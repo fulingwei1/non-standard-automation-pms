@@ -10,16 +10,16 @@ import {
   FileText,
   BarChart3,
   PieChart,
-  Download,
-} from "lucide-react";
+  Download } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
-} from "../components/ui/card";
+  CardDescription } from
+"../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import {
@@ -27,16 +27,16 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import {
   SimpleBarChart,
   SimpleLineChart,
   SimplePieChart,
-  MonthlyTrendChart,
-} from "../components/administrative/StatisticsCharts";
+  MonthlyTrendChart } from
+"../components/administrative/StatisticsCharts";
 import { ecnApi } from "../services/api";
-import { formatDate } from "../lib/utils";
+import { formatDate as _formatDate } from "../lib/utils";
 
 const statusConfigs = {
   DRAFT: { label: "草稿", color: "bg-slate-500" },
@@ -49,7 +49,7 @@ const statusConfigs = {
   EXECUTING: { label: "执行中", color: "bg-purple-500" },
   COMPLETED: { label: "已完成", color: "bg-emerald-500" },
   CLOSED: { label: "已关闭", color: "bg-gray-500" },
-  CANCELLED: { label: "已取消", color: "bg-gray-400" },
+  CANCELLED: { label: "已取消", color: "bg-gray-400" }
 };
 
 const typeConfigs = {
@@ -95,7 +95,7 @@ const typeConfigs = {
   DOCUMENT: { label: "文档变更", color: "bg-slate-500" },
   SPECIFICATION: { label: "规格变更", color: "bg-green-500" },
   SCHEDULE: { label: "计划变更", color: "bg-orange-500" },
-  OTHER: { label: "其他", color: "bg-slate-500" },
+  OTHER: { label: "其他", color: "bg-slate-500" }
 };
 
 export default function ECNStatistics() {
@@ -116,7 +116,7 @@ export default function ECNStatistics() {
     } catch (error) {
       console.error("Failed to fetch ECN statistics:", error);
       alert(
-        "获取统计信息失败: " + (error.response?.data?.detail || error.message),
+        "获取统计信息失败: " + (error.response?.data?.detail || error.message)
       );
     } finally {
       setLoading(false);
@@ -128,8 +128,8 @@ export default function ECNStatistics() {
       <div className="space-y-6 p-6">
         <PageHeader title="ECN统计报表" description="ECN变更管理统计分析" />
         <div className="text-center py-8 text-slate-400">加载中...</div>
-      </div>
-    );
+      </div>);
+
   }
 
   if (!statistics) {
@@ -137,8 +137,8 @@ export default function ECNStatistics() {
       <div className="space-y-6 p-6">
         <PageHeader title="ECN统计报表" description="ECN变更管理统计分析" />
         <div className="text-center py-8 text-slate-400">暂无统计数据</div>
-      </div>
-    );
+      </div>);
+
   }
 
   // 处理统计数据
@@ -150,39 +150,39 @@ export default function ECNStatistics() {
   const trends = statistics.trends || [];
 
   // 状态分布数据（用于饼图）
-  const statusData = Object.entries(statusDistribution)
-    .map(([status, count]) => ({
-      label: statusConfigs[status]?.label || status,
-      value: count,
-      color: statusConfigs[status]?.color?.replace("bg-", "#") || "#6b7280",
-    }))
-    .filter((item) => item.value > 0);
+  const statusData = Object.entries(statusDistribution).
+  map(([status, count]) => ({
+    label: statusConfigs[status]?.label || status,
+    value: count,
+    color: statusConfigs[status]?.color?.replace("bg-", "#") || "#6b7280"
+  })).
+  filter((item) => item.value > 0);
 
   // 类型分布数据（用于饼图）
-  const typeData = Object.entries(typeDistribution)
-    .map(([type, count]) => ({
-      label: typeConfigs[type]?.label || type,
-      value: count,
-      color: typeConfigs[type]?.color?.replace("bg-", "#") || "#6b7280",
-    }))
-    .filter((item) => item.value > 0);
+  const typeData = Object.entries(typeDistribution).
+  map(([type, count]) => ({
+    label: typeConfigs[type]?.label || type,
+    value: count,
+    color: typeConfigs[type]?.color?.replace("bg-", "#") || "#6b7280"
+  })).
+  filter((item) => item.value > 0);
 
   // 趋势数据（用于折线图）
   const trendData = trends.map((t) => ({
     label: t.period || t.date || "",
-    value: t.count || 0,
+    value: t.count || 0
   }));
 
   // 成本趋势数据
   const costTrendData = (statistics.cost_trends || []).map((t) => ({
     label: t.period || t.date || "",
-    value: t.cost || 0,
+    value: t.cost || 0
   }));
 
   // 工期趋势数据
   const scheduleTrendData = (statistics.schedule_trends || []).map((t) => ({
     label: t.period || t.date || "",
-    value: t.days || 0,
+    value: t.days || 0
   }));
 
   // 导出统计报表
@@ -193,59 +193,59 @@ export default function ECNStatistics() {
         month: "最近一月",
         quarter: "最近一季",
         year: "最近一年",
-        all: "全部",
+        all: "全部"
       };
 
       // 构建导出数据
       const exportData = [
-        ["ECN统计报表"],
-        ["统计周期", timeRangeLabels[timeRange] || timeRange],
-        ["导出日期", new Date().toLocaleDateString("zh-CN")],
-        [""],
-        ["=== 统计概览 ==="],
-        ["ECN总数", totalCount],
-        ["总成本影响", `¥${costImpact.total?.toLocaleString() || 0}`],
-        ["平均成本影响", `¥${costImpact.average?.toLocaleString() || 0}`],
-        ["总工期影响", `${scheduleImpact.total || 0} 天`],
-        ["平均工期影响", `${scheduleImpact.average?.toFixed(1) || 0} 天`],
-        [""],
-        ["=== 状态分布 ==="],
-        ["状态", "数量"],
-        ...Object.entries(statusDistribution).map(([status, count]) => [
-          statusConfigs[status]?.label || status,
-          count,
-        ]),
-        [""],
-        ["=== 类型分布 ==="],
-        ["类型", "数量"],
-        ...Object.entries(typeDistribution).map(([type, count]) => [
-          typeConfigs[type]?.label || type,
-          count,
-        ]),
-        [""],
-        ["=== 详细统计 ==="],
-        ["已完成", statusDistribution.COMPLETED || 0],
-        ["已关闭", statusDistribution.CLOSED || 0],
-        ["已驳回", statusDistribution.REJECTED || 0],
-        ["已取消", statusDistribution.CANCELLED || 0],
-      ];
+      ["ECN统计报表"],
+      ["统计周期", timeRangeLabels[timeRange] || timeRange],
+      ["导出日期", new Date().toLocaleDateString("zh-CN")],
+      [""],
+      ["=== 统计概览 ==="],
+      ["ECN总数", totalCount],
+      ["总成本影响", `¥${costImpact.total?.toLocaleString() || 0}`],
+      ["平均成本影响", `¥${costImpact.average?.toLocaleString() || 0}`],
+      ["总工期影响", `${scheduleImpact.total || 0} 天`],
+      ["平均工期影响", `${scheduleImpact.average?.toFixed(1) || 0} 天`],
+      [""],
+      ["=== 状态分布 ==="],
+      ["状态", "数量"],
+      ...Object.entries(statusDistribution).map(([status, count]) => [
+      statusConfigs[status]?.label || status,
+      count]
+      ),
+      [""],
+      ["=== 类型分布 ==="],
+      ["类型", "数量"],
+      ...Object.entries(typeDistribution).map(([type, count]) => [
+      typeConfigs[type]?.label || type,
+      count]
+      ),
+      [""],
+      ["=== 详细统计 ==="],
+      ["已完成", statusDistribution.COMPLETED || 0],
+      ["已关闭", statusDistribution.CLOSED || 0],
+      ["已驳回", statusDistribution.REJECTED || 0],
+      ["已取消", statusDistribution.CANCELLED || 0]];
+
 
       // 转换为CSV格式
-      const csvContent = exportData
-        .map((row) => row.map((cell) => `"${cell}"`).join(","))
-        .join("\n");
+      const csvContent = exportData.
+      map((row) => row.map((cell) => `"${cell}"`).join(",")).
+      join("\n");
 
       // 添加BOM以支持中文
       const BOM = "\uFEFF";
       const blob = new Blob([BOM + csvContent], {
-        type: "text/csv;charset=utf-8;",
+        type: "text/csv;charset=utf-8;"
       });
       const link = document.createElement("a");
       const url = URL.createObjectURL(blob);
       link.setAttribute("href", url);
       link.setAttribute(
         "download",
-        `ECN统计报表_${timeRange}_${new Date().toISOString().split("T")[0]}.csv`,
+        `ECN统计报表_${timeRange}_${new Date().toISOString().split("T")[0]}.csv`
       );
       link.style.visibility = "hidden";
       document.body.appendChild(link);
@@ -263,8 +263,8 @@ export default function ECNStatistics() {
       <div className="flex items-center justify-between">
         <PageHeader
           title="ECN统计报表"
-          description="ECN变更管理统计分析，包括数量、成本、工期、类型分布等"
-        />
+          description="ECN变更管理统计分析，包括数量、成本、工期、类型分布等" />
+
         <Button onClick={handleExport} variant="outline">
           <Download className="w-4 h-4 mr-2" />
           导出报表
@@ -343,9 +343,9 @@ export default function ECNStatistics() {
               <div>
                 <div className="text-sm text-slate-400">进行中</div>
                 <div className="text-2xl font-bold">
-                  {(statusDistribution.EXECUTING || 0) +
-                    (statusDistribution.EVALUATING || 0) +
-                    (statusDistribution.PENDING_APPROVAL || 0)}
+                  {(statusDistribution.EXECUTING || 0) + (
+                  statusDistribution.EVALUATING || 0) + (
+                  statusDistribution.PENDING_APPROVAL || 0)}
                 </div>
               </div>
               <TrendingUp className="w-8 h-8 text-purple-500" />
@@ -363,32 +363,32 @@ export default function ECNStatistics() {
             <CardDescription>ECN各状态数量分布</CardDescription>
           </CardHeader>
           <CardContent>
-            {statusData.length > 0 ? (
-              <div className="space-y-4">
+            {statusData.length > 0 ?
+            <div className="space-y-4">
                 <SimplePieChart data={statusData} size={200} />
                 <div className="space-y-2">
-                  {Object.entries(statusDistribution).map(([status, count]) => (
-                    <div
-                      key={status}
-                      className="flex items-center justify-between"
-                    >
+                  {Object.entries(statusDistribution).map(([status, count]) =>
+                <div
+                  key={status}
+                  className="flex items-center justify-between">
+
                       <div className="flex items-center gap-2">
                         <Badge
-                          className={
-                            statusConfigs[status]?.color || "bg-slate-500"
-                          }
-                        >
+                      className={
+                      statusConfigs[status]?.color || "bg-slate-500"
+                      }>
+
                           {statusConfigs[status]?.label || status}
                         </Badge>
                       </div>
                       <div className="font-medium">{count}</div>
                     </div>
-                  ))}
+                )}
                 </div>
-              </div>
-            ) : (
-              <div className="text-center py-8 text-slate-400">暂无数据</div>
-            )}
+              </div> :
+
+            <div className="text-center py-8 text-slate-400">暂无数据</div>
+            }
           </CardContent>
         </Card>
 
@@ -399,30 +399,30 @@ export default function ECNStatistics() {
             <CardDescription>ECN各类型数量分布</CardDescription>
           </CardHeader>
           <CardContent>
-            {typeData.length > 0 ? (
-              <div className="space-y-4">
+            {typeData.length > 0 ?
+            <div className="space-y-4">
                 <SimplePieChart data={typeData} size={200} />
                 <div className="space-y-2">
-                  {Object.entries(typeDistribution).map(([type, count]) => (
-                    <div
-                      key={type}
-                      className="flex items-center justify-between"
-                    >
+                  {Object.entries(typeDistribution).map(([type, count]) =>
+                <div
+                  key={type}
+                  className="flex items-center justify-between">
+
                       <div className="flex items-center gap-2">
                         <Badge
-                          className={typeConfigs[type]?.color || "bg-slate-500"}
-                        >
+                      className={typeConfigs[type]?.color || "bg-slate-500"}>
+
                           {typeConfigs[type]?.label || type}
                         </Badge>
                       </div>
                       <div className="font-medium">{count}</div>
                     </div>
-                  ))}
+                )}
                 </div>
-              </div>
-            ) : (
-              <div className="text-center py-8 text-slate-400">暂无数据</div>
-            )}
+              </div> :
+
+            <div className="text-center py-8 text-slate-400">暂无数据</div>
+            }
           </CardContent>
         </Card>
       </div>
@@ -436,15 +436,15 @@ export default function ECNStatistics() {
             <CardDescription>ECN数量变化趋势</CardDescription>
           </CardHeader>
           <CardContent>
-            {trendData.length > 0 ? (
-              <SimpleLineChart
-                data={trendData}
-                height={200}
-                color="text-blue-400"
-              />
-            ) : (
-              <div className="text-center py-8 text-slate-400">暂无数据</div>
-            )}
+            {trendData.length > 0 ?
+            <SimpleLineChart
+              data={trendData}
+              height={200}
+              color="text-blue-400" /> :
+
+
+            <div className="text-center py-8 text-slate-400">暂无数据</div>
+            }
           </CardContent>
         </Card>
 
@@ -455,19 +455,19 @@ export default function ECNStatistics() {
             <CardDescription>ECN成本影响变化趋势</CardDescription>
           </CardHeader>
           <CardContent>
-            {costTrendData.length > 0 ? (
-              <MonthlyTrendChart
-                data={costTrendData.map((d) => ({
-                  month: d.label,
-                  amount: d.value,
-                }))}
-                valueKey="amount"
-                labelKey="month"
-                height={200}
-              />
-            ) : (
-              <div className="text-center py-8 text-slate-400">暂无数据</div>
-            )}
+            {costTrendData.length > 0 ?
+            <MonthlyTrendChart
+              data={costTrendData.map((d) => ({
+                month: d.label,
+                amount: d.value
+              }))}
+              valueKey="amount"
+              labelKey="month"
+              height={200} /> :
+
+
+            <div className="text-center py-8 text-slate-400">暂无数据</div>
+            }
           </CardContent>
         </Card>
 
@@ -478,19 +478,19 @@ export default function ECNStatistics() {
             <CardDescription>ECN工期影响变化趋势</CardDescription>
           </CardHeader>
           <CardContent>
-            {scheduleTrendData.length > 0 ? (
-              <MonthlyTrendChart
-                data={scheduleTrendData.map((d) => ({
-                  month: d.label,
-                  amount: d.value,
-                }))}
-                valueKey="amount"
-                labelKey="month"
-                height={200}
-              />
-            ) : (
-              <div className="text-center py-8 text-slate-400">暂无数据</div>
-            )}
+            {scheduleTrendData.length > 0 ?
+            <MonthlyTrendChart
+              data={scheduleTrendData.map((d) => ({
+                month: d.label,
+                amount: d.value
+              }))}
+              valueKey="amount"
+              labelKey="month"
+              height={200} /> :
+
+
+            <div className="text-center py-8 text-slate-400">暂无数据</div>
+            }
           </CardContent>
         </Card>
       </div>
@@ -530,6 +530,6 @@ export default function ECNStatistics() {
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>);
+
 }

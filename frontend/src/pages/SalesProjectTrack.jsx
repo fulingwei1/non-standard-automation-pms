@@ -27,8 +27,8 @@ import {
   ClipboardCheck,
   Shield,
   Phone,
-  MessageSquare,
-} from "lucide-react";
+  MessageSquare } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -38,76 +38,116 @@ import {
   Button,
   Badge,
   Input,
-  Progress,
-} from "../components/ui";
+  Progress } from
+"../components/ui";
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { projectApi } from "../services/api";
 
 // Stage configuration
 const stageConfig = {
+  // 前端友好名称
   solution: {
     label: "方案设计",
     color: "bg-violet-500",
     textColor: "text-violet-400",
-    order: 1,
+    order: 1
   },
   design: {
     label: "结构设计",
     color: "bg-blue-500",
     textColor: "text-blue-400",
-    order: 2,
+    order: 2
   },
   procurement: {
     label: "采购备料",
     color: "bg-cyan-500",
     textColor: "text-cyan-400",
-    order: 3,
+    order: 3
   },
   assembly: {
     label: "装配调试",
     color: "bg-amber-500",
     textColor: "text-amber-400",
-    order: 4,
+    order: 4
   },
   fat: {
     label: "出厂验收",
     color: "bg-emerald-500",
     textColor: "text-emerald-400",
-    order: 5,
+    order: 5
   },
   shipping: {
     label: "包装发运",
     color: "bg-purple-500",
     textColor: "text-purple-400",
-    order: 6,
+    order: 6
   },
   sat: {
     label: "现场调试",
     color: "bg-pink-500",
     textColor: "text-pink-400",
-    order: 7,
+    order: 7
   },
   warranty: {
     label: "质保结项",
     color: "bg-slate-500",
     textColor: "text-slate-400",
-    order: 8,
+    order: 8
   },
+  // 数据库阶段枚举值 (S1-S9)
+  S1: { label: "需求进入", color: "bg-violet-500", textColor: "text-violet-400", order: 1 },
+  S2: { label: "方案设计", color: "bg-blue-500", textColor: "text-blue-400", order: 2 },
+  S3: { label: "采购备料", color: "bg-cyan-500", textColor: "text-cyan-400", order: 3 },
+  S4: { label: "加工制造", color: "bg-teal-500", textColor: "text-teal-400", order: 4 },
+  S5: { label: "装配调试", color: "bg-amber-500", textColor: "text-amber-400", order: 5 },
+  S6: { label: "出厂验收", color: "bg-emerald-500", textColor: "text-emerald-400", order: 6 },
+  S7: { label: "包装发运", color: "bg-purple-500", textColor: "text-purple-400", order: 7 },
+  S8: { label: "现场安装", color: "bg-pink-500", textColor: "text-pink-400", order: 8 },
+  S9: { label: "质保结项", color: "bg-slate-500", textColor: "text-slate-400", order: 9 }
+};
+
+// 默认阶段配置
+const defaultStageConf = {
+  label: "未知阶段",
+  color: "bg-slate-500",
+  textColor: "text-slate-400",
+  order: 0
 };
 
 const healthConfig = {
+  // 前端友好名称
   good: {
     label: "正常",
     color: "bg-emerald-500",
-    textColor: "text-emerald-400",
+    textColor: "text-emerald-400"
   },
   warning: {
     label: "有风险",
     color: "bg-amber-500",
-    textColor: "text-amber-400",
+    textColor: "text-amber-400"
   },
   critical: { label: "阻塞", color: "bg-red-500", textColor: "text-red-400" },
+  // 数据库枚举值 (H1-H4)
+  H1: {
+    label: "正常",
+    color: "bg-emerald-500",
+    textColor: "text-emerald-400"
+  },
+  H2: {
+    label: "有风险",
+    color: "bg-amber-500",
+    textColor: "text-amber-400"
+  },
+  H3: { label: "阻塞", color: "bg-red-500", textColor: "text-red-400" },
+  H4: { label: "已完结", color: "bg-slate-500", textColor: "text-slate-400" }
+};
+
+// 默认健康度配置（当health值未匹配时使用）
+const defaultHealthConf = {
+  label: "未知",
+  color: "bg-slate-500",
+  textColor: "text-slate-400"
 };
 
 // Mock data - 已移除，使用真实API
@@ -117,8 +157,8 @@ export default function SalesProjectTrack() {
   const [selectedStage, setSelectedStage] = useState("all");
   const [selectedHealth, setSelectedHealth] = useState("all");
   const [selectedProject, setSelectedProject] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [_loading, setLoading] = useState(false);
+  const [_error, setError] = useState(null);
   const [projects, setProjects] = useState([]);
 
   // Fetch projects from API
@@ -143,16 +183,21 @@ export default function SalesProjectTrack() {
   // Filter projects
   const filteredProjects = useMemo(() => {
     return projects.filter((project) => {
+      // 兼容API字段名 (project_name vs name, project_code vs id)
+      const projectName = project.name || project.project_name || '';
+      const projectId = String(project.id || project.project_code || '');
+      const customerName = project.customerShort || project.customer_name || project.customer?.name || '';
+
       const matchesSearch =
-        !searchTerm ||
-        project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        project.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        project.customerShort.toLowerCase().includes(searchTerm.toLowerCase());
+      !searchTerm ||
+      projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      projectId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customerName.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesStage =
-        selectedStage === "all" || project.stage === selectedStage;
+      selectedStage === "all" || project.stage === selectedStage;
       const matchesHealth =
-        selectedHealth === "all" || project.health === selectedHealth;
+      selectedHealth === "all" || project.health === selectedHealth;
 
       return matchesSearch && matchesStage && matchesHealth;
     });
@@ -162,15 +207,19 @@ export default function SalesProjectTrack() {
   const stats = useMemo(() => {
     return {
       total: projects.length,
-      inProgress: projects.filter((p) => !["warranty"].includes(p.stage))
-        .length,
+      inProgress: projects.filter((p) => !["warranty", "S9"].includes(p.stage)).
+      length,
       nearDelivery: projects.filter((p) => {
-        const delivery = new Date(p.expectedDelivery);
+        const deliveryDate = p.expectedDelivery || p.expected_delivery || p.plan_delivery_date;
+        if (!deliveryDate) return false;
+        const delivery = new Date(deliveryDate);
         const now = new Date();
         const diff = (delivery - now) / (1000 * 60 * 60 * 24);
         return diff <= 14 && diff > 0;
       }).length,
-      hasIssue: projects.filter((p) => p.health !== "good").length,
+      hasIssue: projects.filter((p) =>
+      p.health && !["good", "H1"].includes(p.health)
+      ).length
     };
   }, [projects]);
 
@@ -183,19 +232,19 @@ export default function SalesProjectTrack() {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       {/* Page Header */}
       <PageHeader
         title="项目跟踪"
-        description="跟踪我负责的项目进度和关键节点"
-      />
+        description="跟踪我负责的项目进度和关键节点" />
+
 
       {/* Stats Row */}
       <motion.div
         variants={fadeIn}
-        className="grid grid-cols-2 sm:grid-cols-4 gap-4"
-      >
+        className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+
         <Card className="bg-surface-100/50">
           <CardContent className="p-4 flex items-center gap-4">
             <div className="p-2 bg-blue-500/20 rounded-lg">
@@ -249,8 +298,8 @@ export default function SalesProjectTrack() {
       {/* Filters */}
       <motion.div
         variants={fadeIn}
-        className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between"
-      >
+        className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+
         <div className="flex flex-wrap gap-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -258,32 +307,32 @@ export default function SalesProjectTrack() {
               placeholder="搜索项目..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-56"
-            />
+              className="pl-10 w-56" />
+
           </div>
           <select
             value={selectedStage}
             onChange={(e) => setSelectedStage(e.target.value)}
-            className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
-          >
+            className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary">
+
             <option value="all">全部阶段</option>
-            {Object.entries(stageConfig).map(([key, val]) => (
-              <option key={key} value={key}>
+            {Object.entries(stageConfig).map(([key, val]) =>
+            <option key={key} value={key}>
                 {val.label}
               </option>
-            ))}
+            )}
           </select>
           <select
             value={selectedHealth}
             onChange={(e) => setSelectedHealth(e.target.value)}
-            className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
-          >
+            className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary">
+
             <option value="all">全部状态</option>
-            {Object.entries(healthConfig).map(([key, val]) => (
-              <option key={key} value={key}>
+            {Object.entries(healthConfig).map(([key, val]) =>
+            <option key={key} value={key}>
                 {val.label}
               </option>
-            ))}
+            )}
           </select>
         </div>
 
@@ -295,52 +344,61 @@ export default function SalesProjectTrack() {
       {/* Project List */}
       <motion.div variants={fadeIn} className="space-y-4">
         {filteredProjects.map((project) => {
-          const stageConf = stageConfig[project.stage];
-          const healthConf = healthConfig[project.health];
-          const paymentProgress =
-            project.contractAmount > 0
-              ? (project.paidAmount / project.contractAmount) * 100
-              : 0;
+          const stageConf = stageConfig[project.stage] || defaultStageConf;
+          const healthConf = healthConfig[project.health] || defaultHealthConf;
+          // 兼容API字段名
+          const contractAmount = project.contractAmount || project.contract_amount || 0;
+          const paidAmount = project.paidAmount || project.paid_amount || 0;
+          const paymentProgress = contractAmount > 0 ? paidAmount / contractAmount * 100 : 0;
+          const projectName = project.name || project.project_name || '未命名项目';
+          const customerName = project.customerShort || project.customer_name || project.customer?.name || '-';
+          const contractNo = project.contractNo || project.contract_no || '-';
+          const pmName = project.pm || project.pm_name || '-';
+          const progress = project.progress ?? project.completion_rate ?? 0;
+          const expectedDelivery = project.expectedDelivery || project.expected_delivery || project.plan_delivery_date || '-';
+          const acceptanceDate = project.acceptanceDate || project.acceptance_date || '-';
+          const milestones = project.milestones || [];
+          const issues = project.issues || [];
 
           return (
             <Card
               key={project.id}
               onClick={() => handleProjectClick(project)}
-              className="cursor-pointer hover:border-primary/30 transition-colors"
-            >
+              className="cursor-pointer hover:border-primary/30 transition-colors">
+
               <CardContent className="p-4">
                 <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                   {/* Project Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2">
                       <div
-                        className={cn("w-3 h-3 rounded-full", healthConf.color)}
-                      />
+                        className={cn("w-3 h-3 rounded-full", healthConf.color)} />
+
                       <h3 className="font-semibold text-white truncate">
-                        {project.name}
+                        {projectName}
                       </h3>
                       <Badge
                         variant="secondary"
-                        className={cn("text-xs", stageConf.textColor)}
-                      >
+                        className={cn("text-xs", stageConf.textColor)}>
+
                         {stageConf.label}
                       </Badge>
-                      {project.issues.length > 0 && (
-                        <AlertTriangle className="w-4 h-4 text-amber-500" />
-                      )}
+                      {issues.length > 0 &&
+                      <AlertTriangle className="w-4 h-4 text-amber-500" />
+                      }
                     </div>
                     <div className="flex flex-wrap items-center gap-4 text-sm text-slate-400">
                       <span className="flex items-center gap-1">
                         <Building2 className="w-4 h-4" />
-                        {project.customerShort}
+                        {customerName}
                       </span>
                       <span className="flex items-center gap-1">
                         <FileText className="w-4 h-4" />
-                        {project.contractNo}
+                        {contractNo}
                       </span>
                       <span className="flex items-center gap-1">
                         <User className="w-4 h-4" />
-                        PM: {project.pm}
+                        PM: {pmName}
                       </span>
                     </div>
                   </div>
@@ -350,10 +408,10 @@ export default function SalesProjectTrack() {
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs text-slate-400">项目进度</span>
                       <span className="text-xs text-white">
-                        {project.progress}%
+                        {progress}%
                       </span>
                     </div>
-                    <Progress value={project.progress} className="h-2" />
+                    <Progress value={progress} className="h-2" />
                   </div>
 
                   {/* Dates */}
@@ -362,14 +420,14 @@ export default function SalesProjectTrack() {
                       <Truck className="w-4 h-4 text-slate-500" />
                       <span className="text-slate-400">交付:</span>
                       <span className="text-white">
-                        {project.expectedDelivery}
+                        {expectedDelivery}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <ClipboardCheck className="w-4 h-4 text-slate-500" />
                       <span className="text-slate-400">验收:</span>
                       <span className="text-white">
-                        {project.acceptanceDate}
+                        {acceptanceDate}
                       </span>
                     </div>
                   </div>
@@ -377,7 +435,7 @@ export default function SalesProjectTrack() {
                   {/* Amount */}
                   <div className="text-right">
                     <div className="text-lg font-semibold text-amber-400">
-                      ¥{(project.contractAmount / 10000).toFixed(0)}万
+                      ¥{(contractAmount / 10000).toFixed(0)}万
                     </div>
                     <div className="text-xs text-slate-400">
                       已收 {paymentProgress.toFixed(0)}%
@@ -388,9 +446,10 @@ export default function SalesProjectTrack() {
                 </div>
 
                 {/* Milestone Progress */}
+                {milestones.length > 0 &&
                 <div className="mt-4 pt-4 border-t border-white/5">
                   <div className="flex items-center gap-1">
-                    {project.milestones.map((milestone, index) => {
+                    {milestones.map((milestone, index) => {
                       const isCompleted = milestone.status === "completed";
                       const isCurrent = milestone.status === "in_progress";
 
@@ -399,70 +458,84 @@ export default function SalesProjectTrack() {
                           <div
                             className={cn(
                               "w-6 h-6 rounded-full flex items-center justify-center text-xs",
-                              isCompleted
-                                ? "bg-emerald-500 text-white"
-                                : isCurrent
-                                  ? "bg-primary text-white"
-                                  : "bg-surface-50 text-slate-500 border border-slate-600",
+                              isCompleted ?
+                              "bg-emerald-500 text-white" :
+                              isCurrent ?
+                              "bg-primary text-white" :
+                              "bg-surface-50 text-slate-500 border border-slate-600"
                             )}
-                            title={`${milestone.name}: ${milestone.date}`}
-                          >
+                            title={`${milestone.name || ''}: ${milestone.date || ''}`}>
+
                             {isCompleted ? "✓" : index + 1}
                           </div>
-                          {index < project.milestones.length - 1 && (
-                            <div
-                              className={cn(
-                                "w-8 h-0.5",
-                                isCompleted ? "bg-emerald-500" : "bg-slate-600",
-                              )}
-                            />
-                          )}
-                        </div>
-                      );
+                          {index < milestones.length - 1 &&
+                          <div
+                            className={cn(
+                              "w-8 h-0.5",
+                              isCompleted ? "bg-emerald-500" : "bg-slate-600"
+                            )} />
+
+                          }
+                        </div>);
+
                     })}
                   </div>
                   <div className="flex justify-between mt-2 text-xs text-slate-500">
-                    <span>{project.milestones[0]?.name}</span>
+                    <span>{milestones[0]?.name}</span>
                     <span>
-                      {project.milestones[project.milestones.length - 1]?.name}
+                      {milestones[milestones.length - 1]?.name}
                     </span>
                   </div>
                 </div>
+                }
               </CardContent>
-            </Card>
-          );
+            </Card>);
+
         })}
 
-        {filteredProjects.length === 0 && (
-          <div className="text-center py-16">
+        {filteredProjects.length === 0 &&
+        <div className="text-center py-16">
             <FolderKanban className="w-12 h-12 mx-auto text-slate-600 mb-4" />
             <h3 className="text-lg font-medium text-white mb-2">暂无项目</h3>
             <p className="text-slate-400">没有找到符合条件的项目</p>
           </div>
-        )}
+        }
       </motion.div>
 
       {/* Project Detail Panel */}
       <AnimatePresence>
-        {selectedProject && (
-          <ProjectDetailPanel
-            project={selectedProject}
-            onClose={() => setSelectedProject(null)}
-          />
-        )}
+        {selectedProject &&
+        <ProjectDetailPanel
+          project={selectedProject}
+          onClose={() => setSelectedProject(null)} />
+
+        }
       </AnimatePresence>
-    </motion.div>
-  );
+    </motion.div>);
+
 }
 
 // Project Detail Panel
 function ProjectDetailPanel({ project, onClose }) {
-  const stageConf = stageConfig[project.stage];
-  const healthConf = healthConfig[project.health];
-  const paymentProgress =
-    project.contractAmount > 0
-      ? (project.paidAmount / project.contractAmount) * 100
-      : 0;
+  const stageConf = stageConfig[project.stage] || defaultStageConf;
+  const healthConf = healthConfig[project.health] || defaultHealthConf;
+
+  // 兼容API字段名
+  const contractAmount = project.contractAmount || project.contract_amount || 0;
+  const paidAmount = project.paidAmount || project.paid_amount || 0;
+  const paymentProgress = contractAmount > 0 ? paidAmount / contractAmount * 100 : 0;
+  const projectName = project.name || project.project_name || '未命名项目';
+  const projectCode = project.project_code || project.id;
+  const customerName = project.customerShort || project.customer_name || project.customer?.name || '-';
+  const contractNo = project.contractNo || project.contract_no || '-';
+  const pmName = project.pm || project.pm_name || '-';
+  const progress = project.progress ?? project.completion_rate ?? 0;
+  const startDate = project.startDate || project.start_date || project.created_at || '-';
+  const expectedDelivery = project.expectedDelivery || project.expected_delivery || project.plan_delivery_date || '-';
+  const acceptanceDate = project.acceptanceDate || project.acceptance_date || '-';
+  const lastUpdate = project.lastUpdate || project.updated_at || '-';
+  const milestones = project.milestones || [];
+  const issues = project.issues || [];
 
   return (
     <motion.div
@@ -470,8 +543,8 @@ function ProjectDetailPanel({ project, onClose }) {
       animate={{ x: 0 }}
       exit={{ x: "100%" }}
       transition={{ type: "spring", damping: 25, stiffness: 200 }}
-      className="fixed right-0 top-0 h-full w-full md:w-[500px] bg-surface-100/95 backdrop-blur-xl border-l border-white/5 shadow-2xl z-50 flex flex-col"
-    >
+      className="fixed right-0 top-0 h-full w-full md:w-[500px] bg-surface-100/95 backdrop-blur-xl border-l border-white/5 shadow-2xl z-50 flex flex-col">
+
       {/* Header */}
       <div className="p-4 border-b border-white/5">
         <div className="flex items-start justify-between">
@@ -479,11 +552,11 @@ function ProjectDetailPanel({ project, onClose }) {
             <div className="flex items-center gap-2 mb-1">
               <div className={cn("w-3 h-3 rounded-full", healthConf.color)} />
               <h2 className="text-lg font-semibold text-white">
-                {project.name}
+                {projectName}
               </h2>
             </div>
             <p className="text-sm text-slate-400">
-              {project.id} · {project.contractNo}
+              {projectCode} · {contractNo}
             </p>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose}>
@@ -493,14 +566,14 @@ function ProjectDetailPanel({ project, onClose }) {
         <div className="flex items-center gap-2 mt-3">
           <Badge
             variant="secondary"
-            className={cn("text-xs", stageConf.textColor)}
-          >
+            className={cn("text-xs", stageConf.textColor)}>
+
             {stageConf.label}
           </Badge>
           <Badge
             variant="secondary"
-            className={cn("text-xs", healthConf.textColor)}
-          >
+            className={cn("text-xs", healthConf.textColor)}>
+
             {healthConf.label}
           </Badge>
         </div>
@@ -513,18 +586,18 @@ function ProjectDetailPanel({ project, onClose }) {
           <div className="p-4 bg-surface-50 rounded-xl">
             <div className="text-sm text-slate-400 mb-2">项目进度</div>
             <div className="text-2xl font-bold text-white mb-2">
-              {project.progress}%
+              {progress}%
             </div>
-            <Progress value={project.progress} className="h-2" />
+            <Progress value={progress} className="h-2" />
           </div>
           <div className="p-4 bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/20 rounded-xl">
             <div className="text-sm text-slate-400 mb-2">合同金额</div>
             <div className="text-2xl font-bold text-amber-400">
-              ¥{(project.contractAmount / 10000).toFixed(0)}万
+              ¥{(contractAmount / 10000).toFixed(0)}万
             </div>
             <div className="text-xs text-slate-400 mt-1">
               已收 {paymentProgress.toFixed(0)}% (¥
-              {(project.paidAmount / 10000).toFixed(0)}万)
+              {(paidAmount / 10000).toFixed(0)}万)
             </div>
           </div>
         </div>
@@ -536,103 +609,105 @@ function ProjectDetailPanel({ project, onClose }) {
             <div className="flex items-center gap-3">
               <Building2 className="w-4 h-4 text-slate-500" />
               <span className="text-slate-400">客户:</span>
-              <span className="text-white">{project.customerShort}</span>
+              <span className="text-white">{customerName}</span>
             </div>
             <div className="flex items-center gap-3">
               <User className="w-4 h-4 text-slate-500" />
               <span className="text-slate-400">项目经理:</span>
-              <span className="text-white">{project.pm}</span>
+              <span className="text-white">{pmName}</span>
             </div>
             <div className="flex items-center gap-3">
               <Calendar className="w-4 h-4 text-slate-500" />
               <span className="text-slate-400">启动日期:</span>
-              <span className="text-white">{project.startDate}</span>
+              <span className="text-white">{startDate}</span>
             </div>
             <div className="flex items-center gap-3">
               <Truck className="w-4 h-4 text-slate-500" />
               <span className="text-slate-400">预计交付:</span>
-              <span className="text-white">{project.expectedDelivery}</span>
+              <span className="text-white">{expectedDelivery}</span>
             </div>
             <div className="flex items-center gap-3">
               <ClipboardCheck className="w-4 h-4 text-slate-500" />
               <span className="text-slate-400">验收日期:</span>
-              <span className="text-white">{project.acceptanceDate}</span>
+              <span className="text-white">{acceptanceDate}</span>
             </div>
             <div className="flex items-center gap-3">
               <Clock className="w-4 h-4 text-slate-500" />
               <span className="text-slate-400">最近更新:</span>
-              <span className="text-white">{project.lastUpdate}</span>
+              <span className="text-white">{lastUpdate}</span>
             </div>
           </div>
         </div>
 
         {/* Milestones */}
+        {milestones.length > 0 &&
         <div className="space-y-3">
           <h3 className="text-sm font-medium text-slate-400">里程碑</h3>
           <div className="space-y-2">
-            {project.milestones.map((milestone, index) => {
+            {milestones.map((milestone, index) => {
               const isCompleted = milestone.status === "completed";
               const isCurrent = milestone.status === "in_progress";
               const isDelayed =
-                milestone.actual && milestone.actual > milestone.date;
+              milestone.actual && milestone.actual > milestone.date;
 
               return (
                 <div
                   key={index}
                   className={cn(
                     "p-3 rounded-lg border",
-                    isCompleted
-                      ? "bg-emerald-500/10 border-emerald-500/20"
-                      : isCurrent
-                        ? "bg-primary/10 border-primary/20"
-                        : "bg-surface-50 border-white/5",
-                  )}
-                >
+                    isCompleted ?
+                    "bg-emerald-500/10 border-emerald-500/20" :
+                    isCurrent ?
+                    "bg-primary/10 border-primary/20" :
+                    "bg-surface-50 border-white/5"
+                  )}>
+
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      {isCompleted ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                      ) : isCurrent ? (
-                        <Flag className="w-4 h-4 text-primary" />
-                      ) : (
-                        <Clock className="w-4 h-4 text-slate-400" />
-                      )}
+                      {isCompleted ?
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400" /> :
+                      isCurrent ?
+                      <Flag className="w-4 h-4 text-primary" /> :
+
+                      <Clock className="w-4 h-4 text-slate-400" />
+                      }
                       <span className="text-sm text-white">
-                        {milestone.name}
+                        {milestone.name || '-'}
                       </span>
-                      {isDelayed && (
-                        <Badge variant="destructive" className="text-xs">
+                      {isDelayed &&
+                      <Badge variant="destructive" className="text-xs">
                           延期
                         </Badge>
-                      )}
+                      }
                     </div>
                     <span className="text-xs text-slate-400">
                       {isCompleted ? milestone.actual : milestone.date}
                     </span>
                   </div>
-                </div>
-              );
+                </div>);
+
             })}
           </div>
         </div>
+        }
 
         {/* Issues */}
-        {project.issues.length > 0 && (
-          <div className="space-y-3">
+        {issues.length > 0 &&
+        <div className="space-y-3">
             <h3 className="text-sm font-medium text-slate-400">问题与风险</h3>
-            {project.issues.map((issue, index) => (
-              <div
-                key={index}
-                className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg"
-              >
+            {issues.map((issue, index) =>
+          <div
+            key={index}
+            className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+
                 <div className="flex items-center gap-2 text-amber-400 text-sm">
                   <AlertTriangle className="w-4 h-4" />
-                  {issue.content}
+                  {issue.content || issue.description || '-'}
                 </div>
               </div>
-            ))}
+          )}
           </div>
-        )}
+        }
 
         {/* Quick Actions */}
         <div className="space-y-3">
@@ -668,6 +743,6 @@ function ProjectDetailPanel({ project, onClose }) {
           查看详情
         </Button>
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback as _useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Users,
@@ -9,15 +9,15 @@ import {
   CheckCircle,
   Plus,
   Edit,
-  Eye,
-} from "lucide-react";
+  Eye } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -26,23 +26,23 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-} from "../components/ui/dialog";
+  DialogFooter } from
+"../components/ui/dialog";
 import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
 import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger,
-} from "../components/ui/tabs";
+  TabsTrigger } from
+"../components/ui/tabs";
 import { hrManagementApi } from "../services/api";
 import { formatDate } from "../lib/utils";
 import { fadeIn } from "../lib/animations";
@@ -58,20 +58,20 @@ export default function HRManagement() {
   // 对话框状态
   const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);
   const [contractDialogOpen, setContractDialogOpen] = useState(false);
-  const [selectedTransaction, setSelectedTransaction] = useState(null);
-  const [selectedContract, setSelectedContract] = useState(null);
+  const [_selectedTransaction, setSelectedTransaction] = useState(null);
+  const [_selectedContract, setSelectedContract] = useState(null);
 
   // 表单数据
   const [transactionForm, setTransactionForm] = useState({
     employee_id: "",
     transaction_type: "onboarding",
-    transaction_date: new Date().toISOString().split("T")[0],
+    transaction_date: new Date().toISOString().split("T")[0]
   });
   const [contractForm, setContractForm] = useState({
     employee_id: "",
     contract_type: "fixed_term",
     start_date: new Date().toISOString().split("T")[0],
-    duration_months: 36,
+    duration_months: 36
   });
 
   useEffect(() => {
@@ -96,7 +96,7 @@ export default function HRManagement() {
       setLoading(true);
       const response = await hrManagementApi.transactions.list({
         page: 1,
-        page_size: 10,
+        page_size: 10
       });
       const data = response.data?.data || response.data || response;
       setTransactions(data.items || []);
@@ -111,7 +111,7 @@ export default function HRManagement() {
     try {
       const response = await hrManagementApi.contracts.list({
         page: 1,
-        page_size: 10,
+        page_size: 10
       });
       const data = response.data?.data || response.data || response;
       setContracts(data.items || []);
@@ -135,7 +135,7 @@ export default function HRManagement() {
     setTransactionForm({
       employee_id: "",
       transaction_type: "onboarding",
-      transaction_date: new Date().toISOString().split("T")[0],
+      transaction_date: new Date().toISOString().split("T")[0]
     });
     setTransactionDialogOpen(true);
   };
@@ -176,7 +176,7 @@ export default function HRManagement() {
       employee_id: "",
       contract_type: "fixed_term",
       start_date: new Date().toISOString().split("T")[0],
-      duration_months: 36,
+      duration_months: 36
     });
     setContractDialogOpen(true);
   };
@@ -204,7 +204,7 @@ export default function HRManagement() {
       confirmation: "转正",
       transfer: "调岗",
       promotion: "晋升",
-      salary_adjustment: "调薪",
+      salary_adjustment: "调薪"
     };
     return labels[type] || type;
   };
@@ -214,13 +214,13 @@ export default function HRManagement() {
       initial="hidden"
       animate="visible"
       variants={fadeIn}
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       <PageHeader title="人事管理" />
 
       {/* 仪表板概览 */}
-      {dashboardData && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {dashboardData &&
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -277,7 +277,7 @@ export default function HRManagement() {
             </CardContent>
           </Card>
         </div>
-      )}
+      }
 
       <Tabs defaultValue="transactions" className="space-y-4">
         <TabsList>
@@ -297,17 +297,17 @@ export default function HRManagement() {
               </Button>
             </CardHeader>
             <CardContent>
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded mb-4">
+              {error &&
+              <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded mb-4">
                   {error}
                 </div>
-              )}
-              {loading ? (
-                <div className="text-center py-8">加载中...</div>
-              ) : transactions.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">暂无事务</div>
-              ) : (
-                <div className="overflow-x-auto">
+              }
+              {loading ?
+              <div className="text-center py-8">加载中...</div> :
+              transactions.length === 0 ?
+              <div className="text-center py-8 text-gray-500">暂无事务</div> :
+
+              <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="border-b">
@@ -319,8 +319,8 @@ export default function HRManagement() {
                       </tr>
                     </thead>
                     <tbody>
-                      {transactions.map((t) => (
-                        <tr key={t.id} className="border-b hover:bg-gray-50">
+                      {transactions.map((t) =>
+                    <tr key={t.id} className="border-b hover:bg-gray-50">
                           <td className="p-2">
                             {t.employee_name || t.employee_code}
                           </td>
@@ -330,44 +330,44 @@ export default function HRManagement() {
                             </Badge>
                           </td>
                           <td className="p-2">
-                            {t.transaction_date
-                              ? formatDate(t.transaction_date)
-                              : "-"}
+                            {t.transaction_date ?
+                        formatDate(t.transaction_date) :
+                        "-"}
                           </td>
                           <td className="p-2">
                             <Badge
-                              variant={
-                                t.status === "pending"
-                                  ? "secondary"
-                                  : t.status === "approved"
-                                    ? "default"
-                                    : "outline"
-                              }
-                            >
-                              {t.status === "pending"
-                                ? "待审批"
-                                : t.status === "approved"
-                                  ? "已审批"
-                                  : t.status}
+                          variant={
+                          t.status === "pending" ?
+                          "secondary" :
+                          t.status === "approved" ?
+                          "default" :
+                          "outline"
+                          }>
+
+                              {t.status === "pending" ?
+                          "待审批" :
+                          t.status === "approved" ?
+                          "已审批" :
+                          t.status}
                             </Badge>
                           </td>
                           <td className="p-2">
-                            {t.status === "pending" && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleApproveTransaction(t.id)}
-                              >
+                            {t.status === "pending" &&
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleApproveTransaction(t.id)}>
+
                                 审批
                               </Button>
-                            )}
+                        }
                           </td>
                         </tr>
-                      ))}
+                    )}
                     </tbody>
                   </table>
                 </div>
-              )}
+              }
             </CardContent>
           </Card>
         </TabsContent>
@@ -383,10 +383,10 @@ export default function HRManagement() {
               </Button>
             </CardHeader>
             <CardContent>
-              {contracts.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">暂无合同</div>
-              ) : (
-                <div className="overflow-x-auto">
+              {contracts.length === 0 ?
+              <div className="text-center py-8 text-gray-500">暂无合同</div> :
+
+              <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="border-b">
@@ -399,8 +399,8 @@ export default function HRManagement() {
                       </tr>
                     </thead>
                     <tbody>
-                      {contracts.map((c) => (
-                        <tr key={c.id} className="border-b hover:bg-gray-50">
+                      {contracts.map((c) =>
+                    <tr key={c.id} className="border-b hover:bg-gray-50">
                           <td className="p-2">
                             {c.employee_name || c.employee_code}
                           </td>
@@ -413,63 +413,63 @@ export default function HRManagement() {
                           </td>
                           <td className="p-2">
                             <Badge
-                              variant={
-                                c.status === "active" ? "default" : "secondary"
-                              }
-                            >
+                          variant={
+                          c.status === "active" ? "default" : "secondary"
+                          }>
+
                               {c.status === "active" ? "有效" : c.status}
                             </Badge>
                           </td>
                           <td className="p-2">
                             {c.days_until_expiry !== null &&
-                              c.days_until_expiry !== undefined && (
-                                <span
-                                  className={
-                                    c.days_until_expiry <= 30
-                                      ? "text-red-600 font-semibold"
-                                      : ""
-                                  }
-                                >
+                        c.days_until_expiry !== undefined &&
+                        <span
+                          className={
+                          c.days_until_expiry <= 30 ?
+                          "text-red-600 font-semibold" :
+                          ""
+                          }>
+
                                   {c.days_until_expiry} 天
                                 </span>
-                              )}
+                        }
                           </td>
                         </tr>
-                      ))}
+                    )}
                     </tbody>
                   </table>
                 </div>
-              )}
+              }
             </CardContent>
           </Card>
         </TabsContent>
 
         {/* 到期提醒 */}
         <TabsContent value="expiring">
-          {expiringContracts && (
-            <div className="space-y-4">
+          {expiringContracts &&
+          <div className="space-y-4">
               <Card>
                 <CardHeader>
                   <CardTitle>两周内到期</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {expiringContracts.two_weeks?.length === 0 ? (
-                    <div className="text-center py-4 text-gray-500">无</div>
-                  ) : (
-                    <div className="space-y-2">
-                      {expiringContracts.two_weeks?.map((c) => (
-                        <div
-                          key={c.id}
-                          className="p-3 bg-red-50 border border-red-200 rounded"
-                        >
+                  {expiringContracts.two_weeks?.length === 0 ?
+                <div className="text-center py-4 text-gray-500">无</div> :
+
+                <div className="space-y-2">
+                      {expiringContracts.two_weeks?.map((c) =>
+                  <div
+                    key={c.id}
+                    className="p-3 bg-red-50 border border-red-200 rounded">
+
                           <div className="font-semibold">{c.employee_name}</div>
                           <div className="text-sm text-gray-600">
                             {c.contract_no} - 还有 {c.days_until_expiry} 天到期
                           </div>
                         </div>
-                      ))}
-                    </div>
                   )}
+                    </div>
+                }
                 </CardContent>
               </Card>
 
@@ -478,35 +478,35 @@ export default function HRManagement() {
                   <CardTitle>一个月内到期</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {expiringContracts.one_month?.length === 0 ? (
-                    <div className="text-center py-4 text-gray-500">无</div>
-                  ) : (
-                    <div className="space-y-2">
-                      {expiringContracts.one_month?.map((c) => (
-                        <div
-                          key={c.id}
-                          className="p-3 bg-yellow-50 border border-yellow-200 rounded"
-                        >
+                  {expiringContracts.one_month?.length === 0 ?
+                <div className="text-center py-4 text-gray-500">无</div> :
+
+                <div className="space-y-2">
+                      {expiringContracts.one_month?.map((c) =>
+                  <div
+                    key={c.id}
+                    className="p-3 bg-yellow-50 border border-yellow-200 rounded">
+
                           <div className="font-semibold">{c.employee_name}</div>
                           <div className="text-sm text-gray-600">
                             {c.contract_no} - 还有 {c.days_until_expiry} 天到期
                           </div>
                         </div>
-                      ))}
-                    </div>
                   )}
+                    </div>
+                }
                 </CardContent>
               </Card>
             </div>
-          )}
+          }
         </TabsContent>
       </Tabs>
 
       {/* 创建人事事务对话框 */}
       <Dialog
         open={transactionDialogOpen}
-        onOpenChange={setTransactionDialogOpen}
-      >
+        onOpenChange={setTransactionDialogOpen}>
+
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>新建人事事务</DialogTitle>
@@ -518,24 +518,24 @@ export default function HRManagement() {
                 type="number"
                 value={transactionForm.employee_id}
                 onChange={(e) =>
-                  setTransactionForm({
-                    ...transactionForm,
-                    employee_id: e.target.value,
-                  })
-                }
-              />
+                setTransactionForm({
+                  ...transactionForm,
+                  employee_id: e.target.value
+                })
+                } />
+
             </div>
             <div>
               <Label>事务类型 *</Label>
               <Select
                 value={transactionForm.transaction_type}
                 onValueChange={(value) =>
-                  setTransactionForm({
-                    ...transactionForm,
-                    transaction_type: value,
-                  })
-                }
-              >
+                setTransactionForm({
+                  ...transactionForm,
+                  transaction_type: value
+                })
+                }>
+
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -555,19 +555,19 @@ export default function HRManagement() {
                 type="date"
                 value={transactionForm.transaction_date}
                 onChange={(e) =>
-                  setTransactionForm({
-                    ...transactionForm,
-                    transaction_date: e.target.value,
-                  })
-                }
-              />
+                setTransactionForm({
+                  ...transactionForm,
+                  transaction_date: e.target.value
+                })
+                } />
+
             </div>
           </div>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setTransactionDialogOpen(false)}
-            >
+              onClick={() => setTransactionDialogOpen(false)}>
+
               取消
             </Button>
             <Button onClick={handleSaveTransaction} disabled={loading}>
@@ -590,21 +590,21 @@ export default function HRManagement() {
                 type="number"
                 value={contractForm.employee_id}
                 onChange={(e) =>
-                  setContractForm({
-                    ...contractForm,
-                    employee_id: e.target.value,
-                  })
-                }
-              />
+                setContractForm({
+                  ...contractForm,
+                  employee_id: e.target.value
+                })
+                } />
+
             </div>
             <div>
               <Label>合同类型 *</Label>
               <Select
                 value={contractForm.contract_type}
                 onValueChange={(value) =>
-                  setContractForm({ ...contractForm, contract_type: value })
-                }
-              >
+                setContractForm({ ...contractForm, contract_type: value })
+                }>
+
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -622,12 +622,12 @@ export default function HRManagement() {
                   type="date"
                   value={contractForm.start_date}
                   onChange={(e) =>
-                    setContractForm({
-                      ...contractForm,
-                      start_date: e.target.value,
-                    })
-                  }
-                />
+                  setContractForm({
+                    ...contractForm,
+                    start_date: e.target.value
+                  })
+                  } />
+
               </div>
               <div>
                 <Label>合同期限（月）</Label>
@@ -635,20 +635,20 @@ export default function HRManagement() {
                   type="number"
                   value={contractForm.duration_months}
                   onChange={(e) =>
-                    setContractForm({
-                      ...contractForm,
-                      duration_months: parseInt(e.target.value),
-                    })
-                  }
-                />
+                  setContractForm({
+                    ...contractForm,
+                    duration_months: parseInt(e.target.value)
+                  })
+                  } />
+
               </div>
             </div>
           </div>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setContractDialogOpen(false)}
-            >
+              onClick={() => setContractDialogOpen(false)}>
+
               取消
             </Button>
             <Button onClick={handleSaveContract} disabled={loading}>
@@ -657,6 +657,6 @@ export default function HRManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

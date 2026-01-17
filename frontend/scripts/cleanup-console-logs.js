@@ -3,10 +3,13 @@
  * 用法: node frontend/scripts/cleanup-console-logs.js
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const srcDir = path.join(__dirname, '../src');
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const srcDir = path.join(__dirname, '../src')
 
 // 需要清理的 console 类型
 const CONSOLE_PATTERNS = [

@@ -11,14 +11,14 @@ import {
   DialogTitle,
   DialogDescription,
   DialogBody,
-  DialogFooter,
-} from "../../components/ui/dialog";
+  DialogFooter } from
+"../../components/ui/dialog";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Textarea } from "../../components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { Send, Plus, X } from "lucide-react";
-import { problemTypeConfigs, urgencyConfigs } from "./serviceTicketConstants";
+import { problemTypeConfigs, urgencyConfigs } from "./serviceTicketConstants";import { toast } from "sonner";
 
 export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
   const [formData, setFormData] = useState({
@@ -32,15 +32,15 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
     reported_phone: "",
     remark: "",
     assignee_id: null,
-    cc_user_ids: [],
+    cc_user_ids: []
   });
 
   const [customers, setCustomers] = useState([]);
   const [projects, setProjects] = useState([]);
   const [users, setUsers] = useState([]);
-  const [loadingCustomers, setLoadingCustomers] = useState(false);
-  const [loadingProjects, setLoadingProjects] = useState(false);
-  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [_loadingCustomers, setLoadingCustomers] = useState(false);
+  const [_loadingProjects, setLoadingProjects] = useState(false);
+  const [_loadingUsers, setLoadingUsers] = useState(false);
 
   // Load data
   useEffect(() => {
@@ -111,7 +111,7 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
     try {
       const createData = {
         project_id: parseInt(formData.project_id),
-        project_ids: formData.project_ids.map(id => parseInt(id)),
+        project_ids: formData.project_ids.map((id) => parseInt(id)),
         customer_id: parseInt(formData.customer_id),
         problem_type: formData.problem_type,
         problem_desc: formData.problem_desc,
@@ -120,8 +120,8 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
         reported_phone: formData.reported_phone,
         remark: formData.remark,
         assignee_id: formData.assignee_id ? parseInt(formData.assignee_id) : null,
-        cc_user_ids: formData.cc_user_ids.map(id => parseInt(id)),
-        reported_time: new Date().toISOString(),
+        cc_user_ids: formData.cc_user_ids.map((id) => parseInt(id)),
+        reported_time: new Date().toISOString()
       };
 
       await onSubmit(createData);
@@ -132,7 +132,7 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
 
   const addProject = (projectId) => {
     if (projectId && !formData.project_ids.includes(projectId)) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         project_ids: [...prev.project_ids, projectId]
       }));
@@ -140,9 +140,9 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
   };
 
   const removeProject = (projectId) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      project_ids: prev.project_ids.filter(id => id !== projectId)
+      project_ids: prev.project_ids.filter((id) => id !== projectId)
     }));
   };
 
@@ -167,17 +167,17 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
               </label>
               <Select
                 value={formData.customer_id}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, customer_id: value }))}
-              >
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, customer_id: value }))}>
+
                 <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
                   <SelectValue placeholder="选择客户" />
                 </SelectTrigger>
                 <SelectContent>
-                  {customers.map((customer) => (
-                    <SelectItem key={customer.id} value={customer.id.toString()}>
+                  {customers.map((customer) =>
+                  <SelectItem key={customer.id} value={customer.id.toString()}>
                       {customer.customer_name} ({customer.customer_code})
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -191,46 +191,46 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
                 <Select
                   value={formData.project_id}
                   onValueChange={(value) => {
-                    setFormData(prev => ({ ...prev, project_id: value }));
+                    setFormData((prev) => ({ ...prev, project_id: value }));
                     addProject(value);
-                  }}
-                >
+                  }}>
+
                   <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
                     <SelectValue placeholder="选择主要项目" />
                   </SelectTrigger>
                   <SelectContent>
-                    {projects.map((project) => (
-                      <SelectItem key={project.id} value={project.id.toString()}>
+                    {projects.map((project) =>
+                    <SelectItem key={project.id} value={project.id.toString()}>
                         {project.project_code} - {project.project_name}
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
 
                 {/* Selected Projects */}
-                {formData.project_ids.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
+                {formData.project_ids.length > 0 &&
+                <div className="flex flex-wrap gap-2">
                     {formData.project_ids.map((projectId) => {
-                      const project = projects.find(p => p.id.toString() === projectId);
-                      return project ? (
-                        <div
-                          key={projectId}
-                          className="flex items-center gap-1 bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-sm"
-                        >
+                    const project = projects.find((p) => p.id.toString() === projectId);
+                    return project ?
+                    <div
+                      key={projectId}
+                      className="flex items-center gap-1 bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-sm">
+
                           <span>{project.project_code}</span>
-                          {formData.project_ids.length > 1 && (
-                            <button
-                              onClick={() => removeProject(projectId)}
-                              className="hover:text-blue-100"
-                            >
+                          {formData.project_ids.length > 1 &&
+                      <button
+                        onClick={() => removeProject(projectId)}
+                        className="hover:text-blue-100">
+
                               <X className="w-3 h-3" />
                             </button>
-                          )}
-                        </div>
-                      ) : null;
-                    })}
+                      }
+                        </div> :
+                    null;
+                  })}
                   </div>
-                )}
+                }
               </div>
             </div>
 
@@ -242,15 +242,15 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
                 </label>
                 <select
                   value={formData.problem_type}
-                  onChange={(e) => setFormData(prev => ({ ...prev, problem_type: e.target.value }))}
-                  className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white"
-                >
+                  onChange={(e) => setFormData((prev) => ({ ...prev, problem_type: e.target.value }))}
+                  className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white">
+
                   <option value="">选择问题类型</option>
-                  {Object.entries(problemTypeConfigs).map(([key, config]) => (
-                    <option key={key} value={key}>
+                  {Object.entries(problemTypeConfigs).map(([key, config]) =>
+                  <option key={key} value={key}>
                       {config.icon} {config.label}
                     </option>
-                  ))}
+                  )}
                 </select>
               </div>
               <div>
@@ -259,14 +259,14 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
                 </label>
                 <select
                   value={formData.urgency}
-                  onChange={(e) => setFormData(prev => ({ ...prev, urgency: e.target.value }))}
-                  className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white"
-                >
-                  {Object.entries(urgencyConfigs).map(([key, config]) => (
-                    <option key={key} value={key}>
+                  onChange={(e) => setFormData((prev) => ({ ...prev, urgency: e.target.value }))}
+                  className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white">
+
+                  {Object.entries(urgencyConfigs).map(([key, config]) =>
+                  <option key={key} value={key}>
                       {config.label}
                     </option>
-                  ))}
+                  )}
                 </select>
               </div>
             </div>
@@ -278,11 +278,11 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
               </label>
               <Textarea
                 value={formData.problem_desc}
-                onChange={(e) => setFormData(prev => ({ ...prev, problem_desc: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, problem_desc: e.target.value }))}
                 placeholder="请详细描述问题情况..."
                 rows={4}
-                className="bg-slate-800/50 border-slate-700"
-              />
+                className="bg-slate-800/50 border-slate-700" />
+
             </div>
 
             {/* Reporter Info */}
@@ -293,10 +293,10 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
                 </label>
                 <Input
                   value={formData.reported_by}
-                  onChange={(e) => setFormData(prev => ({ ...prev, reported_by: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, reported_by: e.target.value }))}
                   placeholder="输入报告人姓名"
-                  className="bg-slate-800/50 border-slate-700"
-                />
+                  className="bg-slate-800/50 border-slate-700" />
+
               </div>
               <div>
                 <label className="text-sm text-slate-400 mb-1 block">
@@ -304,10 +304,10 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
                 </label>
                 <Input
                   value={formData.reported_phone}
-                  onChange={(e) => setFormData(prev => ({ ...prev, reported_phone: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, reported_phone: e.target.value }))}
                   placeholder="输入报告人电话"
-                  className="bg-slate-800/50 border-slate-700"
-                />
+                  className="bg-slate-800/50 border-slate-700" />
+
               </div>
             </div>
 
@@ -318,17 +318,17 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
               </label>
               <Select
                 value={formData.assignee_id || ""}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, assignee_id: value }))}
-              >
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, assignee_id: value }))}>
+
                 <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
                   <SelectValue placeholder="选择处理人（可选）" />
                 </SelectTrigger>
                 <SelectContent>
-                  {users.map((user) => (
-                    <SelectItem key={user.id} value={user.id.toString()}>
+                  {users.map((user) =>
+                  <SelectItem key={user.id} value={user.id.toString()}>
                       {user.real_name || user.username} ({user.position || '工程师'})
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -338,11 +338,11 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
               <label className="text-sm text-slate-400 mb-1 block">备注</label>
               <Textarea
                 value={formData.remark}
-                onChange={(e) => setFormData(prev => ({ ...prev, remark: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, remark: e.target.value }))}
                 placeholder="其他备注信息..."
                 rows={2}
-                className="bg-slate-800/50 border-slate-700"
-              />
+                className="bg-slate-800/50 border-slate-700" />
+
             </div>
           </div>
         </DialogBody>
@@ -356,6 +356,6 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>);
+
 }

@@ -12,15 +12,15 @@ import {
   Play,
   AlertOctagon,
   GitBranch,
-  Link2,
-} from "lucide-react";
+  Link2 } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import {
@@ -29,9 +29,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogBody,
-} from "../components/ui/dialog";
-import { formatDate } from "../lib/utils";
+  DialogBody } from
+"../components/ui/dialog";
+import { formatDate as _formatDate } from "../lib/utils";
 import { progressApi } from "../services/api";
 
 export default function DependencyCheck({ projectId }) {
@@ -67,17 +67,17 @@ export default function DependencyCheck({ projectId }) {
     }
     fetchProject();
     fetchDependencyCheck();
-  }, [id, projectId]);  // 包括projectId，确保当prop变化时重新加载
-  
+  }, [id, projectId]); // 包括projectId，确保当prop变化时重新加载
+
   const fetchProject = async () => {
     try {
-      const res = await fetch(`/api/v1/projects/${id}`).then(r => r.json());
+      const res = await fetch(`/api/v1/projects/${id}`).then((r) => r.json());
       setProject(res.data?.data || res.data);
     } catch (error) {
       console.error("Failed to fetch project:", error);
     }
   };
-  
+
   const fetchDependencyCheck = async () => {
     try {
       setLoading(true);
@@ -106,7 +106,7 @@ export default function DependencyCheck({ projectId }) {
       setLoading(false);
     }
   };
-  
+
   const handlePreview = async () => {
     try {
       setProcessing(true);
@@ -123,22 +123,22 @@ export default function DependencyCheck({ projectId }) {
         issue_count: depData?.issues?.length || 0,
         issues: depData?.issues || [],
         preview_actions: {
-          will_fix_timing: depData?.issues?.filter(i =>
-            i.issue_type === "TIMING_CONFLICT" && autoFixTiming
+          will_fix_timing: depData?.issues?.filter((i) =>
+          i.issue_type === "TIMING_CONFLICT" && autoFixTiming
           ).length || 0,
-          will_remove_missing: depData?.issues?.filter(i =>
-            i.issue_type === "MISSING_PREDECESSOR" && autoFixMissing
+          will_remove_missing: depData?.issues?.filter((i) =>
+          i.issue_type === "MISSING_PREDECESSOR" && autoFixMissing
           ).length || 0,
           will_skip_cycles: depData?.cycle_paths?.length || 0,
-          will_send_notifications: (
-            depData?.has_cycle ||
-            depData?.issues?.some(i =>
-              i.severity === "HIGH" || i.severity === "URGENT"
-            )
+          will_send_notifications:
+          depData?.has_cycle ||
+          depData?.issues?.some((i) =>
+          i.severity === "HIGH" || i.severity === "URGENT"
           )
+
         }
       };
-      
+
       setPreviewData(preview);
       setShowPreviewDialog(true);
     } catch (error) {
@@ -148,7 +148,7 @@ export default function DependencyCheck({ projectId }) {
       setProcessing(false);
     }
   };
-  
+
   const handleFixDependencies = async () => {
     try {
       setProcessing(true);
@@ -160,13 +160,13 @@ export default function DependencyCheck({ projectId }) {
         auto_fix_timing: autoFixTiming,
         auto_fix_missing: autoFixMissing
       });
-      
+
       if (res.data?.success) {
         setSuccessMessage("依赖问题已成功修复！");
-        
+
         // 刷新依赖检查数据
         await fetchDependencyCheck();
-        
+
         // 3秒后清除成功消息
         setTimeout(() => setSuccessMessage(""), 3000);
       } else {
@@ -179,27 +179,27 @@ export default function DependencyCheck({ projectId }) {
       setProcessing(false);
     }
   };
-  
+
   // 分类问题
   const cycleIssues = dependencyData?.cycle_paths || [];
-  const timingIssues = dependencyData?.issues?.filter(i => 
-    i.issue_type === "TIMING_CONFLICT"
+  const timingIssues = dependencyData?.issues?.filter((i) =>
+  i.issue_type === "TIMING_CONFLICT"
   ) || [];
-  const missingIssues = dependencyData?.issues?.filter(i => 
-    i.issue_type === "MISSING_PREDECESSOR"
+  const missingIssues = dependencyData?.issues?.filter((i) =>
+  i.issue_type === "MISSING_PREDECESSOR"
   ) || [];
-  const otherIssues = dependencyData?.issues?.filter(i => 
-    !["TIMING_CONFLICT", "MISSING_PREDECESSOR"].includes(i.issue_type)
+  const otherIssues = dependencyData?.issues?.filter((i) =>
+  !["TIMING_CONFLICT", "MISSING_PREDECESSOR"].includes(i.issue_type)
   ) || [];
-  
+
   // 问题严重度颜色
   const severityColors = {
     HIGH: "text-red-600 bg-red-50 border-red-200",
     URGENT: "text-red-700 bg-red-100 border-red-300",
     MEDIUM: "text-amber-600 bg-amber-50 border-amber-200",
-    LOW: "text-blue-600 bg-blue-50 border-blue-200",
+    LOW: "text-blue-600 bg-blue-50 border-blue-200"
   };
-  
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -207,10 +207,10 @@ export default function DependencyCheck({ projectId }) {
           <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-500" />
           <div className="text-slate-600">加载中...</div>
         </div>
-      </div>
-    );
+      </div>);
+
   }
-  
+
   return (
     <div className="min-h-screen bg-slate-50 p-6">
       {/* 页面头部 */}
@@ -220,23 +220,23 @@ export default function DependencyCheck({ projectId }) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate(`/projects/${id}`)}
-            >
+              onClick={() => navigate(`/projects/${id}`)}>
+
               <ArrowLeft className="w-4 h-4 mr-2" />
               返回项目
             </Button>
             <PageHeader
               title={`${project?.project_name || "项目"} - 依赖巡检`}
-              description="检测循环依赖、缺失依赖和时序冲突"
-            />
+              description="检测循环依赖、缺失依赖和时序冲突" />
+
           </div>
           <div className="flex items-center gap-3">
             <Button
               variant="outline"
               size="sm"
               onClick={fetchDependencyCheck}
-              disabled={processing}
-            >
+              disabled={processing}>
+
               <RefreshCw className="w-4 h-4 mr-2" />
               刷新
             </Button>
@@ -244,8 +244,8 @@ export default function DependencyCheck({ projectId }) {
               variant="outline"
               size="sm"
               onClick={handlePreview}
-              disabled={processing}
-            >
+              disabled={processing}>
+
               <Eye className="w-4 h-4 mr-2" />
               预览修复
             </Button>
@@ -253,8 +253,8 @@ export default function DependencyCheck({ projectId }) {
               variant="default"
               size="sm"
               onClick={() => setShowConfirmDialog(true)}
-              disabled={processing}
-            >
+              disabled={processing}>
+
               <Wrench className="w-4 h-4 mr-2" />
               执行修复
             </Button>
@@ -262,19 +262,19 @@ export default function DependencyCheck({ projectId }) {
         </div>
         
         {/* 消息提示 */}
-        {errorMessage && (
-          <div className="mb-4 rounded-md bg-red-50 border border-red-200 text-red-700 px-4 py-3 flex items-start">
+        {errorMessage &&
+        <div className="mb-4 rounded-md bg-red-50 border border-red-200 text-red-700 px-4 py-3 flex items-start">
             <AlertCircle className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0" />
             <div>{errorMessage}</div>
           </div>
-        )}
+        }
         
-        {successMessage && (
-          <div className="mb-4 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 flex items-start">
+        {successMessage &&
+        <div className="mb-4 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 flex items-start">
             <CheckCircle2 className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0" />
             <div>{successMessage}</div>
           </div>
-        )}
+        }
         
         {/* 自动修复选项 */}
         <Card className="mb-6">
@@ -287,12 +287,12 @@ export default function DependencyCheck({ projectId }) {
                     id="autoFixTiming"
                     checked={autoFixTiming}
                     onChange={(e) => setAutoFixTiming(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 rounded border-slate-300"
-                  />
-                  <label 
-                    htmlFor="autoFixTiming" 
-                    className="text-sm text-slate-700 cursor-pointer"
-                  >
+                    className="w-4 h-4 text-blue-600 rounded border-slate-300" />
+
+                  <label
+                    htmlFor="autoFixTiming"
+                    className="text-sm text-slate-700 cursor-pointer">
+
                     自动修复时序冲突
                   </label>
                 </div>
@@ -307,12 +307,12 @@ export default function DependencyCheck({ projectId }) {
                   id="autoFixMissing"
                   checked={autoFixMissing}
                   onChange={(e) => setAutoFixMissing(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 rounded border-slate-300"
-                />
-                <label 
-                  htmlFor="autoFixMissing" 
-                  className="text-sm text-slate-700 cursor-pointer"
-                >
+                  className="w-4 h-4 text-blue-600 rounded border-slate-300" />
+
+                <label
+                  htmlFor="autoFixMissing"
+                  className="text-sm text-slate-700 cursor-pointer">
+
                   自动移除缺失依赖
                 </label>
                 <div className="text-xs text-slate-500">
@@ -392,8 +392,8 @@ export default function DependencyCheck({ projectId }) {
       </div>
       
       {/* 循环依赖详情 */}
-      {cycleIssues.length > 0 && (
-        <Card className="mb-6 border border-red-200">
+      {cycleIssues.length > 0 &&
+      <Card className="mb-6 border border-red-200">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-red-700">
               <AlertTriangle className="w-5 h-5" />
@@ -403,36 +403,36 @@ export default function DependencyCheck({ projectId }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {cycleIssues.map((cycle, idx) => (
-                <div key={idx} className="rounded-md bg-red-50 border border-red-200 p-4">
+              {cycleIssues.map((cycle, idx) =>
+            <div key={idx} className="rounded-md bg-red-50 border border-red-200 p-4">
                   <div className="font-medium text-red-900 mb-2">
                     循环 {idx + 1}:
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {cycle.map((taskName, taskIdx) => (
-                      <React.Fragment key={taskIdx}>
+                    {cycle.map((taskName, taskIdx) =>
+                <React.Fragment key={taskIdx}>
                         <span className="text-sm text-red-800">
                           {taskName}
                         </span>
-                        {taskIdx < cycle.length - 1 && (
-                          <span className="text-red-400">→</span>
-                        )}
+                        {taskIdx < cycle.length - 1 &&
+                  <span className="text-red-400">→</span>
+                  }
                       </React.Fragment>
-                    ))}
+                )}
                   </div>
                 </div>
-              ))}
+            )}
             </div>
             <div className="mt-4 rounded-md bg-amber-50 border border-amber-200 p-3 text-sm">
               <strong className="text-amber-900">⚠️ 循环依赖无法自动修复，需要手动调整依赖关系或拆分任务。</strong>
             </div>
           </CardContent>
         </Card>
-      )}
+      }
       
       {/* 时序冲突详情 */}
-      {timingIssues.length > 0 && (
-        <Card className="mb-6 border border-amber-200">
+      {timingIssues.length > 0 &&
+      <Card className="mb-6 border border-amber-200">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-amber-700">
               <AlertTriangle className="w-5 h-5" />
@@ -442,8 +442,8 @@ export default function DependencyCheck({ projectId }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {timingIssues.map((issue, idx) => (
-                <div key={idx} className="border border-amber-200 rounded-lg p-4">
+              {timingIssues.map((issue, idx) =>
+            <div key={idx} className="border border-amber-200 rounded-lg p-4">
                   <div className="font-medium text-slate-900 mb-2">
                     {issue.task_name}
                   </div>
@@ -451,26 +451,26 @@ export default function DependencyCheck({ projectId }) {
                     {issue.detail}
                   </div>
                   <div className="flex items-center gap-2 text-sm text-slate-600">
-                    {autoFixTiming ? (
-                      <Badge variant="secondary" className="text-emerald-700 bg-emerald-50">
+                    {autoFixTiming ?
+                <Badge variant="secondary" className="text-emerald-700 bg-emerald-50">
                         将自动修复
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary">
+                      </Badge> :
+
+                <Badge variant="secondary">
                         需手动调整
                       </Badge>
-                    )}
+                }
                   </div>
                 </div>
-              ))}
+            )}
             </div>
           </CardContent>
         </Card>
-      )}
+      }
       
       {/* 缺失依赖详情 */}
-      {missingIssues.length > 0 && (
-        <Card className="mb-6 border border-blue-200">
+      {missingIssues.length > 0 &&
+      <Card className="mb-6 border border-blue-200">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-blue-700">
               <Link2 className="w-5 h-5" />
@@ -480,8 +480,8 @@ export default function DependencyCheck({ projectId }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {missingIssues.map((issue, idx) => (
-                <div key={idx} className="border border-blue-200 rounded-lg p-4">
+              {missingIssues.map((issue, idx) =>
+            <div key={idx} className="border border-blue-200 rounded-lg p-4">
                   <div className="font-medium text-slate-900 mb-2">
                     {issue.task_name}
                   </div>
@@ -489,26 +489,26 @@ export default function DependencyCheck({ projectId }) {
                     {issue.detail}
                   </div>
                   <div className="flex items-center gap-2 text-sm text-slate-600">
-                    {autoFixMissing ? (
-                      <Badge variant="secondary" className="text-emerald-700 bg-emerald-50">
+                    {autoFixMissing ?
+                <Badge variant="secondary" className="text-emerald-700 bg-emerald-50">
                         将自动移除
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary">
+                      </Badge> :
+
+                <Badge variant="secondary">
                         需手动删除
                       </Badge>
-                    )}
+                }
                   </div>
                 </div>
-              ))}
+            )}
             </div>
           </CardContent>
         </Card>
-      )}
+      }
       
       {/* 其他问题详情 */}
-      {otherIssues.length > 0 && (
-        <Card className="mb-6">
+      {otherIssues.length > 0 &&
+      <Card className="mb-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-slate-700">
               <AlertOctagon className="w-5 h-5" />
@@ -518,11 +518,11 @@ export default function DependencyCheck({ projectId }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {otherIssues.map((issue, idx) => (
-                <div 
-                  key={idx} 
-                  className={`border rounded-lg p-4 ${severityColors[issue.severity] || "border-slate-200"}`}
-                >
+              {otherIssues.map((issue, idx) =>
+            <div
+              key={idx}
+              className={`border rounded-lg p-4 ${severityColors[issue.severity] || "border-slate-200"}`}>
+
                   <div className="flex items-start justify-between mb-2">
                     <div className="font-medium text-slate-900">
                       {issue.task_name}
@@ -535,16 +535,16 @@ export default function DependencyCheck({ projectId }) {
                     {issue.detail}
                   </div>
                 </div>
-              ))}
+            )}
             </div>
           </CardContent>
         </Card>
-      )}
+      }
       
       {/* 无问题状态 */}
-      {cycleIssues.length === 0 && timingIssues.length === 0 && 
-       missingIssues.length === 0 && otherIssues.length === 0 && (
-        <Card className="mb-6">
+      {cycleIssues.length === 0 && timingIssues.length === 0 &&
+      missingIssues.length === 0 && otherIssues.length === 0 &&
+      <Card className="mb-6">
           <CardContent className="py-12 text-center">
             <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-emerald-500" />
             <div className="text-xl font-semibold text-slate-900 mb-2">
@@ -555,7 +555,7 @@ export default function DependencyCheck({ projectId }) {
             </div>
           </CardContent>
         </Card>
-      )}
+      }
       
       {/* 预览对话框 */}
       <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
@@ -567,33 +567,33 @@ export default function DependencyCheck({ projectId }) {
             </DialogTitle>
           </DialogHeader>
           <DialogBody>
-            {previewData ? (
-              <div className="space-y-6">
+            {previewData ?
+            <div className="space-y-6">
                 {/* 循环依赖预览 */}
-                {previewData.has_cycle && (
-                  <div>
+                {previewData.has_cycle &&
+              <div>
                     <h4 className="text-sm font-semibold text-slate-900 mb-3">循环依赖（需手动处理）</h4>
                     <div className="space-y-2">
-                      {previewData.cycle_paths.map((cycle, idx) => (
-                        <div key={idx} className="rounded-md bg-red-50 border border-red-200 p-3">
+                      {previewData.cycle_paths.map((cycle, idx) =>
+                  <div key={idx} className="rounded-md bg-red-50 border border-red-200 p-3">
                           <div className="text-sm text-red-800">
                             循环 {idx + 1}: {cycle.join(" → ")}
                           </div>
                         </div>
-                      ))}
+                  )}
                     </div>
                     <div className="rounded-md bg-amber-50 border border-amber-200 p-3 text-sm mt-2">
                       <strong className="text-amber-900">⚠️ 循环依赖无法自动修复，请在修复其他问题后手动调整。</strong>
                     </div>
                   </div>
-                )}
+              }
                 
                 {/* 修复操作预览 */}
                 <div>
                   <h4 className="text-sm font-semibold text-slate-900 mb-3">将要执行的修复操作</h4>
                   <div className="space-y-2">
-                    {previewData.preview_actions?.will_fix_timing > 0 && (
-                      <div className="rounded-md bg-amber-50 border border-amber-200 p-3">
+                    {previewData.preview_actions?.will_fix_timing > 0 &&
+                  <div className="rounded-md bg-amber-50 border border-amber-200 p-3">
                         <div className="font-medium text-amber-900 mb-1">
                           将修复 {previewData.preview_actions.will_fix_timing} 个时序冲突
                         </div>
@@ -601,10 +601,10 @@ export default function DependencyCheck({ projectId }) {
                           自动调整任务计划时间以解决时序冲突
                         </div>
                       </div>
-                    )}
+                  }
                     
-                    {previewData.preview_actions?.will_remove_missing > 0 && (
-                      <div className="rounded-md bg-blue-50 border border-blue-200 p-3">
+                    {previewData.preview_actions?.will_remove_missing > 0 &&
+                  <div className="rounded-md bg-blue-50 border border-blue-200 p-3">
                         <div className="font-medium text-blue-900 mb-1">
                           将移除 {previewData.preview_actions.will_remove_missing} 个缺失依赖
                         </div>
@@ -612,10 +612,10 @@ export default function DependencyCheck({ projectId }) {
                           删除指向不存在任务的依赖关系
                         </div>
                       </div>
-                    )}
+                  }
                     
-                    {previewData.preview_actions?.will_skip_cycles > 0 && (
-                      <div className="rounded-md bg-slate-100 border border-slate-300 p-3">
+                    {previewData.preview_actions?.will_skip_cycles > 0 &&
+                  <div className="rounded-md bg-slate-100 border border-slate-300 p-3">
                         <div className="font-medium text-slate-900 mb-1">
                           跳过 {previewData.preview_actions.will_skip_cycles} 个循环依赖
                         </div>
@@ -623,13 +623,13 @@ export default function DependencyCheck({ projectId }) {
                           循环依赖需手动处理
                         </div>
                       </div>
-                    )}
+                  }
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="text-center py-8 text-slate-500">加载预览数据中...</div>
-            )}
+              </div> :
+
+            <div className="text-center py-8 text-slate-500">加载预览数据中...</div>
+            }
           </DialogBody>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowPreviewDialog(false)}>
@@ -661,19 +661,19 @@ export default function DependencyCheck({ projectId }) {
               </p>
               
               <div className="rounded-md bg-slate-50 p-4 space-y-2 text-sm">
-                {autoFixTiming && (
-                  <div className="flex items-center gap-2">
+                {autoFixTiming &&
+                <div className="flex items-center gap-2">
                     <Network className="w-4 h-4 text-amber-500" />
                     <span>自动修复 {timingIssues.length} 个时序冲突</span>
                   </div>
-                )}
+                }
                 
-                {autoFixMissing && missingIssues.length > 0 && (
-                  <div className="flex items-center gap-2">
+                {autoFixMissing && missingIssues.length > 0 &&
+                <div className="flex items-center gap-2">
                     <Link2 className="w-4 h-4 text-blue-500" />
                     <span>自动移除 {missingIssues.length} 个缺失依赖</span>
                   </div>
-                )}
+                }
                 
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
@@ -681,27 +681,27 @@ export default function DependencyCheck({ projectId }) {
                 </div>
               </div>
               
-              {cycleIssues.length > 0 && (
-                <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm">
+              {cycleIssues.length > 0 &&
+              <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm">
                   <strong className="text-red-900">⚠️ 注意：</strong>
                   循环依赖无法自动修复，需要手动处理。
                 </div>
-              )}
+              }
             </div>
           </DialogBody>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowConfirmDialog(false)}>
               取消
             </Button>
-            <Button 
+            <Button
               onClick={handleFixDependencies}
-              disabled={processing}
-            >
+              disabled={processing}>
+
               {processing ? "修复中..." : "确认修复"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }

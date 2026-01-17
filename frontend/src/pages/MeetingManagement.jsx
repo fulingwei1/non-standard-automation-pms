@@ -3,7 +3,7 @@
  * 会议管理页面 (重构版本)
  */
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo as _useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Calendar,
@@ -17,8 +17,8 @@ import {
   Edit,
   Eye,
   RefreshCw,
-  Download
-} from "lucide-react";
+  Download } from
+"lucide-react";
 
 import {
   Card,
@@ -35,13 +35,14 @@ import {
   Typography,
   Spin,
   Tabs,
-  Badge
-} from "antd";
+  Badge,
+  message } from
+"antd";
 
 import {
   MEETING_TYPES,
-  MEETING_STATUS
-} from '../components/meeting-management/meetingManagementConstants';
+  MEETING_STATUS } from
+'../components/meeting-management/meetingManagementConstants';
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
@@ -52,24 +53,24 @@ const MeetingManagement = () => {
   const [loading, setLoading] = useState(false);
   const [meetings, setMeetings] = useState([]);
   const [activeTab, setActiveTab] = useState('upcoming');
-  const [searchText, setSearchText] = useState('');
+  const [_searchText, _setSearchText] = useState('');
 
   // 模拟数据
   const mockData = {
     meetings: [
-      {
-        id: 1,
-        title: '项目进度评审会',
-        type: 'project',
-        status: 'scheduled',
-        organizer: '张经理',
-        startTime: '2024-01-20 14:00',
-        endTime: '2024-01-20 16:00',
-        location: '会议室A',
-        participants: ['张三', '李四', '王五', '赵六'],
-        description: '评审本月项目进度，协调资源分配'
-      },
-      // 更多模拟数据...
+    {
+      id: 1,
+      title: '项目进度评审会',
+      type: 'project',
+      status: 'scheduled',
+      organizer: '张经理',
+      startTime: '2024-01-20 14:00',
+      endTime: '2024-01-20 16:00',
+      location: '会议室A',
+      participants: ['张三', '李四', '王五', '赵六'],
+      description: '评审本月项目进度，协调资源分配'
+    }
+    // 更多模拟数据...
     ]
   };
 
@@ -86,45 +87,45 @@ const MeetingManagement = () => {
         setMeetings(mockData.meetings);
         setLoading(false);
       }, 1000);
-    } catch (error) {
+    } catch (_error) {
       message.error('加载会议数据失败');
       setLoading(false);
     }
   };
 
   const tabItems = [
-    {
-      key: 'upcoming',
-      tab: (
-        <span>
+  {
+    key: 'upcoming',
+    tab:
+    <span>
           <Calendar size={16} />
-          即将召开 ({meetings.filter(m => m.status === 'scheduled').length})
-        </span>
-      ),
-      content: (
-        <div>
+          即将召开 ({meetings.filter((m) => m.status === 'scheduled').length})
+        </span>,
+
+    content:
+    <div>
           <Table
-            dataSource={meetings.filter(m => m.status === 'scheduled')}
-            columns={[
-              {
-                title: '会议信息',
-                key: 'info',
-                render: (_, record) => (
-                  <div>
+        dataSource={meetings.filter((m) => m.status === 'scheduled')}
+        columns={[
+        {
+          title: '会议信息',
+          key: 'info',
+          render: (_, record) =>
+          <div>
                     <div style={{ fontWeight: 'bold' }}>{record.title}</div>
                     <div style={{ fontSize: 12, color: '#666' }}>
                       <Users size={12} /> {record.participants.length}人
                     </div>
                   </div>
-                )
-              }
-            ]}
-            loading={loading}
-          />
+
+        }]
+        }
+        loading={loading} />
+
         </div>
-      )
-    }
-  ];
+
+  }];
+
 
   return (
     <motion.div
@@ -132,8 +133,8 @@ const MeetingManagement = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
       className="meeting-management-container"
-      style={{ padding: '24px', background: '#f5f5f5', minHeight: '100vh' }}
-    >
+      style={{ padding: '24px', background: '#f5f5f5', minHeight: '100vh' }}>
+
       {/* 页面头部 */}
       <div className="page-header" style={{ marginBottom: '24px' }}>
         <div className="header-content" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -147,16 +148,16 @@ const MeetingManagement = () => {
             </Text>
           </div>
           <Space>
-            <Button 
-              type="primary" 
-              icon={<Plus size={16} />}
-            >
+            <Button
+              type="primary"
+              icon={<Plus size={16} />}>
+
               创建会议
             </Button>
-            <Button 
+            <Button
               icon={<RefreshCw size={16} />}
-              onClick={loadData}
-            >
+              onClick={loadData}>
+
               刷新
             </Button>
           </Space>
@@ -165,21 +166,21 @@ const MeetingManagement = () => {
 
       {/* 主要内容区域 */}
       <Card>
-        <Tabs 
-          activeKey={activeTab} 
+        <Tabs
+          activeKey={activeTab}
           onChange={setActiveTab}
           type="card"
-          size="large"
-        >
-          {tabItems.map(item => (
-            <TabPane key={item.key} tab={item.tab}>
+          size="large">
+
+          {tabItems.map((item) =>
+          <TabPane key={item.key} tab={item.tab}>
               {item.content}
             </TabPane>
-          ))}
+          )}
         </Tabs>
       </Card>
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
 export default MeetingManagement;

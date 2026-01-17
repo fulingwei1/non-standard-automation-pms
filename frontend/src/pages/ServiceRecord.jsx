@@ -43,15 +43,15 @@ import {
   Upload,
   Image as ImageIcon,
   FileCheck,
-  X,
-} from "lucide-react";
+  X } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -62,26 +62,26 @@ import {
   DialogTitle,
   DialogFooter,
   DialogDescription,
-  DialogBody,
-} from "../components/ui/dialog";
+  DialogBody } from
+"../components/ui/dialog";
 import { Textarea } from "../components/ui/textarea";
 import { LoadingCard, ErrorMessage, EmptyState } from "../components/common";
 import { toast } from "../components/ui/toast";
-import { cn } from "../lib/utils";
+import { cn as _cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { serviceApi } from "../services/api";
 
 // 导入重构后的组件
-import { 
+import {
   ServiceRecordOverview,
   SERVICE_STATUS,
   SERVICE_TYPES,
   FEEDBACK_RATINGS,
   getServiceStatusConfig,
   getServiceTypeConfig,
-  getFeedbackConfig,
-  calculateServiceDuration
-} from "../components/service-record";
+  getFeedbackConfig as _getFeedbackConfig,
+  calculateServiceDuration } from
+"../components/service-record";
 
 export default function ServiceRecord() {
   const navigate = useNavigate();
@@ -100,7 +100,7 @@ export default function ServiceRecord() {
     inProgress: 0,
     completed: 0,
     thisMonth: 0,
-    totalHours: 0,
+    totalHours: 0
   });
 
   // 表单数据状态
@@ -129,28 +129,28 @@ export default function ServiceRecord() {
       const query = searchQuery.toLowerCase();
       result = result.filter(
         (record) =>
-          (record.record_no && record.record_no.toLowerCase().includes(query)) ||
-          (record.project_name && record.project_name.toLowerCase().includes(query)) ||
-          (record.customer_name && record.customer_name.toLowerCase().includes(query)) ||
-          (record.service_location && record.service_location.toLowerCase().includes(query)) ||
-          (record.service_engineer && record.service_engineer.toLowerCase().includes(query)),
+        record.record_no && record.record_no.toLowerCase().includes(query) ||
+        record.project_name && record.project_name.toLowerCase().includes(query) ||
+        record.customer_name && record.customer_name.toLowerCase().includes(query) ||
+        record.service_location && record.service_location.toLowerCase().includes(query) ||
+        record.service_engineer && record.service_engineer.toLowerCase().includes(query)
       );
     }
 
     // 类型筛选
     if (typeFilter !== "ALL") {
-      result = result.filter(record => record.service_type === typeFilter);
+      result = result.filter((record) => record.service_type === typeFilter);
     }
 
     // 状态筛选
     if (statusFilter !== "ALL") {
-      result = result.filter(record => record.status === statusFilter);
+      result = result.filter((record) => record.status === statusFilter);
     }
 
     // 日期筛选
     if (dateFilter.start) {
       const startDate = new Date(dateFilter.start);
-      result = result.filter(record => {
+      result = result.filter((record) => {
         const recordDate = new Date(record.service_date);
         return recordDate >= startDate;
       });
@@ -158,7 +158,7 @@ export default function ServiceRecord() {
 
     if (dateFilter.end) {
       const endDate = new Date(dateFilter.end);
-      result = result.filter(record => {
+      result = result.filter((record) => {
         const recordDate = new Date(record.service_date);
         return recordDate <= endDate;
       });
@@ -174,7 +174,7 @@ export default function ServiceRecord() {
       setError(null);
       const params = {
         page: 1,
-        page_size: 1000,
+        page_size: 1000
       };
       const response = await serviceApi.records.list(params);
       const recordsData = response.data?.items || response.data || [];
@@ -207,7 +207,7 @@ export default function ServiceRecord() {
         signature_time: record.signature_time || "",
         photos: record.photos || [],
         status: record.status || "进行中",
-        created_at: record.created_at || "",
+        created_at: record.created_at || ""
       }));
 
       setRecords(transformedRecords);
@@ -229,10 +229,10 @@ export default function ServiceRecord() {
       setStats({
         total: records.length,
         inProgress: records.filter(
-          (r) => r.status === "进行中" || r.status === "IN_PROGRESS",
+          (r) => r.status === "进行中" || r.status === "IN_PROGRESS"
         ).length,
         completed: records.filter(
-          (r) => r.status === "已完成" || r.status === "COMPLETED",
+          (r) => r.status === "已完成" || r.status === "COMPLETED"
         ).length,
         thisMonth: records.filter((r) => {
           if (!r.service_date) return false;
@@ -241,8 +241,8 @@ export default function ServiceRecord() {
         }).length,
         totalHours: records.reduce(
           (sum, r) => sum + (r.service_duration || 0),
-          0,
-        ),
+          0
+        )
       });
     } catch (err) {
       console.error("Failed to load statistics:", err);
@@ -269,7 +269,7 @@ export default function ServiceRecord() {
       };
 
       await serviceApi.records.create(serviceData);
-      
+
       setShowCreateDialog(false);
       resetForm();
       await loadRecords();
@@ -313,8 +313,10 @@ export default function ServiceRecord() {
         break;
       case 'todaySchedule':
         // 跳转到今日安排视图
-        const today = new Date().toISOString().split('T')[0];
-        setDateFilter({ start: today, end: today });
+        {
+          const today = new Date().toISOString().split('T')[0];
+          setDateFilter({ start: today, end: today });
+        }
         break;
       case 'pendingReports':
         // 筛选待审核的报告
@@ -322,7 +324,7 @@ export default function ServiceRecord() {
         break;
       case 'customerFeedback':
         // 筛选有反馈的记录
-        setRecords(records.filter(r => r.customer_feedback));
+        setRecords(records.filter((r) => r.customer_feedback));
         break;
     }
   };
@@ -330,19 +332,19 @@ export default function ServiceRecord() {
   // 照片上传处理
   const handlePhotoUpload = (e) => {
     const files = Array.from(e.target.files);
-    const newPhotos = files.map(file => ({
+    const newPhotos = files.map((file) => ({
       file,
       url: URL.createObjectURL(file),
-      name: file.name,
+      name: file.name
     }));
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       photos: [...prev.photos, ...newPhotos]
     }));
   };
 
   const removePhoto = (index) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       photos: prev.photos.filter((_, i) => i !== index)
     }));
@@ -364,17 +366,17 @@ export default function ServiceRecord() {
 
   if (loading && records.length === 0) {
     return (
-      <LoadingCard message="加载服务记录中..." />
-    );
+      <LoadingCard message="加载服务记录中..." />);
+
   }
 
   if (error) {
     return (
-      <ErrorMessage 
-        message={error} 
-        onRetry={loadRecords}
-      />
-    );
+      <ErrorMessage
+        message={error}
+        onRetry={loadRecords} />);
+
+
   }
 
   return (
@@ -383,26 +385,26 @@ export default function ServiceRecord() {
         title="服务记录管理"
         subtitle="现场服务记录管理 - 客服工程师高级功能"
         breadcrumbs={[
-          { label: "服务管理", href: "/service" },
-          { label: "服务记录" }
-        ]}
+        { label: "服务管理", href: "/service" },
+        { label: "服务记录" }]
+        }
         actions={[
-          {
-            label: "新建记录",
-            icon: Plus,
-            onClick: () => setShowCreateDialog(true),
-            variant: "default"
-          }
-        ]}
-      />
+        {
+          label: "新建记录",
+          icon: Plus,
+          onClick: () => setShowCreateDialog(true),
+          variant: "default"
+        }]
+        } />
+
 
       <div className="container mx-auto px-4 py-6 space-y-6">
         {/* 服务概览 */}
         <ServiceRecordOverview
           records={records}
           stats={stats}
-          onQuickAction={handleQuickAction}
-        />
+          onQuickAction={handleQuickAction} />
+
 
         {/* 筛选和搜索 */}
         <motion.div variants={fadeIn} initial="hidden" animate="visible">
@@ -416,47 +418,47 @@ export default function ServiceRecord() {
                       placeholder="搜索记录号、项目名称、客户名称、服务地点..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 bg-slate-800/50 border-slate-700"
-                    />
+                      className="pl-10 bg-slate-800/50 border-slate-700" />
+
                   </div>
                 </div>
                 <div className="flex gap-2">
                   <select
                     value={typeFilter}
                     onChange={(e) => setTypeFilter(e.target.value)}
-                    className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white"
-                  >
+                    className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white">
+
                     <option value="ALL">全部类型</option>
-                    {Object.values(SERVICE_TYPES).map(type => (
-                      <option key={type.label} value={type.label}>
+                    {Object.values(SERVICE_TYPES).map((type) =>
+                    <option key={type.label} value={type.label}>
                         {type.label}
                       </option>
-                    ))}
+                    )}
                   </select>
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white"
-                  >
+                    className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white">
+
                     <option value="ALL">全部状态</option>
-                    {Object.values(SERVICE_STATUS).map(status => (
-                      <option key={status.label} value={status.label}>
+                    {Object.values(SERVICE_STATUS).map((status) =>
+                    <option key={status.label} value={status.label}>
                         {status.label}
                       </option>
-                    ))}
+                    )}
                   </select>
                   <Input
                     type="date"
                     value={dateFilter.start}
-                    onChange={(e) => setDateFilter(prev => ({ ...prev, start: e.target.value }))}
-                    className="w-40"
-                  />
+                    onChange={(e) => setDateFilter((prev) => ({ ...prev, start: e.target.value }))}
+                    className="w-40" />
+
                   <Input
                     type="date"
                     value={dateFilter.end}
-                    onChange={(e) => setDateFilter(prev => ({ ...prev, end: e.target.value }))}
-                    className="w-40"
-                  />
+                    onChange={(e) => setDateFilter((prev) => ({ ...prev, end: e.target.value }))}
+                    className="w-40" />
+
                 </div>
               </div>
             </CardContent>
@@ -468,39 +470,39 @@ export default function ServiceRecord() {
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
-          className="space-y-4"
-        >
-          {filteredRecords.length === 0 ? (
-            <Card>
+          className="space-y-4">
+
+          {filteredRecords.length === 0 ?
+          <Card>
               <CardContent className="p-8">
                 <EmptyState
-                  icon={FileText}
-                  title="暂无服务记录"
-                  description={searchQuery || typeFilter !== "ALL" || statusFilter !== "ALL" ? "没有找到匹配的记录" : "还没有创建服务记录"}
-                  action={
-                    <Button
-                      onClick={() => setShowCreateDialog(true)}
-                      className="mt-4"
-                    >
+                icon={FileText}
+                title="暂无服务记录"
+                description={searchQuery || typeFilter !== "ALL" || statusFilter !== "ALL" ? "没有找到匹配的记录" : "还没有创建服务记录"}
+                action={
+                <Button
+                  onClick={() => setShowCreateDialog(true)}
+                  className="mt-4">
+
                       <Plus className="h-4 w-4 mr-2" />
                       创建第一个服务记录
                     </Button>
-                  }
-                />
-              </CardContent>
-            </Card>
-          ) : (
-            filteredRecords.map((record, index) => {
-              const statusConfig = getServiceStatusConfig(record.status);
-              const typeConfig = getServiceTypeConfig(record.service_type);
-              const TypeIcon = getServiceTypeIcon(record.service_type);
+                } />
 
-              return (
-                <motion.div
-                  key={record.id}
-                  variants={fadeIn}
-                  custom={index}
-                >
+              </CardContent>
+            </Card> :
+
+          filteredRecords.map((record, index) => {
+            const statusConfig = getServiceStatusConfig(record.status);
+            const typeConfig = getServiceTypeConfig(record.service_type);
+            const TypeIcon = getServiceTypeIcon(record.service_type);
+
+            return (
+              <motion.div
+                key={record.id}
+                variants={fadeIn}
+                custom={index}>
+
                   <Card className="bg-slate-800/50 border-slate-700 hover:bg-slate-800/70 transition-colors">
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between">
@@ -543,49 +545,49 @@ export default function ServiceRecord() {
                             </div>
                           </div>
 
-                          {record.service_content && (
-                            <div className="mb-4">
+                          {record.service_content &&
+                        <div className="mb-4">
                               <p className="text-sm text-slate-400 mb-1">服务内容:</p>
                               <p className="text-sm text-white line-clamp-2">
                                 {record.service_content}
                               </p>
                             </div>
-                          )}
+                        }
 
-                          {record.photos && record.photos.length > 0 && (
-                            <div className="flex items-center gap-2 text-sm">
+                          {record.photos && record.photos.length > 0 &&
+                        <div className="flex items-center gap-2 text-sm">
                               <Camera className="h-4 w-4 text-slate-400" />
                               <span className="text-slate-300">照片:</span>
                               <span className="text-white">{record.photos.length} 张</span>
                             </div>
-                          )}
+                        }
                         </div>
 
                         <div className="flex items-center gap-2">
                           <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleViewDetail(record)}
-                            className="text-slate-400 hover:text-white"
-                          >
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleViewDetail(record)}
+                          className="text-slate-400 hover:text-white">
+
                             <Eye className="h-4 w-4" />
                           </Button>
                           <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => navigate(`/service/records/${record.id}/edit`)}
-                            className="text-slate-400 hover:text-white"
-                          >
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => navigate(`/service/records/${record.id}/edit`)}
+                          className="text-slate-400 hover:text-white">
+
                             <Edit className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
-                </motion.div>
-              );
-            })
-          )}
+                </motion.div>);
+
+          })
+          }
         </motion.div>
       </div>
 
@@ -601,12 +603,12 @@ export default function ServiceRecord() {
               <label className="text-sm font-medium text-slate-300">服务类型</label>
               <select
                 value={formData.service_type}
-                onChange={(e) => setFormData(prev => ({ ...prev, service_type: e.target.value }))}
-                className="w-full mt-1 p-2 bg-slate-800 border border-slate-700 rounded text-white"
-              >
-                {Object.entries(SERVICE_TYPES).map(([key, type]) => (
-                  <option key={key} value={key}>{type.label}</option>
-                ))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, service_type: e.target.value }))}
+                className="w-full mt-1 p-2 bg-slate-800 border border-slate-700 rounded text-white">
+
+                {Object.entries(SERVICE_TYPES).map(([key, type]) =>
+                <option key={key} value={key}>{type.label}</option>
+                )}
               </select>
             </div>
             
@@ -614,30 +616,30 @@ export default function ServiceRecord() {
               <label className="text-sm font-medium text-slate-300">项目名称</label>
               <Input
                 value={formData.project_name}
-                onChange={(e) => setFormData(prev => ({ ...prev, project_name: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, project_name: e.target.value }))}
                 className="mt-1 bg-slate-800 border-slate-700"
-                placeholder="请输入项目名称"
-              />
+                placeholder="请输入项目名称" />
+
             </div>
             
             <div>
               <label className="text-sm font-medium text-slate-300">客户名称</label>
               <Input
                 value={formData.customer_name}
-                onChange={(e) => setFormData(prev => ({ ...prev, customer_name: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, customer_name: e.target.value }))}
                 className="mt-1 bg-slate-800 border-slate-700"
-                placeholder="请输入客户名称"
-              />
+                placeholder="请输入客户名称" />
+
             </div>
             
             <div>
               <label className="text-sm font-medium text-slate-300">服务地点</label>
               <Input
                 value={formData.service_location}
-                onChange={(e) => setFormData(prev => ({ ...prev, service_location: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, service_location: e.target.value }))}
                 className="mt-1 bg-slate-800 border-slate-700"
-                placeholder="请输入服务地点"
-              />
+                placeholder="请输入服务地点" />
+
             </div>
             
             <div>
@@ -645,39 +647,39 @@ export default function ServiceRecord() {
               <Input
                 type="date"
                 value={formData.service_date}
-                onChange={(e) => setFormData(prev => ({ ...prev, service_date: e.target.value }))}
-                className="mt-1 bg-slate-800 border-slate-700"
-              />
+                onChange={(e) => setFormData((prev) => ({ ...prev, service_date: e.target.value }))}
+                className="mt-1 bg-slate-800 border-slate-700" />
+
             </div>
             
             <div>
               <label className="text-sm font-medium text-slate-300">服务工程师</label>
               <Input
                 value={formData.service_engineer}
-                onChange={(e) => setFormData(prev => ({ ...prev, service_engineer: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, service_engineer: e.target.value }))}
                 className="mt-1 bg-slate-800 border-slate-700"
-                placeholder="请输入工程师姓名"
-              />
+                placeholder="请输入工程师姓名" />
+
             </div>
             
             <div>
               <label className="text-sm font-medium text-slate-300">客户联系人</label>
               <Input
                 value={formData.customer_contact}
-                onChange={(e) => setFormData(prev => ({ ...prev, customer_contact: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, customer_contact: e.target.value }))}
                 className="mt-1 bg-slate-800 border-slate-700"
-                placeholder="请输入联系人姓名"
-              />
+                placeholder="请输入联系人姓名" />
+
             </div>
             
             <div>
               <label className="text-sm font-medium text-slate-300">联系电话</label>
               <Input
                 value={formData.customer_phone}
-                onChange={(e) => setFormData(prev => ({ ...prev, customer_phone: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, customer_phone: e.target.value }))}
                 className="mt-1 bg-slate-800 border-slate-700"
-                placeholder="请输入联系电话"
-              />
+                placeholder="请输入联系电话" />
+
             </div>
           </div>
 
@@ -687,9 +689,9 @@ export default function ServiceRecord() {
               <Input
                 type="datetime-local"
                 value={formData.service_start_time}
-                onChange={(e) => setFormData(prev => ({ ...prev, service_start_time: e.target.value }))}
-                className="mt-1 bg-slate-800 border-slate-700"
-              />
+                onChange={(e) => setFormData((prev) => ({ ...prev, service_start_time: e.target.value }))}
+                className="mt-1 bg-slate-800 border-slate-700" />
+
             </div>
             
             <div>
@@ -697,9 +699,9 @@ export default function ServiceRecord() {
               <Input
                 type="datetime-local"
                 value={formData.service_end_time}
-                onChange={(e) => setFormData(prev => ({ ...prev, service_end_time: e.target.value }))}
-                className="mt-1 bg-slate-800 border-slate-700"
-              />
+                onChange={(e) => setFormData((prev) => ({ ...prev, service_end_time: e.target.value }))}
+                className="mt-1 bg-slate-800 border-slate-700" />
+
             </div>
           </div>
 
@@ -707,22 +709,22 @@ export default function ServiceRecord() {
             <label className="text-sm font-medium text-slate-300">服务内容</label>
             <Textarea
               value={formData.service_content}
-              onChange={(e) => setFormData(prev => ({ ...prev, service_content: e.target.value }))}
+              onChange={(e) => setFormData((prev) => ({ ...prev, service_content: e.target.value }))}
               className="mt-1 bg-slate-800 border-slate-700"
               rows={4}
-              placeholder="请详细描述服务内容..."
-            />
+              placeholder="请详细描述服务内容..." />
+
           </div>
 
           <div className="mt-4">
             <label className="text-sm font-medium text-slate-300">服务结果</label>
             <Textarea
               value={formData.service_result}
-              onChange={(e) => setFormData(prev => ({ ...prev, service_result: e.target.value }))}
+              onChange={(e) => setFormData((prev) => ({ ...prev, service_result: e.target.value }))}
               className="mt-1 bg-slate-800 border-slate-700"
               rows={3}
-              placeholder="请描述服务结果..."
-            />
+              placeholder="请描述服务结果..." />
+
           </div>
 
           <div className="mt-4">
@@ -734,55 +736,55 @@ export default function ServiceRecord() {
                 accept="image/*"
                 onChange={handlePhotoUpload}
                 className="hidden"
-                id="photo-upload"
-              />
+                id="photo-upload" />
+
               <label htmlFor="photo-upload">
                 <Button
                   type="button"
                   variant="outline"
-                  className="cursor-pointer"
-                >
+                  className="cursor-pointer">
+
                   <Upload className="h-4 w-4 mr-2" />
                   选择照片
                 </Button>
               </label>
             </div>
             
-            {formData.photos.length > 0 && (
-              <div className="mt-4 grid grid-cols-4 gap-2">
-                {formData.photos.map((photo, index) => (
-                  <div key={index} className="relative">
+            {formData.photos.length > 0 &&
+            <div className="mt-4 grid grid-cols-4 gap-2">
+                {formData.photos.map((photo, index) =>
+              <div key={index} className="relative">
                     <img
-                      src={photo.url}
-                      alt={photo.name}
-                      className="w-full h-20 object-cover rounded border border-slate-700"
-                    />
+                  src={photo.url}
+                  alt={photo.name}
+                  className="w-full h-20 object-cover rounded border border-slate-700" />
+
                     <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      className="absolute -top-2 -right-2 h-6 w-6 p-0"
-                      onClick={() => removePhoto(index)}
-                    >
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  className="absolute -top-2 -right-2 h-6 w-6 p-0"
+                  onClick={() => removePhoto(index)}>
+
                       <X className="h-3 w-3" />
                     </Button>
                   </div>
-                ))}
+              )}
               </div>
-            )}
+            }
           </div>
 
           <DialogFooter className="mt-6">
             <Button
               variant="outline"
-              onClick={() => setShowCreateDialog(false)}
-            >
+              onClick={() => setShowCreateDialog(false)}>
+
               取消
             </Button>
             <Button
               onClick={handleCreateRecord}
-              className="bg-blue-500 hover:bg-blue-600"
-            >
+              className="bg-blue-500 hover:bg-blue-600">
+
               <FileCheck className="h-4 w-4 mr-2" />
               创建记录
             </Button>
@@ -797,8 +799,8 @@ export default function ServiceRecord() {
             <DialogTitle>服务记录详情</DialogTitle>
           </DialogHeader>
           
-          {selectedRecord && (
-            <div className="space-y-6">
+          {selectedRecord &&
+          <div className="space-y-6">
               {/* 基本信息 */}
               <div>
                 <h3 className="text-lg font-semibold text-white mb-4">基本信息</h3>
@@ -847,56 +849,56 @@ export default function ServiceRecord() {
               </div>
 
               {/* 照片展示 */}
-              {selectedRecord.photos && selectedRecord.photos.length > 0 && (
-                <div>
+              {selectedRecord.photos && selectedRecord.photos.length > 0 &&
+            <div>
                   <h3 className="text-lg font-semibold text-white mb-4">服务照片</h3>
                   <div className="grid grid-cols-4 gap-4">
-                    {selectedRecord.photos.map((photo, index) => (
-                      <img
-                        key={index}
-                        src={photo.url || photo}
-                        alt={`服务照片 ${index + 1}`}
-                        className="w-full h-32 object-cover rounded border border-slate-700"
-                      />
-                    ))}
+                    {selectedRecord.photos.map((photo, index) =>
+                <img
+                  key={index}
+                  src={photo.url || photo}
+                  alt={`服务照片 ${index + 1}`}
+                  className="w-full h-32 object-cover rounded border border-slate-700" />
+
+                )}
                   </div>
                 </div>
-              )}
+            }
 
               {/* 客户反馈 */}
-              {selectedRecord.customer_feedback && (
-                <div>
+              {selectedRecord.customer_feedback &&
+            <div>
                   <h3 className="text-lg font-semibold text-white mb-4">客户反馈</h3>
                   <div className="bg-slate-800/50 p-4 rounded">
-                    {selectedRecord.customer_satisfaction && (
-                      <div className="flex items-center gap-2 mb-2">
+                    {selectedRecord.customer_satisfaction &&
+                <div className="flex items-center gap-2 mb-2">
                         <span className="text-sm text-slate-400">满意度:</span>
                         <div className="flex">
-                          {[1, 2, 3, 4, 5].map(star => (
-                            <Star
-                              key={star}
-                              className={`h-4 w-4 ${
-                                star <= selectedRecord.customer_satisfaction
-                                  ? 'text-yellow-400 fill-current'
-                                  : 'text-slate-600'
-                              }`}
-                            />
-                          ))}
+                          {[1, 2, 3, 4, 5].map((star) =>
+                    <Star
+                      key={star}
+                      className={`h-4 w-4 ${
+                      star <= selectedRecord.customer_satisfaction ?
+                      'text-yellow-400 fill-current' :
+                      'text-slate-600'}`
+                      } />
+
+                    )}
                         </div>
                       </div>
-                    )}
+                }
                     <p className="text-slate-300">{selectedRecord.customer_feedback}</p>
                   </div>
                 </div>
-              )}
+            }
             </div>
-          )}
+          }
 
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowDetailDialog(false)}
-            >
+              onClick={() => setShowDetailDialog(false)}>
+
               关闭
             </Button>
             <Button
@@ -904,14 +906,14 @@ export default function ServiceRecord() {
                 // 下载报告功能
                 toast.info("报告下载功能开发中...");
               }}
-              className="bg-blue-500 hover:bg-blue-600"
-            >
+              className="bg-blue-500 hover:bg-blue-600">
+
               <Download className="h-4 w-4 mr-2" />
               下载报告
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }

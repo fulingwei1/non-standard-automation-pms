@@ -23,8 +23,8 @@ import {
   Edit,
   Power,
   Pause,
-  Play,
-} from 'lucide-react';
+  Play } from
+'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui';
 import { Button } from '../../components/ui';
 import { Badge } from '../../components/ui';
@@ -35,16 +35,16 @@ import {
   PRODUCTION_LINE_STATUS,
   EQUIPMENT_STATUS,
   WORK_SHIFT,
-  getStatusColor,
-  getStatusLabel,
-} from './productionConstants';
+  getStatusColor as _getStatusColor,
+  getStatusLabel as _getStatusLabel } from
+'./productionConstants';
 
 export default function ProductionLineManager({
   workshops = [],
   loading = false,
   onLineAction,
-  onViewDetails,
-  onEditLine,
+  onViewDetails: _onViewDetails,
+  onEditLine
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -52,15 +52,15 @@ export default function ProductionLineManager({
 
   // 过滤生产线数据
   const filteredWorkshops = useMemo(() => {
-    return workshops.filter(workshop => {
-      const matchesSearch = !searchQuery || 
-        workshop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        workshop.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        workshop.manager?.toLowerCase().includes(searchQuery.toLowerCase());
-      
+    return workshops.filter((workshop) => {
+      const matchesSearch = !searchQuery ||
+      workshop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      workshop.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      workshop.manager?.toLowerCase().includes(searchQuery.toLowerCase());
+
       const matchesStatus = filterStatus === 'all' || workshop.status === filterStatus;
       const matchesShift = selectedShift === 'all' || workshop.currentShift === selectedShift;
-      
+
       return matchesSearch && matchesStatus && matchesShift;
     });
   }, [workshops, searchQuery, filterStatus, selectedShift]);
@@ -68,18 +68,18 @@ export default function ProductionLineManager({
   // 计算统计数据
   const statistics = useMemo(() => {
     const total = workshops.length;
-    const active = workshops.filter(w => w.status === 'active').length;
-    const idle = workshops.filter(w => w.status === 'idle').length;
-    const maintenance = workshops.filter(w => w.status === 'maintenance').length;
-    const stopped = workshops.filter(w => w.status === 'stopped').length;
-    
+    const active = workshops.filter((w) => w.status === 'active').length;
+    const idle = workshops.filter((w) => w.status === 'idle').length;
+    const maintenance = workshops.filter((w) => w.status === 'maintenance').length;
+    const stopped = workshops.filter((w) => w.status === 'stopped').length;
+
     const totalEfficiency = workshops.reduce((sum, w) => sum + (w.efficiency || 0), 0);
     const avgEfficiency = total > 0 ? Math.round(totalEfficiency / total) : 0;
-    
+
     const totalOutput = workshops.reduce((sum, w) => sum + (w.currentOutput || 0), 0);
     const totalTarget = workshops.reduce((sum, w) => sum + (w.targetOutput || 0), 0);
-    const overallProgress = totalTarget > 0 ? Math.round((totalOutput / totalTarget) * 100) : 0;
-    
+    const overallProgress = totalTarget > 0 ? Math.round(totalOutput / totalTarget * 100) : 0;
+
     return {
       total,
       active,
@@ -89,7 +89,7 @@ export default function ProductionLineManager({
       avgEfficiency,
       overallProgress,
       totalOutput,
-      totalTarget,
+      totalTarget
     };
   }, [workshops]);
 
@@ -97,37 +97,37 @@ export default function ProductionLineManager({
   const renderStatusBadge = (status) => {
     const config = PRODUCTION_LINE_STATUS[status.toUpperCase()];
     if (!config) return <Badge variant="secondary">{status}</Badge>;
-    
+
     return (
       <Badge className={cn(config.color.replace('bg-', 'bg-'), 'text-white')}>
         {config.label}
-      </Badge>
-    );
+      </Badge>);
+
   };
 
   // 渲染班次徽章
   const renderShiftBadge = (shift) => {
     const config = WORK_SHIFT[shift.toUpperCase()];
     if (!config) return <Badge variant="outline">{shift}</Badge>;
-    
+
     return (
       <Badge variant="outline" className="border-blue-200 text-blue-700">
         {config.label}
-      </Badge>
-    );
+      </Badge>);
+
   };
 
   // 获取生产线操作按钮
   const getLineActions = (workshop) => {
     const actions = [];
-    
+
     switch (workshop.status) {
       case 'active':
         actions.push({
           icon: Pause,
           label: '暂停',
           action: 'pause',
-          className: 'bg-orange-500 hover:bg-orange-600',
+          className: 'bg-orange-500 hover:bg-orange-600'
         });
         break;
       case 'idle':
@@ -135,7 +135,7 @@ export default function ProductionLineManager({
           icon: Play,
           label: '启动',
           action: 'start',
-          className: 'bg-green-500 hover:bg-green-600',
+          className: 'bg-green-500 hover:bg-green-600'
         });
         break;
       case 'stopped':
@@ -143,7 +143,7 @@ export default function ProductionLineManager({
           icon: Play,
           label: '启动',
           action: 'start',
-          className: 'bg-green-500 hover:bg-green-600',
+          className: 'bg-green-500 hover:bg-green-600'
         });
         break;
       case 'maintenance':
@@ -151,29 +151,29 @@ export default function ProductionLineManager({
           icon: CheckCircle2,
           label: '完成维护',
           action: 'complete_maintenance',
-          className: 'bg-blue-500 hover:bg-blue-600',
+          className: 'bg-blue-500 hover:bg-blue-600'
         });
         break;
     }
-    
+
     actions.push({
       icon: Edit,
       label: '编辑',
       action: 'edit',
-      className: 'bg-gray-500 hover:bg-gray-600',
+      className: 'bg-gray-500 hover:bg-gray-600'
     });
-    
+
     return actions;
   };
 
   // 渲染生产线卡片
-  const renderWorkshopCard = (workshop, index) => (
-    <motion.div
-      key={workshop.id}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.1 }}
-    >
+  const renderWorkshopCard = (workshop, index) =>
+  <motion.div
+    key={workshop.id}
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.3, delay: index * 0.1 }}>
+
       <Card className="h-full hover:shadow-lg transition-all duration-200">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
@@ -200,10 +200,10 @@ export default function ProductionLineManager({
                 {workshop.currentOutput || 0} / {workshop.targetOutput || 0}
               </span>
             </div>
-            <Progress 
-              value={workshop.targetOutput > 0 ? ((workshop.currentOutput || 0) / workshop.targetOutput) * 100 : 0}
-              className="h-2"
-            />
+            <Progress
+            value={workshop.targetOutput > 0 ? (workshop.currentOutput || 0) / workshop.targetOutput * 100 : 0}
+            className="h-2" />
+
           </div>
           
           {/* 性能指标 */}
@@ -232,64 +232,64 @@ export default function ProductionLineManager({
           <div className="space-y-2">
             <div className="text-sm text-gray-600">设备状态</div>
             <div className="flex flex-wrap gap-2">
-              {workshop.equipments?.slice(0, 3).map(equipment => (
-                <Badge 
-                  key={equipment.id}
-                  variant="outline"
-                  className={cn(
-                    'text-xs',
-                    equipment.status === 'running' && 'border-green-200 text-green-700',
-                    equipment.status === 'idle' && 'border-gray-200 text-gray-700',
-                    equipment.status === 'maintenance' && 'border-orange-200 text-orange-700',
-                    equipment.status === 'breakdown' && 'border-red-200 text-red-700'
-                  )}
-                >
+              {workshop.equipments?.slice(0, 3).map((equipment) =>
+            <Badge
+              key={equipment.id}
+              variant="outline"
+              className={cn(
+                'text-xs',
+                equipment.status === 'running' && 'border-green-200 text-green-700',
+                equipment.status === 'idle' && 'border-gray-200 text-gray-700',
+                equipment.status === 'maintenance' && 'border-orange-200 text-orange-700',
+                equipment.status === 'breakdown' && 'border-red-200 text-red-700'
+              )}>
+
                   {equipment.name}
                 </Badge>
-              ))}
-              {workshop.equipments?.length > 3 && (
-                <Badge variant="outline" className="text-xs">
+            )}
+              {workshop.equipments?.length > 3 &&
+            <Badge variant="outline" className="text-xs">
                   +{workshop.equipments.length - 3} 更多
                 </Badge>
-              )}
+            }
             </div>
           </div>
           
           {/* 操作按钮 */}
           <div className="flex gap-2 pt-2">
             {getLineActions(workshop).map((action, actionIndex) => {
-              const Icon = action.icon;
-              return (
-                <Button
-                  key={actionIndex}
-                  size="sm"
-                  variant="secondary"
-                  className={cn('flex-1', action.className, 'text-white')}
-                  onClick={() => {
-                    if (action.action === 'edit' && onEditLine) {
-                      onEditLine(workshop);
-                    } else if (onLineAction) {
-                      onLineAction(workshop.id, action.action);
-                    }
-                  }}
-                >
+            const Icon = action.icon;
+            return (
+              <Button
+                key={actionIndex}
+                size="sm"
+                variant="secondary"
+                className={cn('flex-1', action.className, 'text-white')}
+                onClick={() => {
+                  if (action.action === 'edit' && onEditLine) {
+                    onEditLine(workshop);
+                  } else if (onLineAction) {
+                    onLineAction(workshop.id, action.action);
+                  }
+                }}>
+
                   <Icon className="w-3 h-3 mr-1" />
                   {action.label}
-                </Button>
-              );
-            })}
+                </Button>);
+
+          })}
           </div>
         </CardContent>
       </Card>
-    </motion.div>
-  );
+    </motion.div>;
+
 
   if (loading) {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {[...Array(8)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
+          {[...Array(8)].map((_, i) =>
+          <Card key={i} className="animate-pulse">
               <CardContent className="p-6">
                 <div className="h-4 bg-gray-200 rounded mb-4"></div>
                 <div className="space-y-3">
@@ -299,10 +299,10 @@ export default function ProductionLineManager({
                 </div>
               </CardContent>
             </Card>
-          ))}
+          )}
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -376,35 +376,35 @@ export default function ProductionLineManager({
                 placeholder="搜索生产线名称、编号或负责人..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+                className="pl-10" />
+
             </div>
             
             <div className="flex gap-2">
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md text-sm"
-              >
+                className="px-3 py-2 border border-gray-300 rounded-md text-sm">
+
                 <option value="all">所有状态</option>
-                {Object.values(PRODUCTION_LINE_STATUS).map(status => (
-                  <option key={status.value} value={status.value}>
+                {Object.values(PRODUCTION_LINE_STATUS).map((status) =>
+                <option key={status.value} value={status.value}>
                     {status.label}
                   </option>
-                ))}
+                )}
               </select>
               
               <select
                 value={selectedShift}
                 onChange={(e) => setSelectedShift(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md text-sm"
-              >
+                className="px-3 py-2 border border-gray-300 rounded-md text-sm">
+
                 <option value="all">所有班次</option>
-                {Object.values(WORK_SHIFT).map(shift => (
-                  <option key={shift.value} value={shift.value}>
+                {Object.values(WORK_SHIFT).map((shift) =>
+                <option key={shift.value} value={shift.value}>
                     {shift.label}
                   </option>
-                ))}
+                )}
               </select>
             </div>
           </div>
@@ -418,15 +418,15 @@ export default function ProductionLineManager({
         </div>
       </AnimatePresence>
       
-      {filteredWorkshops.length === 0 && (
-        <Card>
+      {filteredWorkshops.length === 0 &&
+      <Card>
           <CardContent className="p-8 text-center">
             <Factory className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">没有找到生产线</h3>
             <p className="text-gray-600">请调整搜索条件或筛选器</p>
           </CardContent>
         </Card>
-      )}
-    </div>
-  );
+      }
+    </div>);
+
 }

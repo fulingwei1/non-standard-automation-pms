@@ -565,7 +565,7 @@ export default function InventoryAnalysis() {
                   ))}
                 </div>
               </CardContent>
-            </Card>
+              </Card>
             )}
 
             {/* 低库存预警列表 */}

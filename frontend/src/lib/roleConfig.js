@@ -8,6 +8,8 @@ export const ROLE_INFO = {
   // 管理层
   chairman: { name: "董事长", dataScope: "ALL", level: 1 },
   gm: { name: "总经理", dataScope: "ALL", level: 2 },
+  vp: { name: "副总经理", dataScope: "ALL", level: 2 },
+  VP: { name: "副总经理", dataScope: "ALL", level: 2 },
   admin: { name: "系统管理员", dataScope: "ALL", level: 2 },
   super_admin: { name: "超级管理员", dataScope: "ALL", level: 1 },
 
@@ -20,6 +22,7 @@ export const ROLE_INFO = {
   business_support: { name: "商务支持专员", dataScope: "OWN", level: 5 },
 
   // 项目管理
+  PMO_DIR: { name: "项目管理部总监", dataScope: "DEPT", level: 3 },
   project_dept_manager: { name: "项目部经理", dataScope: "DEPT", level: 3 },
   pmc: { name: "项目经理(PMC)", dataScope: "OWN", level: 4 },
   pm: { name: "项目经理", dataScope: "OWN", level: 4 },
@@ -46,6 +49,7 @@ export const ROLE_INFO = {
 
   // 制造中心
   manufacturing_director: { name: "制造总监", dataScope: "DEPT", level: 2 },
+  production_director: { name: "生产部总监", dataScope: "DEPT", level: 2 },
   production_manager: { name: "生产部经理", dataScope: "DEPT", level: 3 },
   assembler: { name: "装配技工", dataScope: "OWN", level: 6 },
   assembler_mechanic: { name: "装配钳工", dataScope: "OWN", level: 6 },
@@ -332,8 +336,11 @@ export function getRoleInfo(role) {
     售前技术工程师: "presales",
     商务支持: "business_support",
     商务支持专员: "business_support",
+    项目管理部总监: "PMO_DIR",
     项目部经理: "project_dept_manager",
     项目经理: "pmc",
+    计划管理: "pmc",
+    PMC: "pmc",
     技术开发部经理: "tech_dev_manager",
     机械部经理: "me_dept_manager",
     电气部经理: "ee_dept_manager",
@@ -349,6 +356,7 @@ export function getRoleInfo(role) {
     采购专员: "procurement",
     采购员: "buyer",
     制造总监: "manufacturing_director",
+    生产部总监: "production_director",
     生产部经理: "production_manager",
     装配技工: "assembler",
     装配钳工: "assembler_mechanic",
@@ -410,6 +418,7 @@ export function getNavForRole(role) {
         label: "个人中心",
         items: [
           { name: "通知中心", path: "/notifications", icon: "Bell" },
+          { name: "知识管理", path: "/knowledge-base", icon: "BookOpen" },
           { name: "个人设置", path: "/settings", icon: "Settings" },
         ],
       },
@@ -451,6 +460,49 @@ export function getNavForRole(role) {
         label: "个人中心",
         items: [
           { name: "通知中心", path: "/notifications", icon: "Bell" },
+          { name: "知识管理", path: "/knowledge-base", icon: "BookOpen" },
+          { name: "个人设置", path: "/settings", icon: "Settings" },
+        ],
+      },
+    ],
+    VP: [
+      {
+        label: "经营管理",
+        items: [
+          {
+            name: "副总工作台",
+            path: "/gm-dashboard",
+            icon: "LayoutDashboard",
+          },
+          { name: "运营大屏", path: "/operation", icon: "BarChart3" },
+        ],
+      },
+      {
+        label: "项目管理",
+        items: [
+          { name: "项目看板", path: "/board", icon: "Kanban" },
+          { name: "项目列表", path: "/projects", icon: "Briefcase" },
+          { name: "排期看板", path: "/schedule", icon: "Calendar" },
+        ],
+      },
+      {
+        label: "人员管理",
+        items: [
+          { name: "工程师绩效排名", path: "/engineer-performance/ranking", icon: "TrendingUp" },
+        ],
+      },
+      {
+        label: "审批与监控",
+        items: [
+          { name: "审批中心", path: "/approvals", icon: "ClipboardCheck" },
+          { name: "预警中心", path: "/alerts", icon: "AlertTriangle" },
+        ],
+      },
+      {
+        label: "个人中心",
+        items: [
+          { name: "通知中心", path: "/notifications", icon: "Bell" },
+          { name: "知识管理", path: "/knowledge-base", icon: "BookOpen" },
           { name: "个人设置", path: "/settings", icon: "Settings" },
         ],
       },
@@ -465,7 +517,6 @@ export function getNavForRole(role) {
             icon: "LayoutDashboard",
           },
           { name: "销售团队管理", path: "/sales/team", icon: "Users" },
-          { name: "团队业绩排名", path: "/sales/team/ranking", icon: "Award" },
           { name: "销售目标", path: "/sales/targets", icon: "Target" },
         ],
       },
@@ -500,7 +551,7 @@ export function getNavForRole(role) {
           { name: "通知中心", path: "/notifications", icon: "Bell" },
           {
             name: "知识管理",
-            path: "/settings?section=knowledge",
+            path: "/knowledge-base",
             icon: "BookOpen",
           },
           { name: "个人设置", path: "/settings", icon: "Settings" },
@@ -560,14 +611,15 @@ export function getNavForRole(role) {
           { name: "通知中心", path: "/notifications", icon: "Bell" },
           {
             name: "知识管理",
-            path: "/settings?section=knowledge",
+            path: "/knowledge-base",
             icon: "BookOpen",
           },
           { name: "个人设置", path: "/settings", icon: "Settings" },
         ],
       },
     ],
-    dept_manager: [
+    // 默认配置（用于未定义专门菜单的角色）
+    default_user: [
       {
         label: "概览",
         items: [
@@ -595,6 +647,7 @@ export function getNavForRole(role) {
         label: "个人中心",
         items: [
           { name: "通知中心", path: "/notifications", icon: "Bell" },
+          { name: "知识管理", path: "/knowledge-base", icon: "BookOpen" },
           { name: "个人设置", path: "/settings", icon: "Settings" },
         ],
       },
@@ -616,17 +669,19 @@ export function getNavForRole(role) {
         label: "个人中心",
         items: [
           { name: "通知中心", path: "/notifications", icon: "Bell" },
+          { name: "知识管理", path: "/knowledge-base", icon: "BookOpen" },
           { name: "个人设置", path: "/settings", icon: "Settings" },
         ],
       },
     ],
   };
 
-  return navConfigs[role] || navConfigs.dept_manager;
+  return navConfigs[role] || navConfigs.default_user;
 }
 
 /**
  * 检查是否有采购模块访问权限
+ * 包含齐套分析、物料分析等页面的访问权限
  */
 export function hasProcurementAccess(role, isSuperuser = false) {
   if (isSuperuser) return true;
@@ -636,22 +691,33 @@ export function hasProcurementAccess(role, isSuperuser = false) {
     "super_admin",
     "chairman",
     "gm",
+    // 采购部
     "procurement_manager",
     "procurement_engineer",
     "procurement",
     "buyer",
+    // 项目管理
     "pmc",
     "pm",
     "project_dept_manager",
+    "DEPT_MGR",
+    // 生产制造
     "production_manager",
     "manufacturing_director",
+    "production_director",
+    // 中文角色名
     "采购部经理",
     "采购工程师",
     "采购专员",
     "采购员",
     "项目经理",
+    "项目部经理",
     "生产部经理",
+    "生产部总监",
     "制造总监",
+    "计划管理",
+    "PMC",
+    "部门经理",
   ];
 
   return allowedRoles.includes(role);
@@ -713,6 +779,7 @@ export function hasFinanceAccess(role, isSuperuser = false) {
 
 /**
  * 检查是否有生产模块访问权限
+ * 包含装配齐套看板等页面的访问权限
  */
 export function hasProductionAccess(role, isSuperuser = false) {
   if (isSuperuser) return true;
@@ -722,17 +789,28 @@ export function hasProductionAccess(role, isSuperuser = false) {
     "super_admin",
     "chairman",
     "gm",
+    // 生产制造
     "manufacturing_director",
     "production_manager",
+    "production_director",
+    "DEPT_MGR",
+    // 项目管理
     "pmc",
     "pm",
     "project_dept_manager",
+    // 装配人员
     "assembler",
     "assembler_mechanic",
     "assembler_electrician",
+    // 中文角色名
     "制造总监",
     "生产部经理",
+    "生产部总监",
     "项目经理",
+    "项目部经理",
+    "计划管理",
+    "PMC",
+    "部门经理",
     "装配技工",
     "装配钳工",
     "装配电工",

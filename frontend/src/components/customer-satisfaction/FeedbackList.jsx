@@ -3,7 +3,7 @@
  * 反馈列表组件 - 显示和筛选客户反馈信息
  */
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect as _useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -22,8 +22,8 @@ import {
   User,
   Building,
   Calendar,
-  Tag
-} from "lucide-react";
+  Tag } from
+"lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
@@ -33,28 +33,28 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
-} from "../../components/ui/select";
+  SelectValue } from
+"../../components/ui/select";
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger
-} from "../../components/ui/popover";
+  PopoverTrigger } from
+"../../components/ui/popover";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger
-} from "../../components/ui/tooltip";
+  TooltipTrigger } from
+"../../components/ui/tooltip";
 import { cn, formatDateTime } from "../../lib/utils";
 import {
   getFeedbackStatusConfig,
   getFeedbackTypeConfig,
   getPriorityConfig,
-  getSatisfactionScoreConfig,
+  getSatisfactionScoreConfig as _getSatisfactionScoreConfig,
   formatSatisfactionScore,
-  satisfactionConstants
-} from "./satisfactionConstants";
+  satisfactionConstants } from
+"./satisfactionConstants";
 
 export const FeedbackList = ({
   feedbacks = [],
@@ -67,14 +67,19 @@ export const FeedbackList = ({
   onRefresh = null,
   showActions = true,
   pageSize = 10,
-  currentPage = 1
+  currentPage: initialPage = 1
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
-  const [selectedPriority, setSelectedPriority] = useState("all");
-  const [sortBy, setSortBy] = useState("createdAt");
-  const [sortOrder, setSortOrder] = useState("desc");
+  const [selectedPriority, _setSelectedPriority] = useState("all");
+  const [sortBy, _setSortBy] = useState("createdAt");
+  const [sortOrder, _setSortOrder] = useState("desc");
+  const [currentPage, setCurrentPage] = useState(initialPage);
+
+  _useEffect(() => {
+    setCurrentPage(initialPage);
+  }, [initialPage]);
 
   // 过滤和排序反馈数据
   const filteredAndSortedFeedbacks = useMemo(() => {
@@ -82,26 +87,26 @@ export const FeedbackList = ({
 
     // 搜索过滤
     if (searchQuery) {
-      filtered = filtered.filter(feedback =>
-        feedback.customerName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        feedback.content?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        feedback.id?.toLowerCase().includes(searchQuery.toLowerCase())
+      filtered = filtered.filter((feedback) =>
+      feedback.customerName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      feedback.content?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      feedback.id?.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
     // 类型过滤
     if (selectedType !== "all") {
-      filtered = filtered.filter(feedback => feedback.feedbackType === selectedType);
+      filtered = filtered.filter((feedback) => feedback.feedbackType === selectedType);
     }
 
     // 状态过滤
     if (selectedStatus !== "all") {
-      filtered = filtered.filter(feedback => feedback.status === selectedStatus);
+      filtered = filtered.filter((feedback) => feedback.status === selectedStatus);
     }
 
     // 优先级过滤
     if (selectedPriority !== "all") {
-      filtered = filtered.filter(feedback => feedback.priority === selectedPriority);
+      filtered = filtered.filter((feedback) => feedback.priority === selectedPriority);
     }
 
     // 排序
@@ -114,9 +119,11 @@ export const FeedbackList = ({
           bValue = b.rating;
           break;
         case "priority":
-          const priorityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
-          aValue = priorityOrder[a.priority] || 0;
-          bValue = priorityOrder[b.priority] || 0;
+          {
+            const priorityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
+            aValue = priorityOrder[a.priority] || 0;
+            bValue = priorityOrder[b.priority] || 0;
+          }
           break;
         case "createdAt":
         default:
@@ -156,7 +163,7 @@ export const FeedbackList = ({
   };
 
   // 处理优先级变更
-  const handlePriorityChange = (feedbackId, newPriority) => {
+  const _handlePriorityChange = (feedbackId, newPriority) => {
     if (onPriorityChange) {
       onPriorityChange(feedbackId, newPriority);
     }
@@ -177,8 +184,8 @@ export const FeedbackList = ({
         <div className="flex items-center text-slate-400">
           <MessageSquare className="w-4 h-4" />
           <span className="text-sm ml-1">未评分</span>
-        </div>
-      );
+        </div>);
+
     }
 
     const stars = [];
@@ -188,11 +195,11 @@ export const FeedbackList = ({
           key={i}
           className={cn(
             "w-4 h-4",
-            i <= rating
-              ? "text-yellow-400 fill-current"
-              : "text-slate-300"
-          )}
-        />
+            i <= rating ?
+            "text-yellow-400 fill-current" :
+            "text-slate-300"
+          )} />
+
       );
     }
 
@@ -202,8 +209,8 @@ export const FeedbackList = ({
         <span className="text-sm text-slate-600 ml-1">
           {formatSatisfactionScore(rating)}
         </span>
-      </div>
-    );
+      </div>);
+
   };
 
   // 渲染操作按钮
@@ -216,8 +223,8 @@ export const FeedbackList = ({
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 w-8 p-0 text-slate-500 hover:text-slate-700"
-          >
+            className="h-8 w-8 p-0 text-slate-500 hover:text-slate-700">
+
             <MoreHorizontal className="w-4 h-4" />
           </Button>
         </PopoverTrigger>
@@ -227,8 +234,8 @@ export const FeedbackList = ({
               variant="ghost"
               size="sm"
               className="w-full justify-start"
-              onClick={() => handleFeedbackClick(feedback)}
-            >
+              onClick={() => handleFeedbackClick(feedback)}>
+
               <Eye className="w-4 h-4 mr-2" />
               查看详情
             </Button>
@@ -236,8 +243,8 @@ export const FeedbackList = ({
               variant="ghost"
               size="sm"
               className="w-full justify-start"
-              onClick={() => handleStatusChange(feedback.id, "in_progress")}
-            >
+              onClick={() => handleStatusChange(feedback.id, "in_progress")}>
+
               <RefreshCw className="w-4 h-4 mr-2" />
               开始处理
             </Button>
@@ -245,40 +252,40 @@ export const FeedbackList = ({
               variant="ghost"
               size="sm"
               className="w-full justify-start text-red-500 hover:text-red-700"
-              onClick={(e) => handleDelete(feedback.id, e)}
-            >
+              onClick={(e) => handleDelete(feedback.id, e)}>
+
               <Trash2 className="w-4 h-4 mr-2" />
               删除
             </Button>
           </div>
         </PopoverContent>
-      </Popover>
-    );
+      </Popover>);
+
   };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={cn("w-full", className)}
-    >
+      className={cn("w-full", className)}>
+
       <Card className="border-slate-200 bg-white/80 backdrop-blur-sm">
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg font-semibold text-slate-800">
               客户反馈列表
             </CardTitle>
-            {onRefresh && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onRefresh}
-                disabled={loading}
-              >
+            {onRefresh &&
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRefresh}
+              disabled={loading}>
+
                 <RefreshCw className={cn("w-4 h-4 mr-2", loading && "animate-spin")} />
                 刷新
-              </Button>
-            )}
+            </Button>
+            }
           </div>
 
           {/* 筛选和搜索 */}
@@ -289,8 +296,8 @@ export const FeedbackList = ({
                 placeholder="搜索客户名称、内容或ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+                className="pl-10" />
+
             </div>
             <Select value={selectedType} onValueChange={setSelectedType}>
               <SelectTrigger className="w-[150px]">
@@ -298,11 +305,11 @@ export const FeedbackList = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部类型</SelectItem>
-                {Object.entries(satisfactionConstants.feedbackTypeConfig).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
+                {Object.entries(satisfactionConstants.feedbackTypeConfig).map(([key, config]) =>
+                <SelectItem key={key} value={key}>
                     {config.label}
-                  </SelectItem>
-                ))}
+                </SelectItem>
+                )}
               </SelectContent>
             </Select>
             <Select value={selectedStatus} onValueChange={setSelectedStatus}>
@@ -311,11 +318,11 @@ export const FeedbackList = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部状态</SelectItem>
-                {Object.entries(satisfactionConstants.feedbackStatusConfig).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
+                {Object.entries(satisfactionConstants.feedbackStatusConfig).map(([key, config]) =>
+                <SelectItem key={key} value={key}>
                     {config.label}
-                  </SelectItem>
-                ))}
+                </SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -325,21 +332,21 @@ export const FeedbackList = ({
           {/* 反馈列表 */}
           <div className="space-y-3">
             <AnimatePresence mode="wait">
-              {loading ? (
+              {loading ?
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="space-y-3">
+
+                  {[1, 2, 3].map((i) =>
                 <motion.div
-                  key="loading"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="space-y-3"
-                >
-                  {[1, 2, 3].map((i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="p-4 bg-slate-50 rounded-lg border border-slate-200"
-                    >
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+
                       <div className="animate-pulse">
                         <div className="h-4 bg-slate-200 rounded w-3/4 mb-2"></div>
                         <div className="h-3 bg-slate-200 rounded w-1/2 mb-3"></div>
@@ -348,29 +355,29 @@ export const FeedbackList = ({
                           <div className="h-6 bg-slate-200 rounded w-20"></div>
                         </div>
                       </div>
-                    </motion.div>
-                  ))}
                 </motion.div>
-              ) : paginatedFeedbacks.length > 0 ? (
-                paginatedFeedbacks.map((feedback, index) => (
-                  <motion.div
-                    key={feedback.id || index}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="p-4 bg-slate-50 rounded-lg border border-slate-200 hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer"
-                    onClick={() => handleFeedbackClick(feedback)}
-                  >
+                )}
+              </motion.div> :
+              paginatedFeedbacks.length > 0 ?
+              paginatedFeedbacks.map((feedback, index) =>
+              <motion.div
+                key={feedback.id || index}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ delay: index * 0.05 }}
+                className="p-4 bg-slate-50 rounded-lg border border-slate-200 hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer"
+                onClick={() => handleFeedbackClick(feedback)}>
+
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start gap-3 mb-2">
                           <div className="flex-shrink-0">
-                            {feedback.customerLevel === "vip" ? (
-                              <Building className="w-5 h-5 text-purple-400" />
-                            ) : (
-                              <User className="w-5 h-5 text-slate-400" />
-                            )}
+                            {feedback.customerLevel === "vip" ?
+                        <Building className="w-5 h-5 text-purple-400" /> :
+
+                        <User className="w-5 h-5 text-slate-400" />
+                        }
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
@@ -378,12 +385,12 @@ export const FeedbackList = ({
                                 {feedback.customerName || "匿名客户"}
                               </h4>
                               <Badge
-                                variant="outline"
-                                className={cn(
-                                  "text-xs",
-                                  getPriorityConfig(feedback.priority).color
-                                )}
-                              >
+                            variant="outline"
+                            className={cn(
+                              "text-xs",
+                              getPriorityConfig(feedback.priority).color
+                            )}>
+
                                 {getPriorityConfig(feedback.priority).label}
                               </Badge>
                             </div>
@@ -406,12 +413,12 @@ export const FeedbackList = ({
                           <div className="flex items-center gap-4">
                             {renderRating(feedback.rating)}
                             <Badge
-                              variant="outline"
-                              className={cn(
-                                "text-xs",
-                                getFeedbackStatusConfig(feedback.status).color
-                              )}
-                            >
+                          variant="outline"
+                          className={cn(
+                            "text-xs",
+                            getFeedbackStatusConfig(feedback.status).color
+                          )}>
+
                               {getFeedbackStatusConfig(feedback.status).label}
                             </Badge>
                           </div>
@@ -419,52 +426,52 @@ export const FeedbackList = ({
                         </div>
                       </div>
                     </div>
-                  </motion.div>
-                ))
-              ) : (
-                <motion.div
-                  key="empty"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-center py-12"
-                >
+              </motion.div>
+              ) :
+
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-12">
+
                   <MessageSquare className="w-12 h-12 text-slate-300 mx-auto mb-4" />
                   <p className="text-slate-500">暂无反馈数据</p>
-                </motion.div>
-              )}
+              </motion.div>
+              }
             </AnimatePresence>
           </div>
 
           {/* 分页信息 */}
-          {paginatedFeedbacks.length > 0 && (
-            <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-200">
+          {paginatedFeedbacks.length > 0 &&
+          <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-200">
               <div className="text-sm text-slate-600">
-                显示 {((currentPage - 1) * pageSize) + 1} -{" "}
+                显示 {(currentPage - 1) * pageSize + 1} -{" "}
                 {Math.min(currentPage * pageSize, filteredAndSortedFeedbacks.length)}{" "}
                 条，共 {filteredAndSortedFeedbacks.length} 条
               </div>
               <div className="flex items-center gap-2">
                 <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(currentPage - 1)}
-                >
+                variant="outline"
+                size="sm"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(currentPage - 1)}>
+
                   上一页
                 </Button>
                 <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={currentPage * pageSize >= filteredAndSortedFeedbacks.length}
-                  onClick={() => setCurrentPage(currentPage + 1)}
-                >
+                variant="outline"
+                size="sm"
+                disabled={currentPage * pageSize >= filteredAndSortedFeedbacks.length}
+                onClick={() => setCurrentPage(currentPage + 1)}>
+
                   下一页
                 </Button>
               </div>
-            </div>
-          )}
+          </div>
+          }
         </CardContent>
       </Card>
-    </motion.div>
-  );
+    </motion.div>);
+
 };

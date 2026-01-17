@@ -14,8 +14,8 @@ import {
   TrendingUp,
   Clock,
   ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+  ChevronRight } from
+"lucide-react";
 
 // 从 localStorage 获取用户信息
 const getStoredUser = () => {
@@ -32,7 +32,7 @@ const getStoredUser = () => {
     id: 1,
     name: "当前用户",
     role: "project_manager",
-    department: "项目管理部",
+    department: "项目管理部"
   };
 };
 
@@ -53,12 +53,12 @@ export default function ProjectBoard() {
 
   // 使用角色筛选 Hook
   const {
-    relevantStages,
+    relevantStages: _relevantStages,
     isProjectRelevant,
     isStageRelevant,
     filterProjects,
     groupByStage,
-    stageStats,
+    stageStats: _stageStats
   } = useRoleFilter(user, projects);
 
   // 加载数据
@@ -107,21 +107,21 @@ export default function ProjectBoard() {
       const query = searchQuery.toLowerCase();
       result = result.filter(
         (p) =>
-          p.project_code?.toLowerCase().includes(query) ||
-          p.name?.toLowerCase().includes(query) ||
-          p.customer_name?.toLowerCase().includes(query),
+        p.project_code?.toLowerCase().includes(query) ||
+        p.name?.toLowerCase().includes(query) ||
+        p.customer_name?.toLowerCase().includes(query)
       );
     }
 
     return result;
   }, [
-    projects,
-    filterMode,
-    statusFilter,
-    healthFilter,
-    searchQuery,
-    filterProjects,
-  ]);
+  projects,
+  filterMode,
+  statusFilter,
+  healthFilter,
+  searchQuery,
+  filterProjects]
+  );
 
   // 按阶段分组的项目
   const projectsByStage = useMemo(() => {
@@ -140,7 +140,7 @@ export default function ProjectBoard() {
       total: projects.length,
       filtered: filteredProjects.length,
       myCount: filterProjects(projects, "my").length,
-      ...healthCounts,
+      ...healthCounts
     };
   }, [projects, filteredProjects, filterProjects]);
 
@@ -148,7 +148,7 @@ export default function ProjectBoard() {
   const handleToggleCollapse = (stageKey, collapsed) => {
     setCollapsedStages((prev) => ({
       ...prev,
-      [stageKey]: collapsed,
+      [stageKey]: collapsed
     }));
   };
 
@@ -164,7 +164,7 @@ export default function ProjectBoard() {
       const scrollAmount = 320;
       container.scrollBy({
         left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth",
+        behavior: "smooth"
       });
     }
   };
@@ -174,14 +174,14 @@ export default function ProjectBoard() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="min-h-screen"
-    >
+      className="min-h-screen">
+
       {/* 页面头部 */}
       <PageHeader
         title="项目看板"
         description="多维度可视化项目状态，快速定位关注项目"
-        breadcrumb={[{ label: "首页", href: "/" }, { label: "项目看板" }]}
-      />
+        breadcrumb={[{ label: "首页", href: "/" }, { label: "项目看板" }]} />
+
 
       {/* 筛选器 */}
       <BoardFilters
@@ -197,103 +197,103 @@ export default function ProjectBoard() {
         onSearchChange={setSearchQuery}
         onRefresh={fetchData}
         isLoading={loading}
-        stats={stats}
-      />
+        stats={stats} />
+
 
       {/* 错误状态 */}
-      {error && !loading && (
-        <ApiIntegrationError
-          error={error}
-          apiEndpoint="/api/v1/projects"
-          onRetry={fetchData}
-        />
-      )}
+      {error && !loading &&
+      <ApiIntegrationError
+        error={error}
+        apiEndpoint="/api/v1/projects"
+        onRetry={fetchData} />
+
+      }
 
       {/* 加载状态 */}
-      {loading && (
-        <div className="flex gap-4 overflow-hidden">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="min-w-[280px]">
+      {loading &&
+      <div className="flex gap-4 overflow-hidden">
+          {[1, 2, 3, 4, 5].map((i) =>
+        <div key={i} className="min-w-[280px]">
               <Skeleton className="h-16 mb-2" />
               <Skeleton className="h-32 mb-2" />
               <Skeleton className="h-32 mb-2" />
               <Skeleton className="h-32" />
             </div>
-          ))}
+        )}
         </div>
-      )}
+      }
 
       {/* 看板视图 */}
-      {!loading && !error && viewMode === "kanban" && (
-        <div className="relative">
+      {!loading && !error && viewMode === "kanban" &&
+      <div className="relative">
           {/* 左滚动按钮 */}
           <button
-            onClick={() => scrollBoard("left")}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-surface-2/90 border border-white/10 flex items-center justify-center text-white hover:bg-surface-1 transition-colors shadow-lg"
-          >
+          onClick={() => scrollBoard("left")}
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-surface-2/90 border border-white/10 flex items-center justify-center text-white hover:bg-surface-1 transition-colors shadow-lg">
+
             <ChevronLeft className="w-5 h-5" />
           </button>
 
           {/* 看板容器 */}
           <div
-            id="board-container"
-            className="flex gap-4 overflow-x-auto pb-4 px-12 scroll-smooth custom-scrollbar"
-            style={{ scrollbarWidth: "thin" }}
-          >
-            {PROJECT_STAGES.map((stage) => (
-              <BoardColumn
-                key={stage.key}
-                stage={stage}
-                projects={projectsByStage[stage.key] || []}
-                isRelevant={isStageRelevant(stage.key)}
-                onProjectClick={handleProjectClick}
-                isProjectRelevant={isProjectRelevant}
-                collapsed={collapsedStages[stage.key]}
-                onToggleCollapse={handleToggleCollapse}
-              />
-            ))}
+          id="board-container"
+          className="flex gap-4 overflow-x-auto pb-4 px-12 scroll-smooth custom-scrollbar"
+          style={{ scrollbarWidth: "thin" }}>
+
+            {PROJECT_STAGES.map((stage) =>
+          <BoardColumn
+            key={stage.key}
+            stage={stage}
+            projects={projectsByStage[stage.key] || []}
+            isRelevant={isStageRelevant(stage.key)}
+            onProjectClick={handleProjectClick}
+            isProjectRelevant={isProjectRelevant}
+            collapsed={collapsedStages[stage.key]}
+            onToggleCollapse={handleToggleCollapse} />
+
+          )}
           </div>
 
           {/* 右滚动按钮 */}
           <button
-            onClick={() => scrollBoard("right")}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-surface-2/90 border border-white/10 flex items-center justify-center text-white hover:bg-surface-1 transition-colors shadow-lg"
-          >
+          onClick={() => scrollBoard("right")}
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-surface-2/90 border border-white/10 flex items-center justify-center text-white hover:bg-surface-1 transition-colors shadow-lg">
+
             <ChevronRight className="w-5 h-5" />
           </button>
         </div>
-      )}
+      }
 
       {/* 矩阵视图 */}
-      {!loading && !error && viewMode === "matrix" && (
-        <MatrixView
-          projects={filteredProjects}
-          stages={PROJECT_STAGES}
-          onProjectClick={handleProjectClick}
-        />
-      )}
+      {!loading && !error && viewMode === "matrix" &&
+      <MatrixView
+        projects={filteredProjects}
+        stages={PROJECT_STAGES}
+        onProjectClick={handleProjectClick} />
+
+      }
 
       {/* 列表视图 */}
-      {!loading && !error && viewMode === "list" && (
-        <ListView
-          projects={filteredProjects}
-          onProjectClick={handleProjectClick}
-          isProjectRelevant={isProjectRelevant}
-        />
-      )}
+      {!loading && !error && viewMode === "list" &&
+      <ListView
+        projects={filteredProjects}
+        onProjectClick={handleProjectClick}
+        isProjectRelevant={isProjectRelevant} />
+
+      }
 
       {/* 空状态 */}
-      {!loading && filteredProjects.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20">
+      {!loading && filteredProjects.length === 0 &&
+      <div className="flex flex-col items-center justify-center py-20">
           <Layers className="w-16 h-16 text-slate-600 mb-4" />
           <h3 className="text-lg font-medium text-white mb-2">暂无项目</h3>
           <p className="text-slate-400">
             {searchQuery ? "没有找到匹配的项目" : "当前筛选条件下没有项目"}
           </p>
         </div>
-      )}
-    </motion.div>
-  );
+      }
+    </motion.div>);
+
 }
 
 // 矩阵视图组件
@@ -327,107 +327,107 @@ function MatrixView({ projects, stages, onProjectClick }) {
             <th className="p-2 text-left text-xs text-slate-500 font-normal">
               健康度 / 阶段
             </th>
-            {stages.map((stage) => (
-              <th key={stage.key} className="p-2 text-center">
+            {stages.map((stage) =>
+            <th key={stage.key} className="p-2 text-center">
                 <div className="text-xs text-slate-400">{stage.key}</div>
                 <div className="text-sm text-white">{stage.shortName}</div>
               </th>
-            ))}
+            )}
           </tr>
         </thead>
         <tbody>
-          {healthKeys.map((healthKey) => (
-            <tr key={healthKey} className="border-t border-white/5">
+          {healthKeys.map((healthKey) =>
+          <tr key={healthKey} className="border-t border-white/5">
               <td className="p-2">
                 <div
+                className={cn(
+                  "flex items-center gap-2 px-2 py-1 rounded",
+                  HEALTH_CONFIG[healthKey].bgClass
+                )}>
+
+                  <span
                   className={cn(
-                    "flex items-center gap-2 px-2 py-1 rounded",
-                    HEALTH_CONFIG[healthKey].bgClass,
-                  )}
-                >
+                    "w-2 h-2 rounded-full",
+                    HEALTH_CONFIG[healthKey].dotClass
+                  )} />
+
                   <span
-                    className={cn(
-                      "w-2 h-2 rounded-full",
-                      HEALTH_CONFIG[healthKey].dotClass,
-                    )}
-                  />
-                  <span
-                    className={cn(
-                      "text-sm",
-                      HEALTH_CONFIG[healthKey].textClass,
-                    )}
-                  >
+                  className={cn(
+                    "text-sm",
+                    HEALTH_CONFIG[healthKey].textClass
+                  )}>
+
                     {HEALTH_CONFIG[healthKey].label}
                   </span>
                 </div>
               </td>
               {stages.map((stage) => {
-                const cellProjects = matrix[stage.key]?.[healthKey] || [];
-                return (
-                  <td key={stage.key} className="p-2 text-center align-top">
-                    {cellProjects.length > 0 ? (
-                      <div className="space-y-1">
-                        {cellProjects.slice(0, 3).map((project) => (
-                          <motion.div
-                            key={project.id}
-                            whileHover={{ scale: 1.05 }}
-                            onClick={() => onProjectClick(project)}
-                            className={cn(
-                              "cursor-pointer px-2 py-1 rounded text-xs truncate",
-                              "bg-surface-1 hover:bg-surface-2 border border-white/5",
-                              HEALTH_CONFIG[healthKey].borderClass,
-                              "border-l-2",
-                            )}
-                          >
+              const cellProjects = matrix[stage.key]?.[healthKey] || [];
+              return (
+                <td key={stage.key} className="p-2 text-center align-top">
+                    {cellProjects.length > 0 ?
+                  <div className="space-y-1">
+                        {cellProjects.slice(0, 3).map((project) =>
+                    <motion.div
+                      key={project.id}
+                      whileHover={{ scale: 1.05 }}
+                      onClick={() => onProjectClick(project)}
+                      className={cn(
+                        "cursor-pointer px-2 py-1 rounded text-xs truncate",
+                        "bg-surface-1 hover:bg-surface-2 border border-white/5",
+                        HEALTH_CONFIG[healthKey].borderClass,
+                        "border-l-2"
+                      )}>
+
                             {project.project_code}
                           </motion.div>
-                        ))}
-                        {cellProjects.length > 3 && (
-                          <div className="text-xs text-slate-500">
+                    )}
+                        {cellProjects.length > 3 &&
+                    <div className="text-xs text-slate-500">
                             +{cellProjects.length - 3} 更多
                           </div>
-                        )}
-                      </div>
-                    ) : (
-                      <span className="text-slate-600">-</span>
-                    )}
-                  </td>
-                );
-              })}
+                    }
+                      </div> :
+
+                  <span className="text-slate-600">-</span>
+                  }
+                  </td>);
+
+            })}
             </tr>
-          ))}
+          )}
         </tbody>
       </table>
-    </div>
-  );
+    </div>);
+
 }
 
 // 列表视图组件
 function ListView({ projects, onProjectClick, isProjectRelevant }) {
   return (
     <div className="space-y-2">
-      {projects.map((project, index) => (
-        <motion.div
-          key={project.id}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.02 }}
-        >
+      {projects.map((project, index) =>
+      <motion.div
+        key={project.id}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.02 }}>
+
           <Card
-            className={cn(
-              "hover:bg-surface-2/50 cursor-pointer transition-colors",
-              isProjectRelevant(project.id) && "ring-1 ring-primary/30",
-            )}
-            onClick={() => onProjectClick(project)}
-          >
+          className={cn(
+            "hover:bg-surface-2/50 cursor-pointer transition-colors",
+            isProjectRelevant(project.id) && "ring-1 ring-primary/30"
+          )}
+          onClick={() => onProjectClick(project)}>
+
             <div className="p-4 flex items-center gap-4">
               {/* 健康度指示 */}
               <div
-                className={cn(
-                  "w-1 h-12 rounded-full",
-                  HEALTH_CONFIG[project.health || "H1"].dotClass,
-                )}
-              />
+              className={cn(
+                "w-1 h-12 rounded-full",
+                HEALTH_CONFIG[project.health || "H1"].dotClass
+              )} />
+
 
               {/* 项目信息 */}
               <div className="flex-1 min-w-0">
@@ -436,12 +436,12 @@ function ListView({ projects, onProjectClick, isProjectRelevant }) {
                     {project.project_code}
                   </span>
                   <span
-                    className={cn(
-                      "text-xs px-2 py-0.5 rounded",
-                      HEALTH_CONFIG[project.health || "H1"].bgClass,
-                      HEALTH_CONFIG[project.health || "H1"].textClass,
-                    )}
-                  >
+                  className={cn(
+                    "text-xs px-2 py-0.5 rounded",
+                    HEALTH_CONFIG[project.health || "H1"].bgClass,
+                    HEALTH_CONFIG[project.health || "H1"].textClass
+                  )}>
+
                     {HEALTH_CONFIG[project.health || "H1"].label}
                   </span>
                 </div>
@@ -455,10 +455,10 @@ function ListView({ projects, onProjectClick, isProjectRelevant }) {
                 <div className="text-xs text-slate-500">阶段</div>
                 <div className="text-sm text-white">
                   {PROJECT_STAGES.find(
-                    (s) =>
-                      (s.key || s.code) ===
-                      (project.stage || project.current_stage),
-                  )?.shortName || "-"}
+                  (s) =>
+                  (s.key || s.code) === (
+                  project.stage || project.current_stage)
+                )?.shortName || "-"}
                 </div>
               </div>
 
@@ -496,7 +496,7 @@ function ListView({ projects, onProjectClick, isProjectRelevant }) {
             </div>
           </Card>
         </motion.div>
-      ))}
-    </div>
-  );
+      )}
+    </div>);
+
 }

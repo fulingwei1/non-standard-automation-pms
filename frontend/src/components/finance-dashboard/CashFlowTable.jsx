@@ -16,17 +16,17 @@ import { cn } from "../../lib/utils";
 import {
   formatCurrency,
   formatPercentage,
-  cashFlowTypes,
-  timePeriods
-} from "./financeDashboardConstants";
+  cashFlowTypes as _cashFlowTypes,
+  timePeriods } from
+"./financeDashboardConstants";
 
 // 现金流汇总卡片
 const CashFlowSummaryCard = ({ cashFlowData, loading }) => {
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i} className="bg-surface-50 border-white/10">
+        {[...Array(4)].map((_, i) =>
+        <Card key={i} className="bg-surface-50 border-white/10">
             <CardContent className="p-6">
               <div className="animate-pulse space-y-3">
                 <div className="w-8 h-8 bg-slate-700 rounded"></div>
@@ -35,50 +35,50 @@ const CashFlowSummaryCard = ({ cashFlowData, loading }) => {
               </div>
             </CardContent>
           </Card>
-        ))}
-      </div>
-    );
+        )}
+      </div>);
+
   }
 
   const cashFlowTypes = [
-    {
-      type: 'operating',
-      label: '经营活动现金流',
-      value: cashFlowData.operating,
-      icon: '💰',
-      color: cashFlowData.operating >= 0 ? 'text-green-400' : 'text-red-400',
-      bgColor: cashFlowData.operating >= 0 ? 'bg-green-500/10' : 'bg-red-500/10'
-    },
-    {
-      type: 'investing',
-      label: '投资活动现金流',
-      value: cashFlowData.investing,
-      icon: '📈',
-      color: cashFlowData.investing >= 0 ? 'text-green-400' : 'text-red-400',
-      bgColor: cashFlowData.investing >= 0 ? 'bg-green-500/10' : 'bg-red-500/10'
-    },
-    {
-      type: 'financing',
-      label: '筹资活动现金流',
-      value: cashFlowData.financing,
-      icon: '🏦',
-      color: cashFlowData.financing >= 0 ? 'text-green-400' : 'text-red-400',
-      bgColor: cashFlowData.financing >= 0 ? 'bg-green-500/10' : 'bg-red-500/10'
-    },
-    {
-      type: 'net',
-      label: '现金流量净额',
-      value: cashFlowData.net,
-      icon: '💧',
-      color: cashFlowData.net >= 0 ? 'text-green-400' : 'text-red-400',
-      bgColor: cashFlowData.net >= 0 ? 'bg-green-500/10' : 'bg-red-500/10'
-    }
-  ];
+  {
+    type: 'operating',
+    label: '经营活动现金流',
+    value: cashFlowData.operating,
+    icon: '💰',
+    color: cashFlowData.operating >= 0 ? 'text-green-400' : 'text-red-400',
+    bgColor: cashFlowData.operating >= 0 ? 'bg-green-500/10' : 'bg-red-500/10'
+  },
+  {
+    type: 'investing',
+    label: '投资活动现金流',
+    value: cashFlowData.investing,
+    icon: '📈',
+    color: cashFlowData.investing >= 0 ? 'text-green-400' : 'text-red-400',
+    bgColor: cashFlowData.investing >= 0 ? 'bg-green-500/10' : 'bg-red-500/10'
+  },
+  {
+    type: 'financing',
+    label: '筹资活动现金流',
+    value: cashFlowData.financing,
+    icon: '🏦',
+    color: cashFlowData.financing >= 0 ? 'text-green-400' : 'text-red-400',
+    bgColor: cashFlowData.financing >= 0 ? 'bg-green-500/10' : 'bg-red-500/10'
+  },
+  {
+    type: 'net',
+    label: '现金流量净额',
+    value: cashFlowData.net,
+    icon: '💧',
+    color: cashFlowData.net >= 0 ? 'text-green-400' : 'text-red-400',
+    bgColor: cashFlowData.net >= 0 ? 'bg-green-500/10' : 'bg-red-500/10'
+  }];
+
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {cashFlowTypes.map((item, index) => (
-        <Card key={index} className="bg-surface-50 border-white/10">
+      {cashFlowTypes.map((item, index) =>
+      <Card key={index} className="bg-surface-50 border-white/10">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center", item.bg)}>
@@ -93,16 +93,16 @@ const CashFlowSummaryCard = ({ cashFlowData, loading }) => {
             </div>
           </CardContent>
         </Card>
-      ))}
-    </div>
-  );
+      )}
+    </div>);
+
 };
 
 // 现金流趋势图
 const CashFlowTrendChart = ({ cashFlowByMonth, loading }) => {
   const chartData = useMemo(() => {
     if (!cashFlowByMonth || cashFlowByMonth.length === 0) return [];
-    return cashFlowByMonth.map(item => ({
+    return cashFlowByMonth.map((item) => ({
       month: item.month,
       operating: item.operating,
       investing: item.investing,
@@ -120,8 +120,8 @@ const CashFlowTrendChart = ({ cashFlowByMonth, loading }) => {
             <div className="h-64 bg-slate-700 rounded"></div>
           </div>
         </CardContent>
-      </Card>
-    );
+      </Card>);
+
   }
 
   if (!chartData || chartData.length === 0) {
@@ -132,8 +132,8 @@ const CashFlowTrendChart = ({ cashFlowByMonth, loading }) => {
             暂无现金流趋势数据
           </div>
         </CardContent>
-      </Card>
-    );
+      </Card>);
+
   }
 
   const formatter = (value) => formatCurrency(value);
@@ -165,12 +165,12 @@ const CashFlowTrendChart = ({ cashFlowByMonth, loading }) => {
                 name: datum.operating !== undefined ? '现金流量净额' : datum.type,
                 value: formatter(datum.net || datum.value)
               })
-            }}
-          />
+            }} />
+
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 };
 
 // 现金流明细表格
@@ -187,21 +187,21 @@ const CashFlowDetailTable = ({
   const filteredData = useMemo(() => {
     if (!cashFlowDetails) return [];
 
-    return cashFlowDetails
-      .filter(item => {
-        const matchesSearch = item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                             item.category.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesType = !selectedType || item.type === selectedType;
-        return matchesSearch && matchesType;
-      })
-      .sort((a, b) => {
-        // 先按类型排序，再按金额排序
-        if (a.type !== b.type) {
-          const typeOrder = ['operating', 'investing', 'financing'];
-          return typeOrder.indexOf(a.type) - typeOrder.indexOf(b.type);
-        }
-        return Math.abs(b.amount) - Math.abs(a.amount);
-      });
+    return cashFlowDetails.
+    filter((item) => {
+      const matchesSearch = item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.category.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesType = !selectedType || item.type === selectedType;
+      return matchesSearch && matchesType;
+    }).
+    sort((a, b) => {
+      // 先按类型排序，再按金额排序
+      if (a.type !== b.type) {
+        const typeOrder = ['operating', 'investing', 'financing'];
+        return typeOrder.indexOf(a.type) - typeOrder.indexOf(b.type);
+      }
+      return Math.abs(b.amount) - Math.abs(a.amount);
+    });
   }, [cashFlowDetails, searchTerm, selectedType]);
 
   const getTypeConfig = (type) => {
@@ -224,14 +224,14 @@ const CashFlowDetailTable = ({
           <div className="animate-pulse space-y-3">
             <div className="h-4 bg-slate-700 rounded w-1/3"></div>
             <div className="space-y-2">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-3 bg-slate-700 rounded w-full"></div>
-              ))}
+              {[...Array(5)].map((_, i) =>
+              <div key={i} className="h-3 bg-slate-700 rounded w-full"></div>
+              )}
             </div>
           </div>
         </CardContent>
-      </Card>
-    );
+      </Card>);
+
   }
 
   return (
@@ -244,8 +244,8 @@ const CashFlowDetailTable = ({
               placeholder="搜索现金流项目..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="bg-slate-800 border-slate-700 text-white"
-            />
+              className="bg-slate-800 border-slate-700 text-white" />
+
           </div>
 
           <Select value={selectedType} onValueChange={setSelectedType}>
@@ -265,9 +265,9 @@ const CashFlowDetailTable = ({
               <SelectValue placeholder="选择期间" />
             </SelectTrigger>
             <SelectContent className="bg-slate-800">
-              {Object.entries(timePeriods).map(([key, value]) => (
-                <SelectItem key={key} value={key}>{value.label}</SelectItem>
-              ))}
+              {Object.entries(timePeriods).map(([key, value]) =>
+              <SelectItem key={key} value={key}>{value.label}</SelectItem>
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -289,9 +289,9 @@ const CashFlowDetailTable = ({
               {filteredData.map((item, index) => {
                 const typeConfig = getTypeConfig(item.type);
                 const isPositive = item.amount >= 0;
-                const cumulative = filteredData
-                  .slice(0, index + 1)
-                  .reduce((sum, d) => sum + d.amount, 0);
+                const cumulative = filteredData.
+                slice(0, index + 1).
+                reduce((sum, d) => sum + d.amount, 0);
 
                 return (
                   <TableRow key={index} className="border-b border-slate-800/50">
@@ -324,22 +324,22 @@ const CashFlowDetailTable = ({
                     )}>
                       {formatCurrency(cumulative)}
                     </TableCell>
-                  </TableRow>
-                );
+                  </TableRow>);
+
               })}
             </TableBody>
           </Table>
         </div>
 
-        {filteredData.length === 0 && (
-          <div className="text-center py-8 text-slate-400">
+        {filteredData.length === 0 &&
+        <div className="text-center py-8 text-slate-400">
             暂无现金流数据
           </div>
-        )}
+        }
 
         {/* 汇总行 */}
-        {filteredData.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-slate-700">
+        {filteredData.length > 0 &&
+        <div className="mt-4 pt-4 border-t border-slate-700">
             <div className="flex justify-between items-center">
               <div className="text-sm text-slate-400">
                 共 {filteredData.length} 条记录
@@ -352,10 +352,10 @@ const CashFlowDetailTable = ({
               </div>
             </div>
           </div>
-        )}
+        }
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 };
 
 // 现金流分析卡片
@@ -367,42 +367,42 @@ const CashFlowAnalysisCard = ({ analysisData, loading }) => {
           <div className="animate-pulse space-y-3">
             <div className="h-4 bg-slate-700 rounded w-1/3"></div>
             <div className="space-y-2">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-3 bg-slate-700 rounded w-full"></div>
-              ))}
+              {[...Array(4)].map((_, i) =>
+              <div key={i} className="h-3 bg-slate-700 rounded w-full"></div>
+              )}
             </div>
           </div>
         </CardContent>
-      </Card>
-    );
+      </Card>);
+
   }
 
   const metrics = [
-    {
-      label: '现金流入',
-      value: analysisData.totalInflow,
-      trend: analysisData.inflowGrowth,
-      positive: true
-    },
-    {
-      label: '现金流出',
-      value: analysisData.totalOutflow,
-      trend: analysisData.outflowGrowth,
-      positive: false
-    },
-    {
-      label: '现金转换周期',
-      value: `${analysisData.cashConversionCycle}天`,
-      trend: analysisData.cycleTrend,
-      positive: analysisData.cycleTrend <= 0
-    },
-    {
-      label: '自由现金流',
-      value: analysisData.freeCashFlow,
-      trend: analysisData.freeCashFlowGrowth,
-      positive: analysisData.freeCashFlow >= 0
-    }
-  ];
+  {
+    label: '现金流入',
+    value: analysisData.totalInflow,
+    trend: analysisData.inflowGrowth,
+    positive: true
+  },
+  {
+    label: '现金流出',
+    value: analysisData.totalOutflow,
+    trend: analysisData.outflowGrowth,
+    positive: false
+  },
+  {
+    label: '现金转换周期',
+    value: `${analysisData.cashConversionCycle}天`,
+    trend: analysisData.cycleTrend,
+    positive: analysisData.cycleTrend <= 0
+  },
+  {
+    label: '自由现金流',
+    value: analysisData.freeCashFlow,
+    trend: analysisData.freeCashFlowGrowth,
+    positive: analysisData.freeCashFlow >= 0
+  }];
+
 
   return (
     <Card className="bg-surface-50 border-white/10">
@@ -410,28 +410,28 @@ const CashFlowAnalysisCard = ({ analysisData, loading }) => {
         <h3 className="text-lg font-semibold text-white mb-4">现金流分析</h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {metrics.map((metric, index) => (
-            <div key={index} className="bg-slate-800/50 rounded-lg p-4">
+          {metrics.map((metric, index) =>
+          <div key={index} className="bg-slate-800/50 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="text-sm text-slate-400">{metric.label}</div>
-                {metric.trend !== undefined && (
-                  <div className={cn(
-                    "text-xs font-medium",
-                    metric.positive ? "text-green-400" : "text-red-400"
-                  )}>
+                {metric.trend !== undefined &&
+              <div className={cn(
+                "text-xs font-medium",
+                metric.positive ? "text-green-400" : "text-red-400"
+              )}>
                     {metric.trend >= 0 ? "↑" : "↓"}
                     {Math.abs(metric.trend)}%
                   </div>
-                )}
+              }
               </div>
               <div className={cn(
-                "text-xl font-bold",
-                metric.positive ? "text-green-400" : "text-red-400"
-              )}>
+              "text-xl font-bold",
+              metric.positive ? "text-green-400" : "text-red-400"
+            )}>
                 {metric.value}
               </div>
             </div>
-          ))}
+          )}
         </div>
 
         <div className="mt-4 space-y-3">
@@ -444,8 +444,9 @@ const CashFlowAnalysisCard = ({ analysisData, loading }) => {
                 className="bg-gradient-to-r from-green-400 to-emerald-500 h-2 rounded-full"
                 style={{
                   width: `${Math.abs(analysisData.operatingRatio)}%`
-                }}
-              ></div>
+                }}>
+
+              </div>
             </div>
             <span className="text-sm font-medium text-white">
               {analysisData.operatingRatio >= 0 ? '+' : ''}
@@ -454,8 +455,8 @@ const CashFlowAnalysisCard = ({ analysisData, loading }) => {
           </div>
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 };
 
 export function CashFlowTable({
@@ -471,25 +472,25 @@ export function CashFlowTable({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       {/* 现金流汇总 */}
       <CashFlowSummaryCard
         cashFlowData={cashFlowData}
-        loading={loading}
-      />
+        loading={loading} />
+
 
       {/* 现金流分析 */}
       <CashFlowAnalysisCard
         analysisData={cashFlowData?.analysis}
-        loading={loading}
-      />
+        loading={loading} />
+
 
       {/* 现金流趋势 */}
       <CashFlowTrendChart
         cashFlowByMonth={cashFlowData?.byMonth}
-        loading={loading}
-      />
+        loading={loading} />
+
 
       {/* 现金流明细 */}
       <CashFlowDetailTable
@@ -500,10 +501,10 @@ export function CashFlowTable({
         selectedType={selectedType}
         setSelectedType={setSelectedType}
         period={period}
-        setPeriod={setPeriod}
-      />
-    </motion.div>
-  );
+        setPeriod={setPeriod} />
+
+    </motion.div>);
+
 }
 
 export default CashFlowTable;

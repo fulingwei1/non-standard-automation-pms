@@ -17,8 +17,8 @@ import {
   LineChart,
   ArrowUpRight,
   ArrowDownRight,
-  Download,
-} from "lucide-react";
+  Download } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -30,9 +30,9 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../components/ui";
-import { fadeIn, staggerContainer } from "../lib/animations";
+  DropdownMenuTrigger } from
+"../components/ui";
+import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
 import { salesStatisticsApi } from "../services/api";
 
 export default function SalesStatistics() {
@@ -52,23 +52,23 @@ export default function SalesStatistics() {
       let endDate = today.toISOString().split("T")[0];
 
       if (timeRange === "month") {
-        startDate = new Date(today.getFullYear(), today.getMonth(), 1)
-          .toISOString()
-          .split("T")[0];
+        startDate = new Date(today.getFullYear(), today.getMonth(), 1).
+        toISOString().
+        split("T")[0];
       } else if (timeRange === "quarter") {
         const quarter = Math.floor(today.getMonth() / 3);
-        startDate = new Date(today.getFullYear(), quarter * 3, 1)
-          .toISOString()
-          .split("T")[0];
+        startDate = new Date(today.getFullYear(), quarter * 3, 1).
+        toISOString().
+        split("T")[0];
       } else if (timeRange === "year") {
-        startDate = new Date(today.getFullYear(), 0, 1)
-          .toISOString()
-          .split("T")[0];
+        startDate = new Date(today.getFullYear(), 0, 1).
+        toISOString().
+        split("T")[0];
       }
 
-      const params = startDate
-        ? { start_date: startDate, end_date: endDate }
-        : {};
+      const params = startDate ?
+      { start_date: startDate, end_date: endDate } :
+      {};
 
       // Load sales funnel
       const funnelResponse = await salesStatisticsApi.funnel(params);
@@ -77,51 +77,51 @@ export default function SalesStatistics() {
         const funnel = funnelResponse.data.data;
         setFunnelData({
           stages: [
-            {
-              stage: "leads",
-              stage_label: "线索",
-              count: funnel.leads || 0,
-              amount: 0,
-            },
-            {
-              stage: "opportunities",
-              stage_label: "商机",
-              count: funnel.opportunities || 0,
-              amount: funnel.total_opportunity_amount || 0,
-            },
-            {
-              stage: "quotes",
-              stage_label: "报价",
-              count: funnel.quotes || 0,
-              amount: 0,
-            },
-            {
-              stage: "contracts",
-              stage_label: "合同",
-              count: funnel.contracts || 0,
-              amount: funnel.total_contract_amount || 0,
-            },
-          ],
+          {
+            stage: "leads",
+            stage_label: "线索",
+            count: funnel.leads || 0,
+            amount: 0
+          },
+          {
+            stage: "opportunities",
+            stage_label: "商机",
+            count: funnel.opportunities || 0,
+            amount: funnel.total_opportunity_amount || 0
+          },
+          {
+            stage: "quotes",
+            stage_label: "报价",
+            count: funnel.quotes || 0,
+            amount: 0
+          },
+          {
+            stage: "contracts",
+            stage_label: "合同",
+            count: funnel.contracts || 0,
+            amount: funnel.total_contract_amount || 0
+          }]
+
         });
       }
 
       // Load revenue forecast
       const forecastResponse = await salesStatisticsApi.revenueForecast({
-        months: 3,
+        months: 3
       });
       if (forecastResponse.data && forecastResponse.data.data) {
         const forecast = forecastResponse.data.data;
-        const totalForecast = forecast.forecast
-          ? forecast.forecast.reduce(
-              (sum, f) => sum + (parseFloat(f.estimated_revenue) || 0),
-              0,
-            )
-          : 0;
+        const totalForecast = forecast.forecast ?
+        forecast.forecast.reduce(
+          (sum, f) => sum + (parseFloat(f.estimated_revenue) || 0),
+          0
+        ) :
+        0;
         setRevenueForecast({
           forecast_amount: totalForecast,
           confirmed_amount: forecast.confirmed_amount || 0,
           completion_rate: 0,
-          breakdown: forecast.forecast || [],
+          breakdown: forecast.forecast || []
         });
       }
 
@@ -132,17 +132,17 @@ export default function SalesStatistics() {
         const stageList = Object.entries(stages).map(([stage, data]) => ({
           stage,
           stage_label:
-            {
-              DISCOVERY: "发现",
-              QUALIFIED: "已确认",
-              PROPOSAL: "提案",
-              NEGOTIATION: "谈判",
-              WON: "已成交",
-              LOST: "已丢失",
-              ON_HOLD: "暂停",
-            }[stage] || stage,
+          {
+            DISCOVERY: "发现",
+            QUALIFIED: "已确认",
+            PROPOSAL: "提案",
+            NEGOTIATION: "谈判",
+            WON: "已成交",
+            LOST: "已丢失",
+            ON_HOLD: "暂停"
+          }[stage] || stage,
           count: data.count || 0,
-          amount: data.total_amount || 0,
+          amount: data.total_amount || 0
         }));
         setOpportunitiesByStage(stageList);
       }
@@ -160,7 +160,7 @@ export default function SalesStatistics() {
             total_contract_amount: summaryData.total_contract_amount || 0,
             paid_amount: summaryData.paid_amount || 0,
             conversion_rate: summaryData.conversion_rate || 0,
-            win_rate: summaryData.win_rate || 0,
+            win_rate: summaryData.win_rate || 0
           });
         } else if (funnelResponse.data && funnelResponse.data.data) {
           // Fallback: calculate from funnel data if summary API not available
@@ -173,7 +173,7 @@ export default function SalesStatistics() {
             total_contract_amount: funnel.total_contract_amount || 0,
             paid_amount: 0,
             conversion_rate: 0,
-            win_rate: 0,
+            win_rate: 0
           });
         }
       } catch (summaryError) {
@@ -189,7 +189,7 @@ export default function SalesStatistics() {
             total_contract_amount: funnel.total_contract_amount || 0,
             paid_amount: 0,
             conversion_rate: 0,
-            win_rate: 0,
+            win_rate: 0
           });
         }
       }
@@ -223,11 +223,11 @@ export default function SalesStatistics() {
     try {
       const exportData = {
         统计周期:
-          timeRange === "month"
-            ? "本月"
-            : timeRange === "quarter"
-              ? "本季度"
-              : "本年",
+        timeRange === "month" ?
+        "本月" :
+        timeRange === "quarter" ?
+        "本季度" :
+        "本年",
         导出日期: new Date().toLocaleDateString("zh-CN"),
         线索总数: summary?.total_leads || 0,
         已转化线索: summary?.converted_leads || 0,
@@ -236,28 +236,28 @@ export default function SalesStatistics() {
         合同总额: formatCurrency(summary?.total_contract_amount || 0),
         已收款: formatCurrency(summary?.paid_amount || 0),
         成交率: formatPercent(summary?.win_rate || 0),
-        转化率: formatPercent(summary?.conversion_rate || 0),
+        转化率: formatPercent(summary?.conversion_rate || 0)
       };
 
       // 转换为CSV格式
       const csvContent = [
-        "项目,数值",
-        ...Object.entries(exportData).map(
-          ([key, value]) => `"${key}","${value}"`,
-        ),
-      ].join("\n");
+      "项目,数值",
+      ...Object.entries(exportData).map(
+        ([key, value]) => `"${key}","${value}"`
+      )].
+      join("\n");
 
       // 添加BOM以支持中文
       const BOM = "\uFEFF";
       const blob = new Blob([BOM + csvContent], {
-        type: "text/csv;charset=utf-8;",
+        type: "text/csv;charset=utf-8;"
       });
       const link = document.createElement("a");
       const url = URL.createObjectURL(blob);
       link.setAttribute("href", url);
       link.setAttribute(
         "download",
-        `销售统计报表_${timeRange}_${new Date().toISOString().split("T")[0]}.csv`,
+        `销售统计报表_${timeRange}_${new Date().toISOString().split("T")[0]}.csv`
       );
       link.style.visibility = "hidden";
       document.body.appendChild(link);
@@ -274,22 +274,22 @@ export default function SalesStatistics() {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="space-y-6 p-6"
-    >
+      className="space-y-6 p-6">
+
       <PageHeader
         title="销售统计"
         description="销售数据分析与报表"
         action={
-          <div className="flex gap-2">
+        <div className="flex gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">
                   <Calendar className="mr-2 h-4 w-4" />
-                  {timeRange === "month"
-                    ? "本月"
-                    : timeRange === "quarter"
-                      ? "本季度"
-                      : "本年"}
+                  {timeRange === "month" ?
+                "本月" :
+                timeRange === "quarter" ?
+                "本季度" :
+                "本年"}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
@@ -309,12 +309,12 @@ export default function SalesStatistics() {
               导出报表
             </Button>
           </div>
-        }
-      />
+        } />
+
 
       {/* 汇总统计 */}
-      {summary && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {summary &&
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -380,43 +380,43 @@ export default function SalesStatistics() {
             </CardContent>
           </Card>
         </div>
-      )}
+      }
 
       {/* 销售漏斗 */}
-      {funnelData && (
-        <Card>
+      {funnelData &&
+      <Card>
           <CardHeader>
             <CardTitle>销售漏斗</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {funnelData.stages && funnelData.stages.length > 0 ? (
-                <>
+              {funnelData.stages && funnelData.stages.length > 0 ?
+            <>
                   {/* 漏斗可视化 */}
                   <div className="relative">
                     {funnelData.stages.map((stage, index) => {
-                      const prevCount =
-                        index > 0
-                          ? funnelData.stages[index - 1].count
-                          : stage.count;
-                      const conversionRate =
-                        prevCount > 0
-                          ? ((stage.count / prevCount) * 100).toFixed(1)
-                          : 0;
-                      const isIncreasing =
-                        index === 0 || stage.count >= prevCount;
-                      const maxCount = Math.max(
-                        ...funnelData.stages.map((s) => s.count || 0),
-                        1,
-                      );
-                      const widthPercent =
-                        ((stage.count || 0) / maxCount) * 100;
+                  const prevCount =
+                  index > 0 ?
+                  funnelData.stages[index - 1].count :
+                  stage.count;
+                  const conversionRate =
+                  prevCount > 0 ?
+                  (stage.count / prevCount * 100).toFixed(1) :
+                  0;
+                  const isIncreasing =
+                  index === 0 || stage.count >= prevCount;
+                  const maxCount = Math.max(
+                    ...funnelData.stages.map((s) => s.count || 0),
+                    1
+                  );
+                  const widthPercent =
+                  (stage.count || 0) / maxCount * 100;
 
-                      return (
-                        <div
-                          key={stage.stage || index}
-                          className="space-y-2 mb-4"
-                        >
+                  return (
+                    <div
+                      key={stage.stage || index}
+                      className="space-y-2 mb-4">
+
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <span className="font-semibold text-white">
@@ -425,59 +425,59 @@ export default function SalesStatistics() {
                               <Badge className="bg-blue-500">
                                 {stage.count || 0} 个
                               </Badge>
-                              {stage.amount && (
-                                <span className="text-sm text-slate-400">
+                              {stage.amount &&
+                          <span className="text-sm text-slate-400">
                                   {formatCurrency(stage.amount)}
                                 </span>
-                              )}
+                          }
                             </div>
                             <div className="flex items-center gap-2">
-                              {index > 0 && (
-                                <>
-                                  {isIncreasing ? (
-                                    <ArrowUpRight className="h-4 w-4 text-emerald-400" />
-                                  ) : (
-                                    <ArrowDownRight className="h-4 w-4 text-red-400" />
-                                  )}
+                              {index > 0 &&
+                          <>
+                                  {isIncreasing ?
+                            <ArrowUpRight className="h-4 w-4 text-emerald-400" /> :
+
+                            <ArrowDownRight className="h-4 w-4 text-red-400" />
+                            }
                                   <span className="text-sm text-slate-400">
                                     {conversionRate}% 转化率
                                   </span>
                                 </>
-                              )}
+                          }
                             </div>
                           </div>
                           {/* 漏斗形状 */}
                           <div className="relative">
                             <div
-                              className="h-12 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded transition-all hover:opacity-80"
-                              style={{
-                                width: `${Math.max(widthPercent, 10)}%`,
-                                marginLeft: `${(100 - Math.max(widthPercent, 10)) / 2}%`,
-                                clipPath:
-                                  index === 0
-                                    ? "polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%)"
-                                    : index === funnelData.stages.length - 1
-                                      ? "polygon(0% 0%, 100% 0%, 90% 100%, 10% 100%)"
-                                      : "polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%)",
-                              }}
-                            />
+                          className="h-12 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded transition-all hover:opacity-80"
+                          style={{
+                            width: `${Math.max(widthPercent, 10)}%`,
+                            marginLeft: `${(100 - Math.max(widthPercent, 10)) / 2}%`,
+                            clipPath:
+                            index === 0 ?
+                            "polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%)" :
+                            index === funnelData.stages.length - 1 ?
+                            "polygon(0% 0%, 100% 0%, 90% 100%, 10% 100%)" :
+                            "polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%)"
+                          }} />
+
                           </div>
-                        </div>
-                      );
-                    })}
+                        </div>);
+
+                })}
                   </div>
-                </>
-              ) : (
-                <p className="text-center text-slate-400 py-8">暂无漏斗数据</p>
-              )}
+                </> :
+
+            <p className="text-center text-slate-400 py-8">暂无漏斗数据</p>
+            }
             </div>
           </CardContent>
         </Card>
-      )}
+      }
 
       {/* 商机阶段分布 */}
-      {opportunitiesByStage && opportunitiesByStage.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {opportunitiesByStage && opportunitiesByStage.length > 0 &&
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card>
             <CardHeader>
               <CardTitle>商机阶段分布</CardTitle>
@@ -485,15 +485,15 @@ export default function SalesStatistics() {
             <CardContent>
               <div className="space-y-3">
                 {opportunitiesByStage.map((item) => {
-                  const total = opportunitiesByStage.reduce(
-                    (sum, i) => sum + (parseFloat(i.count) || 0),
-                    0,
-                  );
-                  const percentage =
-                    total > 0 ? ((item.count / total) * 100).toFixed(1) : 0;
+                const total = opportunitiesByStage.reduce(
+                  (sum, i) => sum + (parseFloat(i.count) || 0),
+                  0
+                );
+                const percentage =
+                total > 0 ? (item.count / total * 100).toFixed(1) : 0;
 
-                  return (
-                    <div key={item.stage} className="space-y-1">
+                return (
+                  <div key={item.stage} className="space-y-1">
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-slate-300">
                           {item.stage_label || item.stage}
@@ -509,20 +509,20 @@ export default function SalesStatistics() {
                       </div>
                       <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
-                          style={{ width: `${percentage}%` }}
-                        />
+                        className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
+                        style={{ width: `${percentage}%` }} />
+
                       </div>
-                    </div>
-                  );
-                })}
+                    </div>);
+
+              })}
               </div>
             </CardContent>
           </Card>
 
           {/* 收入预测 */}
-          {revenueForecast && (
-            <Card>
+          {revenueForecast &&
+        <Card>
               <CardHeader>
                 <CardTitle>收入预测</CardTitle>
               </CardHeader>
@@ -549,23 +549,23 @@ export default function SalesStatistics() {
                     </div>
                   </div>
                   {revenueForecast.breakdown &&
-                    revenueForecast.breakdown.length > 0 && (
-                      <div className="border-t border-slate-700 pt-4">
+              revenueForecast.breakdown.length > 0 &&
+              <div className="border-t border-slate-700 pt-4">
                         <p className="text-sm text-slate-400 mb-2">
                           按阶段分解:
                         </p>
                         <div className="space-y-2">
                           {revenueForecast.breakdown.map((item) => {
-                            const total = revenueForecast.breakdown.reduce(
-                              (sum, i) => sum + (parseFloat(i.amount) || 0),
-                              0,
-                            );
-                            const percentage =
-                              total > 0
-                                ? ((item.amount || 0) / total) * 100
-                                : 0;
-                            return (
-                              <div key={item.stage} className="space-y-1">
+                    const total = revenueForecast.breakdown.reduce(
+                      (sum, i) => sum + (parseFloat(i.amount) || 0),
+                      0
+                    );
+                    const percentage =
+                    total > 0 ?
+                    (item.amount || 0) / total * 100 :
+                    0;
+                    return (
+                      <div key={item.stage} className="space-y-1">
                                 <div className="flex items-center justify-between text-sm">
                                   <span className="text-slate-300">
                                     {item.stage_label || item.stage}
@@ -581,26 +581,26 @@ export default function SalesStatistics() {
                                 </div>
                                 <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
                                   <div
-                                    className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
-                                    style={{ width: `${percentage}%` }}
-                                  />
+                            className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
+                            style={{ width: `${percentage}%` }} />
+
                                 </div>
-                              </div>
-                            );
-                          })}
+                              </div>);
+
+                  })}
                         </div>
                       </div>
-                    )}
+              }
                 </div>
               </CardContent>
             </Card>
-          )}
+        }
         </div>
-      )}
+      }
 
-      {loading && (
-        <div className="text-center py-12 text-slate-400">加载中...</div>
-      )}
-    </motion.div>
-  );
+      {loading &&
+      <div className="text-center py-12 text-slate-400">加载中...</div>
+      }
+    </motion.div>);
+
 }

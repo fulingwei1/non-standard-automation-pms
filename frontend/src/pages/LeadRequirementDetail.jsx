@@ -11,8 +11,8 @@ import {
   FileText,
   CheckCircle2,
   Lock,
-  ExternalLink,
-} from "lucide-react";
+  ExternalLink } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -26,9 +26,9 @@ import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger,
-} from "../components/ui";
-import { leadApi, technicalAssessmentApi } from "../services/api";
+  TabsTrigger } from
+"../components/ui";
+import { leadApi as _leadApi, technicalAssessmentApi } from "../services/api";
 
 export default function LeadRequirementDetail() {
   const { leadId } = useParams();
@@ -51,7 +51,7 @@ export default function LeadRequirementDetail() {
     cycle_time_seconds: "",
     workstation_count: "",
     acceptance_method: "",
-    acceptance_basis: "",
+    acceptance_basis: ""
   });
 
   useEffect(() => {
@@ -62,13 +62,13 @@ export default function LeadRequirementDetail() {
     try {
       setLoading(true);
       const response = await technicalAssessmentApi.getRequirementDetail(
-        parseInt(leadId),
+        parseInt(leadId)
       );
       if (response.data) {
         setRequirementDetail(response.data);
         setRequirementData({
           customer_factory_location:
-            response.data.customer_factory_location || "",
+          response.data.customer_factory_location || "",
           target_object_type: response.data.target_object_type || "",
           application_scenario: response.data.application_scenario || "",
           delivery_mode: response.data.delivery_mode || "",
@@ -81,7 +81,7 @@ export default function LeadRequirementDetail() {
           cycle_time_seconds: response.data.cycle_time_seconds || "",
           workstation_count: response.data.workstation_count || "",
           acceptance_method: response.data.acceptance_method || "",
-          acceptance_basis: response.data.acceptance_basis || "",
+          acceptance_basis: response.data.acceptance_basis || ""
         });
       }
     } catch (error) {
@@ -103,14 +103,14 @@ export default function LeadRequirementDetail() {
         // 先尝试更新
         await technicalAssessmentApi.updateRequirementDetail(
           parseInt(leadId),
-          requirementData,
+          requirementData
         );
       } catch (error) {
         if (error.response?.status === 404) {
           // 不存在则创建
           await technicalAssessmentApi.createRequirementDetail(
             parseInt(leadId),
-            requirementData,
+            requirementData
           );
         } else {
           throw error;
@@ -135,11 +135,11 @@ export default function LeadRequirementDetail() {
       <PageHeader
         title="需求详情"
         breadcrumbs={[
-          { label: "销售管理", path: "/sales" },
-          { label: "线索管理", path: "/sales/leads" },
-          { label: "需求详情", path: "" },
-        ]}
-      />
+        { label: "销售管理", path: "/sales" },
+        { label: "线索管理", path: "/sales/leads" },
+        { label: "需求详情", path: "" }]
+        } />
+
 
       <div className="mt-6">
         <Card className="bg-gray-800 border-gray-700">
@@ -147,19 +147,19 @@ export default function LeadRequirementDetail() {
             <div className="flex items-center justify-between">
               <CardTitle>需求信息</CardTitle>
               <div className="flex gap-2">
-                {requirementDetail?.is_frozen && (
-                  <Badge className="bg-orange-500">
+                {requirementDetail?.is_frozen &&
+                <Badge className="bg-orange-500">
                     <Lock className="w-3 h-3 mr-1" />
                     已冻结 {requirementDetail.requirement_version}
                   </Badge>
-                )}
+                }
                 <Button
                   onClick={() =>
-                    navigate(`/sales/lead/${leadId}/requirement-freezes`)
+                  navigate(`/sales/lead/${leadId}/requirement-freezes`)
                   }
                   variant="outline"
-                  className="border-blue-500 text-blue-400 hover:bg-blue-500/10"
-                >
+                  className="border-blue-500 text-blue-400 hover:bg-blue-500/10">
+
                   <Lock className="w-4 h-4 mr-2" />
                   冻结管理
                 </Button>
@@ -172,9 +172,9 @@ export default function LeadRequirementDetail() {
                   disabled={saving || requirementDetail?.is_frozen}
                   className="bg-blue-600 hover:bg-blue-700"
                   title={
-                    requirementDetail?.is_frozen ? "需求已冻结，无法修改" : ""
-                  }
-                >
+                  requirementDetail?.is_frozen ? "需求已冻结，无法修改" : ""
+                  }>
+
                   <Save className="w-4 h-4 mr-2" />
                   {saving ? "保存中..." : "保存"}
                 </Button>
@@ -197,52 +197,52 @@ export default function LeadRequirementDetail() {
                     <Input
                       value={requirementData.customer_factory_location}
                       onChange={(e) =>
-                        setRequirementData({
-                          ...requirementData,
-                          customer_factory_location: e.target.value,
-                        })
+                      setRequirementData({
+                        ...requirementData,
+                        customer_factory_location: e.target.value
+                      })
                       }
-                      placeholder="请输入客户工厂/地点"
-                    />
+                      placeholder="请输入客户工厂/地点" />
+
                   </div>
                   <div>
                     <Label>被测对象类型</Label>
                     <Input
                       value={requirementData.target_object_type}
                       onChange={(e) =>
-                        setRequirementData({
-                          ...requirementData,
-                          target_object_type: e.target.value,
-                        })
+                      setRequirementData({
+                        ...requirementData,
+                        target_object_type: e.target.value
+                      })
                       }
-                      placeholder="BMS/电机/动力电池等"
-                    />
+                      placeholder="BMS/电机/动力电池等" />
+
                   </div>
                   <div>
                     <Label>应用场景</Label>
                     <Input
                       value={requirementData.application_scenario}
                       onChange={(e) =>
-                        setRequirementData({
-                          ...requirementData,
-                          application_scenario: e.target.value,
-                        })
+                      setRequirementData({
+                        ...requirementData,
+                        application_scenario: e.target.value
+                      })
                       }
-                      placeholder="量产/实验室/售后维修等"
-                    />
+                      placeholder="量产/实验室/售后维修等" />
+
                   </div>
                   <div>
                     <Label>计划交付模式</Label>
                     <Input
                       value={requirementData.delivery_mode}
                       onChange={(e) =>
-                        setRequirementData({
-                          ...requirementData,
-                          delivery_mode: e.target.value,
-                        })
+                      setRequirementData({
+                        ...requirementData,
+                        delivery_mode: e.target.value
+                      })
                       }
-                      placeholder="整机/线体/工位分段交付"
-                    />
+                      placeholder="整机/线体/工位分段交付" />
+
                   </div>
                 </div>
 
@@ -254,12 +254,12 @@ export default function LeadRequirementDetail() {
                     max="5"
                     value={requirementData.requirement_maturity}
                     onChange={(e) =>
-                      setRequirementData({
-                        ...requirementData,
-                        requirement_maturity: parseInt(e.target.value),
-                      })
-                    }
-                  />
+                    setRequirementData({
+                      ...requirementData,
+                      requirement_maturity: parseInt(e.target.value)
+                    })
+                    } />
+
                 </div>
 
                 <div className="space-y-2">
@@ -270,12 +270,12 @@ export default function LeadRequirementDetail() {
                         type="checkbox"
                         checked={requirementData.has_sow}
                         onChange={(e) =>
-                          setRequirementData({
-                            ...requirementData,
-                            has_sow: e.target.checked,
-                          })
-                        }
-                      />
+                        setRequirementData({
+                          ...requirementData,
+                          has_sow: e.target.checked
+                        })
+                        } />
+
                       <span>有SOW/URS</span>
                     </label>
                     <label className="flex items-center gap-2">
@@ -283,12 +283,12 @@ export default function LeadRequirementDetail() {
                         type="checkbox"
                         checked={requirementData.has_interface_doc}
                         onChange={(e) =>
-                          setRequirementData({
-                            ...requirementData,
-                            has_interface_doc: e.target.checked,
-                          })
-                        }
-                      />
+                        setRequirementData({
+                          ...requirementData,
+                          has_interface_doc: e.target.checked
+                        })
+                        } />
+
                       <span>有接口协议文档</span>
                     </label>
                     <label className="flex items-center gap-2">
@@ -296,12 +296,12 @@ export default function LeadRequirementDetail() {
                         type="checkbox"
                         checked={requirementData.has_drawing_doc}
                         onChange={(e) =>
-                          setRequirementData({
-                            ...requirementData,
-                            has_drawing_doc: e.target.checked,
-                          })
-                        }
-                      />
+                        setRequirementData({
+                          ...requirementData,
+                          has_drawing_doc: e.target.checked
+                        })
+                        } />
+
                       <span>有图纸/原理/IO清单</span>
                     </label>
                   </div>
@@ -316,13 +316,13 @@ export default function LeadRequirementDetail() {
                       type="number"
                       value={requirementData.cycle_time_seconds}
                       onChange={(e) =>
-                        setRequirementData({
-                          ...requirementData,
-                          cycle_time_seconds: e.target.value,
-                        })
+                      setRequirementData({
+                        ...requirementData,
+                        cycle_time_seconds: e.target.value
+                      })
                       }
-                      placeholder="请输入节拍时间"
-                    />
+                      placeholder="请输入节拍时间" />
+
                   </div>
                   <div>
                     <Label>工位数/并行数</Label>
@@ -330,13 +330,13 @@ export default function LeadRequirementDetail() {
                       type="number"
                       value={requirementData.workstation_count}
                       onChange={(e) =>
-                        setRequirementData({
-                          ...requirementData,
-                          workstation_count: e.target.value,
-                        })
+                      setRequirementData({
+                        ...requirementData,
+                        workstation_count: e.target.value
+                      })
                       }
-                      placeholder="请输入工位数"
-                    />
+                      placeholder="请输入工位数" />
+
                   </div>
                 </div>
               </TabsContent>
@@ -347,27 +347,27 @@ export default function LeadRequirementDetail() {
                   <Input
                     value={requirementData.acceptance_method}
                     onChange={(e) =>
-                      setRequirementData({
-                        ...requirementData,
-                        acceptance_method: e.target.value,
-                      })
+                    setRequirementData({
+                      ...requirementData,
+                      acceptance_method: e.target.value
+                    })
                     }
-                    placeholder="FAT/SAT/阶段验收"
-                  />
+                    placeholder="FAT/SAT/阶段验收" />
+
                 </div>
                 <div>
                   <Label>验收依据</Label>
                   <Textarea
                     value={requirementData.acceptance_basis}
                     onChange={(e) =>
-                      setRequirementData({
-                        ...requirementData,
-                        acceptance_basis: e.target.value,
-                      })
+                    setRequirementData({
+                      ...requirementData,
+                      acceptance_basis: e.target.value
+                    })
                     }
                     placeholder="客户标准/企业标准/国标/双方确认的测试用例"
-                    rows={4}
-                  />
+                    rows={4} />
+
                 </div>
               </TabsContent>
 
@@ -376,8 +376,8 @@ export default function LeadRequirementDetail() {
                   <Label>接口类型</Label>
                   <Textarea
                     placeholder="被测对象接口类型（JSON Array）"
-                    rows={3}
-                  />
+                    rows={3} />
+
                 </div>
                 <div>
                   <Label>通讯协议</Label>
@@ -388,6 +388,6 @@ export default function LeadRequirementDetail() {
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>);
+
 }

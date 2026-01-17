@@ -20,8 +20,8 @@ import {
   Filter,
   Download,
   Upload,
-  Info,
-} from "lucide-react";
+  Info } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -54,10 +54,10 @@ import {
   LoadingCard,
   ErrorMessage,
   EmptyState,
-  ApiIntegrationError,
-} from "../components/ui";
-import { cn, formatDate } from "../lib/utils";
-import { fadeIn, staggerContainer } from "../lib/animations";
+  ApiIntegrationError } from
+"../components/ui";
+import { cn, formatDate as _formatDate } from "../lib/utils";
+import { fadeIn as _fadeIn, staggerContainer as _staggerContainer } from "../lib/animations";
 import { schedulerApi } from "../services/api";
 import { toast } from "../components/ui/toast";
 
@@ -77,14 +77,14 @@ const CRON_PRESETS = {
   hourly_10min: { label: "每小时+10分", value: { minute: 10 } },
   hourly_15min: { label: "每小时+15分", value: { minute: 15 } },
   hourly_30min: { label: "每小时+30分", value: { minute: 30 } },
-  custom: { label: "自定义", value: null },
+  custom: { label: "自定义", value: null }
 };
 
 const RISK_LEVEL_COLORS = {
   CRITICAL: "bg-red-500/20 text-red-400 border-red-500/30",
   HIGH: "bg-orange-500/20 text-orange-400 border-orange-500/30",
   MEDIUM: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  LOW: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+  LOW: "bg-blue-500/20 text-blue-400 border-blue-500/30"
 };
 
 export default function SchedulerConfigManagement() {
@@ -142,7 +142,7 @@ export default function SchedulerConfigManagement() {
     } catch (err) {
       console.error("Failed to sync configs:", err);
       toast.error(
-        "配置同步失败: " + (err.response?.data?.detail || err.message),
+        "配置同步失败: " + (err.response?.data?.detail || err.message)
       );
     } finally {
       setSyncing(false);
@@ -153,7 +153,7 @@ export default function SchedulerConfigManagement() {
   const handleEdit = (config) => {
     setEditingConfig({
       ...config,
-      cron_config: config.cron_config || {},
+      cron_config: config.cron_config || {}
     });
     setEditDialogOpen(true);
   };
@@ -165,12 +165,12 @@ export default function SchedulerConfigManagement() {
     try {
       const updateData = {
         is_enabled: editingConfig.is_enabled,
-        cron_config: editingConfig.cron_config,
+        cron_config: editingConfig.cron_config
       };
 
       const res = await schedulerApi.updateConfig(
         editingConfig.task_id,
-        updateData,
+        updateData
       );
 
       if (res.data?.code === 200) {
@@ -182,7 +182,7 @@ export default function SchedulerConfigManagement() {
     } catch (err) {
       console.error("Failed to update config:", err);
       toast.error(
-        "更新配置失败: " + (err.response?.data?.detail || err.message),
+        "更新配置失败: " + (err.response?.data?.detail || err.message)
       );
     }
   };
@@ -191,7 +191,7 @@ export default function SchedulerConfigManagement() {
   const handleToggleEnabled = async (config) => {
     try {
       const updateData = {
-        is_enabled: !config.is_enabled,
+        is_enabled: !config.is_enabled
       };
 
       const res = await schedulerApi.updateConfig(config.task_id, updateData);
@@ -227,9 +227,9 @@ export default function SchedulerConfigManagement() {
     if (parts.length === 0) {
       // 检查是否是每小时执行
       if (
-        Object.keys(cronConfig).length === 1 &&
-        cronConfig.minute !== undefined
-      ) {
+      Object.keys(cronConfig).length === 1 &&
+      cronConfig.minute !== undefined)
+      {
         return `每小时${cronConfig.minute}分`;
       }
       return "自定义配置";
@@ -246,10 +246,10 @@ export default function SchedulerConfigManagement() {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(
         (config) =>
-          config.task_name?.toLowerCase().includes(term) ||
-          config.task_id?.toLowerCase().includes(term) ||
-          config.category?.toLowerCase().includes(term) ||
-          config.owner?.toLowerCase().includes(term),
+        config.task_name?.toLowerCase().includes(term) ||
+        config.task_id?.toLowerCase().includes(term) ||
+        config.category?.toLowerCase().includes(term) ||
+        config.owner?.toLowerCase().includes(term)
       );
     }
 
@@ -267,44 +267,44 @@ export default function SchedulerConfigManagement() {
       <div className="space-y-6">
         <PageHeader
           title="定时服务配置管理"
-          description="配置所有后台定时服务的执行频率和启用状态"
-        />
+          description="配置所有后台定时服务的执行频率和启用状态" />
+
         <ApiIntegrationError
           error={error}
           apiEndpoint="/api/v1/scheduler/configs"
-          onRetry={fetchConfigs}
-        />
-      </div>
-    );
+          onRetry={fetchConfigs} />
+
+      </div>);
+
   }
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="定时服务配置管理"
-        description="配置所有后台定时服务的执行频率和启用状态"
-      >
+        description="配置所有后台定时服务的执行频率和启用状态">
+
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => handleSync(false)}
-            disabled={syncing}
-          >
+            disabled={syncing}>
+
             <RefreshCw
-              className={cn("h-4 w-4 mr-2", syncing && "animate-spin")}
-            />
+              className={cn("h-4 w-4 mr-2", syncing && "animate-spin")} />
+
             同步配置
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={fetchConfigs}
-            disabled={loading}
-          >
+            disabled={loading}>
+
             <RefreshCw
-              className={cn("h-4 w-4 mr-2", loading && "animate-spin")}
-            />
+              className={cn("h-4 w-4 mr-2", loading && "animate-spin")} />
+
             刷新
           </Button>
         </div>
@@ -372,8 +372,8 @@ export default function SchedulerConfigManagement() {
                 placeholder="搜索任务名称、ID、分类..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8"
-              />
+                className="pl-8" />
+
             </div>
             <Select value={filterCategory} onValueChange={setFilterCategory}>
               <SelectTrigger className="w-[180px]">
@@ -381,11 +381,11 @@ export default function SchedulerConfigManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">所有分类</SelectItem>
-                {categories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
+                {categories.map((cat) =>
+                <SelectItem key={cat} value={cat}>
                     {cat}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
             <Select value={filterEnabled} onValueChange={setFilterEnabled}>
@@ -411,16 +411,16 @@ export default function SchedulerConfigManagement() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <LoadingCard />
-          ) : filteredConfigs.length === 0 ? (
-            <EmptyState
-              icon={Settings}
-              title="暂无配置"
-              description='点击"同步配置"按钮从代码同步任务配置'
-            />
-          ) : (
-            <Table>
+          {loading ?
+          <LoadingCard /> :
+          filteredConfigs.length === 0 ?
+          <EmptyState
+            icon={Settings}
+            title="暂无配置"
+            description='点击"同步配置"按钮从代码同步任务配置' /> :
+
+
+          <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>任务名称</TableHead>
@@ -432,8 +432,8 @@ export default function SchedulerConfigManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredConfigs.map((config) => (
-                  <TableRow key={config.id}>
+                {filteredConfigs.map((config) =>
+              <TableRow key={config.id}>
                     <TableCell>
                       <div>
                         <div className="font-medium">{config.task_name}</div>
@@ -456,24 +456,24 @@ export default function SchedulerConfigManagement() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {config.risk_level && (
-                        <Badge
-                          className={cn(
-                            "border",
-                            RISK_LEVEL_COLORS[config.risk_level] ||
-                              RISK_LEVEL_COLORS.LOW,
-                          )}
-                        >
+                      {config.risk_level &&
+                  <Badge
+                    className={cn(
+                      "border",
+                      RISK_LEVEL_COLORS[config.risk_level] ||
+                      RISK_LEVEL_COLORS.LOW
+                    )}>
+
                           {config.risk_level}
                         </Badge>
-                      )}
+                  }
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Switch
-                          checked={config.is_enabled}
-                          onCheckedChange={() => handleToggleEnabled(config)}
-                        />
+                      checked={config.is_enabled}
+                      onCheckedChange={() => handleToggleEnabled(config)} />
+
                         <span className="text-sm">
                           {config.is_enabled ? "已启用" : "已禁用"}
                         </span>
@@ -482,19 +482,19 @@ export default function SchedulerConfigManagement() {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(config)}
-                        >
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(config)}>
+
                           配置
                         </Button>
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+              )}
               </TableBody>
             </Table>
-          )}
+          }
         </CardContent>
       </Card>
 
@@ -506,8 +506,8 @@ export default function SchedulerConfigManagement() {
             <DialogDescription>{editingConfig?.task_name}</DialogDescription>
           </DialogHeader>
 
-          {editingConfig && (
-            <div className="space-y-4">
+          {editingConfig &&
+          <div className="space-y-4">
               {/* 基本信息 */}
               <div className="space-y-2">
                 <Label>任务ID</Label>
@@ -530,92 +530,92 @@ export default function SchedulerConfigManagement() {
                   </p>
                 </div>
                 <Switch
-                  checked={editingConfig.is_enabled}
-                  onCheckedChange={(checked) =>
-                    setEditingConfig({ ...editingConfig, is_enabled: checked })
-                  }
-                />
+                checked={editingConfig.is_enabled}
+                onCheckedChange={(checked) =>
+                setEditingConfig({ ...editingConfig, is_enabled: checked })
+                } />
+
               </div>
 
               {/* Cron配置 */}
               <div className="space-y-2">
                 <Label>执行频率</Label>
                 <Select
-                  value={
-                    Object.keys(CRON_PRESETS).find(
-                      (key) =>
-                        JSON.stringify(CRON_PRESETS[key].value) ===
-                        JSON.stringify(editingConfig.cron_config),
-                    ) || "custom"
+                value={
+                Object.keys(CRON_PRESETS).find(
+                  (key) =>
+                  JSON.stringify(CRON_PRESETS[key].value) ===
+                  JSON.stringify(editingConfig.cron_config)
+                ) || "custom"
+                }
+                onValueChange={(value) => {
+                  if (value !== "custom" && CRON_PRESETS[value].value) {
+                    setEditingConfig({
+                      ...editingConfig,
+                      cron_config: CRON_PRESETS[value].value
+                    });
                   }
-                  onValueChange={(value) => {
-                    if (value !== "custom" && CRON_PRESETS[value].value) {
-                      setEditingConfig({
-                        ...editingConfig,
-                        cron_config: CRON_PRESETS[value].value,
-                      });
-                    }
-                  }}
-                >
+                }}>
+
                   <SelectTrigger>
                     <SelectValue placeholder="选择执行频率" />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(CRON_PRESETS).map(([key, preset]) => (
-                      <SelectItem key={key} value={key}>
+                    {Object.entries(CRON_PRESETS).map(([key, preset]) =>
+                  <SelectItem key={key} value={key}>
                         {preset.label}
                       </SelectItem>
-                    ))}
+                  )}
                   </SelectContent>
                 </Select>
               </div>
 
               {/* 自定义Cron配置 */}
-              {editingConfig.cron_config && (
-                <div className="space-y-2 p-4 bg-muted rounded-lg">
+              {editingConfig.cron_config &&
+            <div className="space-y-2 p-4 bg-muted rounded-lg">
                   <Label className="text-sm">当前配置</Label>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label className="text-xs">小时 (0-23)</Label>
                       <Input
-                        type="number"
-                        min="0"
-                        max="23"
-                        value={editingConfig.cron_config.hour ?? ""}
-                        onChange={(e) =>
-                          setEditingConfig({
-                            ...editingConfig,
-                            cron_config: {
-                              ...editingConfig.cron_config,
-                              hour: e.target.value
-                                ? parseInt(e.target.value)
-                                : undefined,
-                            },
-                          })
-                        }
-                        placeholder="留空表示每小时"
-                      />
+                    type="number"
+                    min="0"
+                    max="23"
+                    value={editingConfig.cron_config.hour ?? ""}
+                    onChange={(e) =>
+                    setEditingConfig({
+                      ...editingConfig,
+                      cron_config: {
+                        ...editingConfig.cron_config,
+                        hour: e.target.value ?
+                        parseInt(e.target.value) :
+                        undefined
+                      }
+                    })
+                    }
+                    placeholder="留空表示每小时" />
+
                     </div>
                     <div>
                       <Label className="text-xs">分钟 (0-59)</Label>
                       <Input
-                        type="number"
-                        min="0"
-                        max="59"
-                        value={editingConfig.cron_config.minute ?? ""}
-                        onChange={(e) =>
-                          setEditingConfig({
-                            ...editingConfig,
-                            cron_config: {
-                              ...editingConfig.cron_config,
-                              minute: e.target.value
-                                ? parseInt(e.target.value)
-                                : undefined,
-                            },
-                          })
-                        }
-                        placeholder="留空表示每分钟"
-                      />
+                    type="number"
+                    min="0"
+                    max="59"
+                    value={editingConfig.cron_config.minute ?? ""}
+                    onChange={(e) =>
+                    setEditingConfig({
+                      ...editingConfig,
+                      cron_config: {
+                        ...editingConfig.cron_config,
+                        minute: e.target.value ?
+                        parseInt(e.target.value) :
+                        undefined
+                      }
+                    })
+                    }
+                    placeholder="留空表示每分钟" />
+
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
@@ -624,25 +624,25 @@ export default function SchedulerConfigManagement() {
                     表示每小时整点执行
                   </p>
                 </div>
-              )}
+            }
 
               {/* 风险级别和SLA */}
-              {editingConfig.risk_level && (
-                <div className="space-y-2">
+              {editingConfig.risk_level &&
+            <div className="space-y-2">
                   <Label>风险级别</Label>
                   <Badge
-                    className={cn(
-                      "border",
-                      RISK_LEVEL_COLORS[editingConfig.risk_level] ||
-                        RISK_LEVEL_COLORS.LOW,
-                    )}
-                  >
+                className={cn(
+                  "border",
+                  RISK_LEVEL_COLORS[editingConfig.risk_level] ||
+                  RISK_LEVEL_COLORS.LOW
+                )}>
+
                     {editingConfig.risk_level}
                   </Badge>
                 </div>
-              )}
+            }
             </div>
-          )}
+          }
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
@@ -655,6 +655,6 @@ export default function SchedulerConfigManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }

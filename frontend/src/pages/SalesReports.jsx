@@ -3,7 +3,7 @@
  * Features: Sales trends, Performance analysis, Customer analysis, Revenue forecasting
  */
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo as _useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   BarChart3,
@@ -23,8 +23,8 @@ import {
   FileText,
   ChevronRight,
   ArrowUpRight,
-  ArrowDownRight,
-} from "lucide-react";
+  ArrowDownRight } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -34,8 +34,8 @@ import {
   Button,
   Badge,
   Progress,
-  ApiIntegrationError,
-} from "../components/ui";
+  ApiIntegrationError } from
+"../components/ui";
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { salesStatisticsApi } from "../services/api";
@@ -49,13 +49,13 @@ const formatCurrency = (value) => {
   return new Intl.NumberFormat("zh-CN", {
     style: "currency",
     currency: "CNY",
-    minimumFractionDigits: 0,
+    minimumFractionDigits: 0
   }).format(value);
 };
 
 export default function SalesReports() {
-  const [selectedPeriod, setSelectedPeriod] = useState("month");
-  const [selectedReport, setSelectedReport] = useState("overview");
+  const [selectedPeriod, _setSelectedPeriod] = useState("month");
+  const [_selectedReport, _setSelectedReport] = useState("overview");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [monthlySales, setMonthlySales] = useState(null);
@@ -69,20 +69,20 @@ export default function SalesReports() {
     setError(null);
     try {
       const [monthlyRes, customerRes, productRes, regionalRes] =
-        await Promise.allSettled([
-          salesStatisticsApi.getMonthlyTrend({ period: selectedPeriod }),
-          salesStatisticsApi.getByCustomer({ limit: 10 }),
-          salesStatisticsApi.getByProduct({ limit: 10 }),
-          salesStatisticsApi.getByRegion(),
-        ]);
+      await Promise.allSettled([
+      salesStatisticsApi.getMonthlyTrend({ period: selectedPeriod }),
+      salesStatisticsApi.getByCustomer({ limit: 10 }),
+      salesStatisticsApi.getByProduct({ limit: 10 }),
+      salesStatisticsApi.getByRegion()]
+      );
 
       // 检查是否有失败的请求
       const failedRequests = [
-        monthlyRes,
-        customerRes,
-        productRes,
-        regionalRes,
-      ].filter((res) => res.status === "rejected");
+      monthlyRes,
+      customerRes,
+      productRes,
+      regionalRes].
+      filter((res) => res.status === "rejected");
 
       if (failedRequests.length > 0) {
         // 使用第一个失败的错误
@@ -136,15 +136,15 @@ export default function SalesReports() {
       <div className="space-y-6">
         <PageHeader
           title="销售报表"
-          description="销售数据分析、业绩趋势、客户分析、产品分析"
-        />
+          description="销售数据分析、业绩趋势、客户分析、产品分析" />
+
         <ApiIntegrationError
           error={error}
           apiEndpoint="/api/v1/sales/statistics/*"
-          onRetry={fetchData}
-        />
-      </div>
-    );
+          onRetry={fetchData} />
+
+      </div>);
+
   }
 
   // 如果正在加载
@@ -153,11 +153,11 @@ export default function SalesReports() {
       <div className="space-y-6">
         <PageHeader
           title="销售报表"
-          description="销售数据分析、业绩趋势、客户分析、产品分析"
-        />
+          description="销售数据分析、业绩趋势、客户分析、产品分析" />
+
         <div className="text-center py-16 text-slate-400">加载中...</div>
-      </div>
-    );
+      </div>);
+
   }
 
   // 如果数据为空
@@ -166,35 +166,35 @@ export default function SalesReports() {
       <div className="space-y-6">
         <PageHeader
           title="销售报表"
-          description="销售数据分析、业绩趋势、客户分析、产品分析"
-        />
+          description="销售数据分析、业绩趋势、客户分析、产品分析" />
+
         <Card>
           <CardContent className="p-12 text-center text-slate-500">
             暂无数据
           </CardContent>
         </Card>
-      </div>
-    );
+      </div>);
+
   }
 
   const currentMonth = monthlySales[monthlySales.length - 1];
   const avgAchievement =
-    monthlySales.reduce((sum, m) => sum + (m.achieved / m.target) * 100, 0) /
-    monthlySales.length;
+  monthlySales.reduce((sum, m) => sum + m.achieved / m.target * 100, 0) /
+  monthlySales.length;
 
   return (
     <motion.div
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       {/* Page Header */}
       <PageHeader
         title="销售报表"
         description="销售数据分析、业绩趋势、客户分析、产品分析"
         actions={
-          <motion.div variants={fadeIn} className="flex gap-2">
+        <motion.div variants={fadeIn} className="flex gap-2">
             <Button variant="outline" className="flex items-center gap-2">
               <Filter className="w-4 h-4" />
               筛选
@@ -204,14 +204,14 @@ export default function SalesReports() {
               导出报表
             </Button>
           </motion.div>
-        }
-      />
+        } />
+
 
       {/* Summary Cards */}
       <motion.div
         variants={staggerContainer}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
-      >
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
         <Card className="bg-gradient-to-br from-amber-500/10 to-orange-500/5 border-amber-500/20">
           <CardContent className="p-4">
             <div className="flex items-start justify-between">
@@ -221,21 +221,21 @@ export default function SalesReports() {
                   {formatCurrency(currentMonth.achieved)}
                 </p>
                 <div className="flex items-center gap-1 mt-1">
-                  {currentMonth.growth > 0 ? (
-                    <>
+                  {currentMonth.growth > 0 ?
+                  <>
                       <ArrowUpRight className="w-3 h-3 text-emerald-400" />
                       <span className="text-xs text-emerald-400">
                         +{currentMonth.growth}%
                       </span>
-                    </>
-                  ) : (
-                    <>
+                    </> :
+
+                  <>
                       <ArrowDownRight className="w-3 h-3 text-red-400" />
                       <span className="text-xs text-red-400">
                         {currentMonth.growth}%
                       </span>
                     </>
-                  )}
+                  }
                   <span className="text-xs text-slate-500">vs 上月</span>
                 </div>
               </div>
@@ -245,13 +245,13 @@ export default function SalesReports() {
             </div>
             <div className="mt-3">
               <Progress
-                value={(currentMonth.achieved / currentMonth.target) * 100}
-                className="h-1.5"
-              />
+                value={currentMonth.achieved / currentMonth.target * 100}
+                className="h-1.5" />
+
               <p className="text-xs text-slate-500 mt-1">
                 目标完成率{" "}
-                {((currentMonth.achieved / currentMonth.target) * 100).toFixed(
-                  1,
+                {(currentMonth.achieved / currentMonth.target * 100).toFixed(
+                  1
                 )}
                 %
               </p>
@@ -283,7 +283,7 @@ export default function SalesReports() {
                 <p className="text-sm text-slate-400">累计销售额</p>
                 <p className="text-2xl font-bold text-white mt-1">
                   {formatCurrency(
-                    monthlySales.reduce((sum, m) => sum + m.achieved, 0),
+                    monthlySales.reduce((sum, m) => sum + m.achieved, 0)
                   )}
                 </p>
                 <p className="text-xs text-slate-500 mt-1">近7个月累计</p>
@@ -326,8 +326,8 @@ export default function SalesReports() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {monthlySales.map((item, index) => {
-                  const achievementRate = (item.achieved / item.target) * 100;
+                {monthlySales.map((item, _index) => {
+                  const achievementRate = item.achieved / item.target * 100;
                   return (
                     <div key={item.month} className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
@@ -339,20 +339,20 @@ export default function SalesReports() {
                           <span className="text-white font-medium">
                             完成: {formatCurrency(item.achieved)}
                           </span>
-                          {item.growth > 0 ? (
-                            <span className="text-emerald-400 text-xs">
+                          {item.growth > 0 ?
+                          <span className="text-emerald-400 text-xs">
                               +{item.growth}%
-                            </span>
-                          ) : (
-                            <span className="text-red-400 text-xs">
+                            </span> :
+
+                          <span className="text-red-400 text-xs">
                               {item.growth}%
                             </span>
-                          )}
+                          }
                         </div>
                       </div>
                       <Progress value={achievementRate} className="h-2" />
-                    </div>
-                  );
+                    </div>);
+
                 })}
               </div>
             </CardContent>
@@ -370,26 +370,26 @@ export default function SalesReports() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {customerAnalysis && customerAnalysis.length > 0 ? (
-                  customerAnalysis.map((customer, index) => (
-                    <div
-                      key={customer.name}
-                      className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50"
-                    >
+                {customerAnalysis && customerAnalysis.length > 0 ?
+                customerAnalysis.map((customer, index) =>
+                <div
+                  key={customer.name}
+                  className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50">
+
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <div
-                            className={cn(
-                              "w-6 h-6 rounded flex items-center justify-center text-xs font-bold text-white",
-                              index === 0 &&
-                                "bg-gradient-to-br from-amber-500 to-orange-500",
-                              index === 1 &&
-                                "bg-gradient-to-br from-blue-500 to-cyan-500",
-                              index === 2 &&
-                                "bg-gradient-to-br from-purple-500 to-pink-500",
-                              index >= 3 && "bg-slate-600",
-                            )}
-                          >
+                        className={cn(
+                          "w-6 h-6 rounded flex items-center justify-center text-xs font-bold text-white",
+                          index === 0 &&
+                          "bg-gradient-to-br from-amber-500 to-orange-500",
+                          index === 1 &&
+                          "bg-gradient-to-br from-blue-500 to-cyan-500",
+                          index === 2 &&
+                          "bg-gradient-to-br from-purple-500 to-pink-500",
+                          index >= 3 && "bg-slate-600"
+                        )}>
+
                             {index + 1}
                           </div>
                           <div>
@@ -405,24 +405,24 @@ export default function SalesReports() {
                           <p className="text-lg font-bold text-white">
                             {formatCurrency(customer.amount)}
                           </p>
-                          {customer.growth > 0 ? (
-                            <p className="text-xs text-emerald-400">
+                          {customer.growth > 0 ?
+                      <p className="text-xs text-emerald-400">
                               +{customer.growth}%
-                            </p>
-                          ) : (
-                            <p className="text-xs text-red-400">
+                            </p> :
+
+                      <p className="text-xs text-red-400">
                               {customer.growth}%
                             </p>
-                          )}
+                      }
                         </div>
                       </div>
                     </div>
-                  ))
-                ) : (
-                  <div className="text-center py-8 text-slate-500 text-sm">
+                ) :
+
+                <div className="text-center py-8 text-slate-500 text-sm">
                     暂无客户数据
                   </div>
-                )}
+                }
               </div>
             </CardContent>
           </Card>
@@ -439,12 +439,12 @@ export default function SalesReports() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {productAnalysis && productAnalysis.length > 0 ? (
-                  productAnalysis.map((product, index) => (
-                    <div
-                      key={product.name}
-                      className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50"
-                    >
+                {productAnalysis && productAnalysis.length > 0 ?
+                productAnalysis.map((product, _index) =>
+                <div
+                  key={product.name}
+                  className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50">
+
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-medium text-white text-sm">
                           {product.name}
@@ -464,12 +464,12 @@ export default function SalesReports() {
                       </div>
                       <Progress value={product.ratio} className="h-1.5" />
                     </div>
-                  ))
-                ) : (
-                  <div className="text-center py-8 text-slate-500 text-sm">
+                ) :
+
+                <div className="text-center py-8 text-slate-500 text-sm">
                     暂无产品数据
                   </div>
-                )}
+                }
               </div>
             </CardContent>
           </Card>
@@ -486,12 +486,12 @@ export default function SalesReports() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {regionalAnalysis && regionalAnalysis.length > 0 ? (
-                  regionalAnalysis.map((region, index) => (
-                    <div
-                      key={region.region}
-                      className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50"
-                    >
+                {regionalAnalysis && regionalAnalysis.length > 0 ?
+                regionalAnalysis.map((region, _index) =>
+                <div
+                  key={region.region}
+                  className="p-3 bg-slate-800/40 rounded-lg border border-slate-700/50">
+
                       <div className="flex items-center justify-between mb-2">
                         <div>
                           <p className="font-medium text-white text-sm">
@@ -511,28 +511,28 @@ export default function SalesReports() {
                         </div>
                       </div>
                       <Progress
-                        value={
-                          (region.amount /
-                            regionalAnalysis.reduce(
-                              (sum, r) => sum + r.amount,
-                              0,
-                            )) *
-                          100
-                        }
-                        className="h-1.5 mt-2"
-                      />
+                    value={
+                    region.amount /
+                    regionalAnalysis.reduce(
+                      (sum, r) => sum + r.amount,
+                      0
+                    ) *
+                    100
+                    }
+                    className="h-1.5 mt-2" />
+
                     </div>
-                  ))
-                ) : (
-                  <div className="text-center py-8 text-slate-500 text-sm">
+                ) :
+
+                <div className="text-center py-8 text-slate-500 text-sm">
                     暂无区域数据
                   </div>
-                )}
+                }
               </div>
             </CardContent>
           </Card>
         </motion.div>
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

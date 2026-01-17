@@ -692,9 +692,18 @@ function LanguageSection() {
 }
 
 export default function Settings() {
+  const navigate = useNavigate();
   // Get section from URL query parameter
   const urlParams = new URLSearchParams(window.location.search);
   const sectionFromUrl = urlParams.get("section");
+
+  // Redirect knowledge section to knowledge-base page
+  useEffect(() => {
+    if (sectionFromUrl === "knowledge") {
+      navigate("/knowledge-base", { replace: true });
+    }
+  }, [sectionFromUrl, navigate]);
+
   const [activeSection, setActiveSection] = useState(
     sectionFromUrl || "profile",
   );

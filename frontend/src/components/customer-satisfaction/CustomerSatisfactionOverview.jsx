@@ -5,29 +5,29 @@
 
 import React, { useState, useMemo } from 'react';
 import { Card, Row, Col, Statistic, Progress, Rate } from 'antd';
-import { 
-  SmileOutlined, 
-  MehOutlined, 
+import {
+  SmileOutlined,
+  MehOutlined,
   FrownOutlined,
   TrophyOutlined,
   RiseOutlined,
   FallOutlined,
-  UserOutlined
-} from '@ant-design/icons';
-import { 
-  SATISFACTION_LEVELS, 
-  SURVEY_STATUS, 
-  CHART_COLORS 
-} from './customerSatisfactionConstants';
+  UserOutlined } from
+'@ant-design/icons';
+import {
+  SATISFACTION_LEVELS,
+  SURVEY_STATUS,
+  CHART_COLORS } from
+'./customerSatisfactionConstants';
 
-const CustomerSatisfactionOverview = ({ data, loading, onRefresh }) => {
-  const [selectedPeriod, setSelectedPeriod] = useState('month');
+const CustomerSatisfactionOverview = ({ data, loading, onRefresh: _onRefresh }) => {
+  const [_selectedPeriod, _setSelectedPeriod] = useState('month');
 
   const overviewStats = useMemo(() => {
     if (!data?.surveys) return {};
 
     const totalSurveys = data.surveys.length;
-    const completedSurveys = data.surveys.filter(s => s.status === 'completed').length;
+    const completedSurveys = data.surveys.filter((s) => s.status === 'completed').length;
     const avgScore = data.surveys.reduce((acc, s) => acc + (s.avgScore || 0), 0) / totalSurveys || 0;
     const responseRate = (completedSurveys / totalSurveys * 100).toFixed(1);
 
@@ -44,13 +44,13 @@ const CustomerSatisfactionOverview = ({ data, loading, onRefresh }) => {
     if (!data?.responses) return {};
 
     const distribution = {};
-    Object.keys(SATISFACTION_LEVELS).forEach(key => {
+    Object.keys(SATISFACTION_LEVELS).forEach((key) => {
       distribution[key] = 0;
     });
 
-    data.responses.forEach(response => {
-      const level = Object.entries(SATISFACTION_LEVELS).find(([_, config]) => 
-        config.value === response.satisfactionLevel
+    data.responses.forEach((response) => {
+      const level = Object.entries(SATISFACTION_LEVELS).find(([_, config]) =>
+      config.value === response.satisfactionLevel
       );
       if (level) {
         distribution[level[0]]++;
@@ -74,15 +74,15 @@ const CustomerSatisfactionOverview = ({ data, loading, onRefresh }) => {
           <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
             {config.label} ({percentage}%)
           </div>
-          <Progress 
-            percent={percentage} 
+          <Progress
+            percent={percentage}
             strokeColor={config.color}
             showInfo={false}
-            size="small"
-          />
+            size="small" />
+
         </div>
-      </Card>
-    );
+      </Card>);
+
   };
 
   return (
@@ -96,8 +96,8 @@ const CustomerSatisfactionOverview = ({ data, loading, onRefresh }) => {
               value={overviewStats.avgScore}
               suffix="/ 5.0"
               prefix={<Rate disabled value={parseFloat(overviewStats.avgScore)} />}
-              valueStyle={{ color: CHART_COLORS.PRIMARY }}
-            />
+              valueStyle={{ color: CHART_COLORS.PRIMARY }} />
+
           </Card>
         </Col>
         
@@ -108,8 +108,8 @@ const CustomerSatisfactionOverview = ({ data, loading, onRefresh }) => {
               value={overviewStats.completedSurveys}
               suffix={`/ ${overviewStats.totalSurveys}`}
               prefix={<TrophyOutlined />}
-              valueStyle={{ color: CHART_COLORS.POSITIVE }}
-            />
+              valueStyle={{ color: CHART_COLORS.POSITIVE }} />
+
           </Card>
         </Col>
         
@@ -120,8 +120,8 @@ const CustomerSatisfactionOverview = ({ data, loading, onRefresh }) => {
               value={overviewStats.responseRate}
               suffix="%"
               prefix={<UserOutlined />}
-              valueStyle={{ color: CHART_COLORS.NEUTRAL }}
-            />
+              valueStyle={{ color: CHART_COLORS.NEUTRAL }} />
+
           </Card>
         </Col>
         
@@ -131,13 +131,13 @@ const CustomerSatisfactionOverview = ({ data, loading, onRefresh }) => {
               title="满意度趋势"
               value={overviewStats.trend.percentage}
               suffix="%"
-              prefix={overviewStats.trend.direction === 'up' ? 
-                <RiseOutlined /> : <FallOutlined />}
-              valueStyle={{ 
-                color: overviewStats.trend.direction === 'up' ? 
-                  CHART_COLORS.POSITIVE : CHART_COLORS.NEGATIVE 
-              }}
-            />
+              prefix={overviewStats.trend.direction === 'up' ?
+              <RiseOutlined /> : <FallOutlined />}
+              valueStyle={{
+                color: overviewStats.trend.direction === 'up' ?
+                CHART_COLORS.POSITIVE : CHART_COLORS.NEGATIVE
+              }} />
+
           </Card>
         </Col>
       </Row>
@@ -145,8 +145,8 @@ const CustomerSatisfactionOverview = ({ data, loading, onRefresh }) => {
       {/* 满意度分布 */}
       <Card title="满意度分布" className="mb-4" loading={loading}>
         <Row gutter={[16, 16]}>
-          {Object.entries(satisfactionDistribution).map(([level, count]) => 
-            renderSatisfactionCard(level, count, data?.responses?.length || 0)
+          {Object.entries(satisfactionDistribution).map(([level, count]) =>
+          renderSatisfactionCard(level, count, data?.responses?.length || 0)
           )}
         </Row>
       </Card>
@@ -197,8 +197,8 @@ const CustomerSatisfactionOverview = ({ data, loading, onRefresh }) => {
           </Col>
         </Row>
       </Card>
-    </div>
-  );
+    </div>);
+
 };
 
 export default CustomerSatisfactionOverview;

@@ -69,7 +69,7 @@ export const metricTypes = {
     borderColor: "border-cyan-500/20",
     icon: "💎",
     description: "资产减去负债后的所有者权益"
-  },
+  }
 };
 
 // 时间周期配置
@@ -115,7 +115,7 @@ export const timePeriods = {
     value: "custom",
     days: null,
     format: "YYYY-MM-DD"
-  },
+  }
 };
 
 // 财务健康度等级
@@ -159,7 +159,7 @@ export const healthLevels = {
     borderColor: "border-red-500/20",
     score: 30,
     description: "财务状况危险，需要立即采取行动"
-  },
+  }
 };
 
 // 预算状态配置
@@ -195,7 +195,7 @@ export const budgetStatuses = {
     borderColor: "border-blue-500/20",
     progress: 50,
     description: "预算执行不足，可调整使用"
-  },
+  }
 };
 
 // 收入类型配置
@@ -223,7 +223,7 @@ export const revenueTypes = {
     color: "text-gray-400",
     percentage: 5,
     description: "利息、租金等其他收入"
-  },
+  }
 };
 
 // 成本类型配置
@@ -251,7 +251,7 @@ export const costTypes = {
     color: "text-cyan-400",
     percentage: 10,
     description: "市场推广、广告、差旅等费用"
-  },
+  }
 };
 
 // 现金流类型配置
@@ -275,7 +275,7 @@ export const cashFlowTypes = {
     label: "现金流量净额",
     color: "text-emerald-400",
     description: "所有活动现金流量净额"
-  },
+  }
 };
 
 // 图表类型配置
@@ -309,7 +309,7 @@ export const chartTypes = {
     label: "双轴图",
     component: "DualAxesChart",
     description: "展示两个不同量级的指标"
-  },
+  }
 };
 
 // 财务指标计算规则
@@ -318,13 +318,13 @@ export const metricCalculations = {
     return revenue - costOfGoodsSold;
   },
   grossMargin: (revenue, costOfGoodsSold) => {
-    return revenue > 0 ? ((revenue - costOfGoodsSold) / revenue) * 100 : 0;
+    return revenue > 0 ? (revenue - costOfGoodsSold) / revenue * 100 : 0;
   },
   netProfit: (revenue, totalExpenses) => {
     return revenue - totalExpenses;
   },
   netMargin: (revenue, totalExpenses) => {
-    return revenue > 0 ? ((revenue - totalExpenses) / revenue) * 100 : 0;
+    return revenue > 0 ? (revenue - totalExpenses) / revenue * 100 : 0;
   },
   currentRatio: (currentAssets, currentLiabilities) => {
     return currentLiabilities > 0 ? currentAssets / currentLiabilities : 0;
@@ -337,7 +337,7 @@ export const metricCalculations = {
   },
   inventoryTurnover: (costOfGoodsSold, averageInventory) => {
     return averageInventory > 0 ? costOfGoodsSold / averageInventory : 0;
-  },
+  }
 };
 
 // 财务预警规则
@@ -366,20 +366,20 @@ export const alertRules = {
     threshold: 1.1,
     message: "预算执行超出10%",
     severity: "HIGH"
-  },
+  }
 };
 
 // Tab 配置
 export const tabConfigs = [
-  { value: "overview", label: "财务概览", icon: "📊" },
-  { value: "revenue", label: "收入分析", icon: "💰" },
-  { value: "cost", label: "成本分析", icon: "💸" },
-  { value: "cashflow", label: "现金流", icon: "💧" },
-  { value: "budget", label: "预算管理", icon: "📋" },
-  { value: "forecast", label: "财务预测", icon: "🔮" },
-  { value: "reports", label: "财务报表", icon: "📑" },
-  { value: "alerts", label: "财务预警", icon: "⚠️" },
-];
+{ value: "overview", label: "财务概览", icon: "📊" },
+{ value: "revenue", label: "收入分析", icon: "💰" },
+{ value: "cost", label: "成本分析", icon: "💸" },
+{ value: "cashflow", label: "现金流", icon: "💧" },
+{ value: "budget", label: "预算管理", icon: "📋" },
+{ value: "forecast", label: "财务预测", icon: "🔮" },
+{ value: "reports", label: "财务报表", icon: "📑" },
+{ value: "alerts", label: "财务预警", icon: "⚠️" }];
+
 
 // 默认财务数据
 export const defaultFinanceData = {
@@ -393,7 +393,7 @@ export const defaultFinanceData = {
     totalLiabilities: 0,
     netEquity: 0,
     cashFlow: 0,
-    healthScore: 0,
+    healthScore: 0
   },
   revenue: {
     byMonth: [],
@@ -401,7 +401,7 @@ export const defaultFinanceData = {
     byCustomer: [],
     growth: 0,
     target: 0,
-    achievement: 0,
+    achievement: 0
   },
   cost: {
     byMonth: [],
@@ -409,7 +409,7 @@ export const defaultFinanceData = {
     byDepartment: [],
     trend: 0,
     budget: 0,
-    actual: 0,
+    actual: 0
   },
   cashflow: {
     byMonth: [],
@@ -417,26 +417,26 @@ export const defaultFinanceData = {
     operating: 0,
     investing: 0,
     financing: 0,
-    net: 0,
+    net: 0
   },
   budget: {
     departments: [],
     categories: [],
     variances: [],
-    overallProgress: 0,
+    overallProgress: 0
   },
   forecast: {
     revenue: [],
     profit: [],
     cashflow: [],
-    accuracy: 0,
+    accuracy: 0
   },
   alerts: [],
-  reports: [],
+  reports: []
 };
 
 // 工具函数
-export const formatCurrency = (value, currency = 'CNY') => {
+export const formatCurrency = (value, _currency = 'CNY') => {
   if (value === 0) return '¥0';
   if (value >= 100000000) return `¥${(value / 100000000).toFixed(2)}亿`;
   if (value >= 10000) return `¥${(value / 10000).toFixed(2)}万`;
@@ -465,15 +465,15 @@ export const getBudgetStatus = (actual, budget) => {
 
 export const calculateTrend = (current, previous) => {
   if (previous === 0) return 0;
-  return ((current - previous) / previous) * 100;
+  return (current - previous) / previous * 100;
 };
 
 export const validateFinanceData = (data) => {
   return data && typeof data === 'object' &&
-         data.overview &&
-         data.revenue &&
-         data.cost &&
-         data.cashflow;
+  data.overview &&
+  data.revenue &&
+  data.cost &&
+  data.cashflow;
 };
 
 export const filterDataByPeriod = (data, period) => {
@@ -529,5 +529,5 @@ export default {
   getBudgetStatus,
   calculateTrend,
   validateFinanceData,
-  filterDataByPeriod,
+  filterDataByPeriod
 };

@@ -5,35 +5,35 @@
 
 import React, { useState, useMemo } from 'react';
 import { Card, Row, Col, Statistic, Progress, Tag, Alert as AntAlert, Space } from 'antd';
-import { 
-  AlertTriangle, 
-  TrendingUp, 
-  TrendingDown, 
-  CheckCircle, 
+import {
+  AlertTriangle,
+  TrendingUp,
+  TrendingDown,
+  CheckCircle,
   Clock,
   BarChart3,
   Activity,
-  Shield
-} from 'lucide-react';
-import { 
-  ALERT_TYPES, 
-  ALERT_LEVELS, 
+  Shield } from
+'lucide-react';
+import {
+  ALERT_TYPES,
+  ALERT_LEVELS,
   ALERT_STATUS,
   STATISTICS_METRICS,
-  CHART_COLORS 
-} from './alertStatisticsConstants';
+  CHART_COLORS } from
+'./alertStatisticsConstants';
 
 const AlertOverview = ({ data, loading, onNavigate }) => {
-  const [selectedPeriod, setSelectedPeriod] = useState('last_24h');
+  const [_selectedPeriod, _setSelectedPeriod] = useState('last_24h');
 
   const overviewStats = useMemo(() => {
     if (!data?.alerts) return {};
 
     const totalAlerts = data.alerts.length;
-    const activeAlerts = data.alerts.filter(a => a.status === 'active').length;
-    const resolvedAlerts = data.alerts.filter(a => a.status === 'resolved').length;
-    const criticalAlerts = data.alerts.filter(a => a.level === 'critical').length;
-    const escalatedAlerts = data.alerts.filter(a => a.status === 'escalated').length;
+    const activeAlerts = data.alerts.filter((a) => a.status === 'active').length;
+    const resolvedAlerts = data.alerts.filter((a) => a.status === 'resolved').length;
+    const criticalAlerts = data.alerts.filter((a) => a.level === 'critical').length;
+    const escalatedAlerts = data.alerts.filter((a) => a.status === 'escalated').length;
 
     const resolvedRate = totalAlerts > 0 ? (resolvedAlerts / totalAlerts * 100).toFixed(1) : 0;
     const escalationRate = totalAlerts > 0 ? (escalatedAlerts / totalAlerts * 100).toFixed(1) : 0;
@@ -58,11 +58,11 @@ const AlertOverview = ({ data, loading, onNavigate }) => {
     if (!data?.alerts) return {};
 
     const distribution = {};
-    Object.keys(ALERT_TYPES).forEach(key => {
+    Object.keys(ALERT_TYPES).forEach((key) => {
       distribution[key] = 0;
     });
 
-    data.alerts.forEach(alert => {
+    data.alerts.forEach((alert) => {
       if (alert.type && ALERT_TYPES[alert.type.toUpperCase()]) {
         distribution[alert.type.toUpperCase()]++;
       }
@@ -75,11 +75,11 @@ const AlertOverview = ({ data, loading, onNavigate }) => {
     if (!data?.alerts) return {};
 
     const distribution = {};
-    Object.keys(ALERT_LEVELS).forEach(key => {
+    Object.keys(ALERT_LEVELS).forEach((key) => {
       distribution[key] = 0;
     });
 
-    data.alerts.forEach(alert => {
+    data.alerts.forEach((alert) => {
       if (alert.level && ALERT_LEVELS[alert.level.toUpperCase()]) {
         distribution[alert.level.toUpperCase()]++;
       }
@@ -91,10 +91,10 @@ const AlertOverview = ({ data, loading, onNavigate }) => {
   const recentCriticalAlerts = useMemo(() => {
     if (!data?.alerts) return [];
 
-    return data.alerts
-      .filter(alert => alert.level === 'critical' && alert.status === 'active')
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-      .slice(0, 5);
+    return data.alerts.
+    filter((alert) => alert.level === 'critical' && alert.status === 'active').
+    sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).
+    slice(0, 5);
   }, [data]);
 
   const renderMetricCard = (title, value, icon, color, trend, unit) => {
@@ -106,10 +106,10 @@ const AlertOverview = ({ data, loading, onNavigate }) => {
           prefix={icon}
           suffix={unit}
           valueStyle={{ color }}
-          trend={trend}
-        />
-      </Card>
-    );
+          trend={trend} />
+
+      </Card>);
+
   };
 
   const renderTypeCard = (typeKey, count) => {
@@ -127,15 +127,15 @@ const AlertOverview = ({ data, loading, onNavigate }) => {
           <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
             {config.label} ({percentage}%)
           </div>
-          <Progress 
-            percent={percentage} 
+          <Progress
+            percent={percentage}
             strokeColor={config.color}
             showInfo={false}
-            size="small"
-          />
+            size="small" />
+
         </div>
-      </Card>
-    );
+      </Card>);
+
   };
 
   const renderLevelCard = (levelKey, count) => {
@@ -155,15 +155,15 @@ const AlertOverview = ({ data, loading, onNavigate }) => {
           <div style={{ fontSize: 11, color: '#666', marginTop: 2 }}>
             {config.label}
           </div>
-          <Progress 
-            percent={percentage} 
+          <Progress
+            percent={percentage}
             strokeColor={config.color}
             showInfo={false}
-            size="small"
-          />
+            size="small" />
+
         </div>
-      </Card>
-    );
+      </Card>);
+
   };
 
   return (
@@ -220,8 +220,8 @@ const AlertOverview = ({ data, loading, onNavigate }) => {
         <Col xs={24} lg={12}>
           <Card title="告警类型分布" loading={loading}>
             <Row gutter={[8, 8]}>
-              {Object.entries(typeDistribution).map(([type, count]) => 
-                renderTypeCard(type, count)
+              {Object.entries(typeDistribution).map(([type, count]) =>
+              renderTypeCard(type, count)
               )}
             </Row>
           </Card>
@@ -230,8 +230,8 @@ const AlertOverview = ({ data, loading, onNavigate }) => {
         <Col xs={24} lg={12}>
           <Card title="告警级别分布" loading={loading}>
             <Row gutter={[8, 8]}>
-              {Object.entries(levelDistribution).map(([level, count]) => 
-                renderLevelCard(level, count)
+              {Object.entries(levelDistribution).map(([level, count]) =>
+              renderLevelCard(level, count)
               )}
             </Row>
           </Card>
@@ -239,57 +239,57 @@ const AlertOverview = ({ data, loading, onNavigate }) => {
       </Row>
 
       {/* 紧急告警 */}
-      {recentCriticalAlerts.length > 0 && (
-        <Card 
-          title="紧急告警" 
-          loading={loading}
-          extra={
-            <Space>
+      {recentCriticalAlerts.length > 0 &&
+      <Card
+        title="紧急告警"
+        loading={loading}
+        extra={
+        <Space>
               <Tag color={CHART_COLORS.ERROR}>
                 {recentCriticalAlerts.length} 条
               </Tag>
-              <Button 
-                type="link" 
-                onClick={() => onNavigate && onNavigate('critical-alerts')}
-              >
+              <Button
+            type="link"
+            onClick={() => onNavigate && onNavigate('critical-alerts')}>
+
                 查看全部
               </Button>
-            </Space>
-          }
-        >
+        </Space>
+        }>
+
           <Space direction="vertical" style={{ width: '100%' }}>
-            {recentCriticalAlerts.map(alert => (
-              <AntAlert
-                key={alert.id}
-                message={alert.title}
-                description={alert.description}
-                type="error"
-                showIcon
-                action={
-                  <Space>
+            {recentCriticalAlerts.map((alert) =>
+          <AntAlert
+            key={alert.id}
+            message={alert.title}
+            description={alert.description}
+            type="error"
+            showIcon
+            action={
+            <Space>
                     <Tag size="small">{alert.source}</Tag>
                     <Tag size="small">{alert.createdAt}</Tag>
-                  </Space>
-                }
-              />
-            ))}
+            </Space>
+            } />
+
+          )}
           </Space>
-        </Card>
-      )}
+      </Card>
+      }
 
       {/* 系统健康度 */}
       <Row gutter={[16, 16]} className="mt-4">
         <Col xs={24} lg={12}>
           <Card title="系统健康度" loading={loading}>
             <div style={{ textAlign: 'center', padding: '20px 0' }}>
-              <div style={{ 
-                fontSize: 48, 
-                fontWeight: 'bold', 
-                color: overviewStats.resolvedRate >= 80 ? CHART_COLORS.SUCCESS : 
-                       overviewStats.resolvedRate >= 60 ? CHART_COLORS.WARNING : CHART_COLORS.ERROR 
+              <div style={{
+                fontSize: 48,
+                fontWeight: 'bold',
+                color: overviewStats.resolvedRate >= 80 ? CHART_COLORS.SUCCESS :
+                overviewStats.resolvedRate >= 60 ? CHART_COLORS.WARNING : CHART_COLORS.ERROR
               }}>
-                {overviewStats.resolvedRate >= 80 ? '优秀' : 
-                 overviewStats.resolvedRate >= 60 ? '良好' : '需改进'}
+                {overviewStats.resolvedRate >= 80 ? '优秀' :
+                overviewStats.resolvedRate >= 60 ? '良好' : '需改进'}
               </div>
               <div style={{ fontSize: 14, color: '#666', marginTop: 8 }}>
                 基于解决率和响应时间综合评估
@@ -301,34 +301,34 @@ const AlertOverview = ({ data, loading, onNavigate }) => {
         <Col xs={24} lg={12}>
           <Card title="快速操作" loading={loading}>
             <Space direction="vertical" style={{ width: '100%' }}>
-              <Button 
-                type="primary" 
-                block 
+              <Button
+                type="primary"
+                block
                 icon={<Shield />}
-                onClick={() => onNavigate && onNavigate('alert-rules')}
-              >
+                onClick={() => onNavigate && onNavigate('alert-rules')}>
+
                 配置告警规则
               </Button>
-              <Button 
-                block 
+              <Button
+                block
                 icon={<BarChart3 />}
-                onClick={() => onNavigate && onNavigate('trend-analysis')}
-              >
+                onClick={() => onNavigate && onNavigate('trend-analysis')}>
+
                 趋势分析
               </Button>
-              <Button 
-                block 
+              <Button
+                block
                 icon={<Activity />}
-                onClick={() => onNavigate && onNavigate('performance-metrics')}
-              >
+                onClick={() => onNavigate && onNavigate('performance-metrics')}>
+
                 性能指标
               </Button>
             </Space>
           </Card>
         </Col>
       </Row>
-    </div>
-  );
+    </div>);
+
 };
 
 export default AlertOverview;

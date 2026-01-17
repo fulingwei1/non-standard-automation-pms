@@ -3,7 +3,7 @@
  * 报价列表管理组件 - 支持列表和卡片视图
  */
 
-import { useState, useMemo, useCallback } from "react";
+import { useState as _useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Search,
@@ -27,8 +27,8 @@ import {
   Download,
   Upload,
   Grid,
-  List
-} from "lucide-react";
+  List } from
+"lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -45,13 +45,13 @@ import {
   formatQuoteNumber,
   formatCurrency,
   QUOTE_SORT_OPTIONS,
-  QUOTE_VIEW_MODES
-} from "./quoteConstants";
+  QUOTE_VIEW_MODES } from
+"./quoteConstants";
 
 export const QuoteListManager = ({
   quotes = [],
-  opportunities = [],
-  customers = [],
+  opportunities: _opportunities = [],
+  customers: _customers = [],
   viewMode = "list",
   searchTerm = "",
   onSearchChange = null,
@@ -65,9 +65,9 @@ export const QuoteListManager = ({
   onQuoteEdit = null,
   onQuoteCreate = null,
   onQuoteCopy = null,
-  onQuoteSend = null,
-  onQuoteApprove = null,
-  onQuoteReject = null,
+  onQuoteSend: _onQuoteSend = null,
+  onQuoteApprove: _onQuoteApprove = null,
+  onQuoteReject: _onQuoteReject = null,
   onExport = null,
   onImport = null,
   loading = false,
@@ -75,15 +75,15 @@ export const QuoteListManager = ({
 }) => {
   // 过滤后的 quotes
   const filteredQuotes = useMemo(() => {
-    return quotes.filter(quote => {
+    return quotes.filter((quote) => {
       // 搜索过滤
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
-        const matchesSearch = 
-          quote.title?.toLowerCase().includes(searchLower) ||
-          quote.id?.toLowerCase().includes(searchLower) ||
-          quote.customer_name?.toLowerCase().includes(searchLower) ||
-          quote.opportunity_title?.toLowerCase().includes(searchLower);
+        const matchesSearch =
+        quote.title?.toLowerCase().includes(searchLower) ||
+        quote.id?.toLowerCase().includes(searchLower) ||
+        quote.customer_name?.toLowerCase().includes(searchLower) ||
+        quote.opportunity_title?.toLowerCase().includes(searchLower);
         if (!matchesSearch) return false;
       }
 
@@ -135,7 +135,7 @@ export const QuoteListManager = ({
   // 排序后的 quotes
   const sortedQuotes = useMemo(() => {
     const sorted = [...filteredQuotes];
-    
+
     switch (sortBy) {
       case 'created_desc':
         return sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -181,12 +181,12 @@ export const QuoteListManager = ({
   // 处理选择
   const handleSelectionChange = useCallback((quoteId, selected) => {
     if (!onSelectionChange) return;
-    
+
     let newSelection;
     if (selected) {
       newSelection = [...selectedQuotes, quoteId];
     } else {
-      newSelection = selectedQuotes.filter(id => id !== quoteId);
+      newSelection = selectedQuotes.filter((id) => id !== quoteId);
     }
     onSelectionChange(newSelection);
   }, [selectedQuotes, onSelectionChange]);
@@ -194,7 +194,7 @@ export const QuoteListManager = ({
   // 处理全选
   const handleSelectAll = useCallback((selected) => {
     if (!onSelectionChange) return;
-    onSelectionChange(selected ? sortedQuotes.map(quote => quote.id) : []);
+    onSelectionChange(selected ? sortedQuotes.map((quote) => quote.id) : []);
   }, [sortedQuotes, onSelectionChange]);
 
   // 渲染状态徽章
@@ -204,8 +204,8 @@ export const QuoteListManager = ({
       <Badge variant="outline" className={config.color}>
         <config.icon className="w-3 h-3 mr-1" />
         {config.label}
-      </Badge>
-    );
+      </Badge>);
+
   };
 
   // 渲染优先级徽章
@@ -214,8 +214,8 @@ export const QuoteListManager = ({
     return (
       <Badge variant="outline" className={config.color}>
         {config.label}
-      </Badge>
-    );
+      </Badge>);
+
   };
 
   // 渲染类型徽章
@@ -224,22 +224,22 @@ export const QuoteListManager = ({
     return (
       <Badge variant="outline" className={config.color}>
         {config.label}
-      </Badge>
-    );
+      </Badge>);
+
   };
 
   // 渲染警告指示器
   const renderWarnings = (quote) => {
     const warnings = [];
-    
+
     if (isQuoteExpired(quote)) {
       warnings.push({ icon: XCircle, color: "text-red-400", tooltip: "已过期" });
     }
-    
+
     if (isQuoteExpiringSoon(quote)) {
       warnings.push({ icon: AlertTriangle, color: "text-amber-400", tooltip: "即将过期" });
     }
-    
+
     return warnings;
   };
 
@@ -247,8 +247,8 @@ export const QuoteListManager = ({
   const renderQuoteCard = (quote, index) => {
     const warnings = renderWarnings(quote);
     const isSelected = selectedQuotes.includes(quote.id);
-    const statusConfig = getQuoteStatusConfig(quote.status);
-    
+    const _statusConfig = getQuoteStatusConfig(quote.status);
+
     return (
       <motion.div
         key={quote.id}
@@ -260,8 +260,8 @@ export const QuoteListManager = ({
           "bg-slate-800/60 border border-slate-700/60 rounded-lg p-4 cursor-pointer hover:border-slate-600/60 transition-all",
           isSelected && "bg-slate-800/80 border-blue-500/60"
         )}
-        onClick={() => onQuoteView?.(quote)}
-      >
+        onClick={() => onQuoteView?.(quote)}>
+
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
             <input
@@ -271,8 +271,8 @@ export const QuoteListManager = ({
                 e.stopPropagation();
                 handleSelectionChange(quote.id, e.target.checked);
               }}
-              className="rounded border-slate-600 bg-slate-700 text-blue-500 focus:ring-blue-500"
-            />
+              className="rounded border-slate-600 bg-slate-700 text-blue-500 focus:ring-blue-500" />
+
             <div className="flex items-center gap-1">
               {warnings.map((warning, idx) => {
                 const Icon = warning.icon;
@@ -280,9 +280,9 @@ export const QuoteListManager = ({
                   <Icon
                     key={idx}
                     className={cn("w-4 h-4", warning.color)}
-                    title={warning.tooltip}
-                  />
-                );
+                    title={warning.tooltip} />);
+
+
               })}
             </div>
           </div>
@@ -345,8 +345,8 @@ export const QuoteListManager = ({
                 e.stopPropagation();
                 onQuoteView?.(quote);
               }}
-              className="h-6 w-6 p-0 text-slate-400 hover:text-white"
-            >
+              className="h-6 w-6 p-0 text-slate-400 hover:text-white">
+
               <Eye className="w-3 h-3" />
             </Button>
             <Button
@@ -356,8 +356,8 @@ export const QuoteListManager = ({
                 e.stopPropagation();
                 onQuoteEdit?.(quote);
               }}
-              className="h-6 w-6 p-0 text-slate-400 hover:text-white"
-            >
+              className="h-6 w-6 p-0 text-slate-400 hover:text-white">
+
               <Edit className="w-3 h-3" />
             </Button>
             <Button
@@ -367,21 +367,21 @@ export const QuoteListManager = ({
                 e.stopPropagation();
                 onQuoteCopy?.(quote);
               }}
-              className="h-6 w-6 p-0 text-slate-400 hover:text-white"
-            >
+              className="h-6 w-6 p-0 text-slate-400 hover:text-white">
+
               <Copy className="w-3 h-3" />
             </Button>
           </div>
         </div>
-      </motion.div>
-    );
+      </motion.div>);
+
   };
 
   // 渲染表格行（列表视图）
   const renderTableRow = (quote, index) => {
     const isSelected = selectedQuotes.includes(quote.id);
     const warnings = renderWarnings(quote);
-    
+
     return (
       <motion.tr
         key={quote.id}
@@ -391,15 +391,15 @@ export const QuoteListManager = ({
         className={cn(
           "border-b border-slate-700/40 hover:bg-slate-800/40 transition-colors",
           isSelected && "bg-slate-800/60"
-        )}
-      >
+        )}>
+
         <td className="px-3 py-3">
           <input
             type="checkbox"
             checked={isSelected}
             onChange={(e) => handleSelectionChange(quote.id, e.target.checked)}
-            className="rounded border-slate-600 bg-slate-700 text-blue-500 focus:ring-blue-500"
-          />
+            className="rounded border-slate-600 bg-slate-700 text-blue-500 focus:ring-blue-500" />
+
         </td>
         
         <td className="px-3 py-3">
@@ -414,9 +414,9 @@ export const QuoteListManager = ({
                   <Icon
                     key={idx}
                     className={cn("w-4 h-4", warning.color)}
-                    title={warning.tooltip}
-                  />
-                );
+                    title={warning.tooltip} />);
+
+
               })}
             </div>
           </div>
@@ -477,8 +477,8 @@ export const QuoteListManager = ({
                 e.stopPropagation();
                 onQuoteView?.(quote);
               }}
-              className="h-8 w-8 p-0 text-slate-400 hover:text-white"
-            >
+              className="h-8 w-8 p-0 text-slate-400 hover:text-white">
+
               <Eye className="w-4 h-4" />
             </Button>
             <Button
@@ -488,8 +488,8 @@ export const QuoteListManager = ({
                 e.stopPropagation();
                 onQuoteEdit?.(quote);
               }}
-              className="h-8 w-8 p-0 text-slate-400 hover:text-white"
-            >
+              className="h-8 w-8 p-0 text-slate-400 hover:text-white">
+
               <Edit className="w-4 h-4" />
             </Button>
             <Button
@@ -499,14 +499,14 @@ export const QuoteListManager = ({
                 e.stopPropagation();
                 onQuoteCopy?.(quote);
               }}
-              className="h-8 w-8 p-0 text-slate-400 hover:text-white"
-            >
+              className="h-8 w-8 p-0 text-slate-400 hover:text-white">
+
               <Copy className="w-4 h-4" />
             </Button>
           </div>
         </td>
-      </motion.tr>
-    );
+      </motion.tr>);
+
   };
 
   return (
@@ -522,31 +522,31 @@ export const QuoteListManager = ({
                 placeholder="搜索报价编号、标题、客户..."
                 value={searchTerm}
                 onChange={(e) => onSearchChange?.(e.target.value)}
-                className="pl-10 bg-slate-800/60 border-slate-700 text-white"
-              />
+                className="pl-10 bg-slate-800/60 border-slate-700 text-white" />
+
             </div>
             
             {/* 筛选选项 */}
             <div className="flex flex-wrap gap-2">
               <Select
                 value={filters.status || "all"}
-                onValueChange={(value) => onFilterChange?.({ ...filters, status: value })}
-              >
+                onValueChange={(value) => onFilterChange?.({ ...filters, status: value })}>
+
                 <SelectTrigger className="w-32 bg-slate-800/60 border-slate-700 text-white">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部状态</SelectItem>
-                  {Object.entries(quoteStatusConfig).map(([key, config]) => (
-                    <SelectItem key={key} value={key}>{config.label}</SelectItem>
-                  ))}
+                  {Object.entries(quoteStatusConfig).map(([key, config]) =>
+                  <SelectItem key={key} value={key}>{config.label}</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
 
               <Select
                 value={filters.type || "all"}
-                onValueChange={(value) => onFilterChange?.({ ...filters, type: value })}
-              >
+                onValueChange={(value) => onFilterChange?.({ ...filters, type: value })}>
+
                 <SelectTrigger className="w-32 bg-slate-800/60 border-slate-700 text-white">
                   <SelectValue />
                 </SelectTrigger>
@@ -561,8 +561,8 @@ export const QuoteListManager = ({
 
               <Select
                 value={filters.priority || "all"}
-                onValueChange={(value) => onFilterChange?.({ ...filters, priority: value })}
-              >
+                onValueChange={(value) => onFilterChange?.({ ...filters, priority: value })}>
+
                 <SelectTrigger className="w-32 bg-slate-800/60 border-slate-700 text-white">
                   <SelectValue />
                 </SelectTrigger>
@@ -577,66 +577,66 @@ export const QuoteListManager = ({
 
               <Select
                 value={sortBy}
-                onValueChange={onSortChange}
-              >
+                onValueChange={onSortChange}>
+
                 <SelectTrigger className="w-40 bg-slate-800/60 border-slate-700 text-white">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {QUOTE_SORT_OPTIONS.map(option => (
-                    <SelectItem key={option.value} value={option.value}>
+                  {QUOTE_SORT_OPTIONS.map((option) =>
+                  <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
 
             {/* 操作按钮 */}
             <div className="flex gap-2">
-              {onImport && (
-                <Button variant="outline" size="sm" onClick={onImport}>
+              {onImport &&
+              <Button variant="outline" size="sm" onClick={onImport}>
                   <Upload className="w-4 h-4 mr-2" />
                   导入
                 </Button>
-              )}
-              {onExport && (
-                <Button variant="outline" size="sm" onClick={onExport}>
+              }
+              {onExport &&
+              <Button variant="outline" size="sm" onClick={onExport}>
                   <Download className="w-4 h-4 mr-2" />
                   导出
                 </Button>
-              )}
-              {onQuoteCreate && (
-                <Button onClick={onQuoteCreate} className="bg-blue-600 hover:bg-blue-700">
+              }
+              {onQuoteCreate &&
+              <Button onClick={onQuoteCreate} className="bg-blue-600 hover:bg-blue-700">
                   <Plus className="w-4 h-4 mr-2" />
                   新建报价
                 </Button>
-              )}
+              }
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* 列表视图 */}
-      {viewMode === 'list' && (
-        <Card className="border border-slate-700/70 bg-slate-900/40">
+      {viewMode === 'list' &&
+      <Card className="border border-slate-700/70 bg-slate-900/40">
           <CardContent className="p-0">
-            {loading ? (
-              <div className="text-center py-8 text-slate-400">加载中...</div>
-            ) : sortedQuotes.length === 0 ? (
-              <div className="text-center py-8 text-slate-400">暂无报价数据</div>
-            ) : (
-              <div className="overflow-x-auto">
+            {loading ?
+          <div className="text-center py-8 text-slate-400">加载中...</div> :
+          sortedQuotes.length === 0 ?
+          <div className="text-center py-8 text-slate-400">暂无报价数据</div> :
+
+          <div className="overflow-x-auto">
                 <table className="min-w-full">
                   <thead>
                     <tr className="border-b border-slate-700/60">
                       <th className="px-3 py-3 text-left">
                         <input
-                          type="checkbox"
-                          checked={selectedQuotes.length === sortedQuotes.length}
-                          onChange={(e) => handleSelectAll(e.target.checked)}
-                          className="rounded border-slate-600 bg-slate-700 text-blue-500 focus:ring-blue-500"
-                        />
+                      type="checkbox"
+                      checked={selectedQuotes.length === sortedQuotes.length}
+                      onChange={(e) => handleSelectAll(e.target.checked)}
+                      className="rounded border-slate-600 bg-slate-700 text-blue-500 focus:ring-blue-500" />
+
                       </th>
                       <th className="px-3 py-3 text-left text-xs font-semibold text-slate-400">编号</th>
                       <th className="px-3 py-3 text-left text-xs font-semibold text-slate-400">标题</th>
@@ -655,25 +655,25 @@ export const QuoteListManager = ({
                   </tbody>
                 </table>
               </div>
-            )}
+          }
           </CardContent>
         </Card>
-      )}
+      }
 
       {/* 卡片视图 */}
-      {viewMode === 'card' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {loading ? (
-            <div className="col-span-full text-center py-8 text-slate-400">加载中...</div>
-          ) : sortedQuotes.length === 0 ? (
-            <div className="col-span-full text-center py-8 text-slate-400">暂无报价数据</div>
-          ) : (
-            sortedQuotes.map((quote, index) => renderQuoteCard(quote, index))
-          )}
+      {viewMode === 'card' &&
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {loading ?
+        <div className="col-span-full text-center py-8 text-slate-400">加载中...</div> :
+        sortedQuotes.length === 0 ?
+        <div className="col-span-full text-center py-8 text-slate-400">暂无报价数据</div> :
+
+        sortedQuotes.map((quote, index) => renderQuoteCard(quote, index))
+        }
         </div>
-      )}
-    </div>
-  );
+      }
+    </div>);
+
 };
 
 export default QuoteListManager;

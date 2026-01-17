@@ -13,21 +13,21 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
-} from "../../components/ui/dialog";
+  DialogFooter } from
+"../../components/ui/dialog";
 import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger,
-} from "../../components/ui/tabs";
+  TabsTrigger } from
+"../../components/ui/tabs";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../../components/ui/select";
+  SelectValue } from
+"../../components/ui/select";
 import {
   AlertTriangle,
   Clock,
@@ -42,14 +42,14 @@ import {
   Search,
   Filter,
   MoreHorizontal,
-  RefreshCw
-} from "lucide-react";
+  RefreshCw } from
+"lucide-react";
 import {
   reminderTypeConfigs,
-  statusConfigs,
-  formatStatus,
-  getRiskLevelConfig
-} from "./contractManagementConstants";
+  statusConfigs as _statusConfigs,
+  formatStatus as _formatStatus,
+  getRiskLevelConfig as _getRiskLevelConfig } from
+"./contractManagementConstants";
 import { cn, formatDate, formatCurrency } from "../../lib/utils";
 
 export function AlertList({
@@ -70,33 +70,33 @@ export function AlertList({
   const [searchTerm, setSearchTerm] = useState('');
 
   // 合同风险评估
-  const riskAssessmentAlerts = alerts.filter(alert =>
-    alert.type === 'RISK_ASSESSMENT' || alert.severity === 'HIGH' || alert.severity === 'CRITICAL'
+  const riskAssessmentAlerts = alerts.filter((alert) =>
+  alert.type === 'RISK_ASSESSMENT' || alert.severity === 'HIGH' || alert.severity === 'CRITICAL'
   );
 
   // 合同到期提醒
-  const dueDateAlerts = alerts.filter(alert =>
-    alert.type === 'DUE_DATE_REMINDER' || alert.type === 'PAYMENT_REMINDER'
+  const dueDateAlerts = alerts.filter((alert) =>
+  alert.type === 'DUE_DATE_REMINDER' || alert.type === 'PAYMENT_REMINDER'
   );
 
   // 合同状态变更
-  const statusChangeAlerts = alerts.filter(alert =>
-    alert.type === 'STATUS_CHANGE'
+  const statusChangeAlerts = alerts.filter((alert) =>
+  alert.type === 'STATUS_CHANGE'
   );
 
   // 其他类型
-  const otherAlerts = alerts.filter(alert =>
-    !riskAssessmentAlerts.includes(alert) &&
-    !dueDateAlerts.includes(alert) &&
-    !statusChangeAlerts.includes(alert)
+  const otherAlerts = alerts.filter((alert) =>
+  !riskAssessmentAlerts.includes(alert) &&
+  !dueDateAlerts.includes(alert) &&
+  !statusChangeAlerts.includes(alert)
   );
 
   // 根据筛选条件过滤
-  const filteredAlerts = alerts.filter(alert => {
+  const filteredAlerts = alerts.filter((alert) => {
     const matchesStatus = filterStatus === 'all' || alert.status === filterStatus;
     const matchesType = filterType === 'all' || alert.type === filterType;
     const matchesSearch = alert.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         alert.description.toLowerCase().includes(searchTerm.toLowerCase());
+    alert.description.toLowerCase().includes(searchTerm.toLowerCase());
 
     return matchesStatus && matchesType && matchesSearch;
   });
@@ -135,7 +135,7 @@ export function AlertList({
 
   // 获取类型图标
   const getTypeIcon = (type) => {
-    const config = reminderTypeConfigs[type] || {};
+    const _config = reminderTypeConfigs[type] || {};
     switch (type) {
       case 'DUE_DATE_REMINDER':
       case 'PAYMENT_REMINDER':
@@ -201,8 +201,8 @@ export function AlertList({
               variant="outline"
               size="sm"
               onClick={onMarkAllAsRead}
-              disabled={alerts.filter(a => !a.read_at).length === 0}
-            >
+              disabled={alerts.filter((a) => !a.read_at).length === 0}>
+
               <CheckCircle2 className="h-4 w-4 mr-2" />
               全部已读
             </Button>
@@ -210,8 +210,8 @@ export function AlertList({
               variant="outline"
               size="sm"
               onClick={refreshAlerts}
-              disabled={isRefreshing}
-            >
+              disabled={isRefreshing}>
+
               <RefreshCw className={cn("h-4 w-4 mr-2", isRefreshing && "animate-spin")} />
               刷新
             </Button>
@@ -227,8 +227,8 @@ export function AlertList({
               placeholder="搜索预警..."
               className="px-3 py-1.5 text-sm border border-slate-200 rounded-md w-48"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+              onChange={(e) => setSearchTerm(e.target.value)} />
+
           </div>
 
           <div className="flex items-center gap-2">
@@ -293,27 +293,27 @@ export function AlertList({
 
         {/* 预警列表 */}
         <div className="space-y-3">
-          {filteredAlerts.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+          {filteredAlerts.length === 0 ?
+          <div className="text-center py-8 text-muted-foreground">
               <Bell className="h-12 w-12 mx-auto mb-2 opacity-50" />
               <p>暂无符合条件的预警</p>
-            </div>
-          ) : (
-            filteredAlerts.map((alert) => {
-              const config = reminderTypeConfigs[alert.type] || {};
-              const isUnread = !alert.read_at;
-              const isOverdue = alert.due_date && new Date(alert.due_date) < new Date();
+          </div> :
 
-              return (
-                <Card
-                  key={alert.id}
-                  className={cn(
-                    "cursor-pointer transition-all duration-200 hover:shadow-md",
-                    isUnread && "bg-blue-50 border-blue-200",
-                    isOverdue && "border-orange-300"
-                  )}
-                  onClick={() => handleAlertClick(alert)}
-                >
+          filteredAlerts.map((alert) => {
+            const config = reminderTypeConfigs[alert.type] || {};
+            const isUnread = !alert.read_at;
+            const isOverdue = alert.due_date && new Date(alert.due_date) < new Date();
+
+            return (
+              <Card
+                key={alert.id}
+                className={cn(
+                  "cursor-pointer transition-all duration-200 hover:shadow-md",
+                  isUnread && "bg-blue-50 border-blue-200",
+                  isOverdue && "border-orange-300"
+                )}
+                onClick={() => handleAlertClick(alert)}>
+
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1 space-y-2">
@@ -325,23 +325,23 @@ export function AlertList({
                           <Badge variant="secondary" className={config.color}>
                             {config.label || alert.type}
                           </Badge>
-                          {isUnread && (
-                            <Badge variant="default" className="bg-blue-500">
+                          {isUnread &&
+                        <Badge variant="default" className="bg-blue-500">
                               未读
-                            </Badge>
-                          )}
-                          {isOverdue && (
-                            <Badge variant="destructive">
+                        </Badge>
+                        }
+                          {isOverdue &&
+                        <Badge variant="destructive">
                               已逾期
-                            </Badge>
-                          )}
+                        </Badge>
+                        }
                         </div>
 
                         {/* 预警标题 */}
                         <h4 className={cn(
-                          "font-medium",
-                          isUnread && "text-blue-900"
-                        )}>
+                        "font-medium",
+                        isUnread && "text-blue-900"
+                      )}>
                           {alert.title}
                         </h4>
 
@@ -356,37 +356,37 @@ export function AlertList({
                             <Calendar className="h-3 w-3" />
                             <span>创建时间: {formatDate(alert.created_at)}</span>
                           </div>
-                          {alert.contract_name && (
-                            <div className="flex items-center gap-1">
+                          {alert.contract_name &&
+                        <div className="flex items-center gap-1">
                               <FileText className="h-3 w-3" />
                               <span className="truncate max-w-32">
                                 {alert.contract_name}
                               </span>
-                            </div>
-                          )}
-                          {alert.counterparty && (
-                            <div className="flex items-center gap-1">
+                        </div>
+                        }
+                          {alert.counterparty &&
+                        <div className="flex items-center gap-1">
                               <User className="h-3 w-3" />
                               <span className="truncate max-w-32">
                                 {alert.counterparty}
                               </span>
-                            </div>
-                          )}
-                          {alert.due_date && (
-                            <div className={cn(
-                              "flex items-center gap-1 font-medium",
-                              isOverdue ? "text-red-600" : "text-green-600"
-                            )}>
+                        </div>
+                        }
+                          {alert.due_date &&
+                        <div className={cn(
+                          "flex items-center gap-1 font-medium",
+                          isOverdue ? "text-red-600" : "text-green-600"
+                        )}>
                               <Clock className="h-3 w-3" />
                               <span>{formatDaysUntilDue(alert.due_date)}</span>
-                            </div>
-                          )}
-                          {alert.amount && (
-                            <div className="flex items-center gap-1">
+                        </div>
+                        }
+                          {alert.amount &&
+                        <div className="flex items-center gap-1">
                               <DollarSign className="h-3 w-3" />
                               <span>金额: {formatCurrency(alert.amount)}</span>
-                            </div>
-                          )}
+                        </div>
+                        }
                         </div>
 
                         {/* 操作按钮 */}
@@ -397,45 +397,45 @@ export function AlertList({
                           </div>
                           <div className="flex items-center gap-2">
                             <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 px-2"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onViewContract(alert.contract_id);
-                              }}
-                            >
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onViewContract(alert.contract_id);
+                            }}>
+
                               查看合同
                             </Button>
-                            {alert.status !== 'RESOLVED' && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 px-2"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleResolveAlert(alert);
-                                }}
-                              >
+                            {alert.status !== 'RESOLVED' &&
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleResolveAlert(alert);
+                            }}>
+
                                 标记已解决
-                              </Button>
-                            )}
+                          </Button>
+                          }
                           </div>
                         </div>
                       </div>
                     </div>
                   </CardContent>
-                </Card>
-              );
-            })
-          )}
+              </Card>);
+
+          })
+          }
         </div>
 
         {/* 预警详情对话框 */}
         <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
           <DialogContent className="max-w-2xl">
-            {selectedAlert && (
-              <>
+            {selectedAlert &&
+            <>
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <div className={cn("p-1 rounded-full", getSeverityColor(selectedAlert.severity))}>
@@ -467,23 +467,23 @@ export function AlertList({
                       <label className="text-muted-foreground">状态</label>
                       <p>{selectedAlert.status}</p>
                     </div>
-                    {selectedAlert.contract_name && (
-                      <div>
+                    {selectedAlert.contract_name &&
+                  <div>
                         <label className="text-muted-foreground">相关合同</label>
                         <p className="font-medium">{selectedAlert.contract_name}</p>
-                      </div>
-                    )}
-                    {selectedAlert.due_date && (
-                      <div>
+                  </div>
+                  }
+                    {selectedAlert.due_date &&
+                  <div>
                         <label className="text-muted-foreground">到期时间</label>
                         <p className={cn(
-                          "font-medium",
-                          new Date(selectedAlert.due_date) < new Date() ? "text-red-600" : "text-green-600"
-                        )}>
+                      "font-medium",
+                      new Date(selectedAlert.due_date) < new Date() ? "text-red-600" : "text-green-600"
+                    )}>
                           {formatDate(selectedAlert.due_date)}
                         </p>
-                      </div>
-                    )}
+                  </div>
+                  }
                   </div>
 
                   {/* 解决方案建议 */}
@@ -499,21 +499,21 @@ export function AlertList({
                     <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
                       关闭
                     </Button>
-                    {selectedAlert.status !== 'RESOLVED' && (
-                      <Button onClick={() => handleResolveAlert(selectedAlert)}>
+                    {selectedAlert.status !== 'RESOLVED' &&
+                  <Button onClick={() => handleResolveAlert(selectedAlert)}>
                         标记已解决
-                      </Button>
-                    )}
+                  </Button>
+                  }
                     <Button variant="outline" onClick={() => onEditAlert(selectedAlert)}>
                       编辑预警
                     </Button>
                   </DialogFooter>
                 </div>
-              </>
-            )}
+            </>
+            }
           </DialogContent>
         </Dialog>
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 }

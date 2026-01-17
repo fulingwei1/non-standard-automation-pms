@@ -107,16 +107,26 @@ export const machineApi = {
 };
 
 export const stageApi = {
-  list: (projectId) =>
-    api.get("/stages/", { params: { project_id: projectId } }),
+  list: (params) => {
+    const projectId = params?.project_id;
+    if (projectId) {
+      return api.get(`/stages/projects/${projectId}/stages`);
+    }
+    return api.get("/stages/", { params });
+  },
   get: (id) => api.get(`/stages/${id}`),
   statuses: (stageId) =>
     api.get("/stages/statuses", { params: { stage_id: stageId } }),
 };
 
 export const milestoneApi = {
-  list: (projectId) =>
-    api.get("/milestones/", { params: { project_id: projectId } }),
+  list: (params) => {
+    const projectId = params?.project_id;
+    if (projectId) {
+      return api.get(`/milestones/projects/${projectId}/milestones`);
+    }
+    return api.get("/milestones/", { params });
+  },
   get: (id) => api.get(`/milestones/${id}`),
   create: (data) => api.post("/milestones/", data),
   update: (id, data) => api.put(`/milestones/${id}`, data),
@@ -124,8 +134,13 @@ export const milestoneApi = {
 };
 
 export const memberApi = {
-  list: (projectId) =>
-    api.get("/members/", { params: { project_id: projectId } }),
+  list: (params) => {
+    const projectId = params?.project_id;
+    if (projectId) {
+      return api.get(`/members/projects/${projectId}/members`);
+    }
+    return api.get("/members/", { params });
+  },
   add: (data) => api.post("/members/", data),
   remove: (id) => api.delete(`/members/${id}`),
   batchAdd: (projectId, data) =>
@@ -164,7 +179,6 @@ export const settlementApi = {
 };
 
 export const documentApi = {
-  list: (projectId) =>
-    api.get("/documents/", { params: { project_id: projectId } }),
+  list: (params) => api.get("/documents/", { params }),
   create: (data) => api.post("/documents/", data),
 };

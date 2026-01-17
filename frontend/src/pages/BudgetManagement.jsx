@@ -19,8 +19,8 @@ import {
   DollarSign,
   Calendar,
   Target,
-  BarChart3,
-} from "lucide-react";
+  BarChart3 } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -42,10 +42,10 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "../components/ui";
+  TableRow } from
+"../components/ui";
 import { cn, formatCurrency, formatDate } from "../lib/utils";
-import { fadeIn, staggerContainer } from "../lib/animations";
+import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
 import { projectApi, costApi } from "../services/api";
 
 // Mock data - 已移除，使用真实API
@@ -74,11 +74,11 @@ export default function BudgetManagement() {
             const usedAmount = summary.total_cost || 0;
             const budgetAmount = project.budget_amount || 0;
             const usageRate =
-              budgetAmount > 0 ? (usedAmount / budgetAmount) * 100 : 0;
+            budgetAmount > 0 ? usedAmount / budgetAmount * 100 : 0;
 
             let status = "NORMAL";
-            if (usageRate >= 90) status = "CRITICAL";
-            else if (usageRate >= 80) status = "WARNING";
+            if (usageRate >= 90) status = "CRITICAL";else
+            if (usageRate >= 80) status = "WARNING";
 
             return {
               id: project.id,
@@ -90,16 +90,16 @@ export default function BudgetManagement() {
               usage_rate: usageRate,
               status,
               start_date: project.planned_start_date,
-              end_date: project.planned_end_date,
+              end_date: project.planned_end_date
             };
           } catch (err) {
             console.error(
               `Failed to load budget for project ${project.id}:`,
-              err,
+              err
             );
             return null;
           }
-        }),
+        })
       );
 
       setBudgets(budgetsData.filter(Boolean));
@@ -121,24 +121,24 @@ export default function BudgetManagement() {
         const keyword = searchKeyword.toLowerCase();
         return (
           budget.project_code?.toLowerCase().includes(keyword) ||
-          budget.project_name?.toLowerCase().includes(keyword)
-        );
+          budget.project_name?.toLowerCase().includes(keyword));
+
       }
       if (filterStatus !== "all") {
         if (filterStatus === "critical" && budget.status !== "CRITICAL")
-          return false;
+        return false;
         if (filterStatus === "warning" && budget.status !== "WARNING")
-          return false;
+        return false;
         if (filterStatus === "normal" && budget.status !== "NORMAL")
-          return false;
+        return false;
       }
       if (filterUsageRate !== "all") {
         if (filterUsageRate === "high" && budget.usage_rate < 80) return false;
         if (
-          filterUsageRate === "medium" &&
-          (budget.usage_rate < 50 || budget.usage_rate >= 80)
-        )
-          return false;
+        filterUsageRate === "medium" && (
+        budget.usage_rate < 50 || budget.usage_rate >= 80))
+
+        return false;
         if (filterUsageRate === "low" && budget.usage_rate >= 50) return false;
       }
       return true;
@@ -156,16 +156,16 @@ export default function BudgetManagement() {
       total,
       used,
       remaining,
-      usageRate: total > 0 ? (used / total) * 100 : 0,
+      usageRate: total > 0 ? used / total * 100 : 0,
       critical,
-      warning,
+      warning
     };
   }, [budgets]);
 
   const statusConfig = {
     CRITICAL: { label: "严重超支", color: "bg-red-500 text-white" },
     WARNING: { label: "预算预警", color: "bg-amber-500 text-white" },
-    NORMAL: { label: "正常", color: "bg-emerald-500 text-white" },
+    NORMAL: { label: "正常", color: "bg-emerald-500 text-white" }
   };
 
   return (
@@ -173,16 +173,16 @@ export default function BudgetManagement() {
       <div className="container mx-auto px-4 py-6 space-y-6">
         <PageHeader
           title="预算管理"
-          description="项目预算跟踪、使用情况监控、预算预警"
-        />
+          description="项目预算跟踪、使用情况监控、预算预警" />
+
 
         {/* Statistics */}
         <motion.div
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
-          className="grid grid-cols-1 md:grid-cols-4 gap-4"
-        >
+          className="grid grid-cols-1 md:grid-cols-4 gap-4">
+
           <Card className="bg-slate-800/50 border-slate-700/50">
             <CardContent className="p-5">
               <div className="flex items-start justify-between">
@@ -264,8 +264,8 @@ export default function BudgetManagement() {
                   placeholder="搜索项目编码、名称..."
                   value={searchKeyword}
                   onChange={(e) => setSearchKeyword(e.target.value)}
-                  className="pl-10 bg-slate-900/50 border-slate-700"
-                />
+                  className="pl-10 bg-slate-900/50 border-slate-700" />
+
               </div>
               <Select value={filterStatus} onValueChange={setFilterStatus}>
                 <SelectTrigger className="bg-slate-900/50 border-slate-700">
@@ -280,8 +280,8 @@ export default function BudgetManagement() {
               </Select>
               <Select
                 value={filterUsageRate}
-                onValueChange={setFilterUsageRate}
-              >
+                onValueChange={setFilterUsageRate}>
+
                 <SelectTrigger className="bg-slate-900/50 border-slate-700">
                   <SelectValue placeholder="使用率" />
                 </SelectTrigger>
@@ -309,14 +309,14 @@ export default function BudgetManagement() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {loading ? (
-              <div className="text-center py-8 text-slate-400">加载中...</div>
-            ) : filteredBudgets.length === 0 ? (
-              <div className="text-center py-8 text-slate-400">
+            {loading ?
+            <div className="text-center py-8 text-slate-400">加载中...</div> :
+            filteredBudgets.length === 0 ?
+            <div className="text-center py-8 text-slate-400">
                 暂无预算数据
-              </div>
-            ) : (
-              <Table>
+              </div> :
+
+            <Table>
                 <TableHeader>
                   <TableRow className="border-slate-700">
                     <TableHead className="text-slate-400">项目编码</TableHead>
@@ -333,8 +333,8 @@ export default function BudgetManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredBudgets.map((budget) => (
-                    <TableRow key={budget.id} className="border-slate-700">
+                  {filteredBudgets.map((budget) =>
+                <TableRow key={budget.id} className="border-slate-700">
                       <TableCell className="font-mono text-sm text-slate-200">
                         {budget.project_code}
                       </TableCell>
@@ -353,54 +353,54 @@ export default function BudgetManagement() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Progress
-                            value={budget.usage_rate}
-                            className="flex-1 h-2"
-                          />
+                        value={budget.usage_rate}
+                        className="flex-1 h-2" />
+
                           <span
-                            className={cn(
-                              "text-sm font-medium w-16 text-right",
-                              budget.usage_rate >= 90
-                                ? "text-red-400"
-                                : budget.usage_rate >= 80
-                                  ? "text-amber-400"
-                                  : "text-emerald-400",
-                            )}
-                          >
+                        className={cn(
+                          "text-sm font-medium w-16 text-right",
+                          budget.usage_rate >= 90 ?
+                          "text-red-400" :
+                          budget.usage_rate >= 80 ?
+                          "text-amber-400" :
+                          "text-emerald-400"
+                        )}>
+
                             {budget.usage_rate.toFixed(1)}%
                           </span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <Badge
-                          className={
-                            statusConfig[budget.status]?.color || "bg-slate-500"
-                          }
-                        >
+                      className={
+                      statusConfig[budget.status]?.color || "bg-slate-500"
+                      }>
+
                           {statusConfig[budget.status]?.label || budget.status}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-slate-400 text-sm">
-                        {budget.start_date && budget.end_date
-                          ? `${formatDate(budget.start_date)} ~ ${formatDate(budget.end_date)}`
-                          : "-"}
+                        {budget.start_date && budget.end_date ?
+                    `${formatDate(budget.start_date)} ~ ${formatDate(budget.end_date)}` :
+                    "-"}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => navigate(`/projects/${budget.id}`)}
-                        >
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate(`/projects/${budget.id}`)}>
+
                           <Eye className="w-4 h-4" />
                         </Button>
                       </TableCell>
                     </TableRow>
-                  ))}
+                )}
                 </TableBody>
               </Table>
-            )}
+            }
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>);
+
 }

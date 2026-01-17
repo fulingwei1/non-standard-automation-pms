@@ -12,7 +12,7 @@
  * 7. 沟通统计分析
  */
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo as _useMemo, useEffect, useCallback as _useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
@@ -39,15 +39,15 @@ import {
   AlertCircle,
   ChevronRight,
   Send,
-  Tag,
-} from "lucide-react";
+  Tag } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -56,29 +56,29 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "../components/ui/table";
+  TableRow } from
+"../components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogBody,
-  DialogFooter,
-} from "../components/ui/dialog";
+  DialogFooter } from
+"../components/ui/dialog";
 import { Textarea } from "../components/ui/textarea";
 import { cn, formatDate } from "../lib/utils";
 import { customerCommunicationApi, customerApi, userApi } from "../services/api";
 import { toast } from "../components/ui/toast";
-import { 
+import {
   CustomerCommunicationOverview,
   COMMUNICATION_TYPE,
   COMMUNICATION_TYPE_LABELS,
@@ -95,12 +95,12 @@ import {
   TYPE_FILTER_OPTIONS,
   TOPIC_FILTER_OPTIONS,
   getCommunicationTypeIcon,
-  getCommunicationStatusColor,
-  getPriorityColor,
-  getTopicColor,
-  getSatisfactionColor,
-  validateCommunicationData
-} from "../components/customer-communication";
+  getCommunicationStatusColor as _getCommunicationStatusColor,
+  getPriorityColor as _getPriorityColor,
+  getTopicColor as _getTopicColor,
+  getSatisfactionColor as _getSatisfactionColor,
+  validateCommunicationData } from
+"../components/customer-communication";
 
 // 配置常量 - 使用新的配置系统
 const communicationTypeConfig = {
@@ -109,20 +109,20 @@ const communicationTypeConfig = {
   [COMMUNICATION_TYPE.ON_SITE]: { label: COMMUNICATION_TYPE_LABELS[COMMUNICATION_TYPE.ON_SITE], icon: MapPin },
   [COMMUNICATION_TYPE.WECHAT]: { label: COMMUNICATION_TYPE_LABELS[COMMUNICATION_TYPE.WECHAT], icon: MessageSquare },
   [COMMUNICATION_TYPE.MEETING]: { label: COMMUNICATION_TYPE_LABELS[COMMUNICATION_TYPE.MEETING], icon: Users },
-  [COMMUNICATION_TYPE.VIDEO_CALL]: { label: COMMUNICATION_TYPE_LABELS[COMMUNICATION_TYPE.VIDEO_CALL], icon: Video },
+  [COMMUNICATION_TYPE.VIDEO_CALL]: { label: COMMUNICATION_TYPE_LABELS[COMMUNICATION_TYPE.VIDEO_CALL], icon: Video }
 };
 
 const priorityConfig = {
   [COMMUNICATION_PRIORITY.HIGH]: { label: COMMUNICATION_PRIORITY_LABELS[COMMUNICATION_PRIORITY.HIGH], color: "text-red-400", bg: "bg-red-500/20" },
   [COMMUNICATION_PRIORITY.MEDIUM]: { label: COMMUNICATION_PRIORITY_LABELS[COMMUNICATION_PRIORITY.MEDIUM], color: "text-yellow-400", bg: "bg-yellow-500/20" },
-  [COMMUNICATION_PRIORITY.LOW]: { label: COMMUNICATION_PRIORITY_LABELS[COMMUNICATION_PRIORITY.LOW], color: "text-green-400", bg: "bg-green-500/20" },
+  [COMMUNICATION_PRIORITY.LOW]: { label: COMMUNICATION_PRIORITY_LABELS[COMMUNICATION_PRIORITY.LOW], color: "text-green-400", bg: "bg-green-500/20" }
 };
 
 const statusConfig = {
   [COMMUNICATION_STATUS.PENDING]: { label: COMMUNICATION_STATUS_LABELS[COMMUNICATION_STATUS.PENDING], color: "text-purple-400", bg: "bg-purple-500/20" },
   [COMMUNICATION_STATUS.IN_PROGRESS]: { label: COMMUNICATION_STATUS_LABELS[COMMUNICATION_STATUS.IN_PROGRESS], color: "text-blue-400", bg: "bg-blue-500/20" },
   [COMMUNICATION_STATUS.COMPLETED]: { label: COMMUNICATION_STATUS_LABELS[COMMUNICATION_STATUS.COMPLETED], color: "text-green-400", bg: "bg-green-500/20" },
-  [COMMUNICATION_STATUS.FOLLOW_UP]: { label: COMMUNICATION_STATUS_LABELS[COMMUNICATION_STATUS.FOLLOW_UP], color: "text-orange-400", bg: "bg-orange-500/20" },
+  [COMMUNICATION_STATUS.FOLLOW_UP]: { label: COMMUNICATION_STATUS_LABELS[COMMUNICATION_STATUS.FOLLOW_UP], color: "text-orange-400", bg: "bg-orange-500/20" }
 };
 
 const satisfactionConfig = {
@@ -130,7 +130,7 @@ const satisfactionConfig = {
   [CUSTOMER_SATISFACTION.SATISFIED]: { label: CUSTOMER_SATISFACTION_LABELS[CUSTOMER_SATISFACTION.SATISFIED], color: "text-green-400", stars: 4 },
   [CUSTOMER_SATISFACTION.NEUTRAL]: { label: CUSTOMER_SATISFACTION_LABELS[CUSTOMER_SATISFACTION.NEUTRAL], color: "text-yellow-400", stars: 3 },
   [CUSTOMER_SATISFACTION.DISSATISFIED]: { label: CUSTOMER_SATISFACTION_LABELS[CUSTOMER_SATISFACTION.DISSATISFIED], color: "text-orange-400", stars: 2 },
-  [CUSTOMER_SATISFACTION.VERY_DISSATISFIED]: { label: CUSTOMER_SATISFACTION_LABELS[CUSTOMER_SATISFACTION.VERY_DISSATISFIED], color: "text-red-400", stars: 1 },
+  [CUSTOMER_SATISFACTION.VERY_DISSATISFIED]: { label: CUSTOMER_SATISFACTION_LABELS[CUSTOMER_SATISFACTION.VERY_DISSATISFIED], color: "text-red-400", stars: 1 }
 };
 
 export default function CustomerCommunication() {
@@ -163,10 +163,10 @@ export default function CustomerCommunication() {
     next_action: "",
     next_action_date: "",
     assigned_to: "",
-    notes: "",
+    notes: ""
   });
 
-  const [stats, setStats] = useState({
+  const [_stats, setStats] = useState({
     total: 0,
     pending: 0,
     in_progress: 0,
@@ -174,7 +174,7 @@ export default function CustomerCommunication() {
     follow_up: 0,
     high_priority: 0,
     today_count: 0,
-    avg_satisfaction: 0,
+    avg_satisfaction: 0
   });
 
   useEffect(() => {
@@ -193,14 +193,14 @@ export default function CustomerCommunication() {
         topic: filterTopic || undefined,
         customer_id: filterCustomer || undefined,
         start_date: dateFilter.start || undefined,
-        end_date: dateFilter.end || undefined,
+        end_date: dateFilter.end || undefined
       };
 
       const [commRes, customerRes, userRes] = await Promise.all([
-        customerCommunicationApi.list(params),
-        customerApi.list({ page_size: 1000 }),
-        userApi.list({ page_size: 1000 }),
-      ]);
+      customerCommunicationApi.list(params),
+      customerApi.list({ page_size: 1000 }),
+      userApi.list({ page_size: 1000 })]
+      );
 
       const commData = commRes.data?.items || commRes.data || [];
       const customerData = customerRes.data?.items || customerRes.data || [];
@@ -209,7 +209,7 @@ export default function CustomerCommunication() {
       const transformedCommunications = commData.map((comm) => ({
         ...comm,
         customer: customerData.find((c) => c.id === comm.customer_id),
-        assigned_user: userData.find((u) => u.id === comm.assigned_to),
+        assigned_user: userData.find((u) => u.id === comm.assigned_to)
       }));
 
       setCommunications(transformedCommunications);
@@ -295,7 +295,7 @@ export default function CustomerCommunication() {
       next_action: "",
       next_action_date: "",
       assigned_to: "",
-      notes: "",
+      notes: ""
     });
     setSelectedCommunication(null);
   };
@@ -316,7 +316,7 @@ export default function CustomerCommunication() {
       next_action: communication.next_action,
       next_action_date: communication.next_action_date,
       assigned_to: communication.assigned_to,
-      notes: communication.notes,
+      notes: communication.notes
     });
     setShowEditDialog(true);
   };
@@ -329,8 +329,8 @@ export default function CustomerCommunication() {
     return (
       <Badge variant="secondary" className={cn("border-0", config.bg, config.color)}>
         {config.label}
-      </Badge>
-    );
+      </Badge>);
+
   };
 
   const getPriorityBadge = (priority) => {
@@ -340,8 +340,8 @@ export default function CustomerCommunication() {
     return (
       <Badge variant="secondary" className={cn("border-0", config.bg, config.color)}>
         {config.label}
-      </Badge>
-    );
+      </Badge>);
+
   };
 
   const getTypeDisplay = (type) => {
@@ -352,8 +352,8 @@ export default function CustomerCommunication() {
       <div className="flex items-center space-x-1">
         <Icon className="h-4 w-4" />
         <span>{config.label}</span>
-      </div>
-    );
+      </div>);
+
   };
 
   const getSatisfactionDisplay = (rating) => {
@@ -364,19 +364,19 @@ export default function CustomerCommunication() {
     return (
       <div className="flex items-center space-x-1">
         <div className="flex">
-          {Array.from({ length: 5 }, (_, i) => (
-            <Star
-              key={i}
-              className={cn(
-                "h-4 w-4",
-                i < config.stars ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
-              )}
-            />
-          ))}
+          {Array.from({ length: 5 }, (_, i) =>
+          <Star
+            key={i}
+            className={cn(
+              "h-4 w-4",
+              i < config.stars ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+            )} />
+
+          )}
         </div>
         <span className={cn("text-sm", config.color)}>{config.label}</span>
-      </div>
-    );
+      </div>);
+
   };
 
   // Quick action handlers for overview component
@@ -390,9 +390,11 @@ export default function CustomerCommunication() {
         break;
       case 'viewOverdue':
         // Filter for overdue communications
-        const today = new Date();
-        const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-        setDateFilter({ start: '', end: weekAgo.toISOString().split('T')[0] });
+        {
+          const today = new Date();
+          const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+          setDateFilter({ start: '', end: weekAgo.toISOString().split('T')[0] });
+        }
         break;
       case 'viewAnalytics':
         // Navigate to analytics view or show analytics dialog
@@ -409,19 +411,19 @@ export default function CustomerCommunication() {
         title="客户沟通管理"
         description="管理客户沟通记录、跟进和分析"
         actions={
-          <Button onClick={() => setShowCreateDialog(true)}>
+        <Button onClick={() => setShowCreateDialog(true)}>
             <Plus className="mr-2 h-4 w-4" />
             新建沟通记录
           </Button>
-        }
-      />
+        } />
+
 
       {/* Overview Section */}
       <CustomerCommunicationOverview
         communications={communications}
         customers={customers}
-        onQuickAction={handleQuickAction}
-      />
+        onQuickAction={handleQuickAction} />
+
 
       {/* Filters Section */}
       <Card>
@@ -436,8 +438,8 @@ export default function CustomerCommunication() {
                 placeholder="搜索沟通记录..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+                className="pl-10" />
+
             </div>
             
             <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -445,11 +447,11 @@ export default function CustomerCommunication() {
                 <SelectValue placeholder="状态" />
               </SelectTrigger>
               <SelectContent>
-                {COMMUNICATION_FILTER_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
+                {COMMUNICATION_FILTER_OPTIONS.map((option) =>
+                <SelectItem key={option.value} value={option.value}>
                     {option.label}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
 
@@ -458,11 +460,11 @@ export default function CustomerCommunication() {
                 <SelectValue placeholder="优先级" />
               </SelectTrigger>
               <SelectContent>
-                {PRIORITY_FILTER_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
+                {PRIORITY_FILTER_OPTIONS.map((option) =>
+                <SelectItem key={option.value} value={option.value}>
                     {option.label}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
 
@@ -471,11 +473,11 @@ export default function CustomerCommunication() {
                 <SelectValue placeholder="沟通方式" />
               </SelectTrigger>
               <SelectContent>
-                {TYPE_FILTER_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
+                {TYPE_FILTER_OPTIONS.map((option) =>
+                <SelectItem key={option.value} value={option.value}>
                     {option.label}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
 
@@ -484,11 +486,11 @@ export default function CustomerCommunication() {
                 <SelectValue placeholder="主题" />
               </SelectTrigger>
               <SelectContent>
-                {TOPIC_FILTER_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
+                {TOPIC_FILTER_OPTIONS.map((option) =>
+                <SelectItem key={option.value} value={option.value}>
                     {option.label}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
 
@@ -498,11 +500,11 @@ export default function CustomerCommunication() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">全部客户</SelectItem>
-                {customers.map((customer) => (
-                  <SelectItem key={customer.id} value={customer.id}>
+                {customers.map((customer) =>
+                <SelectItem key={customer.id} value={customer.id}>
                     {customer.name}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -512,14 +514,14 @@ export default function CustomerCommunication() {
               type="date"
               placeholder="开始日期"
               value={dateFilter.start}
-              onChange={(e) => setDateFilter({ ...dateFilter, start: e.target.value })}
-            />
+              onChange={(e) => setDateFilter({ ...dateFilter, start: e.target.value })} />
+
             <Input
               type="date"
               placeholder="结束日期"
               value={dateFilter.end}
-              onChange={(e) => setDateFilter({ ...dateFilter, end: e.target.value })}
-            />
+              onChange={(e) => setDateFilter({ ...dateFilter, end: e.target.value })} />
+
           </div>
 
           {/* Communications Table */}
@@ -539,21 +541,21 @@ export default function CustomerCommunication() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {loading ? (
-                  <TableRow>
+                {loading ?
+                <TableRow>
                     <TableCell colSpan={9} className="text-center py-8">
                       加载中...
                     </TableCell>
-                  </TableRow>
-                ) : communications.length === 0 ? (
-                  <TableRow>
+                  </TableRow> :
+                communications.length === 0 ?
+                <TableRow>
                     <TableCell colSpan={9} className="text-center py-8">
                       暂无沟通记录
                     </TableCell>
-                  </TableRow>
-                ) : (
-                  communications.map((comm) => (
-                    <TableRow key={comm.id}>
+                  </TableRow> :
+
+                communications.map((comm) =>
+                <TableRow key={comm.id}>
                       <TableCell className="font-medium">
                         {comm.customer?.name || "未知客户"}
                       </TableCell>
@@ -569,34 +571,34 @@ export default function CustomerCommunication() {
                       <TableCell>
                         <div className="flex space-x-1">
                           <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedCommunication(comm);
-                              setShowDetailDialog(true);
-                            }}
-                          >
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedCommunication(comm);
+                          setShowDetailDialog(true);
+                        }}>
+
                             <Eye className="h-4 w-4" />
                           </Button>
                           <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openEditDialog(comm)}
-                          >
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openEditDialog(comm)}>
+
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(comm.id)}
-                          >
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(comm.id)}>
+
                             <XCircle className="h-4 w-4" />
                           </Button>
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
+                )
+                }
               </TableBody>
             </Table>
           </div>
@@ -615,18 +617,18 @@ export default function CustomerCommunication() {
               <Select
                 value={formData.customer_id}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, customer_id: value })
-                }
-              >
+                setFormData({ ...formData, customer_id: value })
+                }>
+
                 <SelectTrigger className="bg-slate-800 border-slate-600 text-white">
                   <SelectValue placeholder="选择客户" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600">
-                  {customers.map((customer) => (
-                    <SelectItem key={customer.id} value={customer.id} className="text-white">
+                  {customers.map((customer) =>
+                  <SelectItem key={customer.id} value={customer.id} className="text-white">
                       {customer.name}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -636,18 +638,18 @@ export default function CustomerCommunication() {
               <Select
                 value={formData.communication_type}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, communication_type: value })
-                }
-              >
+                setFormData({ ...formData, communication_type: value })
+                }>
+
                 <SelectTrigger className="bg-slate-800 border-slate-600 text-white">
                   <SelectValue placeholder="选择沟通方式" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600">
-                  {Object.entries(COMMUNICATION_TYPE).map(([key, value]) => (
-                    <SelectItem key={value} value={value} className="text-white">
+                  {Object.entries(COMMUNICATION_TYPE).map(([_key, value]) =>
+                  <SelectItem key={value} value={value} className="text-white">
                       {getCommunicationTypeIcon(value)} {COMMUNICATION_TYPE_LABELS[value]}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -657,18 +659,18 @@ export default function CustomerCommunication() {
               <Select
                 value={formData.topic}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, topic: value })
-                }
-              >
+                setFormData({ ...formData, topic: value })
+                }>
+
                 <SelectTrigger className="bg-slate-800 border-slate-600 text-white">
                   <SelectValue placeholder="选择主题" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600">
-                  {Object.entries(COMMUNICATION_TOPIC).map(([key, value]) => (
-                    <SelectItem key={value} value={value} className="text-white">
+                  {Object.entries(COMMUNICATION_TOPIC).map(([_key, value]) =>
+                  <SelectItem key={value} value={value} className="text-white">
                       {COMMUNICATION_TOPIC_LABELS[value]}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -678,18 +680,18 @@ export default function CustomerCommunication() {
               <Select
                 value={formData.priority}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, priority: value })
-                }
-              >
+                setFormData({ ...formData, priority: value })
+                }>
+
                 <SelectTrigger className="bg-slate-800 border-slate-600 text-white">
                   <SelectValue placeholder="选择优先级" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600">
-                  {Object.entries(COMMUNICATION_PRIORITY).map(([key, value]) => (
-                    <SelectItem key={value} value={value} className="text-white">
+                  {Object.entries(COMMUNICATION_PRIORITY).map(([_key, value]) =>
+                  <SelectItem key={value} value={value} className="text-white">
                       {COMMUNICATION_PRIORITY_LABELS[value]}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -699,11 +701,11 @@ export default function CustomerCommunication() {
               <Input
                 value={formData.subject}
                 onChange={(e) =>
-                  setFormData({ ...formData, subject: e.target.value })
+                setFormData({ ...formData, subject: e.target.value })
                 }
                 placeholder="输入沟通主题"
-                className="bg-slate-800 border-slate-600 text-white"
-              />
+                className="bg-slate-800 border-slate-600 text-white" />
+
             </div>
 
             <div className="col-span-2">
@@ -711,12 +713,12 @@ export default function CustomerCommunication() {
               <Textarea
                 value={formData.content}
                 onChange={(e) =>
-                  setFormData({ ...formData, content: e.target.value })
+                setFormData({ ...formData, content: e.target.value })
                 }
                 placeholder="详细描述沟通内容"
                 rows={4}
-                className="bg-slate-800 border-slate-600 text-white"
-              />
+                className="bg-slate-800 border-slate-600 text-white" />
+
             </div>
 
             <div>
@@ -725,10 +727,10 @@ export default function CustomerCommunication() {
                 type="date"
                 value={formData.communication_date}
                 onChange={(e) =>
-                  setFormData({ ...formData, communication_date: e.target.value })
+                setFormData({ ...formData, communication_date: e.target.value })
                 }
-                className="bg-slate-800 border-slate-600 text-white"
-              />
+                className="bg-slate-800 border-slate-600 text-white" />
+
             </div>
 
             <div>
@@ -737,11 +739,11 @@ export default function CustomerCommunication() {
                 type="number"
                 value={formData.duration_minutes}
                 onChange={(e) =>
-                  setFormData({ ...formData, duration_minutes: e.target.value })
+                setFormData({ ...formData, duration_minutes: e.target.value })
                 }
                 placeholder="分钟"
-                className="bg-slate-800 border-slate-600 text-white"
-              />
+                className="bg-slate-800 border-slate-600 text-white" />
+
             </div>
 
             <div>
@@ -749,18 +751,18 @@ export default function CustomerCommunication() {
               <Select
                 value={formData.assigned_to}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, assigned_to: value })
-                }
-              >
+                setFormData({ ...formData, assigned_to: value })
+                }>
+
                 <SelectTrigger className="bg-slate-800 border-slate-600 text-white">
                   <SelectValue placeholder="选择负责人" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600">
-                  {users.map((user) => (
-                    <SelectItem key={user.id} value={user.id} className="text-white">
+                  {users.map((user) =>
+                  <SelectItem key={user.id} value={user.id} className="text-white">
                       {user.name}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -770,22 +772,22 @@ export default function CustomerCommunication() {
               <Select
                 value={formData.satisfaction_rating?.toString() || ""}
                 onValueChange={(value) =>
-                  setFormData({ 
-                    ...formData, 
-                    satisfaction_rating: value ? parseInt(value) : null 
-                  })
-                }
-              >
+                setFormData({
+                  ...formData,
+                  satisfaction_rating: value ? parseInt(value) : null
+                })
+                }>
+
                 <SelectTrigger className="bg-slate-800 border-slate-600 text-white">
                   <SelectValue placeholder="选择满意度" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600">
                   <SelectItem value="" className="text-white">未评分</SelectItem>
-                  {Object.entries(CUSTOMER_SATISFACTION).map(([key, value]) => (
-                    <SelectItem key={value} value={value.toString()} className="text-white">
+                  {Object.entries(CUSTOMER_SATISFACTION).map(([_key, value]) =>
+                  <SelectItem key={value} value={value.toString()} className="text-white">
                       {CUSTOMER_SATISFACTION_LABELS[value]}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -795,12 +797,12 @@ export default function CustomerCommunication() {
               <Textarea
                 value={formData.customer_feedback}
                 onChange={(e) =>
-                  setFormData({ ...formData, customer_feedback: e.target.value })
+                setFormData({ ...formData, customer_feedback: e.target.value })
                 }
                 placeholder="客户反馈内容"
                 rows={3}
-                className="bg-slate-800 border-slate-600 text-white"
-              />
+                className="bg-slate-800 border-slate-600 text-white" />
+
             </div>
 
             <div>
@@ -808,11 +810,11 @@ export default function CustomerCommunication() {
               <Input
                 value={formData.next_action}
                 onChange={(e) =>
-                  setFormData({ ...formData, next_action: e.target.value })
+                setFormData({ ...formData, next_action: e.target.value })
                 }
                 placeholder="后续行动计划"
-                className="bg-slate-800 border-slate-600 text-white"
-              />
+                className="bg-slate-800 border-slate-600 text-white" />
+
             </div>
 
             <div>
@@ -821,10 +823,10 @@ export default function CustomerCommunication() {
                 type="date"
                 value={formData.next_action_date}
                 onChange={(e) =>
-                  setFormData({ ...formData, next_action_date: e.target.value })
+                setFormData({ ...formData, next_action_date: e.target.value })
                 }
-                className="bg-slate-800 border-slate-600 text-white"
-              />
+                className="bg-slate-800 border-slate-600 text-white" />
+
             </div>
 
             <div className="col-span-2">
@@ -832,12 +834,12 @@ export default function CustomerCommunication() {
               <Textarea
                 value={formData.notes}
                 onChange={(e) =>
-                  setFormData({ ...formData, notes: e.target.value })
+                setFormData({ ...formData, notes: e.target.value })
                 }
                 placeholder="备注信息"
                 rows={2}
-                className="bg-slate-800 border-slate-600 text-white"
-              />
+                className="bg-slate-800 border-slate-600 text-white" />
+
             </div>
           </div>
           <DialogFooter className="mt-6">
@@ -855,8 +857,8 @@ export default function CustomerCommunication() {
           <DialogHeader>
             <DialogTitle className="text-white">沟通记录详情</DialogTitle>
           </DialogHeader>
-          {selectedCommunication && (
-            <div className="space-y-4 text-white">
+          {selectedCommunication &&
+          <div className="space-y-4 text-white">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-gray-400">客户</label>
@@ -908,39 +910,39 @@ export default function CustomerCommunication() {
                 </p>
               </div>
 
-              {selectedCommunication.customer_feedback && (
-                <div>
+              {selectedCommunication.customer_feedback &&
+            <div>
                   <label className="text-sm font-medium text-gray-400">客户反馈</label>
                   <p className="mt-1 text-sm whitespace-pre-wrap bg-slate-800 p-3 rounded">
                     {selectedCommunication.customer_feedback}
                   </p>
                 </div>
-              )}
+            }
 
-              {selectedCommunication.next_action && (
-                <div>
+              {selectedCommunication.next_action &&
+            <div>
                   <label className="text-sm font-medium text-gray-400">后续行动</label>
                   <p className="mt-1 text-sm">{selectedCommunication.next_action}</p>
                 </div>
-              )}
+            }
 
-              {selectedCommunication.next_action_date && (
-                <div>
+              {selectedCommunication.next_action_date &&
+            <div>
                   <label className="text-sm font-medium text-gray-400">行动日期</label>
                   <p className="mt-1 text-sm">{formatDate(selectedCommunication.next_action_date)}</p>
                 </div>
-              )}
+            }
 
-              {selectedCommunication.notes && (
-                <div>
+              {selectedCommunication.notes &&
+            <div>
                   <label className="text-sm font-medium text-gray-400">备注</label>
                   <p className="mt-1 text-sm whitespace-pre-wrap bg-slate-800 p-3 rounded">
                     {selectedCommunication.notes}
                   </p>
                 </div>
-              )}
+            }
             </div>
-          )}
+          }
           <DialogFooter className="mt-6">
             <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
               关闭
@@ -962,18 +964,18 @@ export default function CustomerCommunication() {
               <Select
                 value={formData.customer_id}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, customer_id: value })
-                }
-              >
+                setFormData({ ...formData, customer_id: value })
+                }>
+
                 <SelectTrigger className="bg-slate-800 border-slate-600 text-white">
                   <SelectValue placeholder="选择客户" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600">
-                  {customers.map((customer) => (
-                    <SelectItem key={customer.id} value={customer.id} className="text-white">
+                  {customers.map((customer) =>
+                  <SelectItem key={customer.id} value={customer.id} className="text-white">
                       {customer.name}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -983,18 +985,18 @@ export default function CustomerCommunication() {
               <Select
                 value={formData.communication_type}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, communication_type: value })
-                }
-              >
+                setFormData({ ...formData, communication_type: value })
+                }>
+
                 <SelectTrigger className="bg-slate-800 border-slate-600 text-white">
                   <SelectValue placeholder="选择沟通方式" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600">
-                  {Object.entries(COMMUNICATION_TYPE).map(([key, value]) => (
-                    <SelectItem key={value} value={value} className="text-white">
+                  {Object.entries(COMMUNICATION_TYPE).map(([_key, value]) =>
+                  <SelectItem key={value} value={value} className="text-white">
                       {getCommunicationTypeIcon(value)} {COMMUNICATION_TYPE_LABELS[value]}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -1009,6 +1011,6 @@ export default function CustomerCommunication() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }

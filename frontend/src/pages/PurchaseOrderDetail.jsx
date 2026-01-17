@@ -28,8 +28,8 @@ import {
   Mail,
   Tag,
   Info,
-  Zap,
-} from "lucide-react";
+  Zap } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -42,8 +42,8 @@ import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger,
-} from "../components/ui";
+  TabsTrigger } from
+"../components/ui";
 import { cn, formatCurrency, formatDate } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { purchaseApi } from "../services/api";
@@ -54,52 +54,52 @@ const statusConfig = {
   draft: {
     label: "草稿",
     color: "bg-slate-500/20 text-slate-400",
-    icon: FileText,
+    icon: FileText
   },
   submitted: {
     label: "已提交",
     color: "bg-blue-500/20 text-blue-400",
-    icon: Send,
+    icon: Send
   },
   confirmed: {
     label: "已确认",
     color: "bg-purple-500/20 text-purple-400",
-    icon: CheckCircle2,
+    icon: CheckCircle2
   },
   shipped: {
     label: "已发货",
     color: "bg-amber-500/20 text-amber-400",
-    icon: Truck,
+    icon: Truck
   },
   received: {
     label: "已收货",
     color: "bg-emerald-500/20 text-emerald-400",
-    icon: Package,
+    icon: Package
   },
   invoiced: {
     label: "已开票",
     color: "bg-indigo-500/20 text-indigo-400",
-    icon: FileText,
-  },
+    icon: FileText
+  }
 };
 
 const paymentStatusConfig = {
   unpaid: { label: "未付款", color: "bg-red-500/20 text-red-400" },
   partial: { label: "部分付款", color: "bg-amber-500/20 text-amber-400" },
-  paid: { label: "已付款", color: "bg-emerald-500/20 text-emerald-400" },
+  paid: { label: "已付款", color: "bg-emerald-500/20 text-emerald-400" }
 };
 
 const invoiceStatusConfig = {
   pending: { label: "待开票", color: "bg-slate-500/20 text-slate-400" },
   partial: { label: "部分开票", color: "bg-amber-500/20 text-amber-400" },
-  complete: { label: "已开票", color: "bg-emerald-500/20 text-emerald-400" },
+  complete: { label: "已开票", color: "bg-emerald-500/20 text-emerald-400" }
 };
 
-const POLineItem = ({ item, idx }) => (
-  <motion.div
-    variants={fadeIn}
-    className="flex items-center border-b border-slate-700/30 py-3"
-  >
+const POLineItem = ({ item, idx: _idx }) =>
+<motion.div
+  variants={fadeIn}
+  className="flex items-center border-b border-slate-700/30 py-3">
+
     <div className="w-12 text-center text-sm text-slate-500">{item.itemNo}</div>
     <div className="flex-1">
       <p className="font-medium text-slate-100">{item.description}</p>
@@ -129,8 +129,8 @@ const POLineItem = ({ item, idx }) => (
         {statusConfig[item.status]?.label || item.status}
       </Badge>
     </div>
-  </motion.div>
-);
+  </motion.div>;
+
 
 const TimelineStage = ({ stage, idx, total }) => {
   const config = statusConfig[stage.stage] || {};
@@ -141,48 +141,48 @@ const TimelineStage = ({ stage, idx, total }) => {
     <div className="relative flex flex-col items-center">
       <motion.div
         variants={fadeIn}
-        className="flex flex-col items-center w-full mb-4"
-      >
+        className="flex flex-col items-center w-full mb-4">
+
         <div
           className={cn(
             "w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all",
-            isCompleted
-              ? "bg-emerald-500/20 border-emerald-500 text-emerald-400"
-              : isPending
-                ? "bg-amber-500/20 border-amber-500 text-amber-400"
-                : "bg-slate-600/30 border-slate-600 text-slate-400",
-          )}
-        >
-          {config.icon ? (
-            <config.icon className="w-5 h-5" />
-          ) : (
-            <CheckCircle2 className="w-5 h-5" />
-          )}
+            isCompleted ?
+            "bg-emerald-500/20 border-emerald-500 text-emerald-400" :
+            isPending ?
+            "bg-amber-500/20 border-amber-500 text-amber-400" :
+            "bg-slate-600/30 border-slate-600 text-slate-400"
+          )}>
+
+          {config.icon ?
+          <config.icon className="w-5 h-5" /> :
+
+          <CheckCircle2 className="w-5 h-5" />
+          }
         </div>
         <p className="mt-2 font-medium text-sm text-slate-100">{stage.label}</p>
-        {stage.date && (
-          <p className="text-xs text-slate-500 mt-1">
+        {stage.date &&
+        <p className="text-xs text-slate-500 mt-1">
             {formatDate(stage.date)}
           </p>
-        )}
-        {stage.daysLeft && (
-          <p className="text-xs text-amber-400 mt-1">
+        }
+        {stage.daysLeft &&
+        <p className="text-xs text-amber-400 mt-1">
             还需 {stage.daysLeft} 天
           </p>
-        )}
+        }
         <p className="text-xs text-slate-400 mt-1">{stage.description}</p>
       </motion.div>
 
-      {idx < total - 1 && (
-        <div
-          className={cn(
-            "w-0.5 h-16 -mb-4",
-            isCompleted ? "bg-emerald-500/40" : "bg-slate-600/30",
-          )}
-        />
-      )}
-    </div>
-  );
+      {idx < total - 1 &&
+      <div
+        className={cn(
+          "w-0.5 h-16 -mb-4",
+          isCompleted ? "bg-emerald-500/40" : "bg-slate-600/30"
+        )} />
+
+      }
+    </div>);
+
 };
 
 export default function PurchaseOrderDetail() {
@@ -198,7 +198,7 @@ export default function PurchaseOrderDetail() {
       CONFIRMED: "confirmed",
       SHIPPED: "shipped",
       RECEIVED: "received",
-      INVOICED: "invoiced",
+      INVOICED: "invoiced"
     };
     return statusMap[backendStatus] || backendStatus?.toLowerCase() || "draft";
   };
@@ -208,7 +208,7 @@ export default function PurchaseOrderDetail() {
     const statusMap = {
       UNPAID: "unpaid",
       PARTIAL: "partial",
-      PAID: "paid",
+      PAID: "paid"
     };
     return statusMap[backendStatus] || backendStatus?.toLowerCase() || "unpaid";
   };
@@ -232,7 +232,7 @@ export default function PurchaseOrderDetail() {
       let receipts = [];
       try {
         const receiptsResponse = await purchaseApi.goodsReceipts.list({
-          purchase_order_id: orderId,
+          purchase_order_id: orderId
         });
         receipts = receiptsResponse.data?.items || receiptsResponse.data || [];
       } catch (err) {
@@ -251,22 +251,22 @@ export default function PurchaseOrderDetail() {
           phone: "",
           email: "",
           address: "",
-          paymentTerm: "",
+          paymentTerm: ""
         },
         status: mapBackendStatusToFrontend(orderData.status),
         issueDate:
-          orderData.order_date || orderData.created_at?.split("T")[0] || "",
+        orderData.order_date || orderData.created_at?.split("T")[0] || "",
         requiredDate: orderData.required_date || "",
         expectedDelivery: orderData.required_date || "",
         actualDelivery: receipts.length > 0 ? receipts[0].receipt_date : null,
         totalAmount: parseFloat(orderData.total_amount || 0),
         taxRate:
-          orderData.tax_amount && orderData.total_amount
-            ? (orderData.tax_amount / orderData.total_amount) * 100
-            : 13,
+        orderData.tax_amount && orderData.total_amount ?
+        orderData.tax_amount / orderData.total_amount * 100 :
+        13,
         taxAmount: parseFloat(orderData.tax_amount || 0),
         totalWithTax: parseFloat(
-          orderData.amount_with_tax || orderData.total_amount || 0,
+          orderData.amount_with_tax || orderData.total_amount || 0
         ),
         currency: "CNY",
         paymentStatus: mapBackendPaymentStatus(orderData.payment_status),
@@ -285,87 +285,87 @@ export default function PurchaseOrderDetail() {
           amount: parseFloat(item.amount || item.amount_with_tax || 0),
           receivedQty: item.received_qty || 0,
           status: mapBackendStatusToFrontend(item.status || "confirmed"),
-          notes: "",
+          notes: ""
         })),
         timeline: [
-          {
-            stage: "draft",
-            label: "草稿",
-            date: orderData.created_at?.split("T")[0] || "",
-            status: orderData.status === "DRAFT" ? "completed" : "completed",
-            description: "采购订单创建",
-          },
-          {
-            stage: "submitted",
-            label: "已提交",
-            date:
-              orderData.status !== "DRAFT"
-                ? orderData.updated_at?.split("T")[0]
-                : null,
-            status: [
-              "SUBMITTED",
-              "CONFIRMED",
-              "SHIPPED",
-              "RECEIVED",
-              "INVOICED",
-            ].includes(orderData.status)
-              ? "completed"
-              : "pending",
-            description: "订单已提交给供应商",
-          },
-          {
-            stage: "confirmed",
-            label: "已确认",
-            date: ["CONFIRMED", "SHIPPED", "RECEIVED", "INVOICED"].includes(
-              orderData.status,
-            )
-              ? orderData.updated_at?.split("T")[0]
-              : null,
-            status: ["CONFIRMED", "SHIPPED", "RECEIVED", "INVOICED"].includes(
-              orderData.status,
-            )
-              ? "completed"
-              : "pending",
-            description: "供应商已确认订单",
-          },
-          {
-            stage: "shipped",
-            label: "已发货",
-            date: ["SHIPPED", "RECEIVED", "INVOICED"].includes(orderData.status)
-              ? orderData.updated_at?.split("T")[0]
-              : null,
-            status: ["SHIPPED", "RECEIVED", "INVOICED"].includes(
-              orderData.status,
-            )
-              ? "completed"
-              : "pending",
-            description: "等待供应商发货",
-          },
-          {
-            stage: "received",
-            label: "已收货",
-            date: receipts.length > 0 ? receipts[0].receipt_date : null,
-            status: receipts.length > 0 ? "completed" : "pending",
-            description: "等待物料到达",
-          },
-          {
-            stage: "invoiced",
-            label: "已开票",
-            date:
-              orderData.status === "INVOICED"
-                ? orderData.updated_at?.split("T")[0]
-                : null,
-            status: orderData.status === "INVOICED" ? "completed" : "pending",
-            description: "等待收票和付款",
-          },
-        ],
+        {
+          stage: "draft",
+          label: "草稿",
+          date: orderData.created_at?.split("T")[0] || "",
+          status: orderData.status === "DRAFT" ? "completed" : "completed",
+          description: "采购订单创建"
+        },
+        {
+          stage: "submitted",
+          label: "已提交",
+          date:
+          orderData.status !== "DRAFT" ?
+          orderData.updated_at?.split("T")[0] :
+          null,
+          status: [
+          "SUBMITTED",
+          "CONFIRMED",
+          "SHIPPED",
+          "RECEIVED",
+          "INVOICED"].
+          includes(orderData.status) ?
+          "completed" :
+          "pending",
+          description: "订单已提交给供应商"
+        },
+        {
+          stage: "confirmed",
+          label: "已确认",
+          date: ["CONFIRMED", "SHIPPED", "RECEIVED", "INVOICED"].includes(
+            orderData.status
+          ) ?
+          orderData.updated_at?.split("T")[0] :
+          null,
+          status: ["CONFIRMED", "SHIPPED", "RECEIVED", "INVOICED"].includes(
+            orderData.status
+          ) ?
+          "completed" :
+          "pending",
+          description: "供应商已确认订单"
+        },
+        {
+          stage: "shipped",
+          label: "已发货",
+          date: ["SHIPPED", "RECEIVED", "INVOICED"].includes(orderData.status) ?
+          orderData.updated_at?.split("T")[0] :
+          null,
+          status: ["SHIPPED", "RECEIVED", "INVOICED"].includes(
+            orderData.status
+          ) ?
+          "completed" :
+          "pending",
+          description: "等待供应商发货"
+        },
+        {
+          stage: "received",
+          label: "已收货",
+          date: receipts.length > 0 ? receipts[0].receipt_date : null,
+          status: receipts.length > 0 ? "completed" : "pending",
+          description: "等待物料到达"
+        },
+        {
+          stage: "invoiced",
+          label: "已开票",
+          date:
+          orderData.status === "INVOICED" ?
+          orderData.updated_at?.split("T")[0] :
+          null,
+          status: orderData.status === "INVOICED" ? "completed" : "pending",
+          description: "等待收票和付款"
+        }],
+
         documents: [],
         remarks: orderData.remark || "",
         attachedProject: {
           id: orderData.project_id?.toString(),
           name: orderData.project_name || "",
-          stage: "",
-        },
+          stage: ""
+        }
       };
 
       setPo(transformedPO);
@@ -386,11 +386,11 @@ export default function PurchaseOrderDetail() {
   const progress = useMemo(() => {
     if (!po) return 0;
     const completedStages = po.timeline.filter(
-      (s) => s.status === "completed",
+      (s) => s.status === "completed"
     ).length;
-    return po.timeline.length > 0
-      ? (completedStages / po.timeline.length) * 100
-      : 0;
+    return po.timeline.length > 0 ?
+    completedStages / po.timeline.length * 100 :
+    0;
   }, [po]);
 
   const totalItems = useMemo(() => {
@@ -406,8 +406,8 @@ export default function PurchaseOrderDetail() {
             <div className="text-slate-400">加载中...</div>
           </div>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   if (error && !po) {
@@ -418,8 +418,8 @@ export default function PurchaseOrderDetail() {
             <div className="text-red-400">{error}</div>
           </div>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   if (!po) {
@@ -430,8 +430,8 @@ export default function PurchaseOrderDetail() {
             <div className="text-slate-400">采购订单不存在</div>
           </div>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -441,26 +441,26 @@ export default function PurchaseOrderDetail() {
           title={po.poNumber}
           description={po.projectName}
           action={
-            po.status === "DRAFT" || po.status === "draft"
-              ? {
-                  label: "编辑",
-                  icon: Edit,
-                  onClick: () => {
-                    // 跳转到采购订单列表页面，并打开编辑对话框
-                    navigate(`/purchase-orders?action=edit&id=${po.id}`);
-                  },
-                }
-              : null
-          }
-        />
+          po.status === "DRAFT" || po.status === "draft" ?
+          {
+            label: "编辑",
+            icon: Edit,
+            onClick: () => {
+              // 跳转到采购订单列表页面，并打开编辑对话框
+              navigate(`/purchase-orders?action=edit&id=${po.id}`);
+            }
+          } :
+          null
+          } />
+
 
         {/* PO Header Info */}
         <motion.div
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
-          className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4"
-        >
+          className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+
           <motion.div variants={fadeIn}>
             <Card className="bg-slate-800/50 border-slate-700/50">
               <CardContent className="pt-6">
@@ -484,9 +484,9 @@ export default function PurchaseOrderDetail() {
                   <Badge
                     className={cn(
                       "text-sm",
-                      statusConfig[po.status]?.color || "",
-                    )}
-                  >
+                      statusConfig[po.status]?.color || ""
+                    )}>
+
                     {statusConfig[po.status]?.label}
                   </Badge>
                 </div>
@@ -505,9 +505,9 @@ export default function PurchaseOrderDetail() {
                   <Badge
                     className={cn(
                       "text-sm",
-                      paymentStatusConfig[po.paymentStatus]?.color || "",
-                    )}
-                  >
+                      paymentStatusConfig[po.paymentStatus]?.color || ""
+                    )}>
+
                     {paymentStatusConfig[po.paymentStatus]?.label}
                   </Badge>
                 </div>
@@ -526,9 +526,9 @@ export default function PurchaseOrderDetail() {
                   <Badge
                     className={cn(
                       "text-sm",
-                      invoiceStatusConfig[po.invoiceStatus]?.color || "",
-                    )}
-                  >
+                      invoiceStatusConfig[po.invoiceStatus]?.color || ""
+                    )}>
+
                     {invoiceStatusConfig[po.invoiceStatus]?.label}
                   </Badge>
                 </div>
@@ -577,14 +577,14 @@ export default function PurchaseOrderDetail() {
           </CardHeader>
           <CardContent>
             <div className="flex justify-between overflow-x-auto py-6 px-2">
-              {po.timeline.map((stage, idx) => (
-                <TimelineStage
-                  key={stage.stage}
-                  stage={stage}
-                  idx={idx}
-                  total={po.timeline.length}
-                />
-              ))}
+              {po.timeline.map((stage, idx) =>
+              <TimelineStage
+                key={stage.stage}
+                stage={stage}
+                idx={idx}
+                total={po.timeline.length} />
+
+              )}
             </div>
           </CardContent>
         </Card>
@@ -614,8 +614,8 @@ export default function PurchaseOrderDetail() {
                   variants={staggerContainer}
                   initial="hidden"
                   animate="visible"
-                  className="space-y-0"
-                >
+                  className="space-y-0">
+
                   {/* Header */}
                   <div className="flex items-center border-b-2 border-slate-600 py-3 text-sm font-medium text-slate-400">
                     <div className="w-12"></div>
@@ -627,9 +627,9 @@ export default function PurchaseOrderDetail() {
                   </div>
 
                   {/* Items */}
-                  {po.items.map((item, idx) => (
-                    <POLineItem key={item.id} item={item} idx={idx} />
-                  ))}
+                  {po.items.map((item, idx) =>
+                  <POLineItem key={item.id} item={item} idx={idx} />
+                  )}
 
                   {/* Summary */}
                   <div className="border-t-2 border-slate-600 pt-4 mt-4 space-y-2">
@@ -675,12 +675,12 @@ export default function PurchaseOrderDetail() {
                   variants={staggerContainer}
                   initial="hidden"
                   animate="visible"
-                  className="space-y-6"
-                >
+                  className="space-y-6">
+
                   <motion.div
                     variants={fadeIn}
-                    className="grid grid-cols-2 gap-4"
-                  >
+                    className="grid grid-cols-2 gap-4">
+
                     <div>
                       <p className="text-sm text-slate-400 mb-1">供应商名称</p>
                       <p className="font-medium text-slate-100">
@@ -746,14 +746,14 @@ export default function PurchaseOrderDetail() {
                   variants={staggerContainer}
                   initial="hidden"
                   animate="visible"
-                  className="space-y-2"
-                >
-                  {po.documents.map((doc) => (
-                    <motion.div
-                      key={doc.id}
-                      variants={fadeIn}
-                      className="flex items-center justify-between p-3 rounded-lg border border-slate-700 bg-slate-800/30 hover:bg-slate-800/50 transition-colors"
-                    >
+                  className="space-y-2">
+
+                  {po.documents.map((doc) =>
+                  <motion.div
+                    key={doc.id}
+                    variants={fadeIn}
+                    className="flex items-center justify-between p-3 rounded-lg border border-slate-700 bg-slate-800/30 hover:bg-slate-800/50 transition-colors">
+
                       <div className="flex items-center gap-3">
                         <FileText className="w-5 h-5 text-blue-400" />
                         <div>
@@ -769,7 +769,7 @@ export default function PurchaseOrderDetail() {
                         <Download className="w-4 h-4" />
                       </Button>
                     </motion.div>
-                  ))}
+                  )}
                 </motion.div>
               </CardContent>
             </Card>
@@ -811,8 +811,8 @@ export default function PurchaseOrderDetail() {
         <Card className="bg-gradient-to-r from-slate-800 to-slate-900 border-slate-700">
           <CardContent className="pt-6">
             <div className="flex flex-wrap gap-2">
-              {po.status !== "draft" && (
-                <>
+              {po.status !== "draft" &&
+              <>
                   <Button className="gap-2">
                     <Send className="w-4 h-4" />
                     发送提醒
@@ -826,9 +826,9 @@ export default function PurchaseOrderDetail() {
                     导出PDF
                   </Button>
                 </>
-              )}
-              {po.status === "draft" && (
-                <>
+              }
+              {po.status === "draft" &&
+              <>
                   <Button className="gap-2">
                     <Send className="w-4 h-4" />
                     提交订单
@@ -838,11 +838,11 @@ export default function PurchaseOrderDetail() {
                     编辑订单
                   </Button>
                 </>
-              )}
+              }
             </div>
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>);
+
 }

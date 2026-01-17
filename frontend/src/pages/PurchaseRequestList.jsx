@@ -17,16 +17,16 @@ import {
   Building2,
   DollarSign,
   Package,
-  AlertTriangle,
-} from "lucide-react";
+  AlertTriangle } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
-} from "../components/ui/card";
+  CardDescription } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -36,20 +36,20 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogBody,
-} from "../components/ui/dialog";
+  DialogBody } from
+"../components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import { Textarea } from "../components/ui/textarea";
 import { Label } from "../components/ui/label";
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
-import { purchaseApi, projectApi, materialApi } from "../services/api";
+import { purchaseApi, projectApi, materialApi as _materialApi } from "../services/api";
 import { toast } from "../components/ui/toast";
 import { LoadingCard } from "../components/common";
 import { EmptyState } from "../components/common";
@@ -61,7 +61,7 @@ const STATUS_CONFIG = {
   SUBMITTED: { label: "待审批", color: "bg-blue-500", icon: Clock },
   APPROVED: { label: "已审批", color: "bg-emerald-500", icon: CheckCircle2 },
   REJECTED: { label: "已驳回", color: "bg-red-500", icon: XCircle },
-  CLOSED: { label: "已关闭", color: "bg-slate-500", icon: Package },
+  CLOSED: { label: "已关闭", color: "bg-slate-500", icon: Package }
 };
 
 function PurchaseRequestCard({
@@ -70,7 +70,7 @@ function PurchaseRequestCard({
   onEdit,
   onDelete,
   onSubmit,
-  onApprove,
+  onApprove
 }) {
   const statusConfig = STATUS_CONFIG[request.status] || STATUS_CONFIG.DRAFT;
   const StatusIcon = statusConfig.icon;
@@ -78,8 +78,8 @@ function PurchaseRequestCard({
   return (
     <motion.div
       variants={fadeIn}
-      className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4 hover:border-slate-600 transition-colors"
-    >
+      className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4 hover:border-slate-600 transition-colors">
+
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
@@ -91,26 +91,26 @@ function PurchaseRequestCard({
               <StatusIcon className="w-3 h-3 mr-1" />
               {statusConfig.label}
             </Badge>
-            {request.request_type === "URGENT" && (
-              <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-xs">
+            {request.request_type === "URGENT" &&
+            <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-xs">
                 紧急
               </Badge>
-            )}
-            {request.auto_po_created && (
-              <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-xs">
+            }
+            {request.auto_po_created &&
+            <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-xs">
                 已生成采购订单
               </Badge>
-            )}
+            }
           </div>
           <p className="text-xs text-slate-400">
             {request.project_name}
             {request.machine_name && ` / ${request.machine_name}`}
           </p>
-          {request.supplier_name && (
-            <p className="text-xs text-slate-500 mt-1">
+          {request.supplier_name &&
+          <p className="text-xs text-slate-500 mt-1">
               供应商：{request.supplier_name}
             </p>
-          )}
+          }
         </div>
       </div>
 
@@ -122,17 +122,17 @@ function PurchaseRequestCard({
             总金额：¥{request.total_amount?.toLocaleString() || "0.00"}
           </span>
         </div>
-        {request.required_date && (
-          <div className="flex items-center gap-2 text-xs text-slate-400">
+        {request.required_date &&
+        <div className="flex items-center gap-2 text-xs text-slate-400">
             <Calendar className="w-3.5 h-3.5" />
             <span>需求日期：{request.required_date}</span>
           </div>
-        )}
-        {request.request_reason && (
-          <p className="text-xs text-slate-400 line-clamp-2">
+        }
+        {request.request_reason &&
+        <p className="text-xs text-slate-400 line-clamp-2">
             {request.request_reason}
           </p>
-        )}
+        }
       </div>
 
       {/* Actions */}
@@ -146,62 +146,62 @@ function PurchaseRequestCard({
             size="sm"
             className="h-7 px-2"
             onClick={() => onView(request)}
-            title="查看详情"
-          >
+            title="查看详情">
+
             <Eye className="w-3.5 h-3.5" />
           </Button>
-          {request.status === "DRAFT" && onEdit && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2"
-              onClick={() => onEdit(request)}
-              title="编辑"
-            >
+          {request.status === "DRAFT" && onEdit &&
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2"
+            onClick={() => onEdit(request)}
+            title="编辑">
+
               <Edit3 className="w-3.5 h-3.5" />
             </Button>
-          )}
-          {request.status === "DRAFT" && onDelete && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2"
-              onClick={() => onDelete(request)}
-              title="删除"
-            >
+          }
+          {request.status === "DRAFT" && onDelete &&
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2"
+            onClick={() => onDelete(request)}
+            title="删除">
+
               <Trash2 className="w-3.5 h-3.5" />
             </Button>
-          )}
-          {request.status === "DRAFT" && onSubmit && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 text-blue-400"
-              onClick={() => onSubmit(request)}
-              title="提交"
-            >
+          }
+          {request.status === "DRAFT" && onSubmit &&
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-blue-400"
+            onClick={() => onSubmit(request)}
+            title="提交">
+
               <Send className="w-3.5 h-3.5" />
             </Button>
-          )}
-          {request.status === "SUBMITTED" && onApprove && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 text-emerald-400"
-              onClick={() => {
-                if (confirm("确定要审批通过此申请吗？")) {
-                  onApprove(request, true, "");
-                }
-              }}
-              title="审批通过"
-            >
+          }
+          {request.status === "SUBMITTED" && onApprove &&
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-emerald-400"
+            onClick={() => {
+              if (confirm("确定要审批通过此申请吗？")) {
+                onApprove(request, true, "");
+              }
+            }}
+            title="审批通过">
+
               <CheckCircle2 className="w-3.5 h-3.5" />
             </Button>
-          )}
+          }
         </div>
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 }
 
 export default function PurchaseRequestList() {
@@ -214,7 +214,7 @@ export default function PurchaseRequestList() {
   const [projectFilter, setProjectFilter] = useState("all");
   const [showApproveDialog, setShowApproveDialog] = useState(false);
   const [selectedRequestForApprove, setSelectedRequestForApprove] =
-    useState(null);
+  useState(null);
   const [approveData, setApproveData] = useState({ approved: true, note: "" });
 
   // Projects for filter
@@ -241,7 +241,7 @@ export default function PurchaseRequestList() {
 
       const params = {
         page: 1,
-        page_size: 100,
+        page_size: 100
       };
 
       if (searchQuery) {
@@ -283,18 +283,18 @@ export default function PurchaseRequestList() {
     if (!Array.isArray(requests)) return [];
     return requests.filter((req) => {
       if (
-        searchQuery &&
-        !req.request_no?.toLowerCase().includes(searchQuery.toLowerCase())
-      ) {
+      searchQuery &&
+      !req.request_no?.toLowerCase().includes(searchQuery.toLowerCase()))
+      {
         return false;
       }
       if (statusFilter !== "all" && req.status !== statusFilter) {
         return false;
       }
       if (
-        projectFilter !== "all" &&
-        req.project_id !== parseInt(projectFilter)
-      ) {
+      projectFilter !== "all" &&
+      req.project_id !== parseInt(projectFilter))
+      {
         return false;
       }
       return true;
@@ -304,13 +304,13 @@ export default function PurchaseRequestList() {
   // Stats
   const stats = useMemo(() => {
     if (!Array.isArray(requests))
-      return { total: 0, draft: 0, submitted: 0, approved: 0, rejected: 0 };
+    return { total: 0, draft: 0, submitted: 0, approved: 0, rejected: 0 };
     return {
       total: requests.length,
       draft: requests.filter((r) => r.status === "DRAFT").length,
       submitted: requests.filter((r) => r.status === "SUBMITTED").length,
       approved: requests.filter((r) => r.status === "APPROVED").length,
-      rejected: requests.filter((r) => r.status === "REJECTED").length,
+      rejected: requests.filter((r) => r.status === "REJECTED").length
     };
   }, [requests]);
 
@@ -362,7 +362,7 @@ export default function PurchaseRequestList() {
     try {
       await purchaseApi.requests.approve(request.id, {
         approved,
-        approval_note: note,
+        approval_note: note
       });
       toast.success(approved ? "采购申请已审批通过" : "采购申请已驳回");
       loadRequests();
@@ -380,15 +380,15 @@ export default function PurchaseRequestList() {
           title="采购申请管理"
           description="管理项目采购申请，提交审批流程"
           actions={
-            <Button
-              onClick={() => navigate("/purchase-requests/new")}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
+          <Button
+            onClick={() => navigate("/purchase-requests/new")}
+            className="bg-blue-600 hover:bg-blue-700">
+
               <Plus className="w-4 h-4 mr-2" />
               新建申请
             </Button>
-          }
-        />
+          } />
+
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -444,8 +444,8 @@ export default function PurchaseRequestList() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   icon={Search}
-                  className="bg-slate-900/50 border-slate-700"
-                />
+                  className="bg-slate-900/50 border-slate-700" />
+
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full md:w-[180px] bg-slate-900/50 border-slate-700">
@@ -465,11 +465,11 @@ export default function PurchaseRequestList() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部项目</SelectItem>
-                  {projects.map((project) => (
-                    <SelectItem key={project.id} value={String(project.id)}>
+                  {projects.map((project) =>
+                  <SelectItem key={project.id} value={String(project.id)}>
                       {project.project_name}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -483,46 +483,46 @@ export default function PurchaseRequestList() {
         {loading && <LoadingCard />}
 
         {/* Requests List */}
-        {!loading && !error && (
-          <>
-            {filteredRequests.length === 0 ? (
-              <EmptyState
-                icon={FileText}
-                title="暂无采购申请"
-                description="点击上方按钮创建新的采购申请"
-              />
-            ) : (
-              <motion.div
-                variants={staggerContainer}
-                initial="hidden"
-                animate="visible"
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-              >
+        {!loading && !error &&
+        <>
+            {filteredRequests.length === 0 ?
+          <EmptyState
+            icon={FileText}
+            title="暂无采购申请"
+            description="点击上方按钮创建新的采购申请" /> :
+
+
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
                 <AnimatePresence>
-                  {filteredRequests.map((request) => (
-                    <RequestCard
-                      key={request.id}
-                      request={request}
-                      onView={handleView}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                      onSubmit={handleSubmit}
-                      onApprove={(req) => {
-                        setSelectedRequestForApprove(req);
-                        setApproveData({ approved: true, note: "" });
-                        setShowApproveDialog(true);
-                      }}
-                    />
-                  ))}
+                  {filteredRequests.map((request) =>
+              <RequestCard
+                key={request.id}
+                request={request}
+                onView={handleView}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onSubmit={handleSubmit}
+                onApprove={(req) => {
+                  setSelectedRequestForApprove(req);
+                  setApproveData({ approved: true, note: "" });
+                  setShowApproveDialog(true);
+                }} />
+
+              )}
                 </AnimatePresence>
               </motion.div>
-            )}
+          }
           </>
-        )}
+        }
 
         {/* Approve Dialog */}
-        {selectedRequestForApprove && (
-          <Dialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
+        {selectedRequestForApprove &&
+        <Dialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
             <DialogContent className="bg-slate-900 border-slate-700">
               <DialogHeader>
                 <DialogTitle className="text-slate-200">
@@ -540,48 +540,48 @@ export default function PurchaseRequestList() {
                   <div>
                     <Label className="text-slate-400">审批意见</Label>
                     <Textarea
-                      value={approveData.note}
-                      onChange={(e) =>
-                        setApproveData({ ...approveData, note: e.target.value })
-                      }
-                      placeholder="请输入审批意见..."
-                      className="bg-slate-800 border-slate-700 text-slate-200"
-                      rows={4}
-                    />
+                    value={approveData.note}
+                    onChange={(e) =>
+                    setApproveData({ ...approveData, note: e.target.value })
+                    }
+                    placeholder="请输入审批意见..."
+                    className="bg-slate-800 border-slate-700 text-slate-200"
+                    rows={4} />
+
                   </div>
                 </div>
               </DialogBody>
               <DialogFooter>
                 <Button
-                  variant="outline"
-                  onClick={() => {
-                    handleApprove(
-                      selectedRequestForApprove,
-                      false,
-                      approveData.note,
-                    );
-                  }}
-                  className="border-red-500 text-red-400 hover:bg-red-500/10"
-                >
+                variant="outline"
+                onClick={() => {
+                  handleApprove(
+                    selectedRequestForApprove,
+                    false,
+                    approveData.note
+                  );
+                }}
+                className="border-red-500 text-red-400 hover:bg-red-500/10">
+
                   驳回
                 </Button>
                 <Button
-                  onClick={() => {
-                    handleApprove(
-                      selectedRequestForApprove,
-                      true,
-                      approveData.note,
-                    );
-                  }}
-                  className="bg-emerald-600 hover:bg-emerald-700"
-                >
+                onClick={() => {
+                  handleApprove(
+                    selectedRequestForApprove,
+                    true,
+                    approveData.note
+                  );
+                }}
+                className="bg-emerald-600 hover:bg-emerald-700">
+
                   审批通过
                 </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
-        )}
+        }
       </div>
-    </div>
-  );
+    </div>);
+
 }

@@ -636,7 +636,7 @@ export function calculateAging(dueDate) {
  */
 export function calculateDSO(receivables, monthlyRevenue) {
   if (!monthlyRevenue || monthlyRevenue === 0) return 0;
-  return Math.round((receivables / monthlyRevenue) * 30);
+  return Math.round(receivables / monthlyRevenue * 30);
 }
 
 /**
@@ -644,7 +644,7 @@ export function calculateDSO(receivables, monthlyRevenue) {
  */
 export function calculateCollectionRate(collectedAmount, totalAmount) {
   if (!totalAmount || totalAmount === 0) return 0;
-  return Math.round((collectedAmount / totalAmount) * 100);
+  return Math.round(collectedAmount / totalAmount * 100);
 }
 
 /**
@@ -660,9 +660,9 @@ export function calculateOverdueInterest(amount, daysOverdue, interestRate = 0.0
  * 获取催收建议
  */
 export function getCollectionRecommendation(overdueDays, amount, creditRating) {
-  const rating = getCreditRating(creditRating);
-  const agingPeriod = getAgingPeriod(overdueDays);
-  
+  const _rating = getCreditRating(creditRating);
+  const _agingPeriod = getAgingPeriod(overdueDays);
+
   if (overdueDays <= 0) {
     return {
       level: 'normal',
@@ -671,7 +671,7 @@ export function getCollectionRecommendation(overdueDays, amount, creditRating) {
       frequency: 7
     };
   }
-  
+
   if (overdueDays <= 30) {
     return {
       level: 'warning',
@@ -680,7 +680,7 @@ export function getCollectionRecommendation(overdueDays, amount, creditRating) {
       frequency: 3
     };
   }
-  
+
   if (overdueDays <= 90) {
     return {
       level: 'urgent',
@@ -689,7 +689,7 @@ export function getCollectionRecommendation(overdueDays, amount, creditRating) {
       frequency: 1
     };
   }
-  
+
   return {
     level: 'critical',
     actions: ['立即上门催收', '启动法律程序'],
@@ -703,11 +703,11 @@ export function getCollectionRecommendation(overdueDays, amount, creditRating) {
  */
 export function formatCurrency(amount, currency = '¥') {
   if (!amount && amount !== 0) return '-';
-  
+
   // 转换为元（如果是分为单位）
   const yuan = amount >= 1000 ? amount / 10000 : amount;
   const unit = amount >= 1000 ? '万' : '';
-  
+
   return `${currency}${yuan.toFixed(2)}${unit}`;
 }
 
@@ -724,32 +724,32 @@ export function formatPercentage(value, decimals = 1) {
  */
 export function generateCollectionReport(payments) {
   const totalAmount = payments.reduce((sum, p) => sum + p.amount, 0);
-  const overdueAmount = payments
-    .filter(p => p.status === 'overdue')
-    .reduce((sum, p) => sum + p.amount, 0);
+  const overdueAmount = payments.
+  filter((p) => p.status === 'overdue').
+  reduce((sum, p) => sum + p.amount, 0);
   const collectionRate = calculateCollectionRate(
-    payments.filter(p => p.status === 'paid').reduce((sum, p) => sum + p.amount, 0),
+    payments.filter((p) => p.status === 'paid').reduce((sum, p) => sum + p.amount, 0),
     totalAmount
   );
-  
+
   const agingDistribution = {};
-  Object.values(AGING_PERIODS).forEach(period => {
-    agingDistribution[period.key] = payments
-      .filter(p => {
-        const daysOverdue = calculateAging(p.due_date);
-        return daysOverdue >= period.minDays && daysOverdue <= period.maxDays;
-      })
-      .reduce((sum, p) => sum + p.amount, 0);
+  Object.values(AGING_PERIODS).forEach((period) => {
+    agingDistribution[period.key] = payments.
+    filter((p) => {
+      const daysOverdue = calculateAging(p.due_date);
+      return daysOverdue >= period.minDays && daysOverdue <= period.maxDays;
+    }).
+    reduce((sum, p) => sum + p.amount, 0);
   });
-  
+
   return {
     totalAmount,
     overdueAmount,
     collectionRate,
-    overdueRate: totalAmount > 0 ? (overdueAmount / totalAmount * 100) : 0,
+    overdueRate: totalAmount > 0 ? overdueAmount / totalAmount * 100 : 0,
     agingDistribution,
     totalPayments: payments.length,
-    overduePayments: payments.filter(p => p.status === 'overdue').length
+    overduePayments: payments.filter((p) => p.status === 'overdue').length
   };
 }
 
@@ -767,7 +767,7 @@ export default {
   CREDIT_RATINGS,
   PAYMENT_METRICS,
   REMINDER_TYPES,
-  
+
   // 选项集合
   PAYMENT_TYPE_OPTIONS,
   PAYMENT_STATUS_OPTIONS,
@@ -779,7 +779,7 @@ export default {
   CREDIT_RATING_OPTIONS,
   PAYMENT_METRIC_OPTIONS,
   REMINDER_TYPE_OPTIONS,
-  
+
   // 工具函数
   getPaymentType,
   getPaymentStatus,

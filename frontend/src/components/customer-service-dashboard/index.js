@@ -37,32 +37,3 @@ export {
   sortByCreateTime,
   sortByResolutionTime,
 } from './customerServiceConstants';
-
-// 默认导出
-export default {
-  ServiceStatsCard,
-  TicketQueue,
-  TeamPerformance,
-  customerStatusConfigs,
-  servicePriorityConfigs,
-  serviceTypeConfigs,
-  satisfactionLevelConfigs,
-  serviceChannelConfigs,
-  serviceStatusConfigs,
-  serviceMetricConfigs,
-  customerServiceTabConfigs,
-  calculateServiceStats,
-  formatCustomerStatus,
-  formatServicePriority,
-  formatServiceType,
-  formatSatisfactionLevel,
-  formatServiceChannel,
-  formatServiceStatus,
-  filterTicketsByStatus,
-  filterTicketsByPriority,
-  filterTicketsByType,
-  filterTicketsByCustomer,
-  sortByPriority,
-  sortByCreateTime,
-  sortByResolutionTime,
-};

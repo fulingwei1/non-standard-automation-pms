@@ -3,6 +3,12 @@ import { api } from "./client.js";
 
 
 export const purchaseApi = {
+  // 顶层便捷方法
+  list: (params) => api.get("/purchase-orders/", { params }),
+  get: (id) => api.get(`/purchase-orders/${id}`),
+  create: (data) => api.post("/purchase-orders", data),
+  update: (id, data) => api.put(`/purchase-orders/${id}`, data),
+
   orders: {
     list: (params) => api.get("/purchase-orders/", { params }),
     get: (id) => api.get(`/purchase-orders/${id}`),

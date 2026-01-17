@@ -129,8 +129,10 @@ export function usePermission() {
       case 'TEAM':
         // 检查数据的组织单元是否在用户可访问范围内
         if (!data.org_unit_id && !data.department_id) return true;
-        const dataOrgId = data.org_unit_id || data.department_id;
-        return userOrgUnitIds.includes(dataOrgId);
+        {
+          const dataOrgId = data.org_unit_id || data.department_id;
+          return userOrgUnitIds.includes(dataOrgId);
+        }
 
       case 'PROJECT':
         // 检查是否参与该项目

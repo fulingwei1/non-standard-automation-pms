@@ -66,7 +66,7 @@ export function PermissionProvider({ children }) {
             setDataScopes(permResponse.data.dataScopes);
           }
         }
-      } catch (permError) {
+      } catch (_permError) {
         // 如果新的权��� API 不存在，使用旧的 nav_groups
         console.warn('新权限 API 不可用，使用兼容模式');
         // 从 localStorage 获取用户数据（兼容旧系统）
@@ -124,12 +124,12 @@ export function PermissionProvider({ children }) {
    * 更新单个权限（用于实时权限变更）
    */
   const updatePermission = useCallback((permissionCode, hasPermission) => {
-    setPermissions(prev => {
+    setPermissions((prev) => {
       if (hasPermission && !prev.includes(permissionCode)) {
         return [...prev, permissionCode];
       }
       if (!hasPermission && prev.includes(permissionCode)) {
-        return prev.filter(p => p !== permissionCode);
+        return prev.filter((p) => p !== permissionCode);
       }
       return prev;
     });
@@ -180,14 +180,14 @@ export function PermissionProvider({ children }) {
     // 方法
     refreshPermissions,
     clearPermissions,
-    updatePermission,
+    updatePermission
   };
 
   return (
     <PermissionContext.Provider value={contextValue}>
       {children}
-    </PermissionContext.Provider>
-  );
+    </PermissionContext.Provider>);
+
 }
 
 /**
@@ -220,11 +220,11 @@ export function PermissionLoading({ children, fallback = null }) {
   const { isLoading } = usePermissionContext();
 
   if (isLoading) {
-    return fallback || (
-      <div className="flex items-center justify-center h-full">
+    return fallback ||
+    <div className="flex items-center justify-center h-full">
         <div className="text-gray-500">加载权限中...</div>
-      </div>
-    );
+      </div>;
+
   }
 
   return children;

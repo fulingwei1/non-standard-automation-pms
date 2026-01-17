@@ -16,12 +16,12 @@ import {
   Area,
   AreaChart,
   BarChart,
-  Bar
-} from "recharts";
+  Bar } from
+"recharts";
 import {
   TimeRangeSelector,
-  DateRangePicker
-} from "../../components/ui/time-range-selector";
+  DateRangePicker } from
+"../../components/ui/time-range-selector";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import { Badge } from "../../components/ui/badge";
@@ -30,11 +30,11 @@ import {
   ALERT_LEVEL_STATS,
   TIME_DIMENSIONS,
   CHART_TYPES,
-  generateTimeSeries,
+  generateTimeSeries as _generateTimeSeries,
   getTrendDirection,
   getTrendColor,
-  getTrendIcon
-} from "./alertStatsConstants";
+  getTrendIcon } from
+"./alertStatsConstants";
 
 export function AlertTrendChart({
   data,
@@ -57,7 +57,7 @@ export function AlertTrendChart({
     // 根据时间维度聚合数据
     const groupedData = {};
 
-    data.forEach(alert => {
+    data.forEach((alert) => {
       if (!alert.created_at) return;
 
       const date = new Date(alert.created_at);
@@ -71,8 +71,10 @@ export function AlertTrendChart({
           key = `${date.getMonth() + 1}/${date.getDate()}`;
           break;
         case 'WEEKLY':
-          const weekNumber = getWeekNumber(date);
-          key = `第${weekNumber}周`;
+          {
+            const weekNumber = getWeekNumber(date);
+            key = `第${weekNumber}周`;
+          }
           break;
         case 'MONTHLY':
           key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
@@ -111,7 +113,7 @@ export function AlertTrendChart({
     });
 
     return Object.values(groupedData).sort((a, b) =>
-      new Date(a.date) - new Date(b.date)
+    new Date(a.date) - new Date(b.date)
     );
   }, [data, timeDimension]);
 
@@ -153,72 +155,72 @@ export function AlertTrendChart({
                 dataKey="date"
                 tick={{ fontSize: 12 }}
                 axisLine={false}
-                tickLine={false}
-              />
+                tickLine={false} />
+
               <YAxis
                 tick={{ fontSize: 12 }}
                 axisLine={false}
-                tickLine={false}
-              />
-              {showTooltip && (
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#fff',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                  }}
-                />
-              )}
-              {showLegend && (
-                <Legend
-                  wrapperStyle={{ paddingTop: '20px' }}
-                  iconType="circle"
-                />
-              )}
+                tickLine={false} />
+
+              {showTooltip &&
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#fff',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }} />
+
+              }
+              {showLegend &&
+              <Legend
+                wrapperStyle={{ paddingTop: '20px' }}
+                iconType="circle" />
+
+              }
               <Line
                 type="monotone"
                 dataKey="critical"
                 stroke={ALERT_LEVEL_STATS.CRITICAL.color}
                 strokeWidth={2}
                 dot={showPoints ? { r: 4 } : false}
-                name="严重"
-              />
+                name="严重" />
+
               <Line
                 type="monotone"
                 dataKey="high"
                 stroke={ALERT_LEVEL_STATS.HIGH.color}
                 strokeWidth={2}
                 dot={showPoints ? { r: 4 } : false}
-                name="高"
-              />
+                name="高" />
+
               <Line
                 type="monotone"
                 dataKey="medium"
                 stroke={ALERT_LEVEL_STATS.MEDIUM.color}
                 strokeWidth={2}
                 dot={showPoints ? { r: 4 } : false}
-                name="中"
-              />
+                name="中" />
+
               <Line
                 type="monotone"
                 dataKey="low"
                 stroke={ALERT_LEVEL_STATS.LOW.color}
                 strokeWidth={2}
                 dot={showPoints ? { r: 4 } : false}
-                name="低"
-              />
+                name="低" />
+
               <Line
                 type="monotone"
                 dataKey="info"
                 stroke={ALERT_LEVEL_STATS.INFO.color}
                 strokeWidth={2}
                 dot={showPoints ? { r: 4 } : false}
-                name="信息"
-              />
+                name="信息" />
+
             </LineChart>
-          </ResponsiveContainer>
-        );
+          </ResponsiveContainer>);
+
 
       case 'area':
         return (
@@ -229,72 +231,72 @@ export function AlertTrendChart({
                 dataKey="date"
                 tick={{ fontSize: 12 }}
                 axisLine={false}
-                tickLine={false}
-              />
+                tickLine={false} />
+
               <YAxis
                 tick={{ fontSize: 12 }}
                 axisLine={false}
-                tickLine={false}
-              />
-              {showTooltip && (
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#fff',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                  }}
-                />
-              )}
-              {showLegend && (
-                <Legend
-                  wrapperStyle={{ paddingTop: '20px' }}
-                  iconType="circle"
-                />
-              )}
+                tickLine={false} />
+
+              {showTooltip &&
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#fff',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }} />
+
+              }
+              {showLegend &&
+              <Legend
+                wrapperStyle={{ paddingTop: '20px' }}
+                iconType="circle" />
+
+              }
               <Area
                 type="monotone"
                 dataKey="critical"
                 stackId="1"
                 stroke={ALERT_LEVEL_STATS.CRITICAL.color}
                 fill={ALERT_LEVEL_STATS.CRITICAL.bgColor}
-                name="严重"
-              />
+                name="严重" />
+
               <Area
                 type="monotone"
                 dataKey="high"
                 stackId="1"
                 stroke={ALERT_LEVEL_STATS.HIGH.color}
                 fill={ALERT_LEVEL_STATS.HIGH.bgColor}
-                name="高"
-              />
+                name="高" />
+
               <Area
                 type="monotone"
                 dataKey="medium"
                 stackId="1"
                 stroke={ALERT_LEVEL_STATS.MEDIUM.color}
                 fill={ALERT_LEVEL_STATS.MEDIUM.bgColor}
-                name="中"
-              />
+                name="中" />
+
               <Area
                 type="monotone"
                 dataKey="low"
                 stackId="1"
                 stroke={ALERT_LEVEL_STATS.LOW.color}
                 fill={ALERT_LEVEL_STATS.LOW.bgColor}
-                name="低"
-              />
+                name="低" />
+
               <Area
                 type="monotone"
                 dataKey="info"
                 stackId="1"
                 stroke={ALERT_LEVEL_STATS.INFO.color}
                 fill={ALERT_LEVEL_STATS.INFO.bgColor}
-                name="信息"
-              />
+                name="信息" />
+
             </AreaChart>
-          </ResponsiveContainer>
-        );
+          </ResponsiveContainer>);
+
 
       case 'bar':
         return (
@@ -305,57 +307,57 @@ export function AlertTrendChart({
                 dataKey="date"
                 tick={{ fontSize: 12 }}
                 axisLine={false}
-                tickLine={false}
-              />
+                tickLine={false} />
+
               <YAxis
                 tick={{ fontSize: 12 }}
                 axisLine={false}
-                tickLine={false}
-              />
-              {showTooltip && (
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#fff',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                  }}
-                />
-              )}
-              {showLegend && (
-                <Legend
-                  wrapperStyle={{ paddingTop: '20px' }}
-                  iconType="circle"
-                />
-              )}
+                tickLine={false} />
+
+              {showTooltip &&
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#fff',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }} />
+
+              }
+              {showLegend &&
+              <Legend
+                wrapperStyle={{ paddingTop: '20px' }}
+                iconType="circle" />
+
+              }
               <Bar
                 dataKey="critical"
                 fill={ALERT_LEVEL_STATS.CRITICAL.color}
-                name="严重"
-              />
+                name="严重" />
+
               <Bar
                 dataKey="high"
                 fill={ALERT_LEVEL_STATS.HIGH.color}
-                name="高"
-              />
+                name="高" />
+
               <Bar
                 dataKey="medium"
                 fill={ALERT_LEVEL_STATS.MEDIUM.color}
-                name="中"
-              />
+                name="中" />
+
               <Bar
                 dataKey="low"
                 fill={ALERT_LEVEL_STATS.LOW.color}
-                name="低"
-              />
+                name="低" />
+
               <Bar
                 dataKey="info"
                 fill={ALERT_LEVEL_STATS.INFO.color}
-                name="信息"
-              />
+                name="信息" />
+
             </BarChart>
-          </ResponsiveContainer>
-        );
+          </ResponsiveContainer>);
+
 
       default:
         return null;
@@ -364,7 +366,7 @@ export function AlertTrendChart({
 
   // 渲染解决率趋势
   const renderResolutionTrend = () => {
-    const resolutionData = processedData.map(item => ({
+    const resolutionData = processedData.map((item) => ({
       ...item,
       resolutionRate: item.total > 0 ? (item.resolved / item.total * 100).toFixed(1) : 0
     }));
@@ -377,41 +379,41 @@ export function AlertTrendChart({
             dataKey="date"
             tick={{ fontSize: 12 }}
             axisLine={false}
-            tickLine={false}
-          />
+            tickLine={false} />
+
           <YAxis
             tick={{ fontSize: 12 }}
             axisLine={false}
             tickLine={false}
-            domain={[0, 100]}
-          />
-          {showTooltip && (
-            <Tooltip
-              formatter={(value) => [`${value}%`, '解决率']}
-              contentStyle={{
-                backgroundColor: '#fff',
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-              }}
-            />
-          )}
-          {showLegend && (
-            <Legend
-              wrapperStyle={{ paddingTop: '20px' }}
-            />
-          )}
+            domain={[0, 100]} />
+
+          {showTooltip &&
+          <Tooltip
+            formatter={(value) => [`${value}%`, '解决率']}
+            contentStyle={{
+              backgroundColor: '#fff',
+              border: '1px solid #e5e7eb',
+              borderRadius: '8px',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+            }} />
+
+          }
+          {showLegend &&
+          <Legend
+            wrapperStyle={{ paddingTop: '20px' }} />
+
+          }
           <Line
             type="monotone"
             dataKey="resolutionRate"
             stroke="#22c55e"
             strokeWidth={2}
             dot={showPoints ? { r: 4 } : false}
-            name="解决率"
-          />
+            name="解决率" />
+
         </LineChart>
-      </ResponsiveContainer>
-    );
+      </ResponsiveContainer>);
+
   };
 
   // 获取周数
@@ -431,8 +433,8 @@ export function AlertTrendChart({
             <p className="text-sm">请选择其他时间范围或检查数据源</p>
           </div>
         </CardContent>
-      </Card>
-    );
+      </Card>);
+
   }
 
   return (
@@ -445,8 +447,8 @@ export function AlertTrendChart({
             <TimeRangeSelector
               value={timeRange}
               onChange={setTimeRange}
-              className="w-32"
-            />
+              className="w-32" />
+
 
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-2">
@@ -459,22 +461,22 @@ export function AlertTrendChart({
                   <Button
                     variant={chartType === 'line' ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => setChartType('line')}
-                  >
+                    onClick={() => setChartType('line')}>
+
                     折线图
                   </Button>
                   <Button
                     variant={chartType === 'area' ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => setChartType('area')}
-                  >
+                    onClick={() => setChartType('area')}>
+
                     面积图
                   </Button>
                   <Button
                     variant={chartType === 'bar' ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => setChartType('bar')}
-                  >
+                    onClick={() => setChartType('bar')}>
+
                     柱状图
                   </Button>
                 </div>
@@ -482,8 +484,8 @@ export function AlertTrendChart({
                 {renderTrendChart()}
 
                 {/* 趋势指标 */}
-                {trendMetrics && (
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+                {trendMetrics &&
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">总告警数</span>
@@ -497,9 +499,9 @@ export function AlertTrendChart({
                         </span>
                         <span className={`text-sm ${getTrendColor(trendMetrics.total.change)}`}>
                           {trendMetrics.total.change === 'up' ? '+' : ''}
-                          {trendMetrics.total.previous > 0
-                            ? Math.round(((trendMetrics.total.current - trendMetrics.total.previous) / trendMetrics.total.previous) * 100)
-                            : 0}%
+                          {trendMetrics.total.previous > 0 ?
+                        Math.round((trendMetrics.total.current - trendMetrics.total.previous) / trendMetrics.total.previous * 100) :
+                        0}%
                         </span>
                       </div>
                     </div>
@@ -517,9 +519,9 @@ export function AlertTrendChart({
                         </span>
                         <span className={`text-sm ${getTrendColor(trendMetrics.critical.change)}`}>
                           {trendMetrics.critical.change === 'up' ? '+' : ''}
-                          {trendMetrics.critical.previous > 0
-                            ? Math.round(((trendMetrics.critical.current - trendMetrics.critical.previous) / trendMetrics.critical.previous) * 100)
-                            : 0}%
+                          {trendMetrics.critical.previous > 0 ?
+                        Math.round((trendMetrics.critical.current - trendMetrics.critical.previous) / trendMetrics.critical.previous * 100) :
+                        0}%
                         </span>
                       </div>
                     </div>
@@ -537,14 +539,14 @@ export function AlertTrendChart({
                         </span>
                         <span className={`text-sm ${getTrendColor(trendMetrics.resolved.change)}`}>
                           {trendMetrics.resolved.change === 'up' ? '+' : ''}
-                          {trendMetrics.resolved.previous > 0
-                            ? Math.round(((trendMetrics.resolved.current - trendMetrics.resolved.previous) / trendMetrics.resolved.previous) * 100)
-                            : 0}%
+                          {trendMetrics.resolved.previous > 0 ?
+                        Math.round((trendMetrics.resolved.current - trendMetrics.resolved.previous) / trendMetrics.resolved.previous * 100) :
+                        0}%
                         </span>
                       </div>
                     </div>
-                  </div>
-                )}
+                </div>
+                }
               </TabsContent>
 
               <TabsContent value="resolution" className="mt-4">
@@ -554,6 +556,6 @@ export function AlertTrendChart({
           </div>
         </div>
       </CardHeader>
-    </Card>
-  );
+    </Card>);
+
 }

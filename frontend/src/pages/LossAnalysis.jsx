@@ -16,8 +16,8 @@ import {
   PieChart,
   Download,
   Filter,
-  Calendar,
-} from "lucide-react";
+  Calendar } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -32,9 +32,9 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "../components/ui";
-import { fadeIn, staggerContainer } from "../lib/animations";
+  TableRow } from
+"../components/ui";
+import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
 import { lossAnalysisApi } from "../services/api";
 import { formatAmount } from "../lib/utils";
 
@@ -44,7 +44,7 @@ export default function LossAnalysis() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [salespersonId, setSalespersonId] = useState("");
-  const [selectedStage, setSelectedStage] = useState("all");
+  const [_selectedStage, _setSelectedStage] = useState("all");
 
   const loadAnalysis = async () => {
     setLoading(true);
@@ -91,16 +91,16 @@ export default function LossAnalysis() {
               <Input
                 type="date"
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
+                onChange={(e) => setStartDate(e.target.value)} />
+
             </div>
             <div>
               <label className="text-sm text-slate-500 mb-1 block">结束日期</label>
               <Input
                 type="date"
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
+                onChange={(e) => setEndDate(e.target.value)} />
+
             </div>
             <div>
               <label className="text-sm text-slate-500 mb-1 block">销售人员ID</label>
@@ -108,8 +108,8 @@ export default function LossAnalysis() {
                 type="number"
                 value={salespersonId}
                 onChange={(e) => setSalespersonId(e.target.value)}
-                placeholder="可选"
-              />
+                placeholder="可选" />
+
             </div>
             <div className="flex items-end">
               <Button onClick={loadAnalysis} className="w-full">
@@ -120,17 +120,17 @@ export default function LossAnalysis() {
         </CardContent>
       </Card>
 
-      {loading && (
-        <div className="text-center py-8 text-slate-500">加载中...</div>
-      )}
+      {loading &&
+      <div className="text-center py-8 text-slate-500">加载中...</div>
+      }
 
-      {analysisData && !loading && (
-        <motion.div
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-          className="space-y-6"
-        >
+      {analysisData && !loading &&
+      <motion.div
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+        className="space-y-6">
+
           {/* 汇总统计 */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card>
@@ -196,8 +196,8 @@ export default function LossAnalysis() {
               <CardTitle>投入阶段分析</CardTitle>
             </CardHeader>
             <CardContent>
-              {analysisData.stage_analysis && (
-                <div className="space-y-4">
+              {analysisData.stage_analysis &&
+            <div className="space-y-4">
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <div className="text-center p-4 bg-slate-50 rounded-lg">
                       <p className="text-sm text-slate-500">仅需求调研</p>
@@ -235,10 +235,10 @@ export default function LossAnalysis() {
                   </div>
 
                   {/* 详细设计项目列表 */}
-                  {analysisData.stage_analysis.details
-                    .filter((d) => d.stage === "detailed_design")
-                    .length > 0 && (
-                    <div className="mt-6">
+                  {analysisData.stage_analysis.details.
+              filter((d) => d.stage === "detailed_design").
+              length > 0 &&
+              <div className="mt-6">
                       <h3 className="text-lg font-semibold mb-3 text-red-600">
                         已完成详细设计但未中标的项目
                       </h3>
@@ -253,10 +253,10 @@ export default function LossAnalysis() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {analysisData.stage_analysis.details
-                            .filter((d) => d.stage === "detailed_design")
-                            .map((detail) => (
-                              <TableRow key={detail.project_id}>
+                          {analysisData.stage_analysis.details.
+                    filter((d) => d.stage === "detailed_design").
+                    map((detail) =>
+                    <TableRow key={detail.project_id}>
                                 <TableCell>{detail.project_code}</TableCell>
                                 <TableCell>{detail.project_name}</TableCell>
                                 <TableCell>{formatHours(detail.total_hours)}</TableCell>
@@ -265,13 +265,13 @@ export default function LossAnalysis() {
                                   <Badge variant="outline">{detail.loss_reason}</Badge>
                                 </TableCell>
                               </TableRow>
-                            ))}
+                    )}
                         </TableBody>
                       </Table>
                     </div>
-                  )}
+              }
                 </div>
-              )}
+            }
             </CardContent>
           </Card>
 
@@ -281,14 +281,14 @@ export default function LossAnalysis() {
               <CardTitle>未中标原因分析</CardTitle>
             </CardHeader>
             <CardContent>
-              {analysisData.reason_analysis && (
-                <div className="space-y-4">
+              {analysisData.reason_analysis &&
+            <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {analysisData.reason_analysis.top_reasons.map((reason, index) => (
-                      <div
-                        key={index}
-                        className="p-4 bg-slate-50 rounded-lg border-l-4 border-blue-500"
-                      >
+                    {analysisData.reason_analysis.top_reasons.map((reason, index) =>
+                <div
+                  key={index}
+                  className="p-4 bg-slate-50 rounded-lg border-l-4 border-blue-500">
+
                         <div className="flex items-center justify-between mb-2">
                           <span className="font-semibold">{reason.reason}</span>
                           <Badge>{reason.count}个</Badge>
@@ -299,10 +299,10 @@ export default function LossAnalysis() {
                           <p>总成本: {formatAmount(reason.total_cost)}</p>
                         </div>
                       </div>
-                    ))}
+                )}
                   </div>
                 </div>
-              )}
+            }
             </CardContent>
           </Card>
 
@@ -312,49 +312,49 @@ export default function LossAnalysis() {
               <CardTitle>投入产出分析</CardTitle>
             </CardHeader>
             <CardContent>
-              {analysisData.investment_analysis && (
-                <div className="space-y-6">
+              {analysisData.investment_analysis &&
+            <div className="space-y-6">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
                       <p className="text-sm text-slate-500">平均工时/项目</p>
                       <p className="text-xl font-bold">
                         {formatHours(
-                          analysisData.investment_analysis.summary
-                            .average_hours_per_project
-                        )}
+                      analysisData.investment_analysis.summary.
+                      average_hours_per_project
+                    )}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-slate-500">平均成本/项目</p>
                       <p className="text-xl font-bold">
                         {formatAmount(
-                          analysisData.investment_analysis.summary
-                            .average_cost_per_project
-                        )}
+                      analysisData.investment_analysis.summary.
+                      average_cost_per_project
+                    )}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-slate-500">预期收益</p>
                       <p className="text-xl font-bold">
                         {formatAmount(
-                          analysisData.investment_analysis.summary
-                            .total_expected_revenue
-                        )}
+                      analysisData.investment_analysis.summary.
+                      total_expected_revenue
+                    )}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-slate-500">总损失</p>
                       <p className="text-xl font-bold text-red-600">
                         {formatAmount(
-                          analysisData.investment_analysis.summary.total_loss
-                        )}
+                      analysisData.investment_analysis.summary.total_loss
+                    )}
                       </p>
                     </div>
                   </div>
 
                   {/* 按人员统计 */}
-                  {analysisData.investment_analysis.by_person.length > 0 && (
-                    <div>
+                  {analysisData.investment_analysis.by_person.length > 0 &&
+              <div>
                       <h3 className="text-lg font-semibold mb-3">按人员统计</h3>
                       <Table>
                         <TableHeader>
@@ -367,44 +367,44 @@ export default function LossAnalysis() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {analysisData.investment_analysis.by_person.map((person) => (
-                            <TableRow key={person.person_id}>
+                          {analysisData.investment_analysis.by_person.map((person) =>
+                    <TableRow key={person.person_id}>
                               <TableCell>{person.person_name}</TableCell>
                               <TableCell>{person.department || "-"}</TableCell>
                               <TableCell>{person.project_count}</TableCell>
                               <TableCell>{formatHours(person.hours)}</TableCell>
                               <TableCell>{formatAmount(person.cost)}</TableCell>
                             </TableRow>
-                          ))}
+                    )}
                         </TableBody>
                       </Table>
                     </div>
-                  )}
+              }
                 </div>
-              )}
+            }
             </CardContent>
           </Card>
 
           {/* 模式识别 */}
-          {analysisData.pattern_analysis && (
-            <Card>
+          {analysisData.pattern_analysis &&
+        <Card>
               <CardHeader>
                 <CardTitle>模式识别</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {analysisData.pattern_analysis.detailed_design_loss_patterns.length > 0 && (
-                    <div>
+                  {analysisData.pattern_analysis.detailed_design_loss_patterns.length > 0 &&
+              <div>
                       <h3 className="text-lg font-semibold mb-3">
                         详细设计后未中标的主要原因
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {analysisData.pattern_analysis.detailed_design_loss_patterns.map(
-                          (pattern, index) => (
-                            <div
-                              key={index}
-                              className="p-4 bg-amber-50 rounded-lg border border-amber-200"
-                            >
+                    (pattern, index) =>
+                    <div
+                      key={index}
+                      className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+
                               <div className="flex items-center justify-between mb-2">
                                 <span className="font-semibold">{pattern.reason}</span>
                                 <Badge variant="outline">{pattern.count}个</Badge>
@@ -413,14 +413,14 @@ export default function LossAnalysis() {
                                 占比: {pattern.percentage}%
                               </p>
                             </div>
-                          )
-                        )}
+
+                  )}
                       </div>
                     </div>
-                  )}
+              }
 
-                  {analysisData.pattern_analysis.salesperson_patterns.length > 0 && (
-                    <div>
+                  {analysisData.pattern_analysis.salesperson_patterns.length > 0 &&
+              <div>
                       <h3 className="text-lg font-semibold mb-3">
                         高投入但未中标率高的销售人员
                       </h3>
@@ -434,24 +434,24 @@ export default function LossAnalysis() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {analysisData.pattern_analysis.salesperson_patterns.map((sp) => (
-                            <TableRow key={sp.person_id}>
+                          {analysisData.pattern_analysis.salesperson_patterns.map((sp) =>
+                    <TableRow key={sp.person_id}>
                               <TableCell>{sp.person_name}</TableCell>
                               <TableCell>{sp.lost_count}</TableCell>
                               <TableCell>{formatHours(sp.total_hours)}</TableCell>
                               <TableCell>{formatAmount(sp.total_cost)}</TableCell>
                             </TableRow>
-                          ))}
+                    )}
                         </TableBody>
                       </Table>
                     </div>
-                  )}
+              }
                 </div>
               </CardContent>
             </Card>
-          )}
+        }
         </motion.div>
-      )}
-    </div>
-  );
+      }
+    </div>);
+
 }

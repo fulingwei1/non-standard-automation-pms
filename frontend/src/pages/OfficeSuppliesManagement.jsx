@@ -22,8 +22,8 @@ import {
   Upload,
   BarChart3,
   Calendar,
-  Building2,
-} from "lucide-react";
+  Building2 } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -43,25 +43,28 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogBody,
-} from "../components/ui";
-import { cn, formatCurrency, formatDate } from "../lib/utils";
-import { fadeIn, staggerContainer } from "../lib/animations";
+  DialogBody } from
+"../components/ui";
+import { cn, formatCurrency, formatDate as _formatDate } from "../lib/utils";
+import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
 import {
   SimpleBarChart,
   MonthlyTrendChart,
-  CategoryBreakdownCard,
-} from "../components/administrative/StatisticsCharts";
+  CategoryBreakdownCard } from
+"../components/administrative/StatisticsCharts";
 import { adminApi } from "../services/api";
 
 // Mock data - 已移除，使用真实API
 
 export default function OfficeSuppliesManagement() {
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [showItemDetail, setShowItemDetail] = useState(false);
+  const mockPurchaseOrders = [];
   const [searchText, setSearchText] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [_loading, setLoading] = useState(false);
+  const [_error, _setError] = useState(null);
   const [supplies, setSupplies] = useState([]);
 
   // Fetch data from API
@@ -75,7 +78,7 @@ export default function OfficeSuppliesManagement() {
         } else if (Array.isArray(res.data)) {
           setSupplies(res.data);
         }
-      } catch (err) {
+      } catch (_err) {
         console.log("Office supplies API unavailable, using mock data");
       }
       setLoading(false);
@@ -85,13 +88,13 @@ export default function OfficeSuppliesManagement() {
 
   const filteredSupplies = useMemo(() => {
     return supplies.filter((item) => {
-      const matchSearch = item.name
-        .toLowerCase()
-        .includes(searchText.toLowerCase());
+      const matchSearch = item.name.
+      toLowerCase().
+      includes(searchText.toLowerCase());
       const matchCategory =
-        categoryFilter === "all" || item.category === categoryFilter;
+      categoryFilter === "all" || item.category === categoryFilter;
       const matchStatus =
-        statusFilter === "all" || item.status === statusFilter;
+      statusFilter === "all" || item.status === statusFilter;
       return matchSearch && matchCategory && matchStatus;
     });
   }, [supplies, searchText, categoryFilter, statusFilter]);
@@ -108,13 +111,13 @@ export default function OfficeSuppliesManagement() {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       <PageHeader
         title="办公用品管理"
         description="办公用品库存管理、采购订单、供应商管理"
         actions={
-          <div className="flex gap-2">
+        <div className="flex gap-2">
             <Button variant="outline">
               <Download className="w-4 h-4 mr-2" />
               导出
@@ -128,8 +131,8 @@ export default function OfficeSuppliesManagement() {
               新建采购订单
             </Button>
           </div>
-        }
-      />
+        } />
+
 
       {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -206,24 +209,24 @@ export default function OfficeSuppliesManagement() {
                 <CategoryBreakdownCard
                   title="库存价值"
                   data={[
-                    {
-                      label: "办公耗材",
-                      value: supplies
-                        .filter((s) => s.category === "办公耗材")
-                        .reduce((sum, s) => sum + s.totalValue, 0),
-                      color: "#3b82f6",
-                    },
-                    {
-                      label: "办公文具",
-                      value: supplies
-                        .filter((s) => s.category === "办公文具")
-                        .reduce((sum, s) => sum + s.totalValue, 0),
-                      color: "#10b981",
-                    },
-                  ]}
+                  {
+                    label: "办公耗材",
+                    value: supplies.
+                    filter((s) => s.category === "办公耗材").
+                    reduce((sum, s) => sum + s.totalValue, 0),
+                    color: "#3b82f6"
+                  },
+                  {
+                    label: "办公文具",
+                    value: supplies.
+                    filter((s) => s.category === "办公文具").
+                    reduce((sum, s) => sum + s.totalValue, 0),
+                    color: "#10b981"
+                  }]
+                  }
                   total={stats.totalValue}
-                  formatValue={formatCurrency}
-                />
+                  formatValue={formatCurrency} />
+
               </CardContent>
             </Card>
             <Card>
@@ -233,15 +236,15 @@ export default function OfficeSuppliesManagement() {
               <CardContent>
                 <MonthlyTrendChart
                   data={[
-                    { month: "2024-10", amount: 42000 },
-                    { month: "2024-11", amount: 38000 },
-                    { month: "2024-12", amount: 45000 },
-                    { month: "2025-01", amount: 45000 },
-                  ]}
+                  { month: "2024-10", amount: 42000 },
+                  { month: "2024-11", amount: 38000 },
+                  { month: "2024-12", amount: 45000 },
+                  { month: "2025-01", amount: 45000 }]
+                  }
                   valueKey="amount"
                   labelKey="month"
-                  height={150}
-                />
+                  height={150} />
+
               </CardContent>
             </Card>
           </div>
@@ -254,13 +257,13 @@ export default function OfficeSuppliesManagement() {
                   placeholder="搜索物品名称..."
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
-                  className="flex-1"
-                />
+                  className="flex-1" />
+
                 <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white"
-                >
+                  className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white">
+
                   <option value="all">全部分类</option>
                   <option value="办公耗材">办公耗材</option>
                   <option value="办公文具">办公文具</option>
@@ -268,8 +271,8 @@ export default function OfficeSuppliesManagement() {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white"
-                >
+                  className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white">
+
                   <option value="all">全部状态</option>
                   <option value="low">低库存</option>
                   <option value="normal">正常</option>
@@ -280,8 +283,8 @@ export default function OfficeSuppliesManagement() {
 
           {/* Items List */}
           <div className="grid grid-cols-1 gap-4">
-            {filteredSupplies.map((item) => (
-              <Card key={item.id}>
+            {filteredSupplies.map((item) =>
+            <Card key={item.id}>
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -290,13 +293,13 @@ export default function OfficeSuppliesManagement() {
                           {item.name}
                         </h3>
                         <Badge
-                          variant="outline"
-                          className={cn(
-                            item.status === "low" &&
-                              "bg-red-500/20 text-red-400 border-red-500/30",
-                            item.status === "normal" && "bg-slate-700/40",
-                          )}
-                        >
+                        variant="outline"
+                        className={cn(
+                          item.status === "low" &&
+                          "bg-red-500/20 text-red-400 border-red-500/30",
+                          item.status === "normal" && "bg-slate-700/40"
+                        )}>
+
                           {item.status === "low" ? "库存不足" : "正常"}
                         </Badge>
                         <Badge variant="outline">{item.category}</Badge>
@@ -332,19 +335,19 @@ export default function OfficeSuppliesManagement() {
                           <span className="text-slate-400">库存率</span>
                           <span className="text-slate-300">
                             {(
-                              (item.currentStock / item.minStock) *
-                              100
-                            ).toFixed(0)}
+                          item.currentStock / item.minStock *
+                          100).
+                          toFixed(0)}
                             %
                           </span>
                         </div>
                         <Progress
-                          value={(item.currentStock / item.minStock) * 100}
-                          className={cn(
-                            "h-2",
-                            item.status === "low" && "bg-red-500/20",
-                          )}
-                        />
+                        value={item.currentStock / item.minStock * 100}
+                        className={cn(
+                          "h-2",
+                          item.status === "low" && "bg-red-500/20"
+                        )} />
+
                       </div>
                       <div className="mt-3 text-xs text-slate-500">
                         供应商: {item.supplier} · 最后采购: {item.lastPurchase}
@@ -352,13 +355,13 @@ export default function OfficeSuppliesManagement() {
                     </div>
                     <div className="flex gap-2 ml-4">
                       <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedItem(item);
-                          setShowItemDetail(true);
-                        }}
-                      >
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedItem(item);
+                        setShowItemDetail(true);
+                      }}>
+
                         <Eye className="w-4 h-4" />
                       </Button>
                       <Button variant="outline" size="sm">
@@ -368,7 +371,7 @@ export default function OfficeSuppliesManagement() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            )}
           </div>
         </TabsContent>
 
@@ -385,11 +388,11 @@ export default function OfficeSuppliesManagement() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockPurchaseOrders.map((order) => (
-                  <div
-                    key={order.id}
-                    className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50"
-                  >
+                {mockPurchaseOrders.map((order) =>
+                <div
+                  key={order.id}
+                  className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50">
+
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
@@ -397,21 +400,21 @@ export default function OfficeSuppliesManagement() {
                             {order.orderNo}
                           </span>
                           <Badge
-                            variant="outline"
-                            className={cn(
-                              order.status === "pending" &&
-                                "bg-amber-500/20 text-amber-400 border-amber-500/30",
-                              order.status === "approved" &&
-                                "bg-green-500/20 text-green-400 border-green-500/30",
-                              order.status === "completed" &&
-                                "bg-blue-500/20 text-blue-400 border-blue-500/30",
-                            )}
-                          >
-                            {order.status === "pending"
-                              ? "待审批"
-                              : order.status === "approved"
-                                ? "已批准"
-                                : "已完成"}
+                          variant="outline"
+                          className={cn(
+                            order.status === "pending" &&
+                            "bg-amber-500/20 text-amber-400 border-amber-500/30",
+                            order.status === "approved" &&
+                            "bg-green-500/20 text-green-400 border-green-500/30",
+                            order.status === "completed" &&
+                            "bg-blue-500/20 text-blue-400 border-blue-500/30"
+                          )}>
+
+                            {order.status === "pending" ?
+                          "待审批" :
+                          order.status === "approved" ?
+                          "已批准" :
+                          "已完成"}
                           </Badge>
                         </div>
                         <div className="grid grid-cols-3 gap-4 text-sm">
@@ -448,7 +451,7 @@ export default function OfficeSuppliesManagement() {
                       </div>
                     </div>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
@@ -467,11 +470,11 @@ export default function OfficeSuppliesManagement() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {supplies.map((item) => (
-                  <div
-                    key={item.id}
-                    className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50"
-                  >
+                {supplies.map((item) =>
+                <div
+                  key={item.id}
+                  className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50">
+
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <h3 className="font-medium text-white mb-1">
@@ -483,14 +486,14 @@ export default function OfficeSuppliesManagement() {
                         </div>
                       </div>
                       <Badge
-                        variant="outline"
-                        className="bg-green-500/20 text-green-400 border-green-500/30"
-                      >
+                      variant="outline"
+                      className="bg-green-500/20 text-green-400 border-green-500/30">
+
                         合作中
                       </Badge>
                     </div>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
@@ -507,17 +510,17 @@ export default function OfficeSuppliesManagement() {
             </DialogDescription>
           </DialogHeader>
           <DialogBody>
-            {selectedItem && (
-              <div className="space-y-4">
+            {selectedItem &&
+            <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <Badge
-                    variant="outline"
-                    className={cn(
-                      selectedItem.status === "low" &&
-                        "bg-red-500/20 text-red-400 border-red-500/30",
-                      selectedItem.status === "normal" && "bg-slate-700/40",
-                    )}
-                  >
+                  variant="outline"
+                  className={cn(
+                    selectedItem.status === "low" &&
+                    "bg-red-500/20 text-red-400 border-red-500/30",
+                    selectedItem.status === "normal" && "bg-slate-700/40"
+                  )}>
+
                     {selectedItem.status === "low" ? "库存不足" : "正常"}
                   </Badge>
                   <Badge variant="outline">{selectedItem.category}</Badge>
@@ -565,22 +568,22 @@ export default function OfficeSuppliesManagement() {
                       <span className="text-slate-400">库存率</span>
                       <span className="text-slate-300">
                         {(
-                          (selectedItem.currentStock / selectedItem.minStock) *
-                          100
-                        ).toFixed(0)}
+                      selectedItem.currentStock / selectedItem.minStock *
+                      100).
+                      toFixed(0)}
                         %
                       </span>
                     </div>
                     <Progress
-                      value={
-                        (selectedItem.currentStock / selectedItem.minStock) *
-                        100
-                      }
-                      className={cn(
-                        "h-2",
-                        selectedItem.status === "low" && "bg-red-500/20",
-                      )}
-                    />
+                    value={
+                    selectedItem.currentStock / selectedItem.minStock *
+                    100
+                    }
+                    className={cn(
+                      "h-2",
+                      selectedItem.status === "low" && "bg-red-500/20"
+                    )} />
+
                   </div>
                 </div>
                 <div className="pt-4 border-t border-slate-700/50 flex gap-2">
@@ -590,10 +593,10 @@ export default function OfficeSuppliesManagement() {
                   </Button>
                 </div>
               </div>
-            )}
+            }
           </DialogBody>
         </DialogContent>
       </Dialog>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

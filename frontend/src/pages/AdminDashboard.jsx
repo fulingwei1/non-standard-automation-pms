@@ -45,8 +45,8 @@ import {
   AlertCircle,
   XCircle,
   Info,
-  Search,
-} from "lucide-react";
+  Search } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -55,8 +55,8 @@ import {
   CardTitle,
   Button,
   Badge,
-  Progress,
-} from "../components/ui";
+  Progress } from
+"../components/ui";
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { ApiIntegrationError } from "../components/ui";
@@ -86,7 +86,7 @@ const defaultStats = {
   loginCountThisWeek: 0,
   lastBackup: null,
   auditLogsToday: 0,
-  auditLogsThisWeek: 0,
+  auditLogsThisWeek: 0
 };
 
 // Mock data - 已移除，使用真实API
@@ -94,21 +94,21 @@ const defaultStats = {
 // Mock data - 已移除，使用真实API
 
 const DEFAULT_PERMISSION_MODULES = [
-  { code: "users", name: "用户管理", description: "创建、停用和分配用户角色" },
-  { code: "roles", name: "角色配置", description: "维护角色及权限组合" },
-  {
-    code: "permissions",
-    name: "权限策略",
-    description: "配置模块、菜单与 API 授权",
-  },
-  { code: "system", name: "系统监控", description: "查看系统运行状态与告警" },
-];
+{ code: "users", name: "用户管理", description: "创建、停用和分配用户角色" },
+{ code: "roles", name: "角色配置", description: "维护角色及权限组合" },
+{
+  code: "permissions",
+  name: "权限策略",
+  description: "配置模块、菜单与 API 授权"
+},
+{ code: "system", name: "系统监控", description: "查看系统运行状态与告警" }];
+
 
 const cloneRolePermissions = (roles) => {
   if (!Array.isArray(roles)) return [];
   return roles.map((role) => ({
     ...role,
-    permissions: Array.isArray(role.permissions) ? [...role.permissions] : [],
+    permissions: Array.isArray(role.permissions) ? [...role.permissions] : []
   }));
 };
 
@@ -120,7 +120,7 @@ const StatCard = ({
   icon: Icon,
   color,
   bg,
-  onClick,
+  onClick
 }) => {
   return (
     <motion.div
@@ -128,38 +128,38 @@ const StatCard = ({
       onClick={onClick}
       className={cn(
         "relative overflow-hidden rounded-lg border border-slate-700/50 bg-gradient-to-br from-slate-800/50 to-slate-900/50 p-5 backdrop-blur transition-all hover:border-slate-600/80 hover:shadow-lg",
-        onClick && "cursor-pointer",
-      )}
-    >
+        onClick && "cursor-pointer"
+      )}>
+
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="text-sm text-slate-400 mb-2">{title}</p>
           <p className={cn("text-2xl font-bold mb-1", color)}>{value}</p>
           {subtitle && <p className="text-xs text-slate-500">{subtitle}</p>}
-          {trend !== undefined && (
-            <div className="flex items-center gap-1 mt-2">
-              {trend > 0 ? (
-                <>
+          {trend !== undefined &&
+          <div className="flex items-center gap-1 mt-2">
+              {trend > 0 ?
+            <>
                   <ArrowUpRight className="w-3 h-3 text-emerald-400" />
                   <span className="text-xs text-emerald-400">+{trend}</span>
-                </>
-              ) : trend < 0 ? (
-                <>
+                </> :
+            trend < 0 ?
+            <>
                   <ArrowDownRight className="w-3 h-3 text-red-400" />
                   <span className="text-xs text-red-400">{trend}</span>
-                </>
-              ) : null}
+                </> :
+            null}
             </div>
-          )}
+          }
         </div>
-        {Icon && (
-          <div className={cn("p-3 rounded-lg", bg)}>
+        {Icon &&
+        <div className={cn("p-3 rounded-lg", bg)}>
             <Icon className={cn("w-5 h-5", color)} />
           </div>
-        )}
+        }
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
 export default function AdminDashboard() {
@@ -170,10 +170,10 @@ export default function AdminDashboard() {
   const [rolePermissions, setRolePermissions] = useState([]);
   const [savedRolePermissions, setSavedRolePermissions] = useState([]);
   const [selectedRoleCode, setSelectedRoleCode] = useState("");
-  const [roleSearchKeyword, setRoleSearchKeyword] = useState("");
-  const [savingPermissions, setSavingPermissions] = useState(false);
+  const [roleSearchKeyword, _setRoleSearchKeyword] = useState("");
+  const [_savingPermissions, setSavingPermissions] = useState(false);
   const [permissionNotice, setPermissionNotice] = useState(null);
-  const permissionModules = DEFAULT_PERMISSION_MODULES;
+  const _permissionModules = DEFAULT_PERMISSION_MODULES;
 
   useEffect(() => {
     // 从后端获取真实统计数据
@@ -226,12 +226,12 @@ export default function AdminDashboard() {
   };
 
   const selectedRole =
-    rolePermissions.find((role) => role.roleCode === selectedRoleCode) || null;
+  rolePermissions.find((role) => role.roleCode === selectedRoleCode) || null;
 
   const isRolePermissionsChanged = (role) => {
     if (!role) return false;
     const savedRole = savedRolePermissions.find(
-      (item) => item.roleCode === role.roleCode,
+      (item) => item.roleCode === role.roleCode
     );
     if (!savedRole) return true;
     if (savedRole.permissions.length !== role.permissions.length) return true;
@@ -240,57 +240,57 @@ export default function AdminDashboard() {
   };
 
   const keyword = roleSearchKeyword.trim().toLowerCase();
-  const filteredRoles = keyword
-    ? rolePermissions.filter((role) => {
-        const roleName = (role.role || "").toLowerCase();
-        const roleCode = (role.roleCode || "").toLowerCase();
-        const desc = (role.description || "").toLowerCase();
-        return (
-          roleName.includes(keyword) ||
-          roleCode.includes(keyword) ||
-          desc.includes(keyword)
-        );
-      })
-    : rolePermissions;
+  const _filteredRoles = keyword ?
+  rolePermissions.filter((role) => {
+    const roleName = (role.role || "").toLowerCase();
+    const roleCode = (role.roleCode || "").toLowerCase();
+    const desc = (role.description || "").toLowerCase();
+    return (
+      roleName.includes(keyword) ||
+      roleCode.includes(keyword) ||
+      desc.includes(keyword));
+
+  }) :
+  rolePermissions;
 
   const hasPendingChanges = rolePermissions.some((role) =>
-    isRolePermissionsChanged(role),
+  isRolePermissionsChanged(role)
   );
-  const selectedRoleChanged = isRolePermissionsChanged(selectedRole);
+  const _selectedRoleChanged = isRolePermissionsChanged(selectedRole);
 
-  const handleRoleSelect = (roleCode) => {
+  const _handleRoleSelect = (roleCode) => {
     setSelectedRoleCode(roleCode);
   };
 
-  const handleTogglePermission = (moduleCode) => {
+  const _handleTogglePermission = (moduleCode) => {
     if (!selectedRoleCode) return;
     setRolePermissions((prev) =>
-      prev.map((role) => {
-        if (role.roleCode !== selectedRoleCode) return role;
-        const hasPermission = role.permissions.includes(moduleCode);
-        return {
-          ...role,
-          permissions: hasPermission
-            ? role.permissions.filter((code) => code !== moduleCode)
-            : [...role.permissions, moduleCode],
-        };
-      }),
+    prev.map((role) => {
+      if (role.roleCode !== selectedRoleCode) return role;
+      const hasPermission = role.permissions.includes(moduleCode);
+      return {
+        ...role,
+        permissions: hasPermission ?
+        role.permissions.filter((code) => code !== moduleCode) :
+        [...role.permissions, moduleCode]
+      };
+    })
     );
   };
 
-  const handleResetPermissions = () => {
+  const _handleResetPermissions = () => {
     setRolePermissions(cloneRolePermissions(savedRolePermissions));
     setPermissionNotice({
       type: "info",
-      message: "已恢复到最近保存的配置（模拟数据）",
+      message: "已恢复到最近保存的配置（模拟数据）"
     });
   };
 
-  const handleSavePermissions = () => {
+  const _handleSavePermissions = () => {
     if (!hasPendingChanges) {
       setPermissionNotice({
         type: "warning",
-        message: "当前没有新的变更需要保存",
+        message: "当前没有新的变更需要保存"
       });
       return;
     }
@@ -300,7 +300,7 @@ export default function AdminDashboard() {
       setSavedRolePermissions(cloneRolePermissions(rolePermissions));
       setPermissionNotice({
         type: "success",
-        message: "权限配置已保存（仅 UI 演示）",
+        message: "权限配置已保存（仅 UI 演示）"
       });
     }, 600);
   };
@@ -311,8 +311,8 @@ export default function AdminDashboard() {
       <div className="space-y-6 p-6">
         <PageHeader
           title="管理员工作台"
-          subtitle="系统配置、用户管理、权限分配、系统维护"
-        />
+          subtitle="系统配置、用户管理、权限分配、系统维护" />
+
         <ApiIntegrationError
           error={error}
           apiEndpoint="/api/v1/admin/stats"
@@ -333,18 +333,18 @@ export default function AdminDashboard() {
               }
             };
             fetchStats();
-          }}
-        />
-      </div>
-    );
+          }} />
+
+      </div>);
+
   }
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-slate-400">加载中...</div>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -352,12 +352,12 @@ export default function AdminDashboard() {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="space-y-6 p-6"
-    >
+      className="space-y-6 p-6">
+
       <PageHeader
         title="管理员工作台"
-        subtitle="系统配置、用户管理、权限分配、系统维护"
-      />
+        subtitle="系统配置、用户管理、权限分配、系统维护" />
+
 
       {/* System Overview Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -369,8 +369,8 @@ export default function AdminDashboard() {
           icon={Users}
           color="text-blue-400"
           bg="bg-blue-500/10"
-          onClick={() => handleStatCardClick("users")}
-        />
+          onClick={() => handleStatCardClick("users")} />
+
         <StatCard
           title="角色总数"
           value={stats.totalRoles}
@@ -379,8 +379,8 @@ export default function AdminDashboard() {
           icon={Shield}
           color="text-purple-400"
           bg="bg-purple-500/10"
-          onClick={() => handleStatCardClick("roles")}
-        />
+          onClick={() => handleStatCardClick("roles")} />
+
         <StatCard
           title="权限总数"
           value={stats.totalPermissions}
@@ -388,8 +388,8 @@ export default function AdminDashboard() {
           icon={Key}
           color="text-amber-400"
           bg="bg-amber-500/10"
-          onClick={() => handleStatCardClick("permissions")}
-        />
+          onClick={() => handleStatCardClick("permissions")} />
+
         <StatCard
           title="系统可用性"
           value={`${stats.systemUptime}%`}
@@ -397,8 +397,8 @@ export default function AdminDashboard() {
           icon={Activity}
           color="text-emerald-400"
           bg="bg-emerald-500/10"
-          onClick={() => handleStatCardClick("system")}
-        />
+          onClick={() => handleStatCardClick("system")} />
+
       </div>
 
       {/* Quick Actions */}
@@ -427,32 +427,32 @@ export default function AdminDashboard() {
               // 系统概览保持在当前页面，滚动到顶部
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            className="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all bg-slate-700 text-white hover:bg-slate-600"
-          >
+            className="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all bg-slate-700 text-white hover:bg-slate-600">
+
             系统概览
           </button>
           <button
             onClick={() => navigate("/user-management")}
-            className="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-300 hover:bg-slate-700 hover:text-white"
-          >
+            className="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-300 hover:bg-slate-700 hover:text-white">
+
             用户管理
           </button>
           <button
             onClick={() => navigate("/role-management")}
-            className="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-300 hover:bg-slate-700 hover:text-white"
-          >
+            className="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-300 hover:bg-slate-700 hover:text-white">
+
             角色权限
           </button>
           <button
             onClick={() => navigate("/scheduler-monitoring")}
-            className="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-300 hover:bg-slate-700 hover:text-white"
-          >
+            className="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-300 hover:bg-slate-700 hover:text-white">
+
             系统监控
           </button>
           <button
             onClick={() => navigate("/scheduler-monitoring")}
-            className="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-300 hover:bg-slate-700 hover:text-white"
-          >
+            className="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-300 hover:bg-slate-700 hover:text-white">
+
             活动日志
           </button>
         </div>
@@ -575,6 +575,6 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

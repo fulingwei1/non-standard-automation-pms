@@ -19,8 +19,8 @@ import {
   Clock,
   Edit,
   Eye,
-  ArrowRight,
-} from "lucide-react";
+  ArrowRight } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -41,8 +41,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../components/ui";
+  DropdownMenuTrigger } from
+"../components/ui";
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { opportunityApi, customerApi } from "../services/api";
@@ -52,30 +52,30 @@ const stageConfig = {
   DISCOVERY: {
     label: "需求澄清",
     color: "bg-blue-500",
-    textColor: "text-blue-400",
+    textColor: "text-blue-400"
   },
   QUALIFIED: {
     label: "商机合格",
     color: "bg-emerald-500",
-    textColor: "text-emerald-400",
+    textColor: "text-emerald-400"
   },
   PROPOSAL: {
     label: "方案/报价中",
     color: "bg-amber-500",
-    textColor: "text-amber-400",
+    textColor: "text-amber-400"
   },
   NEGOTIATION: {
     label: "商务谈判",
     color: "bg-purple-500",
-    textColor: "text-purple-400",
+    textColor: "text-purple-400"
   },
   WON: { label: "赢单", color: "bg-green-500", textColor: "text-green-400" },
   LOST: { label: "丢单", color: "bg-red-500", textColor: "text-red-400" },
   ON_HOLD: {
     label: "暂停",
     color: "bg-slate-500",
-    textColor: "text-slate-400",
-  },
+    textColor: "text-slate-400"
+  }
 };
 
 export default function OpportunityManagement() {
@@ -86,7 +86,7 @@ export default function OpportunityManagement() {
   const [stageFilter, setStageFilter] = useState("all");
   const [selectedOpp, setSelectedOpp] = useState(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [_showEditDialog, setShowEditDialog] = useState(false);
   const [showGateDialog, setShowGateDialog] = useState(false);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [page, setPage] = useState(1);
@@ -110,13 +110,13 @@ export default function OpportunityManagement() {
       ct_seconds: "",
       interface_desc: "",
       site_constraints: "",
-      acceptance_criteria: "",
-    },
+      acceptance_criteria: ""
+    }
   });
 
   const [gateData, setGateData] = useState({
     gate_status: "PASS",
-    remark: "",
+    remark: ""
   });
 
   const loadOpportunities = async () => {
@@ -126,7 +126,7 @@ export default function OpportunityManagement() {
         page,
         page_size: pageSize,
         keyword: searchTerm || undefined,
-        stage: stageFilter !== "all" ? stageFilter : undefined,
+        stage: stageFilter !== "all" ? stageFilter : undefined
       };
       const response = await opportunityApi.list(params);
       if (response.data && response.data.items) {
@@ -171,7 +171,7 @@ export default function OpportunityManagement() {
     }
   };
 
-  const handleUpdate = async () => {
+  const _handleUpdate = async () => {
     if (!selectedOpp) return;
     try {
       await opportunityApi.update(selectedOpp.id, formData);
@@ -194,7 +194,7 @@ export default function OpportunityManagement() {
     } catch (error) {
       console.error("提交阶段门失败:", error);
       alert(
-        "提交阶段门失败: " + (error.response?.data?.detail || error.message),
+        "提交阶段门失败: " + (error.response?.data?.detail || error.message)
       );
     }
   };
@@ -218,8 +218,8 @@ export default function OpportunityManagement() {
         ct_seconds: "",
         interface_desc: "",
         site_constraints: "",
-        acceptance_criteria: "",
-      },
+        acceptance_criteria: ""
+      }
     });
     setShowEditDialog(true);
   };
@@ -242,8 +242,8 @@ export default function OpportunityManagement() {
         ct_seconds: "",
         interface_desc: "",
         site_constraints: "",
-        acceptance_criteria: "",
-      },
+        acceptance_criteria: ""
+      }
     });
   };
 
@@ -270,8 +270,8 @@ export default function OpportunityManagement() {
       won: opportunities.filter((o) => o.stage === "WON").length,
       totalAmount: opportunities.reduce(
         (sum, o) => sum + (parseFloat(o.est_amount) || 0),
-        0,
-      ),
+        0
+      )
     };
   }, [opportunities, total]);
 
@@ -280,18 +280,18 @@ export default function OpportunityManagement() {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="space-y-6 p-6"
-    >
+      className="space-y-6 p-6">
+
       <PageHeader
         title="商机管理"
         description="管理销售商机，跟踪项目进展"
         action={
-          <Button onClick={() => setShowCreateDialog(true)}>
+        <Button onClick={() => setShowCreateDialog(true)}>
             <Plus className="mr-2 h-4 w-4" />
             新建商机
           </Button>
-        }
-      />
+        } />
+
 
       {/* 统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -357,31 +357,31 @@ export default function OpportunityManagement() {
                 placeholder="搜索商机编码、名称..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+                className="pl-10" />
+
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">
                   <Filter className="mr-2 h-4 w-4" />
                   阶段:{" "}
-                  {stageFilter === "all"
-                    ? "全部"
-                    : stageConfig[stageFilter]?.label}
+                  {stageFilter === "all" ?
+                  "全部" :
+                  stageConfig[stageFilter]?.label}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem onClick={() => setStageFilter("all")}>
                   全部
                 </DropdownMenuItem>
-                {Object.entries(stageConfig).map(([key, config]) => (
-                  <DropdownMenuItem
-                    key={key}
-                    onClick={() => setStageFilter(key)}
-                  >
+                {Object.entries(stageConfig).map(([key, config]) =>
+                <DropdownMenuItem
+                  key={key}
+                  onClick={() => setStageFilter(key)}>
+
                     {config.label}
                   </DropdownMenuItem>
-                ))}
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -389,18 +389,18 @@ export default function OpportunityManagement() {
       </Card>
 
       {/* 商机列表 */}
-      {loading ? (
-        <div className="text-center py-12 text-slate-400">加载中...</div>
-      ) : opportunities.length === 0 ? (
-        <Card>
+      {loading ?
+      <div className="text-center py-12 text-slate-400">加载中...</div> :
+      opportunities.length === 0 ?
+      <Card>
           <CardContent className="p-12 text-center">
             <p className="text-slate-400">暂无商机数据</p>
           </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {opportunities.map((opp) => (
-            <motion.div key={opp.id} variants={fadeIn} whileHover={{ y: -4 }}>
+        </Card> :
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {opportunities.map((opp) =>
+        <motion.div key={opp.id} variants={fadeIn} whileHover={{ y: -4 }}>
               <Card className="h-full hover:border-blue-500 transition-colors">
                 <CardHeader>
                   <div className="flex items-start justify-between">
@@ -421,47 +421,47 @@ export default function OpportunityManagement() {
                       <Building2 className="h-4 w-4 text-slate-400" />
                       {opp.customer_name}
                     </div>
-                    {opp.est_amount && (
-                      <div className="flex items-center gap-2 text-slate-300">
+                    {opp.est_amount &&
+                <div className="flex items-center gap-2 text-slate-300">
                         <DollarSign className="h-4 w-4 text-slate-400" />
                         {parseFloat(opp.est_amount).toLocaleString()} 元
                       </div>
-                    )}
-                    {opp.owner_name && (
-                      <div className="flex items-center gap-2 text-slate-300">
+                }
+                    {opp.owner_name &&
+                <div className="flex items-center gap-2 text-slate-300">
                         <User className="h-4 w-4 text-slate-400" />
                         负责人: {opp.owner_name}
                       </div>
-                    )}
+                }
                   </div>
                   <div className="flex gap-2 mt-4">
                     <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleViewDetail(opp)}
-                      className="flex-1"
-                    >
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleViewDetail(opp)}
+                  className="flex-1">
+
                       <Eye className="mr-2 h-4 w-4" />
                       详情
                     </Button>
                     <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(opp)}
-                      className="flex-1"
-                    >
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEdit(opp)}
+                  className="flex-1">
+
                       <Edit className="mr-2 h-4 w-4" />
                       编辑
                     </Button>
                     <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedOpp(opp);
-                        setShowGateDialog(true);
-                      }}
-                      className="flex-1"
-                    >
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedOpp(opp);
+                    setShowGateDialog(true);
+                  }}
+                  className="flex-1">
+
                       <CheckCircle2 className="mr-2 h-4 w-4" />
                       阶段门
                     </Button>
@@ -469,32 +469,32 @@ export default function OpportunityManagement() {
                 </CardContent>
               </Card>
             </motion.div>
-          ))}
+        )}
         </div>
-      )}
+      }
 
       {/* 分页 */}
-      {total > pageSize && (
-        <div className="flex justify-center gap-2">
+      {total > pageSize &&
+      <div className="flex justify-center gap-2">
           <Button
-            variant="outline"
-            disabled={page === 1}
-            onClick={() => setPage(page - 1)}
-          >
+          variant="outline"
+          disabled={page === 1}
+          onClick={() => setPage(page - 1)}>
+
             上一页
           </Button>
           <span className="flex items-center px-4 text-slate-400">
             第 {page} 页，共 {Math.ceil(total / pageSize)} 页
           </span>
           <Button
-            variant="outline"
-            disabled={page >= Math.ceil(total / pageSize)}
-            onClick={() => setPage(page + 1)}
-          >
+          variant="outline"
+          disabled={page >= Math.ceil(total / pageSize)}
+          onClick={() => setPage(page + 1)}>
+
             下一页
           </Button>
         </div>
-      )}
+      }
 
       {/* 创建商机对话框 */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
@@ -510,16 +510,16 @@ export default function OpportunityManagement() {
                 <select
                   value={formData.customer_id}
                   onChange={(e) =>
-                    setFormData({ ...formData, customer_id: e.target.value })
+                  setFormData({ ...formData, customer_id: e.target.value })
                   }
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
-                >
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white">
+
                   <option value="">请选择客户</option>
-                  {customers.map((customer) => (
-                    <option key={customer.id} value={customer.id}>
+                  {customers.map((customer) =>
+                  <option key={customer.id} value={customer.id}>
                       {customer.customer_name}
                     </option>
-                  ))}
+                  )}
                 </select>
               </div>
               <div>
@@ -527,45 +527,45 @@ export default function OpportunityManagement() {
                 <Input
                   value={formData.opp_name}
                   onChange={(e) =>
-                    setFormData({ ...formData, opp_name: e.target.value })
+                  setFormData({ ...formData, opp_name: e.target.value })
                   }
-                  placeholder="请输入商机名称"
-                />
+                  placeholder="请输入商机名称" />
+
               </div>
               <div>
                 <Label>项目类型</Label>
                 <Input
                   value={formData.project_type}
                   onChange={(e) =>
-                    setFormData({ ...formData, project_type: e.target.value })
+                  setFormData({ ...formData, project_type: e.target.value })
                   }
-                  placeholder="单机/线体/改造"
-                />
+                  placeholder="单机/线体/改造" />
+
               </div>
               <div>
                 <Label>设备类型</Label>
                 <Input
                   value={formData.equipment_type}
                   onChange={(e) =>
-                    setFormData({ ...formData, equipment_type: e.target.value })
+                  setFormData({ ...formData, equipment_type: e.target.value })
                   }
-                  placeholder="ICT/FCT/EOL"
-                />
+                  placeholder="ICT/FCT/EOL" />
+
               </div>
               <div>
                 <Label>阶段</Label>
                 <select
                   value={formData.stage}
                   onChange={(e) =>
-                    setFormData({ ...formData, stage: e.target.value })
+                  setFormData({ ...formData, stage: e.target.value })
                   }
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
-                >
-                  {Object.entries(stageConfig).map(([key, config]) => (
-                    <option key={key} value={key}>
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white">
+
+                  {Object.entries(stageConfig).map(([key, config]) =>
+                  <option key={key} value={key}>
                       {config.label}
                     </option>
-                  ))}
+                  )}
                 </select>
               </div>
               <div>
@@ -574,10 +574,10 @@ export default function OpportunityManagement() {
                   type="number"
                   value={formData.est_amount}
                   onChange={(e) =>
-                    setFormData({ ...formData, est_amount: e.target.value })
+                  setFormData({ ...formData, est_amount: e.target.value })
                   }
-                  placeholder="请输入预估金额"
-                />
+                  placeholder="请输入预估金额" />
+
               </div>
               <div>
                 <Label>预估毛利率 (%)</Label>
@@ -585,20 +585,20 @@ export default function OpportunityManagement() {
                   type="number"
                   value={formData.est_margin}
                   onChange={(e) =>
-                    setFormData({ ...formData, est_margin: e.target.value })
+                  setFormData({ ...formData, est_margin: e.target.value })
                   }
-                  placeholder="请输入预估毛利率"
-                />
+                  placeholder="请输入预估毛利率" />
+
               </div>
               <div>
                 <Label>预算范围</Label>
                 <Input
                   value={formData.budget_range}
                   onChange={(e) =>
-                    setFormData({ ...formData, budget_range: e.target.value })
+                  setFormData({ ...formData, budget_range: e.target.value })
                   }
-                  placeholder="如: 80-120万"
-                />
+                  placeholder="如: 80-120万" />
+
               </div>
             </div>
             <div>
@@ -606,32 +606,32 @@ export default function OpportunityManagement() {
               <Textarea
                 value={formData.decision_chain}
                 onChange={(e) =>
-                  setFormData({ ...formData, decision_chain: e.target.value })
+                setFormData({ ...formData, decision_chain: e.target.value })
                 }
                 placeholder="请输入决策链信息"
-                rows={2}
-              />
+                rows={2} />
+
             </div>
             <div>
               <Label>交付窗口</Label>
               <Input
                 value={formData.delivery_window}
                 onChange={(e) =>
-                  setFormData({ ...formData, delivery_window: e.target.value })
+                setFormData({ ...formData, delivery_window: e.target.value })
                 }
-                placeholder="如: 2026年Q2"
-              />
+                placeholder="如: 2026年Q2" />
+
             </div>
             <div>
               <Label>验收依据</Label>
               <Textarea
                 value={formData.acceptance_basis}
                 onChange={(e) =>
-                  setFormData({ ...formData, acceptance_basis: e.target.value })
+                setFormData({ ...formData, acceptance_basis: e.target.value })
                 }
                 placeholder="请输入验收依据"
-                rows={2}
-              />
+                rows={2} />
+
             </div>
             <div className="border-t border-slate-700 pt-4">
               <h4 className="text-sm font-semibold mb-2">需求信息</h4>
@@ -641,16 +641,16 @@ export default function OpportunityManagement() {
                   <Input
                     value={formData.requirement.product_object}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        requirement: {
-                          ...formData.requirement,
-                          product_object: e.target.value,
-                        },
-                      })
+                    setFormData({
+                      ...formData,
+                      requirement: {
+                        ...formData.requirement,
+                        product_object: e.target.value
+                      }
+                    })
                     }
-                    placeholder="如: PCB板"
-                  />
+                    placeholder="如: PCB板" />
+
                 </div>
                 <div>
                   <Label>节拍 (秒)</Label>
@@ -658,67 +658,67 @@ export default function OpportunityManagement() {
                     type="number"
                     value={formData.requirement.ct_seconds}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        requirement: {
-                          ...formData.requirement,
-                          ct_seconds: e.target.value,
-                        },
-                      })
+                    setFormData({
+                      ...formData,
+                      requirement: {
+                        ...formData.requirement,
+                        ct_seconds: e.target.value
+                      }
+                    })
                     }
-                    placeholder="如: 1"
-                  />
+                    placeholder="如: 1" />
+
                 </div>
                 <div className="col-span-2">
                   <Label>接口/通信协议</Label>
                   <Textarea
                     value={formData.requirement.interface_desc}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        requirement: {
-                          ...formData.requirement,
-                          interface_desc: e.target.value,
-                        },
-                      })
+                    setFormData({
+                      ...formData,
+                      requirement: {
+                        ...formData.requirement,
+                        interface_desc: e.target.value
+                      }
+                    })
                     }
                     placeholder="如: RS232/以太网"
-                    rows={2}
-                  />
+                    rows={2} />
+
                 </div>
                 <div className="col-span-2">
                   <Label>现场约束</Label>
                   <Textarea
                     value={formData.requirement.site_constraints}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        requirement: {
-                          ...formData.requirement,
-                          site_constraints: e.target.value,
-                        },
-                      })
+                    setFormData({
+                      ...formData,
+                      requirement: {
+                        ...formData.requirement,
+                        site_constraints: e.target.value
+                      }
+                    })
                     }
                     placeholder="请输入现场约束条件"
-                    rows={2}
-                  />
+                    rows={2} />
+
                 </div>
                 <div className="col-span-2">
                   <Label>验收依据</Label>
                   <Textarea
                     value={formData.requirement.acceptance_criteria}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        requirement: {
-                          ...formData.requirement,
-                          acceptance_criteria: e.target.value,
-                        },
-                      })
+                    setFormData({
+                      ...formData,
+                      requirement: {
+                        ...formData.requirement,
+                        acceptance_criteria: e.target.value
+                      }
+                    })
                     }
                     placeholder="如: 节拍≤1秒，良率≥99.5%"
-                    rows={2}
-                  />
+                    rows={2} />
+
                 </div>
               </div>
             </div>
@@ -726,8 +726,8 @@ export default function OpportunityManagement() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowCreateDialog(false)}
-            >
+              onClick={() => setShowCreateDialog(false)}>
+
               取消
             </Button>
             <Button onClick={handleCreate}>创建</Button>
@@ -748,10 +748,10 @@ export default function OpportunityManagement() {
               <select
                 value={gateData.gate_status}
                 onChange={(e) =>
-                  setGateData({ ...gateData, gate_status: e.target.value })
+                setGateData({ ...gateData, gate_status: e.target.value })
                 }
-                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
-              >
+                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white">
+
                 <option value="PASS">通过</option>
                 <option value="REJECT">拒绝</option>
               </select>
@@ -761,11 +761,11 @@ export default function OpportunityManagement() {
               <Textarea
                 value={gateData.remark}
                 onChange={(e) =>
-                  setGateData({ ...gateData, remark: e.target.value })
+                setGateData({ ...gateData, remark: e.target.value })
                 }
                 placeholder="请输入备注"
-                rows={3}
-              />
+                rows={3} />
+
             </div>
           </div>
           <DialogFooter>
@@ -784,8 +784,8 @@ export default function OpportunityManagement() {
             <DialogTitle>商机详情</DialogTitle>
             <DialogDescription>查看商机详细信息和需求</DialogDescription>
           </DialogHeader>
-          {selectedOpp && (
-            <div className="space-y-6">
+          {selectedOpp &&
+          <div className="space-y-6">
               {/* 基本信息 */}
               <div>
                 <h3 className="text-lg font-semibold mb-4">基本信息</h3>
@@ -805,11 +805,11 @@ export default function OpportunityManagement() {
                   <div>
                     <Label className="text-slate-400">阶段</Label>
                     <Badge
-                      className={cn(
-                        stageConfig[selectedOpp.stage]?.color,
-                        "mt-1",
-                      )}
-                    >
+                    className={cn(
+                      stageConfig[selectedOpp.stage]?.color,
+                      "mt-1"
+                    )}>
+
                       {stageConfig[selectedOpp.stage]?.label}
                     </Badge>
                   </div>
@@ -828,18 +828,18 @@ export default function OpportunityManagement() {
                   <div>
                     <Label className="text-slate-400">预估金额</Label>
                     <p className="text-white">
-                      {selectedOpp.est_amount
-                        ? parseFloat(selectedOpp.est_amount).toLocaleString() +
-                          " 元"
-                        : "-"}
+                      {selectedOpp.est_amount ?
+                    parseFloat(selectedOpp.est_amount).toLocaleString() +
+                    " 元" :
+                    "-"}
                     </p>
                   </div>
                   <div>
                     <Label className="text-slate-400">预估毛利率</Label>
                     <p className="text-white">
-                      {selectedOpp.est_margin
-                        ? selectedOpp.est_margin + "%"
-                        : "-"}
+                      {selectedOpp.est_margin ?
+                    selectedOpp.est_margin + "%" :
+                    "-"}
                     </p>
                   </div>
                   <div>
@@ -870,8 +870,8 @@ export default function OpportunityManagement() {
               </div>
 
               {/* 需求信息 */}
-              {selectedOpp.requirement && (
-                <div>
+              {selectedOpp.requirement &&
+            <div>
                   <h3 className="text-lg font-semibold mb-4">需求信息</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -906,19 +906,19 @@ export default function OpportunityManagement() {
                     </div>
                   </div>
                 </div>
-              )}
+            }
             </div>
-          )}
+          }
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowDetailDialog(false)}
-            >
+              onClick={() => setShowDetailDialog(false)}>
+
               关闭
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

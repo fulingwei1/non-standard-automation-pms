@@ -10,16 +10,16 @@ import {
   Eye,
   Edit,
   CheckSquare,
-  Trash2,
-} from "lucide-react";
+  Trash2 } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
-} from "../components/ui/card";
+  CardDescription } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -28,31 +28,31 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "../components/ui/table";
+  TableRow } from
+"../components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogBody,
-  DialogFooter,
-} from "../components/ui/dialog";
+  DialogFooter } from
+"../components/ui/dialog";
 import { formatDate } from "../lib/utils";
 import { acceptanceApi } from "../services/api";
 
 const typeConfigs = {
   FAT: { label: "出厂验收", color: "bg-blue-500" },
   SAT: { label: "现场验收", color: "bg-purple-500" },
-  FINAL: { label: "终验收", color: "bg-emerald-500" },
+  FINAL: { label: "终验收", color: "bg-emerald-500" }
 };
 
 export default function AcceptanceTemplateManagement() {
@@ -63,7 +63,7 @@ export default function AcceptanceTemplateManagement() {
   const [filterType, setFilterType] = useState("");
   // Dialogs
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [_showEditDialog, _setShowEditDialog] = useState(false);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [showItemsDialog, setShowItemsDialog] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
@@ -74,7 +74,7 @@ export default function AcceptanceTemplateManagement() {
     template_type: "FAT",
     category: "",
     description: "",
-    version: "1.0",
+    version: "1.0"
   });
   const [newItem, setNewItem] = useState({
     item_code: "",
@@ -84,7 +84,7 @@ export default function AcceptanceTemplateManagement() {
     standard_value: "",
     unit: "",
     is_required: true,
-    is_key_item: false,
+    is_key_item: false
   });
 
   useEffect(() => {
@@ -159,7 +159,7 @@ export default function AcceptanceTemplateManagement() {
     try {
       await acceptanceApi.templates.addItems(selectedTemplate.id, {
         category_id: null,
-        items: [newItem],
+        items: [newItem]
       });
       setNewItem({
         item_code: "",
@@ -169,13 +169,13 @@ export default function AcceptanceTemplateManagement() {
         standard_value: "",
         unit: "",
         is_required: true,
-        is_key_item: false,
+        is_key_item: false
       });
       await fetchTemplateItems(selectedTemplate.id);
     } catch (error) {
       console.error("Failed to add item:", error);
       alert(
-        "添加检查项失败: " + (error.response?.data?.detail || error.message),
+        "添加检查项失败: " + (error.response?.data?.detail || error.message)
       );
     }
   };
@@ -186,7 +186,7 @@ export default function AcceptanceTemplateManagement() {
       template_type: "FAT",
       category: "",
       description: "",
-      version: "1.0",
+      version: "1.0"
     });
     setSelectedTemplate(null);
   };
@@ -197,8 +197,8 @@ export default function AcceptanceTemplateManagement() {
         const keyword = searchKeyword.toLowerCase();
         return (
           template.template_name?.toLowerCase().includes(keyword) ||
-          template.category?.toLowerCase().includes(keyword)
-        );
+          template.category?.toLowerCase().includes(keyword));
+
       }
       return true;
     });
@@ -208,8 +208,8 @@ export default function AcceptanceTemplateManagement() {
     <div className="space-y-6 p-6">
       <PageHeader
         title="验收模板管理"
-        description="验收模板列表、创建、编辑、检查项管理"
-      />
+        description="验收模板列表、创建、编辑、检查项管理" />
+
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
@@ -220,8 +220,8 @@ export default function AcceptanceTemplateManagement() {
                 placeholder="搜索模板名称、分类..."
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
-                className="pl-10"
-              />
+                className="pl-10" />
+
             </div>
             <Select value={filterType} onValueChange={setFilterType}>
               <SelectTrigger>
@@ -229,11 +229,11 @@ export default function AcceptanceTemplateManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部类型</SelectItem>
-                {Object.entries(typeConfigs).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
+                {Object.entries(typeConfigs).map(([key, config]) =>
+                <SelectItem key={key} value={key}>
                     {config.label}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -255,12 +255,12 @@ export default function AcceptanceTemplateManagement() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="text-center py-8 text-slate-400">加载中...</div>
-          ) : filteredTemplates.length === 0 ? (
-            <div className="text-center py-8 text-slate-400">暂无模板</div>
-          ) : (
-            <Table>
+          {loading ?
+          <div className="text-center py-8 text-slate-400">加载中...</div> :
+          filteredTemplates.length === 0 ?
+          <div className="text-center py-8 text-slate-400">暂无模板</div> :
+
+          <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>模板名称</TableHead>
@@ -273,53 +273,53 @@ export default function AcceptanceTemplateManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredTemplates.map((template) => (
-                  <TableRow key={template.id}>
+                {filteredTemplates.map((template) =>
+              <TableRow key={template.id}>
                     <TableCell className="font-medium">
                       {template.template_name}
                     </TableCell>
                     <TableCell>
                       <Badge
-                        className={
-                          typeConfigs[template.template_type]?.color ||
-                          "bg-slate-500"
-                        }
-                      >
+                    className={
+                    typeConfigs[template.template_type]?.color ||
+                    "bg-slate-500"
+                    }>
+
                         {typeConfigs[template.template_type]?.label ||
-                          template.template_type}
+                    template.template_type}
                       </Badge>
                     </TableCell>
                     <TableCell>{template.category || "-"}</TableCell>
                     <TableCell>{template.version || "1.0"}</TableCell>
                     <TableCell>{template.item_count || 0}</TableCell>
                     <TableCell className="text-slate-500 text-sm">
-                      {template.created_at
-                        ? formatDate(template.created_at)
-                        : "-"}
+                      {template.created_at ?
+                  formatDate(template.created_at) :
+                  "-"}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewDetail(template.id)}
-                        >
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleViewDetail(template.id)}>
+
                           <Eye className="w-4 h-4" />
                         </Button>
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewItems(template.id)}
-                        >
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleViewItems(template.id)}>
+
                           <CheckSquare className="w-4 h-4" />
                         </Button>
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+              )}
               </TableBody>
             </Table>
-          )}
+          }
         </CardContent>
       </Card>
       {/* Create Dialog */}
@@ -337,13 +337,13 @@ export default function AcceptanceTemplateManagement() {
                 <Input
                   value={templateForm.template_name}
                   onChange={(e) =>
-                    setTemplateForm({
-                      ...templateForm,
-                      template_name: e.target.value,
-                    })
+                  setTemplateForm({
+                    ...templateForm,
+                    template_name: e.target.value
+                  })
                   }
-                  placeholder="请输入模板名称"
-                />
+                  placeholder="请输入模板名称" />
+
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -353,18 +353,18 @@ export default function AcceptanceTemplateManagement() {
                   <Select
                     value={templateForm.template_type}
                     onValueChange={(val) =>
-                      setTemplateForm({ ...templateForm, template_type: val })
-                    }
-                  >
+                    setTemplateForm({ ...templateForm, template_type: val })
+                    }>
+
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(typeConfigs).map(([key, config]) => (
-                        <SelectItem key={key} value={key}>
+                      {Object.entries(typeConfigs).map(([key, config]) =>
+                      <SelectItem key={key} value={key}>
                           {config.label}
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -373,13 +373,13 @@ export default function AcceptanceTemplateManagement() {
                   <Input
                     value={templateForm.version}
                     onChange={(e) =>
-                      setTemplateForm({
-                        ...templateForm,
-                        version: e.target.value,
-                      })
+                    setTemplateForm({
+                      ...templateForm,
+                      version: e.target.value
+                    })
                     }
-                    placeholder="1.0"
-                  />
+                    placeholder="1.0" />
+
                 </div>
               </div>
               <div>
@@ -387,13 +387,13 @@ export default function AcceptanceTemplateManagement() {
                 <Input
                   value={templateForm.category}
                   onChange={(e) =>
-                    setTemplateForm({
-                      ...templateForm,
-                      category: e.target.value,
-                    })
+                  setTemplateForm({
+                    ...templateForm,
+                    category: e.target.value
+                  })
                   }
-                  placeholder="模板分类"
-                />
+                  placeholder="模板分类" />
+
               </div>
               <div>
                 <label className="text-sm font-medium mb-2 block">描述</label>
@@ -401,21 +401,21 @@ export default function AcceptanceTemplateManagement() {
                   className="w-full min-h-[80px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={templateForm.description}
                   onChange={(e) =>
-                    setTemplateForm({
-                      ...templateForm,
-                      description: e.target.value,
-                    })
+                  setTemplateForm({
+                    ...templateForm,
+                    description: e.target.value
+                  })
                   }
-                  placeholder="模板描述..."
-                />
+                  placeholder="模板描述..." />
+
               </div>
             </div>
           </DialogBody>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowCreateDialog(false)}
-            >
+              onClick={() => setShowCreateDialog(false)}>
+
               取消
             </Button>
             <Button onClick={handleCreate}>创建</Button>
@@ -431,8 +431,8 @@ export default function AcceptanceTemplateManagement() {
             </DialogTitle>
           </DialogHeader>
           <DialogBody>
-            {selectedTemplate && (
-              <div className="space-y-4">
+            {selectedTemplate &&
+            <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <div className="text-sm text-slate-500 mb-1">模板名称</div>
@@ -441,10 +441,10 @@ export default function AcceptanceTemplateManagement() {
                   <div>
                     <div className="text-sm text-slate-500 mb-1">模板类型</div>
                     <Badge
-                      className={
-                        typeConfigs[selectedTemplate.template_type]?.color
-                      }
-                    >
+                    className={
+                    typeConfigs[selectedTemplate.template_type]?.color
+                    }>
+
                       {typeConfigs[selectedTemplate.template_type]?.label}
                     </Badge>
                   </div>
@@ -457,22 +457,22 @@ export default function AcceptanceTemplateManagement() {
                     <div>{selectedTemplate.version || "1.0"}</div>
                   </div>
                 </div>
-                {selectedTemplate.description && (
-                  <div>
+                {selectedTemplate.description &&
+              <div>
                     <div className="text-sm text-slate-500 mb-1">描述</div>
                     <div>{selectedTemplate.description}</div>
                   </div>
-                )}
+              }
                 <div>
                   <div className="text-sm text-slate-500 mb-2">检查项列表</div>
                   <div className="space-y-2">
-                    {templateItems.length === 0 ? (
-                      <div className="text-center py-4 text-slate-400">
+                    {templateItems.length === 0 ?
+                  <div className="text-center py-4 text-slate-400">
                         暂无检查项
-                      </div>
-                    ) : (
-                      templateItems.map((item) => (
-                        <div key={item.id} className="border rounded-lg p-3">
+                      </div> :
+
+                  templateItems.map((item) =>
+                  <div key={item.id} className="border rounded-lg p-3">
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <div className="font-medium">
@@ -480,48 +480,48 @@ export default function AcceptanceTemplateManagement() {
                               </div>
                               <div className="text-xs text-slate-500 mt-1">
                                 {item.item_code}{" "}
-                                {item.is_key_item && (
-                                  <Badge variant="destructive" className="ml-1">
+                                {item.is_key_item &&
+                          <Badge variant="destructive" className="ml-1">
                                     关键项
                                   </Badge>
-                                )}
+                          }
                               </div>
-                              {item.acceptance_criteria && (
-                                <div className="text-xs text-slate-600 mt-1">
+                              {item.acceptance_criteria &&
+                        <div className="text-xs text-slate-600 mt-1">
                                   验收标准: {item.acceptance_criteria}
                                 </div>
-                              )}
+                        }
                             </div>
-                            {item.is_required && (
-                              <Badge className="bg-blue-500">必检</Badge>
-                            )}
+                            {item.is_required &&
+                      <Badge className="bg-blue-500">必检</Badge>
+                      }
                           </div>
                         </div>
-                      ))
-                    )}
+                  )
+                  }
                   </div>
                 </div>
               </div>
-            )}
+            }
           </DialogBody>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowDetailDialog(false)}
-            >
+              onClick={() => setShowDetailDialog(false)}>
+
               关闭
             </Button>
-            {selectedTemplate && (
-              <Button
-                onClick={() => {
-                  setShowDetailDialog(false);
-                  handleViewItems(selectedTemplate.id);
-                }}
-              >
+            {selectedTemplate &&
+            <Button
+              onClick={() => {
+                setShowDetailDialog(false);
+                handleViewItems(selectedTemplate.id);
+              }}>
+
                 <CheckSquare className="w-4 h-4 mr-2" />
                 管理检查项
               </Button>
-            )}
+            }
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -545,10 +545,10 @@ export default function AcceptanceTemplateManagement() {
                     <Input
                       value={newItem.item_code}
                       onChange={(e) =>
-                        setNewItem({ ...newItem, item_code: e.target.value })
+                      setNewItem({ ...newItem, item_code: e.target.value })
                       }
-                      placeholder="检查项编码"
-                    />
+                      placeholder="检查项编码" />
+
                   </div>
                   <div>
                     <label className="text-sm font-medium mb-2 block">
@@ -557,10 +557,10 @@ export default function AcceptanceTemplateManagement() {
                     <Input
                       value={newItem.item_name}
                       onChange={(e) =>
-                        setNewItem({ ...newItem, item_name: e.target.value })
+                      setNewItem({ ...newItem, item_name: e.target.value })
                       }
-                      placeholder="检查项名称"
-                    />
+                      placeholder="检查项名称" />
+
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4 mt-4">
@@ -571,13 +571,13 @@ export default function AcceptanceTemplateManagement() {
                     <Input
                       value={newItem.category_name}
                       onChange={(e) =>
-                        setNewItem({
-                          ...newItem,
-                          category_name: e.target.value,
-                        })
+                      setNewItem({
+                        ...newItem,
+                        category_name: e.target.value
+                      })
                       }
-                      placeholder="分类名称"
-                    />
+                      placeholder="分类名称" />
+
                   </div>
                   <div>
                     <label className="text-sm font-medium mb-2 block">
@@ -586,10 +586,10 @@ export default function AcceptanceTemplateManagement() {
                     <Input
                       value={newItem.unit}
                       onChange={(e) =>
-                        setNewItem({ ...newItem, unit: e.target.value })
+                      setNewItem({ ...newItem, unit: e.target.value })
                       }
-                      placeholder="单位"
-                    />
+                      placeholder="单位" />
+
                   </div>
                 </div>
                 <div className="mt-4">
@@ -599,13 +599,13 @@ export default function AcceptanceTemplateManagement() {
                   <Input
                     value={newItem.acceptance_criteria}
                     onChange={(e) =>
-                      setNewItem({
-                        ...newItem,
-                        acceptance_criteria: e.target.value,
-                      })
+                    setNewItem({
+                      ...newItem,
+                      acceptance_criteria: e.target.value
+                    })
                     }
-                    placeholder="验收标准"
-                  />
+                    placeholder="验收标准" />
+
                 </div>
                 <div className="mt-4">
                   <label className="text-sm font-medium mb-2 block">
@@ -614,10 +614,10 @@ export default function AcceptanceTemplateManagement() {
                   <Input
                     value={newItem.standard_value}
                     onChange={(e) =>
-                      setNewItem({ ...newItem, standard_value: e.target.value })
+                    setNewItem({ ...newItem, standard_value: e.target.value })
                     }
-                    placeholder="标准值"
-                  />
+                    placeholder="标准值" />
+
                 </div>
                 <div className="mt-4 flex items-center gap-4">
                   <label className="flex items-center gap-2">
@@ -625,12 +625,12 @@ export default function AcceptanceTemplateManagement() {
                       type="checkbox"
                       checked={newItem.is_required}
                       onChange={(e) =>
-                        setNewItem({
-                          ...newItem,
-                          is_required: e.target.checked,
-                        })
-                      }
-                    />
+                      setNewItem({
+                        ...newItem,
+                        is_required: e.target.checked
+                      })
+                      } />
+
                     <span className="text-sm">必检项</span>
                   </label>
                   <label className="flex items-center gap-2">
@@ -638,12 +638,12 @@ export default function AcceptanceTemplateManagement() {
                       type="checkbox"
                       checked={newItem.is_key_item}
                       onChange={(e) =>
-                        setNewItem({
-                          ...newItem,
-                          is_key_item: e.target.checked,
-                        })
-                      }
-                    />
+                      setNewItem({
+                        ...newItem,
+                        is_key_item: e.target.checked
+                      })
+                      } />
+
                     <span className="text-sm">关键项</span>
                   </label>
                 </div>
@@ -655,13 +655,13 @@ export default function AcceptanceTemplateManagement() {
               <div className="border-t pt-4">
                 <h3 className="text-sm font-medium mb-2">检查项列表</h3>
                 <div className="space-y-2">
-                  {templateItems.length === 0 ? (
-                    <div className="text-center py-4 text-slate-400">
+                  {templateItems.length === 0 ?
+                  <div className="text-center py-4 text-slate-400">
                       暂无检查项
-                    </div>
-                  ) : (
-                    templateItems.map((item) => (
-                      <div key={item.id} className="border rounded-lg p-3">
+                    </div> :
+
+                  templateItems.map((item) =>
+                  <div key={item.id} className="border rounded-lg p-3">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="font-medium">{item.item_name}</div>
@@ -669,24 +669,24 @@ export default function AcceptanceTemplateManagement() {
                               {item.item_code}{" "}
                               {item.category_name && `· ${item.category_name}`}
                             </div>
-                            {item.acceptance_criteria && (
-                              <div className="text-xs text-slate-600 mt-1">
+                            {item.acceptance_criteria &&
+                        <div className="text-xs text-slate-600 mt-1">
                                 验收标准: {item.acceptance_criteria}
                               </div>
-                            )}
+                        }
                           </div>
                           <div className="flex items-center gap-2">
-                            {item.is_required && (
-                              <Badge className="bg-blue-500">必检</Badge>
-                            )}
-                            {item.is_key_item && (
-                              <Badge variant="destructive">关键项</Badge>
-                            )}
+                            {item.is_required &&
+                        <Badge className="bg-blue-500">必检</Badge>
+                        }
+                            {item.is_key_item &&
+                        <Badge variant="destructive">关键项</Badge>
+                        }
                           </div>
                         </div>
                       </div>
-                    ))
-                  )}
+                  )
+                  }
                 </div>
               </div>
             </div>
@@ -698,6 +698,6 @@ export default function AcceptanceTemplateManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }

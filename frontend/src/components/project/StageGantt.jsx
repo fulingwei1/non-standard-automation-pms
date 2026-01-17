@@ -9,12 +9,12 @@ export default function StageGantt({ stages }) {
   }
 
   // 计算整个项目的时间范围
-  const allDates = stages
-    .flatMap((s) => [
-      new Date(s.planned_start_date),
-      new Date(s.planned_end_date),
-    ])
-    .filter((d) => !isNaN(d));
+  const allDates = stages.
+  flatMap((s) => [
+  new Date(s.planned_start_date),
+  new Date(s.planned_end_date)]
+  ).
+  filter((d) => !isNaN(d));
 
   const minDate = new Date(Math.min(...allDates));
   const maxDate = new Date(Math.max(...allDates));
@@ -23,34 +23,34 @@ export default function StageGantt({ stages }) {
   // 计算日期相对位置函数
   const getPositionPercent = (date) => {
     const daysFromStart =
-      (new Date(date) - minDate) / (1000 * 60 * 60 * 24);
-    return (daysFromStart / totalDays) * 100;
+    (new Date(date) - minDate) / (1000 * 60 * 60 * 24);
+    return daysFromStart / totalDays * 100;
   };
 
   const getWidthPercent = (startDate, endDate) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
     const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-    return (days / totalDays) * 100;
+    return days / totalDays * 100;
   };
 
   // 状态颜色映射
   const statusColors = {
     COMPLETED: "bg-emerald-500",
     IN_PROGRESS: "bg-blue-500",
-    PENDING: "bg-slate-600",
+    PENDING: "bg-slate-600"
   };
 
-  const statusBgColors = {
+  const _statusBgColors = {
     COMPLETED: "bg-emerald-500/10",
     IN_PROGRESS: "bg-blue-500/10",
-    PENDING: "bg-slate-600/10",
+    PENDING: "bg-slate-600/10"
   };
 
-  const statusBorderColors = {
+  const _statusBorderColors = {
     COMPLETED: "border-emerald-500/30",
     IN_PROGRESS: "border-blue-500/30",
-    PENDING: "border-slate-600/30",
+    PENDING: "border-slate-600/30"
   };
 
   return (
@@ -65,13 +65,13 @@ export default function StageGantt({ stages }) {
           {/* Gantt chart background grid */}
           <div className="relative h-full">
             <div className="absolute inset-0 flex">
-              {Array.from({ length: Math.min(totalDays, 50) }).map((_, i) => (
-                <div
-                  key={i}
-                  className="flex-1 border-r border-white/5"
-                  style={{ flex: `${100 / Math.min(totalDays, 50)}%` }}
-                />
-              ))}
+              {Array.from({ length: Math.min(totalDays, 50) }).map((_, i) =>
+              <div
+                key={i}
+                className="flex-1 border-r border-white/5"
+                style={{ flex: `${100 / Math.min(totalDays, 50)}%` }} />
+
+              )}
             </div>
           </div>
         </div>
@@ -92,13 +92,13 @@ export default function StageGantt({ stages }) {
                 {/* 阶段代码和名称 */}
                 <div className="w-28 flex-shrink-0">
                   <div className="flex items-center gap-2">
-                    {stage.status === "COMPLETED" ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    ) : stage.status === "IN_PROGRESS" ? (
-                      <Circle className="w-4 h-4 text-blue-500 animate-pulse" />
-                    ) : (
-                      <Circle className="w-4 h-4 text-slate-600" />
-                    )}
+                    {stage.status === "COMPLETED" ?
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" /> :
+                    stage.status === "IN_PROGRESS" ?
+                    <Circle className="w-4 h-4 text-blue-500 animate-pulse" /> :
+
+                    <Circle className="w-4 h-4 text-slate-600" />
+                    }
                     <div className="min-w-0">
                       <p className="font-semibold text-sm text-white truncate">
                         {stage.stage_code}
@@ -121,35 +121,35 @@ export default function StageGantt({ stages }) {
                     style={{
                       left: `${startPercent}%`,
                       width: `${widthPercent}%`,
-                      opacity: stage.status === "COMPLETED" ? 0.8 : 0.6,
-                    }}
-                  />
+                      opacity: stage.status === "COMPLETED" ? 0.8 : 0.6
+                    }} />
+
 
                   {/* 进度条（如果有进度） */}
-                  {stage.progress_pct > 0 && stage.status !== "COMPLETED" && (
-                    <div
-                      className="absolute h-full bg-gradient-to-r from-blue-400 to-blue-500 opacity-40"
-                      style={{
-                        left: `${startPercent}%`,
-                        width: `${(widthPercent * stage.progress_pct) / 100}%`,
-                      }}
-                    />
-                  )}
+                  {stage.progress_pct > 0 && stage.status !== "COMPLETED" &&
+                  <div
+                    className="absolute h-full bg-gradient-to-r from-blue-400 to-blue-500 opacity-40"
+                    style={{
+                      left: `${startPercent}%`,
+                      width: `${widthPercent * stage.progress_pct / 100}%`
+                    }} />
+
+                  }
 
                   {/* 文字标签 */}
                   <div
                     className="absolute h-full flex items-center justify-center px-2 text-xs font-medium text-white"
                     style={{
                       left: `${startPercent}%`,
-                      width: `${widthPercent}%`,
-                    }}
-                  >
+                      width: `${widthPercent}%`
+                    }}>
+
                     <span className="truncate">
-                      {stage.progress_pct > 0 && stage.status !== "COMPLETED"
-                        ? `${stage.progress_pct}%`
-                        : stage.status === "COMPLETED"
-                          ? "✓ 完成"
-                          : ""}
+                      {stage.progress_pct > 0 && stage.status !== "COMPLETED" ?
+                      `${stage.progress_pct}%` :
+                      stage.status === "COMPLETED" ?
+                      "✓ 完成" :
+                      ""}
                     </span>
                   </div>
                 </div>
@@ -167,13 +167,13 @@ export default function StageGantt({ stages }) {
               </div>
 
               {/* 描述信息 */}
-              {stage.description && (
-                <p className="text-xs text-slate-400 ml-28 mt-1">
+              {stage.description &&
+              <p className="text-xs text-slate-400 ml-28 mt-1">
                   {stage.description}
                 </p>
-              )}
-            </div>
-          );
+              }
+            </div>);
+
         })}
       </div>
 
@@ -192,6 +192,6 @@ export default function StageGantt({ stages }) {
           <span>未开始</span>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }

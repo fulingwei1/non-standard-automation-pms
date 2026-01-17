@@ -11,15 +11,15 @@ import {
   TrendingDown,
   RefreshCw,
   Filter,
-  BarChart3,
-} from "lucide-react";
+  BarChart3 } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
@@ -28,23 +28,23 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "../components/ui/table";
-import { cn, formatCurrency } from "../lib/utils";
+  TableRow } from
+"../components/ui/table";
+import { cn, formatCurrency as _formatCurrency } from "../lib/utils";
 import { purchaseApi, projectApi } from "../services/api";
 export default function KitRateBoard() {
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
   const [projects, setProjects] = useState([]);
-  const [filterProject, setFilterProject] = useState("");
+  const [filterProject, setFilterProject] = useState(undefined);
   useEffect(() => {
     fetchProjects();
     fetchDashboardData();
@@ -61,9 +61,39 @@ export default function KitRateBoard() {
     try {
       setLoading(true);
       const params = {};
-      if (filterProject) params.project_id = filterProject;
+      if (filterProject && filterProject !== "all") params.project_ids = filterProject;
       const res = await purchaseApi.kitRate.dashboard(params);
-      setDashboardData(res.data || res || null);
+      const data = res.data || res || null;
+
+      // 转换后端数据格式以匹配前端展示
+      if (data) {
+        // 计算平均齐套率
+        const totalKitRate = data.projects?.reduce((sum, p) => sum + (p.kit_rate || 0), 0) || 0;
+        const avgKitRate = data.projects?.length > 0 ?
+        Math.round(totalKitRate / data.projects.length * 100) / 100 :
+        0;
+
+        // 转换 summary 字段
+        data.summary = {
+          ...data.summary,
+          avg_kit_rate: avgKitRate,
+          shortage_alerts: data.summary?.shortage_projects || 0,
+          in_transit_materials: data.summary?.partial_projects || 0,
+          ready_projects: data.summary?.complete_projects || 0
+        };
+
+        // 转换 projects 字段名
+        if (data.projects) {
+          data.projects = data.projects.map((p) => ({
+            ...p,
+            id: p.project_id,
+            shortage_count: p.shortage_items || 0,
+            in_transit_count: p.in_transit_items || 0
+          }));
+        }
+      }
+
+      setDashboardData(data);
     } catch (error) {
       console.error("Failed to fetch dashboard data:", error);
       setDashboardData(null); // 不再使用mock数据，显示空状态
@@ -85,28 +115,28 @@ export default function KitRateBoard() {
     return (
       <div className="space-y-6 p-6">
         <div className="text-center py-8 text-slate-400">加载中...</div>
-      </div>
-    );
+      </div>);
+
   }
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <PageHeader
           title="齐套看板"
-          description="齐套率分布、缺料预警汇总、物料保障情况"
-        />
+          description="齐套率分布、缺料预警汇总、物料保障情况" />
+
         <div className="flex items-center gap-4">
-          <Select value={filterProject} onValueChange={setFilterProject}>
+          <Select value={filterProject || "all"} onValueChange={(val) => setFilterProject(val === "all" ? undefined : val)}>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="选择项目" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">全部项目</SelectItem>
-              {projects.map((proj) => (
-                <SelectItem key={proj.id} value={proj.id.toString()}>
+              {projects.map((proj) =>
+              <SelectItem key={proj.id} value={proj.id.toString()}>
                   {proj.project_name}
                 </SelectItem>
-              ))}
+              )}
             </SelectContent>
           </Select>
           <Button variant="outline" onClick={fetchDashboardData}>
@@ -116,19 +146,19 @@ export default function KitRateBoard() {
         </div>
       </div>
       {/* Statistics Cards */}
-      {dashboardData?.summary && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {dashboardData?.summary &&
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-sm text-slate-500 mb-1">平均齐套率</div>
                   <div
-                    className={cn(
-                      "text-2xl font-bold",
-                      getKitRateColor(dashboardData.summary.avg_kit_rate || 0),
-                    )}
-                  >
+                  className={cn(
+                    "text-2xl font-bold",
+                    getKitRateColor(dashboardData.summary.avg_kit_rate || 0)
+                  )}>
+
                     {dashboardData.summary.avg_kit_rate || 0}%
                   </div>
                 </div>
@@ -176,15 +206,15 @@ export default function KitRateBoard() {
             </CardContent>
           </Card>
         </div>
-      )}
+      }
       {/* Kit Rate Distribution */}
       <Card>
         <CardHeader>
           <CardTitle>齐套率分布</CardTitle>
         </CardHeader>
         <CardContent>
-          {dashboardData?.projects && dashboardData.projects.length > 0 ? (
-            <Table>
+          {dashboardData?.projects && dashboardData.projects.length > 0 ?
+          <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>项目名称</TableHead>
@@ -197,9 +227,9 @@ export default function KitRateBoard() {
               </TableHeader>
               <TableBody>
                 {dashboardData.projects.map((item) => {
-                  const badge = getKitRateBadge(item.kit_rate || 0);
-                  return (
-                    <TableRow key={item.id}>
+                const badge = getKitRateBadge(item.kit_rate || 0);
+                return (
+                  <TableRow key={item.id}>
                       <TableCell className="font-medium">
                         {item.project_name}
                       </TableCell>
@@ -207,53 +237,53 @@ export default function KitRateBoard() {
                       <TableCell>
                         <div className="space-y-1">
                           <div
-                            className={cn(
-                              "font-bold",
-                              getKitRateColor(item.kit_rate || 0),
-                            )}
-                          >
+                          className={cn(
+                            "font-bold",
+                            getKitRateColor(item.kit_rate || 0)
+                          )}>
+
                             {item.kit_rate || 0}%
                           </div>
                           <Progress
-                            value={item.kit_rate || 0}
-                            className="h-1.5"
-                          />
+                          value={item.kit_rate || 0}
+                          className="h-1.5" />
+
                         </div>
                       </TableCell>
                       <TableCell>
-                        {item.shortage_count > 0 ? (
-                          <Badge className="bg-red-500">
+                        {item.shortage_count > 0 ?
+                      <Badge className="bg-red-500">
                             {item.shortage_count} 项
-                          </Badge>
-                        ) : (
-                          <span className="text-slate-400">-</span>
-                        )}
+                          </Badge> :
+
+                      <span className="text-slate-400">-</span>
+                      }
                       </TableCell>
                       <TableCell>
-                        {item.in_transit_count > 0 ? (
-                          <Badge variant="outline">
+                        {item.in_transit_count > 0 ?
+                      <Badge variant="outline">
                             {item.in_transit_count} 项
-                          </Badge>
-                        ) : (
-                          <span className="text-slate-400">-</span>
-                        )}
+                          </Badge> :
+
+                      <span className="text-slate-400">-</span>
+                      }
                       </TableCell>
                       <TableCell>
                         <Badge className={badge.color}>{badge.label}</Badge>
                       </TableCell>
-                    </TableRow>
-                  );
-                })}
+                    </TableRow>);
+
+              })}
               </TableBody>
-            </Table>
-          ) : (
-            <div className="text-center py-8 text-slate-400">暂无数据</div>
-          )}
+            </Table> :
+
+          <div className="text-center py-8 text-slate-400">暂无数据</div>
+          }
         </CardContent>
       </Card>
       {/* Shortage Alerts */}
-      {dashboardData?.alerts && dashboardData.alerts.length > 0 && (
-        <Card>
+      {dashboardData?.alerts && dashboardData.alerts.length > 0 &&
+      <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-red-500" />
@@ -262,11 +292,11 @@ export default function KitRateBoard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {dashboardData.alerts.map((alert) => (
-                <div
-                  key={alert.id}
-                  className="border-l-4 border-red-500 bg-red-50 p-4 rounded-r-lg"
-                >
+              {dashboardData.alerts.map((alert) =>
+            <div
+              key={alert.id}
+              className="border-l-4 border-red-500 bg-red-50 p-4 rounded-r-lg">
+
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
@@ -288,11 +318,11 @@ export default function KitRateBoard() {
                     </div>
                   </div>
                 </div>
-              ))}
+            )}
             </div>
           </CardContent>
         </Card>
-      )}
-    </div>
-  );
+      }
+    </div>);
+
 }

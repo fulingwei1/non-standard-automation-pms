@@ -23,16 +23,16 @@ import {
   FileText,
   Copy,
   RefreshCw,
-  X,
-} from "lucide-react";
+  X } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
-} from "../components/ui/card";
+  CardDescription } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -40,31 +40,31 @@ import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger,
-} from "../components/ui/tabs";
+  TabsTrigger } from
+"../components/ui/tabs";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogBody,
-  DialogFooter,
-} from "../components/ui/dialog";
+  DialogFooter } from
+"../components/ui/dialog";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "../components/ui/table";
+  TableRow } from
+"../components/ui/table";
 import { formatCurrency, formatDate } from "../lib/utils";
 import { bomApi, projectApi, machineApi } from "../services/api";
 const statusConfigs = {
@@ -72,11 +72,11 @@ const statusConfigs = {
   REVIEWING: { label: "审核中", color: "bg-blue-500" },
   APPROVED: { label: "已审批", color: "bg-emerald-500" },
   RELEASED: { label: "已发布", color: "bg-violet-500" },
-  OBSOLETE: { label: "已废弃", color: "bg-red-500" },
+  OBSOLETE: { label: "已废弃", color: "bg-red-500" }
 };
 export default function BOMManagement() {
-  const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const _navigate = useNavigate();
+  const [searchParams, _setSearchParams] = useSearchParams();
   const machineId = searchParams.get("machine_id");
   const projectId = searchParams.get("project_id");
   const [loading, setLoading] = useState(true);
@@ -94,7 +94,7 @@ export default function BOMManagement() {
   // Dialogs
   const [showBomDetail, setShowBomDetail] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [showVersionDialog, setShowVersionDialog] = useState(false);
+  const [_showVersionDialog, _setShowVersionDialog] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [showReleaseDialog, setShowReleaseDialog] = useState(false);
   // Form states
@@ -102,7 +102,7 @@ export default function BOMManagement() {
     bom_name: "",
     machine_id: machineId ? parseInt(machineId) : null,
     version: "1.0",
-    remark: "",
+    remark: ""
   });
   const [importFile, setImportFile] = useState(null);
   const [releaseNote, setReleaseNote] = useState("");
@@ -151,10 +151,10 @@ export default function BOMManagement() {
   const fetchBOMDetail = async (bomId) => {
     try {
       const [bomRes, itemsRes, versionsRes] = await Promise.all([
-        bomApi.get(bomId),
-        bomApi.getItems(bomId),
-        bomApi.getVersions(bomId),
-      ]);
+      bomApi.get(bomId),
+      bomApi.getItems(bomId),
+      bomApi.getVersions(bomId)]
+      );
       setSelectedBom(bomRes.data || bomRes);
       setBomItems(itemsRes.data || itemsRes || []);
       setVersions(versionsRes.data || versionsRes || []);
@@ -227,8 +227,8 @@ export default function BOMManagement() {
           bom.bom_no?.toLowerCase().includes(keyword) ||
           bom.bom_name?.toLowerCase().includes(keyword) ||
           bom.project_name?.toLowerCase().includes(keyword) ||
-          bom.machine_name?.toLowerCase().includes(keyword)
-        );
+          bom.machine_name?.toLowerCase().includes(keyword));
+
       }
       return true;
     });
@@ -237,8 +237,8 @@ export default function BOMManagement() {
     <div className="space-y-6 p-6">
       <PageHeader
         title="BOM管理"
-        description="物料清单管理，支持版本控制、导入导出、发布审批"
-      />
+        description="物料清单管理，支持版本控制、导入导出、发布审批" />
+
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
@@ -249,8 +249,8 @@ export default function BOMManagement() {
                 placeholder="搜索BOM编号、名称..."
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
-                className="pl-10"
-              />
+                className="pl-10" />
+
             </div>
             <Select
               value={filterProject}
@@ -258,35 +258,35 @@ export default function BOMManagement() {
                 setFilterProject(val);
                 setFilterMachine("");
                 if (val) fetchMachines(val);
-              }}
-            >
+              }}>
+
               <SelectTrigger>
                 <SelectValue placeholder="选择项目" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部项目</SelectItem>
-                {projects.map((proj) => (
-                  <SelectItem key={proj.id} value={proj.id.toString()}>
+                {projects.map((proj) =>
+                <SelectItem key={proj.id} value={proj.id.toString()}>
                     {proj.project_name}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
             <Select
               value={filterMachine}
               onValueChange={setFilterMachine}
-              disabled={!filterProject}
-            >
+              disabled={!filterProject}>
+
               <SelectTrigger>
                 <SelectValue placeholder="选择机台" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部机台</SelectItem>
-                {machines.map((machine) => (
-                  <SelectItem key={machine.id} value={machine.id.toString()}>
+                {machines.map((machine) =>
+                <SelectItem key={machine.id} value={machine.id.toString()}>
                     {machine.machine_name}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -295,11 +295,11 @@ export default function BOMManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部状态</SelectItem>
-                {Object.entries(statusConfigs).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
+                {Object.entries(statusConfigs).map(([key, config]) =>
+                <SelectItem key={key} value={key}>
                     {config.label}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -318,12 +318,12 @@ export default function BOMManagement() {
           </Button>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="text-center py-8 text-slate-400">加载中...</div>
-          ) : filteredBoms.length === 0 ? (
-            <div className="text-center py-8 text-slate-400">暂无BOM数据</div>
-          ) : (
-            <Table>
+          {loading ?
+          <div className="text-center py-8 text-slate-400">加载中...</div> :
+          filteredBoms.length === 0 ?
+          <div className="text-center py-8 text-slate-400">暂无BOM数据</div> :
+
+          <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>BOM编号</TableHead>
@@ -339,8 +339,8 @@ export default function BOMManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredBoms.map((bom) => (
-                  <TableRow key={bom.id}>
+                {filteredBoms.map((bom) =>
+              <TableRow key={bom.id}>
                     <TableCell className="font-mono text-sm">
                       {bom.bom_no}
                     </TableCell>
@@ -351,16 +351,16 @@ export default function BOMManagement() {
                     <TableCell>{bom.machine_name || "-"}</TableCell>
                     <TableCell>
                       <Badge variant="outline">{bom.version}</Badge>
-                      {bom.is_latest && (
-                        <Badge className="ml-2 bg-emerald-500">最新</Badge>
-                      )}
+                      {bom.is_latest &&
+                  <Badge className="ml-2 bg-emerald-500">最新</Badge>
+                  }
                     </TableCell>
                     <TableCell>
                       <Badge
-                        className={
-                          statusConfigs[bom.status]?.color || "bg-slate-500"
-                        }
-                      >
+                    className={
+                    statusConfigs[bom.status]?.color || "bg-slate-500"
+                    }>
+
                         {statusConfigs[bom.status]?.label || bom.status}
                       </Badge>
                     </TableCell>
@@ -374,26 +374,26 @@ export default function BOMManagement() {
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => fetchBOMDetail(bom.id)}
-                        >
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => fetchBOMDetail(bom.id)}>
+
                           <Eye className="w-4 h-4" />
                         </Button>
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleExport(bom.id)}
-                        >
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleExport(bom.id)}>
+
                           <Download className="w-4 h-4" />
                         </Button>
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+              )}
               </TableBody>
             </Table>
-          )}
+          }
         </CardContent>
       </Card>
       {/* BOM Detail Dialog */}
@@ -405,8 +405,8 @@ export default function BOMManagement() {
             </DialogTitle>
           </DialogHeader>
           <DialogBody>
-            {selectedBom && (
-              <Tabs defaultValue="items" className="w-full">
+            {selectedBom &&
+            <Tabs defaultValue="items" className="w-full">
                 <TabsList>
                   <TabsTrigger value="items">BOM明细</TabsTrigger>
                   <TabsTrigger value="versions">版本历史</TabsTrigger>
@@ -419,30 +419,30 @@ export default function BOMManagement() {
                     </div>
                     <div className="flex gap-2">
                       <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowImportDialog(true)}
-                      >
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowImportDialog(true)}>
+
                         <Upload className="w-4 h-4 mr-2" />
                         导入
                       </Button>
                       <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleExport(selectedBom.id)}
-                      >
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleExport(selectedBom.id)}>
+
                         <Download className="w-4 h-4 mr-2" />
                         导出
                       </Button>
-                      {selectedBom.status === "APPROVED" && (
-                        <Button
-                          size="sm"
-                          onClick={() => setShowReleaseDialog(true)}
-                        >
+                      {selectedBom.status === "APPROVED" &&
+                    <Button
+                      size="sm"
+                      onClick={() => setShowReleaseDialog(true)}>
+
                           <CheckCircle2 className="w-4 h-4 mr-2" />
                           发布
                         </Button>
-                      )}
+                    }
                     </div>
                   </div>
                   <Table>
@@ -462,8 +462,8 @@ export default function BOMManagement() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {bomItems.map((item, index) => (
-                        <TableRow key={item.id}>
+                      {bomItems.map((item, index) =>
+                    <TableRow key={item.id}>
                           <TableCell>{item.item_no || index + 1}</TableCell>
                           <TableCell className="font-mono text-sm">
                             {item.material_code}
@@ -484,17 +484,17 @@ export default function BOMManagement() {
                             <Badge variant="outline">{item.source_type}</Badge>
                           </TableCell>
                           <TableCell className="text-slate-500 text-sm">
-                            {item.required_date
-                              ? formatDate(item.required_date)
-                              : "-"}
+                            {item.required_date ?
+                        formatDate(item.required_date) :
+                        "-"}
                           </TableCell>
                           <TableCell>
-                            {item.is_key_item && (
-                              <Badge className="bg-amber-500">关键</Badge>
-                            )}
+                            {item.is_key_item &&
+                        <Badge className="bg-amber-500">关键</Badge>
+                        }
                           </TableCell>
                         </TableRow>
-                      ))}
+                    )}
                     </TableBody>
                   </Table>
                 </TabsContent>
@@ -503,18 +503,18 @@ export default function BOMManagement() {
                     共 {versions.length} 个版本
                   </div>
                   <div className="space-y-2">
-                    {versions.map((version) => (
-                      <Card key={version.id}>
+                    {versions.map((version) =>
+                  <Card key={version.id}>
                         <CardContent className="pt-4">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               <Badge>{version.version}</Badge>
-                              {version.is_latest && (
-                                <Badge className="bg-emerald-500">最新</Badge>
-                              )}
+                              {version.is_latest &&
+                          <Badge className="bg-emerald-500">最新</Badge>
+                          }
                               <Badge
-                                className={statusConfigs[version.status]?.color}
-                              >
+                            className={statusConfigs[version.status]?.color}>
+
                                 {statusConfigs[version.status]?.label}
                               </Badge>
                               <span className="text-sm text-slate-500">
@@ -523,13 +523,13 @@ export default function BOMManagement() {
                             </div>
                             <div className="flex gap-2">
                               <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedBom(version);
-                                  fetchBOMDetail(version.id);
-                                }}
-                              >
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedBom(version);
+                              fetchBOMDetail(version.id);
+                            }}>
+
                                 <Eye className="w-4 h-4 mr-2" />
                                 查看
                               </Button>
@@ -537,7 +537,7 @@ export default function BOMManagement() {
                           </div>
                         </CardContent>
                       </Card>
-                    ))}
+                  )}
                   </div>
                 </TabsContent>
                 <TabsContent value="info" className="space-y-4">
@@ -565,8 +565,8 @@ export default function BOMManagement() {
                     <div>
                       <div className="text-sm text-slate-500 mb-1">状态</div>
                       <Badge
-                        className={statusConfigs[selectedBom.status]?.color}
-                      >
+                      className={statusConfigs[selectedBom.status]?.color}>
+
                         {statusConfigs[selectedBom.status]?.label}
                       </Badge>
                     </div>
@@ -585,7 +585,7 @@ export default function BOMManagement() {
                   </div>
                 </TabsContent>
               </Tabs>
-            )}
+            }
           </DialogBody>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowBomDetail(false)}>
@@ -606,30 +606,30 @@ export default function BOMManagement() {
                 <label className="text-sm font-medium mb-2 block">项目</label>
                 <Select
                   value={
-                    newBom.machine_id
-                      ? projects
-                          .find(
-                            (p) =>
-                              machines.find((m) => m.id === newBom.machine_id)
-                                ?.project_id === p.id,
-                          )
-                          ?.id?.toString() || ""
-                      : ""
+                  newBom.machine_id ?
+                  projects.
+                  find(
+                    (p) =>
+                    machines.find((m) => m.id === newBom.machine_id)?.
+                    project_id === p.id
+                  )?.
+                  id?.toString() || "" :
+                  ""
                   }
                   onValueChange={(val) => {
                     fetchMachines(val);
                     setNewBom({ ...newBom, machine_id: null });
-                  }}
-                >
+                  }}>
+
                   <SelectTrigger>
                     <SelectValue placeholder="选择项目" />
                   </SelectTrigger>
                   <SelectContent>
-                    {projects.map((proj) => (
-                      <SelectItem key={proj.id} value={proj.id.toString()}>
+                    {projects.map((proj) =>
+                    <SelectItem key={proj.id} value={proj.id.toString()}>
                         {proj.project_name}
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -638,22 +638,22 @@ export default function BOMManagement() {
                 <Select
                   value={newBom.machine_id?.toString() || ""}
                   onValueChange={(val) =>
-                    setNewBom({ ...newBom, machine_id: parseInt(val) })
+                  setNewBom({ ...newBom, machine_id: parseInt(val) })
                   }
-                  disabled={!newBom.machine_id && machines.length === 0}
-                >
+                  disabled={!newBom.machine_id && machines.length === 0}>
+
                   <SelectTrigger>
                     <SelectValue placeholder="选择机台" />
                   </SelectTrigger>
                   <SelectContent>
-                    {machines.map((machine) => (
-                      <SelectItem
-                        key={machine.id}
-                        value={machine.id.toString()}
-                      >
+                    {machines.map((machine) =>
+                    <SelectItem
+                      key={machine.id}
+                      value={machine.id.toString()}>
+
                         {machine.machine_name}
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -664,38 +664,38 @@ export default function BOMManagement() {
                 <Input
                   value={newBom.bom_name}
                   onChange={(e) =>
-                    setNewBom({ ...newBom, bom_name: e.target.value })
+                  setNewBom({ ...newBom, bom_name: e.target.value })
                   }
-                  placeholder="请输入BOM名称"
-                />
+                  placeholder="请输入BOM名称" />
+
               </div>
               <div>
                 <label className="text-sm font-medium mb-2 block">版本</label>
                 <Input
                   value={newBom.version}
                   onChange={(e) =>
-                    setNewBom({ ...newBom, version: e.target.value })
+                  setNewBom({ ...newBom, version: e.target.value })
                   }
-                  placeholder="1.0"
-                />
+                  placeholder="1.0" />
+
               </div>
               <div>
                 <label className="text-sm font-medium mb-2 block">备注</label>
                 <Input
                   value={newBom.remark}
                   onChange={(e) =>
-                    setNewBom({ ...newBom, remark: e.target.value })
+                  setNewBom({ ...newBom, remark: e.target.value })
                   }
-                  placeholder="备注信息"
-                />
+                  placeholder="备注信息" />
+
               </div>
             </div>
           </DialogBody>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowCreateDialog(false)}
-            >
+              onClick={() => setShowCreateDialog(false)}>
+
               取消
             </Button>
             <Button onClick={handleCreateBOM}>创建</Button>
@@ -717,16 +717,16 @@ export default function BOMManagement() {
                 <Input
                   type="file"
                   accept=".xlsx,.xls"
-                  onChange={(e) => setImportFile(e.target.files?.[0] || null)}
-                />
+                  onChange={(e) => setImportFile(e.target.files?.[0] || null)} />
+
               </div>
             </div>
           </DialogBody>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowImportDialog(false)}
-            >
+              onClick={() => setShowImportDialog(false)}>
+
               取消
             </Button>
             <Button onClick={handleImport} disabled={!importFile}>
@@ -750,22 +750,22 @@ export default function BOMManagement() {
                 <Input
                   value={releaseNote}
                   onChange={(e) => setReleaseNote(e.target.value)}
-                  placeholder="请输入变更说明"
-                />
+                  placeholder="请输入变更说明" />
+
               </div>
             </div>
           </DialogBody>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowReleaseDialog(false)}
-            >
+              onClick={() => setShowReleaseDialog(false)}>
+
               取消
             </Button>
             <Button onClick={handleReleaseBOM}>发布</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }

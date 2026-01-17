@@ -12,8 +12,8 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  DragOverlay,
-} from "@dnd-kit/core";
+  DragOverlay } from
+"@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import {
   Search,
@@ -36,8 +36,8 @@ import {
   User,
   Calendar,
   Tag,
-  ArrowRight
-} from "lucide-react";
+  ArrowRight } from
+"lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -48,7 +48,7 @@ import {
   issueStatusConfig,
   issueSeverityConfig,
   issueCategoryConfig,
-  issuePriorityConfig,
+  issuePriorityConfig as _issuePriorityConfig,
   getIssueStatusConfig,
   getIssueSeverityConfig,
   getIssueCategoryConfig,
@@ -56,8 +56,8 @@ import {
   isIssueOverdue,
   isIssueBlocking,
   ISSUE_SORT_OPTIONS,
-  ISSUE_VIEW_MODES
-} from "./issueConstants";
+  ISSUE_VIEW_MODES } from
+"./issueConstants";
 
 export const IssueListManager = ({
   issues = [],
@@ -73,7 +73,7 @@ export const IssueListManager = ({
   onIssueView = null,
   onIssueEdit = null,
   onIssueCreate = null,
-  onIssueStatusChange = null,
+  onIssueStatusChange: _onIssueStatusChange = null,
   onExport = null,
   onImport = null,
   loading = false,
@@ -81,26 +81,26 @@ export const IssueListManager = ({
 }) => {
   const [expandedRows, setExpandedRows] = useState(new Set());
   const [activeId, setActiveId] = useState(null);
-  
+
   // DnD sensors for kanban view
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
+      coordinateGetter: sortableKeyboardCoordinates
     })
   );
 
   // 过滤后的 issues
   const filteredIssues = useMemo(() => {
-    return issues.filter(issue => {
+    return issues.filter((issue) => {
       // 搜索过滤
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
-        const matchesSearch = 
-          issue.title?.toLowerCase().includes(searchLower) ||
-          issue.description?.toLowerCase().includes(searchLower) ||
-          issue.id?.toLowerCase().includes(searchLower) ||
-          issue.assignee?.toLowerCase().includes(searchLower);
+        const matchesSearch =
+        issue.title?.toLowerCase().includes(searchLower) ||
+        issue.description?.toLowerCase().includes(searchLower) ||
+        issue.id?.toLowerCase().includes(searchLower) ||
+        issue.assignee?.toLowerCase().includes(searchLower);
         if (!matchesSearch) return false;
       }
 
@@ -136,7 +136,7 @@ export const IssueListManager = ({
   // 排序后的 issues
   const sortedIssues = useMemo(() => {
     const sorted = [...filteredIssues];
-    
+
     switch (sortBy) {
       case 'created_desc':
         return sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -170,8 +170,8 @@ export const IssueListManager = ({
   // 按状态分组的 issues (用于看板视图)
   const issuesByStatus = useMemo(() => {
     const grouped = {};
-    Object.keys(issueStatusConfig).forEach(status => {
-      grouped[status] = sortedIssues.filter(issue => issue.status === status);
+    Object.keys(issueStatusConfig).forEach((status) => {
+      grouped[status] = sortedIssues.filter((issue) => issue.status === status);
     });
     return grouped;
   }, [sortedIssues]);
@@ -190,12 +190,12 @@ export const IssueListManager = ({
   // 处理选择
   const handleSelectionChange = useCallback((issueId, selected) => {
     if (!onSelectionChange) return;
-    
+
     let newSelection;
     if (selected) {
       newSelection = [...selectedIssues, issueId];
     } else {
-      newSelection = selectedIssues.filter(id => id !== issueId);
+      newSelection = selectedIssues.filter((id) => id !== issueId);
     }
     onSelectionChange(newSelection);
   }, [selectedIssues, onSelectionChange]);
@@ -203,23 +203,23 @@ export const IssueListManager = ({
   // 处理全选
   const handleSelectAll = useCallback((selected) => {
     if (!onSelectionChange) return;
-    onSelectionChange(selected ? sortedIssues.map(issue => issue.id) : []);
+    onSelectionChange(selected ? sortedIssues.map((issue) => issue.id) : []);
   }, [sortedIssues, onSelectionChange]);
 
   // 渲染状态徽章
   const renderStatusBadge = (status) => {
     const config = getIssueStatusConfig(status);
     const Icon = config.icon === 'AlertCircle' ? AlertCircle :
-                config.icon === 'Clock' ? Clock :
-                config.icon === 'CheckCircle2' ? CheckCircle2 :
-                config.icon === 'XCircle' ? XCircle : AlertCircle;
-    
+    config.icon === 'Clock' ? Clock :
+    config.icon === 'CheckCircle2' ? CheckCircle2 :
+    config.icon === 'XCircle' ? XCircle : AlertCircle;
+
     return (
       <Badge variant="outline" className={config.color}>
         <Icon className="w-3 h-3 mr-1" />
         {config.label}
-      </Badge>
-    );
+      </Badge>);
+
   };
 
   // 渲染严重程度徽章
@@ -228,8 +228,8 @@ export const IssueListManager = ({
     return (
       <Badge variant="outline" className={config.color}>
         {config.label}
-      </Badge>
-    );
+      </Badge>);
+
   };
 
   // 渲染优先级徽章
@@ -238,16 +238,16 @@ export const IssueListManager = ({
     return (
       <Badge variant="outline" className={config.color}>
         {config.label}
-      </Badge>
-    );
+      </Badge>);
+
   };
 
   // 渲染问题卡片（看板视图）
   const renderIssueCard = (issue) => {
     const isOverdue = isIssueOverdue(issue);
     const isBlocking = isIssueBlocking(issue);
-    const statusConfig = getIssueStatusConfig(issue.status);
-    
+    const _statusConfig = getIssueStatusConfig(issue.status);
+
     return (
       <motion.div
         key={issue.id}
@@ -257,8 +257,8 @@ export const IssueListManager = ({
         exit={{ opacity: 0, scale: 0.95 }}
         whileHover={{ scale: 1.02 }}
         className="bg-slate-800/60 border border-slate-700/60 rounded-lg p-4 cursor-pointer hover:border-slate-600/60 transition-all"
-        onClick={() => onIssueView?.(issue)}
-      >
+        onClick={() => onIssueView?.(issue)}>
+
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
             <h4 className="text-sm font-medium text-white mb-1 line-clamp-2">
@@ -289,8 +289,8 @@ export const IssueListManager = ({
             <span>{issue.createdAt ? new Date(issue.createdAt).toLocaleDateString() : '-'}</span>
           </div>
         </div>
-      </motion.div>
-    );
+      </motion.div>);
+
   };
 
   // 渲染表格行（列表视图）
@@ -299,7 +299,7 @@ export const IssueListManager = ({
     const isSelected = selectedIssues.includes(issue.id);
     const isOverdue = isIssueOverdue(issue);
     const isBlocking = isIssueBlocking(issue);
-    
+
     return (
       <motion.tr
         key={issue.id}
@@ -309,15 +309,15 @@ export const IssueListManager = ({
         className={cn(
           "border-b border-slate-700/40 hover:bg-slate-800/40 transition-colors",
           isSelected && "bg-slate-800/60"
-        )}
-      >
+        )}>
+
         <td className="px-3 py-3">
           <input
             type="checkbox"
             checked={isSelected}
             onChange={(e) => handleSelectionChange(issue.id, e.target.checked)}
-            className="rounded border-slate-600 bg-slate-700 text-blue-500 focus:ring-blue-500"
-          />
+            className="rounded border-slate-600 bg-slate-700 text-blue-500 focus:ring-blue-500" />
+
         </td>
         
         <td className="px-3 py-3">
@@ -382,8 +382,8 @@ export const IssueListManager = ({
                 e.stopPropagation();
                 onIssueView?.(issue);
               }}
-              className="h-8 w-8 p-0 text-slate-400 hover:text-white"
-            >
+              className="h-8 w-8 p-0 text-slate-400 hover:text-white">
+
               <Eye className="w-4 h-4" />
             </Button>
             <Button
@@ -393,8 +393,8 @@ export const IssueListManager = ({
                 e.stopPropagation();
                 onIssueEdit?.(issue);
               }}
-              className="h-8 w-8 p-0 text-slate-400 hover:text-white"
-            >
+              className="h-8 w-8 p-0 text-slate-400 hover:text-white">
+
               <Edit3 className="w-4 h-4" />
             </Button>
             <Button
@@ -404,14 +404,14 @@ export const IssueListManager = ({
                 e.stopPropagation();
                 toggleRowExpansion(issue.id);
               }}
-              className="h-8 w-8 p-0 text-slate-400 hover:text-white"
-            >
+              className="h-8 w-8 p-0 text-slate-400 hover:text-white">
+
               {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </Button>
           </div>
         </td>
-      </motion.tr>
-    );
+      </motion.tr>);
+
   };
 
   // 渲染看板列
@@ -419,10 +419,10 @@ export const IssueListManager = ({
     const statusConfig = getIssueStatusConfig(status);
     const columnIssues = issuesByStatus[status] || [];
     const Icon = statusConfig.icon === 'AlertCircle' ? AlertCircle :
-                statusConfig.icon === 'Clock' ? Clock :
-                statusConfig.icon === 'CheckCircle2' ? CheckCircle2 :
-                statusConfig.icon === 'XCircle' ? XCircle : AlertCircle;
-    
+    statusConfig.icon === 'Clock' ? Clock :
+    statusConfig.icon === 'CheckCircle2' ? CheckCircle2 :
+    statusConfig.icon === 'XCircle' ? XCircle : AlertCircle;
+
     return (
       <div key={status} className="flex-1 min-w-0">
         <Card className="h-full border border-slate-700/70 bg-slate-900/40">
@@ -438,18 +438,18 @@ export const IssueListManager = ({
           <CardContent className="pt-0">
             <div className="space-y-3 min-h-[400px]">
               <AnimatePresence>
-                {columnIssues.map(issue => renderIssueCard(issue))}
+                {columnIssues.map((issue) => renderIssueCard(issue))}
               </AnimatePresence>
-              {columnIssues.length === 0 && (
-                <div className="text-center py-8 text-slate-500 text-sm">
+              {columnIssues.length === 0 &&
+              <div className="text-center py-8 text-slate-500 text-sm">
                   暂无问题
                 </div>
-              )}
+              }
             </div>
           </CardContent>
         </Card>
-      </div>
-    );
+      </div>);
+
   };
 
   return (
@@ -465,119 +465,119 @@ export const IssueListManager = ({
                 placeholder="搜索问题编号、标题、描述..."
                 value={searchTerm}
                 onChange={(e) => onSearchChange?.(e.target.value)}
-                className="pl-10 bg-slate-800/60 border-slate-700 text-white"
-              />
+                className="pl-10 bg-slate-800/60 border-slate-700 text-white" />
+
             </div>
             
             {/* 筛选选项 */}
             <div className="flex flex-wrap gap-2">
               <Select
                 value={filters.status || "all"}
-                onValueChange={(value) => onFilterChange?.({ ...filters, status: value })}
-              >
+                onValueChange={(value) => onFilterChange?.({ ...filters, status: value })}>
+
                 <SelectTrigger className="w-32 bg-slate-800/60 border-slate-700 text-white">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部状态</SelectItem>
-                  {Object.entries(issueStatusConfig).map(([key, config]) => (
-                    <SelectItem key={key} value={key}>{config.label}</SelectItem>
-                  ))}
+                  {Object.entries(issueStatusConfig).map(([key, config]) =>
+                  <SelectItem key={key} value={key}>{config.label}</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
 
               <Select
                 value={filters.severity || "all"}
-                onValueChange={(value) => onFilterChange?.({ ...filters, severity: value })}
-              >
+                onValueChange={(value) => onFilterChange?.({ ...filters, severity: value })}>
+
                 <SelectTrigger className="w-32 bg-slate-800/60 border-slate-700 text-white">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部严重程度</SelectItem>
-                  {Object.entries(issueSeverityConfig).map(([key, config]) => (
-                    <SelectItem key={key} value={key}>{config.label}</SelectItem>
-                  ))}
+                  {Object.entries(issueSeverityConfig).map(([key, config]) =>
+                  <SelectItem key={key} value={key}>{config.label}</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
 
               <Select
                 value={filters.category || "all"}
-                onValueChange={(value) => onFilterChange?.({ ...filters, category: value })}
-              >
+                onValueChange={(value) => onFilterChange?.({ ...filters, category: value })}>
+
                 <SelectTrigger className="w-32 bg-slate-800/60 border-slate-700 text-white">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部分类</SelectItem>
-                  {Object.entries(issueCategoryConfig).map(([key, config]) => (
-                    <SelectItem key={key} value={key}>{config.label}</SelectItem>
-                  ))}
+                  {Object.entries(issueCategoryConfig).map(([key, config]) =>
+                  <SelectItem key={key} value={key}>{config.label}</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
 
               <Select
                 value={sortBy}
-                onValueChange={onSortChange}
-              >
+                onValueChange={onSortChange}>
+
                 <SelectTrigger className="w-40 bg-slate-800/60 border-slate-700 text-white">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {ISSUE_SORT_OPTIONS.map(option => (
-                    <SelectItem key={option.value} value={option.value}>
+                  {ISSUE_SORT_OPTIONS.map((option) =>
+                  <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
 
             {/* 操作按钮 */}
             <div className="flex gap-2">
-              {onImport && (
-                <Button variant="outline" size="sm" onClick={onImport}>
+              {onImport &&
+              <Button variant="outline" size="sm" onClick={onImport}>
                   <Upload className="w-4 h-4 mr-2" />
                   导入
                 </Button>
-              )}
-              {onExport && (
-                <Button variant="outline" size="sm" onClick={onExport}>
+              }
+              {onExport &&
+              <Button variant="outline" size="sm" onClick={onExport}>
                   <Download className="w-4 h-4 mr-2" />
                   导出
                 </Button>
-              )}
-              {onIssueCreate && (
-                <Button onClick={onIssueCreate} className="bg-blue-600 hover:bg-blue-700">
+              }
+              {onIssueCreate &&
+              <Button onClick={onIssueCreate} className="bg-blue-600 hover:bg-blue-700">
                   <Plus className="w-4 h-4 mr-2" />
                   新建问题
                 </Button>
-              )}
+              }
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* 列表视图 */}
-      {viewMode === 'list' && (
-        <Card className="border border-slate-700/70 bg-slate-900/40">
+      {viewMode === 'list' &&
+      <Card className="border border-slate-700/70 bg-slate-900/40">
           <CardContent className="p-0">
-            {loading ? (
-              <div className="text-center py-8 text-slate-400">加载中...</div>
-            ) : sortedIssues.length === 0 ? (
-              <div className="text-center py-8 text-slate-400">暂无问题数据</div>
-            ) : (
-              <div className="overflow-x-auto">
+            {loading ?
+          <div className="text-center py-8 text-slate-400">加载中...</div> :
+          sortedIssues.length === 0 ?
+          <div className="text-center py-8 text-slate-400">暂无问题数据</div> :
+
+          <div className="overflow-x-auto">
                 <table className="min-w-full">
                   <thead>
                     <tr className="border-b border-slate-700/60">
                       <th className="px-3 py-3 text-left">
                         <input
-                          type="checkbox"
-                          checked={selectedIssues.length === sortedIssues.length}
-                          onChange={(e) => handleSelectAll(e.target.checked)}
-                          className="rounded border-slate-600 bg-slate-700 text-blue-500 focus:ring-blue-500"
-                        />
+                      type="checkbox"
+                      checked={selectedIssues.length === sortedIssues.length}
+                      onChange={(e) => handleSelectAll(e.target.checked)}
+                      className="rounded border-slate-600 bg-slate-700 text-blue-500 focus:ring-blue-500" />
+
                       </th>
                       <th className="px-3 py-3 text-left text-xs font-semibold text-slate-400">编号</th>
                       <th className="px-3 py-3 text-left text-xs font-semibold text-slate-400">标题</th>
@@ -595,36 +595,36 @@ export const IssueListManager = ({
                   </tbody>
                 </table>
               </div>
-            )}
+          }
           </CardContent>
         </Card>
-      )}
+      }
 
       {/* 看板视图 */}
-      {viewMode === 'kanban' && (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={(event) => setActiveId(event.active.id)}
-          onDragEnd={(event) => {
-            setActiveId(null);
-            // Handle drag end logic here
-          }}
-        >
+      {viewMode === 'kanban' &&
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={(event) => setActiveId(event.active.id)}
+        onDragEnd={(_event) => {
+          setActiveId(null);
+          // Handle drag end logic here
+        }}>
+
           <div className="flex gap-4 overflow-x-auto pb-4">
-            {Object.keys(issueStatusConfig).map(status => renderKanbanColumn(status))}
+            {Object.keys(issueStatusConfig).map((status) => renderKanbanColumn(status))}
           </div>
           <DragOverlay>
-            {activeId ? (
-              <div className="bg-slate-800 border border-slate-600 rounded-lg p-4 shadow-xl">
+            {activeId ?
+          <div className="bg-slate-800 border border-slate-600 rounded-lg p-4 shadow-xl">
                 <p className="text-white text-sm">拖拽中...</p>
-              </div>
-            ) : null}
+              </div> :
+          null}
           </DragOverlay>
         </DndContext>
-      )}
-    </div>
-  );
+      }
+    </div>);
+
 };
 
 export default IssueListManager;

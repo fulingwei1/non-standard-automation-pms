@@ -4,7 +4,7 @@
  */
 
 const isDevelopment =
-  import.meta.env?.DEV ?? process.env?.NODE_ENV !== "production";
+  import.meta.env?.DEV ?? import.meta.env?.MODE !== "production";
 
 const LOG_LEVELS = {
   NONE: 0,

@@ -3,7 +3,7 @@
  * Features: Purchase cost analysis, supplier cost comparison, cost trends
  */
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo as _useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   BarChart3,
@@ -18,8 +18,8 @@ import {
   Download,
   PieChart,
   ArrowUpRight,
-  ArrowDownRight,
-} from "lucide-react";
+  ArrowDownRight } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -38,16 +38,16 @@ import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger,
-} from "../components/ui";
+  TabsTrigger } from
+"../components/ui";
 import { cn, formatCurrency } from "../lib/utils";
 import { staggerContainer } from "../lib/animations";
-import { purchaseApi, supplierApi, costApi, projectApi } from "../services/api";
+import { purchaseApi, supplierApi as _supplierApi, costApi as _costApi, projectApi as _projectApi } from "../services/api";
 
 // Mock cost analysis data - 已移除，使用真实API
 
 export default function CostAnalysis() {
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState("overview");
   const [timeRange, setTimeRange] = useState("month");
   const [analysisData, setAnalysisData] = useState({
@@ -56,7 +56,7 @@ export default function CostAnalysis() {
     byCategory: [],
     bySupplier: [],
     costSavings: 0,
-    savingsRate: 0,
+    savingsRate: 0
   });
 
   const loadAnalysisData = useCallback(async () => {
@@ -66,15 +66,15 @@ export default function CostAnalysis() {
       // Calculate date range
       const now = new Date();
       const startDate =
-        timeRange === "month"
-          ? new Date(now.getFullYear(), now.getMonth(), 1)
-              .toISOString()
-              .split("T")[0]
-          : timeRange === "quarter"
-            ? new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1)
-                .toISOString()
-                .split("T")[0]
-            : new Date(now.getFullYear(), 0, 1).toISOString().split("T")[0];
+      timeRange === "month" ?
+      new Date(now.getFullYear(), now.getMonth(), 1).
+      toISOString().
+      split("T")[0] :
+      timeRange === "quarter" ?
+      new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1).
+      toISOString().
+      split("T")[0] :
+      new Date(now.getFullYear(), 0, 1).toISOString().split("T")[0];
       const endDate = now.toISOString().split("T")[0];
 
       // Load purchase orders
@@ -82,14 +82,14 @@ export default function CostAnalysis() {
         page: 1,
         page_size: 1000,
         start_date: startDate,
-        end_date: endDate,
+        end_date: endDate
       });
       const orders = ordersRes.data?.items || ordersRes.data || [];
 
       // Calculate statistics
       const totalCost = orders.reduce(
         (sum, o) => sum + parseFloat(o.total_amount || 0),
-        0,
+        0
       );
 
       // Group by category
@@ -98,7 +98,7 @@ export default function CostAnalysis() {
         order.items?.forEach((item) => {
           const category = item.material_category || item.category || "其他";
           const itemAmount = parseFloat(
-            item.amount || item.unit_price * item.quantity || 0,
+            item.amount || item.unit_price * item.quantity || 0
           );
           byCategory[category] = (byCategory[category] || 0) + itemAmount;
         });
@@ -108,7 +108,7 @@ export default function CostAnalysis() {
       const bySupplier = {};
       orders.forEach((order) => {
         const supplier =
-          order.supplier_name || order.supplier?.name || "未知供应商";
+        order.supplier_name || order.supplier?.name || "未知供应商";
         if (!bySupplier[supplier]) {
           bySupplier[supplier] = { amount: 0, orders: 0 };
         }
@@ -127,18 +127,18 @@ export default function CostAnalysis() {
             monthlyTrendMap[monthKey] = { amount: 0, orders: 0 };
           }
           monthlyTrendMap[monthKey].amount += parseFloat(
-            order.total_amount || 0,
+            order.total_amount || 0
           );
           monthlyTrendMap[monthKey].orders += 1;
         }
       });
-      const monthlyTrend = Object.entries(monthlyTrendMap)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([month, data]) => ({
-          month,
-          amount: data.amount,
-          orders: data.orders,
-        }));
+      const monthlyTrend = Object.entries(monthlyTrendMap).
+      sort(([a], [b]) => a.localeCompare(b)).
+      map(([month, data]) => ({
+        month,
+        amount: data.amount,
+        orders: data.orders
+      }));
 
       // Calculate cost savings (simplified: compare with previous period)
       let costSavings = 0;
@@ -147,17 +147,17 @@ export default function CostAnalysis() {
         const currentMonth = monthlyTrend[monthlyTrend.length - 1];
         const previousMonth = monthlyTrend[monthlyTrend.length - 2];
         const avgOrderCostCurrent =
-          currentMonth.orders > 0
-            ? currentMonth.amount / currentMonth.orders
-            : 0;
+        currentMonth.orders > 0 ?
+        currentMonth.amount / currentMonth.orders :
+        0;
         const avgOrderCostPrevious =
-          previousMonth.orders > 0
-            ? previousMonth.amount / previousMonth.orders
-            : 0;
+        previousMonth.orders > 0 ?
+        previousMonth.amount / previousMonth.orders :
+        0;
         if (avgOrderCostPrevious > 0) {
           const savingsPerOrder = avgOrderCostPrevious - avgOrderCostCurrent;
           costSavings = savingsPerOrder * currentMonth.orders;
-          savingsRate = (savingsPerOrder / avgOrderCostPrevious) * 100;
+          savingsRate = savingsPerOrder / avgOrderCostPrevious * 100;
         }
       }
 
@@ -167,16 +167,16 @@ export default function CostAnalysis() {
         byCategory: Object.entries(byCategory).map(([category, amount]) => ({
           category,
           amount,
-          percentage: totalCost > 0 ? (amount / totalCost) * 100 : 0,
+          percentage: totalCost > 0 ? amount / totalCost * 100 : 0
         })),
         bySupplier: Object.entries(bySupplier).map(([supplier, data]) => ({
           supplier,
           amount: data.amount,
           orders: data.orders,
-          avgPrice: data.orders > 0 ? data.amount / data.orders : 0,
+          avgPrice: data.orders > 0 ? data.amount / data.orders : 0
         })),
         costSavings: Math.max(0, costSavings), // Ensure non-negative
-        savingsRate: Math.max(0, savingsRate),
+        savingsRate: Math.max(0, savingsRate)
       });
     } catch (error) {
       console.error("Failed to load cost analysis:", error);
@@ -186,7 +186,7 @@ export default function CostAnalysis() {
         byCategory: [],
         bySupplier: [],
         costSavings: 0,
-        savingsRate: 0,
+        savingsRate: 0
       });
     } finally {
       setLoading(false);
@@ -202,8 +202,8 @@ export default function CostAnalysis() {
       <div className="container mx-auto px-4 py-6 space-y-6">
         <PageHeader
           title="成本分析"
-          description="采购成本分析、供应商成本对比、成本趋势"
-        />
+          description="采购成本分析、供应商成本对比、成本趋势" />
+
 
         {/* Time Range Selector */}
         <Card className="bg-slate-800/50 border-slate-700/50">
@@ -236,8 +236,8 @@ export default function CostAnalysis() {
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
-          className="grid grid-cols-1 md:grid-cols-4 gap-4"
-        >
+          className="grid grid-cols-1 md:grid-cols-4 gap-4">
+
           <Card className="bg-slate-800/50 border-slate-700/50">
             <CardContent className="p-5">
               <div className="flex items-start justify-between">
@@ -312,31 +312,31 @@ export default function CostAnalysis() {
         <Tabs
           value={selectedTab}
           onValueChange={setSelectedTab}
-          className="space-y-6"
-        >
+          className="space-y-6">
+
           <TabsList className="bg-slate-800/50 border-slate-700/50">
             <TabsTrigger
               value="overview"
-              className="data-[state=active]:bg-slate-700"
-            >
+              className="data-[state=active]:bg-slate-700">
+
               概览
             </TabsTrigger>
             <TabsTrigger
               value="category"
-              className="data-[state=active]:bg-slate-700"
-            >
+              className="data-[state=active]:bg-slate-700">
+
               按类别
             </TabsTrigger>
             <TabsTrigger
               value="supplier"
-              className="data-[state=active]:bg-slate-700"
-            >
+              className="data-[state=active]:bg-slate-700">
+
               按供应商
             </TabsTrigger>
             <TabsTrigger
               value="trend"
-              className="data-[state=active]:bg-slate-700"
-            >
+              className="data-[state=active]:bg-slate-700">
+
               趋势分析
             </TabsTrigger>
           </TabsList>
@@ -356,8 +356,8 @@ export default function CostAnalysis() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {analysisData.byCategory.map((item, idx) => (
-                      <div key={idx} className="space-y-2">
+                    {analysisData.byCategory.map((item, idx) =>
+                    <div key={idx} className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-slate-300">
                             {item.category}
@@ -369,12 +369,12 @@ export default function CostAnalysis() {
                         </div>
                         <div className="w-full bg-slate-700/50 rounded-full h-2">
                           <div
-                            className="bg-blue-500 h-2 rounded-full"
-                            style={{ width: `${item.percentage}%` }}
-                          />
+                          className="bg-blue-500 h-2 rounded-full"
+                          style={{ width: `${item.percentage}%` }} />
+
                         </div>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -389,27 +389,27 @@ export default function CostAnalysis() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {analysisData.bySupplier
-                      .sort((a, b) => b.amount - a.amount)
-                      .slice(0, 5)
-                      .map((item, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg"
-                        >
+                    {analysisData.bySupplier.
+                    sort((a, b) => b.amount - a.amount).
+                    slice(0, 5).
+                    map((item, idx) =>
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg">
+
                           <div className="flex items-center gap-3">
                             <div
-                              className={cn(
-                                "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold",
-                                idx === 0
-                                  ? "bg-amber-500/20 text-amber-400"
-                                  : idx === 1
-                                    ? "bg-slate-500/20 text-slate-400"
-                                    : idx === 2
-                                      ? "bg-orange-500/20 text-orange-400"
-                                      : "bg-slate-600/20 text-slate-400",
-                              )}
-                            >
+                          className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold",
+                            idx === 0 ?
+                            "bg-amber-500/20 text-amber-400" :
+                            idx === 1 ?
+                            "bg-slate-500/20 text-slate-400" :
+                            idx === 2 ?
+                            "bg-orange-500/20 text-orange-400" :
+                            "bg-slate-600/20 text-slate-400"
+                          )}>
+
                               {idx + 1}
                             </div>
                             <div>
@@ -430,7 +430,7 @@ export default function CostAnalysis() {
                             </p>
                           </div>
                         </div>
-                      ))}
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -448,8 +448,8 @@ export default function CostAnalysis() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {analysisData.byCategory.map((item, idx) => (
-                    <div key={idx} className="p-4 bg-slate-900/50 rounded-lg">
+                  {analysisData.byCategory.map((item, idx) =>
+                  <div key={idx} className="p-4 bg-slate-900/50 rounded-lg">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-slate-200 font-medium">
                           {item.category}
@@ -461,16 +461,16 @@ export default function CostAnalysis() {
                       <div className="flex items-center gap-2">
                         <div className="flex-1 bg-slate-700/50 rounded-full h-2">
                           <div
-                            className="bg-blue-500 h-2 rounded-full"
-                            style={{ width: `${item.percentage}%` }}
-                          />
+                          className="bg-blue-500 h-2 rounded-full"
+                          style={{ width: `${item.percentage}%` }} />
+
                         </div>
                         <span className="text-sm text-slate-400 w-16 text-right">
                           {item.percentage.toFixed(1)}%
                         </span>
                       </div>
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -487,10 +487,10 @@ export default function CostAnalysis() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {analysisData.bySupplier
-                    .sort((a, b) => b.amount - a.amount)
-                    .map((item, idx) => (
-                      <div key={idx} className="p-4 bg-slate-900/50 rounded-lg">
+                  {analysisData.bySupplier.
+                  sort((a, b) => b.amount - a.amount).
+                  map((item, idx) =>
+                  <div key={idx} className="p-4 bg-slate-900/50 rounded-lg">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-3">
                             <Building2 className="w-5 h-5 text-slate-400" />
@@ -515,22 +515,22 @@ export default function CostAnalysis() {
                         <div className="flex items-center gap-2">
                           <div className="flex-1 bg-slate-700/50 rounded-full h-1.5">
                             <div
-                              className="bg-purple-500 h-1.5 rounded-full"
-                              style={{
-                                width: `${(item.amount / analysisData.totalPurchaseCost) * 100}%`,
-                              }}
-                            />
+                          className="bg-purple-500 h-1.5 rounded-full"
+                          style={{
+                            width: `${item.amount / analysisData.totalPurchaseCost * 100}%`
+                          }} />
+
                           </div>
                           <span className="text-xs text-slate-400 w-20 text-right">
                             {(
-                              (item.amount / analysisData.totalPurchaseCost) *
-                              100
-                            ).toFixed(1)}
+                        item.amount / analysisData.totalPurchaseCost *
+                        100).
+                        toFixed(1)}
                             %
                           </span>
                         </div>
                       </div>
-                    ))}
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -546,10 +546,10 @@ export default function CostAnalysis() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {analysisData.monthlyTrend.length > 0 ? (
-                  <div className="space-y-4">
-                    {analysisData.monthlyTrend.map((item, idx) => (
-                      <div key={idx} className="p-4 bg-slate-900/50 rounded-lg">
+                {analysisData.monthlyTrend.length > 0 ?
+                <div className="space-y-4">
+                    {analysisData.monthlyTrend.map((item, idx) =>
+                  <div key={idx} className="p-4 bg-slate-900/50 rounded-lg">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-slate-200 font-medium">
                             {item.month}
@@ -562,18 +562,18 @@ export default function CostAnalysis() {
                           <span>{item.orders} 个订单</span>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-slate-400">
+                  )}
+                  </div> :
+
+                <div className="text-center py-8 text-slate-400">
                     暂无趋势数据
                   </div>
-                )}
+                }
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
       </div>
-    </div>
-  );
+    </div>);
+
 }

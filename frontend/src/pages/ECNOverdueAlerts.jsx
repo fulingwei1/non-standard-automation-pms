@@ -11,16 +11,16 @@ import {
   CheckCircle2,
   ExternalLink,
   RefreshCw,
-  Filter,
-} from "lucide-react";
+  Filter } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
-} from "../components/ui/card";
+  CardDescription } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import {
@@ -28,36 +28,36 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "../components/ui/table";
+  TableRow } from
+"../components/ui/table";
 import { Checkbox } from "../components/ui/checkbox";
 import { ecnApi } from "../services/api";
-import { formatDate } from "../lib/utils";
+import { formatDate as _formatDate } from "../lib/utils";
 
 const alertTypeConfigs = {
   EVALUATION_OVERDUE: {
     label: "评估超时",
     color: "bg-amber-500",
-    icon: FileText,
+    icon: FileText
   },
   APPROVAL_OVERDUE: {
     label: "审批超时",
     color: "bg-red-500",
-    icon: CheckCircle2,
+    icon: CheckCircle2
   },
   TASK_OVERDUE: {
     label: "任务超时",
     color: "bg-orange-500",
-    icon: Clock,
-  },
+    icon: Clock
+  }
 };
 
 export default function ECNOverdueAlerts() {
@@ -87,7 +87,7 @@ export default function ECNOverdueAlerts() {
     } catch (error) {
       console.error("Failed to fetch overdue alerts:", error);
       alert(
-        "获取超时提醒失败: " + (error.response?.data?.detail || error.message),
+        "获取超时提醒失败: " + (error.response?.data?.detail || error.message)
       );
     } finally {
       setLoading(false);
@@ -112,7 +112,7 @@ export default function ECNOverdueAlerts() {
     setSelectedAlerts(newSelected);
   };
 
-  const handleSelectAll = () => {
+  const _handleSelectAll = () => {
     if (selectedAlerts.size === filteredAlerts.length) {
       setSelectedAlerts(new Set());
     } else {
@@ -120,9 +120,9 @@ export default function ECNOverdueAlerts() {
         new Set(
           filteredAlerts.map(
             (a) =>
-              `${a.type}-${a.ecn_id}-${a.task_id || a.approval_level || a.dept || ""}`,
-          ),
-        ),
+            `${a.type}-${a.ecn_id}-${a.task_id || a.approval_level || a.dept || ""}`
+          )
+        )
       );
     }
   };
@@ -138,10 +138,10 @@ export default function ECNOverdueAlerts() {
     }
 
     if (
-      !confirm(
-        `确认发送提醒通知给相关人员？将处理 ${selectedAlerts.size} 个超时提醒。`,
-      )
-    ) {
+    !confirm(
+      `确认发送提醒通知给相关人员？将处理 ${selectedAlerts.size} 个超时提醒。`
+    ))
+    {
       return;
     }
 
@@ -167,21 +167,21 @@ export default function ECNOverdueAlerts() {
           // 使用toast替代alert，如果toast可用
           if (window.toast) {
             window.toast.success(
-              `批量处理成功！已发送提醒通知给 ${success_count} 个提醒的相关人员。`,
+              `批量处理成功！已发送提醒通知给 ${success_count} 个提醒的相关人员。`
             );
           } else {
             alert(
-              `批量处理成功！已发送提醒通知给 ${success_count} 个提醒的相关人员。`,
+              `批量处理成功！已发送提醒通知给 ${success_count} 个提醒的相关人员。`
             );
           }
         } else {
           if (window.toast) {
             window.toast.warning(
-              `批量处理完成：成功 ${success_count} 个，失败 ${fail_count} 个。`,
+              `批量处理完成：成功 ${success_count} 个，失败 ${fail_count} 个。`
             );
           } else {
             alert(
-              `批量处理完成：成功 ${success_count} 个，失败 ${fail_count} 个。`,
+              `批量处理完成：成功 ${success_count} 个，失败 ${fail_count} 个。`
             );
           }
         }
@@ -198,7 +198,7 @@ export default function ECNOverdueAlerts() {
     } catch (error) {
       console.error("批量处理失败:", error);
       const errorMsg =
-        error.response?.data?.detail || error.message || "批量处理失败";
+      error.response?.data?.detail || error.message || "批量处理失败";
       if (window.toast) {
         window.toast.error("批量处理失败: " + errorMsg);
       } else {
@@ -211,7 +211,7 @@ export default function ECNOverdueAlerts() {
     const groups = {
       EVALUATION_OVERDUE: [],
       APPROVAL_OVERDUE: [],
-      TASK_OVERDUE: [],
+      TASK_OVERDUE: []
     };
     alerts.forEach((alert) => {
       if (groups[alert.type]) {
@@ -231,8 +231,8 @@ export default function ECNOverdueAlerts() {
     <div className="space-y-6 p-6">
       <PageHeader
         title="ECN超时提醒"
-        description="查看和处理ECN评估、审批、执行任务超时提醒"
-      />
+        description="查看和处理ECN评估、审批、执行任务超时提醒" />
+
 
       {/* 统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -303,11 +303,11 @@ export default function ECNOverdueAlerts() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {selectedAlerts.size > 0 && (
-                <Button variant="outline" onClick={handleBatchProcess}>
+              {selectedAlerts.size > 0 &&
+              <Button variant="outline" onClick={handleBatchProcess}>
                   批量处理 ({selectedAlerts.size})
                 </Button>
-              )}
+              }
               <Button onClick={fetchAlerts} variant="outline">
                 <RefreshCw className="w-4 h-4 mr-2" />
                 刷新
@@ -318,27 +318,27 @@ export default function ECNOverdueAlerts() {
       </Card>
 
       {/* 超时提醒列表 */}
-      {loading ? (
-        <Card>
+      {loading ?
+      <Card>
           <CardContent className="pt-6">
             <div className="text-center py-8 text-slate-400">加载中...</div>
           </CardContent>
-        </Card>
-      ) : filteredAlerts.length === 0 ? (
-        <Card>
+        </Card> :
+      filteredAlerts.length === 0 ?
+      <Card>
           <CardContent className="pt-6">
             <div className="text-center py-8 text-slate-400">
-              {filterType === "all"
-                ? "暂无超时提醒"
-                : `暂无${alertTypeConfigs[filterType]?.label || ""}提醒`}
+              {filterType === "all" ?
+            "暂无超时提醒" :
+            `暂无${alertTypeConfigs[filterType]?.label || ""}提醒`}
             </div>
           </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
+        </Card> :
+
+      <div className="space-y-4">
           {/* 评估超时 */}
-          {groupedAlerts.EVALUATION_OVERDUE.length > 0 && (
-            <Card>
+          {groupedAlerts.EVALUATION_OVERDUE.length > 0 &&
+        <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="w-5 h-5 text-amber-500" />
@@ -352,36 +352,36 @@ export default function ECNOverdueAlerts() {
                     <TableRow>
                       <TableHead className="w-12">
                         <Checkbox
-                          checked={
-                            selectedAlerts.size ===
-                              groupedAlerts.EVALUATION_OVERDUE.length &&
-                            groupedAlerts.EVALUATION_OVERDUE.length > 0 &&
-                            groupedAlerts.EVALUATION_OVERDUE.every((a) =>
-                              selectedAlerts.has(
-                                `${a.type}-${a.ecn_id}-${a.dept || ""}`,
-                              ),
-                            )
-                          }
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              const newSelected = new Set(selectedAlerts);
-                              groupedAlerts.EVALUATION_OVERDUE.forEach((a) => {
-                                newSelected.add(
-                                  `${a.type}-${a.ecn_id}-${a.dept || ""}`,
-                                );
-                              });
-                              setSelectedAlerts(newSelected);
-                            } else {
-                              const newSelected = new Set(selectedAlerts);
-                              groupedAlerts.EVALUATION_OVERDUE.forEach((a) => {
-                                newSelected.delete(
-                                  `${a.type}-${a.ecn_id}-${a.dept || ""}`,
-                                );
-                              });
-                              setSelectedAlerts(newSelected);
-                            }
-                          }}
-                        />
+                      checked={
+                      selectedAlerts.size ===
+                      groupedAlerts.EVALUATION_OVERDUE.length &&
+                      groupedAlerts.EVALUATION_OVERDUE.length > 0 &&
+                      groupedAlerts.EVALUATION_OVERDUE.every((a) =>
+                      selectedAlerts.has(
+                        `${a.type}-${a.ecn_id}-${a.dept || ""}`
+                      )
+                      )
+                      }
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          const newSelected = new Set(selectedAlerts);
+                          groupedAlerts.EVALUATION_OVERDUE.forEach((a) => {
+                            newSelected.add(
+                              `${a.type}-${a.ecn_id}-${a.dept || ""}`
+                            );
+                          });
+                          setSelectedAlerts(newSelected);
+                        } else {
+                          const newSelected = new Set(selectedAlerts);
+                          groupedAlerts.EVALUATION_OVERDUE.forEach((a) => {
+                            newSelected.delete(
+                              `${a.type}-${a.ecn_id}-${a.dept || ""}`
+                            );
+                          });
+                          setSelectedAlerts(newSelected);
+                        }
+                      }} />
+
                       </TableHead>
                       <TableHead>ECN编号</TableHead>
                       <TableHead>ECN标题</TableHead>
@@ -392,20 +392,20 @@ export default function ECNOverdueAlerts() {
                   </TableHeader>
                   <TableBody>
                     {groupedAlerts.EVALUATION_OVERDUE.map((alert, index) => {
-                      const alertId = `${alert.type}-${alert.ecn_id}-${alert.dept || ""}`;
-                      return (
-                        <TableRow key={index}>
+                  const alertId = `${alert.type}-${alert.ecn_id}-${alert.dept || ""}`;
+                  return (
+                    <TableRow key={index}>
                           <TableCell>
                             <Checkbox
-                              checked={selectedAlerts.has(alertId)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  handleSelectAlert(alertId);
-                                } else {
-                                  handleSelectAlert(alertId);
-                                }
-                              }}
-                            />
+                          checked={selectedAlerts.has(alertId)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              handleSelectAlert(alertId);
+                            } else {
+                              handleSelectAlert(alertId);
+                            }
+                          }} />
+
                           </TableCell>
                           <TableCell className="font-mono text-sm">
                             {alert.ecn_no}
@@ -421,26 +421,26 @@ export default function ECNOverdueAlerts() {
                           </TableCell>
                           <TableCell>
                             <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleViewECN(alert.ecn_id)}
-                            >
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleViewECN(alert.ecn_id)}>
+
                               <ExternalLink className="w-4 h-4 mr-2" />
                               查看ECN
                             </Button>
                           </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                        </TableRow>);
+
+                })}
                   </TableBody>
                 </Table>
               </CardContent>
             </Card>
-          )}
+        }
 
           {/* 审批超时 */}
-          {groupedAlerts.APPROVAL_OVERDUE.length > 0 && (
-            <Card>
+          {groupedAlerts.APPROVAL_OVERDUE.length > 0 &&
+        <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CheckCircle2 className="w-5 h-5 text-red-500" />
@@ -454,36 +454,36 @@ export default function ECNOverdueAlerts() {
                     <TableRow>
                       <TableHead className="w-12">
                         <Checkbox
-                          checked={
-                            selectedAlerts.size ===
-                              groupedAlerts.APPROVAL_OVERDUE.length &&
-                            groupedAlerts.APPROVAL_OVERDUE.length > 0 &&
-                            groupedAlerts.APPROVAL_OVERDUE.every((a) =>
-                              selectedAlerts.has(
-                                `${a.type}-${a.ecn_id}-${a.approval_level || ""}`,
-                              ),
-                            )
-                          }
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              const newSelected = new Set(selectedAlerts);
-                              groupedAlerts.APPROVAL_OVERDUE.forEach((a) => {
-                                newSelected.add(
-                                  `${a.type}-${a.ecn_id}-${a.approval_level || ""}`,
-                                );
-                              });
-                              setSelectedAlerts(newSelected);
-                            } else {
-                              const newSelected = new Set(selectedAlerts);
-                              groupedAlerts.APPROVAL_OVERDUE.forEach((a) => {
-                                newSelected.delete(
-                                  `${a.type}-${a.ecn_id}-${a.approval_level || ""}`,
-                                );
-                              });
-                              setSelectedAlerts(newSelected);
-                            }
-                          }}
-                        />
+                      checked={
+                      selectedAlerts.size ===
+                      groupedAlerts.APPROVAL_OVERDUE.length &&
+                      groupedAlerts.APPROVAL_OVERDUE.length > 0 &&
+                      groupedAlerts.APPROVAL_OVERDUE.every((a) =>
+                      selectedAlerts.has(
+                        `${a.type}-${a.ecn_id}-${a.approval_level || ""}`
+                      )
+                      )
+                      }
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          const newSelected = new Set(selectedAlerts);
+                          groupedAlerts.APPROVAL_OVERDUE.forEach((a) => {
+                            newSelected.add(
+                              `${a.type}-${a.ecn_id}-${a.approval_level || ""}`
+                            );
+                          });
+                          setSelectedAlerts(newSelected);
+                        } else {
+                          const newSelected = new Set(selectedAlerts);
+                          groupedAlerts.APPROVAL_OVERDUE.forEach((a) => {
+                            newSelected.delete(
+                              `${a.type}-${a.ecn_id}-${a.approval_level || ""}`
+                            );
+                          });
+                          setSelectedAlerts(newSelected);
+                        }
+                      }} />
+
                       </TableHead>
                       <TableHead>ECN编号</TableHead>
                       <TableHead>ECN标题</TableHead>
@@ -495,20 +495,20 @@ export default function ECNOverdueAlerts() {
                   </TableHeader>
                   <TableBody>
                     {groupedAlerts.APPROVAL_OVERDUE.map((alert, index) => {
-                      const alertId = `${alert.type}-${alert.ecn_id}-${alert.approval_level || ""}`;
-                      return (
-                        <TableRow key={index}>
+                  const alertId = `${alert.type}-${alert.ecn_id}-${alert.approval_level || ""}`;
+                  return (
+                    <TableRow key={index}>
                           <TableCell>
                             <Checkbox
-                              checked={selectedAlerts.has(alertId)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  handleSelectAlert(alertId);
-                                } else {
-                                  handleSelectAlert(alertId);
-                                }
-                              }}
-                            />
+                          checked={selectedAlerts.has(alertId)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              handleSelectAlert(alertId);
+                            } else {
+                              handleSelectAlert(alertId);
+                            }
+                          }} />
+
                           </TableCell>
                           <TableCell className="font-mono text-sm">
                             {alert.ecn_no}
@@ -527,26 +527,26 @@ export default function ECNOverdueAlerts() {
                           </TableCell>
                           <TableCell>
                             <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleViewECN(alert.ecn_id)}
-                            >
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleViewECN(alert.ecn_id)}>
+
                               <ExternalLink className="w-4 h-4 mr-2" />
                               查看ECN
                             </Button>
                           </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                        </TableRow>);
+
+                })}
                   </TableBody>
                 </Table>
               </CardContent>
             </Card>
-          )}
+        }
 
           {/* 任务超时 */}
-          {groupedAlerts.TASK_OVERDUE.length > 0 && (
-            <Card>
+          {groupedAlerts.TASK_OVERDUE.length > 0 &&
+        <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Clock className="w-5 h-5 text-orange-500" />
@@ -562,36 +562,36 @@ export default function ECNOverdueAlerts() {
                     <TableRow>
                       <TableHead className="w-12">
                         <Checkbox
-                          checked={
-                            selectedAlerts.size ===
-                              groupedAlerts.TASK_OVERDUE.length &&
-                            groupedAlerts.TASK_OVERDUE.length > 0 &&
-                            groupedAlerts.TASK_OVERDUE.every((a) =>
-                              selectedAlerts.has(
-                                `${a.type}-${a.ecn_id}-${a.task_id || ""}`,
-                              ),
-                            )
-                          }
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              const newSelected = new Set(selectedAlerts);
-                              groupedAlerts.TASK_OVERDUE.forEach((a) => {
-                                newSelected.add(
-                                  `${a.type}-${a.ecn_id}-${a.task_id || ""}`,
-                                );
-                              });
-                              setSelectedAlerts(newSelected);
-                            } else {
-                              const newSelected = new Set(selectedAlerts);
-                              groupedAlerts.TASK_OVERDUE.forEach((a) => {
-                                newSelected.delete(
-                                  `${a.type}-${a.ecn_id}-${a.task_id || ""}`,
-                                );
-                              });
-                              setSelectedAlerts(newSelected);
-                            }
-                          }}
-                        />
+                      checked={
+                      selectedAlerts.size ===
+                      groupedAlerts.TASK_OVERDUE.length &&
+                      groupedAlerts.TASK_OVERDUE.length > 0 &&
+                      groupedAlerts.TASK_OVERDUE.every((a) =>
+                      selectedAlerts.has(
+                        `${a.type}-${a.ecn_id}-${a.task_id || ""}`
+                      )
+                      )
+                      }
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          const newSelected = new Set(selectedAlerts);
+                          groupedAlerts.TASK_OVERDUE.forEach((a) => {
+                            newSelected.add(
+                              `${a.type}-${a.ecn_id}-${a.task_id || ""}`
+                            );
+                          });
+                          setSelectedAlerts(newSelected);
+                        } else {
+                          const newSelected = new Set(selectedAlerts);
+                          groupedAlerts.TASK_OVERDUE.forEach((a) => {
+                            newSelected.delete(
+                              `${a.type}-${a.ecn_id}-${a.task_id || ""}`
+                            );
+                          });
+                          setSelectedAlerts(newSelected);
+                        }
+                      }} />
+
                       </TableHead>
                       <TableHead>ECN编号</TableHead>
                       <TableHead>ECN标题</TableHead>
@@ -602,20 +602,20 @@ export default function ECNOverdueAlerts() {
                   </TableHeader>
                   <TableBody>
                     {groupedAlerts.TASK_OVERDUE.map((alert, index) => {
-                      const alertId = `${alert.type}-${alert.ecn_id}-${alert.task_id || ""}`;
-                      return (
-                        <TableRow key={index}>
+                  const alertId = `${alert.type}-${alert.ecn_id}-${alert.task_id || ""}`;
+                  return (
+                    <TableRow key={index}>
                           <TableCell>
                             <Checkbox
-                              checked={selectedAlerts.has(alertId)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  handleSelectAlert(alertId);
-                                } else {
-                                  handleSelectAlert(alertId);
-                                }
-                              }}
-                            />
+                          checked={selectedAlerts.has(alertId)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              handleSelectAlert(alertId);
+                            } else {
+                              handleSelectAlert(alertId);
+                            }
+                          }} />
+
                           </TableCell>
                           <TableCell className="font-mono text-sm">
                             {alert.ecn_no}
@@ -629,24 +629,24 @@ export default function ECNOverdueAlerts() {
                           </TableCell>
                           <TableCell>
                             <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleViewECN(alert.ecn_id)}
-                            >
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleViewECN(alert.ecn_id)}>
+
                               <ExternalLink className="w-4 h-4 mr-2" />
                               查看ECN
                             </Button>
                           </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                        </TableRow>);
+
+                })}
                   </TableBody>
                 </Table>
               </CardContent>
             </Card>
-          )}
+        }
         </div>
-      )}
-    </div>
-  );
+      }
+    </div>);
+
 }

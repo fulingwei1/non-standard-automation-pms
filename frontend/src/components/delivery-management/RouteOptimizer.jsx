@@ -6,23 +6,23 @@ import { Badge } from "../ui/badge";
 import { Progress } from "../ui/progress";
 import {
   Map, Route, Navigation, MapPin, Truck, Timer, AlertTriangle,
-  CheckCircle, XCircle, RefreshCw, Settings, Eye, Download
-} from 'lucide-react';
+  CheckCircle, XCircle, RefreshCw, Settings, Eye, Download } from
+'lucide-react';
 import { cn } from "../../lib/utils";
 import {
-  deliveryStatusConfigs,
-  deliveryPriorityConfigs,
-  deliveryMethodConfigs,
-  deliveryStageConfigs,
+  deliveryStatusConfigs as _deliveryStatusConfigs,
+  deliveryPriorityConfigs as _deliveryPriorityConfigs,
+  deliveryMethodConfigs as _deliveryMethodConfigs,
+  deliveryStageConfigs as _deliveryStageConfigs,
   getStatusConfig,
-  getPriorityConfig,
-  getMethodConfig,
-  getStageConfig,
-  formatStatus,
-  formatPriority,
-  formatMethod,
-  formatStage
-} from './deliveryConstants';
+  getPriorityConfig as _getPriorityConfig,
+  getMethodConfig as _getMethodConfig,
+  getStageConfig as _getStageConfig,
+  formatStatus as _formatStatus,
+  formatPriority as _formatPriority,
+  formatMethod as _formatMethod,
+  formatStage as _formatStage } from
+'./deliveryConstants';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -65,38 +65,38 @@ const RouteAlgorithm = ({ onOptimize, optimizing, algorithm = 'genetic' }) => {
             variant="outline"
             onClick={() => onOptimize('genetic')}
             disabled={optimizing}
-            className={algorithm === 'genetic' ? 'ring-2 ring-blue-500' : ''}
-          >
+            className={algorithm === 'genetic' ? 'ring-2 ring-blue-500' : ''}>
+
             遗传算法
           </Button>
           <Button
             variant="outline"
             onClick={() => onOptimize('greedy')}
             disabled={optimizing}
-            className={algorithm === 'greedy' ? 'ring-2 ring-blue-500' : ''}
-          >
+            className={algorithm === 'greedy' ? 'ring-2 ring-blue-500' : ''}>
+
             贪心算法
           </Button>
           <Button
             variant="outline"
             onClick={() => onOptimize('simulated')}
             disabled={optimizing}
-            className={algorithm === 'simulated' ? 'ring-2 ring-blue-500' : ''}
-          >
+            className={algorithm === 'simulated' ? 'ring-2 ring-blue-500' : ''}>
+
             模拟退火
           </Button>
           <Button
             variant="outline"
             onClick={() => onOptimize('nearest')}
             disabled={optimizing}
-            className={algorithm === 'nearest' ? 'ring-2 ring-blue-500' : ''}
-          >
+            className={algorithm === 'nearest' ? 'ring-2 ring-blue-500' : ''}>
+
             最近邻
           </Button>
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 };
 
 /**
@@ -104,11 +104,11 @@ const RouteAlgorithm = ({ onOptimize, optimizing, algorithm = 'genetic' }) => {
  */
 const RouteStats = ({ stats }) => {
   const statConfigs = [
-    { key: 'total_distance', label: '总距离', unit: 'km', icon: '🛣️' },
-    { key: 'total_time', label: '总时间', unit: '小时', icon: '⏰' },
-    { key: 'deliveries_count', label: '配送任务', unit: '单', icon: '📦' },
-    { key: 'savings', label: '时间节省', unit: '%', icon: '⚡' },
-  ];
+  { key: 'total_distance', label: '总距离', unit: 'km', icon: '🛣️' },
+  { key: 'total_time', label: '总时间', unit: '小时', icon: '⏰' },
+  { key: 'deliveries_count', label: '配送任务', unit: '单', icon: '📦' },
+  { key: 'savings', label: '时间节省', unit: '%', icon: '⚡' }];
+
 
   return (
     <Card>
@@ -117,8 +117,8 @@ const RouteStats = ({ stats }) => {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {statConfigs.map((stat) => (
-            <div key={stat.key} className="text-center">
+          {statConfigs.map((stat) =>
+          <div key={stat.key} className="text-center">
               <div className="text-2xl mb-1">{stat.icon}</div>
               <div className="text-2xl font-bold text-blue-600">
                 {stats[stat.key] || 0}
@@ -130,11 +130,11 @@ const RouteStats = ({ stats }) => {
                 {stats[stat.key + '_unit'] || stat.unit}
               </div>
             </div>
-          ))}
+          )}
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 };
 
 /**
@@ -152,8 +152,8 @@ const RouteNode = ({ node, isActive, onClick }) => {
         isActive ? "ring-2 ring-blue-500 border-blue-300" : "border-slate-200",
         isDelivery ? "bg-white" : "bg-slate-50"
       )}
-      onClick={onClick}
-    >
+      onClick={onClick}>
+
       <div className="flex items-center gap-2">
         <div className={cn(
           "w-8 h-8 rounded-full flex items-center justify-center text-white text-sm",
@@ -163,32 +163,32 @@ const RouteNode = ({ node, isActive, onClick }) => {
         </div>
         <div className="flex-1">
           <div className="font-medium flex items-center gap-2">
-            {isDelivery ? (
-              <>
+            {isDelivery ?
+            <>
                 <MapPin className="w-4 h-4 text-slate-500" />
                 {node.recipient_name}
-              </>
-            ) : (
-              <Truck className="w-4 h-4 text-slate-500" />
-            )}
+              </> :
+
+            <Truck className="w-4 h-4 text-slate-500" />
+            }
           </div>
           <div className="text-sm text-slate-500">
             {isDelivery ? node.address : "配送中心"}
           </div>
-          {node.estimated_time && (
-            <div className="text-xs text-slate-400">
+          {node.estimated_time &&
+          <div className="text-xs text-slate-400">
               预计 {new Date(node.estimated_time).toLocaleTimeString()}
             </div>
-          )}
+          }
         </div>
-        {node.distance && (
-          <div className="text-sm text-slate-500">
+        {node.distance &&
+        <div className="text-sm text-slate-500">
             {node.distance} km
           </div>
-        )}
+        }
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
 /**
@@ -218,14 +218,14 @@ export const RouteOptimizer = ({
     if (currentRoute) {
       // 构建路线节点
       const nodes = [
-        {
-          type: 'depot',
-          name: '配送中心',
-          address: currentRoute.depot_address,
-          index: 0,
-          status: 'COMPLETED',
-        }
-      ];
+      {
+        type: 'depot',
+        name: '配送中心',
+        address: currentRoute.depot_address,
+        index: 0,
+        status: 'COMPLETED'
+      }];
+
 
       currentRoute.steps.forEach((step, index) => {
         nodes.push({
@@ -248,11 +248,6 @@ export const RouteOptimizer = ({
 
   const handleOptimize = async (algorithm) => {
     setSelectedAlgorithm(algorithm);
-    await onOptimize(algorithm);
-  };
-
-  const handleOptimize = async (algorithm) => {
-    setSelectedAlgorithm(algorithm);
     await onRouteUpdate(deliveries, algorithm);
   };
 
@@ -268,18 +263,18 @@ export const RouteOptimizer = ({
       variants={fadeIn}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       {/* 算法选择 */}
       <RouteAlgorithm
         onOptimize={handleOptimize}
         optimizing={optimizing}
-        algorithm={selectedAlgorithm}
-      />
+        algorithm={selectedAlgorithm} />
+
 
       {/* 优化进度 */}
-      {optimizing && (
-        <Card>
+      {optimizing &&
+      <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3 mb-4">
               <RefreshCw className="w-5 h-5 text-blue-500 animate-spin" />
@@ -288,12 +283,12 @@ export const RouteOptimizer = ({
             <Progress value={75} className="h-2" />
           </CardContent>
         </Card>
-      )}
+      }
 
       {/* 路线统计 */}
-      {optimizationStats && Object.keys(optimizationStats).length > 0 && (
-        <RouteStats stats={optimizationStats} />
-      )}
+      {optimizationStats && Object.keys(optimizationStats).length > 0 &&
+      <RouteStats stats={optimizationStats} />
+      }
 
       {/* 路线展示 */}
       <Card>
@@ -302,62 +297,62 @@ export const RouteOptimizer = ({
             <CardTitle className="text-base flex items-center gap-2">
               <Route className="w-5 h-5 text-blue-600" />
               优化路线
-              {selectedRoute && (
-                <Badge className="bg-green-500">已优化</Badge>
-              )}
+              {selectedRoute &&
+              <Badge className="bg-green-500">已优化</Badge>
+              }
             </CardTitle>
-            {selectedRoute && (
-              <div className="flex gap-2">
+            {selectedRoute &&
+            <div className="flex gap-2">
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onExportRoute}
-                >
+                variant="outline"
+                size="sm"
+                onClick={onExportRoute}>
+
                   <Download className="w-4 h-4 mr-2" />
                   导出路线
                 </Button>
               </div>
-            )}
+            }
           </div>
         </CardHeader>
         <CardContent>
-          {routeNodes.length > 0 ? (
-            <div className="space-y-2">
-              {routeNodes.map((node, index) => (
-                <motion.div
-                  key={index}
-                  variants={slideIn}
-                  initial="hidden"
-                  animate="visible"
-                >
+          {routeNodes.length > 0 ?
+          <div className="space-y-2">
+              {routeNodes.map((node, index) =>
+            <motion.div
+              key={index}
+              variants={slideIn}
+              initial="hidden"
+              animate="visible">
+
                   <RouteNode
-                    node={node}
-                    isActive={selectedRoute?.selectedNode === node}
-                    onClick={() => handleNodeClick(node)}
-                  />
-                  {index < routeNodes.length - 1 && (
-                    <div className="flex items-center justify-center my-2">
+                node={node}
+                isActive={selectedRoute?.selectedNode === node}
+                onClick={() => handleNodeClick(node)} />
+
+                  {index < routeNodes.length - 1 &&
+              <div className="flex items-center justify-center my-2">
                       <Navigation className="w-4 h-4 text-slate-400" />
                     </div>
-                  )}
+              }
                 </motion.div>
-              ))}
-            </div>
-          ) : (
-            <div className="py-12 text-center">
+            )}
+            </div> :
+
+          <div className="py-12 text-center">
               <Map className="w-12 h-12 text-slate-400 mx-auto mb-4" />
               <p className="text-slate-500 mb-2">暂无路线数据</p>
               <p className="text-sm text-slate-400">
                 点击优化按钮开始路线优化
               </p>
             </div>
-          )}
+          }
         </CardContent>
       </Card>
 
       {/* 路线详情 */}
-      {selectedRoute?.selectedNode && (
-        <Card className="border-blue-200 bg-blue-50/30">
+      {selectedRoute?.selectedNode &&
+      <Card className="border-blue-200 bg-blue-50/30">
           <CardHeader>
             <CardTitle className="text-base">节点详情</CardTitle>
           </CardHeader>
@@ -369,8 +364,8 @@ export const RouteOptimizer = ({
                   {selectedRoute.selectedNode.type === 'delivery' ? '配送点' : '配送中心'}
                 </span>
               </div>
-              {selectedRoute.selectedNode.type === 'delivery' && (
-                <>
+              {selectedRoute.selectedNode.type === 'delivery' &&
+            <>
                   <div>
                     <span className="text-sm text-slate-500">收货人:</span>
                     <span className="ml-2 font-medium">
@@ -390,29 +385,29 @@ export const RouteOptimizer = ({
                     </span>
                   </div>
                 </>
-              )}
-              {selectedRoute.selectedNode.distance && (
-                <div>
+            }
+              {selectedRoute.selectedNode.distance &&
+            <div>
                   <span className="text-sm text-slate-500">距离:</span>
                   <span className="ml-2 font-medium">
                     {selectedRoute.selectedNode.distance} km
                   </span>
                 </div>
-              )}
-              {selectedRoute.selectedNode.estimated_time && (
-                <div>
+            }
+              {selectedRoute.selectedNode.estimated_time &&
+            <div>
                   <span className="text-sm text-slate-500">预计到达:</span>
                   <span className="ml-2 font-medium">
                     {new Date(selectedRoute.selectedNode.estimated_time).toLocaleString()}
                   </span>
                 </div>
-              )}
+            }
             </div>
           </CardContent>
         </Card>
-      )}
-    </motion.div>
-  );
+      }
+    </motion.div>);
+
 };
 
 export default RouteOptimizer;

@@ -4,6 +4,8 @@ import { api } from "./client.js";
 
 export const customerApi = {
   list: (params) => api.get("/customers/", { params }),
+  // Alias for backward compatibility
+  getCustomers: (params) => api.get("/customers/", { params }),
   get: (id) => api.get(`/customers/${id}`),
   create: (data) => api.post("/customers/", data),
   update: (id, data) => api.put(`/customers/${id}`, data),

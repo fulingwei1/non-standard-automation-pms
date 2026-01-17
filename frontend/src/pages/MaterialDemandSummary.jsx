@@ -15,16 +15,16 @@ import {
   CheckCircle2,
   BarChart3,
   Calendar,
-  RefreshCw,
-} from "lucide-react";
+  RefreshCw } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
-} from "../components/ui/card";
+  CardDescription } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -33,25 +33,25 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "../components/ui/table";
+  TableRow } from
+"../components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogBody,
-  DialogFooter,
-} from "../components/ui/dialog";
-import { cn, formatCurrency, formatDate } from "../lib/utils";
+  DialogFooter } from
+"../components/ui/dialog";
+import { cn, formatCurrency as _formatCurrency, formatDate } from "../lib/utils";
 import { materialDemandApi, projectApi } from "../services/api";
 export default function MaterialDemandSummary() {
   const [loading, setLoading] = useState(true);
@@ -61,7 +61,7 @@ export default function MaterialDemandSummary() {
   // Filters
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filterProject, setFilterProject] = useState("");
-  const [filterMaterial, setFilterMaterial] = useState("");
+  const [filterMaterial, _setFilterMaterial] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   // Dialogs
@@ -73,7 +73,7 @@ export default function MaterialDemandSummary() {
   const [generateParams, setGenerateParams] = useState({
     project_ids: [],
     material_ids: [],
-    supplier_id: null,
+    supplier_id: null
   });
   useEffect(() => {
     fetchProjects();
@@ -102,14 +102,14 @@ export default function MaterialDemandSummary() {
       // Calculate summary
       const totalDemand = demandList.reduce(
         (sum, item) => sum + (item.total_demand || 0),
-        0,
+        0
       );
-      const totalProjects = new Set(demandList.map((item) => item.project_id))
-        .size;
+      const totalProjects = new Set(demandList.map((item) => item.project_id)).
+      size;
       setSummary({
         total_materials: demandList.length,
         total_demand: totalDemand,
-        total_projects: totalProjects,
+        total_projects: totalProjects
       });
     } catch (error) {
       console.error("Failed to fetch demands:", error);
@@ -145,7 +145,7 @@ export default function MaterialDemandSummary() {
     } catch (error) {
       console.error("Failed to generate PR:", error);
       alert(
-        "生成采购需求失败: " + (error.response?.data?.detail || error.message),
+        "生成采购需求失败: " + (error.response?.data?.detail || error.message)
       );
     }
   };
@@ -155,8 +155,8 @@ export default function MaterialDemandSummary() {
         const keyword = searchKeyword.toLowerCase();
         return (
           demand.material_code?.toLowerCase().includes(keyword) ||
-          demand.material_name?.toLowerCase().includes(keyword)
-        );
+          demand.material_name?.toLowerCase().includes(keyword));
+
       }
       return true;
     });
@@ -165,11 +165,11 @@ export default function MaterialDemandSummary() {
     <div className="space-y-6 p-6">
       <PageHeader
         title="物料需求汇总"
-        description="多项目物料需求汇总、需求与库存对比、自动生成采购需求"
-      />
+        description="多项目物料需求汇总、需求与库存对比、自动生成采购需求" />
+
       {/* Summary Cards */}
-      {summary && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {summary &&
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -210,7 +210,7 @@ export default function MaterialDemandSummary() {
             </CardContent>
           </Card>
         </div>
-      )}
+      }
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
@@ -221,8 +221,8 @@ export default function MaterialDemandSummary() {
                 placeholder="搜索物料编码、名称..."
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
-                className="pl-10"
-              />
+                className="pl-10" />
+
             </div>
             <Select value={filterProject} onValueChange={setFilterProject}>
               <SelectTrigger>
@@ -230,25 +230,25 @@ export default function MaterialDemandSummary() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部项目</SelectItem>
-                {projects.map((proj) => (
-                  <SelectItem key={proj.id} value={proj.id.toString()}>
+                {projects.map((proj) =>
+                <SelectItem key={proj.id} value={proj.id.toString()}>
                     {proj.project_name}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
             <Input
               type="date"
               placeholder="开始日期"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-            />
+              onChange={(e) => setStartDate(e.target.value)} />
+
             <Input
               type="date"
               placeholder="结束日期"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-            />
+              onChange={(e) => setEndDate(e.target.value)} />
+
             <Button onClick={() => setShowGenerateDialog(true)}>
               <Plus className="w-4 h-4 mr-2" />
               生成采购需求
@@ -265,12 +265,12 @@ export default function MaterialDemandSummary() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="text-center py-8 text-slate-400">加载中...</div>
-          ) : filteredDemands.length === 0 ? (
-            <div className="text-center py-8 text-slate-400">暂无需求数据</div>
-          ) : (
-            <Table>
+          {loading ?
+          <div className="text-center py-8 text-slate-400">加载中...</div> :
+          filteredDemands.length === 0 ?
+          <div className="text-center py-8 text-slate-400">暂无需求数据</div> :
+
+          <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>物料编码</TableHead>
@@ -283,8 +283,8 @@ export default function MaterialDemandSummary() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredDemands.map((demand) => (
-                  <TableRow key={demand.material_id}>
+                {filteredDemands.map((demand) =>
+              <TableRow key={demand.material_id}>
                     <TableCell className="font-mono text-sm">
                       {demand.material_code}
                     </TableCell>
@@ -295,14 +295,14 @@ export default function MaterialDemandSummary() {
                       {demand.total_demand || 0}
                     </TableCell>
                     <TableCell className="text-slate-500 text-sm">
-                      {demand.earliest_date
-                        ? formatDate(demand.earliest_date)
-                        : "-"}
+                      {demand.earliest_date ?
+                  formatDate(demand.earliest_date) :
+                  "-"}
                     </TableCell>
                     <TableCell className="text-slate-500 text-sm">
-                      {demand.latest_date
-                        ? formatDate(demand.latest_date)
-                        : "-"}
+                      {demand.latest_date ?
+                  formatDate(demand.latest_date) :
+                  "-"}
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">
@@ -312,20 +312,20 @@ export default function MaterialDemandSummary() {
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewVsStock(demand.material_id)}
-                        >
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleViewVsStock(demand.material_id)}>
+
                           <BarChart3 className="w-4 h-4 mr-2" />
                           库存对比
                         </Button>
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+              )}
               </TableBody>
             </Table>
-          )}
+          }
         </CardContent>
       </Card>
       {/* Generate PR Dialog */}
@@ -343,22 +343,22 @@ export default function MaterialDemandSummary() {
                 <Select
                   value={generateParams.project_ids[0]?.toString() || ""}
                   onValueChange={(val) =>
-                    setGenerateParams({
-                      ...generateParams,
-                      project_ids: val ? [parseInt(val)] : [],
-                    })
-                  }
-                >
+                  setGenerateParams({
+                    ...generateParams,
+                    project_ids: val ? [parseInt(val)] : []
+                  })
+                  }>
+
                   <SelectTrigger>
                     <SelectValue placeholder="选择项目（留空则包含所有项目）" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">全部项目</SelectItem>
-                    {projects.map((proj) => (
-                      <SelectItem key={proj.id} value={proj.id.toString()}>
+                    {projects.map((proj) =>
+                    <SelectItem key={proj.id} value={proj.id.toString()}>
                         {proj.project_name}
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -370,15 +370,15 @@ export default function MaterialDemandSummary() {
                   type="number"
                   value={generateParams.supplier_id || ""}
                   onChange={(e) =>
-                    setGenerateParams({
-                      ...generateParams,
-                      supplier_id: e.target.value
-                        ? parseInt(e.target.value)
-                        : null,
-                    })
+                  setGenerateParams({
+                    ...generateParams,
+                    supplier_id: e.target.value ?
+                    parseInt(e.target.value) :
+                    null
+                  })
                   }
-                  placeholder="供应商ID"
-                />
+                  placeholder="供应商ID" />
+
               </div>
               <div className="text-sm text-slate-500">
                 将根据物料需求与库存对比，自动生成采购需求单
@@ -388,8 +388,8 @@ export default function MaterialDemandSummary() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowGenerateDialog(false)}
-            >
+              onClick={() => setShowGenerateDialog(false)}>
+
               取消
             </Button>
             <Button onClick={handleGeneratePR}>生成</Button>
@@ -405,8 +405,8 @@ export default function MaterialDemandSummary() {
             </DialogTitle>
           </DialogHeader>
           <DialogBody>
-            {vsStockData && (
-              <div className="space-y-4">
+            {vsStockData &&
+            <div className="space-y-4">
                 <div className="grid grid-cols-3 gap-4">
                   <Card>
                     <CardContent className="pt-4">
@@ -430,20 +430,20 @@ export default function MaterialDemandSummary() {
                     <CardContent className="pt-4">
                       <div className="text-sm text-slate-500 mb-1">缺口</div>
                       <div
-                        className={cn(
-                          "text-2xl font-bold",
-                          (vsStockData.shortage || 0) > 0
-                            ? "text-red-600"
-                            : "text-emerald-600",
-                        )}
-                      >
+                      className={cn(
+                        "text-2xl font-bold",
+                        (vsStockData.shortage || 0) > 0 ?
+                        "text-red-600" :
+                        "text-emerald-600"
+                      )}>
+
                         {vsStockData.shortage || 0}
                       </div>
                     </CardContent>
                   </Card>
                 </div>
-                {vsStockData.details && vsStockData.details.length > 0 && (
-                  <div>
+                {vsStockData.details && vsStockData.details.length > 0 &&
+              <div>
                     <div className="text-sm font-medium mb-3">需求明细</div>
                     <Table>
                       <TableHeader>
@@ -455,35 +455,35 @@ export default function MaterialDemandSummary() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {vsStockData.details.map((detail, index) => (
-                          <TableRow key={index}>
+                        {vsStockData.details.map((detail, index) =>
+                    <TableRow key={index}>
                             <TableCell>{detail.project_name}</TableCell>
                             <TableCell>{detail.machine_name || "-"}</TableCell>
                             <TableCell>{detail.demand_qty}</TableCell>
                             <TableCell className="text-slate-500 text-sm">
-                              {detail.required_date
-                                ? formatDate(detail.required_date)
-                                : "-"}
+                              {detail.required_date ?
+                        formatDate(detail.required_date) :
+                        "-"}
                             </TableCell>
                           </TableRow>
-                        ))}
+                    )}
                       </TableBody>
                     </Table>
                   </div>
-                )}
+              }
               </div>
-            )}
+            }
           </DialogBody>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowVsStockDialog(false)}
-            >
+              onClick={() => setShowVsStockDialog(false)}>
+
               关闭
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }

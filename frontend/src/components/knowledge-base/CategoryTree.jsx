@@ -18,23 +18,23 @@ import {
   FileText,
   Tag,
   Layers,
-  ChevronUp
-} from "lucide-react";
+  ChevronUp } from
+"lucide-react";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import {
-  articleCategoryConfigs,
+  articleCategoryConfigs as _articleCategoryConfigs,
   generateCategoryTree,
   getPopularCategories,
   getCategoryConfig,
-  formatCategory
-} from "./knowledgeBaseConstants";
+  formatCategory } from
+"./knowledgeBaseConstants";
 
 export default function CategoryTree({
   categories = null,
   onCategorySelect,
   selectedCategory = null,
-  selectedSubcategory = null,
+  selectedSubcategory: _selectedSubcategory = null,
   expandedCategories = [],
   onExpandToggle,
   showStats = true,
@@ -53,9 +53,9 @@ export default function CategoryTree({
 
   // Handle expand/collapse
   const handleExpand = (categoryValue) => {
-    const newExpanded = localExpanded.includes(categoryValue)
-      ? localExpanded.filter(c => c !== categoryValue)
-      : [...localExpanded, categoryValue];
+    const newExpanded = localExpanded.includes(categoryValue) ?
+    localExpanded.filter((c) => c !== categoryValue) :
+    [...localExpanded, categoryValue];
 
     setLocalExpanded(newExpanded);
     onExpandToggle?.(newExpanded);
@@ -67,17 +67,17 @@ export default function CategoryTree({
   };
 
   // Filter categories based on search
-  const filteredCategories = categoryTree.filter(category => {
+  const filteredCategories = categoryTree.filter((category) => {
     if (!searchTerm) return true;
 
     const searchLower = searchTerm.toLowerCase();
     return (
       category.label.toLowerCase().includes(searchLower) ||
       category.description?.toLowerCase().includes(searchLower) ||
-      (category.subcategories && Object.values(category.subcategories).some(sub =>
-        sub.label.toLowerCase().includes(searchLower)
-      ))
-    );
+      category.subcategories && Object.values(category.subcategories).some((sub) =>
+      sub.label.toLowerCase().includes(searchLower)
+      ));
+
   });
 
   // Recursive component for rendering category tree
@@ -94,30 +94,30 @@ export default function CategoryTree({
           className={cn(
             "group relative",
             compact ? "mb-1" : "mb-2"
-          )}
-        >
+          )}>
+
           <div
             onClick={() => handleExpand(category.value)}
             className={cn(
               "flex items-center justify-between w-full p-2 rounded-lg cursor-pointer transition-all",
-              compact
-                ? "hover:bg-surface-100"
-                : "hover:bg-surface-100/50",
+              compact ?
+              "hover:bg-surface-100" :
+              "hover:bg-surface-100/50",
               isSelected && "bg-primary/10 border border-primary/20",
               level > 0 && "ml-4"
-            )}
-          >
+            )}>
+
             <div className="flex items-center gap-2 flex-1 min-w-0">
               {/* Expand/Collapse Icon */}
-              {hasSubcategories && (
-                <motion.div
-                  animate={{ rotate: isExpanded ? 90 : 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex-shrink-0"
-                >
+              {hasSubcategories &&
+              <motion.div
+                animate={{ rotate: isExpanded ? 90 : 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex-shrink-0">
+
                   <ChevronRight className="w-4 h-4 text-slate-500" />
                 </motion.div>
-              )}
+              }
 
               {/* Category Icon */}
               <div className={cn(
@@ -136,75 +136,75 @@ export default function CategoryTree({
                 )}>
                   {category.label}
                 </span>
-                {showStats && (
-                  <Badge variant="secondary" className="text-xs ml-2">
+                {showStats &&
+                <Badge variant="secondary" className="text-xs ml-2">
                     {Math.floor(Math.random() * 50) + 10}篇
                   </Badge>
-                )}
+                }
               </div>
             </div>
 
             {/* Actions */}
-            {!compact && (
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {!compact &&
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 w-6 p-0"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleCategorySelect(category.value);
-                  }}
-                >
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCategorySelect(category.value);
+                }}>
+
                   <BookOpen className="w-3 h-3" />
                 </Button>
-                {hasSubcategories && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleExpand(category.value);
-                    }}
-                  >
+                {hasSubcategories &&
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleExpand(category.value);
+                }}>
+
                     <ChevronDown className="w-3 h-3" />
                   </Button>
-                )}
+              }
               </div>
-            )}
+            }
           </div>
 
           {/* Category Description */}
-          {!compact && category.description && (
-            <p className="text-xs text-slate-400 mt-1 ml-8">
+          {!compact && category.description &&
+          <p className="text-xs text-slate-400 mt-1 ml-8">
               {category.description}
             </p>
-          )}
+          }
         </motion.div>
 
         {/* Subcategories */}
         <AnimatePresence>
-          {isExpanded && hasSubcategories && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="ml-4 mt-1"
-            >
-              {category.children.map((subcategory) => (
-                <CategoryNode
-                  key={subcategory.value}
-                  category={subcategory}
-                  level={level + 1}
-                />
-              ))}
+          {isExpanded && hasSubcategories &&
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="ml-4 mt-1">
+
+              {category.children.map((subcategory) =>
+            <CategoryNode
+              key={subcategory.value}
+              category={subcategory}
+              level={level + 1} />
+
+            )}
             </motion.div>
-          )}
+          }
         </AnimatePresence>
-      </div>
-    );
+      </div>);
+
   };
 
   return (
@@ -214,69 +214,69 @@ export default function CategoryTree({
       variant === "embedded" && "p-2"
     )}>
       {/* Search Bar */}
-      {showSearch && (
-        <div className="mb-4">
+      {showSearch &&
+      <div className="mb-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
-              type="text"
-              placeholder="搜索分类..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-surface-50 border border-white/10 rounded-lg text-sm text-white placeholder-slate-400 focus:outline-none focus:border-primary/30 focus:ring-1 focus:ring-primary/20"
-            />
+            type="text"
+            placeholder="搜索分类..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-surface-50 border border-white/10 rounded-lg text-sm text-white placeholder-slate-400 focus:outline-none focus:border-primary/30 focus:ring-1 focus:ring-primary/20" />
+
           </div>
         </div>
-      )}
+      }
 
       {/* Categories List */}
       <div className="space-y-1">
-        {filteredCategories.map((category) => (
-          <CategoryNode key={category.value} category={category} />
-        ))}
+        {filteredCategories.map((category) =>
+        <CategoryNode key={category.value} category={category} />
+        )}
       </div>
 
       {/* Popular Categories */}
-      {!compact && showStats && popularCategories.length > 0 && searchTerm === "" && (
-        <div className="mt-4 pt-4 border-t border-white/10">
+      {!compact && showStats && popularCategories.length > 0 && searchTerm === "" &&
+      <div className="mt-4 pt-4 border-t border-white/10">
           <div className="flex items-center gap-2 mb-3">
             <TrendingUp className="w-4 h-4 text-slate-400" />
             <span className="text-xs font-medium text-slate-400">热门分类</span>
           </div>
           <div className="flex flex-wrap gap-2">
-            {popularCategories.map(({ category, count }) => (
-              <Badge
-                key={category}
-                variant="secondary"
-                className="text-xs cursor-pointer hover:bg-primary/10"
-                onClick={() => handleCategorySelect(category)}
-              >
+            {popularCategories.map(({ category, count }) =>
+          <Badge
+            key={category}
+            variant="secondary"
+            className="text-xs cursor-pointer hover:bg-primary/10"
+            onClick={() => handleCategorySelect(category)}>
+
                 {formatCategory(category)}
                 <span className="ml-1 text-slate-500">({count})</span>
               </Badge>
-            ))}
+          )}
           </div>
         </div>
-      )}
+      }
 
       {/* Add Category Button */}
-      {!compact && (
-        <div className="mt-4 pt-4 border-t border-white/10">
+      {!compact &&
+      <div className="mt-4 pt-4 border-t border-white/10">
           <Button
-            variant="outline"
-            size="sm"
-            className="w-full"
-            onClick={() => {
-              // Handle add category
-            }}
-          >
+          variant="outline"
+          size="sm"
+          className="w-full"
+          onClick={() => {
+
+
+            // Handle add category
+          }}>
             <Plus className="w-4 h-4 mr-2" />
             添加分类
           </Button>
-        </div>
-      )}
-    </div>
-  );
+        </div>}
+    </div>);
+
 }
 
 // Compact Category Selector Component
@@ -284,29 +284,33 @@ export function CategorySelector({
   categories = null,
   selectedCategory = null,
   selectedSubcategory = null,
-  onCategorySelect,
+  onCategorySelect: _onCategorySelect,
   placeholder = "选择分类",
   showSubcategories = true,
-  variant = "default"
+  variant: _variant = "default"
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
   const categoryTree = categories || generateCategoryTree();
 
-  const selectedCategoryConfig = selectedCategory
-    ? getCategoryConfig(selectedCategory)
-    : null;
+  const handleCategorySelect = (categoryValue, subcategoryValue = null) => {
+    _onCategorySelect?.(categoryValue, subcategoryValue);
+  };
 
-  const filteredCategories = categoryTree.filter(category => {
+  const selectedCategoryConfig = selectedCategory ?
+  getCategoryConfig(selectedCategory) :
+  null;
+
+  const filteredCategories = categoryTree.filter((category) => {
     if (!searchTerm) return true;
     const searchLower = searchTerm.toLowerCase();
     return (
       category.label.toLowerCase().includes(searchLower) ||
-      (category.subcategories && Object.values(category.subcategories).some(sub =>
-        sub.label.toLowerCase().includes(searchLower)
-      ))
-    );
+      category.subcategories && Object.values(category.subcategories).some((sub) =>
+      sub.label.toLowerCase().includes(searchLower)
+      ));
+
   });
 
   return (
@@ -315,111 +319,111 @@ export function CategorySelector({
       <Button
         variant="outline"
         className="w-full justify-between"
-        onClick={() => setIsOpen(!isOpen)}
-      >
+        onClick={() => setIsOpen(!isOpen)}>
+
         <div className="flex items-center gap-2">
-          {selectedCategoryConfig ? (
-            <>
+          {selectedCategoryConfig ?
+          <>
               <div className={cn(
-                "w-5 h-5 rounded flex items-center justify-center text-xs",
-                selectedCategoryConfig.color
-              )}>
+              "w-5 h-5 rounded flex items-center justify-center text-xs",
+              selectedCategoryConfig.color
+            )}>
                 {selectedCategoryConfig.icon}
               </div>
               <span>{formatCategory(selectedCategory)}</span>
-              {selectedSubcategory && (
-                <span className="text-slate-400">/ {selectedSubcategory}</span>
-              )}
-            </>
-          ) : (
-            <span className="text-slate-400">{placeholder}</span>
-          )}
+              {selectedSubcategory &&
+            <span className="text-slate-400">/ {selectedSubcategory}</span>
+            }
+            </> :
+
+          <span className="text-slate-400">{placeholder}</span>
+          }
         </div>
         <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </Button>
 
       {/* Dropdown */}
       <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="absolute top-full left-0 right-0 mt-2 bg-surface-100 border border-white/10 rounded-lg shadow-lg z-50 max-h-60 overflow-hidden"
-          >
+        {isOpen &&
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          className="absolute top-full left-0 right-0 mt-2 bg-surface-100 border border-white/10 rounded-lg shadow-lg z-50 max-h-60 overflow-hidden">
+
             {/* Search */}
             <div className="p-2 border-b border-white/10">
               <div className="relative">
                 <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-slate-400" />
                 <input
-                  type="text"
-                  placeholder="搜索分类..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-8 pr-2 py-1 bg-surface-50 border border-white/10 rounded text-xs text-white placeholder-slate-400 focus:outline-none focus:border-primary/30"
-                />
+                type="text"
+                placeholder="搜索分类..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-8 pr-2 py-1 bg-surface-50 border border-white/10 rounded text-xs text-white placeholder-slate-400 focus:outline-none focus:border-primary/30" />
+
               </div>
             </div>
 
             {/* Categories */}
             <div className="max-h-48 overflow-y-auto">
-              {filteredCategories.map((category) => (
-                <div key={category.value}>
+              {filteredCategories.map((category) =>
+            <div key={category.value}>
                   {/* Category */}
                   <div
-                    className="flex items-center gap-2 p-2 hover:bg-surface-50/50 cursor-pointer"
-                    onClick={() => {
-                      if (!showSubcategories || !category.children?.length) {
-                        handleCategorySelect(category.value);
-                        setIsOpen(false);
-                      } else {
-                        handleCategorySelect(category.value);
-                      }
-                    }}
-                  >
+                className="flex items-center gap-2 p-2 hover:bg-surface-50/50 cursor-pointer"
+                onClick={() => {
+                  if (!showSubcategories || !category.children?.length) {
+                    handleCategorySelect(category.value);
+                    setIsOpen(false);
+                  } else {
+                    handleCategorySelect(category.value);
+                  }
+                }}>
+
                     <div className={cn(
-                      "w-4 h-4 rounded flex items-center justify-center text-xs",
-                      category.color
-                    )}>
+                  "w-4 h-4 rounded flex items-center justify-center text-xs",
+                  category.color
+                )}>
                       {category.icon}
                     </div>
                     <span className="text-sm text-white">{category.label}</span>
-                    {category.children?.length > 0 && (
-                      <ChevronRight className="w-3 h-3 text-slate-400 ml-auto" />
-                    )}
+                    {category.children?.length > 0 &&
+                <ChevronRight className="w-3 h-3 text-slate-400 ml-auto" />
+                }
                   </div>
 
                   {/* Subcategories */}
-                  {showSubcategories && selectedCategory === category.value && category.children?.length > 0 && (
-                    <div className="ml-4 border-l border-white/10">
-                      {category.children.map((subcategory) => (
-                        <div
-                          key={subcategory.value}
-                          className="flex items-center gap-2 p-2 pl-4 hover:bg-surface-50/50 cursor-pointer"
-                          onClick={() => {
-                            handleCategorySelect(category.value, subcategory.value);
-                            setIsOpen(false);
-                          }}
-                        >
+                  {showSubcategories && selectedCategory === category.value && category.children?.length > 0 &&
+              <div className="ml-4 border-l border-white/10">
+                      {category.children.map((subcategory) =>
+                <div
+                  key={subcategory.value}
+                  className="flex items-center gap-2 p-2 pl-4 hover:bg-surface-50/50 cursor-pointer"
+                  onClick={() => {
+                    handleCategorySelect(category.value, subcategory.value);
+                    setIsOpen(false);
+                  }}>
+
                           <div className={cn(
-                            "w-3 h-3 rounded flex items-center justify-center text-xs",
-                            subcategory.color
-                          )}>
+                    "w-3 h-3 rounded flex items-center justify-center text-xs",
+                    subcategory.color
+                  )}>
                             {subcategory.icon}
                           </div>
                           <span className="text-sm text-slate-300">{subcategory.label}</span>
                         </div>
-                      ))}
+                )}
                     </div>
-                  )}
+              }
                 </div>
-              ))}
+            )}
             </div>
           </motion.div>
-        )}
+        }
       </AnimatePresence>
-    </div>
-  );
+    </div>);
+
 }
 
 // Category Filter Pills Component
@@ -429,9 +433,9 @@ export function CategoryFilterPills({
   selectedSubcategory = null,
   onCategorySelect,
   removable = true,
-  maxDisplay = 5
+  maxDisplay: _maxDisplay = 5
 }) {
-  const categoryTree = categories || generateCategoryTree();
+  const _categoryTree = categories || generateCategoryTree();
 
   const handleRemoveFilter = (e, category, subcategory) => {
     e.stopPropagation();
@@ -445,17 +449,17 @@ export function CategoryFilterPills({
       <Badge
         variant="secondary"
         className="cursor-pointer hover:bg-primary/10"
-        onClick={() => onCategorySelect?.(selectedCategory, null)}
-      >
+        onClick={() => onCategorySelect?.(selectedCategory, null)}>
+
         {formatCategory(selectedCategory)}
         {selectedSubcategory && ` / ${selectedSubcategory}`}
-        {removable && (
-          <ChevronUp
-            className="w-3 h-3 ml-1 hover:text-red-500"
-            onClick={(e) => handleRemoveFilter(e, selectedCategory, selectedSubcategory)}
-          />
-        )}
+        {removable &&
+        <ChevronUp
+          className="w-3 h-3 ml-1 hover:text-red-500"
+          onClick={(e) => handleRemoveFilter(e, selectedCategory, selectedSubcategory)} />
+
+        }
       </Badge>
-    </div>
-  );
+    </div>);
+
 }

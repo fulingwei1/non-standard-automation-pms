@@ -16,16 +16,16 @@ import {
   XCircle,
   User,
   Package,
-  TrendingUp,
-} from "lucide-react";
+  TrendingUp } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
-} from "../components/ui/card";
+  CardDescription } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -34,46 +34,46 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "../components/ui/table";
+  TableRow } from
+"../components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogBody,
-  DialogFooter,
-} from "../components/ui/dialog";
-import { cn, formatDate } from "../lib/utils";
+  DialogFooter } from
+"../components/ui/dialog";
+import { cn as _cn, formatDate } from "../lib/utils";
 import { productionApi, projectApi } from "../services/api";
 const statusConfigs = {
   REPORTED: { label: "已上报", color: "bg-blue-500" },
   IN_PROGRESS: { label: "处理中", color: "bg-amber-500" },
   RESOLVED: { label: "已解决", color: "bg-emerald-500" },
-  CLOSED: { label: "已关闭", color: "bg-slate-500" },
+  CLOSED: { label: "已关闭", color: "bg-slate-500" }
 };
 const typeConfigs = {
   MATERIAL: { label: "物料异常", color: "bg-amber-500" },
   EQUIPMENT: { label: "设备异常", color: "bg-red-500" },
   QUALITY: { label: "质量异常", color: "bg-purple-500" },
-  OTHER: { label: "其他", color: "bg-slate-500" },
+  OTHER: { label: "其他", color: "bg-slate-500" }
 };
 const levelConfigs = {
   CRITICAL: { label: "严重", color: "bg-red-500" },
   MAJOR: { label: "重要", color: "bg-orange-500" },
   MINOR: { label: "一般", color: "bg-amber-500" },
-  LOW: { label: "轻微", color: "bg-blue-500" },
+  LOW: { label: "轻微", color: "bg-blue-500" }
 };
 export default function ProductionExceptionList() {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [exceptions, setExceptions] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -100,11 +100,11 @@ export default function ProductionExceptionList() {
     equipment_id: null,
     impact_hours: 0,
     impact_cost: 0,
-    remark: "",
+    remark: ""
   });
   const [handleData, setHandleData] = useState({
     handle_plan: "",
-    handle_result: "",
+    handle_result: ""
   });
   useEffect(() => {
     fetchProjects();
@@ -155,7 +155,7 @@ export default function ProductionExceptionList() {
         equipment_id: null,
         impact_hours: 0,
         impact_cost: 0,
-        remark: "",
+        remark: ""
       });
       fetchExceptions();
     } catch (error) {
@@ -179,7 +179,7 @@ export default function ProductionExceptionList() {
       setShowHandleDialog(false);
       setHandleData({
         handle_plan: "",
-        handle_result: "",
+        handle_result: ""
       });
       fetchExceptions();
       if (showDetailDialog) {
@@ -210,8 +210,8 @@ export default function ProductionExceptionList() {
         return (
           exc.exception_no?.toLowerCase().includes(keyword) ||
           exc.title?.toLowerCase().includes(keyword) ||
-          exc.description?.toLowerCase().includes(keyword)
-        );
+          exc.description?.toLowerCase().includes(keyword));
+
       }
       return true;
     });
@@ -220,8 +220,8 @@ export default function ProductionExceptionList() {
     <div className="space-y-6 p-6">
       <PageHeader
         title="生产异常管理"
-        description="生产异常列表、上报、处理、关闭"
-      />
+        description="生产异常列表、上报、处理、关闭" />
+
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
@@ -232,8 +232,8 @@ export default function ProductionExceptionList() {
                 placeholder="搜索异常编号、标题..."
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
-                className="pl-10"
-              />
+                className="pl-10" />
+
             </div>
             <Select value={filterProject} onValueChange={setFilterProject}>
               <SelectTrigger>
@@ -241,11 +241,11 @@ export default function ProductionExceptionList() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部项目</SelectItem>
-                {projects.map((proj) => (
-                  <SelectItem key={proj.id} value={proj.id.toString()}>
+                {projects.map((proj) =>
+                <SelectItem key={proj.id} value={proj.id.toString()}>
                     {proj.project_name}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
             <Select value={filterType} onValueChange={setFilterType}>
@@ -254,11 +254,11 @@ export default function ProductionExceptionList() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部类型</SelectItem>
-                {Object.entries(typeConfigs).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
+                {Object.entries(typeConfigs).map(([key, config]) =>
+                <SelectItem key={key} value={key}>
                     {config.label}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
             <Select value={filterLevel} onValueChange={setFilterLevel}>
@@ -267,11 +267,11 @@ export default function ProductionExceptionList() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部级别</SelectItem>
-                {Object.entries(levelConfigs).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
+                {Object.entries(levelConfigs).map(([key, config]) =>
+                <SelectItem key={key} value={key}>
                     {config.label}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -280,11 +280,11 @@ export default function ProductionExceptionList() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部状态</SelectItem>
-                {Object.entries(statusConfigs).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
+                {Object.entries(statusConfigs).map(([key, config]) =>
+                <SelectItem key={key} value={key}>
                     {config.label}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -306,12 +306,12 @@ export default function ProductionExceptionList() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="text-center py-8 text-slate-400">加载中...</div>
-          ) : filteredExceptions.length === 0 ? (
-            <div className="text-center py-8 text-slate-400">暂无异常</div>
-          ) : (
-            <Table>
+          {loading ?
+          <div className="text-center py-8 text-slate-400">加载中...</div> :
+          filteredExceptions.length === 0 ?
+          <div className="text-center py-8 text-slate-400">暂无异常</div> :
+
+          <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>异常编号</TableHead>
@@ -326,32 +326,32 @@ export default function ProductionExceptionList() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredExceptions.map((exc) => (
-                  <TableRow key={exc.id}>
+                {filteredExceptions.map((exc) =>
+              <TableRow key={exc.id}>
                     <TableCell className="font-mono text-sm">
                       {exc.exception_no}
                     </TableCell>
                     <TableCell className="font-medium">{exc.title}</TableCell>
                     <TableCell>
                       <Badge
-                        className={
-                          typeConfigs[exc.exception_type]?.color ||
-                          "bg-slate-500"
-                        }
-                      >
+                    className={
+                    typeConfigs[exc.exception_type]?.color ||
+                    "bg-slate-500"
+                    }>
+
                         {typeConfigs[exc.exception_type]?.label ||
-                          exc.exception_type}
+                    exc.exception_type}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <Badge
-                        className={
-                          levelConfigs[exc.exception_level]?.color ||
-                          "bg-slate-500"
-                        }
-                      >
+                    className={
+                    levelConfigs[exc.exception_level]?.color ||
+                    "bg-slate-500"
+                    }>
+
                         {levelConfigs[exc.exception_level]?.label ||
-                          exc.exception_level}
+                    exc.exception_level}
                       </Badge>
                     </TableCell>
                     <TableCell>{exc.project_name || "-"}</TableCell>
@@ -363,51 +363,51 @@ export default function ProductionExceptionList() {
                     </TableCell>
                     <TableCell>
                       <Badge
-                        className={
-                          statusConfigs[exc.status]?.color || "bg-slate-500"
-                        }
-                      >
+                    className={
+                    statusConfigs[exc.status]?.color || "bg-slate-500"
+                    }>
+
                         {statusConfigs[exc.status]?.label || exc.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewDetail(exc.id)}
-                        >
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleViewDetail(exc.id)}>
+
                           <Eye className="w-4 h-4" />
                         </Button>
                         {(exc.status === "REPORTED" ||
-                          exc.status === "IN_PROGRESS") && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedException(exc);
-                              setShowHandleDialog(true);
-                            }}
-                          >
+                    exc.status === "IN_PROGRESS") &&
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedException(exc);
+                        setShowHandleDialog(true);
+                      }}>
+
                             <Edit className="w-4 h-4" />
                           </Button>
-                        )}
-                        {exc.status === "RESOLVED" && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleClose(exc.id)}
-                          >
+                    }
+                        {exc.status === "RESOLVED" &&
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleClose(exc.id)}>
+
                             <CheckCircle2 className="w-4 h-4" />
                           </Button>
-                        )}
+                    }
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+              )}
               </TableBody>
             </Table>
-          )}
+          }
         </CardContent>
       </Card>
       {/* Create Exception Dialog */}
@@ -425,10 +425,10 @@ export default function ProductionExceptionList() {
                 <Input
                   value={newException.title}
                   onChange={(e) =>
-                    setNewException({ ...newException, title: e.target.value })
+                  setNewException({ ...newException, title: e.target.value })
                   }
-                  placeholder="请输入异常标题"
-                />
+                  placeholder="请输入异常标题" />
+
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -438,18 +438,18 @@ export default function ProductionExceptionList() {
                   <Select
                     value={newException.exception_type}
                     onValueChange={(val) =>
-                      setNewException({ ...newException, exception_type: val })
-                    }
-                  >
+                    setNewException({ ...newException, exception_type: val })
+                    }>
+
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(typeConfigs).map(([key, config]) => (
-                        <SelectItem key={key} value={key}>
+                      {Object.entries(typeConfigs).map(([key, config]) =>
+                      <SelectItem key={key} value={key}>
                           {config.label}
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -460,18 +460,18 @@ export default function ProductionExceptionList() {
                   <Select
                     value={newException.exception_level}
                     onValueChange={(val) =>
-                      setNewException({ ...newException, exception_level: val })
-                    }
-                  >
+                    setNewException({ ...newException, exception_level: val })
+                    }>
+
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(levelConfigs).map(([key, config]) => (
-                        <SelectItem key={key} value={key}>
+                      {Object.entries(levelConfigs).map(([key, config]) =>
+                      <SelectItem key={key} value={key}>
                           {config.label}
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -481,22 +481,22 @@ export default function ProductionExceptionList() {
                 <Select
                   value={newException.project_id?.toString() || ""}
                   onValueChange={(val) =>
-                    setNewException({
-                      ...newException,
-                      project_id: val ? parseInt(val) : null,
-                    })
-                  }
-                >
+                  setNewException({
+                    ...newException,
+                    project_id: val ? parseInt(val) : null
+                  })
+                  }>
+
                   <SelectTrigger>
                     <SelectValue placeholder="选择项目" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">无</SelectItem>
-                    {projects.map((proj) => (
-                      <SelectItem key={proj.id} value={proj.id.toString()}>
+                    {projects.map((proj) =>
+                    <SelectItem key={proj.id} value={proj.id.toString()}>
                         {proj.project_name}
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -508,13 +508,13 @@ export default function ProductionExceptionList() {
                   className="w-full min-h-[100px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={newException.description}
                   onChange={(e) =>
-                    setNewException({
-                      ...newException,
-                      description: e.target.value,
-                    })
+                  setNewException({
+                    ...newException,
+                    description: e.target.value
+                  })
                   }
-                  placeholder="详细描述异常情况..."
-                />
+                  placeholder="详细描述异常情况..." />
+
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -525,13 +525,13 @@ export default function ProductionExceptionList() {
                     type="number"
                     value={newException.impact_hours}
                     onChange={(e) =>
-                      setNewException({
-                        ...newException,
-                        impact_hours: parseFloat(e.target.value) || 0,
-                      })
+                    setNewException({
+                      ...newException,
+                      impact_hours: parseFloat(e.target.value) || 0
+                    })
                     }
-                    placeholder="0"
-                  />
+                    placeholder="0" />
+
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-2 block">
@@ -541,13 +541,13 @@ export default function ProductionExceptionList() {
                     type="number"
                     value={newException.impact_cost}
                     onChange={(e) =>
-                      setNewException({
-                        ...newException,
-                        impact_cost: parseFloat(e.target.value) || 0,
-                      })
+                    setNewException({
+                      ...newException,
+                      impact_cost: parseFloat(e.target.value) || 0
+                    })
                     }
-                    placeholder="0"
-                  />
+                    placeholder="0" />
+
                 </div>
               </div>
             </div>
@@ -555,8 +555,8 @@ export default function ProductionExceptionList() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowCreateDialog(false)}
-            >
+              onClick={() => setShowCreateDialog(false)}>
+
               取消
             </Button>
             <Button onClick={handleCreateException}>上报</Button>
@@ -572,8 +572,8 @@ export default function ProductionExceptionList() {
             </DialogTitle>
           </DialogHeader>
           <DialogBody>
-            {selectedException && (
-              <div className="space-y-4">
+            {selectedException &&
+            <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <div className="text-sm text-slate-500 mb-1">异常编号</div>
@@ -584,28 +584,28 @@ export default function ProductionExceptionList() {
                   <div>
                     <div className="text-sm text-slate-500 mb-1">状态</div>
                     <Badge
-                      className={statusConfigs[selectedException.status]?.color}
-                    >
+                    className={statusConfigs[selectedException.status]?.color}>
+
                       {statusConfigs[selectedException.status]?.label}
                     </Badge>
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">异常类型</div>
                     <Badge
-                      className={
-                        typeConfigs[selectedException.exception_type]?.color
-                      }
-                    >
+                    className={
+                    typeConfigs[selectedException.exception_type]?.color
+                    }>
+
                       {typeConfigs[selectedException.exception_type]?.label}
                     </Badge>
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">异常级别</div>
                     <Badge
-                      className={
-                        levelConfigs[selectedException.exception_level]?.color
-                      }
-                    >
+                    className={
+                    levelConfigs[selectedException.exception_level]?.color
+                    }>
+
                       {levelConfigs[selectedException.exception_level]?.label}
                     </Badge>
                   </div>
@@ -626,9 +626,9 @@ export default function ProductionExceptionList() {
                   <div>
                     <div className="text-sm text-slate-500 mb-1">上报时间</div>
                     <div>
-                      {selectedException.report_time
-                        ? formatDate(selectedException.report_time)
-                        : "-"}
+                      {selectedException.report_time ?
+                    formatDate(selectedException.report_time) :
+                    "-"}
                     </div>
                   </div>
                   <div>
@@ -640,53 +640,53 @@ export default function ProductionExceptionList() {
                     <div>¥{selectedException.impact_cost || 0}</div>
                   </div>
                 </div>
-                {selectedException.description && (
-                  <div>
+                {selectedException.description &&
+              <div>
                     <div className="text-sm text-slate-500 mb-1">异常描述</div>
                     <div>{selectedException.description}</div>
                   </div>
-                )}
-                {selectedException.handle_plan && (
-                  <div>
+              }
+                {selectedException.handle_plan &&
+              <div>
                     <div className="text-sm text-slate-500 mb-1">处理方案</div>
                     <div>{selectedException.handle_plan}</div>
                   </div>
-                )}
-                {selectedException.handle_result && (
-                  <div>
+              }
+                {selectedException.handle_result &&
+              <div>
                     <div className="text-sm text-slate-500 mb-1">处理结果</div>
                     <div>{selectedException.handle_result}</div>
                   </div>
-                )}
+              }
               </div>
-            )}
+            }
           </DialogBody>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowDetailDialog(false)}
-            >
+              onClick={() => setShowDetailDialog(false)}>
+
               关闭
             </Button>
-            {selectedException &&
-              (selectedException.status === "REPORTED" ||
-                selectedException.status === "IN_PROGRESS") && (
-                <Button
-                  onClick={() => {
-                    setShowDetailDialog(false);
-                    setShowHandleDialog(true);
-                  }}
-                >
+            {selectedException && (
+            selectedException.status === "REPORTED" ||
+            selectedException.status === "IN_PROGRESS") &&
+            <Button
+              onClick={() => {
+                setShowDetailDialog(false);
+                setShowHandleDialog(true);
+              }}>
+
                   <Edit className="w-4 h-4 mr-2" />
                   处理异常
                 </Button>
-              )}
-            {selectedException && selectedException.status === "RESOLVED" && (
-              <Button onClick={() => handleClose(selectedException.id)}>
+            }
+            {selectedException && selectedException.status === "RESOLVED" &&
+            <Button onClick={() => handleClose(selectedException.id)}>
                 <CheckCircle2 className="w-4 h-4 mr-2" />
                 关闭异常
               </Button>
-            )}
+            }
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -697,8 +697,8 @@ export default function ProductionExceptionList() {
             <DialogTitle>处理生产异常</DialogTitle>
           </DialogHeader>
           <DialogBody>
-            {selectedException && (
-              <div className="space-y-4">
+            {selectedException &&
+            <div className="space-y-4">
                 <div>
                   <div className="text-sm text-slate-500 mb-1">异常标题</div>
                   <div className="font-medium">{selectedException.title}</div>
@@ -708,47 +708,47 @@ export default function ProductionExceptionList() {
                     处理方案
                   </label>
                   <textarea
-                    className="w-full min-h-[100px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={handleData.handle_plan}
-                    onChange={(e) =>
-                      setHandleData({
-                        ...handleData,
-                        handle_plan: e.target.value,
-                      })
-                    }
-                    placeholder="填写处理方案..."
-                  />
+                  className="w-full min-h-[100px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={handleData.handle_plan}
+                  onChange={(e) =>
+                  setHandleData({
+                    ...handleData,
+                    handle_plan: e.target.value
+                  })
+                  }
+                  placeholder="填写处理方案..." />
+
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-2 block">
                     处理结果
                   </label>
                   <textarea
-                    className="w-full min-h-[100px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={handleData.handle_result}
-                    onChange={(e) =>
-                      setHandleData({
-                        ...handleData,
-                        handle_result: e.target.value,
-                      })
-                    }
-                    placeholder="填写处理结果..."
-                  />
+                  className="w-full min-h-[100px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={handleData.handle_result}
+                  onChange={(e) =>
+                  setHandleData({
+                    ...handleData,
+                    handle_result: e.target.value
+                  })
+                  }
+                  placeholder="填写处理结果..." />
+
                 </div>
               </div>
-            )}
+            }
           </DialogBody>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowHandleDialog(false)}
-            >
+              onClick={() => setShowHandleDialog(false)}>
+
               取消
             </Button>
             <Button onClick={handleException}>保存</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }

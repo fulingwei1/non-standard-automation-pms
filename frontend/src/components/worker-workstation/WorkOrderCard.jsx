@@ -8,7 +8,7 @@ import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
 import { Button } from '../ui/button';
 import { cn, formatDate } from '../../lib/utils';
-import { WORK_ORDER_STATUS, WORK_ORDER_TYPES, getStatusColor, calculateProgress } from './workerWorkstationConstants';
+import { WORK_ORDER_STATUS, WORK_ORDER_TYPES, getStatusColor as _getStatusColor, calculateProgress } from './workerWorkstationConstants';
 
 /**
  * 工单卡片组件
@@ -25,33 +25,33 @@ export default function WorkOrderCard({ order, onAction }) {
   const isOverdue = order.plan_end_time && new Date(order.plan_end_time) < new Date();
 
   const availableActions = [
-    { key: 'start', label: '开工', icon: PlayCircle, show: order.status === 'pending' },
-    { key: 'progress', label: '进度', icon: TrendingUp, show: order.status === 'in_progress' },
-    { key: 'complete', label: '完工', icon: CheckCircle2, show: order.status === 'in_progress' },
-    { key: 'detail', label: '详情', icon: FileText, show: true },
-  ].filter((action) => action.show);
+  { key: 'start', label: '开工', icon: PlayCircle, show: order.status === 'pending' },
+  { key: 'progress', label: '进度', icon: TrendingUp, show: order.status === 'in_progress' },
+  { key: 'complete', label: '完工', icon: CheckCircle2, show: order.status === 'in_progress' },
+  { key: 'detail', label: '详情', icon: FileText, show: true }].
+  filter((action) => action.show);
 
   return (
     <Card
       className={cn(
         'bg-slate-800/50 border transition-all hover:shadow-lg',
         isOverdue ? 'border-red-500/30' : 'border-slate-700/50'
-      )}
-    >
+      )}>
+
       <CardContent className="p-4">
         {/* 头部 */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <h4 className="text-white font-medium">{order.work_order_no || order.code}</h4>
-              {isUrgent && (
-                <AlertTriangle className="w-4 h-4 text-amber-500" />
-              )}
-              {isOverdue && (
-                <Badge variant="destructive" className="text-xs">
+              {isUrgent &&
+              <AlertTriangle className="w-4 h-4 text-amber-500" />
+              }
+              {isOverdue &&
+              <Badge variant="destructive" className="text-xs">
                   已逾期
                 </Badge>
-              )}
+              }
             </div>
             <p className="text-sm text-slate-400">{order.project_name || order.project_code}</p>
           </div>
@@ -87,38 +87,38 @@ export default function WorkOrderCard({ order, onAction }) {
 
         {/* 时间信息 */}
         <div className="flex items-center gap-4 mb-3 text-xs text-slate-400">
-          {order.plan_start_time && (
-            <div className="flex items-center gap-1">
+          {order.plan_start_time &&
+          <div className="flex items-center gap-1">
               <Clock className="w-3 h-3" />
               <span>开始: {formatDate(order.plan_start_time)}</span>
             </div>
-          )}
-          {order.plan_end_time && (
-            <div className="flex items-center gap-1">
+          }
+          {order.plan_end_time &&
+          <div className="flex items-center gap-1">
               <Clock className="w-3 h-3" />
               <span>结束: {formatDate(order.plan_end_time)}</span>
             </div>
-          )}
+          }
         </div>
 
         {/* 操作按钮 */}
         <div className="flex items-center gap-2">
-          {availableActions.map((action) => (
-            <Button
-              key={action.key}
-              variant={action.key === 'detail' ? 'outline' : 'default'}
-              size="sm"
-              onClick={() => onAction && onAction({ type: action.key, orderId: order.id })}
-              className="flex-1"
-            >
+          {availableActions.map((action) =>
+          <Button
+            key={action.key}
+            variant={action.key === 'detail' ? 'outline' : 'default'}
+            size="sm"
+            onClick={() => onAction && onAction({ type: action.key, orderId: order.id })}
+            className="flex-1">
+
               <action.icon className="w-4 h-4 mr-1" />
               {action.label}
             </Button>
-          ))}
+          )}
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 }
 
 // 导入需要的图标

@@ -15,8 +15,8 @@ import {
   Calendar,
   CheckCircle2,
   AlertCircle,
-  TrendingDown,
-} from "lucide-react";
+  TrendingDown } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -38,9 +38,9 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  Label,
-} from "../components/ui";
-import { fadeIn, staggerContainer } from "../lib/animations";
+  Label } from
+"../components/ui";
+import { fadeIn as _fadeIn, staggerContainer as _staggerContainer } from "../lib/animations";
 import { presaleExpenseApi } from "../services/api";
 import { formatAmount } from "../lib/utils";
 
@@ -58,7 +58,7 @@ export default function PresaleExpenseManagement() {
   const [expenseRequest, setExpenseRequest] = useState({
     project_ids: null,
     start_date: null,
-    end_date: null,
+    end_date: null
   });
 
   const pageSize = 20;
@@ -146,22 +146,22 @@ export default function PresaleExpenseManagement() {
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 placeholder="开始日期"
-                className="w-40"
-              />
+                className="w-40" />
+
               <Input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 placeholder="结束日期"
-                className="w-40"
-              />
+                className="w-40" />
+
               <Input
                 type="number"
                 value={salespersonId}
                 onChange={(e) => setSalespersonId(e.target.value)}
                 placeholder="销售人员ID"
-                className="w-32"
-              />
+                className="w-32" />
+
             </div>
           </div>
         </CardContent>
@@ -182,40 +182,40 @@ export default function PresaleExpenseManagement() {
               <Input
                 placeholder="例如: 1,2,3"
                 onChange={(e) => {
-                  const ids = e.target.value
-                    .split(",")
-                    .map((id) => parseInt(id.trim()))
-                    .filter((id) => !isNaN(id));
+                  const ids = e.target.value.
+                  split(",").
+                  map((id) => parseInt(id.trim())).
+                  filter((id) => !isNaN(id));
                   setExpenseRequest({
                     ...expenseRequest,
-                    project_ids: ids.length > 0 ? ids : null,
+                    project_ids: ids.length > 0 ? ids : null
                   });
-                }}
-              />
+                }} />
+
             </div>
             <div>
               <Label>开始日期（可选）</Label>
               <Input
                 type="date"
                 onChange={(e) =>
-                  setExpenseRequest({
-                    ...expenseRequest,
-                    start_date: e.target.value || null,
-                  })
-                }
-              />
+                setExpenseRequest({
+                  ...expenseRequest,
+                  start_date: e.target.value || null
+                })
+                } />
+
             </div>
             <div>
               <Label>结束日期（可选）</Label>
               <Input
                 type="date"
                 onChange={(e) =>
-                  setExpenseRequest({
-                    ...expenseRequest,
-                    end_date: e.target.value || null,
-                  })
-                }
-              />
+                setExpenseRequest({
+                  ...expenseRequest,
+                  end_date: e.target.value || null
+                })
+                } />
+
             </div>
           </div>
           <DialogFooter>
@@ -230,8 +230,8 @@ export default function PresaleExpenseManagement() {
       </Dialog>
 
       {/* 统计卡片 */}
-      {statistics && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {statistics &&
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -272,11 +272,11 @@ export default function PresaleExpenseManagement() {
             </CardContent>
           </Card>
         </div>
-      )}
+      }
 
       {/* 费用统计 */}
-      {statistics && statistics.statistics && (
-        <Card>
+      {statistics && statistics.statistics &&
+      <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>
@@ -284,10 +284,10 @@ export default function PresaleExpenseManagement() {
               </CardTitle>
               <div className="flex items-center gap-2">
                 <select
-                  value={groupBy}
-                  onChange={(e) => setGroupBy(e.target.value)}
-                  className="px-3 py-1 border rounded"
-                >
+                value={groupBy}
+                onChange={(e) => setGroupBy(e.target.value)}
+                className="px-3 py-1 border rounded">
+
                   <option value="person">按人员</option>
                   <option value="department">按部门</option>
                   <option value="time">按时间</option>
@@ -299,56 +299,56 @@ export default function PresaleExpenseManagement() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  {groupBy === "person" && (
-                    <>
+                  {groupBy === "person" &&
+                <>
                       <TableHead>人员</TableHead>
                       <TableHead>部门</TableHead>
                     </>
-                  )}
-                  {groupBy === "department" && (
-                    <>
+                }
+                  {groupBy === "department" &&
+                <>
                       <TableHead>部门</TableHead>
                     </>
-                  )}
-                  {groupBy === "time" && (
-                    <>
+                }
+                  {groupBy === "time" &&
+                <>
                       <TableHead>月份</TableHead>
                     </>
-                  )}
+                }
                   <TableHead>项目数</TableHead>
                   <TableHead>总工时</TableHead>
                   <TableHead>总费用</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {statistics.statistics.map((stat, index) => (
-                  <TableRow key={index}>
-                    {groupBy === "person" && (
-                      <>
+                {statistics.statistics.map((stat, index) =>
+              <TableRow key={index}>
+                    {groupBy === "person" &&
+                <>
                         <TableCell>{stat.person_name}</TableCell>
                         <TableCell>{stat.department || "-"}</TableCell>
                       </>
-                    )}
-                    {groupBy === "department" && (
-                      <>
+                }
+                    {groupBy === "department" &&
+                <>
                         <TableCell>{stat.department_name}</TableCell>
                       </>
-                    )}
-                    {groupBy === "time" && (
-                      <>
+                }
+                    {groupBy === "time" &&
+                <>
                         <TableCell>{stat.month}</TableCell>
                       </>
-                    )}
+                }
                     <TableCell>{stat.project_count || 0}</TableCell>
                     <TableCell>{formatHours(stat.total_hours)}</TableCell>
                     <TableCell>{formatAmount(stat.total_amount)}</TableCell>
                   </TableRow>
-                ))}
+              )}
               </TableBody>
             </Table>
           </CardContent>
         </Card>
-      )}
+      }
 
       {/* 费用列表 */}
       <Card>
@@ -356,12 +356,12 @@ export default function PresaleExpenseManagement() {
           <CardTitle>未中标项目费用列表</CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="text-center py-8 text-slate-500">加载中...</div>
-          ) : expenses.length === 0 ? (
-            <div className="text-center py-8 text-slate-500">暂无数据</div>
-          ) : (
-            <Table>
+          {loading ?
+          <div className="text-center py-8 text-slate-500">加载中...</div> :
+          expenses.length === 0 ?
+          <div className="text-center py-8 text-slate-500">暂无数据</div> :
+
+          <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>项目编号</TableHead>
@@ -375,18 +375,18 @@ export default function PresaleExpenseManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {expenses.map((expense) => (
-                  <TableRow key={expense.project_id}>
+                {expenses.map((expense) =>
+              <TableRow key={expense.project_id}>
                     <TableCell>{expense.project_code}</TableCell>
                     <TableCell>{expense.project_name}</TableCell>
                     <TableCell>
                       <Badge
-                        variant={
-                          expense.expense_category === "LOST_BID"
-                            ? "destructive"
-                            : "outline"
-                        }
-                      >
+                    variant={
+                    expense.expense_category === "LOST_BID" ?
+                    "destructive" :
+                    "outline"
+                    }>
+
                         {expense.expense_category === "LOST_BID" ? "丢标" : "放弃"}
                       </Badge>
                     </TableCell>
@@ -396,39 +396,39 @@ export default function PresaleExpenseManagement() {
                     <TableCell>{expense.loss_reason || "-"}</TableCell>
                     <TableCell>{expense.expense_date}</TableCell>
                   </TableRow>
-                ))}
+              )}
               </TableBody>
             </Table>
-          )}
+          }
 
           {/* 分页 */}
-          {total > pageSize && (
-            <div className="flex items-center justify-between mt-4">
+          {total > pageSize &&
+          <div className="flex items-center justify-between mt-4">
               <div className="text-sm text-slate-500">
                 共 {total} 条记录，第 {page} / {Math.ceil(total / pageSize)} 页
               </div>
               <div className="flex items-center gap-2">
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(page - 1)}
-                  disabled={page === 1}
-                >
+                variant="outline"
+                size="sm"
+                onClick={() => setPage(page - 1)}
+                disabled={page === 1}>
+
                   上一页
                 </Button>
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(page + 1)}
-                  disabled={page >= Math.ceil(total / pageSize)}
-                >
+                variant="outline"
+                size="sm"
+                onClick={() => setPage(page + 1)}
+                disabled={page >= Math.ceil(total / pageSize)}>
+
                   下一页
                 </Button>
               </div>
             </div>
-          )}
+          }
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>);
+
 }

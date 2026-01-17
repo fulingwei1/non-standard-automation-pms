@@ -13,18 +13,18 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "../ui/table";
+  TableRow } from
+"../ui/table";
 import { Card, CardContent } from "../ui/card";
 import { formatDate } from "../../lib/utils";
-import { 
-  statusConfigs, 
+import {
+  statusConfigs,
   urgencyConfigs,
-  problemTypeConfigs,
+  problemTypeConfigs as _problemTypeConfigs,
   getStatusLabel,
   getUrgencyLabel,
-  getProblemTypeIcon
-} from "./serviceTicketConstants";
+  getProblemTypeIcon } from
+"./serviceTicketConstants";
 
 export function ServiceTicketListTable({
   tickets = [],
@@ -32,7 +32,7 @@ export function ServiceTicketListTable({
   selectedTicketIds = new Set(),
   onSelectionChange,
   onViewDetail,
-  onEditTicket,
+  onEditTicket
 }) {
   const [sortConfig, setSortConfig] = useState({
     key: "reported_time",
@@ -41,7 +41,7 @@ export function ServiceTicketListTable({
 
   // 排序函数
   const handleSort = (key) => {
-    setSortConfig(prev => ({
+    setSortConfig((prev) => ({
       key,
       direction: prev.key === key && prev.direction === "desc" ? "asc" : "desc"
     }));
@@ -51,13 +51,13 @@ export function ServiceTicketListTable({
   const sortedTickets = [...tickets].sort((a, b) => {
     let aValue = a[sortConfig.key];
     let bValue = b[sortConfig.key];
-    
+
     // 处理日期排序
     if (sortConfig.key.includes("_time") || sortConfig.key.includes("Date")) {
       aValue = new Date(aValue);
       bValue = new Date(bValue);
     }
-    
+
     if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
     if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
     return 0;
@@ -77,7 +77,7 @@ export function ServiceTicketListTable({
   // 处理全选
   const handleSelectAll = (checked) => {
     if (checked) {
-      onSelectionChange(new Set(sortedTickets.map(ticket => ticket.id)));
+      onSelectionChange(new Set(sortedTickets.map((ticket) => ticket.id)));
     } else {
       onSelectionChange(new Set());
     }
@@ -117,8 +117,8 @@ export function ServiceTicketListTable({
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
         <span className="ml-2 text-slate-600 dark:text-slate-400">加载中...</span>
-      </div>
-    );
+      </div>);
+
   }
 
   if (sortedTickets.length === 0) {
@@ -131,8 +131,8 @@ export function ServiceTicketListTable({
         <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">
           请调整筛选条件或创建新的服务工单
         </p>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -145,19 +145,19 @@ export function ServiceTicketListTable({
                 <TableHead className="w-12">
                   <Checkbox
                     checked={sortedTickets.length > 0 && selectedTicketIds.size === sortedTickets.length}
-                    onCheckedChange={handleSelectAll}
-                  />
+                    onCheckedChange={handleSelectAll} />
+
                 </TableHead>
                 
                 {/* 可排序列头 */}
                 <TableHead className="cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800" onClick={() => handleSort("ticket_no")}>
                   <div className="flex items-center gap-1">
                     工单编号
-                    {sortConfig.key === "ticket_no" && (
-                      <span className="text-xs text-slate-400">
+                    {sortConfig.key === "ticket_no" &&
+                    <span className="text-xs text-slate-400">
                         {sortConfig.direction === "asc" ? "↑" : "↓"}
                       </span>
-                    )}
+                    }
                   </div>
                 </TableHead>
 
@@ -171,11 +171,11 @@ export function ServiceTicketListTable({
                 <TableHead className="cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800" onClick={() => handleSort("reported_time")}>
                   <div className="flex items-center gap-1">
                     报告时间
-                    {sortConfig.key === "reported_time" && (
-                      <span className="text-xs text-slate-400">
+                    {sortConfig.key === "reported_time" &&
+                    <span className="text-xs text-slate-400">
                         {sortConfig.direction === "asc" ? "↑" : "↓"}
                       </span>
-                    )}
+                    }
                   </div>
                 </TableHead>
 
@@ -184,18 +184,18 @@ export function ServiceTicketListTable({
             </TableHeader>
 
             <TableBody>
-              {sortedTickets.map((ticket) => (
-                <TableRow 
-                  key={ticket.id}
-                  className={`hover:bg-slate-50 dark:hover:bg-slate-800/50 ${
-                    selectedTicketIds.has(ticket.id) ? "bg-blue-50 dark:bg-blue-900/20" : ""
-                  }`}
-                >
+              {sortedTickets.map((ticket) =>
+              <TableRow
+                key={ticket.id}
+                className={`hover:bg-slate-50 dark:hover:bg-slate-800/50 ${
+                selectedTicketIds.has(ticket.id) ? "bg-blue-50 dark:bg-blue-900/20" : ""}`
+                }>
+
                   <TableCell>
                     <Checkbox
-                      checked={selectedTicketIds.has(ticket.id)}
-                      onCheckedChange={(checked) => handleRowSelect(ticket.id, checked)}
-                    />
+                    checked={selectedTicketIds.has(ticket.id)}
+                    onCheckedChange={(checked) => handleRowSelect(ticket.id, checked)} />
+
                   </TableCell>
 
                   <TableCell className="font-mono text-sm">
@@ -211,9 +211,9 @@ export function ServiceTicketListTable({
                   <TableCell>
                     <div className="text-sm">
                       <div className="font-medium">{ticket.customer_name || "未知客户"}</div>
-                      {ticket.contact_phone && (
-                        <div className="text-xs text-slate-500">{ticket.contact_phone}</div>
-                      )}
+                      {ticket.contact_phone &&
+                    <div className="text-xs text-slate-500">{ticket.contact_phone}</div>
+                    }
                     </div>
                   </TableCell>
 
@@ -227,10 +227,10 @@ export function ServiceTicketListTable({
                   <TableCell>
                     <div className="flex items-center gap-2">
                       {getStatusIcon(ticket.status)}
-                      <Badge 
-                        variant="outline"
-                        className={`${statusConfigs[ticket.status]?.borderColor} border-2 text-xs`}
-                      >
+                      <Badge
+                      variant="outline"
+                      className={`${statusConfigs[ticket.status]?.borderColor} border-2 text-xs`}>
+
                         {getStatusLabel(ticket.status)}
                       </Badge>
                     </div>
@@ -239,10 +239,10 @@ export function ServiceTicketListTable({
                   <TableCell>
                     <div className="flex items-center gap-2">
                       {getUrgencyIcon(ticket.urgency)}
-                      <Badge 
-                        variant="secondary"
-                        className={`${urgencyConfigs[ticket.urgency]?.bg} text-xs`}
-                      >
+                      <Badge
+                      variant="secondary"
+                      className={`${urgencyConfigs[ticket.urgency]?.bg} text-xs`}>
+
                         {getUrgencyLabel(ticket.urgency)}
                       </Badge>
                     </div>
@@ -250,14 +250,14 @@ export function ServiceTicketListTable({
 
                   <TableCell>
                     <div className="text-sm">
-                      {ticket.assigned_engineer ? (
-                        <div className="flex items-center gap-1">
+                      {ticket.assigned_engineer ?
+                    <div className="flex items-center gap-1">
                           <User className="w-3 h-3 text-slate-400" />
                           {ticket.assigned_engineer}
-                        </div>
-                      ) : (
-                        <span className="text-slate-400">未分配</span>
-                      )}
+                        </div> :
+
+                    <span className="text-slate-400">未分配</span>
+                    }
                     </div>
                   </TableCell>
 
@@ -271,31 +271,31 @@ export function ServiceTicketListTable({
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
                       <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onViewDetail(ticket)}
-                        className="h-8 w-8 p-0"
-                      >
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onViewDetail(ticket)}
+                      className="h-8 w-8 p-0">
+
                         <Eye className="w-4 h-4" />
                       </Button>
-                      {ticket.status === "PENDING" && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onEditTicket(ticket)}
-                          className="h-8 w-8 p-0"
-                        >
+                      {ticket.status === "PENDING" &&
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onEditTicket(ticket)}
+                      className="h-8 w-8 p-0">
+
                           <Edit className="w-4 h-4" />
                         </Button>
-                      )}
+                    }
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 }

@@ -11,7 +11,7 @@
  * 6. 客户满意度记录
  */
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo as _useMemo, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -35,7 +35,7 @@ import { serviceApi } from "../services/api";
 import { Plus, Download, RefreshCw } from "lucide-react";
 
 export default function ServiceTicketManagement() {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
 
   const getPriorityValue = (ticket) => {
     const urgency = ticket?.urgency;
@@ -46,7 +46,7 @@ export default function ServiceTicketManagement() {
     }
 
     const matched = Object.values(urgencyConfigs).find(
-      (config) => config.label === urgency,
+      (config) => config.label === urgency
     );
     return matched?.level ?? 0;
   };
@@ -56,13 +56,13 @@ export default function ServiceTicketManagement() {
   const [filteredTickets, setFilteredTickets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const [submitting, _setSubmitting] = useState(false);
   const [statistics, setStatistics] = useState({
     total: 0,
     pending: 0,
     inProgress: 0,
     completed: 0,
-    overdue: 0,
+    overdue: 0
   });
 
   // Search and filter state
@@ -90,7 +90,7 @@ export default function ServiceTicketManagement() {
       const response = await serviceApi.tickets.list({
         page_size: 1000,
         order_by: sortField,
-        order_direction: sortDirection,
+        order_direction: sortDirection
       });
       const ticketList = response.data?.items || response.data || [];
       setTickets(ticketList);
@@ -111,7 +111,7 @@ export default function ServiceTicketManagement() {
         pending: 0,
         inProgress: 0,
         completed: 0,
-        overdue: 0,
+        overdue: 0
       });
     } catch (error) {
       console.error("Failed to load statistics:", error);
@@ -131,25 +131,25 @@ export default function ServiceTicketManagement() {
     // Search filter
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(ticket =>
-        ticket.ticket_no?.toLowerCase().includes(term) ||
-        ticket.project_name?.toLowerCase().includes(term) ||
-        ticket.project_code?.toLowerCase().includes(term) ||
-        ticket.customer_name?.toLowerCase().includes(term) ||
-        ticket.problem_desc?.toLowerCase().includes(term) ||
-        ticket.reported_by?.toLowerCase().includes(term) ||
-        ticket.assignee_name?.toLowerCase().includes(term)
+      filtered = filtered.filter((ticket) =>
+      ticket.ticket_no?.toLowerCase().includes(term) ||
+      ticket.project_name?.toLowerCase().includes(term) ||
+      ticket.project_code?.toLowerCase().includes(term) ||
+      ticket.customer_name?.toLowerCase().includes(term) ||
+      ticket.problem_desc?.toLowerCase().includes(term) ||
+      ticket.reported_by?.toLowerCase().includes(term) ||
+      ticket.assignee_name?.toLowerCase().includes(term)
       );
     }
 
     // Status filter
     if (filterStatus) {
-      filtered = filtered.filter(ticket => ticket.status === filterStatus);
+      filtered = filtered.filter((ticket) => ticket.status === filterStatus);
     }
 
     // Urgency filter
     if (filterUrgency) {
-      filtered = filtered.filter(ticket => ticket.urgency === filterUrgency);
+      filtered = filtered.filter((ticket) => ticket.urgency === filterUrgency);
     }
 
     // Date range filter
@@ -174,7 +174,7 @@ export default function ServiceTicketManagement() {
           break;
       }
 
-      filtered = filtered.filter(ticket => {
+      filtered = filtered.filter((ticket) => {
         const ticketDate = new Date(ticket.created_time);
         return ticketDate >= filterDate;
       });
@@ -273,35 +273,35 @@ export default function ServiceTicketManagement() {
   const handleBatchExport = async (ticketsToExport) => {
     try {
       const csvContent = [
-        [
-          "工单号",
-          "项目编号",
-          "项目名称",
-          "客户名称",
-          "问题类型",
-          "紧急程度",
-          "状态",
-          "报告人",
-          "报告时间",
-          "负责人",
-          "创建时间",
-        ].join(","),
-        ...ticketsToExport.map((ticket) =>
-          [
-            ticket.ticket_no,
-            ticket.project_code,
-            ticket.project_name,
-            ticket.customer_name,
-            ticket.problem_type,
-            ticket.urgency,
-            ticket.status,
-            ticket.reported_by,
-            ticket.created_time ? new Date(ticket.created_time).toLocaleString() : "",
-            ticket.assignee_name || "",
-            ticket.created_time ? new Date(ticket.created_time).toLocaleDateString() : "",
-          ].join(",")
-        ),
-      ].join("\n");
+      [
+      "工单号",
+      "项目编号",
+      "项目名称",
+      "客户名称",
+      "问题类型",
+      "紧急程度",
+      "状态",
+      "报告人",
+      "报告时间",
+      "负责人",
+      "创建时间"].
+      join(","),
+      ...ticketsToExport.map((ticket) =>
+      [
+      ticket.ticket_no,
+      ticket.project_code,
+      ticket.project_name,
+      ticket.customer_name,
+      ticket.problem_type,
+      ticket.urgency,
+      ticket.status,
+      ticket.reported_by,
+      ticket.created_time ? new Date(ticket.created_time).toLocaleString() : "",
+      ticket.assignee_name || "",
+      ticket.created_time ? new Date(ticket.created_time).toLocaleDateString() : ""].
+      join(",")
+      )].
+      join("\n");
 
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
       const url = URL.createObjectURL(blob);
@@ -326,7 +326,7 @@ export default function ServiceTicketManagement() {
       await loadTickets();
       await loadStatistics();
       toast.success("数据已刷新");
-    } catch (error) {
+    } catch (_error) {
       toast.error("刷新失败");
     } finally {
       setRefreshing(false);
@@ -339,10 +339,10 @@ export default function ServiceTicketManagement() {
   };
 
   const handleSelectTicket = (ticketId) => {
-    setSelectedTickets(prev => 
-      prev.includes(ticketId)
-        ? prev.filter(id => id !== ticketId)
-        : [...prev, ticketId]
+    setSelectedTickets((prev) =>
+    prev.includes(ticketId) ?
+    prev.filter((id) => id !== ticketId) :
+    [...prev, ticketId]
     );
   };
 
@@ -350,7 +350,7 @@ export default function ServiceTicketManagement() {
     if (selectedTickets.length === filteredTickets.length) {
       setSelectedTickets([]);
     } else {
-      setSelectedTickets(filteredTickets.map(ticket => ticket.id));
+      setSelectedTickets(filteredTickets.map((ticket) => ticket.id));
     }
   };
 
@@ -363,33 +363,33 @@ export default function ServiceTicketManagement() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white"
-    >
+      className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+
       <PageHeader
         title="服务工单管理"
         subtitle="管理客户服务工单，跟踪问题解决进度"
         actions={
-          <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3">
             <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="border-slate-600 bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 hover:text-white"
-            >
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="border-slate-600 bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 hover:text-white">
+
               <RefreshCw className={cn("w-4 h-4 mr-2", refreshing && "animate-spin")} />
               刷新
             </Button>
             <Button
-              onClick={() => setShowCreateDialog(true)}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
+            onClick={() => setShowCreateDialog(true)}
+            className="bg-blue-600 hover:bg-blue-700">
+
               <Plus className="w-4 h-4 mr-2" />
               创建工单
             </Button>
           </div>
-        }
-      />
+        } />
+
 
       <div className="p-6 max-w-[1600px] mx-auto space-y-6">
         {/* Statistics Cards */}
@@ -416,8 +416,8 @@ export default function ServiceTicketManagement() {
               setSortDirection={setSortDirection}
               tickets={filteredTickets}
               onExport={() => handleBatchExport(filteredTickets)}
-              loading={loading}
-            />
+              loading={loading} />
+
           </CardContent>
         </Card>
 
@@ -444,30 +444,30 @@ export default function ServiceTicketManagement() {
                 setSelectedTicket(ticket);
                 // Show close dialog
               }}
-              searchTerm={searchTerm}
-            />
+              searchTerm={searchTerm} />
+
           </CardContent>
         </Card>
       </div>
 
       {/* Create Dialog */}
-      {showCreateDialog && (
-        <ServiceTicketCreateDialog
-          onClose={() => setShowCreateDialog(false)}
-          onSubmit={handleCreateTicket}
-          submitting={submitting}
-        />
-      )}
+      {showCreateDialog &&
+      <ServiceTicketCreateDialog
+        onClose={() => setShowCreateDialog(false)}
+        onSubmit={handleCreateTicket}
+        submitting={submitting} />
+
+      }
 
       {/* Detail Dialog */}
-      {showDetailDialog && selectedTicket && (
-        <ServiceTicketDetailDialog
-          ticket={selectedTicket}
-          onClose={() => setShowDetailDialog(false)}
-          onAssign={handleAssignTicket}
-          onCloseTicket={handleCloseTicket}
-        />
-      )}
+      {showDetailDialog && selectedTicket &&
+      <ServiceTicketDetailDialog
+        ticket={selectedTicket}
+        onClose={() => setShowDetailDialog(false)}
+        onAssign={handleAssignTicket}
+        onCloseTicket={handleCloseTicket} />
+
+      }
 
       {/* Batch Actions */}
       <ServiceTicketBatchActions
@@ -476,8 +476,8 @@ export default function ServiceTicketManagement() {
         onClearSelection={handleClearSelection}
         onBatchAssign={handleBatchAssign}
         onBatchExport={handleBatchExport}
-        onBatchDelete={handleBatchDelete}
-      />
-    </motion.div>
-  );
+        onBatchDelete={handleBatchDelete} />
+
+    </motion.div>);
+
 }

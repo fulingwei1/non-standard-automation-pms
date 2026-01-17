@@ -6,14 +6,14 @@
 import { Badge } from "../../components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { cn, formatDate } from "../../lib/utils";
-import { 
-  statusConfigs, 
-  typeConfigs, 
-  priorityConfigs,
+import {
+  statusConfigs as _statusConfigs,
+  typeConfigs as _typeConfigs,
+  priorityConfigs as _priorityConfigs,
   getStatusConfig,
   getTypeConfig,
-  getPriorityConfig
-} from "./ecnConstants";
+  getPriorityConfig } from
+"./ecnConstants";
 
 export function ECNBasicInfo({ ecn, loading }) {
   if (loading) {
@@ -43,8 +43,8 @@ export function ECNBasicInfo({ ecn, loading }) {
             </div>
           </CardContent>
         </Card>
-      </div>
-    );
+      </div>);
+
   }
 
   const statusConfig = getStatusConfig(ecn.status);
@@ -173,20 +173,20 @@ export function ECNBasicInfo({ ecn, loading }) {
           </div>
 
           {/* 受影响部门 */}
-          {ecn.affected_departments && ecn.affected_departments.length > 0 && (
-            <div>
+          {ecn.affected_departments && ecn.affected_departments.length > 0 &&
+          <div>
               <div className="text-sm text-slate-500 mb-2">受影响部门</div>
               <div className="flex flex-wrap gap-1">
-                {ecn.affected_departments.map((dept, index) => (
-                  <Badge key={index} variant="outline" className="text-xs">
+                {ecn.affected_departments.map((dept, index) =>
+              <Badge key={index} variant="outline" className="text-xs">
                     {dept}
                   </Badge>
-                ))}
+              )}
               </div>
             </div>
-          )}
+          }
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>);
+
 }

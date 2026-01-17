@@ -2,6 +2,7 @@
  * HRDashboardHeader Component
  * HR Dashboard 页面头部组件
  */
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { PageHeader } from "../layout";
 import {
@@ -10,8 +11,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../ui";
+  DropdownMenuTrigger } from
+"../ui";
 import {
   UserPlus,
   Award,
@@ -20,8 +21,8 @@ import {
   FileSpreadsheet,
   Printer,
   Share2,
-  Settings,
-} from "lucide-react";
+  Settings } from
+"lucide-react";
 import { cn } from "../../lib/utils";
 import { toast } from "../ui/toast";
 import { fadeIn } from "../../lib/animations";
@@ -30,8 +31,9 @@ export default function HRDashboardHeader({
   mockHRStats,
   refreshing,
   onRefresh,
-  onExportReport,
+  onExportReport
 }) {
+  const [_selectedTab, setSelectedTab] = useState(null);
   const handlePrint = () => {
     window.print();
   };
@@ -52,50 +54,50 @@ export default function HRDashboardHeader({
       title="人事管理"
       description={`在职员工: ${mockHRStats.activeEmployees}人 | 本月新增: ${mockHRStats.newEmployeesThisMonth}人 | 绩效完成率: ${mockHRStats.performanceCompletionRate}%`}
       actions={
-        <motion.div variants={fadeIn} className="flex gap-2">
+      <motion.div variants={fadeIn} className="flex gap-2">
           <Button
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2"
-            onClick={() => {
-              setSelectedTab("recruitment");
-              // TODO: 打开新建招聘对话框
-            }}
-          >
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-2"
+          onClick={() => {
+            setSelectedTab("recruitment");
+            // TODO: 打开新建招聘对话框
+          }}>
+
             <UserPlus className="w-4 h-4" />
             新建招聘
           </Button>
           <Button
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2"
-            onClick={() => {
-              setSelectedTab("performance");
-              // TODO: 跳转到绩效管理页面
-            }}
-          >
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-2"
+          onClick={() => {
+            setSelectedTab("performance");
+            // TODO: 跳转到绩效管理页面
+          }}>
+
             <Award className="w-4 h-4" />
             绩效管理
           </Button>
           <Button
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2"
-            disabled={refreshing}
-            onClick={onRefresh}
-          >
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-2"
+          disabled={refreshing}
+          onClick={onRefresh}>
+
             <RefreshCw
-              className={cn("w-4 h-4", refreshing && "animate-spin")}
-            />
+            className={cn("w-4 h-4", refreshing && "animate-spin")} />
+
             刷新
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2"
-              >
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2">
+
                 <MoreVertical className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -114,17 +116,17 @@ export default function HRDashboardHeader({
                 分享
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => {
-                  // TODO: Implement settings
-                }}
-              >
+              onClick={() => {
+
+                // TODO: Implement settings
+              }}>
                 <Settings className="w-4 h-4 mr-2" />
                 设置
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </motion.div>
-      }
-    />
-  );
+      } />);
+
+
 }

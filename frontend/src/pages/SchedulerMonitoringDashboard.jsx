@@ -26,8 +26,8 @@ import {
   Search,
   Calendar,
   Bell,
-  Send,
-} from "lucide-react";
+  Send } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -51,8 +51,8 @@ import {
   TableRow,
   LoadingCard,
   ErrorMessage,
-  EmptyState,
-} from "../components/ui";
+  EmptyState } from
+"../components/ui";
 import { cn, formatDate } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { schedulerApi } from "../services/api";
@@ -62,11 +62,11 @@ export default function SchedulerMonitoringDashboard() {
   const [error, setError] = useState(null);
   const [metrics, setMetrics] = useState([]);
   const [schedulerStatus, setSchedulerStatus] = useState(null);
-  const [services, setServices] = useState([]);
+  const [_services, setServices] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
-  const [autoRefresh, setAutoRefresh] = useState(true);
-  const [refreshInterval, setRefreshInterval] = useState(30); // seconds
+  const [autoRefresh, _setAutoRefresh] = useState(true);
+  const [refreshInterval, _setRefreshInterval] = useState(30); // seconds
 
   // Fetch all data
   const fetchData = async () => {
@@ -75,10 +75,10 @@ export default function SchedulerMonitoringDashboard() {
       setError(null);
 
       const [metricsRes, statusRes, servicesRes] = await Promise.all([
-        schedulerApi.metrics(),
-        schedulerApi.status(),
-        schedulerApi.listServices(),
-      ]);
+      schedulerApi.metrics(),
+      schedulerApi.status(),
+      schedulerApi.listServices()]
+      );
 
       if (metricsRes.data?.code === 200) {
         setMetrics(metricsRes.data.data?.metrics || []);
@@ -121,9 +121,9 @@ export default function SchedulerMonitoringDashboard() {
     if (searchTerm) {
       filtered = filtered.filter(
         (m) =>
-          m.job_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          m.job_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          m.owner?.toLowerCase().includes(searchTerm.toLowerCase()),
+        m.job_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        m.job_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        m.owner?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -139,20 +139,20 @@ export default function SchedulerMonitoringDashboard() {
     const total = metrics.length;
     const totalSuccess = metrics.reduce(
       (sum, m) => sum + (m.success_count || 0),
-      0,
+      0
     );
     const totalFailure = metrics.reduce(
       (sum, m) => sum + (m.failure_count || 0),
-      0,
+      0
     );
     const totalRuns = totalSuccess + totalFailure;
     const successRate =
-      totalRuns > 0 ? ((totalSuccess / totalRuns) * 100).toFixed(1) : 0;
+    totalRuns > 0 ? (totalSuccess / totalRuns * 100).toFixed(1) : 0;
     const avgDuration =
-      metrics.reduce((sum, m) => sum + (m.avg_duration_ms || 0), 0) /
-      (total || 1);
+    metrics.reduce((sum, m) => sum + (m.avg_duration_ms || 0), 0) / (
+    total || 1);
     const jobsWithFailures = metrics.filter(
-      (m) => (m.failure_count || 0) > 0,
+      (m) => (m.failure_count || 0) > 0
     ).length;
 
     return {
@@ -162,7 +162,7 @@ export default function SchedulerMonitoringDashboard() {
       totalRuns,
       successRate: parseFloat(successRate),
       avgDuration: avgDuration.toFixed(2),
-      jobsWithFailures,
+      jobsWithFailures
     };
   }, [metrics]);
 
@@ -181,7 +181,7 @@ export default function SchedulerMonitoringDashboard() {
         heatmap[cat] = {
           category: cat,
           totalFailures: 0,
-          jobs: [],
+          jobs: []
         };
       }
       heatmap[cat].totalFailures += m.failure_count || 0;
@@ -189,12 +189,12 @@ export default function SchedulerMonitoringDashboard() {
         heatmap[cat].jobs.push({
           job_id: m.job_id,
           job_name: m.job_name,
-          failure_count: m.failure_count,
+          failure_count: m.failure_count
         });
       }
     });
     return Object.values(heatmap).sort(
-      (a, b) => b.totalFailures - a.totalFailures,
+      (a, b) => b.totalFailures - a.totalFailures
     );
   }, [metrics]);
 
@@ -227,11 +227,11 @@ export default function SchedulerMonitoringDashboard() {
       <div className="space-y-6">
         <PageHeader
           title="调度器监控仪表盘"
-          description="实时监控调度任务执行情况"
-        />
+          description="实时监控调度任务执行情况" />
+
         <LoadingCard />
-      </div>
-    );
+      </div>);
+
   }
 
   if (error && metrics.length === 0) {
@@ -239,29 +239,29 @@ export default function SchedulerMonitoringDashboard() {
       <div className="space-y-6">
         <PageHeader
           title="调度器监控仪表盘"
-          description="实时监控调度任务执行情况"
-        />
+          description="实时监控调度任务执行情况" />
+
         <ErrorMessage message={error} onRetry={fetchData} />
-      </div>
-    );
+      </div>);
+
   }
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="调度器监控仪表盘"
-        description="实时监控调度任务执行情况、失败热力图和通知链路指标"
-      >
+        description="实时监控调度任务执行情况、失败热力图和通知链路指标">
+
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={fetchData}
-            disabled={loading}
-          >
+            disabled={loading}>
+
             <RefreshCw
-              className={cn("h-4 w-4 mr-2", loading && "animate-spin")}
-            />
+              className={cn("h-4 w-4 mr-2", loading && "animate-spin")} />
+
             刷新
           </Button>
           <Button variant="outline" size="sm" onClick={handleExportPrometheus}>
@@ -276,8 +276,8 @@ export default function SchedulerMonitoringDashboard() {
         variants={staggerContainer}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
-      >
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
         <motion.div variants={fadeIn}>
           <Card>
             <CardContent className="p-6">
@@ -364,8 +364,8 @@ export default function SchedulerMonitoringDashboard() {
       </motion.div>
 
       {/* Scheduler Status */}
-      {schedulerStatus && (
-        <motion.div variants={fadeIn}>
+      {schedulerStatus &&
+      <motion.div variants={fadeIn}>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -376,8 +376,8 @@ export default function SchedulerMonitoringDashboard() {
             <CardContent>
               <div className="flex items-center gap-4">
                 <Badge
-                  variant={schedulerStatus.running ? "success" : "destructive"}
-                >
+                variant={schedulerStatus.running ? "success" : "destructive"}>
+
                   {schedulerStatus.running ? "运行中" : "已停止"}
                 </Badge>
                 <span className="text-sm text-muted-foreground">
@@ -387,11 +387,11 @@ export default function SchedulerMonitoringDashboard() {
             </CardContent>
           </Card>
         </motion.div>
-      )}
+      }
 
       {/* Notification Chain Metrics */}
-      {notificationMetrics && (
-        <motion.div variants={fadeIn}>
+      {notificationMetrics &&
+      <motion.div variants={fadeIn}>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -419,32 +419,32 @@ export default function SchedulerMonitoringDashboard() {
                 <div>
                   <p className="text-sm text-muted-foreground">平均耗时</p>
                   <p className="text-2xl font-bold">
-                    {notificationMetrics.avg_duration_ms
-                      ? `${notificationMetrics.avg_duration_ms.toFixed(2)}ms`
-                      : "N/A"}
+                    {notificationMetrics.avg_duration_ms ?
+                  `${notificationMetrics.avg_duration_ms.toFixed(2)}ms` :
+                  "N/A"}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">P95 耗时</p>
                   <p className="text-2xl font-bold">
-                    {notificationMetrics.p95_duration_ms
-                      ? `${notificationMetrics.p95_duration_ms.toFixed(2)}ms`
-                      : "N/A"}
+                    {notificationMetrics.p95_duration_ms ?
+                  `${notificationMetrics.p95_duration_ms.toFixed(2)}ms` :
+                  "N/A"}
                   </p>
                 </div>
               </div>
-              {notificationMetrics.last_timestamp && (
-                <div className="mt-4 pt-4 border-t">
+              {notificationMetrics.last_timestamp &&
+            <div className="mt-4 pt-4 border-t">
                   <p className="text-sm text-muted-foreground">
                     最后执行时间:{" "}
                     {formatDate(notificationMetrics.last_timestamp)}
                   </p>
                 </div>
-              )}
+            }
             </CardContent>
           </Card>
         </motion.div>
-      )}
+      }
 
       {/* Tabs */}
       <Tabs defaultValue="tasks" className="space-y-4">
@@ -466,29 +466,29 @@ export default function SchedulerMonitoringDashboard() {
                       placeholder="搜索任务..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-8 w-64"
-                    />
+                      className="pl-8 w-64" />
+
                   </div>
                   <select
                     value={filterCategory}
                     onChange={(e) => setFilterCategory(e.target.value)}
-                    className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
-                  >
+                    className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm">
+
                     <option value="all">所有类别</option>
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat}>
+                    {categories.map((cat) =>
+                    <option key={cat} value={cat}>
                         {cat}
                       </option>
-                    ))}
+                    )}
                   </select>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              {filteredMetrics.length === 0 ? (
-                <EmptyState message="没有找到匹配的任务" />
-              ) : (
-                <div className="overflow-x-auto">
+              {filteredMetrics.length === 0 ?
+              <EmptyState message="没有找到匹配的任务" /> :
+
+              <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -507,19 +507,19 @@ export default function SchedulerMonitoringDashboard() {
                     </TableHeader>
                     <TableBody>
                       {filteredMetrics.map((metric) => {
-                        const totalRuns =
-                          (metric.success_count || 0) +
-                          (metric.failure_count || 0);
-                        const successRate =
-                          totalRuns > 0
-                            ? (
-                                (metric.success_count / totalRuns) *
-                                100
-                              ).toFixed(1)
-                            : 0;
+                      const totalRuns =
+                      (metric.success_count || 0) + (
+                      metric.failure_count || 0);
+                      const successRate =
+                      totalRuns > 0 ?
+                      (
+                      metric.success_count / totalRuns *
+                      100).
+                      toFixed(1) :
+                      0;
 
-                        return (
-                          <TableRow key={metric.job_id}>
+                      return (
+                        <TableRow key={metric.job_id}>
                             <TableCell className="font-mono text-sm">
                               {metric.job_id}
                             </TableCell>
@@ -546,46 +546,46 @@ export default function SchedulerMonitoringDashboard() {
                               <div className="flex items-center gap-2">
                                 <span>{successRate}%</span>
                                 <Progress
-                                  value={parseFloat(successRate)}
-                                  className="w-16 h-2"
-                                />
+                                value={parseFloat(successRate)}
+                                className="w-16 h-2" />
+
                               </div>
                             </TableCell>
                             <TableCell>
-                              {metric.avg_duration_ms
-                                ? `${metric.avg_duration_ms.toFixed(2)}ms`
-                                : "-"}
+                              {metric.avg_duration_ms ?
+                            `${metric.avg_duration_ms.toFixed(2)}ms` :
+                            "-"}
                             </TableCell>
                             <TableCell>
-                              {metric.p95_duration_ms
-                                ? `${metric.p95_duration_ms.toFixed(2)}ms`
-                                : "-"}
+                              {metric.p95_duration_ms ?
+                            `${metric.p95_duration_ms.toFixed(2)}ms` :
+                            "-"}
                             </TableCell>
                             <TableCell className="text-sm text-muted-foreground">
-                              {metric.last_timestamp
-                                ? formatDate(metric.last_timestamp)
-                                : "-"}
+                              {metric.last_timestamp ?
+                            formatDate(metric.last_timestamp) :
+                            "-"}
                             </TableCell>
                             <TableCell>
                               <Badge
-                                variant={
-                                  metric.last_status === "success"
-                                    ? "success"
-                                    : "destructive"
-                                }
-                              >
-                                {metric.last_status === "success"
-                                  ? "成功"
-                                  : "失败"}
+                              variant={
+                              metric.last_status === "success" ?
+                              "success" :
+                              "destructive"
+                              }>
+
+                                {metric.last_status === "success" ?
+                              "成功" :
+                              "失败"}
                               </Badge>
                             </TableCell>
-                          </TableRow>
-                        );
-                      })}
+                          </TableRow>);
+
+                    })}
                     </TableBody>
                   </Table>
                 </div>
-              )}
+              }
             </CardContent>
           </Card>
         </TabsContent>
@@ -598,19 +598,19 @@ export default function SchedulerMonitoringDashboard() {
               <CardDescription>按类别统计任务失败情况</CardDescription>
             </CardHeader>
             <CardContent>
-              {failureHeatmap.length === 0 ? (
-                <EmptyState message="暂无失败记录" />
-              ) : (
-                <div className="space-y-4">
-                  {failureHeatmap.map((item) => {
-                    const maxFailures = Math.max(
-                      ...failureHeatmap.map((i) => i.totalFailures),
-                      1,
-                    );
-                    const intensity = (item.totalFailures / maxFailures) * 100;
+              {failureHeatmap.length === 0 ?
+              <EmptyState message="暂无失败记录" /> :
 
-                    return (
-                      <div key={item.category} className="space-y-2">
+              <div className="space-y-4">
+                  {failureHeatmap.map((item) => {
+                  const maxFailures = Math.max(
+                    ...failureHeatmap.map((i) => i.totalFailures),
+                    1
+                  );
+                  const intensity = item.totalFailures / maxFailures * 100;
+
+                  return (
+                    <div key={item.category} className="space-y-2">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <Badge variant="outline">{item.category}</Badge>
@@ -621,29 +621,29 @@ export default function SchedulerMonitoringDashboard() {
                           <div className="flex items-center gap-2">
                             <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
                               <div
-                                className={cn(
-                                  "h-full transition-all",
-                                  intensity > 70
-                                    ? "bg-red-500"
-                                    : intensity > 40
-                                      ? "bg-amber-500"
-                                      : "bg-yellow-500",
-                                )}
-                                style={{ width: `${intensity}%` }}
-                              />
+                              className={cn(
+                                "h-full transition-all",
+                                intensity > 70 ?
+                                "bg-red-500" :
+                                intensity > 40 ?
+                                "bg-amber-500" :
+                                "bg-yellow-500"
+                              )}
+                              style={{ width: `${intensity}%` }} />
+
                             </div>
                             <span className="text-xs text-muted-foreground w-12 text-right">
                               {intensity.toFixed(0)}%
                             </span>
                           </div>
                         </div>
-                        {item.jobs.length > 0 && (
-                          <div className="ml-6 space-y-1">
-                            {item.jobs.map((job) => (
-                              <div
-                                key={job.job_id}
-                                className="text-sm text-muted-foreground flex items-center gap-2"
-                              >
+                        {item.jobs.length > 0 &&
+                      <div className="ml-6 space-y-1">
+                            {item.jobs.map((job) =>
+                        <div
+                          key={job.job_id}
+                          className="text-sm text-muted-foreground flex items-center gap-2">
+
                                 <span className="font-mono text-xs">
                                   {job.job_id}
                                 </span>
@@ -651,18 +651,18 @@ export default function SchedulerMonitoringDashboard() {
                                   ({job.failure_count} 次失败)
                                 </span>
                               </div>
-                            ))}
-                          </div>
                         )}
-                      </div>
-                    );
-                  })}
+                          </div>
+                      }
+                      </div>);
+
+                })}
                 </div>
-              )}
+              }
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>);
+
 }

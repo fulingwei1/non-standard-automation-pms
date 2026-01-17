@@ -11,8 +11,8 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../ui/select";
+  SelectValue } from
+"../ui/select";
 import { filterOptions, sortOptions } from "./serviceTicketConstants";
 
 export function ServiceTicketListHeader({
@@ -33,7 +33,7 @@ export function ServiceTicketListHeader({
   onCreateTicket,
   onRefresh,
   exporting,
-  onExport,
+  onExport
 }) {
   const [showFilters, setShowFilters] = useState(false);
   const [showDateRange, setShowDateRange] = useState(false);
@@ -50,8 +50,8 @@ export function ServiceTicketListHeader({
               placeholder="搜索工单编号、客户、设备、问题描述..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-10 w-full lg:w-96"
-            />
+              className="pl-10 w-full lg:w-96" />
+
           </div>
 
           {/* 排序选择 */}
@@ -59,20 +59,20 @@ export function ServiceTicketListHeader({
             <span className="text-sm text-slate-500 whitespace-nowrap">排序:</span>
             <Select
               value={sortBy}
-              onValueChange={onSortChange}
-            >
+              onValueChange={onSortChange}>
+
               <SelectTrigger className="w-32">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {sortOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
+                {sortOptions.map((option) =>
+                <SelectItem key={option.value} value={option.value}>
                     <div className="flex items-center gap-2">
                       {option.icon && <option.icon className="w-4 h-4" />}
                       {option.label}
                     </div>
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
             
@@ -80,8 +80,8 @@ export function ServiceTicketListHeader({
               variant="outline"
               size="sm"
               onClick={() => onSortOrderChange(sortOrder === "asc" ? "desc" : "asc")}
-              className="px-2"
-            >
+              className="px-2">
+
               {sortOrder === "asc" ? "↑" : "↓"}
             </Button>
           </div>
@@ -92,26 +92,26 @@ export function ServiceTicketListHeader({
               variant="outline"
               size="sm"
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2"
-            >
+              className="flex items-center gap-2">
+
               <Filter className="w-4 h-4" />
               筛选
-              {(statusFilter !== "ALL" || urgencyFilter !== "ALL" || problemTypeFilter !== "ALL") && (
-                <span className="w-2 h-2 bg-blue-500 rounded-full" />
-              )}
+              {(statusFilter !== "ALL" || urgencyFilter !== "ALL" || problemTypeFilter !== "ALL") &&
+              <span className="w-2 h-2 bg-blue-500 rounded-full" />
+              }
             </Button>
 
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowDateRange(!showDateRange)}
-              className="flex items-center gap-2"
-            >
+              className="flex items-center gap-2">
+
               <Calendar className="w-4 h-4" />
               日期
-              {(dateRange.start || dateRange.end) && (
-                <span className="w-2 h-2 bg-blue-500 rounded-full" />
-              )}
+              {(dateRange.start || dateRange.end) &&
+              <span className="w-2 h-2 bg-blue-500 rounded-full" />
+              }
             </Button>
           </div>
         </div>
@@ -123,8 +123,8 @@ export function ServiceTicketListHeader({
             size="sm"
             onClick={onRefresh}
             disabled={exporting}
-            className="flex items-center gap-2"
-          >
+            className="flex items-center gap-2">
+
             <RefreshCw className="w-4 h-4" />
             刷新
           </Button>
@@ -134,8 +134,8 @@ export function ServiceTicketListHeader({
             size="sm"
             onClick={onExport}
             disabled={exporting}
-            className="flex items-center gap-2"
-          >
+            className="flex items-center gap-2">
+
             <Download className="w-4 h-4" />
             {exporting ? "导出中..." : "导出"}
           </Button>
@@ -143,8 +143,8 @@ export function ServiceTicketListHeader({
           <Button
             size="sm"
             onClick={onCreateTicket}
-            className="flex items-center gap-2"
-          >
+            className="flex items-center gap-2">
+
             <Plus className="w-4 h-4" />
             创建工单
           </Button>
@@ -152,25 +152,25 @@ export function ServiceTicketListHeader({
       </div>
 
       {/* 筛选条件 */}
-      {showFilters && (
-        <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg border">
+      {showFilters &&
+      <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg border">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* 状态筛选 */}
             <div>
               <label className="text-sm font-medium mb-2 block">工单状态</label>
               <Select
-                value={statusFilter}
-                onValueChange={onStatusChange}
-              >
+              value={statusFilter}
+              onValueChange={onStatusChange}>
+
                 <SelectTrigger>
                   <SelectValue placeholder="选择状态" />
                 </SelectTrigger>
                 <SelectContent>
-                  {filterOptions.statuses.map((status) => (
-                    <SelectItem key={status.value} value={status.value}>
+                  {filterOptions.statuses.map((status) =>
+                <SelectItem key={status.value} value={status.value}>
                       {status.label}
                     </SelectItem>
-                  ))}
+                )}
                 </SelectContent>
               </Select>
             </div>
@@ -179,18 +179,18 @@ export function ServiceTicketListHeader({
             <div>
               <label className="text-sm font-medium mb-2 block">紧急程度</label>
               <Select
-                value={urgencyFilter}
-                onValueChange={onUrgencyChange}
-              >
+              value={urgencyFilter}
+              onValueChange={onUrgencyChange}>
+
                 <SelectTrigger>
                   <SelectValue placeholder="选择紧急程度" />
                 </SelectTrigger>
                 <SelectContent>
-                  {filterOptions.urgencies.map((urgency) => (
-                    <SelectItem key={urgency.value} value={urgency.value}>
+                  {filterOptions.urgencies.map((urgency) =>
+                <SelectItem key={urgency.value} value={urgency.value}>
                       {urgency.label}
                     </SelectItem>
-                  ))}
+                )}
                 </SelectContent>
               </Select>
             </div>
@@ -199,21 +199,21 @@ export function ServiceTicketListHeader({
             <div>
               <label className="text-sm font-medium mb-2 block">问题类型</label>
               <Select
-                value={problemTypeFilter}
-                onValueChange={onProblemTypeChange}
-              >
+              value={problemTypeFilter}
+              onValueChange={onProblemTypeChange}>
+
                 <SelectTrigger>
                   <SelectValue placeholder="选择问题类型" />
                 </SelectTrigger>
                 <SelectContent>
-                  {filterOptions.problemTypes.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
+                  {filterOptions.problemTypes.map((type) =>
+                <SelectItem key={type.value} value={type.value}>
                       <div className="flex items-center gap-2">
                         {type.icon && <span>{type.icon}</span>}
                         {type.label}
                       </div>
                     </SelectItem>
-                  ))}
+                )}
                 </SelectContent>
               </Select>
             </div>
@@ -223,36 +223,36 @@ export function ServiceTicketListHeader({
               <label className="text-sm font-medium mb-2 block">快速筛选</label>
               <div className="flex flex-wrap gap-1">
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    onStatusChange("PENDING");
-                    onUrgencyChange("URGENT");
-                  }}
-                  className="text-xs"
-                >
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  onStatusChange("PENDING");
+                  onUrgencyChange("URGENT");
+                }}
+                className="text-xs">
+
                   待处理紧急
                 </Button>
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    onStatusChange("PENDING_VERIFY");
-                    onUrgencyChange("ALL");
-                  }}
-                  className="text-xs"
-                >
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  onStatusChange("PENDING_VERIFY");
+                  onUrgencyChange("ALL");
+                }}
+                className="text-xs">
+
                   待验证
                 </Button>
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    onStatusChange("ASSIGNED");
-                    onUrgencyChange("HIGH");
-                  }}
-                  className="text-xs"
-                >
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  onStatusChange("ASSIGNED");
+                  onUrgencyChange("HIGH");
+                }}
+                className="text-xs">
+
                   高优先级处理中
                 </Button>
               </div>
@@ -262,89 +262,89 @@ export function ServiceTicketListHeader({
           {/* 清除筛选 */}
           <div className="mt-4 flex justify-end">
             <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                onStatusChange("ALL");
-                onUrgencyChange("ALL");
-                onProblemTypeFilter("ALL");
-                onDateRangeChange({ start: "", end: "" });
-              }}
-            >
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              onStatusChange("ALL");
+              onUrgencyChange("ALL");
+              onProblemTypeChange("ALL");
+              onDateRangeChange({ start: "", end: "" });
+            }}>
+
               清除所有筛选
             </Button>
           </div>
         </div>
-      )}
+      }
 
       {/* 日期范围筛选 */}
-      {showDateRange && (
-        <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg border">
+      {showDateRange &&
+      <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg border">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="text-sm font-medium mb-2 block">开始日期</label>
               <Input
-                type="date"
-                value={dateRange.start}
-                onChange={(e) => onDateRangeChange({ ...dateRange, start: e.target.value })}
-              />
+              type="date"
+              value={dateRange.start}
+              onChange={(e) => onDateRangeChange({ ...dateRange, start: e.target.value })} />
+
             </div>
             <div>
               <label className="text-sm font-medium mb-2 block">结束日期</label>
               <Input
-                type="date"
-                value={dateRange.end}
-                onChange={(e) => onDateRangeChange({ ...dateRange, end: e.target.value })}
-              />
+              type="date"
+              value={dateRange.end}
+              onChange={(e) => onDateRangeChange({ ...dateRange, end: e.target.value })} />
+
             </div>
             <div className="flex items-end">
               <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  // 设置为最近7天
-                  const end = new Date();
-                  const start = new Date();
-                  start.setDate(start.getDate() - 7);
-                  onDateRangeChange({
-                    start: start.toISOString().split('T')[0],
-                    end: end.toISOString().split('T')[0],
-                  });
-                }}
-                className="mr-2"
-              >
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                // 设置为最近7天
+                const end = new Date();
+                const start = new Date();
+                start.setDate(start.getDate() - 7);
+                onDateRangeChange({
+                  start: start.toISOString().split('T')[0],
+                  end: end.toISOString().split('T')[0]
+                });
+              }}
+              className="mr-2">
+
                 最近7天
               </Button>
               <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  // 设置为最近30天
-                  const end = new Date();
-                  const start = new Date();
-                  start.setDate(start.getDate() - 30);
-                  onDateRangeChange({
-                    start: start.toISOString().split('T')[0],
-                    end: end.toISOString().split('T')[0],
-                  });
-                }}
-                className="mr-2"
-              >
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                // 设置为最近30天
+                const end = new Date();
+                const start = new Date();
+                start.setDate(start.getDate() - 30);
+                onDateRangeChange({
+                  start: start.toISOString().split('T')[0],
+                  end: end.toISOString().split('T')[0]
+                });
+              }}
+              className="mr-2">
+
                 最近30天
               </Button>
               <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  onDateRangeChange({ start: "", end: "" });
-                }}
-              >
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                onDateRangeChange({ start: "", end: "" });
+              }}>
+
                 清除
               </Button>
             </div>
           </div>
         </div>
-      )}
-    </div>
-  );
+      }
+    </div>);
+
 }

@@ -21,8 +21,8 @@ import {
   Trash2,
   Star,
   Clock,
-  AlertCircle
-} from "lucide-react";
+  AlertCircle } from
+"lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
@@ -32,8 +32,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu";
+  DropdownMenuTrigger } from
+"../../components/ui/dropdown-menu";
 import { cn } from "../../lib/utils";
 import {
   LEAD_SOURCES,
@@ -43,8 +43,8 @@ import {
   LEAD_PRIORITIES,
   SCORE_THRESHOLDS,
   DECISION_TIMELINES,
-  BUDGET_RANGES
-} from "./leadAssessmentConstants";
+  BUDGET_RANGES } from
+"./leadAssessmentConstants";
 
 export const LeadCard = ({
   lead,
@@ -52,42 +52,42 @@ export const LeadCard = ({
   onView = null,
   onEdit = null,
   onDelete = null,
-  onAssign = null,
+  onAssign: _onAssign = null,
   onQuickAction = null,
   showActions = true,
   className = ""
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
+  const [_isHovered, setIsHovered] = useState(false);
 
   // 获取线索来源配置
   const leadSourceConfig = useMemo(() => {
-    return LEAD_SOURCES.find(source => source.value === lead.source) || LEAD_SOURCES[0];
+    return LEAD_SOURCES.find((source) => source.value === lead.source) || LEAD_SOURCES[0];
   }, [lead.source]);
 
   // 获取行业配置
   const industryConfig = useMemo(() => {
-    return INDUSTRIES.find(industry => industry.value === lead.industry) || INDUSTRIES[0];
+    return INDUSTRIES.find((industry) => industry.value === lead.industry) || INDUSTRIES[0];
   }, [lead.industry]);
 
   // 获取客户类型配置
   const customerTypeConfig = useMemo(() => {
-    return LEAD_TYPES.find(type => type.value === lead.customerType) || LEAD_TYPES[0];
+    return LEAD_TYPES.find((type) => type.value === lead.customerType) || LEAD_TYPES[0];
   }, [lead.customerType]);
 
   // 获取状态配置
   const statusConfig = useMemo(() => {
-    return LEAD_STATUSES.find(status => status.value === lead.status) || LEAD_STATUSES[0];
+    return LEAD_STATUSES.find((status) => status.value === lead.status) || LEAD_STATUSES[0];
   }, [lead.status]);
 
   // 获取优先级配置
   const priorityConfig = useMemo(() => {
-    return LEAD_PRIORITIES.find(priority => priority.value === lead.priority) || LEAD_PRIORITIES[0];
+    return LEAD_PRIORITIES.find((priority) => priority.value === lead.priority) || LEAD_PRIORITIES[0];
   }, [lead.priority]);
 
   // 获取评分阈值配置
   const scoreThresholdConfig = useMemo(() => {
     const score = lead.assessmentScore || 0;
-    return Object.values(SCORE_THRESHOLDS).find(threshold => {
+    return Object.values(SCORE_THRESHOLDS).find((threshold) => {
       if (threshold.min && threshold.max) {
         return score >= threshold.min && score <= threshold.max;
       } else if (threshold.min) {
@@ -100,12 +100,12 @@ export const LeadCard = ({
 
   // 获取预算配置
   const budgetConfig = useMemo(() => {
-    return BUDGET_RANGES.find(budget => budget.value === lead.budgetRange) || BUDGET_RANGES[0];
+    return BUDGET_RANGES.find((budget) => budget.value === lead.budgetRange) || BUDGET_RANGES[0];
   }, [lead.budgetRange]);
 
   // 获取决策时间配置
   const decisionTimelineConfig = useMemo(() => {
-    return DECISION_TIMELINES.find(timeline => timeline.value === lead.decisionTimeline) || DECISION_TIMELINES[0];
+    return DECISION_TIMELINES.find((timeline) => timeline.value === lead.decisionTimeline) || DECISION_TIMELINES[0];
   }, [lead.decisionTimeline]);
 
   // 计算健康度指示器
@@ -138,7 +138,7 @@ export const LeadCard = ({
     const name = contactInfo.name;
     if (!name || name === '未填写') return 'C';
 
-    const words = name.split(' ').filter(word => word.length > 0);
+    const words = name.split(' ').filter((word) => word.length > 0);
     if (words.length === 1) {
       return words[0].substring(0, 2).toUpperCase();
     }
@@ -149,10 +149,10 @@ export const LeadCard = ({
   const cardVariants = {
     hover: {
       y: -4,
-      boxShadow: "0 8px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+      boxShadow: "0 8px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
     },
     tap: {
-      scale: 0.98,
+      scale: 0.98
     }
   };
 
@@ -170,8 +170,8 @@ export const LeadCard = ({
         <div className="flex items-center gap-2 text-slate-500">
           <Clock className="h-4 w-4" />
           <span className="text-sm">待评估</span>
-        </div>
-      );
+        </div>);
+
     }
 
     return (
@@ -179,8 +179,8 @@ export const LeadCard = ({
         <div className="relative w-12 h-12">
           <Progress
             value={lead.assessmentScore}
-            className="h-2"
-          />
+            className="h-2" />
+
           <div className="absolute inset-0 flex items-center justify-center">
             <span className="text-xs font-semibold">{lead.assessmentScore}</span>
           </div>
@@ -191,17 +191,17 @@ export const LeadCard = ({
           </span>
           <span className="text-xs text-slate-500">综合评分</span>
         </div>
-      </div>
-    );
+      </div>);
+
   };
 
   // 渲染健康度指示器
-  const renderHealthIndicator = () => (
-    <div className="flex items-center gap-2">
+  const renderHealthIndicator = () =>
+  <div className="flex items-center gap-2">
       <div className={`w-3 h-3 rounded-full ${healthIndicator.color}`} />
       <span className="text-sm text-slate-600">健康度: {healthIndicator.label}</span>
-    </div>
-  );
+    </div>;
+
 
   return (
     <motion.div
@@ -214,8 +214,8 @@ export const LeadCard = ({
       className={cn(
         "relative bg-white rounded-xl border border-slate-200 transition-all duration-200",
         className
-      )}
-    >
+      )}>
+
       {/* 健康度指示条 */}
       <div className="absolute top-0 left-0 right-0 h-1 rounded-t-xl" style={{ backgroundColor: healthIndicator.color }} />
 
@@ -239,52 +239,52 @@ export const LeadCard = ({
                   {lead.isStarred && <Star className="h-4 w-4 text-amber-500 fill-current" />}
                 </div>
 
-                {companyNameDisplay && (
-                  <div className="flex items-center gap-1 mb-1">
+                {companyNameDisplay &&
+                <div className="flex items-center gap-1 mb-1">
                     <Building className="h-3 w-3 text-slate-500" />
                     <span className="text-sm text-slate-600 truncate">
                       {companyNameDisplay}
                     </span>
                   </div>
-                )}
+                }
 
-                {contactInfo.title && (
-                  <div className="text-xs text-slate-500 mb-2">
+                {contactInfo.title &&
+                <div className="text-xs text-slate-500 mb-2">
                     {contactInfo.title}
                   </div>
-                )}
+                }
 
                 <div className="flex flex-wrap gap-2">
                   <Badge
                     variant="secondary"
                     style={{ borderColor: statusConfig.color, color: statusConfig.color }}
-                    className="text-xs"
-                  >
+                    className="text-xs">
+
                     {statusConfig.label}
                   </Badge>
 
-                  {lead.priority && (
-                    <Badge
-                      variant="outline"
-                      className="text-xs"
-                      style={{ borderColor: priorityConfig.color, color: priorityConfig.color }}
-                    >
+                  {lead.priority &&
+                  <Badge
+                    variant="outline"
+                    className="text-xs"
+                    style={{ borderColor: priorityConfig.color, color: priorityConfig.color }}>
+
                       {priorityConfig.label}
                     </Badge>
-                  )}
+                  }
                 </div>
               </div>
             </div>
 
             {/* 快速操作 */}
-            {showActions && (
-              <DropdownMenu>
+            {showActions &&
+            <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 opacity-60 hover:opacity-100"
-                  >
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 opacity-60 hover:opacity-100">
+
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -306,22 +306,22 @@ export const LeadCard = ({
                     分配负责人
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => handleQuickAction('star', lead)}
-                    className={lead.isStarred ? "text-amber-600" : ""}
-                  >
+                  onClick={() => handleQuickAction('star', lead)}
+                  className={lead.isStarred ? "text-amber-600" : ""}>
+
                     <Star className="mr-2 h-4 w-4" />
                     {lead.isStarred ? "取消星标" : "添加星标"}
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => onDelete && onDelete(lead)}
-                    className="text-red-600"
-                  >
+                  onClick={() => onDelete && onDelete(lead)}
+                  className="text-red-600">
+
                     <Trash2 className="mr-2 h-4 w-4" />
                     删除线索
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            )}
+            }
           </div>
         </CardHeader>
 
@@ -347,14 +347,14 @@ export const LeadCard = ({
           </div>
 
           {/* 项目信息 */}
-          {lead.projectName && (
-            <div className="mb-3">
+          {lead.projectName &&
+          <div className="mb-3">
               <div className="text-sm font-medium text-slate-700 mb-1">项目名称</div>
               <div className="text-sm text-slate-900 truncate">
                 {lead.projectName}
               </div>
             </div>
-          )}
+          }
 
           {/* 线索详情 */}
           <div className="space-y-2">
@@ -410,17 +410,17 @@ export const LeadCard = ({
           </div>
 
           {/* 简短描述 */}
-          {lead.description && (
-            <div className="mt-3 pt-3 border-t border-slate-100">
+          {lead.description &&
+          <div className="mt-3 pt-3 border-t border-slate-100">
               <div className="text-sm text-slate-600 line-clamp-2">
                 {lead.description}
               </div>
             </div>
-          )}
+          }
         </CardContent>
       </Card>
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
 export default LeadCard;

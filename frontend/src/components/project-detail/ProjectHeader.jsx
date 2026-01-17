@@ -8,33 +8,34 @@ import {
   Badge,
   Progress,
   Button,
-  Separator
-} from '@/components/ui';
+  Separator } from
+'@/components/ui';
 import {
   PROJECT_STATUS,
   PROJECT_HEALTH,
-  PROJECT_PRIORITY
-} from './projectDetailConstants';
+  PROJECT_PRIORITY,
+  PROJECT_STAGES,
+  METRICS } from
+'./projectDetailConstants';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 
 const ProjectHeader = ({ project, onEdit, onViewDocuments, onViewTimeline }) => {
-  const { PROJECT_STAGES, METRICS } = require('./projectDetailConstants');
 
   // Calculate project progress based on stages
   const calculateProgress = () => {
     if (!project.stages || project.stages.length === 0) return 0;
 
-    const completedStages = project.stages.filter(stage =>
-      stage.status === 'COMPLETED'
+    const completedStages = project.stages.filter((stage) =>
+    stage.status === 'COMPLETED'
     ).length;
 
-    return Math.round((completedStages / PROJECT_STAGES.length) * 100);
+    return Math.round(completedStages / PROJECT_STAGES.length * 100);
   };
 
   // Get stage info by code
   const getStageInfo = (stageCode) => {
-    return PROJECT_STAGES.find(stage => stage.code === stageCode) || PROJECT_STAGES[0];
+    return PROJECT_STAGES.find((stage) => stage.code === stageCode) || PROJECT_STAGES[0];
   };
 
   // Get project status info
@@ -92,8 +93,8 @@ const ProjectHeader = ({ project, onEdit, onViewDocuments, onViewTimeline }) => 
                   style={{
                     borderColor: statusInfo.color,
                     color: statusInfo.color
-                  }}
-                >
+                  }}>
+
                   {statusInfo.icon} {statusInfo.name}
                 </Badge>
                 <Badge
@@ -101,8 +102,8 @@ const ProjectHeader = ({ project, onEdit, onViewDocuments, onViewTimeline }) => 
                   style={{
                     borderColor: healthInfo.color,
                     color: healthInfo.color
-                  }}
-                >
+                  }}>
+
                   {healthInfo.icon} {healthInfo.name}
                 </Badge>
                 <Badge
@@ -110,8 +111,8 @@ const ProjectHeader = ({ project, onEdit, onViewDocuments, onViewTimeline }) => 
                   style={{
                     borderColor: priorityInfo.color,
                     color: priorityInfo.color
-                  }}
-                >
+                  }}>
+
                   {priorityInfo.icon} {priorityInfo.name}优先级
                 </Badge>
               </div>
@@ -121,22 +122,22 @@ const ProjectHeader = ({ project, onEdit, onViewDocuments, onViewTimeline }) => 
               <Button
                 variant="outline"
                 size="sm"
-                onClick={onViewDocuments}
-              >
+                onClick={onViewDocuments}>
+
                 📄 文档
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={onViewTimeline}
-              >
+                onClick={onViewTimeline}>
+
                 📅 时间线
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={onEdit}
-              >
+                onClick={onEdit}>
+
                 ✏️ 编辑
               </Button>
             </div>
@@ -185,7 +186,7 @@ const ProjectHeader = ({ project, onEdit, onViewDocuments, onViewTimeline }) => 
                 </div>
                 <Progress value={progress} className="h-3" />
                 <div className="text-xs text-gray-500">
-                  已完成 {project.stages?.filter(s => s.status === 'COMPLETED').length || 0} /
+                  已完成 {project.stages?.filter((s) => s.status === 'COMPLETED').length || 0} /
                   {PROJECT_STAGES.length} 个阶段
                 </div>
               </div>
@@ -204,27 +205,27 @@ const ProjectHeader = ({ project, onEdit, onViewDocuments, onViewTimeline }) => 
             <div className="text-center p-4 bg-gray-50 rounded-lg">
               <div className="text-sm text-gray-500 mb-1">开始时间</div>
               <div className="font-medium">
-                {project.start_date
-                  ? format(new Date(project.start_date), 'yyyy-MM-dd', { locale: zhCN })
-                  : '-'
+                {project.start_date ?
+                format(new Date(project.start_date), 'yyyy-MM-dd', { locale: zhCN }) :
+                '-'
                 }
               </div>
             </div>
             <div className="text-center p-4 bg-blue-50 rounded-lg">
               <div className="text-sm text-gray-500 mb-1">计划完成</div>
               <div className="font-medium">
-                {project.planned_end_date
-                  ? format(new Date(project.planned_end_date), 'yyyy-MM-dd', { locale: zhCN })
-                  : '-'
+                {project.planned_end_date ?
+                format(new Date(project.planned_end_date), 'yyyy-MM-dd', { locale: zhCN }) :
+                '-'
                 }
               </div>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
               <div className="text-sm text-gray-500 mb-1">实际完成</div>
               <div className="font-medium">
-                {project.actual_end_date
-                  ? format(new Date(project.actual_end_date), 'yyyy-MM-dd', { locale: zhCN })
-                  : '进行中'
+                {project.actual_end_date ?
+                format(new Date(project.actual_end_date), 'yyyy-MM-dd', { locale: zhCN }) :
+                '进行中'
                 }
               </div>
             </div>
@@ -233,17 +234,17 @@ const ProjectHeader = ({ project, onEdit, onViewDocuments, onViewTimeline }) => 
       </Card>
 
       {/* Current Stage */}
-      {project.current_stage && (
-        <Card>
+      {project.current_stage &&
+      <Card>
           <CardHeader>
             <CardTitle>当前阶段</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-4">
               <div
-                className="w-16 h-16 rounded-full flex items-center justify-center text-2xl"
-                style={{ backgroundColor: getStageInfo(project.current_stage).bgColor }}
-              >
+              className="w-16 h-16 rounded-full flex items-center justify-center text-2xl"
+              style={{ backgroundColor: getStageInfo(project.current_stage).bgColor }}>
+
                 {getStageInfo(project.current_stage).icon}
               </div>
               <div className="flex-1">
@@ -258,17 +259,17 @@ const ProjectHeader = ({ project, onEdit, onViewDocuments, onViewTimeline }) => 
                     阶段 {project.current_stage}
                   </Badge>
                   <span className="text-sm text-gray-500">
-                    开始于: {project.current_stage_start_date
-                      ? format(new Date(project.current_stage_start_date), 'MM-dd', { locale: zhCN })
-                      : '-'
-                    }
+                    开始于: {project.current_stage_start_date ?
+                  format(new Date(project.current_stage_start_date), 'MM-dd', { locale: zhCN }) :
+                  '-'
+                  }
                   </span>
                 </div>
               </div>
             </div>
           </CardContent>
         </Card>
-      )}
+      }
 
       {/* Additional Info */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -314,9 +315,9 @@ const ProjectHeader = ({ project, onEdit, onViewDocuments, onViewTimeline }) => 
               <div>
                 <p className="text-sm text-gray-500">更新时间</p>
                 <p className="text-sm font-medium">
-                  {project.updated_at
-                    ? format(new Date(project.updated_at), 'MM-dd HH:mm', { locale: zhCN })
-                    : '-'
+                  {project.updated_at ?
+                  format(new Date(project.updated_at), 'MM-dd HH:mm', { locale: zhCN }) :
+                  '-'
                   }
                 </p>
               </div>
@@ -325,8 +326,8 @@ const ProjectHeader = ({ project, onEdit, onViewDocuments, onViewTimeline }) => 
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default ProjectHeader;

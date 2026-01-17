@@ -11,15 +11,15 @@ import {
   Zap,
   Eye,
   Play,
-  AlertCircle,
-} from "lucide-react";
+  AlertCircle } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
@@ -29,8 +29,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogBody,
-} from "../components/ui/dialog";
+  DialogBody } from
+"../components/ui/dialog";
 import { Switch } from "../components/ui/switch";
 import { formatDate } from "../lib/utils";
 import { progressApi } from "../services/api";
@@ -68,11 +68,11 @@ export default function ProgressForecast({ projectId }) {
     }
     fetchProject();
     fetchForecast();
-  }, [id, projectId]);  // 包括projectId，确保当prop变化时重新加载
-  
+  }, [id, projectId]); // 包括projectId，确保当prop变化时重新加载
+
   const fetchProject = async () => {
     try {
-      const res = await fetch(`/api/v1/projects/${id}`).then(r => r.json());
+      const res = await fetch(`/api/v1/projects/${id}`).then((r) => r.json());
       setProject(res.data?.data || res.data);
     } catch (error) {
       console.error("Failed to fetch project:", error);
@@ -107,7 +107,7 @@ export default function ProgressForecast({ projectId }) {
       setLoading(false);
     }
   };
-  
+
   const handlePreview = async () => {
     try {
       setProcessing(true);
@@ -124,8 +124,8 @@ export default function ProgressForecast({ projectId }) {
       setProcessing(false);
     }
   };
-  
-  const handleApplyForecast = async () => {
+
+  const _handleApplyForecast = async () => {
     try {
       setProcessing(true);
       setShowConfirmDialog(false);
@@ -136,12 +136,12 @@ export default function ProgressForecast({ projectId }) {
         auto_block: autoBlock,
         delay_threshold: delayThreshold
       });
-      
+
       setSuccessMessage("进度预测已成功应用到任务！");
-      
+
       // 刷新预测数据
       await fetchForecast();
-      
+
       // 3秒后清除成功消息
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
@@ -151,14 +151,14 @@ export default function ProgressForecast({ projectId }) {
       setProcessing(false);
     }
   };
-  
+
   const handleCompleteProcess = async () => {
     try {
       setProcessing(true);
       setShowConfirmDialog(false);
       setErrorMessage("");
       setSuccessMessage("");
-      
+
       const options = {
         auto_block: autoBlock,
         delay_threshold: delayThreshold,
@@ -171,10 +171,10 @@ export default function ProgressForecast({ projectId }) {
 
       if (res.data?.success) {
         setSuccessMessage("自动处理流程执行成功！");
-        
+
         // 刷新预测数据
         await fetchForecast();
-        
+
         // 3秒后清除成功消息
         setTimeout(() => setSuccessMessage(""), 3000);
       } else {
@@ -187,18 +187,18 @@ export default function ProgressForecast({ projectId }) {
       setProcessing(false);
     }
   };
-  
+
   // 计算统计数据
-  const criticalTasks = forecastData?.tasks?.filter(t => t.critical) || [];
-  const delayedTasks = forecastData?.tasks?.filter(t => (t.delay_days || 0) > 0) || [];
-  const onTrackTasks = forecastData?.tasks?.filter(t => t.status === "OnTrack") || [];
-  
-  const confidenceColor = {
+  const criticalTasks = forecastData?.tasks?.filter((t) => t.critical) || [];
+  const delayedTasks = forecastData?.tasks?.filter((t) => (t.delay_days || 0) > 0) || [];
+  const _onTrackTasks = forecastData?.tasks?.filter((t) => t.status === "OnTrack") || [];
+
+  const _confidenceColor = {
     HIGH: "text-emerald-600 bg-emerald-50 border-emerald-200",
     MEDIUM: "text-amber-600 bg-amber-50 border-amber-200",
-    LOW: "text-red-600 bg-red-50 border-red-200",
+    LOW: "text-red-600 bg-red-50 border-red-200"
   };
-  
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -206,10 +206,10 @@ export default function ProgressForecast({ projectId }) {
           <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-500" />
           <div className="text-slate-600">加载中...</div>
         </div>
-      </div>
-    );
+      </div>);
+
   }
-  
+
   return (
     <div className="min-h-screen bg-slate-50 p-6">
       {/* 页面头部 */}
@@ -219,23 +219,23 @@ export default function ProgressForecast({ projectId }) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate(`/projects/${id}`)}
-            >
+              onClick={() => navigate(`/projects/${id}`)}>
+
               <ArrowLeft className="w-4 h-4 mr-2" />
               返回项目
             </Button>
             <PageHeader
               title={`${project?.project_name || "项目"} - 进度预测`}
-              description="智能化进度预测与风险预警"
-            />
+              description="智能化进度预测与风险预警" />
+
           </div>
           <div className="flex items-center gap-3">
             <Button
               variant="outline"
               size="sm"
               onClick={fetchForecast}
-              disabled={processing}
-            >
+              disabled={processing}>
+
               <RefreshCw className="w-4 h-4 mr-2" />
               刷新
             </Button>
@@ -243,8 +243,8 @@ export default function ProgressForecast({ projectId }) {
               variant="outline"
               size="sm"
               onClick={handlePreview}
-              disabled={processing}
-            >
+              disabled={processing}>
+
               <Eye className="w-4 h-4 mr-2" />
               预览自动处理
             </Button>
@@ -252,8 +252,8 @@ export default function ProgressForecast({ projectId }) {
               variant="default"
               size="sm"
               onClick={() => setShowConfirmDialog(true)}
-              disabled={processing}
-            >
+              disabled={processing}>
+
               <Play className="w-4 h-4 mr-2" />
               执行自动处理
             </Button>
@@ -261,19 +261,19 @@ export default function ProgressForecast({ projectId }) {
         </div>
         
         {/* 消息提示 */}
-        {errorMessage && (
-          <div className="mb-4 rounded-md bg-red-50 border border-red-200 text-red-700 px-4 py-3 flex items-start">
+        {errorMessage &&
+        <div className="mb-4 rounded-md bg-red-50 border border-red-200 text-red-700 px-4 py-3 flex items-start">
             <AlertCircle className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0" />
             <div>{errorMessage}</div>
           </div>
-        )}
+        }
         
-        {successMessage && (
-          <div className="mb-4 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 flex items-start">
+        {successMessage &&
+        <div className="mb-4 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 flex items-start">
             <CheckCircle2 className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0" />
             <div>{successMessage}</div>
           </div>
-        )}
+        }
         
         {/* 自动处理选项 */}
         <Card className="mb-6">
@@ -284,8 +284,8 @@ export default function ProgressForecast({ projectId }) {
                   <div className="flex items-center gap-2">
                     <Switch
                       checked={autoBlock}
-                      onCheckedChange={setAutoBlock}
-                    />
+                      onCheckedChange={setAutoBlock} />
+
                     <span className="text-sm text-slate-700">自动阻塞延迟任务</span>
                   </div>
                   <div className="text-xs text-slate-500">
@@ -301,8 +301,8 @@ export default function ProgressForecast({ projectId }) {
                     onChange={(e) => setDelayThreshold(parseInt(e.target.value))}
                     min={1}
                     max={30}
-                    className="w-20 px-3 py-1.5 border border-slate-300 rounded-md text-sm"
-                  />
+                    className="w-20 px-3 py-1.5 border border-slate-300 rounded-md text-sm" />
+
                   <span className="text-sm text-slate-700">天</span>
                 </div>
               </div>
@@ -355,8 +355,8 @@ export default function ProgressForecast({ projectId }) {
               <AlertTriangle className="w-4 h-4 text-amber-500" />
             </div>
             <div className={`text-xl font-bold ${
-              (forecastData?.predicted_delay_days || 0) > 0 ? "text-red-600" : "text-emerald-600"
-            }`}>
+            (forecastData?.predicted_delay_days || 0) > 0 ? "text-red-600" : "text-emerald-600"}`
+            }>
               {forecastData?.predicted_delay_days || 0} 天
             </div>
             <div className="text-sm text-slate-500 mt-1">
@@ -376,8 +376,8 @@ export default function ProgressForecast({ projectId }) {
               {criticalTasks.length}
             </div>
             <div className="text-sm text-slate-500 mt-1">
-              占比: {forecastData?.tasks?.length ? 
-                ((criticalTasks.length / forecastData.tasks.length) * 100).toFixed(1) : 0}%
+              占比: {forecastData?.tasks?.length ?
+              (criticalTasks.length / forecastData.tasks.length * 100).toFixed(1) : 0}%
             </div>
           </CardContent>
         </Card>
@@ -395,20 +395,20 @@ export default function ProgressForecast({ projectId }) {
               <div className="text-2xl font-bold text-slate-900">
                 +{forecastData?.expected_progress_next_7d?.toFixed(1) || 0}%
               </div>
-              <Progress 
-                value={forecastData?.expected_progress_next_7d || 0} 
-                className="h-2 mt-2" 
-              />
+              <Progress
+                value={forecastData?.expected_progress_next_7d || 0}
+                className="h-2 mt-2" />
+
             </div>
             <div>
               <div className="text-sm text-slate-600 mb-2">未来14天</div>
               <div className="text-2xl font-bold text-slate-900">
                 +{forecastData?.expected_progress_next_14d?.toFixed(1) || 0}%
               </div>
-              <Progress 
-                value={forecastData?.expected_progress_next_14d || 0} 
-                className="h-2 mt-2" 
-              />
+              <Progress
+                value={forecastData?.expected_progress_next_14d || 0}
+                className="h-2 mt-2" />
+
             </div>
           </div>
         </CardContent>
@@ -428,15 +428,15 @@ export default function ProgressForecast({ projectId }) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {delayedTasks.length === 0 ? (
-            <div className="text-center py-8 text-slate-500">
+          {delayedTasks.length === 0 ?
+          <div className="text-center py-8 text-slate-500">
               <CheckCircle2 className="w-12 h-12 mx-auto mb-3 text-emerald-500" />
               <div>没有延迟任务，项目进展顺利！</div>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {delayedTasks.slice(0, 10).map((task) => (
-                <div key={task.task_id} className="border border-slate-200 rounded-lg p-4">
+            </div> :
+
+          <div className="space-y-3">
+              {delayedTasks.slice(0, 10).map((task) =>
+            <div key={task.task_id} className="border border-slate-200 rounded-lg p-4">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
                       <div className="font-medium text-slate-900 mb-1">
@@ -450,8 +450,8 @@ export default function ProgressForecast({ projectId }) {
                       </div>
                     </div>
                     <div className={`text-sm font-semibold ${
-                      task.critical ? "text-red-600" : "text-amber-600"
-                    }`}>
+                task.critical ? "text-red-600" : "text-amber-600"}`
+                }>
                       延迟 {task.delay_days} 天
                     </div>
                   </div>
@@ -475,17 +475,17 @@ export default function ProgressForecast({ projectId }) {
                     </div>
                   </div>
                 </div>
-              ))}
+            )}
               
-              {delayedTasks.length > 10 && (
-                <div className="text-center pt-4">
+              {delayedTasks.length > 10 &&
+            <div className="text-center pt-4">
                   <div className="text-sm text-slate-500">
                     还有 {delayedTasks.length - 10} 个延迟任务...
                   </div>
                 </div>
-              )}
+            }
             </div>
-          )}
+          }
         </CardContent>
       </Card>
       
@@ -499,56 +499,56 @@ export default function ProgressForecast({ projectId }) {
             </DialogTitle>
           </DialogHeader>
           <DialogBody>
-            {previewData ? (
-              <div className="space-y-6">
+            {previewData ?
+            <div className="space-y-6">
                 {/* 预览操作 */}
                 <div>
                   <h4 className="text-sm font-semibold text-slate-900 mb-3">将要执行的操作</h4>
                   <div className="space-y-2">
-                    {previewData.preview_actions?.will_block?.length > 0 && (
-                      <div className="rounded-md bg-red-50 border border-red-200 p-3">
+                    {previewData.preview_actions?.will_block?.length > 0 &&
+                  <div className="rounded-md bg-red-50 border border-red-200 p-3">
                         <div className="font-medium text-red-900 mb-2">
                           将阻塞 {previewData.preview_actions.will_block.length} 个任务
                         </div>
                         <ul className="text-sm space-y-1">
-                          {previewData.preview_actions.will_block.map((action, idx) => (
-                            <li key={idx} className="text-red-800">
+                          {previewData.preview_actions.will_block.map((action, idx) =>
+                      <li key={idx} className="text-red-800">
                               {action.task_name}: {action.reason}
                             </li>
-                          ))}
+                      )}
                         </ul>
                       </div>
-                    )}
+                  }
                     
-                    {previewData.preview_actions?.will_fix_timing > 0 && (
-                      <div className="rounded-md bg-amber-50 border border-amber-200 p-3">
+                    {previewData.preview_actions?.will_fix_timing > 0 &&
+                  <div className="rounded-md bg-amber-50 border border-amber-200 p-3">
                         <div className="font-medium text-amber-900 mb-2">
                           将修复 {previewData.preview_actions.will_fix_timing} 个时序冲突
                         </div>
                       </div>
-                    )}
+                  }
                     
-                    {previewData.preview_actions?.will_remove_missing > 0 && (
-                      <div className="rounded-md bg-blue-50 border border-blue-200 p-3">
+                    {previewData.preview_actions?.will_remove_missing > 0 &&
+                  <div className="rounded-md bg-blue-50 border border-blue-200 p-3">
                         <div className="font-medium text-blue-900 mb-2">
                           将移除 {previewData.preview_actions.will_remove_missing} 个缺失依赖
                         </div>
                       </div>
-                    )}
+                  }
                     
-                    {previewData.preview_actions?.will_send_notifications && (
-                      <div className="rounded-md bg-emerald-50 border border-emerald-200 p-3">
+                    {previewData.preview_actions?.will_send_notifications &&
+                  <div className="rounded-md bg-emerald-50 border border-emerald-200 p-3">
                         <div className="font-medium text-emerald-900 mb-2">
                           将发送通知给相关人员
                         </div>
                       </div>
-                    )}
+                  }
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="text-center py-8 text-slate-500">加载预览数据中...</div>
-            )}
+              </div> :
+
+            <div className="text-center py-8 text-slate-500">加载预览数据中...</div>
+            }
           </DialogBody>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowPreviewDialog(false)}>
@@ -603,15 +603,15 @@ export default function ProgressForecast({ projectId }) {
             <Button variant="outline" onClick={() => setShowConfirmDialog(false)}>
               取消
             </Button>
-            <Button 
+            <Button
               onClick={handleCompleteProcess}
-              disabled={processing}
-            >
+              disabled={processing}>
+
               {processing ? "执行中..." : "确认执行"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }

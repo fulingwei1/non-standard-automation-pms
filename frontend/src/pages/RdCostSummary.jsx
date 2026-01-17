@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { cn } from "../lib/utils";
+import { cn as _cn } from "../lib/utils";
 import { rdProjectApi } from "../services/api";
-import { formatDate, formatCurrency } from "../lib/utils";
+import { formatDate as _formatDate, formatCurrency } from "../lib/utils";
 import { PageHeader } from "../components/layout/PageHeader";
 import {
   Card,
@@ -14,8 +14,8 @@ import {
   Tabs,
   TabsList,
   TabsTrigger,
-  TabsContent,
-} from "../components/ui";
+  TabsContent } from
+"../components/ui";
 import {
   ArrowLeft,
   Calculator,
@@ -25,8 +25,8 @@ import {
   PieChart,
   Download,
   Users,
-  Clock,
-} from "lucide-react";
+  Clock } from
+"lucide-react";
 
 export default function RdCostSummary() {
   const { id } = useParams();
@@ -89,12 +89,12 @@ export default function RdCostSummary() {
         <Button
           variant="outline"
           className="mt-4"
-          onClick={() => navigate("/rd-projects")}
-        >
+          onClick={() => navigate("/rd-projects")}>
+
           返回列表
         </Button>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -105,8 +105,8 @@ export default function RdCostSummary() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate(`/rd-projects/${id}`)}
-          >
+            onClick={() => navigate(`/rd-projects/${id}`)}>
+
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
@@ -118,8 +118,8 @@ export default function RdCostSummary() {
         </div>
         <Button
           variant="outline"
-          onClick={() => navigate(`/rd-projects/${id}/reports`)}
-        >
+          onClick={() => navigate(`/rd-projects/${id}/reports`)}>
+
           <Download className="h-4 w-4 mr-2" />
           导出报表
         </Button>
@@ -151,12 +151,12 @@ export default function RdCostSummary() {
               {formatCurrency(costSummary?.labor_cost || 0)}
             </p>
             <p className="text-xs text-slate-500 mt-1">
-              {costSummary?.labor_cost && costSummary?.total_cost
-                ? (
-                    (costSummary.labor_cost / costSummary.total_cost) *
-                    100
-                  ).toFixed(1)
-                : 0}
+              {costSummary?.labor_cost && costSummary?.total_cost ?
+              (
+              costSummary.labor_cost / costSummary.total_cost *
+              100).
+              toFixed(1) :
+              0}
               %占比
             </p>
           </CardContent>
@@ -171,12 +171,12 @@ export default function RdCostSummary() {
               {formatCurrency(costSummary?.material_cost || 0)}
             </p>
             <p className="text-xs text-slate-500 mt-1">
-              {costSummary?.material_cost && costSummary?.total_cost
-                ? (
-                    (costSummary.material_cost / costSummary.total_cost) *
-                    100
-                  ).toFixed(1)
-                : 0}
+              {costSummary?.material_cost && costSummary?.total_cost ?
+              (
+              costSummary.material_cost / costSummary.total_cost *
+              100).
+              toFixed(1) :
+              0}
               %占比
             </p>
           </CardContent>
@@ -222,36 +222,36 @@ export default function RdCostSummary() {
                   </div>
                   <Progress
                     value={
-                      project.budget_amount && project.budget_amount > 0
-                        ? ((costSummary?.total_cost || 0) /
-                            project.budget_amount) *
-                          100
-                        : 0
+                    project.budget_amount && project.budget_amount > 0 ?
+                    (costSummary?.total_cost || 0) /
+                    project.budget_amount *
+                    100 :
+                    0
                     }
                     color={
-                      project.budget_amount &&
-                      (costSummary?.total_cost || 0) > project.budget_amount
-                        ? "danger"
-                        : "primary"
-                    }
-                  />
+                    project.budget_amount &&
+                    (costSummary?.total_cost || 0) > project.budget_amount ?
+                    "danger" :
+                    "primary"
+                    } />
+
                   <div className="flex justify-between text-xs text-slate-500 mt-2">
                     <span>
                       执行率:{" "}
-                      {project.budget_amount && project.budget_amount > 0
-                        ? (
-                            ((costSummary?.total_cost || 0) /
-                              project.budget_amount) *
-                            100
-                          ).toFixed(1)
-                        : 0}
+                      {project.budget_amount && project.budget_amount > 0 ?
+                      (
+                      (costSummary?.total_cost || 0) /
+                      project.budget_amount *
+                      100).
+                      toFixed(1) :
+                      0}
                       %
                     </span>
                     <span>
                       剩余预算:{" "}
                       {formatCurrency(
-                        (project.budget_amount || 0) -
-                          (costSummary?.total_cost || 0),
+                        (project.budget_amount || 0) - (
+                        costSummary?.total_cost || 0)
                       )}
                     </span>
                   </div>
@@ -261,16 +261,16 @@ export default function RdCostSummary() {
           </Card>
 
           {/* Cost Breakdown */}
-          {costSummary && (
-            <Card>
+          {costSummary &&
+          <Card>
               <CardContent className="p-6">
                 <h3 className="text-lg font-semibold text-white mb-4">
                   费用构成
                 </h3>
                 <div className="space-y-4">
-                  {costSummary.by_type && costSummary.by_type.length > 0 ? (
-                    costSummary.by_type.map((item, idx) => (
-                      <div key={idx} className="space-y-2">
+                  {costSummary.by_type && costSummary.by_type.length > 0 ?
+                costSummary.by_type.map((item, idx) =>
+                <div key={idx} className="space-y-2">
                         <div className="flex justify-between text-sm">
                           <span className="text-slate-400">
                             {item.type_name}
@@ -280,47 +280,47 @@ export default function RdCostSummary() {
                           </span>
                         </div>
                         <Progress
-                          value={
-                            costSummary.total_cost && costSummary.total_cost > 0
-                              ? ((item.total_amount || 0) /
-                                  costSummary.total_cost) *
-                                100
-                              : 0
-                          }
-                          color="primary"
-                        />
+                    value={
+                    costSummary.total_cost && costSummary.total_cost > 0 ?
+                    (item.total_amount || 0) /
+                    costSummary.total_cost *
+                    100 :
+                    0
+                    }
+                    color="primary" />
+
                       </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-8 text-slate-500">
+                ) :
+
+                <div className="text-center py-8 text-slate-500">
                       暂无费用数据
                     </div>
-                  )}
+                }
                 </div>
               </CardContent>
             </Card>
-          )}
+          }
         </TabsContent>
 
         {/* By Type Tab */}
         <TabsContent value="byType" className="space-y-6">
-          {costSummary?.by_type && costSummary.by_type.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {costSummary.by_type.map((item, idx) => (
-                <Card key={idx}>
+          {costSummary?.by_type && costSummary.by_type.length > 0 ?
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {costSummary.by_type.map((item, idx) =>
+            <Card key={idx}>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <h4 className="font-semibold text-white">
                         {item.type_name}
                       </h4>
                       <Badge variant="outline">
-                        {costSummary.total_cost && costSummary.total_cost > 0
-                          ? (
-                              ((item.total_amount || 0) /
-                                costSummary.total_cost) *
-                              100
-                            ).toFixed(1)
-                          : 0}
+                        {costSummary.total_cost && costSummary.total_cost > 0 ?
+                    (
+                    (item.total_amount || 0) /
+                    costSummary.total_cost *
+                    100).
+                    toFixed(1) :
+                    0}
                         %
                       </Badge>
                     </div>
@@ -332,23 +332,23 @@ export default function RdCostSummary() {
                     </p>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
-          ) : (
-            <Card>
+            )}
+            </div> :
+
+          <Card>
               <CardContent className="p-6">
                 <div className="text-center py-12 text-slate-500">
                   暂无费用数据
                 </div>
               </CardContent>
             </Card>
-          )}
+          }
         </TabsContent>
 
         {/* Timesheet Tab */}
         <TabsContent value="timesheet" className="space-y-6">
-          {timesheetSummary ? (
-            <>
+          {timesheetSummary ?
+          <>
               <Card>
                 <CardContent className="p-6">
                   <h3 className="text-lg font-semibold text-white mb-4">
@@ -377,12 +377,12 @@ export default function RdCostSummary() {
                       <p className="text-sm text-slate-400 mb-1">平均工时</p>
                       <p className="text-2xl font-semibold text-white">
                         {timesheetSummary.total_participants &&
-                        timesheetSummary.total_hours
-                          ? (
-                              timesheetSummary.total_hours /
-                              timesheetSummary.total_participants
-                            ).toFixed(1)
-                          : 0}{" "}
+                      timesheetSummary.total_hours ?
+                      (
+                      timesheetSummary.total_hours /
+                      timesheetSummary.total_participants).
+                      toFixed(1) :
+                      0}{" "}
                         小时/人
                       </p>
                     </div>
@@ -391,18 +391,18 @@ export default function RdCostSummary() {
               </Card>
 
               {timesheetSummary.by_user &&
-                timesheetSummary.by_user.length > 0 && (
-                  <Card>
+            timesheetSummary.by_user.length > 0 &&
+            <Card>
                     <CardContent className="p-6">
                       <h3 className="text-lg font-semibold text-white mb-4">
                         按人员统计
                       </h3>
                       <div className="space-y-3">
-                        {timesheetSummary.by_user.map((user, idx) => (
-                          <div
-                            key={idx}
-                            className="flex items-center justify-between p-4 rounded-lg bg-white/[0.02]"
-                          >
+                        {timesheetSummary.by_user.map((user, idx) =>
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between p-4 rounded-lg bg-white/[0.02]">
+
                             <div className="flex items-center gap-3">
                               <div className="p-2 rounded-lg bg-primary/20">
                                 <Users className="h-4 w-4 text-primary" />
@@ -422,40 +422,40 @@ export default function RdCostSummary() {
                               </p>
                               <p className="text-xs text-slate-500">
                                 {timesheetSummary.total_hours &&
-                                timesheetSummary.total_hours > 0
-                                  ? (
-                                      ((user.total_hours || 0) /
-                                        timesheetSummary.total_hours) *
-                                      100
-                                    ).toFixed(1)
-                                  : 0}
+                        timesheetSummary.total_hours > 0 ?
+                        (
+                        (user.total_hours || 0) /
+                        timesheetSummary.total_hours *
+                        100).
+                        toFixed(1) :
+                        0}
                                 %占比
                               </p>
                             </div>
                           </div>
-                        ))}
+                  )}
                       </div>
                     </CardContent>
                   </Card>
-                )}
-            </>
-          ) : (
-            <Card>
+            }
+            </> :
+
+          <Card>
               <CardContent className="p-6">
                 <div className="text-center py-12 text-slate-500">
                   <Clock className="h-12 w-12 mx-auto mb-4 text-slate-600" />
                   <p>暂无工时数据</p>
                   <p className="text-xs mt-2">
-                    {project.linked_project_id
-                      ? "工时数据从关联的非标项目中统计"
-                      : "请先关联非标项目"}
+                    {project.linked_project_id ?
+                  "工时数据从关联的非标项目中统计" :
+                  "请先关联非标项目"}
                   </p>
                 </div>
               </CardContent>
             </Card>
-          )}
+          }
         </TabsContent>
       </Tabs>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

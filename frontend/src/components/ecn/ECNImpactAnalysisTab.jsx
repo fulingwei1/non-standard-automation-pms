@@ -3,11 +3,11 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { 
+import {
   GitBranch, AlertTriangle, Users, FileText,
-  DollarSign, Clock, Package
-} from 'lucide-react';
-import { cn } from "../../lib/utils";
+  DollarSign, Clock, Package } from
+'lucide-react';
+import { cn as _cn } from "../../lib/utils";
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -50,21 +50,21 @@ const BomImpactCard = ({ summary }) => {
           </div>
         </div>
         
-        {summary.bom_impacts && summary.bom_impacts.length > 0 && (
-          <div className="space-y-2">
+        {summary.bom_impacts && summary.bom_impacts.length > 0 &&
+        <div className="space-y-2">
             <div className="text-sm font-medium">BOM影响明细：</div>
-            {summary.bom_impacts.map((impact, idx) => (
-              <div key={idx} className="p-2 bg-white rounded text-sm">
+            {summary.bom_impacts.map((impact, idx) =>
+          <div key={idx} className="p-2 bg-white rounded text-sm">
                 BOM #{impact.bom_id}: {impact.affected_item_count}项受影响, 
                 成本影响¥{impact.cost_impact?.toLocaleString()}, 
                 交期影响{impact.schedule_impact_days}天
               </div>
-            ))}
+          )}
           </div>
-        )}
+        }
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 };
 
 /**
@@ -100,8 +100,8 @@ const ObsoleteAlertCard = ({ alert }) => {
           <span className="text-slate-500">风险原因:</span> {alert.risk_reason}
         </div>
       </div>
-    </Card>
-  );
+    </Card>);
+
 };
 
 /**
@@ -140,14 +140,14 @@ const RcaAnalysisCard = ({ rcaAnalysis }) => {
             {rcaAnalysis.root_cause_analysis}
           </div>
         </div>
-        {rcaAnalysis.created_at && (
-          <div className="text-xs text-slate-500">
+        {rcaAnalysis.created_at &&
+        <div className="text-xs text-slate-500">
             分析时间: {new Date(rcaAnalysis.created_at).toLocaleString()}
           </div>
-        )}
+        }
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 };
 
 /**
@@ -180,8 +180,8 @@ export const ECNImpactAnalysisTab = ({
       variants={fadeIn}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       {/* 操作按钮 */}
       <Card>
         <CardHeader>
@@ -192,30 +192,30 @@ export const ECNImpactAnalysisTab = ({
             <Button
               variant="outline"
               onClick={onAnalyzeBomImpact}
-              disabled={analyzingBom || !ecn?.machine_id}
-            >
+              disabled={analyzingBom || !ecn?.machine_id}>
+
               <GitBranch className="w-4 h-4 mr-2" />
               {analyzingBom ? "分析中..." : "BOM影响分析"}
             </Button>
             <Button
               variant="outline"
               onClick={onCheckObsoleteRisk}
-              disabled={analyzingBom}
-            >
+              disabled={analyzingBom}>
+
               <AlertTriangle className="w-4 h-4 mr-2" />
               检查呆滞料风险
             </Button>
             <Button
               variant="outline"
-              onClick={onShowResponsibility}
-            >
+              onClick={onShowResponsibility}>
+
               <Users className="w-4 h-4 mr-2" />
               责任分摊
             </Button>
             <Button
               variant="outline"
-              onClick={onShowRca}
-            >
+              onClick={onShowRca}>
+
               <FileText className="w-4 h-4 mr-2" />
               RCA分析
             </Button>
@@ -227,8 +227,8 @@ export const ECNImpactAnalysisTab = ({
       <BomImpactCard summary={bomImpactSummary} />
 
       {/* 呆滞料预警 */}
-      {obsoleteAlerts.length > 0 && (
-        <Card className="border-red-200 bg-red-50/30">
+      {obsoleteAlerts.length > 0 &&
+      <Card className="border-red-200 bg-red-50/30">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-red-600" />
@@ -238,20 +238,20 @@ export const ECNImpactAnalysisTab = ({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {obsoleteAlerts.map((alert, idx) => (
-                <ObsoleteAlertCard key={idx} alert={alert} />
-              ))}
+              {obsoleteAlerts.map((alert, idx) =>
+            <ObsoleteAlertCard key={idx} alert={alert} />
+            )}
             </div>
           </CardContent>
         </Card>
-      )}
+      }
 
       {/* RCA分析 */}
       <RcaAnalysisCard rcaAnalysis={rcaAnalysis} />
 
       {/* 空状态提示 */}
-      {!bomImpactSummary?.has_impact && obsoleteAlerts.length === 0 && !rcaAnalysis && (
-        <Card>
+      {!bomImpactSummary?.has_impact && obsoleteAlerts.length === 0 && !rcaAnalysis &&
+      <Card>
           <CardContent className="py-12 text-center">
             <Package className="w-12 h-12 text-slate-400 mx-auto mb-4" />
             <p className="text-slate-500 mb-2">暂无影响分析数据</p>
@@ -260,9 +260,9 @@ export const ECNImpactAnalysisTab = ({
             </p>
           </CardContent>
         </Card>
-      )}
-    </motion.div>
-  );
+      }
+    </motion.div>);
+
 };
 
 export default ECNImpactAnalysisTab;

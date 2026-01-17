@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { cn } from "../lib/utils";
+import { cn as _cn } from "../lib/utils";
 import { pmoApi, projectApi } from "../services/api";
 import { formatDate } from "../lib/utils";
 import { PageHeader } from "../components/layout/PageHeader";
@@ -12,16 +12,16 @@ import {
   Badge,
   Progress,
   Input,
-  SkeletonCard,
-} from "../components/ui";
+  SkeletonCard } from
+"../components/ui";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogBody,
-  DialogFooter,
-} from "../components/ui";
+  DialogFooter } from
+"../components/ui";
 import {
   ArrowLeft,
   Search,
@@ -33,20 +33,20 @@ import {
   ArrowRight,
   Play,
   Eye,
-  Calendar,
-} from "lucide-react";
+  Calendar } from
+"lucide-react";
 
 const staggerContainer = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.05, delayChildren: 0.1 },
-  },
+    transition: { staggerChildren: 0.05, delayChildren: 0.1 }
+  }
 };
 
 const staggerChild = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 },
+  visible: { opacity: 1, y: 0 }
 };
 
 const getStatusBadge = (status) => {
@@ -56,9 +56,9 @@ const getStatusBadge = (status) => {
     COMPLETED: {
       label: "已完成",
       variant: "success",
-      color: "text-emerald-400",
+      color: "text-emerald-400"
     },
-    SKIPPED: { label: "已跳过", variant: "secondary", color: "text-slate-500" },
+    SKIPPED: { label: "已跳过", variant: "secondary", color: "text-slate-500" }
   };
   return badges[status] || badges.PENDING;
 };
@@ -69,9 +69,9 @@ const getReviewResultBadge = (result) => {
     CONDITIONAL: {
       label: "有条件通过",
       variant: "warning",
-      color: "text-yellow-400",
+      color: "text-yellow-400"
     },
-    FAILED: { label: "未通过", variant: "danger", color: "text-red-400" },
+    FAILED: { label: "未通过", variant: "danger", color: "text-red-400" }
   };
   return badges[result] || null;
 };
@@ -85,7 +85,7 @@ export default function ProjectPhaseManagement() {
   const [project, setProject] = useState(null);
   const [phases, setPhases] = useState([]);
   const [selectedProjectId, setSelectedProjectId] = useState(
-    projectId ? parseInt(projectId) : null,
+    projectId ? parseInt(projectId) : null
   );
   const [projectSearch, setProjectSearch] = useState("");
   const [projectList, setProjectList] = useState([]);
@@ -94,23 +94,23 @@ export default function ProjectPhaseManagement() {
   // Dialogs
   const [entryCheckDialog, setEntryCheckDialog] = useState({
     open: false,
-    phaseId: null,
+    phaseId: null
   });
   const [exitCheckDialog, setExitCheckDialog] = useState({
     open: false,
-    phaseId: null,
+    phaseId: null
   });
   const [reviewDialog, setReviewDialog] = useState({
     open: false,
-    phaseId: null,
+    phaseId: null
   });
   const [advanceDialog, setAdvanceDialog] = useState({
     open: false,
-    phaseId: null,
+    phaseId: null
   });
   const [detailDialog, setDetailDialog] = useState({
     open: false,
-    phase: null,
+    phase: null
   });
 
   useEffect(() => {
@@ -156,7 +156,7 @@ export default function ProjectPhaseManagement() {
       const res = await projectApi.list({
         page: 1,
         page_size: 50,
-        keyword: projectSearch,
+        keyword: projectSearch
       });
       const data = res.data || res;
       // Handle PaginatedResponse format
@@ -222,8 +222,8 @@ export default function ProjectPhaseManagement() {
       <motion.div
         initial="hidden"
         animate="visible"
-        variants={staggerContainer}
-      >
+        variants={staggerContainer}>
+
         <PageHeader title="项目阶段管理" description="选择项目以管理其阶段" />
 
         <Card className="max-w-2xl mx-auto">
@@ -237,21 +237,21 @@ export default function ProjectPhaseManagement() {
                   fetchProjectList();
                 }}
                 className="w-full"
-                icon={Search}
-              />
+                icon={Search} />
+
             </div>
 
             <div className="space-y-2 max-h-96 overflow-y-auto">
-              {projectList.map((proj) => (
-                <div
-                  key={proj.id}
-                  onClick={() => {
-                    setSelectedProjectId(proj.id);
-                    setShowProjectSelect(false);
-                    navigate(`/pmo/phases/${proj.id}`);
-                  }}
-                  className="p-4 rounded-xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.06] hover:border-white/10 cursor-pointer transition-all"
-                >
+              {projectList.map((proj) =>
+              <div
+                key={proj.id}
+                onClick={() => {
+                  setSelectedProjectId(proj.id);
+                  setShowProjectSelect(false);
+                  navigate(`/pmo/phases/${proj.id}`);
+                }}
+                className="p-4 rounded-xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.06] hover:border-white/10 cursor-pointer transition-all">
+
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="font-medium text-white">
@@ -264,12 +264,12 @@ export default function ProjectPhaseManagement() {
                     <ArrowRight className="h-5 w-5 text-slate-500" />
                   </div>
                 </div>
-              ))}
+              )}
             </div>
           </CardContent>
         </Card>
-      </motion.div>
-    );
+      </motion.div>);
+
   }
 
   return (
@@ -277,25 +277,25 @@ export default function ProjectPhaseManagement() {
       <PageHeader
         title="项目阶段管理"
         description={
-          project ? `${project.project_name} - 阶段门控管理` : "阶段门控管理"
+        project ? `${project.project_name} - 阶段门控管理` : "阶段门控管理"
         }
         action={
-          <Button
-            variant="outline"
-            onClick={() => {
-              setShowProjectSelect(true);
-              navigate("/pmo/phases");
-            }}
-          >
+        <Button
+          variant="outline"
+          onClick={() => {
+            setShowProjectSelect(true);
+            navigate("/pmo/phases");
+          }}>
+
             <ArrowLeft className="h-4 w-4 mr-2" />
             选择项目
           </Button>
-        }
-      />
+        } />
+
 
       {/* Error Message */}
-      {error && (
-        <Card className="mb-6 border-red-500/30 bg-red-500/10">
+      {error &&
+      <Card className="mb-6 border-red-500/30 bg-red-500/10">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-red-400">
@@ -303,42 +303,42 @@ export default function ProjectPhaseManagement() {
                 <span>{error}</span>
               </div>
               <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setError(null);
-                  if (selectedProjectId) {
-                    fetchProjectData();
-                    fetchPhases();
-                  }
-                }}
-                className="border-red-500/30 text-red-400 hover:bg-red-500/20"
-              >
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setError(null);
+                if (selectedProjectId) {
+                  fetchProjectData();
+                  fetchPhases();
+                }
+              }}
+              className="border-red-500/30 text-red-400 hover:bg-red-500/20">
+
                 重试
               </Button>
             </div>
           </CardContent>
         </Card>
-      )}
+      }
 
-      {loading ? (
-        <div className="grid grid-cols-1 gap-4">
-          {Array(3)
-            .fill(null)
-            .map((_, i) => (
-              <SkeletonCard key={i} />
-            ))}
-        </div>
-      ) : error ? null : phases.length > 0 ? (
-        <div className="space-y-4">
-          {phases.map((phase, index) => {
-            const statusBadge = getStatusBadge(phase.status);
-            const reviewBadge = phase.review_result
-              ? getReviewResultBadge(phase.review_result)
-              : null;
+      {loading ?
+      <div className="grid grid-cols-1 gap-4">
+          {Array(3).
+        fill(null).
+        map((_, i) =>
+        <SkeletonCard key={i} />
+        )}
+        </div> :
+      error ? null : phases.length > 0 ?
+      <div className="space-y-4">
+          {phases.map((phase, _index) => {
+          const statusBadge = getStatusBadge(phase.status);
+          const reviewBadge = phase.review_result ?
+          getReviewResultBadge(phase.review_result) :
+          null;
 
-            return (
-              <motion.div key={phase.id} variants={staggerChild}>
+          return (
+            <motion.div key={phase.id} variants={staggerChild}>
                 <Card className="hover:bg-white/[0.02] transition-colors">
                   <CardContent className="p-5">
                     {/* Header */}
@@ -355,11 +355,11 @@ export default function ProjectPhaseManagement() {
                             <Badge variant={statusBadge.variant}>
                               {statusBadge.label}
                             </Badge>
-                            {reviewBadge && (
-                              <Badge variant={reviewBadge.variant}>
+                            {reviewBadge &&
+                          <Badge variant={reviewBadge.variant}>
                                 {reviewBadge.label}
                               </Badge>
-                            )}
+                          }
                           </div>
                           <p className="text-xs text-slate-500 mt-1">
                             {phase.phase_code} • 顺序: {phase.phase_order}
@@ -373,33 +373,33 @@ export default function ProjectPhaseManagement() {
                       <div>
                         <span className="text-slate-400">计划开始</span>
                         <p className="text-white mt-1">
-                          {phase.plan_start_date
-                            ? formatDate(phase.plan_start_date)
-                            : "未设置"}
+                          {phase.plan_start_date ?
+                        formatDate(phase.plan_start_date) :
+                        "未设置"}
                         </p>
                       </div>
                       <div>
                         <span className="text-slate-400">计划结束</span>
                         <p className="text-white mt-1">
-                          {phase.plan_end_date
-                            ? formatDate(phase.plan_end_date)
-                            : "未设置"}
+                          {phase.plan_end_date ?
+                        formatDate(phase.plan_end_date) :
+                        "未设置"}
                         </p>
                       </div>
                       <div>
                         <span className="text-slate-400">实际开始</span>
                         <p className="text-white mt-1">
-                          {phase.actual_start_date
-                            ? formatDate(phase.actual_start_date)
-                            : "未开始"}
+                          {phase.actual_start_date ?
+                        formatDate(phase.actual_start_date) :
+                        "未开始"}
                         </p>
                       </div>
                       <div>
                         <span className="text-slate-400">实际结束</span>
                         <p className="text-white mt-1">
-                          {phase.actual_end_date
-                            ? formatDate(phase.actual_end_date)
-                            : "未结束"}
+                          {phase.actual_end_date ?
+                        formatDate(phase.actual_end_date) :
+                        "未结束"}
                         </p>
                       </div>
                     </div>
@@ -416,10 +416,10 @@ export default function ProjectPhaseManagement() {
                     </div>
 
                     {/* Criteria */}
-                    {(phase.entry_criteria || phase.exit_criteria) && (
-                      <div className="mb-4 p-3 rounded-xl bg-white/[0.02] border border-white/5">
-                        {phase.entry_criteria && (
-                          <div className="mb-2">
+                    {(phase.entry_criteria || phase.exit_criteria) &&
+                  <div className="mb-4 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                        {phase.entry_criteria &&
+                    <div className="mb-2">
                             <span className="text-xs text-slate-400">
                               入口条件:
                             </span>
@@ -427,9 +427,9 @@ export default function ProjectPhaseManagement() {
                               {phase.entry_criteria}
                             </p>
                           </div>
-                        )}
-                        {phase.exit_criteria && (
-                          <div>
+                    }
+                        {phase.exit_criteria &&
+                    <div>
                             <span className="text-xs text-slate-400">
                               出口条件:
                             </span>
@@ -437,143 +437,143 @@ export default function ProjectPhaseManagement() {
                               {phase.exit_criteria}
                             </p>
                           </div>
-                        )}
+                    }
                       </div>
-                    )}
+                  }
 
                     {/* Actions */}
                     <div className="flex items-center justify-between pt-4 border-t border-white/5">
                       <div className="flex items-center gap-2 flex-wrap">
-                        {phase.status === "PENDING" && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() =>
-                              setEntryCheckDialog({
-                                open: true,
-                                phaseId: phase.id,
-                              })
-                            }
-                          >
+                        {phase.status === "PENDING" &&
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                        setEntryCheckDialog({
+                          open: true,
+                          phaseId: phase.id
+                        })
+                        }>
+
                             <FileCheck className="h-4 w-4 mr-2" />
                             入口检查
                           </Button>
-                        )}
-                        {phase.status === "IN_PROGRESS" && (
-                          <>
+                      }
+                        {phase.status === "IN_PROGRESS" &&
+                      <>
                             <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() =>
-                                setExitCheckDialog({
-                                  open: true,
-                                  phaseId: phase.id,
-                                })
-                              }
-                            >
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                          setExitCheckDialog({
+                            open: true,
+                            phaseId: phase.id
+                          })
+                          }>
+
                               <FileCheck className="h-4 w-4 mr-2" />
                               出口检查
                             </Button>
-                            {phase.review_required && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() =>
-                                  setReviewDialog({
-                                    open: true,
-                                    phaseId: phase.id,
-                                  })
-                                }
-                              >
+                            {phase.review_required &&
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                          setReviewDialog({
+                            open: true,
+                            phaseId: phase.id
+                          })
+                          }>
+
                                 <CheckCircle2 className="h-4 w-4 mr-2" />
                                 阶段评审
                               </Button>
-                            )}
+                        }
                           </>
-                        )}
+                      }
                         {phase.status !== "COMPLETED" &&
-                          phase.status !== "SKIPPED" && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() =>
-                                setAdvanceDialog({
-                                  open: true,
-                                  phaseId: phase.id,
-                                })
-                              }
-                            >
+                      phase.status !== "SKIPPED" &&
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                        setAdvanceDialog({
+                          open: true,
+                          phaseId: phase.id
+                        })
+                        }>
+
                               <Play className="h-4 w-4 mr-2" />
                               推进阶段
                             </Button>
-                          )}
+                      }
                       </div>
                       <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setDetailDialog({ open: true, phase })}
-                      >
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setDetailDialog({ open: true, phase })}>
+
                         <Eye className="h-4 w-4 mr-2" />
                         查看详情
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
-              </motion.div>
-            );
-          })}
-        </div>
-      ) : (
-        <Card>
+              </motion.div>);
+
+        })}
+        </div> :
+
+      <Card>
           <CardContent className="p-12 text-center text-slate-500">
             该项目暂无阶段数据
           </CardContent>
         </Card>
-      )}
+      }
 
       {/* Entry Check Dialog */}
       <EntryCheckDialog
         open={entryCheckDialog.open}
         onOpenChange={(open) => setEntryCheckDialog({ open, phaseId: null })}
-        onSubmit={(data) => handleEntryCheck(entryCheckDialog.phaseId, data)}
-      />
+        onSubmit={(data) => handleEntryCheck(entryCheckDialog.phaseId, data)} />
+
 
       {/* Exit Check Dialog */}
       <ExitCheckDialog
         open={exitCheckDialog.open}
         onOpenChange={(open) => setExitCheckDialog({ open, phaseId: null })}
-        onSubmit={(data) => handleExitCheck(exitCheckDialog.phaseId, data)}
-      />
+        onSubmit={(data) => handleExitCheck(exitCheckDialog.phaseId, data)} />
+
 
       {/* Review Dialog */}
       <ReviewDialog
         open={reviewDialog.open}
         onOpenChange={(open) => setReviewDialog({ open, phaseId: null })}
-        onSubmit={(data) => handleReview(reviewDialog.phaseId, data)}
-      />
+        onSubmit={(data) => handleReview(reviewDialog.phaseId, data)} />
+
 
       {/* Advance Dialog */}
       <AdvanceDialog
         open={advanceDialog.open}
         onOpenChange={(open) => setAdvanceDialog({ open, phaseId: null })}
-        onSubmit={(data) => handleAdvance(advanceDialog.phaseId, data)}
-      />
+        onSubmit={(data) => handleAdvance(advanceDialog.phaseId, data)} />
+
 
       {/* Detail Dialog */}
       <PhaseDetailDialog
         open={detailDialog.open}
         onOpenChange={(open) => setDetailDialog({ open, phase: null })}
-        phase={detailDialog.phase}
-      />
-    </motion.div>
-  );
+        phase={detailDialog.phase} />
+
+    </motion.div>);
+
 }
 
 // Entry Check Dialog
 function EntryCheckDialog({ open, onOpenChange, onSubmit }) {
   const [formData, setFormData] = useState({
     check_result: "",
-    notes: "",
+    notes: ""
   });
 
   const handleSubmit = () => {
@@ -600,12 +600,12 @@ function EntryCheckDialog({ open, onOpenChange, onSubmit }) {
               <textarea
                 value={formData.check_result}
                 onChange={(e) =>
-                  setFormData({ ...formData, check_result: e.target.value })
+                setFormData({ ...formData, check_result: e.target.value })
                 }
                 placeholder="请输入检查结果"
                 className="w-full px-4 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                rows={4}
-              />
+                rows={4} />
+
             </div>
             <div>
               <label className="block text-sm font-medium text-white mb-2">
@@ -614,12 +614,12 @@ function EntryCheckDialog({ open, onOpenChange, onSubmit }) {
               <textarea
                 value={formData.notes}
                 onChange={(e) =>
-                  setFormData({ ...formData, notes: e.target.value })
+                setFormData({ ...formData, notes: e.target.value })
                 }
                 placeholder="请输入检查说明（可选）"
                 className="w-full px-4 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                rows={3}
-              />
+                rows={3} />
+
             </div>
           </div>
         </DialogBody>
@@ -630,15 +630,15 @@ function EntryCheckDialog({ open, onOpenChange, onSubmit }) {
           <Button onClick={handleSubmit}>提交</Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>);
+
 }
 
 // Exit Check Dialog
 function ExitCheckDialog({ open, onOpenChange, onSubmit }) {
   const [formData, setFormData] = useState({
     check_result: "",
-    notes: "",
+    notes: ""
   });
 
   const handleSubmit = () => {
@@ -665,12 +665,12 @@ function ExitCheckDialog({ open, onOpenChange, onSubmit }) {
               <textarea
                 value={formData.check_result}
                 onChange={(e) =>
-                  setFormData({ ...formData, check_result: e.target.value })
+                setFormData({ ...formData, check_result: e.target.value })
                 }
                 placeholder="请输入检查结果"
                 className="w-full px-4 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                rows={4}
-              />
+                rows={4} />
+
             </div>
             <div>
               <label className="block text-sm font-medium text-white mb-2">
@@ -679,12 +679,12 @@ function ExitCheckDialog({ open, onOpenChange, onSubmit }) {
               <textarea
                 value={formData.notes}
                 onChange={(e) =>
-                  setFormData({ ...formData, notes: e.target.value })
+                setFormData({ ...formData, notes: e.target.value })
                 }
                 placeholder="请输入检查说明（可选）"
                 className="w-full px-4 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                rows={3}
-              />
+                rows={3} />
+
             </div>
           </div>
         </DialogBody>
@@ -695,15 +695,15 @@ function ExitCheckDialog({ open, onOpenChange, onSubmit }) {
           <Button onClick={handleSubmit}>提交</Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>);
+
 }
 
 // Review Dialog
 function ReviewDialog({ open, onOpenChange, onSubmit }) {
   const [formData, setFormData] = useState({
     review_result: "PASSED",
-    review_notes: "",
+    review_notes: ""
   });
 
   const handleSubmit = () => {
@@ -726,10 +726,10 @@ function ReviewDialog({ open, onOpenChange, onSubmit }) {
               <select
                 value={formData.review_result}
                 onChange={(e) =>
-                  setFormData({ ...formData, review_result: e.target.value })
+                setFormData({ ...formData, review_result: e.target.value })
                 }
-                className="w-full px-4 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              >
+                className="w-full px-4 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+
                 <option value="PASSED">通过</option>
                 <option value="CONDITIONAL">有条件通过</option>
                 <option value="FAILED">未通过</option>
@@ -742,12 +742,12 @@ function ReviewDialog({ open, onOpenChange, onSubmit }) {
               <textarea
                 value={formData.review_notes}
                 onChange={(e) =>
-                  setFormData({ ...formData, review_notes: e.target.value })
+                setFormData({ ...formData, review_notes: e.target.value })
                 }
                 placeholder="请输入评审记录"
                 className="w-full px-4 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                rows={4}
-              />
+                rows={4} />
+
             </div>
           </div>
         </DialogBody>
@@ -758,15 +758,15 @@ function ReviewDialog({ open, onOpenChange, onSubmit }) {
           <Button onClick={handleSubmit}>提交</Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>);
+
 }
 
 // Advance Dialog
 function AdvanceDialog({ open, onOpenChange, onSubmit }) {
   const [formData, setFormData] = useState({
     actual_start_date: "",
-    notes: "",
+    notes: ""
   });
 
   const handleSubmit = () => {
@@ -790,12 +790,12 @@ function AdvanceDialog({ open, onOpenChange, onSubmit }) {
                 type="date"
                 value={formData.actual_start_date}
                 onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    actual_start_date: e.target.value,
-                  })
-                }
-              />
+                setFormData({
+                  ...formData,
+                  actual_start_date: e.target.value
+                })
+                } />
+
             </div>
             <div>
               <label className="block text-sm font-medium text-white mb-2">
@@ -804,12 +804,12 @@ function AdvanceDialog({ open, onOpenChange, onSubmit }) {
               <textarea
                 value={formData.notes}
                 onChange={(e) =>
-                  setFormData({ ...formData, notes: e.target.value })
+                setFormData({ ...formData, notes: e.target.value })
                 }
                 placeholder="请输入推进说明（可选）"
                 className="w-full px-4 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                rows={3}
-              />
+                rows={3} />
+
             </div>
           </div>
         </DialogBody>
@@ -820,8 +820,8 @@ function AdvanceDialog({ open, onOpenChange, onSubmit }) {
           <Button onClick={handleSubmit}>提交</Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>);
+
 }
 
 // Phase Detail Dialog
@@ -829,9 +829,9 @@ function PhaseDetailDialog({ open, onOpenChange, phase }) {
   if (!phase) return null;
 
   const statusBadge = getStatusBadge(phase.status);
-  const reviewBadge = phase.review_result
-    ? getReviewResultBadge(phase.review_result)
-    : null;
+  const reviewBadge = phase.review_result ?
+  getReviewResultBadge(phase.review_result) :
+  null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -872,70 +872,70 @@ function PhaseDetailDialog({ open, onOpenChange, phase }) {
                 <div>
                   <span className="text-xs text-slate-400">计划开始</span>
                   <p className="text-white">
-                    {phase.plan_start_date
-                      ? formatDate(phase.plan_start_date)
-                      : "未设置"}
+                    {phase.plan_start_date ?
+                    formatDate(phase.plan_start_date) :
+                    "未设置"}
                   </p>
                 </div>
                 <div>
                   <span className="text-xs text-slate-400">计划结束</span>
                   <p className="text-white">
-                    {phase.plan_end_date
-                      ? formatDate(phase.plan_end_date)
-                      : "未设置"}
+                    {phase.plan_end_date ?
+                    formatDate(phase.plan_end_date) :
+                    "未设置"}
                   </p>
                 </div>
                 <div>
                   <span className="text-xs text-slate-400">实际开始</span>
                   <p className="text-white">
-                    {phase.actual_start_date
-                      ? formatDate(phase.actual_start_date)
-                      : "未开始"}
+                    {phase.actual_start_date ?
+                    formatDate(phase.actual_start_date) :
+                    "未开始"}
                   </p>
                 </div>
                 <div>
                   <span className="text-xs text-slate-400">实际结束</span>
                   <p className="text-white">
-                    {phase.actual_end_date
-                      ? formatDate(phase.actual_end_date)
-                      : "未结束"}
+                    {phase.actual_end_date ?
+                    formatDate(phase.actual_end_date) :
+                    "未结束"}
                   </p>
                 </div>
               </div>
             </div>
 
             {/* Criteria */}
-            {(phase.entry_criteria || phase.exit_criteria) && (
-              <div>
+            {(phase.entry_criteria || phase.exit_criteria) &&
+            <div>
                 <h4 className="text-sm font-medium text-white mb-3">
                   门控条件
                 </h4>
                 <div className="space-y-3">
-                  {phase.entry_criteria && (
-                    <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                  {phase.entry_criteria &&
+                <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
                       <span className="text-xs text-slate-400">入口条件</span>
                       <p className="text-white mt-1">{phase.entry_criteria}</p>
                     </div>
-                  )}
-                  {phase.exit_criteria && (
-                    <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                }
+                  {phase.exit_criteria &&
+                <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
                       <span className="text-xs text-slate-400">出口条件</span>
                       <p className="text-white mt-1">{phase.exit_criteria}</p>
                     </div>
-                  )}
+                }
                 </div>
               </div>
-            )}
+            }
 
             {/* Check Results */}
-            {(phase.entry_check_result || phase.exit_check_result) && (
-              <div>
+            {(phase.entry_check_result || phase.exit_check_result) &&
+            <div>
                 <h4 className="text-sm font-medium text-white mb-3">
                   检查结果
                 </h4>
                 <div className="space-y-3">
-                  {phase.entry_check_result && (
-                    <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                  {phase.entry_check_result &&
+                <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
                       <span className="text-xs text-slate-400">
                         入口检查结果
                       </span>
@@ -943,9 +943,9 @@ function PhaseDetailDialog({ open, onOpenChange, phase }) {
                         {phase.entry_check_result}
                       </p>
                     </div>
-                  )}
-                  {phase.exit_check_result && (
-                    <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                }
+                  {phase.exit_check_result &&
+                <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
                       <span className="text-xs text-slate-400">
                         出口检查结果
                       </span>
@@ -953,20 +953,20 @@ function PhaseDetailDialog({ open, onOpenChange, phase }) {
                         {phase.exit_check_result}
                       </p>
                     </div>
-                  )}
+                }
                 </div>
               </div>
-            )}
+            }
 
             {/* Review */}
-            {phase.review_required && (
-              <div>
+            {phase.review_required &&
+            <div>
                 <h4 className="text-sm font-medium text-white mb-3">
                   评审信息
                 </h4>
                 <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 space-y-2">
-                  {reviewBadge && (
-                    <div>
+                  {reviewBadge &&
+                <div>
                       <span className="text-xs text-slate-400">评审结果</span>
                       <p className="mt-1">
                         <Badge variant={reviewBadge.variant}>
@@ -974,32 +974,32 @@ function PhaseDetailDialog({ open, onOpenChange, phase }) {
                         </Badge>
                       </p>
                     </div>
-                  )}
-                  {phase.review_date && (
-                    <div>
+                }
+                  {phase.review_date &&
+                <div>
                       <span className="text-xs text-slate-400">评审日期</span>
                       <p className="text-white">
                         {formatDate(phase.review_date)}
                       </p>
                     </div>
-                  )}
-                  {phase.review_notes && (
-                    <div>
+                }
+                  {phase.review_notes &&
+                <div>
                       <span className="text-xs text-slate-400">评审记录</span>
                       <p className="text-white mt-1 whitespace-pre-wrap">
                         {phase.review_notes}
                       </p>
                     </div>
-                  )}
+                }
                 </div>
               </div>
-            )}
+            }
           </div>
         </DialogBody>
         <DialogFooter>
           <Button onClick={() => onOpenChange(false)}>关闭</Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>);
+
 }

@@ -4,7 +4,7 @@
  * Features: Production overview, workshop management, production plans, work orders, team management
  */
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo as _useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   LayoutDashboard,
@@ -19,8 +19,8 @@ import {
   Package,
   Target,
   Activity,
-  Zap,
-} from "lucide-react";
+  Zap } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -31,14 +31,14 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-  Button,
-} from "../components/ui";
+  Button } from
+"../components/ui";
 import {
   productionApi,
-  projectApi,
-  materialApi,
-  alertApi,
-} from "../services/api";
+  projectApi as _projectApi,
+  materialApi as _materialApi,
+  alertApi } from
+"../services/api";
 import { ApiIntegrationError } from "../components/ui";
 import {
   ProductionStatsOverview,
@@ -49,12 +49,12 @@ import {
   ALERT_STATUS,
   RANKING_TYPE,
   TIME_RANGE_FILTERS,
-  getStatusColor,
-  getStatusLabel,
-  getPriorityColor,
+  getStatusColor as _getStatusColor,
+  getStatusLabel as _getStatusLabel,
+  getPriorityColor as _getPriorityColor,
   getAlertLevelConfig,
-  getAlertStatusConfig,
-} from "../components/production";
+  getAlertStatusConfig } from
+"../components/production";
 
 export default function ProductionManagerDashboard() {
   const [selectedTab, setSelectedTab] = useState("overview");
@@ -70,11 +70,11 @@ export default function ProductionManagerDashboard() {
     totalWorkers: 0,
     activeWorkers: 0,
     totalWorkstations: 0,
-    activeWorkstations: 0,
+    activeWorkstations: 0
   });
   const [workshops, setWorkshops] = useState([]);
-  const [productionPlans, setProductionPlans] = useState([]);
-  const [workOrders, setWorkOrders] = useState([]);
+  const [_productionPlans, setProductionPlans] = useState([]);
+  const [_workOrders, setWorkOrders] = useState([]);
   const [productionDaily, setProductionDaily] = useState(null);
   const [alerts, setAlerts] = useState([]);
 
@@ -143,13 +143,13 @@ export default function ProductionManagerDashboard() {
       setLoading(true);
       try {
         await Promise.all([
-          loadProductionStats(),
-          loadWorkshops(),
-          loadProductionPlans(),
-          loadWorkOrders(),
-          loadProductionDaily(),
-          loadAlerts(),
-        ]);
+        loadProductionStats(),
+        loadWorkshops(),
+        loadProductionPlans(),
+        loadWorkOrders(),
+        loadProductionDaily(),
+        loadAlerts()]
+        );
       } catch (err) {
         setError(err.message);
       } finally {
@@ -159,13 +159,13 @@ export default function ProductionManagerDashboard() {
 
     loadAllData();
   }, [
-    loadProductionStats,
-    loadWorkshops,
-    loadProductionPlans,
-    loadWorkOrders,
-    loadProductionDaily,
-    loadAlerts,
-  ]);
+  loadProductionStats,
+  loadWorkshops,
+  loadProductionPlans,
+  loadWorkOrders,
+  loadProductionDaily,
+  loadAlerts]
+  );
 
   // 定时刷新数据
   useEffect(() => {
@@ -183,26 +183,26 @@ export default function ProductionManagerDashboard() {
     setLoading(true);
     try {
       await Promise.all([
-        loadProductionStats(),
-        loadWorkshops(),
-        loadProductionPlans(),
-        loadWorkOrders(),
-        loadProductionDaily(),
-        loadAlerts(),
-      ]);
+      loadProductionStats(),
+      loadWorkshops(),
+      loadProductionPlans(),
+      loadWorkOrders(),
+      loadProductionDaily(),
+      loadAlerts()]
+      );
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
   }, [
-    loadProductionStats,
-    loadWorkshops,
-    loadProductionPlans,
-    loadWorkOrders,
-    loadProductionDaily,
-    loadAlerts,
-  ]);
+  loadProductionStats,
+  loadWorkshops,
+  loadProductionPlans,
+  loadWorkOrders,
+  loadProductionDaily,
+  loadAlerts]
+  );
 
   // 处理生产线操作
   const handleLineAction = useCallback(async (lineId, action) => {
@@ -223,47 +223,47 @@ export default function ProductionManagerDashboard() {
 
   // Tab配置
   const tabs = [
-    { value: "overview", label: "生产概览", icon: LayoutDashboard },
-    { value: "workshops", label: "生产线管理", icon: Factory },
-    { value: "plans", label: "生产计划", icon: Calendar },
-    { value: "orders", label: "工单管理", icon: Wrench },
-    { value: "alerts", label: "生产预警", icon: AlertTriangle },
-  ];
+  { value: "overview", label: "生产概览", icon: LayoutDashboard },
+  { value: "workshops", label: "生产线管理", icon: Factory },
+  { value: "plans", label: "生产计划", icon: Calendar },
+  { value: "orders", label: "工单管理", icon: Wrench },
+  { value: "alerts", label: "生产预警", icon: AlertTriangle }];
+
 
   // 渲染错误状态
   if (error) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <ApiIntegrationError 
+        <ApiIntegrationError
           title="生产系统加载失败"
           description="无法连接到生产管理系统，请检查网络连接或联系管理员。"
-          onRetry={handleRefresh}
-        />
-      </div>
-    );
+          onRetry={handleRefresh} />
+
+      </div>);
+
   }
 
   return (
     <div className="container mx-auto px-4 py-6 space-y-6">
       {/* 页面头部 */}
-      <PageHeader 
+      <PageHeader
         title="生产管理"
         subtitle="实时监控和管理生产活动"
         icon={Factory}
         actions={[
-          {
-            label: "刷新数据",
-            icon: Activity,
-            onClick: handleRefresh,
-            loading: loading,
-          },
-          {
-            label: "生产设置",
-            icon: Settings,
-            onClick: () => console.log('Open settings'),
-          },
-        ]}
-      />
+        {
+          label: "刷新数据",
+          icon: Activity,
+          onClick: handleRefresh,
+          loading: loading
+        },
+        {
+          label: "生产设置",
+          icon: Settings,
+          onClick: () => console.log('Open settings')
+        }]
+        } />
+
 
       {/* 主要内容区域 */}
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
@@ -274,8 +274,8 @@ export default function ProductionManagerDashboard() {
               <TabsTrigger key={tab.value} value={tab.value} className="flex items-center gap-2">
                 <Icon className="w-4 h-4" />
                 <span className="hidden sm:inline">{tab.label}</span>
-              </TabsTrigger>
-            );
+              </TabsTrigger>);
+
           })}
         </TabsList>
 
@@ -285,8 +285,8 @@ export default function ProductionManagerDashboard() {
             productionStats={productionStats}
             productionDaily={productionDaily}
             loading={loading}
-            onRefresh={handleRefresh}
-          />
+            onRefresh={handleRefresh} />
+
         </TabsContent>
 
         {/* 生产线管理 */}
@@ -296,8 +296,8 @@ export default function ProductionManagerDashboard() {
             loading={loading}
             onLineAction={handleLineAction}
             onEditLine={handleEditLine}
-            onViewDetails={(workshop) => console.log('View details:', workshop)}
-          />
+            onViewDetails={(workshop) => console.log('View details:', workshop)} />
+
         </TabsContent>
 
         {/* 生产计划 */}
@@ -348,19 +348,19 @@ export default function ProductionManagerDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {alerts.length > 0 ? (
-                <div className="space-y-3">
+              {alerts.length > 0 ?
+              <div className="space-y-3">
                   {alerts.slice(0, 10).map((alert) => {
-                    const levelConfig = getAlertLevelConfig(alert.level);
-                    const statusConfig = getAlertStatusConfig(alert.status);
-                    
-                    return (
-                      <motion.div
-                        key={alert.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="flex items-center justify-between p-4 border rounded-lg"
-                      >
+                  const levelConfig = getAlertLevelConfig(alert.level);
+                  const statusConfig = getAlertStatusConfig(alert.status);
+
+                  return (
+                    <motion.div
+                      key={alert.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className="flex items-center justify-between p-4 border rounded-lg">
+
                         <div className="flex items-center gap-3">
                           <span className="text-xl">{levelConfig.icon}</span>
                           <div>
@@ -376,21 +376,21 @@ export default function ProductionManagerDashboard() {
                             {levelConfig.label}
                           </Badge>
                         </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-8">
+                      </motion.div>);
+
+                })}
+                </div> :
+
+              <div className="text-center py-8">
                   <AlertTriangle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">暂无预警信息</h3>
                   <p className="text-gray-600">当前没有生产预警信息</p>
                 </div>
-              )}
+              }
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>);
+
 }

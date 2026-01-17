@@ -7,60 +7,60 @@ import { Badge } from "../../components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Textarea } from "../../components/ui/textarea";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogBody, 
-  DialogFooter 
-} from "../../components/ui/dialog";
-import { 
-  CheckCircle2, 
-  XCircle, 
-  Clock, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogBody,
+  DialogFooter } from
+"../../components/ui/dialog";
+import {
+  CheckCircle2,
+  XCircle,
+  Clock,
   AlertTriangle,
   User,
   Calendar,
-  MessageSquare
-} from "lucide-react";
-import { 
+  MessageSquare } from
+"lucide-react";
+import {
   approvalStatusConfigs,
-  getStatusConfig,
-  formatStatus
-} from "./ecnConstants";
-import { cn, formatDate } from "../../lib/utils";
+  getStatusConfig as _getStatusConfig,
+  formatStatus } from
+"./ecnConstants";
+import { cn, formatDate } from "../../lib/utils";import { useState } from "react";import { toast } from "sonner";
 
-export function ECNApprovalFlow({ 
-  approvals, 
-  ecn, 
-  onApprove, 
+export function ECNApprovalFlow({
+  approvals,
+  ecn,
+  onApprove,
   onReject,
   currentUser,
-  loading 
+  loading: _loading
 }) {
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [approvalForm, setApprovalForm] = useState({
     action: "", // "approve" or "reject"
-    comment: "",
+    comment: ""
   });
 
   const statusOrder = [
-    "SUBMITTED",
-    "EVALUATING", 
-    "EVALUATED",
-    "PENDING_APPROVAL",
-    "APPROVED",
-    "REJECTED"
-  ];
+  "SUBMITTED",
+  "EVALUATING",
+  "EVALUATED",
+  "PENDING_APPROVAL",
+  "APPROVED",
+  "REJECTED"];
 
-  const getCurrentApprovalStep = () => {
+
+  const _getCurrentApprovalStep = () => {
     const currentIndex = statusOrder.indexOf(ecn.status);
     return currentIndex >= 0 ? currentIndex : 0;
   };
 
   const getApprovalIcon = (status) => {
-    const statusConfig = approvalStatusConfigs[status];
+    const _statusConfig = approvalStatusConfigs[status];
     switch (status) {
       case "APPROVED":
         return <CheckCircle2 className="w-5 h-5 text-green-500" />;
@@ -84,14 +84,14 @@ export function ECNApprovalFlow({
         ecn_id: ecn.id,
         comment: approvalForm.comment,
         approved_by: currentUser.name,
-        approved_time: new Date().toISOString(),
+        approved_time: new Date().toISOString()
       });
     } else {
       onReject({
         ecn_id: ecn.id,
         comment: approvalForm.comment,
         rejected_by: currentUser.name,
-        rejected_time: new Date().toISOString(),
+        rejected_time: new Date().toISOString()
       });
     }
 
@@ -101,35 +101,35 @@ export function ECNApprovalFlow({
 
   const canApprove = () => {
     // 检查当前用户是否有审批权限
-    return ecn.status === "PENDING_APPROVAL" && 
-           currentUser && 
-           (currentUser.role === "MANAGER" || currentUser.role === "DIRECTOR");
+    return ecn.status === "PENDING_APPROVAL" &&
+    currentUser && (
+    currentUser.role === "MANAGER" || currentUser.role === "DIRECTOR");
   };
 
   return (
     <>
-      {approvals.length === 0 ? (
-        <Card>
+      {approvals.length === 0 ?
+      <Card>
           <CardContent className="py-8 text-center text-slate-400">
             暂无审批记录
           </CardContent>
-        </Card>
-      ) : (
-        <div className="relative">
+        </Card> :
+
+      <div className="relative">
           {/* 时间线背景线 */}
           <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-slate-600"></div>
           
           <div className="space-y-6">
-            {approvals.map((approval, index) => (
-              <div key={approval.id} className="relative flex items-start gap-4">
+            {approvals.map((approval, _index) =>
+          <div key={approval.id} className="relative flex items-start gap-4">
                 {/* 状态图标 */}
                 <div className="relative z-10">
                   <div className={cn(
-                    "w-16 h-16 rounded-full flex items-center justify-center bg-slate-800 border-2",
-                    approval.status === "APPROVED" && "border-green-500 bg-green-500/10",
-                    approval.status === "REJECTED" && "border-red-500 bg-red-500/10",
-                    approval.status === "PENDING" && "border-yellow-500 bg-yellow-500/10"
-                  )}>
+                "w-16 h-16 rounded-full flex items-center justify-center bg-slate-800 border-2",
+                approval.status === "APPROVED" && "border-green-500 bg-green-500/10",
+                approval.status === "REJECTED" && "border-red-500 bg-red-500/10",
+                approval.status === "PENDING" && "border-yellow-500 bg-yellow-500/10"
+              )}>
                     {getApprovalIcon(approval.status)}
                   </div>
                 </div>
@@ -143,10 +143,10 @@ export function ECNApprovalFlow({
                           <CardTitle className="text-base flex items-center gap-2">
                             {approval.approval_type || "审批"}
                             <Badge className={cn(
-                              approvalStatusConfigs[approval.status]?.color,
-                              approvalStatusConfigs[approval.status]?.textColor,
-                              "text-xs"
-                            )}>
+                          approvalStatusConfigs[approval.status]?.color,
+                          approvalStatusConfigs[approval.status]?.textColor,
+                          "text-xs"
+                        )}>
                               {formatStatus(approval.status)}
                             </Badge>
                           </CardTitle>
@@ -159,17 +159,17 @@ export function ECNApprovalFlow({
                               <Calendar className="w-3 h-3" />
                               {formatDate(approval.approval_time || approval.created_time)}
                             </div>
-                            {approval.department && (
-                              <span>{approval.department}</span>
-                            )}
+                            {approval.department &&
+                        <span>{approval.department}</span>
+                        }
                           </div>
                         </div>
                       </div>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
-                        {approval.comment && (
-                          <div>
+                        {approval.comment &&
+                    <div>
                             <div className="text-sm text-slate-500 mb-1 flex items-center gap-1">
                               <MessageSquare className="w-3 h-3" />
                               审批意见
@@ -178,44 +178,44 @@ export function ECNApprovalFlow({
                               {approval.comment}
                             </div>
                           </div>
-                        )}
+                    }
 
-                        {approval.conditions && approval.conditions.length > 0 && (
-                          <div>
+                        {approval.conditions && approval.conditions.length > 0 &&
+                    <div>
                             <div className="text-sm text-slate-500 mb-1">审批条件</div>
                             <ul className="text-white text-sm space-y-1">
-                              {approval.conditions.map((condition, idx) => (
-                                <li key={idx} className="flex items-center gap-2">
+                              {approval.conditions.map((condition, idx) =>
+                        <li key={idx} className="flex items-center gap-2">
                                   <span className="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
                                   {condition}
                                 </li>
-                              ))}
+                        )}
                             </ul>
                           </div>
-                        )}
+                    }
 
-                        {approval.attachments && approval.attachments.length > 0 && (
-                          <div>
+                        {approval.attachments && approval.attachments.length > 0 &&
+                    <div>
                             <div className="text-sm text-slate-500 mb-1">附件</div>
                             <div className="flex flex-wrap gap-2">
-                              {approval.attachments.map((attachment, idx) => (
-                                <Badge key={idx} variant="outline" className="text-xs">
+                              {approval.attachments.map((attachment, idx) =>
+                        <Badge key={idx} variant="outline" className="text-xs">
                                   {attachment.name}
                                 </Badge>
-                              ))}
+                        )}
                             </div>
                           </div>
-                        )}
+                    }
                       </div>
                     </CardContent>
                   </Card>
                 </div>
               </div>
-            ))}
+          )}
 
             {/* 当前待审批状态 */}
-            {canApprove() && (
-              <div className="relative flex items-start gap-4">
+            {canApprove() &&
+          <div className="relative flex items-start gap-4">
                 <div className="relative z-10">
                   <div className="w-16 h-16 rounded-full flex items-center justify-center bg-blue-500/20 border-2 border-blue-500 animate-pulse">
                     <Clock className="w-6 h-6 text-blue-500" />
@@ -233,24 +233,24 @@ export function ECNApprovalFlow({
                         </div>
                         <div className="flex gap-2">
                           <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setApprovalForm({ action: "reject", comment: "" });
-                              setShowApprovalDialog(true);
-                            }}
-                            className="border-red-500 text-red-400 hover:bg-red-500 hover:text-white"
-                          >
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setApprovalForm({ action: "reject", comment: "" });
+                          setShowApprovalDialog(true);
+                        }}
+                        className="border-red-500 text-red-400 hover:bg-red-500 hover:text-white">
+
                             驳回
                           </Button>
                           <Button
-                            size="sm"
-                            onClick={() => {
-                              setApprovalForm({ action: "approve", comment: "" });
-                              setShowApprovalDialog(true);
-                            }}
-                            className="bg-green-600 hover:bg-green-700"
-                          >
+                        size="sm"
+                        onClick={() => {
+                          setApprovalForm({ action: "approve", comment: "" });
+                          setShowApprovalDialog(true);
+                        }}
+                        className="bg-green-600 hover:bg-green-700">
+
                             批准
                           </Button>
                         </div>
@@ -259,10 +259,10 @@ export function ECNApprovalFlow({
                   </Card>
                 </div>
               </div>
-            )}
+          }
           </div>
         </div>
-      )}
+      }
 
       {/* 审批对话框 */}
       <Dialog open={showApprovalDialog} onOpenChange={setShowApprovalDialog}>
@@ -278,35 +278,35 @@ export function ECNApprovalFlow({
               <Textarea
                 value={approvalForm.comment}
                 onChange={(e) =>
-                  setApprovalForm({ ...approvalForm, comment: e.target.value })
+                setApprovalForm({ ...approvalForm, comment: e.target.value })
                 }
-                placeholder={approvalForm.action === "approve" 
-                  ? "请输入批准理由..." 
-                  : "请输入驳回理由..."
+                placeholder={approvalForm.action === "approve" ?
+                "请输入批准理由..." :
+                "请输入驳回理由..."
                 }
-                rows={4}
-              />
+                rows={4} />
+
             </div>
           </DialogBody>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowApprovalDialog(false)}
-            >
+              onClick={() => setShowApprovalDialog(false)}>
+
               取消
             </Button>
-            <Button 
+            <Button
               onClick={handleApproval}
-              className={approvalForm.action === "approve" 
-                ? "bg-green-600 hover:bg-green-700" 
-                : "bg-red-600 hover:bg-red-700"
-              }
-            >
+              className={approvalForm.action === "approve" ?
+              "bg-green-600 hover:bg-green-700" :
+              "bg-red-600 hover:bg-red-700"
+              }>
+
               {approvalForm.action === "approve" ? "批准" : "驳回"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
-  );
+    </>);
+
 }

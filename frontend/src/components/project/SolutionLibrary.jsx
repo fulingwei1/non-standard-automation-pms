@@ -6,11 +6,11 @@ import {
   CardTitle,
   Badge,
   Button,
-  Input,
-} from "../ui";
+  Input } from
+"../ui";
 import { BookOpen, Search, Plus, Star, Copy } from "lucide-react";
-import { formatDate } from "../../lib/utils";
-import { projectWorkspaceApi } from "../../services/api";
+import { formatDate as _formatDate } from "../../lib/utils";
+import { projectWorkspaceApi as _projectWorkspaceApi } from "../../services/api";
 
 export default function SolutionLibrary({ projectId, onApplyTemplate }) {
   const [loading, setLoading] = useState(true);
@@ -40,9 +40,9 @@ export default function SolutionLibrary({ projectId, onApplyTemplate }) {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       if (
-        !template.template_name.toLowerCase().includes(query) &&
-        !template.solution.toLowerCase().includes(query)
-      ) {
+      !template.template_name.toLowerCase().includes(query) &&
+      !template.solution.toLowerCase().includes(query))
+      {
         return false;
       }
     }
@@ -58,8 +58,8 @@ export default function SolutionLibrary({ projectId, onApplyTemplate }) {
         <CardContent className="p-6">
           <div className="text-center text-gray-500">加载中...</div>
         </CardContent>
-      </Card>
-    );
+      </Card>);
+
   }
 
   return (
@@ -85,14 +85,14 @@ export default function SolutionLibrary({ projectId, onApplyTemplate }) {
               placeholder="搜索解决方案模板..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
+              className="pl-9" />
+
           </div>
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="h-9 px-3 rounded-lg border border-gray-300 text-sm"
-          >
+            className="h-9 px-3 rounded-lg border border-gray-300 text-sm">
+
             <option value="all">全部类型</option>
             <option value="DEFECT">缺陷</option>
             <option value="DEVIATION">偏差</option>
@@ -102,27 +102,27 @@ export default function SolutionLibrary({ projectId, onApplyTemplate }) {
         </div>
 
         {/* 模板列表 */}
-        {filteredTemplates.length > 0 ? (
-          <div className="space-y-3">
-            {filteredTemplates.map((template) => (
-              <div
-                key={template.id}
-                className="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
-              >
+        {filteredTemplates.length > 0 ?
+        <div className="space-y-3">
+            {filteredTemplates.map((template) =>
+          <div
+            key={template.id}
+            className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <p className="font-medium">{template.template_name}</p>
                       <Badge variant="outline">{template.issue_type}</Badge>
-                      {template.category && (
-                        <Badge variant="secondary">{template.category}</Badge>
-                      )}
+                      {template.category &&
+                  <Badge variant="secondary">{template.category}</Badge>
+                  }
                     </div>
-                    {template.applicable_scenarios && (
-                      <p className="text-sm text-gray-600 mb-2">
+                    {template.applicable_scenarios &&
+                <p className="text-sm text-gray-600 mb-2">
                         {template.applicable_scenarios}
                       </p>
-                    )}
+                }
                     <div className="p-3 bg-gray-50 rounded text-sm">
                       {template.solution.substring(0, 300)}
                       {template.solution.length > 300 && "..."}
@@ -131,40 +131,40 @@ export default function SolutionLibrary({ projectId, onApplyTemplate }) {
                 </div>
                 <div className="flex items-center justify-between mt-3">
                   <div className="flex items-center gap-4 text-sm text-gray-500">
-                    {template.usage_count > 0 && (
-                      <span>使用 {template.usage_count} 次</span>
-                    )}
-                    {template.success_rate && (
-                      <span>成功率 {template.success_rate}%</span>
-                    )}
-                    {template.avg_resolution_time && (
-                      <span>平均 {template.avg_resolution_time}h</span>
-                    )}
+                    {template.usage_count > 0 &&
+                <span>使用 {template.usage_count} 次</span>
+                }
+                    {template.success_rate &&
+                <span>成功率 {template.success_rate}%</span>
+                }
+                    {template.avg_resolution_time &&
+                <span>平均 {template.avg_resolution_time}h</span>
+                }
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        onApplyTemplate && onApplyTemplate(template)
-                      }
-                    >
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                  onApplyTemplate && onApplyTemplate(template)
+                  }>
+
                       <Copy className="h-4 w-4 mr-1" />
                       应用模板
                     </Button>
                   </div>
                 </div>
               </div>
-            ))}
+          )}
+          </div> :
+
+        <div className="text-center py-12 text-gray-500">
+            {searchQuery || filterType !== "all" ?
+          "没有找到匹配的模板" :
+          "暂无解决方案模板"}
           </div>
-        ) : (
-          <div className="text-center py-12 text-gray-500">
-            {searchQuery || filterType !== "all"
-              ? "没有找到匹配的模板"
-              : "暂无解决方案模板"}
-          </div>
-        )}
+        }
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 }

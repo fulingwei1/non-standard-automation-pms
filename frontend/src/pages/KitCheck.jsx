@@ -17,8 +17,8 @@ import {
   Eye,
   Play,
   Calendar,
-  TrendingUp,
-} from "lucide-react";
+  TrendingUp } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -39,8 +39,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogBody,
-  DialogFooter,
-} from "../components/ui";
+  DialogFooter } from
+"../components/ui";
 import { cn, formatDate } from "../lib/utils";
 import { fadeIn } from "../lib/animations";
 import { kitCheckApi } from "../services/api";
@@ -49,32 +49,32 @@ const kitStatusConfigs = {
   complete: {
     label: "完全齐套",
     color: "bg-emerald-500",
-    textColor: "text-emerald-400",
+    textColor: "text-emerald-400"
   },
   partial: {
     label: "部分齐套",
     color: "bg-amber-500",
-    textColor: "text-amber-400",
+    textColor: "text-amber-400"
   },
-  shortage: { label: "缺料", color: "bg-red-500", textColor: "text-red-400" },
+  shortage: { label: "缺料", color: "bg-red-500", textColor: "text-red-400" }
 };
 
 export default function KitCheck() {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [workOrders, setWorkOrders] = useState([]);
   const [summary, setSummary] = useState({
     total: 0,
     complete: 0,
     partial: 0,
-    shortage: 0,
+    shortage: 0
   });
   const [filters, setFilters] = useState({
     kit_status: "all",
     workshop_id: "",
     project_id: "",
     plan_date: "",
-    keyword: "",
+    keyword: ""
   });
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
@@ -94,7 +94,7 @@ export default function KitCheck() {
     try {
       const params = {
         page,
-        page_size: pageSize,
+        page_size: pageSize
       };
       if (filters.kit_status && filters.kit_status !== "all") {
         params.kit_status = filters.kit_status;
@@ -168,7 +168,7 @@ export default function KitCheck() {
     try {
       await kitCheckApi.workOrders.confirm(workOrderId, {
         confirm_type: confirmType,
-        confirm_note: "确认开工",
+        confirm_note: "确认开工"
       });
       alert("开工确认成功");
       setShowDetailDialog(false);
@@ -195,8 +195,8 @@ export default function KitCheck() {
         variants={fadeIn}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 md:grid-cols-4 gap-4"
-      >
+        className="grid grid-cols-1 md:grid-cols-4 gap-4">
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">今日工单</CardTitle>
@@ -255,9 +255,9 @@ export default function KitCheck() {
               <Select
                 value={filters.kit_status}
                 onValueChange={(value) =>
-                  handleFilterChange("kit_status", value)
-                }
-              >
+                handleFilterChange("kit_status", value)
+                }>
+
                 <SelectTrigger>
                   <SelectValue placeholder="齐套状态" />
                 </SelectTrigger>
@@ -274,8 +274,8 @@ export default function KitCheck() {
               <Input
                 placeholder="搜索工单号、任务名称..."
                 value={filters.keyword}
-                onChange={(e) => handleFilterChange("keyword", e.target.value)}
-              />
+                onChange={(e) => handleFilterChange("keyword", e.target.value)} />
+
             </div>
 
             <div>
@@ -284,9 +284,9 @@ export default function KitCheck() {
                 placeholder="计划开工日期"
                 value={filters.plan_date}
                 onChange={(e) =>
-                  handleFilterChange("plan_date", e.target.value)
-                }
-              />
+                handleFilterChange("plan_date", e.target.value)
+                } />
+
             </div>
 
             <div>
@@ -306,36 +306,36 @@ export default function KitCheck() {
           <CardDescription>未来7天内计划开工的工单</CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="text-center py-8 text-muted-foreground">
+          {loading ?
+          <div className="text-center py-8 text-muted-foreground">
               加载中...
-            </div>
-          ) : workOrders.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            </div> :
+          workOrders.length === 0 ?
+          <div className="text-center py-8 text-muted-foreground">
               暂无待检查工单
-            </div>
-          ) : (
-            <div className="space-y-3">
+            </div> :
+
+          <div className="space-y-3">
               {workOrders.map((wo) => {
-                const status =
-                  kitStatusConfigs[wo.kit_status] || kitStatusConfigs.shortage;
-                return (
-                  <div
-                    key={wo.id}
-                    className={cn(
-                      "flex items-center justify-between p-4 rounded-lg border border-border hover:bg-surface-2 transition-colors",
-                      wo.kit_status === "complete" && "bg-emerald-500/5",
-                      wo.kit_status === "partial" && "bg-amber-500/5",
-                      wo.kit_status === "shortage" && "bg-red-500/5",
-                    )}
-                  >
+              const status =
+              kitStatusConfigs[wo.kit_status] || kitStatusConfigs.shortage;
+              return (
+                <div
+                  key={wo.id}
+                  className={cn(
+                    "flex items-center justify-between p-4 rounded-lg border border-border hover:bg-surface-2 transition-colors",
+                    wo.kit_status === "complete" && "bg-emerald-500/5",
+                    wo.kit_status === "partial" && "bg-amber-500/5",
+                    wo.kit_status === "shortage" && "bg-red-500/5"
+                  )}>
+
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="font-medium">{wo.work_order_no}</span>
                         <Badge
-                          variant="outline"
-                          className={cn(status.color, "text-white")}
-                        >
+                        variant="outline"
+                        className={cn(status.color, "text-white")}>
+
                           {status.label}
                         </Badge>
                         <span className="text-sm text-muted-foreground">
@@ -347,23 +347,23 @@ export default function KitCheck() {
                       </div>
                       <div className="text-sm text-muted-foreground">
                         {wo.project_name} | 计划开工:{" "}
-                        {wo.plan_start_date
-                          ? formatDate(wo.plan_start_date)
-                          : "-"}
+                        {wo.plan_start_date ?
+                      formatDate(wo.plan_start_date) :
+                      "-"}
                       </div>
                       <div className="flex items-center gap-4 mt-2">
                         <div className="flex items-center gap-2">
                           <div className="w-24 h-2 bg-slate-200 rounded-full overflow-hidden">
                             <div
-                              className={cn(
-                                "h-full transition-all",
-                                wo.kit_status === "complete" &&
-                                  "bg-emerald-500",
-                                wo.kit_status === "partial" && "bg-amber-500",
-                                wo.kit_status === "shortage" && "bg-red-500",
-                              )}
-                              style={{ width: `${wo.kit_rate}%` }}
-                            />
+                            className={cn(
+                              "h-full transition-all",
+                              wo.kit_status === "complete" &&
+                              "bg-emerald-500",
+                              wo.kit_status === "partial" && "bg-amber-500",
+                              wo.kit_status === "shortage" && "bg-red-500"
+                            )}
+                            style={{ width: `${wo.kit_rate}%` }} />
+
                           </div>
                           <span className="text-sm font-medium">
                             {wo.kit_rate}%
@@ -377,56 +377,56 @@ export default function KitCheck() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleViewDetail(wo)}
-                      >
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleViewDetail(wo)}>
+
                         <Eye className="h-4 w-4 mr-2" />
                         查看详情
                       </Button>
                       <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleCheckKit(wo.id)}
-                        disabled={actionLoading}
-                      >
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleCheckKit(wo.id)}
+                      disabled={actionLoading}>
+
                         <RefreshCw className="h-4 w-4 mr-2" />
                         检查
                       </Button>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  </div>);
 
-          {total > pageSize && (
-            <div className="flex items-center justify-between mt-4 pt-4 border-t">
+            })}
+            </div>
+          }
+
+          {total > pageSize &&
+          <div className="flex items-center justify-between mt-4 pt-4 border-t">
               <div className="text-sm text-muted-foreground">
                 共 {total} 条记录，第 {page} / {Math.ceil(total / pageSize)} 页
               </div>
               <div className="flex items-center gap-2">
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1 || loading}
-                >
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1 || loading}>
+
                   上一页
                 </Button>
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    setPage((p) => Math.min(Math.ceil(total / pageSize), p + 1))
-                  }
-                  disabled={page >= Math.ceil(total / pageSize) || loading}
-                >
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                setPage((p) => Math.min(Math.ceil(total / pageSize), p + 1))
+                }
+                disabled={page >= Math.ceil(total / pageSize) || loading}>
+
                   下一页
                 </Button>
               </div>
             </div>
-          )}
+          }
         </CardContent>
       </Card>
 
@@ -437,12 +437,12 @@ export default function KitCheck() {
             <DialogTitle>工单齐套详情</DialogTitle>
           </DialogHeader>
           <DialogBody>
-            {detailLoading ? (
-              <div className="text-center py-8 text-muted-foreground">
+            {detailLoading ?
+            <div className="text-center py-8 text-muted-foreground">
                 加载中...
-              </div>
-            ) : detailData ? (
-              <div className="space-y-6">
+              </div> :
+            detailData ?
+            <div className="space-y-6">
                 {/* 工单信息 */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -470,9 +470,9 @@ export default function KitCheck() {
                       计划开工日期
                     </div>
                     <div className="font-medium">
-                      {detailData.work_order?.plan_start_date
-                        ? formatDate(detailData.work_order.plan_start_date)
-                        : "-"}
+                      {detailData.work_order?.plan_start_date ?
+                    formatDate(detailData.work_order.plan_start_date) :
+                    "-"}
                     </div>
                   </div>
                 </div>
@@ -533,16 +533,16 @@ export default function KitCheck() {
                       <div>缺料</div>
                       <div>状态</div>
                     </div>
-                    {detailData.bom_items?.map((item, index) => (
-                      <div
-                        key={index}
-                        className={cn(
-                          "grid grid-cols-8 gap-2 p-2 text-sm border-t",
-                          item.status === "fulfilled" && "bg-emerald-500/5",
-                          item.status === "partial" && "bg-amber-500/5",
-                          item.status === "shortage" && "bg-red-500/5",
-                        )}
-                      >
+                    {detailData.bom_items?.map((item, index) =>
+                  <div
+                    key={index}
+                    className={cn(
+                      "grid grid-cols-8 gap-2 p-2 text-sm border-t",
+                      item.status === "fulfilled" && "bg-emerald-500/5",
+                      item.status === "partial" && "bg-amber-500/5",
+                      item.status === "shortage" && "bg-red-500/5"
+                    )}>
+
                         <div>{item.material_code}</div>
                         <div>{item.material_name}</div>
                         <div className="text-muted-foreground">
@@ -552,73 +552,73 @@ export default function KitCheck() {
                         <div>{item.available_qty}</div>
                         <div>{item.in_transit_qty}</div>
                         <div
-                          className={cn(
-                            item.shortage_qty > 0 && "text-red-400 font-medium",
-                          )}
-                        >
+                      className={cn(
+                        item.shortage_qty > 0 && "text-red-400 font-medium"
+                      )}>
+
                           {item.shortage_qty}
                         </div>
                         <div>
                           <Badge
-                            variant="outline"
-                            className={cn(
-                              item.status === "fulfilled" &&
-                                "bg-emerald-500 text-white",
-                              item.status === "partial" &&
-                                "bg-amber-500 text-white",
-                              item.status === "shortage" &&
-                                "bg-red-500 text-white",
-                            )}
-                          >
-                            {item.status === "fulfilled"
-                              ? "已齐套"
-                              : item.status === "partial"
-                                ? "部分"
-                                : "缺料"}
+                        variant="outline"
+                        className={cn(
+                          item.status === "fulfilled" &&
+                          "bg-emerald-500 text-white",
+                          item.status === "partial" &&
+                          "bg-amber-500 text-white",
+                          item.status === "shortage" &&
+                          "bg-red-500 text-white"
+                        )}>
+
+                            {item.status === "fulfilled" ?
+                        "已齐套" :
+                        item.status === "partial" ?
+                        "部分" :
+                        "缺料"}
                           </Badge>
                         </div>
                       </div>
-                    ))}
+                  )}
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
+              </div> :
+
+            <div className="text-center py-8 text-muted-foreground">
                 暂无数据
               </div>
-            )}
+            }
           </DialogBody>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowDetailDialog(false)}
-            >
+              onClick={() => setShowDetailDialog(false)}>
+
               关闭
             </Button>
-            {detailData && selectedWorkOrder && (
-              <>
+            {detailData && selectedWorkOrder &&
+            <>
                 <Button
-                  variant="outline"
-                  onClick={() => handleCheckKit(selectedWorkOrder.id)}
-                  disabled={actionLoading}
-                >
+                variant="outline"
+                onClick={() => handleCheckKit(selectedWorkOrder.id)}
+                disabled={actionLoading}>
+
                   <RefreshCw className="h-4 w-4 mr-2" />
                   重新检查
                 </Button>
-                {detailData.kit_data?.kit_status === "complete" && (
-                  <Button
-                    onClick={() => handleConfirmStart(selectedWorkOrder.id)}
-                    disabled={actionLoading}
-                  >
+                {detailData.kit_data?.kit_status === "complete" &&
+              <Button
+                onClick={() => handleConfirmStart(selectedWorkOrder.id)}
+                disabled={actionLoading}>
+
                     <Play className="h-4 w-4 mr-2" />
                     确认开工
                   </Button>
-                )}
+              }
               </>
-            )}
+            }
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }

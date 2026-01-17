@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState as _useState } from "react";
 import { motion } from "framer-motion";
 import { Crown, CheckCircle2, Clock, XCircle } from "lucide-react";
 import { PageHeader } from "../components/layout";
@@ -6,10 +6,10 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Badge } from "../components/ui/badge";
-import { fadeIn, staggerContainer } from "../lib/animations";
+import { fadeIn, staggerContainer as _staggerContainer } from "../lib/animations";
 
 export default function KeyDecisions() {
   return (
@@ -25,6 +25,6 @@ export default function KeyDecisions() {
           </Card>
         </motion.div>
       </div>
-    </div>
-  );
+    </div>);
+
 }

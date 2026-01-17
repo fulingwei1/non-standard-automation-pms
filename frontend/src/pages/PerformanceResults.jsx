@@ -19,15 +19,15 @@ import {
   ChevronRight,
   CheckCircle,
   AlertCircle,
-  Loader2,
-} from "lucide-react";
+  Loader2 } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
@@ -35,8 +35,8 @@ import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger,
-} from "../components/ui/tabs";
+  TabsTrigger } from
+"../components/ui/tabs";
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { performanceApi } from "../services/api";
@@ -49,7 +49,7 @@ const getLevelColor = (level) => {
     EXCELLENT: "emerald",
     GOOD: "blue",
     QUALIFIED: "amber",
-    NEEDS_IMPROVEMENT: "red",
+    NEEDS_IMPROVEMENT: "red"
   };
   return colors[level] || "slate";
 };
@@ -68,13 +68,13 @@ const emptyCurrentResult = {
   level: "B",
   totalScore: 0,
   indicators: [],
-  feedback: "",
+  feedback: ""
 };
 
 export default function PerformanceResults() {
-  const [selectedPeriod, setSelectedPeriod] = useState("current");
+  const [_selectedPeriod, _setSelectedPeriod] = useState("current");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [_error, setError] = useState(null);
   const [currentResult, setCurrentResult] = useState(emptyCurrentResult);
   const [historyResults, setHistoryResults] = useState([]);
 
@@ -91,7 +91,7 @@ export default function PerformanceResults() {
           if (perfData.current_result) {
             setCurrentResult({
               ...emptyCurrentResult,
-              ...perfData.current_result,
+              ...perfData.current_result
             });
           }
           if (perfData.history?.length > 0) {
@@ -115,13 +115,13 @@ export default function PerformanceResults() {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       <PageHeader
         title="绩效结果查看"
         description="查看个人绩效详情和历史记录"
         actions={
-          <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3">
             <Button variant="outline" className="flex items-center gap-2">
               <Download className="w-4 h-4" />
               导出报告
@@ -131,33 +131,33 @@ export default function PerformanceResults() {
               申诉
             </Button>
           </div>
-        }
-      />
+        } />
+
 
       {/* Current Result Summary */}
       <motion.div variants={fadeIn}>
         <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
           <CardContent className="pt-6">
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
+            {loading ?
+            <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
-              </div>
-            ) : (
-              <div className="flex items-start justify-between gap-6">
+              </div> :
+
+            <div className="flex items-start justify-between gap-6">
                 <div className="flex items-start gap-4">
                   <div
-                    className={cn(
-                      "w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold",
-                      `bg-${levelColor}-500/20 text-${levelColor}-400 border-2 border-${levelColor}-500/50`,
-                    )}
-                  >
-                    {currentResult.level === "EXCELLENT"
-                      ? "A"
-                      : currentResult.level === "GOOD"
-                        ? "B"
-                        : currentResult.level === "QUALIFIED"
-                          ? "C"
-                          : "D"}
+                  className={cn(
+                    "w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold",
+                    `bg-${levelColor}-500/20 text-${levelColor}-400 border-2 border-${levelColor}-500/50`
+                  )}>
+
+                    {currentResult.level === "EXCELLENT" ?
+                  "A" :
+                  currentResult.level === "GOOD" ?
+                  "B" :
+                  currentResult.level === "QUALIFIED" ?
+                  "C" :
+                  "D"}
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold text-white mb-2">
@@ -184,22 +184,22 @@ export default function PerformanceResults() {
                   <div className="text-center">
                     <p className="text-sm text-slate-400 mb-1">综合得分</p>
                     <p
-                      className={cn(
-                        "text-4xl font-bold",
-                        `text-${levelColor}-400`,
-                      )}
-                    >
+                    className={cn(
+                      "text-4xl font-bold",
+                      `text-${levelColor}-400`
+                    )}>
+
                       {currentResult.totalScore}
                     </p>
                   </div>
                   <div className="text-center">
                     <p className="text-sm text-slate-400 mb-1">绩效等级</p>
                     <Badge
-                      className={cn(
-                        "text-base px-3 py-1",
-                        `bg-${levelColor}-500/20 text-${levelColor}-400 border-${levelColor}-500/50`,
-                      )}
-                    >
+                    className={cn(
+                      "text-base px-3 py-1",
+                      `bg-${levelColor}-500/20 text-${levelColor}-400 border-${levelColor}-500/50`
+                    )}>
+
                       {currentResult.levelName}
                     </Badge>
                   </div>
@@ -217,7 +217,7 @@ export default function PerformanceResults() {
                   </div>
                 </div>
               </div>
-            )}
+            }
           </CardContent>
         </Card>
       </motion.div>
@@ -249,30 +249,30 @@ export default function PerformanceResults() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {loading ? (
-                <div className="flex items-center justify-center py-12">
+              {loading ?
+              <div className="flex items-center justify-center py-12">
                   <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {currentResult.indicators.map((indicator, index) => (
-                    <motion.div
-                      key={index}
-                      variants={fadeIn}
-                      className="p-4 rounded-lg bg-slate-800/40 border border-slate-700/50"
-                    >
+                </div> :
+
+              <div className="space-y-4">
+                  {currentResult.indicators.map((indicator, index) =>
+                <motion.div
+                  key={index}
+                  variants={fadeIn}
+                  className="p-4 rounded-lg bg-slate-800/40 border border-slate-700/50">
+
                       <div className="flex items-start justify-between gap-4 mb-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             <h4 className="font-semibold text-white">
                               {indicator.name}
                             </h4>
-                            {indicator.trend === "up" && (
-                              <TrendingUp className="w-4 h-4 text-emerald-400" />
-                            )}
-                            {indicator.trend === "down" && (
-                              <TrendingDown className="w-4 h-4 text-red-400" />
-                            )}
+                            {indicator.trend === "up" &&
+                        <TrendingUp className="w-4 h-4 text-emerald-400" />
+                        }
+                            {indicator.trend === "down" &&
+                        <TrendingDown className="w-4 h-4 text-red-400" />
+                        }
                           </div>
                           <div className="flex items-center gap-6 text-sm">
                             <div>
@@ -285,14 +285,14 @@ export default function PerformanceResults() {
                             <div>
                               <span className="text-slate-400">实际值: </span>
                               <span
-                                className={cn(
-                                  "font-semibold",
-                                  getScoreColor(
-                                    indicator.actual,
-                                    indicator.target,
-                                  ),
-                                )}
-                              >
+                            className={cn(
+                              "font-semibold",
+                              getScoreColor(
+                                indicator.actual,
+                                indicator.target
+                              )
+                            )}>
+
                                 {indicator.actual}
                                 {indicator.unit}
                               </span>
@@ -300,18 +300,18 @@ export default function PerformanceResults() {
                             <div>
                               <span className="text-slate-400">完成率: </span>
                               <span
-                                className={cn(
-                                  "font-semibold",
-                                  getScoreColor(
-                                    indicator.actual,
-                                    indicator.target,
-                                  ),
-                                )}
-                              >
+                            className={cn(
+                              "font-semibold",
+                              getScoreColor(
+                                indicator.actual,
+                                indicator.target
+                              )
+                            )}>
+
                                 {(
-                                  (indicator.actual / indicator.target) *
-                                  100
-                                ).toFixed(1)}
+                            indicator.actual / indicator.target *
+                            100).
+                            toFixed(1)}
                                 %
                               </span>
                             </div>
@@ -328,13 +328,13 @@ export default function PerformanceResults() {
                         </div>
                       </div>
                       <Progress
-                        value={(indicator.score / indicator.weight) * 100}
-                        className="h-2 bg-slate-700/50"
-                      />
+                    value={indicator.score / indicator.weight * 100}
+                    className="h-2 bg-slate-700/50" />
+
                     </motion.div>
-                  ))}
+                )}
                 </div>
-              )}
+              }
             </CardContent>
           </Card>
         </TabsContent>
@@ -349,33 +349,33 @@ export default function PerformanceResults() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {loading ? (
-                <div className="flex items-center justify-center py-12">
+              {loading ?
+              <div className="flex items-center justify-center py-12">
                   <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {historyResults.map((result, index) => (
-                    <motion.div
-                      key={index}
-                      variants={fadeIn}
-                      className="p-4 rounded-lg bg-slate-800/40 border border-slate-700/50 hover:border-slate-600/80 transition-all cursor-pointer"
-                    >
+                </div> :
+
+              <div className="space-y-3">
+                  {historyResults.map((result, index) =>
+                <motion.div
+                  key={index}
+                  variants={fadeIn}
+                  className="p-4 rounded-lg bg-slate-800/40 border border-slate-700/50 hover:border-slate-600/80 transition-all cursor-pointer">
+
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <div
-                            className={cn(
-                              "w-12 h-12 rounded-lg flex items-center justify-center text-lg font-bold",
-                              `bg-${getLevelColor(result.level)}-500/20 text-${getLevelColor(result.level)}-400 border border-${getLevelColor(result.level)}-500/50`,
-                            )}
-                          >
-                            {result.level === "EXCELLENT"
-                              ? "A"
-                              : result.level === "GOOD"
-                                ? "B"
-                                : result.level === "QUALIFIED"
-                                  ? "C"
-                                  : "D"}
+                        className={cn(
+                          "w-12 h-12 rounded-lg flex items-center justify-center text-lg font-bold",
+                          `bg-${getLevelColor(result.level)}-500/20 text-${getLevelColor(result.level)}-400 border border-${getLevelColor(result.level)}-500/50`
+                        )}>
+
+                            {result.level === "EXCELLENT" ?
+                        "A" :
+                        result.level === "GOOD" ?
+                        "B" :
+                        result.level === "QUALIFIED" ?
+                        "C" :
+                        "D"}
                           </div>
                           <div>
                             <h4 className="font-semibold text-white mb-1">
@@ -391,30 +391,30 @@ export default function PerformanceResults() {
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
-                          {result.change !== 0 && (
-                            <div
-                              className={cn(
-                                "flex items-center gap-1 text-sm",
-                                result.change > 0
-                                  ? "text-emerald-400"
-                                  : "text-red-400",
-                              )}
-                            >
-                              {result.change > 0 ? (
-                                <TrendingUp className="w-4 h-4" />
-                              ) : (
-                                <TrendingDown className="w-4 h-4" />
-                              )}
+                          {result.change !== 0 &&
+                      <div
+                        className={cn(
+                          "flex items-center gap-1 text-sm",
+                          result.change > 0 ?
+                          "text-emerald-400" :
+                          "text-red-400"
+                        )}>
+
+                              {result.change > 0 ?
+                        <TrendingUp className="w-4 h-4" /> :
+
+                        <TrendingDown className="w-4 h-4" />
+                        }
                               <span>{Math.abs(result.change)}</span>
                             </div>
-                          )}
+                      }
                           <ChevronRight className="w-5 h-5 text-slate-400" />
                         </div>
                       </div>
                     </motion.div>
-                  ))}
+                )}
                 </div>
-              )}
+              }
             </CardContent>
           </Card>
         </TabsContent>
@@ -429,18 +429,18 @@ export default function PerformanceResults() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {loading ? (
-                <div className="flex items-center justify-center py-12">
+              {loading ?
+              <div className="flex items-center justify-center py-12">
                   <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {currentResult.comments.map((comment, index) => (
-                    <motion.div
-                      key={index}
-                      variants={fadeIn}
-                      className="p-4 rounded-lg bg-slate-800/40 border border-slate-700/50"
-                    >
+                </div> :
+
+              <div className="space-y-4">
+                  {currentResult.comments.map((comment, index) =>
+                <motion.div
+                  key={index}
+                  variants={fadeIn}
+                  className="p-4 rounded-lg bg-slate-800/40 border border-slate-700/50">
+
                       <div className="flex items-start gap-3 mb-3">
                         <CheckCircle className="w-5 h-5 text-emerald-400 mt-0.5" />
                         <div className="flex-1">
@@ -458,13 +458,13 @@ export default function PerformanceResults() {
                         </div>
                       </div>
                     </motion.div>
-                  ))}
+                )}
                 </div>
-              )}
+              }
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

@@ -5,15 +5,15 @@ import {
   Users,
   DollarSign,
   BarChart3,
-  AlertTriangle,
-} from "lucide-react";
+  AlertTriangle } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -22,22 +22,22 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger,
-} from "../components/ui/tabs";
+  TabsTrigger } from
+"../components/ui/tabs";
 import { presalesIntegrationApi } from "../services/api";
 import { fadeIn } from "../lib/animations";
 
 export default function PresalesIntegration() {
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [dashboardData, setDashboardData] = useState(null);
-  const [winRatePrediction, setWinRatePrediction] = useState(null);
+  const [_winRatePrediction, _setWinRatePrediction] = useState(null);
   const [resourceWaste, setResourceWaste] = useState(null);
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export default function PresalesIntegration() {
     }
   };
 
-  const handlePredictWinRate = async () => {
+  const _handlePredictWinRate = async () => {
     // 这里需要用户输入数据，简化处理
     setError("此功能需要输入线索评估数据");
   };
@@ -67,7 +67,7 @@ export default function PresalesIntegration() {
     try {
       setLoading(true);
       const response =
-        await presalesIntegrationApi.getResourceWasteAnalysis(period);
+      await presalesIntegrationApi.getResourceWasteAnalysis(period);
       const data = response.data?.data || response.data || response;
       setResourceWaste(data);
     } catch (err) {
@@ -83,20 +83,20 @@ export default function PresalesIntegration() {
       initial="hidden"
       animate="visible"
       variants={fadeIn}
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       <PageHeader title="售前系统集成" />
 
       {/* 错误提示 */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded">
+      {error &&
+      <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded">
           {error}
         </div>
-      )}
+      }
 
       {/* 仪表板概览 */}
-      {dashboardData && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {dashboardData &&
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -131,9 +131,9 @@ export default function PresalesIntegration() {
                 <div>
                   <p className="text-sm text-gray-600">整体中标率</p>
                   <p className="text-2xl font-bold">
-                    {dashboardData.overall_win_rate
-                      ? `${(dashboardData.overall_win_rate * 100).toFixed(1)}%`
-                      : "0%"}
+                    {dashboardData.overall_win_rate ?
+                  `${(dashboardData.overall_win_rate * 100).toFixed(1)}%` :
+                  "0%"}
                   </p>
                 </div>
                 <DollarSign className="h-8 w-8 text-purple-500" />
@@ -155,7 +155,7 @@ export default function PresalesIntegration() {
             </CardContent>
           </Card>
         </div>
-      )}
+      }
 
       <Tabs defaultValue="dashboard" className="space-y-4">
         <TabsList>
@@ -166,15 +166,15 @@ export default function PresalesIntegration() {
 
         {/* 仪表板 */}
         <TabsContent value="dashboard">
-          {dashboardData && (
-            <Card>
+          {dashboardData &&
+          <Card>
               <CardHeader>
                 <CardTitle>月度统计</CardTitle>
               </CardHeader>
               <CardContent>
                 {dashboardData.monthly_stats &&
-                dashboardData.monthly_stats.length > 0 ? (
-                  <div className="overflow-x-auto">
+              dashboardData.monthly_stats.length > 0 ?
+              <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
                         <tr className="border-b">
@@ -186,8 +186,8 @@ export default function PresalesIntegration() {
                         </tr>
                       </thead>
                       <tbody>
-                        {dashboardData.monthly_stats.map((stat, idx) => (
-                          <tr key={idx} className="border-b hover:bg-gray-50">
+                        {dashboardData.monthly_stats.map((stat, idx) =>
+                    <tr key={idx} className="border-b hover:bg-gray-50">
                             <td className="p-2">{stat.month}</td>
                             <td className="p-2">{stat.total}</td>
                             <td className="p-2 text-green-600">{stat.won}</td>
@@ -196,16 +196,16 @@ export default function PresalesIntegration() {
                               {(stat.win_rate * 100).toFixed(1)}%
                             </td>
                           </tr>
-                        ))}
+                    )}
                       </tbody>
                     </table>
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">暂无数据</div>
-                )}
+                  </div> :
+
+              <div className="text-center py-8 text-gray-500">暂无数据</div>
+              }
               </CardContent>
             </Card>
-          )}
+          }
         </TabsContent>
 
         {/* 中标率预测 */}
@@ -236,22 +236,22 @@ export default function PresalesIntegration() {
                     type="text"
                     placeholder="YYYY-MM 或 YYYY"
                     id="waste-period"
-                    className="max-w-xs"
-                  />
+                    className="max-w-xs" />
+
                   <Button
                     onClick={() => {
                       const period =
-                        document.getElementById("waste-period").value;
+                      document.getElementById("waste-period").value;
                       if (period) handleLoadResourceWaste(period);
-                    }}
-                  >
+                    }}>
+
                     查询
                   </Button>
                 </div>
               </div>
 
-              {resourceWaste && (
-                <div className="space-y-4 mt-4">
+              {resourceWaste &&
+              <div className="space-y-4 mt-4">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
                       <div className="text-sm text-gray-600">总线索数</div>
@@ -274,9 +274,9 @@ export default function PresalesIntegration() {
                     <div>
                       <div className="text-sm text-gray-600">浪费率</div>
                       <div className="text-xl font-bold text-orange-600">
-                        {resourceWaste.waste_rate
-                          ? `${(resourceWaste.waste_rate * 100).toFixed(1)}%`
-                          : "0%"}
+                        {resourceWaste.waste_rate ?
+                      `${(resourceWaste.waste_rate * 100).toFixed(1)}%` :
+                      "0%"}
                       </div>
                     </div>
                   </div>
@@ -291,11 +291,11 @@ export default function PresalesIntegration() {
                     </div>
                   </div>
                 </div>
-              )}
+              }
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

@@ -12,31 +12,31 @@ import {
   Building2,
   Calendar,
   Medal,
-  Loader2,
-} from "lucide-react";
+  Loader2 } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger,
-} from "../components/ui/tabs";
+  TabsTrigger } from
+"../components/ui/tabs";
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
-import { performanceApi, pmoApi } from "../services/api";
+import { performanceApi, pmoApi as _pmoApi } from "../services/api";
 
 export default function PerformanceRanking() {
-  const [selectedPeriod, setSelectedPeriod] = useState("current");
+  const [_selectedPeriod, _setSelectedPeriod] = useState("current");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [_error, setError] = useState(null);
   const [employeeRanking, setEmployeeRanking] = useState([]);
   const [departmentRanking, setDepartmentRanking] = useState([]);
 
@@ -73,8 +73,8 @@ export default function PerformanceRanking() {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       <PageHeader title="绩效排行榜" description="员工绩效排名、部门绩效对比" />
 
       <Tabs defaultValue="employee" className="w-full">
@@ -98,23 +98,23 @@ export default function PerformanceRanking() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {loading ? (
-                <div className="flex items-center justify-center py-12">
+              {loading ?
+              <div className="flex items-center justify-center py-12">
                   <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {employeeRanking.map((employee) => (
-                    <motion.div
-                      key={employee.rank}
-                      variants={fadeIn}
-                      className={cn(
-                        "flex items-center justify-between p-4 rounded-lg border transition-all",
-                        employee.rank <= 3
-                          ? "bg-gradient-to-r from-amber-500/10 to-transparent border-amber-500/30"
-                          : "bg-slate-800/40 border-slate-700/50 hover:border-slate-600/80",
-                      )}
-                    >
+                </div> :
+
+              <div className="space-y-3">
+                  {employeeRanking.map((employee) =>
+                <motion.div
+                  key={employee.rank}
+                  variants={fadeIn}
+                  className={cn(
+                    "flex items-center justify-between p-4 rounded-lg border transition-all",
+                    employee.rank <= 3 ?
+                    "bg-gradient-to-r from-amber-500/10 to-transparent border-amber-500/30" :
+                    "bg-slate-800/40 border-slate-700/50 hover:border-slate-600/80"
+                  )}>
+
                       <div className="flex items-center gap-4">
                         <div className="w-12 flex items-center justify-center">
                           {getRankBadge(employee.rank)}
@@ -135,30 +135,30 @@ export default function PerformanceRanking() {
                           </div>
                           <div className="text-xs text-slate-400">绩效分数</div>
                         </div>
-                        {employee.change !== 0 && (
-                          <div className="w-16 flex items-center justify-center">
-                            {employee.change > 0 ? (
-                              <div className="flex items-center gap-1 text-emerald-400">
+                        {employee.change !== 0 &&
+                    <div className="w-16 flex items-center justify-center">
+                            {employee.change > 0 ?
+                      <div className="flex items-center gap-1 text-emerald-400">
                                 <TrendingUp className="w-4 h-4" />
                                 <span className="text-sm">
                                   +{employee.change}
                                 </span>
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-1 text-red-400">
+                              </div> :
+
+                      <div className="flex items-center gap-1 text-red-400">
                                 <TrendingDown className="w-4 h-4" />
                                 <span className="text-sm">
                                   {employee.change}
                                 </span>
                               </div>
-                            )}
+                      }
                           </div>
-                        )}
+                    }
                       </div>
                     </motion.div>
-                  ))}
+                )}
                 </div>
-              )}
+              }
             </CardContent>
           </Card>
         </TabsContent>
@@ -172,23 +172,23 @@ export default function PerformanceRanking() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {loading ? (
-                <div className="flex items-center justify-center py-12">
+              {loading ?
+              <div className="flex items-center justify-center py-12">
                   <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {departmentRanking.map((dept) => (
-                    <motion.div
-                      key={dept.rank}
-                      variants={fadeIn}
-                      className={cn(
-                        "flex items-center justify-between p-4 rounded-lg border transition-all",
-                        dept.rank === 1
-                          ? "bg-gradient-to-r from-amber-500/10 to-transparent border-amber-500/30"
-                          : "bg-slate-800/40 border-slate-700/50 hover:border-slate-600/80",
-                      )}
-                    >
+                </div> :
+
+              <div className="space-y-3">
+                  {departmentRanking.map((dept) =>
+                <motion.div
+                  key={dept.rank}
+                  variants={fadeIn}
+                  className={cn(
+                    "flex items-center justify-between p-4 rounded-lg border transition-all",
+                    dept.rank === 1 ?
+                    "bg-gradient-to-r from-amber-500/10 to-transparent border-amber-500/30" :
+                    "bg-slate-800/40 border-slate-700/50 hover:border-slate-600/80"
+                  )}>
+
                       <div className="flex items-center gap-4">
                         <div className="w-12 flex items-center justify-center">
                           {getRankBadge(dept.rank)}
@@ -207,13 +207,13 @@ export default function PerformanceRanking() {
                         <div className="text-xs text-slate-400">平均分数</div>
                       </div>
                     </motion.div>
-                  ))}
+                )}
                 </div>
-              )}
+              }
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

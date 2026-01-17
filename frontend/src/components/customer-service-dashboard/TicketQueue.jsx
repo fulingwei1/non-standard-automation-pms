@@ -12,16 +12,16 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../ui/select";
+  SelectValue } from
+"../ui/select";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "../ui/table";
+  TableRow } from
+"../ui/table";
 import {
   Search,
   Filter,
@@ -39,26 +39,26 @@ import {
   RefreshCw,
   Eye,
   Edit,
-  Trash2
-} from "lucide-react";
+  Trash2 } from
+"lucide-react";
 import {
   servicePriorityConfigs,
   serviceStatusConfigs,
   serviceTypeConfigs,
-  serviceChannelConfigs,
+  serviceChannelConfigs as _serviceChannelConfigs,
   filterTicketsByStatus,
   filterTicketsByPriority,
   filterTicketsByType,
-  filterTicketsByCustomer,
+  filterTicketsByCustomer as _filterTicketsByCustomer,
   sortByPriority,
-  sortByCreateTime
-} from "./customerServiceConstants";
+  sortByCreateTime } from
+"./customerServiceConstants";
 
 export function TicketQueue({
   tickets = [],
   onTicketClick,
   onTicketAssign,
-  onTicketUpdate,
+  onTicketUpdate: _onTicketUpdate,
   onTicketDelete,
   className = ""
 }) {
@@ -80,11 +80,11 @@ export function TicketQueue({
 
     // 搜索筛选
     if (searchTerm) {
-      filtered = filteredTickets.filter(ticket =>
-        ticket.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ticket.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ticket.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ticket.ticketId?.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filteredTickets.filter((ticket) =>
+      ticket.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.ticketId?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -136,9 +136,9 @@ export function TicketQueue({
   // 获取排序图标
   const getSortIcon = (key) => {
     if (sortConfig.key !== key) return <ArrowUpDown className="w-4 h-4" />;
-    return sortConfig.direction === "asc"
-      ? <ChevronUp className="w-4 h-4" />
-      : <ChevronDown className="w-4 h-4" />;
+    return sortConfig.direction === "asc" ?
+    <ChevronUp className="w-4 h-4" /> :
+    <ChevronDown className="w-4 h-4" />;
   };
 
   // 获取状态配置
@@ -182,8 +182,8 @@ export function TicketQueue({
                 placeholder="搜索工单标题、描述、客户..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+                className="pl-10" />
+
             </div>
           </div>
           <div className="flex gap-2">
@@ -193,11 +193,11 @@ export function TicketQueue({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">所有状态</SelectItem>
-                {Object.entries(serviceStatusConfigs).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
+                {Object.entries(serviceStatusConfigs).map(([key, config]) =>
+                <SelectItem key={key} value={key}>
                     {config.icon} {config.label}
-                  </SelectItem>
-                ))}
+                </SelectItem>
+                )}
               </SelectContent>
             </Select>
 
@@ -207,11 +207,11 @@ export function TicketQueue({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">所有优先级</SelectItem>
-                {Object.entries(servicePriorityConfigs).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
+                {Object.entries(servicePriorityConfigs).map(([key, config]) =>
+                <SelectItem key={key} value={key}>
                     {config.icon} {config.label}
-                  </SelectItem>
-                ))}
+                </SelectItem>
+                )}
               </SelectContent>
             </Select>
 
@@ -221,11 +221,11 @@ export function TicketQueue({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">所有类型</SelectItem>
-                {Object.entries(serviceTypeConfigs).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
+                {Object.entries(serviceTypeConfigs).map(([key, config]) =>
+                <SelectItem key={key} value={key}>
                     {config.icon} {config.label}
-                  </SelectItem>
-                ))}
+                </SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -239,8 +239,8 @@ export function TicketQueue({
               <TableRow>
                 <TableHead
                   className="w-[120px] cursor-pointer"
-                  onClick={() => handleSort("priority")}
-                >
+                  onClick={() => handleSort("priority")}>
+
                   <div className="flex items-center gap-1">
                     优先级 {getSortIcon("priority")}
                   </div>
@@ -251,8 +251,8 @@ export function TicketQueue({
                 <TableHead className="w-[100px]">类型</TableHead>
                 <TableHead
                   className="w-[120px] cursor-pointer"
-                  onClick={() => handleSort("createTime")}
-                >
+                  onClick={() => handleSort("createTime")}>
+
                   <div className="flex items-center gap-1">
                     创建时间 {getSortIcon("createTime")}
                   </div>
@@ -271,13 +271,13 @@ export function TicketQueue({
                   <TableRow
                     key={ticket.id}
                     className="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800"
-                    onClick={() => onTicketClick?.(ticket)}
-                  >
+                    onClick={() => onTicketClick?.(ticket)}>
+
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Badge
-                          className={`${priorityConfig.bg} ${priorityConfig.textColor} border-0 px-2 py-1`}
-                        >
+                          className={`${priorityConfig.bg} ${priorityConfig.textColor} border-0 px-2 py-1`}>
+
                           {priorityConfig.icon}
                         </Badge>
                         <span className="text-sm text-slate-600 dark:text-slate-400">
@@ -305,8 +305,8 @@ export function TicketQueue({
                     </TableCell>
                     <TableCell>
                       <Badge
-                        className={`${statusConfig.color} ${statusConfig.textColor} border-0 px-2 py-1`}
-                      >
+                        className={`${statusConfig.color} ${statusConfig.textColor} border-0 px-2 py-1`}>
+
                         {statusConfig.icon} {statusConfig.label}
                       </Badge>
                     </TableCell>
@@ -327,20 +327,20 @@ export function TicketQueue({
                       </div>
                     </TableCell>
                     <TableCell>
-                      {ticket.assignee ? (
-                        <div className="flex items-center gap-2">
+                      {ticket.assignee ?
+                      <div className="flex items-center gap-2">
                           <div className="w-6 h-6 bg-slate-200 dark:bg-slate-700 rounded-full flex items-center justify-center">
                             <User className="w-3 h-3 text-slate-600 dark:text-slate-400" />
                           </div>
                           <span className="text-sm text-slate-600 dark:text-slate-400 truncate">
                             {ticket.assignee}
                           </span>
-                        </div>
-                      ) : (
-                        <Badge variant="outline" className="text-xs">
+                      </div> :
+
+                      <Badge variant="outline" className="text-xs">
                           未分配
-                        </Badge>
-                      )}
+                      </Badge>
+                      }
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
@@ -350,80 +350,80 @@ export function TicketQueue({
                           onClick={(e) => {
                             e.stopPropagation();
                             onTicketClick?.(ticket);
-                          }}
-                        >
+                          }}>
+
                           <Eye className="w-4 h-4" />
                         </Button>
-                        {onTicketAssign && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onTicketAssign(ticket);
-                            }}
-                          >
+                        {onTicketAssign &&
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onTicketAssign(ticket);
+                          }}>
+
                             <Edit className="w-4 h-4" />
-                          </Button>
-                        )}
-                        {onTicketDelete && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onTicketDelete(ticket);
-                            }}
-                          >
+                        </Button>
+                        }
+                        {onTicketDelete &&
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onTicketDelete(ticket);
+                          }}>
+
                             <Trash2 className="w-4 h-4 text-red-500" />
-                          </Button>
-                        )}
+                        </Button>
+                        }
                       </div>
                     </TableCell>
-                  </TableRow>
-                );
+                  </TableRow>);
+
               })}
             </TableBody>
           </Table>
         </div>
 
         {/* 分页 */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-4">
+        {totalPages > 1 &&
+        <div className="flex items-center justify-between mt-4">
             <div className="text-sm text-slate-500 dark:text-slate-400">
               显示 {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredTickets.length)} 条，
               共 {filteredTickets.length} 条
             </div>
             <div className="flex gap-2">
               <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-              >
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}>
+
                 上一页
               </Button>
               <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
-              >
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}>
+
                 下一页
               </Button>
             </div>
-          </div>
-        )}
+        </div>
+        }
 
-        {filteredTickets.length === 0 && (
-          <div className="text-center py-8">
+        {filteredTickets.length === 0 &&
+        <div className="text-center py-8">
             <MessageSquare className="w-12 h-12 text-slate-300 mx-auto mb-4" />
             <p className="text-slate-500 dark:text-slate-400">
               没有找到符合条件的工单
             </p>
-          </div>
-        )}
+        </div>
+        }
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 }

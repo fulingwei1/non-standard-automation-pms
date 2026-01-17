@@ -12,32 +12,32 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter
-} from "../../components/ui/dialog";
+  DialogFooter } from
+"../../components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
-} from "../../components/ui/select";
+  SelectValue } from
+"../../components/ui/select";
 import {
-  Checkbox
-} from "../../components/ui/checkbox";
+  Checkbox } from
+"../../components/ui/checkbox";
 import {
-  Label
-} from "../../components/ui/label";
+  Label } from
+"../../components/ui/label";
 import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger
-} from "../../components/ui/tabs";
+  TabsTrigger } from
+"../../components/ui/tabs";
 import {
   Alert,
   AlertDescription,
-  AlertTitle
-} from "../../components/ui/alert";
+  AlertTitle } from
+"../../components/ui/alert";
 import {
   Shield,
   Users,
@@ -52,14 +52,14 @@ import {
   Save,
   RotateCcw,
   Eye,
-  EyeOff
-} from "lucide-react";
+  EyeOff } from
+"lucide-react";
 import {
   userRoleConfigs,
-  permissionAuditConfigs,
-  getUserRoleConfig,
-  formatUserRole
-} from "./userManagementConstants";
+  permissionAuditConfigs as _permissionAuditConfigs,
+  getUserRoleConfig as _getUserRoleConfig,
+  formatUserRole as _formatUserRole } from
+"./userManagementConstants";
 import { cn } from "../../lib/utils";
 
 export function RoleAssignment({
@@ -80,13 +80,13 @@ export function RoleAssignment({
   // 初始化选中状态
   useEffect(() => {
     if (user?.roles) {
-      const roleIds = user.roles.map(ur => ur.role_id);
+      const roleIds = user.roles.map((ur) => ur.role_id);
       setSelectedRoles(roleIds);
 
       // 初始化权限选中状态
       const permissions = {};
-      user.roles.forEach(ur => {
-        ur.role.permissions.forEach(rp => {
+      user.roles.forEach((ur) => {
+        ur.role.permissions.forEach((rp) => {
           permissions[rp.permission_id] = true;
         });
       });
@@ -99,13 +99,13 @@ export function RoleAssignment({
     if (checked) {
       setSelectedRoles([...selectedRoles, roleId]);
     } else {
-      setSelectedRoles(selectedRoles.filter(id => id !== roleId));
+      setSelectedRoles(selectedRoles.filter((id) => id !== roleId));
     }
   };
 
   // 权限变化处理
   const handlePermissionChange = (permissionId, checked) => {
-    setSelectedPermissions(prev => ({
+    setSelectedPermissions((prev) => ({
       ...prev,
       [permissionId]: checked
     }));
@@ -113,15 +113,15 @@ export function RoleAssignment({
 
   // 权限详情切换
   const togglePermissionDetails = (permissionId) => {
-    setShowPermissionDetails(prev => ({
+    setShowPermissionDetails((prev) => ({
       ...prev,
       [permissionId]: !prev[permissionId]
     }));
   };
 
   // 获取角色包含的权限
-  const getRolePermissions = (roleId) => {
-    const role = availableRoles.find(r => r.id === roleId);
+  const _getRolePermissions = (roleId) => {
+    const role = availableRoles.find((r) => r.id === roleId);
     return role?.permissions || [];
   };
 
@@ -139,9 +139,9 @@ export function RoleAssignment({
       const assignmentData = {
         userId: user.id,
         roleIds: selectedRoles,
-        permissions: Object.entries(selectedPermissions)
-          .filter(([_, selected]) => selected)
-          .map(([permissionId]) => parseInt(permissionId)),
+        permissions: Object.entries(selectedPermissions).
+        filter(([_, selected]) => selected).
+        map(([permissionId]) => parseInt(permissionId)),
         dataScope
       };
 
@@ -160,35 +160,35 @@ export function RoleAssignment({
   };
 
   // 渲染角色选择
-  const renderRoleSelection = () => (
-    <div className="space-y-3">
+  const renderRoleSelection = () =>
+  <div className="space-y-3">
       <Label className="text-sm font-medium">选择角色</Label>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-64 overflow-y-auto">
-        {availableRoles.map(role => {
-          const isSelected = selectedRoles.includes(role.id);
-          const roleConfig = userRoleConfigs[role.role_code];
+        {availableRoles.map((role) => {
+        const isSelected = selectedRoles.includes(role.id);
+        const roleConfig = userRoleConfigs[role.role_code];
 
-          return (
-            <div
-              key={role.id}
-              className={cn(
-                "border rounded-lg p-3 cursor-pointer transition-colors",
-                isSelected ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
-              )}
-              onClick={() => handleRoleChange(role.id, !isSelected)}
-            >
+        return (
+          <div
+            key={role.id}
+            className={cn(
+              "border rounded-lg p-3 cursor-pointer transition-colors",
+              isSelected ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
+            )}
+            onClick={() => handleRoleChange(role.id, !isSelected)}>
+
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <span>{roleConfig.icon}</span>
                     <span className="font-medium">{roleConfig.label}</span>
                     <Badge
-                      variant={isSelected ? "default" : "secondary"}
-                      className={cn(
-                        "text-xs",
-                        isSelected && roleConfig.color?.replace('bg-', 'bg-')
-                      )}
-                    >
+                    variant={isSelected ? "default" : "secondary"}
+                    className={cn(
+                      "text-xs",
+                      isSelected && roleConfig.color?.replace('bg-', 'bg-')
+                    )}>
+
                       {role.users?.length || 0} 用户
                     </Badge>
                   </div>
@@ -201,23 +201,23 @@ export function RoleAssignment({
                   </div>
                 </div>
                 <Checkbox
-                  checked={isSelected}
-                  onChange={() => handleRoleChange(role.id, !isSelected)}
-                  className="mt-1"
-                />
+                checked={isSelected}
+                onChange={() => handleRoleChange(role.id, !isSelected)}
+                className="mt-1" />
+
               </div>
-            </div>
-          );
-        })}
+            </div>);
+
+      })}
       </div>
-    </div>
-  );
+    </div>;
+
 
   // 渲染权限选择
   const renderPermissionSelection = () => {
     // 按模块分组权限
     const permissionsByModule = {};
-    availablePermissions.forEach(permission => {
+    availablePermissions.forEach((permission) => {
       if (!permissionsByModule[permission.module]) {
         permissionsByModule[permission.module] = [];
       }
@@ -228,8 +228,8 @@ export function RoleAssignment({
       <div className="space-y-4">
         <Label className="text-sm font-medium">选择权限</Label>
         <div className="max-h-96 overflow-y-auto space-y-4">
-          {Object.entries(permissionsByModule).map(([module, permissions]) => (
-            <div key={module} className="border rounded-lg p-3">
+          {Object.entries(permissionsByModule).map(([module, permissions]) =>
+          <div key={module} className="border rounded-lg p-3">
               <div className="flex items-center gap-2 mb-3">
                 <Shield className="h-4 w-4" />
                 <span className="font-medium text-sm">{module}</span>
@@ -238,51 +238,51 @@ export function RoleAssignment({
                 </span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {permissions.map(permission => (
-                  <div key={permission.id} className="flex items-start gap-2">
+                {permissions.map((permission) =>
+              <div key={permission.id} className="flex items-start gap-2">
                     <Checkbox
-                      id={`permission-${permission.id}`}
-                      checked={isPermissionSelected(permission.id)}
-                      onCheckedChange={(checked) =>
-                        handlePermissionChange(permission.id, checked)
-                      }
-                    />
+                  id={`permission-${permission.id}`}
+                  checked={isPermissionSelected(permission.id)}
+                  onCheckedChange={(checked) =>
+                  handlePermissionChange(permission.id, checked)
+                  } />
+
                     <div className="flex-1">
                       <Label
-                        htmlFor={`permission-${permission.id}`}
-                        className="text-sm cursor-pointer"
-                      >
+                    htmlFor={`permission-${permission.id}`}
+                    className="text-sm cursor-pointer">
+
                         {permission.permission_name}
                       </Label>
                       <p className="text-xs text-muted-foreground mt-1">
                         {permission.description || "暂无描述"}
                       </p>
                       <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 p-1 mt-1"
-                        onClick={() => togglePermissionDetails(permission.id)}
-                      >
-                        {showPermissionDetails[permission.id] ? (
-                          <EyeOff className="h-3 w-3" />
-                        ) : (
-                          <Eye className="h-3 w-3" />
-                        )}
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 p-1 mt-1"
+                    onClick={() => togglePermissionDetails(permission.id)}>
+
+                        {showPermissionDetails[permission.id] ?
+                    <EyeOff className="h-3 w-3" /> :
+
+                    <Eye className="h-3 w-3" />
+                    }
                       </Button>
                     </div>
                   </div>
-                ))}
+              )}
               </div>
             </div>
-          ))}
+          )}
         </div>
-      </div>
-    );
+      </div>);
+
   };
 
   // 渲染数据权限
-  const renderDataScope = () => (
-    <div className="space-y-3">
+  const renderDataScope = () =>
+  <div className="space-y-3">
       <Label className="text-sm font-medium">数据权限范围</Label>
       <Select value={dataScope} onValueChange={setDataScope}>
         <SelectTrigger>
@@ -328,14 +328,14 @@ export function RoleAssignment({
           数据权限控制用户能查看和操作的数据范围。超级管理员拥有全部数据权限。
         </AlertDescription>
       </Alert>
-    </div>
-  );
+    </div>;
+
 
   // 渲染权限冲突提示
   const renderPermissionConflicts = () => {
     const conflicts = [];
-    const hasSuperAdmin = selectedRoles.some(roleId => {
-      const role = availableRoles.find(r => r.id === roleId);
+    const hasSuperAdmin = selectedRoles.some((roleId) => {
+      const role = availableRoles.find((r) => r.id === roleId);
       return role?.role_code === "SUPER_ADMIN";
     });
 
@@ -353,22 +353,22 @@ export function RoleAssignment({
       });
     }
 
-    return conflicts.length > 0 ? (
-      <div className="space-y-2">
-        {conflicts.map((conflict, index) => (
-          <Alert key={index} variant={conflict.type === "warning" ? "default" : "destructive"}>
-            {conflict.type === "warning" ? (
-              <AlertTriangle className="h-4 w-4" />
-            ) : (
-              <XCircle className="h-4 w-4" />
-            )}
+    return conflicts.length > 0 ?
+    <div className="space-y-2">
+        {conflicts.map((conflict, index) =>
+      <Alert key={index} variant={conflict.type === "warning" ? "default" : "destructive"}>
+            {conflict.type === "warning" ?
+        <AlertTriangle className="h-4 w-4" /> :
+
+        <XCircle className="h-4 w-4" />
+        }
             <AlertDescription className="text-xs">
               {conflict.message}
             </AlertDescription>
           </Alert>
-        ))}
-      </div>
-    ) : null;
+      )}
+      </div> :
+    null;
   };
 
   // 计算总权限数
@@ -423,21 +423,21 @@ export function RoleAssignment({
               重置
             </Button>
             <Button onClick={handleSave} disabled={isSaving}>
-              {isSaving ? (
-                <>
+              {isSaving ?
+              <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                   保存中...
-                </>
-              ) : (
-                <>
+                </> :
+
+              <>
                   <Save className="mr-2 h-4 w-4" />
                   保存分配
                 </>
-              )}
+              }
             </Button>
           </div>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>);
+
 }

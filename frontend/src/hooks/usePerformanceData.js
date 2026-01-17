@@ -27,7 +27,6 @@ export const usePerformanceData = (fallbackData) => {
 
   useEffect(() => {
     loadPerformanceData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // fallbackData 通常是常量，不需要作为依赖
 
   return {

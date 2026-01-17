@@ -38,7 +38,6 @@ const MonthlySummary = () => {
   // 页面加载时加载历史记录
   useEffect(() => {
     loadHistory();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 提交处理（需要 navigate）

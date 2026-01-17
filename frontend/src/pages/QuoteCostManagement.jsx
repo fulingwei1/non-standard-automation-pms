@@ -27,8 +27,8 @@ import {
   Filter,
   Download,
   Send,
-  History,
-} from "lucide-react";
+  History } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -63,13 +63,16 @@ import {
   TableHeader,
   TableRow,
   Alert,
-  AlertDescription,
-} from "../components/ui";
+  AlertDescription } from
+"../components/ui";
 import { cn, formatCurrency, formatDate } from "../lib/utils";
-import { fadeIn, staggerContainer } from "../lib/animations";
+import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
 import { quoteApi, salesTemplateApi } from "../services/api";
 
 export default function QuoteCostManagement() {
+  const [costSuggestions, setCostSuggestions] = useState(null);
+  const [editedSuggestions, setEditedSuggestions] = useState({});
+  const [showSuggestionsDialog, setShowSuggestionsDialog] = useState(false);
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -83,13 +86,13 @@ export default function QuoteCostManagement() {
   // Dialog states
   const [showTemplateDialog, setShowTemplateDialog] = useState(false);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
-  const [showHistoryDialog, setShowHistoryDialog] = useState(false);
+  const [_showHistoryDialog, _setShowHistoryDialog] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
 
   // Form states
   const [approvalData, setApprovalData] = useState({
     approval_level: 1,
-    comment: "",
+    comment: ""
   });
 
   // Group items by category
@@ -109,33 +112,33 @@ export default function QuoteCostManagement() {
   const totals = useMemo(() => {
     const totalPrice = items.reduce(
       (sum, item) =>
-        sum + parseFloat(item.unit_price || 0) * parseFloat(item.qty || 0),
-      0,
+      sum + parseFloat(item.unit_price || 0) * parseFloat(item.qty || 0),
+      0
     );
     const totalCost = items.reduce(
       (sum, item) =>
-        sum + parseFloat(item.cost || 0) * parseFloat(item.qty || 0),
-      0,
+      sum + parseFloat(item.cost || 0) * parseFloat(item.qty || 0),
+      0
     );
     const grossMargin =
-      totalPrice > 0 ? ((totalPrice - totalCost) / totalPrice) * 100 : 0;
+    totalPrice > 0 ? (totalPrice - totalCost) / totalPrice * 100 : 0;
     return { totalPrice, totalCost, grossMargin };
   }, [items]);
 
   // Margin status
   const marginStatus = useMemo(() => {
     if (totals.grossMargin >= 20)
-      return {
-        label: "正常",
-        color: "bg-green-500",
-        textColor: "text-green-400",
-      };
+    return {
+      label: "正常",
+      color: "bg-green-500",
+      textColor: "text-green-400"
+    };
     if (totals.grossMargin >= 15)
-      return {
-        label: "警告",
-        color: "bg-amber-500",
-        textColor: "text-amber-400",
-      };
+    return {
+      label: "警告",
+      color: "bg-amber-500",
+      textColor: "text-amber-400"
+    };
     return { label: "风险", color: "bg-red-500", textColor: "text-red-400" };
   }, [totals.grossMargin]);
 
@@ -156,8 +159,8 @@ export default function QuoteCostManagement() {
         const versionsRes = await quoteApi.getVersions(id);
         const versions = versionsRes.data?.data || versionsRes.data || [];
         const currentVersion =
-          versions.find((v) => v.id === quoteData.current_version_id) ||
-          versions[0];
+        versions.find((v) => v.id === quoteData.current_version_id) ||
+        versions[0];
         setVersion(currentVersion);
 
         // Load items from separate API
@@ -165,7 +168,7 @@ export default function QuoteCostManagement() {
           const itemsRes = await quoteApi.getItems(id, currentVersion.id);
           const itemsList = itemsRes.data?.data || itemsRes.data || [];
           setItems(itemsList);
-        } catch (e) {
+        } catch (_e) {
           // Fallback to version.items if API not available
           if (currentVersion.items) {
             setItems(currentVersion.items);
@@ -194,10 +197,10 @@ export default function QuoteCostManagement() {
         const templatesRes = await salesTemplateApi.listCostTemplates({
           page: 1,
           page_size: 100,
-          is_active: true,
+          is_active: true
         });
         const templates =
-          templatesRes.data?.data?.items || templatesRes.data?.items || [];
+        templatesRes.data?.data?.items || templatesRes.data?.items || [];
         setCostTemplates(templates);
       } catch (e) {
         console.log("Cost templates not available:", e);
@@ -218,7 +221,7 @@ export default function QuoteCostManagement() {
         id,
         selectedTemplate.id,
         version?.id,
-        {},
+        {}
       );
       await loadData();
       setShowTemplateDialog(false);
@@ -262,7 +265,7 @@ export default function QuoteCostManagement() {
       setLoading(true);
       await quoteApi.submitCostApproval(id, {
         quote_version_id: version?.id,
-        ...approvalData,
+        ...approvalData
       });
       await loadData();
       setShowApprovalDialog(false);
@@ -278,8 +281,8 @@ export default function QuoteCostManagement() {
   const handleItemChange = (itemId, field, value) => {
     setItems(
       items.map((item) =>
-        item.id === itemId ? { ...item, [field]: value } : item,
-      ),
+      item.id === itemId ? { ...item, [field]: value } : item
+      )
     );
   };
 
@@ -304,7 +307,7 @@ export default function QuoteCostManagement() {
             specification: s.suggested_specification,
             unit: s.suggested_unit,
             lead_time_days: s.suggested_lead_time_days,
-            cost_category: s.suggested_cost_category,
+            cost_category: s.suggested_cost_category
           };
         });
         setEditedSuggestions(edited);
@@ -313,7 +316,7 @@ export default function QuoteCostManagement() {
     } catch (error) {
       console.error("获取成本建议失败:", error);
       alert(
-        "获取成本建议失败: " + (error.response?.data?.detail || error.message),
+        "获取成本建议失败: " + (error.response?.data?.detail || error.message)
       );
     } finally {
       setLoading(false);
@@ -333,20 +336,20 @@ export default function QuoteCostManagement() {
         suggestions: costSuggestions.suggestions.map((s) => ({
           item_id: s.item_id,
           cost:
-            editedSuggestions[s.item_id]?.cost ||
-            s.suggested_cost ||
-            s.current_cost,
+          editedSuggestions[s.item_id]?.cost ||
+          s.suggested_cost ||
+          s.current_cost,
           specification:
-            editedSuggestions[s.item_id]?.specification ||
-            s.suggested_specification,
+          editedSuggestions[s.item_id]?.specification ||
+          s.suggested_specification,
           unit: editedSuggestions[s.item_id]?.unit || s.suggested_unit,
           lead_time_days:
-            editedSuggestions[s.item_id]?.lead_time_days ||
-            s.suggested_lead_time_days,
+          editedSuggestions[s.item_id]?.lead_time_days ||
+          s.suggested_lead_time_days,
           cost_category:
-            editedSuggestions[s.item_id]?.cost_category ||
-            s.suggested_cost_category,
-        })),
+          editedSuggestions[s.item_id]?.cost_category ||
+          s.suggested_cost_category
+        }))
       };
 
       await quoteApi.applyCostSuggestions(id, version.id, applyData);
@@ -362,7 +365,7 @@ export default function QuoteCostManagement() {
     } catch (error) {
       console.error("应用成本建议失败:", error);
       alert(
-        "应用成本建议失败: " + (error.response?.data?.detail || error.message),
+        "应用成本建议失败: " + (error.response?.data?.detail || error.message)
       );
     } finally {
       setLoading(false);
@@ -374,8 +377,8 @@ export default function QuoteCostManagement() {
       ...editedSuggestions,
       [itemId]: {
         ...editedSuggestions[itemId],
-        [field]: value,
-      },
+        [field]: value
+      }
     });
   };
 
@@ -397,15 +400,15 @@ export default function QuoteCostManagement() {
           qty: item.qty ? parseFloat(item.qty) : null,
           unit_price: item.unit_price ? parseFloat(item.unit_price) : null,
           cost: item.cost ? parseFloat(item.cost) : null,
-          lead_time_days: item.lead_time_days
-            ? parseInt(item.lead_time_days)
-            : null,
+          lead_time_days: item.lead_time_days ?
+          parseInt(item.lead_time_days) :
+          null,
           remark: item.remark,
           cost_category: item.cost_category,
           cost_source: item.cost_source,
           specification: item.specification,
-          unit: item.unit,
-        })),
+          unit: item.unit
+        }))
       };
 
       const res = await quoteApi.batchUpdateItems(id, batchData, version.id);
@@ -434,8 +437,8 @@ export default function QuoteCostManagement() {
 
   if (loading && !quote) {
     return (
-      <div className="flex items-center justify-center h-64">加载中...</div>
-    );
+      <div className="flex items-center justify-center h-64">加载中...</div>);
+
   }
 
   return (
@@ -443,13 +446,13 @@ export default function QuoteCostManagement() {
       initial="hidden"
       animate="visible"
       variants={staggerContainer}
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       <PageHeader
         title="报价成本管理"
         description={quote ? `报价编号: ${quote.quote_no || id}` : ""}
         actions={
-          <div className="flex gap-2">
+        <div className="flex gap-2">
             <Button variant="outline" onClick={() => navigate(`/sales/quotes`)}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               返回
@@ -471,8 +474,8 @@ export default function QuoteCostManagement() {
               应用模板
             </Button>
           </div>
-        }
-      />
+        } />
+
 
       {/* Cost Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -559,8 +562,8 @@ export default function QuoteCostManagement() {
               </div>
             </CardHeader>
             <CardContent>
-              {Object.entries(groupedItems).map(([category, categoryItems]) => (
-                <div key={category} className="mb-6">
+              {Object.entries(groupedItems).map(([category, categoryItems]) =>
+              <div key={category} className="mb-6">
                   <h3 className="text-lg font-semibold mb-3 text-slate-300">
                     {category}
                   </h3>
@@ -578,58 +581,58 @@ export default function QuoteCostManagement() {
                     </TableHeader>
                     <TableBody>
                       {categoryItems.map((item) => {
-                        const subtotal =
-                          parseFloat(item.unit_price || 0) *
-                          parseFloat(item.qty || 0);
-                        const costSubtotal =
-                          parseFloat(item.cost || 0) *
-                          parseFloat(item.qty || 0);
-                        return (
-                          <TableRow key={item.id}>
+                      const subtotal =
+                      parseFloat(item.unit_price || 0) *
+                      parseFloat(item.qty || 0);
+                      const costSubtotal =
+                      parseFloat(item.cost || 0) *
+                      parseFloat(item.qty || 0);
+                      return (
+                        <TableRow key={item.id}>
                             <TableCell>{item.item_name}</TableCell>
                             <TableCell>{item.specification || "-"}</TableCell>
                             <TableCell>{item.unit || "-"}</TableCell>
                             <TableCell>
                               <Input
-                                type="number"
-                                value={item.qty || ""}
-                                onChange={(e) =>
-                                  handleItemChange(
-                                    item.id,
-                                    "qty",
-                                    e.target.value,
-                                  )
-                                }
-                                className="w-20"
-                              />
+                              type="number"
+                              value={item.qty || ""}
+                              onChange={(e) =>
+                              handleItemChange(
+                                item.id,
+                                "qty",
+                                e.target.value
+                              )
+                              }
+                              className="w-20" />
+
                             </TableCell>
                             <TableCell>
                               <Input
-                                type="number"
-                                value={item.unit_price || ""}
-                                onChange={(e) =>
-                                  handleItemChange(
-                                    item.id,
-                                    "unit_price",
-                                    e.target.value,
-                                  )
-                                }
-                                className="w-24"
-                              />
+                              type="number"
+                              value={item.unit_price || ""}
+                              onChange={(e) =>
+                              handleItemChange(
+                                item.id,
+                                "unit_price",
+                                e.target.value
+                              )
+                              }
+                              className="w-24" />
+
                             </TableCell>
                             <TableCell>
                               <Input
-                                type="number"
-                                value={item.cost || ""}
-                                onChange={(e) =>
-                                  handleItemChange(
-                                    item.id,
-                                    "cost",
-                                    e.target.value,
-                                  )
-                                }
-                                className="w-24"
-                              />
+                              type="number"
+                              value={item.cost || ""}
+                              onChange={(e) =>
+                              handleItemChange(
+                                item.id,
+                                "cost",
+                                e.target.value
+                              )
+                              }
+                              className="w-24" />
+
                             </TableCell>
                             <TableCell>
                               <div className="space-y-1">
@@ -641,19 +644,19 @@ export default function QuoteCostManagement() {
                                 </div>
                               </div>
                             </TableCell>
-                          </TableRow>
-                        );
-                      })}
+                          </TableRow>);
+
+                    })}
                     </TableBody>
                   </Table>
                 </div>
-              ))}
+              )}
 
-              {items.length === 0 && (
-                <div className="text-center py-8 text-slate-400">
+              {items.length === 0 &&
+              <div className="text-center py-8 text-slate-400">
                   暂无成本明细，请应用成本模板或手动添加
                 </div>
-              )}
+              }
             </CardContent>
           </Card>
         </TabsContent>
@@ -668,14 +671,14 @@ export default function QuoteCostManagement() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {costCheck ? (
-                <div className="space-y-4">
+              {costCheck ?
+              <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <Badge
-                      className={
-                        costCheck.is_complete ? "bg-green-500" : "bg-amber-500"
-                      }
-                    >
+                    className={
+                    costCheck.is_complete ? "bg-green-500" : "bg-amber-500"
+                    }>
+
                       {costCheck.is_complete ? "检查通过" : "存在问题"}
                     </Badge>
                     <span className="text-sm text-slate-400">
@@ -686,40 +689,40 @@ export default function QuoteCostManagement() {
                   </div>
 
                   <div className="space-y-2">
-                    {costCheck.checks?.map((check, index) => (
-                      <Alert
-                        key={index}
-                        className={
-                          check.status === "PASS"
-                            ? "border-green-500"
-                            : check.status === "WARNING"
-                              ? "border-amber-500"
-                              : "border-red-500"
-                        }
-                      >
+                    {costCheck.checks?.map((check, index) =>
+                  <Alert
+                    key={index}
+                    className={
+                    check.status === "PASS" ?
+                    "border-green-500" :
+                    check.status === "WARNING" ?
+                    "border-amber-500" :
+                    "border-red-500"
+                    }>
+
                         <div className="flex items-center gap-2">
-                          {check.status === "PASS" && (
-                            <CheckCircle2 className="h-4 w-4 text-green-500" />
-                          )}
-                          {check.status === "WARNING" && (
-                            <AlertTriangle className="h-4 w-4 text-amber-500" />
-                          )}
-                          {check.status === "FAIL" && (
-                            <XCircle className="h-4 w-4 text-red-500" />
-                          )}
+                          {check.status === "PASS" &&
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      }
+                          {check.status === "WARNING" &&
+                      <AlertTriangle className="h-4 w-4 text-amber-500" />
+                      }
+                          {check.status === "FAIL" &&
+                      <XCircle className="h-4 w-4 text-red-500" />
+                      }
                           <AlertDescription>
                             <strong>{check.check_item}:</strong> {check.message}
                           </AlertDescription>
                         </div>
                       </Alert>
-                    ))}
+                  )}
                   </div>
-                </div>
-              ) : (
-                <div className="text-center py-8 text-slate-400">
+                </div> :
+
+              <div className="text-center py-8 text-slate-400">
                   点击"成本检查"按钮进行检查
                 </div>
-              )}
+              }
             </CardContent>
           </Card>
         </TabsContent>
@@ -742,37 +745,37 @@ export default function QuoteCostManagement() {
               </div>
             </CardHeader>
             <CardContent>
-              {approvalHistory.length > 0 ? (
-                <div className="space-y-4">
-                  {approvalHistory.map((approval) => (
-                    <div
-                      key={approval.id}
-                      className="border border-slate-700 rounded-lg p-4"
-                    >
+              {approvalHistory.length > 0 ?
+              <div className="space-y-4">
+                  {approvalHistory.map((approval) =>
+                <div
+                  key={approval.id}
+                  className="border border-slate-700 rounded-lg p-4">
+
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <Badge
-                            className={
-                              approval.approval_status === "APPROVED"
-                                ? "bg-green-500"
-                                : approval.approval_status === "REJECTED"
-                                  ? "bg-red-500"
-                                  : "bg-amber-500"
-                            }
-                          >
-                            {approval.approval_status === "APPROVED"
-                              ? "已通过"
-                              : approval.approval_status === "REJECTED"
-                                ? "已驳回"
-                                : "待审批"}
+                        className={
+                        approval.approval_status === "APPROVED" ?
+                        "bg-green-500" :
+                        approval.approval_status === "REJECTED" ?
+                        "bg-red-500" :
+                        "bg-amber-500"
+                        }>
+
+                            {approval.approval_status === "APPROVED" ?
+                        "已通过" :
+                        approval.approval_status === "REJECTED" ?
+                        "已驳回" :
+                        "待审批"}
                           </Badge>
                           <span className="text-sm text-slate-400">
                             审批层级:{" "}
-                            {approval.approval_level === 1
-                              ? "销售经理"
-                              : approval.approval_level === 2
-                                ? "销售总监"
-                                : "财务"}
+                            {approval.approval_level === 1 ?
+                        "销售经理" :
+                        approval.approval_level === 2 ?
+                        "销售总监" :
+                        "财务"}
                           </span>
                         </div>
                         <span className="text-sm text-slate-400">
@@ -781,23 +784,23 @@ export default function QuoteCostManagement() {
                       </div>
                       <div className="text-sm text-slate-300 space-y-1">
                         <div>毛利率: {approval.gross_margin?.toFixed(2)}%</div>
-                        {approval.approval_comment && (
-                          <div>审批意见: {approval.approval_comment}</div>
-                        )}
-                        {approval.rejected_reason && (
-                          <div className="text-red-400">
+                        {approval.approval_comment &&
+                    <div>审批意见: {approval.approval_comment}</div>
+                    }
+                        {approval.rejected_reason &&
+                    <div className="text-red-400">
                             驳回原因: {approval.rejected_reason}
                           </div>
-                        )}
+                    }
                       </div>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-slate-400">
+                )}
+                </div> :
+
+              <div className="text-center py-8 text-slate-400">
                   暂无审批记录
                 </div>
-              )}
+              }
             </CardContent>
           </Card>
         </TabsContent>
@@ -817,29 +820,29 @@ export default function QuoteCostManagement() {
                 value={selectedTemplate?.id?.toString()}
                 onValueChange={(value) => {
                   const template = costTemplates.find(
-                    (t) => t.id.toString() === value,
+                    (t) => t.id.toString() === value
                   );
                   setSelectedTemplate(template);
-                }}
-              >
+                }}>
+
                 <SelectTrigger>
                   <SelectValue placeholder="选择成本模板" />
                 </SelectTrigger>
                 <SelectContent>
-                  {costTemplates.map((template) => (
-                    <SelectItem
-                      key={template.id}
-                      value={template.id.toString()}
-                    >
+                  {costTemplates.map((template) =>
+                  <SelectItem
+                    key={template.id}
+                    value={template.id.toString()}>
+
                       {template.template_name} ({template.template_code})
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
 
-            {selectedTemplate && (
-              <div className="border border-slate-700 rounded-lg p-4">
+            {selectedTemplate &&
+            <div className="border border-slate-700 rounded-lg p-4">
                 <div className="text-sm space-y-1">
                   <div>
                     <strong>模板名称:</strong> {selectedTemplate.template_name}
@@ -855,20 +858,20 @@ export default function QuoteCostManagement() {
                     <strong>总成本:</strong>{" "}
                     {formatCurrency(selectedTemplate.total_cost || 0)}
                   </div>
-                  {selectedTemplate.description && (
-                    <div>
+                  {selectedTemplate.description &&
+                <div>
                       <strong>说明:</strong> {selectedTemplate.description}
                     </div>
-                  )}
+                }
                 </div>
               </div>
-            )}
+            }
           </div>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowTemplateDialog(false)}
-            >
+              onClick={() => setShowTemplateDialog(false)}>
+
               取消
             </Button>
             <Button onClick={handleApplyTemplate} disabled={!selectedTemplate}>
@@ -891,12 +894,12 @@ export default function QuoteCostManagement() {
               <Select
                 value={approvalData.approval_level.toString()}
                 onValueChange={(value) =>
-                  setApprovalData({
-                    ...approvalData,
-                    approval_level: parseInt(value),
-                  })
-                }
-              >
+                setApprovalData({
+                  ...approvalData,
+                  approval_level: parseInt(value)
+                })
+                }>
+
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -917,18 +920,18 @@ export default function QuoteCostManagement() {
               <Textarea
                 value={approvalData.comment}
                 onChange={(e) =>
-                  setApprovalData({ ...approvalData, comment: e.target.value })
+                setApprovalData({ ...approvalData, comment: e.target.value })
                 }
                 placeholder="请输入审批意见..."
-                rows={4}
-              />
+                rows={4} />
+
             </div>
           </div>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowApprovalDialog(false)}
-            >
+              onClick={() => setShowApprovalDialog(false)}>
+
               取消
             </Button>
             <Button onClick={handleSubmitApproval}>提交审批</Button>
@@ -939,8 +942,8 @@ export default function QuoteCostManagement() {
       {/* Cost Suggestions Dialog */}
       <Dialog
         open={showSuggestionsDialog}
-        onOpenChange={setShowSuggestionsDialog}
-      >
+        onOpenChange={setShowSuggestionsDialog}>
+
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>成本匹配建议</DialogTitle>
@@ -949,8 +952,8 @@ export default function QuoteCostManagement() {
             </DialogDescription>
           </DialogHeader>
 
-          {costSuggestions && (
-            <div className="space-y-4">
+          {costSuggestions &&
+          <div className="space-y-4">
               {/* Summary */}
               <div className="bg-slate-800 rounded-lg p-4 space-y-2">
                 <div className="flex justify-between items-center">
@@ -967,40 +970,40 @@ export default function QuoteCostManagement() {
                     </span>
                   </div>
                 </div>
-                {costSuggestions.summary && (
-                  <div className="grid grid-cols-3 gap-4 text-sm mt-2">
+                {costSuggestions.summary &&
+              <div className="grid grid-cols-3 gap-4 text-sm mt-2">
                     <div>
                       <span className="text-slate-400">当前总成本:</span>
                       <div className="font-medium">
                         {formatCurrency(
-                          costSuggestions.summary.current_total_cost || 0,
-                        )}
+                      costSuggestions.summary.current_total_cost || 0
+                    )}
                       </div>
                     </div>
                     <div>
                       <span className="text-slate-400">建议总成本:</span>
                       <div className="font-medium text-blue-400">
                         {formatCurrency(
-                          costSuggestions.summary.suggested_total_cost || 0,
-                        )}
+                      costSuggestions.summary.suggested_total_cost || 0
+                    )}
                       </div>
                     </div>
                     <div>
                       <span className="text-slate-400">建议毛利率:</span>
                       <div className="font-medium text-green-400">
-                        {costSuggestions.summary.suggested_margin !== null
-                          ? `${costSuggestions.summary.suggested_margin.toFixed(2)}%`
-                          : "-"}
+                        {costSuggestions.summary.suggested_margin !== null ?
+                    `${costSuggestions.summary.suggested_margin.toFixed(2)}%` :
+                    "-"}
                       </div>
                     </div>
                   </div>
-                )}
+              }
               </div>
 
               {/* Warnings */}
               {costSuggestions.warnings &&
-                costSuggestions.warnings.length > 0 && (
-                  <div className="bg-amber-900/20 border border-amber-500/50 rounded-lg p-3">
+            costSuggestions.warnings.length > 0 &&
+            <div className="bg-amber-900/20 border border-amber-500/50 rounded-lg p-3">
                     <div className="flex items-start gap-2">
                       <AlertTriangle className="h-5 w-5 text-amber-400 mt-0.5" />
                       <div className="flex-1">
@@ -1008,191 +1011,191 @@ export default function QuoteCostManagement() {
                           整体异常警告
                         </div>
                         <ul className="text-sm text-slate-300 space-y-1">
-                          {costSuggestions.warnings.map((warning, idx) => (
-                            <li key={idx}>• {warning}</li>
-                          ))}
+                          {costSuggestions.warnings.map((warning, idx) =>
+                    <li key={idx}>• {warning}</li>
+                    )}
                         </ul>
                       </div>
                     </div>
                   </div>
-                )}
+            }
 
               {/* Suggestions List */}
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {costSuggestions.suggestions?.map((suggestion) => {
-                  const edited = editedSuggestions[suggestion.item_id] || {};
-                  const item = items.find((i) => i.id === suggestion.item_id);
+                const edited = editedSuggestions[suggestion.item_id] || {};
+                const item = items.find((i) => i.id === suggestion.item_id);
 
-                  return (
-                    <div
-                      key={suggestion.item_id}
-                      className="border border-slate-700 rounded-lg p-4 space-y-3"
-                    >
+                return (
+                  <div
+                    key={suggestion.item_id}
+                    className="border border-slate-700 rounded-lg p-4 space-y-3">
+
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
                           <div className="font-medium">
                             {suggestion.item_name}
                           </div>
-                          {suggestion.reason && (
-                            <div className="text-xs text-slate-400 mt-1">
+                          {suggestion.reason &&
+                        <div className="text-xs text-slate-400 mt-1">
                               匹配原因: {suggestion.reason}
                               {suggestion.match_score &&
-                                ` (匹配度: ${suggestion.match_score}%)`}
+                          ` (匹配度: ${suggestion.match_score}%)`}
                             </div>
-                          )}
+                        }
                         </div>
-                        {suggestion.matched_cost_record && (
-                          <Badge className="bg-blue-500">
+                        {suggestion.matched_cost_record &&
+                      <Badge className="bg-blue-500">
                             来源:{" "}
                             {suggestion.matched_cost_record.supplier_name ||
-                              "历史采购"}
+                        "历史采购"}
                           </Badge>
-                        )}
+                      }
                       </div>
 
                       {/* Warnings */}
                       {suggestion.warnings &&
-                        suggestion.warnings.length > 0 && (
-                          <div className="bg-amber-900/20 border border-amber-500/50 rounded p-2 text-sm">
-                            {suggestion.warnings.map((warning, idx) => (
-                              <div key={idx} className="text-amber-400">
+                    suggestion.warnings.length > 0 &&
+                    <div className="bg-amber-900/20 border border-amber-500/50 rounded p-2 text-sm">
+                            {suggestion.warnings.map((warning, idx) =>
+                      <div key={idx} className="text-amber-400">
                                 ⚠ {warning}
                               </div>
-                            ))}
+                      )}
                           </div>
-                        )}
+                    }
 
                       {/* Editable Fields */}
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <Label className="text-xs">当前成本</Label>
                           <div className="text-sm text-slate-400">
-                            {suggestion.current_cost
-                              ? formatCurrency(suggestion.current_cost)
-                              : "未填写"}
+                            {suggestion.current_cost ?
+                          formatCurrency(suggestion.current_cost) :
+                          "未填写"}
                           </div>
                         </div>
                         <div>
                           <Label className="text-xs">建议成本 *</Label>
                           <Input
-                            type="number"
-                            value={
-                              edited.cost ||
-                              suggestion.suggested_cost ||
-                              suggestion.current_cost ||
-                              ""
-                            }
-                            onChange={(e) =>
-                              handleSuggestionChange(
-                                suggestion.item_id,
-                                "cost",
-                                e.target.value,
-                              )
-                            }
-                            placeholder="0.00"
-                            className="h-8"
-                          />
+                          type="number"
+                          value={
+                          edited.cost ||
+                          suggestion.suggested_cost ||
+                          suggestion.current_cost ||
+                          ""
+                          }
+                          onChange={(e) =>
+                          handleSuggestionChange(
+                            suggestion.item_id,
+                            "cost",
+                            e.target.value
+                          )
+                          }
+                          placeholder="0.00"
+                          className="h-8" />
+
                         </div>
                         <div>
                           <Label className="text-xs">规格型号</Label>
                           <Input
-                            value={
-                              edited.specification ||
-                              suggestion.suggested_specification ||
-                              item?.specification ||
-                              ""
-                            }
-                            onChange={(e) =>
-                              handleSuggestionChange(
-                                suggestion.item_id,
-                                "specification",
-                                e.target.value,
-                              )
-                            }
-                            placeholder="规格型号"
-                            className="h-8"
-                          />
+                          value={
+                          edited.specification ||
+                          suggestion.suggested_specification ||
+                          item?.specification ||
+                          ""
+                          }
+                          onChange={(e) =>
+                          handleSuggestionChange(
+                            suggestion.item_id,
+                            "specification",
+                            e.target.value
+                          )
+                          }
+                          placeholder="规格型号"
+                          className="h-8" />
+
                         </div>
                         <div>
                           <Label className="text-xs">单位</Label>
                           <Input
-                            value={
-                              edited.unit ||
-                              suggestion.suggested_unit ||
-                              item?.unit ||
-                              ""
-                            }
-                            onChange={(e) =>
-                              handleSuggestionChange(
-                                suggestion.item_id,
-                                "unit",
-                                e.target.value,
-                              )
-                            }
-                            placeholder="单位"
-                            className="h-8"
-                          />
+                          value={
+                          edited.unit ||
+                          suggestion.suggested_unit ||
+                          item?.unit ||
+                          ""
+                          }
+                          onChange={(e) =>
+                          handleSuggestionChange(
+                            suggestion.item_id,
+                            "unit",
+                            e.target.value
+                          )
+                          }
+                          placeholder="单位"
+                          className="h-8" />
+
                         </div>
                         <div>
                           <Label className="text-xs">交期(天)</Label>
                           <Input
-                            type="number"
-                            value={
-                              edited.lead_time_days ||
-                              suggestion.suggested_lead_time_days ||
-                              item?.lead_time_days ||
-                              ""
-                            }
-                            onChange={(e) =>
-                              handleSuggestionChange(
-                                suggestion.item_id,
-                                "lead_time_days",
-                                e.target.value,
-                              )
-                            }
-                            placeholder="交期"
-                            className="h-8"
-                          />
+                          type="number"
+                          value={
+                          edited.lead_time_days ||
+                          suggestion.suggested_lead_time_days ||
+                          item?.lead_time_days ||
+                          ""
+                          }
+                          onChange={(e) =>
+                          handleSuggestionChange(
+                            suggestion.item_id,
+                            "lead_time_days",
+                            e.target.value
+                          )
+                          }
+                          placeholder="交期"
+                          className="h-8" />
+
                         </div>
                         <div>
                           <Label className="text-xs">成本分类</Label>
                           <Input
-                            value={
-                              edited.cost_category ||
-                              suggestion.suggested_cost_category ||
-                              item?.cost_category ||
-                              ""
-                            }
-                            onChange={(e) =>
-                              handleSuggestionChange(
-                                suggestion.item_id,
-                                "cost_category",
-                                e.target.value,
-                              )
-                            }
-                            placeholder="成本分类"
-                            className="h-8"
-                          />
+                          value={
+                          edited.cost_category ||
+                          suggestion.suggested_cost_category ||
+                          item?.cost_category ||
+                          ""
+                          }
+                          onChange={(e) =>
+                          handleSuggestionChange(
+                            suggestion.item_id,
+                            "cost_category",
+                            e.target.value
+                          )
+                          }
+                          placeholder="成本分类"
+                          className="h-8" />
+
                         </div>
                       </div>
 
                       {/* Matched Cost Record Info */}
-                      {suggestion.matched_cost_record && (
-                        <div className="text-xs text-slate-500 bg-slate-800/50 rounded p-2">
+                      {suggestion.matched_cost_record &&
+                    <div className="text-xs text-slate-500 bg-slate-800/50 rounded p-2">
                           匹配记录:{" "}
                           {suggestion.matched_cost_record.material_name}
                           {suggestion.matched_cost_record.specification &&
-                            ` (${suggestion.matched_cost_record.specification})`}
+                      ` (${suggestion.matched_cost_record.specification})`}
                           {suggestion.matched_cost_record.purchase_date &&
-                            ` | 采购日期: ${formatDate(suggestion.matched_cost_record.purchase_date)}`}
+                      ` | 采购日期: ${formatDate(suggestion.matched_cost_record.purchase_date)}`}
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
+                    }
+                    </div>);
+
+              })}
               </div>
             </div>
-          )}
+          }
 
           <DialogFooter>
             <Button
@@ -1201,21 +1204,21 @@ export default function QuoteCostManagement() {
                 setShowSuggestionsDialog(false);
                 setCostSuggestions(null);
                 setEditedSuggestions({});
-              }}
-            >
+              }}>
+
               取消
             </Button>
             <Button
               onClick={handleApplySuggestions}
               disabled={
-                !costSuggestions || costSuggestions.suggestions?.length === 0
-              }
-            >
+              !costSuggestions || costSuggestions.suggestions?.length === 0
+              }>
+
               确认应用
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

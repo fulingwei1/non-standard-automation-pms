@@ -2,7 +2,7 @@ import * as React from "react";
 import { cn } from "../../lib/utils";
 
 const Input = React.forwardRef(
-  ({ className, type, icon: Icon, error, ...props }, ref) => {
+  ({ className, type, icon: Icon, error, value, ...props }, ref) => {
     return (
       <div className="relative">
         {Icon && (
@@ -12,6 +12,7 @@ const Input = React.forwardRef(
         )}
         <input
           type={type}
+          value={value ?? ""}
           className={cn(
             // Base styles
             "flex w-full h-11 rounded-xl text-sm",
@@ -63,9 +64,10 @@ const InputWithLabel = React.forwardRef(
 );
 InputWithLabel.displayName = "InputWithLabel";
 
-const Textarea = React.forwardRef(({ className, error, ...props }, ref) => {
+const Textarea = React.forwardRef(({ className, error, value, ...props }, ref) => {
   return (
     <textarea
+      value={value ?? ""}
       className={cn(
         "flex w-full min-h-[100px] rounded-xl text-sm",
         "bg-white/[0.03] border border-white/10",

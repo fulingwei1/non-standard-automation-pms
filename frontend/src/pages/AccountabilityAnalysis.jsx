@@ -13,8 +13,8 @@ import {
   AlertTriangle,
   BarChart3,
   Calendar,
-  Filter,
-} from "lucide-react";
+  Filter } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -33,14 +33,14 @@ import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger,
-} from "../components/ui";
-import { fadeIn, staggerContainer } from "../lib/animations";
+  TabsTrigger } from
+"../components/ui";
+import { fadeIn as _fadeIn, staggerContainer as _staggerContainer } from "../lib/animations";
 import { accountabilityApi } from "../services/api";
-import { formatAmount, formatDate } from "../lib/utils";
+import { formatAmount, formatDate as _formatDate } from "../lib/utils";
 
 export default function AccountabilityAnalysis() {
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
   const [byStageData, setByStageData] = useState(null);
   const [byPersonData, setByPersonData] = useState(null);
   const [byDepartmentData, setByDepartmentData] = useState(null);
@@ -57,11 +57,11 @@ export default function AccountabilityAnalysis() {
       if (endDate) params.end_date = endDate;
 
       const [stageRes, personRes, deptRes, costRes] = await Promise.all([
-        accountabilityApi.getByStage(params),
-        accountabilityApi.getByPerson(params),
-        accountabilityApi.getByDepartment(params),
-        accountabilityApi.getCostImpact(params),
-      ]);
+      accountabilityApi.getByStage(params),
+      accountabilityApi.getByPerson(params),
+      accountabilityApi.getByDepartment(params),
+      accountabilityApi.getCostImpact(params)]
+      );
 
       if (stageRes.data?.data) setByStageData(stageRes.data.data);
       if (personRes.data?.data) setByPersonData(personRes.data.data);
@@ -85,7 +85,7 @@ export default function AccountabilityAnalysis() {
       QUOTE_TO_CONTRACT: "报价→合同",
       CONTRACT_TO_PROJECT: "合同→项目",
       PROJECT_TO_INVOICE: "项目→发票",
-      INVOICE_TO_PAYMENT: "发票→回款",
+      INVOICE_TO_PAYMENT: "发票→回款"
     };
     return labels[stage] || stage;
   };
@@ -108,8 +108,8 @@ export default function AccountabilityAnalysis() {
               <Input
                 type="date"
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
+                onChange={(e) => setStartDate(e.target.value)} />
+
             </div>
             <div>
               <label className="text-sm text-slate-500 mb-1 block">
@@ -118,8 +118,8 @@ export default function AccountabilityAnalysis() {
               <Input
                 type="date"
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
+                onChange={(e) => setEndDate(e.target.value)} />
+
             </div>
             <div className="flex items-end">
               <Button onClick={loadAnalysis} className="w-full">
@@ -131,8 +131,8 @@ export default function AccountabilityAnalysis() {
       </Card>
 
       {/* 责任成本总览 */}
-      {costImpactData && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {costImpactData &&
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardContent className="pt-6">
               <div className="text-sm text-slate-500">总成本影响</div>
@@ -146,8 +146,8 @@ export default function AccountabilityAnalysis() {
               <div className="text-sm text-slate-500">总机会成本</div>
               <div className="text-2xl font-bold mt-2">
                 {formatAmount(
-                  costImpactData.summary?.total_opportunity_cost || 0
-                )}
+                costImpactData.summary?.total_opportunity_cost || 0
+              )}
               </div>
             </CardContent>
           </Card>
@@ -160,7 +160,7 @@ export default function AccountabilityAnalysis() {
             </CardContent>
           </Card>
         </div>
-      )}
+      }
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
@@ -172,11 +172,11 @@ export default function AccountabilityAnalysis() {
 
         {/* 按环节归责 */}
         <TabsContent value="stage">
-          {byStageData && (
-            <div className="space-y-6">
+          {byStageData &&
+          <div className="space-y-6">
               {Object.entries(byStageData.by_stage || {}).map(
-                ([stage, data]) => (
-                  <Card key={stage}>
+              ([stage, data]) =>
+              <Card key={stage}>
                     <CardHeader>
                       <CardTitle>{getBreakStageLabel(stage)}</CardTitle>
                     </CardHeader>
@@ -184,8 +184,8 @@ export default function AccountabilityAnalysis() {
                       <div className="mb-4 text-sm text-slate-500">
                         总断链数: {data.total_breaks}
                       </div>
-                      {data.by_person && data.by_person.length > 0 && (
-                        <Table>
+                      {data.by_person && data.by_person.length > 0 &&
+                  <Table>
                           <TableHeader>
                             <TableRow>
                               <TableHead>人员</TableHead>
@@ -195,8 +195,8 @@ export default function AccountabilityAnalysis() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {data.by_person.map((person, idx) => (
-                              <TableRow key={idx}>
+                            {data.by_person.map((person, idx) =>
+                      <TableRow key={idx}>
                                 <TableCell>{person.person_name}</TableCell>
                                 <TableCell>
                                   {person.department || "未设置"}
@@ -206,22 +206,22 @@ export default function AccountabilityAnalysis() {
                                   {formatAmount(person.cost_impact)}
                                 </TableCell>
                               </TableRow>
-                            ))}
+                      )}
                           </TableBody>
                         </Table>
-                      )}
+                  }
                     </CardContent>
                   </Card>
-                )
-              )}
+
+            )}
             </div>
-          )}
+          }
         </TabsContent>
 
         {/* 按人员归责 */}
         <TabsContent value="person">
-          {byPersonData && (
-            <Card>
+          {byPersonData &&
+          <Card>
               <CardHeader>
                 <CardTitle>按人员归责</CardTitle>
               </CardHeader>
@@ -231,8 +231,8 @@ export default function AccountabilityAnalysis() {
                   {byPersonData.summary?.total_breaks} · 总成本影响:{" "}
                   {formatAmount(byPersonData.summary?.total_cost_impact || 0)}
                 </div>
-                {byPersonData.by_person && byPersonData.by_person.length > 0 && (
-                  <Table>
+                {byPersonData.by_person && byPersonData.by_person.length > 0 &&
+              <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>人员</TableHead>
@@ -244,8 +244,8 @@ export default function AccountabilityAnalysis() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {byPersonData.by_person.map((person, idx) => (
-                        <TableRow key={idx}>
+                      {byPersonData.by_person.map((person, idx) =>
+                  <TableRow key={idx}>
                           <TableCell>{person.person_name}</TableCell>
                           <TableCell>{person.department || "未设置"}</TableCell>
                           <TableCell>{person.total_breaks}</TableCell>
@@ -259,19 +259,19 @@ export default function AccountabilityAnalysis() {
                             {Object.keys(person.stages || {}).length} 个环节
                           </TableCell>
                         </TableRow>
-                      ))}
+                  )}
                     </TableBody>
                   </Table>
-                )}
+              }
               </CardContent>
             </Card>
-          )}
+          }
         </TabsContent>
 
         {/* 按部门归责 */}
         <TabsContent value="department">
-          {byDepartmentData && (
-            <Card>
+          {byDepartmentData &&
+          <Card>
               <CardHeader>
                 <CardTitle>按部门归责</CardTitle>
               </CardHeader>
@@ -280,12 +280,12 @@ export default function AccountabilityAnalysis() {
                   总部门数: {byDepartmentData.summary?.total_departments} ·
                   总断链数: {byDepartmentData.summary?.total_breaks} · 总成本影响:{" "}
                   {formatAmount(
-                    byDepartmentData.summary?.total_cost_impact || 0
-                  )}
+                  byDepartmentData.summary?.total_cost_impact || 0
+                )}
                 </div>
                 {byDepartmentData.by_department &&
-                  byDepartmentData.by_department.length > 0 && (
-                    <Table>
+              byDepartmentData.by_department.length > 0 &&
+              <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead>部门</TableHead>
@@ -295,33 +295,33 @@ export default function AccountabilityAnalysis() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {byDepartmentData.by_department.map((dept, idx) => (
-                          <TableRow key={idx}>
+                        {byDepartmentData.by_department.map((dept, idx) =>
+                  <TableRow key={idx}>
                             <TableCell>{dept.department}</TableCell>
                             <TableCell>{dept.total_breaks}</TableCell>
                             <TableCell>{formatAmount(dept.cost_impact)}</TableCell>
                             <TableCell>{dept.person_count} 人</TableCell>
                           </TableRow>
-                        ))}
+                  )}
                       </TableBody>
                     </Table>
-                  )}
+              }
               </CardContent>
             </Card>
-          )}
+          }
         </TabsContent>
 
         {/* 责任成本 */}
         <TabsContent value="cost">
-          {costImpactData && (
-            <div className="space-y-6">
+          {costImpactData &&
+          <div className="space-y-6">
               <Card>
                 <CardHeader>
                   <CardTitle>按环节成本影响</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {costImpactData.by_stage && (
-                    <Table>
+                  {costImpactData.by_stage &&
+                <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead>环节</TableHead>
@@ -330,24 +330,24 @@ export default function AccountabilityAnalysis() {
                       </TableHeader>
                       <TableBody>
                         {Object.entries(costImpactData.by_stage).map(
-                          ([stage, cost]) => (
-                            <TableRow key={stage}>
+                      ([stage, cost]) =>
+                      <TableRow key={stage}>
                               <TableCell>
                                 {getBreakStageLabel(stage)}
                               </TableCell>
                               <TableCell>{formatAmount(cost)}</TableCell>
                             </TableRow>
-                          )
-                        )}
+
+                    )}
                       </TableBody>
                     </Table>
-                  )}
+                }
                 </CardContent>
               </Card>
             </div>
-          )}
+          }
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>);
+
 }

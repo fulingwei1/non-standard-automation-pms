@@ -376,58 +376,58 @@ export const FILTER_CONFIGS = {
   TIME_RANGE: {
     label: "时间范围",
     options: [
-      { value: "today", label: "今天" },
-      { value: "yesterday", label: "昨天" },
-      { value: "week", label: "本周" },
-      { value: "month", label: "本月" },
-      { value: "quarter", label: "本季度" },
-      { value: "year", label: "本年" },
-      { value: "custom", label: "自定义" }
-    ]
+    { value: "today", label: "今天" },
+    { value: "yesterday", label: "昨天" },
+    { value: "week", label: "本周" },
+    { value: "month", label: "本月" },
+    { value: "quarter", label: "本季度" },
+    { value: "year", label: "本年" },
+    { value: "custom", label: "自定义" }]
+
   },
   LEVEL: {
     label: "告警级别",
     options: [
-      { value: "all", label: "全部" },
-      { value: "critical", label: "严重" },
-      { value: "high", label: "高" },
-      { value: "medium", label: "中" },
-      { value: "low", label: "低" },
-      { value: "info", label: "信息" }
-    ]
+    { value: "all", label: "全部" },
+    { value: "critical", label: "严重" },
+    { value: "high", label: "高" },
+    { value: "medium", label: "中" },
+    { value: "low", label: "低" },
+    { value: "info", label: "信息" }]
+
   },
   STATUS: {
     label: "告警状态",
     options: [
-      { value: "all", label: "全部" },
-      { value: "pending", label: "待处理" },
-      { value: "acknowledged", label: "已确认" },
-      { value: "assigned", label: "已分配" },
-      { value: "in_progress", label: "处理中" },
-      { value: "resolved", label: "已解决" },
-      { value: "closed", label: "已关闭" },
-      { value: "ignored", label: "已忽略" }
-    ]
+    { value: "all", label: "全部" },
+    { value: "pending", label: "待处理" },
+    { value: "acknowledged", label: "已确认" },
+    { value: "assigned", label: "已分配" },
+    { value: "in_progress", label: "处理中" },
+    { value: "resolved", label: "已解决" },
+    { value: "closed", label: "已关闭" },
+    { value: "ignored", label: "已忽略" }]
+
   },
   TYPE: {
     label: "告警类型",
     options: [
-      { value: "all", label: "全部" },
-      { value: "project", label: "项目预警" },
-      { value: "system", label: "系统告警" },
-      { value: "business", label: "业务告警" },
-      { value: "operation", label: "运营告警" },
-      { value: "quality", label: "质量告警" }
-    ]
+    { value: "all", label: "全部" },
+    { value: "project", label: "项目预警" },
+    { value: "system", label: "系统告警" },
+    { value: "business", label: "业务告警" },
+    { value: "operation", label: "运营告警" },
+    { value: "quality", label: "质量告警" }]
+
   },
   PROJECT: {
     label: "项目",
     options: [
-      { value: "all", label: "全部项目" },
-      { value: "active", label: "进行中项目" },
-      { value: "delayed", label: "延期项目" },
-      { value: "completed", label: "已完成项目" }
-    ]
+    { value: "all", label: "全部项目" },
+    { value: "active", label: "进行中项目" },
+    { value: "delayed", label: "延期项目" },
+    { value: "completed", label: "已完成项目" }]
+
   }
 };
 
@@ -460,13 +460,13 @@ export const getAlertTypeConfig = (type) => {
 export const calculateSLACompliance = (alerts) => {
   if (!alerts || alerts.length === 0) return 0;
 
-  const compliantAlerts = alerts.filter(alert => {
+  const compliantAlerts = alerts.filter((alert) => {
     const levelConfig = getAlertLevelConfig(alert.alert_level);
     const responseTime = calculateResponseTime(alert);
     return responseTime <= levelConfig.targetResponseTime;
   });
 
-  return Math.round((compliantAlerts.length / alerts.length) * 100);
+  return Math.round(compliantAlerts.length / alerts.length * 100);
 };
 
 /**
@@ -475,11 +475,11 @@ export const calculateSLACompliance = (alerts) => {
 export const calculateAverageResponseTime = (alerts) => {
   if (!alerts || alerts.length === 0) return 0;
 
-  const alertsWithResponse = alerts.filter(alert => alert.response_time);
+  const alertsWithResponse = alerts.filter((alert) => alert.response_time);
   if (alertsWithResponse.length === 0) return 0;
 
   const totalTime = alertsWithResponse.reduce((sum, alert) =>
-    sum + (alert.response_time || 0), 0
+  sum + (alert.response_time || 0), 0
   );
 
   return Math.round(totalTime / alertsWithResponse.length);
@@ -521,7 +521,7 @@ export const formatStatValue = (value, metric) => {
  */
 export const getTrendDirection = (current, previous) => {
   if (!previous) return 'stable';
-  const change = ((current - previous) / previous) * 100;
+  const change = (current - previous) / previous * 100;
 
   if (change > 5) return 'up';
   if (change < -5) return 'down';
@@ -560,7 +560,7 @@ export const getTrendIcon = (direction) => {
  * 生成时间序列数据
  */
 export const generateTimeSeries = (data, timeDimension) => {
-  const { groupBy, intervals } = TIME_DIMENSIONS[timeDimension];
+  const { groupBy: _groupBy, intervals } = TIME_DIMENSIONS[timeDimension];
 
   // 这里根据实际数据格式生成时间序列
   // 返回格式: { labels: [], values: [] }

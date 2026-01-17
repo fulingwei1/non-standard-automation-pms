@@ -5,7 +5,7 @@
  * Features: ECN完整信息展示、评估管理、审批流程可视化、执行任务看板、影响分析、变更日志
  */
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo as _useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -25,8 +25,8 @@ import {
   ECNChangeLog,
   tabConfigs,
   getStatusConfig,
-  formatDate
-} from "../components/ecn";
+  formatDate } from
+"../components/ecn";
 
 // Import services
 import { ecnApi } from "../services/api";
@@ -39,7 +39,7 @@ export default function ECNDetail() {
   const [ecn, setEcn] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  
+
   // Data state
   const [evaluations, setEvaluations] = useState([]);
   const [evaluationSummary, setEvaluationSummary] = useState(null);
@@ -48,9 +48,9 @@ export default function ECNDetail() {
   const [bomImpactSummary, setBomImpactSummary] = useState(null);
   const [obsoleteRisks, setObsoleteRisks] = useState([]);
   const [logs, setLogs] = useState([]);
-  const [knowledge, setKnowledge] = useState([]);
-  const [integrations, setIntegrations] = useState([]);
-  
+  const [_knowledge, setKnowledge] = useState([]);
+  const [_integrations, setIntegrations] = useState([]);
+
   // UI state
   const [analyzingBom, setAnalyzingBom] = useState(false);
   const [activeTab, setActiveTab] = useState("info");
@@ -82,31 +82,31 @@ export default function ECNDetail() {
       // Load evaluations
       const evalResponse = await ecnApi.getEvaluations(id);
       setEvaluations(evalResponse.data?.items || []);
-      
+
       // Load evaluation summary
       const summaryResponse = await ecnApi.getEvaluationSummary(id);
       setEvaluationSummary(summaryResponse.data);
-      
+
       // Load approvals
       const approvalResponse = await ecnApi.getApprovals(id);
       setApprovals(approvalResponse.data?.items || []);
-      
+
       // Load tasks
       const taskResponse = await ecnApi.getTasks(id);
       setTasks(taskResponse.data?.items || []);
-      
+
       // Load logs
       const logResponse = await ecnApi.getLogs(id);
       setLogs(logResponse.data?.items || []);
-      
+
       // Load knowledge
       const knowledgeResponse = await ecnApi.getKnowledge(id);
       setKnowledge(knowledgeResponse.data?.items || []);
-      
+
       // Load integrations
       const integrationResponse = await ecnApi.getIntegrations(id);
       setIntegrations(integrationResponse.data?.items || []);
-      
+
     } catch (error) {
       console.error("Failed to load related data:", error);
     }
@@ -132,7 +132,7 @@ export default function ECNDetail() {
       await loadECN();
       await loadRelatedData();
       toast.success("数据已刷新");
-    } catch (error) {
+    } catch (_error) {
       toast.error("刷新失败");
     } finally {
       setRefreshing(false);
@@ -141,7 +141,7 @@ export default function ECNDetail() {
 
   const handleAnalyzeBomImpact = async () => {
     if (analyzingBom) return;
-    
+
     try {
       setAnalyzingBom(true);
       const response = await ecnApi.analyzeBomImpact(ecn.id);
@@ -166,44 +166,44 @@ export default function ECNDetail() {
     }
   };
 
-  const handleResponsibilityAllocation = (allocationData) => {
+  const handleResponsibilityAllocation = (_allocationData) => {
     // Implement responsibility allocation logic
     toast.success("责任分摊已保存");
   };
 
-  const handleRcaAnalysis = (rcaData) => {
+  const handleRcaAnalysis = (_rcaData) => {
     // Implement RCA analysis logic
     toast.success("RCA分析已保存");
   };
 
   const handleCreateEvaluation = (evaluationData) => {
     // Implement evaluation creation logic
-    setEvaluations(prev => [...prev, { ...evaluationData, id: Date.now() }]);
+    setEvaluations((prev) => [...prev, { ...evaluationData, id: Date.now() }]);
     toast.success("评估创建成功");
   };
 
-  const handleApprove = (approvalData) => {
+  const handleApprove = (_approvalData) => {
     // Implement approval logic
-    setEcn(prev => ({ ...prev, status: "APPROVED" }));
+    setEcn((prev) => ({ ...prev, status: "APPROVED" }));
     toast.success("ECN已批准");
   };
 
-  const handleReject = (rejectionData) => {
+  const handleReject = (_rejectionData) => {
     // Implement rejection logic
-    setEcn(prev => ({ ...prev, status: "REJECTED" }));
+    setEcn((prev) => ({ ...prev, status: "REJECTED" }));
     toast.success("ECN已驳回");
   };
 
   const handleCreateTask = (taskData) => {
     // Implement task creation logic
-    setTasks(prev => [...prev, { ...taskData, id: Date.now() }]);
+    setTasks((prev) => [...prev, { ...taskData, id: Date.now() }]);
     toast.success("任务创建成功");
   };
 
   const handleUpdateTask = (taskId, updateData) => {
     // Implement task update logic
-    setTasks(prev => prev.map(task => 
-      task.id === taskId ? { ...task, ...updateData } : task
+    setTasks((prev) => prev.map((task) =>
+    task.id === taskId ? { ...task, ...updateData } : task
     ));
     toast.success("任务更新成功");
   };
@@ -215,15 +215,15 @@ export default function ECNDetail() {
           title="ECN详情"
           subtitle="加载中..."
           actions={
-            <button
-              onClick={() => navigate("/ecn")}
-              className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
-            >
+          <button
+            onClick={() => navigate("/ecn")}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors">
+
               <ArrowLeft className="w-4 h-4" />
               返回列表
             </button>
-          }
-        />
+          } />
+
         <div className="max-w-[1600px] mx-auto space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <Skeleton className="h-40 bg-slate-800" />
@@ -231,8 +231,8 @@ export default function ECNDetail() {
           </div>
           <Skeleton className="h-80 bg-slate-800" />
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   if (!ecn) {
@@ -242,14 +242,14 @@ export default function ECNDetail() {
           <h2 className="text-2xl font-bold mb-4">ECN未找到</h2>
           <button
             onClick={() => navigate("/ecn")}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors mx-auto"
-          >
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors mx-auto">
+
             <ArrowLeft className="w-4 h-4" />
             返回列表
           </button>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   const statusConfig = getStatusConfig(ecn.status);
@@ -259,11 +259,11 @@ export default function ECNDetail() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-6"
-    >
+      className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-6">
+
       <PageHeader
         title={
-          <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3">
             <span>ECN详情</span>
             <span className="font-mono text-xl">{ecn.ecn_no}</span>
             <span className={`px-3 py-1 rounded-full text-sm ${statusConfig.color} ${statusConfig.textColor}`}>
@@ -273,38 +273,38 @@ export default function ECNDetail() {
         }
         subtitle={`创建时间: ${formatDate(ecn.created_time)} | 创建人: ${ecn.created_by_name || ecn.created_by}`}
         actions={
-          <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3">
             <button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors disabled:opacity-50"
-            >
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors disabled:opacity-50">
+
               {refreshing ? "刷新中..." : "刷新"}
             </button>
             <button
-              onClick={() => navigate("/ecn")}
-              className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
-            >
+            onClick={() => navigate("/ecn")}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors">
+
               <ArrowLeft className="w-4 h-4" />
               返回列表
             </button>
           </div>
-        }
-      />
+        } />
+
 
       <div className="max-w-[1600px] mx-auto">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid grid-cols-8 w-full bg-slate-800/50 border border-slate-700">
-            {tabConfigs.map(tab => (
-              <TabsTrigger
-                key={tab.value}
-                value={tab.value}
-                className="flex items-center gap-2 data-[state=active]:bg-slate-700"
-              >
+            {tabConfigs.map((tab) =>
+            <TabsTrigger
+              key={tab.value}
+              value={tab.value}
+              className="flex items-center gap-2 data-[state=active]:bg-slate-700">
+
                 <span>{tab.icon}</span>
                 <span className="hidden sm:inline">{tab.label}</span>
               </TabsTrigger>
-            ))}
+            )}
           </TabsList>
 
           {/* 基本信息 */}
@@ -319,8 +319,8 @@ export default function ECNDetail() {
               evaluations={evaluations}
               evaluationSummary={evaluationSummary}
               onCreateEvaluation={handleCreateEvaluation}
-              loading={loading}
-            />
+              loading={loading} />
+
           </TabsContent>
 
           {/* 审批流程 */}
@@ -331,8 +331,8 @@ export default function ECNDetail() {
               onApprove={handleApprove}
               onReject={handleReject}
               currentUser={currentUser}
-              loading={loading}
-            />
+              loading={loading} />
+
           </TabsContent>
 
           {/* 执行任务 */}
@@ -343,8 +343,8 @@ export default function ECNDetail() {
               onCreateTask={handleCreateTask}
               onUpdateTask={handleUpdateTask}
               currentUser={currentUser}
-              loading={loading}
-            />
+              loading={loading} />
+
           </TabsContent>
 
           {/* 影响分析 */}
@@ -357,8 +357,8 @@ export default function ECNDetail() {
               onCheckObsoleteRisk={handleCheckObsoleteRisk}
               onResponsibilityAllocation={handleResponsibilityAllocation}
               onRcaAnalysis={handleRcaAnalysis}
-              analyzingBom={analyzingBom}
-            />
+              analyzingBom={analyzingBom} />
+
           </TabsContent>
 
           {/* 知识库 */}
@@ -380,11 +380,11 @@ export default function ECNDetail() {
             <ECNChangeLog
               logs={logs}
               ecn={ecn}
-              loading={loading}
-            />
+              loading={loading} />
+
           </TabsContent>
         </Tabs>
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

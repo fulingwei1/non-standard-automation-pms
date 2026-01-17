@@ -7,17 +7,17 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  Skeleton,
-} from "../components/ui";
+  Skeleton } from
+"../components/ui";
 import ContributionChart from "../components/project/ContributionChart";
-import { formatCurrency, formatDate } from "../lib/utils";
+import { formatCurrency, formatDate as _formatDate } from "../lib/utils";
 import { Award, TrendingUp, Clock, CheckCircle2 } from "lucide-react";
 
 export default function ProjectContributionReport() {
   const { id } = useParams();
   const [loading, setLoading] = useState(true);
   const [report, setReport] = useState(null);
-  const [period, setPeriod] = useState(() => {
+  const [period, _setPeriod] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   });
@@ -43,12 +43,12 @@ export default function ProjectContributionReport() {
       <div className="p-6">
         <Skeleton className="h-12 w-64 mb-6" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-24" />
-          ))}
+          {[1, 2, 3, 4].map((i) =>
+          <Skeleton key={i} className="h-24" />
+          )}
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   if (!report) {
@@ -60,8 +60,8 @@ export default function ProjectContributionReport() {
             无法加载报告数据
           </CardContent>
         </Card>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -104,18 +104,18 @@ export default function ProjectContributionReport() {
       <ContributionChart contributions={report.contributions || []} />
 
       {/* TOP贡献者 */}
-      {report.top_contributors && report.top_contributors.length > 0 && (
-        <Card>
+      {report.top_contributors && report.top_contributors.length > 0 &&
+      <Card>
           <CardHeader>
             <CardTitle>TOP 贡献者</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {report.top_contributors.map((contributor, index) => (
-                <div
-                  key={contributor.user_id}
-                  className="flex items-center justify-between p-3 border rounded-lg"
-                >
+              {report.top_contributors.map((contributor, index) =>
+            <div
+              key={contributor.user_id}
+              className="flex items-center justify-between p-3 border rounded-lg">
+
                   <div className="flex items-center gap-4">
                     <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
                       {index + 1}
@@ -129,11 +129,11 @@ export default function ProjectContributionReport() {
                   </div>
                   <Award className="h-5 w-5 text-yellow-500" />
                 </div>
-              ))}
+            )}
             </div>
           </CardContent>
         </Card>
-      )}
+      }
 
       {/* 详细贡献列表 */}
       <Card>
@@ -156,11 +156,11 @@ export default function ProjectContributionReport() {
                 </tr>
               </thead>
               <tbody>
-                {report.contributions?.map((contrib) => (
-                  <tr
-                    key={contrib.user_id}
-                    className="border-b hover:bg-gray-50"
-                  >
+                {report.contributions?.map((contrib) =>
+                <tr
+                  key={contrib.user_id}
+                  className="border-b hover:bg-gray-50">
+
                     <td className="p-3 font-medium">{contrib.user_name}</td>
                     <td className="p-3">{contrib.task_count}</td>
                     <td className="p-3">{contrib.actual_hours.toFixed(1)}h</td>
@@ -173,21 +173,21 @@ export default function ProjectContributionReport() {
                       {contrib.contribution_score.toFixed(1)}
                     </td>
                     <td className="p-3">
-                      {contrib.pm_rating ? (
-                        <span className="text-yellow-500">
+                      {contrib.pm_rating ?
+                    <span className="text-yellow-500">
                           ⭐ {contrib.pm_rating}/5
-                        </span>
-                      ) : (
-                        <span className="text-gray-400">未评分</span>
-                      )}
+                        </span> :
+
+                    <span className="text-gray-400">未评分</span>
+                    }
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>);
+
 }

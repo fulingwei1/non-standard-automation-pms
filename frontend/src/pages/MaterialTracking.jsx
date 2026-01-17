@@ -22,8 +22,8 @@ import {
   Eye,
   Download,
   AlertCircle,
-  Zap,
-} from "lucide-react";
+  Zap } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -50,8 +50,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Textarea,
-} from "../components/ui";
+  Textarea } from
+"../components/ui";
 import { cn, formatCurrency, formatDate } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { materialApi, purchaseApi } from "../services/api";
@@ -64,56 +64,56 @@ const statusConfig = {
     label: "未到货",
     color: "bg-red-500/20 text-red-400",
     icon: AlertTriangle,
-    description: "采购订单已下达，等待物料到达",
+    description: "采购订单已下达，等待物料到达"
   },
   "partial-arrived": {
     label: "部分到货",
     color: "bg-amber-500/20 text-amber-400",
     icon: Truck,
-    description: "物料已部分到达，继续等待后续",
+    description: "物料已部分到达，继续等待后续"
   },
   "fully-arrived": {
     label: "全部到货",
     color: "bg-emerald-500/20 text-emerald-400",
     icon: CheckCircle2,
-    description: "采购的全部物料已到达仓库",
+    description: "采购的全部物料已到达仓库"
   },
   "in-use": {
     label: "使用中",
     color: "bg-blue-500/20 text-blue-400",
     icon: Zap,
-    description: "物料正在生产中使用",
+    description: "物料正在生产中使用"
   },
   completed: {
     label: "已完成",
     color: "bg-slate-500/20 text-slate-400",
     icon: CheckCircle2,
-    description: "物料已全部使用或返库",
-  },
+    description: "物料已全部使用或返库"
+  }
 };
 
 const qualityStatusConfig = {
   qualified: { label: "合格", color: "bg-emerald-500/20 text-emerald-400" },
   "pending-inspection": {
     label: "待检验",
-    color: "bg-amber-500/20 text-amber-400",
+    color: "bg-amber-500/20 text-amber-400"
   },
-  rejected: { label: "不合格", color: "bg-red-500/20 text-red-400" },
+  rejected: { label: "不合格", color: "bg-red-500/20 text-red-400" }
 };
 
 const MaterialRow = ({ material, onView }) => {
   const statusCfg = statusConfig[material.status];
   const StatusIcon = statusCfg.icon;
   const arrivalProgress =
-    (material.arrivedQuantity / material.totalQuantity) * 100;
+  material.arrivedQuantity / material.totalQuantity * 100;
   const usageProgress =
-    (material.usedQuantity / material.arrivedQuantity) * 100;
+  material.usedQuantity / material.arrivedQuantity * 100;
 
   return (
     <motion.div
       variants={fadeIn}
-      className="group rounded-lg border border-slate-700/50 bg-slate-800/40 p-4 hover:bg-slate-800/60 transition-all"
-    >
+      className="group rounded-lg border border-slate-700/50 bg-slate-800/40 p-4 hover:bg-slate-800/60 transition-all">
+
       <div className="space-y-3">
         {/* Header Row */}
         <div className="flex items-start justify-between">
@@ -168,8 +168,8 @@ const MaterialRow = ({ material, onView }) => {
             </div>
             <Progress value={arrivalProgress} className="h-1.5" />
           </div>
-          {material.arrivedQuantity > 0 && (
-            <div>
+          {material.arrivedQuantity > 0 &&
+          <div>
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs text-slate-400">使用进度</span>
                 <span className="text-xs font-medium text-slate-300">
@@ -178,7 +178,7 @@ const MaterialRow = ({ material, onView }) => {
               </div>
               <Progress value={usageProgress} className="h-1.5" />
             </div>
-          )}
+          }
         </div>
 
         {/* Timeline and Status */}
@@ -189,48 +189,48 @@ const MaterialRow = ({ material, onView }) => {
               {formatDate(material.expectedDate)}
             </p>
           </div>
-          {material.actualArrivalDate && (
-            <div>
+          {material.actualArrivalDate &&
+          <div>
               <p className="text-slate-500 text-xs mb-1">实际日期</p>
               <p className="text-slate-300">
                 {formatDate(material.actualArrivalDate)}
               </p>
             </div>
-          )}
+          }
           <div>
             <p className="text-slate-500 text-xs mb-1">位置</p>
             <p className="text-slate-300">{material.location || "—"}</p>
           </div>
-          {material.daysUntilExpiry && (
-            <div>
+          {material.daysUntilExpiry &&
+          <div>
               <p className="text-slate-500 text-xs mb-1">保质期</p>
               <p
-                className={cn(
-                  "text-sm font-medium",
-                  material.daysUntilExpiry < 30
-                    ? "text-red-400"
-                    : "text-slate-300",
-                )}
-              >
+              className={cn(
+                "text-sm font-medium",
+                material.daysUntilExpiry < 30 ?
+                "text-red-400" :
+                "text-slate-300"
+              )}>
+
                 {material.daysUntilExpiry} 天
               </p>
             </div>
-          )}
+          }
         </div>
 
         {/* Action Bar */}
         <div className="flex items-center justify-between pt-2 border-t border-slate-700/30">
           <div className="flex gap-2">
-            {material.qualityStatus && (
-              <Badge
-                className={cn(
-                  "text-xs",
-                  qualityStatusConfig[material.qualityStatus]?.color,
-                )}
-              >
+            {material.qualityStatus &&
+            <Badge
+              className={cn(
+                "text-xs",
+                qualityStatusConfig[material.qualityStatus]?.color
+              )}>
+
                 {qualityStatusConfig[material.qualityStatus]?.label}
               </Badge>
-            )}
+            }
             <Badge className="bg-slate-700/50 text-slate-300 text-xs">
               {material.nextAction}
             </Badge>
@@ -239,14 +239,14 @@ const MaterialRow = ({ material, onView }) => {
             size="sm"
             variant="ghost"
             className="h-8 w-8 p-0"
-            onClick={() => onView(material)}
-          >
+            onClick={() => onView(material)}>
+
             <Eye className="w-4 h-4 text-blue-400" />
           </Button>
         </div>
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
 export default function MaterialTracking() {
@@ -262,7 +262,7 @@ export default function MaterialTracking() {
   const mapMaterialStatus = (material, purchaseItems) => {
     // Find related purchase order items
     const relatedItems = purchaseItems.filter(
-      (item) => item.material_code === material.material_code,
+      (item) => item.material_code === material.material_code
     );
 
     if (relatedItems.length === 0) {
@@ -271,11 +271,11 @@ export default function MaterialTracking() {
 
     const totalQty = relatedItems.reduce(
       (sum, item) => sum + (item.quantity || 0),
-      0,
+      0
     );
     const receivedQty = relatedItems.reduce(
       (sum, item) => sum + (item.received_quantity || 0),
-      0,
+      0
     );
 
     if (receivedQty === 0) {
@@ -298,18 +298,18 @@ export default function MaterialTracking() {
         page: 1,
         page_size: 100,
         keyword: searchText || undefined,
-        is_active: true,
+        is_active: true
       });
       const materialsData =
-        materialsResponse.data?.items || materialsResponse.data || [];
+      materialsResponse.data?.items || materialsResponse.data || [];
 
       // Load purchase order items to get arrival status
       const purchaseResponse = await purchaseApi.orders.list({
         page: 1,
-        page_size: 100,
+        page_size: 100
       });
       const purchaseOrders =
-        purchaseResponse.data?.items || purchaseResponse.data || [];
+      purchaseResponse.data?.items || purchaseResponse.data || [];
 
       // Get all purchase order items
       const allPurchaseItems = [];
@@ -327,16 +327,16 @@ export default function MaterialTracking() {
       const transformedMaterials = materialsData.map((material) => {
         const status = mapMaterialStatus(material, allPurchaseItems);
         const relatedItems = allPurchaseItems.filter(
-          (item) => item.material_code === material.material_code,
+          (item) => item.material_code === material.material_code
         );
 
         const totalQuantity = relatedItems.reduce(
           (sum, item) => sum + (item.quantity || 0),
-          0,
+          0
         );
         const arrivedQuantity = relatedItems.reduce(
           (sum, item) => sum + (item.received_quantity || 0),
-          0,
+          0
         );
         const unitPrice = material.last_price || material.standard_price || 0;
 
@@ -365,12 +365,12 @@ export default function MaterialTracking() {
           usedValue: 0,
           project: "",
           nextAction:
-            status === "not-arrived"
-              ? "等待到货"
-              : status === "partial-arrived"
-                ? "继续到货"
-                : "按需领取",
-          daysUntilExpiry: 365,
+          status === "not-arrived" ?
+          "等待到货" :
+          status === "partial-arrived" ?
+          "继续到货" :
+          "按需领取",
+          daysUntilExpiry: 365
         };
       });
 
@@ -405,9 +405,9 @@ export default function MaterialTracking() {
   const filteredMaterials = useMemo(() => {
     return materials.filter((m) => {
       const matchSearch =
-        m.name.toLowerCase().includes(searchText.toLowerCase()) ||
-        m.code.toLowerCase().includes(searchText.toLowerCase()) ||
-        m.supplier.toLowerCase().includes(searchText.toLowerCase());
+      m.name.toLowerCase().includes(searchText.toLowerCase()) ||
+      m.code.toLowerCase().includes(searchText.toLowerCase()) ||
+      m.supplier.toLowerCase().includes(searchText.toLowerCase());
 
       const matchStatus = filterStatus === "all" || m.status === filterStatus;
 
@@ -422,7 +422,7 @@ export default function MaterialTracking() {
       notArrived: materials.filter((m) => m.status === "not-arrived").length,
       totalValue: materials.reduce((sum, m) => sum + m.totalValue, 0),
       arrivedValue: materials.reduce((sum, m) => sum + m.arrivedValue, 0),
-      usedValue: materials.reduce((sum, m) => sum + m.usedValue, 0),
+      usedValue: materials.reduce((sum, m) => sum + m.usedValue, 0)
     };
   }, [materials]);
 
@@ -431,13 +431,13 @@ export default function MaterialTracking() {
       <div className="space-y-6 pb-8">
         <PageHeader
           title="物料跟踪"
-          description="实时监控物料采购、到货和使用状态"
-        />
+          description="实时监控物料采购、到货和使用状态" />
+
         <div className="text-center py-16">
           <div className="text-slate-400">加载中...</div>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   if (error && materials.length === 0) {
@@ -445,13 +445,13 @@ export default function MaterialTracking() {
       <div className="space-y-6 pb-8">
         <PageHeader
           title="物料跟踪"
-          description="实时监控物料采购、到货和使用状态"
-        />
+          description="实时监控物料采购、到货和使用状态" />
+
         <div className="text-center py-16">
           <div className="text-red-400">{error}</div>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -464,22 +464,22 @@ export default function MaterialTracking() {
           icon: Plus,
           onClick: () => {
             setShowCreateDialog(true);
-          },
-        }}
-      />
-      {error && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400 text-sm">
+          }
+        }} />
+
+      {error &&
+      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400 text-sm">
           {error}
         </div>
-      )}
+      }
 
       {/* Statistics */}
       <motion.div
         variants={staggerContainer}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5"
-      >
+        className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
+
         <motion.div variants={fadeIn}>
           <Card>
             <CardContent className="pt-6">
@@ -499,7 +499,7 @@ export default function MaterialTracking() {
                 {stats.fullArrived}
               </p>
               <p className="text-xs text-slate-500 mt-1">
-                {((stats.fullArrived / stats.total) * 100).toFixed(0)}%
+                {(stats.fullArrived / stats.total * 100).toFixed(0)}%
               </p>
             </CardContent>
           </Card>
@@ -535,7 +535,7 @@ export default function MaterialTracking() {
                 {formatCurrency(stats.arrivedValue)}
               </p>
               <p className="text-xs text-slate-500 mt-1">
-                {((stats.arrivedValue / stats.totalValue) * 100).toFixed(1)}%
+                {(stats.arrivedValue / stats.totalValue * 100).toFixed(1)}%
               </p>
             </CardContent>
           </Card>
@@ -552,29 +552,29 @@ export default function MaterialTracking() {
                 placeholder="搜索物料名、物料码、供应商..."
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
-                className="pl-10"
-              />
+                className="pl-10" />
+
             </div>
 
             <div className="flex flex-wrap gap-2">
               <Button
                 variant={filterStatus === "all" ? "default" : "ghost"}
                 size="sm"
-                onClick={() => setFilterStatus("all")}
-              >
+                onClick={() => setFilterStatus("all")}>
+
                 全部状态
               </Button>
-              {Object.entries(statusConfig).map(([key, cfg]) => (
-                <Button
-                  key={key}
-                  variant={filterStatus === key ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setFilterStatus(key)}
-                  className={cn(filterStatus === key && cfg.color)}
-                >
+              {Object.entries(statusConfig).map(([key, cfg]) =>
+              <Button
+                key={key}
+                variant={filterStatus === key ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setFilterStatus(key)}
+                className={cn(filterStatus === key && cfg.color)}>
+
                   {cfg.label}
                 </Button>
-              ))}
+              )}
             </div>
           </div>
         </CardContent>
@@ -585,37 +585,37 @@ export default function MaterialTracking() {
         variants={staggerContainer}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 gap-4"
-      >
+        className="grid grid-cols-1 gap-4">
+
         <AnimatePresence>
-          {filteredMaterials.length > 0 ? (
-            filteredMaterials.map((material) => (
-              <MaterialRow
-                key={material.id}
-                material={material}
-                onView={(m) => {
-                  // Handle view material if needed
-                }}
-              />
-            ))
-          ) : (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="py-12 text-center"
-            >
+          {filteredMaterials.length > 0 ?
+          filteredMaterials.map((material) =>
+          <MaterialRow
+            key={material.id}
+            material={material}
+            onView={(_m) => {
+
+              // Handle view material if needed
+            }} />
+          ) :
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="py-12 text-center">
+
               <Package className="w-12 h-12 text-slate-500 mx-auto mb-3" />
               <p className="text-slate-400">没有符合条件的物料</p>
             </motion.div>
-          )}
+          }
         </AnimatePresence>
       </motion.div>
 
       {/* Alert Summary */}
       {materials.some(
-        (m) => m.status === "not-arrived" && m.daysUntilExpiry,
-      ) && (
-        <Card className="bg-red-500/5 border-red-500/20">
+        (m) => m.status === "not-arrived" && m.daysUntilExpiry
+      ) &&
+      <Card className="bg-red-500/5 border-red-500/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-red-400">
               <AlertCircle className="w-5 h-5" />
@@ -624,36 +624,36 @@ export default function MaterialTracking() {
           </CardHeader>
           <CardContent>
             <ul className="space-y-2">
-              {materials
-                .filter((m) => m.status === "not-arrived")
-                .map((m) => (
-                  <li
-                    key={m.id}
-                    className="text-sm text-slate-300 flex items-center gap-2"
-                  >
+              {materials.
+            filter((m) => m.status === "not-arrived").
+            map((m) =>
+            <li
+              key={m.id}
+              className="text-sm text-slate-300 flex items-center gap-2">
+
                     <span className="w-2 h-2 rounded-full bg-red-400" />
                     {m.name} - 预期到货: {formatDate(m.expectedDate)}
                   </li>
-                ))}
+            )}
             </ul>
           </CardContent>
         </Card>
-      )}
+      }
 
       {/* Create Material Dialog */}
-      {showCreateDialog && (
-        <CreateMaterialDialog
-          categories={categories}
-          onClose={() => setShowCreateDialog(false)}
-          onSuccess={() => {
-            setShowCreateDialog(false);
-            loadMaterials();
-            toast.success("物料创建成功");
-          }}
-        />
-      )}
-    </div>
-  );
+      {showCreateDialog &&
+      <CreateMaterialDialog
+        categories={categories}
+        onClose={() => setShowCreateDialog(false)}
+        onSuccess={() => {
+          setShowCreateDialog(false);
+          loadMaterials();
+          toast.success("物料创建成功");
+        }} />
+
+      }
+    </div>);
+
 }
 
 // Create Material Dialog Component
@@ -674,7 +674,7 @@ function CreateMaterialDialog({ categories, onClose, onSuccess }) {
     min_order_qty: 1,
     default_supplier_id: null,
     is_key_material: false,
-    remark: "",
+    remark: ""
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -702,14 +702,14 @@ function CreateMaterialDialog({ categories, onClose, onSuccess }) {
         default_supplier_id: formData.default_supplier_id || undefined,
         standard_price: parseFloat(formData.standard_price) || 0,
         safety_stock: parseFloat(formData.safety_stock) || 0,
-        min_order_qty: parseFloat(formData.min_order_qty) || 1,
+        min_order_qty: parseFloat(formData.min_order_qty) || 1
       };
       await materialApi.create(submitData);
       onSuccess();
     } catch (error) {
       console.error("Failed to create material:", error);
       toast.error(
-        "创建失败: " + (error.response?.data?.detail || error.message),
+        "创建失败: " + (error.response?.data?.detail || error.message)
       );
     } finally {
       setLoading(false);
@@ -731,16 +731,16 @@ function CreateMaterialDialog({ categories, onClose, onSuccess }) {
               <Input
                 value={formData.material_code}
                 onChange={(e) =>
-                  setFormData({ ...formData, material_code: e.target.value })
+                setFormData({ ...formData, material_code: e.target.value })
                 }
                 placeholder="请输入物料编码"
-                className={errors.material_code ? "border-red-400" : ""}
-              />
-              {errors.material_code && (
-                <div className="text-sm text-red-400 mt-1">
+                className={errors.material_code ? "border-red-400" : ""} />
+
+              {errors.material_code &&
+              <div className="text-sm text-red-400 mt-1">
                   {errors.material_code}
                 </div>
-              )}
+              }
             </div>
             <div>
               <Label className="required">
@@ -749,38 +749,38 @@ function CreateMaterialDialog({ categories, onClose, onSuccess }) {
               <Input
                 value={formData.material_name}
                 onChange={(e) =>
-                  setFormData({ ...formData, material_name: e.target.value })
+                setFormData({ ...formData, material_name: e.target.value })
                 }
                 placeholder="请输入物料名称"
-                className={errors.material_name ? "border-red-400" : ""}
-              />
-              {errors.material_name && (
-                <div className="text-sm text-red-400 mt-1">
+                className={errors.material_name ? "border-red-400" : ""} />
+
+              {errors.material_name &&
+              <div className="text-sm text-red-400 mt-1">
                   {errors.material_name}
                 </div>
-              )}
+              }
             </div>
             <div>
               <Label>物料分类</Label>
               <Select
                 value={formData.category_id?.toString() || ""}
                 onValueChange={(value) =>
-                  setFormData({
-                    ...formData,
-                    category_id: value ? parseInt(value) : null,
-                  })
-                }
-              >
+                setFormData({
+                  ...formData,
+                  category_id: value ? parseInt(value) : null
+                })
+                }>
+
                 <SelectTrigger>
                   <SelectValue placeholder="请选择物料分类" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__">无分类</SelectItem>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id.toString()}>
+                  {categories.map((cat) =>
+                  <SelectItem key={cat.id} value={cat.id.toString()}>
                       {cat.category_name}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -789,59 +789,59 @@ function CreateMaterialDialog({ categories, onClose, onSuccess }) {
               <Input
                 value={formData.specification}
                 onChange={(e) =>
-                  setFormData({ ...formData, specification: e.target.value })
+                setFormData({ ...formData, specification: e.target.value })
                 }
-                placeholder="请输入规格型号"
-              />
+                placeholder="请输入规格型号" />
+
             </div>
             <div>
               <Label>品牌</Label>
               <Input
                 value={formData.brand}
                 onChange={(e) =>
-                  setFormData({ ...formData, brand: e.target.value })
+                setFormData({ ...formData, brand: e.target.value })
                 }
-                placeholder="请输入品牌"
-              />
+                placeholder="请输入品牌" />
+
             </div>
             <div>
               <Label>单位</Label>
               <Input
                 value={formData.unit}
                 onChange={(e) =>
-                  setFormData({ ...formData, unit: e.target.value })
+                setFormData({ ...formData, unit: e.target.value })
                 }
-                placeholder="如：件、个、根等"
-              />
+                placeholder="如：件、个、根等" />
+
             </div>
             <div>
               <Label>图号</Label>
               <Input
                 value={formData.drawing_no}
                 onChange={(e) =>
-                  setFormData({ ...formData, drawing_no: e.target.value })
+                setFormData({ ...formData, drawing_no: e.target.value })
                 }
-                placeholder="请输入图号"
-              />
+                placeholder="请输入图号" />
+
             </div>
             <div>
               <Label>物料类型</Label>
               <Input
                 value={formData.material_type}
                 onChange={(e) =>
-                  setFormData({ ...formData, material_type: e.target.value })
+                setFormData({ ...formData, material_type: e.target.value })
                 }
-                placeholder="如：标准件、机械件、电气件等"
-              />
+                placeholder="如：标准件、机械件、电气件等" />
+
             </div>
             <div>
               <Label>来源类型</Label>
               <Select
                 value={formData.source_type}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, source_type: value })
-                }
-              >
+                setFormData({ ...formData, source_type: value })
+                }>
+
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -859,10 +859,10 @@ function CreateMaterialDialog({ categories, onClose, onSuccess }) {
                 step="0.01"
                 value={formData.standard_price}
                 onChange={(e) =>
-                  setFormData({ ...formData, standard_price: e.target.value })
+                setFormData({ ...formData, standard_price: e.target.value })
                 }
-                placeholder="0.00"
-              />
+                placeholder="0.00" />
+
             </div>
             <div>
               <Label>安全库存</Label>
@@ -871,10 +871,10 @@ function CreateMaterialDialog({ categories, onClose, onSuccess }) {
                 step="0.01"
                 value={formData.safety_stock}
                 onChange={(e) =>
-                  setFormData({ ...formData, safety_stock: e.target.value })
+                setFormData({ ...formData, safety_stock: e.target.value })
                 }
-                placeholder="0"
-              />
+                placeholder="0" />
+
             </div>
             <div>
               <Label>交期（天）</Label>
@@ -882,13 +882,13 @@ function CreateMaterialDialog({ categories, onClose, onSuccess }) {
                 type="number"
                 value={formData.lead_time_days}
                 onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    lead_time_days: parseInt(e.target.value) || 0,
-                  })
+                setFormData({
+                  ...formData,
+                  lead_time_days: parseInt(e.target.value) || 0
+                })
                 }
-                placeholder="0"
-              />
+                placeholder="0" />
+
             </div>
             <div>
               <Label>最小订购量</Label>
@@ -897,10 +897,10 @@ function CreateMaterialDialog({ categories, onClose, onSuccess }) {
                 step="0.01"
                 value={formData.min_order_qty}
                 onChange={(e) =>
-                  setFormData({ ...formData, min_order_qty: e.target.value })
+                setFormData({ ...formData, min_order_qty: e.target.value })
                 }
-                placeholder="1"
-              />
+                placeholder="1" />
+
             </div>
             <div className="flex items-center gap-2">
               <input
@@ -908,13 +908,13 @@ function CreateMaterialDialog({ categories, onClose, onSuccess }) {
                 id="is_key_material"
                 checked={formData.is_key_material}
                 onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    is_key_material: e.target.checked,
-                  })
+                setFormData({
+                  ...formData,
+                  is_key_material: e.target.checked
+                })
                 }
-                className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-blue-500"
-              />
+                className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-blue-500" />
+
               <Label htmlFor="is_key_material" className="cursor-pointer">
                 关键物料
               </Label>
@@ -925,12 +925,12 @@ function CreateMaterialDialog({ categories, onClose, onSuccess }) {
             <Textarea
               value={formData.remark}
               onChange={(e) =>
-                setFormData({ ...formData, remark: e.target.value })
+              setFormData({ ...formData, remark: e.target.value })
               }
               placeholder="请输入备注信息"
               rows={3}
-              className="bg-slate-800/50 border-slate-700"
-            />
+              className="bg-slate-800/50 border-slate-700" />
+
           </div>
         </DialogBody>
         <DialogFooter>
@@ -942,6 +942,6 @@ function CreateMaterialDialog({ categories, onClose, onSuccess }) {
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>);
+
 }

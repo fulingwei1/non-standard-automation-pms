@@ -14,16 +14,16 @@ import {
   Users,
   Settings,
   CheckCircle2,
-  XCircle,
-} from "lucide-react";
+  XCircle } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
-} from "../components/ui/card";
+  CardDescription } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -33,31 +33,31 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "../components/ui/table";
+  TableRow } from
+"../components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogBody,
-  DialogFooter,
-} from "../components/ui/dialog";
-import { cn, formatDate } from "../lib/utils";
+  DialogFooter } from
+"../components/ui/dialog";
+import { cn as _cn, formatDate as _formatDate } from "../lib/utils";
 import { productionApi, userApi } from "../services/api";
 
 const typeConfigs = {
   MACHINING: { label: "机加车间", color: "bg-blue-500" },
   ASSEMBLY: { label: "装配车间", color: "bg-purple-500" },
-  DEBUGGING: { label: "调试车间", color: "bg-emerald-500" },
+  DEBUGGING: { label: "调试车间", color: "bg-emerald-500" }
 };
 
 export default function WorkshopManagement() {
@@ -83,7 +83,7 @@ export default function WorkshopManagement() {
     location: "",
     capacity_hours: 0,
     description: "",
-    is_active: true,
+    is_active: true
   });
 
   useEffect(() => {
@@ -166,7 +166,7 @@ export default function WorkshopManagement() {
       location: workshop.location || "",
       capacity_hours: workshop.capacity_hours || 0,
       description: workshop.description || "",
-      is_active: workshop.is_active !== false,
+      is_active: workshop.is_active !== false
     });
     setShowEditDialog(true);
   };
@@ -180,7 +180,7 @@ export default function WorkshopManagement() {
       location: "",
       capacity_hours: 0,
       description: "",
-      is_active: true,
+      is_active: true
     });
     setSelectedWorkshop(null);
   };
@@ -191,8 +191,8 @@ export default function WorkshopManagement() {
         const keyword = searchKeyword.toLowerCase();
         return (
           ws.workshop_code?.toLowerCase().includes(keyword) ||
-          ws.workshop_name?.toLowerCase().includes(keyword)
-        );
+          ws.workshop_name?.toLowerCase().includes(keyword));
+
       }
       return true;
     });
@@ -202,8 +202,8 @@ export default function WorkshopManagement() {
     <div className="space-y-6 p-6">
       <PageHeader
         title="车间管理"
-        description="车间列表、创建、编辑、工位管理"
-      />
+        description="车间列表、创建、编辑、工位管理" />
+
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
@@ -214,8 +214,8 @@ export default function WorkshopManagement() {
                 placeholder="搜索车间编码、名称..."
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
-                className="pl-10"
-              />
+                className="pl-10" />
+
             </div>
             <Select value={filterType} onValueChange={setFilterType}>
               <SelectTrigger>
@@ -223,11 +223,11 @@ export default function WorkshopManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部类型</SelectItem>
-                {Object.entries(typeConfigs).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
+                {Object.entries(typeConfigs).map(([key, config]) =>
+                <SelectItem key={key} value={key}>
                     {config.label}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
             <Select value={filterActive} onValueChange={setFilterActive}>
@@ -259,12 +259,12 @@ export default function WorkshopManagement() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="text-center py-8 text-slate-400">加载中...</div>
-          ) : filteredWorkshops.length === 0 ? (
-            <div className="text-center py-8 text-slate-400">暂无车间</div>
-          ) : (
-            <Table>
+          {loading ?
+          <div className="text-center py-8 text-slate-400">加载中...</div> :
+          filteredWorkshops.length === 0 ?
+          <div className="text-center py-8 text-slate-400">暂无车间</div> :
+
+          <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>车间编码</TableHead>
@@ -278,8 +278,8 @@ export default function WorkshopManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredWorkshops.map((workshop) => (
-                  <TableRow key={workshop.id}>
+                {filteredWorkshops.map((workshop) =>
+              <TableRow key={workshop.id}>
                     <TableCell className="font-mono text-sm">
                       {workshop.workshop_code}
                     </TableCell>
@@ -288,63 +288,63 @@ export default function WorkshopManagement() {
                     </TableCell>
                     <TableCell>
                       <Badge
-                        className={
-                          typeConfigs[workshop.workshop_type]?.color ||
-                          "bg-slate-500"
-                        }
-                      >
+                    className={
+                    typeConfigs[workshop.workshop_type]?.color ||
+                    "bg-slate-500"
+                    }>
+
                         {typeConfigs[workshop.workshop_type]?.label ||
-                          workshop.workshop_type}
+                    workshop.workshop_type}
                       </Badge>
                     </TableCell>
                     <TableCell>{workshop.manager_name || "-"}</TableCell>
                     <TableCell>{workshop.location || "-"}</TableCell>
                     <TableCell>{workshop.capacity_hours || 0}</TableCell>
                     <TableCell>
-                      {workshop.is_active !== false ? (
-                        <Badge className="bg-emerald-500">
+                      {workshop.is_active !== false ?
+                  <Badge className="bg-emerald-500">
                           <CheckCircle2 className="w-3 h-3 mr-1" />
                           启用
-                        </Badge>
-                      ) : (
-                        <Badge className="bg-gray-500">
+                        </Badge> :
+
+                  <Badge className="bg-gray-500">
                           <XCircle className="w-3 h-3 mr-1" />
                           停用
                         </Badge>
-                      )}
+                  }
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewDetail(workshop.id)}
-                        >
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleViewDetail(workshop.id)}>
+
                           <Eye className="w-4 h-4" />
                         </Button>
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditClick(workshop)}
-                        >
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEditClick(workshop)}>
+
                           <Edit className="w-4 h-4" />
                         </Button>
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            navigate(`/workshops/${workshop.id}/task-board`)
-                          }
-                        >
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                      navigate(`/workshops/${workshop.id}/task-board`)
+                      }>
+
                           <Wrench className="w-4 h-4" />
                         </Button>
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+              )}
               </TableBody>
             </Table>
-          )}
+          }
         </CardContent>
       </Card>
       {/* Create Dialog */}
@@ -363,13 +363,13 @@ export default function WorkshopManagement() {
                   <Input
                     value={workshopForm.workshop_code}
                     onChange={(e) =>
-                      setWorkshopForm({
-                        ...workshopForm,
-                        workshop_code: e.target.value,
-                      })
+                    setWorkshopForm({
+                      ...workshopForm,
+                      workshop_code: e.target.value
+                    })
                     }
-                    placeholder="请输入车间编码"
-                  />
+                    placeholder="请输入车间编码" />
+
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-2 block">
@@ -378,13 +378,13 @@ export default function WorkshopManagement() {
                   <Input
                     value={workshopForm.workshop_name}
                     onChange={(e) =>
-                      setWorkshopForm({
-                        ...workshopForm,
-                        workshop_name: e.target.value,
-                      })
+                    setWorkshopForm({
+                      ...workshopForm,
+                      workshop_name: e.target.value
+                    })
                     }
-                    placeholder="请输入车间名称"
-                  />
+                    placeholder="请输入车间名称" />
+
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -395,18 +395,18 @@ export default function WorkshopManagement() {
                   <Select
                     value={workshopForm.workshop_type}
                     onValueChange={(val) =>
-                      setWorkshopForm({ ...workshopForm, workshop_type: val })
-                    }
-                  >
+                    setWorkshopForm({ ...workshopForm, workshop_type: val })
+                    }>
+
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(typeConfigs).map(([key, config]) => (
-                        <SelectItem key={key} value={key}>
+                      {Object.entries(typeConfigs).map(([key, config]) =>
+                      <SelectItem key={key} value={key}>
                           {config.label}
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -417,22 +417,22 @@ export default function WorkshopManagement() {
                   <Select
                     value={workshopForm.manager_id?.toString() || ""}
                     onValueChange={(val) =>
-                      setWorkshopForm({
-                        ...workshopForm,
-                        manager_id: val ? parseInt(val) : null,
-                      })
-                    }
-                  >
+                    setWorkshopForm({
+                      ...workshopForm,
+                      manager_id: val ? parseInt(val) : null
+                    })
+                    }>
+
                     <SelectTrigger>
                       <SelectValue placeholder="选择主管" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">无</SelectItem>
-                      {managers.map((mgr) => (
-                        <SelectItem key={mgr.id} value={mgr.id.toString()}>
+                      {managers.map((mgr) =>
+                      <SelectItem key={mgr.id} value={mgr.id.toString()}>
                           {mgr.real_name || mgr.username}
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -443,13 +443,13 @@ export default function WorkshopManagement() {
                   <Input
                     value={workshopForm.location}
                     onChange={(e) =>
-                      setWorkshopForm({
-                        ...workshopForm,
-                        location: e.target.value,
-                      })
+                    setWorkshopForm({
+                      ...workshopForm,
+                      location: e.target.value
+                    })
                     }
-                    placeholder="车间位置"
-                  />
+                    placeholder="车间位置" />
+
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-2 block">
@@ -459,13 +459,13 @@ export default function WorkshopManagement() {
                     type="number"
                     value={workshopForm.capacity_hours}
                     onChange={(e) =>
-                      setWorkshopForm({
-                        ...workshopForm,
-                        capacity_hours: parseFloat(e.target.value) || 0,
-                      })
+                    setWorkshopForm({
+                      ...workshopForm,
+                      capacity_hours: parseFloat(e.target.value) || 0
+                    })
                     }
-                    placeholder="0"
-                  />
+                    placeholder="0" />
+
                 </div>
               </div>
               <div>
@@ -474,21 +474,21 @@ export default function WorkshopManagement() {
                   className="w-full min-h-[80px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={workshopForm.description}
                   onChange={(e) =>
-                    setWorkshopForm({
-                      ...workshopForm,
-                      description: e.target.value,
-                    })
+                  setWorkshopForm({
+                    ...workshopForm,
+                    description: e.target.value
+                  })
                   }
-                  placeholder="车间描述..."
-                />
+                  placeholder="车间描述..." />
+
               </div>
             </div>
           </DialogBody>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowCreateDialog(false)}
-            >
+              onClick={() => setShowCreateDialog(false)}>
+
               取消
             </Button>
             <Button onClick={handleCreate}>创建</Button>
@@ -511,13 +511,13 @@ export default function WorkshopManagement() {
                   <Input
                     value={workshopForm.workshop_code}
                     onChange={(e) =>
-                      setWorkshopForm({
-                        ...workshopForm,
-                        workshop_code: e.target.value,
-                      })
+                    setWorkshopForm({
+                      ...workshopForm,
+                      workshop_code: e.target.value
+                    })
                     }
-                    placeholder="请输入车间编码"
-                  />
+                    placeholder="请输入车间编码" />
+
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-2 block">
@@ -526,13 +526,13 @@ export default function WorkshopManagement() {
                   <Input
                     value={workshopForm.workshop_name}
                     onChange={(e) =>
-                      setWorkshopForm({
-                        ...workshopForm,
-                        workshop_name: e.target.value,
-                      })
+                    setWorkshopForm({
+                      ...workshopForm,
+                      workshop_name: e.target.value
+                    })
                     }
-                    placeholder="请输入车间名称"
-                  />
+                    placeholder="请输入车间名称" />
+
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -543,18 +543,18 @@ export default function WorkshopManagement() {
                   <Select
                     value={workshopForm.workshop_type}
                     onValueChange={(val) =>
-                      setWorkshopForm({ ...workshopForm, workshop_type: val })
-                    }
-                  >
+                    setWorkshopForm({ ...workshopForm, workshop_type: val })
+                    }>
+
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(typeConfigs).map(([key, config]) => (
-                        <SelectItem key={key} value={key}>
+                      {Object.entries(typeConfigs).map(([key, config]) =>
+                      <SelectItem key={key} value={key}>
                           {config.label}
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -565,22 +565,22 @@ export default function WorkshopManagement() {
                   <Select
                     value={workshopForm.manager_id?.toString() || ""}
                     onValueChange={(val) =>
-                      setWorkshopForm({
-                        ...workshopForm,
-                        manager_id: val ? parseInt(val) : null,
-                      })
-                    }
-                  >
+                    setWorkshopForm({
+                      ...workshopForm,
+                      manager_id: val ? parseInt(val) : null
+                    })
+                    }>
+
                     <SelectTrigger>
                       <SelectValue placeholder="选择主管" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">无</SelectItem>
-                      {managers.map((mgr) => (
-                        <SelectItem key={mgr.id} value={mgr.id.toString()}>
+                      {managers.map((mgr) =>
+                      <SelectItem key={mgr.id} value={mgr.id.toString()}>
                           {mgr.real_name || mgr.username}
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -591,13 +591,13 @@ export default function WorkshopManagement() {
                   <Input
                     value={workshopForm.location}
                     onChange={(e) =>
-                      setWorkshopForm({
-                        ...workshopForm,
-                        location: e.target.value,
-                      })
+                    setWorkshopForm({
+                      ...workshopForm,
+                      location: e.target.value
+                    })
                     }
-                    placeholder="车间位置"
-                  />
+                    placeholder="车间位置" />
+
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-2 block">
@@ -607,13 +607,13 @@ export default function WorkshopManagement() {
                     type="number"
                     value={workshopForm.capacity_hours}
                     onChange={(e) =>
-                      setWorkshopForm({
-                        ...workshopForm,
-                        capacity_hours: parseFloat(e.target.value) || 0,
-                      })
+                    setWorkshopForm({
+                      ...workshopForm,
+                      capacity_hours: parseFloat(e.target.value) || 0
+                    })
                     }
-                    placeholder="0"
-                  />
+                    placeholder="0" />
+
                 </div>
               </div>
               <div>
@@ -622,13 +622,13 @@ export default function WorkshopManagement() {
                   className="w-full min-h-[80px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={workshopForm.description}
                   onChange={(e) =>
-                    setWorkshopForm({
-                      ...workshopForm,
-                      description: e.target.value,
-                    })
+                  setWorkshopForm({
+                    ...workshopForm,
+                    description: e.target.value
+                  })
                   }
-                  placeholder="车间描述..."
-                />
+                  placeholder="车间描述..." />
+
               </div>
               <div>
                 <label className="flex items-center gap-2">
@@ -636,12 +636,12 @@ export default function WorkshopManagement() {
                     type="checkbox"
                     checked={workshopForm.is_active}
                     onChange={(e) =>
-                      setWorkshopForm({
-                        ...workshopForm,
-                        is_active: e.target.checked,
-                      })
-                    }
-                  />
+                    setWorkshopForm({
+                      ...workshopForm,
+                      is_active: e.target.checked
+                    })
+                    } />
+
                   <span className="text-sm">启用</span>
                 </label>
               </div>
@@ -664,8 +664,8 @@ export default function WorkshopManagement() {
             </DialogTitle>
           </DialogHeader>
           <DialogBody>
-            {selectedWorkshop && (
-              <div className="space-y-4">
+            {selectedWorkshop &&
+            <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <div className="text-sm text-slate-500 mb-1">车间编码</div>
@@ -680,10 +680,10 @@ export default function WorkshopManagement() {
                   <div>
                     <div className="text-sm text-slate-500 mb-1">车间类型</div>
                     <Badge
-                      className={
-                        typeConfigs[selectedWorkshop.workshop_type]?.color
-                      }
-                    >
+                    className={
+                    typeConfigs[selectedWorkshop.workshop_type]?.color
+                    }>
+
                       {typeConfigs[selectedWorkshop.workshop_type]?.label}
                     </Badge>
                   </div>
@@ -703,43 +703,43 @@ export default function WorkshopManagement() {
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">状态</div>
-                    {selectedWorkshop.is_active !== false ? (
-                      <Badge className="bg-emerald-500">启用</Badge>
-                    ) : (
-                      <Badge className="bg-gray-500">停用</Badge>
-                    )}
+                    {selectedWorkshop.is_active !== false ?
+                  <Badge className="bg-emerald-500">启用</Badge> :
+
+                  <Badge className="bg-gray-500">停用</Badge>
+                  }
                   </div>
                 </div>
-                {selectedWorkshop.description && (
-                  <div>
+                {selectedWorkshop.description &&
+              <div>
                     <div className="text-sm text-slate-500 mb-1">描述</div>
                     <div>{selectedWorkshop.description}</div>
                   </div>
-                )}
+              }
               </div>
-            )}
+            }
           </DialogBody>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowDetailDialog(false)}
-            >
+              onClick={() => setShowDetailDialog(false)}>
+
               关闭
             </Button>
-            {selectedWorkshop && (
-              <Button
-                onClick={() => {
-                  setShowDetailDialog(false);
-                  handleEditClick(selectedWorkshop);
-                }}
-              >
+            {selectedWorkshop &&
+            <Button
+              onClick={() => {
+                setShowDetailDialog(false);
+                handleEditClick(selectedWorkshop);
+              }}>
+
                 <Edit className="w-4 h-4 mr-2" />
                 编辑
               </Button>
-            )}
+            }
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }

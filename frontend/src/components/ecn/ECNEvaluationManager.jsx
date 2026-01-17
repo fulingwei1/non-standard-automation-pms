@@ -8,43 +8,43 @@ import { Badge } from "../../components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Textarea } from "../../components/ui/textarea";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "../../components/ui/select";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogBody, 
-  DialogFooter 
-} from "../../components/ui/dialog";
-import { 
-  Plus, 
-  TrendingUp, 
-  DollarSign, 
-  Clock, 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue } from
+"../../components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogBody,
+  DialogFooter } from
+"../../components/ui/dialog";
+import {
+  Plus,
+  TrendingUp,
+  DollarSign,
+  Clock,
   AlertTriangle,
   CheckCircle2,
-  XCircle
-} from "lucide-react";
-import { 
+  XCircle } from
+"lucide-react";
+import {
   evaluationStatusConfigs,
   impactTypeConfigs,
-  formatStatus
-} from "./ecnConstants";
-import { cn, formatDate } from "../../lib/utils";
+  formatStatus } from
+"./ecnConstants";
+import { cn, formatDate } from "../../lib/utils";import { toast } from "sonner";
 
-export function ECNEvaluationManager({ 
-  ecn, 
-  evaluations, 
-  evaluationSummary, 
+export function ECNEvaluationManager({
+  ecn,
+  evaluations,
+  evaluationSummary,
   onCreateEvaluation,
-  loading 
+  loading: _loading
 }) {
   const [showEvaluationDialog, setShowEvaluationDialog] = useState(false);
   const [evaluationForm, setEvaluationForm] = useState({
@@ -56,7 +56,7 @@ export function ECNEvaluationManager({
     quality_impact: "",
     risk_level: "",
     recommendation: "",
-    evaluated_by: "",
+    evaluated_by: ""
   });
 
   const getRiskLevelConfig = (level) => {
@@ -64,7 +64,7 @@ export function ECNEvaluationManager({
       LOW: { label: "低风险", color: "bg-green-500", textColor: "text-green-50" },
       MEDIUM: { label: "中等风险", color: "bg-yellow-500", textColor: "text-yellow-50" },
       HIGH: { label: "高风险", color: "bg-red-500", textColor: "text-red-50" },
-      CRITICAL: { label: "关键风险", color: "bg-purple-500", textColor: "text-purple-50" },
+      CRITICAL: { label: "关键风险", color: "bg-purple-500", textColor: "text-purple-50" }
     };
     return configs[level] || configs.LOW;
   };
@@ -78,7 +78,7 @@ export function ECNEvaluationManager({
     onCreateEvaluation({
       ...evaluationForm,
       ecn_id: ecn.id,
-      evaluation_date: new Date().toISOString(),
+      evaluation_date: new Date().toISOString()
     });
 
     setEvaluationForm({
@@ -90,7 +90,7 @@ export function ECNEvaluationManager({
       quality_impact: "",
       risk_level: "",
       recommendation: "",
-      evaluated_by: "",
+      evaluated_by: ""
     });
     setShowEvaluationDialog(false);
   };
@@ -98,8 +98,8 @@ export function ECNEvaluationManager({
   return (
     <>
       {/* 评估汇总 */}
-      {evaluationSummary && (
-        <Card>
+      {evaluationSummary &&
+      <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <TrendingUp className="w-5 h-5" />
@@ -134,52 +134,52 @@ export function ECNEvaluationManager({
               </div>
             </div>
             
-            {evaluationSummary.average_risk_level && (
-              <div className="flex items-center gap-2">
+            {evaluationSummary.average_risk_level &&
+          <div className="flex items-center gap-2">
                 <span className="text-sm text-slate-500">平均风险等级:</span>
                 <Badge className={cn(
-                  getRiskLevelConfig(evaluationSummary.average_risk_level).color,
-                  getRiskLevelConfig(evaluationSummary.average_risk_level).textColor
-                )}>
+              getRiskLevelConfig(evaluationSummary.average_risk_level).color,
+              getRiskLevelConfig(evaluationSummary.average_risk_level).textColor
+            )}>
                   {getRiskLevelConfig(evaluationSummary.average_risk_level).label}
                 </Badge>
               </div>
-            )}
+          }
           </CardContent>
         </Card>
-      )}
+      }
 
       {/* 部门评估 */}
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold">部门评估</h3>
-        {(ecn.status === "EVALUATING" || ecn.status === "SUBMITTED") && (
-          <Button onClick={() => setShowEvaluationDialog(true)}>
+        {(ecn.status === "EVALUATING" || ecn.status === "SUBMITTED") &&
+        <Button onClick={() => setShowEvaluationDialog(true)}>
             <Plus className="w-4 h-4 mr-2" />
             创建评估
           </Button>
-        )}
+        }
       </div>
 
-      {evaluations.length === 0 ? (
-        <Card>
+      {evaluations.length === 0 ?
+      <Card>
           <CardContent className="py-8 text-center text-slate-400">
             暂无评估记录
           </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {evaluations.map((evaluation) => (
-            <Card key={evaluation.id} className="border-l-4 border-l-blue-500">
+        </Card> :
+
+      <div className="space-y-4">
+          {evaluations.map((evaluation) =>
+        <Card key={evaluation.id} className="border-l-4 border-l-blue-500">
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
                     <CardTitle className="text-base flex items-center gap-2">
                       {evaluation.department}
                       <Badge className={cn(
-                        evaluationStatusConfigs[evaluation.status]?.color,
-                        evaluationStatusConfigs[evaluation.status]?.textColor,
-                        "text-xs"
-                      )}>
+                    evaluationStatusConfigs[evaluation.status]?.color,
+                    evaluationStatusConfigs[evaluation.status]?.textColor,
+                    "text-xs"
+                  )}>
                         {formatStatus(evaluation.status)}
                       </Badge>
                     </CardTitle>
@@ -189,20 +189,20 @@ export function ECNEvaluationManager({
                     </CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
-                    {evaluation.impact_type && (
-                      <Badge variant="outline" className="text-xs">
+                    {evaluation.impact_type &&
+                <Badge variant="outline" className="text-xs">
                         {impactTypeConfigs[evaluation.impact_type]?.label || evaluation.impact_type}
                       </Badge>
-                    )}
-                    {evaluation.risk_level && (
-                      <Badge className={cn(
-                        getRiskLevelConfig(evaluation.risk_level).color,
-                        getRiskLevelConfig(evaluation.risk_level).textColor,
-                        "text-xs"
-                      )}>
+                }
+                    {evaluation.risk_level &&
+                <Badge className={cn(
+                  getRiskLevelConfig(evaluation.risk_level).color,
+                  getRiskLevelConfig(evaluation.risk_level).textColor,
+                  "text-xs"
+                )}>
                         {getRiskLevelConfig(evaluation.risk_level).label}
                       </Badge>
-                    )}
+                }
                   </div>
                 </div>
               </CardHeader>
@@ -252,9 +252,9 @@ export function ECNEvaluationManager({
                 </div>
               </CardContent>
             </Card>
-          ))}
+        )}
         </div>
-      )}
+      }
 
       {/* 创建评估对话框 */}
       <Dialog open={showEvaluationDialog} onOpenChange={setShowEvaluationDialog}>
@@ -269,9 +269,9 @@ export function ECNEvaluationManager({
                 <Select
                   value={evaluationForm.department}
                   onValueChange={(value) =>
-                    setEvaluationForm({ ...evaluationForm, department: value })
-                  }
-                >
+                  setEvaluationForm({ ...evaluationForm, department: value })
+                  }>
+
                   <SelectTrigger>
                     <SelectValue placeholder="选择部门" />
                   </SelectTrigger>
@@ -290,18 +290,18 @@ export function ECNEvaluationManager({
                 <Select
                   value={evaluationForm.impact_type}
                   onValueChange={(value) =>
-                    setEvaluationForm({ ...evaluationForm, impact_type: value })
-                  }
-                >
+                  setEvaluationForm({ ...evaluationForm, impact_type: value })
+                  }>
+
                   <SelectTrigger>
                     <SelectValue placeholder="选择影响类型" />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(impactTypeConfigs).map(([key, config]) => (
-                      <SelectItem key={key} value={key}>
+                    {Object.entries(impactTypeConfigs).map(([key, config]) =>
+                    <SelectItem key={key} value={key}>
                         {config.icon} {config.label}
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -312,11 +312,11 @@ export function ECNEvaluationManager({
               <Textarea
                 value={evaluationForm.impact_description}
                 onChange={(e) =>
-                  setEvaluationForm({ ...evaluationForm, impact_description: e.target.value })
+                setEvaluationForm({ ...evaluationForm, impact_description: e.target.value })
                 }
                 placeholder="详细描述变更带来的影响..."
-                rows={3}
-              />
+                rows={3} />
+
             </div>
 
             <div className="grid grid-cols-3 gap-4">
@@ -326,11 +326,11 @@ export function ECNEvaluationManager({
                   type="number"
                   value={evaluationForm.cost_impact}
                   onChange={(e) =>
-                    setEvaluationForm({ ...evaluationForm, cost_impact: e.target.value })
+                  setEvaluationForm({ ...evaluationForm, cost_impact: e.target.value })
                   }
                   placeholder="0"
-                  className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white"
-                />
+                  className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white" />
+
               </div>
               <div>
                 <label className="text-sm font-medium mb-2 block">进度影响(天)</label>
@@ -338,20 +338,20 @@ export function ECNEvaluationManager({
                   type="number"
                   value={evaluationForm.schedule_impact}
                   onChange={(e) =>
-                    setEvaluationForm({ ...evaluationForm, schedule_impact: e.target.value })
+                  setEvaluationForm({ ...evaluationForm, schedule_impact: e.target.value })
                   }
                   placeholder="0"
-                  className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white"
-                />
+                  className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white" />
+
               </div>
               <div>
                 <label className="text-sm font-medium mb-2 block">风险等级</label>
                 <Select
                   value={evaluationForm.risk_level}
                   onValueChange={(value) =>
-                    setEvaluationForm({ ...evaluationForm, risk_level: value })
-                  }
-                >
+                  setEvaluationForm({ ...evaluationForm, risk_level: value })
+                  }>
+
                   <SelectTrigger>
                     <SelectValue placeholder="选择风险等级" />
                   </SelectTrigger>
@@ -370,24 +370,24 @@ export function ECNEvaluationManager({
               <Textarea
                 value={evaluationForm.recommendation}
                 onChange={(e) =>
-                  setEvaluationForm({ ...evaluationForm, recommendation: e.target.value })
+                setEvaluationForm({ ...evaluationForm, recommendation: e.target.value })
                 }
                 placeholder="基于评估结果提出建议..."
-                rows={3}
-              />
+                rows={3} />
+
             </div>
           </DialogBody>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowEvaluationDialog(false)}
-            >
+              onClick={() => setShowEvaluationDialog(false)}>
+
               取消
             </Button>
             <Button onClick={handleCreateEvaluation}>创建评估</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
-  );
+    </>);
+
 }

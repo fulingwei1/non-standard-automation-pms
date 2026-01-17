@@ -16,16 +16,16 @@ import {
   Tag,
   DollarSign,
   Box,
-  AlertCircle,
-} from "lucide-react";
+  AlertCircle } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
-} from "../components/ui/card";
+  CardDescription } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -34,30 +34,30 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "../components/ui/table";
+  TableRow } from
+"../components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogBody,
-  DialogFooter,
-} from "../components/ui/dialog";
+  DialogFooter } from
+"../components/ui/dialog";
 import { ApiIntegrationError } from "../components/ui";
-import { cn, formatCurrency } from "../lib/utils";
-import { fadeIn } from "../lib/animations";
+import { cn as _cn, formatCurrency } from "../lib/utils";
+import { fadeIn as _fadeIn } from "../lib/animations";
 import { materialApi, supplierApi } from "../services/api";
 export default function MaterialList() {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [materials, setMaterials] = useState(null);
@@ -80,7 +80,7 @@ export default function MaterialList() {
     unit: "PCS",
     unit_price: 0,
     supplier_id: null,
-    remark: "",
+    remark: ""
   });
   useEffect(() => {
     fetchMaterials();
@@ -93,9 +93,9 @@ export default function MaterialList() {
       setError(null);
       const params = {};
       if (filterCategory && filterCategory !== "all")
-        params.category_id = filterCategory;
+      params.category_id = filterCategory;
       if (filterSupplier && filterSupplier !== "all")
-        params.supplier_id = filterSupplier;
+      params.supplier_id = filterSupplier;
       if (searchKeyword) params.search = searchKeyword;
       const res = await materialApi.list(params);
       const materialList = res.data?.items || res.data || [];
@@ -144,7 +144,7 @@ export default function MaterialList() {
         unit: "PCS",
         unit_price: 0,
         supplier_id: null,
-        remark: "",
+        remark: ""
       });
       fetchMaterials();
     } catch (error) {
@@ -170,8 +170,8 @@ export default function MaterialList() {
         return (
           material.material_code?.toLowerCase().includes(keyword) ||
           material.material_name?.toLowerCase().includes(keyword) ||
-          material.specification?.toLowerCase().includes(keyword)
-        );
+          material.specification?.toLowerCase().includes(keyword));
+
       }
       return true;
     });
@@ -184,16 +184,16 @@ export default function MaterialList() {
         <div className="container mx-auto px-4 py-6 space-y-6">
           <PageHeader
             title="物料管理"
-            description="物料主数据管理，支持分类、供应商关联、价格管理"
-          />
+            description="物料主数据管理，支持分类、供应商关联、价格管理" />
+
           <ApiIntegrationError
             error={error}
             apiEndpoint="/api/v1/materials"
-            onRetry={fetchMaterials}
-          />
+            onRetry={fetchMaterials} />
+
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -201,8 +201,8 @@ export default function MaterialList() {
       <div className="container mx-auto px-4 py-6 space-y-6">
         <PageHeader
           title="物料管理"
-          description="物料主数据管理，支持分类、供应商关联、价格管理"
-        />
+          description="物料主数据管理，支持分类、供应商关联、价格管理" />
+
         {/* Filters */}
         <Card className="bg-slate-800/50 border-slate-700/50">
           <CardContent className="pt-6">
@@ -213,8 +213,8 @@ export default function MaterialList() {
                   placeholder="搜索物料编码、名称..."
                   value={searchKeyword}
                   onChange={(e) => setSearchKeyword(e.target.value)}
-                  className="pl-10"
-                />
+                  className="pl-10" />
+
               </div>
               <Select value={filterCategory} onValueChange={setFilterCategory}>
                 <SelectTrigger>
@@ -222,11 +222,11 @@ export default function MaterialList() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部分类</SelectItem>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id.toString()}>
+                  {categories.map((cat) =>
+                  <SelectItem key={cat.id} value={cat.id.toString()}>
                       {cat.name}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
               <Select value={filterSupplier} onValueChange={setFilterSupplier}>
@@ -235,14 +235,14 @@ export default function MaterialList() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部供应商</SelectItem>
-                  {suppliers.map((supplier) => (
-                    <SelectItem
-                      key={supplier.id}
-                      value={supplier.id.toString()}
-                    >
+                  {suppliers.map((supplier) =>
+                  <SelectItem
+                    key={supplier.id}
+                    value={supplier.id.toString()}>
+
                       {supplier.name}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
               <Button onClick={() => setShowCreateDialog(true)}>
@@ -261,16 +261,16 @@ export default function MaterialList() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {loading ? (
-              <div className="text-center py-8 text-slate-400">加载中...</div>
-            ) : !materials ? (
-              <div className="text-center py-8 text-slate-400">暂无数据</div>
-            ) : filteredMaterials.length === 0 ? (
-              <div className="text-center py-8 text-slate-400">
+            {loading ?
+            <div className="text-center py-8 text-slate-400">加载中...</div> :
+            !materials ?
+            <div className="text-center py-8 text-slate-400">暂无数据</div> :
+            filteredMaterials.length === 0 ?
+            <div className="text-center py-8 text-slate-400">
                 暂无物料数据
-              </div>
-            ) : (
-              <Table>
+              </div> :
+
+            <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>物料编码</TableHead>
@@ -284,8 +284,8 @@ export default function MaterialList() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredMaterials.map((material) => (
-                    <TableRow key={material.id}>
+                  {filteredMaterials.map((material) =>
+                <TableRow key={material.id}>
                       <TableCell className="font-mono text-sm">
                         {material.material_code}
                       </TableCell>
@@ -296,48 +296,48 @@ export default function MaterialList() {
                         {material.specification || "-"}
                       </TableCell>
                       <TableCell>
-                        {material.category_name ? (
-                          <Badge variant="outline">
+                        {material.category_name ?
+                    <Badge variant="outline">
                             {material.category_name}
-                          </Badge>
-                        ) : (
-                          "-"
-                        )}
+                          </Badge> :
+
+                    "-"
+                    }
                       </TableCell>
                       <TableCell>{material.unit || "PCS"}</TableCell>
                       <TableCell>
-                        {material.unit_price
-                          ? formatCurrency(material.unit_price)
-                          : "-"}
+                        {material.unit_price ?
+                    formatCurrency(material.unit_price) :
+                    "-"}
                       </TableCell>
                       <TableCell>
-                        {material.supplier_name ? (
-                          <div className="flex items-center gap-2">
+                        {material.supplier_name ?
+                    <div className="flex items-center gap-2">
                             <Building2 className="w-4 h-4 text-slate-400" />
                             <span className="text-sm">
                               {material.supplier_name}
                             </span>
-                          </div>
-                        ) : (
-                          "-"
-                        )}
+                          </div> :
+
+                    "-"
+                    }
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleViewDetail(material.id)}
-                          >
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleViewDetail(material.id)}>
+
                             <Eye className="w-4 h-4" />
                           </Button>
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                )}
                 </TableBody>
               </Table>
-            )}
+            }
           </CardContent>
         </Card>
         {/* Create Material Dialog */}
@@ -355,13 +355,13 @@ export default function MaterialList() {
                   <Input
                     value={newMaterial.material_code}
                     onChange={(e) =>
-                      setNewMaterial({
-                        ...newMaterial,
-                        material_code: e.target.value,
-                      })
+                    setNewMaterial({
+                      ...newMaterial,
+                      material_code: e.target.value
+                    })
                     }
-                    placeholder="请输入物料编码"
-                  />
+                    placeholder="请输入物料编码" />
+
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-2 block">
@@ -370,49 +370,49 @@ export default function MaterialList() {
                   <Input
                     value={newMaterial.material_name}
                     onChange={(e) =>
-                      setNewMaterial({
-                        ...newMaterial,
-                        material_name: e.target.value,
-                      })
+                    setNewMaterial({
+                      ...newMaterial,
+                      material_name: e.target.value
+                    })
                     }
-                    placeholder="请输入物料名称"
-                  />
+                    placeholder="请输入物料名称" />
+
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-2 block">规格</label>
                   <Input
                     value={newMaterial.specification}
                     onChange={(e) =>
-                      setNewMaterial({
-                        ...newMaterial,
-                        specification: e.target.value,
-                      })
+                    setNewMaterial({
+                      ...newMaterial,
+                      specification: e.target.value
+                    })
                     }
-                    placeholder="请输入规格"
-                  />
+                    placeholder="请输入规格" />
+
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-2 block">分类</label>
                   <Select
                     value={newMaterial.category_id?.toString() || "none"}
                     onValueChange={(val) =>
-                      setNewMaterial({
-                        ...newMaterial,
-                        category_id:
-                          val && val !== "none" ? parseInt(val) : null,
-                      })
-                    }
-                  >
+                    setNewMaterial({
+                      ...newMaterial,
+                      category_id:
+                      val && val !== "none" ? parseInt(val) : null
+                    })
+                    }>
+
                     <SelectTrigger>
                       <SelectValue placeholder="选择分类" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">无</SelectItem>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id.toString()}>
+                      {categories.map((cat) =>
+                      <SelectItem key={cat.id} value={cat.id.toString()}>
                           {cat.name}
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -421,10 +421,10 @@ export default function MaterialList() {
                   <Input
                     value={newMaterial.unit}
                     onChange={(e) =>
-                      setNewMaterial({ ...newMaterial, unit: e.target.value })
+                    setNewMaterial({ ...newMaterial, unit: e.target.value })
                     }
-                    placeholder="PCS"
-                  />
+                    placeholder="PCS" />
+
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-2 block">单价</label>
@@ -432,13 +432,13 @@ export default function MaterialList() {
                     type="number"
                     value={newMaterial.unit_price}
                     onChange={(e) =>
-                      setNewMaterial({
-                        ...newMaterial,
-                        unit_price: parseFloat(e.target.value) || 0,
-                      })
+                    setNewMaterial({
+                      ...newMaterial,
+                      unit_price: parseFloat(e.target.value) || 0
+                    })
                     }
-                    placeholder="0.00"
-                  />
+                    placeholder="0.00" />
+
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-2 block">
@@ -447,26 +447,26 @@ export default function MaterialList() {
                   <Select
                     value={newMaterial.supplier_id?.toString() || "none"}
                     onValueChange={(val) =>
-                      setNewMaterial({
-                        ...newMaterial,
-                        supplier_id:
-                          val && val !== "none" ? parseInt(val) : null,
-                      })
-                    }
-                  >
+                    setNewMaterial({
+                      ...newMaterial,
+                      supplier_id:
+                      val && val !== "none" ? parseInt(val) : null
+                    })
+                    }>
+
                     <SelectTrigger>
                       <SelectValue placeholder="选择供应商" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">无</SelectItem>
-                      {suppliers.map((supplier) => (
-                        <SelectItem
-                          key={supplier.id}
-                          value={supplier.id.toString()}
-                        >
+                      {suppliers.map((supplier) =>
+                      <SelectItem
+                        key={supplier.id}
+                        value={supplier.id.toString()}>
+
                           {supplier.name}
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -475,18 +475,18 @@ export default function MaterialList() {
                   <Input
                     value={newMaterial.remark}
                     onChange={(e) =>
-                      setNewMaterial({ ...newMaterial, remark: e.target.value })
+                    setNewMaterial({ ...newMaterial, remark: e.target.value })
                     }
-                    placeholder="备注信息"
-                  />
+                    placeholder="备注信息" />
+
                 </div>
               </div>
             </DialogBody>
             <DialogFooter>
               <Button
                 variant="outline"
-                onClick={() => setShowCreateDialog(false)}
-              >
+                onClick={() => setShowCreateDialog(false)}>
+
                 取消
               </Button>
               <Button onClick={handleCreateMaterial}>创建</Button>
@@ -500,8 +500,8 @@ export default function MaterialList() {
               <DialogTitle className="text-slate-200">物料详情</DialogTitle>
             </DialogHeader>
             <DialogBody>
-              {selectedMaterial && (
-                <div className="space-y-4">
+              {selectedMaterial &&
+              <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <div className="text-sm text-slate-500 mb-1">
@@ -532,9 +532,9 @@ export default function MaterialList() {
                     <div>
                       <div className="text-sm text-slate-500 mb-1">单价</div>
                       <div>
-                        {selectedMaterial.unit_price
-                          ? formatCurrency(selectedMaterial.unit_price)
-                          : "-"}
+                        {selectedMaterial.unit_price ?
+                      formatCurrency(selectedMaterial.unit_price) :
+                      "-"}
                       </div>
                     </div>
                     <div>
@@ -542,26 +542,26 @@ export default function MaterialList() {
                       <div>{selectedMaterial.supplier_name || "-"}</div>
                     </div>
                   </div>
-                  {selectedMaterial.remark && (
-                    <div>
+                  {selectedMaterial.remark &&
+                <div>
                       <div className="text-sm text-slate-500 mb-1">备注</div>
                       <div>{selectedMaterial.remark}</div>
                     </div>
-                  )}
+                }
                 </div>
-              )}
+              }
             </DialogBody>
             <DialogFooter>
               <Button
                 variant="outline"
-                onClick={() => setShowDetailDialog(false)}
-              >
+                onClick={() => setShowDetailDialog(false)}>
+
                 关闭
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
-    </div>
-  );
+    </div>);
+
 }

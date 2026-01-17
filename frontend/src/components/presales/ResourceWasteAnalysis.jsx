@@ -10,8 +10,8 @@ import {
   DollarSign,
   BarChart2,
   PieChart,
-  Info,
-} from "lucide-react";
+  Info } from
+"lucide-react";
 
 /**
  * 丢标原因配置
@@ -24,7 +24,7 @@ const LOSS_REASONS = {
   CUSTOMER_BUDGET: { label: "客户预算", color: "bg-purple-500" },
   CUSTOMER_CANCEL: { label: "客户取消", color: "bg-slate-500" },
   RELATIONSHIP: { label: "关系不足", color: "bg-pink-500" },
-  OTHER: { label: "其他", color: "bg-gray-500" },
+  OTHER: { label: "其他", color: "bg-gray-500" }
 };
 
 /**
@@ -50,8 +50,8 @@ const ResourceWasteOverview = ({ data }) => {
           <Info className="h-8 w-8 mx-auto mb-2 opacity-50" />
           <p>暂无数据</p>
         </CardContent>
-      </Card>
-    );
+      </Card>);
+
   }
 
   const {
@@ -59,10 +59,10 @@ const ResourceWasteOverview = ({ data }) => {
     won_leads,
     lost_leads,
     overall_win_rate,
-    total_investment_hours,
+    total_investment_hours: _total_investment_hours,
     wasted_hours,
     wasted_cost,
-    waste_rate,
+    waste_rate
   } = data;
 
   const wasteRatePercent = Math.round(waste_rate * 100);
@@ -125,17 +125,17 @@ const ResourceWasteOverview = ({ data }) => {
           <div className="flex h-4 rounded-full overflow-hidden">
             <div
               className="bg-green-500"
-              style={{ width: `${100 - wasteRatePercent}%` }}
-            />
+              style={{ width: `${100 - wasteRatePercent}%` }} />
+
             <div
               className="bg-red-400"
-              style={{ width: `${wasteRatePercent}%` }}
-            />
+              style={{ width: `${wasteRatePercent}%` }} />
+
           </div>
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 };
 
 /**
@@ -154,19 +154,19 @@ const LossReasonDistribution = ({ data }) => {
         <CardContent className="py-8 text-center text-slate-500">
           <p>暂无丢标数据</p>
         </CardContent>
-      </Card>
-    );
+      </Card>);
+
   }
 
   const total = Object.values(data).reduce((sum, count) => sum + count, 0);
-  const sortedReasons = Object.entries(data)
-    .sort((a, b) => b[1] - a[1])
-    .map(([reason, count]) => ({
-      reason,
-      count,
-      percent: Math.round((count / total) * 100),
-      ...(LOSS_REASONS[reason] || LOSS_REASONS.OTHER),
-    }));
+  const sortedReasons = Object.entries(data).
+  sort((a, b) => b[1] - a[1]).
+  map(([reason, count]) => ({
+    reason,
+    count,
+    percent: Math.round(count / total * 100),
+    ...(LOSS_REASONS[reason] || LOSS_REASONS.OTHER)
+  }));
 
   return (
     <Card className="border-slate-200">
@@ -178,28 +178,28 @@ const LossReasonDistribution = ({ data }) => {
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {sortedReasons.map((item, index) => (
-            <div key={index} className="flex items-center gap-3">
+          {sortedReasons.map((item, index) =>
+          <div key={index} className="flex items-center gap-3">
               <div className={`w-3 h-3 rounded-full ${item.color}`} />
               <span className="text-sm text-slate-700 flex-1">
                 {item.label}
               </span>
               <div className="w-24">
                 <Progress
-                  value={item.percent}
-                  className="h-2"
-                  indicatorClassName={item.color}
-                />
+                value={item.percent}
+                className="h-2"
+                indicatorClassName={item.color} />
+
               </div>
               <span className="text-sm text-slate-500 w-16 text-right">
                 {item.count}次 ({item.percent}%)
               </span>
             </div>
-          ))}
+          )}
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 };
 
 /**
@@ -218,8 +218,8 @@ const SalespersonPerformanceRanking = ({ data, type = "waste" }) => {
         <CardContent className="py-8 text-center text-slate-500">
           <p>暂无数据</p>
         </CardContent>
-      </Card>
-    );
+      </Card>);
+
   }
 
   return (
@@ -244,32 +244,32 @@ const SalespersonPerformanceRanking = ({ data, type = "waste" }) => {
             return (
               <div
                 key={sp.salesperson_id}
-                className={`p-3 rounded-lg ${index < 3 && type === "waste" ? "bg-red-50" : "bg-slate-50"}`}
-              >
+                className={`p-3 rounded-lg ${index < 3 && type === "waste" ? "bg-red-50" : "bg-slate-50"}`}>
+
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <span
                       className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-                        index < 3
-                          ? "bg-red-500 text-white"
-                          : "bg-slate-300 text-slate-700"
-                      }`}
-                    >
+                      index < 3 ?
+                      "bg-red-500 text-white" :
+                      "bg-slate-300 text-slate-700"}`
+                      }>
+
                       {index + 1}
                     </span>
                     <span className="font-medium text-slate-700">
                       {sp.salesperson_name}
                     </span>
-                    {sp.department && (
-                      <span className="text-xs text-slate-400">
+                    {sp.department &&
+                    <span className="text-xs text-slate-400">
                         {sp.department}
                       </span>
-                    )}
+                    }
                   </div>
                   <Badge
                     variant={isHighPerformer ? "default" : "destructive"}
-                    className="text-xs"
-                  >
+                    className="text-xs">
+
                     中标率 {winRatePercent}%
                   </Badge>
                 </div>
@@ -299,23 +299,23 @@ const SalespersonPerformanceRanking = ({ data, type = "waste" }) => {
                   </div>
                 </div>
 
-                {sp.top_loss_reasons?.length > 0 && (
-                  <div className="mt-2 flex items-center gap-1 flex-wrap">
+                {sp.top_loss_reasons?.length > 0 &&
+                <div className="mt-2 flex items-center gap-1 flex-wrap">
                     <span className="text-xs text-slate-500">主要原因:</span>
-                    {sp.top_loss_reasons.map((r, i) => (
-                      <Badge key={i} variant="outline" className="text-xs">
+                    {sp.top_loss_reasons.map((r, i) =>
+                  <Badge key={i} variant="outline" className="text-xs">
                         {LOSS_REASONS[r.reason]?.label || r.reason} ({r.count})
                       </Badge>
-                    ))}
+                  )}
                   </div>
-                )}
-              </div>
-            );
+                }
+              </div>);
+
           })}
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 };
 
 /**
@@ -334,8 +334,8 @@ const MonthlyWasteTrend = ({ data }) => {
         <CardContent className="py-8 text-center text-slate-500">
           <p>暂无趋势数据</p>
         </CardContent>
-      </Card>
-    );
+      </Card>);
+
   }
 
   return (
@@ -348,24 +348,24 @@ const MonthlyWasteTrend = ({ data }) => {
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          {data.map((item, index) => (
-            <div
-              key={index}
-              className="grid grid-cols-12 gap-2 items-center text-xs"
-            >
+          {data.map((item, index) =>
+          <div
+            key={index}
+            className="grid grid-cols-12 gap-2 items-center text-xs">
+
               <span className="col-span-2 text-slate-500">{item.month}</span>
               <div className="col-span-6">
                 <div className="flex h-4 rounded overflow-hidden">
                   <div
-                    className="bg-green-500"
-                    style={{ width: `${(1 - item.waste_rate) * 100}%` }}
-                    title={`有效: ${(1 - item.waste_rate) * 100}%`}
-                  />
+                  className="bg-green-500"
+                  style={{ width: `${(1 - item.waste_rate) * 100}%` }}
+                  title={`有效: ${(1 - item.waste_rate) * 100}%`} />
+
                   <div
-                    className="bg-red-400"
-                    style={{ width: `${item.waste_rate * 100}%` }}
-                    title={`浪费: ${item.waste_rate * 100}%`}
-                  />
+                  className="bg-red-400"
+                  style={{ width: `${item.waste_rate * 100}%` }}
+                  title={`浪费: ${item.waste_rate * 100}%`} />
+
                 </div>
               </div>
               <span className="col-span-2 text-right text-green-600">
@@ -375,7 +375,7 @@ const MonthlyWasteTrend = ({ data }) => {
                 {item.wasted_hours?.toFixed(0)}h
               </span>
             </div>
-          ))}
+          )}
         </div>
         <div className="flex justify-end gap-4 mt-2 text-xs text-slate-400">
           <span className="flex items-center gap-1">
@@ -386,8 +386,8 @@ const MonthlyWasteTrend = ({ data }) => {
           </span>
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 };
 
 export {
@@ -395,5 +395,4 @@ export {
   LossReasonDistribution,
   SalespersonPerformanceRanking,
   MonthlyWasteTrend,
-  formatAmount,
-};
+  formatAmount };

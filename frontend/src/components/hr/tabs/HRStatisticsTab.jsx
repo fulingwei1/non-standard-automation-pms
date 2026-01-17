@@ -9,8 +9,8 @@ import {
   CardHeader,
   CardTitle,
   Button,
-  Progress,
-} from "../../ui";
+  Progress } from
+"../../ui";
 import {
   Users,
   Clock,
@@ -20,10 +20,9 @@ import {
   FileSpreadsheet,
   BarChart3,
   PieChart,
-  Activity,
-} from "lucide-react";
+  Activity } from
+"lucide-react";
 import { fadeIn } from "../../../lib/animations";
-import { cn } from "../../../lib/utils";
 import { cn } from "../../../lib/utils";
 
 export default function HRStatisticsTab({
@@ -33,12 +32,12 @@ export default function HRStatisticsTab({
   mockEmployeeAgeDistribution,
   mockEmployeeTenureDistribution,
   mockEmployeeEducationDistribution,
-  mockMonthlyEmployeeFlow,
+  mockMonthlyEmployeeFlow: _mockMonthlyEmployeeFlow,
   mockDepartmentPerformanceComparison,
-  mockAttendanceTrend,
-  mockRecruitmentChannelStats,
-  mockPerformanceTrend,
-  handleExportReport,
+  mockAttendanceTrend: _mockAttendanceTrend,
+  mockRecruitmentChannelStats: _mockRecruitmentChannelStats,
+  mockPerformanceTrend: _mockPerformanceTrend,
+  handleExportReport
 }) {
   return (
     <div className="space-y-6">
@@ -50,33 +49,33 @@ export default function HRStatisticsTab({
               <div className="flex items-center gap-4">
                 <span className="text-sm text-slate-400">统计周期:</span>
                 <div className="flex items-center gap-2">
-                  {["month", "quarter", "year"].map((period) => (
-                    <Button
-                      key={period}
-                      variant={
-                        statisticsPeriod === period ? "default" : "outline"
-                      }
-                      size="sm"
-                      onClick={() => {
-                        setStatisticsPeriod(period);
-                        // TODO: Reload statistics data
-                      }}
-                    >
-                      {period === "month"
-                        ? "月度"
-                        : period === "quarter"
-                          ? "季度"
-                          : "年度"}
+                  {["month", "quarter", "year"].map((period) =>
+                  <Button
+                    key={period}
+                    variant={
+                    statisticsPeriod === period ? "default" : "outline"
+                    }
+                    size="sm"
+                    onClick={() => {
+                      setStatisticsPeriod(period);
+                      // TODO: Reload statistics data
+                    }}>
+
+                      {period === "month" ?
+                    "月度" :
+                    period === "quarter" ?
+                    "季度" :
+                    "年度"}
                     </Button>
-                  ))}
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex items-center gap-2"
-                >
+                  className="flex items-center gap-2">
+
                   <Filter className="w-4 h-4" />
                   筛选
                 </Button>
@@ -84,8 +83,8 @@ export default function HRStatisticsTab({
                   variant="outline"
                   size="sm"
                   className="flex items-center gap-2"
-                  onClick={handleExportReport}
-                >
+                  onClick={handleExportReport}>
+
                   <FileSpreadsheet className="w-4 h-4" />
                   导出报表
                 </Button>
@@ -108,8 +107,8 @@ export default function HRStatisticsTab({
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {mockEmployeeAgeDistribution.map((item, index) => (
-                  <div key={index}>
+                {mockEmployeeAgeDistribution.map((item, index) =>
+                <div key={index}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm text-slate-300">
                         {item.range}
@@ -124,11 +123,11 @@ export default function HRStatisticsTab({
                       </div>
                     </div>
                     <Progress
-                      value={item.percentage}
-                      className="h-2 bg-slate-700/50"
-                    />
+                    value={item.percentage}
+                    className="h-2 bg-slate-700/50" />
+
                   </div>
-                ))}
+                )}
               </div>
               <div className="mt-4 pt-4 border-t border-slate-700/50">
                 <div className="flex items-center justify-between text-xs text-slate-400">
@@ -154,8 +153,8 @@ export default function HRStatisticsTab({
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {mockEmployeeTenureDistribution.map((item, index) => (
-                  <div key={index}>
+                {mockEmployeeTenureDistribution.map((item, index) =>
+                <div key={index}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm text-slate-300">
                         {item.range}
@@ -170,11 +169,11 @@ export default function HRStatisticsTab({
                       </div>
                     </div>
                     <Progress
-                      value={item.percentage}
-                      className="h-2 bg-slate-700/50"
-                    />
+                    value={item.percentage}
+                    className="h-2 bg-slate-700/50" />
+
                   </div>
-                ))}
+                )}
               </div>
               <div className="mt-4 pt-4 border-t border-slate-700/50">
                 <div className="flex items-center justify-between text-xs text-slate-400">
@@ -203,8 +202,8 @@ export default function HRStatisticsTab({
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {mockEmployeeEducationDistribution.map((item, index) => (
-                  <div key={index}>
+                {mockEmployeeEducationDistribution.map((item, index) =>
+                <div key={index}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm text-slate-300">
                         {item.level}
@@ -219,11 +218,11 @@ export default function HRStatisticsTab({
                       </div>
                     </div>
                     <Progress
-                      value={item.percentage}
-                      className="h-2 bg-slate-700/50"
-                    />
+                    value={item.percentage}
+                    className="h-2 bg-slate-700/50" />
+
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
@@ -240,8 +239,8 @@ export default function HRStatisticsTab({
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {mockDepartmentPerformanceComparison.map((dept, index) => (
-                  <div key={index}>
+                {mockDepartmentPerformanceComparison.map((dept, index) =>
+                <div key={index}>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-white">
@@ -256,29 +255,29 @@ export default function HRStatisticsTab({
                           {dept.avgScore}分
                         </span>
                         <span
-                          className={cn(
-                            "text-xs",
-                            dept.trend > 0
-                              ? "text-emerald-400"
-                              : "text-red-400",
-                          )}
-                        >
+                        className={cn(
+                          "text-xs",
+                          dept.trend > 0 ?
+                          "text-emerald-400" :
+                          "text-red-400"
+                        )}>
+
                           {dept.trend > 0 ? "+" : ""}
                           {dept.trend}%
                         </span>
                       </div>
                     </div>
                     <Progress
-                      value={dept.avgScore}
-                      className="h-2 bg-slate-700/50"
-                    />
+                    value={dept.avgScore}
+                    className="h-2 bg-slate-700/50" />
+
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
         </motion.div>
       </div>
-    </div>
-  );
+    </div>);
+
 }

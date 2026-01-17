@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { cn } from "../lib/utils";
-import { projectWorkspaceApi, projectContributionApi } from "../services/api";
+import { cn as _cn } from "../lib/utils";
+import { projectWorkspaceApi, projectContributionApi as _projectContributionApi } from "../services/api";
 import { formatDate, formatCurrency } from "../lib/utils";
 import { PageHeader } from "../components/layout/PageHeader";
 import {
@@ -18,8 +18,8 @@ import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger,
-} from "../components/ui";
+  TabsTrigger } from
+"../components/ui";
 import ProjectBonusPanel from "../components/project/ProjectBonusPanel";
 import ProjectMeetingPanel from "../components/project/ProjectMeetingPanel";
 import ProjectIssuePanel from "../components/project/ProjectIssuePanel";
@@ -37,8 +37,8 @@ import {
   Award,
   MessageSquare,
   BookOpen,
-  Activity,
-} from "lucide-react";
+  Activity } from
+"lucide-react";
 
 export default function ProjectWorkspace() {
   const { id } = useParams();
@@ -68,12 +68,12 @@ export default function ProjectWorkspace() {
       <div className="p-6">
         <Skeleton className="h-12 w-64 mb-6" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Skeleton key={i} className="h-48" />
-          ))}
+          {[1, 2, 3, 4, 5, 6].map((i) =>
+          <Skeleton key={i} className="h-48" />
+          )}
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   if (!workspaceData) {
@@ -85,32 +85,32 @@ export default function ProjectWorkspace() {
             无法加载项目数据
           </CardContent>
         </Card>
-      </div>
-    );
+      </div>);
+
   }
 
   const {
     project,
     team,
     tasks,
-    bonus,
-    meetings,
-    issues,
-    solutions,
-    documents,
+    bonus: _bonus,
+    meetings: _meetings,
+    issues: _issues,
+    solutions: _solutions,
+    documents
   } = workspaceData;
 
   return (
     <div className="p-6 space-y-6">
       <PageHeader
         title={
-          <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3">
             <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(-1)}
-              className="p-0 h-auto"
-            >
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(-1)}
+            className="p-0 h-auto">
+
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
@@ -118,8 +118,8 @@ export default function ProjectWorkspace() {
               <p className="text-sm text-gray-500">{project.project_code}</p>
             </div>
           </div>
-        }
-      />
+        } />
+
 
       {/* 项目概览卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -197,11 +197,11 @@ export default function ProjectWorkspace() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {team.map((member) => (
-                  <div
-                    key={member.user_id}
-                    className="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
-                  >
+                {team.map((member) =>
+                <div
+                  key={member.user_id}
+                  className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="font-medium">{member.user_name}</p>
@@ -211,13 +211,13 @@ export default function ProjectWorkspace() {
                       </div>
                       <Badge variant="outline">{member.allocation_pct}%</Badge>
                     </div>
-                    {member.start_date && member.end_date && (
-                      <p className="text-xs text-gray-400 mt-2">
+                    {member.start_date && member.end_date &&
+                  <p className="text-xs text-gray-400 mt-2">
                         {member.start_date} ~ {member.end_date}
                       </p>
-                    )}
+                  }
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
@@ -232,11 +232,11 @@ export default function ProjectWorkspace() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {tasks.slice(0, 10).map((task) => (
-                  <div
-                    key={task.id}
-                    className="flex items-center justify-between p-3 border rounded-lg"
-                  >
+                {tasks.slice(0, 10).map((task) =>
+                <div
+                  key={task.id}
+                  className="flex items-center justify-between p-3 border rounded-lg">
+
                     <div className="flex-1">
                       <p className="font-medium">{task.title}</p>
                       <p className="text-sm text-gray-500">
@@ -245,16 +245,16 @@ export default function ProjectWorkspace() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge
-                        variant={
-                          task.status === "COMPLETED" ? "default" : "secondary"
-                        }
-                      >
+                      variant={
+                      task.status === "COMPLETED" ? "default" : "secondary"
+                      }>
+
                         {task.status}
                       </Badge>
                       <Progress value={task.progress} className="w-20" />
                     </div>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
@@ -278,8 +278,8 @@ export default function ProjectWorkspace() {
             onApplyTemplate={(template) => {
               // TODO: 实现应用模板逻辑
               console.log("Apply template:", template);
-            }}
-          />
+            }} />
+
         </TabsContent>
 
         <TabsContent value="documents" className="space-y-6">
@@ -292,11 +292,11 @@ export default function ProjectWorkspace() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {documents.map((doc) => (
-                  <div
-                    key={doc.id}
-                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
-                  >
+                {documents.map((doc) =>
+                <div
+                  key={doc.id}
+                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+
                     <div className="flex items-center gap-3">
                       <FileText className="h-5 w-5 text-gray-400" />
                       <div>
@@ -313,19 +313,19 @@ export default function ProjectWorkspace() {
                       </div>
                     </div>
                     <Badge
-                      variant={
-                        doc.status === "APPROVED" ? "default" : "secondary"
-                      }
-                    >
+                    variant={
+                    doc.status === "APPROVED" ? "default" : "secondary"
+                    }>
+
                       {doc.status}
                     </Badge>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>);
+
 }

@@ -23,20 +23,14 @@ export function QualificationTrendChart({
     });
   }, [data]);
 
-  if (sortedData.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-full text-gray-400">
-        暂无评估数据
-      </div>
-    );
-  }
-
   const maxValue = useMemo(() => {
+    if (sortedData.length === 0) return 100;
     const scores = sortedData.map((d) => d.total_score || d.score || 0);
     return Math.max(...scores, 100);
   }, [sortedData]);
 
   const minValue = useMemo(() => {
+    if (sortedData.length === 0) return 0;
     const scores = sortedData.map((d) => d.total_score || d.score || 0);
     return Math.min(...scores, 0);
   }, [sortedData]);
@@ -47,6 +41,7 @@ export function QualificationTrendChart({
   const chartHeight = height;
 
   const points = useMemo(() => {
+    if (sortedData.length === 0) return [];
     return sortedData.map((item, index) => {
       const score = item.total_score || item.score || 0;
       const x =
@@ -74,6 +69,14 @@ export function QualificationTrendChart({
       .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
       .join(" ");
   }, [points]);
+
+  if (sortedData.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-400">
+        暂无评估数据
+      </div>
+    );
+  }
 
   const getResultColor = (result) => {
     const colors = {

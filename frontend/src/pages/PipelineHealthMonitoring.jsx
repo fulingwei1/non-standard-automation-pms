@@ -14,8 +14,8 @@ import {
   XCircle,
   Calendar,
   Filter,
-  Eye,
-} from "lucide-react";
+  Eye } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -34,18 +34,18 @@ import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger,
-} from "../components/ui";
-import { fadeIn, staggerContainer } from "../lib/animations";
+  TabsTrigger } from
+"../components/ui";
+import { fadeIn as _fadeIn, staggerContainer as _staggerContainer } from "../lib/animations";
 import { healthApi } from "../services/api";
-import { formatDate } from "../lib/utils";
+import { formatDate as _formatDate } from "../lib/utils";
 
 export default function PipelineHealthMonitoring() {
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
   const [warnings, setWarnings] = useState([]);
   const [selectedEntity, setSelectedEntity] = useState({
     type: "lead",
-    id: null,
+    id: null
   });
 
   const loadWarnings = async () => {
@@ -71,7 +71,7 @@ export default function PipelineHealthMonitoring() {
       H1: { label: "正常", variant: "success", color: "text-green-600" },
       H2: { label: "有风险", variant: "warning", color: "text-amber-600" },
       H3: { label: "阻塞", variant: "destructive", color: "text-red-600" },
-      H4: { label: "已完结", variant: "secondary", color: "text-slate-600" },
+      H4: { label: "已完结", variant: "secondary", color: "text-slate-600" }
     };
     const config = configs[status] || configs.H1;
     return <Badge variant={config.variant}>{config.label}</Badge>;
@@ -126,8 +126,8 @@ export default function PipelineHealthMonitoring() {
       <PageHeader title="全链条健康度监控" />
 
       {/* 健康度预警 */}
-      {warnings.length > 0 && (
-        <Card>
+      {warnings.length > 0 &&
+      <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-amber-500" />
@@ -136,11 +136,11 @@ export default function PipelineHealthMonitoring() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {warnings.slice(0, 10).map((warning, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between p-3 bg-amber-50 rounded-lg"
-                >
+              {warnings.slice(0, 10).map((warning, idx) =>
+            <div
+              key={idx}
+              className="flex items-center justify-between p-3 bg-amber-50 rounded-lg">
+
                   <div>
                     <div className="font-medium">{warning.entity_name}</div>
                     <div className="text-sm text-slate-500">
@@ -149,11 +149,11 @@ export default function PipelineHealthMonitoring() {
                   </div>
                   {getHealthBadge(warning.health_status)}
                 </div>
-              ))}
+            )}
             </div>
           </CardContent>
         </Card>
-      )}
+      }
 
       {/* 健康度计算工具 */}
       <Card>
@@ -180,17 +180,17 @@ export default function PipelineHealthMonitoring() {
                     placeholder="请输入线索ID"
                     value={selectedEntity.type === "lead" ? selectedEntity.id || "" : ""}
                     onChange={(e) =>
-                      setSelectedEntity({
-                        type: "lead",
-                        id: e.target.value ? parseInt(e.target.value) : null,
-                      })
-                    }
-                  />
+                    setSelectedEntity({
+                      type: "lead",
+                      id: e.target.value ? parseInt(e.target.value) : null
+                    })
+                    } />
+
                 </div>
                 <Button
                   onClick={() => calculateHealth("lead", selectedEntity.id)}
-                  disabled={!selectedEntity.id || selectedEntity.type !== "lead"}
-                >
+                  disabled={!selectedEntity.id || selectedEntity.type !== "lead"}>
+
                   计算健康度
                 </Button>
               </div>
@@ -206,19 +206,19 @@ export default function PipelineHealthMonitoring() {
                     placeholder="请输入商机ID"
                     value={selectedEntity.type === "opportunity" ? selectedEntity.id || "" : ""}
                     onChange={(e) =>
-                      setSelectedEntity({
-                        type: "opportunity",
-                        id: e.target.value ? parseInt(e.target.value) : null,
-                      })
-                    }
-                  />
+                    setSelectedEntity({
+                      type: "opportunity",
+                      id: e.target.value ? parseInt(e.target.value) : null
+                    })
+                    } />
+
                 </div>
                 <Button
                   onClick={() =>
-                    calculateHealth("opportunity", selectedEntity.id)
+                  calculateHealth("opportunity", selectedEntity.id)
                   }
-                  disabled={!selectedEntity.id || selectedEntity.type !== "opportunity"}
-                >
+                  disabled={!selectedEntity.id || selectedEntity.type !== "opportunity"}>
+
                   计算健康度
                 </Button>
               </div>
@@ -234,17 +234,17 @@ export default function PipelineHealthMonitoring() {
                     placeholder="请输入报价ID"
                     value={selectedEntity.type === "quote" ? selectedEntity.id || "" : ""}
                     onChange={(e) =>
-                      setSelectedEntity({
-                        type: "quote",
-                        id: e.target.value ? parseInt(e.target.value) : null,
-                      })
-                    }
-                  />
+                    setSelectedEntity({
+                      type: "quote",
+                      id: e.target.value ? parseInt(e.target.value) : null
+                    })
+                    } />
+
                 </div>
                 <Button
                   onClick={() => calculateHealth("quote", selectedEntity.id)}
-                  disabled={!selectedEntity.id || selectedEntity.type !== "quote"}
-                >
+                  disabled={!selectedEntity.id || selectedEntity.type !== "quote"}>
+
                   计算健康度
                 </Button>
               </div>
@@ -260,19 +260,19 @@ export default function PipelineHealthMonitoring() {
                     placeholder="请输入合同ID"
                     value={selectedEntity.type === "contract" ? selectedEntity.id || "" : ""}
                     onChange={(e) =>
-                      setSelectedEntity({
-                        type: "contract",
-                        id: e.target.value ? parseInt(e.target.value) : null,
-                      })
-                    }
-                  />
+                    setSelectedEntity({
+                      type: "contract",
+                      id: e.target.value ? parseInt(e.target.value) : null
+                    })
+                    } />
+
                 </div>
                 <Button
                   onClick={() =>
-                    calculateHealth("contract", selectedEntity.id)
+                  calculateHealth("contract", selectedEntity.id)
                   }
-                  disabled={!selectedEntity.id || selectedEntity.type !== "contract"}
-                >
+                  disabled={!selectedEntity.id || selectedEntity.type !== "contract"}>
+
                   计算健康度
                 </Button>
               </div>
@@ -288,17 +288,17 @@ export default function PipelineHealthMonitoring() {
                     placeholder="请输入发票ID"
                     value={selectedEntity.type === "payment" ? selectedEntity.id || "" : ""}
                     onChange={(e) =>
-                      setSelectedEntity({
-                        type: "payment",
-                        id: e.target.value ? parseInt(e.target.value) : null,
-                      })
-                    }
-                  />
+                    setSelectedEntity({
+                      type: "payment",
+                      id: e.target.value ? parseInt(e.target.value) : null
+                    })
+                    } />
+
                 </div>
                 <Button
                   onClick={() => calculateHealth("payment", selectedEntity.id)}
-                  disabled={!selectedEntity.id || selectedEntity.type !== "payment"}
-                >
+                  disabled={!selectedEntity.id || selectedEntity.type !== "payment"}>
+
                   计算健康度
                 </Button>
               </div>
@@ -353,6 +353,6 @@ export default function PipelineHealthMonitoring() {
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>);
+
 }

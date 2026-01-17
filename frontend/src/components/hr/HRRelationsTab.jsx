@@ -25,8 +25,8 @@ import {
   Shield,
   Users,
   Calendar,
-  ChevronRight
-} from 'lucide-react';
+  ChevronRight } from
+'lucide-react';
 import {
   Card,
   CardContent,
@@ -34,8 +34,8 @@ import {
   CardTitle,
   Button,
   Badge,
-  Progress
-} from '../ui';
+  Progress } from
+'../ui';
 import { cn } from '../../lib/utils';
 import { fadeIn } from '../../lib/animations';
 
@@ -44,7 +44,7 @@ const HRRelationsTab = ({
   issues = [],
   onCreateIssue,
   onViewIssue,
-  onResolveIssue,
+  onResolveIssue: _onResolveIssue,
   formatDate = (date) => date
 }) => {
   // 计算统计数据
@@ -57,45 +57,45 @@ const HRRelationsTab = ({
 
   // 问题类型配置
   const issueTypes = {
-    conflict: { 
-      label: '冲突', 
-      icon: AlertTriangle, 
-      color: 'text-red-400', 
+    conflict: {
+      label: '冲突',
+      icon: AlertTriangle,
+      color: 'text-red-400',
       bg: 'bg-red-500/20',
       border: 'border-red-500/30'
     },
-    leave: { 
-      label: '请假', 
-      icon: Calendar, 
-      color: 'text-blue-400', 
+    leave: {
+      label: '请假',
+      icon: Calendar,
+      color: 'text-blue-400',
       bg: 'bg-blue-500/20',
       border: 'border-blue-500/30'
     },
-    complaint: { 
-      label: '投诉', 
-      icon: MessageSquare, 
-      color: 'text-amber-400', 
+    complaint: {
+      label: '投诉',
+      icon: MessageSquare,
+      color: 'text-amber-400',
       bg: 'bg-amber-500/20',
       border: 'border-amber-500/30'
     },
-    resignation: { 
-      label: '离职', 
-      icon: UserMinus, 
-      color: 'text-purple-400', 
+    resignation: {
+      label: '离职',
+      icon: UserMinus,
+      color: 'text-purple-400',
       bg: 'bg-purple-500/20',
       border: 'border-purple-500/30'
     },
-    performance: { 
-      label: '绩效', 
-      icon: TrendingUp, 
-      color: 'text-cyan-400', 
+    performance: {
+      label: '绩效',
+      icon: TrendingUp,
+      color: 'text-cyan-400',
       bg: 'bg-cyan-500/20',
       border: 'border-cyan-500/30'
     },
-    other: { 
-      label: '其他', 
-      icon: FileText, 
-      color: 'text-slate-400', 
+    other: {
+      label: '其他',
+      icon: FileText,
+      color: 'text-slate-400',
       bg: 'bg-slate-500/20',
       border: 'border-slate-500/30'
     }
@@ -202,8 +202,8 @@ const HRRelationsTab = ({
               <Button
                 size="sm"
                 onClick={onCreateIssue}
-                className="gap-2"
-              >
+                className="gap-2">
+
                 <Plus className="w-4 h-4" />
                 记录问题
               </Button>
@@ -211,31 +211,31 @@ const HRRelationsTab = ({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {issues.length === 0 ? (
-                <div className="py-8 text-center text-slate-400">
+              {issues.length === 0 ?
+              <div className="py-8 text-center text-slate-400">
                   <Heart className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p>暂无员工关系问题</p>
                   <p className="text-xs text-slate-500 mt-1">良好的员工关系是企业发展的基石</p>
-                </div>
-              ) : (
-                issues.map((issue, index) => {
-                  const typeConfig = issueTypes[issue.type] || issueTypes.other;
-                  const Icon = typeConfig.icon;
-                  const statusCfg = statusConfig[issue.status] || statusConfig.pending;
-                  const priorityCfg = priorityConfig[issue.priority] || priorityConfig.medium;
+                </div> :
 
-                  return (
-                    <div
-                      key={issue.id || index}
-                      className={cn(
-                        "p-4 rounded-lg border hover:border-slate-600/80 transition-all cursor-pointer",
-                        "bg-slate-800/40",
-                        issue.priority === 'urgent' || issue.priority === 'high'
-                          ? "border-red-500/30"
-                          : "border-slate-700/50"
-                      )}
-                      onClick={() => onViewIssue && onViewIssue(issue)}
-                    >
+              issues.map((issue, index) => {
+                const typeConfig = issueTypes[issue.type] || issueTypes.other;
+                const Icon = typeConfig.icon;
+                const statusCfg = statusConfig[issue.status] || statusConfig.pending;
+                const priorityCfg = priorityConfig[issue.priority] || priorityConfig.medium;
+
+                return (
+                  <div
+                    key={issue.id || index}
+                    className={cn(
+                      "p-4 rounded-lg border hover:border-slate-600/80 transition-all cursor-pointer",
+                      "bg-slate-800/40",
+                      issue.priority === 'urgent' || issue.priority === 'high' ?
+                      "border-red-500/30" :
+                      "border-slate-700/50"
+                    )}
+                    onClick={() => onViewIssue && onViewIssue(issue)}>
+
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
@@ -249,18 +249,18 @@ const HRRelationsTab = ({
                             <Badge className={cn("text-xs", statusCfg.bg, statusCfg.color)}>
                               {statusCfg.label}
                             </Badge>
-                            {(issue.priority === 'high' || issue.priority === 'urgent') && (
-                              <Badge className={cn("text-xs", priorityCfg.bg, priorityCfg.color)}>
+                            {(issue.priority === 'high' || issue.priority === 'urgent') &&
+                          <Badge className={cn("text-xs", priorityCfg.bg, priorityCfg.color)}>
                                 {priorityCfg.label}
                               </Badge>
-                            )}
+                          }
                           </div>
                           
-                          {issue.description && (
-                            <p className="text-sm text-slate-300 mb-2 line-clamp-2">
+                          {issue.description &&
+                        <p className="text-sm text-slate-300 mb-2 line-clamp-2">
                               {issue.description}
                             </p>
-                          )}
+                        }
                           
                           <div className="flex items-center gap-4 text-xs text-slate-400">
                             <span className="flex items-center gap-1">
@@ -271,30 +271,30 @@ const HRRelationsTab = ({
                               <Calendar className="w-3 h-3" />
                               {formatDate(issue.created_at)}
                             </span>
-                            {issue.handler && (
-                              <span className="flex items-center gap-1">
+                            {issue.handler &&
+                          <span className="flex items-center gap-1">
                                 处理人: {issue.handler}
                               </span>
-                            )}
+                          }
                           </div>
                         </div>
                         <ChevronRight className="w-4 h-4 text-slate-500 flex-shrink-0 ml-2" />
                       </div>
 
                       {/* 处理进度 */}
-                      {issue.status === 'in_progress' && issue.progress !== undefined && (
-                        <div className="mt-3 space-y-1">
+                      {issue.status === 'in_progress' && issue.progress !== undefined &&
+                    <div className="mt-3 space-y-1">
                           <div className="flex items-center justify-between text-xs">
                             <span className="text-slate-400">处理进度</span>
                             <span className="text-blue-400 font-medium">{issue.progress}%</span>
                           </div>
                           <Progress value={issue.progress} className="h-1.5" />
                         </div>
-                      )}
-                    </div>
-                  );
-                })
-              )}
+                    }
+                    </div>);
+
+              })
+              }
             </div>
           </CardContent>
         </Card>
@@ -314,24 +314,24 @@ const HRRelationsTab = ({
               <Button
                 variant="outline"
                 className="justify-start gap-2 h-auto py-3 hover:bg-blue-500/10 hover:border-blue-500/30"
-                onClick={onCreateIssue}
-              >
+                onClick={onCreateIssue}>
+
                 <Plus className="w-4 h-4 text-blue-400" />
                 <span>记录新问题</span>
               </Button>
               <Button
                 variant="outline"
                 className="justify-start gap-2 h-auto py-3 hover:bg-purple-500/10 hover:border-purple-500/30"
-                onClick={() => {/* TODO: 查看报告 */}}
-              >
+                onClick={() => {/* TODO: 查看报告 */}}>
+
                 <FileText className="w-4 h-4 text-purple-400" />
                 <span>关系报告</span>
               </Button>
               <Button
                 variant="outline"
                 className="justify-start gap-2 h-auto py-3 hover:bg-amber-500/10 hover:border-amber-500/30"
-                onClick={() => {/* TODO: 统计分析 */}}
-              >
+                onClick={() => {/* TODO: 统计分析 */}}>
+
                 <BarChart3 className="w-4 h-4 text-amber-400" />
                 <span>统计分析</span>
               </Button>
@@ -339,8 +339,8 @@ const HRRelationsTab = ({
           </CardContent>
         </Card>
       </motion.div>
-    </div>
-  );
+    </div>);
+
 };
 
 export { HRRelationsTab };

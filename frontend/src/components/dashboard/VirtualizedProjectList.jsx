@@ -2,7 +2,7 @@
  * VirtualizedProjectList - 虚拟滚动的项目列表组件
  * 用于优化长项目列表的渲染性能
  */
-import { useMemo } from "react";
+import { useMemo as _useMemo } from "react";
 import { Link } from "react-router-dom";
 import { VirtualizedList } from "./VirtualizedList";
 import { Progress, HealthBadge } from "../ui";
@@ -10,24 +10,24 @@ import { Briefcase, ArrowRight } from "lucide-react";
 import { cn } from "../../lib/utils";
 
 export function VirtualizedProjectList({ projects, itemHeight = 80 }) {
-  const renderItem = (project, index) => (
-    <Link
-      key={project.id}
-      to={`/projects/${project.id}`}
-      className={cn(
-        "flex items-center gap-4 p-5 hover:bg-white/[0.02] transition-colors group",
-        "border-b border-white/5"
-      )}
-    >
+  const renderItem = (project, _index) =>
+  <Link
+    key={project.id}
+    to={`/projects/${project.id}`}
+    className={cn(
+      "flex items-center gap-4 p-5 hover:bg-white/[0.02] transition-colors group",
+      "border-b border-white/5"
+    )}>
+
       {/* Icon */}
       <div
-        className={cn(
-          "p-3 rounded-xl",
-          "bg-gradient-to-br from-primary/20 to-indigo-500/10",
-          "ring-1 ring-primary/20",
-          "group-hover:scale-105 transition-transform",
-        )}
-      >
+      className={cn(
+        "p-3 rounded-xl",
+        "bg-gradient-to-br from-primary/20 to-indigo-500/10",
+        "ring-1 ring-primary/20",
+        "group-hover:scale-105 transition-transform"
+      )}>
+
         <Briefcase className="h-5 w-5 text-primary" />
       </div>
 
@@ -59,8 +59,8 @@ export function VirtualizedProjectList({ projects, itemHeight = 80 }) {
 
       {/* Arrow */}
       <ArrowRight className="h-5 w-5 text-slate-600 group-hover:text-primary group-hover:translate-x-1 transition-all" />
-    </Link>
-  );
+  </Link>;
+
 
   return (
     <VirtualizedList
@@ -68,9 +68,9 @@ export function VirtualizedProjectList({ projects, itemHeight = 80 }) {
       itemHeight={itemHeight}
       containerHeight={600}
       renderItem={renderItem}
-      overscan={5}
-    />
-  );
+      overscan={5} />);
+
+
 }
 
 export default VirtualizedProjectList;

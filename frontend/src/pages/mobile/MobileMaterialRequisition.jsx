@@ -10,8 +10,8 @@ import {
   Plus,
   X,
   CheckCircle2,
-  AlertCircle,
-} from "lucide-react";
+  AlertCircle } from
+"lucide-react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Card, CardContent } from "../../components/ui/card";
@@ -20,9 +20,9 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../../components/ui/select";
-import { cn } from "../../lib/utils";
+  SelectValue } from
+"../../components/ui/select";
+import { cn as _cn } from "../../lib/utils";
 import { productionApi, materialApi } from "../../services/api";
 
 export default function MobileMaterialRequisition() {
@@ -36,8 +36,8 @@ export default function MobileMaterialRequisition() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [items, setItems] = useState([
-    { material_id: "", material_code: "", material_name: "", qty: 1, unit: "" },
-  ]);
+  { material_id: "", material_code: "", material_name: "", qty: 1, unit: "" }]
+  );
 
   useEffect(() => {
     if (workOrderId) {
@@ -74,7 +74,7 @@ export default function MobileMaterialRequisition() {
         material_id: material.id,
         material_code: material.material_code,
         material_name: material.material_name,
-        unit: material.unit || "个",
+        unit: material.unit || "个"
       };
       setItems(newItems);
     }
@@ -88,15 +88,15 @@ export default function MobileMaterialRequisition() {
 
   const handleAddItem = () => {
     setItems([
-      ...items,
-      {
-        material_id: "",
-        material_code: "",
-        material_name: "",
-        qty: 1,
-        unit: "",
-      },
-    ]);
+    ...items,
+    {
+      material_id: "",
+      material_code: "",
+      material_name: "",
+      qty: 1,
+      unit: ""
+    }]
+    );
   };
 
   const handleRemoveItem = (index) => {
@@ -108,7 +108,7 @@ export default function MobileMaterialRequisition() {
   const handleSubmit = async () => {
     // 验证
     const invalidItems = items.filter(
-      (item) => !item.material_id || !item.qty || item.qty <= 0,
+      (item) => !item.material_id || !item.qty || item.qty <= 0
     );
     if (invalidItems.length > 0) {
       setError("请完善物料信息并填写数量");
@@ -123,9 +123,9 @@ export default function MobileMaterialRequisition() {
         work_order_id: workOrderId ? parseInt(workOrderId) : null,
         items: items.map((item) => ({
           material_id: item.material_id,
-          required_qty: item.qty,
+          required_qty: item.qty
         })),
-        remark: "",
+        remark: ""
       });
 
       setSuccess(true);
@@ -135,7 +135,7 @@ export default function MobileMaterialRequisition() {
     } catch (error) {
       console.error("Failed to create requisition:", error);
       setError(
-        "领料申请失败: " + (error.response?.data?.detail || error.message),
+        "领料申请失败: " + (error.response?.data?.detail || error.message)
       );
     } finally {
       setLoading(false);
@@ -152,8 +152,8 @@ export default function MobileMaterialRequisition() {
               variant="ghost"
               size="sm"
               onClick={() => navigate(-1)}
-              className="p-2"
-            >
+              className="p-2">
+
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <h1 className="text-lg font-semibold">领料申请</h1>
@@ -163,8 +163,8 @@ export default function MobileMaterialRequisition() {
 
       <div className="p-4 space-y-4">
         {/* 工单信息 */}
-        {workOrder && (
-          <Card>
+        {workOrder &&
+        <Card>
             <CardContent className="pt-6">
               <div className="space-y-2">
                 <div>
@@ -182,21 +182,21 @@ export default function MobileMaterialRequisition() {
               </div>
             </CardContent>
           </Card>
-        )}
+        }
 
         {/* 错误提示 */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+        {error &&
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <div className="text-sm font-medium text-red-800">{error}</div>
             </div>
           </div>
-        )}
+        }
 
         {/* 成功提示 */}
-        {success && (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 flex items-center gap-3">
+        {success &&
+        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 flex items-center gap-3">
             <CheckCircle2 className="w-5 h-5 text-emerald-500" />
             <div className="flex-1">
               <div className="text-sm font-medium text-emerald-800">
@@ -204,7 +204,7 @@ export default function MobileMaterialRequisition() {
               </div>
             </div>
           </div>
-        )}
+        }
 
         {/* 物料列表 */}
         <Card>
@@ -218,22 +218,22 @@ export default function MobileMaterialRequisition() {
                 </Button>
               </div>
 
-              {items.map((item, index) => (
-                <div key={index} className="p-4 border rounded-lg space-y-3">
+              {items.map((item, index) =>
+              <div key={index} className="p-4 border rounded-lg space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">
                       物料 {index + 1}
                     </span>
-                    {items.length > 1 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveItem(index)}
-                        className="p-1 h-auto text-red-500"
-                      >
+                    {items.length > 1 &&
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleRemoveItem(index)}
+                    className="p-1 h-auto text-red-500">
+
                         <X className="w-4 h-4" />
                       </Button>
-                    )}
+                  }
                   </div>
 
                   <div>
@@ -241,29 +241,29 @@ export default function MobileMaterialRequisition() {
                       物料 *
                     </label>
                     <Select
-                      value={item.material_id ? String(item.material_id) : ""}
-                      onValueChange={(value) =>
-                        handleMaterialChange(index, value)
-                      }
-                    >
+                    value={item.material_id ? String(item.material_id) : ""}
+                    onValueChange={(value) =>
+                    handleMaterialChange(index, value)
+                    }>
+
                       <SelectTrigger>
                         <SelectValue placeholder="请选择物料" />
                       </SelectTrigger>
                       <SelectContent>
-                        {materials.map((material) => (
-                          <SelectItem
-                            key={material.id}
-                            value={String(material.id)}
-                          >
+                        {materials.map((material) =>
+                      <SelectItem
+                        key={material.id}
+                        value={String(material.id)}>
+
                             {material.material_code} - {material.material_name}
                           </SelectItem>
-                        ))}
+                      )}
                       </SelectContent>
                     </Select>
                   </div>
 
-                  {item.material_id && (
-                    <div className="bg-slate-50 rounded-lg p-3 space-y-1">
+                  {item.material_id &&
+                <div className="bg-slate-50 rounded-lg p-3 space-y-1">
                       <div className="text-xs text-slate-500">物料编码</div>
                       <div className="font-mono text-sm">
                         {item.material_code}
@@ -271,7 +271,7 @@ export default function MobileMaterialRequisition() {
                       <div className="text-xs text-slate-500">物料名称</div>
                       <div className="text-sm">{item.material_name}</div>
                     </div>
-                  )}
+                }
 
                   <div>
                     <label className="text-sm font-medium mb-2 block">
@@ -279,20 +279,20 @@ export default function MobileMaterialRequisition() {
                     </label>
                     <div className="flex gap-2">
                       <Input
-                        type="number"
-                        min="1"
-                        value={item.qty}
-                        onChange={(e) => handleQtyChange(index, e.target.value)}
-                        placeholder="0"
-                        className="flex-1"
-                      />
+                      type="number"
+                      min="1"
+                      value={item.qty}
+                      onChange={(e) => handleQtyChange(index, e.target.value)}
+                      placeholder="0"
+                      className="flex-1" />
+
                       <div className="flex items-center px-3 bg-slate-50 rounded-lg text-sm text-slate-600">
                         {item.unit || "个"}
                       </div>
                     </div>
                   </div>
                 </div>
-              ))}
+              )}
             </div>
           </CardContent>
         </Card>
@@ -301,12 +301,12 @@ export default function MobileMaterialRequisition() {
         <Button
           onClick={handleSubmit}
           disabled={loading}
-          className="w-full bg-blue-500 hover:bg-blue-600 h-12 text-base"
-        >
+          className="w-full bg-blue-500 hover:bg-blue-600 h-12 text-base">
+
           <Package className="w-5 h-5 mr-2" />
           {loading ? "提交中..." : "提交申请"}
         </Button>
       </div>
-    </div>
-  );
+    </div>);
+
 }

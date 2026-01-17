@@ -30,9 +30,9 @@ const SearchAndFilter = ({ filters, onFiltersChange, documents = [], loading = f
   const reset = () => {
     const next = {
       ...filters,
-      type: null,
-      category: null,
-      accessLevel: null,
+      type: undefined,
+      category: undefined,
+      accessLevel: undefined,
       status: 'published'
     };
     form.resetFields();
@@ -45,9 +45,9 @@ const SearchAndFilter = ({ filters, onFiltersChange, documents = [], loading = f
         form={form}
         layout="vertical"
         initialValues={{
-          type: filters?.type ?? null,
-          category: filters?.category ?? null,
-          accessLevel: filters?.accessLevel ?? null,
+          type: filters?.type,
+          category: filters?.category,
+          accessLevel: filters?.accessLevel,
           status: filters?.status ?? 'published'
         }}
         onFinish={apply}

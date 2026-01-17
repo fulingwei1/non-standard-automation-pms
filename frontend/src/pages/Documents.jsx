@@ -21,15 +21,15 @@ import {
   FileCode,
   FileSpreadsheet,
   Calendar,
-  User,
-} from "lucide-react";
+  User } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -38,16 +38,16 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogBody,
-  DialogFooter,
-} from "../components/ui/dialog";
+  DialogFooter } from
+"../components/ui/dialog";
 import { cn, formatDate } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { documentApi, projectApi } from "../services/api";
@@ -78,7 +78,7 @@ const formatFileSize = (bytes) => {
   const k = 1024;
   const sizes = ["B", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
+  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
 };
 
 export default function Documents() {
@@ -123,11 +123,11 @@ export default function Documents() {
         // Since API requires project_id, we'll load from all projects
         const allDocs = [];
         if (projects.length > 0) {
-          const promises = projects
-            .slice(0, 20)
-            .map((project) =>
-              documentApi.list(project.id).catch(() => ({ data: [] })),
-            );
+          const promises = projects.
+          slice(0, 20).
+          map((project) =>
+          documentApi.list(project.id).catch(() => ({ data: [] }))
+          );
           const results = await Promise.allSettled(promises);
           results.forEach((result) => {
             if (result.status === "fulfilled") {
@@ -142,7 +142,7 @@ export default function Documents() {
     } catch (err) {
       console.error("Failed to load documents:", err);
       const errorMessage =
-        err.response?.data?.detail || err.message || "加载文档失败";
+      err.response?.data?.detail || err.message || "加载文档失败";
       setError(errorMessage);
       setDocuments([]);
     } finally {
@@ -202,7 +202,7 @@ export default function Documents() {
     } catch (err) {
       console.error("Failed to upload file:", err);
       const errorMessage =
-        err.response?.data?.detail || err.message || "上传失败，请稍后重试";
+      err.response?.data?.detail || err.message || "上传失败，请稍后重试";
       toast.error(errorMessage);
     } finally {
       setUploading(false);
@@ -218,10 +218,10 @@ export default function Documents() {
       } else if (document.id) {
         // Try to construct download URL
         const baseURL =
-          process.env.REACT_APP_API_BASE_URL || "http://127.0.0.1:8000";
+        import.meta.env?.VITE_API_BASE_URL || "http://127.0.0.1:8000";
         window.open(
           `${baseURL}/api/v1/documents/${document.id}/download`,
-          "_blank",
+          "_blank"
         );
       } else {
         toast.error("无法获取下载链接");
@@ -240,8 +240,8 @@ export default function Documents() {
         doc.file_name?.toLowerCase().includes(query) ||
         doc.name?.toLowerCase().includes(query) ||
         doc.description?.toLowerCase().includes(query) ||
-        doc.project_name?.toLowerCase().includes(query)
-      );
+        doc.project_name?.toLowerCase().includes(query));
+
     }
     return true;
   });
@@ -249,7 +249,7 @@ export default function Documents() {
   // Get project name
   const getProjectName = (projectId) => {
     const project = projects.find(
-      (p) => p.id === projectId || p.project_code === projectId,
+      (p) => p.id === projectId || p.project_code === projectId
     );
     return project?.project_name || "未知项目";
   };
@@ -261,8 +261,8 @@ export default function Documents() {
         <div className="container mx-auto px-4 py-6">
           <LoadingCard rows={5} />
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -270,12 +270,12 @@ export default function Documents() {
       <PageHeader
         title="文件管理"
         actions={
-          <Button className="gap-2" onClick={() => setShowUploadDialog(true)}>
+        <Button className="gap-2" onClick={() => setShowUploadDialog(true)}>
             <Upload className="w-4 h-4" />
             上传文件
           </Button>
-        }
-      />
+        } />
+
       <div className="container mx-auto px-4 py-6 space-y-6">
         {/* Filters */}
         <motion.div variants={fadeIn} initial="hidden" animate="visible">
@@ -289,28 +289,28 @@ export default function Documents() {
                       placeholder="搜索文档名称、描述..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 bg-slate-800/50 border-slate-700"
-                    />
+                      className="pl-10 bg-slate-800/50 border-slate-700" />
+
                   </div>
                 </div>
                 <div className="w-full md:w-64">
                   <Select
                     value={selectedProject}
-                    onValueChange={setSelectedProject}
-                  >
+                    onValueChange={setSelectedProject}>
+
                     <SelectTrigger className="bg-slate-800/50 border-slate-700">
                       <SelectValue placeholder="选择项目" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">全部项目</SelectItem>
-                      {projects.map((project) => (
-                        <SelectItem
-                          key={project.id || project.project_code}
-                          value={project.id || project.project_code}
-                        >
+                      {projects.map((project) =>
+                      <SelectItem
+                        key={project.id || project.project_code}
+                        value={project.id || project.project_code}>
+
                           {project.project_name}
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -320,38 +320,38 @@ export default function Documents() {
         </motion.div>
 
         {/* Documents List */}
-        {error && !documents.length ? (
-          <ErrorMessage error={error} onRetry={loadDocuments} />
-        ) : filteredDocuments.length === 0 ? (
-          <EmptyState
-            icon={Archive}
-            title="暂无文档"
-            description={
-              searchQuery || selectedProject !== "all"
-                ? "没有找到匹配的文档"
-                : "还没有上传任何文档"
-            }
-          />
-        ) : (
-          <motion.div
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-          >
+        {error && !documents.length ?
+        <ErrorMessage error={error} onRetry={loadDocuments} /> :
+        filteredDocuments.length === 0 ?
+        <EmptyState
+          icon={Archive}
+          title="暂无文档"
+          description={
+          searchQuery || selectedProject !== "all" ?
+          "没有找到匹配的文档" :
+          "还没有上传任何文档"
+          } /> :
+
+
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
             {filteredDocuments.map((doc) => {
-              const FileIcon = getFileIcon(doc.file_name || doc.name);
-              return (
-                <motion.div key={doc.id} variants={fadeIn}>
+            const FileIcon = getFileIcon(doc.file_name || doc.name);
+            return (
+              <motion.div key={doc.id} variants={fadeIn}>
                   <Card className="bg-surface-1/50 hover:bg-surface-1/70 transition-colors">
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
                         <div
-                          className={cn(
-                            "p-2 rounded-lg",
-                            "bg-blue-500/10 text-blue-400",
-                          )}
-                        >
+                        className={cn(
+                          "p-2 rounded-lg",
+                          "bg-blue-500/10 text-blue-400"
+                        )}>
+
                           <FileIcon className="w-5 h-5" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -359,61 +359,61 @@ export default function Documents() {
                             {doc.file_name || doc.name || "未命名文件"}
                           </h4>
                           <div className="space-y-1 text-xs text-slate-400">
-                            {doc.file_size && (
-                              <div className="flex items-center gap-1">
+                            {doc.file_size &&
+                          <div className="flex items-center gap-1">
                                 <Archive className="w-3 h-3" />
                                 {formatFileSize(doc.file_size)}
                               </div>
-                            )}
-                            {doc.created_at && (
-                              <div className="flex items-center gap-1">
+                          }
+                            {doc.created_at &&
+                          <div className="flex items-center gap-1">
                                 <Calendar className="w-3 h-3" />
                                 {formatDate(doc.created_at)}
                               </div>
-                            )}
-                            {doc.project_id && (
-                              <div className="flex items-center gap-1">
+                          }
+                            {doc.project_id &&
+                          <div className="flex items-center gap-1">
                                 <Folder className="w-3 h-3" />
                                 {getProjectName(doc.project_id)}
                               </div>
-                            )}
-                            {doc.uploaded_by && (
-                              <div className="flex items-center gap-1">
+                          }
+                            {doc.uploaded_by &&
+                          <div className="flex items-center gap-1">
                                 <User className="w-3 h-3" />
                                 {doc.uploaded_by}
                               </div>
-                            )}
+                          }
                           </div>
-                          {doc.description && (
-                            <p className="text-xs text-slate-500 mt-2 line-clamp-2">
+                          {doc.description &&
+                        <p className="text-xs text-slate-500 mt-2 line-clamp-2">
                               {doc.description}
                             </p>
-                          )}
+                        }
                         </div>
                       </div>
                       <div className="flex items-center gap-2 mt-4 pt-4 border-t border-slate-700">
                         <Button
-                          size="sm"
-                          variant="ghost"
-                          className="flex-1 gap-2"
-                          onClick={() => handleDownload(doc)}
-                        >
+                        size="sm"
+                        variant="ghost"
+                        className="flex-1 gap-2"
+                        onClick={() => handleDownload(doc)}>
+
                           <Download className="w-4 h-4" />
                           下载
                         </Button>
-                        {doc.file_type && (
-                          <Badge variant="outline" className="text-xs">
+                        {doc.file_type &&
+                      <Badge variant="outline" className="text-xs">
                             {doc.file_type}
                           </Badge>
-                        )}
+                      }
                       </div>
                     </CardContent>
                   </Card>
-                </motion.div>
-              );
-            })}
+                </motion.div>);
+
+          })}
           </motion.div>
-        )}
+        }
 
         {/* Upload Dialog */}
         <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
@@ -428,20 +428,20 @@ export default function Documents() {
                 </label>
                 <Select
                   value={uploadProjectId}
-                  onValueChange={setUploadProjectId}
-                >
+                  onValueChange={setUploadProjectId}>
+
                   <SelectTrigger>
                     <SelectValue placeholder="选择关联项目" />
                   </SelectTrigger>
                   <SelectContent>
-                    {projects.map((project) => (
-                      <SelectItem
-                        key={project.id || project.project_code}
-                        value={project.id || project.project_code}
-                      >
+                    {projects.map((project) =>
+                    <SelectItem
+                      key={project.id || project.project_code}
+                      value={project.id || project.project_code}>
+
                         {project.project_name}
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -454,21 +454,21 @@ export default function Documents() {
                     type="file"
                     onChange={handleFileSelect}
                     className="hidden"
-                    id="file-upload"
-                  />
+                    id="file-upload" />
+
                   <label
                     htmlFor="file-upload"
-                    className="cursor-pointer flex flex-col items-center gap-2"
-                  >
+                    className="cursor-pointer flex flex-col items-center gap-2">
+
                     <Upload className="w-8 h-8 text-slate-400" />
                     <span className="text-sm text-slate-400">
                       {uploadFile ? uploadFile.name : "点击选择文件"}
                     </span>
-                    {uploadFile && (
-                      <span className="text-xs text-slate-500">
+                    {uploadFile &&
+                    <span className="text-xs text-slate-500">
                         {formatFileSize(uploadFile.size)}
                       </span>
-                    )}
+                    }
                   </label>
                 </div>
               </div>
@@ -479,8 +479,8 @@ export default function Documents() {
                 <Input
                   placeholder="输入文件描述..."
                   value={uploadDescription}
-                  onChange={(e) => setUploadDescription(e.target.value)}
-                />
+                  onChange={(e) => setUploadDescription(e.target.value)} />
+
               </div>
             </DialogBody>
             <DialogFooter>
@@ -491,20 +491,20 @@ export default function Documents() {
                   setUploadFile(null);
                   setUploadProjectId("");
                   setUploadDescription("");
-                }}
-              >
+                }}>
+
                 取消
               </Button>
               <Button
                 onClick={handleUpload}
-                disabled={uploading || !uploadFile || !uploadProjectId}
-              >
+                disabled={uploading || !uploadFile || !uploadProjectId}>
+
                 {uploading ? "上传中..." : "上传"}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
-    </div>
-  );
+    </div>);
+
 }

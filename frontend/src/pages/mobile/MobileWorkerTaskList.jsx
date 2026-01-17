@@ -12,8 +12,8 @@ import {
   PlayCircle,
   CheckCircle2,
   AlertCircle,
-  Filter,
-} from "lucide-react";
+  Filter } from
+"lucide-react";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { Progress } from "../../components/ui/progress";
@@ -22,9 +22,9 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../../components/ui/select";
-import { cn, formatDate } from "../../lib/utils";
+  SelectValue } from
+"../../components/ui/select";
+import { cn, formatDate as _formatDate } from "../../lib/utils";
 import { productionApi } from "../../services/api";
 
 const statusConfigs = {
@@ -34,7 +34,7 @@ const statusConfigs = {
   IN_PROGRESS: { label: "进行中", color: "bg-amber-500" },
   PAUSED: { label: "已暂停", color: "bg-purple-500" },
   COMPLETED: { label: "已完成", color: "bg-emerald-500" },
-  CANCELLED: { label: "已取消", color: "bg-gray-500" },
+  CANCELLED: { label: "已取消", color: "bg-gray-500" }
 };
 
 export default function MobileWorkerTaskList() {
@@ -57,15 +57,15 @@ export default function MobileWorkerTaskList() {
       // 筛选已派工的任务
       const myTasks = allOrders.filter(
         (order) =>
-          order.status === "ASSIGNED" ||
-          order.status === "STARTED" ||
-          order.status === "IN_PROGRESS" ||
-          order.status === "PAUSED",
+        order.status === "ASSIGNED" ||
+        order.status === "STARTED" ||
+        order.status === "IN_PROGRESS" ||
+        order.status === "PAUSED"
       );
 
       if (filterStatus) {
         const filtered = myTasks.filter(
-          (order) => order.status === filterStatus,
+          (order) => order.status === filterStatus
         );
         setTasks(filtered);
       } else {
@@ -82,9 +82,9 @@ export default function MobileWorkerTaskList() {
     total: tasks.length,
     assigned: tasks.filter((t) => t.status === "ASSIGNED").length,
     inProgress: tasks.filter(
-      (t) => t.status === "STARTED" || t.status === "IN_PROGRESS",
+      (t) => t.status === "STARTED" || t.status === "IN_PROGRESS"
     ).length,
-    completed: tasks.filter((t) => t.status === "COMPLETED").length,
+    completed: tasks.filter((t) => t.status === "COMPLETED").length
   };
 
   return (
@@ -97,8 +97,8 @@ export default function MobileWorkerTaskList() {
               variant="ghost"
               size="sm"
               onClick={() => navigate(-1)}
-              className="p-2"
-            >
+              className="p-2">
+
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <h1 className="text-lg font-semibold">我的任务</h1>
@@ -108,16 +108,16 @@ export default function MobileWorkerTaskList() {
               variant="ghost"
               size="sm"
               onClick={fetchTasks}
-              className="p-2"
-            >
+              className="p-2">
+
               <RefreshCw className={cn("w-5 h-5", loading && "animate-spin")} />
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate("/mobile/scan-start")}
-              className="p-2"
-            >
+              className="p-2">
+
               <PlayCircle className="w-5 h-5 text-blue-500" />
             </Button>
           </div>
@@ -166,25 +166,25 @@ export default function MobileWorkerTaskList() {
 
       {/* 任务列表 */}
       <div className="px-4 space-y-3">
-        {loading ? (
-          <div className="text-center py-12 text-slate-400">加载中...</div>
-        ) : tasks.length === 0 ? (
-          <div className="text-center py-12 text-slate-400">暂无任务</div>
-        ) : (
-          tasks.map((task) => (
-            <div
-              key={task.id}
-              className="bg-white rounded-lg p-4 shadow-sm active:scale-[0.98] transition-transform"
-              onClick={() => navigate(`/work-orders/${task.id}`)}
-            >
+        {loading ?
+        <div className="text-center py-12 text-slate-400">加载中...</div> :
+        tasks.length === 0 ?
+        <div className="text-center py-12 text-slate-400">暂无任务</div> :
+
+        tasks.map((task) =>
+        <div
+          key={task.id}
+          className="bg-white rounded-lg p-4 shadow-sm active:scale-[0.98] transition-transform"
+          onClick={() => navigate(`/work-orders/${task.id}`)}>
+
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <Badge
-                      className={
-                        statusConfigs[task.status]?.color || "bg-slate-500"
-                      }
-                    >
+                  className={
+                  statusConfigs[task.status]?.color || "bg-slate-500"
+                  }>
+
                       {statusConfigs[task.status]?.label || task.status}
                     </Badge>
                     <span className="font-mono text-xs text-slate-500">
@@ -213,67 +213,67 @@ export default function MobileWorkerTaskList() {
                 </div>
               </div>
 
-              {task.progress !== undefined && (
-                <div className="space-y-1">
+              {task.progress !== undefined &&
+          <div className="space-y-1">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-slate-500">进度</span>
                     <span className="font-medium">{task.progress}%</span>
                   </div>
                   <Progress value={task.progress} className="h-2" />
                 </div>
-              )}
+          }
 
               {/* 操作按钮 */}
               <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100">
-                {task.status === "ASSIGNED" && (
-                  <Button
-                    size="sm"
-                    className="flex-1 bg-blue-500 hover:bg-blue-600"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/mobile/scan-start?workOrderId=${task.id}`);
-                    }}
-                  >
+                {task.status === "ASSIGNED" &&
+            <Button
+              size="sm"
+              className="flex-1 bg-blue-500 hover:bg-blue-600"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/mobile/scan-start?workOrderId=${task.id}`);
+              }}>
+
                     <PlayCircle className="w-4 h-4 mr-1" />
                     开工
                   </Button>
-                )}
+            }
                 {(task.status === "STARTED" ||
-                  task.status === "IN_PROGRESS" ||
-                  task.status === "PAUSED") && (
-                  <>
+            task.status === "IN_PROGRESS" ||
+            task.status === "PAUSED") &&
+            <>
                     <Button
-                      size="sm"
-                      variant="outline"
-                      className="flex-1"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(
-                          `/mobile/progress-report?workOrderId=${task.id}`,
-                        );
-                      }}
-                    >
+                size="sm"
+                variant="outline"
+                className="flex-1"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(
+                    `/mobile/progress-report?workOrderId=${task.id}`
+                  );
+                }}>
+
                       报进度
                     </Button>
                     <Button
-                      size="sm"
-                      className="flex-1 bg-emerald-500 hover:bg-emerald-600"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(
-                          `/mobile/complete-report?workOrderId=${task.id}`,
-                        );
-                      }}
-                    >
+                size="sm"
+                className="flex-1 bg-emerald-500 hover:bg-emerald-600"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(
+                    `/mobile/complete-report?workOrderId=${task.id}`
+                  );
+                }}>
+
                       完工
                     </Button>
                   </>
-                )}
+            }
               </div>
             </div>
-          ))
-        )}
+        )
+        }
       </div>
-    </div>
-  );
+    </div>);
+
 }

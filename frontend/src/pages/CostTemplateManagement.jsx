@@ -19,8 +19,8 @@ import {
   Calendar,
   User,
   CheckCircle2,
-  XCircle,
-} from "lucide-react";
+  XCircle } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -49,14 +49,14 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "../components/ui";
-import { cn, formatCurrency, formatDate } from "../lib/utils";
-import { fadeIn, staggerContainer } from "../lib/animations";
+  TableRow } from
+"../components/ui";
+import { cn as _cn, formatCurrency, formatDate as _formatDate } from "../lib/utils";
+import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
 import { salesTemplateApi } from "../services/api";
 
 export default function CostTemplateManagement() {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [templates, setTemplates] = useState([]);
   const [filteredTemplates, setFilteredTemplates] = useState([]);
@@ -80,9 +80,9 @@ export default function CostTemplateManagement() {
     industry: "",
     description: "",
     cost_structure: {
-      categories: [],
+      categories: []
     },
-    is_active: true,
+    is_active: true
   });
 
   useEffect(() => {
@@ -98,7 +98,7 @@ export default function CostTemplateManagement() {
     try {
       const res = await salesTemplateApi.listCostTemplates({
         page: 1,
-        page_size: 1000,
+        page_size: 1000
       });
       const items = res.data?.data?.items || res.data?.items || [];
       setTemplates(items);
@@ -115,8 +115,8 @@ export default function CostTemplateManagement() {
     if (searchTerm) {
       filtered = filtered.filter(
         (t) =>
-          t.template_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          t.template_code?.toLowerCase().includes(searchTerm.toLowerCase()),
+        t.template_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        t.template_code?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -140,9 +140,9 @@ export default function CostTemplateManagement() {
       industry: "",
       description: "",
       cost_structure: {
-        categories: [],
+        categories: []
       },
-      is_active: true,
+      is_active: true
     });
     setShowCreateDialog(true);
   };
@@ -157,7 +157,7 @@ export default function CostTemplateManagement() {
       industry: template.industry || "",
       description: template.description || "",
       cost_structure: template.cost_structure || { categories: [] },
-      is_active: template.is_active !== false,
+      is_active: template.is_active !== false
     });
     setShowEditDialog(true);
   };
@@ -178,7 +178,7 @@ export default function CostTemplateManagement() {
       if (selectedTemplate) {
         await salesTemplateApi.updateCostTemplate(
           selectedTemplate.id,
-          formData,
+          formData
         );
       } else {
         await salesTemplateApi.createCostTemplate(formData);
@@ -215,35 +215,35 @@ export default function CostTemplateManagement() {
       ...formData,
       cost_structure: {
         categories: [
-          ...(formData.cost_structure?.categories || []),
-          {
-            category: "",
-            items: [],
-          },
-        ],
-      },
+        ...(formData.cost_structure?.categories || []),
+        {
+          category: "",
+          items: []
+        }]
+
+      }
     });
   };
 
   const addItem = (categoryIndex) => {
     const categories = [...(formData.cost_structure?.categories || [])];
     categories[categoryIndex].items = [
-      ...(categories[categoryIndex].items || []),
-      {
-        item_name: "",
-        specification: "",
-        unit: "",
-        default_qty: 1,
-        default_unit_price: 0,
-        default_cost: 0,
-        lead_time_days: 0,
-      },
-    ];
+    ...(categories[categoryIndex].items || []),
+    {
+      item_name: "",
+      specification: "",
+      unit: "",
+      default_qty: 1,
+      default_unit_price: 0,
+      default_cost: 0,
+      lead_time_days: 0
+    }];
+
     setFormData({
       ...formData,
       cost_structure: {
-        categories,
-      },
+        categories
+      }
     });
   };
 
@@ -253,8 +253,8 @@ export default function CostTemplateManagement() {
     setFormData({
       ...formData,
       cost_structure: {
-        categories,
-      },
+        categories
+      }
     });
   };
 
@@ -264,8 +264,8 @@ export default function CostTemplateManagement() {
     setFormData({
       ...formData,
       cost_structure: {
-        categories,
-      },
+        categories
+      }
     });
   };
 
@@ -275,8 +275,8 @@ export default function CostTemplateManagement() {
     setFormData({
       ...formData,
       cost_structure: {
-        categories,
-      },
+        categories
+      }
     });
   };
 
@@ -286,8 +286,8 @@ export default function CostTemplateManagement() {
     setFormData({
       ...formData,
       cost_structure: {
-        categories,
-      },
+        categories
+      }
     });
   };
 
@@ -305,18 +305,18 @@ export default function CostTemplateManagement() {
       initial="hidden"
       animate="visible"
       variants={staggerContainer}
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       <PageHeader
         title="成本模板管理"
         description="管理报价成本模板，快速生成报价成本"
         actions={
-          <Button onClick={handleCreate}>
+        <Button onClick={handleCreate}>
             <Plus className="h-4 w-4 mr-2" />
             新建模板
           </Button>
-        }
-      />
+        } />
+
 
       {/* Filters */}
       <Card>
@@ -329,8 +329,8 @@ export default function CostTemplateManagement() {
                   placeholder="搜索模板名称或编码..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+                  className="pl-10" />
+
               </div>
             </div>
             <Select value={typeFilter} onValueChange={setTypeFilter}>
@@ -350,11 +350,11 @@ export default function CostTemplateManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部设备</SelectItem>
-                {equipmentTypes.map((type) => (
-                  <SelectItem key={type} value={type}>
+                {equipmentTypes.map((type) =>
+                <SelectItem key={type} value={type}>
                     {type}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -363,11 +363,11 @@ export default function CostTemplateManagement() {
 
       {/* Template List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredTemplates.map((template) => (
-          <Card
-            key={template.id}
-            className="hover:border-slate-600 transition-colors"
-          >
+        {filteredTemplates.map((template) =>
+        <Card
+          key={template.id}
+          className="hover:border-slate-600 transition-colors">
+
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -379,10 +379,10 @@ export default function CostTemplateManagement() {
                   </CardDescription>
                 </div>
                 <Badge
-                  className={
-                    template.is_active ? "bg-green-500" : "bg-slate-500"
-                  }
-                >
+                className={
+                template.is_active ? "bg-green-500" : "bg-slate-500"
+                }>
+
                   {template.is_active ? "启用" : "禁用"}
                 </Badge>
               </div>
@@ -393,19 +393,19 @@ export default function CostTemplateManagement() {
                   <Layers className="h-4 w-4" />
                   <span>
                     类型:{" "}
-                    {template.template_type === "STANDARD"
-                      ? "标准"
-                      : template.template_type === "CUSTOM"
-                        ? "自定义"
-                        : "项目"}
+                    {template.template_type === "STANDARD" ?
+                  "标准" :
+                  template.template_type === "CUSTOM" ?
+                  "自定义" :
+                  "项目"}
                   </span>
                 </div>
-                {template.equipment_type && (
-                  <div className="flex items-center gap-2">
+                {template.equipment_type &&
+              <div className="flex items-center gap-2">
                     <FileText className="h-4 w-4" />
                     <span>设备: {template.equipment_type}</span>
                   </div>
-                )}
+              }
                 <div className="flex items-center gap-2">
                   <DollarSign className="h-4 w-4" />
                   <span>
@@ -420,44 +420,44 @@ export default function CostTemplateManagement() {
 
               <div className="flex gap-2 mt-4">
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePreview(template)}
-                  className="flex-1"
-                >
+                variant="outline"
+                size="sm"
+                onClick={() => handlePreview(template)}
+                className="flex-1">
+
                   <Eye className="h-4 w-4 mr-1" />
                   预览
                 </Button>
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleEdit(template)}
-                  className="flex-1"
-                >
+                variant="outline"
+                size="sm"
+                onClick={() => handleEdit(template)}
+                className="flex-1">
+
                   <Edit className="h-4 w-4 mr-1" />
                   编辑
                 </Button>
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDelete(template)}
-                  className="text-red-400 hover:text-red-300"
-                >
+                variant="outline"
+                size="sm"
+                onClick={() => handleDelete(template)}
+                className="text-red-400 hover:text-red-300">
+
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
             </CardContent>
           </Card>
-        ))}
+        )}
       </div>
 
-      {filteredTemplates.length === 0 && !loading && (
-        <Card>
+      {filteredTemplates.length === 0 && !loading &&
+      <Card>
           <CardContent className="py-12 text-center text-slate-400">
             暂无模板，点击"新建模板"创建第一个模板
           </CardContent>
         </Card>
-      )}
+      }
 
       {/* Create/Edit Dialog */}
       <Dialog
@@ -468,8 +468,8 @@ export default function CostTemplateManagement() {
             setShowEditDialog(false);
             setSelectedTemplate(null);
           }
-        }}
-      >
+        }}>
+
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
@@ -485,20 +485,20 @@ export default function CostTemplateManagement() {
                 <Input
                   value={formData.template_code}
                   onChange={(e) =>
-                    setFormData({ ...formData, template_code: e.target.value })
+                  setFormData({ ...formData, template_code: e.target.value })
                   }
-                  placeholder="TPL-ICT-001"
-                />
+                  placeholder="TPL-ICT-001" />
+
               </div>
               <div>
                 <Label>模板名称 *</Label>
                 <Input
                   value={formData.template_name}
                   onChange={(e) =>
-                    setFormData({ ...formData, template_name: e.target.value })
+                  setFormData({ ...formData, template_name: e.target.value })
                   }
-                  placeholder="ICT测试设备标准模板"
-                />
+                  placeholder="ICT测试设备标准模板" />
+
               </div>
             </div>
 
@@ -508,9 +508,9 @@ export default function CostTemplateManagement() {
                 <Select
                   value={formData.template_type}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, template_type: value })
-                  }
-                >
+                  setFormData({ ...formData, template_type: value })
+                  }>
+
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -526,20 +526,20 @@ export default function CostTemplateManagement() {
                 <Input
                   value={formData.equipment_type}
                   onChange={(e) =>
-                    setFormData({ ...formData, equipment_type: e.target.value })
+                  setFormData({ ...formData, equipment_type: e.target.value })
                   }
-                  placeholder="ICT"
-                />
+                  placeholder="ICT" />
+
               </div>
               <div>
                 <Label>行业</Label>
                 <Input
                   value={formData.industry}
                   onChange={(e) =>
-                    setFormData({ ...formData, industry: e.target.value })
+                  setFormData({ ...formData, industry: e.target.value })
                   }
-                  placeholder="消费电子"
-                />
+                  placeholder="消费电子" />
+
               </div>
             </div>
 
@@ -548,11 +548,11 @@ export default function CostTemplateManagement() {
               <Textarea
                 value={formData.description}
                 onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
+                setFormData({ ...formData, description: e.target.value })
                 }
                 placeholder="模板说明..."
-                rows={3}
-              />
+                rows={3} />
+
             </div>
 
             {/* Cost Structure */}
@@ -567,140 +567,140 @@ export default function CostTemplateManagement() {
 
               <div className="space-y-4 border border-slate-700 rounded-lg p-4">
                 {formData.cost_structure?.categories?.map(
-                  (category, catIndex) => (
-                    <div
-                      key={catIndex}
-                      className="border border-slate-600 rounded-lg p-4"
-                    >
+                  (category, catIndex) =>
+                  <div
+                    key={catIndex}
+                    className="border border-slate-600 rounded-lg p-4">
+
                       <div className="flex items-center gap-2 mb-3">
                         <Input
-                          value={category.category}
-                          onChange={(e) =>
-                            updateCategory(catIndex, "category", e.target.value)
-                          }
-                          placeholder="分类名称（如：硬件成本）"
-                          className="flex-1"
-                        />
+                        value={category.category}
+                        onChange={(e) =>
+                        updateCategory(catIndex, "category", e.target.value)
+                        }
+                        placeholder="分类名称（如：硬件成本）"
+                        className="flex-1" />
+
                         <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => addItem(catIndex)}
-                        >
+                        variant="outline"
+                        size="sm"
+                        onClick={() => addItem(catIndex)}>
+
                           <Plus className="h-4 w-4 mr-1" />
                           添加项
                         </Button>
                         <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeCategory(catIndex)}
-                          className="text-red-400"
-                        >
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeCategory(catIndex)}
+                        className="text-red-400">
+
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
 
                       <div className="space-y-2">
-                        {category.items?.map((item, itemIndex) => (
-                          <div
-                            key={itemIndex}
-                            className="grid grid-cols-7 gap-2 items-end"
-                          >
+                        {category.items?.map((item, itemIndex) =>
+                      <div
+                        key={itemIndex}
+                        className="grid grid-cols-7 gap-2 items-end">
+
                             <Input
-                              value={item.item_name}
-                              onChange={(e) =>
-                                updateItem(
-                                  catIndex,
-                                  itemIndex,
-                                  "item_name",
-                                  e.target.value,
-                                )
-                              }
-                              placeholder="项目名称"
-                            />
+                          value={item.item_name}
+                          onChange={(e) =>
+                          updateItem(
+                            catIndex,
+                            itemIndex,
+                            "item_name",
+                            e.target.value
+                          )
+                          }
+                          placeholder="项目名称" />
+
                             <Input
-                              value={item.specification}
-                              onChange={(e) =>
-                                updateItem(
-                                  catIndex,
-                                  itemIndex,
-                                  "specification",
-                                  e.target.value,
-                                )
-                              }
-                              placeholder="规格型号"
-                            />
+                          value={item.specification}
+                          onChange={(e) =>
+                          updateItem(
+                            catIndex,
+                            itemIndex,
+                            "specification",
+                            e.target.value
+                          )
+                          }
+                          placeholder="规格型号" />
+
                             <Input
-                              value={item.unit}
-                              onChange={(e) =>
-                                updateItem(
-                                  catIndex,
-                                  itemIndex,
-                                  "unit",
-                                  e.target.value,
-                                )
-                              }
-                              placeholder="单位"
-                            />
+                          value={item.unit}
+                          onChange={(e) =>
+                          updateItem(
+                            catIndex,
+                            itemIndex,
+                            "unit",
+                            e.target.value
+                          )
+                          }
+                          placeholder="单位" />
+
                             <Input
-                              type="number"
-                              value={item.default_qty}
-                              onChange={(e) =>
-                                updateItem(
-                                  catIndex,
-                                  itemIndex,
-                                  "default_qty",
-                                  parseFloat(e.target.value) || 0,
-                                )
-                              }
-                              placeholder="数量"
-                            />
+                          type="number"
+                          value={item.default_qty}
+                          onChange={(e) =>
+                          updateItem(
+                            catIndex,
+                            itemIndex,
+                            "default_qty",
+                            parseFloat(e.target.value) || 0
+                          )
+                          }
+                          placeholder="数量" />
+
                             <Input
-                              type="number"
-                              value={item.default_unit_price}
-                              onChange={(e) =>
-                                updateItem(
-                                  catIndex,
-                                  itemIndex,
-                                  "default_unit_price",
-                                  parseFloat(e.target.value) || 0,
-                                )
-                              }
-                              placeholder="单价"
-                            />
+                          type="number"
+                          value={item.default_unit_price}
+                          onChange={(e) =>
+                          updateItem(
+                            catIndex,
+                            itemIndex,
+                            "default_unit_price",
+                            parseFloat(e.target.value) || 0
+                          )
+                          }
+                          placeholder="单价" />
+
                             <Input
-                              type="number"
-                              value={item.default_cost}
-                              onChange={(e) =>
-                                updateItem(
-                                  catIndex,
-                                  itemIndex,
-                                  "default_cost",
-                                  parseFloat(e.target.value) || 0,
-                                )
-                              }
-                              placeholder="成本"
-                            />
+                          type="number"
+                          value={item.default_cost}
+                          onChange={(e) =>
+                          updateItem(
+                            catIndex,
+                            itemIndex,
+                            "default_cost",
+                            parseFloat(e.target.value) || 0
+                          )
+                          }
+                          placeholder="成本" />
+
                             <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => removeItem(catIndex, itemIndex)}
-                              className="text-red-400"
-                            >
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeItem(catIndex, itemIndex)}
+                          className="text-red-400">
+
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
-                        ))}
+                      )}
                       </div>
                     </div>
-                  ),
+
                 )}
 
                 {(!formData.cost_structure?.categories ||
-                  formData.cost_structure.categories.length === 0) && (
-                  <div className="text-center py-8 text-slate-400">
+                formData.cost_structure.categories.length === 0) &&
+                <div className="text-center py-8 text-slate-400">
                     点击"添加分类"开始构建成本结构
                   </div>
-                )}
+                }
               </div>
             </div>
           </div>
@@ -712,14 +712,14 @@ export default function CostTemplateManagement() {
                 setShowCreateDialog(false);
                 setShowEditDialog(false);
                 setSelectedTemplate(null);
-              }}
-            >
+              }}>
+
               取消
             </Button>
             <Button
               onClick={handleSave}
-              disabled={!formData.template_code || !formData.template_name}
-            >
+              disabled={!formData.template_code || !formData.template_name}>
+
               保存
             </Button>
           </DialogFooter>
@@ -736,8 +736,8 @@ export default function CostTemplateManagement() {
             </DialogDescription>
           </DialogHeader>
 
-          {selectedTemplate && (
-            <div className="space-y-4">
+          {selectedTemplate &&
+          <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <strong>模板编码:</strong> {selectedTemplate.template_code}
@@ -755,14 +755,14 @@ export default function CostTemplateManagement() {
                 </div>
               </div>
 
-              {selectedTemplate.cost_structure && (
-                <div className="space-y-4">
+              {selectedTemplate.cost_structure &&
+            <div className="space-y-4">
                   {selectedTemplate.cost_structure.categories?.map(
-                    (category, catIndex) => (
-                      <div
-                        key={catIndex}
-                        className="border border-slate-700 rounded-lg p-4"
-                      >
+                (category, catIndex) =>
+                <div
+                  key={catIndex}
+                  className="border border-slate-700 rounded-lg p-4">
+
                         <h4 className="font-semibold mb-2">
                           {category.category}
                         </h4>
@@ -778,8 +778,8 @@ export default function CostTemplateManagement() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {category.items?.map((item, itemIndex) => (
-                              <TableRow key={itemIndex}>
+                            {category.items?.map((item, itemIndex) =>
+                      <TableRow key={itemIndex}>
                                 <TableCell>{item.item_name}</TableCell>
                                 <TableCell>
                                   {item.specification || "-"}
@@ -793,22 +793,22 @@ export default function CostTemplateManagement() {
                                   {formatCurrency(item.default_cost || 0)}
                                 </TableCell>
                               </TableRow>
-                            ))}
+                      )}
                           </TableBody>
                         </Table>
                       </div>
-                    ),
-                  )}
-                </div>
+
               )}
+                </div>
+            }
             </div>
-          )}
+          }
 
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowPreviewDialog(false)}
-            >
+              onClick={() => setShowPreviewDialog(false)}>
+
               关闭
             </Button>
           </DialogFooter>
@@ -828,8 +828,8 @@ export default function CostTemplateManagement() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowDeleteDialog(false)}
-            >
+              onClick={() => setShowDeleteDialog(false)}>
+
               取消
             </Button>
             <Button variant="destructive" onClick={handleConfirmDelete}>
@@ -838,6 +838,6 @@ export default function CostTemplateManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

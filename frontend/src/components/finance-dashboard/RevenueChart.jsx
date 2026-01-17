@@ -4,15 +4,15 @@
  * 用于展示收入趋势、结构和分析
  */
 
-import { useState, useMemo } from "react";
+import { useState as _useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   LineChart,
   AreaChart,
   PieChart,
   BarChart,
-  DualAxesChart
-} from "../../components/charts";
+  DualAxesChart } from
+"../../components/charts";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import { Badge } from "../../components/ui/badge";
@@ -22,10 +22,10 @@ import { cn } from "../../lib/utils";
 import {
   formatCurrency,
   formatPercentage,
-  calculateTrend,
+  calculateTrend as _calculateTrend,
   revenueTypes,
-  chartTypes
-} from "./financeDashboardConstants";
+  chartTypes as _chartTypes } from
+"./financeDashboardConstants";
 
 // 收入概览卡片组件
 const RevenueOverviewCard = ({ revenueData, loading }) => {
@@ -36,17 +36,17 @@ const RevenueOverviewCard = ({ revenueData, loading }) => {
           <div className="animate-pulse space-y-3">
             <div className="h-8 bg-slate-700 rounded w-1/3"></div>
             <div className="grid grid-cols-3 gap-4">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="space-y-2">
+              {[...Array(3)].map((_, i) =>
+              <div key={i} className="space-y-2">
                   <div className="h-4 bg-slate-700 rounded w-1/2"></div>
                   <div className="h-6 bg-slate-700 rounded"></div>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </CardContent>
-      </Card>
-    );
+      </Card>);
+
   }
 
   return (
@@ -65,16 +65,16 @@ const RevenueOverviewCard = ({ revenueData, loading }) => {
               {formatCurrency(revenueData.totalRevenue)}
             </div>
             <div className="text-sm text-slate-400">总收入</div>
-            {revenueData.growth !== undefined && (
-              <div className={cn(
-                "text-xs mt-1 flex items-center justify-center gap-1",
-                revenueData.growth >= 0 ? "text-green-400" : "text-red-400"
-              )}>
+            {revenueData.growth !== undefined &&
+            <div className={cn(
+              "text-xs mt-1 flex items-center justify-center gap-1",
+              revenueData.growth >= 0 ? "text-green-400" : "text-red-400"
+            )}>
                 {revenueData.growth >= 0 ? "↑" : "↓"}
                 {Math.abs(revenueData.growth)}%
                 <span className="text-slate-500">较上月</span>
               </div>
-            )}
+            }
           </div>
 
           <div className="text-center">
@@ -109,8 +109,9 @@ const RevenueOverviewCard = ({ revenueData, loading }) => {
           <div className="w-full bg-slate-700 rounded-full h-2">
             <div
               className="bg-gradient-to-r from-green-400 to-emerald-500 h-2 rounded-full transition-all duration-500"
-              style={{ width: `${Math.min(revenueData.achievementRate, 100)}%` }}
-            ></div>
+              style={{ width: `${Math.min(revenueData.achievementRate, 100)}%` }}>
+
+            </div>
           </div>
           <div className="flex justify-between text-xs text-slate-500 mt-1">
             <span>0%</span>
@@ -120,18 +121,18 @@ const RevenueOverviewCard = ({ revenueData, loading }) => {
           </div>
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 };
 
 // 收入类型饼图
 const RevenueTypeDistribution = ({ revenueByType, loading }) => {
   const chartData = useMemo(() => {
     if (!revenueByType || revenueByType.length === 0) return [];
-    return revenueByType.map(item => ({
+    return revenueByType.map((item) => ({
       type: item.type,
       value: item.value,
-      percentage: (item.value / revenueByType.reduce((sum, d) => sum + d.value, 0)) * 100
+      percentage: item.value / revenueByType.reduce((sum, d) => sum + d.value, 0) * 100
     }));
   }, [revenueByType]);
 
@@ -144,8 +145,8 @@ const RevenueTypeDistribution = ({ revenueByType, loading }) => {
             <div className="h-40 bg-slate-700 rounded"></div>
           </div>
         </CardContent>
-      </Card>
-    );
+      </Card>);
+
   }
 
   if (!chartData || chartData.length === 0) {
@@ -156,15 +157,15 @@ const RevenueTypeDistribution = ({ revenueByType, loading }) => {
             暂无收入类型数据
           </div>
         </CardContent>
-      </Card>
-    );
+      </Card>);
+
   }
 
   const colors = [
-    '#4ade80', // 产品销售
-    '#60a5fa', // 服务收入
-    '#a78bfa', // 咨询收入
-    '#9ca3af'  // 其他收入
+  '#4ade80', // 产品销售
+  '#60a5fa', // 服务收入
+  '#a78bfa', // 咨询收入
+  '#9ca3af' // 其他收入
   ];
 
   return (
@@ -186,8 +187,8 @@ const RevenueTypeDistribution = ({ revenueByType, loading }) => {
                   name: revenueTypes[datum.type]?.label || datum.type,
                   value: formatCurrency(datum.value)
                 })
-              }}
-            />
+              }} />
+
           </div>
 
           {/* 图例和明细 */}
@@ -199,8 +200,9 @@ const RevenueTypeDistribution = ({ revenueByType, loading }) => {
                   <div className="flex items-center gap-3">
                     <div
                       className="w-4 h-4 rounded"
-                      style={{ backgroundColor: colors[index] }}
-                    ></div>
+                      style={{ backgroundColor: colors[index] }}>
+
+                    </div>
                     <div>
                       <div className="text-sm font-medium text-white">
                         {revenueType?.label || item.type}
@@ -218,21 +220,21 @@ const RevenueTypeDistribution = ({ revenueByType, loading }) => {
                       {formatPercentage(item.percentage)}
                     </div>
                   </div>
-                </div>
-              );
+                </div>);
+
             })}
           </div>
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 };
 
 // 收入趋势图
 const RevenueTrendChart = ({ revenueByMonth, loading, timeRange }) => {
   const chartData = useMemo(() => {
     if (!revenueByMonth || revenueByMonth.length === 0) return [];
-    return revenueByMonth.map(item => ({
+    return revenueByMonth.map((item) => ({
       month: item.month,
       actual: item.actual,
       target: item.target,
@@ -249,8 +251,8 @@ const RevenueTrendChart = ({ revenueByMonth, loading, timeRange }) => {
             <div className="h-64 bg-slate-700 rounded"></div>
           </div>
         </CardContent>
-      </Card>
-    );
+      </Card>);
+
   }
 
   if (!chartData || chartData.length === 0) {
@@ -261,8 +263,8 @@ const RevenueTrendChart = ({ revenueByMonth, loading, timeRange }) => {
             暂无收入趋势数据
           </div>
         </CardContent>
-      </Card>
-    );
+      </Card>);
+
   }
 
   const formatter = (value) => formatCurrency(value);
@@ -272,7 +274,7 @@ const RevenueTrendChart = ({ revenueByMonth, loading, timeRange }) => {
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-white">收入趋势</h3>
-          <Select value={timeRange} onValueChange={(value) => {}}>
+          <Select value={timeRange} onValueChange={(_value) => {}}>
             <SelectTrigger className="w-32">
               <SelectValue />
             </SelectTrigger>
@@ -306,26 +308,26 @@ const RevenueTrendChart = ({ revenueByMonth, loading, timeRange }) => {
               value: formatter(datum.actual || datum.value)
             })
           }}
-          style={{ width: '100%' }}
-        />
+          style={{ width: '100%' }} />
+
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 };
 
 // 客户收入分析
 const CustomerRevenueAnalysis = ({ revenueByCustomer, loading }) => {
   const chartData = useMemo(() => {
     if (!revenueByCustomer || revenueByCustomer.length === 0) return [];
-    return revenueByCustomer
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 10)
-      .map((item, index) => ({
-        name: item.customer,
-        revenue: item.value,
-        growth: item.growth,
-        rank: index + 1
-      }));
+    return revenueByCustomer.
+    sort((a, b) => b.value - a.value).
+    slice(0, 10).
+    map((item, index) => ({
+      name: item.customer,
+      revenue: item.value,
+      growth: item.growth,
+      rank: index + 1
+    }));
   }, [revenueByCustomer]);
 
   if (loading) {
@@ -335,14 +337,14 @@ const CustomerRevenueAnalysis = ({ revenueByCustomer, loading }) => {
           <div className="animate-pulse space-y-3">
             <div className="h-4 bg-slate-700 rounded w-1/3"></div>
             <div className="space-y-2">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-3 bg-slate-700 rounded w-full"></div>
-              ))}
+              {[...Array(5)].map((_, i) =>
+              <div key={i} className="h-3 bg-slate-700 rounded w-full"></div>
+              )}
             </div>
           </div>
         </CardContent>
-      </Card>
-    );
+      </Card>);
+
   }
 
   if (!chartData || chartData.length === 0) {
@@ -353,8 +355,8 @@ const CustomerRevenueAnalysis = ({ revenueByCustomer, loading }) => {
             暂无客户收入数据
           </div>
         </CardContent>
-      </Card>
-    );
+      </Card>);
+
   }
 
   return (
@@ -363,13 +365,13 @@ const CustomerRevenueAnalysis = ({ revenueByCustomer, loading }) => {
         <h3 className="text-lg font-semibold text-white mb-4">客户收入TOP10</h3>
 
         <div className="space-y-3">
-          {chartData.map((item, index) => (
-            <div key={index} className="flex items-center justify-between">
+          {chartData.map((item, index) =>
+          <div key={index} className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className={cn(
-                  "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
-                  index < 3 ? "bg-amber-500 text-white" : "bg-slate-700 text-slate-400"
-                )}>
+                "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
+                index < 3 ? "bg-amber-500 text-white" : "bg-slate-700 text-slate-400"
+              )}>
                   {item.rank}
                 </div>
                 <div className="text-sm text-white">
@@ -378,9 +380,9 @@ const CustomerRevenueAnalysis = ({ revenueByCustomer, loading }) => {
               </div>
               <div className="flex items-center gap-3">
                 <div className={cn(
-                  "text-sm font-medium",
-                  item.growth >= 0 ? "text-green-400" : "text-red-400"
-                )}>
+                "text-sm font-medium",
+                item.growth >= 0 ? "text-green-400" : "text-red-400"
+              )}>
                   {item.growth >= 0 ? "↑" : "↓"}
                   {Math.abs(item.growth)}%
                 </div>
@@ -389,7 +391,7 @@ const CustomerRevenueAnalysis = ({ revenueByCustomer, loading }) => {
                 </div>
               </div>
             </div>
-          ))}
+          )}
         </div>
 
         <div className="mt-4 pt-4 border-t border-slate-700">
@@ -401,8 +403,8 @@ const CustomerRevenueAnalysis = ({ revenueByCustomer, loading }) => {
           </div>
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 };
 
 export function RevenueChart({
@@ -415,8 +417,8 @@ export function RevenueChart({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       {/* 收入概览 */}
       <RevenueOverviewCard revenueData={revenueData} loading={loading} />
 
@@ -433,22 +435,22 @@ export function RevenueChart({
           <RevenueTrendChart
             revenueByMonth={revenueData.byMonth}
             loading={loading}
-            timeRange={timeRange}
-          />
+            timeRange={timeRange} />
+
         </TabsContent>
 
         <TabsContent value="type" className="mt-4">
           <RevenueTypeDistribution
             revenueByType={revenueData.byType}
-            loading={loading}
-          />
+            loading={loading} />
+
         </TabsContent>
 
         <TabsContent value="customer" className="mt-4">
           <CustomerRevenueAnalysis
             revenueByCustomer={revenueData.byCustomer}
-            loading={loading}
-          />
+            loading={loading} />
+
         </TabsContent>
 
         <TabsContent value="forecast" className="mt-4">
@@ -461,8 +463,8 @@ export function RevenueChart({
           </Card>
         </TabsContent>
       </Tabs>
-    </motion.div>
-  );
+    </motion.div>);
+
 }
 
 export default RevenueChart;

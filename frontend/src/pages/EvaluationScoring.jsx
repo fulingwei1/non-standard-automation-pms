@@ -7,8 +7,8 @@ import {
   User,
   Calendar,
   Briefcase,
-  AlertCircle,
-} from "lucide-react";
+  AlertCircle } from
+"lucide-react";
 import { performanceApi } from "../services/api";
 import { WorkSummaryDisplay } from "../components/evaluation/WorkSummaryDisplay";
 import { ScoringForm } from "../components/evaluation/ScoringForm";
@@ -16,8 +16,8 @@ import {
   scoringGuidelines,
   commentTemplates,
   validateScore,
-  validateComment,
-} from "../utils/evaluationUtils";
+  validateComment } from
+"../utils/evaluationUtils";
 
 const EvaluationScoring = () => {
   const navigate = useNavigate();
@@ -31,7 +31,7 @@ const EvaluationScoring = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [_error, setError] = useState(null);
 
   // 任务数据（从 API 获取或使用传递过来的数据）
   const [task, setTask] = useState(
@@ -53,10 +53,10 @@ const EvaluationScoring = () => {
         selfEvaluation: "",
         highlights: "",
         problems: "",
-        nextMonthPlan: "",
+        nextMonthPlan: ""
       },
-      historicalScores: [],
-    },
+      historicalScores: []
+    }
   );
 
   // 加载评价详情
@@ -74,12 +74,12 @@ const EvaluationScoring = () => {
       setTask({
         ...response.data.summary,
         employeeName:
-          response.data.employee_info?.name ||
-          response.data.employee_info?.employee_name,
+        response.data.employee_info?.name ||
+        response.data.employee_info?.employee_name,
         department: response.data.employee_info?.department,
         position: response.data.employee_info?.position,
         workSummary: response.data.summary?.summary || response.data.summary,
-        historicalScores: response.data.historical_performance || [],
+        historicalScores: response.data.historical_performance || []
       });
       // 如果已经评价过，填充分数和评论
       if (response.data.summary?.score) {
@@ -101,7 +101,7 @@ const EvaluationScoring = () => {
   // 处理输入变化
   const handleScoreChange = (value) => {
     // 只允许输入60-100的数字
-    if (value === "" || (Number(value) >= 60 && Number(value) <= 100)) {
+    if (value === "" || Number(value) >= 60 && Number(value) <= 100) {
       setScore(value);
       setIsDraft(true);
     }
@@ -160,7 +160,7 @@ const EvaluationScoring = () => {
     try {
       await performanceApi.submitEvaluation(taskId, {
         score: parseInt(score),
-        comment: comment.trim(),
+        comment: comment.trim()
       });
       alert("评价提交成功！");
       navigate("/evaluation-tasks");
@@ -177,7 +177,7 @@ const EvaluationScoring = () => {
   const fadeIn = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.4 },
+    transition: { duration: 0.4 }
   };
 
   // 如果正在加载，显示加载状态
@@ -188,8 +188,8 @@ const EvaluationScoring = () => {
           <div className="animate-spin h-12 w-12 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
           <p className="text-slate-400">加载中...</p>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -198,14 +198,14 @@ const EvaluationScoring = () => {
         className="max-w-5xl mx-auto space-y-6"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
+        transition={{ duration: 0.5 }}>
+
         {/* 返回按钮 */}
         <motion.div {...fadeIn}>
           <button
             onClick={() => navigate("/evaluation-tasks")}
-            className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
-          >
+            className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors">
+
             <ArrowLeft className="h-4 w-4" />
             返回任务列表
           </button>
@@ -218,9 +218,9 @@ const EvaluationScoring = () => {
               <h1 className="text-3xl font-bold text-white mb-2">绩效评价</h1>
               <p className="text-slate-400">
                 {(task.evaluationType || task.evaluator_type) === "dept" ||
-                (task.evaluationType || task.evaluator_type) === "DEPT_MANAGER"
-                  ? "部门成员"
-                  : "项目成员"}
+                (task.evaluationType || task.evaluator_type) === "DEPT_MANAGER" ?
+                "部门成员" :
+                "项目成员"}
                 评价打分
               </p>
             </div>
@@ -235,7 +235,7 @@ const EvaluationScoring = () => {
               <div className="h-16 w-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
                 <span className="text-white font-bold text-2xl">
                   {(task.employeeName || task.employee_name || "未知").charAt(
-                    0,
+                    0
                   )}
                 </span>
               </div>
@@ -279,15 +279,15 @@ const EvaluationScoring = () => {
                   <p className="text-xl font-bold text-white mb-1">
                     {(task.evaluationType || task.evaluator_type) === "dept" ||
                     (task.evaluationType || task.evaluator_type) ===
-                      "DEPT_MANAGER"
-                      ? "部门评价"
-                      : "项目评价"}
+                    "DEPT_MANAGER" ?
+                    "部门评价" :
+                    "项目评价"}
                   </p>
                   <p className="text-sm text-slate-400">
                     {task.projectName ||
-                      task.project_name ||
-                      task.department ||
-                      task.employee_department}{" "}
+                    task.project_name ||
+                    task.department ||
+                    task.employee_department}{" "}
                     · 权重 {task.weight || task.project_weight || 50}%
                   </p>
                 </div>
@@ -297,18 +297,18 @@ const EvaluationScoring = () => {
         </motion.div>
 
         {/* 历史绩效记录 */}
-        {task.historicalScores && task.historicalScores.length > 0 && (
-          <motion.div {...fadeIn} transition={{ delay: 0.3 }}>
+        {task.historicalScores && task.historicalScores.length > 0 &&
+        <motion.div {...fadeIn} transition={{ delay: 0.3 }}>
             <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50">
               <h3 className="text-lg font-bold text-white mb-4">
                 历史绩效参考
               </h3>
               <div className="grid grid-cols-3 gap-4">
-                {task.historicalScores.map((hs, idx) => (
-                  <div
-                    key={idx}
-                    className="p-4 bg-slate-900/50 rounded-lg border border-slate-700/50"
-                  >
+                {task.historicalScores.map((hs, idx) =>
+              <div
+                key={idx}
+                className="p-4 bg-slate-900/50 rounded-lg border border-slate-700/50">
+
                     <p className="text-sm text-slate-400 mb-2">{hs.period}</p>
                     <div className="flex items-baseline gap-2">
                       <p className="text-2xl font-bold text-blue-400">
@@ -319,11 +319,11 @@ const EvaluationScoring = () => {
                       </span>
                     </div>
                   </div>
-                ))}
+              )}
               </div>
             </div>
           </motion.div>
-        )}
+        }
 
         {/* 工作总结展示 */}
         <motion.div {...fadeIn} transition={{ delay: 0.4 }}>
@@ -344,8 +344,8 @@ const EvaluationScoring = () => {
             onCommentChange={handleCommentChange}
             onInsertTemplate={insertTemplate}
             onSaveDraft={handleSaveDraft}
-            onSubmit={handleSubmit}
-          />
+            onSubmit={handleSubmit} />
+
         </motion.div>
 
         {/* 提示信息 */}
@@ -365,8 +365,8 @@ const EvaluationScoring = () => {
           </div>
         </motion.div>
       </motion.div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default EvaluationScoring;

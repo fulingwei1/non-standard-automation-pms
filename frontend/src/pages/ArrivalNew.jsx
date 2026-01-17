@@ -22,15 +22,15 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Textarea,
-} from "../components/ui";
+  Textarea } from
+"../components/ui";
 import { fadeIn } from "../lib/animations";
 import {
   shortageApi,
   materialApi,
-  purchaseApi,
-  supplierApi,
-} from "../services/api";
+  purchaseApi as _purchaseApi,
+  supplierApi } from
+"../services/api";
 
 export default function ArrivalNew() {
   const navigate = useNavigate();
@@ -48,7 +48,7 @@ export default function ArrivalNew() {
     supplier_id: "",
     supplier_name: "",
     expected_date: "",
-    remark: "",
+    remark: ""
   });
   const [errors, setErrors] = useState({});
 
@@ -58,12 +58,12 @@ export default function ArrivalNew() {
     // 如果有传入的物料ID，设置默认值
     if (location.state?.material_id) {
       const material = materials.find(
-        (m) => m.id === location.state.material_id,
+        (m) => m.id === location.state.material_id
       );
       if (material) {
         setFormData((prev) => ({
           ...prev,
-          material_id: String(material.id),
+          material_id: String(material.id)
         }));
       }
     }
@@ -74,7 +74,7 @@ export default function ArrivalNew() {
       const res = await materialApi.list({
         page: 1,
         page_size: 200,
-        is_active: true,
+        is_active: true
       });
       setMaterials(res.data.items || res.data || []);
     } catch (error) {
@@ -111,21 +111,21 @@ export default function ArrivalNew() {
     try {
       const submitData = {
         ...formData,
-        shortage_report_id: formData.shortage_report_id
-          ? parseInt(formData.shortage_report_id)
-          : null,
-        purchase_order_id: formData.purchase_order_id
-          ? parseInt(formData.purchase_order_id)
-          : null,
-        purchase_order_item_id: formData.purchase_order_item_id
-          ? parseInt(formData.purchase_order_item_id)
-          : null,
+        shortage_report_id: formData.shortage_report_id ?
+        parseInt(formData.shortage_report_id) :
+        null,
+        purchase_order_id: formData.purchase_order_id ?
+        parseInt(formData.purchase_order_id) :
+        null,
+        purchase_order_item_id: formData.purchase_order_item_id ?
+        parseInt(formData.purchase_order_item_id) :
+        null,
         material_id: parseInt(formData.material_id),
         expected_qty: parseFloat(formData.expected_qty),
-        supplier_id: formData.supplier_id
-          ? parseInt(formData.supplier_id)
-          : null,
-        expected_date: formData.expected_date,
+        supplier_id: formData.supplier_id ?
+        parseInt(formData.supplier_id) :
+        null,
+        expected_date: formData.expected_date
       };
 
       const res = await shortageApi.arrivals.create(submitData);
@@ -151,7 +151,7 @@ export default function ArrivalNew() {
       if (supplier) {
         setFormData((prev) => ({
           ...prev,
-          supplier_name: supplier.supplier_name || "",
+          supplier_name: supplier.supplier_name || ""
         }));
       }
     }
@@ -159,9 +159,9 @@ export default function ArrivalNew() {
 
   const filteredMaterials = materials.filter(
     (m) =>
-      !searchKeyword ||
-      m.material_code?.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-      m.material_name?.toLowerCase().includes(searchKeyword.toLowerCase()),
+    !searchKeyword ||
+    m.material_code?.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+    m.material_name?.toLowerCase().includes(searchKeyword.toLowerCase())
   );
 
   // 设置默认日期为7天后
@@ -171,7 +171,7 @@ export default function ArrivalNew() {
       defaultDate.setDate(defaultDate.getDate() + 7);
       setFormData((prev) => ({
         ...prev,
-        expected_date: defaultDate.toISOString().split("T")[0],
+        expected_date: defaultDate.toISOString().split("T")[0]
       }));
     }
   }, []);
@@ -191,8 +191,8 @@ export default function ArrivalNew() {
         initial="hidden"
         animate="visible"
         onSubmit={handleSubmit}
-        className="max-w-4xl"
-      >
+        className="max-w-4xl">
+
         <Card>
           <CardHeader>
             <CardTitle>关联信息</CardTitle>
@@ -208,9 +208,9 @@ export default function ArrivalNew() {
                   placeholder="缺料上报ID"
                   value={formData.shortage_report_id}
                   onChange={(e) =>
-                    handleChange("shortage_report_id", e.target.value)
-                  }
-                />
+                  handleChange("shortage_report_id", e.target.value)
+                  } />
+
               </div>
 
               <div>
@@ -221,9 +221,9 @@ export default function ArrivalNew() {
                   placeholder="采购订单ID"
                   value={formData.purchase_order_id}
                   onChange={(e) =>
-                    handleChange("purchase_order_id", e.target.value)
-                  }
-                />
+                  handleChange("purchase_order_id", e.target.value)
+                  } />
+
               </div>
             </div>
           </CardContent>
@@ -244,31 +244,31 @@ export default function ArrivalNew() {
                   placeholder="搜索物料编码或名称..."
                   value={searchKeyword}
                   onChange={(e) => setSearchKeyword(e.target.value)}
-                  className="mb-2"
-                />
+                  className="mb-2" />
+
                 <Select
                   value={formData.material_id}
-                  onValueChange={(value) => handleChange("material_id", value)}
-                >
+                  onValueChange={(value) => handleChange("material_id", value)}>
+
                   <SelectTrigger
                     id="material_id"
-                    className={errors.material_id ? "border-red-400" : ""}
-                  >
+                    className={errors.material_id ? "border-red-400" : ""}>
+
                     <SelectValue placeholder="请选择物料" />
                   </SelectTrigger>
                   <SelectContent>
-                    {filteredMaterials.map((material) => (
-                      <SelectItem key={material.id} value={String(material.id)}>
+                    {filteredMaterials.map((material) =>
+                    <SelectItem key={material.id} value={String(material.id)}>
                         {material.material_code} - {material.material_name}
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
-                {errors.material_id && (
-                  <div className="text-sm text-red-400 mt-1">
+                {errors.material_id &&
+                <div className="text-sm text-red-400 mt-1">
                     {errors.material_id}
                   </div>
-                )}
+                }
               </div>
             </div>
 
@@ -285,13 +285,13 @@ export default function ArrivalNew() {
                   placeholder="0.00"
                   value={formData.expected_qty}
                   onChange={(e) => handleChange("expected_qty", e.target.value)}
-                  className={errors.expected_qty ? "border-red-400" : ""}
-                />
-                {errors.expected_qty && (
-                  <div className="text-sm text-red-400 mt-1">
+                  className={errors.expected_qty ? "border-red-400" : ""} />
+
+                {errors.expected_qty &&
+                <div className="text-sm text-red-400 mt-1">
                     {errors.expected_qty}
                   </div>
-                )}
+                }
               </div>
 
               <div>
@@ -303,15 +303,15 @@ export default function ArrivalNew() {
                   type="date"
                   value={formData.expected_date}
                   onChange={(e) =>
-                    handleChange("expected_date", e.target.value)
+                  handleChange("expected_date", e.target.value)
                   }
-                  className={errors.expected_date ? "border-red-400" : ""}
-                />
-                {errors.expected_date && (
-                  <div className="text-sm text-red-400 mt-1">
+                  className={errors.expected_date ? "border-red-400" : ""} />
+
+                {errors.expected_date &&
+                <div className="text-sm text-red-400 mt-1">
                     {errors.expected_date}
                   </div>
-                )}
+                }
               </div>
             </div>
 
@@ -320,17 +320,17 @@ export default function ArrivalNew() {
                 <Label htmlFor="supplier_id">供应商（可选）</Label>
                 <Select
                   value={formData.supplier_id}
-                  onValueChange={(value) => handleChange("supplier_id", value)}
-                >
+                  onValueChange={(value) => handleChange("supplier_id", value)}>
+
                   <SelectTrigger id="supplier_id">
                     <SelectValue placeholder="请选择供应商" />
                   </SelectTrigger>
                   <SelectContent>
-                    {suppliers.map((supplier) => (
-                      <SelectItem key={supplier.id} value={String(supplier.id)}>
+                    {suppliers.map((supplier) =>
+                    <SelectItem key={supplier.id} value={String(supplier.id)}>
                         {supplier.supplier_name} ({supplier.supplier_code})
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -342,9 +342,9 @@ export default function ArrivalNew() {
                   placeholder="或手动输入供应商名称"
                   value={formData.supplier_name}
                   onChange={(e) =>
-                    handleChange("supplier_name", e.target.value)
-                  }
-                />
+                  handleChange("supplier_name", e.target.value)
+                  } />
+
               </div>
             </div>
           </CardContent>
@@ -359,8 +359,8 @@ export default function ArrivalNew() {
               placeholder="其他需要说明的信息..."
               value={formData.remark}
               onChange={(e) => handleChange("remark", e.target.value)}
-              rows={3}
-            />
+              rows={3} />
+
           </CardContent>
         </Card>
 
@@ -369,8 +369,8 @@ export default function ArrivalNew() {
             type="button"
             variant="outline"
             onClick={() => navigate("/shortage")}
-            disabled={loading}
-          >
+            disabled={loading}>
+
             <X className="h-4 w-4 mr-2" />
             取消
           </Button>
@@ -380,6 +380,6 @@ export default function ArrivalNew() {
           </Button>
         </div>
       </motion.form>
-    </div>
-  );
+    </div>);
+
 }

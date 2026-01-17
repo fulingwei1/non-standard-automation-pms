@@ -20,8 +20,8 @@ import {
   DollarSign,
   Users,
   MapPin,
-  FileText,
-} from "lucide-react";
+  FileText } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -49,10 +49,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
-} from "../components/ui";
+  DialogFooter } from
+"../components/ui";
 import { cn, formatCurrency, formatDate } from "../lib/utils";
-import { fadeIn, staggerContainer } from "../lib/animations";
+import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
 import { financialCostApi } from "../services/api";
 
 export default function FinancialCostUpload() {
@@ -104,7 +104,7 @@ export default function FinancialCostUpload() {
       const res = await financialCostApi.listCosts({
         page: 1,
         page_size: 1000,
-        ...params,
+        ...params
       });
       const items = res.data?.data?.items || res.data?.items || [];
       setCosts(items);
@@ -121,10 +121,10 @@ export default function FinancialCostUpload() {
     if (searchTerm) {
       filtered = filtered.filter(
         (c) =>
-          c.project_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          c.project_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          c.cost_item?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          c.description?.toLowerCase().includes(searchTerm.toLowerCase()),
+        c.project_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.project_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.cost_item?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.description?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -135,7 +135,7 @@ export default function FinancialCostUpload() {
     try {
       const response = await financialCostApi.downloadTemplate();
       const blob = new Blob([response.data], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
       });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -216,7 +216,7 @@ export default function FinancialCostUpload() {
     LABOR: "人工费用",
     TRAVEL: "出差费用",
     ENTERTAINMENT: "招待费用",
-    OTHER: "其他费用",
+    OTHER: "其他费用"
   };
 
   return (
@@ -224,13 +224,13 @@ export default function FinancialCostUpload() {
       initial="hidden"
       animate="visible"
       variants={staggerContainer}
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       <PageHeader
         title="财务历史项目成本上传"
         description="上传历史项目的非物料成本，包括出差费用、人工费用、招待费用等"
         actions={
-          <div className="flex gap-2">
+        <div className="flex gap-2">
             <Button variant="outline" onClick={handleDownloadTemplate}>
               <Download className="h-4 w-4 mr-2" />
               下载模板
@@ -240,15 +240,15 @@ export default function FinancialCostUpload() {
               {uploading ? "上传中..." : "上传Excel"}
             </Button>
             <input
-              ref={fileInputRef}
-              type="file"
-              accept=".xlsx,.xls"
-              onChange={handleFileSelect}
-              style={{ display: "none" }}
-            />
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls"
+            onChange={handleFileSelect}
+            style={{ display: "none" }} />
+
           </div>
-        }
-      />
+        } />
+
 
       {/* Upload Instructions */}
       <Card>
@@ -287,8 +287,8 @@ export default function FinancialCostUpload() {
                   placeholder="搜索项目编号、项目名称、成本项..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+                  className="pl-10" />
+
               </div>
             </div>
             <Select value={typeFilter} onValueChange={setTypeFilter}>
@@ -297,11 +297,11 @@ export default function FinancialCostUpload() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部类型</SelectItem>
-                {costTypes.map((type) => (
-                  <SelectItem key={type} value={type}>
+                {costTypes.map((type) =>
+                <SelectItem key={type} value={type}>
                     {costTypeLabels[type]}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
@@ -310,11 +310,11 @@ export default function FinancialCostUpload() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部分类</SelectItem>
-                {costCategories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
+                {costCategories.map((cat) =>
+                <SelectItem key={cat} value={cat}>
                     {cat}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
             <Input
@@ -322,15 +322,15 @@ export default function FinancialCostUpload() {
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               placeholder="开始日期"
-              className="w-40"
-            />
+              className="w-40" />
+
             <Input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               placeholder="结束日期"
-              className="w-40"
-            />
+              className="w-40" />
+
             <Button variant="outline" onClick={loadCosts}>
               <Search className="h-4 w-4 mr-2" />
               查询
@@ -361,21 +361,21 @@ export default function FinancialCostUpload() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredCosts.map((cost) => (
-                <TableRow key={cost.id}>
+              {filteredCosts.map((cost) =>
+              <TableRow key={cost.id}>
                   <TableCell>
                     <div className="font-medium">{cost.project_code}</div>
                   </TableCell>
                   <TableCell>{cost.project_name || "-"}</TableCell>
                   <TableCell>
                     <Badge
-                      className={cn(
-                        cost.cost_type === "LABOR" && "bg-purple-500",
-                        cost.cost_type === "TRAVEL" && "bg-blue-500",
-                        cost.cost_type === "ENTERTAINMENT" && "bg-amber-500",
-                        cost.cost_type === "OTHER" && "bg-slate-500",
-                      )}
-                    >
+                    className={cn(
+                      cost.cost_type === "LABOR" && "bg-purple-500",
+                      cost.cost_type === "TRAVEL" && "bg-blue-500",
+                      cost.cost_type === "ENTERTAINMENT" && "bg-amber-500",
+                      cost.cost_type === "OTHER" && "bg-slate-500"
+                    )}>
+
                       {costTypeLabels[cost.cost_type] || cost.cost_type}
                     </Badge>
                   </TableCell>
@@ -394,24 +394,24 @@ export default function FinancialCostUpload() {
                   </TableCell>
                   <TableCell>
                     <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(cost.id)}
-                      className="text-red-400"
-                    >
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDelete(cost.id)}
+                    className="text-red-400">
+
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
 
-          {filteredCosts.length === 0 && !loading && (
-            <div className="text-center py-12 text-slate-400">
+          {filteredCosts.length === 0 && !loading &&
+          <div className="text-center py-12 text-slate-400">
               暂无成本记录，点击"上传Excel"上传第一条记录
             </div>
-          )}
+          }
         </CardContent>
       </Card>
 
@@ -423,49 +423,49 @@ export default function FinancialCostUpload() {
             <DialogDescription>Excel文件处理完成</DialogDescription>
           </DialogHeader>
 
-          {uploadResult && (
-            <div className="space-y-4">
+          {uploadResult &&
+          <div className="space-y-4">
               <div className="flex items-center gap-2">
-                {uploadResult.success_count > 0 && (
-                  <div className="flex items-center gap-2 text-green-400">
+                {uploadResult.success_count > 0 &&
+              <div className="flex items-center gap-2 text-green-400">
                     <CheckCircle2 className="h-5 w-5" />
                     <span>成功: {uploadResult.success_count} 条</span>
                   </div>
-                )}
-                {uploadResult.error_count > 0 && (
-                  <div className="flex items-center gap-2 text-red-400">
+              }
+                {uploadResult.error_count > 0 &&
+              <div className="flex items-center gap-2 text-red-400">
                     <XCircle className="h-5 w-5" />
                     <span>失败: {uploadResult.error_count} 条</span>
                   </div>
-                )}
+              }
               </div>
 
-              {uploadResult.errors && uploadResult.errors.length > 0 && (
-                <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-3 max-h-60 overflow-y-auto">
+              {uploadResult.errors && uploadResult.errors.length > 0 &&
+            <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-3 max-h-60 overflow-y-auto">
                   <div className="font-medium text-red-400 mb-2">
                     错误详情：
                   </div>
                   <ul className="text-sm text-slate-300 space-y-1">
-                    {uploadResult.errors.map((error, idx) => (
-                      <li key={idx}>• {error}</li>
-                    ))}
+                    {uploadResult.errors.map((error, idx) =>
+                <li key={idx}>• {error}</li>
+                )}
                   </ul>
                 </div>
-              )}
+            }
 
-              {uploadResult.upload_batch_no && (
-                <div className="text-sm text-slate-400">
+              {uploadResult.upload_batch_no &&
+            <div className="text-sm text-slate-400">
                   上传批次号: {uploadResult.upload_batch_no}
                 </div>
-              )}
+            }
             </div>
-          )}
+          }
 
           <DialogFooter>
             <Button onClick={() => setShowResultDialog(false)}>确定</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

@@ -20,8 +20,8 @@ import {
   AlertTriangle,
   Edit,
   Eye,
-  Calendar,
-} from "lucide-react";
+  Calendar } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -34,22 +34,22 @@ import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger,
-} from "../components/ui";
-import { cn, formatCurrency, formatDate } from "../lib/utils";
-import { fadeIn, staggerContainer } from "../lib/animations";
+  TabsTrigger } from
+"../components/ui";
+import { cn, formatCurrency, formatDate as _formatDate } from "../lib/utils";
+import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
 import {
   SimpleBarChart,
   MonthlyTrendChart,
   SimplePieChart,
-  TrendComparisonCard,
-} from "../components/administrative/StatisticsCharts";
+  TrendComparisonCard } from
+"../components/administrative/StatisticsCharts";
 import { adminApi } from "../services/api";
 
 export default function VehicleManagement() {
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
   const [vehicles, setVehicles] = useState([]);
 
   // Fetch data from API
@@ -63,7 +63,7 @@ export default function VehicleManagement() {
         } else if (Array.isArray(res.data)) {
           setVehicles(res.data);
         }
-      } catch (err) {
+      } catch (_err) {
         console.log("Vehicle API unavailable, using mock data");
       }
       setLoading(false);
@@ -74,11 +74,11 @@ export default function VehicleManagement() {
   const filteredVehicles = useMemo(() => {
     return vehicles.filter((vehicle) => {
       const matchSearch =
-        vehicle.plateNumber.includes(searchText) ||
-        vehicle.brand.includes(searchText) ||
-        (vehicle.driver && vehicle.driver.includes(searchText));
+      vehicle.plateNumber.includes(searchText) ||
+      vehicle.brand.includes(searchText) ||
+      vehicle.driver && vehicle.driver.includes(searchText);
       const matchStatus =
-        statusFilter === "all" || vehicle.status === statusFilter;
+      statusFilter === "all" || vehicle.status === statusFilter;
       return matchSearch && matchStatus;
     });
   }, [vehicles, searchText, statusFilter]);
@@ -88,7 +88,7 @@ export default function VehicleManagement() {
     const inUse = vehicles.filter((v) => v.status === "in_use").length;
     const available = vehicles.filter((v) => v.status === "available").length;
     const maintenance = vehicles.filter(
-      (v) => v.status === "maintenance",
+      (v) => v.status === "maintenance"
     ).length;
     return { total, inUse, available, maintenance };
   }, [vehicles]);
@@ -98,18 +98,18 @@ export default function VehicleManagement() {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       <PageHeader
         title="车辆管理"
         description="车辆使用管理、维护记录、燃油管理"
         actions={
-          <Button>
+        <Button>
             <Plus className="w-4 h-4 mr-2" />
             新增车辆
           </Button>
-        }
-      />
+        } />
+
 
       {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -186,16 +186,16 @@ export default function VehicleManagement() {
               <CardContent>
                 <SimplePieChart
                   data={[
-                    { label: "使用中", value: stats.inUse, color: "#3b82f6" },
-                    { label: "可用", value: stats.available, color: "#10b981" },
-                    {
-                      label: "保养中",
-                      value: stats.maintenance,
-                      color: "#f59e0b",
-                    },
-                  ]}
-                  size={180}
-                />
+                  { label: "使用中", value: stats.inUse, color: "#3b82f6" },
+                  { label: "可用", value: stats.available, color: "#10b981" },
+                  {
+                    label: "保养中",
+                    value: stats.maintenance,
+                    color: "#f59e0b"
+                  }]
+                  }
+                  size={180} />
+
               </CardContent>
             </Card>
             <Card>
@@ -205,18 +205,18 @@ export default function VehicleManagement() {
               <CardContent>
                 <MonthlyTrendChart
                   data={[
-                    { month: "2024-10", amount: 75 },
-                    { month: "2024-11", amount: 68 },
-                    { month: "2024-12", amount: 72 },
-                    {
-                      month: "2025-01",
-                      amount: (stats.inUse / stats.total) * 100,
-                    },
-                  ]}
+                  { month: "2024-10", amount: 75 },
+                  { month: "2024-11", amount: 68 },
+                  { month: "2024-12", amount: 72 },
+                  {
+                    month: "2025-01",
+                    amount: stats.inUse / stats.total * 100
+                  }]
+                  }
                   valueKey="amount"
                   labelKey="month"
-                  height={150}
-                />
+                  height={150} />
+
               </CardContent>
             </Card>
           </div>
@@ -225,20 +225,20 @@ export default function VehicleManagement() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <TrendComparisonCard
               title="车辆使用率"
-              current={(stats.inUse / stats.total) * 100}
+              current={stats.inUse / stats.total * 100}
               previous={72}
-              unit="%"
-            />
+              unit="%" />
+
             <TrendComparisonCard
               title="在用车辆数"
               current={stats.inUse}
-              previous={9}
-            />
+              previous={9} />
+
             <TrendComparisonCard
               title="可用车辆数"
               current={stats.available}
-              previous={3}
-            />
+              previous={3} />
+
           </div>
 
           {/* Filters */}
@@ -249,13 +249,13 @@ export default function VehicleManagement() {
                   placeholder="搜索车牌号、品牌、驾驶员..."
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
-                  className="flex-1"
-                />
+                  className="flex-1" />
+
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white"
-                >
+                  className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white">
+
                   <option value="all">全部状态</option>
                   <option value="in_use">使用中</option>
                   <option value="available">可用</option>
@@ -267,8 +267,8 @@ export default function VehicleManagement() {
 
           {/* Vehicles List */}
           <div className="grid grid-cols-1 gap-4">
-            {filteredVehicles.map((vehicle) => (
-              <Card key={vehicle.id}>
+            {filteredVehicles.map((vehicle) =>
+            <Card key={vehicle.id}>
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -277,21 +277,21 @@ export default function VehicleManagement() {
                           {vehicle.plateNumber}
                         </h3>
                         <Badge
-                          variant="outline"
-                          className={cn(
-                            vehicle.status === "in_use" &&
-                              "bg-blue-500/20 text-blue-400 border-blue-500/30",
-                            vehicle.status === "available" &&
-                              "bg-green-500/20 text-green-400 border-green-500/30",
-                            vehicle.status === "maintenance" &&
-                              "bg-amber-500/20 text-amber-400 border-amber-500/30",
-                          )}
-                        >
-                          {vehicle.status === "in_use"
-                            ? "使用中"
-                            : vehicle.status === "available"
-                              ? "可用"
-                              : "保养中"}
+                        variant="outline"
+                        className={cn(
+                          vehicle.status === "in_use" &&
+                          "bg-blue-500/20 text-blue-400 border-blue-500/30",
+                          vehicle.status === "available" &&
+                          "bg-green-500/20 text-green-400 border-green-500/30",
+                          vehicle.status === "maintenance" &&
+                          "bg-amber-500/20 text-amber-400 border-amber-500/30"
+                        )}>
+
+                          {vehicle.status === "in_use" ?
+                        "使用中" :
+                        vehicle.status === "available" ?
+                        "可用" :
+                        "保养中"}
                         </Badge>
                       </div>
                       <div className="grid grid-cols-4 gap-4 text-sm mb-3">
@@ -313,38 +313,38 @@ export default function VehicleManagement() {
                             {vehicle.purchaseDate}
                           </p>
                         </div>
-                        {vehicle.driver && (
-                          <div>
+                        {vehicle.driver &&
+                      <div>
                             <p className="text-slate-400">驾驶员</p>
                             <p className="text-white font-medium">
                               {vehicle.driver}
                             </p>
                           </div>
-                        )}
+                      }
                       </div>
-                      {vehicle.purpose && (
-                        <div className="text-sm text-slate-400 mb-2">
+                      {vehicle.purpose &&
+                    <div className="text-sm text-slate-400 mb-2">
                           用途: {vehicle.purpose} · 目的地:{" "}
                           {vehicle.destination}
                         </div>
-                      )}
-                      {vehicle.startTime && (
-                        <div className="text-xs text-slate-500">
+                    }
+                      {vehicle.startTime &&
+                    <div className="text-xs text-slate-500">
                           使用时间: {vehicle.startTime} - {vehicle.endTime}
                         </div>
-                      )}
-                      {vehicle.nextMaintenance && (
-                        <div className="text-xs text-amber-400 mt-2">
+                    }
+                      {vehicle.nextMaintenance &&
+                    <div className="text-xs text-amber-400 mt-2">
                           下次保养: {vehicle.nextMaintenance} (里程:{" "}
                           {vehicle.nextMaintenanceMileage.toLocaleString()} km)
                         </div>
-                      )}
-                      {vehicle.maintenanceReason && (
-                        <div className="text-xs text-amber-400 mt-2">
+                    }
+                      {vehicle.maintenanceReason &&
+                    <div className="text-xs text-amber-400 mt-2">
                           {vehicle.maintenanceReason} · 预计归还:{" "}
                           {vehicle.returnDate}
                         </div>
-                      )}
+                    }
                     </div>
                     <div className="flex gap-2 ml-4">
                       <Button variant="outline" size="sm">
@@ -357,7 +357,7 @@ export default function VehicleManagement() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            )}
           </div>
         </TabsContent>
 
@@ -368,13 +368,13 @@ export default function VehicleManagement() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {vehicles
-                  .filter((v) => v.status === "in_use")
-                  .map((vehicle) => (
-                    <div
-                      key={vehicle.id}
-                      className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50"
-                    >
+                {vehicles.
+                filter((v) => v.status === "in_use").
+                map((vehicle) =>
+                <div
+                  key={vehicle.id}
+                  className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50">
+
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
@@ -382,9 +382,9 @@ export default function VehicleManagement() {
                               {vehicle.plateNumber}
                             </span>
                             <Badge
-                              variant="outline"
-                              className="bg-blue-500/20 text-blue-400 border-blue-500/30"
-                            >
+                          variant="outline"
+                          className="bg-blue-500/20 text-blue-400 border-blue-500/30">
+
                               使用中
                             </Badge>
                           </div>
@@ -417,7 +417,7 @@ export default function VehicleManagement() {
                         </div>
                       </div>
                     </div>
-                  ))}
+                )}
               </div>
             </CardContent>
           </Card>
@@ -430,13 +430,13 @@ export default function VehicleManagement() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {vehicles
-                  .filter((v) => v.status === "maintenance")
-                  .map((vehicle) => (
-                    <div
-                      key={vehicle.id}
-                      className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50"
-                    >
+                {vehicles.
+                filter((v) => v.status === "maintenance").
+                map((vehicle) =>
+                <div
+                  key={vehicle.id}
+                  className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50">
+
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
@@ -444,9 +444,9 @@ export default function VehicleManagement() {
                               {vehicle.plateNumber}
                             </span>
                             <Badge
-                              variant="outline"
-                              className="bg-amber-500/20 text-amber-400 border-amber-500/30"
-                            >
+                          variant="outline"
+                          className="bg-amber-500/20 text-amber-400 border-amber-500/30">
+
                               保养中
                             </Badge>
                           </div>
@@ -473,14 +473,14 @@ export default function VehicleManagement() {
                         </div>
                       </div>
                     </div>
-                  ))}
-                {vehicles
-                  .filter((v) => v.nextMaintenance)
-                  .map((vehicle) => (
-                    <div
-                      key={vehicle.id}
-                      className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50"
-                    >
+                )}
+                {vehicles.
+                filter((v) => v.nextMaintenance).
+                map((vehicle) =>
+                <div
+                  key={vehicle.id}
+                  className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50">
+
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
@@ -488,9 +488,9 @@ export default function VehicleManagement() {
                               {vehicle.plateNumber}
                             </span>
                             <Badge
-                              variant="outline"
-                              className="bg-green-500/20 text-green-400 border-green-500/30"
-                            >
+                          variant="outline"
+                          className="bg-green-500/20 text-green-400 border-green-500/30">
+
                               待保养
                             </Badge>
                           </div>
@@ -502,7 +502,7 @@ export default function VehicleManagement() {
                         </div>
                       </div>
                     </div>
-                  ))}
+                )}
               </div>
             </CardContent>
           </Card>
@@ -522,38 +522,38 @@ export default function VehicleManagement() {
             <CardContent>
               <div className="space-y-4">
                 {[
-                  {
-                    id: 1,
-                    plateNumber: "粤B12345",
-                    date: "2025-01-05",
-                    amount: 500,
-                    price: 7.8,
-                    total: 3900,
-                    mileage: 85000,
-                  },
-                  {
-                    id: 2,
-                    plateNumber: "粤B67890",
-                    date: "2025-01-04",
-                    amount: 450,
-                    price: 7.8,
-                    total: 3510,
-                    mileage: 65000,
-                  },
-                  {
-                    id: 3,
-                    plateNumber: "粤B11111",
-                    date: "2025-01-03",
-                    amount: 400,
-                    price: 7.8,
-                    total: 3120,
-                    mileage: 124500,
-                  },
-                ].map((record) => (
-                  <div
-                    key={record.id}
-                    className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50"
-                  >
+                {
+                  id: 1,
+                  plateNumber: "粤B12345",
+                  date: "2025-01-05",
+                  amount: 500,
+                  price: 7.8,
+                  total: 3900,
+                  mileage: 85000
+                },
+                {
+                  id: 2,
+                  plateNumber: "粤B67890",
+                  date: "2025-01-04",
+                  amount: 450,
+                  price: 7.8,
+                  total: 3510,
+                  mileage: 65000
+                },
+                {
+                  id: 3,
+                  plateNumber: "粤B11111",
+                  date: "2025-01-03",
+                  amount: 400,
+                  price: 7.8,
+                  total: 3120,
+                  mileage: 124500
+                }].
+                map((record) =>
+                <div
+                  key={record.id}
+                  className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50">
+
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
@@ -593,12 +593,12 @@ export default function VehicleManagement() {
                       </div>
                     </div>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

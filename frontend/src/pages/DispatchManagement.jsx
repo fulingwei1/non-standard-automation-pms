@@ -13,16 +13,16 @@ import {
   Square,
   User,
   Clock,
-  AlertTriangle,
-} from "lucide-react";
+  AlertTriangle } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
-} from "../components/ui/card";
+  CardDescription } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -31,28 +31,28 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "../components/ui/table";
+  TableRow } from
+"../components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogBody,
-  DialogFooter,
-} from "../components/ui/dialog";
+  DialogFooter } from
+"../components/ui/dialog";
 import { cn, formatDate } from "../lib/utils";
-import { productionApi, projectApi } from "../services/api";
+import { productionApi, projectApi as _projectApi } from "../services/api";
 export default function DispatchManagement() {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [workOrders, setWorkOrders] = useState([]);
   const [workers, setWorkers] = useState([]);
@@ -66,7 +66,7 @@ export default function DispatchManagement() {
   const [assignData, setAssignData] = useState({
     worker_id: null,
     workstation_id: null,
-    remark: "",
+    remark: ""
   });
   useEffect(() => {
     fetchWorkshops();
@@ -135,7 +135,7 @@ export default function DispatchManagement() {
         await productionApi.workOrders.assign(orderId, {
           assigned_to: assignData.worker_id,
           workstation_id: assignData.workstation_id,
-          remark: assignData.remark,
+          remark: assignData.remark
         });
       }
       setShowAssignDialog(false);
@@ -143,7 +143,7 @@ export default function DispatchManagement() {
       setAssignData({
         worker_id: null,
         workstation_id: null,
-        remark: "",
+        remark: ""
       });
       fetchWorkOrders();
       alert(`成功派工 ${orderIds.length} 个工单`);
@@ -168,11 +168,11 @@ export default function DispatchManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部车间</SelectItem>
-                {workshops.map((ws) => (
-                  <SelectItem key={ws.id} value={ws.id.toString()}>
+                {workshops.map((ws) =>
+                <SelectItem key={ws.id} value={ws.id.toString()}>
                     {ws.workshop_name}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -194,20 +194,20 @@ export default function DispatchManagement() {
           <span className="text-sm text-slate-500">
             已选择 {selectedOrders.size} 个工单
           </span>
-          {selectedOrders.size > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setSelectedOrders(new Set())}
-            >
+          {selectedOrders.size > 0 &&
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setSelectedOrders(new Set())}>
+
               清空选择
             </Button>
-          )}
+          }
         </div>
         <Button
           onClick={() => setShowAssignDialog(true)}
-          disabled={selectedOrders.size === 0}
-        >
+          disabled={selectedOrders.size === 0}>
+
           <Users className="w-4 h-4 mr-2" />
           批量派工 ({selectedOrders.size})
         </Button>
@@ -221,23 +221,23 @@ export default function DispatchManagement() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="text-center py-8 text-slate-400">加载中...</div>
-          ) : pendingOrders.length === 0 ? (
-            <div className="text-center py-8 text-slate-400">
+          {loading ?
+          <div className="text-center py-8 text-slate-400">加载中...</div> :
+          pendingOrders.length === 0 ?
+          <div className="text-center py-8 text-slate-400">
               暂无待派工工单
-            </div>
-          ) : (
-            <Table>
+            </div> :
+
+          <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12">
                     <Button variant="ghost" size="sm" onClick={handleSelectAll}>
-                      {selectedOrders.size === pendingOrders.length ? (
-                        <CheckSquare className="w-4 h-4" />
-                      ) : (
-                        <Square className="w-4 h-4" />
-                      )}
+                      {selectedOrders.size === pendingOrders.length ?
+                    <CheckSquare className="w-4 h-4" /> :
+
+                    <Square className="w-4 h-4" />
+                    }
                     </Button>
                   </TableHead>
                   <TableHead>工单编号</TableHead>
@@ -251,22 +251,22 @@ export default function DispatchManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {pendingOrders.map((order) => (
-                  <TableRow
-                    key={order.id}
-                    className={cn(selectedOrders.has(order.id) && "bg-blue-50")}
-                  >
+                {pendingOrders.map((order) =>
+              <TableRow
+                key={order.id}
+                className={cn(selectedOrders.has(order.id) && "bg-blue-50")}>
+
                     <TableCell>
                       <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleSelectOrder(order.id)}
-                      >
-                        {selectedOrders.has(order.id) ? (
-                          <CheckSquare className="w-4 h-4" />
-                        ) : (
-                          <Square className="w-4 h-4" />
-                        )}
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleSelectOrder(order.id)}>
+
+                        {selectedOrders.has(order.id) ?
+                    <CheckSquare className="w-4 h-4" /> :
+
+                    <Square className="w-4 h-4" />
+                    }
                       </Button>
                     </TableCell>
                     <TableCell className="font-mono text-sm">
@@ -279,23 +279,23 @@ export default function DispatchManagement() {
                     <TableCell>{order.workshop_name || "-"}</TableCell>
                     <TableCell>{order.plan_qty || 0}</TableCell>
                     <TableCell className="text-slate-500 text-sm">
-                      {order.plan_start_date
-                        ? formatDate(order.plan_start_date)
-                        : "-"}
+                      {order.plan_start_date ?
+                  formatDate(order.plan_start_date) :
+                  "-"}
                     </TableCell>
                     <TableCell className="text-slate-500 text-sm">
-                      {order.plan_end_date
-                        ? formatDate(order.plan_end_date)
-                        : "-"}
+                      {order.plan_end_date ?
+                  formatDate(order.plan_end_date) :
+                  "-"}
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">{order.priority || "-"}</Badge>
                     </TableCell>
                   </TableRow>
-                ))}
+              )}
               </TableBody>
             </Table>
-          )}
+          }
         </CardContent>
       </Card>
       {/* Batch Assign Dialog */}
@@ -318,28 +318,28 @@ export default function DispatchManagement() {
                 <Select
                   value={assignData.worker_id?.toString() || ""}
                   onValueChange={(val) =>
-                    setAssignData({
-                      ...assignData,
-                      worker_id: val ? parseInt(val) : null,
-                    })
-                  }
-                >
+                  setAssignData({
+                    ...assignData,
+                    worker_id: val ? parseInt(val) : null
+                  })
+                  }>
+
                   <SelectTrigger>
                     <SelectValue placeholder="选择工人" />
                   </SelectTrigger>
                   <SelectContent>
-                    {workers.map((worker) => (
-                      <SelectItem key={worker.id} value={worker.id.toString()}>
+                    {workers.map((worker) =>
+                    <SelectItem key={worker.id} value={worker.id.toString()}>
                         {worker.worker_name}
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
-                {workers.length === 0 && (
-                  <div className="text-xs text-slate-400 mt-1">
+                {workers.length === 0 &&
+                <div className="text-xs text-slate-400 mt-1">
                     暂无工人数据，请先配置工人信息
                   </div>
-                )}
+                }
               </div>
               <div>
                 <label className="text-sm font-medium mb-2 block">
@@ -348,12 +348,12 @@ export default function DispatchManagement() {
                 <Select
                   value={assignData.workstation_id?.toString() || ""}
                   onValueChange={(val) =>
-                    setAssignData({
-                      ...assignData,
-                      workstation_id: val ? parseInt(val) : null,
-                    })
-                  }
-                >
+                  setAssignData({
+                    ...assignData,
+                    workstation_id: val ? parseInt(val) : null
+                  })
+                  }>
+
                   <SelectTrigger>
                     <SelectValue placeholder="选择工位" />
                   </SelectTrigger>
@@ -368,29 +368,29 @@ export default function DispatchManagement() {
                 <Input
                   value={assignData.remark}
                   onChange={(e) =>
-                    setAssignData({ ...assignData, remark: e.target.value })
+                  setAssignData({ ...assignData, remark: e.target.value })
                   }
-                  placeholder="派工备注"
-                />
+                  placeholder="派工备注" />
+
               </div>
             </div>
           </DialogBody>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowAssignDialog(false)}
-            >
+              onClick={() => setShowAssignDialog(false)}>
+
               取消
             </Button>
             <Button
               onClick={handleBatchAssign}
-              disabled={!assignData.worker_id}
-            >
+              disabled={!assignData.worker_id}>
+
               确认派工
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }

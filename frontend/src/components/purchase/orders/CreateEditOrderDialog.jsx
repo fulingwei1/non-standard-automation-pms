@@ -3,15 +3,15 @@
  * 支持创建新订单和编辑现有订单
  */
 
-import { useEffect } from "react";
+import { useEffect as _useEffect } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogBody,
-} from "../../../ui/dialog";
+  DialogBody } from
+"../../../ui/dialog";
 import { Button } from "../../../ui/button";
 import { Label } from "../../../ui/label";
 import { Textarea } from "../../../ui/textarea";
@@ -20,8 +20,8 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../../../ui/select";
+  SelectValue } from
+"../../../ui/select";
 import { PAYMENT_TERMS, PAYMENT_TERMS_CONFIGS, SHIPPING_METHODS } from "./purchaseOrderConstants";
 
 export default function CreateEditOrderDialog({
@@ -32,7 +32,7 @@ export default function CreateEditOrderDialog({
   suppliers = [],
   projects = [],
   onChange,
-  onSubmit,
+  onSubmit
 }) {
   const isEditing = mode === "edit";
   const title = isEditing ? "编辑采购订单" : "创建采购订单";
@@ -52,17 +52,17 @@ export default function CreateEditOrderDialog({
               <Label className="text-slate-400">供应商</Label>
               <Select
                 value={orderData?.supplier_id || ""}
-                onValueChange={(value) => onChange?.({ ...orderData, supplier_id: value })}
-              >
+                onValueChange={(value) => onChange?.({ ...orderData, supplier_id: value })}>
+
                 <SelectTrigger className="bg-slate-900 border-slate-700 text-white">
                   <SelectValue placeholder="选择供应商" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-900 border-slate-700">
-                  {suppliers.map((supplier) => (
-                    <SelectItem key={supplier.id} value={supplier.id}>
+                  {suppliers.map((supplier) =>
+                  <SelectItem key={supplier.id} value={supplier.id}>
                       {supplier.name}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -71,17 +71,17 @@ export default function CreateEditOrderDialog({
               <Label className="text-slate-400">项目</Label>
               <Select
                 value={orderData?.project_id || ""}
-                onValueChange={(value) => onChange?.({ ...orderData, project_id: value })}
-              >
+                onValueChange={(value) => onChange?.({ ...orderData, project_id: value })}>
+
                 <SelectTrigger className="bg-slate-900 border-slate-700 text-white">
                   <SelectValue placeholder="选择项目" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-900 border-slate-700">
-                  {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
+                  {projects.map((project) =>
+                  <SelectItem key={project.id} value={project.id}>
                       {project.name}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -93,17 +93,17 @@ export default function CreateEditOrderDialog({
               <Label className="text-slate-400">支付条款</Label>
               <Select
                 value={orderData?.payment_terms || PAYMENT_TERMS.NET30}
-                onValueChange={(value) => onChange?.({ ...orderData, payment_terms: value })}
-              >
+                onValueChange={(value) => onChange?.({ ...orderData, payment_terms: value })}>
+
                 <SelectTrigger className="bg-slate-900 border-slate-700 text-white">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-900 border-slate-700">
-                  {Object.entries(PAYMENT_TERMS_CONFIGS).map(([key, config]) => (
-                    <SelectItem key={key} value={key}>
+                  {Object.entries(PAYMENT_TERMS_CONFIGS).map(([key, config]) =>
+                  <SelectItem key={key} value={key}>
                       {config.label}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -112,30 +112,30 @@ export default function CreateEditOrderDialog({
               <Label className="text-slate-400">运输方式</Label>
               <Select
                 value={orderData?.shipping_method || SHIPPING_METHODS.STANDARD}
-                onValueChange={(value) => onChange?.({ ...orderData, shipping_method: value })}
-              >
+                onValueChange={(value) => onChange?.({ ...orderData, shipping_method: value })}>
+
                 <SelectTrigger className="bg-slate-900 border-slate-700 text-white">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-900 border-slate-700">
-                  {Object.entries(SHIPPING_METHODS).map(([key, config]) => (
-                    <SelectItem key={key} value={key}>
+                  {Object.entries(SHIPPING_METHODS).map(([key, config]) =>
+                  <SelectItem key={key} value={key}>
                       {config.label}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           {/* 紧急程度（仅编辑模式显示） */}
-          {isEditing && (
-            <div>
+          {isEditing &&
+          <div>
               <Label className="text-slate-400">紧急程度</Label>
               <Select
-                value={orderData?.urgency || "normal"}
-                onValueChange={(value) => onChange?.({ ...orderData, urgency: value })}
-              >
+              value={orderData?.urgency || "normal"}
+              onValueChange={(value) => onChange?.({ ...orderData, urgency: value })}>
+
                 <SelectTrigger className="bg-slate-900 border-slate-700 text-white">
                   <SelectValue />
                 </SelectTrigger>
@@ -146,7 +146,7 @@ export default function CreateEditOrderDialog({
                 </SelectContent>
               </Select>
             </div>
-          )}
+          }
 
           {/* 备注 */}
           <div>
@@ -156,8 +156,8 @@ export default function CreateEditOrderDialog({
               onChange={(e) => onChange?.({ ...orderData, notes: e.target.value })}
               placeholder="订单备注信息..."
               className="bg-slate-900 border-slate-700 text-white placeholder-slate-400"
-              rows={3}
-            />
+              rows={3} />
+
           </div>
         </DialogBody>
 
@@ -165,18 +165,18 @@ export default function CreateEditOrderDialog({
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="bg-slate-700 border-slate-600 text-white"
-          >
+            className="bg-slate-700 border-slate-600 text-white">
+
             取消
           </Button>
           <Button
             onClick={onSubmit}
-            className="bg-blue-500 hover:bg-blue-600 text-white"
-          >
+            className="bg-blue-500 hover:bg-blue-600 text-white">
+
             {submitLabel}
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>);
+
 }

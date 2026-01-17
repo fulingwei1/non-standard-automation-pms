@@ -26,7 +26,7 @@ console.log('📋 步骤 1: 备份当前配置...')
 try {
   copyFileSync(currentConfig, backupConfig)
   console.log('✅ 已备份到 eslint.config.backup.js\n')
-} catch (error) {
+} catch {
   console.log('⚠️  备份失败（可能已存在）\n')
 }
 

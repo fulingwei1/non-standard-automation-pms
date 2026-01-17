@@ -17,15 +17,15 @@ import {
   AlertTriangle,
   GitBranch,
   Calendar,
-  TrendingUp,
-} from "lucide-react";
+  TrendingUp } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -35,31 +35,31 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "../components/ui/table";
+  TableRow } from
+"../components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogBody,
-  DialogFooter,
-} from "../components/ui/dialog";
+  DialogFooter } from
+"../components/ui/dialog";
 import { cn, formatDate } from "../lib/utils";
 import { progressApi, projectApi } from "../services/api";
 const statusConfigs = {
   PENDING: { label: "待开始", color: "bg-slate-500", icon: Circle },
   IN_PROGRESS: { label: "进行中", color: "bg-blue-500", icon: Clock },
   BLOCKED: { label: "阻塞", color: "bg-red-500", icon: AlertTriangle },
-  COMPLETED: { label: "已完成", color: "bg-emerald-500", icon: CheckCircle2 },
+  COMPLETED: { label: "已完成", color: "bg-emerald-500", icon: CheckCircle2 }
 };
 export default function ProjectTaskList() {
   const { id } = useParams();
@@ -72,7 +72,7 @@ export default function ProjectTaskList() {
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterStage, setFilterStage] = useState("");
-  const [filterAssignee, setFilterAssignee] = useState("");
+  const [filterAssignee, _setFilterAssignee] = useState("");
   // Dialogs
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showTaskDetail, setShowTaskDetail] = useState(false);
@@ -84,7 +84,7 @@ export default function ProjectTaskList() {
     planned_start_date: "",
     planned_end_date: "",
     weight: 0,
-    description: "",
+    description: ""
   });
   useEffect(() => {
     if (id) {
@@ -140,7 +140,7 @@ export default function ProjectTaskList() {
         planned_start_date: "",
         planned_end_date: "",
         weight: 0,
-        description: "",
+        description: ""
       });
       fetchTasks();
       fetchSummary();
@@ -164,8 +164,8 @@ export default function ProjectTaskList() {
         const keyword = searchKeyword.toLowerCase();
         return (
           task.task_name?.toLowerCase().includes(keyword) ||
-          task.description?.toLowerCase().includes(keyword)
-        );
+          task.description?.toLowerCase().includes(keyword));
+
       }
       return true;
     });
@@ -182,15 +182,15 @@ export default function ProjectTaskList() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate(`/projects/${id}`)}
-          >
+            onClick={() => navigate(`/projects/${id}`)}>
+
             <ArrowLeft className="w-4 h-4 mr-2" />
             返回项目
           </Button>
           <PageHeader
             title={`${project?.project_name || "项目"} - 任务列表`}
-            description="项目任务管理，支持任务创建、进度更新、依赖关系"
-          />
+            description="项目任务管理，支持任务创建、进度更新、依赖关系" />
+
         </div>
         <Button onClick={() => setShowCreateDialog(true)}>
           <Plus className="w-4 h-4 mr-2" />
@@ -198,8 +198,8 @@ export default function ProjectTaskList() {
         </Button>
       </div>
       {/* Summary Cards */}
-      {summary && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {summary &&
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -253,7 +253,7 @@ export default function ProjectTaskList() {
             </CardContent>
           </Card>
         </div>
-      )}
+      }
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
@@ -264,8 +264,8 @@ export default function ProjectTaskList() {
                 placeholder="搜索任务名称..."
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
-                className="pl-10"
-              />
+                className="pl-10" />
+
             </div>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger>
@@ -273,11 +273,11 @@ export default function ProjectTaskList() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部状态</SelectItem>
-                {Object.entries(statusConfigs).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
+                {Object.entries(statusConfigs).map(([key, config]) =>
+                <SelectItem key={key} value={key}>
                     {config.label}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
             <Select value={filterStage} onValueChange={setFilterStage}>
@@ -303,12 +303,12 @@ export default function ProjectTaskList() {
           <CardTitle>任务列表</CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="text-center py-8 text-slate-400">加载中...</div>
-          ) : filteredTasks.length === 0 ? (
-            <div className="text-center py-8 text-slate-400">暂无任务</div>
-          ) : (
-            <Table>
+          {loading ?
+          <div className="text-center py-8 text-slate-400">加载中...</div> :
+          filteredTasks.length === 0 ?
+          <div className="text-center py-8 text-slate-400">暂无任务</div> :
+
+          <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>任务名称</TableHead>
@@ -323,23 +323,23 @@ export default function ProjectTaskList() {
               </TableHeader>
               <TableBody>
                 {filteredTasks.map((task) => {
-                  const progress = task.progress || 0;
-                  const isOverdue =
-                    task.planned_end_date &&
-                    new Date(task.planned_end_date) < new Date() &&
-                    task.status !== "COMPLETED";
-                  return (
-                    <TableRow key={task.id}>
+                const progress = task.progress || 0;
+                const isOverdue =
+                task.planned_end_date &&
+                new Date(task.planned_end_date) < new Date() &&
+                task.status !== "COMPLETED";
+                return (
+                  <TableRow key={task.id}>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {getStatusIcon(task.status)}
                           <div>
                             <div className="font-medium">{task.task_name}</div>
-                            {task.description && (
-                              <div className="text-xs text-slate-500 line-clamp-1">
+                            {task.description &&
+                          <div className="text-xs text-slate-500 line-clamp-1">
                                 {task.description}
                               </div>
-                            )}
+                          }
                           </div>
                         </div>
                       </TableCell>
@@ -348,44 +348,44 @@ export default function ProjectTaskList() {
                       </TableCell>
                       <TableCell>
                         <Badge
-                          className={
-                            statusConfigs[task.status]?.color || "bg-slate-500"
-                          }
-                        >
+                        className={
+                        statusConfigs[task.status]?.color || "bg-slate-500"
+                        }>
+
                           {statusConfigs[task.status]?.label || task.status}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {task.assignee_name ? (
-                          <div className="flex items-center gap-2">
+                        {task.assignee_name ?
+                      <div className="flex items-center gap-2">
                             <Users className="w-4 h-4 text-slate-400" />
                             <span className="text-sm">
                               {task.assignee_name}
                             </span>
-                          </div>
-                        ) : (
-                          <span className="text-slate-400">未分配</span>
-                        )}
+                          </div> :
+
+                      <span className="text-slate-400">未分配</span>
+                      }
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">
-                          {task.planned_start_date
-                            ? formatDate(task.planned_start_date)
-                            : "-"}
-                          {task.planned_end_date && (
-                            <>
+                          {task.planned_start_date ?
+                        formatDate(task.planned_start_date) :
+                        "-"}
+                          {task.planned_end_date &&
+                        <>
                               <span className="mx-1">-</span>
                               <span className={cn(isOverdue && "text-red-500")}>
                                 {formatDate(task.planned_end_date)}
                               </span>
                             </>
-                          )}
+                        }
                         </div>
-                        {isOverdue && (
-                          <Badge className="bg-red-500 text-xs mt-1">
+                        {isOverdue &&
+                      <Badge className="bg-red-500 text-xs mt-1">
                             逾期
                           </Badge>
-                        )}
+                      }
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1">
@@ -396,29 +396,29 @@ export default function ProjectTaskList() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {task.weight ? (
-                          <Badge variant="outline">{task.weight}%</Badge>
-                        ) : (
-                          "-"
-                        )}
+                        {task.weight ?
+                      <Badge variant="outline">{task.weight}%</Badge> :
+
+                      "-"
+                      }
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleViewTask(task.id)}
-                          >
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleViewTask(task.id)}>
+
                             <Edit className="w-4 h-4" />
                           </Button>
                         </div>
                       </TableCell>
-                    </TableRow>
-                  );
-                })}
+                    </TableRow>);
+
+              })}
               </TableBody>
             </Table>
-          )}
+          }
         </CardContent>
       </Card>
       {/* Create Task Dialog */}
@@ -436,19 +436,19 @@ export default function ProjectTaskList() {
                 <Input
                   value={newTask.task_name}
                   onChange={(e) =>
-                    setNewTask({ ...newTask, task_name: e.target.value })
+                  setNewTask({ ...newTask, task_name: e.target.value })
                   }
-                  placeholder="请输入任务名称"
-                />
+                  placeholder="请输入任务名称" />
+
               </div>
               <div>
                 <label className="text-sm font-medium mb-2 block">阶段</label>
                 <Select
                   value={newTask.stage}
                   onValueChange={(val) =>
-                    setNewTask({ ...newTask, stage: val })
-                  }
-                >
+                  setNewTask({ ...newTask, stage: val })
+                  }>
+
                   <SelectTrigger>
                     <SelectValue placeholder="选择阶段" />
                   </SelectTrigger>
@@ -471,12 +471,12 @@ export default function ProjectTaskList() {
                     type="date"
                     value={newTask.planned_start_date}
                     onChange={(e) =>
-                      setNewTask({
-                        ...newTask,
-                        planned_start_date: e.target.value,
-                      })
-                    }
-                  />
+                    setNewTask({
+                      ...newTask,
+                      planned_start_date: e.target.value
+                    })
+                    } />
+
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-2 block">
@@ -486,12 +486,12 @@ export default function ProjectTaskList() {
                     type="date"
                     value={newTask.planned_end_date}
                     onChange={(e) =>
-                      setNewTask({
-                        ...newTask,
-                        planned_end_date: e.target.value,
-                      })
-                    }
-                  />
+                    setNewTask({
+                      ...newTask,
+                      planned_end_date: e.target.value
+                    })
+                    } />
+
                 </div>
               </div>
               <div>
@@ -504,31 +504,31 @@ export default function ProjectTaskList() {
                   max="100"
                   value={newTask.weight}
                   onChange={(e) =>
-                    setNewTask({
-                      ...newTask,
-                      weight: parseFloat(e.target.value) || 0,
-                    })
+                  setNewTask({
+                    ...newTask,
+                    weight: parseFloat(e.target.value) || 0
+                  })
                   }
-                  placeholder="0"
-                />
+                  placeholder="0" />
+
               </div>
               <div>
                 <label className="text-sm font-medium mb-2 block">描述</label>
                 <Input
                   value={newTask.description}
                   onChange={(e) =>
-                    setNewTask({ ...newTask, description: e.target.value })
+                  setNewTask({ ...newTask, description: e.target.value })
                   }
-                  placeholder="任务描述"
-                />
+                  placeholder="任务描述" />
+
               </div>
             </div>
           </DialogBody>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowCreateDialog(false)}
-            >
+              onClick={() => setShowCreateDialog(false)}>
+
               取消
             </Button>
             <Button onClick={handleCreateTask}>创建</Button>
@@ -542,8 +542,8 @@ export default function ProjectTaskList() {
             <DialogTitle>任务详情</DialogTitle>
           </DialogHeader>
           <DialogBody>
-            {selectedTask && (
-              <div className="space-y-4">
+            {selectedTask &&
+            <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <div className="text-sm text-slate-500 mb-1">任务名称</div>
@@ -552,8 +552,8 @@ export default function ProjectTaskList() {
                   <div>
                     <div className="text-sm text-slate-500 mb-1">状态</div>
                     <Badge
-                      className={statusConfigs[selectedTask.status]?.color}
-                    >
+                    className={statusConfigs[selectedTask.status]?.color}>
+
                       {statusConfigs[selectedTask.status]?.label}
                     </Badge>
                   </div>
@@ -568,17 +568,17 @@ export default function ProjectTaskList() {
                   <div>
                     <div className="text-sm text-slate-500 mb-1">计划开始</div>
                     <div>
-                      {selectedTask.planned_start_date
-                        ? formatDate(selectedTask.planned_start_date)
-                        : "-"}
+                      {selectedTask.planned_start_date ?
+                    formatDate(selectedTask.planned_start_date) :
+                    "-"}
                     </div>
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">计划结束</div>
                     <div>
-                      {selectedTask.planned_end_date
-                        ? formatDate(selectedTask.planned_end_date)
-                        : "-"}
+                      {selectedTask.planned_end_date ?
+                    formatDate(selectedTask.planned_end_date) :
+                    "-"}
                     </div>
                   </div>
                   <div>
@@ -588,9 +588,9 @@ export default function ProjectTaskList() {
                         {selectedTask.progress || 0}%
                       </div>
                       <Progress
-                        value={selectedTask.progress || 0}
-                        className="h-2"
-                      />
+                      value={selectedTask.progress || 0}
+                      className="h-2" />
+
                     </div>
                   </div>
                   <div>
@@ -598,14 +598,14 @@ export default function ProjectTaskList() {
                     <div>{selectedTask.weight || 0}%</div>
                   </div>
                 </div>
-                {selectedTask.description && (
-                  <div>
+                {selectedTask.description &&
+              <div>
                     <div className="text-sm text-slate-500 mb-1">描述</div>
                     <div>{selectedTask.description}</div>
                   </div>
-                )}
+              }
               </div>
-            )}
+            }
           </DialogBody>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowTaskDetail(false)}>
@@ -614,6 +614,6 @@ export default function ProjectTaskList() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }

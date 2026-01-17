@@ -13,14 +13,14 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
-} from "../../components/ui/dialog";
+  DialogFooter } from
+"../../components/ui/dialog";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
-} from "../../components/ui/tooltip";
+  TooltipTrigger } from
+"../../components/ui/tooltip";
 import {
   Calendar,
   CheckCircle2,
@@ -32,15 +32,15 @@ import {
   MessageSquare,
   Plus,
   Eye,
-  Edit
-} from "lucide-react";
+  Edit } from
+"lucide-react";
 import {
   statusChangeTypeConfigs,
-  fulfillmentStatusConfigs,
+  fulfillmentStatusConfigs as _fulfillmentStatusConfigs,
   getStatusConfig,
   formatStatus,
-  canTransition
-} from "./contractManagementConstants";
+  canTransition as _canTransition } from
+"./contractManagementConstants";
 import { cn, formatDate } from "../../lib/utils";
 
 export function ContractTimeline({
@@ -53,7 +53,7 @@ export function ContractTimeline({
 }) {
   const [showAddEventDialog, setShowAddEventDialog] = useState(false);
   const [showAddReminderDialog, setShowAddReminderDialog] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [_selectedEvent, setSelectedEvent] = useState(null);
   const [newEvent, setNewEvent] = useState({
     title: '',
     description: '',
@@ -64,79 +64,79 @@ export function ContractTimeline({
 
   // 示例时间线事件数据
   const timelineEvents = [
-    {
-      id: 1,
-      type: 'CREATED',
-      title: '合同创建',
-      description: '创建合同草稿',
-      event_date: '2024-01-15',
-      user: '张三',
-      status: 'COMPLETED',
-      document_id: null
-    },
-    {
-      id: 2,
-      type: 'REVIEWED',
-      title: '法务审核',
-      description: '法务部门完成审核',
-      event_date: '2024-01-18',
-      user: '李四',
-      status: 'COMPLETED',
-      document_id: 101
-    },
-    {
-      id: 3,
-      type: 'APPROVED',
-      title: '管理层批准',
-      description: '总经理批准合同',
-      event_date: '2024-01-20',
-      user: '王五',
-      status: 'COMPLETED',
-      document_id: 102
-    },
-    {
-      id: 4,
-      type: 'SIGNED',
-      title: '合同签署',
-      description: '双方正式签署合同',
-      event_date: '2024-01-25',
-      user: '张三',
-      status: 'COMPLETED',
-      document_id: 103
-    },
-    {
-      id: 5,
-      type: 'ACTIVATED',
-      title: '合同生效',
-      description: '合同正式生效开始执行',
-      event_date: '2024-01-26',
-      user: '李四',
-      status: 'COMPLETED',
-      document_id: null
-    },
-    {
-      id: 6,
-      type: 'REMINDER',
-      title: '付款提醒',
-      description: '提醒对方支付第一期款项',
-      event_date: '2024-02-15',
-      user: '王五',
-      status: 'PENDING',
-      due_date: '2024-02-20',
-      document_id: null
-    },
-    {
-      id: 7,
-      type: 'COMPLETION_REMINDER',
-      title: '验收提醒',
-      description: '项目即将到期，准备验收',
-      event_date: '2024-03-10',
-      user: '张三',
-      status: 'IN_PROGRESS',
-      due_date: '2024-03-15',
-      document_id: 104
-    }
-  ];
+  {
+    id: 1,
+    type: 'CREATED',
+    title: '合同创建',
+    description: '创建合同草稿',
+    event_date: '2024-01-15',
+    user: '张三',
+    status: 'COMPLETED',
+    document_id: null
+  },
+  {
+    id: 2,
+    type: 'REVIEWED',
+    title: '法务审核',
+    description: '法务部门完成审核',
+    event_date: '2024-01-18',
+    user: '李四',
+    status: 'COMPLETED',
+    document_id: 101
+  },
+  {
+    id: 3,
+    type: 'APPROVED',
+    title: '管理层批准',
+    description: '总经理批准合同',
+    event_date: '2024-01-20',
+    user: '王五',
+    status: 'COMPLETED',
+    document_id: 102
+  },
+  {
+    id: 4,
+    type: 'SIGNED',
+    title: '合同签署',
+    description: '双方正式签署合同',
+    event_date: '2024-01-25',
+    user: '张三',
+    status: 'COMPLETED',
+    document_id: 103
+  },
+  {
+    id: 5,
+    type: 'ACTIVATED',
+    title: '合同生效',
+    description: '合同正式生效开始执行',
+    event_date: '2024-01-26',
+    user: '李四',
+    status: 'COMPLETED',
+    document_id: null
+  },
+  {
+    id: 6,
+    type: 'REMINDER',
+    title: '付款提醒',
+    description: '提醒对方支付第一期款项',
+    event_date: '2024-02-15',
+    user: '王五',
+    status: 'PENDING',
+    due_date: '2024-02-20',
+    document_id: null
+  },
+  {
+    id: 7,
+    type: 'COMPLETION_REMINDER',
+    title: '验收提醒',
+    description: '项目即将到期，准备验收',
+    event_date: '2024-03-10',
+    user: '张三',
+    status: 'IN_PROGRESS',
+    due_date: '2024-03-15',
+    document_id: 104
+  }];
+
 
   const getEventConfig = (type) => {
     return statusChangeTypeConfigs[type] || {
@@ -148,7 +148,7 @@ export function ContractTimeline({
   };
 
   const getEventIcon = (type, status) => {
-    const eventConfig = getEventConfig(type);
+    const _eventConfig = getEventConfig(type);
     const iconClass = "w-5 h-5";
 
     if (status === 'COMPLETED') {
@@ -199,7 +199,7 @@ export function ContractTimeline({
     onAddEvent({
       ...newEvent,
       contract_id: contract.id,
-      user: currentUser.name,
+      user: currentUser.name
     });
     setNewEvent({
       title: '',
@@ -228,16 +228,16 @@ export function ContractTimeline({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setShowAddReminderDialog(true)}
-            >
+              onClick={() => setShowAddReminderDialog(true)}>
+
               <Plus className="h-4 w-4 mr-2" />
               添加提醒
             </Button>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setShowAddEventDialog(true)}
-            >
+              onClick={() => setShowAddEventDialog(true)}>
+
               <Plus className="h-4 w-4 mr-2" />
               添加事件
             </Button>
@@ -264,50 +264,50 @@ export function ContractTimeline({
           {/* 垂直时间线 */}
           <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-slate-200"></div>
 
-          {months.map((month, monthIndex) => (
-            <div key={month} className="relative">
+          {months.map((month, _monthIndex) =>
+          <div key={month} className="relative">
               <div className="sticky top-0 z-10 bg-white p-2 border-b">
                 <h3 className="text-sm font-medium text-slate-600">{month}</h3>
               </div>
 
               <div className="ml-8 space-y-4 pb-4">
                 {groupedEvents[month].map((event, eventIndex) => {
-                  const isLast = eventIndex === groupedEvents[month].length - 1;
-                  const eventConfig = getEventConfig(event.type);
+                const isLast = eventIndex === groupedEvents[month].length - 1;
+                const eventConfig = getEventConfig(event.type);
 
-                  return (
-                    <div key={event.id} className="relative">
+                return (
+                  <div key={event.id} className="relative">
                       {/* 时间线节点 */}
                       <div className={cn(
-                        "absolute left-[-16px] w-8 h-8 rounded-full flex items-center justify-center border-2 border-white",
-                        eventConfig.color
-                      )}>
+                      "absolute left-[-16px] w-8 h-8 rounded-full flex items-center justify-center border-2 border-white",
+                      eventConfig.color
+                    )}>
                         {getEventIcon(event.type, event.status)}
                       </div>
 
                       {/* 事件卡片 */}
                       <Card className={cn(
-                        "hover:shadow-md transition-shadow duration-200",
-                        getStatusColor(event.status)
-                      )}>
+                      "hover:shadow-md transition-shadow duration-200",
+                      getStatusColor(event.status)
+                    )}>
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between">
                             <div className="flex-1 space-y-2">
                               <div className="flex items-center gap-2">
                                 <Badge
-                                  variant="secondary"
-                                  className={cn("text-xs", eventConfig.color)}
-                                >
+                                variant="secondary"
+                                className={cn("text-xs", eventConfig.color)}>
+
                                   {eventConfig.icon} {eventConfig.label}
                                 </Badge>
                                 <span className="text-xs text-muted-foreground">
                                   {formatDate(event.event_date)}
                                 </span>
-                                {event.due_date && (
-                                  <span className="text-xs text-orange-600">
+                                {event.due_date &&
+                              <span className="text-xs text-orange-600">
                                     截止: {formatDate(event.due_date)}
-                                  </span>
-                                )}
+                              </span>
+                              }
                               </div>
 
                               <h4 className="font-medium">{event.title}</h4>
@@ -318,12 +318,12 @@ export function ContractTimeline({
                                   <User className="h-3 w-3" />
                                   <span>{event.user}</span>
                                 </div>
-                                {event.document_id && (
-                                  <div className="flex items-center gap-1">
+                                {event.document_id &&
+                              <div className="flex items-center gap-1">
                                     <FileText className="h-3 w-3" />
                                     <span>文档 #{event.document_id}</span>
-                                  </div>
-                                )}
+                              </div>
+                              }
                               </div>
 
                               {/* 操作按钮 */}
@@ -332,11 +332,11 @@ export function ContractTimeline({
                                   <Tooltip>
                                     <TooltipTrigger asChild>
                                       <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-6 px-2"
-                                        onClick={() => handleEditEvent(event)}
-                                      >
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 px-2"
+                                      onClick={() => handleEditEvent(event)}>
+
                                         <Eye className="h-3 w-3" />
                                       </Button>
                                     </TooltipTrigger>
@@ -346,49 +346,49 @@ export function ContractTimeline({
                                   </Tooltip>
                                 </TooltipProvider>
 
-                                {event.type !== 'CREATED' && event.type !== 'SIGNED' && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-6 px-2"
-                                  >
-                                    <Edit className="h-3 w-3" />
-                                  </Button>
-                                )}
+                                {event.type !== 'CREATED' && event.type !== 'SIGNED' &&
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 px-2">
 
-                                {event.type === 'REMINDER' && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-6 px-2 text-blue-600"
-                                  >
+                                    <Edit className="h-3 w-3" />
+                              </Button>
+                              }
+
+                                {event.type === 'REMINDER' &&
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 px-2 text-blue-600">
+
                                     <MessageSquare className="h-3 w-3" />
-                                  </Button>
-                                )}
+                              </Button>
+                              }
                               </div>
                             </div>
                           </div>
                         </CardContent>
                       </Card>
 
-                      {!isLast && (
-                        <div className="absolute left-[-16px] top-full w-0.5 h-4 bg-slate-200"></div>
-                      )}
-                    </div>
-                  );
-                })}
+                      {!isLast &&
+                    <div className="absolute left-[-16px] top-full w-0.5 h-4 bg-slate-200"></div>
+                    }
+                  </div>);
+
+              })}
               </div>
-            </div>
-          ))}
+          </div>
+          )}
 
           {/* 如果没有事件 */}
-          {months.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
+          {months.length === 0 &&
+          <div className="text-center py-8 text-muted-foreground">
               <Calendar className="h-12 w-12 mx-auto mb-2 opacity-50" />
               <p>暂无时间线事件</p>
               <p className="text-sm">点击"添加事件"开始记录</p>
-            </div>
-          )}
+          </div>
+          }
         </div>
 
         {/* 添加事件对话框 */}
@@ -407,19 +407,19 @@ export function ContractTimeline({
                   type="text"
                   className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-md text-sm"
                   value={newEvent.title}
-                  onChange={(e) => setNewEvent({...newEvent, title: e.target.value})}
-                  placeholder="输入事件标题"
-                />
+                  onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                  placeholder="输入事件标题" />
+
               </div>
               <div>
                 <label className="text-sm font-medium">事件描述</label>
                 <textarea
                   className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-md text-sm"
                   value={newEvent.description}
-                  onChange={(e) => setNewEvent({...newEvent, description: e.target.value})}
+                  onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
                   placeholder="输入事件描述"
-                  rows={3}
-                />
+                  rows={3} />
+
               </div>
               <div>
                 <label className="text-sm font-medium">事件日期</label>
@@ -427,8 +427,8 @@ export function ContractTimeline({
                   type="date"
                   className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-md text-sm"
                   value={newEvent.event_date}
-                  onChange={(e) => setNewEvent({...newEvent, event_date: e.target.value})}
-                />
+                  onChange={(e) => setNewEvent({ ...newEvent, event_date: e.target.value })} />
+
               </div>
             </div>
             <DialogFooter>
@@ -457,8 +457,8 @@ export function ContractTimeline({
                 <select
                   className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-md text-sm"
                   value={newEvent.type}
-                  onChange={(e) => setNewEvent({...newEvent, type: e.target.value})}
-                >
+                  onChange={(e) => setNewEvent({ ...newEvent, type: e.target.value })}>
+
                   <option value="PAYMENT_REMINDER">付款提醒</option>
                   <option value="RENEWAL_REMINDER">续签提醒</option>
                   <option value="INSPECTION_REMINDER">验收提醒</option>
@@ -472,9 +472,9 @@ export function ContractTimeline({
                   type="text"
                   className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-md text-sm"
                   value={newEvent.title}
-                  onChange={(e) => setNewEvent({...newEvent, title: e.target.value})}
-                  placeholder="输入提醒标题"
-                />
+                  onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                  placeholder="输入提醒标题" />
+
               </div>
               <div>
                 <label className="text-sm font-medium">提醒日期</label>
@@ -482,8 +482,8 @@ export function ContractTimeline({
                   type="date"
                   className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-md text-sm"
                   value={newEvent.event_date}
-                  onChange={(e) => setNewEvent({...newEvent, event_date: e.target.value})}
-                />
+                  onChange={(e) => setNewEvent({ ...newEvent, event_date: e.target.value })} />
+
               </div>
             </div>
             <DialogFooter>
@@ -494,7 +494,7 @@ export function ContractTimeline({
                 onAddReminder({
                   ...newEvent,
                   contract_id: contract.id,
-                  user: currentUser.name,
+                  user: currentUser.name
                 });
                 setShowAddReminderDialog(false);
               }}>
@@ -504,6 +504,6 @@ export function ContractTimeline({
           </DialogContent>
         </Dialog>
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 }

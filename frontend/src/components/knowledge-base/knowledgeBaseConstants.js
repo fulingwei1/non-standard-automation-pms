@@ -82,9 +82,9 @@ export const TABLE_CONFIG = {
 };
 
 export const DEFAULT_FILTERS = {
-  type: null,
-  category: null,
-  accessLevel: null,
+  type: undefined,
+  category: undefined,
+  accessLevel: undefined,
   status: 'published',
   tags: [],
   dateRange: null

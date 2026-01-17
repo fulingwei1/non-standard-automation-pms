@@ -1,12 +1,12 @@
 /**
- * Alert Center Overview Component - 告警中心概览组件
- * 显示告警的关键指标和快速操作入口
+ * Alert Center Overview Component - 预警中心概览组件
+ * 显示预警的关键指标和快速操作入口
  */
 import React, { useMemo } from "react";
-import { 
-  AlertTriangle, 
-  AlertCircle, 
-  CheckCircle2, 
+import {
+  AlertTriangle,
+  AlertCircle,
+  CheckCircle2,
   Clock,
   TrendingUp,
   Bell,
@@ -14,29 +14,29 @@ import {
   BarChart3,
   Eye,
   Settings,
-  RefreshCw
-} from "lucide-react";
+  RefreshCw } from
+"lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Progress } from "../ui/progress";
-import { 
-  ALERT_LEVELS, 
+import {
+  ALERT_LEVELS,
   ALERT_STATUS,
   ALERT_TYPES,
   getAlertLevelConfig,
   getAlertStatusConfig,
   getAlertTypeConfig,
-  getAlertSummary,
+  getAlertSummary as _getAlertSummary,
   isBusinessHour,
   formatAlertTime,
-  requiresEscalation
-} from "./alertCenterConstants";
+  requiresEscalation } from
+"./alertCenterConstants";
 
-const AlertCenterOverview = ({ 
-  alerts, 
-  stats, 
-  onQuickAction 
+const AlertCenterOverview = ({
+  alerts,
+  stats,
+  onQuickAction
 }) => {
   // 计算高级统计数据
   const advancedStats = useMemo(() => {
@@ -52,7 +52,7 @@ const AlertCenterOverview = ({
       };
     }
 
-    // 告警级别分布
+    // 预警级别分布
     const levelDistribution = alerts.reduce((acc, alert) => {
       const level = alert.alert_level || 'INFO';
       const levelConfig = getAlertLevelConfig(level);
@@ -82,7 +82,7 @@ const AlertCenterOverview = ({
         const responseTime = (new Date(alert.first_action_time) - new Date(alert.created_time)) / (1000 * 60);
         const levelConfig = getAlertLevelConfig(alert.alert_level);
         const targetTime = levelConfig.level === 5 ? 5 : levelConfig.level === 4 ? 30 : 120;
-        
+
         if (responseTime <= targetTime) {
           acc.compliant += 1;
         } else {
@@ -92,11 +92,11 @@ const AlertCenterOverview = ({
       return acc;
     }, { compliant: 0, total: 0 });
 
-    const resolutionSLA = alerts.filter(a => a.resolved_time).reduce((acc, alert) => {
+    const resolutionSLA = alerts.filter((a) => a.resolved_time).reduce((acc, alert) => {
       const resolutionTime = (new Date(alert.resolved_time) - new Date(alert.created_time)) / (1000 * 60 * 60);
       const levelConfig = getAlertLevelConfig(alert.alert_level);
       const targetTime = levelConfig.level === 5 ? 1 : levelConfig.level === 4 ? 4 : 24;
-      
+
       if (resolutionTime <= targetTime) {
         acc.compliant += 1;
       } else {
@@ -124,34 +124,34 @@ const AlertCenterOverview = ({
     weekStart.setDate(weekStart.getDate() - 7);
 
     const recentTrends = {
-      today: alerts.filter(a => new Date(a.created_time) >= today).length,
-      yesterday: alerts.filter(a => {
+      today: alerts.filter((a) => new Date(a.created_time) >= today).length,
+      yesterday: alerts.filter((a) => {
         const alertDate = new Date(a.created_time);
         return alertDate >= yesterday && alertDate < today;
       }).length,
-      week: alerts.filter(a => new Date(a.created_time) >= weekStart).length
+      week: alerts.filter((a) => new Date(a.created_time) >= weekStart).length
     };
 
-    // 需要紧急处理的告警
-    const priorityAlerts = alerts
-      .filter(alert => {
-        const levelConfig = getAlertLevelConfig(alert.alert_level);
-        return levelConfig.level >= 4 && alert.status === 'PENDING';
-      })
-      .slice(0, 5)
-      .map(alert => ({
-        ...alert,
-        needsEscalation: requiresEscalation(alert),
-        timeDisplay: formatAlertTime(alert.created_time)
-      }));
+    // 需要紧急处理的预警
+    const priorityAlerts = alerts.
+    filter((alert) => {
+      const levelConfig = getAlertLevelConfig(alert.alert_level);
+      return levelConfig.level >= 4 && alert.status === 'PENDING';
+    }).
+    slice(0, 5).
+    map((alert) => ({
+      ...alert,
+      needsEscalation: requiresEscalation(alert),
+      timeDisplay: formatAlertTime(alert.created_time)
+    }));
 
     return {
       levelDistribution,
       statusDistribution,
       typeDistribution,
       slaCompliance: {
-        response: responseSLA.total > 0 ? Math.round((responseSLA.compliant / (responseSLA.compliant + responseSLA.total)) * 100) : 100,
-        resolution: resolutionSLA.total > 0 ? Math.round((resolutionSLA.compliant / (resolutionSLA.compliant + resolutionSLA.total)) * 100) : 100
+        response: responseSLA.total > 0 ? Math.round(responseSLA.compliant / (responseSLA.compliant + responseSLA.total) * 100) : 100,
+        resolution: resolutionSLA.total > 0 ? Math.round(resolutionSLA.compliant / (resolutionSLA.compliant + resolutionSLA.total) * 100) : 100
       },
       businessHourStats,
       recentTrends,
@@ -167,7 +167,7 @@ const AlertCenterOverview = ({
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm text-gray-600 mb-1">总告警数</div>
+                <div className="text-sm text-gray-600 mb-1">总预警数</div>
                 <div className="text-2xl font-bold text-gray-900">
                   {stats?.total || 0}
                 </div>
@@ -234,25 +234,25 @@ const AlertCenterOverview = ({
         </Card>
       </div>
 
-      {/* 告警分析概览 */}
+      {/* 预警分析概览 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* 告警级别分布 */}
+        {/* 预警级别分布 */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-sm">
               <AlertCircle className="h-4 w-4" />
-              告警级别分布
+              预警级别分布
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {Object.entries(advancedStats.levelDistribution).map(([level, count]) => {
-                const levelConfig = getAlertLevelConfig(Object.keys(ALERT_LEVELS).find(key => 
-                  ALERT_LEVELS[key].label === level
+                const levelConfig = getAlertLevelConfig(Object.keys(ALERT_LEVELS).find((key) =>
+                ALERT_LEVELS[key].label === level
                 ) || 'INFO');
                 const total = alerts?.length || 1;
-                const percentage = Math.round((count / total) * 100);
-                
+                const percentage = Math.round(count / total * 100);
+
                 return (
                   <div key={level} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -261,21 +261,21 @@ const AlertCenterOverview = ({
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-16 bg-gray-200 rounded-full h-2">
-                        <div 
-                          className={`${levelConfig.color} h-2 rounded-full`} 
-                          style={{ width: `${percentage}%` }}
-                        />
+                        <div
+                          className={`${levelConfig.color} h-2 rounded-full`}
+                          style={{ width: `${percentage}%` }} />
+
                       </div>
                       <span className="text-xs text-gray-500 w-8">{count}</span>
                     </div>
-                  </div>
-                );
+                  </div>);
+
               })}
-              {Object.keys(advancedStats.levelDistribution).length === 0 && (
-                <div className="text-center text-gray-500 py-4">
-                  暂无告警数据
-                </div>
-              )}
+              {Object.keys(advancedStats.levelDistribution).length === 0 &&
+              <div className="text-center text-gray-500 py-4">
+                  暂无预警数据
+              </div>
+              }
             </div>
           </CardContent>
         </Card>
@@ -295,12 +295,12 @@ const AlertCenterOverview = ({
                   <span className="text-sm font-medium">响应时间SLA</span>
                   <span className="text-sm font-bold">{advancedStats.slaCompliance.response}%</span>
                 </div>
-                <Progress 
-                  value={advancedStats.slaCompliance.response} 
+                <Progress
+                  value={advancedStats.slaCompliance.response}
                   className="h-2"
-                  color={advancedStats.slaCompliance.response >= 95 ? "emerald" : 
-                        advancedStats.slaCompliance.response >= 80 ? "amber" : "red"}
-                />
+                  color={advancedStats.slaCompliance.response >= 95 ? "emerald" :
+                  advancedStats.slaCompliance.response >= 80 ? "amber" : "red"} />
+
               </div>
               
               <div>
@@ -308,30 +308,30 @@ const AlertCenterOverview = ({
                   <span className="text-sm font-medium">解决时间SLA</span>
                   <span className="text-sm font-bold">{advancedStats.slaCompliance.resolution}%</span>
                 </div>
-                <Progress 
-                  value={advancedStats.slaCompliance.resolution} 
+                <Progress
+                  value={advancedStats.slaCompliance.resolution}
                   className="h-2"
-                  color={advancedStats.slaCompliance.resolution >= 90 ? "emerald" : 
-                        advancedStats.slaCompliance.resolution >= 75 ? "amber" : "red"}
-                />
+                  color={advancedStats.slaCompliance.resolution >= 90 ? "emerald" :
+                  advancedStats.slaCompliance.resolution >= 75 ? "amber" : "red"} />
+
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* 紧急告警 */}
+        {/* 紧急预警 */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-sm">
               <AlertTriangle className="h-4 w-4" />
-              紧急告警
+              紧急预警
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {advancedStats.priorityAlerts.map((alert, index) => {
                 const levelConfig = getAlertLevelConfig(alert.alert_level);
-                
+
                 return (
                   <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                     <div className="flex-1 min-w-0">
@@ -346,20 +346,20 @@ const AlertCenterOverview = ({
                       <Badge className={levelConfig.color} variant="secondary">
                         {levelConfig.label}
                       </Badge>
-                      {alert.needsEscalation && (
-                        <Badge className="bg-red-500" variant="secondary">
+                      {alert.needsEscalation &&
+                      <Badge className="bg-red-500" variant="secondary">
                           需升级
-                        </Badge>
-                      )}
+                      </Badge>
+                      }
                     </div>
-                  </div>
-                );
+                  </div>);
+
               })}
-              {advancedStats.priorityAlerts.length === 0 && (
-                <div className="text-center text-gray-500 py-4">
-                  暂无紧急告警
-                </div>
-              )}
+              {advancedStats.priorityAlerts.length === 0 &&
+              <div className="text-center text-gray-500 py-4">
+                  暂无紧急预警
+              </div>
+              }
             </div>
           </CardContent>
         </Card>
@@ -393,9 +393,9 @@ const AlertCenterOverview = ({
                   工作时间占比
                 </div>
                 <div className="text-lg font-semibold">
-                  {alerts?.length > 0 
-                    ? Math.round((advancedStats.businessHourStats.business / alerts.length) * 100)
-                    : 0}%
+                  {alerts?.length > 0 ?
+                  Math.round(advancedStats.businessHourStats.business / alerts.length * 100) :
+                  0}%
                 </div>
               </div>
             </div>
@@ -407,25 +407,25 @@ const AlertCenterOverview = ({
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-sm">
               <TrendingUp className="h-4 w-4" />
-              告警趋势
+              预警趋势
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">今日告警</span>
+                <span className="text-sm text-gray-600">今日预警</span>
                 <span className="text-lg font-semibold">
                   {advancedStats.recentTrends.today}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">昨日告警</span>
+                <span className="text-sm text-gray-600">昨日预警</span>
                 <span className="text-lg font-semibold">
                   {advancedStats.recentTrends.yesterday}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">本周告警</span>
+                <span className="text-sm text-gray-600">本周预警</span>
                 <span className="text-lg font-semibold">
                   {advancedStats.recentTrends.week}
                 </span>
@@ -435,12 +435,12 @@ const AlertCenterOverview = ({
                   日变化率
                 </div>
                 <div className={`text-lg font-semibold ${
-                  advancedStats.recentTrends.today > advancedStats.recentTrends.yesterday 
-                    ? 'text-red-600' : 'text-emerald-600'
-                }`}>
-                  {advancedStats.recentTrends.yesterday > 0
-                    ? Math.round(((advancedStats.recentTrends.today - advancedStats.recentTrends.yesterday) / advancedStats.recentTrends.yesterday) * 100)
-                    : 0}%
+                advancedStats.recentTrends.today > advancedStats.recentTrends.yesterday ?
+                'text-red-600' : 'text-emerald-600'}`
+                }>
+                  {advancedStats.recentTrends.yesterday > 0 ?
+                  Math.round((advancedStats.recentTrends.today - advancedStats.recentTrends.yesterday) / advancedStats.recentTrends.yesterday * 100) :
+                  0}%
                 </div>
               </div>
             </div>
@@ -455,35 +455,35 @@ const AlertCenterOverview = ({
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               variant="outline"
-              onClick={() => onQuickAction && onQuickAction('createAlert')}
-            >
+              onClick={() => onQuickAction && onQuickAction('createAlert')}>
+
               <AlertTriangle className="h-4 w-4 mr-2" />
-              创建告警
+              创建预警
             </Button>
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               variant="outline"
-              onClick={() => onQuickAction && onQuickAction('manageRules')}
-            >
+              onClick={() => onQuickAction && onQuickAction('manageRules')}>
+
               <Settings className="h-4 w-4 mr-2" />
               规则管理
             </Button>
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               variant="outline"
-              onClick={() => onQuickAction && onQuickAction('notificationSettings')}
-            >
+              onClick={() => onQuickAction && onQuickAction('notificationSettings')}>
+
               <Bell className="h-4 w-4 mr-2" />
               通知设置
             </Button>
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               variant="outline"
-              onClick={() => onQuickAction && onQuickAction('exportReport')}
-            >
+              onClick={() => onQuickAction && onQuickAction('exportReport')}>
+
               <Eye className="h-4 w-4 mr-2" />
               导出报表
             </Button>
@@ -492,29 +492,29 @@ const AlertCenterOverview = ({
       </Card>
 
       {/* SLA提醒 */}
-      {(advancedStats.slaCompliance.response < 90 || advancedStats.slaCompliance.resolution < 85) && (
-        <Card className="border-red-200 bg-red-50">
+      {(advancedStats.slaCompliance.response < 90 || advancedStats.slaCompliance.resolution < 85) &&
+      <Card className="border-red-200 bg-red-50">
           <CardContent className="pt-6">
             <div className="flex items-start gap-3">
               <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5" />
               <div className="space-y-1">
-                {advancedStats.slaCompliance.response < 90 && (
-                  <p className="text-sm text-red-800">
+                {advancedStats.slaCompliance.response < 90 &&
+              <p className="text-sm text-red-800">
                     响应时间SLA达标率偏低 ({advancedStats.slaCompliance.response}%)，建议加强响应时效管理
-                  </p>
-                )}
-                {advancedStats.slaCompliance.resolution < 85 && (
-                  <p className="text-sm text-red-800">
+              </p>
+              }
+                {advancedStats.slaCompliance.resolution < 85 &&
+              <p className="text-sm text-red-800">
                     解决时间SLA达标率偏低 ({advancedStats.slaCompliance.resolution}%)，请关注解决效率提升
-                  </p>
-                )}
+              </p>
+              }
               </div>
             </div>
           </CardContent>
-        </Card>
-      )}
-    </div>
-  );
+      </Card>
+      }
+    </div>);
+
 };
 
 export default AlertCenterOverview;

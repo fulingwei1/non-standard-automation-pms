@@ -2,20 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
-  Users, 
-  UserPlus, 
-  UserCheck, 
-  UserX, 
-  Shield, 
-  Building2, 
+import {
+  Users,
+  UserPlus,
+  UserCheck,
+  UserX,
+  Shield,
+  Building2,
   TrendingUp,
   UserCog,
   AlertCircle,
   Calendar,
   BarChart3,
-  Activity
-} from 'lucide-react';
+  Activity } from
+'lucide-react';
 import {
   USER_STATUS,
   USER_STATUS_LABELS,
@@ -29,18 +29,18 @@ import {
   getDepartmentDistributionStats,
   getMonthlyNewUsers,
   calculateUserGrowthRate,
-  getUserStatusLabel,
-  getUserRoleLabel,
-  getUserDepartmentLabel,
-  getUserStatusColor,
+  getUserStatusLabel as _getUserStatusLabel,
+  getUserRoleLabel as _getUserRoleLabel,
+  getUserDepartmentLabel as _getUserDepartmentLabel,
+  getUserStatusColor as _getUserStatusColor,
   getRoleColor,
-  getDepartmentColor
-} from './userManagementConstants';
+  getDepartmentColor as _getDepartmentColor } from
+'./userManagementConstants';
 
-const UserManagementOverview = ({ 
-  users = [], 
-  roles = [], 
-  onQuickAction 
+const UserManagementOverview = ({
+  users = [],
+  roles = [],
+  onQuickAction
 }) => {
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -61,11 +61,11 @@ const UserManagementOverview = ({
       const roleStatsData = getRoleDistributionStats(users);
       const departmentStatsData = getDepartmentDistributionStats(users);
       const newUsersCount = getMonthlyNewUsers(users);
-      
+
       // 模拟上个月的用户数量来计算增长率
       const previousMonthUsers = users.length - newUsersCount;
       const growthRate = calculateUserGrowthRate(users.length, previousMonthUsers);
-      
+
       setStats({
         totalUsers: statusStats.total,
         activeUsers: statusStats.active,
@@ -82,45 +82,45 @@ const UserManagementOverview = ({
   }, [users]);
 
   const getTopRoles = () => {
-    return Object.entries(roleStats)
-      .filter(([role, count]) => count > 0)
-      .sort(([,a], [,b]) => b - a)
-      .slice(0, 3)
-      .map(([role, count]) => ({
-        role,
-        label: USER_ROLE_LABELS[role],
-        count,
-        percentage: stats.totalUsers > 0 ? ((count / stats.totalUsers) * 100).toFixed(1) : 0
-      }));
+    return Object.entries(roleStats).
+    filter(([_role, count]) => count > 0).
+    sort(([, a], [, b]) => b - a).
+    slice(0, 3).
+    map(([role, count]) => ({
+      role,
+      label: USER_ROLE_LABELS[role],
+      count,
+      percentage: stats.totalUsers > 0 ? (count / stats.totalUsers * 100).toFixed(1) : 0
+    }));
   };
 
   const getTopDepartments = () => {
-    return Object.entries(departmentStats)
-      .filter(([department, count]) => count > 0)
-      .sort(([,a], [,b]) => b - a)
-      .slice(0, 3)
-      .map(([department, count]) => ({
-        department,
-        label: USER_DEPARTMENT_LABELS[department],
-        count,
-        percentage: stats.totalUsers > 0 ? ((count / stats.totalUsers) * 100).toFixed(1) : 0
-      }));
+    return Object.entries(departmentStats).
+    filter(([_department, count]) => count > 0).
+    sort(([, a], [, b]) => b - a).
+    slice(0, 3).
+    map(([department, count]) => ({
+      department,
+      label: USER_DEPARTMENT_LABELS[department],
+      count,
+      percentage: stats.totalUsers > 0 ? (count / stats.totalUsers * 100).toFixed(1) : 0
+    }));
   };
 
   const getInactiveUsers = () => {
-    return users.filter(user => 
-      user.status === USER_STATUS.INACTIVE || user.status === USER_STATUS.SUSPENDED
+    return users.filter((user) =>
+    user.status === USER_STATUS.INACTIVE || user.status === USER_STATUS.SUSPENDED
     );
   };
 
   const getPendingUsers = () => {
-    return users.filter(user => user.status === USER_STATUS.PENDING);
+    return users.filter((user) => user.status === USER_STATUS.PENDING);
   };
 
   const topRoles = getTopRoles();
   const topDepartments = getTopDepartments();
-  const inactiveUsers = getInactiveUsers();
-  const pendingUsers = getPendingUsers();
+  const _inactiveUsers = getInactiveUsers();
+  const _pendingUsers = getPendingUsers();
 
   return (
     <div className="space-y-6">
@@ -147,7 +147,7 @@ const UserManagementOverview = ({
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{stats.activeUsers}</div>
             <p className="text-xs text-muted-foreground">
-              活跃率: {stats.totalUsers > 0 ? ((stats.activeUsers / stats.totalUsers) * 100).toFixed(1) : 0}%
+              活跃率: {stats.totalUsers > 0 ? (stats.activeUsers / stats.totalUsers * 100).toFixed(1) : 0}%
             </p>
           </CardContent>
         </Card>
@@ -192,22 +192,22 @@ const UserManagementOverview = ({
               {Object.entries(USER_STATUS).map(([key, value]) => {
                 const count = stats[`${key.toLowerCase()}Users`] || 0;
                 const percentage = stats.totalUsers > 0 ? (count / stats.totalUsers * 100).toFixed(1) : 0;
-                
+
                 return (
                   <div key={value} className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <div 
-                        className="w-3 h-3 rounded-full" 
-                        style={{ backgroundColor: USER_STATUS_COLORS[value] }}
-                      />
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: USER_STATUS_COLORS[value] }} />
+
                       <span className="text-sm">{USER_STATUS_LABELS[value]}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Badge variant="secondary">{count}</Badge>
                       <span className="text-xs text-muted-foreground">{percentage}%</span>
                     </div>
-                  </div>
-                );
+                  </div>);
+
               })}
             </div>
           </CardContent>
@@ -255,13 +255,13 @@ const UserManagementOverview = ({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {topRoles.map((roleData, index) => (
-                <div key={roleData.role} className="flex items-center justify-between">
+              {topRoles.map((roleData, _index) =>
+              <div key={roleData.role} className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <div 
-                      className="w-3 h-3 rounded-full" 
-                      style={{ backgroundColor: getRoleColor(roleData.role) }}
-                    />
+                    <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: getRoleColor(roleData.role) }} />
+
                     <span className="text-sm font-medium">{roleData.label}</span>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -269,7 +269,7 @@ const UserManagementOverview = ({
                     <span className="text-xs text-muted-foreground">{roleData.percentage}%</span>
                   </div>
                 </div>
-              ))}
+              )}
             </div>
           </CardContent>
         </Card>
@@ -280,8 +280,8 @@ const UserManagementOverview = ({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {topDepartments.map((deptData, index) => (
-                <div key={deptData.department} className="flex items-center justify-between">
+              {topDepartments.map((deptData, _index) =>
+              <div key={deptData.department} className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <Building2 className="h-3 w-3" />
                     <span className="text-sm font-medium">{deptData.label}</span>
@@ -291,7 +291,7 @@ const UserManagementOverview = ({
                     <span className="text-xs text-muted-foreground">{deptData.percentage}%</span>
                   </div>
                 </div>
-              ))}
+              )}
             </div>
           </CardContent>
         </Card>
@@ -304,38 +304,38 @@ const UserManagementOverview = ({
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="h-auto p-4 flex flex-col items-center space-y-2"
-              onClick={() => onQuickAction?.('createUser')}
-            >
+              onClick={() => onQuickAction?.('createUser')}>
+
               <UserPlus className="h-6 w-6" />
               <span className="text-sm">新建用户</span>
             </Button>
             
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="h-auto p-4 flex flex-col items-center space-y-2"
-              onClick={() => onQuickAction?.('manageRoles')}
-            >
+              onClick={() => onQuickAction?.('manageRoles')}>
+
               <Shield className="h-6 w-6" />
               <span className="text-sm">角色管理</span>
             </Button>
             
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="h-auto p-4 flex flex-col items-center space-y-2"
-              onClick={() => onQuickAction?.('viewInactive')}
-            >
+              onClick={() => onQuickAction?.('viewInactive')}>
+
               <UserX className="h-6 w-6" />
               <span className="text-sm">非活跃用户</span>
             </Button>
             
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="h-auto p-4 flex flex-col items-center space-y-2"
-              onClick={() => onQuickAction?.('userAnalytics')}
-            >
+              onClick={() => onQuickAction?.('userAnalytics')}>
+
               <BarChart3 className="h-6 w-6" />
               <span className="text-sm">用户分析</span>
             </Button>
@@ -365,7 +365,7 @@ const UserManagementOverview = ({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {stats.totalUsers > 0 ? ((stats.activeUsers / stats.totalUsers) * 100).toFixed(1) : 0}%
+              {stats.totalUsers > 0 ? (stats.activeUsers / stats.totalUsers * 100).toFixed(1) : 0}%
             </div>
             <p className="text-xs text-muted-foreground">
               用户活跃率
@@ -386,8 +386,8 @@ const UserManagementOverview = ({
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default UserManagementOverview;

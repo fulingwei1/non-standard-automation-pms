@@ -9,22 +9,22 @@ import {
   Progress,
   Button,
   ScrollArea,
-  Separator
-} from '@/components/ui';
+  Separator } from
+'@/components/ui';
 import {
   PROJECT_STAGES,
   MILESTONE_STATUSES,
-  PROJECT_HEALTH
-} from './projectDetailConstants';
-import { format, differenceInDays, isAfter, isBefore } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
+  PROJECT_HEALTH } from
+'./projectDetailConstants';
+import { format, differenceInDays, isAfter, isBefore as _isBefore } from 'date-fns';
+import { zhCN as _zhCN } from 'date-fns/locale';
 
 const MilestoneTracker = ({ project, onStageClick, onAddMilestone }) => {
   const [expandedStage, setExpandedStage] = useState(null);
 
   // Get stage info by code
   const getStageInfo = (stageCode) => {
-    return PROJECT_STAGES.find(stage => stage.code === stageCode) || PROJECT_STAGES[0];
+    return PROJECT_STAGES.find((stage) => stage.code === stageCode) || PROJECT_STAGES[0];
   };
 
   // Calculate days difference
@@ -80,8 +80,8 @@ const MilestoneTracker = ({ project, onStageClick, onAddMilestone }) => {
       return stage.status === 'COMPLETED' ? 100 : 0;
     }
 
-    const completedMilestones = stage.milestones.filter(m => m.completed_at).length;
-    return Math.round((completedMilestones / stage.milestones.length) * 100);
+    const completedMilestones = stage.milestones.filter((m) => m.completed_at).length;
+    return Math.round(completedMilestones / stage.milestones.length * 100);
   };
 
   // Toggle stage expansion
@@ -90,21 +90,21 @@ const MilestoneTracker = ({ project, onStageClick, onAddMilestone }) => {
   };
 
   // Render milestone item
-  const renderMilestone = (milestone, stageCode) => {
+  const renderMilestone = (milestone, _stageCode) => {
     const status = getMilestoneStatus(milestone);
-    const daysDiff = milestone.target_date
-      ? getDaysDiff(new Date(), milestone.target_date)
-      : 0;
+    const daysDiff = milestone.target_date ?
+    getDaysDiff(new Date(), milestone.target_date) :
+    0;
 
     return (
       <div
         key={milestone.id}
-        className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
-      >
+        className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+
         <div
           className="w-4 h-4 rounded-full mt-1 flex-shrink-0"
-          style={{ backgroundColor: getStatusColor(status.code) }}
-        />
+          style={{ backgroundColor: getStatusColor(status.code) }} />
+
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
@@ -121,33 +121,33 @@ const MilestoneTracker = ({ project, onStageClick, onAddMilestone }) => {
                 borderColor: getStatusColor(status.code),
                 color: getStatusColor(status.code)
               }}
-              className="text-xs flex-shrink-0"
-            >
+              className="text-xs flex-shrink-0">
+
               {status.name}
             </Badge>
           </div>
 
           <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
             <span className="flex items-center gap-1">
-              📅 目标时间: {milestone.target_date
-                ? format(new Date(milestone.target_date), 'yyyy-MM-dd')
-                : '未设定'
+              📅 目标时间: {milestone.target_date ?
+              format(new Date(milestone.target_date), 'yyyy-MM-dd') :
+              '未设定'
               }
             </span>
-            {status.code === MILESTONE_STATUSES.DELAYED.code && (
-              <span className="text-red-500">
+            {status.code === MILESTONE_STATUSES.DELAYED.code &&
+            <span className="text-red-500">
                 已延期 {Math.abs(daysDiff)} 天
               </span>
-            )}
-            {milestone.completed_at && (
-              <span className="text-green-500">
+            }
+            {milestone.completed_at &&
+            <span className="text-green-500">
                 完成于 {format(new Date(milestone.completed_at), 'MM-dd')}
               </span>
-            )}
+            }
           </div>
         </div>
-      </div>
-    );
+      </div>);
+
   };
 
   // Render stage
@@ -160,20 +160,20 @@ const MilestoneTracker = ({ project, onStageClick, onAddMilestone }) => {
       <div key={stage.code} className="space-y-2">
         <div
           className={`p-4 rounded-lg border cursor-pointer transition-all ${
-            stage.status === 'COMPLETED'
-              ? 'bg-green-50 border-green-200'
-              : stage.status === 'DELAYED'
-              ? 'bg-red-50 border-red-200'
-              : 'bg-white border-gray-200 hover:border-gray-300'
-          }`}
-          onClick={() => toggleStageExpansion(stage.code)}
-        >
+          stage.status === 'COMPLETED' ?
+          'bg-green-50 border-green-200' :
+          stage.status === 'DELAYED' ?
+          'bg-red-50 border-red-200' :
+          'bg-white border-gray-200 hover:border-gray-300'}`
+          }
+          onClick={() => toggleStageExpansion(stage.code)}>
+
           <div className="flex items-center gap-3">
             <div className="flex-shrink-0">
               <div
                 className="w-10 h-10 rounded-lg flex items-center justify-center text-lg"
-                style={{ backgroundColor: stageInfo.bgColor }}
-              >
+                style={{ backgroundColor: stageInfo.bgColor }}>
+
                 {stageInfo.icon}
               </div>
             </div>
@@ -187,8 +187,8 @@ const MilestoneTracker = ({ project, onStageClick, onAddMilestone }) => {
                     </h3>
                     <Badge
                       variant="outline"
-                      className="text-xs"
-                    >
+                      className="text-xs">
+
                       阶段 {stage.code}
                     </Badge>
                     <span className="text-xs text-gray-500">
@@ -204,30 +204,30 @@ const MilestoneTracker = ({ project, onStageClick, onAddMilestone }) => {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {stage.status !== 'COMPLETED' && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onStageClick(stage.code);
-                      }}
-                    >
+                  {stage.status !== 'COMPLETED' &&
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onStageClick(stage.code);
+                    }}>
+
                       查看详情
                     </Button>
-                  )}
-                  {isExpanded && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onAddMilestone(stage.code);
-                      }}
-                    >
+                  }
+                  {isExpanded &&
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAddMilestone(stage.code);
+                    }}>
+
                       + 里程碑
                     </Button>
-                  )}
+                  }
                 </div>
               </div>
             </div>
@@ -238,18 +238,18 @@ const MilestoneTracker = ({ project, onStageClick, onAddMilestone }) => {
             <div>
               <span className="text-gray-500">开始：</span>
               <span className="font-medium">
-                {stage.start_date
-                  ? format(new Date(stage.start_date), 'yyyy-MM-dd')
-                  : '未开始'
+                {stage.start_date ?
+                format(new Date(stage.start_date), 'yyyy-MM-dd') :
+                '未开始'
                 }
               </span>
             </div>
             <div>
               <span className="text-gray-500">结束：</span>
               <span className="font-medium">
-                {stage.end_date
-                  ? format(new Date(stage.end_date), 'yyyy-MM-dd')
-                  : '进行中'
+                {stage.end_date ?
+                format(new Date(stage.end_date), 'yyyy-MM-dd') :
+                '进行中'
                 }
               </span>
             </div>
@@ -257,17 +257,17 @@ const MilestoneTracker = ({ project, onStageClick, onAddMilestone }) => {
         </div>
 
         {/* Milestones */}
-        {isExpanded && stage.milestones && stage.milestones.length > 0 && (
-          <div className="ml-14 space-y-1">
-            {stage.milestones.map(milestone => renderMilestone(milestone, stage.code))}
+        {isExpanded && stage.milestones && stage.milestones.length > 0 &&
+        <div className="ml-14 space-y-1">
+            {stage.milestones.map((milestone) => renderMilestone(milestone, stage.code))}
           </div>
-        )}
+        }
 
-        {index < PROJECT_STAGES.length - 1 && (
-          <Separator className="my-2" />
-        )}
-      </div>
-    );
+        {index < PROJECT_STAGES.length - 1 &&
+        <Separator className="my-2" />
+        }
+      </div>);
+
   };
 
   return (
@@ -278,8 +278,8 @@ const MilestoneTracker = ({ project, onStageClick, onAddMilestone }) => {
           <Button
             variant="outline"
             size="sm"
-            onClick={onAddMilestone}
-          >
+            onClick={onAddMilestone}>
+
             + 添加里程碑
           </Button>
         </CardTitle>
@@ -290,18 +290,18 @@ const MilestoneTracker = ({ project, onStageClick, onAddMilestone }) => {
       <CardContent>
         <ScrollArea className="h-[600px] pr-4">
           <div className="space-y-2">
-            {project.stages ? (
-              project.stages.map((stage, index) => renderStage(stage, index))
-            ) : (
-              <div className="text-center py-8 text-gray-500">
+            {project.stages ?
+            project.stages.map((stage, index) => renderStage(stage, index)) :
+
+            <div className="text-center py-8 text-gray-500">
                 暂无阶段数据
               </div>
-            )}
+            }
           </div>
         </ScrollArea>
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 };
 
 export default MilestoneTracker;

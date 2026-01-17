@@ -18,8 +18,8 @@ import {
   Calendar,
   Edit,
   Eye,
-  Download,
-} from "lucide-react";
+  Download } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -32,8 +32,8 @@ import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger,
-} from "../components/ui";
+  TabsTrigger } from
+"../components/ui";
 import { cn, formatCurrency } from "../lib/utils";
 import { staggerContainer } from "../lib/animations";
 import {
@@ -41,8 +41,8 @@ import {
   MonthlyTrendChart,
   SimplePieChart,
   CategoryBreakdownCard,
-  TrendComparisonCard,
-} from "../components/administrative/StatisticsCharts";
+  TrendComparisonCard } from
+"../components/administrative/StatisticsCharts";
 import { adminApi } from "../services/api";
 
 // Mock data - 已移除，使用真实API
@@ -51,8 +51,8 @@ export default function FixedAssetsManagement() {
   const [searchText, setSearchText] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [_loading, setLoading] = useState(false);
+  const [_error, setError] = useState(null);
   const [assets, setAssets] = useState([]);
 
   // Fetch assets from API
@@ -66,7 +66,7 @@ export default function FixedAssetsManagement() {
         } else if (Array.isArray(res.data)) {
           setAssets(res.data);
         }
-      } catch (err) {
+      } catch (_err) {
         console.log("Assets API unavailable");
         setError("加载固定资产数据失败");
       }
@@ -78,12 +78,12 @@ export default function FixedAssetsManagement() {
   const filteredAssets = useMemo(() => {
     return assets.filter((asset) => {
       const matchSearch =
-        asset.name?.toLowerCase().includes(searchText.toLowerCase()) ||
-        asset.assetNo?.includes(searchText);
+      asset.name?.toLowerCase().includes(searchText.toLowerCase()) ||
+      asset.assetNo?.includes(searchText);
       const matchCategory =
-        categoryFilter === "all" || asset.category === categoryFilter;
+      categoryFilter === "all" || asset.category === categoryFilter;
       const matchStatus =
-        statusFilter === "all" || asset.status === statusFilter;
+      statusFilter === "all" || asset.status === statusFilter;
       return matchSearch && matchCategory && matchStatus;
     });
   }, [assets, searchText, categoryFilter, statusFilter]);
@@ -93,10 +93,10 @@ export default function FixedAssetsManagement() {
     const totalValue = assets.reduce((sum, a) => sum + (a.currentValue || 0), 0);
     const totalDepreciation = assets.reduce(
       (sum, a) => sum + (a.depreciation || 0),
-      0,
+      0
     );
     const maintenance = assets.filter(
-      (a) => a.status === "maintenance",
+      (a) => a.status === "maintenance"
     ).length;
     return { total, totalValue, totalDepreciation, maintenance };
   }, [assets]);
@@ -106,13 +106,13 @@ export default function FixedAssetsManagement() {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       <PageHeader
         title="固定资产管理"
         description="固定资产清单、折旧计算、维护跟踪、资产分配"
         actions={
-          <div className="flex gap-2">
+        <div className="flex gap-2">
             <Button variant="outline">
               <Download className="w-4 h-4 mr-2" />
               导出
@@ -122,8 +122,8 @@ export default function FixedAssetsManagement() {
               新增资产
             </Button>
           </div>
-        }
-      />
+        } />
+
 
       {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -201,24 +201,24 @@ export default function FixedAssetsManagement() {
                 <CategoryBreakdownCard
                   title="资产价值"
                   data={[
-                    {
-                      label: "办公家具",
-                      value: assets
-                        .filter((a) => a.category === "办公家具")
-                        .reduce((sum, a) => sum + a.currentValue, 0),
-                      color: "#3b82f6",
-                    },
-                    {
-                      label: "办公设备",
-                      value: assets
-                        .filter((a) => a.category === "办公设备")
-                        .reduce((sum, a) => sum + a.currentValue, 0),
-                      color: "#10b981",
-                    },
-                  ]}
+                  {
+                    label: "办公家具",
+                    value: assets.
+                    filter((a) => a.category === "办公家具").
+                    reduce((sum, a) => sum + a.currentValue, 0),
+                    color: "#3b82f6"
+                  },
+                  {
+                    label: "办公设备",
+                    value: assets.
+                    filter((a) => a.category === "办公设备").
+                    reduce((sum, a) => sum + a.currentValue, 0),
+                    color: "#10b981"
+                  }]
+                  }
                   total={stats.totalValue}
-                  formatValue={formatCurrency}
-                />
+                  formatValue={formatCurrency} />
+
               </CardContent>
             </Card>
             <Card>
@@ -228,15 +228,15 @@ export default function FixedAssetsManagement() {
               <CardContent>
                 <MonthlyTrendChart
                   data={[
-                    { month: "2024-10", amount: 12000000 },
-                    { month: "2024-11", amount: 12200000 },
-                    { month: "2024-12", amount: 12350000 },
-                    { month: "2025-01", amount: stats.totalValue },
-                  ]}
+                  { month: "2024-10", amount: 12000000 },
+                  { month: "2024-11", amount: 12200000 },
+                  { month: "2024-12", amount: 12350000 },
+                  { month: "2025-01", amount: stats.totalValue }]
+                  }
                   valueKey="amount"
                   labelKey="month"
-                  height={150}
-                />
+                  height={150} />
+
               </CardContent>
             </Card>
           </div>
@@ -247,19 +247,19 @@ export default function FixedAssetsManagement() {
               title="资产总值"
               current={stats.totalValue}
               previous={12350000}
-              formatValue={formatCurrency}
-            />
+              formatValue={formatCurrency} />
+
             <TrendComparisonCard
               title="累计折旧"
               current={stats.totalDepreciation}
               previous={1200000}
-              formatValue={formatCurrency}
-            />
+              formatValue={formatCurrency} />
+
             <TrendComparisonCard
               title="维护中资产"
               current={stats.maintenance}
-              previous={12}
-            />
+              previous={12} />
+
           </div>
 
           {/* Filters */}
@@ -270,13 +270,13 @@ export default function FixedAssetsManagement() {
                   placeholder="搜索资产名称、编号..."
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
-                  className="flex-1"
-                />
+                  className="flex-1" />
+
                 <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white"
-                >
+                  className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white">
+
                   <option value="all">全部分类</option>
                   <option value="办公家具">办公家具</option>
                   <option value="办公设备">办公设备</option>
@@ -284,8 +284,8 @@ export default function FixedAssetsManagement() {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white"
-                >
+                  className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white">
+
                   <option value="all">全部状态</option>
                   <option value="in_use">使用中</option>
                   <option value="maintenance">维护中</option>
@@ -297,8 +297,8 @@ export default function FixedAssetsManagement() {
 
           {/* Assets List */}
           <div className="grid grid-cols-1 gap-4">
-            {filteredAssets.map((asset) => (
-              <Card key={asset.id}>
+            {filteredAssets.map((asset) =>
+            <Card key={asset.id}>
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -308,14 +308,14 @@ export default function FixedAssetsManagement() {
                         </h3>
                         <Badge variant="outline">{asset.category}</Badge>
                         <Badge
-                          variant="outline"
-                          className={cn(
-                            asset.status === "in_use" &&
-                              "bg-green-500/20 text-green-400 border-green-500/30",
-                            asset.status === "maintenance" &&
-                              "bg-amber-500/20 text-amber-400 border-amber-500/30",
-                          )}
-                        >
+                        variant="outline"
+                        className={cn(
+                          asset.status === "in_use" &&
+                          "bg-green-500/20 text-green-400 border-green-500/30",
+                          asset.status === "maintenance" &&
+                          "bg-amber-500/20 text-amber-400 border-amber-500/30"
+                        )}>
+
                           {asset.status === "in_use" ? "使用中" : "维护中"}
                         </Badge>
                       </div>
@@ -383,7 +383,7 @@ export default function FixedAssetsManagement() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            )}
           </div>
         </TabsContent>
 
@@ -396,16 +396,16 @@ export default function FixedAssetsManagement() {
               <div className="space-y-4">
                 {assets.map((asset) => {
                   const yearsInUse = Math.floor(
-                    (new Date() - new Date(asset.purchaseDate)) /
-                      (365 * 24 * 60 * 60 * 1000),
+                    (new Date() - new Date(asset.purchaseDate)) / (
+                    365 * 24 * 60 * 60 * 1000)
                   );
                   const annualDepreciation =
-                    asset.purchasePrice * (asset.depreciationRate / 100);
+                  asset.purchasePrice * (asset.depreciationRate / 100);
                   return (
                     <div
                       key={asset.id}
-                      className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50"
-                    >
+                      className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50">
+
                       <div className="flex items-start justify-between mb-3">
                         <div>
                           <h3 className="font-medium text-white mb-1">
@@ -447,8 +447,8 @@ export default function FixedAssetsManagement() {
                         折旧率: {asset.depreciationRate}% · 年折旧额:{" "}
                         {formatCurrency(annualDepreciation)}
                       </div>
-                    </div>
-                  );
+                    </div>);
+
                 })}
               </div>
             </CardContent>
@@ -462,13 +462,13 @@ export default function FixedAssetsManagement() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {assets
-                  .filter((a) => a.status === "maintenance")
-                  .map((asset) => (
-                    <div
-                      key={asset.id}
-                      className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50"
-                    >
+                {assets.
+                filter((a) => a.status === "maintenance").
+                map((asset) =>
+                <div
+                  key={asset.id}
+                  className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50">
+
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
@@ -476,9 +476,9 @@ export default function FixedAssetsManagement() {
                               {asset.name}
                             </span>
                             <Badge
-                              variant="outline"
-                              className="bg-amber-500/20 text-amber-400 border-amber-500/30"
-                            >
+                          variant="outline"
+                          className="bg-amber-500/20 text-amber-400 border-amber-500/30">
+
                               维护中
                             </Badge>
                           </div>
@@ -492,7 +492,7 @@ export default function FixedAssetsManagement() {
                         </div>
                       </div>
                     </div>
-                  ))}
+                )}
               </div>
             </CardContent>
           </Card>
@@ -505,11 +505,11 @@ export default function FixedAssetsManagement() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {assets.map((asset) => (
-                  <div
-                    key={asset.id}
-                    className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50"
-                  >
+                {assets.map((asset) =>
+                <div
+                  key={asset.id}
+                  className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50">
+
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
@@ -545,12 +545,12 @@ export default function FixedAssetsManagement() {
                       </div>
                     </div>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

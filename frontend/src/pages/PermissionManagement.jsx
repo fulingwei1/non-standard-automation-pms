@@ -11,15 +11,15 @@ import {
   ChevronRight,
   Key,
   FileText,
-  Settings,
-} from "lucide-react";
+  Settings } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -27,17 +27,17 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
-} from "../components/ui/dialog";
+  DialogTitle } from
+"../components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import { cn } from "../lib/utils";
-import { fadeIn } from "../lib/animations";
+import { fadeIn as _fadeIn } from "../lib/animations";
 import { roleApi } from "../services/api";
 
 export default function PermissionManagement() {
@@ -63,11 +63,11 @@ export default function PermissionManagement() {
       console.log("[权限管理] 开始加载权限列表...");
       console.log(
         "[权限管理] Token检查:",
-        token
-          ? token.startsWith("demo_token_")
-            ? "演示账号token"
-            : `真实token (${token.substring(0, 30)}...)`
-          : "❌ 未找到token",
+        token ?
+        token.startsWith("demo_token_") ?
+        "演示账号token" :
+        `真实token (${token.substring(0, 30)}...)` :
+        "❌ 未找到token"
       );
 
       if (!token) {
@@ -96,7 +96,7 @@ export default function PermissionManagement() {
       console.log(
         "[权限管理] ✅ 成功获取权限列表:",
         response.data?.length || 0,
-        "条",
+        "条"
       );
       setPermissions(response.data || []);
     } catch (error) {
@@ -107,17 +107,17 @@ export default function PermissionManagement() {
         status: statusCode,
         detail: errorDetail,
         message: error.message,
-        response: error.response?.data,
+        response: error.response?.data
       });
 
       // 如果是认证错误，提示重新登录
       if (
-        statusCode === 401 ||
-        statusCode === 403 ||
-        errorDetail?.includes("Not authenticated") ||
-        errorDetail?.includes("认证") ||
-        errorDetail?.includes("无效的认证凭据")
-      ) {
+      statusCode === 401 ||
+      statusCode === 403 ||
+      errorDetail?.includes("Not authenticated") ||
+      errorDetail?.includes("认证") ||
+      errorDetail?.includes("无效的认证凭据"))
+      {
         console.error("[权限管理] 认证失败，清除token并跳转登录页");
         alert("认证失败，请重新登录");
         localStorage.removeItem("token");
@@ -158,7 +158,7 @@ export default function PermissionManagement() {
 
   // 获取所有模块列表
   const modules = Array.from(
-    new Set(permissions.map((p) => p.module).filter(Boolean)),
+    new Set(permissions.map((p) => p.module).filter(Boolean))
   ).sort();
 
   // 按模块分组权限
@@ -180,22 +180,22 @@ export default function PermissionManagement() {
         return (
           p.permission_code?.toLowerCase().includes(keyword) ||
           p.permission_name?.toLowerCase().includes(keyword) ||
-          p.description?.toLowerCase().includes(keyword)
-        );
+          p.description?.toLowerCase().includes(keyword));
+
       });
       if (filtered.length > 0) {
         acc[module] = filtered;
       }
       return acc;
     },
-    {},
+    {}
   );
 
   // 切换模块展开/收起
   const toggleModule = (module) => {
     setExpandedModules((prev) => ({
       ...prev,
-      [module]: !prev[module],
+      [module]: !prev[module]
     }));
   };
 
@@ -215,9 +215,9 @@ export default function PermissionManagement() {
           const rolePermissionNames = roleDetail.data?.permissions || [];
           // 通过权限名称匹配
           if (
-            rolePermissionNames.includes(permission.permission_name) ||
-            rolePermissionNames.includes(permission.permission_code)
-          ) {
+          rolePermissionNames.includes(permission.permission_name) ||
+          rolePermissionNames.includes(permission.permission_code))
+          {
             rolesWithPermission.push(role);
           }
         } catch (error) {
@@ -239,7 +239,7 @@ export default function PermissionManagement() {
       update: "bg-yellow-500/10 text-yellow-400",
       delete: "bg-red-500/10 text-red-400",
       approve: "bg-purple-500/10 text-purple-400",
-      submit: "bg-cyan-500/10 text-cyan-400",
+      submit: "bg-cyan-500/10 text-cyan-400"
     };
     return colors[action?.toLowerCase()] || "bg-gray-500/10 text-gray-400";
   };
@@ -248,7 +248,7 @@ export default function PermissionManagement() {
   const stats = {
     total: permissions.length,
     modules: modules.length,
-    active: permissions.filter((p) => p.is_active !== false).length, // 兼容is_active可能不存在的情况
+    active: permissions.filter((p) => p.is_active !== false).length // 兼容is_active可能不存在的情况
   };
 
   return (
@@ -256,16 +256,16 @@ export default function PermissionManagement() {
       <PageHeader
         title="权限管理"
         description="查看和管理系统中的所有权限配置"
-        icon={Shield}
-      />
+        icon={Shield} />
+
 
       {/* 统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
+          transition={{ delay: 0.1 }}>
+
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -284,8 +284,8 @@ export default function PermissionManagement() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
+          transition={{ delay: 0.2 }}>
+
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -304,8 +304,8 @@ export default function PermissionManagement() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
+          transition={{ delay: 0.3 }}>
+
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -332,8 +332,8 @@ export default function PermissionManagement() {
                 placeholder="搜索权限编码、名称或描述..."
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
-                className="pl-10"
-              />
+                className="pl-10" />
+
             </div>
             <Select value={filterModule} onValueChange={setFilterModule}>
               <SelectTrigger className="w-full sm:w-[200px]">
@@ -342,11 +342,11 @@ export default function PermissionManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">所有模块</SelectItem>
-                {modules.map((module) => (
-                  <SelectItem key={module} value={module}>
+                {modules.map((module) =>
+                <SelectItem key={module} value={module}>
                     {module}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -354,8 +354,8 @@ export default function PermissionManagement() {
       </Card>
 
       {}
-      {isDemoAccount && (
-        <Card className="border-amber-500/50 bg-amber-500/10">
+      {isDemoAccount &&
+      <Card className="border-amber-500/50 bg-amber-500/10">
           <CardContent className="pt-6">
             <div className="flex items-start gap-4">
               <div className="flex-shrink-0">
@@ -371,20 +371,20 @@ export default function PermissionManagement() {
                 </p>
                 <div className="flex gap-3">
                   <Button
-                    onClick={() => {
-                      localStorage.removeItem("token");
-                      localStorage.removeItem("user");
-                      window.location.href = "/";
-                    }}
-                    className="bg-amber-500 hover:bg-amber-600 text-white"
-                  >
+                  onClick={() => {
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("user");
+                    window.location.href = "/";
+                  }}
+                  className="bg-amber-500 hover:bg-amber-600 text-white">
+
                     切换到真实账号登录
                   </Button>
                   <Button
-                    variant="outline"
-                    onClick={() => window.history.back()}
-                    className="border-slate-600 text-slate-300 hover:bg-slate-800"
-                  >
+                  variant="outline"
+                  onClick={() => window.history.back()}
+                  className="border-slate-600 text-slate-300 hover:bg-slate-800">
+
                     返回上一页
                   </Button>
                 </div>
@@ -399,39 +399,39 @@ export default function PermissionManagement() {
             </div>
           </CardContent>
         </Card>
-      )}
+      }
 
       {/* 权限列表 */}
-      {loading ? (
-        <Card>
+      {loading ?
+      <Card>
           <CardContent className="pt-6">
             <div className="text-center py-8 text-slate-400">加载中...</div>
           </CardContent>
-        </Card>
-      ) : isDemoAccount ? null : Object.keys(filteredPermissions).length ===
-        0 ? (
-        <Card>
+        </Card> :
+      isDemoAccount ? null : Object.keys(filteredPermissions).length ===
+      0 ?
+      <Card>
           <CardContent className="pt-6">
             <div className="text-center py-8 text-slate-400">
               {searchKeyword ? "未找到匹配的权限" : "暂无权限数据"}
             </div>
           </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {Object.entries(filteredPermissions).map(([module, perms]) => (
-            <motion.div
-              key={module}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-            >
+        </Card> :
+
+      <div className="space-y-4">
+          {Object.entries(filteredPermissions).map(([module, perms]) =>
+        <motion.div
+          key={module}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}>
+
               <Card>
                 <CardHeader>
                   <div
-                    className="flex items-center justify-between cursor-pointer"
-                    onClick={() => toggleModule(module)}
-                  >
+                className="flex items-center justify-between cursor-pointer"
+                onClick={() => toggleModule(module)}>
+
                     <CardTitle className="flex items-center gap-2">
                       <Package className="h-5 w-5 text-blue-400" />
                       <span>{module}</span>
@@ -439,82 +439,82 @@ export default function PermissionManagement() {
                         {perms.length}
                       </Badge>
                     </CardTitle>
-                    {expandedModules[module] !== false ? (
-                      <ChevronDown className="h-5 w-5 text-slate-400" />
-                    ) : (
-                      <ChevronRight className="h-5 w-5 text-slate-400" />
-                    )}
+                    {expandedModules[module] !== false ?
+                <ChevronDown className="h-5 w-5 text-slate-400" /> :
+
+                <ChevronRight className="h-5 w-5 text-slate-400" />
+                }
                   </div>
                 </CardHeader>
-                {expandedModules[module] !== false && (
-                  <CardContent>
+                {expandedModules[module] !== false &&
+            <CardContent>
                     <div className="space-y-2">
-                      {perms.map((permission) => (
-                        <div
-                          key={permission.id}
-                          className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50 hover:bg-slate-800 transition-colors"
-                        >
+                      {perms.map((permission) =>
+                <div
+                  key={permission.id}
+                  className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50 hover:bg-slate-800 transition-colors">
+
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                               <Key className="h-4 w-4 text-slate-400" />
                               <span className="font-medium text-white">
                                 {permission.permission_code}
                               </span>
-                              {permission.action && (
-                                <Badge
-                                  className={cn(
-                                    "text-xs",
-                                    getActionColor(permission.action),
-                                  )}
-                                >
+                              {permission.action &&
+                      <Badge
+                        className={cn(
+                          "text-xs",
+                          getActionColor(permission.action)
+                        )}>
+
                                   {permission.action}
                                 </Badge>
-                              )}
-                              {permission.is_active === false && (
-                                <Badge
-                                  variant="destructive"
-                                  className="text-xs"
-                                >
+                      }
+                              {permission.is_active === false &&
+                      <Badge
+                        variant="destructive"
+                        className="text-xs">
+
                                   已禁用
                                 </Badge>
-                              )}
+                      }
                             </div>
                             <p className="text-sm text-slate-400 ml-6">
                               {permission.permission_name}
                             </p>
-                            {permission.description && (
-                              <p className="text-xs text-slate-500 ml-6 mt-1">
+                            {permission.description &&
+                    <p className="text-xs text-slate-500 ml-6 mt-1">
                                 {permission.description}
                               </p>
-                            )}
-                            {permission.resource && (
-                              <div className="flex items-center gap-2 mt-2 ml-6">
+                    }
+                            {permission.resource &&
+                    <div className="flex items-center gap-2 mt-2 ml-6">
                                 <FileText className="h-3 w-3 text-slate-500" />
                                 <span className="text-xs text-slate-500">
                                   资源: {permission.resource}
                                 </span>
                               </div>
-                            )}
+                    }
                           </div>
                           <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleViewDetail(permission)}
-                            className="ml-4"
-                          >
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleViewDetail(permission)}
+                    className="ml-4">
+
                             <Eye className="h-4 w-4 mr-1" />
                             详情
                           </Button>
                         </div>
-                      ))}
+                )}
                     </div>
                   </CardContent>
-                )}
+            }
               </Card>
             </motion.div>
-          ))}
+        )}
         </div>
-      )}
+      }
 
       {/* 权限详情对话框 */}
       <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
@@ -525,8 +525,8 @@ export default function PermissionManagement() {
               权限详情
             </DialogTitle>
           </DialogHeader>
-          {selectedPermission && (
-            <div className="space-y-4">
+          {selectedPermission &&
+          <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-slate-400">
                   权限编码
@@ -543,8 +543,8 @@ export default function PermissionManagement() {
                   {selectedPermission.permission_name}
                 </p>
               </div>
-              {selectedPermission.description && (
-                <div>
+              {selectedPermission.description &&
+            <div>
                   <label className="text-sm font-medium text-slate-400">
                     描述
                   </label>
@@ -552,7 +552,7 @@ export default function PermissionManagement() {
                     {selectedPermission.description}
                   </p>
                 </div>
-              )}
+            }
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-slate-400">
@@ -575,15 +575,15 @@ export default function PermissionManagement() {
                     操作类型
                   </label>
                   <p className="text-white mt-1">
-                    {selectedPermission.action ? (
-                      <Badge
-                        className={getActionColor(selectedPermission.action)}
-                      >
+                    {selectedPermission.action ?
+                  <Badge
+                    className={getActionColor(selectedPermission.action)}>
+
                         {selectedPermission.action}
-                      </Badge>
-                    ) : (
-                      "未指定"
-                    )}
+                      </Badge> :
+
+                  "未指定"
+                  }
                   </p>
                 </div>
                 <div>
@@ -591,53 +591,53 @@ export default function PermissionManagement() {
                     状态
                   </label>
                   <p className="text-white mt-1">
-                    {selectedPermission.is_active !== false ? (
-                      <Badge className="bg-green-500/10 text-green-400">
+                    {selectedPermission.is_active !== false ?
+                  <Badge className="bg-green-500/10 text-green-400">
                         启用
-                      </Badge>
-                    ) : (
-                      <Badge variant="destructive">禁用</Badge>
-                    )}
+                      </Badge> :
+
+                  <Badge variant="destructive">禁用</Badge>
+                  }
                   </p>
                 </div>
               </div>
-              {selectedPermission.created_at && (
-                <div className="grid grid-cols-2 gap-4">
+              {selectedPermission.created_at &&
+            <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-slate-400">
                       创建时间
                     </label>
                     <p className="text-white mt-1">
                       {new Date(selectedPermission.created_at).toLocaleString(
-                        "zh-CN",
-                      )}
+                    "zh-CN"
+                  )}
                     </p>
                   </div>
-                  {selectedPermission.updated_at && (
-                    <div>
+                  {selectedPermission.updated_at &&
+              <div>
                       <label className="text-sm font-medium text-slate-400">
                         更新时间
                       </label>
                       <p className="text-white mt-1">
                         {new Date(selectedPermission.updated_at).toLocaleString(
-                          "zh-CN",
-                        )}
+                    "zh-CN"
+                  )}
                       </p>
                     </div>
-                  )}
+              }
                 </div>
-              )}
+            }
               <div className="pt-4 border-t border-slate-700">
                 <label className="text-sm font-medium text-slate-400 mb-2 block">
                   拥有此权限的角色
                 </label>
                 <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {permissionRoles.length > 0 ? (
-                    permissionRoles.map((role) => (
-                      <div
-                        key={role.id}
-                        className="flex items-center gap-2 p-2 rounded bg-slate-800/50"
-                      >
+                  {permissionRoles.length > 0 ?
+                permissionRoles.map((role) =>
+                <div
+                  key={role.id}
+                  className="flex items-center gap-2 p-2 rounded bg-slate-800/50">
+
                         <Users className="h-4 w-4 text-slate-400" />
                         <span className="text-sm text-white">
                           {role.role_name}
@@ -646,21 +646,21 @@ export default function PermissionManagement() {
                           {role.role_code}
                         </Badge>
                       </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-slate-500 text-center py-4">
+                ) :
+
+                <p className="text-sm text-slate-500 text-center py-4">
                       暂无角色拥有此权限
                     </p>
-                  )}
+                }
                 </div>
                 <p className="text-xs text-slate-500 mt-2">
                   提示：权限通常通过角色管理页面进行分配
                 </p>
               </div>
             </div>
-          )}
+          }
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }

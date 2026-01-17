@@ -7,8 +7,8 @@ import {
   RefreshCw,
   AlertTriangle,
   TrendingUp,
-  BarChart3,
-} from "lucide-react";
+  BarChart3 } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -17,14 +17,14 @@ import { Badge } from "../components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { cn } from "../lib/utils";
-import { fadeIn, staggerContainer } from "../lib/animations";
-import { projectApi, bomApi, purchaseApi, assemblyKitApi } from "../services/api";
+import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
+import { projectApi, bomApi, purchaseApi, assemblyKitApi as _assemblyKitApi } from "../services/api";
 import {
   MaterialStatsOverview,
   MATERIAL_STATUS,
   getMaterialStatus,
-  calculateReadinessRate,
-} from "../components/material-analysis";
+  calculateReadinessRate } from
+"../components/material-analysis";
 
 /**
  * 📦 材料分析管理系统 - 重构版
@@ -36,10 +36,10 @@ export default function MaterialAnalysis() {
   const [projectMaterials, setProjectMaterials] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [trendData, setTrendData] = useState([]);
-  const [trendPeriod, setTrendPeriod] = useState("weekly");
-  const [loadingTrend, setLoadingTrend] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [_trendData, setTrendData] = useState([]);
+  const [trendPeriod, _setTrendPeriod] = useState("weekly");
+  const [_loadingTrend, setLoadingTrend] = useState(false);
+  const [_refreshKey, setRefreshKey] = useState(0);
 
   // 加载项目材料数据
   const loadProjectMaterials = useCallback(async () => {
@@ -51,25 +51,25 @@ export default function MaterialAnalysis() {
       // 获取所有项目
       const projectsResponse = await projectApi.list({
         is_active: true,
-        limit: 1000,
+        page_size: 1000
       });
-      const projects = projectsResponse.data?.results || projectsResponse.data || [];
+      const projects = projectsResponse.data?.items || projectsResponse.data?.results || projectsResponse.data || [];
 
       for (const project of projects) {
         try {
           // 获取BOM数据
           const bomResponse = await bomApi.list({
             project: project.id,
-            limit: 1000,
+            page_size: 1000
           });
-          const bomItems = bomResponse.data?.results || bomResponse.data || [];
+          const bomItems = bomResponse.data?.items || bomResponse.data?.results || bomResponse.data || [];
 
           // 获取采购订单数据
           const purchaseResponse = await purchaseApi.orders.list({
-            project: project.id,
-            limit: 1000,
+            project_id: project.id,
+            limit: 100
           });
-          const purchaseOrders = purchaseResponse.data?.results || purchaseResponse.data || [];
+          const purchaseOrders = purchaseResponse.data?.data || purchaseResponse.data?.items || purchaseResponse.data?.results || purchaseResponse.data || [];
 
           // 计算材料统计
           let stats = {
@@ -77,7 +77,7 @@ export default function MaterialAnalysis() {
             arrived: 0,
             inTransit: 0,
             delayed: 0,
-            notOrdered: 0,
+            notOrdered: 0
           };
 
           bomItems.forEach((item) => {
@@ -128,24 +128,24 @@ export default function MaterialAnalysis() {
           const readyRate = calculateReadinessRate(stats.arrived, stats.total);
 
           // 识别关键材料
-          const criticalMaterials = bomItems
-            .filter((item) => item.is_critical)
-            .map((item) => ({
-              ...item,
-              status: getItemStatus(item, purchaseOrders),
-            }));
+          const criticalMaterials = bomItems.
+          filter((item) => item.is_critical).
+          map((item) => ({
+            ...item,
+            status: getItemStatus(item, purchaseOrders)
+          }));
 
           // 计算计划装配日期
           const planAssemblyDate = project.planned_end_date || "";
-          const daysUntilAssembly = planAssemblyDate
-            ? Math.max(
-                0,
-                Math.ceil(
-                  (new Date(planAssemblyDate) - new Date()) /
-                    (1000 * 60 * 60 * 24)
-                )
-              )
-            : 0;
+          const daysUntilAssembly = planAssemblyDate ?
+          Math.max(
+            0,
+            Math.ceil(
+              (new Date(planAssemblyDate) - new Date()) / (
+              1000 * 60 * 60 * 24)
+            )
+          ) :
+          0;
 
           projectMaterialsData.push({
             id: project.project_code || project.id?.toString(),
@@ -154,7 +154,7 @@ export default function MaterialAnalysis() {
             daysUntilAssembly,
             materialStats: stats,
             readyRate,
-            criticalMaterials,
+            criticalMaterials
           });
         } catch (fallbackErr) {
           console.error(
@@ -183,8 +183,8 @@ export default function MaterialAnalysis() {
     const hasInTransit = relatedOrders.some((order) => order.status === "in_transit");
     const hasDelayed = relatedOrders.some(
       (order) =>
-        order.status === "in_transit" &&
-        new Date(order.expected_delivery_date) < new Date()
+      order.status === "in_transit" &&
+      new Date(order.expected_delivery_date) < new Date()
     );
 
     if (hasDelivered) return "arrived";
@@ -198,7 +198,7 @@ export default function MaterialAnalysis() {
     try {
       setLoadingTrend(true);
       const response = await purchaseApi.kitRate.trend({
-        group_by: trendPeriod,
+        group_by: trendPeriod
       });
       const trendResponse = response.data || {};
       setTrendData(trendResponse.trend_data || []);
@@ -210,7 +210,7 @@ export default function MaterialAnalysis() {
         period: new Date(Date.now() - (days - i - 1) * 24 * 60 * 60 * 1000).toLocaleDateString(),
         kit_rate: Math.floor(Math.random() * 20) + 75,
         on_time_rate: Math.floor(Math.random() * 25) + 70,
-        quality_rate: Math.floor(Math.random() * 10) + 90,
+        quality_rate: Math.floor(Math.random() * 10) + 90
       }));
       setTrendData(mockTrend);
     } finally {
@@ -225,8 +225,8 @@ export default function MaterialAnalysis() {
     if (searchQuery) {
       filtered = filtered.filter(
         (p) =>
-          p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.id.toLowerCase().includes(searchQuery.toLowerCase())
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.id.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
@@ -257,9 +257,9 @@ export default function MaterialAnalysis() {
   }, [filteredProjects]);
 
   const overallReadyRate = useMemo(() => {
-    return overallStats.total > 0
-      ? Math.round((overallStats.arrived / overallStats.total) * 100)
-      : 100;
+    return overallStats.total > 0 ?
+    Math.round(overallStats.arrived / overallStats.total * 100) :
+    100;
   }, [overallStats]);
 
   // 初始化
@@ -279,11 +279,11 @@ export default function MaterialAnalysis() {
         layout
         className={cn(
           "rounded-xl border overflow-hidden transition-colors",
-          isAtRisk
-            ? "bg-red-500/5 border-red-500/30"
-            : "bg-slate-800/50 border-slate-700/50"
-        )}
-      >
+          isAtRisk ?
+          "bg-red-500/5 border-red-500/30" :
+          "bg-slate-800/50 border-slate-700/50"
+        )}>
+
         <div className="p-6">
           <div className="flex items-start justify-between mb-4">
             <div>
@@ -293,21 +293,21 @@ export default function MaterialAnalysis() {
               <p className="text-sm text-slate-400">{project.id}</p>
             </div>
             <div className="flex items-center gap-2">
-              {isAtRisk && (
-                <Badge variant="destructive" className="flex items-center gap-1">
+              {isAtRisk &&
+              <Badge variant="destructive" className="flex items-center gap-1">
                   <AlertTriangle className="w-3 h-3" />
                   风险
                 </Badge>
-              )}
+              }
               <Badge
                 variant={
-                  project.readyRate >= 90
-                    ? "default"
-                    : project.readyRate >= 70
-                    ? "secondary"
-                    : "destructive"
-                }
-              >
+                project.readyRate >= 90 ?
+                "default" :
+                project.readyRate >= 70 ?
+                "secondary" :
+                "destructive"
+                }>
+
                 {project.readyRate}% 齐套
               </Badge>
             </div>
@@ -345,47 +345,47 @@ export default function MaterialAnalysis() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setExpanded(!expanded)}
-            >
+              onClick={() => setExpanded(!expanded)}>
+
               {expanded ? "收起" : "详情"}
             </Button>
           </div>
 
-          {expanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="mt-4 pt-4 border-t border-slate-700"
-            >
+          {expanded &&
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="mt-4 pt-4 border-t border-slate-700">
+
               <h4 className="text-sm font-medium text-white mb-3">关键物料</h4>
               <div className="space-y-2">
-                {project.criticalMaterials.map((material, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-2 bg-slate-900/50 rounded"
-                  >
+                {project.criticalMaterials.map((material, index) =>
+              <div
+                key={index}
+                className="flex items-center justify-between p-2 bg-slate-900/50 rounded">
+
                     <span className="text-sm text-slate-300">
                       {material.name || material.part_number}
                     </span>
                     <Badge
-                      variant="outline"
-                      className={cn(
-                        "border",
-                        getMaterialStatus(material.status).borderColor,
-                        getMaterialStatus(material.status).textColor
-                      )}
-                    >
+                  variant="outline"
+                  className={cn(
+                    "border",
+                    getMaterialStatus(material.status).borderColor,
+                    getMaterialStatus(material.status).textColor
+                  )}>
+
                       {getMaterialStatus(material.status).label}
                     </Badge>
                   </div>
-                ))}
+              )}
               </div>
             </motion.div>
-          )}
+          }
         </div>
-      </motion.div>
-    );
+      </motion.div>);
+
   }
 
   // 导出数据
@@ -399,13 +399,13 @@ export default function MaterialAnalysis() {
       在途: project.materialStats.inTransit,
       延期: project.materialStats.delayed,
       未下单: project.materialStats.notOrdered,
-      齐套率: `${project.readyRate}%`,
+      齐套率: `${project.readyRate}%`
     }));
 
     const csv = [
-      Object.keys(csvData[0]).join(","),
-      ...csvData.map((row) => Object.values(row).join(",")),
-    ].join("\n");
+    Object.keys(csvData[0]).join(","),
+    ...csvData.map((row) => Object.values(row).join(","))].
+    join("\n");
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
@@ -418,8 +418,8 @@ export default function MaterialAnalysis() {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-      </div>
-    );
+      </div>);
+
   }
 
   if (error) {
@@ -429,8 +429,8 @@ export default function MaterialAnalysis() {
         <h3 className="text-lg font-medium text-white mb-2">加载失败</h3>
         <p className="text-slate-400 mb-4">{error}</p>
         <Button onClick={() => loadProjectMaterials()}>重试</Button>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -438,13 +438,13 @@ export default function MaterialAnalysis() {
       initial="initial"
       animate="animate"
       variants={staggerContainer}
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       <PageHeader
         title="材料分析"
         description="项目材料齐套性分析、风险评估和性能监控"
         actions={
-          <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3">
             <Button variant="outline" onClick={() => loadProjectMaterials()}>
               <RefreshCw className="w-4 h-4 mr-2" />
               刷新
@@ -454,8 +454,8 @@ export default function MaterialAnalysis() {
               导出
             </Button>
           </div>
-        }
-      />
+        } />
+
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="grid w-full grid-cols-2">
@@ -468,8 +468,8 @@ export default function MaterialAnalysis() {
             projects={filteredProjects}
             materials={[]}
             loading={loading}
-            onRefresh={() => setRefreshKey(prev => prev + 1)}
-          />
+            onRefresh={() => setRefreshKey((prev) => prev + 1)} />
+
         </TabsContent>
 
         <TabsContent value="details" className="space-y-6">
@@ -484,8 +484,8 @@ export default function MaterialAnalysis() {
                       placeholder="搜索项目名称或编码..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 bg-slate-900 border-slate-700 text-white"
-                    />
+                      className="pl-10 bg-slate-900 border-slate-700 text-white" />
+
                   </div>
                 </div>
                 <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -542,20 +542,20 @@ export default function MaterialAnalysis() {
 
           {/* 项目列表 */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {filteredProjects.map((project) => (
-              <ProjectMaterialCard key={project.id} project={project} />
-            ))}
+            {filteredProjects.map((project) =>
+            <ProjectMaterialCard key={project.id} project={project} />
+            )}
           </div>
 
-          {filteredProjects.length === 0 && (
-            <Card className="bg-slate-800/50 border-slate-700/50">
+          {filteredProjects.length === 0 &&
+          <Card className="bg-slate-800/50 border-slate-700/50">
               <CardContent className="p-12 text-center">
                 <div className="text-slate-400">没有找到匹配的项目</div>
               </CardContent>
             </Card>
-          )}
+          }
         </TabsContent>
       </Tabs>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

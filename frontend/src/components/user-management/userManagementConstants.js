@@ -1,75 +1,75 @@
 // 用户管理业务配置
 export const USER_STATUS = {
-  ACTIVE: 'active',         // 活跃
-  INACTIVE: 'inactive',     // 非活跃
-  SUSPENDED: 'suspended',   // 暂停
-  PENDING: 'pending'        // 待激活
+  ACTIVE: 'active', // 活跃
+  INACTIVE: 'inactive', // 非活跃
+  SUSPENDED: 'suspended', // 暂停
+  PENDING: 'pending' // 待激活
 };
 
 export const USER_ROLE = {
-  ADMIN: 'admin',               // 管理员
-  MANAGER: 'manager',           // 经理
-  SUPERVISOR: 'supervisor',     // 主管
-  ENGINEER: 'engineer',         // 工程师
-  TECHNICIAN: 'technician',     // 技术员
-  SALESPERSON: 'salesperson',   // 销售员
+  ADMIN: 'admin', // 管理员
+  MANAGER: 'manager', // 经理
+  SUPERVISOR: 'supervisor', // 主管
+  ENGINEER: 'engineer', // 工程师
+  TECHNICIAN: 'technician', // 技术员
+  SALESPERSON: 'salesperson', // 销售员
   CUSTOMER_SERVICE: 'customer_service', // 客服
-  FINANCE: 'finance',          // 财务
-  HR: 'hr',                    // 人力资源
-  OPERATIONS: 'operations'      // 运营
+  FINANCE: 'finance', // 财务
+  HR: 'hr', // 人力资源
+  OPERATIONS: 'operations' // 运营
 };
 
 export const USER_DEPARTMENT = {
-  ENGINEERING: 'engineering',     // 工程部
-  SALES: 'sales',                 // 销售部
+  ENGINEERING: 'engineering', // 工程部
+  SALES: 'sales', // 销售部
   CUSTOMER_SERVICE: 'customer_service', // 客服部
-  FINANCE: 'finance',             // 财务部
-  HR: 'hr',                       // 人力资源部
-  OPERATIONS: 'operations',       // 运营部
-  MANAGEMENT: 'management',       // 管理层
-  IT: 'it',                       // IT部
-  QUALITY: 'quality',             // 质量部
-  MARKETING: 'marketing'          // 市场部
+  FINANCE: 'finance', // 财务部
+  HR: 'hr', // 人力资源部
+  OPERATIONS: 'operations', // 运营部
+  MANAGEMENT: 'management', // 管理层
+  IT: 'it', // IT部
+  QUALITY: 'quality', // 质量部
+  MARKETING: 'marketing' // 市场部
 };
 
 export const USER_PERMISSION = {
   // 用户管理权限
-  USER_CREATE: 'user_create',         // 创建用户
-  USER_READ: 'user_read',            // 查看用户
-  USER_UPDATE: 'user_update',        // 更新用户
-  USER_DELETE: 'user_delete',        // 删除用户
-  
+  USER_CREATE: 'user_create', // 创建用户
+  USER_READ: 'user_read', // 查看用户
+  USER_UPDATE: 'user_update', // 更新用户
+  USER_DELETE: 'user_delete', // 删除用户
+
   // 角色管理权限
-  ROLE_CREATE: 'role_create',        // 创建角色
-  ROLE_READ: 'role_read',           // 查看角色
-  ROLE_UPDATE: 'role_update',       // 更新角色
-  ROLE_DELETE: 'role_delete',       // 删除角色
-  
+  ROLE_CREATE: 'role_create', // 创建角色
+  ROLE_READ: 'role_read', // 查看角色
+  ROLE_UPDATE: 'role_update', // 更新角色
+  ROLE_DELETE: 'role_delete', // 删除角色
+
   // 项目管理权限
-  PROJECT_CREATE: 'project_create',   // 创建项目
-  PROJECT_READ: 'project_read',      // 查看项目
-  PROJECT_UPDATE: 'project_update',  // 更新项目
-  PROJECT_DELETE: 'project_delete',  // 删除项目
-  
+  PROJECT_CREATE: 'project_create', // 创建项目
+  PROJECT_READ: 'project_read', // 查看项目
+  PROJECT_UPDATE: 'project_update', // 更新项目
+  PROJECT_DELETE: 'project_delete', // 删除项目
+
   // 系统管理权限
-  SYSTEM_CONFIG: 'system_config',    // 系统配置
-  DATA_EXPORT: 'data_export',        // 数据导出
-  REPORT_VIEW: 'report_view',        // 查看报表
-  ANALYTICS: 'analytics',            // 数据分析
+  SYSTEM_CONFIG: 'system_config', // 系统配置
+  DATA_EXPORT: 'data_export', // 数据导出
+  REPORT_VIEW: 'report_view', // 查看报表
+  ANALYTICS: 'analytics' // 数据分析
 };
 
 export const USER_GENDER = {
-  MALE: 'male',       // 男性
-  FEMALE: 'female',   // 女性
-  OTHER: 'other'      // 其他
+  MALE: 'male', // 男性
+  FEMALE: 'female', // 女性
+  OTHER: 'other' // 其他
 };
 
 export const EMPLOYMENT_TYPE = {
-  FULL_TIME: 'full_time',     // 全职
-  PART_TIME: 'part_time',     // 兼职
-  CONTRACT: 'contract',       // 合同工
-  INTERN: 'intern',           // 实习生
-  CONSULTANT: 'consultant'    // 顾问
+  FULL_TIME: 'full_time', // 全职
+  PART_TIME: 'part_time', // 兼职
+  CONTRACT: 'contract', // 合同工
+  INTERN: 'intern', // 实习生
+  CONSULTANT: 'consultant' // 顾问
 };
 
 // 标签配置
@@ -141,23 +141,23 @@ export const EMPLOYMENT_TYPE_LABELS = {
 
 // 状态颜色配置
 export const USER_STATUS_COLORS = {
-  [USER_STATUS.ACTIVE]: '#10B981',     // 绿色
-  [USER_STATUS.INACTIVE]: '#6B7280',   // 灰色
-  [USER_STATUS.SUSPENDED]: '#EF4444',   // 红色
-  [USER_STATUS.PENDING]: '#F59E0B'      // 橙色
+  [USER_STATUS.ACTIVE]: '#10B981', // 绿色
+  [USER_STATUS.INACTIVE]: '#6B7280', // 灰色
+  [USER_STATUS.SUSPENDED]: '#EF4444', // 红色
+  [USER_STATUS.PENDING]: '#F59E0B' // 橙色
 };
 
 export const ROLE_COLORS = {
-  [USER_ROLE.ADMIN]: '#DC2626',         // 红色
-  [USER_ROLE.MANAGER]: '#EA580C',       // 橙色
-  [USER_ROLE.SUPERVISOR]: '#CA8A04',     // 黄色
-  [USER_ROLE.ENGINEER]: '#16A34A',      // 绿色
-  [USER_ROLE.TECHNICIAN]: '#059669',    // 深绿色
-  [USER_ROLE.SALESPERSON]: '#0891B2',    // 青色
+  [USER_ROLE.ADMIN]: '#DC2626', // 红色
+  [USER_ROLE.MANAGER]: '#EA580C', // 橙色
+  [USER_ROLE.SUPERVISOR]: '#CA8A04', // 黄色
+  [USER_ROLE.ENGINEER]: '#16A34A', // 绿色
+  [USER_ROLE.TECHNICIAN]: '#059669', // 深绿色
+  [USER_ROLE.SALESPERSON]: '#0891B2', // 青色
   [USER_ROLE.CUSTOMER_SERVICE]: '#2563EB', // 蓝色
-  [USER_ROLE.FINANCE]: '#7C3AED',       // 紫色
-  [USER_ROLE.HR]: '#DB2777',            // 粉色
-  [USER_ROLE.OPERATIONS]: '#64748B'     // 灰蓝色
+  [USER_ROLE.FINANCE]: '#7C3AED', // 紫色
+  [USER_ROLE.HR]: '#DB2777', // 粉色
+  [USER_ROLE.OPERATIONS]: '#64748B' // 灰蓝色
 };
 
 export const DEPARTMENT_COLORS = {
@@ -189,50 +189,50 @@ export const USER_STATS_CONFIG = {
 // 默认角色权限配置
 export const DEFAULT_ROLE_PERMISSIONS = {
   [USER_ROLE.ADMIN]: [
-    USER_PERMISSION.USER_CREATE, USER_PERMISSION.USER_READ, USER_PERMISSION.USER_UPDATE, USER_PERMISSION.USER_DELETE,
-    USER_PERMISSION.ROLE_CREATE, USER_PERMISSION.ROLE_READ, USER_PERMISSION.ROLE_UPDATE, USER_PERMISSION.ROLE_DELETE,
-    USER_PERMISSION.PROJECT_CREATE, USER_PERMISSION.PROJECT_READ, USER_PERMISSION.PROJECT_UPDATE, USER_PERMISSION.PROJECT_DELETE,
-    USER_PERMISSION.SYSTEM_CONFIG, USER_PERMISSION.DATA_EXPORT, USER_PERMISSION.REPORT_VIEW, USER_PERMISSION.ANALYTICS
-  ],
+  USER_PERMISSION.USER_CREATE, USER_PERMISSION.USER_READ, USER_PERMISSION.USER_UPDATE, USER_PERMISSION.USER_DELETE,
+  USER_PERMISSION.ROLE_CREATE, USER_PERMISSION.ROLE_READ, USER_PERMISSION.ROLE_UPDATE, USER_PERMISSION.ROLE_DELETE,
+  USER_PERMISSION.PROJECT_CREATE, USER_PERMISSION.PROJECT_READ, USER_PERMISSION.PROJECT_UPDATE, USER_PERMISSION.PROJECT_DELETE,
+  USER_PERMISSION.SYSTEM_CONFIG, USER_PERMISSION.DATA_EXPORT, USER_PERMISSION.REPORT_VIEW, USER_PERMISSION.ANALYTICS],
+
   [USER_ROLE.MANAGER]: [
-    USER_PERMISSION.USER_READ, USER_PERMISSION.USER_UPDATE,
-    USER_PERMISSION.ROLE_READ,
-    USER_PERMISSION.PROJECT_CREATE, USER_PERMISSION.PROJECT_READ, USER_PERMISSION.PROJECT_UPDATE,
-    USER_PERMISSION.DATA_EXPORT, USER_PERMISSION.REPORT_VIEW, USER_PERMISSION.ANALYTICS
-  ],
+  USER_PERMISSION.USER_READ, USER_PERMISSION.USER_UPDATE,
+  USER_PERMISSION.ROLE_READ,
+  USER_PERMISSION.PROJECT_CREATE, USER_PERMISSION.PROJECT_READ, USER_PERMISSION.PROJECT_UPDATE,
+  USER_PERMISSION.DATA_EXPORT, USER_PERMISSION.REPORT_VIEW, USER_PERMISSION.ANALYTICS],
+
   [USER_ROLE.SUPERVISOR]: [
-    USER_PERMISSION.USER_READ,
-    USER_PERMISSION.PROJECT_READ, USER_PERMISSION.PROJECT_UPDATE,
-    USER_PERMISSION.REPORT_VIEW
-  ],
+  USER_PERMISSION.USER_READ,
+  USER_PERMISSION.PROJECT_READ, USER_PERMISSION.PROJECT_UPDATE,
+  USER_PERMISSION.REPORT_VIEW],
+
   [USER_ROLE.ENGINEER]: [
-    USER_PERMISSION.PROJECT_READ, USER_PERMISSION.PROJECT_UPDATE,
-    USER_PERMISSION.REPORT_VIEW
-  ],
+  USER_PERMISSION.PROJECT_READ, USER_PERMISSION.PROJECT_UPDATE,
+  USER_PERMISSION.REPORT_VIEW],
+
   [USER_ROLE.TECHNICIAN]: [
-    USER_PERMISSION.PROJECT_READ, USER_PERMISSION.PROJECT_UPDATE
-  ],
+  USER_PERMISSION.PROJECT_READ, USER_PERMISSION.PROJECT_UPDATE],
+
   [USER_ROLE.SALESPERSON]: [
-    USER_PERMISSION.PROJECT_CREATE, USER_PERMISSION.PROJECT_READ, USER_PERMISSION.PROJECT_UPDATE,
-    USER_PERMISSION.REPORT_VIEW
-  ],
+  USER_PERMISSION.PROJECT_CREATE, USER_PERMISSION.PROJECT_READ, USER_PERMISSION.PROJECT_UPDATE,
+  USER_PERMISSION.REPORT_VIEW],
+
   [USER_ROLE.CUSTOMER_SERVICE]: [
-    USER_PERMISSION.PROJECT_READ, USER_PERMISSION.PROJECT_UPDATE,
-    USER_PERMISSION.REPORT_VIEW
-  ],
+  USER_PERMISSION.PROJECT_READ, USER_PERMISSION.PROJECT_UPDATE,
+  USER_PERMISSION.REPORT_VIEW],
+
   [USER_ROLE.FINANCE]: [
-    USER_PERMISSION.PROJECT_READ,
-    USER_PERMISSION.DATA_EXPORT, USER_PERMISSION.REPORT_VIEW
-  ],
+  USER_PERMISSION.PROJECT_READ,
+  USER_PERMISSION.DATA_EXPORT, USER_PERMISSION.REPORT_VIEW],
+
   [USER_ROLE.HR]: [
-    USER_PERMISSION.USER_CREATE, USER_PERMISSION.USER_READ, USER_PERMISSION.USER_UPDATE,
-    USER_PERMISSION.ROLE_READ,
-    USER_PERMISSION.REPORT_VIEW
-  ],
+  USER_PERMISSION.USER_CREATE, USER_PERMISSION.USER_READ, USER_PERMISSION.USER_UPDATE,
+  USER_PERMISSION.ROLE_READ,
+  USER_PERMISSION.REPORT_VIEW],
+
   [USER_ROLE.OPERATIONS]: [
-    USER_PERMISSION.PROJECT_READ, USER_PERMISSION.PROJECT_UPDATE,
-    USER_PERMISSION.REPORT_VIEW, USER_PERMISSION.ANALYTICS
-  ]
+  USER_PERMISSION.PROJECT_READ, USER_PERMISSION.PROJECT_UPDATE,
+  USER_PERMISSION.REPORT_VIEW, USER_PERMISSION.ANALYTICS]
+
 };
 
 // 工具函数
@@ -282,7 +282,7 @@ export const getUserStatusStats = (users) => {
     pending: 0
   };
 
-  users.forEach(user => {
+  users.forEach((user) => {
     switch (user.status) {
       case USER_STATUS.ACTIVE:
         stats.active++;
@@ -305,12 +305,12 @@ export const getUserStatusStats = (users) => {
 // 计算角色分布统计
 export const getRoleDistributionStats = (users) => {
   const stats = {};
-  
-  Object.values(USER_ROLE).forEach(role => {
+
+  Object.values(USER_ROLE).forEach((role) => {
     stats[role] = 0;
   });
 
-  users.forEach(user => {
+  users.forEach((user) => {
     if (user.role) {
       stats[user.role] = (stats[user.role] || 0) + 1;
     }
@@ -322,12 +322,12 @@ export const getRoleDistributionStats = (users) => {
 // 计算部门分布统计
 export const getDepartmentDistributionStats = (users) => {
   const stats = {};
-  
-  Object.values(USER_DEPARTMENT).forEach(department => {
+
+  Object.values(USER_DEPARTMENT).forEach((department) => {
     stats[department] = 0;
   });
 
-  users.forEach(user => {
+  users.forEach((user) => {
     if (user.department) {
       stats[user.department] = (stats[user.department] || 0) + 1;
     }
@@ -340,43 +340,43 @@ export const getDepartmentDistributionStats = (users) => {
 export const getMonthlyNewUsers = (users) => {
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
-  
-  return users.filter(user => {
+
+  return users.filter((user) => {
     const createdDate = new Date(user.created_at);
-    return createdDate.getMonth() === currentMonth && 
-           createdDate.getFullYear() === currentYear;
+    return createdDate.getMonth() === currentMonth &&
+    createdDate.getFullYear() === currentYear;
   }).length;
 };
 
 // 计算用户增长率
 export const calculateUserGrowthRate = (currentUsers, previousUsers) => {
   if (previousUsers === 0) return currentUsers > 0 ? 100 : 0;
-  return (((currentUsers - previousUsers) / previousUsers) * 100).toFixed(1);
+  return ((currentUsers - previousUsers) / previousUsers * 100).toFixed(1);
 };
 
 // 用户数据验证
 export const validateUserData = (userData) => {
   const errors = [];
-  
+
   if (!userData.username || userData.username.trim() === '') {
     errors.push('用户名不能为空');
   }
-  
+
   if (!userData.email || userData.email.trim() === '') {
     errors.push('邮箱不能为空');
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userData.email)) {
     errors.push('邮箱格式不正确');
   }
-  
+
   if (!userData.role) {
     errors.push('角色不能为空');
   }
-  
+
   if (!userData.department) {
     errors.push('部门不能为空');
   }
-  
-  if (userData.phone && !/^[\d\s\-\+\(\)]+$/.test(userData.phone)) {
+
+  if (userData.phone && !/^[\d\s()+-]+$/.test(userData.phone)) {
     errors.push('电话格式不正确');
   }
 
@@ -398,28 +398,28 @@ export const getUserPermissions = (userRole) => {
 
 // 搜索和过滤配置
 export const USER_STATUS_FILTER_OPTIONS = [
-  { value: 'all', label: '全部状态' },
-  { value: USER_STATUS.ACTIVE, label: '活跃' },
-  { value: USER_STATUS.INACTIVE, label: '非活跃' },
-  { value: USER_STATUS.SUSPENDED, label: '暂停' },
-  { value: USER_STATUS.PENDING, label: '待激活' }
-];
+{ value: 'all', label: '全部状态' },
+{ value: USER_STATUS.ACTIVE, label: '活跃' },
+{ value: USER_STATUS.INACTIVE, label: '非活跃' },
+{ value: USER_STATUS.SUSPENDED, label: '暂停' },
+{ value: USER_STATUS.PENDING, label: '待激活' }];
+
 
 export const ROLE_FILTER_OPTIONS = [
-  { value: 'all', label: '全部角色' },
-  ...Object.entries(USER_ROLE).map(([key, value]) => ({
-    value,
-    label: USER_ROLE_LABELS[value]
-  }))
-];
+{ value: 'all', label: '全部角色' },
+...Object.entries(USER_ROLE).map(([_key, value]) => ({
+  value,
+  label: USER_ROLE_LABELS[value]
+}))];
+
 
 export const DEPARTMENT_FILTER_OPTIONS = [
-  { value: 'all', label: '全部部门' },
-  ...Object.entries(USER_DEPARTMENT).map(([key, value]) => ({
-    value,
-    label: USER_DEPARTMENT_LABELS[value]
-  }))
-];
+{ value: 'all', label: '全部部门' },
+...Object.entries(USER_DEPARTMENT).map(([_key, value]) => ({
+  value,
+  label: USER_DEPARTMENT_LABELS[value]
+}))];
+
 
 // 默认配置
 export const DEFAULT_USER_CONFIG = {

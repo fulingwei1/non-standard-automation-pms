@@ -9,23 +9,23 @@ import { motion } from "framer-motion";
 import { PageHeader } from "../components/layout";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
-import { cn } from "../lib/utils";
+import { cn as _cn } from "../lib/utils";
 
 // Import refactored components
 import {
   QuoteStatsOverview,
   QuoteListManager,
   DEFAULT_QUOTE_STATS,
-  QUOTE_VIEW_MODES
-} from "../components/quote";
+  QUOTE_VIEW_MODES } from
+"../components/quote";
 
 // Import services
 import {
   quoteApi,
   opportunityApi,
   customerApi,
-  salesTemplateApi,
-} from "../services/api";
+  salesTemplateApi as _salesTemplateApi } from
+"../services/api";
 
 // Import utilities
 import { fadeIn, staggerContainer } from "../lib/animations";
@@ -41,10 +41,10 @@ export default function QuoteManagement() {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [selectedQuote, setSelectedQuote] = useState(null);
-  
+
   // 统计数据
   const [stats, setStats] = useState(DEFAULT_QUOTE_STATS);
-  
+
   // 视图和筛选
   const [viewMode, setViewMode] = useState("list");
   const [searchTerm, setSearchTerm] = useState("");
@@ -74,112 +74,112 @@ export default function QuoteManagement() {
       console.error('Failed to fetch quotes:', error);
       // 使用模拟数据
       const mockQuotes = [
-        {
-          id: "QT-000001",
-          title: "ERP系统年度维护服务",
-          status: "SENT",
-          type: "SERVICE",
-          priority: "HIGH",
-          customer_id: "CUST001",
-          customer_name: "ABC科技有限公司",
-          opportunity_id: "OPP001",
-          opportunity_title: "ERP系统升级项目",
-          created_by: "USER001",
-          created_by_name: "张三",
-          created_at: "2024-01-10T10:00:00Z",
-          updated_at: "2024-01-12T15:30:00Z",
-          valid_until: "2024-02-10T23:59:59Z",
-          version: {
-            version_no: "V1",
-            total_price: 150000,
-            cost_total: 120000,
-            gross_margin: 20.0,
-            lead_time_days: 30,
-            delivery_date: "2024-02-20",
-            items: [
-              {
-                id: 1,
-                name: "系统维护服务",
-                description: "全年系统维护和技术支持",
-                quantity: 1,
-                unit_price: 150000,
-                discount: 0,
-                total_price: 150000
-              }
-            ]
-          }
-        },
-        {
-          id: "QT-000002",
-          title: "生产设备自动化改造",
-          status: "APPROVED",
-          type: "PROJECT",
-          priority: "URGENT",
-          customer_id: "CUST002",
-          customer_name: "XYZ制造公司",
-          opportunity_id: "OPP002",
-          opportunity_title: "生产线自动化项目",
-          created_by: "USER002",
-          created_by_name: "李四",
-          created_at: "2024-01-08T14:00:00Z",
-          updated_at: "2024-01-11T09:15:00Z",
-          valid_until: "2024-02-08T23:59:59Z",
-          version: {
-            version_no: "V2",
-            total_price: 850000,
-            cost_total: 680000,
-            gross_margin: 20.0,
-            lead_time_days: 45,
-            delivery_date: "2024-03-15",
-            items: [
-              {
-                id: 1,
-                name: "自动化设备",
-                description: "生产线自动化改造设备",
-                quantity: 5,
-                unit_price: 170000,
-                discount: 0,
-                total_price: 850000
-              }
-            ]
-          }
-        },
-        {
-          id: "QT-000003",
-          title: "办公用品批量采购",
-          status: "DRAFT",
-          type: "STANDARD",
-          priority: "MEDIUM",
-          customer_id: "CUST003",
-          customer_name: "DEF贸易公司",
-          opportunity_id: "OPP003",
-          opportunity_title: "办公用品供应",
-          created_by: "USER003",
-          created_by_name: "王五",
-          created_at: "2024-01-12T16:00:00Z",
-          updated_at: "2024-01-12T16:00:00Z",
-          valid_until: "2024-02-12T23:59:59Z",
-          version: {
-            version_no: "V1",
-            total_price: 25000,
-            cost_total: 20000,
-            gross_margin: 20.0,
-            lead_time_days: 7,
-            delivery_date: "2024-01-20",
-            items: [
-              {
-                id: 1,
-                name: "办公桌椅",
-                description: "办公桌椅套装",
-                quantity: 10,
-                unit_price: 2500,
-                discount: 0,
-                total_price: 25000
-              }
-            ]
-          }
+      {
+        id: "QT-000001",
+        title: "ERP系统年度维护服务",
+        status: "SENT",
+        type: "SERVICE",
+        priority: "HIGH",
+        customer_id: "CUST001",
+        customer_name: "ABC科技有限公司",
+        opportunity_id: "OPP001",
+        opportunity_title: "ERP系统升级项目",
+        created_by: "USER001",
+        created_by_name: "张三",
+        created_at: "2024-01-10T10:00:00Z",
+        updated_at: "2024-01-12T15:30:00Z",
+        valid_until: "2024-02-10T23:59:59Z",
+        version: {
+          version_no: "V1",
+          total_price: 150000,
+          cost_total: 120000,
+          gross_margin: 20.0,
+          lead_time_days: 30,
+          delivery_date: "2024-02-20",
+          items: [
+          {
+            id: 1,
+            name: "系统维护服务",
+            description: "全年系统维护和技术支持",
+            quantity: 1,
+            unit_price: 150000,
+            discount: 0,
+            total_price: 150000
+          }]
+
         }
-      ];
+      },
+      {
+        id: "QT-000002",
+        title: "生产设备自动化改造",
+        status: "APPROVED",
+        type: "PROJECT",
+        priority: "URGENT",
+        customer_id: "CUST002",
+        customer_name: "XYZ制造公司",
+        opportunity_id: "OPP002",
+        opportunity_title: "生产线自动化项目",
+        created_by: "USER002",
+        created_by_name: "李四",
+        created_at: "2024-01-08T14:00:00Z",
+        updated_at: "2024-01-11T09:15:00Z",
+        valid_until: "2024-02-08T23:59:59Z",
+        version: {
+          version_no: "V2",
+          total_price: 850000,
+          cost_total: 680000,
+          gross_margin: 20.0,
+          lead_time_days: 45,
+          delivery_date: "2024-03-15",
+          items: [
+          {
+            id: 1,
+            name: "自动化设备",
+            description: "生产线自动化改造设备",
+            quantity: 5,
+            unit_price: 170000,
+            discount: 0,
+            total_price: 850000
+          }]
+
+        }
+      },
+      {
+        id: "QT-000003",
+        title: "办公用品批量采购",
+        status: "DRAFT",
+        type: "STANDARD",
+        priority: "MEDIUM",
+        customer_id: "CUST003",
+        customer_name: "DEF贸易公司",
+        opportunity_id: "OPP003",
+        opportunity_title: "办公用品供应",
+        created_by: "USER003",
+        created_by_name: "王五",
+        created_at: "2024-01-12T16:00:00Z",
+        updated_at: "2024-01-12T16:00:00Z",
+        valid_until: "2024-02-12T23:59:59Z",
+        version: {
+          version_no: "V1",
+          total_price: 25000,
+          cost_total: 20000,
+          gross_margin: 20.0,
+          lead_time_days: 7,
+          delivery_date: "2024-01-20",
+          items: [
+          {
+            id: 1,
+            name: "办公桌椅",
+            description: "办公桌椅套装",
+            quantity: 10,
+            unit_price: 2500,
+            discount: 0,
+            total_price: 25000
+          }]
+
+        }
+      }];
+
       setQuotes(mockQuotes);
     } finally {
       setLoading(false);
@@ -225,10 +225,10 @@ export default function QuoteManagement() {
       console.error('Failed to fetch opportunities:', error);
       // 使用模拟数据
       setOpportunities([
-        { id: "OPP001", title: "ERP系统升级项目", customer_id: "CUST001" },
-        { id: "OPP002", title: "生产线自动化项目", customer_id: "CUST002" },
-        { id: "OPP003", title: "办公用品供应", customer_id: "CUST003" }
-      ]);
+      { id: "OPP001", title: "ERP系统升级项目", customer_id: "CUST001" },
+      { id: "OPP002", title: "生产线自动化项目", customer_id: "CUST002" },
+      { id: "OPP003", title: "办公用品供应", customer_id: "CUST003" }]
+      );
     }
   }, []);
 
@@ -241,10 +241,10 @@ export default function QuoteManagement() {
       console.error('Failed to fetch customers:', error);
       // 使用模拟数据
       setCustomers([
-        { id: "CUST001", name: "ABC科技有限公司" },
-        { id: "CUST002", name: "XYZ制造公司" },
-        { id: "CUST003", name: "DEF贸易公司" }
-      ]);
+      { id: "CUST001", name: "ABC科技有限公司" },
+      { id: "CUST002", name: "XYZ制造公司" },
+      { id: "CUST003", name: "DEF贸易公司" }]
+      );
     }
   }, []);
 
@@ -341,32 +341,32 @@ export default function QuoteManagement() {
       initial="hidden"
       animate="show"
       variants={staggerContainer}
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       <PageHeader
         title="报价管理"
         subtitle="管理销售报价，支持多版本管理和审批流程"
         breadcrumbs={[
-          { label: "销售管理", href: "/sales" },
-          { label: "报价管理", href: "/quotes" },
-        ]}
+        { label: "销售管理", href: "/sales" },
+        { label: "报价管理", href: "/quotes" }]
+        }
         actions={
-          <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3">
             <Button
-              variant="outline"
-              onClick={() => window.location.href = "/quote-analytics"}
-            >
+            variant="outline"
+            onClick={() => window.location.href = "/quote-analytics"}>
+
               数据分析
             </Button>
             <Button
-              onClick={handleQuoteCreate}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
+            onClick={handleQuoteCreate}
+            className="bg-blue-600 hover:bg-blue-700 text-white">
+
               新建报价
             </Button>
           </div>
-        }
-      />
+        } />
+
 
       <motion.div variants={fadeIn} className="space-y-6">
         {/* 统计概览 */}
@@ -377,8 +377,8 @@ export default function QuoteManagement() {
           onRefresh={handleRefresh}
           loading={loading}
           timeRange={timeRange}
-          onTimeRangeChange={setTimeRange}
-        />
+          onTimeRangeChange={setTimeRange} />
+
 
         {/* 报价列表管理 */}
         <QuoteListManager
@@ -403,8 +403,8 @@ export default function QuoteManagement() {
           onQuoteReject={handleQuoteReject}
           onExport={handleExport}
           onImport={handleImport}
-          loading={loading}
-        />
+          loading={loading} />
+
       </motion.div>
 
       {/* 报价详情对话框 */}
@@ -416,8 +416,8 @@ export default function QuoteManagement() {
               <span className="text-sm text-slate-400">#{selectedQuote?.id}</span>
             </DialogTitle>
           </DialogHeader>
-          {selectedQuote && (
-            <div className="space-y-6">
+          {selectedQuote &&
+          <div className="space-y-6">
               {/* 基本信息 */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -453,8 +453,8 @@ export default function QuoteManagement() {
               </div>
 
               {/* 版本信息 */}
-              {selectedQuote.version && (
-                <div>
+              {selectedQuote.version &&
+            <div>
                   <label className="text-sm text-slate-400 block mb-2">版本信息</label>
                   <div className="bg-slate-800/60 rounded-lg p-4 space-y-2">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
@@ -483,35 +483,35 @@ export default function QuoteManagement() {
                     </div>
                   </div>
                 </div>
-              )}
+            }
 
               {/* 操作按钮 */}
               <div className="flex justify-end gap-3 pt-4 border-t border-slate-700">
                 <Button
-                  variant="outline"
-                  onClick={() => setShowDetailDialog(false)}
-                >
+                variant="outline"
+                onClick={() => setShowDetailDialog(false)}>
+
                   关闭
                 </Button>
                 <Button
-                  onClick={() => {
-                    handleQuoteEdit(selectedQuote);
-                    setShowDetailDialog(false);
-                  }}
-                >
+                onClick={() => {
+                  handleQuoteEdit(selectedQuote);
+                  setShowDetailDialog(false);
+                }}>
+
                   编辑
                 </Button>
                 <Button
-                  onClick={() => {
-                    handleQuoteSend(selectedQuote);
-                    setShowDetailDialog(false);
-                  }}
-                >
+                onClick={() => {
+                  handleQuoteSend(selectedQuote);
+                  setShowDetailDialog(false);
+                }}>
+
                   发送
                 </Button>
               </div>
             </div>
-          )}
+          }
         </DialogContent>
       </Dialog>
 
@@ -526,8 +526,8 @@ export default function QuoteManagement() {
             <div className="flex justify-end gap-3 pt-4">
               <Button
                 variant="outline"
-                onClick={() => setShowCreateDialog(false)}
-              >
+                onClick={() => setShowCreateDialog(false)}>
+
                 取消
               </Button>
               <Button>
@@ -549,8 +549,8 @@ export default function QuoteManagement() {
             <div className="flex justify-end gap-3 pt-4">
               <Button
                 variant="outline"
-                onClick={() => setShowEditDialog(false)}
-              >
+                onClick={() => setShowEditDialog(false)}>
+
                 取消
               </Button>
               <Button>
@@ -560,6 +560,6 @@ export default function QuoteManagement() {
           </div>
         </DialogContent>
       </Dialog>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

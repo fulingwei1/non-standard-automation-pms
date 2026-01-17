@@ -9,8 +9,8 @@ import {
   AlertTriangle,
   Camera,
   X,
-  CheckCircle2,
-} from "lucide-react";
+  CheckCircle2 } from
+"lucide-react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Card, CardContent } from "../../components/ui/card";
@@ -19,26 +19,26 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../../components/ui/select";
-import { cn } from "../../lib/utils";
+  SelectValue } from
+"../../components/ui/select";
+import { cn as _cn } from "../../lib/utils";
 import { productionApi } from "../../services/api";
 
 const exceptionTypes = [
-  { value: "QUALITY", label: "质量问题" },
-  { value: "EQUIPMENT", label: "设备故障" },
-  { value: "MATERIAL", label: "物料问题" },
-  { value: "PROCESS", label: "工艺问题" },
-  { value: "SAFETY", label: "安全问题" },
-  { value: "OTHER", label: "其他" },
-];
+{ value: "QUALITY", label: "质量问题" },
+{ value: "EQUIPMENT", label: "设备故障" },
+{ value: "MATERIAL", label: "物料问题" },
+{ value: "PROCESS", label: "工艺问题" },
+{ value: "SAFETY", label: "安全问题" },
+{ value: "OTHER", label: "其他" }];
+
 
 const urgentLevels = [
-  { value: "LOW", label: "低" },
-  { value: "MEDIUM", label: "中" },
-  { value: "HIGH", label: "高" },
-  { value: "URGENT", label: "紧急" },
-];
+{ value: "LOW", label: "低" },
+{ value: "MEDIUM", label: "中" },
+{ value: "HIGH", label: "高" },
+{ value: "URGENT", label: "紧急" }];
+
 
 export default function MobileExceptionReport() {
   const navigate = useNavigate();
@@ -54,7 +54,7 @@ export default function MobileExceptionReport() {
     exception_type: "",
     urgent_level: "MEDIUM",
     description: "",
-    location: "",
+    location: ""
   });
 
   useEffect(() => {
@@ -113,7 +113,7 @@ export default function MobileExceptionReport() {
             reader.onerror = () => resolve(photo.url); // Fallback to original URL
             reader.readAsDataURL(photo.file);
           });
-        }),
+        })
       );
 
       await productionApi.exceptions.create({
@@ -122,7 +122,7 @@ export default function MobileExceptionReport() {
         urgent_level: formData.urgent_level,
         description: formData.description,
         location: formData.location,
-        photos: photoUrls,
+        photos: photoUrls
       });
 
       setSuccess(true);
@@ -132,7 +132,7 @@ export default function MobileExceptionReport() {
     } catch (error) {
       console.error("Failed to report exception:", error);
       setError(
-        "异常上报失败: " + (error.response?.data?.detail || error.message),
+        "异常上报失败: " + (error.response?.data?.detail || error.message)
       );
     } finally {
       setLoading(false);
@@ -149,8 +149,8 @@ export default function MobileExceptionReport() {
               variant="ghost"
               size="sm"
               onClick={() => navigate(-1)}
-              className="p-2"
-            >
+              className="p-2">
+
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <h1 className="text-lg font-semibold">异常上报</h1>
@@ -160,8 +160,8 @@ export default function MobileExceptionReport() {
 
       <div className="p-4 space-y-4">
         {/* 工单信息 */}
-        {workOrder && (
-          <Card>
+        {workOrder &&
+        <Card>
             <CardContent className="pt-6">
               <div className="space-y-2">
                 <div>
@@ -179,21 +179,21 @@ export default function MobileExceptionReport() {
               </div>
             </CardContent>
           </Card>
-        )}
+        }
 
         {/* 错误提示 */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+        {error &&
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <div className="text-sm font-medium text-red-800">{error}</div>
             </div>
           </div>
-        )}
+        }
 
         {/* 成功提示 */}
-        {success && (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 flex items-center gap-3">
+        {success &&
+        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 flex items-center gap-3">
             <CheckCircle2 className="w-5 h-5 text-emerald-500" />
             <div className="flex-1">
               <div className="text-sm font-medium text-emerald-800">
@@ -201,7 +201,7 @@ export default function MobileExceptionReport() {
               </div>
             </div>
           </div>
-        )}
+        }
 
         {/* 表单 */}
         <Card>
@@ -215,18 +215,18 @@ export default function MobileExceptionReport() {
                 <Select
                   value={formData.exception_type}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, exception_type: value })
-                  }
-                >
+                  setFormData({ ...formData, exception_type: value })
+                  }>
+
                   <SelectTrigger>
                     <SelectValue placeholder="请选择异常类型" />
                   </SelectTrigger>
                   <SelectContent>
-                    {exceptionTypes.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
+                    {exceptionTypes.map((type) =>
+                    <SelectItem key={type.value} value={type.value}>
                         {type.label}
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -239,18 +239,18 @@ export default function MobileExceptionReport() {
                 <Select
                   value={formData.urgent_level}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, urgent_level: value })
-                  }
-                >
+                  setFormData({ ...formData, urgent_level: value })
+                  }>
+
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {urgentLevels.map((level) => (
-                      <SelectItem key={level.value} value={level.value}>
+                    {urgentLevels.map((level) =>
+                    <SelectItem key={level.value} value={level.value}>
                         {level.label}
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -264,10 +264,10 @@ export default function MobileExceptionReport() {
                   className="w-full min-h-[120px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={formData.description}
                   onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
+                  setFormData({ ...formData, description: e.target.value })
                   }
-                  placeholder="详细描述异常情况..."
-                />
+                  placeholder="详细描述异常情况..." />
+
               </div>
 
               {/* 位置 */}
@@ -278,10 +278,10 @@ export default function MobileExceptionReport() {
                 <Input
                   value={formData.location}
                   onChange={(e) =>
-                    setFormData({ ...formData, location: e.target.value })
+                  setFormData({ ...formData, location: e.target.value })
                   }
-                  placeholder="车间/工位"
-                />
+                  placeholder="车间/工位" />
+
               </div>
 
               {/* 拍照 */}
@@ -297,44 +297,44 @@ export default function MobileExceptionReport() {
                     multiple
                     onChange={handlePhotoUpload}
                     className="hidden"
-                    id="photo-upload-exception"
-                  />
+                    id="photo-upload-exception" />
+
                   <label
                     htmlFor="photo-upload-exception"
-                    className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed rounded-lg cursor-pointer hover:bg-slate-50 transition-colors"
-                  >
+                    className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+
                     <Camera className="w-5 h-5 text-slate-400" />
                     <span className="text-sm text-slate-600">
                       拍照上传（可多张）
                     </span>
                   </label>
-                  {photos.length > 0 && (
-                    <div className="grid grid-cols-3 gap-2">
-                      {photos.map((photo, idx) => (
-                        <div
-                          key={idx}
-                          className="relative aspect-square rounded-lg overflow-hidden"
-                        >
+                  {photos.length > 0 &&
+                  <div className="grid grid-cols-3 gap-2">
+                      {photos.map((photo, idx) =>
+                    <div
+                      key={idx}
+                      className="relative aspect-square rounded-lg overflow-hidden">
+
                           <img
-                            src={photo.url}
-                            alt={`Photo ${idx + 1}`}
-                            className="w-full h-full object-cover"
-                          />
+                        src={photo.url}
+                        alt={`Photo ${idx + 1}`}
+                        className="w-full h-full object-cover" />
+
                           <button
-                            type="button"
-                            onClick={() =>
-                              setPhotos((prev) =>
-                                prev.filter((_, i) => i !== idx),
-                              )
-                            }
-                            className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full"
-                          >
+                        type="button"
+                        onClick={() =>
+                        setPhotos((prev) =>
+                        prev.filter((_, i) => i !== idx)
+                        )
+                        }
+                        className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full">
+
                             <X className="w-3 h-3" />
                           </button>
                         </div>
-                      ))}
+                    )}
                     </div>
-                  )}
+                  }
                 </div>
               </div>
             </div>
@@ -345,12 +345,12 @@ export default function MobileExceptionReport() {
         <Button
           onClick={handleSubmit}
           disabled={loading}
-          className="w-full bg-red-500 hover:bg-red-600 h-12 text-base"
-        >
+          className="w-full bg-red-500 hover:bg-red-600 h-12 text-base">
+
           <AlertTriangle className="w-5 h-5 mr-2" />
           {loading ? "提交中..." : "提交异常"}
         </Button>
       </div>
-    </div>
-  );
+    </div>);
+
 }

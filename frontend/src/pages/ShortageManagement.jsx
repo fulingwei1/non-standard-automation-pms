@@ -21,16 +21,16 @@ import {
   Clock,
   XCircle,
   TrendingUp,
-  TrendingDown,
-} from "lucide-react";
+  TrendingDown } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
-} from "../components/ui/card";
+  CardDescription } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -38,30 +38,30 @@ import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger,
-} from "../components/ui/tabs";
+  TabsTrigger } from
+"../components/ui/tabs";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import { cn } from "../lib/utils";
-import { fadeIn, staggerContainer } from "../lib/animations";
+import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
 import { shortageApi } from "../services/api";
 
 const statusConfigs = {
   REPORTED: { label: "已上报", color: "bg-blue-500", icon: Clock },
   CONFIRMED: { label: "已确认", color: "bg-amber-500", icon: CheckCircle2 },
   HANDLING: { label: "处理中", color: "bg-purple-500", icon: RefreshCw },
-  RESOLVED: { label: "已解决", color: "bg-emerald-500", icon: CheckCircle2 },
+  RESOLVED: { label: "已解决", color: "bg-emerald-500", icon: CheckCircle2 }
 };
 
 const urgentLevelConfigs = {
   NORMAL: { label: "普通", color: "text-slate-400" },
   URGENT: { label: "紧急", color: "text-amber-400" },
-  CRITICAL: { label: "特急", color: "text-red-400" },
+  CRITICAL: { label: "特急", color: "text-red-400" }
 };
 
 export default function ShortageManagement() {
@@ -80,7 +80,7 @@ export default function ShortageManagement() {
   const [statusFilter, setStatusFilter] = useState("");
   const [arrivalFilters, setArrivalFilters] = useState({
     status: "",
-    is_delayed: false,
+    is_delayed: false
   });
 
   useEffect(() => {
@@ -135,7 +135,7 @@ export default function ShortageManagement() {
         page,
         page_size: pageSize,
         keyword: searchKeyword || undefined,
-        status: statusFilter || undefined,
+        status: statusFilter || undefined
       };
       const res = await shortageApi.reports.list(params);
       setReports(res.data.items || []);
@@ -154,7 +154,7 @@ export default function ShortageManagement() {
         page: 1,
         page_size: 20,
         status: arrivalFilters.status || undefined,
-        is_delayed: arrivalFilters.is_delayed || undefined,
+        is_delayed: arrivalFilters.is_delayed || undefined
       };
       const res = await shortageApi.arrivals.list(params);
       setArrivals(res.data.items || []);
@@ -170,7 +170,7 @@ export default function ShortageManagement() {
     try {
       const res = await shortageApi.substitutions.list({
         page: 1,
-        page_size: 20,
+        page_size: 20
       });
       setSubstitutions(res.data.items || []);
     } catch (error) {
@@ -196,14 +196,14 @@ export default function ShortageManagement() {
     <div className="space-y-6 p-6">
       <PageHeader
         title="缺料管理"
-        description="缺料上报、到货跟踪、物料替代、物料调拨"
-      />
+        description="缺料上报、到货跟踪、物料替代、物料调拨" />
+
 
       <Tabs
         value={activeTab}
         onValueChange={setActiveTab}
-        className="space-y-6"
-      >
+        className="space-y-6">
+
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="dashboard">看板</TabsTrigger>
           <TabsTrigger value="reports">缺料上报</TabsTrigger>
@@ -214,13 +214,13 @@ export default function ShortageManagement() {
 
         {/* 看板 */}
         <TabsContent value="dashboard" className="space-y-6">
-          {dashboardData && (
-            <motion.div
-              variants={staggerContainer}
-              initial="hidden"
-              animate="visible"
-              className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4"
-            >
+          {dashboardData &&
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
@@ -234,15 +234,15 @@ export default function ShortageManagement() {
                   </div>
                   <div className="flex items-center gap-2 mt-2">
                     <Badge
-                      variant="outline"
-                      className="bg-blue-500/20 text-blue-400"
-                    >
+                    variant="outline"
+                    className="bg-blue-500/20 text-blue-400">
+
                       已上报: {dashboardData.reports?.reported || 0}
                     </Badge>
                     <Badge
-                      variant="outline"
-                      className="bg-amber-500/20 text-amber-400"
-                    >
+                    variant="outline"
+                    className="bg-amber-500/20 text-amber-400">
+
                       处理中: {dashboardData.reports?.handling || 0}
                     </Badge>
                   </div>
@@ -279,15 +279,15 @@ export default function ShortageManagement() {
                   </div>
                   <div className="flex items-center gap-2 mt-2">
                     <Badge
-                      variant="outline"
-                      className="bg-amber-500/20 text-amber-400"
-                    >
+                    variant="outline"
+                    className="bg-amber-500/20 text-amber-400">
+
                       待处理: {dashboardData.arrivals?.pending || 0}
                     </Badge>
                     <Badge
-                      variant="outline"
-                      className="bg-red-500/20 text-red-400"
-                    >
+                    variant="outline"
+                    className="bg-red-500/20 text-red-400">
+
                       延迟: {dashboardData.arrivals?.delayed || 0}
                     </Badge>
                   </div>
@@ -301,8 +301,8 @@ export default function ShortageManagement() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {(dashboardData.substitutions?.pending || 0) +
-                      (dashboardData.transfers?.pending || 0)}
+                    {(dashboardData.substitutions?.pending || 0) + (
+                  dashboardData.transfers?.pending || 0)}
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
                     替代: {dashboardData.substitutions?.pending || 0} | 调拨:{" "}
@@ -311,12 +311,12 @@ export default function ShortageManagement() {
                 </CardContent>
               </Card>
             </motion.div>
-          )}
+          }
 
           {/* 最近缺料上报 */}
           {dashboardData?.recent_reports &&
-            dashboardData.recent_reports.length > 0 && (
-              <Card>
+          dashboardData.recent_reports.length > 0 &&
+          <Card>
                 <CardHeader>
                   <CardTitle>最近缺料上报</CardTitle>
                   <CardDescription>最近10条缺料上报记录</CardDescription>
@@ -324,31 +324,31 @@ export default function ShortageManagement() {
                 <CardContent>
                   <div className="space-y-3">
                     {dashboardData.recent_reports.map((report) => {
-                      const urgent =
-                        urgentLevelConfigs[report.urgent_level] ||
-                        urgentLevelConfigs.NORMAL;
-                      const status =
-                        statusConfigs[report.status] || statusConfigs.REPORTED;
-                      return (
-                        <div
-                          key={report.id}
-                          className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-surface-2 transition-colors"
-                        >
+                  const urgent =
+                  urgentLevelConfigs[report.urgent_level] ||
+                  urgentLevelConfigs.NORMAL;
+                  const status =
+                  statusConfigs[report.status] || statusConfigs.REPORTED;
+                  return (
+                    <div
+                      key={report.id}
+                      className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-surface-2 transition-colors">
+
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
                               <span className="font-medium">
                                 {report.report_no}
                               </span>
                               <Badge
-                                variant="outline"
-                                className={cn(urgent.color)}
-                              >
+                            variant="outline"
+                            className={cn(urgent.color)}>
+
                                 {urgent.label}
                               </Badge>
                               <Badge
-                                variant="outline"
-                                className={cn(status.color, "text-white")}
-                              >
+                            variant="outline"
+                            className={cn(status.color, "text-white")}>
+
                                 {status.label}
                               </Badge>
                             </div>
@@ -361,22 +361,22 @@ export default function ShortageManagement() {
                               缺料: {report.shortage_qty}
                             </div>
                             <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                navigate(`/shortage/reports/${report.id}`)
-                              }
-                            >
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                          navigate(`/shortage/reports/${report.id}`)
+                          }>
+
                               <Eye className="h-4 w-4" />
                             </Button>
                           </div>
-                        </div>
-                      );
-                    })}
+                        </div>);
+
+                })}
                   </div>
                 </CardContent>
               </Card>
-            )}
+          }
         </TabsContent>
 
         {/* 缺料上报 */}
@@ -395,8 +395,8 @@ export default function ShortageManagement() {
                       placeholder="搜索上报单号、物料..."
                       className="pl-8 w-64"
                       value={searchKeyword}
-                      onChange={(e) => setSearchKeyword(e.target.value)}
-                    />
+                      onChange={(e) => setSearchKeyword(e.target.value)} />
+
                   </div>
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
                     <SelectTrigger className="w-32">
@@ -418,42 +418,42 @@ export default function ShortageManagement() {
               </div>
             </CardHeader>
             <CardContent>
-              {loading ? (
-                <div className="text-center py-8 text-muted-foreground">
+              {loading ?
+              <div className="text-center py-8 text-muted-foreground">
                   加载中...
-                </div>
-              ) : reports.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
+                </div> :
+              reports.length === 0 ?
+              <div className="text-center py-8 text-muted-foreground">
                   暂无缺料上报记录
-                </div>
-              ) : (
-                <div className="space-y-3">
+                </div> :
+
+              <div className="space-y-3">
                   {reports.map((report) => {
-                    const urgent =
-                      urgentLevelConfigs[report.urgent_level] ||
-                      urgentLevelConfigs.NORMAL;
-                    const status =
-                      statusConfigs[report.status] || statusConfigs.REPORTED;
-                    return (
-                      <div
-                        key={report.id}
-                        className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-surface-2 transition-colors"
-                      >
+                  const urgent =
+                  urgentLevelConfigs[report.urgent_level] ||
+                  urgentLevelConfigs.NORMAL;
+                  const status =
+                  statusConfigs[report.status] || statusConfigs.REPORTED;
+                  return (
+                    <div
+                      key={report.id}
+                      className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-surface-2 transition-colors">
+
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
                             <span className="font-medium">
                               {report.report_no}
                             </span>
                             <Badge
-                              variant="outline"
-                              className={cn(urgent.color)}
-                            >
+                            variant="outline"
+                            className={cn(urgent.color)}>
+
                               {urgent.label}
                             </Badge>
                             <Badge
-                              variant="outline"
-                              className={cn(status.color, "text-white")}
-                            >
+                            variant="outline"
+                            className={cn(status.color, "text-white")}>
+
                               {status.label}
                             </Badge>
                           </div>
@@ -467,50 +467,50 @@ export default function ShortageManagement() {
                           </div>
                         </div>
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            navigate(`/shortage/reports/${report.id}`)
-                          }
-                        >
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                        navigate(`/shortage/reports/${report.id}`)
+                        }>
+
                           <Eye className="h-4 w-4 mr-2" />
                           查看
                         </Button>
-                      </div>
-                    );
-                  })}
+                      </div>);
+
+                })}
                 </div>
-              )}
-              {total > pageSize && (
-                <div className="flex items-center justify-between mt-4 pt-4 border-t">
+              }
+              {total > pageSize &&
+              <div className="flex items-center justify-between mt-4 pt-4 border-t">
                   <div className="text-sm text-muted-foreground">
                     共 {total} 条记录，第 {page} / {Math.ceil(total / pageSize)}{" "}
                     页
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      disabled={page === 1 || loading}
-                    >
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1 || loading}>
+
                       上一页
                     </Button>
                     <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setPage((p) =>
-                          Math.min(Math.ceil(total / pageSize), p + 1),
-                        )
-                      }
-                      disabled={page >= Math.ceil(total / pageSize) || loading}
-                    >
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                    setPage((p) =>
+                    Math.min(Math.ceil(total / pageSize), p + 1)
+                    )
+                    }
+                    disabled={page >= Math.ceil(total / pageSize) || loading}>
+
                       下一页
                     </Button>
                   </div>
                 </div>
-              )}
+              }
             </CardContent>
           </Card>
         </TabsContent>
@@ -530,11 +530,11 @@ export default function ShortageManagement() {
                     onClick={() => {
                       setArrivalFilters((prev) => ({
                         ...prev,
-                        is_delayed: !prev.is_delayed,
+                        is_delayed: !prev.is_delayed
                       }));
                       loadArrivals();
-                    }}
-                  >
+                    }}>
+
                     <AlertTriangle className="h-4 w-4 mr-2" />
                     {arrivalFilters.is_delayed ? "全部" : "延迟预警"}
                   </Button>
@@ -546,37 +546,37 @@ export default function ShortageManagement() {
               </div>
             </CardHeader>
             <CardContent>
-              {loading ? (
-                <div className="text-center py-8 text-muted-foreground">
+              {loading ?
+              <div className="text-center py-8 text-muted-foreground">
                   加载中...
-                </div>
-              ) : arrivals.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
+                </div> :
+              arrivals.length === 0 ?
+              <div className="text-center py-8 text-muted-foreground">
                   暂无到货跟踪记录
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {arrivals.map((arrival) => (
-                    <div
-                      key={arrival.id}
-                      className={cn(
-                        "flex items-center justify-between p-4 rounded-lg border border-border hover:bg-surface-2 transition-colors",
-                        arrival.is_delayed && "bg-red-500/5 border-red-500/20",
-                      )}
-                    >
+                </div> :
+
+              <div className="space-y-3">
+                  {arrivals.map((arrival) =>
+                <div
+                  key={arrival.id}
+                  className={cn(
+                    "flex items-center justify-between p-4 rounded-lg border border-border hover:bg-surface-2 transition-colors",
+                    arrival.is_delayed && "bg-red-500/5 border-red-500/20"
+                  )}>
+
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="font-medium">
                             {arrival.arrival_no}
                           </span>
-                          {arrival.is_delayed && (
-                            <Badge
-                              variant="outline"
-                              className="bg-red-500/20 text-red-400"
-                            >
+                          {arrival.is_delayed &&
+                      <Badge
+                        variant="outline"
+                        className="bg-red-500/20 text-red-400">
+
                               延迟 {arrival.delay_days} 天
                             </Badge>
-                          )}
+                      }
                           <Badge variant="outline">{arrival.status}</Badge>
                         </div>
                         <div className="text-sm text-muted-foreground">
@@ -589,19 +589,19 @@ export default function ShortageManagement() {
                         </div>
                       </div>
                       <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() =>
-                          navigate(`/shortage/arrivals/${arrival.id}`)
-                        }
-                      >
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                    navigate(`/shortage/arrivals/${arrival.id}`)
+                    }>
+
                         <Eye className="h-4 w-4 mr-2" />
                         查看
                       </Button>
                     </div>
-                  ))}
+                )}
                 </div>
-              )}
+              }
             </CardContent>
           </Card>
         </TabsContent>
@@ -622,21 +622,21 @@ export default function ShortageManagement() {
               </div>
             </CardHeader>
             <CardContent>
-              {loading ? (
-                <div className="text-center py-8 text-muted-foreground">
+              {loading ?
+              <div className="text-center py-8 text-muted-foreground">
                   加载中...
-                </div>
-              ) : substitutions.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
+                </div> :
+              substitutions.length === 0 ?
+              <div className="text-center py-8 text-muted-foreground">
                   暂无物料替代申请
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {substitutions.map((sub) => (
-                    <div
-                      key={sub.id}
-                      className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-surface-2 transition-colors"
-                    >
+                </div> :
+
+              <div className="space-y-3">
+                  {substitutions.map((sub) =>
+                <div
+                  key={sub.id}
+                  className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-surface-2 transition-colors">
+
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="font-medium">
@@ -653,19 +653,19 @@ export default function ShortageManagement() {
                         </div>
                       </div>
                       <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() =>
-                          navigate(`/shortage/substitutions/${sub.id}`)
-                        }
-                      >
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                    navigate(`/shortage/substitutions/${sub.id}`)
+                    }>
+
                         <Eye className="h-4 w-4 mr-2" />
                         查看
                       </Button>
                     </div>
-                  ))}
+                )}
                 </div>
-              )}
+              }
             </CardContent>
           </Card>
         </TabsContent>
@@ -686,21 +686,21 @@ export default function ShortageManagement() {
               </div>
             </CardHeader>
             <CardContent>
-              {loading ? (
-                <div className="text-center py-8 text-muted-foreground">
+              {loading ?
+              <div className="text-center py-8 text-muted-foreground">
                   加载中...
-                </div>
-              ) : transfers.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
+                </div> :
+              transfers.length === 0 ?
+              <div className="text-center py-8 text-muted-foreground">
                   暂无物料调拨申请
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {transfers.map((transfer) => (
-                    <div
-                      key={transfer.id}
-                      className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-surface-2 transition-colors"
-                    >
+                </div> :
+
+              <div className="space-y-3">
+                  {transfers.map((transfer) =>
+                <div
+                  key={transfer.id}
+                  className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-surface-2 transition-colors">
+
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="font-medium">
@@ -718,23 +718,23 @@ export default function ShortageManagement() {
                         </div>
                       </div>
                       <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() =>
-                          navigate(`/shortage/transfers/${transfer.id}`)
-                        }
-                      >
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                    navigate(`/shortage/transfers/${transfer.id}`)
+                    }>
+
                         <Eye className="h-4 w-4 mr-2" />
                         查看
                       </Button>
                     </div>
-                  ))}
+                )}
                 </div>
-              )}
+              }
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>);
+
 }

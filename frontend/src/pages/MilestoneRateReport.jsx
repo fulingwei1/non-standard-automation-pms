@@ -13,15 +13,15 @@ import {
   AlertTriangle,
   Clock,
   TrendingUp,
-  FileText,
-} from "lucide-react";
+  FileText } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
@@ -30,8 +30,8 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import { cn, formatDate } from "../lib/utils";
 import { progressApi, projectApi } from "../services/api";
 
@@ -45,13 +45,13 @@ export default function MilestoneRateReport() {
   const [project, setProject] = useState(null);
   const [reportData, setReportData] = useState(null);
   const [selectedProjectId, setSelectedProjectId] = useState(
-    id
-      ? parseInt(id)
-      : projectIdFromQuery
-        ? parseInt(projectIdFromQuery)
-        : null,
+    id ?
+    parseInt(id) :
+    projectIdFromQuery ?
+    parseInt(projectIdFromQuery) :
+    null
   );
-  const [projects, setProjects] = useState([]);
+  const [_projects, _setProjects] = useState([]);
 
   useEffect(() => {
     if (selectedProjectId) {
@@ -119,40 +119,40 @@ export default function MilestoneRateReport() {
     return (
       <div className="space-y-6 p-6">
         <div className="text-center py-8 text-slate-400">加载中...</div>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          {selectedProjectId && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(`/projects/${selectedProjectId}`)}
-            >
+          {selectedProjectId &&
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(`/projects/${selectedProjectId}`)}>
+
               <ArrowLeft className="w-4 h-4 mr-2" />
               返回项目
             </Button>
-          )}
+          }
           <PageHeader
             title={
-              selectedProjectId
-                ? `${project?.project_name || "项目"} - 里程碑达成率`
-                : "里程碑达成率统计"
+            selectedProjectId ?
+            `${project?.project_name || "项目"} - 里程碑达成率` :
+            "里程碑达成率统计"
             }
-            description="查看项目里程碑完成情况"
-          />
+            description="查看项目里程碑完成情况" />
+
         </div>
         <div className="flex items-center gap-2">
           <Select
             value={selectedProjectId?.toString() || "all"}
             onValueChange={(value) =>
-              setSelectedProjectId(value === "all" ? null : parseInt(value))
-            }
-          >
+            setSelectedProjectId(value === "all" ? null : parseInt(value))
+            }>
+
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="选择项目" />
             </SelectTrigger>
@@ -169,8 +169,8 @@ export default function MilestoneRateReport() {
       </div>
 
       {/* Summary Cards */}
-      {reportData && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {reportData &&
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -225,11 +225,11 @@ export default function MilestoneRateReport() {
             </CardContent>
           </Card>
         </div>
-      )}
+      }
 
       {/* Completion Rate Progress */}
-      {reportData && (
-        <Card>
+      {reportData &&
+      <Card>
           <CardHeader>
             <CardTitle>里程碑达成率</CardTitle>
           </CardHeader>
@@ -242,9 +242,9 @@ export default function MilestoneRateReport() {
                 </span>
               </div>
               <Progress
-                value={reportData.completion_rate || 0}
-                className="h-3"
-              />
+              value={reportData.completion_rate || 0}
+              className="h-3" />
+
               <div className="grid grid-cols-3 gap-4 text-sm text-slate-600">
                 <div>
                   <span className="font-medium">已完成:</span>{" "}
@@ -262,11 +262,11 @@ export default function MilestoneRateReport() {
             </div>
           </CardContent>
         </Card>
-      )}
+      }
 
       {/* Milestone List */}
-      {reportData?.milestones && reportData.milestones.length > 0 && (
-        <Card>
+      {reportData?.milestones && reportData.milestones.length > 0 &&
+      <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="w-5 h-5" />
@@ -276,65 +276,65 @@ export default function MilestoneRateReport() {
           <CardContent>
             <div className="space-y-3">
               {reportData.milestones.map((milestone) => {
-                const isOverdue =
-                  milestone.planned_date &&
-                  new Date(milestone.planned_date) < new Date() &&
-                  milestone.status !== "COMPLETED";
-                const status = isOverdue ? "OVERDUE" : milestone.status;
-                return (
-                  <div
-                    key={milestone.id}
-                    className="border rounded-lg p-4 hover:bg-slate-50 transition-colors"
-                  >
+              const isOverdue =
+              milestone.planned_date &&
+              new Date(milestone.planned_date) < new Date() &&
+              milestone.status !== "COMPLETED";
+              const status = isOverdue ? "OVERDUE" : milestone.status;
+              return (
+                <div
+                  key={milestone.id}
+                  className="border rounded-lg p-4 hover:bg-slate-50 transition-colors">
+
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="font-medium">
                             {milestone.milestone_name}
                           </span>
-                          {milestone.is_key && (
-                            <Badge variant="outline" className="text-xs">
+                          {milestone.is_key &&
+                        <Badge variant="outline" className="text-xs">
                               关键
                             </Badge>
-                          )}
+                        }
                           <Badge
-                            className={cn("text-xs", getStatusColor(status))}
-                          >
+                          className={cn("text-xs", getStatusColor(status))}>
+
                             {getStatusLabel(status)}
                           </Badge>
                         </div>
                         <div className="text-sm text-slate-500 space-y-1">
                           <div>编码: {milestone.milestone_code}</div>
-                          {milestone.planned_date && (
-                            <div>
+                          {milestone.planned_date &&
+                        <div>
                               计划日期: {formatDate(milestone.planned_date)}
                             </div>
-                          )}
-                          {milestone.actual_date && (
-                            <div>
+                        }
+                          {milestone.actual_date &&
+                        <div>
                               实际日期: {formatDate(milestone.actual_date)}
                             </div>
-                          )}
+                        }
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  </div>);
+
+            })}
             </div>
           </CardContent>
         </Card>
-      )}
+      }
 
-      {reportData?.milestones && reportData.milestones.length === 0 && (
-        <Card>
+      {reportData?.milestones && reportData.milestones.length === 0 &&
+      <Card>
           <CardContent className="pt-6">
             <div className="text-center py-8 text-slate-400">
               暂无里程碑数据
             </div>
           </CardContent>
         </Card>
-      )}
-    </div>
-  );
+      }
+    </div>);
+
 }

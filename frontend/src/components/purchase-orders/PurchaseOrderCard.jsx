@@ -65,7 +65,8 @@ const PurchaseOrderCard = ({
           <div
             className={`h-2 rounded-full ${progress >= 100 ? 'bg-green-500' : progress >= 50 ? 'bg-blue-500' : 'bg-yellow-500'}`}
             style={{ width: `${Math.min(progress, 100)}%` }}
-          ></div>
+          >
+          </div>
         </div>
       </div>
 

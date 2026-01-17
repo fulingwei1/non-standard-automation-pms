@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { cn } from "../lib/utils";
+import { cn as _cn } from "../lib/utils";
 import { pmoApi } from "../services/api";
 import { formatDate } from "../lib/utils";
 import { PageHeader } from "../components/layout/PageHeader";
@@ -12,8 +12,8 @@ import {
   Progress,
   Input,
   SkeletonCard,
-  Button,
-} from "../components/ui";
+  Button } from
+"../components/ui";
 import {
   Calendar,
   TrendingUp,
@@ -24,28 +24,28 @@ import {
   Target,
   ArrowRight,
   ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+  ChevronRight } from
+"lucide-react";
 
 const staggerContainer = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.05, delayChildren: 0.1 },
-  },
+    transition: { staggerChildren: 0.05, delayChildren: 0.1 }
+  }
 };
 
 const staggerChild = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 },
+  visible: { opacity: 1, y: 0 }
 };
 
-const getHealthColor = (health) => {
+const _getHealthColor = (health) => {
   const colors = {
     H1: "text-emerald-400",
     H2: "text-amber-400",
     H3: "text-orange-400",
-    H4: "text-red-400",
+    H4: "text-red-400"
   };
   return colors[health] || colors.H1;
 };
@@ -55,7 +55,7 @@ const getHealthBadge = (health) => {
     H1: { label: "健康", variant: "success" },
     H2: { label: "良好", variant: "warning" },
     H3: { label: "警告", variant: "warning" },
-    H4: { label: "危险", variant: "danger" },
+    H4: { label: "危险", variant: "danger" }
   };
   return badges[health] || badges.H1;
 };
@@ -115,14 +115,14 @@ export default function WeeklyReport() {
       <div className="space-y-6">
         <PageHeader title="项目状态周报" description="项目周度状态汇总与分析" />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {Array(8)
-            .fill(null)
-            .map((_, i) => (
-              <SkeletonCard key={i} />
-            ))}
+          {Array(8).
+          fill(null).
+          map((_, i) =>
+          <SkeletonCard key={i} />
+          )}
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   if (!reportData) {
@@ -134,8 +134,8 @@ export default function WeeklyReport() {
             暂无数据
           </CardContent>
         </Card>
-      </div>
-    );
+      </div>);
+
   }
 
   const {
@@ -147,7 +147,7 @@ export default function WeeklyReport() {
     delayed_projects,
     new_risks,
     resolved_risks,
-    project_updates,
+    project_updates
   } = reportData;
 
   return (
@@ -156,7 +156,7 @@ export default function WeeklyReport() {
         title="项目状态周报"
         description="项目周度状态汇总与分析"
         action={
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={handlePreviousWeek}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -167,14 +167,14 @@ export default function WeeklyReport() {
               <ChevronRight className="h-4 w-4" />
             </Button>
             <Input
-              type="date"
-              value={weekStart}
-              onChange={(e) => setWeekStart(e.target.value)}
-              className="w-40"
-            />
+            type="date"
+            value={weekStart}
+            onChange={(e) => setWeekStart(e.target.value)}
+            className="w-40" />
+
           </div>
-        }
-      />
+        } />
+
 
       {/* Week Info */}
       <Card className="mb-6">
@@ -268,22 +268,22 @@ export default function WeeklyReport() {
               <h3 className="text-lg font-semibold text-white">本周项目更新</h3>
               <Link
                 to="/projects"
-                className="flex items-center gap-1 text-sm text-primary hover:text-primary-light transition-colors"
-              >
+                className="flex items-center gap-1 text-sm text-primary hover:text-primary-light transition-colors">
+
                 查看全部 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
 
-            {project_updates && project_updates.length > 0 ? (
-              <div className="divide-y divide-white/5">
+            {project_updates && project_updates.length > 0 ?
+            <div className="divide-y divide-white/5">
                 {project_updates.map((project) => {
-                  const healthBadge = getHealthBadge(project.health || "H1");
-                  return (
-                    <Link
-                      key={project.project_id}
-                      to={`/projects/${project.project_id}`}
-                      className="block p-5 hover:bg-white/[0.02] transition-colors"
-                    >
+                const healthBadge = getHealthBadge(project.health || "H1");
+                return (
+                  <Link
+                    key={project.project_id}
+                    to={`/projects/${project.project_id}`}
+                    className="block p-5 hover:bg-white/[0.02] transition-colors">
+
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4 flex-1">
                           <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-indigo-500/10 ring-1 ring-primary/20">
@@ -318,25 +318,25 @@ export default function WeeklyReport() {
                             <Progress value={project.progress || 0} />
                           </div>
                           <div className="text-xs text-slate-500">
-                            {project.updated_at
-                              ? formatDate(project.updated_at)
-                              : ""}
+                            {project.updated_at ?
+                          formatDate(project.updated_at) :
+                          ""}
                           </div>
                           <ArrowRight className="h-5 w-5 text-slate-500" />
                         </div>
                       </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="p-12 text-center text-slate-500">
+                    </Link>);
+
+              })}
+              </div> :
+
+            <div className="p-12 text-center text-slate-500">
                 本周暂无项目更新
               </div>
-            )}
+            }
           </CardContent>
         </Card>
       </motion.div>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

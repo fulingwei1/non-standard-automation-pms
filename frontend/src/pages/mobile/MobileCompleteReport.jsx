@@ -8,7 +8,7 @@ import { ArrowLeft, CheckCircle2, AlertCircle, Camera, X } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Card, CardContent } from "../../components/ui/card";
-import { cn } from "../../lib/utils";
+import { cn as _cn } from "../../lib/utils";
 import { productionApi } from "../../services/api";
 
 export default function MobileCompleteReport() {
@@ -26,7 +26,7 @@ export default function MobileCompleteReport() {
     qualified_qty: 0,
     defect_qty: 0,
     work_hours: 0,
-    report_note: "",
+    report_note: ""
   });
 
   useEffect(() => {
@@ -42,16 +42,16 @@ export default function MobileCompleteReport() {
       setWorkOrder(order);
 
       // 自动填充已完成数量和工时
-      const autoHours = order.actual_start_time
-        ? calculateWorkHours(order.actual_start_time)
-        : 0;
+      const autoHours = order.actual_start_time ?
+      calculateWorkHours(order.actual_start_time) :
+      0;
 
       setFormData({
         completed_qty: order.completed_qty || 0,
         qualified_qty: order.qualified_qty || order.completed_qty || 0,
         defect_qty: 0,
         work_hours: autoHours,
-        report_note: "",
+        report_note: ""
       });
     } catch (error) {
       console.error("Failed to fetch work order:", error);
@@ -90,14 +90,14 @@ export default function MobileCompleteReport() {
         ...prev,
         completed_qty: qty,
         qualified_qty: qty, // 默认全部合格
-        defect_qty: 0,
+        defect_qty: 0
       }));
     } else if (type === "qualified") {
       setFormData((prev) => ({
         ...prev,
         qualified_qty: value === "all" ? prev.completed_qty : value,
         defect_qty:
-          prev.completed_qty - (value === "all" ? prev.completed_qty : value),
+        prev.completed_qty - (value === "all" ? prev.completed_qty : value)
       }));
     }
   };
@@ -113,7 +113,7 @@ export default function MobileCompleteReport() {
     }
 
     const defectQty =
-      formData.defect_qty || formData.completed_qty - formData.qualified_qty;
+    formData.defect_qty || formData.completed_qty - formData.qualified_qty;
 
     try {
       setLoading(true);
@@ -124,7 +124,7 @@ export default function MobileCompleteReport() {
         qualified_qty: formData.qualified_qty,
         defect_qty: defectQty,
         work_hours: formData.work_hours,
-        report_note: formData.report_note,
+        report_note: formData.report_note
       });
       setSuccess(true);
       setTimeout(() => {
@@ -133,7 +133,7 @@ export default function MobileCompleteReport() {
     } catch (error) {
       console.error("Failed to complete work:", error);
       setError(
-        "完工报工失败: " + (error.response?.data?.detail || error.message),
+        "完工报工失败: " + (error.response?.data?.detail || error.message)
       );
     } finally {
       setLoading(false);
@@ -144,8 +144,8 @@ export default function MobileCompleteReport() {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-slate-400">加载中...</div>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -158,8 +158,8 @@ export default function MobileCompleteReport() {
               variant="ghost"
               size="sm"
               onClick={() => navigate(-1)}
-              className="p-2"
-            >
+              className="p-2">
+
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <h1 className="text-lg font-semibold">完工报工</h1>
@@ -195,18 +195,18 @@ export default function MobileCompleteReport() {
         </Card>
 
         {/* 错误提示 */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+        {error &&
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <div className="text-sm font-medium text-red-800">{error}</div>
             </div>
           </div>
-        )}
+        }
 
         {/* 成功提示 */}
-        {success && (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 flex items-center gap-3">
+        {success &&
+        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 flex items-center gap-3">
             <CheckCircle2 className="w-5 h-5 text-emerald-500" />
             <div className="flex-1">
               <div className="text-sm font-medium text-emerald-800">
@@ -214,7 +214,7 @@ export default function MobileCompleteReport() {
               </div>
             </div>
           </div>
-        )}
+        }
 
         {/* 表单 */}
         <Card>
@@ -235,22 +235,22 @@ export default function MobileCompleteReport() {
                     setFormData({
                       ...formData,
                       completed_qty: qty,
-                      qualified_qty: Math.min(formData.qualified_qty, qty),
+                      qualified_qty: Math.min(formData.qualified_qty, qty)
                     });
                   }}
                   placeholder="0"
-                  className="text-lg mb-2"
-                />
+                  className="text-lg mb-2" />
+
                 <div className="flex gap-2">
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={() =>
-                      handleQuickQuantity("completed", workOrder.plan_qty)
+                    handleQuickQuantity("completed", workOrder.plan_qty)
                     }
-                    className="flex-1"
-                  >
+                    className="flex-1">
+
                     全部完成
                   </Button>
                   <Button
@@ -258,13 +258,13 @@ export default function MobileCompleteReport() {
                     variant="outline"
                     size="sm"
                     onClick={() =>
-                      handleQuickQuantity(
-                        "completed",
-                        Math.floor((workOrder.plan_qty || 0) / 2),
-                      )
+                    handleQuickQuantity(
+                      "completed",
+                      Math.floor((workOrder.plan_qty || 0) / 2)
+                    )
                     }
-                    className="flex-1"
-                  >
+                    className="flex-1">
+
                     一半
                   </Button>
                 </div>
@@ -285,33 +285,33 @@ export default function MobileCompleteReport() {
                     setFormData({
                       ...formData,
                       qualified_qty: qty,
-                      defect_qty: formData.completed_qty - qty,
+                      defect_qty: formData.completed_qty - qty
                     });
                   }}
                   placeholder="0"
-                  className="text-lg mb-2"
-                />
+                  className="text-lg mb-2" />
+
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => handleQuickQuantity("qualified", "all")}
-                  className="w-full"
-                >
+                  className="w-full">
+
                   全部合格
                 </Button>
               </div>
 
               {/* 不良数量（自动计算） */}
-              {formData.completed_qty > 0 && (
-                <div className="bg-slate-50 rounded-lg p-3">
+              {formData.completed_qty > 0 &&
+              <div className="bg-slate-50 rounded-lg p-3">
                   <div className="text-sm text-slate-500 mb-1">不良数量</div>
                   <div className="text-lg font-medium text-red-600">
                     {formData.completed_qty - formData.qualified_qty}
                     （自动计算）
                   </div>
                 </div>
-              )}
+              }
 
               {/* 拍照 */}
               <div>
@@ -325,42 +325,42 @@ export default function MobileCompleteReport() {
                     capture="environment"
                     onChange={handlePhotoUpload}
                     className="hidden"
-                    id="photo-upload-complete"
-                  />
+                    id="photo-upload-complete" />
+
                   <label
                     htmlFor="photo-upload-complete"
-                    className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed rounded-lg cursor-pointer hover:bg-slate-50 transition-colors"
-                  >
+                    className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+
                     <Camera className="w-5 h-5 text-slate-400" />
                     <span className="text-sm text-slate-600">拍照上传</span>
                   </label>
-                  {photos.length > 0 && (
-                    <div className="grid grid-cols-3 gap-2">
-                      {photos.map((photo, idx) => (
-                        <div
-                          key={idx}
-                          className="relative aspect-square rounded-lg overflow-hidden"
-                        >
+                  {photos.length > 0 &&
+                  <div className="grid grid-cols-3 gap-2">
+                      {photos.map((photo, idx) =>
+                    <div
+                      key={idx}
+                      className="relative aspect-square rounded-lg overflow-hidden">
+
                           <img
-                            src={photo.url}
-                            alt={`Photo ${idx + 1}`}
-                            className="w-full h-full object-cover"
-                          />
+                        src={photo.url}
+                        alt={`Photo ${idx + 1}`}
+                        className="w-full h-full object-cover" />
+
                           <button
-                            type="button"
-                            onClick={() =>
-                              setPhotos((prev) =>
-                                prev.filter((_, i) => i !== idx),
-                              )
-                            }
-                            className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full"
-                          >
+                        type="button"
+                        onClick={() =>
+                        setPhotos((prev) =>
+                        prev.filter((_, i) => i !== idx)
+                        )
+                        }
+                        className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full">
+
                             <X className="w-3 h-3" />
                           </button>
                         </div>
-                      ))}
+                    )}
                     </div>
-                  )}
+                  }
                 </div>
               </div>
 
@@ -368,11 +368,11 @@ export default function MobileCompleteReport() {
               <div>
                 <label className="text-sm font-medium mb-2 block">
                   工时 (小时)
-                  {workOrder.actual_start_time && (
-                    <span className="text-xs text-slate-500 ml-2">
+                  {workOrder.actual_start_time &&
+                  <span className="text-xs text-slate-500 ml-2">
                       已用: {calculateWorkHours(workOrder.actual_start_time)}h
                     </span>
-                  )}
+                  }
                 </label>
                 <Input
                   type="number"
@@ -380,14 +380,14 @@ export default function MobileCompleteReport() {
                   step="0.5"
                   value={formData.work_hours}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      work_hours: parseFloat(e.target.value) || 0,
-                    })
+                  setFormData({
+                    ...formData,
+                    work_hours: parseFloat(e.target.value) || 0
+                  })
                   }
                   placeholder="0"
-                  className="text-lg"
-                />
+                  className="text-lg" />
+
               </div>
 
               {/* 说明 */}
@@ -399,10 +399,10 @@ export default function MobileCompleteReport() {
                   className="w-full min-h-[100px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={formData.report_note}
                   onChange={(e) =>
-                    setFormData({ ...formData, report_note: e.target.value })
+                  setFormData({ ...formData, report_note: e.target.value })
                   }
-                  placeholder="填写完工说明..."
-                />
+                  placeholder="填写完工说明..." />
+
               </div>
             </div>
           </CardContent>
@@ -412,12 +412,12 @@ export default function MobileCompleteReport() {
         <Button
           onClick={handleSubmit}
           disabled={loading}
-          className="w-full bg-emerald-500 hover:bg-emerald-600 h-12 text-base"
-        >
+          className="w-full bg-emerald-500 hover:bg-emerald-600 h-12 text-base">
+
           <CheckCircle2 className="w-5 h-5 mr-2" />
           {loading ? "提交中..." : "确认完工"}
         </Button>
       </div>
-    </div>
-  );
+    </div>);
+
 }

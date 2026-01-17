@@ -15,8 +15,8 @@ import {
   getReadinessColor,
   isMaterialReady,
   isMaterialDelayed,
-  isMaterialInProgress
-} from "./materialReadinessConstants";
+  isMaterialInProgress } from
+"./materialReadinessConstants";
 
 /**
  * 物料准备状态环形仪表盘组件
@@ -43,7 +43,7 @@ export function ReadinessGauge({
   const statusConfig = getReadinessStatusConfig(status);
 
   // 根据进度确定颜色
-  const progressColor = getReadinessColor(progress);
+  const _progressColor = getReadinessColor(progress);
 
   // 根据尺寸计算大小
   const sizeConfig = {
@@ -76,10 +76,10 @@ export function ReadinessGauge({
   const config = sizeConfig[size];
 
   // 计算SVG路径
-  const radius = (config.size / 2) - config.strokeWidth;
+  const radius = config.size / 2 - config.strokeWidth;
   const circumference = 2 * Math.PI * radius;
   const strokeDasharray = circumference;
-  const strokeDashoffset = circumference - (progress / 100) * circumference;
+  const strokeDashoffset = circumference - progress / 100 * circumference;
 
   // 根据变体设置样式
   const variantStyles = {
@@ -116,8 +116,8 @@ export function ReadinessGauge({
             <svg
               width={config.size}
               height={config.size}
-              className="transform -rotate-90"
-            >
+              className="transform -rotate-90">
+
               {/* 背景圆 */}
               <circle
                 cx={config.size / 2}
@@ -126,8 +126,8 @@ export function ReadinessGauge({
                 stroke="currentColor"
                 strokeWidth={config.strokeWidth}
                 fill="none"
-                className={styles.background}
-              />
+                className={styles.background} />
+
               {/* 进度圆 */}
               <circle
                 cx={config.size / 2}
@@ -139,8 +139,8 @@ export function ReadinessGauge({
                 strokeDasharray={strokeDasharray}
                 strokeDashoffset={strokeDashoffset}
                 strokeLinecap="round"
-                className={`${styles.progress} transition-all duration-500 ease-in-out`}
-              />
+                className={`${styles.progress} transition-all duration-500 ease-in-out`} />
+
             </svg>
             {/* 中心文本 */}
             <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -152,32 +152,32 @@ export function ReadinessGauge({
           </div>
 
           {/* 信息 */}
-          {showDetails && (
-            <div className="text-center space-y-1">
-              {title && (
-                <h3 className="text-sm font-semibold text-gray-700">
+          {showDetails &&
+          <div className="text-center space-y-1">
+              {title &&
+            <h3 className="text-sm font-semibold text-gray-700">
                   {title}
                 </h3>
-              )}
-              {description && (
-                <p className="text-xs text-gray-500">
+            }
+              {description &&
+            <p className="text-xs text-gray-500">
                   {description}
                 </p>
-              )}
+            }
               <Badge
-                className={cn(
-                  statusConfig.color,
-                  statusConfig.textColor
-                )}
-              >
+              className={cn(
+                statusConfig.color,
+                statusConfig.textColor
+              )}>
+
                 {statusConfig.label}
               </Badge>
             </div>
-          )}
+          }
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 }
 
 /**
@@ -189,15 +189,15 @@ export function ReadinessDashboard({
   title,
   subtitle,
   showFilters = false,
-  onFilterChange,
+  onFilterChange: _onFilterChange,
   className
 }) {
   // 计算统计数据
   const stats = useMemo(() => {
     const total = materials.length;
-    const ready = materials.filter(m => isMaterialReady(m.readiness_status)).length;
-    const inProgress = materials.filter(m => isMaterialInProgress(m.readiness_status)).length;
-    const delayed = materials.filter(m => isMaterialDelayed(m.readiness_status)).length;
+    const ready = materials.filter((m) => isMaterialReady(m.readiness_status)).length;
+    const inProgress = materials.filter((m) => isMaterialInProgress(m.readiness_status)).length;
+    const delayed = materials.filter((m) => isMaterialDelayed(m.readiness_status)).length;
 
     // 计算平均进度
     const totalProgress = materials.reduce((sum, m) => {
@@ -211,64 +211,64 @@ export function ReadinessDashboard({
       inProgress,
       delayed,
       avgProgress,
-      completionRate: total > 0 ? Math.round((ready / total) * 100) : 0,
-      onTimeRate: total > 0 ? Math.round(((total - delayed) / total) * 100) : 0
+      completionRate: total > 0 ? Math.round(ready / total * 100) : 0,
+      onTimeRate: total > 0 ? Math.round((total - delayed) / total * 100) : 0
     };
   }, [materials]);
 
   // 统计卡片数据
   const statCards = [
-    {
-      title: "物料总数",
-      value: stats.total,
-      color: "bg-blue-500",
-      textColor: "text-blue-50",
-      icon: "📦"
-    },
-    {
-      title: "已就绪",
-      value: stats.ready,
-      color: "bg-green-500",
-      textColor: "text-green-50",
-      icon: "✅"
-    },
-    {
-      title: "进行中",
-      value: stats.inProgress,
-      color: "bg-orange-500",
-      textColor: "text-orange-50",
-      icon: "⏳"
-    },
-    {
-      title: "延期",
-      value: stats.delayed,
-      color: "bg-red-500",
-      textColor: "text-red-50",
-      icon: "⚠️"
-    }
-  ];
+  {
+    title: "物料总数",
+    value: stats.total,
+    color: "bg-blue-500",
+    textColor: "text-blue-50",
+    icon: "📦"
+  },
+  {
+    title: "已就绪",
+    value: stats.ready,
+    color: "bg-green-500",
+    textColor: "text-green-50",
+    icon: "✅"
+  },
+  {
+    title: "进行中",
+    value: stats.inProgress,
+    color: "bg-orange-500",
+    textColor: "text-orange-50",
+    icon: "⏳"
+  },
+  {
+    title: "延期",
+    value: stats.delayed,
+    color: "bg-red-500",
+    textColor: "text-red-50",
+    icon: "⚠️"
+  }];
+
 
   return (
     <div className={cn("space-y-6", className)}>
       {/* 标题 */}
-      {(title || subtitle) && (
-        <div className="space-y-2">
-          {title && (
-            <h2 className="text-2xl font-bold text-gray-900">
+      {(title || subtitle) &&
+      <div className="space-y-2">
+          {title &&
+        <h2 className="text-2xl font-bold text-gray-900">
               {title}
             </h2>
-          )}
-          {subtitle && (
-            <p className="text-gray-600">
+        }
+          {subtitle &&
+        <p className="text-gray-600">
               {subtitle}
             </p>
-          )}
+        }
         </div>
-      )}
+      }
 
       {/* 过滤器 */}
-      {showFilters && (
-        <div className="flex space-x-2">
+      {showFilters &&
+      <div className="flex space-x-2">
           <button className="px-3 py-1 text-sm bg-gray-100 rounded-full hover:bg-gray-200">
             全部 ({stats.total})
           </button>
@@ -282,12 +282,12 @@ export function ReadinessDashboard({
             延期 ({stats.delayed})
           </button>
         </div>
-      )}
+      }
 
       {/* 统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statCards.map((stat, index) => (
-          <Card key={index}>
+        {statCards.map((stat, index) =>
+        <Card key={index}>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -299,23 +299,23 @@ export function ReadinessDashboard({
                   </p>
                 </div>
                 <div className={cn(
-                  "p-3 rounded-full",
-                  stat.color,
-                  stat.textColor
-                )}>
+                "p-3 rounded-full",
+                stat.color,
+                stat.textColor
+              )}>
                   <span className="text-lg">
                     {stat.icon}
                   </span>
                 </div>
               </div>
-              {stat.title === "已就绪" && stats.total > 0 && (
-                <p className="text-xs text-gray-500 mt-2">
+              {stat.title === "已就绪" && stats.total > 0 &&
+            <p className="text-xs text-gray-500 mt-2">
                   完成率 {stats.completionRate}%
                 </p>
-              )}
+            }
             </CardContent>
           </Card>
-        ))}
+        )}
       </div>
 
       {/* 仪表盘 */}
@@ -324,38 +324,38 @@ export function ReadinessDashboard({
         <ReadinessGauge
           progress={stats.avgProgress}
           status={stats.avgProgress >= 100 ? "READY_FOR_PRODUCTION" :
-                  stats.avgProgress >= 50 ? "SUPPLIER_PROCESSING" :
-                  stats.avgProgress >= 20 ? "PROCUREMENT_APPROVED" : "NOT_STARTED"}
+          stats.avgProgress >= 50 ? "SUPPLIER_PROCESSING" :
+          stats.avgProgress >= 20 ? "PROCUREMENT_APPROVED" : "NOT_STARTED"}
           title="总体准备进度"
           description={`${stats.total} 个物料的平均准备进度`}
-          size="lg"
-        />
+          size="lg" />
+
 
         {/* 完成率 */}
         <ReadinessGauge
           progress={stats.completionRate}
           status={stats.completionRate === 100 ? "READY_FOR_PRODUCTION" :
-                  stats.completionRate >= 80 ? "INSPECTED" :
-                  stats.completionRate >= 50 ? "FULLY_SHIPPED" : "IN_PROGRESS"}
+          stats.completionRate >= 80 ? "INSPECTED" :
+          stats.completionRate >= 50 ? "FULLY_SHIPPED" : "IN_PROGRESS"}
           title="物料完成率"
           description={`${stats.ready} / ${stats.total} 个物料已就绪`}
           size="lg"
           variant={stats.completionRate >= 80 ? "success" :
-                   stats.completionRate >= 50 ? "warning" : "default"}
-        />
+          stats.completionRate >= 50 ? "warning" : "default"} />
+
 
         {/* 准时率 */}
         <ReadinessGauge
           progress={stats.onTimeRate}
           status={stats.onTimeRate === 100 ? "READY_FOR_PRODUCTION" :
-                  stats.onTimeRate >= 80 ? "INSPECTED" :
-                  stats.onTimeRate >= 50 ? "SUPPLIER_PROCESSING" : "DELAYED"}
+          stats.onTimeRate >= 80 ? "INSPECTED" :
+          stats.onTimeRate >= 50 ? "SUPPLIER_PROCESSING" : "DELAYED"}
           title="交付准时率"
           description={`${stats.total - stats.delayed} / ${stats.total} 个物料准时交付`}
           size="lg"
           variant={stats.onTimeRate >= 80 ? "success" :
-                   stats.onTimeRate >= 50 ? "warning" : "danger"}
-        />
+          stats.onTimeRate >= 50 ? "warning" : "danger"} />
+
       </div>
 
       {/* 进度条 */}
@@ -385,12 +385,12 @@ export function ReadinessDashboard({
                   <span className="w-3 h-3 bg-orange-500 rounded-full mr-2"></span>
                   进行中
                 </span>
-                <span>{stats.inProgress} ({Math.round((stats.inProgress / stats.total) * 100)}%)</span>
+                <span>{stats.inProgress} ({Math.round(stats.inProgress / stats.total * 100)}%)</span>
               </div>
               <Progress
-                value={Math.round((stats.inProgress / stats.total) * 100)}
-                className="h-2"
-              />
+                value={Math.round(stats.inProgress / stats.total * 100)}
+                className="h-2" />
+
             </div>
 
             {/* 延期 */}
@@ -400,18 +400,18 @@ export function ReadinessDashboard({
                   <span className="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
                   延期
                 </span>
-                <span>{stats.delayed} ({Math.round((stats.delayed / stats.total) * 100)}%)</span>
+                <span>{stats.delayed} ({Math.round(stats.delayed / stats.total * 100)}%)</span>
               </div>
               <Progress
-                value={Math.round((stats.delayed / stats.total) * 100)}
-                className="h-2"
-              />
+                value={Math.round(stats.delayed / stats.total * 100)}
+                className="h-2" />
+
             </div>
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>);
+
 }
 
 export default ReadinessGauge;

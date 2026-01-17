@@ -15,6 +15,7 @@ import {
 } from "../../components/ui/dialog";
 import { Button } from "../../components/ui/button";
 import { Textarea } from "../../components/ui/textarea";
+import { toast } from "../../components/ui/toast";
 import { User } from "lucide-react";
 
 export function ServiceTicketAssignDialog({ ticketId, onClose, onSubmit, submitting = false }) {

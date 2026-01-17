@@ -27,8 +27,8 @@ import {
   CreditCard,
   TrendingUp,
   TrendingDown,
-  BarChart3,
-} from "lucide-react";
+  BarChart3 } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -48,9 +48,9 @@ import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger,
-} from "../components/ui";
-import { cn, formatCurrency, formatDate } from "../lib/utils";
+  TabsTrigger } from
+"../components/ui";
+import { cn, formatCurrency, formatDate as _formatDate } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { settlementApi } from "../services/api";
 
@@ -59,23 +59,23 @@ const statusConfig = {
   DRAFT: {
     label: "草稿",
     color: "bg-slate-500/20 text-slate-400",
-    icon: FileText,
+    icon: FileText
   },
   PENDING: {
     label: "待确认",
     color: "bg-amber-500/20 text-amber-400",
-    icon: Clock,
+    icon: Clock
   },
   CONFIRMED: {
     label: "已确认",
     color: "bg-blue-500/20 text-blue-400",
-    icon: CheckCircle2,
+    icon: CheckCircle2
   },
   SETTLED: {
     label: "已结算",
     color: "bg-emerald-500/20 text-emerald-400",
-    icon: CheckCircle2,
-  },
+    icon: CheckCircle2
+  }
 };
 
 export default function ProjectSettlement() {
@@ -83,8 +83,8 @@ export default function ProjectSettlement() {
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedSettlement, setSelectedSettlement] = useState(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [_loading, setLoading] = useState(false);
+  const [_error, setError] = useState(null);
   const [settlements, setSettlements] = useState([]);
 
   // Fetch settlements from API
@@ -110,20 +110,20 @@ export default function ProjectSettlement() {
   const filteredSettlements = useMemo(() => {
     return settlements.filter((settlement) => {
       const matchesSearch =
-        !searchTerm ||
-        settlement.settlementNo
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        settlement.projectName
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        settlement.customerName
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        settlement.contractNo.toLowerCase().includes(searchTerm.toLowerCase());
+      !searchTerm ||
+      settlement.settlementNo.
+      toLowerCase().
+      includes(searchTerm.toLowerCase()) ||
+      settlement.projectName.
+      toLowerCase().
+      includes(searchTerm.toLowerCase()) ||
+      settlement.customerName.
+      toLowerCase().
+      includes(searchTerm.toLowerCase()) ||
+      settlement.contractNo.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesStatus =
-        selectedStatus === "all" || settlement.status === selectedStatus;
+      selectedStatus === "all" || settlement.status === selectedStatus;
 
       return matchesSearch && matchesStatus;
     });
@@ -135,26 +135,26 @@ export default function ProjectSettlement() {
       total: filteredSettlements.length,
       totalContractAmount: filteredSettlements.reduce(
         (sum, s) => sum + s.contractAmount,
-        0,
+        0
       ),
       totalCost: filteredSettlements.reduce((sum, s) => sum + s.totalCost, 0),
       totalProfit: filteredSettlements.reduce(
         (sum, s) => sum + s.grossProfit,
-        0,
+        0
       ),
       averageMargin:
-        filteredSettlements.length > 0
-          ? filteredSettlements.reduce((sum, s) => sum + s.grossMargin, 0) /
-            filteredSettlements.length
-          : 0,
+      filteredSettlements.length > 0 ?
+      filteredSettlements.reduce((sum, s) => sum + s.grossMargin, 0) /
+      filteredSettlements.length :
+      0,
       totalReceived: filteredSettlements.reduce(
         (sum, s) => sum + s.receivedAmount,
-        0,
+        0
       ),
       totalReceivable: filteredSettlements.reduce(
         (sum, s) => sum + s.receivableAmount,
-        0,
-      ),
+        0
+      )
     };
   }, [filteredSettlements]);
 
@@ -163,37 +163,37 @@ export default function ProjectSettlement() {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       {/* Page Header */}
       <PageHeader
         title="项目结算"
         description="项目财务结算、成本核算、利润分析"
         icon={Receipt}
         actions={
-          <motion.div variants={fadeIn} className="flex gap-2">
+        <motion.div variants={fadeIn} className="flex gap-2">
             <Button variant="outline" className="flex items-center gap-2">
               <Download className="w-4 h-4" />
               导出报表
             </Button>
             <Button
-              className="flex items-center gap-2"
-              onClick={() => setShowCreateDialog(true)}
-            >
+            className="flex items-center gap-2"
+            onClick={() => setShowCreateDialog(true)}>
+
               <Plus className="w-4 h-4" />
               创建结算
             </Button>
           </motion.div>
-        }
-      />
+        } />
+
 
       {/* Statistics */}
       <motion.div
         variants={staggerContainer}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4"
-      >
+        className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
+
         <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
@@ -222,12 +222,12 @@ export default function ProjectSettlement() {
                   {formatCurrency(stats.totalCost)}
                 </p>
                 <p className="text-xs text-slate-500 mt-1">
-                  {stats.totalContractAmount > 0
-                    ? (
-                        (stats.totalCost / stats.totalContractAmount) *
-                        100
-                      ).toFixed(1)
-                    : 0}
+                  {stats.totalContractAmount > 0 ?
+                  (
+                  stats.totalCost / stats.totalContractAmount *
+                  100).
+                  toFixed(1) :
+                  0}
                   %占比
                 </p>
               </div>
@@ -263,12 +263,12 @@ export default function ProjectSettlement() {
               <div>
                 <p className="text-sm text-slate-400 mb-2">回款率</p>
                 <p className="text-2xl font-bold text-cyan-400">
-                  {stats.totalContractAmount > 0
-                    ? (
-                        (stats.totalReceived / stats.totalContractAmount) *
-                        100
-                      ).toFixed(1)
-                    : 0}
+                  {stats.totalContractAmount > 0 ?
+                  (
+                  stats.totalReceived / stats.totalContractAmount *
+                  100).
+                  toFixed(1) :
+                  0}
                   %
                 </p>
                 <p className="text-xs text-slate-500 mt-1">
@@ -294,20 +294,20 @@ export default function ProjectSettlement() {
                   placeholder="搜索结算单号、项目、客户、合同号..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+                  className="pl-10" />
+
               </div>
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
-              >
+                className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary">
+
                 <option value="all">全部状态</option>
-                {Object.entries(statusConfig).map(([key, val]) => (
-                  <option key={key} value={key}>
+                {Object.entries(statusConfig).map(([key, val]) =>
+                <option key={key} value={key}>
                     {val.label}
                   </option>
-                ))}
+                )}
               </select>
             </div>
           </CardContent>
@@ -337,8 +337,8 @@ export default function ProjectSettlement() {
                   <div
                     key={settlement.id}
                     className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors cursor-pointer"
-                    onClick={() => setSelectedSettlement(settlement)}
-                  >
+                    onClick={() => setSelectedSettlement(settlement)}>
+
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
@@ -347,8 +347,8 @@ export default function ProjectSettlement() {
                           </span>
                           <Badge
                             variant="outline"
-                            className={cn("text-xs", statusConf?.color)}
-                          >
+                            className={cn("text-xs", statusConf?.color)}>
+
                             <StatusIcon className="w-3 h-3 mr-1" />
                             {settlement.statusLabel}
                           </Badge>
@@ -362,12 +362,12 @@ export default function ProjectSettlement() {
                             合同: {settlement.contractNo} · 合同金额:{" "}
                             {formatCurrency(settlement.contractAmount)}
                           </div>
-                          {settlement.settlementDate && (
-                            <div>
+                          {settlement.settlementDate &&
+                          <div>
                               结算日期: {settlement.settlementDate} · 结算人:{" "}
                               {settlement.settledBy}
                             </div>
-                          )}
+                          }
                         </div>
                       </div>
                       <div className="text-right ml-4">
@@ -415,7 +415,7 @@ export default function ProjectSettlement() {
                         </div>
                         <div className="text-sm font-medium text-white">
                           {formatCurrency(
-                            settlement.expenseCost + settlement.otherCost,
+                            settlement.expenseCost + settlement.otherCost
                           )}
                         </div>
                       </div>
@@ -440,21 +440,21 @@ export default function ProjectSettlement() {
                       </div>
                       <Progress
                         value={
-                          (settlement.receivedAmount /
-                            settlement.contractAmount) *
-                          100
+                        settlement.receivedAmount /
+                        settlement.contractAmount *
+                        100
                         }
-                        className="h-2 bg-slate-700/50"
-                      />
+                        className="h-2 bg-slate-700/50" />
+
                     </div>
-                  </div>
-                );
+                  </div>);
+
               })}
-              {filteredSettlements.length === 0 && (
-                <div className="text-center py-12 text-slate-500">
+              {filteredSettlements.length === 0 &&
+              <div className="text-center py-12 text-slate-500">
                   暂无结算单
                 </div>
-              )}
+              }
             </div>
           </CardContent>
         </Card>
@@ -463,14 +463,14 @@ export default function ProjectSettlement() {
       {/* Settlement Detail Dialog */}
       <Dialog
         open={!!selectedSettlement}
-        onOpenChange={() => setSelectedSettlement(null)}
-      >
+        onOpenChange={() => setSelectedSettlement(null)}>
+
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>结算单详情</DialogTitle>
           </DialogHeader>
-          {selectedSettlement && (
-            <div className="py-4 space-y-6">
+          {selectedSettlement &&
+          <div className="py-4 space-y-6">
               {/* Basic Info */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -549,9 +549,9 @@ export default function ProjectSettlement() {
                     <div className="text-xs text-slate-400 mb-1">其他费用</div>
                     <div className="text-lg font-bold text-white">
                       {formatCurrency(
-                        selectedSettlement.expenseCost +
-                          selectedSettlement.otherCost,
-                      )}
+                      selectedSettlement.expenseCost +
+                      selectedSettlement.otherCost
+                    )}
                     </div>
                   </div>
                   <div className="p-3 bg-slate-800/40 rounded-lg border-2 border-red-500/30">
@@ -569,67 +569,67 @@ export default function ProjectSettlement() {
                   收款节点
                 </h3>
                 <div className="space-y-2">
-                  {selectedSettlement.milestones.map((milestone, index) => (
-                    <div
-                      key={index}
-                      className={cn(
-                        "p-3 rounded-lg border",
-                        milestone.received
-                          ? "bg-emerald-500/10 border-emerald-500/30"
-                          : "bg-slate-800/40 border-slate-700/50",
-                      )}
-                    >
+                  {selectedSettlement.milestones.map((milestone, index) =>
+                <div
+                  key={index}
+                  className={cn(
+                    "p-3 rounded-lg border",
+                    milestone.received ?
+                    "bg-emerald-500/10 border-emerald-500/30" :
+                    "bg-slate-800/40 border-slate-700/50"
+                  )}>
+
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          {milestone.received ? (
-                            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                          ) : (
-                            <Clock className="w-5 h-5 text-slate-400" />
-                          )}
+                          {milestone.received ?
+                      <CheckCircle2 className="w-5 h-5 text-emerald-400" /> :
+
+                      <Clock className="w-5 h-5 text-slate-400" />
+                      }
                           <div>
                             <div className="font-medium text-white">
                               {milestone.name}
                             </div>
-                            {milestone.received ? (
-                              <div className="text-xs text-slate-400">
+                            {milestone.received ?
+                        <div className="text-xs text-slate-400">
                                 已收 · {milestone.receivedDate}
-                              </div>
-                            ) : (
-                              <div className="text-xs text-slate-400">
+                              </div> :
+
+                        <div className="text-xs text-slate-400">
                                 待收 · 到期: {milestone.dueDate}
                               </div>
-                            )}
+                        }
                           </div>
                         </div>
                         <div className="text-right">
                           <div
-                            className={cn(
-                              "font-bold",
-                              milestone.received
-                                ? "text-emerald-400"
-                                : "text-amber-400",
-                            )}
-                          >
+                        className={cn(
+                          "font-bold",
+                          milestone.received ?
+                          "text-emerald-400" :
+                          "text-amber-400"
+                        )}>
+
                             {formatCurrency(milestone.amount)}
                           </div>
                         </div>
                       </div>
                     </div>
-                  ))}
+                )}
                 </div>
               </div>
             </div>
-          )}
+          }
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setSelectedSettlement(null)}
-            >
+              onClick={() => setSelectedSettlement(null)}>
+
               关闭
             </Button>
-            {selectedSettlement?.status === "PENDING" && (
-              <Button>确认结算</Button>
-            )}
+            {selectedSettlement?.status === "PENDING" &&
+            <Button>确认结算</Button>
+            }
             <Button variant="outline">
               <Download className="w-4 h-4 mr-2" />
               导出
@@ -669,21 +669,21 @@ export default function ProjectSettlement() {
               <label className="text-sm text-slate-400">备注</label>
               <textarea
                 placeholder="请输入备注信息..."
-                className="w-full px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white resize-none h-20"
-              />
+                className="w-full px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white resize-none h-20" />
+
             </div>
           </div>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowCreateDialog(false)}
-            >
+              onClick={() => setShowCreateDialog(false)}>
+
               取消
             </Button>
             <Button onClick={() => setShowCreateDialog(false)}>创建</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

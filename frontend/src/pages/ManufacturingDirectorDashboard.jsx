@@ -5,7 +5,7 @@
  * Core Functions: Production plan approval, Resource coordination, Multi-department management
  */
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo as _useMemo, useEffect as _useEffect, useCallback as _useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Factory,
@@ -38,8 +38,8 @@ import {
   PackageX,
   MapPin,
   Timer,
-  Award,
-} from "lucide-react";
+  Award } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -53,17 +53,17 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-  Input,
-} from "../components/ui";
+  Input } from
+"../components/ui";
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import {
-  productionApi,
-  shortageApi,
-  serviceApi,
-  materialApi,
-  businessSupportApi,
-} from "../services/api";
+  productionApi as _productionApi,
+  shortageApi as _shortageApi,
+  serviceApi as _serviceApi,
+  materialApi as _materialApi,
+  businessSupportApi as _businessSupportApi } from
+"../services/api";
 import CultureWallCarousel from "../components/culture/CultureWallCarousel";
 import { ApiIntegrationError } from "../components/ui";
 
@@ -81,35 +81,35 @@ export default function ManufacturingDirectorDashboard() {
   // 状态定义
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTab, setSelectedTab] = useState("overview");
-  const [productionStats, setProductionStats] = useState(null);
-  const [serviceStats, setServiceStats] = useState(null);
-  const [warehouseStats, setWarehouseStats] = useState(null);
-  const [shippingStats, setShippingStats] = useState({
+  const [productionStats, _setProductionStats] = useState(null);
+  const [serviceStats, _setServiceStats] = useState(null);
+  const [warehouseStats, _setWarehouseStats] = useState(null);
+  const [shippingStats, _setShippingStats] = useState({
     pendingShipments: 0,
     shippedToday: 0,
     onTimeShippingRate: 0,
     inTransit: 0,
-    avgShippingTime: 0,
+    avgShippingTime: 0
   });
-  const [pendingApprovals, setPendingApprovals] = useState([]);
-  const [workshopCards, setWorkshopCards] = useState([]);
-  const [dailyError, setDailyError] = useState(null);
-  const [productionDaily, setProductionDaily] = useState(null);
-  const [shortageDaily, setShortageDaily] = useState(null);
-  const [loadingDaily, setLoadingDaily] = useState(false);
+  const [_pendingApprovals, _setPendingApprovals] = useState([]);
+  const [workshopCards, _setWorkshopCards] = useState([]);
+  const [dailyError, _setDailyError] = useState(null);
+  const [productionDaily, _setProductionDaily] = useState(null);
+  const [shortageDaily, _setShortageDaily] = useState(null);
+  const [loadingDaily, _setLoadingDaily] = useState(false);
 
   return (
     <motion.div
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       <PageHeader
         title="制造总监工作台"
         description="制造中心全面管理 | 生产计划审批 | 资源协调"
         actions={
-          <motion.div variants={fadeIn} className="flex gap-2">
+        <motion.div variants={fadeIn} className="flex gap-2">
             <Button variant="outline" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
               运营报表
@@ -119,8 +119,8 @@ export default function ManufacturingDirectorDashboard() {
               审批中心
             </Button>
           </motion.div>
-        }
-      />
+        } />
+
 
       {/* 文化墙滚动播放 */}
       <motion.div variants={fadeIn}>
@@ -139,46 +139,46 @@ export default function ManufacturingDirectorDashboard() {
               // 跳转到文化墙详情页
               window.location.href = `/culture-wall?item=${item.id}`;
             }
-          }}
-        />
+          }} />
+
       </motion.div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-400">
         <div>
-          {selectedDate
-            ? `当前日期：${selectedDate}`
-            : "显示最新生成的日报数据"}
+          {selectedDate ?
+          `当前日期：${selectedDate}` :
+          "显示最新生成的日报数据"}
         </div>
         <div className="flex items-center gap-2">
           <Input
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="bg-slate-900/50 border-slate-700 text-sm"
-          />
-          {selectedDate && (
-            <Button
-              variant="ghost"
-              className="text-slate-300"
-              onClick={() => setSelectedDate("")}
-            >
+            className="bg-slate-900/50 border-slate-700 text-sm" />
+
+          {selectedDate &&
+          <Button
+            variant="ghost"
+            className="text-slate-300"
+            onClick={() => setSelectedDate("")}>
+
               清空
             </Button>
-          )}
+          }
         </div>
       </div>
 
-      {(dailyError || productionDaily || shortageDaily || loadingDaily) && (
-        <div className="space-y-3">
-          {dailyError && (
-            <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+      {(dailyError || productionDaily || shortageDaily || loadingDaily) &&
+      <div className="space-y-3">
+          {dailyError &&
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
               {dailyError}
             </div>
-          )}
-          {(productionDaily || shortageDaily) && (
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              {productionDaily && (
-                <Card className="bg-slate-900/60 border-slate-800">
+        }
+          {(productionDaily || shortageDaily) &&
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              {productionDaily &&
+          <Card className="bg-slate-900/60 border-slate-800">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg flex items-center gap-2">
                       <Activity className="w-5 h-5 text-emerald-400" />
@@ -203,14 +203,14 @@ export default function ManufacturingDirectorDashboard() {
                         <p className="text-sm text-slate-400">完成率</p>
                         <p className="text-3xl font-semibold text-emerald-400">
                           {(
-                            productionDaily.overall?.completion_rate ?? 0
-                          ).toFixed(1)}
+                    productionDaily.overall?.completion_rate ?? 0).
+                    toFixed(1)}
                           %
                         </p>
                         <Progress
-                          value={productionDaily.overall?.completion_rate || 0}
-                          className="h-2 mt-2"
-                        />
+                    value={productionDaily.overall?.completion_rate || 0}
+                    className="h-2 mt-2" />
+
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -231,16 +231,16 @@ export default function ManufacturingDirectorDashboard() {
                         </p>
                       </div>
                     </div>
-                    {productionDaily.overall?.summary && (
-                      <p className="text-sm text-slate-300">
+                    {productionDaily.overall?.summary &&
+              <p className="text-sm text-slate-300">
                         {productionDaily.overall.summary}
                       </p>
-                    )}
+              }
                   </CardContent>
                 </Card>
-              )}
-              {shortageDaily && (
-                <Card className="bg-slate-900/60 border-slate-800">
+          }
+              {shortageDaily &&
+          <Card className="bg-slate-900/60 border-slate-800">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg flex items-center gap-2">
                       <AlertTriangle className="w-5 h-5 text-amber-400" />
@@ -302,21 +302,21 @@ export default function ManufacturingDirectorDashboard() {
                     </div>
                     <div className="grid grid-cols-4 gap-2 text-xs text-slate-400">
                       {["level1", "level2", "level3", "level4"].map(
-                        (levelKey, idx) => {
-                          const labels = ["一级", "二级", "三级", "四级"];
-                          return (
-                            <div
-                              key={levelKey}
-                              className="rounded bg-slate-800/60 px-2 py-1 text-center"
-                            >
+                  (levelKey, idx) => {
+                    const labels = ["一级", "二级", "三级", "四级"];
+                    return (
+                      <div
+                        key={levelKey}
+                        className="rounded bg-slate-800/60 px-2 py-1 text-center">
+
                               <p>{labels[idx]}</p>
                               <p className="text-base text-white">
                                 {shortageDaily.alerts?.levels?.[levelKey] ?? 0}
                               </p>
-                            </div>
-                          );
-                        },
-                      )}
+                            </div>);
+
+                  }
+                )}
                     </div>
                     <div className="text-xs text-slate-500">
                       停工 {shortageDaily.stoppage?.count ?? 0} 次 ·{" "}
@@ -324,121 +324,121 @@ export default function ManufacturingDirectorDashboard() {
                     </div>
                   </CardContent>
                 </Card>
-              )}
+          }
             </div>
-          )}
-          {loadingDaily && (
-            <div className="text-sm text-slate-400">
+        }
+          {loadingDaily &&
+        <div className="text-sm text-slate-400">
               正在同步最新日报数据...
             </div>
-          )}
+        }
         </div>
-      )}
+      }
 
       {/* Key Statistics - 8 column grid for 4 departments */}
-      {(productionStats || serviceStats || warehouseStats || shippingStats) && (
-        <motion.div
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-          className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8"
-        >
+      {(productionStats || serviceStats || warehouseStats || shippingStats) &&
+      <motion.div
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8">
+
           {/* Production Department Stats */}
-          {productionStats && (
-            <>
+          {productionStats &&
+        <>
               <StatCard
-                title="生产项目"
-                value={productionStats.inProductionProjects || 0}
-                subtitle={`今日产出 ${productionStats.todayOutput || 0}`}
-                trend={5.2}
-                icon={Factory}
-                color="text-blue-400"
-                bg="bg-blue-500/10"
-              />
+            title="生产项目"
+            value={productionStats.inProductionProjects || 0}
+            subtitle={`今日产出 ${productionStats.todayOutput || 0}`}
+            trend={5.2}
+            icon={Factory}
+            color="text-blue-400"
+            bg="bg-blue-500/10" />
+
               <StatCard
-                title="完成率"
-                value={`${productionStats.completionRate || 0}%`}
-                subtitle="生产完成率"
-                icon={Target}
-                color="text-emerald-400"
-                bg="bg-emerald-500/10"
-              />
+            title="完成率"
+            value={`${productionStats.completionRate || 0}%`}
+            subtitle="生产完成率"
+            icon={Target}
+            color="text-emerald-400"
+            bg="bg-emerald-500/10" />
+
             </>
-          )}
+        }
 
           {/* Customer Service Department Stats */}
-          {serviceStats && (
-            <>
+          {serviceStats &&
+        <>
               <StatCard
-                title="服务案例"
-                value={serviceStats.activeCases || 0}
-                subtitle={`今日解决 ${serviceStats.resolvedToday || 0}`}
-                trend={8.5}
-                icon={Headphones}
-                color="text-purple-400"
-                bg="bg-purple-500/10"
-              />
+            title="服务案例"
+            value={serviceStats.activeCases || 0}
+            subtitle={`今日解决 ${serviceStats.resolvedToday || 0}`}
+            trend={8.5}
+            icon={Headphones}
+            color="text-purple-400"
+            bg="bg-purple-500/10" />
+
               <StatCard
-                title="满意度"
-                value={`${(serviceStats.customerSatisfaction || 0).toFixed(1)}%`}
-                subtitle="客户满意度"
-                icon={Award}
-                color="text-amber-400"
-                bg="bg-amber-500/10"
-              />
+            title="满意度"
+            value={`${(serviceStats.customerSatisfaction || 0).toFixed(1)}%`}
+            subtitle="客户满意度"
+            icon={Award}
+            color="text-amber-400"
+            bg="bg-amber-500/10" />
+
             </>
-          )}
+        }
 
           {/* Warehouse Department Stats */}
-          {warehouseStats && (
-            <>
+          {warehouseStats &&
+        <>
               <StatCard
-                title="库存SKU"
-                value={warehouseStats.totalItems || 0}
-                subtitle={`在库 ${warehouseStats.inStockItems || 0}`}
-                trend={-2.3}
-                icon={Warehouse}
-                color="text-cyan-400"
-                bg="bg-cyan-500/10"
-              />
+            title="库存SKU"
+            value={warehouseStats.totalItems || 0}
+            subtitle={`在库 ${warehouseStats.inStockItems || 0}`}
+            trend={-2.3}
+            icon={Warehouse}
+            color="text-cyan-400"
+            bg="bg-cyan-500/10" />
+
               <StatCard
-                title="周转率"
-                value={`${(warehouseStats.inventoryTurnover || 0).toFixed(1)}x`}
-                subtitle="库存周转"
-                icon={Activity}
-                color="text-indigo-400"
-                bg="bg-indigo-500/10"
-              />
+            title="周转率"
+            value={`${(warehouseStats.inventoryTurnover || 0).toFixed(1)}x`}
+            subtitle="库存周转"
+            icon={Activity}
+            color="text-indigo-400"
+            bg="bg-indigo-500/10" />
+
             </>
-          )}
+        }
 
           {/* Shipping Department Stats */}
           <StatCard
-            title="待发货"
-            value={shippingStats.pendingShipments}
-            subtitle={`今日已发 ${shippingStats.shippedToday}`}
-            trend={12.5}
-            icon={Ship}
-            color="text-orange-400"
-            bg="bg-orange-500/10"
-          />
+          title="待发货"
+          value={shippingStats.pendingShipments}
+          subtitle={`今日已发 ${shippingStats.shippedToday}`}
+          trend={12.5}
+          icon={Ship}
+          color="text-orange-400"
+          bg="bg-orange-500/10" />
+
           <StatCard
-            title="准时率"
-            value={`${shippingStats.onTimeShippingRate.toFixed(1)}%`}
-            subtitle="发货准时率"
-            icon={CheckCircle2}
-            color="text-green-400"
-            bg="bg-green-500/10"
-          />
+          title="准时率"
+          value={`${shippingStats.onTimeShippingRate.toFixed(1)}%`}
+          subtitle="发货准时率"
+          icon={CheckCircle2}
+          color="text-green-400"
+          bg="bg-green-500/10" />
+
         </motion.div>
-      )}
+      }
 
       {/* Main Content Tabs */}
       <Tabs
         value={selectedTab}
         onValueChange={setSelectedTab}
-        className="space-y-6"
-      >
+        className="space-y-6">
+
         <TabsList className="bg-surface-50 border-white/10">
           <TabsTrigger value="overview">综合概览</TabsTrigger>
           <TabsTrigger value="production">生产部</TabsTrigger>
@@ -452,8 +452,8 @@ export default function ManufacturingDirectorDashboard() {
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Production Overview */}
-            {productionStats && (
-              <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
+            {productionStats &&
+            <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Factory className="w-5 h-5 text-blue-400" />
@@ -469,9 +469,9 @@ export default function ManufacturingDirectorDashboard() {
                       </span>
                     </div>
                     <Progress
-                      value={productionStats.workshopLoad || 0}
-                      className="h-2"
-                    />
+                    value={productionStats.workshopLoad || 0}
+                    className="h-2" />
+
                   </div>
                   <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
                     <div>
@@ -495,11 +495,11 @@ export default function ManufacturingDirectorDashboard() {
                   </Button>
                 </CardContent>
               </Card>
-            )}
+            }
 
             {/* Customer Service Overview */}
-            {serviceStats && (
-              <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
+            {serviceStats &&
+            <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Headphones className="w-5 h-5 text-purple-400" />
@@ -537,11 +537,11 @@ export default function ManufacturingDirectorDashboard() {
                   </Button>
                 </CardContent>
               </Card>
-            )}
+            }
 
             {/* Warehouse & Shipping Overview */}
-            {warehouseStats && shippingStats && (
-              <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
+            {warehouseStats && shippingStats &&
+            <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Package className="w-5 h-5 text-cyan-400" />
@@ -557,9 +557,9 @@ export default function ManufacturingDirectorDashboard() {
                       </span>
                     </div>
                     <Progress
-                      value={warehouseStats.warehouseUtilization || 0}
-                      className="h-2"
-                    />
+                    value={warehouseStats.warehouseUtilization || 0}
+                    className="h-2" />
+
                     <div className="flex items-center justify-between text-sm pt-2 border-t border-white/10">
                       <span className="text-slate-400">在途订单</span>
                       <span className="text-white font-semibold">
@@ -587,7 +587,7 @@ export default function ManufacturingDirectorDashboard() {
                   </Button>
                 </CardContent>
               </Card>
-            )}
+            }
           </div>
 
           {/* Pending Approvals Quick View */}
@@ -600,8 +600,8 @@ export default function ManufacturingDirectorDashboard() {
                 </CardTitle>
                 <Badge
                   variant="outline"
-                  className="bg-amber-500/20 text-amber-400 border-amber-500/30"
-                >
+                  className="bg-amber-500/20 text-amber-400 border-amber-500/30">
+
                   {/* 待审批事项数量 - 需要从API获取 */}
                 </Badge>
               </div>
@@ -628,35 +628,35 @@ export default function ManufacturingDirectorDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {workshopCards.map((workshop, index) => (
-                  <motion.div
-                    key={workshop.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="p-4 rounded-lg bg-slate-800/40 border border-slate-700/50"
-                  >
+                {workshopCards.map((workshop, index) =>
+                <motion.div
+                  key={workshop.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="p-4 rounded-lg bg-slate-800/40 border border-slate-700/50">
+
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <div
-                          className={cn(
-                            "w-3 h-3 rounded-full",
-                            workshop.status === "normal"
-                              ? "bg-emerald-500"
-                              : "bg-amber-500",
-                          )}
-                        />
+                        className={cn(
+                          "w-3 h-3 rounded-full",
+                          workshop.status === "normal" ?
+                          "bg-emerald-500" :
+                          "bg-amber-500"
+                        )} />
+
                         <h4 className="font-semibold text-white">
                           {workshop.name}
                         </h4>
                         <Badge
-                          className={cn(
-                            "text-xs",
-                            workshop.status === "normal"
-                              ? "bg-emerald-500/20 text-emerald-400"
-                              : "bg-amber-500/20 text-amber-400",
-                          )}
-                        >
+                        className={cn(
+                          "text-xs",
+                          workshop.status === "normal" ?
+                          "bg-emerald-500/20 text-emerald-400" :
+                          "bg-amber-500/20 text-amber-400"
+                        )}>
+
                           {workshop.status === "normal" ? "正常" : "负荷高"}
                         </Badge>
                       </div>
@@ -668,9 +668,9 @@ export default function ManufacturingDirectorDashboard() {
                       </div>
                     </div>
                     <Progress
-                      value={workshop.currentLoad}
-                      className="h-2 mb-3"
-                    />
+                    value={workshop.currentLoad}
+                    className="h-2 mb-3" />
+
                     <div className="grid grid-cols-3 gap-4 text-sm">
                       <div>
                         <p className="text-slate-400">工位</p>
@@ -693,7 +693,7 @@ export default function ManufacturingDirectorDashboard() {
                       </div>
                     </div>
                   </motion.div>
-                ))}
+                )}
               </CardContent>
             </Card>
 
@@ -715,8 +715,8 @@ export default function ManufacturingDirectorDashboard() {
                   </div>
                   <Progress
                     value={productionStats.completionRate}
-                    className="h-2"
-                  />
+                    className="h-2" />
+
                 </div>
                 <div className="p-4 rounded-lg bg-slate-800/40 border border-slate-700/50">
                   <div className="flex items-center justify-between mb-2">
@@ -727,8 +727,8 @@ export default function ManufacturingDirectorDashboard() {
                   </div>
                   <Progress
                     value={productionStats.onTimeDeliveryRate}
-                    className="h-2"
-                  />
+                    className="h-2" />
+
                 </div>
                 <div className="p-4 rounded-lg bg-slate-800/40 border border-slate-700/50">
                   <div className="flex items-center justify-between mb-2">
@@ -780,8 +780,8 @@ export default function ManufacturingDirectorDashboard() {
                   </div>
                   <Progress
                     value={serviceStats.customerSatisfaction}
-                    className="h-2"
-                  />
+                    className="h-2" />
+
                 </div>
                 <div className="p-4 rounded-lg bg-slate-800/40 border border-slate-700/50">
                   <div className="flex items-center justify-between mb-2">
@@ -841,8 +841,8 @@ export default function ManufacturingDirectorDashboard() {
                   </div>
                   <Progress
                     value={warehouseStats.warehouseUtilization}
-                    className="h-2"
-                  />
+                    className="h-2" />
+
                 </div>
                 <div className="p-4 rounded-lg bg-slate-800/40 border border-slate-700/50">
                   <div className="flex items-center justify-between mb-2">
@@ -891,8 +891,8 @@ export default function ManufacturingDirectorDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {shippingStats ? (
-                  <>
+                {shippingStats ?
+                <>
                     <div className="p-4 rounded-lg bg-slate-800/40 border border-slate-700/50">
                       <div className="flex items-center justify-between mb-2">
                         <p className="text-sm text-slate-400">准时发货率</p>
@@ -901,9 +901,9 @@ export default function ManufacturingDirectorDashboard() {
                         </p>
                       </div>
                       <Progress
-                        value={shippingStats.onTimeShippingRate || 0}
-                        className="h-2"
-                      />
+                      value={shippingStats.onTimeShippingRate || 0}
+                      className="h-2" />
+
                     </div>
                     <div className="p-4 rounded-lg bg-slate-800/40 border border-slate-700/50">
                       <div className="flex items-center justify-between mb-2">
@@ -921,12 +921,12 @@ export default function ManufacturingDirectorDashboard() {
                         </p>
                       </div>
                     </div>
-                  </>
-                ) : (
-                  <div className="text-center py-8 text-slate-500">
+                  </> :
+
+                <div className="text-center py-8 text-slate-500">
                     <p>发货数据需要从API获取</p>
                   </div>
-                )}
+                }
               </CardContent>
             </Card>
           </div>
@@ -943,8 +943,8 @@ export default function ManufacturingDirectorDashboard() {
                 </CardTitle>
                 <Badge
                   variant="outline"
-                  className="bg-amber-500/20 text-amber-400 border-amber-500/30"
-                >
+                  className="bg-amber-500/20 text-amber-400 border-amber-500/30">
+
                   {/* 待审批事项数量 - 需要从API获取 */}
                 </Badge>
               </div>
@@ -952,60 +952,60 @@ export default function ManufacturingDirectorDashboard() {
             <CardContent className="space-y-3">
               {/* 待审批事项 - 需要从API获取数据 */}
               {/* {pendingApprovals.map((item) => (
-                <div
-                  key={item.id}
-                  className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors cursor-pointer"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            'text-xs',
-                            item.type === 'production_plan' && 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-                            item.type === 'resource_allocation' && 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-                            item.type === 'warehouse_expansion' && 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'
-                          )}
-                        >
-                          {item.type === 'production_plan' ? '生产计划' : 
-                           item.type === 'resource_allocation' ? '资源调配' : '仓储扩容'}
-                        </Badge>
-                        {item.priority === 'high' && (
-                          <Badge className="text-xs bg-red-500/20 text-red-400 border-red-500/30">
-                            紧急
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="font-medium text-white text-sm mb-1">
-                        {item.projectName || item.title}
-                      </p>
-                      {item.planCode && (
-                        <p className="text-xs text-slate-400 mb-1">
-                          {item.planCode} · {item.workshop} · {item.startDate} ~ {item.endDate}
-                        </p>
-                      )}
-                      {item.request && (
-                        <p className="text-xs text-slate-400 mb-1">{item.request}</p>
-                      )}
-                      {item.amount && (
-                        <p className="text-xs text-slate-400 mb-1">金额: {formatCurrency(item.amount)}</p>
-                      )}
-                      <p className="text-xs text-slate-400 mt-2">
-                        {item.submitter} · {item.submitTime}
-                      </p>
-                    </div>
-                    <div className="flex gap-2 ml-4">
-                      <Button variant="outline" size="sm">
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600">
-                        审批
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))} */}
+                 <div
+                   key={item.id}
+                   className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600/80 transition-colors cursor-pointer"
+                 >
+                   <div className="flex items-start justify-between mb-2">
+                     <div className="flex-1">
+                       <div className="flex items-center gap-2 mb-2">
+                         <Badge
+                           variant="outline"
+                           className={cn(
+                             'text-xs',
+                             item.type === 'production_plan' && 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+                             item.type === 'resource_allocation' && 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+                             item.type === 'warehouse_expansion' && 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'
+                           )}
+                         >
+                           {item.type === 'production_plan' ? '生产计划' : 
+                            item.type === 'resource_allocation' ? '资源调配' : '仓储扩容'}
+                         </Badge>
+                         {item.priority === 'high' && (
+                           <Badge className="text-xs bg-red-500/20 text-red-400 border-red-500/30">
+                             紧急
+                           </Badge>
+                         )}
+                       </div>
+                       <p className="font-medium text-white text-sm mb-1">
+                         {item.projectName || item.title}
+                       </p>
+                       {item.planCode && (
+                         <p className="text-xs text-slate-400 mb-1">
+                           {item.planCode} · {item.workshop} · {item.startDate} ~ {item.endDate}
+                         </p>
+                       )}
+                       {item.request && (
+                         <p className="text-xs text-slate-400 mb-1">{item.request}</p>
+                       )}
+                       {item.amount && (
+                         <p className="text-xs text-slate-400 mb-1">金额: {formatCurrency(item.amount)}</p>
+                       )}
+                       <p className="text-xs text-slate-400 mt-2">
+                         {item.submitter} · {item.submitTime}
+                       </p>
+                     </div>
+                     <div className="flex gap-2 ml-4">
+                       <Button variant="outline" size="sm">
+                         <Eye className="w-4 h-4" />
+                       </Button>
+                       <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600">
+                         审批
+                       </Button>
+                     </div>
+                   </div>
+                 </div>
+                ))} */}
               <div className="text-center py-8 text-slate-500">
                 <p>待审批事项数据需要从API获取</p>
               </div>
@@ -1013,6 +1013,6 @@ export default function ManufacturingDirectorDashboard() {
           </Card>
         </TabsContent>
       </Tabs>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

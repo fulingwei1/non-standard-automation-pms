@@ -15,8 +15,8 @@ import {
   CheckCircle2,
   Clock,
   Filter,
-  RefreshCw,
-} from "lucide-react";
+  RefreshCw } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -35,9 +35,9 @@ import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger,
-} from "../components/ui";
-import { fadeIn, staggerContainer } from "../lib/animations";
+  TabsTrigger } from
+"../components/ui";
+import { fadeIn as _fadeIn, staggerContainer as _staggerContainer } from "../lib/animations";
 import { priorityApi } from "../services/api";
 
 export default function LeadPriorityManagement() {
@@ -157,14 +157,14 @@ export default function LeadPriorityManagement() {
       P1: { label: "P1-重要且紧急", color: "bg-red-500", textColor: "text-red-600" },
       P2: { label: "P2-重要不紧急", color: "bg-orange-500", textColor: "text-orange-600" },
       P3: { label: "P3-不重要但紧急", color: "bg-yellow-500", textColor: "text-yellow-600" },
-      P4: { label: "P4-不重要不紧急", color: "bg-slate-500", textColor: "text-slate-600" },
+      P4: { label: "P4-不重要不紧急", color: "bg-slate-500", textColor: "text-slate-600" }
     };
     const cfg = config[level] || config.P4;
     return (
       <Badge className={`${cfg.textColor} bg-${cfg.color.replace("bg-", "")}/10`}>
         {cfg.label}
-      </Badge>
-    );
+      </Badge>);
+
   };
 
   const getScoreColor = (score) => {
@@ -234,10 +234,10 @@ export default function LeadPriorityManagement() {
             </TabsList>
 
             <TabsContent value="leads" className="mt-4">
-              {loading ? (
-                <div className="text-center py-8 text-slate-500">加载中...</div>
-              ) : (
-                <Table>
+              {loading ?
+              <div className="text-center py-8 text-slate-500">加载中...</div> :
+
+              <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>排名</TableHead>
@@ -251,8 +251,8 @@ export default function LeadPriorityManagement() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {leadRankings.map((lead, index) => (
-                      <TableRow key={lead.id}>
+                    {leadRankings.map((lead, index) =>
+                  <TableRow key={lead.id}>
                         <TableCell>
                           <Badge variant="outline">#{index + 1}</Badge>
                         </TableCell>
@@ -267,60 +267,60 @@ export default function LeadPriorityManagement() {
                         <TableCell>{getPriorityBadge(lead.priority_level)}</TableCell>
                         <TableCell>
                           <Badge
-                            variant={
-                              lead.importance_level === "HIGH"
-                                ? "default"
-                                : lead.importance_level === "MEDIUM"
-                                ? "secondary"
-                                : "outline"
-                            }
-                          >
-                            {lead.importance_level === "HIGH"
-                              ? "高"
-                              : lead.importance_level === "MEDIUM"
-                              ? "中"
-                              : "低"}
+                        variant={
+                        lead.importance_level === "HIGH" ?
+                        "default" :
+                        lead.importance_level === "MEDIUM" ?
+                        "secondary" :
+                        "outline"
+                        }>
+
+                            {lead.importance_level === "HIGH" ?
+                        "高" :
+                        lead.importance_level === "MEDIUM" ?
+                        "中" :
+                        "低"}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <Badge
-                            variant={
-                              lead.urgency_level === "HIGH"
-                                ? "destructive"
-                                : lead.urgency_level === "MEDIUM"
-                                ? "secondary"
-                                : "outline"
-                            }
-                          >
-                            {lead.urgency_level === "HIGH"
-                              ? "高"
-                              : lead.urgency_level === "MEDIUM"
-                              ? "中"
-                              : "低"}
+                        variant={
+                        lead.urgency_level === "HIGH" ?
+                        "destructive" :
+                        lead.urgency_level === "MEDIUM" ?
+                        "secondary" :
+                        "outline"
+                        }>
+
+                            {lead.urgency_level === "HIGH" ?
+                        "高" :
+                        lead.urgency_level === "MEDIUM" ?
+                        "中" :
+                        "低"}
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {lead.is_key ? (
-                            <Badge className="bg-yellow-500/10 text-yellow-600">
+                          {lead.is_key ?
+                      <Badge className="bg-yellow-500/10 text-yellow-600">
                               <Star className="h-3 w-3 mr-1 fill-yellow-500" />
                               关键
-                            </Badge>
-                          ) : (
-                            <span className="text-slate-400">-</span>
-                          )}
+                            </Badge> :
+
+                      <span className="text-slate-400">-</span>
+                      }
                         </TableCell>
                       </TableRow>
-                    ))}
+                  )}
                   </TableBody>
                 </Table>
-              )}
+              }
             </TabsContent>
 
             <TabsContent value="opportunities" className="mt-4">
-              {loading ? (
-                <div className="text-center py-8 text-slate-500">加载中...</div>
-              ) : (
-                <Table>
+              {loading ?
+              <div className="text-center py-8 text-slate-500">加载中...</div> :
+
+              <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>排名</TableHead>
@@ -334,8 +334,8 @@ export default function LeadPriorityManagement() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {opportunityRankings.map((opp, index) => (
-                      <TableRow key={opp.id}>
+                    {opportunityRankings.map((opp, index) =>
+                  <TableRow key={opp.id}>
                         <TableCell>
                           <Badge variant="outline">#{index + 1}</Badge>
                         </TableCell>
@@ -350,57 +350,57 @@ export default function LeadPriorityManagement() {
                         <TableCell>{getPriorityBadge(opp.priority_level)}</TableCell>
                         <TableCell>
                           <Badge
-                            variant={
-                              opp.importance_level === "HIGH"
-                                ? "default"
-                                : opp.importance_level === "MEDIUM"
-                                ? "secondary"
-                                : "outline"
-                            }
-                          >
-                            {opp.importance_level === "HIGH"
-                              ? "高"
-                              : opp.importance_level === "MEDIUM"
-                              ? "中"
-                              : "低"}
+                        variant={
+                        opp.importance_level === "HIGH" ?
+                        "default" :
+                        opp.importance_level === "MEDIUM" ?
+                        "secondary" :
+                        "outline"
+                        }>
+
+                            {opp.importance_level === "HIGH" ?
+                        "高" :
+                        opp.importance_level === "MEDIUM" ?
+                        "中" :
+                        "低"}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <Badge
-                            variant={
-                              opp.urgency_level === "HIGH"
-                                ? "destructive"
-                                : opp.urgency_level === "MEDIUM"
-                                ? "secondary"
-                                : "outline"
-                            }
-                          >
-                            {opp.urgency_level === "HIGH"
-                              ? "高"
-                              : opp.urgency_level === "MEDIUM"
-                              ? "中"
-                              : "低"}
+                        variant={
+                        opp.urgency_level === "HIGH" ?
+                        "destructive" :
+                        opp.urgency_level === "MEDIUM" ?
+                        "secondary" :
+                        "outline"
+                        }>
+
+                            {opp.urgency_level === "HIGH" ?
+                        "高" :
+                        opp.urgency_level === "MEDIUM" ?
+                        "中" :
+                        "低"}
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {opp.is_key ? (
-                            <Badge className="bg-yellow-500/10 text-yellow-600">
+                          {opp.is_key ?
+                      <Badge className="bg-yellow-500/10 text-yellow-600">
                               <Star className="h-3 w-3 mr-1 fill-yellow-500" />
                               关键
-                            </Badge>
-                          ) : (
-                            <span className="text-slate-400">-</span>
-                          )}
+                            </Badge> :
+
+                      <span className="text-slate-400">-</span>
+                      }
                         </TableCell>
                       </TableRow>
-                    ))}
+                  )}
                   </TableBody>
                 </Table>
-              )}
+              }
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>);
+
 }

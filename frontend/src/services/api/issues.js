@@ -3,7 +3,8 @@ import { api } from "./client.js";
 
 
 export const issueApi = {
-  list: (params) => api.get("/issues", { params }),
+  list: (params) => api.get("/issues/", { params }),
+  getIssues: (params) => api.get("/issues/", { params }),
   get: (id) => api.get(`/issues/${id}`),
   create: (data) => api.post("/issues", data),
   update: (id, data) => api.put(`/issues/${id}`, data),
@@ -15,6 +16,7 @@ export const issueApi = {
   cancel: (id, data) => api.post(`/issues/${id}/cancel`, data),
   changeStatus: (id, data) => api.post(`/issues/${id}/status`, data),
   getStatistics: (params) => api.get("/issues/statistics/overview", { params }),
+  getStats: (params) => api.get("/issues/statistics/overview", { params }),
   getTrend: (params) => api.get("/issues/statistics/trend", { params }),
   getEngineerStatistics: (params) =>
     api.get("/issues/statistics/engineer", { params }),

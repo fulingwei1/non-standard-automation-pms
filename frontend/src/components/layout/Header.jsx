@@ -52,8 +52,8 @@ export function Header({ sidebarCollapsed = false, user, onLogout }) {
     return getRoleInfo(currentUser.role || "admin");
   }, [currentUser]);
 
-  const displayName = currentUser?.name || currentUser?.username || "用户";
-  const displayEmail = currentUser?.email || currentUser?.username || "";
+  const displayName = currentUser?.real_name || currentUser?.name || currentUser?.username || "用户";
+  const displayUsername = currentUser?.username || "";
   const displayRole = roleInfo?.name || "";
 
   return (
@@ -134,7 +134,7 @@ export function Header({ sidebarCollapsed = false, user, onLogout }) {
               <div className="text-left">
                 <p className="text-sm font-medium text-white">{displayName}</p>
                 <p className="text-xs text-slate-500">
-                  {displayEmail || displayRole || "用户"}
+                  {displayUsername || displayRole || "用户"}
                 </p>
               </div>
               <ChevronDown className="h-4 w-4 text-slate-500" />

@@ -4,7 +4,7 @@
  * Core Functions: Financial team management, Budget monitoring, Financial analysis, Cash flow management
  */
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback as _useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   TrendingUp,
@@ -35,15 +35,15 @@ import {
   Edit,
   Trash2,
   RefreshCw,
-  Download
-} from "lucide-react";
+  Download } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -52,24 +52,24 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "../components/ui/table";
+  TableRow } from
+"../components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-} from "../components/ui/dialog";
-import { cn, formatDate, formatCurrency } from "../lib/utils";
+  DialogFooter } from
+"../components/ui/dialog";
+import { cn as _cn, formatDate, formatCurrency } from "../lib/utils";
 import { financeApi, userApi, budgetApi } from "../services/api";
 import { toast } from "../components/ui/toast";
 import {
@@ -88,18 +88,18 @@ import {
   getIncomeExpenseStats,
   getFinanceStatusStats,
   getPendingApprovals,
-  getOverduePayments
-} from "../components/finance-dashboard";
+  getOverduePayments } from
+"../components/finance-dashboard";
 
 export default function FinanceManagerDashboard() {
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState([]);
   const [budgets, setBudgets] = useState([]);
   const [team, setTeam] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, _setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
-  const [filterType, setFilterType] = useState("");
-  const [selectedPeriod, setSelectedPeriod] = useState("month");
+  const [filterType, _setFilterType] = useState("");
+  const [selectedPeriod, _setSelectedPeriod] = useState("month");
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
 
@@ -114,14 +114,14 @@ export default function FinanceManagerDashboard() {
         period: selectedPeriod,
         search: searchQuery,
         status: filterStatus || undefined,
-        type: filterType || undefined,
+        type: filterType || undefined
       };
 
       const [transactionsRes, budgetsRes, teamRes] = await Promise.all([
-        financeApi.list(params),
-        budgetApi.list(params),
-        userApi.list({ department: 'finance' }),
-      ]);
+      financeApi.list(params),
+      budgetApi.list(params),
+      userApi.list({ department: 'finance' })]
+      );
 
       setTransactions(transactionsRes.data || []);
       setBudgets(budgetsRes.data || []);
@@ -154,7 +154,7 @@ export default function FinanceManagerDashboard() {
     let totalBudget = 0;
     let totalSpent = 0;
 
-    budgets.forEach(budget => {
+    budgets.forEach((budget) => {
       totalBudget += parseFloat(budget.amount) || 0;
       totalSpent += parseFloat(budget.spent) || 0;
     });
@@ -162,53 +162,53 @@ export default function FinanceManagerDashboard() {
     return {
       totalBudget,
       totalSpent,
-      utilization: totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0
+      utilization: totalBudget > 0 ? Math.round(totalSpent / totalBudget * 100) : 0
     };
   }, [budgets]);
 
   // 获取最近交易
   const recentTransactions = useMemo(() => {
-    return transactions
-      .sort((a, b) => new Date(b.date) - new Date(a.date))
-      .slice(0, 5);
+    return transactions.
+    sort((a, b) => new Date(b.date) - new Date(a.date)).
+    slice(0, 5);
   }, [transactions]);
 
   // 获取紧急任务
   const urgentTasks = useMemo(() => {
-    return transactions.filter(transaction => 
-      transaction.priority === 'urgent' && 
-      transaction.status === FINANCE_STATUS.PENDING
+    return transactions.filter((transaction) =>
+    transaction.priority === 'urgent' &&
+    transaction.status === FINANCE_STATUS.PENDING
     );
   }, [transactions]);
 
   const getStatusBadge = (status) => {
     return (
-      <Badge 
-        variant="secondary" 
+      <Badge
+        variant="secondary"
         className="border-0"
-        style={{ 
+        style={{
           backgroundColor: getFinanceStatusColor(status) + '20',
           color: getFinanceStatusColor(status)
-        }}
-      >
+        }}>
+
         {getFinanceStatusLabel(status)}
-      </Badge>
-    );
+      </Badge>);
+
   };
 
   const getTypeBadge = (type) => {
     return (
-      <Badge 
-        variant="secondary" 
+      <Badge
+        variant="secondary"
         className="border-0"
-        style={{ 
+        style={{
           backgroundColor: getFinanceTypeColor(type) + '20',
           color: getFinanceTypeColor(type)
-        }}
-      >
+        }}>
+
         {getFinanceTypeLabel(type)}
-      </Badge>
-    );
+      </Badge>);
+
   };
 
   const handleApproval = async (transactionId, approved) => {
@@ -255,17 +255,17 @@ export default function FinanceManagerDashboard() {
           <Skeleton className="h-8 w-64" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i}>
+          {Array.from({ length: 4 }).map((_, i) =>
+          <Card key={i}>
               <CardContent className="p-6">
                 <Skeleton className="h-4 w-24 mb-2" />
                 <Skeleton className="h-8 w-16" />
               </CardContent>
             </Card>
-          ))}
+          )}
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -273,13 +273,13 @@ export default function FinanceManagerDashboard() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       <PageHeader
         title="财务管理仪表板"
         description="财务概览、预算控制、支付审批、成本分析"
         actions={
-          <div className="flex space-x-2">
+        <div className="flex space-x-2">
             <Button variant="outline" onClick={fetchDashboardData}>
               <RefreshCw className="mr-2 h-4 w-4" />
               刷新
@@ -289,8 +289,8 @@ export default function FinanceManagerDashboard() {
               导出报表
             </Button>
           </div>
-        }
-      />
+        } />
+
 
       {/* 财务概览卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -363,11 +363,11 @@ export default function FinanceManagerDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {transactions
-                .filter(t => t.status === FINANCE_STATUS.PENDING)
-                .slice(0, 5)
-                .map((transaction) => (
-                  <div key={transaction.id} className="flex items-center justify-between p-3 border rounded">
+              {transactions.
+              filter((t) => t.status === FINANCE_STATUS.PENDING).
+              slice(0, 5).
+              map((transaction) =>
+              <div key={transaction.id} className="flex items-center justify-between p-3 border rounded">
                     <div className="flex-1">
                       <p className="font-medium">{transaction.description}</p>
                       <div className="flex items-center space-x-2 mt-1">
@@ -379,25 +379,25 @@ export default function FinanceManagerDashboard() {
                     </div>
                     <div className="flex space-x-1">
                       <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleApproval(transaction.id, true)}
-                      >
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleApproval(transaction.id, true)}>
+
                         <CheckCircle2 className="h-4 w-4 text-green-600" />
                       </Button>
                       <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleApproval(transaction.id, false)}
-                      >
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleApproval(transaction.id, false)}>
+
                         <X className="h-4 w-4 text-red-600" />
                       </Button>
                     </div>
                   </div>
-                ))}
-              {financialStats.pendingApprovals === 0 && (
-                <p className="text-center text-muted-foreground py-4">暂无待审批交易</p>
               )}
+              {financialStats.pendingApprovals === 0 &&
+              <p className="text-center text-muted-foreground py-4">暂无待审批交易</p>
+              }
             </div>
           </CardContent>
         </Card>
@@ -455,8 +455,8 @@ export default function FinanceManagerDashboard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {recentTransactions.map((transaction) => (
-                  <TableRow key={transaction.id}>
+                {recentTransactions.map((transaction) =>
+                <TableRow key={transaction.id}>
                     <TableCell>{formatDate(transaction.date)}</TableCell>
                     <TableCell className="font-medium">{transaction.description}</TableCell>
                     <TableCell>{getTypeBadge(transaction.type)}</TableCell>
@@ -467,22 +467,22 @@ export default function FinanceManagerDashboard() {
                     <TableCell>{getStatusBadge(transaction.status)}</TableCell>
                     <TableCell>
                       <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleViewTransaction(transaction)}
-                      >
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleViewTransaction(transaction)}>
+
                         <Eye className="h-4 w-4" />
                       </Button>
                     </TableCell>
                   </TableRow>
-                ))}
-                {recentTransactions.length === 0 && (
-                  <TableRow>
+                )}
+                {recentTransactions.length === 0 &&
+                <TableRow>
                     <TableCell colSpan={6} className="text-center py-8">
                       暂无交易记录
                     </TableCell>
                   </TableRow>
-                )}
+                }
               </TableBody>
             </Table>
           </div>
@@ -496,38 +496,38 @@ export default function FinanceManagerDashboard() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="h-auto p-4 flex flex-col items-center space-y-2"
-              onClick={() => handleQuickAction('createTransaction')}
-            >
+              onClick={() => handleQuickAction('createTransaction')}>
+
               <Plus className="h-6 w-6" />
               <span className="text-sm">新建交易</span>
             </Button>
             
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="h-auto p-4 flex flex-col items-center space-y-2"
-              onClick={() => handleQuickAction('pendingApprovals')}
-            >
+              onClick={() => handleQuickAction('pendingApprovals')}>
+
               <Clock className="h-6 w-6" />
               <span className="text-sm">待审批</span>
             </Button>
             
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="h-auto p-4 flex flex-col items-center space-y-2"
-              onClick={() => handleQuickAction('budgetAnalysis')}
-            >
+              onClick={() => handleQuickAction('budgetAnalysis')}>
+
               <BarChart3 className="h-6 w-6" />
               <span className="text-sm">预算分析</span>
             </Button>
             
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="h-auto p-4 flex flex-col items-center space-y-2"
-              onClick={() => handleQuickAction('teamManagement')}
-            >
+              onClick={() => handleQuickAction('teamManagement')}>
+
               <Users className="h-6 w-6" />
               <span className="text-sm">团队管理</span>
             </Button>
@@ -541,8 +541,8 @@ export default function FinanceManagerDashboard() {
           <DialogHeader>
             <DialogTitle>交易详情</DialogTitle>
           </DialogHeader>
-          {selectedTransaction && (
-            <div className="space-y-4">
+          {selectedTransaction &&
+          <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">交易编号</p>
@@ -573,14 +573,14 @@ export default function FinanceManagerDashboard() {
                 </div>
               </div>
               
-              {selectedTransaction.notes && (
-                <div>
+              {selectedTransaction.notes &&
+            <div>
                   <p className="text-sm text-muted-foreground">备注</p>
                   <p className="font-medium">{selectedTransaction.notes}</p>
                 </div>
-              )}
+            }
             </div>
-          )}
+          }
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
               关闭
@@ -588,6 +588,6 @@ export default function FinanceManagerDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

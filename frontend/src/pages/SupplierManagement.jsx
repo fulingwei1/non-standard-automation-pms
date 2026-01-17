@@ -25,8 +25,8 @@ import {
   BarChart3,
   Users,
   FileText,
-  Zap,
-} from "lucide-react";
+  Zap } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -48,9 +48,9 @@ import {
   DialogBody,
   DialogFooter,
   Label,
-  Textarea,
-} from "../components/ui";
-import { cn, formatCurrency, formatDate } from "../lib/utils";
+  Textarea } from
+"../components/ui";
+import { cn, formatCurrency, formatDate as _formatDate } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { supplierApi } from "../services/api";
 import { toast } from "../components/ui/toast";
@@ -61,29 +61,29 @@ const levelConfig = {
   A级: {
     label: "A级",
     color: "bg-emerald-500/20 text-emerald-400",
-    description: "优秀供应商",
+    description: "优秀供应商"
   },
   B级: {
     label: "B级",
     color: "bg-amber-500/20 text-amber-400",
-    description: "合格供应商",
+    description: "合格供应商"
   },
   C级: {
     label: "C级",
     color: "bg-orange-500/20 text-orange-400",
-    description: "待改进",
+    description: "待改进"
   },
   D级: {
     label: "D级",
     color: "bg-red-500/20 text-red-400",
-    description: "需淘汰",
-  },
+    description: "需淘汰"
+  }
 };
 
 const statusConfig = {
   active: { label: "活跃", color: "bg-blue-500/20 text-blue-400" },
   inactive: { label: "停用", color: "bg-slate-500/20 text-slate-400" },
-  review: { label: "评审中", color: "bg-amber-500/20 text-amber-400" },
+  review: { label: "评审中", color: "bg-amber-500/20 text-amber-400" }
 };
 
 const SupplierCard = ({ supplier, onView }) => {
@@ -93,8 +93,8 @@ const SupplierCard = ({ supplier, onView }) => {
   return (
     <motion.div
       variants={fadeIn}
-      className="rounded-lg border border-slate-700 bg-slate-800/50 overflow-hidden hover:bg-slate-800/70 transition-all"
-    >
+      className="rounded-lg border border-slate-700 bg-slate-800/50 overflow-hidden hover:bg-slate-800/70 transition-all">
+
       {/* Header */}
       <div className="bg-gradient-to-r from-slate-700 to-slate-800 p-4">
         <div className="flex items-start justify-between mb-2">
@@ -143,17 +143,17 @@ const SupplierCard = ({ supplier, onView }) => {
           <div className="flex items-center justify-between mb-3">
             <p className="font-medium text-slate-100">综合评分</p>
             <div className="flex items-center gap-1">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className={cn(
-                    "w-4 h-4",
-                    i < Math.floor(supplier.overallRating)
-                      ? "fill-amber-400 text-amber-400"
-                      : "text-slate-600",
-                  )}
-                />
-              ))}
+              {[...Array(5)].map((_, i) =>
+              <Star
+                key={i}
+                className={cn(
+                  "w-4 h-4",
+                  i < Math.floor(supplier.overallRating) ?
+                  "fill-amber-400 text-amber-400" :
+                  "text-slate-600"
+                )} />
+
+              )}
               <span className="ml-2 text-sm font-semibold text-amber-400">
                 {supplier.overallRating.toFixed(1)}
               </span>
@@ -166,8 +166,8 @@ const SupplierCard = ({ supplier, onView }) => {
               <div className="flex items-center gap-1">
                 <Progress
                   value={supplier.ratingDetails.quality * 20}
-                  className="flex-1 h-1.5"
-                />
+                  className="flex-1 h-1.5" />
+
                 <span className="font-medium text-slate-300 w-8">
                   {supplier.ratingDetails.quality}
                 </span>
@@ -178,8 +178,8 @@ const SupplierCard = ({ supplier, onView }) => {
               <div className="flex items-center gap-1">
                 <Progress
                   value={supplier.ratingDetails.delivery * 20}
-                  className="flex-1 h-1.5"
-                />
+                  className="flex-1 h-1.5" />
+
                 <span className="font-medium text-slate-300 w-8">
                   {supplier.ratingDetails.delivery}
                 </span>
@@ -190,8 +190,8 @@ const SupplierCard = ({ supplier, onView }) => {
               <div className="flex items-center gap-1">
                 <Progress
                   value={supplier.ratingDetails.service * 20}
-                  className="flex-1 h-1.5"
-                />
+                  className="flex-1 h-1.5" />
+
                 <span className="font-medium text-slate-300 w-8">
                   {supplier.ratingDetails.service}
                 </span>
@@ -202,8 +202,8 @@ const SupplierCard = ({ supplier, onView }) => {
               <div className="flex items-center gap-1">
                 <Progress
                   value={supplier.ratingDetails.price * 20}
-                  className="flex-1 h-1.5"
-                />
+                  className="flex-1 h-1.5" />
+
                 <span className="font-medium text-slate-300 w-8">
                   {supplier.ratingDetails.price}
                 </span>
@@ -218,11 +218,11 @@ const SupplierCard = ({ supplier, onView }) => {
             <p className="text-slate-500 text-xs mb-1">交期准时率</p>
             <p className="font-semibold text-slate-100 flex items-center gap-1">
               {supplier.onTimeDeliveryRate}%
-              {supplier.onTimeDeliveryRate >= 95 ? (
-                <TrendingUp className="w-4 h-4 text-emerald-400" />
-              ) : (
-                <TrendingDown className="w-4 h-4 text-red-400" />
-              )}
+              {supplier.onTimeDeliveryRate >= 95 ?
+              <TrendingUp className="w-4 h-4 text-emerald-400" /> :
+
+              <TrendingDown className="w-4 h-4 text-red-400" />
+              }
             </p>
           </div>
           <div>
@@ -252,9 +252,9 @@ const SupplierCard = ({ supplier, onView }) => {
             <p
               className={cn(
                 "font-semibold",
-                supplier.growthRate > 0 ? "text-emerald-400" : "text-red-400",
-              )}
-            >
+                supplier.growthRate > 0 ? "text-emerald-400" : "text-red-400"
+              )}>
+
               {supplier.growthRate > 0 ? "+" : ""}
               {supplier.growthRate}%
             </p>
@@ -262,40 +262,40 @@ const SupplierCard = ({ supplier, onView }) => {
         </div>
 
         {/* Issues or Risk Alert */}
-        {(supplier.issues.length > 0 || supplier.riskLevel !== "low") && (
-          <div
-            className={cn(
-              "rounded-lg p-3 border text-sm",
-              supplier.riskLevel === "high"
-                ? "bg-red-500/10 border-red-500/30"
-                : "bg-amber-500/10 border-amber-500/30",
-            )}
-          >
-            {supplier.issues.length > 0 && (
-              <div>
+        {(supplier.issues.length > 0 || supplier.riskLevel !== "low") &&
+        <div
+          className={cn(
+            "rounded-lg p-3 border text-sm",
+            supplier.riskLevel === "high" ?
+            "bg-red-500/10 border-red-500/30" :
+            "bg-amber-500/10 border-amber-500/30"
+          )}>
+
+            {supplier.issues.length > 0 &&
+          <div>
                 <p
-                  className={cn(
-                    "text-xs font-medium mb-2",
-                    supplier.riskLevel === "high"
-                      ? "text-red-400"
-                      : "text-amber-400",
-                  )}
-                >
+              className={cn(
+                "text-xs font-medium mb-2",
+                supplier.riskLevel === "high" ?
+                "text-red-400" :
+                "text-amber-400"
+              )}>
+
                   <AlertTriangle className="w-3 h-3 mr-1 inline" />
                   最近问题
                 </p>
                 <ul className="space-y-1 text-xs text-slate-300">
-                  {supplier.issues.slice(0, 2).map((issue, idx) => (
-                    <li key={idx} className="flex items-center gap-1">
+                  {supplier.issues.slice(0, 2).map((issue, idx) =>
+              <li key={idx} className="flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
                       {issue.issue}
                     </li>
-                  ))}
+              )}
                 </ul>
               </div>
-            )}
+          }
           </div>
-        )}
+        }
 
         {/* Action Bar */}
         <div className="flex gap-2 pt-2 border-t border-slate-700/50">
@@ -309,8 +309,8 @@ const SupplierCard = ({ supplier, onView }) => {
           </Button>
         </div>
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
 export default function SupplierManagement() {
@@ -318,8 +318,8 @@ export default function SupplierManagement() {
   const [searchText, setSearchText] = useState("");
   const [filterLevel, setFilterLevel] = useState("all");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [_loading, setLoading] = useState(true);
+  const [_error, setError] = useState(null);
 
   // Load suppliers from API
   useEffect(() => {
@@ -344,9 +344,9 @@ export default function SupplierManagement() {
   const filteredSuppliers = useMemo(() => {
     return suppliers.filter((s) => {
       const matchSearch =
-        s.name.toLowerCase().includes(searchText.toLowerCase()) ||
-        s.category.toLowerCase().includes(searchText.toLowerCase()) ||
-        s.contactPerson.toLowerCase().includes(searchText.toLowerCase());
+      s.name.toLowerCase().includes(searchText.toLowerCase()) ||
+      s.category.toLowerCase().includes(searchText.toLowerCase()) ||
+      s.contactPerson.toLowerCase().includes(searchText.toLowerCase());
 
       const matchLevel = filterLevel === "all" || s.level === filterLevel;
 
@@ -361,9 +361,9 @@ export default function SupplierManagement() {
       bGrade: suppliers.filter((s) => s.level === "B级").length,
       active: suppliers.filter((s) => s.status === "active").length,
       avgRating: (
-        suppliers.reduce((sum, s) => sum + s.overallRating, 0) /
-        suppliers.length
-      ).toFixed(2),
+      suppliers.reduce((sum, s) => sum + s.overallRating, 0) /
+      suppliers.length).
+      toFixed(2)
     };
   }, [suppliers]);
 
@@ -377,17 +377,17 @@ export default function SupplierManagement() {
           icon: Plus,
           onClick: () => {
             setShowCreateDialog(true);
-          },
-        }}
-      />
+          }
+        }} />
+
 
       {/* Statistics */}
       <motion.div
         variants={staggerContainer}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5"
-      >
+        className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
+
         <motion.div variants={fadeIn}>
           <Card>
             <CardContent className="pt-6">
@@ -457,29 +457,29 @@ export default function SupplierManagement() {
                 placeholder="搜索供应商名称、分类、联系人..."
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
-                className="pl-10"
-              />
+                className="pl-10" />
+
             </div>
 
             <div className="flex flex-wrap gap-2">
               <Button
                 variant={filterLevel === "all" ? "default" : "ghost"}
                 size="sm"
-                onClick={() => setFilterLevel("all")}
-              >
+                onClick={() => setFilterLevel("all")}>
+
                 全部等级
               </Button>
-              {Object.entries(levelConfig).map(([key, cfg]) => (
-                <Button
-                  key={key}
-                  variant={filterLevel === key ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setFilterLevel(key)}
-                  className={cn(filterLevel === key && cfg.color)}
-                >
+              {Object.entries(levelConfig).map(([key, cfg]) =>
+              <Button
+                key={key}
+                variant={filterLevel === key ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setFilterLevel(key)}
+                className={cn(filterLevel === key && cfg.color)}>
+
                   {cfg.label}
                 </Button>
-              ))}
+              )}
             </div>
           </div>
         </CardContent>
@@ -490,35 +490,35 @@ export default function SupplierManagement() {
         variants={staggerContainer}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 md:grid-cols-2 gap-4"
-      >
+        className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
         <AnimatePresence>
-          {filteredSuppliers.length > 0 ? (
-            filteredSuppliers.map((supplier) => (
-              <SupplierCard
-                key={supplier.id}
-                supplier={supplier}
-                onView={(s) => {
-                  // Handle view supplier if needed
-                }}
-              />
-            ))
-          ) : (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="col-span-full py-12 text-center"
-            >
+          {filteredSuppliers.length > 0 ?
+          filteredSuppliers.map((supplier) =>
+          <SupplierCard
+            key={supplier.id}
+            supplier={supplier}
+            onView={(_s) => {
+
+              // Handle view supplier if needed
+            }} />
+          ) :
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="col-span-full py-12 text-center">
+
               <Building2 className="w-12 h-12 text-slate-500 mx-auto mb-3" />
               <p className="text-slate-400">没有符合条件的供应商</p>
             </motion.div>
-          )}
+          }
         </AnimatePresence>
       </motion.div>
 
       {/* Supplier Risk Summary */}
-      {suppliers.some((s) => s.riskLevel !== "low") && (
-        <Card className="bg-amber-500/5 border-amber-500/20">
+      {suppliers.some((s) => s.riskLevel !== "low") &&
+      <Card className="bg-amber-500/5 border-amber-500/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-amber-400">
               <AlertTriangle className="w-5 h-5" />
@@ -527,45 +527,45 @@ export default function SupplierManagement() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {suppliers
-                .filter((s) => s.riskLevel === "high")
-                .map((s) => (
-                  <div
-                    key={s.id}
-                    className="flex items-start gap-3 p-3 rounded-lg bg-red-500/5 border border-red-500/20"
-                  >
+              {suppliers.
+            filter((s) => s.riskLevel === "high").
+            map((s) =>
+            <div
+              key={s.id}
+              className="flex items-start gap-3 p-3 rounded-lg bg-red-500/5 border border-red-500/20">
+
                     <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-slate-100 text-sm">
                         {s.name}
                       </p>
                       <p className="text-xs text-slate-400 mt-1">
-                        {s.issues.length > 0
-                          ? `${s.issues[0].issue}`
-                          : "存在多项问题需要关注"}
+                        {s.issues.length > 0 ?
+                  `${s.issues[0].issue}` :
+                  "存在多项问题需要关注"}
                       </p>
                     </div>
                   </div>
-                ))}
+            )}
             </div>
           </CardContent>
         </Card>
-      )}
+      }
 
       {/* Create Supplier Dialog */}
-      {showCreateDialog && (
-        <CreateSupplierDialog
-          onClose={() => setShowCreateDialog(false)}
-          onSuccess={() => {
-            setShowCreateDialog(false);
-            // Reload suppliers if needed
-            // loadSuppliers()
-            toast.success("供应商创建成功");
-          }}
-        />
-      )}
-    </div>
-  );
+      {showCreateDialog &&
+      <CreateSupplierDialog
+        onClose={() => setShowCreateDialog(false)}
+        onSuccess={() => {
+          setShowCreateDialog(false);
+          // Reload suppliers if needed
+          // loadSuppliers()
+          toast.success("供应商创建成功");
+        }} />
+
+      }
+    </div>);
+
 }
 
 // Create Supplier Dialog Component
@@ -584,7 +584,7 @@ function CreateSupplierDialog({ onClose, onSuccess }) {
     bank_account: "",
     tax_number: "",
     payment_terms: "",
-    remark: "",
+    remark: ""
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -611,7 +611,7 @@ function CreateSupplierDialog({ onClose, onSuccess }) {
     } catch (error) {
       console.error("Failed to create supplier:", error);
       toast.error(
-        "创建失败: " + (error.response?.data?.detail || error.message),
+        "创建失败: " + (error.response?.data?.detail || error.message)
       );
     } finally {
       setLoading(false);
@@ -633,16 +633,16 @@ function CreateSupplierDialog({ onClose, onSuccess }) {
               <Input
                 value={formData.supplier_code}
                 onChange={(e) =>
-                  setFormData({ ...formData, supplier_code: e.target.value })
+                setFormData({ ...formData, supplier_code: e.target.value })
                 }
                 placeholder="请输入供应商编码"
-                className={errors.supplier_code ? "border-red-400" : ""}
-              />
-              {errors.supplier_code && (
-                <div className="text-sm text-red-400 mt-1">
+                className={errors.supplier_code ? "border-red-400" : ""} />
+
+              {errors.supplier_code &&
+              <div className="text-sm text-red-400 mt-1">
                   {errors.supplier_code}
                 </div>
-              )}
+              }
             </div>
             <div>
               <Label className="required">
@@ -651,59 +651,59 @@ function CreateSupplierDialog({ onClose, onSuccess }) {
               <Input
                 value={formData.supplier_name}
                 onChange={(e) =>
-                  setFormData({ ...formData, supplier_name: e.target.value })
+                setFormData({ ...formData, supplier_name: e.target.value })
                 }
                 placeholder="请输入供应商名称"
-                className={errors.supplier_name ? "border-red-400" : ""}
-              />
-              {errors.supplier_name && (
-                <div className="text-sm text-red-400 mt-1">
+                className={errors.supplier_name ? "border-red-400" : ""} />
+
+              {errors.supplier_name &&
+              <div className="text-sm text-red-400 mt-1">
                   {errors.supplier_name}
                 </div>
-              )}
+              }
             </div>
             <div>
               <Label>供应商简称</Label>
               <Input
                 value={formData.supplier_short_name}
                 onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    supplier_short_name: e.target.value,
-                  })
+                setFormData({
+                  ...formData,
+                  supplier_short_name: e.target.value
+                })
                 }
-                placeholder="请输入供应商简称"
-              />
+                placeholder="请输入供应商简称" />
+
             </div>
             <div>
               <Label>供应商类型</Label>
               <Input
                 value={formData.supplier_type}
                 onChange={(e) =>
-                  setFormData({ ...formData, supplier_type: e.target.value })
+                setFormData({ ...formData, supplier_type: e.target.value })
                 }
-                placeholder="如：电子元器件、机械件等"
-              />
+                placeholder="如：电子元器件、机械件等" />
+
             </div>
             <div>
               <Label>联系人</Label>
               <Input
                 value={formData.contact_person}
                 onChange={(e) =>
-                  setFormData({ ...formData, contact_person: e.target.value })
+                setFormData({ ...formData, contact_person: e.target.value })
                 }
-                placeholder="请输入联系人姓名"
-              />
+                placeholder="请输入联系人姓名" />
+
             </div>
             <div>
               <Label>联系电话</Label>
               <Input
                 value={formData.contact_phone}
                 onChange={(e) =>
-                  setFormData({ ...formData, contact_phone: e.target.value })
+                setFormData({ ...formData, contact_phone: e.target.value })
                 }
-                placeholder="请输入联系电话"
-              />
+                placeholder="请输入联系电话" />
+
             </div>
             <div>
               <Label>联系邮箱</Label>
@@ -711,70 +711,70 @@ function CreateSupplierDialog({ onClose, onSuccess }) {
                 type="email"
                 value={formData.contact_email}
                 onChange={(e) =>
-                  setFormData({ ...formData, contact_email: e.target.value })
+                setFormData({ ...formData, contact_email: e.target.value })
                 }
-                placeholder="请输入联系邮箱"
-              />
+                placeholder="请输入联系邮箱" />
+
             </div>
             <div>
               <Label>地址</Label>
               <Input
                 value={formData.address}
                 onChange={(e) =>
-                  setFormData({ ...formData, address: e.target.value })
+                setFormData({ ...formData, address: e.target.value })
                 }
-                placeholder="请输入供应商地址"
-              />
+                placeholder="请输入供应商地址" />
+
             </div>
             <div>
               <Label>营业执照号</Label>
               <Input
                 value={formData.business_license}
                 onChange={(e) =>
-                  setFormData({ ...formData, business_license: e.target.value })
+                setFormData({ ...formData, business_license: e.target.value })
                 }
-                placeholder="请输入营业执照号"
-              />
+                placeholder="请输入营业执照号" />
+
             </div>
             <div>
               <Label>开户银行</Label>
               <Input
                 value={formData.bank_name}
                 onChange={(e) =>
-                  setFormData({ ...formData, bank_name: e.target.value })
+                setFormData({ ...formData, bank_name: e.target.value })
                 }
-                placeholder="请输入开户银行"
-              />
+                placeholder="请输入开户银行" />
+
             </div>
             <div>
               <Label>银行账号</Label>
               <Input
                 value={formData.bank_account}
                 onChange={(e) =>
-                  setFormData({ ...formData, bank_account: e.target.value })
+                setFormData({ ...formData, bank_account: e.target.value })
                 }
-                placeholder="请输入银行账号"
-              />
+                placeholder="请输入银行账号" />
+
             </div>
             <div>
               <Label>税号</Label>
               <Input
                 value={formData.tax_number}
                 onChange={(e) =>
-                  setFormData({ ...formData, tax_number: e.target.value })
+                setFormData({ ...formData, tax_number: e.target.value })
                 }
-                placeholder="请输入税号"
-              />
+                placeholder="请输入税号" />
+
             </div>
             <div>
               <Label>付款条件</Label>
               <Input
                 value={formData.payment_terms}
                 onChange={(e) =>
-                  setFormData({ ...formData, payment_terms: e.target.value })
+                setFormData({ ...formData, payment_terms: e.target.value })
                 }
-                placeholder="如：2/10 N30"
-              />
+                placeholder="如：2/10 N30" />
+
             </div>
           </div>
           <div>
@@ -782,12 +782,12 @@ function CreateSupplierDialog({ onClose, onSuccess }) {
             <Textarea
               value={formData.remark}
               onChange={(e) =>
-                setFormData({ ...formData, remark: e.target.value })
+              setFormData({ ...formData, remark: e.target.value })
               }
               placeholder="请输入备注信息"
               rows={3}
-              className="bg-slate-800/50 border-slate-700"
-            />
+              className="bg-slate-800/50 border-slate-700" />
+
           </div>
         </DialogBody>
         <DialogFooter>
@@ -799,6 +799,6 @@ function CreateSupplierDialog({ onClose, onSuccess }) {
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>);
+
 }

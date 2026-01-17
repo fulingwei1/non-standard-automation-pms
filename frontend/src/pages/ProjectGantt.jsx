@@ -12,19 +12,19 @@ import {
   CheckCircle2,
   Circle,
   AlertTriangle,
-  RefreshCw,
-} from "lucide-react";
+  RefreshCw } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
-import { cn, formatDate } from "../lib/utils";
+import { cn as _cn, formatDate } from "../lib/utils";
 import { progressApi, projectApi } from "../services/api";
 export default function ProjectGantt() {
   const { id } = useParams();
@@ -80,8 +80,8 @@ export default function ProjectGantt() {
     return (
       <div className="space-y-6 p-6">
         <div className="text-center py-8 text-slate-400">加载中...</div>
-      </div>
-    );
+      </div>);
+
   }
   return (
     <div className="space-y-6 p-6">
@@ -90,15 +90,15 @@ export default function ProjectGantt() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate(`/projects/${id}`)}
-          >
+            onClick={() => navigate(`/projects/${id}`)}>
+
             <ArrowLeft className="w-4 h-4 mr-2" />
             返回项目
           </Button>
           <PageHeader
             title={`${project?.project_name || "项目"} - 甘特图`}
-            description="项目进度可视化，展示任务时间线和依赖关系"
-          />
+            description="项目进度可视化，展示任务时间线和依赖关系" />
+
         </div>
         <Button variant="outline" onClick={fetchGanttData}>
           <RefreshCw className="w-4 h-4 mr-2" />
@@ -110,45 +110,45 @@ export default function ProjectGantt() {
           <CardTitle>任务时间线</CardTitle>
         </CardHeader>
         <CardContent>
-          {ganttData.length === 0 ? (
-            <div className="text-center py-8 text-slate-400">暂无任务数据</div>
-          ) : (
-            <div className="space-y-4">
+          {ganttData.length === 0 ?
+          <div className="text-center py-8 text-slate-400">暂无任务数据</div> :
+
+          <div className="space-y-4">
               {ganttData.map((task) => {
-                const progress = calculateProgress(task);
-                const startDate = new Date(
-                  task.start_date || task.planned_start_date,
-                );
-                const endDate = new Date(
-                  task.end_date || task.planned_end_date,
-                );
-                const today = new Date();
-                const isOverdue =
-                  endDate < today && task.status !== "COMPLETED";
-                return (
-                  <div
-                    key={task.id}
-                    className="border rounded-lg p-4 hover:bg-slate-50 transition-colors"
-                  >
+              const progress = calculateProgress(task);
+              const _startDate = new Date(
+                task.start_date || task.planned_start_date
+              );
+              const endDate = new Date(
+                task.end_date || task.planned_end_date
+              );
+              const today = new Date();
+              const isOverdue =
+              endDate < today && task.status !== "COMPLETED";
+              return (
+                <div
+                  key={task.id}
+                  className="border rounded-lg p-4 hover:bg-slate-50 transition-colors">
+
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <Badge className={getStatusColor(task.status)}>
-                            {task.status === "COMPLETED"
-                              ? "已完成"
-                              : task.status === "IN_PROGRESS"
-                                ? "进行中"
-                                : task.status === "BLOCKED"
-                                  ? "阻塞"
-                                  : "待开始"}
+                            {task.status === "COMPLETED" ?
+                          "已完成" :
+                          task.status === "IN_PROGRESS" ?
+                          "进行中" :
+                          task.status === "BLOCKED" ?
+                          "阻塞" :
+                          "待开始"}
                           </Badge>
                           <h3 className="font-medium">{task.task_name}</h3>
-                          {isOverdue && (
-                            <Badge className="bg-red-500">
+                          {isOverdue &&
+                        <Badge className="bg-red-500">
                               <AlertTriangle className="w-3 h-3 mr-1" />
                               逾期
                             </Badge>
-                          )}
+                        }
                         </div>
                         <div className="flex items-center gap-4 text-sm text-slate-500">
                           <div className="flex items-center gap-1">
@@ -156,19 +156,19 @@ export default function ProjectGantt() {
                             {formatDate(task.planned_start_date)} -{" "}
                             {formatDate(task.planned_end_date)}
                           </div>
-                          {task.assignee_name && (
-                            <div className="flex items-center gap-1">
+                          {task.assignee_name &&
+                        <div className="flex items-center gap-1">
                               <Users className="w-4 h-4" />
                               {task.assignee_name}
                             </div>
-                          )}
+                        }
                           {task.dependencies &&
-                            task.dependencies.length > 0 && (
-                              <div className="flex items-center gap-1">
+                        task.dependencies.length > 0 &&
+                        <div className="flex items-center gap-1">
                                 <Clock className="w-4 h-4" />
                                 依赖 {task.dependencies.length} 个任务
                               </div>
-                            )}
+                        }
                         </div>
                       </div>
                       <div className="text-right">
@@ -179,13 +179,13 @@ export default function ProjectGantt() {
                       </div>
                     </div>
                     <Progress value={progress} className="h-2" />
-                  </div>
-                );
-              })}
+                  </div>);
+
+            })}
             </div>
-          )}
+          }
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>);
+
 }

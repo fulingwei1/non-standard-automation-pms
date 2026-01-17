@@ -3,7 +3,7 @@
  * 客户满意度调查 - 客服工程师高级功能 (重构版本)
  */
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback as _useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
@@ -26,8 +26,8 @@ import {
   Settings,
   MessageSquare,
   ThumbsUp,
-  ThumbsDown
-} from "lucide-react";
+  ThumbsDown } from
+"lucide-react";
 
 import {
   Card,
@@ -60,8 +60,8 @@ import {
   Checkbox,
   Upload,
   message,
-  Spin
-} from "antd";
+  Spin } from
+"antd";
 
 // 导入拆分后的组件
 import {
@@ -69,8 +69,8 @@ import {
   SurveyManager,
   SatisfactionAnalytics,
   FeedbackManager,
-  SurveyTemplates
-} from '../components/customer-satisfaction';
+  SurveyTemplates } from
+'../components/customer-satisfaction';
 
 import {
   SATISFACTION_LEVELS,
@@ -82,8 +82,8 @@ import {
   CHART_COLORS,
   EXPORT_FORMATS,
   DEFAULT_FILTERS,
-  TABLE_CONFIG
-} from '../components/customer-satisfaction/customerSatisfactionConstants';
+  TABLE_CONFIG } from
+'../components/customer-satisfaction/customerSatisfactionConstants';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
@@ -97,39 +97,39 @@ const CustomerSatisfaction = () => {
   const [responses, setResponses] = useState([]);
   const [selectedSurvey, setSelectedSurvey] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
-  const [filters, setFilters] = useState(DEFAULT_FILTERS);
-  const [searchText, setSearchText] = useState('');
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showTemplateModal, setShowTemplateModal] = useState(false);
-  const [editingSurvey, setEditingSurvey] = useState(null);
+  const [filters, _setFilters] = useState(DEFAULT_FILTERS);
+  const [searchText, _setSearchText] = useState('');
+  const [_showCreateModal, setShowCreateModal] = useState(false);
+  const [_showTemplateModal, _setShowTemplateModal] = useState(false);
+  const [_editingSurvey, setEditingSurvey] = useState(null);
 
   // 模拟数据
   const mockData = {
     surveys: [
-      {
-        id: 1,
-        title: '客户服务满意度调查',
-        type: 'service',
-        status: 'active',
-        createdDate: '2024-01-15',
-        completedDate: '2024-01-20',
-        avgScore: 4.2,
-        responseCount: 156,
-        targetCount: 200
-      },
-      // 更多模拟数据...
+    {
+      id: 1,
+      title: '客户服务满意度调查',
+      type: 'service',
+      status: 'active',
+      createdDate: '2024-01-15',
+      completedDate: '2024-01-20',
+      avgScore: 4.2,
+      responseCount: 156,
+      targetCount: 200
+    }
+    // 更多模拟数据...
     ],
     responses: [
-      {
-        id: 1,
-        surveyId: 1,
-        customerName: '张三',
-        satisfactionLevel: 4,
-        feedback: '服务质量很好，响应及时',
-        category: 'service',
-        createdDate: '2024-01-18'
-      },
-      // 更多模拟数据...
+    {
+      id: 1,
+      surveyId: 1,
+      customerName: '张三',
+      satisfactionLevel: 4,
+      feedback: '服务质量很好，响应及时',
+      category: 'service',
+      createdDate: '2024-01-18'
+    }
+    // 更多模拟数据...
     ]
   };
 
@@ -147,7 +147,7 @@ const CustomerSatisfaction = () => {
         setResponses(mockData.responses);
         setLoading(false);
       }, 1000);
-    } catch (error) {
+    } catch (_error) {
       message.error('加载数据失败');
       setLoading(false);
     }
@@ -155,20 +155,20 @@ const CustomerSatisfaction = () => {
 
   // 过滤数据
   const filteredSurveys = useMemo(() => {
-    return surveys.filter(survey => {
+    return surveys.filter((survey) => {
       const matchesSearch = survey.title.toLowerCase().includes(searchText.toLowerCase());
       const matchesType = !filters.surveyType || survey.type === filters.surveyType;
       const matchesStatus = !filters.status || survey.status === filters.status;
-      
+
       return matchesSearch && matchesType && matchesStatus;
     });
   }, [surveys, searchText, filters]);
 
   const filteredResponses = useMemo(() => {
-    return responses.filter(response => {
+    return responses.filter((response) => {
       const matchesLevel = !filters.satisfactionLevel || response.satisfactionLevel === filters.satisfactionLevel;
       const matchesCategory = !filters.category || response.category === filters.category;
-      
+
       return matchesLevel && matchesCategory;
     });
   }, [responses, filters]);
@@ -188,11 +188,11 @@ const CustomerSatisfaction = () => {
       setLoading(true);
       // 模拟删除API调用
       setTimeout(() => {
-        setSurveys(surveys.filter(s => s.id !== surveyId));
+        setSurveys(surveys.filter((s) => s.id !== surveyId));
         message.success('删除成功');
         setLoading(false);
       }, 500);
-    } catch (error) {
+    } catch (_error) {
       message.error('删除失败');
       setLoading(false);
     }
@@ -203,86 +203,86 @@ const CustomerSatisfaction = () => {
   };
 
   // 表格列配置
-  const surveyColumns = [
-    {
-      title: '调查标题',
-      dataIndex: 'title',
-      key: 'title',
-      render: (text, record) => (
-        <div>
+  const _surveyColumns = [
+  {
+    title: '调查标题',
+    dataIndex: 'title',
+    key: 'title',
+    render: (text, record) =>
+    <div>
           <div style={{ fontWeight: 'bold' }}>{text}</div>
           <div style={{ fontSize: 12, color: '#666' }}>
             {SURVEY_TYPES[record.type?.toUpperCase()]?.label}
           </div>
         </div>
-      )
-    },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => {
-        const config = SURVEY_STATUS[status?.toUpperCase()];
-        return <Tag color={config?.color}>{config?.label}</Tag>;
-      }
-    },
-    {
-      title: '平均评分',
-      dataIndex: 'avgScore',
-      key: 'avgScore',
-      render: (score) => (
-        <div>
+
+  },
+  {
+    title: '状态',
+    dataIndex: 'status',
+    key: 'status',
+    render: (status) => {
+      const config = SURVEY_STATUS[status?.toUpperCase()];
+      return <Tag color={config?.color}>{config?.label}</Tag>;
+    }
+  },
+  {
+    title: '平均评分',
+    dataIndex: 'avgScore',
+    key: 'avgScore',
+    render: (score) =>
+    <div>
           <Rate disabled value={score} style={{ fontSize: 14 }} />
           <div style={{ fontSize: 12, color: '#666' }}>{score}/5.0</div>
         </div>
-      )
-    },
-    {
-      title: '响应情况',
-      key: 'responses',
-      render: (_, record) => (
-        <div>
-          <Progress 
-            percent={(record.responseCount / record.targetCount * 100).toFixed(1)}
-            size="small"
-          />
+
+  },
+  {
+    title: '响应情况',
+    key: 'responses',
+    render: (_, record) =>
+    <div>
+          <Progress
+        percent={(record.responseCount / record.targetCount * 100).toFixed(1)}
+        size="small" />
+
           <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
             {record.responseCount}/{record.targetCount}
           </div>
         </div>
-      )
-    },
-    {
-      title: '操作',
-      key: 'actions',
-      render: (_, record) => (
-        <Space>
-          <Button 
-            type="link" 
-            icon={<Eye size={16} />}
-            onClick={() => setSelectedSurvey(record)}
-          >
+
+  },
+  {
+    title: '操作',
+    key: 'actions',
+    render: (_, record) =>
+    <Space>
+          <Button
+        type="link"
+        icon={<Eye size={16} />}
+        onClick={() => setSelectedSurvey(record)}>
+
             查看
           </Button>
-          <Button 
-            type="link" 
-            icon={<FileText size={16} />}
-            onClick={() => handleEditSurvey(record)}
-          >
+          <Button
+        type="link"
+        icon={<FileText size={16} />}
+        onClick={() => handleEditSurvey(record)}>
+
             编辑
           </Button>
-          <Button 
-            type="link" 
-            danger
-            icon={<XCircle size={16} />}
-            onClick={() => handleDeleteSurvey(record.id)}
-          >
+          <Button
+        type="link"
+        danger
+        icon={<XCircle size={16} />}
+        onClick={() => handleDeleteSurvey(record.id)}>
+
             删除
           </Button>
         </Space>
-      )
-    }
-  ];
+
+  }];
+
 
   return (
     <motion.div
@@ -290,8 +290,8 @@ const CustomerSatisfaction = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
       className="customer-satisfaction-container"
-      style={{ padding: '24px', background: '#f5f5f5', minHeight: '100vh' }}
-    >
+      style={{ padding: '24px', background: '#f5f5f5', minHeight: '100vh' }}>
+
       {/* 页面头部 */}
       <div className="page-header" style={{ marginBottom: '24px' }}>
         <div className="header-content" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -305,34 +305,34 @@ const CustomerSatisfaction = () => {
             </Text>
           </div>
           <Space>
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               icon={<Plus size={16} />}
-              onClick={handleCreateSurvey}
-            >
+              onClick={handleCreateSurvey}>
+
               创建调查
             </Button>
-            <Button 
+            <Button
               icon={<RefreshCw size={16} />}
-              onClick={loadData}
-            >
+              onClick={loadData}>
+
               刷新
             </Button>
             <Dropdown
               overlay={
-                <Menu>
-                  {Object.values(EXPORT_FORMATS).map(format => (
-                    <Menu.Item 
-                      key={format.value}
-                      onClick={() => handleExportData(format)}
-                    >
+              <Menu>
+                  {Object.values(EXPORT_FORMATS).map((format) =>
+                <Menu.Item
+                  key={format.value}
+                  onClick={() => handleExportData(format)}>
+
                       <Download size={14} className="mr-2" />
                       导出{format.label}
                     </Menu.Item>
-                  ))}
+                )}
                 </Menu>
-              }
-            >
+              }>
+
               <Button icon={<Download size={16} />}>
                 导出数据
               </Button>
@@ -342,91 +342,91 @@ const CustomerSatisfaction = () => {
       </div>
 
       {/* 主要内容区域 */}
-      <Tabs 
-        activeKey={activeTab} 
+      <Tabs
+        activeKey={activeTab}
         onChange={setActiveTab}
         type="card"
-        style={{ marginBottom: '24px' }}
-      >
-        <TabPane 
+        style={{ marginBottom: '24px' }}>
+
+        <TabPane
           tab={
-            <span>
+          <span>
               <BarChart3 size={16} />
               概览分析
             </span>
-          } 
-          key="overview"
-        >
-          <CustomerSatisfactionOverview 
+          }
+          key="overview">
+
+          <CustomerSatisfactionOverview
             data={{ surveys, responses, trend: { direction: 'up', percentage: 5.2 } }}
             loading={loading}
-            onRefresh={loadData}
-          />
+            onRefresh={loadData} />
+
         </TabPane>
 
-        <TabPane 
+        <TabPane
           tab={
-            <span>
+          <span>
               <FileText size={16} />
               调查管理
             </span>
-          } 
-          key="surveys"
-        >
-          <SurveyManager 
+          }
+          key="surveys">
+
+          <SurveyManager
             surveys={filteredSurveys}
             loading={loading}
             onCreate={handleCreateSurvey}
             onEdit={handleEditSurvey}
-            onDelete={handleDeleteSurvey}
-          />
+            onDelete={handleDeleteSurvey} />
+
         </TabPane>
 
-        <TabPane 
+        <TabPane
           tab={
-            <span>
+          <span>
               <PieChart size={16} />
               满意度分析
             </span>
-          } 
-          key="analytics"
-        >
-          <SatisfactionAnalytics 
+          }
+          key="analytics">
+
+          <SatisfactionAnalytics
             surveys={surveys}
             responses={filteredResponses}
-            loading={loading}
-          />
+            loading={loading} />
+
         </TabPane>
 
-        <TabPane 
+        <TabPane
           tab={
-            <span>
+          <span>
               <MessageSquare size={16} />
               反馈管理
             </span>
-          } 
-          key="feedback"
-        >
-          <FeedbackManager 
+          }
+          key="feedback">
+
+          <FeedbackManager
             responses={filteredResponses}
             loading={loading}
-            onRefresh={loadData}
-          />
+            onRefresh={loadData} />
+
         </TabPane>
 
-        <TabPane 
+        <TabPane
           tab={
-            <span>
+          <span>
               <Settings size={16} />
               问卷模板
             </span>
-          } 
-          key="templates"
-        >
-          <SurveyTemplates 
+          }
+          key="templates">
+
+          <SurveyTemplates
             loading={loading}
-            onUseTemplate={handleCreateSurvey}
-          />
+            onUseTemplate={handleCreateSurvey} />
+
         </TabPane>
       </Tabs>
 
@@ -436,10 +436,10 @@ const CustomerSatisfaction = () => {
         visible={!!selectedSurvey}
         onCancel={() => setSelectedSurvey(null)}
         footer={null}
-        width={1000}
-      >
-        {selectedSurvey && (
-          <div>
+        width={1000}>
+
+        {selectedSurvey &&
+        <div>
             <Title level={4}>{selectedSurvey.title}</Title>
             <Row gutter={16}>
               <Col span={8}>
@@ -453,10 +453,10 @@ const CustomerSatisfaction = () => {
               </Col>
             </Row>
           </div>
-        )}
+        }
       </Modal>
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
 export default CustomerSatisfaction;

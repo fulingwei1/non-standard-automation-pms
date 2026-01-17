@@ -7,8 +7,8 @@ import { motion } from 'framer-motion';
 import {
   Plus, Send, MessageSquare, Phone, Mail, Video,
   FileText, Users, Calendar, Clock, AlertCircle,
-  CheckCircle, Search, Filter, MoreHorizontal
-} from "lucide-react";
+  CheckCircle, Search, Filter, MoreHorizontal } from
+"lucide-react";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
@@ -16,17 +16,17 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+  DropdownMenuTrigger } from
+"../ui/dropdown-menu";
 import { cn } from "../../lib/utils";
 import {
   typeConfigs,
-  priorityConfigs,
-  channelConfigs,
-  formatType,
-  formatPriority,
-  formatChannel,
-} from "./communicationConstants";
+  priorityConfigs as _priorityConfigs,
+  channelConfigs as _channelConfigs,
+  formatType as _formatType,
+  formatPriority as _formatPriority,
+  formatChannel as _formatChannel } from
+"./communicationConstants";
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -46,59 +46,59 @@ const stagger = {
  */
 const QuickCreateButtons = ({ onCreate }) => {
   const quickActions = [
-    {
-      key: 'email',
-      icon: <Mail className="w-4 h-4" />,
-      label: '邮件沟通',
-      type: 'EMAIL',
-      defaultType: 'TECHNICAL_DISCUSSION'
-    },
-    {
-      key: 'phone',
-      icon: <Phone className="w-4 h-4" />,
-      label: '电话沟通',
-      type: 'PHONE',
-      defaultType: 'TECHNICAL_DISCUSSION'
-    },
-    {
-      key: 'meeting',
-      icon: <Users className="w-4 h-4" />,
-      label: '安排会议',
-      type: 'MEETING',
-      defaultType: 'MEETING_INVITATION'
-    },
-    {
-      key: 'message',
-      icon: <MessageSquare className="w-4 h-4" />,
-      label: '即时消息',
-      type: 'WECHAT',
-      defaultType: 'TECHNICAL_DISCUSSION'
-    },
-    {
-      key: 'video',
-      icon: <Video className="w-4 h-4" />,
-      label: '视频会议',
-      type: 'VIDEO_CALL',
-      defaultType: 'TECHNICAL_PRESENTATION'
-    }
-  ];
+  {
+    key: 'email',
+    icon: <Mail className="w-4 h-4" />,
+    label: '邮件沟通',
+    type: 'EMAIL',
+    defaultType: 'TECHNICAL_DISCUSSION'
+  },
+  {
+    key: 'phone',
+    icon: <Phone className="w-4 h-4" />,
+    label: '电话沟通',
+    type: 'PHONE',
+    defaultType: 'TECHNICAL_DISCUSSION'
+  },
+  {
+    key: 'meeting',
+    icon: <Users className="w-4 h-4" />,
+    label: '安排会议',
+    type: 'MEETING',
+    defaultType: 'MEETING_INVITATION'
+  },
+  {
+    key: 'message',
+    icon: <MessageSquare className="w-4 h-4" />,
+    label: '即时消息',
+    type: 'WECHAT',
+    defaultType: 'TECHNICAL_DISCUSSION'
+  },
+  {
+    key: 'video',
+    icon: <Video className="w-4 h-4" />,
+    label: '视频会议',
+    type: 'VIDEO_CALL',
+    defaultType: 'TECHNICAL_PRESENTATION'
+  }];
+
 
   return (
     <div className="flex flex-wrap gap-2">
-      {quickActions.map((action) => (
-        <Button
-          key={action.key}
-          variant="outline"
-          size="sm"
-          onClick={() => onCreate && onCreate(action.type, action.defaultType)}
-          className="h-9"
-        >
+      {quickActions.map((action) =>
+      <Button
+        key={action.key}
+        variant="outline"
+        size="sm"
+        onClick={() => onCreate && onCreate(action.type, action.defaultType)}
+        className="h-9">
+
           {action.icon}
           <span className="ml-2">{action.label}</span>
-        </Button>
-      ))}
-    </div>
-  );
+      </Button>
+      )}
+    </div>);
+
 };
 
 /**
@@ -106,55 +106,55 @@ const QuickCreateButtons = ({ onCreate }) => {
  */
 const QuickFilterButtons = ({ onFilter, activeFilters }) => {
   const filterOptions = [
-    {
-      key: 'pending',
-      label: '待处理',
-      count: 5,
-      status: ['PENDING_REVIEW', 'PENDING_APPROVAL', 'IN_PROGRESS']
-    },
-    {
-      key: 'high_priority',
-      label: '高优先级',
-      count: 3,
-      priority: ['HIGH', 'URGENT', 'CRITICAL']
-    },
-    {
-      key: 'today',
-      label: '今日',
-      count: 8,
-      dateFilter: 'today'
-    },
-    {
-      key: 'overdue',
-      label: '已逾期',
-      count: 2,
-      status: ['OVERDUE']
-    }
-  ];
+  {
+    key: 'pending',
+    label: '待处理',
+    count: 5,
+    status: ['PENDING_REVIEW', 'PENDING_APPROVAL', 'IN_PROGRESS']
+  },
+  {
+    key: 'high_priority',
+    label: '高优先级',
+    count: 3,
+    priority: ['HIGH', 'URGENT', 'CRITICAL']
+  },
+  {
+    key: 'today',
+    label: '今日',
+    count: 8,
+    dateFilter: 'today'
+  },
+  {
+    key: 'overdue',
+    label: '已逾期',
+    count: 2,
+    status: ['OVERDUE']
+  }];
+
 
   return (
     <div className="flex flex-wrap gap-2">
-      {filterOptions.map((filter) => (
-        <Button
-          key={filter.key}
-          variant={activeFilters?.[filter.key] ? "default" : "ghost"}
-          size="sm"
-          onClick={() => onFilter && onFilter(filter.key)}
-          className={cn(
-            "h-9",
-            activeFilters?.[filter.key] && filter.key === 'high_priority' && "bg-red-100 text-red-700 border-red-200"
-          )}
-        >
+      {filterOptions.map((filter) =>
+      <Button
+        key={filter.key}
+        variant={activeFilters?.[filter.key] ? "default" : "ghost"}
+        size="sm"
+        onClick={() => onFilter && onFilter(filter.key)}
+        className={cn(
+          "h-9",
+          activeFilters?.[filter.key] && filter.key === 'high_priority' && "bg-red-100 text-red-700 border-red-200"
+        )}>
+
           {filter.label}
-          {filter.count > 0 && (
-            <Badge variant="secondary" className="ml-2 h-5 px-1.5">
+          {filter.count > 0 &&
+        <Badge variant="secondary" className="ml-2 h-5 px-1.5">
               {filter.count}
-            </Badge>
-          )}
-        </Button>
-      ))}
-    </div>
-  );
+        </Badge>
+        }
+      </Button>
+      )}
+    </div>);
+
 };
 
 /**
@@ -162,11 +162,11 @@ const QuickFilterButtons = ({ onFilter, activeFilters }) => {
  */
 const BulkActionsMenu = ({ onSelect }) => {
   const actions = [
-    { key: 'resend', label: '批量重新发送', icon: <Send className="w-4 h-4" /> },
-    { key: 'mark_read', label: '标记为已读', icon: <CheckCircle className="w-4 h-4" /> },
-    { key: 'archive', label: '归档选中', icon: <FileText className="w-4 h-4" /> },
-    { key: 'export', label: '导出数据', icon: <FileText className="w-4 h-4" /> }
-  ];
+  { key: 'resend', label: '批量重新发送', icon: <Send className="w-4 h-4" /> },
+  { key: 'mark_read', label: '标记为已读', icon: <CheckCircle className="w-4 h-4" /> },
+  { key: 'archive', label: '归档选中', icon: <FileText className="w-4 h-4" /> },
+  { key: 'export', label: '导出数据', icon: <FileText className="w-4 h-4" /> }];
+
 
   return (
     <DropdownMenu>
@@ -177,18 +177,18 @@ const BulkActionsMenu = ({ onSelect }) => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {actions.map((action) => (
-          <DropdownMenuItem
-            key={action.key}
-            onClick={() => onSelect && onSelect(action.key)}
-          >
+        {actions.map((action) =>
+        <DropdownMenuItem
+          key={action.key}
+          onClick={() => onSelect && onSelect(action.key)}>
+
             {action.icon}
             <span className="ml-2">{action.label}</span>
-          </DropdownMenuItem>
-        ))}
+        </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
-    </DropdownMenu>
-  );
+    </DropdownMenu>);
+
 };
 
 /**
@@ -202,7 +202,7 @@ export const QuickActions = ({
   activeFilters,
   searchQuery,
   showCreateForm = false,
-  showFilters = true,
+  showFilters = true
 }) => {
   const [localSearch, setLocalSearch] = useState(searchQuery || "");
 
@@ -215,8 +215,8 @@ export const QuickActions = ({
       variants={fadeIn}
       initial="hidden"
       animate="visible"
-      className="space-y-4"
-    >
+      className="space-y-4">
+
       {/* 主操作卡片 */}
       <Card>
         <CardHeader className="pb-3">
@@ -237,31 +237,31 @@ export const QuickActions = ({
                 <div className="text-xs text-slate-500">快速创建新的客户沟通记录</div>
               </div>
               <div className="flex items-center gap-2">
-                {showCreateForm && (
-                  <div className="flex items-center gap-1">
+                {showCreateForm &&
+                <div className="flex items-center gap-1">
                     <Button variant="default" size="sm" onClick={() => onCreate && onCreate()}>
                       <Plus className="w-4 h-4 mr-1" />
                       新建沟通
                     </Button>
                     <QuickCreateButtons onCreate={onCreate} />
-                  </div>
-                )}
+                </div>
+                }
               </div>
             </div>
 
             {/* 筛选操作 */}
-            {showFilters && (
-              <div className="flex items-center justify-between">
+            {showFilters &&
+            <div className="flex items-center justify-between">
                 <div>
                   <div className="text-sm font-medium mb-1">快速筛选</div>
                   <div className="text-xs text-slate-500">按状态、优先级或时间快速筛选</div>
                 </div>
                 <QuickFilterButtons
-                  onFilter={onFilter}
-                  activeFilters={activeFilters}
-                />
-              </div>
-            )}
+                onFilter={onFilter}
+                activeFilters={activeFilters} />
+
+            </div>
+            }
 
             {/* 搜索操作 */}
             <div className="flex items-center gap-3">
@@ -275,8 +275,8 @@ export const QuickActions = ({
                   className="w-full pl-9 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') handleSearch();
-                  }}
-                />
+                  }} />
+
               </div>
               <Button variant="outline" size="sm" onClick={handleSearch}>
                 搜索
@@ -319,25 +319,25 @@ export const QuickActions = ({
           <motion.div
             variants={stagger}
             animate="animate"
-            className="grid grid-cols-2 md:grid-cols-4 gap-2"
-          >
-            {Object.entries(typeConfigs).slice(0, 8).map(([key, config]) => (
-              <Button
-                key={key}
-                variant="outline"
-                size="sm"
-                className="h-10 justify-start"
-                onClick={() => onCreate && onCreate('SYSTEM', key)}
-              >
+            className="grid grid-cols-2 md:grid-cols-4 gap-2">
+
+            {Object.entries(typeConfigs).slice(0, 8).map(([key, config]) =>
+            <Button
+              key={key}
+              variant="outline"
+              size="sm"
+              className="h-10 justify-start"
+              onClick={() => onCreate && onCreate('SYSTEM', key)}>
+
                 <span className="mr-2">{config.icon}</span>
                 <span className="text-sm">{config.label}</span>
-              </Button>
-            ))}
+            </Button>
+            )}
           </motion.div>
         </CardContent>
       </Card>
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
 export default QuickActions;

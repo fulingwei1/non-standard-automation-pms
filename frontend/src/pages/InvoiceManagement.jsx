@@ -22,8 +22,8 @@ import {
   Calendar,
   ChevronRight,
   TrendingUp,
-  BarChart3,
-} from "lucide-react";
+  BarChart3 } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -45,9 +45,9 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../components/ui";
-import { cn, formatCurrency, formatDate } from "../lib/utils";
+  DropdownMenuTrigger } from
+"../components/ui";
+import { cn, formatCurrency, formatDate as _formatDate } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { invoiceApi, contractApi } from "../services/api";
 import { CreditCard } from "lucide-react";
@@ -58,14 +58,14 @@ const statusMap = {
   APPLIED: "applied",
   APPROVED: "approved",
   ISSUED: "issued",
-  VOID: "void",
+  VOID: "void"
 };
 
 const paymentStatusMap = {
   PENDING: "pending",
   PARTIAL: "partial",
   PAID: "paid",
-  OVERDUE: "overdue",
+  OVERDUE: "overdue"
 };
 
 // Mock invoice data (fallback)
@@ -74,47 +74,47 @@ const statusConfig = {
   draft: {
     label: "草稿",
     color: "bg-slate-500/20 text-slate-400",
-    icon: FileText,
+    icon: FileText
   },
   applied: {
     label: "申请中",
     color: "bg-blue-500/20 text-blue-400",
-    icon: Clock,
+    icon: Clock
   },
   approved: {
     label: "已批准",
     color: "bg-purple-500/20 text-purple-400",
-    icon: Check,
+    icon: Check
   },
   issued: {
     label: "已开票",
     color: "bg-emerald-500/20 text-emerald-400",
-    icon: Check,
+    icon: Check
   },
-  void: { label: "作废", color: "bg-red-500/20 text-red-400", icon: X },
+  void: { label: "作废", color: "bg-red-500/20 text-red-400", icon: X }
 };
 
 const paymentStatusConfig = {
   pending: {
     label: "未收款",
     color: "bg-slate-500/20 text-slate-400",
-    icon: Clock,
+    icon: Clock
   },
   partial: {
     label: "部分收款",
     color: "bg-amber-500/20 text-amber-400",
-    icon: TrendingUp,
+    icon: TrendingUp
   },
   paid: {
     label: "已收款",
     color: "bg-emerald-500/20 text-emerald-400",
-    icon: Check,
+    icon: Check
   },
   overdue: {
     label: "已逾期",
     color: "bg-red-500/20 text-red-400",
-    icon: AlertTriangle,
-  },
+    icon: AlertTriangle
+  }
 };
 
 const InvoiceRow = ({
@@ -123,7 +123,7 @@ const InvoiceRow = ({
   onEdit,
   onDelete,
   onIssue,
-  onReceivePayment,
+  onReceivePayment
 }) => {
   const invoiceConfig = statusConfig[invoice.status];
   const paymentConfig = paymentStatusConfig[invoice.paymentStatus];
@@ -133,8 +133,8 @@ const InvoiceRow = ({
   return (
     <motion.div
       variants={fadeIn}
-      className="group flex items-center justify-between rounded-lg border border-slate-700/50 bg-slate-800/40 px-4 py-3 transition-all hover:border-slate-600 hover:bg-slate-800/60"
-    >
+      className="group flex items-center justify-between rounded-lg border border-slate-700/50 bg-slate-800/40 px-4 py-3 transition-all hover:border-slate-600 hover:bg-slate-800/60">
+
       <div className="flex flex-1 items-center gap-4">
         {/* Checkbox */}
         <input type="checkbox" className="h-4 w-4 rounded cursor-pointer" />
@@ -151,12 +151,12 @@ const InvoiceRow = ({
             <span className="text-slate-500">{invoice.customerName}</span>
             <span className="text-slate-600">|</span>
             <span className="text-slate-500">{invoice.invoiceType}</span>
-            {invoice.issueDate && (
-              <>
+            {invoice.issueDate &&
+            <>
                 <span className="text-slate-600">|</span>
                 <span className="text-slate-500">{invoice.issueDate}</span>
               </>
-            )}
+            }
           </div>
         </div>
 
@@ -186,69 +186,69 @@ const InvoiceRow = ({
             size="sm"
             variant="ghost"
             className="h-8 w-8 p-0"
-            onClick={() => onView(invoice)}
-          >
+            onClick={() => onView(invoice)}>
+
             <FileText className="h-4 w-4 text-blue-400" />
           </Button>
-          {invoice.status === "draft" && (
-            <>
+          {invoice.status === "draft" &&
+          <>
               <Button
-                size="sm"
-                variant="ghost"
-                className="h-8 w-8 p-0"
-                onClick={() => onEdit(invoice)}
-                title="编辑"
-              >
-                <Edit className="h-4 w-4 text-amber-400" />
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-8 w-8 p-0"
-                onClick={() => onDelete(invoice)}
-                title="删除"
-              >
-                <X className="h-4 w-4 text-red-400" />
-              </Button>
-            </>
-          )}
-          {invoice.status === "approved" && onIssue && (
-            <Button
               size="sm"
               variant="ghost"
               className="h-8 w-8 p-0"
-              onClick={() => onIssue(invoice)}
-            >
+              onClick={() => onEdit(invoice)}
+              title="编辑">
+
+                <Edit className="h-4 w-4 text-amber-400" />
+              </Button>
+              <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 w-8 p-0"
+              onClick={() => onDelete(invoice)}
+              title="删除">
+
+                <X className="h-4 w-4 text-red-400" />
+              </Button>
+            </>
+          }
+          {invoice.status === "approved" && onIssue &&
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 w-8 p-0"
+            onClick={() => onIssue(invoice)}>
+
               <Send className="h-4 w-4 text-purple-400" />
             </Button>
-          )}
+          }
           {invoice.status === "issued" &&
-            invoice.paymentStatus !== "paid" &&
-            onReceivePayment && (
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-8 w-8 p-0"
-                onClick={() => onReceivePayment(invoice)}
-                title="记录收款"
-              >
+          invoice.paymentStatus !== "paid" &&
+          onReceivePayment &&
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 w-8 p-0"
+            onClick={() => onReceivePayment(invoice)}
+            title="记录收款">
+
                 <DollarSign className="h-4 w-4 text-emerald-400" />
               </Button>
-            )}
+          }
           <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
             <Download className="h-4 w-4 text-slate-400" />
           </Button>
         </div>
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
 export default function InvoiceManagement() {
   const [invoices, setInvoices] = useState([]);
   const [contracts, setContracts] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [_loading, setLoading] = useState(false);
+  const [_error, setError] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterPayment, setFilterPayment] = useState("all");
@@ -269,19 +269,19 @@ export default function InvoiceManagement() {
     tax_rate: "13",
     issue_date: "",
     due_date: "",
-    remark: "",
+    remark: ""
   });
 
   const [issueData, setIssueData] = useState({
     invoice_no: "",
     issue_date: new Date().toISOString().split("T")[0],
-    remark: "",
+    remark: ""
   });
 
   const [paymentData, setPaymentData] = useState({
     paid_amount: "",
     paid_date: new Date().toISOString().split("T")[0],
-    remark: "",
+    remark: ""
   });
 
   const loadInvoices = async () => {
@@ -292,15 +292,15 @@ export default function InvoiceManagement() {
         page_size: pageSize,
         keyword: searchText || undefined,
         status:
-          filterStatus !== "all"
-            ? Object.keys(statusMap).find((k) => statusMap[k] === filterStatus)
-            : undefined,
+        filterStatus !== "all" ?
+        Object.keys(statusMap).find((k) => statusMap[k] === filterStatus) :
+        undefined,
         payment_status:
-          filterPayment !== "all"
-            ? Object.keys(paymentStatusMap).find(
-                (k) => paymentStatusMap[k] === filterPayment,
-              )
-            : undefined,
+        filterPayment !== "all" ?
+        Object.keys(paymentStatusMap).find(
+          (k) => paymentStatusMap[k] === filterPayment
+        ) :
+        undefined
       };
       const response = await invoiceApi.list(params);
       if (response.data && response.data.items) {
@@ -322,7 +322,7 @@ export default function InvoiceManagement() {
           paidAmount: parseFloat(inv.paid_amount || 0),
           paidDate: inv.paid_date || null,
           notes: inv.remark || "",
-          raw: inv, // Keep original data
+          raw: inv // Keep original data
         }));
         setInvoices(transformed);
         setTotal(response.data.total || 0);
@@ -330,7 +330,7 @@ export default function InvoiceManagement() {
     } catch (error) {
       console.error("加载发票列表失败:", error);
       setError(
-        error.response?.data?.detail || error.message || "加载发票列表失败",
+        error.response?.data?.detail || error.message || "加载发票列表失败"
       );
       setInvoices([]); // 不再使用mock数据，显示空列表
     } finally {
@@ -391,7 +391,7 @@ export default function InvoiceManagement() {
       setPaymentData({
         paid_amount: "",
         paid_date: new Date().toISOString().split("T")[0],
-        remark: "",
+        remark: ""
       });
       loadInvoices();
     } catch (error) {
@@ -413,7 +413,7 @@ export default function InvoiceManagement() {
           tax_rate: inv.tax_rate ? String(inv.tax_rate) : "13",
           issue_date: inv.issue_date || "",
           due_date: inv.due_date || "",
-          remark: inv.remark || "",
+          remark: inv.remark || ""
         });
         setShowEditDialog(true);
       }
@@ -467,21 +467,21 @@ export default function InvoiceManagement() {
       tax_rate: "13",
       issue_date: "",
       due_date: "",
-      remark: "",
+      remark: ""
     });
   };
 
   const filteredInvoices = useMemo(() => {
     return invoices.filter((invoice) => {
       const matchSearch =
-        invoice.id.toLowerCase().includes(searchText.toLowerCase()) ||
-        invoice.projectName.toLowerCase().includes(searchText.toLowerCase()) ||
-        invoice.customerName.toLowerCase().includes(searchText.toLowerCase());
+      invoice.id.toLowerCase().includes(searchText.toLowerCase()) ||
+      invoice.projectName.toLowerCase().includes(searchText.toLowerCase()) ||
+      invoice.customerName.toLowerCase().includes(searchText.toLowerCase());
 
       const matchStatus =
-        filterStatus === "all" || invoice.status === filterStatus;
+      filterStatus === "all" || invoice.status === filterStatus;
       const matchPayment =
-        filterPayment === "all" || invoice.paymentStatus === filterPayment;
+      filterPayment === "all" || invoice.paymentStatus === filterPayment;
 
       return matchSearch && matchStatus && matchPayment;
     });
@@ -492,16 +492,16 @@ export default function InvoiceManagement() {
     totalAmount: invoices.reduce((sum, inv) => sum + inv.totalAmount, 0),
     paidAmount: invoices.reduce(
       (sum, inv) => sum + (inv.paymentStatus === "paid" ? inv.totalAmount : 0),
-      0,
+      0
     ),
     pendingAmount: invoices.reduce(
       (sum, inv) =>
-        sum +
-        (inv.paymentStatus === "pending" || inv.paymentStatus === "overdue"
-          ? inv.totalAmount
-          : 0),
-      0,
-    ),
+      sum + (
+      inv.paymentStatus === "pending" || inv.paymentStatus === "overdue" ?
+      inv.totalAmount :
+      0),
+      0
+    )
   };
 
   return (
@@ -510,20 +510,20 @@ export default function InvoiceManagement() {
         title="对账开票管理"
         description="发票申请、开票、收款跟踪"
         action={
-          <Button onClick={() => setShowCreateDialog(true)}>
+        <Button onClick={() => setShowCreateDialog(true)}>
             <Plus className="mr-2 h-4 w-4" />
             新建发票
           </Button>
-        }
-      />
+        } />
+
 
       {/* Statistics */}
       <motion.div
         variants={staggerContainer}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4"
-      >
+        className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+
         <Card>
           <CardContent className="pt-6">
             <div className="space-y-2">
@@ -555,7 +555,7 @@ export default function InvoiceManagement() {
                 {formatCurrency(stats.paidAmount)}
               </p>
               <p className="text-xs text-slate-500">
-                {((stats.paidAmount / stats.totalAmount) * 100).toFixed(1)}%
+                {(stats.paidAmount / stats.totalAmount * 100).toFixed(1)}%
               </p>
             </div>
           </CardContent>
@@ -584,8 +584,8 @@ export default function InvoiceManagement() {
                 placeholder="搜索发票号、项目名、客户名..."
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
-                className="pl-10"
-              />
+                className="pl-10" />
+
             </div>
 
             {/* Filter Buttons */}
@@ -593,40 +593,40 @@ export default function InvoiceManagement() {
               <Button
                 variant={filterStatus === "all" ? "default" : "ghost"}
                 size="sm"
-                onClick={() => setFilterStatus("all")}
-              >
+                onClick={() => setFilterStatus("all")}>
+
                 全部状态
               </Button>
-              {Object.entries(statusConfig).map(([key, config]) => (
-                <Button
-                  key={key}
-                  variant={filterStatus === key ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setFilterStatus(key)}
-                  className={cn(filterStatus === key && config.color)}
-                >
+              {Object.entries(statusConfig).map(([key, config]) =>
+              <Button
+                key={key}
+                variant={filterStatus === key ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setFilterStatus(key)}
+                className={cn(filterStatus === key && config.color)}>
+
                   {config.label}
                 </Button>
-              ))}
+              )}
               <div className="w-full border-t border-slate-700/30" />
               <Button
                 variant={filterPayment === "all" ? "default" : "ghost"}
                 size="sm"
-                onClick={() => setFilterPayment("all")}
-              >
+                onClick={() => setFilterPayment("all")}>
+
                 全部收款状态
               </Button>
-              {Object.entries(paymentStatusConfig).map(([key, config]) => (
-                <Button
-                  key={key}
-                  variant={filterPayment === key ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setFilterPayment(key)}
-                  className={cn(filterPayment === key && config.color)}
-                >
+              {Object.entries(paymentStatusConfig).map(([key, config]) =>
+              <Button
+                key={key}
+                variant={filterPayment === key ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setFilterPayment(key)}
+                className={cn(filterPayment === key && config.color)}>
+
                   {config.label}
                 </Button>
-              ))}
+              )}
             </div>
           </div>
         </CardContent>
@@ -645,57 +645,57 @@ export default function InvoiceManagement() {
             variants={staggerContainer}
             initial="hidden"
             animate="visible"
-            className="space-y-2"
-          >
+            className="space-y-2">
+
             <AnimatePresence>
-              {filteredInvoices.length > 0 ? (
-                filteredInvoices.map((invoice) => (
-                  <InvoiceRow
-                    key={invoice.id}
-                    invoice={invoice}
-                    onView={(inv) => {
-                      setSelectedInvoice(inv);
-                      // Show detail dialog or navigate
-                    }}
-                    onEdit={handleEdit}
-                    onDelete={(inv) => {
-                      setSelectedInvoice(inv);
-                      setShowDeleteDialog(true);
-                    }}
-                    onIssue={(inv) => {
-                      setSelectedInvoice(inv);
-                      setShowIssueDialog(true);
-                    }}
-                    onReceivePayment={(inv) => {
-                      setSelectedInvoice(inv);
-                      setPaymentData({
-                        paid_amount: (inv.totalAmount - inv.paidAmount).toFixed(
-                          2,
-                        ),
-                        paid_date: new Date().toISOString().split("T")[0],
-                        remark: "",
-                      });
-                      setShowPaymentDialog(true);
-                    }}
-                  />
-                ))
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="py-12 text-center"
-                >
+              {filteredInvoices.length > 0 ?
+              filteredInvoices.map((invoice) =>
+              <InvoiceRow
+                key={invoice.id}
+                invoice={invoice}
+                onView={(inv) => {
+                  setSelectedInvoice(inv);
+                  // Show detail dialog or navigate
+                }}
+                onEdit={handleEdit}
+                onDelete={(inv) => {
+                  setSelectedInvoice(inv);
+                  setShowDeleteDialog(true);
+                }}
+                onIssue={(inv) => {
+                  setSelectedInvoice(inv);
+                  setShowIssueDialog(true);
+                }}
+                onReceivePayment={(inv) => {
+                  setSelectedInvoice(inv);
+                  setPaymentData({
+                    paid_amount: (inv.totalAmount - inv.paidAmount).toFixed(
+                      2
+                    ),
+                    paid_date: new Date().toISOString().split("T")[0],
+                    remark: ""
+                  });
+                  setShowPaymentDialog(true);
+                }} />
+
+              ) :
+
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="py-12 text-center">
+
                   <p className="text-slate-400">没有符合条件的发票</p>
                 </motion.div>
-              )}
+              }
             </AnimatePresence>
           </motion.div>
         </CardContent>
       </Card>
 
       {/* Bulk Actions */}
-      {filteredInvoices.length > 0 && (
-        <Card className="bg-blue-500/10 border-blue-500/30">
+      {filteredInvoices.length > 0 &&
+      <Card className="bg-blue-500/10 border-blue-500/30">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <p className="text-sm text-slate-300">
@@ -711,10 +711,10 @@ export default function InvoiceManagement() {
                   批量下载
                 </Button>
                 <Button
-                  variant="ghost"
-                  size="sm"
-                  className="gap-2 text-red-400 hover:text-red-300"
-                >
+                variant="ghost"
+                size="sm"
+                className="gap-2 text-red-400 hover:text-red-300">
+
                   <X className="h-4 w-4" />
                   取消选择
                 </Button>
@@ -722,7 +722,7 @@ export default function InvoiceManagement() {
             </div>
           </CardContent>
         </Card>
-      )}
+      }
 
       {/* 创建发票对话框 */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
@@ -738,16 +738,16 @@ export default function InvoiceManagement() {
                 <select
                   value={formData.contract_id}
                   onChange={(e) =>
-                    setFormData({ ...formData, contract_id: e.target.value })
+                  setFormData({ ...formData, contract_id: e.target.value })
                   }
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
-                >
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white">
+
                   <option value="">请选择合同</option>
-                  {contracts.map((contract) => (
-                    <option key={contract.id} value={contract.id}>
+                  {contracts.map((contract) =>
+                  <option key={contract.id} value={contract.id}>
                       {contract.contract_code} - {contract.customer_name}
                     </option>
-                  ))}
+                  )}
                 </select>
               </div>
               <div>
@@ -755,10 +755,10 @@ export default function InvoiceManagement() {
                 <select
                   value={formData.invoice_type}
                   onChange={(e) =>
-                    setFormData({ ...formData, invoice_type: e.target.value })
+                  setFormData({ ...formData, invoice_type: e.target.value })
                   }
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
-                >
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white">
+
                   <option value="SPECIAL">专票</option>
                   <option value="NORMAL">普票</option>
                 </select>
@@ -769,10 +769,10 @@ export default function InvoiceManagement() {
                   type="number"
                   value={formData.amount}
                   onChange={(e) =>
-                    setFormData({ ...formData, amount: e.target.value })
+                  setFormData({ ...formData, amount: e.target.value })
                   }
-                  placeholder="请输入金额"
-                />
+                  placeholder="请输入金额" />
+
               </div>
               <div>
                 <Label>税率 (%)</Label>
@@ -780,10 +780,10 @@ export default function InvoiceManagement() {
                   type="number"
                   value={formData.tax_rate}
                   onChange={(e) =>
-                    setFormData({ ...formData, tax_rate: e.target.value })
+                  setFormData({ ...formData, tax_rate: e.target.value })
                   }
-                  placeholder="13"
-                />
+                  placeholder="13" />
+
               </div>
               <div>
                 <Label>开票日期</Label>
@@ -791,9 +791,9 @@ export default function InvoiceManagement() {
                   type="date"
                   value={formData.issue_date}
                   onChange={(e) =>
-                    setFormData({ ...formData, issue_date: e.target.value })
-                  }
-                />
+                  setFormData({ ...formData, issue_date: e.target.value })
+                  } />
+
               </div>
               <div>
                 <Label>到期日期</Label>
@@ -801,9 +801,9 @@ export default function InvoiceManagement() {
                   type="date"
                   value={formData.due_date}
                   onChange={(e) =>
-                    setFormData({ ...formData, due_date: e.target.value })
-                  }
-                />
+                  setFormData({ ...formData, due_date: e.target.value })
+                  } />
+
               </div>
             </div>
             <div>
@@ -811,18 +811,18 @@ export default function InvoiceManagement() {
               <Textarea
                 value={formData.remark}
                 onChange={(e) =>
-                  setFormData({ ...formData, remark: e.target.value })
+                setFormData({ ...formData, remark: e.target.value })
                 }
                 placeholder="请输入备注"
-                rows={3}
-              />
+                rows={3} />
+
             </div>
           </div>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowCreateDialog(false)}
-            >
+              onClick={() => setShowCreateDialog(false)}>
+
               取消
             </Button>
             <Button onClick={handleCreate}>创建</Button>
@@ -843,10 +843,10 @@ export default function InvoiceManagement() {
               <Input
                 value={issueData.invoice_no}
                 onChange={(e) =>
-                  setIssueData({ ...issueData, invoice_no: e.target.value })
+                setIssueData({ ...issueData, invoice_no: e.target.value })
                 }
-                placeholder="请输入发票号码"
-              />
+                placeholder="请输入发票号码" />
+
             </div>
             <div>
               <Label>开票日期 *</Label>
@@ -854,20 +854,20 @@ export default function InvoiceManagement() {
                 type="date"
                 value={issueData.issue_date}
                 onChange={(e) =>
-                  setIssueData({ ...issueData, issue_date: e.target.value })
-                }
-              />
+                setIssueData({ ...issueData, issue_date: e.target.value })
+                } />
+
             </div>
             <div>
               <Label>备注</Label>
               <Textarea
                 value={issueData.remark}
                 onChange={(e) =>
-                  setIssueData({ ...issueData, remark: e.target.value })
+                setIssueData({ ...issueData, remark: e.target.value })
                 }
                 placeholder="请输入备注"
-                rows={3}
-              />
+                rows={3} />
+
             </div>
           </div>
           <DialogFooter>
@@ -889,8 +889,8 @@ export default function InvoiceManagement() {
               <br />
               待收金额:{" "}
               {formatCurrency(
-                (selectedInvoice?.totalAmount || 0) -
-                  (selectedInvoice?.paidAmount || 0),
+                (selectedInvoice?.totalAmount || 0) - (
+                selectedInvoice?.paidAmount || 0)
               )}
             </DialogDescription>
           </DialogHeader>
@@ -901,13 +901,13 @@ export default function InvoiceManagement() {
                 type="number"
                 value={paymentData.paid_amount}
                 onChange={(e) =>
-                  setPaymentData({
-                    ...paymentData,
-                    paid_amount: e.target.value,
-                  })
+                setPaymentData({
+                  ...paymentData,
+                  paid_amount: e.target.value
+                })
                 }
-                placeholder="请输入收款金额"
-              />
+                placeholder="请输入收款金额" />
+
             </div>
             <div>
               <Label>收款日期 *</Label>
@@ -915,27 +915,27 @@ export default function InvoiceManagement() {
                 type="date"
                 value={paymentData.paid_date}
                 onChange={(e) =>
-                  setPaymentData({ ...paymentData, paid_date: e.target.value })
-                }
-              />
+                setPaymentData({ ...paymentData, paid_date: e.target.value })
+                } />
+
             </div>
             <div>
               <Label>备注</Label>
               <Textarea
                 value={paymentData.remark}
                 onChange={(e) =>
-                  setPaymentData({ ...paymentData, remark: e.target.value })
+                setPaymentData({ ...paymentData, remark: e.target.value })
                 }
                 placeholder="请输入备注"
-                rows={3}
-              />
+                rows={3} />
+
             </div>
           </div>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowPaymentDialog(false)}
-            >
+              onClick={() => setShowPaymentDialog(false)}>
+
               取消
             </Button>
             <Button onClick={handleReceivePayment}>确认收款</Button>
@@ -957,16 +957,16 @@ export default function InvoiceManagement() {
                 <select
                   value={formData.contract_id}
                   onChange={(e) =>
-                    setFormData({ ...formData, contract_id: e.target.value })
+                  setFormData({ ...formData, contract_id: e.target.value })
                   }
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
-                >
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white">
+
                   <option value="">请选择合同</option>
-                  {contracts.map((contract) => (
-                    <option key={contract.id} value={contract.id}>
+                  {contracts.map((contract) =>
+                  <option key={contract.id} value={contract.id}>
                       {contract.contract_code} - {contract.customer_name}
                     </option>
-                  ))}
+                  )}
                 </select>
               </div>
               <div>
@@ -974,10 +974,10 @@ export default function InvoiceManagement() {
                 <select
                   value={formData.invoice_type}
                   onChange={(e) =>
-                    setFormData({ ...formData, invoice_type: e.target.value })
+                  setFormData({ ...formData, invoice_type: e.target.value })
                   }
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
-                >
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white">
+
                   <option value="SPECIAL">专票</option>
                   <option value="NORMAL">普票</option>
                 </select>
@@ -988,10 +988,10 @@ export default function InvoiceManagement() {
                   type="number"
                   value={formData.amount}
                   onChange={(e) =>
-                    setFormData({ ...formData, amount: e.target.value })
+                  setFormData({ ...formData, amount: e.target.value })
                   }
-                  placeholder="请输入金额"
-                />
+                  placeholder="请输入金额" />
+
               </div>
               <div>
                 <Label>税率 (%)</Label>
@@ -999,10 +999,10 @@ export default function InvoiceManagement() {
                   type="number"
                   value={formData.tax_rate}
                   onChange={(e) =>
-                    setFormData({ ...formData, tax_rate: e.target.value })
+                  setFormData({ ...formData, tax_rate: e.target.value })
                   }
-                  placeholder="13"
-                />
+                  placeholder="13" />
+
               </div>
               <div>
                 <Label>开票日期</Label>
@@ -1010,9 +1010,9 @@ export default function InvoiceManagement() {
                   type="date"
                   value={formData.issue_date}
                   onChange={(e) =>
-                    setFormData({ ...formData, issue_date: e.target.value })
-                  }
-                />
+                  setFormData({ ...formData, issue_date: e.target.value })
+                  } />
+
               </div>
               <div>
                 <Label>到期日期</Label>
@@ -1020,9 +1020,9 @@ export default function InvoiceManagement() {
                   type="date"
                   value={formData.due_date}
                   onChange={(e) =>
-                    setFormData({ ...formData, due_date: e.target.value })
-                  }
-                />
+                  setFormData({ ...formData, due_date: e.target.value })
+                  } />
+
               </div>
             </div>
             <div>
@@ -1030,11 +1030,11 @@ export default function InvoiceManagement() {
               <Textarea
                 value={formData.remark}
                 onChange={(e) =>
-                  setFormData({ ...formData, remark: e.target.value })
+                setFormData({ ...formData, remark: e.target.value })
                 }
                 placeholder="请输入备注"
-                rows={3}
-              />
+                rows={3} />
+
             </div>
           </div>
           <DialogFooter>
@@ -1060,15 +1060,15 @@ export default function InvoiceManagement() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowDeleteDialog(false)}
-            >
+              onClick={() => setShowDeleteDialog(false)}>
+
               取消
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700"
-            >
+              className="bg-red-600 hover:bg-red-700">
+
               删除
             </Button>
           </DialogFooter>
@@ -1076,27 +1076,27 @@ export default function InvoiceManagement() {
       </Dialog>
 
       {/* 分页 */}
-      {total > pageSize && (
-        <div className="flex justify-center gap-2">
+      {total > pageSize &&
+      <div className="flex justify-center gap-2">
           <Button
-            variant="outline"
-            disabled={page === 1}
-            onClick={() => setPage(page - 1)}
-          >
+          variant="outline"
+          disabled={page === 1}
+          onClick={() => setPage(page - 1)}>
+
             上一页
           </Button>
           <span className="flex items-center px-4 text-slate-400">
             第 {page} 页，共 {Math.ceil(total / pageSize)} 页
           </span>
           <Button
-            variant="outline"
-            disabled={page >= Math.ceil(total / pageSize)}
-            onClick={() => setPage(page + 1)}
-          >
+          variant="outline"
+          disabled={page >= Math.ceil(total / pageSize)}
+          onClick={() => setPage(page + 1)}>
+
             下一页
           </Button>
         </div>
-      )}
-    </div>
-  );
+      }
+    </div>);
+
 }

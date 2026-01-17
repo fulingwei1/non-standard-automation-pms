@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { cn } from "../lib/utils";
+import { cn as _cn } from "../lib/utils";
 import { rdProjectApi } from "../services/api";
 import { formatDate, formatCurrency } from "../lib/utils";
 import { PageHeader } from "../components/layout/PageHeader";
@@ -21,8 +21,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogBody,
-  DialogFooter,
-} from "../components/ui";
+  DialogFooter } from
+"../components/ui";
 import {
   ArrowLeft,
   Plus,
@@ -32,16 +32,16 @@ import {
   Calendar,
   FileText,
   AlertCircle,
-  CheckCircle2,
-} from "lucide-react";
+  CheckCircle2 } from
+"lucide-react";
 
-const costTypeMap = {
+const _costTypeMap = {
   LABOR: { label: "人工费用", color: "primary" },
   MATERIAL: { label: "材料费用", color: "blue" },
   EQUIPMENT: { label: "设备费用", color: "purple" },
   DEPRECIATION: { label: "折旧费用", color: "indigo" },
   AMORTIZATION: { label: "摊销费用", color: "pink" },
-  OTHER: { label: "其他费用", color: "gray" },
+  OTHER: { label: "其他费用", color: "gray" }
 };
 
 export default function RdCostEntry() {
@@ -59,7 +59,7 @@ export default function RdCostEntry() {
     cost_amount: "",
     deductible_amount: "",
     cost_description: "",
-    remark: "",
+    remark: ""
   });
   const [formLoading, setFormLoading] = useState(false);
 
@@ -98,7 +98,7 @@ export default function RdCostEntry() {
     try {
       const response = await rdProjectApi.getCosts({
         rd_project_id: id,
-        page_size: 100,
+        page_size: 100
       });
       const data = response.data || response;
       setCosts(data.items || data || []);
@@ -117,11 +117,11 @@ export default function RdCostEntry() {
         cost_type_id: parseInt(formData.cost_type_id),
         cost_date: formData.cost_date,
         cost_amount: parseFloat(formData.cost_amount),
-        deductible_amount: formData.deductible_amount
-          ? parseFloat(formData.deductible_amount)
-          : null,
+        deductible_amount: formData.deductible_amount ?
+        parseFloat(formData.deductible_amount) :
+        null,
         cost_description: formData.cost_description || "",
-        remark: formData.remark || "",
+        remark: formData.remark || ""
       };
 
       await rdProjectApi.createCost(submitData);
@@ -132,7 +132,7 @@ export default function RdCostEntry() {
         cost_amount: "",
         deductible_amount: "",
         cost_description: "",
-        remark: "",
+        remark: ""
       });
       fetchCosts();
       fetchProject(); // Refresh project to update total_cost
@@ -153,14 +153,14 @@ export default function RdCostEntry() {
       setFormLoading(true);
       const response = await rdProjectApi.calculateLaborCost({
         rd_project_id: parseInt(id),
-        cost_date: formData.cost_date,
+        cost_date: formData.cost_date
       });
       const data = response.data?.data || response.data || response;
       if (data.total_cost && data.total_cost > 0) {
         setFormData({
           ...formData,
           cost_amount: data.total_cost.toString(),
-          cost_description: `人工费用自动计算（${data.total_hours || 0}小时）`,
+          cost_description: `人工费用自动计算（${data.total_hours || 0}小时）`
         });
       } else {
         alert("该日期无工时数据，无法自动计算人工费用");
@@ -184,16 +184,16 @@ export default function RdCostEntry() {
         <Button
           variant="outline"
           className="mt-4"
-          onClick={() => navigate("/rd-projects")}
-        >
+          onClick={() => navigate("/rd-projects")}>
+
           返回列表
         </Button>
-      </div>
-    );
+      </div>);
+
   }
 
   const selectedCostType = costTypes.find(
-    (t) => t.id === parseInt(formData.cost_type_id),
+    (t) => t.id === parseInt(formData.cost_type_id)
   );
   const isLaborType = selectedCostType?.cost_type_code === "LABOR";
 
@@ -205,8 +205,8 @@ export default function RdCostEntry() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate(`/rd-projects/${id}`)}
-          >
+            onClick={() => navigate(`/rd-projects/${id}`)}>
+
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
@@ -246,7 +246,7 @@ export default function RdCostEntry() {
               <p className="text-sm text-slate-400 mb-1">剩余预算</p>
               <p className="text-xl font-semibold text-primary">
                 {formatCurrency(
-                  (project.budget_amount || 0) - (project.total_cost || 0),
+                  (project.budget_amount || 0) - (project.total_cost || 0)
                 )}
               </p>
             </div>
@@ -258,17 +258,17 @@ export default function RdCostEntry() {
       <Card>
         <CardContent className="p-6">
           <h3 className="text-lg font-semibold text-white mb-4">费用明细</h3>
-          {costs.length > 0 ? (
-            <div className="space-y-3">
+          {costs.length > 0 ?
+          <div className="space-y-3">
               {costs.map((cost) => {
-                const costType = costTypes.find(
-                  (t) => t.id === cost.cost_type_id,
-                );
-                return (
-                  <div
-                    key={cost.id}
-                    className="flex items-center justify-between p-4 rounded-lg bg-white/[0.02] hover:bg-white/[0.04] transition-colors"
-                  >
+              const costType = costTypes.find(
+                (t) => t.id === cost.cost_type_id
+              );
+              return (
+                <div
+                  key={cost.id}
+                  className="flex items-center justify-between p-4 rounded-lg bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
+
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <p className="font-medium text-white">
@@ -277,49 +277,49 @@ export default function RdCostEntry() {
                         <Badge variant="outline" className="text-xs">
                           {costType?.cost_type_name || "未知类型"}
                         </Badge>
-                        {cost.cost_date && (
-                          <Badge variant="secondary" className="text-xs">
+                        {cost.cost_date &&
+                      <Badge variant="secondary" className="text-xs">
                             {formatDate(cost.cost_date)}
                           </Badge>
-                        )}
+                      }
                       </div>
                       <p className="text-sm text-slate-400">
                         {cost.cost_description || "无描述"}
                       </p>
-                      {cost.remark && (
-                        <p className="text-xs text-slate-500 mt-1">
+                      {cost.remark &&
+                    <p className="text-xs text-slate-500 mt-1">
                           {cost.remark}
                         </p>
-                      )}
+                    }
                     </div>
                     <div className="text-right">
                       <p className="text-lg font-semibold text-white">
                         {formatCurrency(cost.cost_amount || 0)}
                       </p>
-                      {cost.deductible_amount && cost.deductible_amount > 0 && (
-                        <p className="text-xs text-primary">
+                      {cost.deductible_amount && cost.deductible_amount > 0 &&
+                    <p className="text-xs text-primary">
                           扣除: {formatCurrency(cost.deductible_amount)}
                         </p>
-                      )}
+                    }
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-12 text-slate-500">
+                  </div>);
+
+            })}
+            </div> :
+
+          <div className="text-center py-12 text-slate-500">
               <FileText className="h-12 w-12 mx-auto mb-4 text-slate-600" />
               <p>暂无费用记录</p>
               <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => setFormOpen(true)}
-              >
+              variant="outline"
+              className="mt-4"
+              onClick={() => setFormOpen(true)}>
+
                 <Plus className="h-4 w-4 mr-2" />
                 录入第一条费用
               </Button>
             </div>
-          )}
+          }
         </CardContent>
       </Card>
 
@@ -339,19 +339,19 @@ export default function RdCostEntry() {
                   <Select
                     value={formData.cost_type_id?.toString() || ""}
                     onValueChange={(value) =>
-                      setFormData({ ...formData, cost_type_id: value })
-                    }
-                  >
+                    setFormData({ ...formData, cost_type_id: value })
+                    }>
+
                     <SelectTrigger>
                       <SelectValue placeholder="请选择费用类型" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="__empty__">请选择费用类型</SelectItem>
-                      {costTypes.map((type) => (
-                        <SelectItem key={type.id} value={type.id.toString()}>
+                      {costTypes.map((type) =>
+                      <SelectItem key={type.id} value={type.id.toString()}>
                           {type.cost_type_name}
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -363,10 +363,10 @@ export default function RdCostEntry() {
                     type="date"
                     value={formData.cost_date}
                     onChange={(e) =>
-                      setFormData({ ...formData, cost_date: e.target.value })
+                    setFormData({ ...formData, cost_date: e.target.value })
                     }
-                    required
-                  />
+                    required />
+
                 </div>
               </div>
 
@@ -381,32 +381,32 @@ export default function RdCostEntry() {
                       step="0.01"
                       value={formData.cost_amount}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          cost_amount: e.target.value,
-                        })
+                      setFormData({
+                        ...formData,
+                        cost_amount: e.target.value
+                      })
                       }
                       placeholder="0.00"
                       required
-                      className="flex-1"
-                    />
-                    {isLaborType && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handleCalculateLabor}
-                        disabled={formLoading}
-                      >
+                      className="flex-1" />
+
+                    {isLaborType &&
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleCalculateLabor}
+                      disabled={formLoading}>
+
                         <Calculator className="h-4 w-4 mr-2" />
                         自动计算
                       </Button>
-                    )}
+                    }
                   </div>
-                  {isLaborType && (
-                    <p className="text-xs text-slate-500 mt-1">
+                  {isLaborType &&
+                  <p className="text-xs text-slate-500 mt-1">
                       点击"自动计算"可根据该日期的工时数据自动计算人工费用
                     </p>
-                  )}
+                  }
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -417,13 +417,13 @@ export default function RdCostEntry() {
                     step="0.01"
                     value={formData.deductible_amount}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        deductible_amount: e.target.value,
-                      })
+                    setFormData({
+                      ...formData,
+                      deductible_amount: e.target.value
+                    })
                     }
-                    placeholder="0.00"
-                  />
+                    placeholder="0.00" />
+
                   <p className="text-xs text-slate-500 mt-1">
                     可加计扣除的费用金额（175%扣除）
                   </p>
@@ -439,13 +439,13 @@ export default function RdCostEntry() {
                   rows={3}
                   value={formData.cost_description}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      cost_description: e.target.value,
-                    })
+                  setFormData({
+                    ...formData,
+                    cost_description: e.target.value
+                  })
                   }
-                  placeholder="请输入费用描述"
-                />
+                  placeholder="请输入费用描述" />
+
               </div>
 
               <div>
@@ -457,18 +457,18 @@ export default function RdCostEntry() {
                   rows={2}
                   value={formData.remark}
                   onChange={(e) =>
-                    setFormData({ ...formData, remark: e.target.value })
+                  setFormData({ ...formData, remark: e.target.value })
                   }
-                  placeholder="请输入备注"
-                />
+                  placeholder="请输入备注" />
+
               </div>
             </DialogBody>
             <DialogFooter>
               <Button
                 type="button"
                 variant="secondary"
-                onClick={() => setFormOpen(false)}
-              >
+                onClick={() => setFormOpen(false)}>
+
                 取消
               </Button>
               <Button type="submit" loading={formLoading}>
@@ -479,6 +479,6 @@ export default function RdCostEntry() {
           </form>
         </DialogContent>
       </Dialog>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

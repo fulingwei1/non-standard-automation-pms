@@ -10,7 +10,7 @@ const HEALTH_CONFIG = {
   H1: { label: "正常", color: "#22c55e", description: "项目进展顺利" },
   H2: { label: "有风险", color: "#eab308", description: "存在潜在风险需关注" },
   H3: { label: "阻塞", color: "#ef4444", description: "项目遇到阻塞问题" },
-  H4: { label: "已完结", color: "#64748b", description: "项目已结束" },
+  H4: { label: "已完结", color: "#64748b", description: "项目已结束" }
 };
 
 /**
@@ -27,19 +27,19 @@ export default function ProjectHealthChart({
   height = 280,
   onHealthClick,
   title = "项目健康度分布",
-  style,
+  style
 }) {
-  const [activeHealth, setActiveHealth] = useState(null);
+  const [_activeHealth, setActiveHealth] = useState(null);
 
   const chartData = useMemo(() => {
-    return Object.entries(HEALTH_CONFIG)
-      .map(([key, config]) => ({
-        type: config.label,
-        value: data[key] || 0,
-        healthCode: key,
-        color: config.color,
-      }))
-      .filter((item) => item.value > 0);
+    return Object.entries(HEALTH_CONFIG).
+    map(([key, config]) => ({
+      type: config.label,
+      value: data[key] || 0,
+      healthCode: key,
+      color: config.color
+    })).
+    filter((item) => item.value > 0);
   }, [data]);
 
   const total = useMemo(() => {
@@ -60,11 +60,11 @@ export default function ProjectHealthChart({
     return (
       <div
         className="flex items-center justify-center text-slate-400"
-        style={{ height, ...style }}
-      >
+        style={{ height, ...style }}>
+
         暂无项目数据
-      </div>
-    );
+      </div>);
+
   }
 
   // 饼图/环形图配置
@@ -80,63 +80,63 @@ export default function ProjectHealthChart({
       label: {
         type: "outer",
         content: ({ percent, type }) =>
-          `${type} ${(percent * 100).toFixed(0)}%`,
+        `${type} ${(percent * 100).toFixed(0)}%`,
         style: {
           fill: "#94a3b8",
-          fontSize: 12,
-        },
+          fontSize: 12
+        }
       },
       tooltip: {
         formatter: (datum) => ({
           name: datum.type,
-          value: `${datum.value} 个项目 (${((datum.value / total) * 100).toFixed(1)}%)`,
-        }),
+          value: `${datum.value} 个项目 (${(datum.value / total * 100).toFixed(1)}%)`
+        })
       },
       legend: {
         position: "right",
         itemName: {
           style: {
-            fill: "#94a3b8",
-          },
-        },
+            fill: "#94a3b8"
+          }
+        }
       },
       statistic:
-        chartType === "donut"
-          ? {
-              title: {
-                content: "总项目",
-                style: {
-                  color: "#94a3b8",
-                  fontSize: "14px",
-                },
-              },
-              content: {
-                content: `${total}`,
-                style: {
-                  color: "#e2e8f0",
-                  fontSize: "28px",
-                  fontWeight: "bold",
-                },
-              },
-            }
-          : false,
+      chartType === "donut" ?
+      {
+        title: {
+          content: "总项目",
+          style: {
+            color: "#94a3b8",
+            fontSize: "14px"
+          }
+        },
+        content: {
+          content: `${total}`,
+          style: {
+            color: "#e2e8f0",
+            fontSize: "28px",
+            fontWeight: "bold"
+          }
+        }
+      } :
+      false,
       interactions: [{ type: "element-active" }, { type: "pie-legend-active" }],
       animation: {
         appear: {
           animation: "fade-in",
-          duration: 800,
-        },
-      },
+          duration: 800
+        }
+      }
     };
 
     return (
       <div style={style}>
-        {title && (
-          <div className="text-sm font-medium text-slate-300 mb-3">{title}</div>
-        )}
+        {title &&
+        <div className="text-sm font-medium text-slate-300 mb-3">{title}</div>
+        }
         <Pie {...pieConfig} onReady={handleReady} />
-      </div>
-    );
+      </div>);
+
   }
 
   // 柱状图配置
@@ -154,58 +154,58 @@ export default function ProjectHealthChart({
       position: "top",
       style: {
         fill: "#94a3b8",
-        fontSize: 12,
-      },
+        fontSize: 12
+      }
     },
     tooltip: {
       formatter: (datum) => ({
         name: datum.type,
-        value: `${datum.value} 个项目`,
-      }),
+        value: `${datum.value} 个项目`
+      })
     },
     xAxis: {
       label: {
         style: {
           fill: "#94a3b8",
-          fontSize: 12,
-        },
+          fontSize: 12
+        }
       },
       line: {
         style: {
-          stroke: "#334155",
-        },
-      },
+          stroke: "#334155"
+        }
+      }
     },
     yAxis: {
       label: {
         style: {
           fill: "#94a3b8",
-          fontSize: 12,
-        },
+          fontSize: 12
+        }
       },
       grid: {
         line: {
           style: {
             stroke: "#334155",
-            lineDash: [4, 4],
-          },
-        },
-      },
+            lineDash: [4, 4]
+          }
+        }
+      }
     },
     animation: {
       appear: {
         animation: "scale-in-y",
-        duration: 800,
-      },
-    },
+        duration: 800
+      }
+    }
   };
 
   return (
     <div style={style}>
-      {title && (
-        <div className="text-sm font-medium text-slate-300 mb-3">{title}</div>
-      )}
+      {title &&
+      <div className="text-sm font-medium text-slate-300 mb-3">{title}</div>
+      }
       <Column {...barConfig} onReady={handleReady} />
-    </div>
-  );
+    </div>);
+
 }

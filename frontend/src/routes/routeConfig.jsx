@@ -59,10 +59,12 @@ import ProcurementEngineerWorkstation from "../pages/ProcurementEngineerWorkstat
 import PurchaseOrderDetail from "../pages/PurchaseOrderDetail";
 import MaterialTracking from "../pages/MaterialTracking";
 import MaterialList from "../pages/MaterialList";
+import MaterialAnalysis from "../pages/MaterialAnalysis";
 import SupplierManagement from "../pages/SupplierManagement";
 import ShortageManagement from "../pages/ShortageManagement";
 import BOMManagement from "../pages/BOMManagement";
 import KitRateBoard from "../pages/KitRateBoard";
+import KitCheck from "../pages/KitCheck";
 import AssemblyKitBoard from "../pages/AssemblyKitBoard";
 import BomAssemblyAttrs from "../pages/BomAssemblyAttrs";
 import ArrivalManagement from "../pages/ArrivalManagement";
@@ -593,6 +595,8 @@ export function AppRoutes() {
       />
       <Route path="/sales-reports" element={<SalesReports />} />
       <Route path="/sales-team" element={<SalesTeam />} />
+      <Route path="/sales/team" element={<SalesTeam />} />
+      <Route path="/sales/team/ranking" element={<SalesTeam />} />
       <Route path="/sales/targets" element={<SalesTarget />} />
       <Route path="/contract-approval" element={<ContractApproval />} />
       <Route
@@ -852,6 +856,22 @@ export function AppRoutes() {
         element={
           <ProcurementProtectedRoute>
             <KitRateBoard />
+          </ProcurementProtectedRoute>
+        }
+      />
+      <Route
+        path="/kit-check"
+        element={
+          <ProcurementProtectedRoute>
+            <KitCheck />
+          </ProcurementProtectedRoute>
+        }
+      />
+      <Route
+        path="/material-analysis"
+        element={
+          <ProcurementProtectedRoute>
+            <MaterialAnalysis />
           </ProcurementProtectedRoute>
         }
       />

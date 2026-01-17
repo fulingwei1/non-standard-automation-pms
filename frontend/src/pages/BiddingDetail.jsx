@@ -28,8 +28,8 @@ import {
   Share2,
   Trash2,
   ArrowLeft,
-  Loader2,
-} from "lucide-react";
+  Loader2 } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -43,8 +43,8 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
-} from "../components/ui";
+  DialogTitle } from
+"../components/ui";
 import { formatCurrency } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { presaleApi } from "../services/api";
@@ -55,7 +55,7 @@ export default function BiddingDetail() {
   const [bidding, setBidding] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState("overview");
+  const [_activeTab, _setActiveTab] = useState("overview");
 
   // Map backend result to frontend status
   const mapTenderResult = (result) => {
@@ -65,7 +65,7 @@ export default function BiddingDetail() {
       SUBMITTED: "bidding_phase",
       EVALUATING: "technical_evaluation",
       WON: "won",
-      LOST: "lost",
+      LOST: "lost"
     };
     return resultMap[result] || "inquiry";
   };
@@ -82,120 +82,120 @@ export default function BiddingDetail() {
       const tenderData = response.data;
 
       // Calculate days left
-      const deadline = tenderData.deadline
-        ? new Date(tenderData.deadline)
-        : null;
+      const deadline = tenderData.deadline ?
+      new Date(tenderData.deadline) :
+      null;
       const now = new Date();
-      const daysLeft = deadline
-        ? Math.ceil((deadline - now) / (1000 * 60 * 60 * 24))
-        : 0;
+      const daysLeft = deadline ?
+      Math.ceil((deadline - now) / (1000 * 60 * 60 * 24)) :
+      0;
 
       // Transform data
       const transformedBidding = {
         id: tenderData.tender_no || `BID-${tenderData.id}`,
         projectName: tenderData.tender_name || "",
         customerName: tenderData.customer_name || "",
-        bidAmount: tenderData.our_bid_amount
-          ? tenderData.our_bid_amount * 10000
-          : tenderData.budget_amount
-            ? tenderData.budget_amount * 10000
-            : 0,
-        estimatedCost: tenderData.budget_amount
-          ? tenderData.budget_amount * 10000 * 0.74
-          : 0, // Assume 74% cost
+        bidAmount: tenderData.our_bid_amount ?
+        tenderData.our_bid_amount * 10000 :
+        tenderData.budget_amount ?
+        tenderData.budget_amount * 10000 :
+        0,
+        estimatedCost: tenderData.budget_amount ?
+        tenderData.budget_amount * 10000 * 0.74 :
+        0, // Assume 74% cost
         estimatedMargin:
-          tenderData.our_bid_amount && tenderData.budget_amount
-            ? (
-                ((tenderData.our_bid_amount - tenderData.budget_amount * 0.74) /
-                  tenderData.our_bid_amount) *
-                100
-              ).toFixed(0)
-            : 26,
+        tenderData.our_bid_amount && tenderData.budget_amount ?
+        (
+        (tenderData.our_bid_amount - tenderData.budget_amount * 0.74) /
+        tenderData.our_bid_amount *
+        100).
+        toFixed(0) :
+        26,
         bidDeadline: tenderData.deadline || "",
         daysLeft: daysLeft > 0 ? daysLeft : 0,
         status: mapTenderResult(tenderData.result),
         documentStatus:
-          tenderData.result === "SUBMITTED" ? "submitted" : "draft",
+        tenderData.result === "SUBMITTED" ? "submitted" : "draft",
         progress:
-          tenderData.result === "SUBMITTED"
-            ? 100
-            : tenderData.result === "PREPARING"
-              ? 60
-              : 20,
+        tenderData.result === "SUBMITTED" ?
+        100 :
+        tenderData.result === "PREPARING" ?
+        60 :
+        20,
         projectType: "线体",
         equipmentType: "ICT/FCT",
         industry: "汽车电池",
         projectScope: tenderData.tender_name || "",
         technicalApproach: {
           mainPoints: [
-            "采用模块化设计，支持灵活扩展",
-            "集成国际领先的测试技术",
-            "提供完整的软件解决方案",
-            "包含3年技术支持和维护",
-          ],
+          "采用模块化设计，支持灵活扩展",
+          "集成国际领先的测试技术",
+          "提供完整的软件解决方案",
+          "包含3年技术支持和维护"],
+
           deliveryPeriod: "6个月",
           warranty: "3年",
-          support: "7×24技术支持",
+          support: "7×24技术支持"
         },
         commercialTerms: {
           paymentTerms: "签约30%、进度40%、验收20%、质保10%",
           deliveryAddress: "客户指定地点",
           transportCost: "由我方承担",
-          installationService: "包含现场安装和调试",
+          installationService: "包含现场安装和调试"
         },
         team: [
-          {
-            id: 1,
-            name: tenderData.leader_name || "负责人",
-            role: "项目经理",
-            department: "销售部",
-            responsibility: "整体协调",
-          },
-        ],
+        {
+          id: 1,
+          name: tenderData.leader_name || "负责人",
+          role: "项目经理",
+          department: "销售部",
+          responsibility: "整体协调"
+        }],
+
         documents: [],
         evaluation: [
-          {
-            id: 1,
-            stage: "资格审查",
-            status:
-              tenderData.result === "WON" || tenderData.result === "LOST"
-                ? "completed"
-                : "in_progress",
-            completedDate: tenderData.publish_date || "",
-            notes: "资格审查通过",
-          },
-          {
-            id: 2,
-            stage: "技术评标",
-            status: tenderData.technical_score ? "completed" : "in_progress",
-            dueDate: tenderData.bid_opening_date || "",
-            notes: tenderData.technical_score
-              ? `技术得分: ${tenderData.technical_score}`
-              : "技术评标进行中",
-          },
-          {
-            id: 3,
-            stage: "商务评标",
-            status: tenderData.commercial_score ? "completed" : "pending",
-            dueDate: tenderData.bid_opening_date || "",
-            notes: tenderData.commercial_score
-              ? `商务得分: ${tenderData.commercial_score}`
-              : "待技术评标完成",
-          },
-          {
-            id: 4,
-            stage: "综合评定",
-            status: tenderData.total_score ? "completed" : "pending",
-            dueDate: tenderData.bid_opening_date || "",
-            notes: tenderData.total_score
-              ? `总分: ${tenderData.total_score}`
-              : "待商务评标完成",
-          },
-        ],
+        {
+          id: 1,
+          stage: "资格审查",
+          status:
+          tenderData.result === "WON" || tenderData.result === "LOST" ?
+          "completed" :
+          "in_progress",
+          completedDate: tenderData.publish_date || "",
+          notes: "资格审查通过"
+        },
+        {
+          id: 2,
+          stage: "技术评标",
+          status: tenderData.technical_score ? "completed" : "in_progress",
+          dueDate: tenderData.bid_opening_date || "",
+          notes: tenderData.technical_score ?
+          `技术得分: ${tenderData.technical_score}` :
+          "技术评标进行中"
+        },
+        {
+          id: 3,
+          stage: "商务评标",
+          status: tenderData.commercial_score ? "completed" : "pending",
+          dueDate: tenderData.bid_opening_date || "",
+          notes: tenderData.commercial_score ?
+          `商务得分: ${tenderData.commercial_score}` :
+          "待技术评标完成"
+        },
+        {
+          id: 4,
+          stage: "综合评定",
+          status: tenderData.total_score ? "completed" : "pending",
+          dueDate: tenderData.bid_opening_date || "",
+          notes: tenderData.total_score ?
+          `总分: ${tenderData.total_score}` :
+          "待商务评标完成"
+        }],
+
         competitors: [],
         risks: [],
         opportunities: [],
-        communications: [],
+        communications: []
       };
 
       setBidding(transformedBidding);
@@ -216,21 +216,21 @@ export default function BiddingDetail() {
     bidding_phase: { label: "投标阶段", color: "bg-blue-500/20 text-blue-400" },
     technical_evaluation: {
       label: "技术评标",
-      color: "bg-purple-500/20 text-purple-400",
+      color: "bg-purple-500/20 text-purple-400"
     },
     commercial_evaluation: {
       label: "商务评标",
-      color: "bg-orange-500/20 text-orange-400",
+      color: "bg-orange-500/20 text-orange-400"
     },
     won: { label: "中标", color: "bg-emerald-500/20 text-emerald-400" },
-    lost: { label: "未中标", color: "bg-red-500/20 text-red-400" },
+    lost: { label: "未中标", color: "bg-red-500/20 text-red-400" }
   };
 
   const documentStatusConfig = {
     draft: { label: "编制中", color: "bg-slate-700/40 text-slate-300" },
     review: { label: "审核中", color: "bg-amber-500/20 text-amber-400" },
     submitted: { label: "已提交", color: "bg-emerald-500/20 text-emerald-400" },
-    approved: { label: "已批准", color: "bg-blue-500/20 text-blue-400" },
+    approved: { label: "已批准", color: "bg-blue-500/20 text-blue-400" }
   };
 
   if (loading) {
@@ -241,8 +241,8 @@ export default function BiddingDetail() {
           <Loader2 className="w-12 h-12 mx-auto mb-4 text-slate-600 animate-spin" />
           <p className="text-lg font-medium">加载中...</p>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   if (error || !bidding) {
@@ -256,8 +256,8 @@ export default function BiddingDetail() {
             返回投标中心
           </Button>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -267,8 +267,8 @@ export default function BiddingDetail() {
           variant="ghost"
           size="icon"
           onClick={() => navigate("/bidding")}
-          className="text-slate-400 hover:text-white"
-        >
+          className="text-slate-400 hover:text-white">
+
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div className="flex-1">
@@ -276,7 +276,7 @@ export default function BiddingDetail() {
             title={bidding.projectName}
             description={`${bidding.customerName} | ${bidding.id}`}
             actions={
-              <motion.div variants={fadeIn} className="flex gap-2">
+            <motion.div variants={fadeIn} className="flex gap-2">
                 <Button variant="outline" className="flex items-center gap-2">
                   <Edit className="w-4 h-4" />
                   编辑投标
@@ -286,8 +286,8 @@ export default function BiddingDetail() {
                   分享
                 </Button>
               </motion.div>
-            }
-          />
+            } />
+
         </div>
       </motion.div>
 
@@ -296,8 +296,8 @@ export default function BiddingDetail() {
         variants={staggerContainer}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4"
-      >
+        className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+
         <Card>
           <CardContent className="pt-6">
             <div className="space-y-2">
@@ -364,16 +364,16 @@ export default function BiddingDetail() {
             <CardContent className="space-y-4">
               <Progress
                 value={bidding.progress}
-                className="h-3 bg-slate-700/50"
-              />
+                className="h-3 bg-slate-700/50" />
+
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="rounded-lg bg-slate-800/40 px-3 py-2">
                   <p className="text-slate-400">标书状态</p>
                   <Badge
                     className={
-                      documentStatusConfig[bidding.documentStatus].color
-                    }
-                  >
+                    documentStatusConfig[bidding.documentStatus].color
+                    }>
+
                     {documentStatusConfig[bidding.documentStatus].label}
                   </Badge>
                 </div>
@@ -398,16 +398,16 @@ export default function BiddingDetail() {
                   主要方案点
                 </h4>
                 <ul className="space-y-2">
-                  {bidding.technicalApproach.mainPoints.map((point, idx) => (
-                    <motion.li
-                      key={idx}
-                      variants={fadeIn}
-                      className="flex items-start gap-3 text-sm text-slate-300"
-                    >
+                  {bidding.technicalApproach.mainPoints.map((point, idx) =>
+                  <motion.li
+                    key={idx}
+                    variants={fadeIn}
+                    className="flex items-start gap-3 text-sm text-slate-300">
+
                       <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-400" />
                       <span>{point}</span>
                     </motion.li>
-                  ))}
+                  )}
                 </ul>
               </div>
               <div className="grid grid-cols-3 gap-3 border-t border-slate-700/30 pt-4 text-sm">
@@ -440,22 +440,22 @@ export default function BiddingDetail() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {bidding.evaluation.map((evalItem, idx) => (
-                  <motion.div
-                    key={idx}
-                    variants={fadeIn}
-                    className="flex items-center justify-between rounded-lg bg-slate-800/40 px-4 py-3"
-                  >
+                {bidding.evaluation.map((evalItem, idx) =>
+                <motion.div
+                  key={idx}
+                  variants={fadeIn}
+                  className="flex items-center justify-between rounded-lg bg-slate-800/40 px-4 py-3">
+
                     <div className="flex items-center gap-3">
-                      {evalItem.status === "completed" && (
-                        <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-                      )}
-                      {evalItem.status === "in_progress" && (
-                        <Clock className="h-5 w-5 text-blue-400" />
-                      )}
-                      {evalItem.status === "pending" && (
-                        <AlertTriangle className="h-5 w-5 text-slate-500" />
-                      )}
+                      {evalItem.status === "completed" &&
+                    <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                    }
+                      {evalItem.status === "in_progress" &&
+                    <Clock className="h-5 w-5 text-blue-400" />
+                    }
+                      {evalItem.status === "pending" &&
+                    <AlertTriangle className="h-5 w-5 text-slate-500" />
+                    }
                       <div>
                         <p className="font-semibold text-slate-200">
                           {evalItem.stage}
@@ -469,7 +469,7 @@ export default function BiddingDetail() {
                       {evalItem.completedDate || evalItem.dueDate}
                     </span>
                   </motion.div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
@@ -485,12 +485,12 @@ export default function BiddingDetail() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {bidding.documents.map((doc, idx) => (
-                <motion.div
-                  key={idx}
-                  variants={fadeIn}
-                  className="flex items-center justify-between rounded-lg bg-slate-800/40 px-4 py-3"
-                >
+              {bidding.documents.map((doc, idx) =>
+              <motion.div
+                key={idx}
+                variants={fadeIn}
+                className="flex items-center justify-between rounded-lg bg-slate-800/40 px-4 py-3">
+
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <Paperclip className="h-4 w-4 flex-shrink-0 text-slate-500" />
                     <div className="min-w-0">
@@ -504,9 +504,9 @@ export default function BiddingDetail() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge
-                      className={documentStatusConfig[doc.status].color}
-                      variant="outline"
-                    >
+                    className={documentStatusConfig[doc.status].color}
+                    variant="outline">
+
                       {documentStatusConfig[doc.status].label}
                     </Badge>
                     <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
@@ -514,11 +514,11 @@ export default function BiddingDetail() {
                     </Button>
                   </div>
                 </motion.div>
-              ))}
+              )}
               <Button
                 variant="ghost"
-                className="w-full justify-start gap-2 text-slate-400 hover:text-slate-100"
-              >
+                className="w-full justify-start gap-2 text-slate-400 hover:text-slate-100">
+
                 <Upload className="h-4 w-4" />
                 上传新文件
               </Button>
@@ -559,12 +559,12 @@ export default function BiddingDetail() {
               <CardTitle className="text-base">项目团队</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {bidding.team.map((member, idx) => (
-                <motion.div
-                  key={idx}
-                  variants={fadeIn}
-                  className="rounded-lg bg-slate-800/40 px-3 py-2.5"
-                >
+              {bidding.team.map((member, idx) =>
+              <motion.div
+                key={idx}
+                variants={fadeIn}
+                className="rounded-lg bg-slate-800/40 px-3 py-2.5">
+
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-slate-500" />
                     <div>
@@ -577,7 +577,7 @@ export default function BiddingDetail() {
                     </div>
                   </div>
                 </motion.div>
-              ))}
+              )}
             </CardContent>
           </Card>
 
@@ -588,18 +588,18 @@ export default function BiddingDetail() {
             </CardHeader>
             <CardContent className="space-y-2">
               <div className="space-y-1">
-                {bidding.competitors.map((comp, idx) => (
-                  <motion.div
-                    key={idx}
-                    variants={fadeIn}
-                    className="flex items-center justify-between rounded-lg bg-slate-800/40 px-3 py-2 text-sm"
-                  >
+                {bidding.competitors.map((comp, idx) =>
+                <motion.div
+                  key={idx}
+                  variants={fadeIn}
+                  className="flex items-center justify-between rounded-lg bg-slate-800/40 px-3 py-2 text-sm">
+
                     <span className="text-slate-300">{comp.name}</span>
                     <span className="font-semibold text-amber-400">
                       {formatCurrency(parseInt(comp.estimatedPrice))}
                     </span>
                   </motion.div>
-                ))}
+                )}
               </div>
               <div className="mt-3 rounded-lg bg-blue-500/10 border border-blue-500/30 px-3 py-2 text-xs">
                 <p className="text-blue-300">
@@ -638,6 +638,6 @@ export default function BiddingDetail() {
           </Card>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }

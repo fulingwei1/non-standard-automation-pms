@@ -29,8 +29,8 @@ import {
   MoreHorizontal,
   TrendingUp,
   Users,
-  Settings
-} from "lucide-react";
+  Settings } from
+"lucide-react";
 
 import {
   Card,
@@ -65,8 +65,8 @@ import {
   Progress,
   Timeline,
   InputNumber,
-  Rate
-} from "antd";
+  Rate } from
+"antd";
 
 // 导入拆分后的组件
 import {
@@ -74,8 +74,8 @@ import {
   ContractList,
   ContractEditor,
   SignatureManager,
-  PaymentTracker
-} from '../components/contract-management';
+  PaymentTracker } from
+'../components/contract-management';
 
 import {
   CONTRACT_TYPES,
@@ -89,8 +89,8 @@ import {
   NOTIFICATION_EVENTS,
   TABLE_CONFIG,
   DEFAULT_FILTERS,
-  CHART_COLORS
-} from '../components/contract-management/contractManagementConstants';
+  CHART_COLORS } from
+'../components/contract-management/contractManagementConstants';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
@@ -112,34 +112,34 @@ const ContractManagement = () => {
   // 模拟数据
   const mockData = {
     contracts: [
-      {
-        id: 1,
-        title: '光伏电站建设合同',
-        type: 'sales',
-        status: 'executing',
-        signatureStatus: 'signed',
-        value: 2500000,
-        clientName: '绿色能源科技有限公司',
-        signingDate: '2024-01-15',
-        expiryDate: '2024-12-31',
-        signingDeadline: '2024-01-20',
-        riskLevel: 'medium',
-        paymentTerms: 'progress',
-        approvalLevel: 'director',
-        template: 'standard_sales',
-        createdBy: '张销售',
-        createdAt: '2024-01-10'
-      },
-      // 更多模拟数据...
+    {
+      id: 1,
+      title: '光伏电站建设合同',
+      type: 'sales',
+      status: 'executing',
+      signatureStatus: 'signed',
+      value: 2500000,
+      clientName: '绿色能源科技有限公司',
+      signingDate: '2024-01-15',
+      expiryDate: '2024-12-31',
+      signingDeadline: '2024-01-20',
+      riskLevel: 'medium',
+      paymentTerms: 'progress',
+      approvalLevel: 'director',
+      template: 'standard_sales',
+      createdBy: '张销售',
+      createdAt: '2024-01-10'
+    }
+    // 更多模拟数据...
     ],
     riskContracts: [
-      {
-        id: 2,
-        title: '高风险采购合同',
-        riskLevel: 'high',
-        reason: '付款条款过于宽松'
-      }
-    ],
+    {
+      id: 2,
+      title: '高风险采购合同',
+      riskLevel: 'high',
+      reason: '付款条款过于宽松'
+    }],
+
     monthlyStats: {
       growth: 8.5,
       newContracts: 12,
@@ -160,7 +160,7 @@ const ContractManagement = () => {
         setContracts(mockData.contracts);
         setLoading(false);
       }, 1000);
-    } catch (error) {
+    } catch (_error) {
       message.error('加载数据失败');
       setLoading(false);
     }
@@ -168,10 +168,10 @@ const ContractManagement = () => {
 
   // 过滤数据
   const filteredContracts = useMemo(() => {
-    return contracts.filter(contract => {
-      const matchesSearch = !searchText || 
-        contract.title.toLowerCase().includes(searchText.toLowerCase()) ||
-        contract.clientName?.toLowerCase().includes(searchText.toLowerCase());
+    return contracts.filter((contract) => {
+      const matchesSearch = !searchText ||
+      contract.title.toLowerCase().includes(searchText.toLowerCase()) ||
+      contract.clientName?.toLowerCase().includes(searchText.toLowerCase());
 
       const matchesType = !filters.type || contract.type === filters.type;
       const matchesStatus = !filters.status || contract.status === filters.status;
@@ -197,11 +197,11 @@ const ContractManagement = () => {
       setLoading(true);
       // 模拟删除API调用
       setTimeout(() => {
-        setContracts(contracts.filter(c => c.id !== contractId));
+        setContracts(contracts.filter((c) => c.id !== contractId));
         message.success('删除成功');
         setLoading(false);
       }, 500);
-    } catch (error) {
+    } catch (_error) {
       message.error('删除失败');
       setLoading(false);
     }
@@ -221,12 +221,12 @@ const ContractManagement = () => {
   };
 
   // 表格列配置
-  const contractColumns = [
-    {
-      title: '合同信息',
-      key: 'info',
-      render: (_, record) => (
-        <div>
+  const _contractColumns = [
+  {
+    title: '合同信息',
+    key: 'info',
+    render: (_, record) =>
+    <div>
           <div style={{ fontWeight: 'bold', cursor: 'pointer' }}>
             {record.title}
           </div>
@@ -235,109 +235,109 @@ const ContractManagement = () => {
             <span style={{ marginLeft: 8 }}>{record.clientName}</span>
           </div>
         </div>
-      )
-    },
-    {
-      title: '状态',
-      key: 'status',
-      render: (_, record) => (
-        <div>
+
+  },
+  {
+    title: '状态',
+    key: 'status',
+    render: (_, record) =>
+    <div>
           <Tag color={CONTRACT_STATUS[record.status?.toUpperCase()]?.color}>
             {CONTRACT_STATUS[record.status?.toUpperCase()]?.label}
           </Tag>
           <div style={{ marginTop: 4 }}>
-            <Tag 
-              size="small" 
-              color={SIGNATURE_STATUS[record.signatureStatus?.toUpperCase()]?.color}
-            >
+            <Tag
+          size="small"
+          color={SIGNATURE_STATUS[record.signatureStatus?.toUpperCase()]?.color}>
+
               {SIGNATURE_STATUS[record.signatureStatus?.toUpperCase()]?.label}
             </Tag>
           </div>
         </div>
-      )
-    },
-    {
-      title: '合同金额',
-      dataIndex: 'value',
-      key: 'value',
-      render: (value) => (
-        <span style={{ fontWeight: 'bold', color: CHART_COLORS.POSITIVE }}>
+
+  },
+  {
+    title: '合同金额',
+    dataIndex: 'value',
+    key: 'value',
+    render: (value) =>
+    <span style={{ fontWeight: 'bold', color: CHART_COLORS.POSITIVE }}>
           ¥{value?.toLocaleString()}
         </span>
-      )
-    },
-    {
-      title: '签署信息',
-      key: 'signing',
-      render: (_, record) => (
-        <div>
+
+  },
+  {
+    title: '签署信息',
+    key: 'signing',
+    render: (_, record) =>
+    <div>
           <div style={{ fontSize: 12 }}>
             <Calendar size={12} /> 签署: {record.signingDate || '-'}
           </div>
           <div style={{ fontSize: 12 }}>
             <Clock size={12} /> 到期: {record.expiryDate}
           </div>
-          {record.signingDeadline && (
-            <div style={{ fontSize: 12, color: '#ff4d4f' }}>
+          {record.signingDeadline &&
+      <div style={{ fontSize: 12, color: '#ff4d4f' }}>
               <AlertTriangle size={12} /> 期限: {record.signingDeadline}
             </div>
-          )}
-        </div>
-      )
-    },
-    {
-      title: '风险评估',
-      dataIndex: 'riskLevel',
-      key: 'riskLevel',
-      render: (riskLevel) => {
-        const config = RISK_LEVELS[riskLevel?.toUpperCase()];
-        return (
-          <Tag color={config?.color}>
-            {config?.label}
-          </Tag>
-        );
       }
-    },
-    {
-      title: '操作',
-      key: 'actions',
-      render: (_, record) => (
-        <Space>
-          <Button 
-            type="link" 
-            icon={<Eye size={16} />}
-            onClick={() => setSelectedContract(record)}
-          >
+        </div>
+
+  },
+  {
+    title: '风险评估',
+    dataIndex: 'riskLevel',
+    key: 'riskLevel',
+    render: (riskLevel) => {
+      const config = RISK_LEVELS[riskLevel?.toUpperCase()];
+      return (
+        <Tag color={config?.color}>
+            {config?.label}
+          </Tag>);
+
+    }
+  },
+  {
+    title: '操作',
+    key: 'actions',
+    render: (_, record) =>
+    <Space>
+          <Button
+        type="link"
+        icon={<Eye size={16} />}
+        onClick={() => setSelectedContract(record)}>
+
             查看
           </Button>
-          <Button 
-            type="link" 
-            icon={<Edit size={16} />}
-            onClick={() => handleEditContract(record)}
-          >
+          <Button
+        type="link"
+        icon={<Edit size={16} />}
+        onClick={() => handleEditContract(record)}>
+
             编辑
           </Button>
-          {record.signatureStatus === 'pending' && (
-            <Button 
-              type="link" 
-              icon={<FileCheck size={16} />}
-              onClick={() => handleSignContract(record)}
-            >
+          {record.signatureStatus === 'pending' &&
+      <Button
+        type="link"
+        icon={<FileCheck size={16} />}
+        onClick={() => handleSignContract(record)}>
+
               签署
             </Button>
-          )}
-          {record.status === 'signed' && (
-            <Button 
-              type="link" 
-              icon={<Layers size={16} />}
-              onClick={() => handleCreateProject(record)}
-            >
+      }
+          {record.status === 'signed' &&
+      <Button
+        type="link"
+        icon={<Layers size={16} />}
+        onClick={() => handleCreateProject(record)}>
+
               创建项目
             </Button>
-          )}
+      }
           <Dropdown
-            overlay={
-              <Menu>
+        overlay={
+        <Menu>
                 <Menu.Item onClick={() => handleExportContract('PDF')}>
                   <FileText size={14} /> 导出PDF
                 </Menu.Item>
@@ -345,23 +345,23 @@ const ContractManagement = () => {
                   <FileText size={14} /> 导出Word
                 </Menu.Item>
                 <Menu.Divider />
-                <Menu.Item 
-                  danger
-                  onClick={() => handleDeleteContract(record.id)}
-                >
+                <Menu.Item
+            danger
+            onClick={() => handleDeleteContract(record.id)}>
+
                   <XCircle size={14} /> 删除合同
                 </Menu.Item>
               </Menu>
-            }
-          >
+        }>
+
             <Button type="link" icon={<MoreHorizontal size={16} />}>
               更多
             </Button>
           </Dropdown>
         </Space>
-      )
-    }
-  ];
+
+  }];
+
 
   return (
     <motion.div
@@ -369,8 +369,8 @@ const ContractManagement = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
       className="contract-management-container"
-      style={{ padding: '24px', background: '#f5f5f5', minHeight: '100vh' }}
-    >
+      style={{ padding: '24px', background: '#f5f5f5', minHeight: '100vh' }}>
+
       {/* 页面头部 */}
       <div className="page-header" style={{ marginBottom: '24px' }}>
         <div className="header-content" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -384,21 +384,21 @@ const ContractManagement = () => {
             </Text>
           </div>
           <Space>
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               icon={<Plus size={16} />}
-              onClick={handleCreateContract}
-            >
+              onClick={handleCreateContract}>
+
               创建合同
             </Button>
-            <Button 
-              icon={<Upload size={16} />}
-            >
+            <Button
+              icon={<Upload size={16} />}>
+
               批量导入
             </Button>
-            <Button 
-              icon={<Download size={16} />}
-            >
+            <Button
+              icon={<Download size={16} />}>
+
               导出报表
             </Button>
           </Space>
@@ -414,8 +414,8 @@ const ContractManagement = () => {
               prefix={<Search size={16} />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              allowClear
-            />
+              allowClear />
+
           </Col>
           <Col xs={24} md={12}>
             <Space>
@@ -424,39 +424,39 @@ const ContractManagement = () => {
                 value={filters.type}
                 onChange={(value) => setFilters({ ...filters, type: value })}
                 style={{ width: 150 }}
-                allowClear
-              >
-                {Object.values(CONTRACT_TYPES).map(type => (
-                  <Select.Option key={type.value} value={type.value}>
+                allowClear>
+
+                {Object.values(CONTRACT_TYPES).map((type) =>
+                <Select.Option key={type.value} value={type.value}>
                     {type.icon} {type.label}
                   </Select.Option>
-                ))}
+                )}
               </Select>
               <Select
                 placeholder="状态"
                 value={filters.status}
                 onChange={(value) => setFilters({ ...filters, status: value })}
                 style={{ width: 120 }}
-                allowClear
-              >
-                {Object.values(CONTRACT_STATUS).map(status => (
-                  <Select.Option key={status.value} value={status.value}>
+                allowClear>
+
+                {Object.values(CONTRACT_STATUS).map((status) =>
+                <Select.Option key={status.value} value={status.value}>
                     <Tag color={status.color}>{status.label}</Tag>
                   </Select.Option>
-                ))}
+                )}
               </Select>
               <Select
                 placeholder="签署状态"
                 value={filters.signatureStatus}
                 onChange={(value) => setFilters({ ...filters, signatureStatus: value })}
                 style={{ width: 120 }}
-                allowClear
-              >
-                {Object.values(SIGNATURE_STATUS).map(status => (
-                  <Select.Option key={status.value} value={status.value}>
+                allowClear>
+
+                {Object.values(SIGNATURE_STATUS).map((status) =>
+                <Select.Option key={status.value} value={status.value}>
                     <Tag color={status.color}>{status.label}</Tag>
                   </Select.Option>
-                ))}
+                )}
               </Select>
             </Space>
           </Col>
@@ -464,61 +464,61 @@ const ContractManagement = () => {
       </Card>
 
       {/* 主要内容区域 */}
-      <Tabs 
-        activeKey={activeTab} 
+      <Tabs
+        activeKey={activeTab}
         onChange={setActiveTab}
         type="card"
-        style={{ marginBottom: '24px' }}
-      >
-        <TabPane 
+        style={{ marginBottom: '24px' }}>
+
+        <TabPane
           tab={
-            <span>
+          <span>
               <TrendingUp size={16} />
               概览分析
             </span>
-          } 
-          key="overview"
-        >
-          <ContractOverview 
+          }
+          key="overview">
+
+          <ContractOverview
             data={mockData}
             loading={loading}
             onNavigate={(type, value) => {
               setActiveTab('contracts');
               if (type === 'status') setFilters({ ...filters, status: value });
               if (type === 'risks') setFilters({ ...filters, riskLevel: 'high' });
-            }}
-          />
+            }} />
+
         </TabPane>
 
-        <TabPane 
+        <TabPane
           tab={
-            <span>
+          <span>
               <FileText size={16} />
               合同列表 ({filteredContracts.length})
             </span>
-          } 
-          key="contracts"
-        >
-          <ContractList 
+          }
+          key="contracts">
+
+          <ContractList
             contracts={filteredContracts}
             loading={loading}
             onEdit={handleEditContract}
             onDelete={handleDeleteContract}
             onSign={handleSignContract}
-            onCreateProject={handleCreateProject}
-          />
+            onCreateProject={handleCreateProject} />
+
         </TabPane>
 
-        <TabPane 
+        <TabPane
           tab={
-            <span>
+          <span>
               <Edit size={16} />
               合同编辑
             </span>
-          } 
-          key="editor"
-        >
-          <ContractEditor 
+          }
+          key="editor">
+
+          <ContractEditor
             contract={editingContract}
             onSave={() => {
               setShowCreateModal(false);
@@ -528,54 +528,54 @@ const ContractManagement = () => {
             onCancel={() => {
               setShowCreateModal(false);
               setEditingContract(null);
-            }}
-          />
+            }} />
+
         </TabPane>
 
-        <TabPane 
+        <TabPane
           tab={
-            <span>
+          <span>
               <FileCheck size={16} />
               签署管理
             </span>
-          } 
-          key="signature"
-        >
-          <SignatureManager 
+          }
+          key="signature">
+
+          <SignatureManager
             contracts={contracts}
             loading={loading}
-            onRefresh={loadData}
-          />
+            onRefresh={loadData} />
+
         </TabPane>
 
-        <TabPane 
+        <TabPane
           tab={
-            <span>
+          <span>
               <DollarSign size={16} />
               付款跟踪
             </span>
-          } 
-          key="payment"
-        >
-          <PaymentTracker 
+          }
+          key="payment">
+
+          <PaymentTracker
             contracts={contracts}
-            loading={loading}
-          />
+            loading={loading} />
+
         </TabPane>
       </Tabs>
 
       {/* 合同创建/编辑模态框 */}
       <Modal
         title={editingContract ? '编辑合同' : '创建合同'}
-        visible={showCreateModal}
+        open={showCreateModal}
         onCancel={() => {
           setShowCreateModal(false);
           setEditingContract(null);
         }}
         footer={null}
-        width={1000}
-      >
-        <ContractEditor 
+        width={1000}>
+
+        <ContractEditor
           contract={editingContract}
           onSave={() => {
             setShowCreateModal(false);
@@ -585,34 +585,34 @@ const ContractManagement = () => {
           onCancel={() => {
             setShowCreateModal(false);
             setEditingContract(null);
-          }}
-        />
+          }} />
+
       </Modal>
 
       {/* 签署模态框 */}
       <Modal
         title="合同签署"
-        visible={showSignatureModal}
+        open={showSignatureModal}
         onCancel={() => {
           setShowSignatureModal(false);
           setSelectedContract(null);
         }}
         footer={null}
-        width={800}
-      >
-        {selectedContract && (
-          <SignatureManager 
-            contracts={[selectedContract]}
-            onSignComplete={() => {
-              setShowSignatureModal(false);
-              setSelectedContract(null);
-              loadData();
-            }}
-          />
-        )}
+        width={800}>
+
+        {selectedContract &&
+        <SignatureManager
+          contracts={[selectedContract]}
+          onSignComplete={() => {
+            setShowSignatureModal(false);
+            setSelectedContract(null);
+            loadData();
+          }} />
+
+        }
       </Modal>
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
 export default ContractManagement;

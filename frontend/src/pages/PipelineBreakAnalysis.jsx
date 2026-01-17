@@ -15,8 +15,8 @@ import {
   Download,
   Bell,
   Users,
-  Building2,
-} from "lucide-react";
+  Building2 } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -35,14 +35,14 @@ import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger,
-} from "../components/ui";
-import { fadeIn, staggerContainer } from "../lib/animations";
+  TabsTrigger } from
+"../components/ui";
+import { fadeIn as _fadeIn, staggerContainer as _staggerContainer } from "../lib/animations";
 import { pipelineAnalysisApi } from "../services/api";
-import { formatAmount, formatDate } from "../lib/utils";
+import { formatAmount as _formatAmount, formatDate } from "../lib/utils";
 
 export default function PipelineBreakAnalysis() {
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
   const [breakData, setBreakData] = useState(null);
   const [breakReasons, setBreakReasons] = useState(null);
   const [breakPatterns, setBreakPatterns] = useState(null);
@@ -61,18 +61,18 @@ export default function PipelineBreakAnalysis() {
       if (pipelineType !== "all") params.pipeline_type = pipelineType;
 
       const [breaksRes, reasonsRes, patternsRes, warningsRes] =
-        await Promise.all([
-          pipelineAnalysisApi.getPipelineBreaks(params),
-          pipelineAnalysisApi.getBreakReasons(params),
-          pipelineAnalysisApi.getBreakPatterns(params),
-          pipelineAnalysisApi.getBreakWarnings({ days_ahead: 7 }),
-        ]);
+      await Promise.all([
+      pipelineAnalysisApi.getPipelineBreaks(params),
+      pipelineAnalysisApi.getBreakReasons(params),
+      pipelineAnalysisApi.getBreakPatterns(params),
+      pipelineAnalysisApi.getBreakWarnings({ days_ahead: 7 })]
+      );
 
       if (breaksRes.data?.data) setBreakData(breaksRes.data.data);
       if (reasonsRes.data?.data) setBreakReasons(reasonsRes.data.data);
       if (patternsRes.data?.data) setBreakPatterns(patternsRes.data.data);
       if (warningsRes.data?.data?.warnings)
-        setWarnings(warningsRes.data.data.warnings);
+      setWarnings(warningsRes.data.data.warnings);
     } catch (error) {
       console.error("加载断链分析失败:", error);
     } finally {
@@ -91,7 +91,7 @@ export default function PipelineBreakAnalysis() {
       QUOTE_TO_CONTRACT: "报价→合同",
       CONTRACT_TO_PROJECT: "合同→项目",
       PROJECT_TO_INVOICE: "项目→发票",
-      INVOICE_TO_PAYMENT: "发票→回款",
+      INVOICE_TO_PAYMENT: "发票→回款"
     };
     return labels[stage] || stage;
   };
@@ -120,8 +120,8 @@ export default function PipelineBreakAnalysis() {
               <Input
                 type="date"
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
+                onChange={(e) => setStartDate(e.target.value)} />
+
             </div>
             <div>
               <label className="text-sm text-slate-500 mb-1 block">
@@ -130,8 +130,8 @@ export default function PipelineBreakAnalysis() {
               <Input
                 type="date"
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
+                onChange={(e) => setEndDate(e.target.value)} />
+
             </div>
             <div>
               <label className="text-sm text-slate-500 mb-1 block">
@@ -140,8 +140,8 @@ export default function PipelineBreakAnalysis() {
               <select
                 className="w-full px-3 py-2 border rounded-md"
                 value={pipelineType}
-                onChange={(e) => setPipelineType(e.target.value)}
-              >
+                onChange={(e) => setPipelineType(e.target.value)}>
+
                 <option value="all">全部</option>
                 <option value="LEAD">线索</option>
                 <option value="OPPORTUNITY">商机</option>
@@ -159,8 +159,8 @@ export default function PipelineBreakAnalysis() {
       </Card>
 
       {/* 断链预警 */}
-      {warnings.length > 0 && (
-        <Card>
+      {warnings.length > 0 &&
+      <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Bell className="h-5 w-5 text-amber-500" />
@@ -169,11 +169,11 @@ export default function PipelineBreakAnalysis() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {warnings.slice(0, 5).map((warning, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between p-3 bg-amber-50 rounded-lg"
-                >
+              {warnings.slice(0, 5).map((warning, idx) =>
+            <div
+              key={idx}
+              className="flex items-center justify-between p-3 bg-amber-50 rounded-lg">
+
                   <div>
                     <div className="font-medium">
                       {warning.pipeline_code} - {warning.pipeline_type}
@@ -185,11 +185,11 @@ export default function PipelineBreakAnalysis() {
                   </div>
                   <Badge variant="warning">预警</Badge>
                 </div>
-              ))}
+            )}
             </div>
           </CardContent>
         </Card>
-      )}
+      }
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
@@ -201,12 +201,12 @@ export default function PipelineBreakAnalysis() {
 
         {/* 断链概览 */}
         <TabsContent value="overview">
-          {breakData && (
-            <div className="space-y-6">
+          {breakData &&
+          <div className="space-y-6">
               {/* 总体统计 */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {breakData.top_break_stages?.map((stage, idx) => (
-                  <Card key={idx}>
+                {breakData.top_break_stages?.map((stage, idx) =>
+              <Card key={idx}>
                     <CardContent className="pt-6">
                       <div className="text-sm text-slate-500">
                         {getBreakStageLabel(stage.stage)}
@@ -220,7 +220,7 @@ export default function PipelineBreakAnalysis() {
                       {getHealthBadge(stage.break_rate)}
                     </CardContent>
                   </Card>
-                ))}
+              )}
               </div>
 
               {/* 各环节断链详情 */}
@@ -241,8 +241,8 @@ export default function PipelineBreakAnalysis() {
                     </TableHeader>
                     <TableBody>
                       {Object.entries(breakData.break_rates || {}).map(
-                        ([stage, data]) => (
-                          <TableRow key={stage}>
+                      ([stage, data]) =>
+                      <TableRow key={stage}>
                             <TableCell>
                               {getBreakStageLabel(stage)}
                             </TableCell>
@@ -255,23 +255,23 @@ export default function PipelineBreakAnalysis() {
                               {getHealthBadge(data.break_rate)}
                             </TableCell>
                           </TableRow>
-                        )
-                      )}
+
+                    )}
                     </TableBody>
                   </Table>
                 </CardContent>
               </Card>
             </div>
-          )}
+          }
         </TabsContent>
 
         {/* 按环节分析 */}
         <TabsContent value="stages">
-          {breakData && (
-            <div className="space-y-6">
+          {breakData &&
+          <div className="space-y-6">
               {Object.entries(breakData.breaks || {}).map(
-                ([stage, data]) => (
-                  <Card key={stage}>
+              ([stage, data]) =>
+              <Card key={stage}>
                     <CardHeader>
                       <CardTitle>{getBreakStageLabel(stage)}</CardTitle>
                     </CardHeader>
@@ -281,8 +281,8 @@ export default function PipelineBreakAnalysis() {
                           总数: {data.total} · 断链数: {data.break_count}
                         </div>
                       </div>
-                      {data.break_records && data.break_records.length > 0 && (
-                        <Table>
+                      {data.break_records && data.break_records.length > 0 &&
+                  <Table>
                           <TableHeader>
                             <TableRow>
                               <TableHead>编码</TableHead>
@@ -293,8 +293,8 @@ export default function PipelineBreakAnalysis() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {data.break_records.map((record, idx) => (
-                              <TableRow key={idx}>
+                            {data.break_records.map((record, idx) =>
+                      <TableRow key={idx}>
                                 <TableCell>{record.pipeline_code}</TableCell>
                                 <TableCell>{record.pipeline_name}</TableCell>
                                 <TableCell>
@@ -307,22 +307,22 @@ export default function PipelineBreakAnalysis() {
                                   {record.responsible_person_name || "未设置"}
                                 </TableCell>
                               </TableRow>
-                            ))}
+                      )}
                           </TableBody>
                         </Table>
-                      )}
+                  }
                     </CardContent>
                   </Card>
-                )
-              )}
+
+            )}
             </div>
-          )}
+          }
         </TabsContent>
 
         {/* 断链原因 */}
         <TabsContent value="reasons">
-          {breakReasons && (
-            <Card>
+          {breakReasons &&
+          <Card>
               <CardHeader>
                 <CardTitle>断链原因统计</CardTitle>
               </CardHeader>
@@ -332,38 +332,38 @@ export default function PipelineBreakAnalysis() {
                 </div>
               </CardContent>
             </Card>
-          )}
+          }
         </TabsContent>
 
         {/* 断链模式 */}
         <TabsContent value="patterns">
-          {breakPatterns && (
-            <Card>
+          {breakPatterns &&
+          <Card>
               <CardHeader>
                 <CardTitle>断链模式识别</CardTitle>
               </CardHeader>
               <CardContent>
-                {breakPatterns.most_common_stage && (
-                  <div className="mb-4">
+                {breakPatterns.most_common_stage &&
+              <div className="mb-4">
                     <div className="text-sm text-slate-500 mb-2">
                       最容易断链的环节
                     </div>
                     <div className="text-lg font-semibold">
                       {getBreakStageLabel(
-                        breakPatterns.most_common_stage.stage
-                      )}
+                    breakPatterns.most_common_stage.stage
+                  )}
                     </div>
                     <div className="text-sm text-slate-400">
                       断链率:{" "}
                       {breakPatterns.most_common_stage.break_rate.toFixed(2)}%
                     </div>
                   </div>
-                )}
+              }
               </CardContent>
             </Card>
-          )}
+          }
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>);
+
 }

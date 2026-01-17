@@ -10,8 +10,8 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
-} from "../components/ui";
+  DialogTitle } from
+"../components/ui";
 import {
   Plus,
   FileText,
@@ -20,18 +20,18 @@ import {
   TrendingDown,
   Minus,
   Download,
-  Eye,
-} from "lucide-react";
+  Eye } from
+"lucide-react";
 
 const reportTypeConfig = {
   ANNUAL: { label: "年度报告", color: "bg-blue-500" },
-  MONTHLY: { label: "月度报告", color: "bg-green-500" },
+  MONTHLY: { label: "月度报告", color: "bg-green-500" }
 };
 
-const statusConfig = {
+const _statusConfig = {
   GENERATED: { label: "已生成", color: "bg-gray-500" },
   PUBLISHED: { label: "已发布", color: "bg-green-500" },
-  ARCHIVED: { label: "已归档", color: "bg-gray-400" },
+  ARCHIVED: { label: "已归档", color: "bg-gray-400" }
 };
 
 export default function MeetingReports() {
@@ -44,14 +44,14 @@ export default function MeetingReports() {
   const [filters, setFilters] = useState({
     report_type: "",
     period_year: new Date().getFullYear(),
-    rhythm_level: "",
+    rhythm_level: ""
   });
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
   const [generateForm, setGenerateForm] = useState({
     report_type: "MONTHLY",
     period_year: new Date().getFullYear(),
     period_month: new Date().getMonth() + 1,
-    rhythm_level: "",
+    rhythm_level: ""
   });
 
   useEffect(() => {
@@ -64,7 +64,7 @@ export default function MeetingReports() {
       const params = {
         page,
         page_size: pageSize,
-        ...filters,
+        ...filters
       };
       const res = await managementRhythmApi.reports.list(params);
       const data = res.data || res;
@@ -107,23 +107,23 @@ export default function MeetingReports() {
       <div className="flex items-center gap-2 text-sm">
         {isPositive && <TrendingUp className="w-4 h-4 text-green-600" />}
         {isNegative && <TrendingDown className="w-4 h-4 text-red-600" />}
-        {!isPositive && !isNegative && (
-          <Minus className="w-4 h-4 text-gray-400" />
-        )}
+        {!isPositive && !isNegative &&
+        <Minus className="w-4 h-4 text-gray-400" />
+        }
         <span
           className={
-            isPositive
-              ? "text-green-600"
-              : isNegative
-                ? "text-red-600"
-                : "text-gray-500"
-          }
-        >
+          isPositive ?
+          "text-green-600" :
+          isNegative ?
+          "text-red-600" :
+          "text-gray-500"
+          }>
+
           {change > 0 ? "+" : ""}
           {change} ({changeRate})
         </span>
-      </div>
-    );
+      </div>);
+
   };
 
   return (
@@ -132,12 +132,12 @@ export default function MeetingReports() {
         title="会议报告"
         description="自动生成年度和月度会议报告，月度报告包含与上月对比"
         action={
-          <Button onClick={() => setGenerateDialogOpen(true)}>
+        <Button onClick={() => setGenerateDialogOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             生成报告
           </Button>
-        }
-      />
+        } />
+
 
       {/* 筛选器 */}
       <Card>
@@ -148,10 +148,10 @@ export default function MeetingReports() {
               <select
                 value={filters.report_type}
                 onChange={(e) =>
-                  setFilters({ ...filters, report_type: e.target.value })
+                setFilters({ ...filters, report_type: e.target.value })
                 }
-                className="w-full px-3 py-2 border rounded-lg"
-              >
+                className="w-full px-3 py-2 border rounded-lg">
+
                 <option value="">全部</option>
                 <option value="ANNUAL">年度报告</option>
                 <option value="MONTHLY">月度报告</option>
@@ -163,24 +163,24 @@ export default function MeetingReports() {
                 type="number"
                 value={filters.period_year}
                 onChange={(e) =>
-                  setFilters({
-                    ...filters,
-                    period_year:
-                      parseInt(e.target.value) || new Date().getFullYear(),
-                  })
+                setFilters({
+                  ...filters,
+                  period_year:
+                  parseInt(e.target.value) || new Date().getFullYear()
+                })
                 }
-                className="w-full px-3 py-2 border rounded-lg"
-              />
+                className="w-full px-3 py-2 border rounded-lg" />
+
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">节律层级</label>
               <select
                 value={filters.rhythm_level}
                 onChange={(e) =>
-                  setFilters({ ...filters, rhythm_level: e.target.value })
+                setFilters({ ...filters, rhythm_level: e.target.value })
                 }
-                className="w-full px-3 py-2 border rounded-lg"
-              >
+                className="w-full px-3 py-2 border rounded-lg">
+
                 <option value="">全部</option>
                 <option value="STRATEGIC">战略层</option>
                 <option value="OPERATIONAL">经营层</option>
@@ -199,28 +199,28 @@ export default function MeetingReports() {
 
       {/* 报告列表 */}
       <div className="space-y-4">
-        {loading ? (
-          <div className="text-center py-12">
+        {loading ?
+        <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <p className="text-gray-600">加载中...</p>
-          </div>
-        ) : reports.length === 0 ? (
-          <Card>
+          </div> :
+        reports.length === 0 ?
+        <Card>
             <CardContent className="p-12 text-center">
               <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-500">暂无报告</p>
             </CardContent>
-          </Card>
-        ) : (
-          reports.map((report) => (
-            <Card key={report.id} className="hover:shadow-md transition-shadow">
+          </Card> :
+
+        reports.map((report) =>
+        <Card key={report.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <Badge
-                        className={reportTypeConfig[report.report_type]?.color}
-                      >
+                    className={reportTypeConfig[report.report_type]?.color}>
+
                         {reportTypeConfig[report.report_type]?.label}
                       </Badge>
                       <h3 className="text-lg font-semibold">
@@ -249,8 +249,8 @@ export default function MeetingReports() {
                         <div>{formatDate(report.generated_at)}</div>
                       </div>
                     </div>
-                    {report.report_data?.summary && (
-                      <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {report.report_data?.summary &&
+                <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div>
                           <div className="text-sm text-gray-500">会议总数</div>
                           <div className="text-lg font-semibold">
@@ -280,9 +280,9 @@ export default function MeetingReports() {
                           </div>
                         </div>
                       </div>
-                    )}
-                    {report.comparison_data && (
-                      <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                }
+                    {report.comparison_data &&
+                <div className="mt-4 p-4 bg-blue-50 rounded-lg">
                         <div className="font-medium mb-2">
                           与上月对比 ({report.comparison_data.previous_period})
                         </div>
@@ -290,90 +290,90 @@ export default function MeetingReports() {
                           <div>
                             <div className="text-gray-600">会议数</div>
                             {renderComparison(
-                              report.comparison_data.meetings_comparison,
-                            )}
+                        report.comparison_data.meetings_comparison
+                      )}
                           </div>
                           <div>
                             <div className="text-gray-600">已完成会议</div>
                             {renderComparison(
-                              report.comparison_data
-                                .completed_meetings_comparison,
-                            )}
+                        report.comparison_data.
+                        completed_meetings_comparison
+                      )}
                           </div>
                           <div>
                             <div className="text-gray-600">行动项</div>
                             {renderComparison(
-                              report.comparison_data.action_items_comparison,
-                            )}
+                        report.comparison_data.action_items_comparison
+                      )}
                           </div>
                           <div>
                             <div className="text-gray-600">完成率</div>
                             <div className="text-sm">
                               {
-                                report.comparison_data
-                                  .completion_rate_comparison?.current
-                              }{" "}
+                        report.comparison_data.
+                        completion_rate_comparison?.current
+                        }{" "}
                               →{" "}
                               {
-                                report.comparison_data
-                                  .completion_rate_comparison?.previous
-                              }
+                        report.comparison_data.
+                        completion_rate_comparison?.previous
+                        }
                               <span
-                                className={
-                                  report.comparison_data
-                                    .completion_rate_comparison?.change_value >
-                                  0
-                                    ? "text-green-600"
-                                    : "text-red-600"
-                                }
-                              >
+                          className={
+                          report.comparison_data.
+                          completion_rate_comparison?.change_value >
+                          0 ?
+                          "text-green-600" :
+                          "text-red-600"
+                          }>
+
                                 {" "}
                                 {
-                                  report.comparison_data
-                                    .completion_rate_comparison?.change
-                                }
+                          report.comparison_data.
+                          completion_rate_comparison?.change
+                          }
                               </span>
                             </div>
                           </div>
                         </div>
                       </div>
-                    )}
+                }
                   </div>
                   <div className="flex gap-2 ml-4">
                     <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate(`/meeting-reports/${report.id}`)}
-                    >
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate(`/meeting-reports/${report.id}`)}>
+
                       <Eye className="w-4 h-4 mr-1" />
                       查看
                     </Button>
                     <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={async () => {
-                        try {
-                          const blob =
-                            await managementRhythmApi.reports.exportDocx(
-                              report.id,
-                            );
-                          const url = window.URL.createObjectURL(blob);
-                          const a = document.createElement("a");
-                          a.href = url;
-                          a.download = `${report.report_no}.docx`;
-                          document.body.appendChild(a);
-                          a.click();
-                          window.URL.revokeObjectURL(url);
-                          document.body.removeChild(a);
-                        } catch (err) {
-                          console.error("Failed to export:", err);
-                          alert(
-                            "导出失败: " +
-                              (err.response?.data?.detail || err.message),
-                          );
-                        }
-                      }}
-                    >
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    try {
+                      const blob =
+                      await managementRhythmApi.reports.exportDocx(
+                        report.id
+                      );
+                      const url = window.URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = `${report.report_no}.docx`;
+                      document.body.appendChild(a);
+                      a.click();
+                      window.URL.revokeObjectURL(url);
+                      document.body.removeChild(a);
+                    } catch (err) {
+                      console.error("Failed to export:", err);
+                      alert(
+                        "导出失败: " + (
+                        err.response?.data?.detail || err.message)
+                      );
+                    }
+                  }}>
+
                       <Download className="w-4 h-4 mr-1" />
                       导出Word
                     </Button>
@@ -381,34 +381,34 @@ export default function MeetingReports() {
                 </div>
               </CardContent>
             </Card>
-          ))
-        )}
+        )
+        }
       </div>
 
       {/* 分页 */}
-      {total > pageSize && (
-        <div className="flex items-center justify-between">
+      {total > pageSize &&
+      <div className="flex items-center justify-between">
           <div className="text-sm text-gray-600">
             共 {total} 条记录，第 {page} / {Math.ceil(total / pageSize)} 页
           </div>
           <div className="flex gap-2">
             <Button
-              variant="outline"
-              disabled={page === 1}
-              onClick={() => setPage(page - 1)}
-            >
+            variant="outline"
+            disabled={page === 1}
+            onClick={() => setPage(page - 1)}>
+
               上一页
             </Button>
             <Button
-              variant="outline"
-              disabled={page >= Math.ceil(total / pageSize)}
-              onClick={() => setPage(page + 1)}
-            >
+            variant="outline"
+            disabled={page >= Math.ceil(total / pageSize)}
+            onClick={() => setPage(page + 1)}>
+
               下一页
             </Button>
           </div>
         </div>
-      )}
+      }
 
       {/* 生成报告对话框 */}
       <Dialog open={generateDialogOpen} onOpenChange={setGenerateDialogOpen}>
@@ -422,13 +422,13 @@ export default function MeetingReports() {
               <select
                 value={generateForm.report_type}
                 onChange={(e) =>
-                  setGenerateForm({
-                    ...generateForm,
-                    report_type: e.target.value,
-                  })
+                setGenerateForm({
+                  ...generateForm,
+                  report_type: e.target.value
+                })
                 }
-                className="w-full px-3 py-2 border rounded-lg"
-              >
+                className="w-full px-3 py-2 border rounded-lg">
+
                 <option value="ANNUAL">年度报告</option>
                 <option value="MONTHLY">月度报告</option>
               </select>
@@ -439,36 +439,36 @@ export default function MeetingReports() {
                 type="number"
                 value={generateForm.period_year}
                 onChange={(e) =>
-                  setGenerateForm({
-                    ...generateForm,
-                    period_year:
-                      parseInt(e.target.value) || new Date().getFullYear(),
-                  })
+                setGenerateForm({
+                  ...generateForm,
+                  period_year:
+                  parseInt(e.target.value) || new Date().getFullYear()
+                })
                 }
-                className="w-full px-3 py-2 border rounded-lg"
-              />
+                className="w-full px-3 py-2 border rounded-lg" />
+
             </div>
-            {generateForm.report_type === "MONTHLY" && (
-              <div>
+            {generateForm.report_type === "MONTHLY" &&
+            <div>
                 <label className="block text-sm font-medium mb-1">月份</label>
                 <select
-                  value={generateForm.period_month}
-                  onChange={(e) =>
-                    setGenerateForm({
-                      ...generateForm,
-                      period_month: parseInt(e.target.value),
-                    })
-                  }
-                  className="w-full px-3 py-2 border rounded-lg"
-                >
-                  {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                    <option key={m} value={m}>
+                value={generateForm.period_month}
+                onChange={(e) =>
+                setGenerateForm({
+                  ...generateForm,
+                  period_month: parseInt(e.target.value)
+                })
+                }
+                className="w-full px-3 py-2 border rounded-lg">
+
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map((m) =>
+                <option key={m} value={m}>
                       {m}月
                     </option>
-                  ))}
+                )}
                 </select>
               </div>
-            )}
+            }
             <div>
               <label className="block text-sm font-medium mb-1">
                 节律层级（可选）
@@ -476,13 +476,13 @@ export default function MeetingReports() {
               <select
                 value={generateForm.rhythm_level}
                 onChange={(e) =>
-                  setGenerateForm({
-                    ...generateForm,
-                    rhythm_level: e.target.value,
-                  })
+                setGenerateForm({
+                  ...generateForm,
+                  rhythm_level: e.target.value
+                })
                 }
-                className="w-full px-3 py-2 border rounded-lg"
-              >
+                className="w-full px-3 py-2 border rounded-lg">
+
                 <option value="">全部层级</option>
                 <option value="STRATEGIC">战略层</option>
                 <option value="OPERATIONAL">经营层</option>
@@ -493,8 +493,8 @@ export default function MeetingReports() {
             <div className="flex gap-2 justify-end">
               <Button
                 variant="outline"
-                onClick={() => setGenerateDialogOpen(false)}
-              >
+                onClick={() => setGenerateDialogOpen(false)}>
+
                 取消
               </Button>
               <Button onClick={handleGenerate}>生成报告</Button>
@@ -502,6 +502,6 @@ export default function MeetingReports() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }

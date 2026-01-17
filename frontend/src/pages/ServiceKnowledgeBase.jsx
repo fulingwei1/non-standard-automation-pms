@@ -34,15 +34,15 @@ import {
   Copy,
   Share2,
   ThumbsUp,
-  ThumbsDown,
-} from "lucide-react";
+  ThumbsDown } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -53,8 +53,8 @@ import {
   DialogTitle,
   DialogFooter,
   DialogDescription,
-  DialogBody,
-} from "../components/ui/dialog";
+  DialogBody } from
+"../components/ui/dialog";
 import { Textarea } from "../components/ui/textarea";
 import { LoadingCard, ErrorMessage, EmptyState } from "../components/common";
 import { toast } from "../components/ui/toast";
@@ -70,10 +70,10 @@ const categoryConfig = {
   技术文档: {
     label: "技术文档",
     color: "text-purple-400",
-    bg: "bg-purple-500/20",
+    bg: "bg-purple-500/20"
   },
   FAQ: { label: "FAQ", color: "text-green-400", bg: "bg-green-500/20" },
-  其他: { label: "其他", color: "text-slate-400", bg: "bg-slate-500/20" },
+  其他: { label: "其他", color: "text-slate-400", bg: "bg-slate-500/20" }
 };
 
 const statusConfig = {
@@ -81,13 +81,13 @@ const statusConfig = {
   已发布: {
     label: "已发布",
     color: "bg-emerald-500",
-    textColor: "text-emerald-400",
+    textColor: "text-emerald-400"
   },
   已归档: {
     label: "已归档",
     color: "bg-slate-600",
-    textColor: "text-slate-400",
-  },
+    textColor: "text-slate-400"
+  }
 };
 
 export default function ServiceKnowledgeBase() {
@@ -105,7 +105,7 @@ export default function ServiceKnowledgeBase() {
     published: 0,
     faq: 0,
     featured: 0,
-    totalViews: 0,
+    totalViews: 0
   });
 
   useEffect(() => {
@@ -118,7 +118,7 @@ export default function ServiceKnowledgeBase() {
     const statusMap = {
       DRAFT: "草稿",
       PUBLISHED: "已发布",
-      ARCHIVED: "已归档",
+      ARCHIVED: "已归档"
     };
     return statusMap[backendStatus] || backendStatus;
   };
@@ -130,7 +130,7 @@ export default function ServiceKnowledgeBase() {
 
       const params = {
         page: 1,
-        page_size: 100,
+        page_size: 100
       };
 
       if (categoryFilter !== "ALL") {
@@ -164,14 +164,14 @@ export default function ServiceKnowledgeBase() {
         view_count: article.view_count || 0,
         author: article.author_name || "",
         created_at: article.created_at || "",
-        updated_at: article.updated_at || "",
+        updated_at: article.updated_at || ""
       }));
 
       setArticles(transformedArticles);
     } catch (err) {
       console.error("Failed to load articles:", err);
       setError(
-        err.response?.data?.detail || err.message || "加载知识库文章失败",
+        err.response?.data?.detail || err.message || "加载知识库文章失败"
       );
       setArticles([]); // 不再使用mock数据，显示空列表
     } finally {
@@ -189,7 +189,7 @@ export default function ServiceKnowledgeBase() {
         published: statsData.published || 0,
         faq: statsData.faq || 0,
         featured: statsData.featured || 0,
-        totalViews: statsData.total_views || 0,
+        totalViews: statsData.total_views || 0
       });
     } catch (err) {
       console.error("Failed to load statistics:", err);
@@ -199,7 +199,7 @@ export default function ServiceKnowledgeBase() {
         published: articles.filter((a) => a.status === "已发布").length,
         faq: articles.filter((a) => a.is_faq).length,
         featured: articles.filter((a) => a.is_featured).length,
-        totalViews: articles.reduce((sum, a) => sum + a.view_count, 0),
+        totalViews: articles.reduce((sum, a) => sum + a.view_count, 0)
       });
     }
   }, [articles]);
@@ -212,10 +212,10 @@ export default function ServiceKnowledgeBase() {
       const query = searchQuery.toLowerCase();
       result = result.filter(
         (article) =>
-          article.title.toLowerCase().includes(query) ||
-          article.content.toLowerCase().includes(query) ||
-          article.tags.some((tag) => tag.toLowerCase().includes(query)) ||
-          article.article_no.toLowerCase().includes(query),
+        article.title.toLowerCase().includes(query) ||
+        article.content.toLowerCase().includes(query) ||
+        article.tags.some((tag) => tag.toLowerCase().includes(query)) ||
+        article.article_no.toLowerCase().includes(query)
       );
     }
 
@@ -254,8 +254,8 @@ export default function ServiceKnowledgeBase() {
     } catch (error) {
       console.error("Failed to create article:", error);
       toast.error(
-        "创建失败: " +
-          (error.response?.data?.detail || error.message || "请稍后重试"),
+        "创建失败: " + (
+        error.response?.data?.detail || error.message || "请稍后重试")
       );
     }
   };
@@ -273,7 +273,7 @@ export default function ServiceKnowledgeBase() {
     }
   };
 
-  const handleDeleteArticle = async (articleId) => {
+  const handleDeleteArticle = async (_articleId) => {
     if (!confirm("确定要删除这篇文章吗？")) return;
     try {
       // TODO: 调用API
@@ -293,34 +293,34 @@ export default function ServiceKnowledgeBase() {
         title="知识库管理"
         description="管理和维护知识库文章，提供FAQ和操作指南"
         actions={
-          <div className="flex gap-2">
+        <div className="flex gap-2">
             <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={() => {
-                loadArticles();
-                loadStatistics();
-                toast.success("数据已刷新");
-              }}
-              disabled={loading}
-            >
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() => {
+              loadArticles();
+              loadStatistics();
+              toast.success("数据已刷新");
+            }}
+            disabled={loading}>
+
               <RefreshCw
-                className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
-              />
+              className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+
               刷新
             </Button>
             <Button
-              size="sm"
-              className="gap-2"
-              onClick={() => setShowCreateDialog(true)}
-            >
+            size="sm"
+            className="gap-2"
+            onClick={() => setShowCreateDialog(true)}>
+
               <Plus className="w-4 h-4" />
               创建文章
             </Button>
           </div>
-        }
-      />
+        } />
+
 
       <div className="container mx-auto px-4 py-6 space-y-6">
         {/* Statistics */}
@@ -328,8 +328,8 @@ export default function ServiceKnowledgeBase() {
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4"
-        >
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+
           <motion.div variants={fadeIn}>
             <Card className="bg-slate-800/30 border-slate-700">
               <CardContent className="p-4">
@@ -394,16 +394,16 @@ export default function ServiceKnowledgeBase() {
                       placeholder="搜索文章标题、内容、标签..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 bg-slate-800/50 border-slate-700"
-                    />
+                      className="pl-10 bg-slate-800/50 border-slate-700" />
+
                   </div>
                 </div>
                 <div className="flex gap-2">
                   <select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white"
-                  >
+                    className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white">
+
                     <option value="ALL">全部分类</option>
                     <option value="故障处理">故障处理</option>
                     <option value="操作指南">操作指南</option>
@@ -414,29 +414,29 @@ export default function ServiceKnowledgeBase() {
                   <select
                     value={faqFilter}
                     onChange={(e) => setFaqFilter(e.target.value)}
-                    className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white"
-                  >
+                    className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white">
+
                     <option value="ALL">全部</option>
                     <option value="FAQ_ONLY">仅FAQ</option>
                     <option value="NON_FAQ">非FAQ</option>
                   </select>
                   {(searchQuery ||
-                    categoryFilter !== "ALL" ||
-                    faqFilter !== "ALL") && (
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => {
-                        setSearchQuery("");
-                        setCategoryFilter("ALL");
-                        setFaqFilter("ALL");
-                      }}
-                      className="gap-2"
-                    >
+                  categoryFilter !== "ALL" ||
+                  faqFilter !== "ALL") &&
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setCategoryFilter("ALL");
+                      setFaqFilter("ALL");
+                    }}
+                    className="gap-2">
+
                       <XCircle className="w-4 h-4" />
                       清除
                     </Button>
-                  )}
+                  }
                 </div>
               </div>
             </CardContent>
@@ -448,66 +448,66 @@ export default function ServiceKnowledgeBase() {
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
-          className="space-y-3"
-        >
-          {loading ? (
-            <LoadingCard rows={5} />
-          ) : error && articles.length === 0 ? (
-            <ErrorMessage error={error} onRetry={loadArticles} />
-          ) : filteredArticles.length === 0 ? (
-            <EmptyState
-              icon={BookOpen}
-              title="暂无知识库文章"
-              description={
-                searchQuery || categoryFilter !== "ALL" || faqFilter !== "ALL"
-                  ? "当前筛选条件下没有匹配的文章，请尝试调整筛选条件"
-                  : "当前没有知识库文章数据"
-              }
-            />
-          ) : (
-            filteredArticles.map((article) => {
-              const category =
-                categoryConfig[article.category] || categoryConfig["其他"];
-              const status =
-                statusConfig[article.status] || statusConfig["草稿"];
+          className="space-y-3">
 
-              return (
-                <motion.div key={article.id} variants={fadeIn}>
+          {loading ?
+          <LoadingCard rows={5} /> :
+          error && articles.length === 0 ?
+          <ErrorMessage error={error} onRetry={loadArticles} /> :
+          filteredArticles.length === 0 ?
+          <EmptyState
+            icon={BookOpen}
+            title="暂无知识库文章"
+            description={
+            searchQuery || categoryFilter !== "ALL" || faqFilter !== "ALL" ?
+            "当前筛选条件下没有匹配的文章，请尝试调整筛选条件" :
+            "当前没有知识库文章数据"
+            } /> :
+
+
+          filteredArticles.map((article) => {
+            const category =
+            categoryConfig[article.category] || categoryConfig["其他"];
+            const status =
+            statusConfig[article.status] || statusConfig["草稿"];
+
+            return (
+              <motion.div key={article.id} variants={fadeIn}>
                   <Card
-                    className={cn(
-                      "hover:bg-slate-800/50 transition-colors",
-                      article.is_featured && "ring-2 ring-yellow-500/30",
-                    )}
-                  >
+                  className={cn(
+                    "hover:bg-slate-800/50 transition-colors",
+                    article.is_featured && "ring-2 ring-yellow-500/30"
+                  )}>
+
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 space-y-3">
                           {/* Header */}
                           <div className="flex items-center gap-3 flex-wrap">
-                            {article.is_featured && (
-                              <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                            )}
+                            {article.is_featured &&
+                          <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                          }
                             <span className="font-mono text-sm text-slate-300">
                               {article.article_no}
                             </span>
                             <Badge
-                              className={cn(
-                                category.bg,
-                                category.color,
-                                "text-xs",
-                              )}
-                            >
+                            className={cn(
+                              category.bg,
+                              category.color,
+                              "text-xs"
+                            )}>
+
                               {category.label}
                             </Badge>
-                            {article.is_faq && (
-                              <Badge
-                                variant="outline"
-                                className="text-xs text-blue-400 border-blue-500/30"
-                              >
+                            {article.is_faq &&
+                          <Badge
+                            variant="outline"
+                            className="text-xs text-blue-400 border-blue-500/30">
+
                                 <HelpCircle className="w-3 h-3 mr-1" />
                                 FAQ
                               </Badge>
-                            )}
+                          }
                             <Badge className={cn(status.color, "text-xs")}>
                               {status.label}
                             </Badge>
@@ -516,9 +516,9 @@ export default function ServiceKnowledgeBase() {
                           {/* Content */}
                           <div>
                             <h3
-                              className="text-white font-medium mb-1 cursor-pointer hover:text-primary transition-colors"
-                              onClick={() => handleViewDetail(article)}
-                            >
+                            className="text-white font-medium mb-1 cursor-pointer hover:text-primary transition-colors"
+                            onClick={() => handleViewDetail(article)}>
+
                               {article.title}
                             </h3>
                             <p className="text-sm text-slate-300 line-clamp-2">
@@ -529,16 +529,16 @@ export default function ServiceKnowledgeBase() {
                           {/* Tags and Footer */}
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2 flex-wrap">
-                              {article.tags.map((tag, index) => (
-                                <Badge
-                                  key={index}
-                                  variant="secondary"
-                                  className="text-xs"
-                                >
+                              {article.tags.map((tag, index) =>
+                            <Badge
+                              key={index}
+                              variant="secondary"
+                              className="text-xs">
+
                                   <Tag className="w-3 h-3 mr-1" />
                                   {tag}
                                 </Badge>
-                              ))}
+                            )}
                             </div>
                             <div className="flex items-center gap-4 text-xs text-slate-500">
                               <span className="flex items-center gap-1">
@@ -561,11 +561,11 @@ export default function ServiceKnowledgeBase() {
                         {/* Actions */}
                         <div className="flex items-center gap-2">
                           <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleViewDetail(article)}
-                            className="gap-1"
-                          >
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleViewDetail(article)}
+                          className="gap-1">
+
                             <Eye className="w-3 h-3" />
                             查看
                           </Button>
@@ -573,39 +573,39 @@ export default function ServiceKnowledgeBase() {
                       </div>
                     </CardContent>
                   </Card>
-                </motion.div>
-              );
-            })
-          )}
+                </motion.div>);
+
+          })
+          }
         </motion.div>
       </div>
 
       {/* Create Article Dialog */}
       <AnimatePresence>
-        {showCreateDialog && (
-          <CreateArticleDialog
-            onClose={() => setShowCreateDialog(false)}
-            onSubmit={handleCreateArticle}
-          />
-        )}
+        {showCreateDialog &&
+        <CreateArticleDialog
+          onClose={() => setShowCreateDialog(false)}
+          onSubmit={handleCreateArticle} />
+
+        }
       </AnimatePresence>
 
       {/* Detail Dialog */}
       <AnimatePresence>
-        {showDetailDialog && selectedArticle && (
-          <ArticleDetailDialog
-            article={selectedArticle}
-            onClose={() => {
-              setShowDetailDialog(false);
-              setSelectedArticle(null);
-            }}
-            onUpdate={handleUpdateArticle}
-            onDelete={handleDeleteArticle}
-          />
-        )}
+        {showDetailDialog && selectedArticle &&
+        <ArticleDetailDialog
+          article={selectedArticle}
+          onClose={() => {
+            setShowDetailDialog(false);
+            setSelectedArticle(null);
+          }}
+          onUpdate={handleUpdateArticle}
+          onDelete={handleDeleteArticle} />
+
+        }
       </AnimatePresence>
-    </div>
-  );
+    </div>);
+
 }
 
 // Create Article Dialog Component
@@ -617,7 +617,7 @@ function CreateArticleDialog({ onClose, onSubmit }) {
     tags: [],
     is_faq: false,
     is_featured: false,
-    status: "草稿",
+    status: "草稿"
   });
 
   const [tagInput, setTagInput] = useState("");
@@ -660,11 +660,11 @@ function CreateArticleDialog({ onClose, onSubmit }) {
                 <Input
                   value={formData.title}
                   onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
+                  setFormData({ ...formData, title: e.target.value })
                   }
                   placeholder="输入文章标题"
-                  className="bg-slate-800/50 border-slate-700"
-                />
+                  className="bg-slate-800/50 border-slate-700" />
+
               </div>
               <div>
                 <label className="text-sm text-slate-400 mb-1 block">
@@ -673,10 +673,10 @@ function CreateArticleDialog({ onClose, onSubmit }) {
                 <select
                   value={formData.category}
                   onChange={(e) =>
-                    setFormData({ ...formData, category: e.target.value })
+                  setFormData({ ...formData, category: e.target.value })
                   }
-                  className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white"
-                >
+                  className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white">
+
                   <option value="故障处理">故障处理</option>
                   <option value="操作指南">操作指南</option>
                   <option value="技术文档">技术文档</option>
@@ -702,41 +702,41 @@ function CreateArticleDialog({ onClose, onSubmit }) {
                 <Textarea
                   value={formData.content}
                   onChange={(e) =>
-                    setFormData({ ...formData, content: e.target.value })
+                  setFormData({ ...formData, content: e.target.value })
                   }
                   placeholder="输入文章详细内容...&#10;&#10;支持 Markdown 格式：&#10;- 使用 **粗体** 和 *斜体*&#10;- 使用 # 标题&#10;- 使用 - 或 * 创建列表&#10;- 使用 ```代码块```"
                   rows={12}
-                  className="bg-slate-800/50 border-slate-700 font-mono text-sm"
-                />
+                  className="bg-slate-800/50 border-slate-700 font-mono text-sm" />
+
                 <div className="absolute bottom-2 right-2 text-xs text-slate-500">
                   {formData.content.length} 字符
                 </div>
               </div>
               {/* Markdown Preview Toggle */}
-              {formData.content && (
-                <div className="mt-2">
+              {formData.content &&
+              <div className="mt-2">
                   <details className="group">
                     <summary className="cursor-pointer text-xs text-slate-400 hover:text-slate-300">
                       预览 Markdown 渲染效果
                     </summary>
                     <div className="mt-2 p-3 bg-slate-900/50 border border-slate-700 rounded-lg prose prose-invert prose-sm max-w-none">
                       <div
-                        className="text-slate-200 whitespace-pre-wrap"
-                        dangerouslySetInnerHTML={{
-                          __html: formData.content
-                            .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                            .replace(/\*(.*?)\*/g, "<em>$1</em>")
-                            .replace(/^### (.*$)/gim, "<h3>$1</h3>")
-                            .replace(/^## (.*$)/gim, "<h2>$1</h2>")
-                            .replace(/^# (.*$)/gim, "<h1>$1</h1>")
-                            .replace(/^- (.*$)/gim, "<li>$1</li>")
-                            .replace(/\n/g, "<br/>"),
-                        }}
-                      />
+                      className="text-slate-200 whitespace-pre-wrap"
+                      dangerouslySetInnerHTML={{
+                        __html: formData.content.
+                        replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>").
+                        replace(/\*(.*?)\*/g, "<em>$1</em>").
+                        replace(/^### (.*$)/gim, "<h3>$1</h3>").
+                        replace(/^## (.*$)/gim, "<h2>$1</h2>").
+                        replace(/^# (.*$)/gim, "<h1>$1</h1>").
+                        replace(/^- (.*$)/gim, "<li>$1</li>").
+                        replace(/\n/g, "<br/>")
+                      }} />
+
                     </div>
                   </details>
                 </div>
-              )}
+              }
             </div>
 
             <div>
@@ -747,25 +747,25 @@ function CreateArticleDialog({ onClose, onSubmit }) {
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && handleAddTag()}
                   placeholder="输入标签后按回车"
-                  className="bg-slate-800/50 border-slate-700"
-                />
+                  className="bg-slate-800/50 border-slate-700" />
+
                 <Button variant="outline" size="sm" onClick={handleAddTag}>
                   <Plus className="w-4 h-4" />
                 </Button>
               </div>
-              {formData.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {formData.tags.map((tag, index) => (
-                    <Badge key={index} variant="secondary" className="text-xs">
+              {formData.tags.length > 0 &&
+              <div className="flex flex-wrap gap-2 mt-2">
+                  {formData.tags.map((tag, index) =>
+                <Badge key={index} variant="secondary" className="text-xs">
                       {tag}
                       <XCircle
-                        className="w-3 h-3 ml-1 cursor-pointer"
-                        onClick={() => handleRemoveTag(tag)}
-                      />
+                    className="w-3 h-3 ml-1 cursor-pointer"
+                    onClick={() => handleRemoveTag(tag)} />
+
                     </Badge>
-                  ))}
+                )}
                 </div>
-              )}
+              }
             </div>
 
             <div className="grid grid-cols-3 gap-4">
@@ -774,10 +774,10 @@ function CreateArticleDialog({ onClose, onSubmit }) {
                   type="checkbox"
                   checked={formData.is_faq}
                   onChange={(e) =>
-                    setFormData({ ...formData, is_faq: e.target.checked })
+                  setFormData({ ...formData, is_faq: e.target.checked })
                   }
-                  className="w-4 h-4"
-                />
+                  className="w-4 h-4" />
+
                 <label className="text-sm text-slate-400">标记为FAQ</label>
               </div>
               <div className="flex items-center gap-2">
@@ -785,10 +785,10 @@ function CreateArticleDialog({ onClose, onSubmit }) {
                   type="checkbox"
                   checked={formData.is_featured}
                   onChange={(e) =>
-                    setFormData({ ...formData, is_featured: e.target.checked })
+                  setFormData({ ...formData, is_featured: e.target.checked })
                   }
-                  className="w-4 h-4"
-                />
+                  className="w-4 h-4" />
+
                 <label className="text-sm text-slate-400">设为精选</label>
               </div>
               <div>
@@ -798,10 +798,10 @@ function CreateArticleDialog({ onClose, onSubmit }) {
                 <select
                   value={formData.status}
                   onChange={(e) =>
-                    setFormData({ ...formData, status: e.target.value })
+                  setFormData({ ...formData, status: e.target.value })
                   }
-                  className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white"
-                >
+                  className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white">
+
                   <option value="草稿">草稿</option>
                   <option value="已发布">已发布</option>
                 </select>
@@ -819,8 +819,8 @@ function CreateArticleDialog({ onClose, onSubmit }) {
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>);
+
 }
 
 // Article Detail Dialog Component
@@ -845,38 +845,38 @@ function ArticleDetailDialog({ article, onClose, onUpdate, onDelete }) {
       <DialogContent className="max-w-5xl bg-slate-900 border-slate-700 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            {article.is_featured && (
-              <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-            )}
+            {article.is_featured &&
+            <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+            }
             <span>{article.title}</span>
             <Badge className={cn(category.bg, category.color, "text-xs")}>
               {category.label}
             </Badge>
-            {article.is_faq && (
-              <Badge
-                variant="outline"
-                className="text-xs text-blue-400 border-blue-500/30"
-              >
+            {article.is_faq &&
+            <Badge
+              variant="outline"
+              className="text-xs text-blue-400 border-blue-500/30">
+
                 FAQ
               </Badge>
-            )}
+            }
           </DialogTitle>
           <DialogDescription>知识库文章详情</DialogDescription>
         </DialogHeader>
         <DialogBody>
-          {isEditing ? (
-            <div className="space-y-4">
+          {isEditing ?
+          <div className="space-y-4">
               <div>
                 <label className="text-sm text-slate-400 mb-1 block">
                   文章标题
                 </label>
                 <Input
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
-                  className="bg-slate-800/50 border-slate-700"
-                />
+                value={formData.title}
+                onChange={(e) =>
+                setFormData({ ...formData, title: e.target.value })
+                }
+                className="bg-slate-800/50 border-slate-700" />
+
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1">
@@ -888,23 +888,23 @@ function ArticleDetailDialog({ article, onClose, onUpdate, onDelete }) {
                   </Badge>
                 </div>
                 <Textarea
-                  value={formData.content}
-                  onChange={(e) =>
-                    setFormData({ ...formData, content: e.target.value })
-                  }
-                  rows={15}
-                  className="bg-slate-800/50 border-slate-700 font-mono text-sm"
-                  placeholder="支持 Markdown 格式..."
-                />
-                {formData.content && (
-                  <div className="mt-2 text-xs text-slate-500">
+                value={formData.content}
+                onChange={(e) =>
+                setFormData({ ...formData, content: e.target.value })
+                }
+                rows={15}
+                className="bg-slate-800/50 border-slate-700 font-mono text-sm"
+                placeholder="支持 Markdown 格式..." />
+
+                {formData.content &&
+              <div className="mt-2 text-xs text-slate-500">
                     {formData.content.length} 字符
                   </div>
-                )}
+              }
               </div>
-            </div>
-          ) : (
-            <div className="space-y-6">
+            </div> :
+
+          <div className="space-y-6">
               <div>
                 <p className="text-sm text-slate-400 mb-1">文章编号</p>
                 <p className="font-mono text-white">{article.article_no}</p>
@@ -917,23 +917,23 @@ function ArticleDetailDialog({ article, onClose, onUpdate, onDelete }) {
                 </div>
               </div>
 
-              {article.tags && article.tags.length > 0 && (
-                <div>
+              {article.tags && article.tags.length > 0 &&
+            <div>
                   <p className="text-sm text-slate-400 mb-2">标签</p>
                   <div className="flex flex-wrap gap-2">
-                    {article.tags.map((tag, index) => (
-                      <Badge
-                        key={index}
-                        variant="secondary"
-                        className="text-xs"
-                      >
+                    {article.tags.map((tag, index) =>
+                <Badge
+                  key={index}
+                  variant="secondary"
+                  className="text-xs">
+
                         <Tag className="w-3 h-3 mr-1" />
                         {tag}
                       </Badge>
-                    ))}
+                )}
                   </div>
                 </div>
-              )}
+            }
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -974,11 +974,11 @@ function ArticleDetailDialog({ article, onClose, onUpdate, onDelete }) {
                 </div>
               </div>
             </div>
-          )}
+          }
         </DialogBody>
         <DialogFooter>
-          {isEditing ? (
-            <>
+          {isEditing ?
+          <>
               <Button variant="outline" onClick={() => setIsEditing(false)}>
                 取消
               </Button>
@@ -986,9 +986,9 @@ function ArticleDetailDialog({ article, onClose, onUpdate, onDelete }) {
                 <Save className="w-4 h-4 mr-2" />
                 保存
               </Button>
-            </>
-          ) : (
-            <>
+            </> :
+
+          <>
               <Button variant="outline" onClick={() => onDelete(article.id)}>
                 <Trash2 className="w-4 h-4 mr-2" />
                 删除
@@ -1001,9 +1001,9 @@ function ArticleDetailDialog({ article, onClose, onUpdate, onDelete }) {
                 关闭
               </Button>
             </>
-          )}
+          }
         </DialogFooter>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>);
+
 }

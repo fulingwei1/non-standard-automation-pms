@@ -15,6 +15,7 @@ import {
 } from "../../components/ui/dialog";
 import { Button } from "../../components/ui/button";
 import { Textarea } from "../../components/ui/textarea";
+import { toast } from "../../components/ui/toast";
 import { Users, Download, Trash2, AlertTriangle, CheckCircle2 } from "lucide-react";
 
 export function ServiceTicketBatchActions({

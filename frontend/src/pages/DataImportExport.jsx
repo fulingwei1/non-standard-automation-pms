@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback as _useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Upload,
@@ -7,15 +7,15 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
-  RefreshCw,
-} from "lucide-react";
+  RefreshCw } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -24,14 +24,14 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger,
-} from "../components/ui/tabs";
+  TabsTrigger } from
+"../components/ui/tabs";
 import { Label } from "../components/ui/label";
 import { Checkbox } from "../components/ui/checkbox";
 import { dataImportExportApi } from "../services/api";
@@ -79,7 +79,7 @@ export default function DataImportExport() {
       link.href = url;
       link.setAttribute(
         "download",
-        `导入模板_${templateType}_${new Date().toISOString().split("T")[0]}.xlsx`,
+        `导入模板_${templateType}_${new Date().toISOString().split("T")[0]}.xlsx`
       );
       document.body.appendChild(link);
       link.click();
@@ -108,7 +108,7 @@ export default function DataImportExport() {
 
       const response = await dataImportExportApi.previewImport(
         importFile,
-        selectedTemplateType,
+        selectedTemplateType
       );
       const data = response.data?.data || response.data || response;
       setPreviewData(data);
@@ -117,7 +117,7 @@ export default function DataImportExport() {
         setError(`发现 ${data.errors.length} 个错误，请检查数据`);
       } else {
         setSuccess(
-          `预览成功：共 ${data.total_rows} 行，有效 ${data.valid_rows} 行`,
+          `预览成功：共 ${data.total_rows} 行，有效 ${data.valid_rows} 行`
         );
       }
     } catch (err) {
@@ -147,7 +147,7 @@ export default function DataImportExport() {
       const response = await dataImportExportApi.uploadImport(
         importFile,
         selectedTemplateType,
-        updateExisting,
+        updateExisting
       );
       const data = response.data?.data || response.data || response;
 
@@ -229,23 +229,23 @@ export default function DataImportExport() {
       initial="hidden"
       animate="visible"
       variants={fadeIn}
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       <PageHeader title="数据导入导出" />
 
       {/* 消息提示 */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded flex items-center gap-2">
+      {error &&
+      <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded flex items-center gap-2">
           <XCircle className="h-5 w-5" />
           {error}
         </div>
-      )}
-      {success && (
-        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded flex items-center gap-2">
+      }
+      {success &&
+      <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded flex items-center gap-2">
           <CheckCircle className="h-5 w-5" />
           {success}
         </div>
-      )}
+      }
 
       <Tabs defaultValue="import" className="space-y-4">
         <TabsList>
@@ -265,17 +265,17 @@ export default function DataImportExport() {
                   <Label>模板类型</Label>
                   <Select
                     value={selectedTemplateType}
-                    onValueChange={setSelectedTemplateType}
-                  >
+                    onValueChange={setSelectedTemplateType}>
+
                     <SelectTrigger>
                       <SelectValue placeholder="选择模板类型" />
                     </SelectTrigger>
                     <SelectContent>
-                      {templateTypes.map((type) => (
-                        <SelectItem key={type.type} value={type.type}>
+                      {templateTypes.map((type) =>
+                      <SelectItem key={type.type} value={type.type}>
                           {type.name} - {type.description}
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -285,8 +285,8 @@ export default function DataImportExport() {
                   <Input
                     type="file"
                     accept=".xlsx,.xls"
-                    onChange={(e) => setImportFile(e.target.files?.[0] || null)}
-                  />
+                    onChange={(e) => setImportFile(e.target.files?.[0] || null)} />
+
                 </div>
               </div>
 
@@ -294,35 +294,35 @@ export default function DataImportExport() {
                 <Checkbox
                   id="update-existing"
                   checked={updateExisting}
-                  onCheckedChange={setUpdateExisting}
-                />
+                  onCheckedChange={setUpdateExisting} />
+
                 <Label htmlFor="update-existing" className="cursor-pointer">
                   更新已存在的数据
                 </Label>
               </div>
 
               <div className="flex gap-2">
-                {selectedTemplateType && (
-                  <Button
-                    variant="outline"
-                    onClick={() => handleDownloadTemplate(selectedTemplateType)}
-                    disabled={loading}
-                  >
+                {selectedTemplateType &&
+                <Button
+                  variant="outline"
+                  onClick={() => handleDownloadTemplate(selectedTemplateType)}
+                  disabled={loading}>
+
                     <Download className="h-4 w-4 mr-2" />
                     下载模板
                   </Button>
-                )}
+                }
                 <Button
                   onClick={handlePreviewImport}
-                  disabled={loading || !importFile || !selectedTemplateType}
-                >
+                  disabled={loading || !importFile || !selectedTemplateType}>
+
                   <FileSpreadsheet className="h-4 w-4 mr-2" />
                   预览数据
                 </Button>
                 <Button
                   onClick={handleUploadImport}
-                  disabled={loading || !importFile || !selectedTemplateType}
-                >
+                  disabled={loading || !importFile || !selectedTemplateType}>
+
                   <Upload className="h-4 w-4 mr-2" />
                   导入数据
                 </Button>
@@ -331,8 +331,8 @@ export default function DataImportExport() {
           </Card>
 
           {/* 预览数据 */}
-          {previewData && (
-            <Card>
+          {previewData &&
+          <Card>
               <CardHeader>
                 <CardTitle>预览结果</CardTitle>
               </CardHeader>
@@ -365,33 +365,33 @@ export default function DataImportExport() {
                     </div>
                   </div>
 
-                  {previewData.errors && previewData.errors.length > 0 && (
-                    <div>
+                  {previewData.errors && previewData.errors.length > 0 &&
+                <div>
                       <div className="text-sm font-semibold mb-2">
                         错误列表：
                       </div>
                       <div className="max-h-60 overflow-y-auto space-y-1">
-                        {previewData.errors.slice(0, 20).map((error, idx) => (
-                          <div
-                            key={idx}
-                            className="text-sm text-red-600 p-2 bg-red-50 rounded"
-                          >
+                        {previewData.errors.slice(0, 20).map((error, idx) =>
+                    <div
+                      key={idx}
+                      className="text-sm text-red-600 p-2 bg-red-50 rounded">
+
                             第 {error.row} 行，字段 {error.field}：
                             {error.message}
                           </div>
-                        ))}
-                        {previewData.errors.length > 20 && (
-                          <div className="text-sm text-gray-500">
+                    )}
+                        {previewData.errors.length > 20 &&
+                    <div className="text-sm text-gray-500">
                             还有 {previewData.errors.length - 20} 个错误...
                           </div>
-                        )}
+                    }
                       </div>
                     </div>
-                  )}
+                }
 
                   {previewData.preview_data &&
-                    previewData.preview_data.length > 0 && (
-                      <div>
+                previewData.preview_data.length > 0 &&
+                <div>
                         <div className="text-sm font-semibold mb-2">
                           预览数据（前10行）：
                         </div>
@@ -400,33 +400,33 @@ export default function DataImportExport() {
                             <thead>
                               <tr className="border-b">
                                 {Object.keys(
-                                  previewData.preview_data[0] || {},
-                                ).map((key) => (
-                                  <th key={key} className="text-left p-2">
+                            previewData.preview_data[0] || {}
+                          ).map((key) =>
+                          <th key={key} className="text-left p-2">
                                     {key}
                                   </th>
-                                ))}
+                          )}
                               </tr>
                             </thead>
                             <tbody>
-                              {previewData.preview_data.map((row, idx) => (
-                                <tr key={idx} className="border-b">
-                                  {Object.values(row).map((value, cellIdx) => (
-                                    <td key={cellIdx} className="p-2">
+                              {previewData.preview_data.map((row, idx) =>
+                        <tr key={idx} className="border-b">
+                                  {Object.values(row).map((value, cellIdx) =>
+                          <td key={cellIdx} className="p-2">
                                       {String(value || "")}
                                     </td>
-                                  ))}
+                          )}
                                 </tr>
-                              ))}
+                        )}
                             </tbody>
                           </table>
                         </div>
                       </div>
-                    )}
+                }
                 </div>
               </CardContent>
             </Card>
-          )}
+          }
         </TabsContent>
 
         {/* 导出标签页 */}
@@ -454,53 +454,53 @@ export default function DataImportExport() {
 
               {/* 导出筛选条件 */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {exportType === "project_detail" && (
-                  <div>
+                {exportType === "project_detail" &&
+                <div>
                     <Label>项目ID</Label>
                     <Input
-                      type="number"
-                      placeholder="项目ID"
-                      value={exportFilters.project_id || ""}
-                      onChange={(e) =>
-                        setExportFilters({
-                          ...exportFilters,
-                          project_id: parseInt(e.target.value),
-                        })
-                      }
-                    />
-                  </div>
-                )}
+                    type="number"
+                    placeholder="项目ID"
+                    value={exportFilters.project_id || ""}
+                    onChange={(e) =>
+                    setExportFilters({
+                      ...exportFilters,
+                      project_id: parseInt(e.target.value)
+                    })
+                    } />
 
-                {(exportType === "timesheet" || exportType === "workload") && (
-                  <>
+                  </div>
+                }
+
+                {(exportType === "timesheet" || exportType === "workload") &&
+                <>
                     <div>
                       <Label>开始日期</Label>
                       <Input
-                        type="date"
-                        value={exportFilters.start_date || ""}
-                        onChange={(e) =>
-                          setExportFilters({
-                            ...exportFilters,
-                            start_date: e.target.value,
-                          })
-                        }
-                      />
+                      type="date"
+                      value={exportFilters.start_date || ""}
+                      onChange={(e) =>
+                      setExportFilters({
+                        ...exportFilters,
+                        start_date: e.target.value
+                      })
+                      } />
+
                     </div>
                     <div>
                       <Label>结束日期</Label>
                       <Input
-                        type="date"
-                        value={exportFilters.end_date || ""}
-                        onChange={(e) =>
-                          setExportFilters({
-                            ...exportFilters,
-                            end_date: e.target.value,
-                          })
-                        }
-                      />
+                      type="date"
+                      value={exportFilters.end_date || ""}
+                      onChange={(e) =>
+                      setExportFilters({
+                        ...exportFilters,
+                        end_date: e.target.value
+                      })
+                      } />
+
                     </div>
                   </>
-                )}
+                }
               </div>
 
               <Button onClick={handleExport} disabled={loading}>
@@ -511,6 +511,6 @@ export default function DataImportExport() {
           </Card>
         </TabsContent>
       </Tabs>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

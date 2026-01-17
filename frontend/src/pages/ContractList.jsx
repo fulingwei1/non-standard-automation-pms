@@ -29,8 +29,8 @@ import {
   Milestone,
   Paperclip,
   Shield,
-  Loader2,
-} from "lucide-react";
+  Loader2 } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -46,8 +46,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
-} from "../components/ui";
+  DialogFooter } from
+"../components/ui";
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { contractApi } from "../services/api";
@@ -58,19 +58,19 @@ const statusConfig = {
   pending_sign: {
     label: "待签约",
     color: "bg-amber-500",
-    textColor: "text-amber-400",
+    textColor: "text-amber-400"
   },
   active: { label: "执行中", color: "bg-blue-500", textColor: "text-blue-400" },
   completed: {
     label: "已完成",
     color: "bg-emerald-500",
-    textColor: "text-emerald-400",
+    textColor: "text-emerald-400"
   },
   terminated: {
     label: "已终止",
     color: "bg-red-500",
-    textColor: "text-red-400",
-  },
+    textColor: "text-red-400"
+  }
 };
 
 // Mock contract data
@@ -80,14 +80,14 @@ const paymentTypeLabels = {
   progress: "进度款",
   delivery: "发货款",
   acceptance: "验收款",
-  warranty: "质保金",
+  warranty: "质保金"
 };
 
 export default function ContractList() {
   const [loading, setLoading] = useState(true);
   const [contracts, setContracts] = useState([]);
   const [error, setError] = useState(null);
-  const [viewMode, setViewMode] = useState("list");
+  const [_viewMode, _setViewMode] = useState("list");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedContract, setSelectedContract] = useState(null);
@@ -117,15 +117,15 @@ export default function ContractList() {
   const filteredContracts = useMemo(() => {
     return contracts.filter((contract) => {
       const matchesSearch =
-        !searchTerm ||
-        contract.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contract.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (contract.customerShort || "")
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase());
+      !searchTerm ||
+      contract.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contract.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (contract.customerShort || "").
+      toLowerCase().
+      includes(searchTerm.toLowerCase());
 
       const matchesStatus =
-        selectedStatus === "all" || contract.status === selectedStatus;
+      selectedStatus === "all" || contract.status === selectedStatus;
 
       return matchesSearch && matchesStatus;
     });
@@ -142,8 +142,8 @@ export default function ContractList() {
       paidValue: active.reduce((sum, c) => sum + (c.paidAmount || 0), 0),
       pendingValue: active.reduce(
         (sum, c) => sum + ((c.totalAmount || 0) - (c.paidAmount || 0)),
-        0,
-      ),
+        0
+      )
     };
   }, [contracts]);
 
@@ -156,34 +156,34 @@ export default function ContractList() {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       {/* Page Header */}
       <PageHeader
         title="合同管理"
         description="管理销售合同和付款条款"
         actions={
-          <motion.div variants={fadeIn} className="flex gap-2">
+        <motion.div variants={fadeIn} className="flex gap-2">
             <Button variant="outline" className="flex items-center gap-2">
               <Download className="w-4 h-4" />
               导出
             </Button>
             <Button
-              className="flex items-center gap-2"
-              onClick={() => setShowCreateDialog(true)}
-            >
+            className="flex items-center gap-2"
+            onClick={() => setShowCreateDialog(true)}>
+
               <Plus className="w-4 h-4" />
               新建合同
             </Button>
           </motion.div>
-        }
-      />
+        } />
+
 
       {/* Stats Row */}
       <motion.div
         variants={fadeIn}
-        className="grid grid-cols-2 sm:grid-cols-4 gap-4"
-      >
+        className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+
         <Card className="bg-surface-100/50">
           <CardContent className="p-4 flex items-center gap-4">
             <div className="p-2 bg-blue-500/20 rounded-lg">
@@ -239,8 +239,8 @@ export default function ContractList() {
       {/* Filters */}
       <motion.div
         variants={fadeIn}
-        className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between"
-      >
+        className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+
         <div className="flex flex-wrap gap-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -248,20 +248,20 @@ export default function ContractList() {
               placeholder="搜索合同号、名称..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-64"
-            />
+              className="pl-10 w-64" />
+
           </div>
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
-          >
+            className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary">
+
             <option value="all">全部状态</option>
-            {Object.entries(statusConfig).map(([key, val]) => (
-              <option key={key} value={key}>
+            {Object.entries(statusConfig).map(([key, val]) =>
+            <option key={key} value={key}>
                 {val.label}
               </option>
-            ))}
+            )}
           </select>
         </div>
 
@@ -271,18 +271,18 @@ export default function ContractList() {
       </motion.div>
 
       {/* Loading State */}
-      {loading && (
-        <motion.div variants={fadeIn} className="flex justify-center py-20">
+      {loading &&
+      <motion.div variants={fadeIn} className="flex justify-center py-20">
           <div className="flex items-center gap-3 text-slate-400">
             <Loader2 className="w-6 h-6 animate-spin" />
             <span>加载中...</span>
           </div>
         </motion.div>
-      )}
+      }
 
       {/* Error State */}
-      {error && !loading && (
-        <motion.div variants={fadeIn}>
+      {error && !loading &&
+      <motion.div variants={fadeIn}>
           <Card className="bg-red-500/10 border-red-500/20">
             <CardContent className="p-6 text-center">
               <AlertTriangle className="w-12 h-12 mx-auto text-red-400 mb-4" />
@@ -292,10 +292,10 @@ export default function ContractList() {
             </CardContent>
           </Card>
         </motion.div>
-      )}
+      }
 
       {/* Content */}
-      {!loading && !error && (
+      {!loading && !error &&
       <motion.div variants={fadeIn}>
         <Card>
           <CardContent className="p-0">
@@ -332,16 +332,16 @@ export default function ContractList() {
                 {filteredContracts.map((contract) => {
                   const statusConf = statusConfig[contract.status];
                   const paymentProgress =
-                    contract.totalAmount > 0
-                      ? (contract.paidAmount / contract.totalAmount) * 100
-                      : 0;
+                  contract.totalAmount > 0 ?
+                  contract.paidAmount / contract.totalAmount * 100 :
+                  0;
 
                   return (
                     <tr
                       key={contract.id}
                       onClick={() => handleContractClick(contract)}
-                      className="border-b border-white/5 hover:bg-surface-100 cursor-pointer transition-colors"
-                    >
+                      className="border-b border-white/5 hover:bg-surface-100 cursor-pointer transition-colors">
+
                       <td className="p-4">
                         <div>
                           <div className="font-medium text-white">
@@ -364,8 +364,8 @@ export default function ContractList() {
                         <div className="flex items-center gap-2">
                           <Progress
                             value={paymentProgress}
-                            className="w-20 h-2"
-                          />
+                            className="w-20 h-2" />
+
                           <span className="text-xs text-slate-400">
                             {paymentProgress.toFixed(0)}%
                           </span>
@@ -382,15 +382,15 @@ export default function ContractList() {
                           className={cn(
                             "text-xs",
                             statusConf.textColor,
-                            "bg-transparent border-0",
-                          )}
-                        >
+                            "bg-transparent border-0"
+                          )}>
+
                           <div
                             className={cn(
                               "w-2 h-2 rounded-full mr-1",
-                              statusConf.color,
-                            )}
-                          />
+                              statusConf.color
+                            )} />
+
                           {statusConf.label}
                         </Badge>
                       </td>
@@ -399,29 +399,29 @@ export default function ContractList() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8"
-                          >
+                            className="h-8 w-8">
+
                             <Eye className="w-4 h-4" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8"
-                          >
+                            className="h-8 w-8">
+
                             <Download className="w-4 h-4" />
                           </Button>
                         </div>
                       </td>
-                    </tr>
-                  );
+                    </tr>);
+
                 })}
               </tbody>
             </table>
           </CardContent>
         </Card>
 
-        {filteredContracts.length === 0 && (
-          <div className="text-center py-16">
+        {filteredContracts.length === 0 &&
+        <div className="text-center py-16">
             <FileSignature className="w-12 h-12 mx-auto text-slate-600 mb-4" />
             <h3 className="text-lg font-medium text-white mb-2">暂无合同</h3>
             <p className="text-slate-400 mb-4">没有找到符合条件的合同</p>
@@ -430,18 +430,18 @@ export default function ContractList() {
               新建合同
             </Button>
           </div>
-        )}
+        }
       </motion.div>
-      )}
+      }
 
       {/* Contract Detail Panel */}
       <AnimatePresence>
-        {selectedContract && (
-          <ContractDetailPanel
-            contract={selectedContract}
-            onClose={() => setSelectedContract(null)}
-          />
-        )}
+        {selectedContract &&
+        <ContractDetailPanel
+          contract={selectedContract}
+          onClose={() => setSelectedContract(null)} />
+
+        }
       </AnimatePresence>
 
       {/* Create Dialog */}
@@ -481,25 +481,25 @@ export default function ContractList() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowCreateDialog(false)}
-            >
+              onClick={() => setShowCreateDialog(false)}>
+
               取消
             </Button>
             <Button onClick={() => setShowCreateDialog(false)}>创建合同</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </motion.div>
-  );
+    </motion.div>);
+
 }
 
 // Contract Detail Panel
 function ContractDetailPanel({ contract, onClose }) {
   const statusConf = statusConfig[contract.status];
   const paymentProgress =
-    contract.totalAmount > 0
-      ? (contract.paidAmount / contract.totalAmount) * 100
-      : 0;
+  contract.totalAmount > 0 ?
+  contract.paidAmount / contract.totalAmount * 100 :
+  0;
 
   return (
     <motion.div
@@ -507,8 +507,8 @@ function ContractDetailPanel({ contract, onClose }) {
       animate={{ x: 0 }}
       exit={{ x: "100%" }}
       transition={{ type: "spring", damping: 25, stiffness: 200 }}
-      className="fixed right-0 top-0 h-full w-full md:w-[500px] bg-surface-100/95 backdrop-blur-xl border-l border-white/5 shadow-2xl z-50 flex flex-col"
-    >
+      className="fixed right-0 top-0 h-full w-full md:w-[500px] bg-surface-100/95 backdrop-blur-xl border-l border-white/5 shadow-2xl z-50 flex flex-col">
+
       {/* Header */}
       <div className="p-4 border-b border-white/5">
         <div className="flex items-start justify-between">
@@ -529,12 +529,12 @@ function ContractDetailPanel({ contract, onClose }) {
             className={cn(
               "text-xs",
               statusConf.textColor,
-              "bg-transparent border-0",
-            )}
-          >
+              "bg-transparent border-0"
+            )}>
+
             <div
-              className={cn("w-2 h-2 rounded-full mr-1", statusConf.color)}
-            />
+              className={cn("w-2 h-2 rounded-full mr-1", statusConf.color)} />
+
             {statusConf.label}
           </Badge>
         </div>
@@ -564,7 +564,7 @@ function ContractDetailPanel({ contract, onClose }) {
             <span>
               待收: ¥
               {((contract.totalAmount - contract.paidAmount) / 10000).toFixed(
-                1,
+                1
               )}
               万
             </span>
@@ -580,13 +580,13 @@ function ContractDetailPanel({ contract, onClose }) {
               <span className="text-slate-400">客户:</span>
               <span className="text-white">{contract.customerShort}</span>
             </div>
-            {contract.projectName && (
-              <div className="flex items-center gap-3">
+            {contract.projectName &&
+            <div className="flex items-center gap-3">
                 <FileText className="w-4 h-4 text-slate-500" />
                 <span className="text-slate-400">项目:</span>
                 <span className="text-blue-400">{contract.projectName}</span>
               </div>
-            )}
+            }
             <div className="flex items-center gap-3">
               <Calendar className="w-4 h-4 text-slate-500" />
               <span className="text-slate-400">签约日期:</span>
@@ -614,85 +614,85 @@ function ContractDetailPanel({ contract, onClose }) {
         </div>
 
         {/* Payment Terms */}
-        {contract.paymentTerms.length > 0 && (
-          <div className="space-y-3">
+        {contract.paymentTerms.length > 0 &&
+        <div className="space-y-3">
             <h3 className="text-sm font-medium text-slate-400">付款条款</h3>
             <div className="space-y-2">
               {contract.paymentTerms.map((term, index) => {
-                const isPaid = term.status === "paid";
-                const isOverdue =
-                  term.status === "overdue" ||
-                  (term.status === "pending" &&
-                    term.dueDate &&
-                    new Date(term.dueDate) < new Date());
+              const isPaid = term.status === "paid";
+              const isOverdue =
+              term.status === "overdue" ||
+              term.status === "pending" &&
+              term.dueDate &&
+              new Date(term.dueDate) < new Date();
 
-                return (
-                  <div
-                    key={index}
-                    className={cn(
-                      "p-3 rounded-lg border",
-                      isPaid
-                        ? "bg-emerald-500/10 border-emerald-500/20"
-                        : isOverdue
-                          ? "bg-red-500/10 border-red-500/20"
-                          : "bg-surface-50 border-white/5",
-                    )}
-                  >
+              return (
+                <div
+                  key={index}
+                  className={cn(
+                    "p-3 rounded-lg border",
+                    isPaid ?
+                    "bg-emerald-500/10 border-emerald-500/20" :
+                    isOverdue ?
+                    "bg-red-500/10 border-red-500/20" :
+                    "bg-surface-50 border-white/5"
+                  )}>
+
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        {isPaid ? (
-                          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                        ) : isOverdue ? (
-                          <AlertTriangle className="w-4 h-4 text-red-400" />
-                        ) : (
-                          <Clock className="w-4 h-4 text-slate-400" />
-                        )}
+                        {isPaid ?
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400" /> :
+                      isOverdue ?
+                      <AlertTriangle className="w-4 h-4 text-red-400" /> :
+
+                      <Clock className="w-4 h-4 text-slate-400" />
+                      }
                         <span className="text-sm text-white">
                           {paymentTypeLabels[term.type]} ({term.percent}%)
                         </span>
                       </div>
                       <span
-                        className={cn(
-                          "text-sm font-medium",
-                          isPaid
-                            ? "text-emerald-400"
-                            : isOverdue
-                              ? "text-red-400"
-                              : "text-amber-400",
-                        )}
-                      >
+                      className={cn(
+                        "text-sm font-medium",
+                        isPaid ?
+                        "text-emerald-400" :
+                        isOverdue ?
+                        "text-red-400" :
+                        "text-amber-400"
+                      )}>
+
                         ¥{(term.amount / 10000).toFixed(1)}万
                       </span>
                     </div>
                     <div className="text-xs text-slate-400 mt-1">
-                      {isPaid ? (
-                        <span className="text-emerald-400">
+                      {isPaid ?
+                    <span className="text-emerald-400">
                           已收款: {term.paidDate}
-                        </span>
-                      ) : (
-                        <span className={isOverdue ? "text-red-400" : ""}>
+                        </span> :
+
+                    <span className={isOverdue ? "text-red-400" : ""}>
                           应收日期: {term.dueDate || "-"}
                           {isOverdue && " (已逾期)"}
                         </span>
-                      )}
+                    }
                     </div>
-                  </div>
-                );
-              })}
+                  </div>);
+
+            })}
             </div>
           </div>
-        )}
+        }
 
         {/* Attachments */}
-        {contract.attachments.length > 0 && (
-          <div className="space-y-3">
+        {contract.attachments.length > 0 &&
+        <div className="space-y-3">
             <h3 className="text-sm font-medium text-slate-400">合同附件</h3>
             <div className="space-y-2">
-              {contract.attachments.map((file, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 bg-surface-50 rounded-lg"
-                >
+              {contract.attachments.map((file, index) =>
+            <div
+              key={index}
+              className="flex items-center justify-between p-3 bg-surface-50 rounded-lg">
+
                   <div className="flex items-center gap-2">
                     <Paperclip className="w-4 h-4 text-slate-400" />
                     <span className="text-sm text-white">{file}</span>
@@ -701,30 +701,30 @@ function ContractDetailPanel({ contract, onClose }) {
                     <Download className="w-4 h-4" />
                   </Button>
                 </div>
-              ))}
+            )}
             </div>
           </div>
-        )}
+        }
 
         {/* Notes */}
-        {contract.notes && (
-          <div className="space-y-2">
+        {contract.notes &&
+        <div className="space-y-2">
             <h3 className="text-sm font-medium text-slate-400">备注</h3>
             <p className="text-sm text-white bg-surface-50 p-3 rounded-lg">
               {contract.notes}
             </p>
           </div>
-        )}
+        }
 
         {/* Terminate Reason */}
-        {contract.terminateReason && (
-          <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+        {contract.terminateReason &&
+        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
             <div className="flex items-center gap-2 text-red-400 text-sm">
               <XCircle className="w-4 h-4" />
               终止原因: {contract.terminateReason}
             </div>
           </div>
-        )}
+        }
       </div>
 
       {/* Footer */}
@@ -732,13 +732,13 @@ function ContractDetailPanel({ contract, onClose }) {
         <Button variant="outline" className="flex-1" onClick={onClose}>
           关闭
         </Button>
-        {contract.status === "active" && (
-          <Button className="flex-1">
+        {contract.status === "active" &&
+        <Button className="flex-1">
             <Edit className="w-4 h-4 mr-2" />
             编辑
           </Button>
-        )}
+        }
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

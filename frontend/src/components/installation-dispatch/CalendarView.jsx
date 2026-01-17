@@ -19,23 +19,23 @@ import {
   Users,
   Clock,
   Plus,
-  Filter
-} from "lucide-react";
+  Filter } from
+"lucide-react";
 import { Button, Badge } from "../../components/ui";
 import { cn } from "../../lib/utils";
 import {
-  taskStatusConfigs,
-  priorityConfigs,
-  installationTypeConfigs,
-  formatDate,
-  isTaskOverdue
-} from "./installationDispatchConstants";
+  taskStatusConfigs as _taskStatusConfigs,
+  priorityConfigs as _priorityConfigs,
+  installationTypeConfigs as _installationTypeConfigs,
+  formatDate as _formatDate,
+  isTaskOverdue } from
+"./installationDispatchConstants";
 
 // View modes
 const VIEW_MODES = {
   month: { id: "month", label: "月" },
   week: { id: "week", label: "周" },
-  day: { id: "day", label: "日" },
+  day: { id: "day", label: "日" }
 };
 
 // Days of week
@@ -48,7 +48,7 @@ const statusConfig = {
   ON_HOLD: { icon: PauseCircle, color: "text-yellow-400", bg: "bg-yellow-500/20" },
   COMPLETED: { icon: CheckCircle2, color: "text-emerald-400", bg: "bg-emerald-500/20" },
   CANCELLED: { icon: Circle, color: "text-slate-400", bg: "bg-slate-500/20" },
-  DELAYED: { icon: AlertTriangle, color: "text-orange-400", bg: "bg-orange-500/20" },
+  DELAYED: { icon: AlertTriangle, color: "text-orange-400", bg: "bg-orange-500/20" }
 };
 
 // Priority colors
@@ -57,7 +57,7 @@ const priorityColors = {
   HIGH: "border-l-amber-400 bg-amber-500/20",
   MEDIUM: "border-l-blue-400 bg-blue-500/20",
   LOW: "border-l-green-400 bg-green-500/20",
-  NORMAL: "border-l-slate-400 bg-slate-500/20",
+  NORMAL: "border-l-slate-400 bg-slate-500/20"
 };
 
 // Helper: Get days in month
@@ -86,8 +86,8 @@ const isSameDay = (date1, date2) => {
   return (
     date1.getFullYear() === date2.getFullYear() &&
     date1.getMonth() === date2.getMonth() &&
-    date1.getDate() === date2.getDate()
-  );
+    date1.getDate() === date2.getDate());
+
 };
 
 // Helper: Check if date is in range
@@ -108,9 +108,9 @@ function TaskBlock({ task, onClick, isSelected, compact = false }) {
   const priorityClass = priorityColors[task.priority] || priorityColors.NORMAL;
   const isOverdue = isTaskOverdue(task.status, task.planned_end_date);
 
-  const displayTitle = compact
-    ? task.title
-    : `${task.project_name || "无项目"} · ${task.machine_name || "无设备"}`;
+  const _displayTitle = compact ?
+  task.title :
+  `${task.project_name || "无项目"} · ${task.machine_name || "无设备"}`;
 
   if (compact) {
     return (
@@ -124,12 +124,12 @@ function TaskBlock({ task, onClick, isSelected, compact = false }) {
           status.bg,
           priorityClass,
           isSelected && "ring-1 ring-primary",
-          isOverdue && "ring-1 ring-red-500",
-        )}
-      >
+          isOverdue && "ring-1 ring-red-500"
+        )}>
+
         <span className={cn("truncate", status.color)}>{task.title}</span>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -144,9 +144,9 @@ function TaskBlock({ task, onClick, isSelected, compact = false }) {
         status.bg,
         priorityClass,
         isSelected && "ring-2 ring-primary",
-        isOverdue && "ring-1 ring-red-500",
-      )}
-    >
+        isOverdue && "ring-1 ring-red-500"
+      )}>
+
       <div className="flex items-center gap-1.5 mb-1">
         <StatusIcon className={cn("w-3 h-3", status.color)} />
         <span className="text-xs text-white font-medium truncate">
@@ -163,22 +163,22 @@ function TaskBlock({ task, onClick, isSelected, compact = false }) {
           <Users className="w-2.5 h-2.5" />
           <span className="truncate">{task.assigned_engineer_name || "未分配"}</span>
         </div>
-        {task.estimated_duration && (
-          <div className="flex items-center gap-1">
+        {task.estimated_duration &&
+        <div className="flex items-center gap-1">
             <Clock className="w-2.5 h-2.5" />
             <span>{task.estimated_duration}小时</span>
           </div>
-        )}
+        }
       </div>
 
-      {isOverdue && (
-        <div className="flex items-center gap-1 mt-1 text-[10px] text-red-400">
+      {isOverdue &&
+      <div className="flex items-center gap-1 mt-1 text-[10px] text-red-400">
           <AlertTriangle className="w-2.5 h-2.5" />
           已逾期
         </div>
-      )}
-    </motion.div>
-  );
+      }
+    </motion.div>);
+
 }
 
 // Day Cell Component
@@ -190,7 +190,7 @@ function DayCell({
   onTaskClick,
   selectedTaskId,
   viewMode,
-  onDateClick,
+  onDateClick
 }) {
   const dayTasks = tasks.filter((task) => {
     const start = parseDate(task.start_date || task.scheduled_date);
@@ -213,7 +213,7 @@ function DayCell({
   );
 
   // Tasks with installation engineers available
-  const assignedTasks = dayTasks.filter(task => task.assigned_engineer_name);
+  const assignedTasks = dayTasks.filter((task) => task.assigned_engineer_name);
 
   const isWeekend = date.getDay() === 0 || date.getDay() === 6;
 
@@ -224,10 +224,10 @@ function DayCell({
         !isCurrentMonth && "bg-slate-800/20",
         isToday && "bg-primary/5 border-primary/30",
         isWeekend && isCurrentMonth && "bg-slate-800/20",
-        viewMode === "day" && "min-h-[400px]",
+        viewMode === "day" && "min-h-[400px]"
       )}
-      onClick={() => onDateClick && onDateClick(date)}
-    >
+      onClick={() => onDateClick && onDateClick(date)}>
+
       {/* Date Header */}
       <div className="flex items-center justify-between mb-1">
         <span
@@ -235,100 +235,100 @@ function DayCell({
             "text-sm font-medium px-1.5 py-0.5 rounded cursor-pointer",
             isToday && "bg-primary text-white",
             !isCurrentMonth && "text-slate-600",
-            isCurrentMonth && !isToday && "text-slate-300",
-          )}
-        >
+            isCurrentMonth && !isToday && "text-slate-300"
+          )}>
+
           {date.getDate()}
         </span>
 
         <div className="flex gap-1">
-          {dueTasks.length > 0 && (
-            <Badge
-              variant="outline"
-              className="text-[10px] text-red-400 border-red-500/30 bg-red-500/10"
-            >
+          {dueTasks.length > 0 &&
+          <Badge
+            variant="outline"
+            className="text-[10px] text-red-400 border-red-500/30 bg-red-500/10">
+
               {dueTasks.length}
             </Badge>
-          )}
-          {assignedTasks.length > 0 && startingTasks.length > 0 && (
-            <Badge
-              variant="outline"
-              className="text-[10px] text-green-400 border-green-500/30 bg-green-500/10"
-            >
+          }
+          {assignedTasks.length > 0 && startingTasks.length > 0 &&
+          <Badge
+            variant="outline"
+            className="text-[10px] text-green-400 border-green-500/30 bg-green-500/10">
+
               {assignedTasks.length}
             </Badge>
-          )}
+          }
         </div>
       </div>
 
       {/* Tasks */}
       <div className="space-y-1">
-        {viewMode === "month" ? (
-          // Compact view for month
-          <>
-            {startingTasks.slice(0, 3).map((task) => (
-              <TaskBlock
-                key={task.id}
-                task={task}
-                onClick={onTaskClick}
-                isSelected={selectedTaskId === task.id}
-                compact
-              />
-            ))}
-            {startingTasks.length > 3 && (
-              <div className="text-[10px] text-slate-500 text-center">
+        {viewMode === "month" ?
+        // Compact view for month
+        <>
+            {startingTasks.slice(0, 3).map((task) =>
+          <TaskBlock
+            key={task.id}
+            task={task}
+            onClick={onTaskClick}
+            isSelected={selectedTaskId === task.id}
+            compact />
+
+          )}
+            {startingTasks.length > 3 &&
+          <div className="text-[10px] text-slate-500 text-center">
                 +{startingTasks.length - 3} 更多
               </div>
-            )}
-          </>
-        ) : viewMode === "week" ? (
-          // Compact view for week
-          <>
-            {dayTasks.slice(0, 4).map((task) => (
-              <TaskBlock
-                key={task.id}
-                task={task}
-                onClick={onTaskClick}
-                isSelected={selectedTaskId === task.id}
-                compact
-              />
-            ))}
-            {dayTasks.length > 4 && (
-              <div className="text-[10px] text-slate-500 text-center">
+          }
+          </> :
+        viewMode === "week" ?
+        // Compact view for week
+        <>
+            {dayTasks.slice(0, 4).map((task) =>
+          <TaskBlock
+            key={task.id}
+            task={task}
+            onClick={onTaskClick}
+            isSelected={selectedTaskId === task.id}
+            compact />
+
+          )}
+            {dayTasks.length > 4 &&
+          <div className="text-[10px] text-slate-500 text-center">
                 +{dayTasks.length - 4} 更多
               </div>
-            )}
-          </>
-        ) : (
-          // Detailed view for day
-          dayTasks
-            .slice(0, 5)
-            .map((task) => (
-              <TaskBlock
-                key={task.id}
-                task={task}
-                onClick={onTaskClick}
-                isSelected={selectedTaskId === task.id}
-              />
-            ))
-        )}
-        {viewMode === "week" && dayTasks.length > 4 && (
-          <div className="text-[10px] text-slate-500 text-center">
+          }
+          </> :
+
+        // Detailed view for day
+        dayTasks.
+        slice(0, 5).
+        map((task) =>
+        <TaskBlock
+          key={task.id}
+          task={task}
+          onClick={onTaskClick}
+          isSelected={selectedTaskId === task.id} />
+
+        )
+        }
+        {viewMode === "week" && dayTasks.length > 4 &&
+        <div className="text-[10px] text-slate-500 text-center">
             +{dayTasks.length - 4} 更多
           </div>
-        )}
-        {viewMode === "day" && dayTasks.length > 5 && (
-          <div className="text-[10px] text-slate-500 text-center">
+        }
+        {viewMode === "day" && dayTasks.length > 5 &&
+        <div className="text-[10px] text-slate-500 text-center">
             +{dayTasks.length - 5} 更多
           </div>
-        )}
+        }
       </div>
-    </div>
-  );
+    </div>);
+
 }
 
 // Week View Component
-function WeekView({ currentDate, tasks, onTaskClick, selectedTaskId, onDateClick }) {
+function WeekView({ currentDate, tasks, onTaskClick, selectedTaskId: _selectedTaskId, onDateClick }) {
   const startOfWeek = new Date(currentDate);
   startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
 
@@ -350,11 +350,11 @@ function WeekView({ currentDate, tasks, onTaskClick, selectedTaskId, onDateClick
     <div className="space-y-3">
       {/* Day Headers */}
       <div className="grid grid-cols-7 gap-2">
-        {weekDays.map((date) => (
-          <div
-            key={formatDateKey(date)}
-            className="text-center p-2 bg-slate-800/50 rounded-lg"
-          >
+        {weekDays.map((date) =>
+        <div
+          key={formatDateKey(date)}
+          className="text-center p-2 bg-slate-800/50 rounded-lg">
+
             <div className="text-sm font-medium text-slate-400">
               {date.getMonth() + 1}/{date.getDate()}
             </div>
@@ -362,7 +362,7 @@ function WeekView({ currentDate, tasks, onTaskClick, selectedTaskId, onDateClick
               {DAYS_OF_WEEK[date.getDay()]}
             </div>
           </div>
-        ))}
+        )}
       </div>
 
       {/* Time Slots */}
@@ -377,42 +377,42 @@ function WeekView({ currentDate, tasks, onTaskClick, selectedTaskId, onDateClick
                   const taskDate = parseDate(task.scheduled_date);
                   return (
                     isSameDay(taskDate, date) &&
-                    task.scheduled_time === `${timeSlot}:00`
-                  );
+                    task.scheduled_time === `${timeSlot}:00`);
+
                 });
 
                 return (
                   <div
                     key={`${formatDateKey(date)}-${timeSlot}`}
                     className="h-20 bg-slate-800/20 rounded border border-slate-700/30 relative"
-                    onClick={() => onDateClick && onDateClick(date)}
-                  >
-                    {hourTasks.slice(0, 1).map((task) => (
-                      <div
-                        key={task.id}
-                        className="p-1 text-xs bg-blue-500/50 rounded cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onTaskClick(task);
-                        }}
-                      >
+                    onClick={() => onDateClick && onDateClick(date)}>
+
+                    {hourTasks.slice(0, 1).map((task) =>
+                    <div
+                      key={task.id}
+                      className="p-1 text-xs bg-blue-500/50 rounded cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onTaskClick(task);
+                      }}>
+
                         {task.title}
                       </div>
-                    ))}
-                    {hourTasks.length > 1 && (
-                      <div className="absolute bottom-1 right-1 text-[10px] text-slate-500">
+                    )}
+                    {hourTasks.length > 1 &&
+                    <div className="absolute bottom-1 right-1 text-[10px] text-slate-500">
                         +{hourTasks.length - 1}
                       </div>
-                    )}
-                  </div>
-                );
+                    }
+                  </div>);
+
               })}
-            </div>
-          );
+            </div>);
+
         })}
       </div>
-    </div>
-  );
+    </div>);
+
 }
 
 // Main CalendarView Component
@@ -421,9 +421,9 @@ export default function CalendarView({
   onTaskSelect,
   selectedTaskId,
   onDateSelect,
-  selectedDate,
+  selectedDate: _selectedDate,
   onViewModeChange,
-  initialViewMode = "month",
+  initialViewMode = "month"
 }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState(initialViewMode);
@@ -443,7 +443,7 @@ export default function CalendarView({
       for (let i = firstDay - 1; i >= 0; i--) {
         days.push({
           date: new Date(year, month - 1, prevMonthDays - i),
-          isCurrentMonth: false,
+          isCurrentMonth: false
         });
       }
 
@@ -451,7 +451,7 @@ export default function CalendarView({
       for (let i = 1; i <= daysInMonth; i++) {
         days.push({
           date: new Date(year, month, i),
-          isCurrentMonth: true,
+          isCurrentMonth: true
         });
       }
 
@@ -460,7 +460,7 @@ export default function CalendarView({
       for (let i = 1; i <= remainingDays; i++) {
         days.push({
           date: new Date(year, month + 1, i),
-          isCurrentMonth: false,
+          isCurrentMonth: false
         });
       }
 
@@ -474,17 +474,17 @@ export default function CalendarView({
         date.setDate(startOfWeek.getDate() + i);
         return {
           date,
-          isCurrentMonth: date.getMonth() === month,
+          isCurrentMonth: date.getMonth() === month
         };
       });
     } else {
       // Day view
       return [
-        {
-          date: currentDate,
-          isCurrentMonth: true,
-        }
-      ];
+      {
+        date: currentDate,
+        isCurrentMonth: true
+      }];
+
     }
   }, [year, month, currentDate, viewMode]);
 
@@ -546,21 +546,21 @@ export default function CalendarView({
         <div className="flex items-center gap-4">
           {/* View Mode Toggle */}
           <div className="flex items-center gap-1 p-1 bg-surface-2 rounded-lg">
-            {Object.values(VIEW_MODES).map((mode) => (
-              <Button
-                key={mode.id}
-                variant={viewMode === mode.id ? "default" : "ghost"}
-                size="sm"
-                onClick={() => {
-                  setViewMode(mode.id);
-                  if (onViewModeChange) {
-                    onViewModeChange(mode.id);
-                  }
-                }}
-              >
+            {Object.values(VIEW_MODES).map((mode) =>
+            <Button
+              key={mode.id}
+              variant={viewMode === mode.id ? "default" : "ghost"}
+              size="sm"
+              onClick={() => {
+                setViewMode(mode.id);
+                if (onViewModeChange) {
+                  onViewModeChange(mode.id);
+                }
+              }}>
+
                 {mode.label}
               </Button>
-            ))}
+            )}
           </div>
 
           {/* Navigation */}
@@ -582,72 +582,72 @@ export default function CalendarView({
             <Calendar className="w-4 h-4 mr-1" />
             今天
           </Button>
-          {viewMode !== "month" && (
-            <Button size="sm" onClick={() => setViewMode("month")}>
+          {viewMode !== "month" &&
+          <Button size="sm" onClick={() => setViewMode("month")}>
               <Plus className="w-4 h-4 mr-1" />
               新建任务
             </Button>
-          )}
+          }
         </div>
       </div>
 
       {/* Days of Week Header (Month/Week view) */}
-      {viewMode !== "day" && (
-        <div className="grid grid-cols-7 bg-surface-2/30">
-          {DAYS_OF_WEEK.map((day, index) => (
-            <div
-              key={day}
-              className={cn(
-                "text-center py-2 text-sm font-medium border-b border-border/30",
-                index === 0 || index === 6 ? "text-slate-500" : "text-slate-400",
-              )}
-            >
+      {viewMode !== "day" &&
+      <div className="grid grid-cols-7 bg-surface-2/30">
+          {DAYS_OF_WEEK.map((day, index) =>
+        <div
+          key={day}
+          className={cn(
+            "text-center py-2 text-sm font-medium border-b border-border/30",
+            index === 0 || index === 6 ? "text-slate-500" : "text-slate-400"
+          )}>
+
               {day}
             </div>
-          ))}
+        )}
         </div>
-      )}
+      }
 
       {/* Calendar Grid */}
-      {viewMode === "week" ? (
-        <WeekView
-          currentDate={currentDate}
-          tasks={tasks}
-          onTaskClick={onTaskSelect}
-          selectedTaskId={selectedTaskId}
-          onDateClick={onDateSelect}
-        />
-      ) : (
-        <div
-          className={cn(
-            "grid grid-cols-7",
-            viewMode === "day" ? "min-h-[400px]" : "",
-          )}
-        >
+      {viewMode === "week" ?
+      <WeekView
+        currentDate={currentDate}
+        tasks={tasks}
+        onTaskClick={onTaskSelect}
+        selectedTaskId={selectedTaskId}
+        onDateClick={onDateSelect} /> :
+
+
+      <div
+        className={cn(
+          "grid grid-cols-7",
+          viewMode === "day" ? "min-h-[400px]" : ""
+        )}>
+
           <AnimatePresence mode="wait">
-            {calendarDays.map((day) => (
-              <motion.div
-                key={formatDateKey(day.date)}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.1 }}
-              >
+            {calendarDays.map((day) =>
+          <motion.div
+            key={formatDateKey(day.date)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.1 }}>
+
                 <DayCell
-                  date={day.date}
-                  tasks={tasks}
-                  isCurrentMonth={day.isCurrentMonth}
-                  isToday={isSameDay(day.date, today)}
-                  onTaskClick={onTaskSelect}
-                  selectedTaskId={selectedTaskId}
-                  viewMode={viewMode}
-                  onDateClick={onDateSelect}
-                />
+              date={day.date}
+              tasks={tasks}
+              isCurrentMonth={day.isCurrentMonth}
+              isToday={isSameDay(day.date, today)}
+              onTaskClick={onTaskSelect}
+              selectedTaskId={selectedTaskId}
+              viewMode={viewMode}
+              onDateClick={onDateSelect} />
+
               </motion.div>
-            ))}
+          )}
           </AnimatePresence>
         </div>
-      )}
+      }
 
       {/* Legend */}
       <div className="flex items-center gap-6 p-3 border-t border-border bg-surface-2/30 text-xs text-slate-400">
@@ -670,8 +670,8 @@ export default function CalendarView({
         <div className="flex items-center gap-2">
           <Badge
             variant="outline"
-            className="text-[10px] text-red-400 border-red-500/30 bg-red-500/10"
-          >
+            className="text-[10px] text-red-400 border-red-500/30 bg-red-500/10">
+
             逾期
           </Badge>
           <span>逾期任务</span>
@@ -679,13 +679,13 @@ export default function CalendarView({
         <div className="flex items-center gap-2">
           <Badge
             variant="outline"
-            className="text-[10px] text-green-400 border-green-500/30 bg-green-500/10"
-          >
+            className="text-[10px] text-green-400 border-green-500/30 bg-green-500/10">
+
             已分配
           </Badge>
           <span>有工程师</span>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }

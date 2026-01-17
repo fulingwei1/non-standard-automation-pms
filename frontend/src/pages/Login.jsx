@@ -1,9 +1,9 @@
-import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { cn } from '../lib/utils'
-import { authApi } from '../services/api'
-import { diagnoseLogin } from '../utils/diagnose'
-import { logger } from '../utils/logger'
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { cn } from '../lib/utils';
+import { authApi } from '../services/api';
+import { diagnoseLogin } from '../utils/diagnose';
+import { logger } from '../utils/logger';
 import {
   User,
   Lock,
@@ -39,74 +39,74 @@ import {
   Shield,
   Award,
   DollarSign,
-  UserCircle,
-} from 'lucide-react'
+  UserCircle } from
+'lucide-react';
 
 const features = [
-  {
-    icon: BarChart3,
-    title: "实时进度追踪",
-    desc: "甘特图、看板多视图",
-  },
-  {
-    icon: Clock,
-    title: "智能工时管理",
-    desc: "自动统计、负荷预警",
-  },
-  {
-    icon: Users,
-    title: "团队高效协作",
-    desc: "任务分配、实时同步",
-  },
-  {
-    icon: AlertTriangle,
-    title: "AI 智能预警",
-    desc: "风险识别、提前预警",
-  },
-]
+{
+  icon: BarChart3,
+  title: "实时进度追踪",
+  desc: "甘特图、看板多视图"
+},
+{
+  icon: Clock,
+  title: "智能工时管理",
+  desc: "自动统计、负荷预警"
+},
+{
+  icon: Users,
+  title: "团队高效协作",
+  desc: "任务分配、实时同步"
+},
+{
+  icon: AlertTriangle,
+  title: "AI 智能预警",
+  desc: "风险识别、提前预警"
+}];
 
-export default function Login({ onLoginSuccess }) {
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [rememberMe, setRememberMe] = useState(true)
-  const [error, setError] = useState("")
-  const [loading, setLoading] = useState(false)
+
+export default function Login({ onLoginSuccess }) {const _errorCode_1 = null;
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError("")
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
     try {
-      const formData = new URLSearchParams()
-      formData.append("username", username)
-      formData.append("password", password)
+      const formData = new URLSearchParams();
+      formData.append("username", username);
+      formData.append("password", password);
 
       // 纯真实 API 登录
-      const response = await authApi.login(formData)
+      const response = await authApi.login(formData);
 
       // 处理响应数据
       const token =
-        response.data?.access_token ||
-        response.data?.data?.access_token ||
-        response.access_token
+      response.data?.access_token ||
+      response.data?.data?.access_token ||
+      response.access_token;
 
       if (!token) {
-        logger.error("登录响应格式错误:", response)
-        throw new Error("服务器返回格式错误，请检查后端服务")
+        logger.error("登录响应格式错误:", response);
+        throw new Error("服务器返回格式错误，请检查后端服务");
       }
 
       // 清理之前的用户信息
-      localStorage.removeItem("user")
+      localStorage.removeItem("user");
 
       // 保存 token
-      localStorage.setItem("token", token)
+      localStorage.setItem("token", token);
 
       // 获取用户信息
       try {
-        const userResponse = await authApi.me()
-        const userData = userResponse.data
+        const userResponse = await authApi.me();
+        const userData = userResponse.data;
 
         if (userData) {
           // 将后端返回的用户数据转换为前端需要的格式
@@ -116,19 +116,19 @@ export default function Login({ onLoginSuccess }) {
             logger.debug(
               "[Login] 用户权限列表:",
               userData.permissions.length,
-              "个权限",
-            )
+              "个权限"
+            );
           } else {
             // 如果没有权限列表，初始化为空数组
-            userData.permissions = []
+            userData.permissions = [];
           }
 
           // 确定用户角色
-          let userRole = "user"
+          let userRole = "user";
 
           // 优先从角色名称中提取角色代码
           if (userData.roles && userData.roles.length > 0) {
-            const roleName = userData.roles[0]
+            const roleName = userData.roles[0];
             // 尝试匹配角色代码（支持中英文和常见变体）
             const roleMap = {
               "系统管理员": "admin",
@@ -163,42 +163,42 @@ export default function Login({ onLoginSuccess }) {
               PROCUREMENT_ENGINEER: "procurement_engineer",
               采购员: "buyer",
               Buyer: "buyer",
-              BUYER: "buyer",
-            }
+              BUYER: "buyer"
+            };
 
             // 先尝试精确匹配
             userRole =
-              roleMap[roleName] ||
-              // 尝试忽略大小写匹配
-              Object.keys(roleMap).find(
-                (key) => key.toLowerCase() === roleName.toLowerCase()
-              ) ||
-              // 智能匹配：如果角色名称包含特定关键词，映射到对应角色
-              (roleName.includes("总经理") ||
-                roleName.includes("GeneralManager") ||
-                roleName === "GM"
-                  ? "gm"
-                  : roleName.includes("生产") && !roleName.includes("制造")
-                    ? "production_manager"
-                    : roleName.includes("制造") && roleName.includes("总监")
-                      ? "manufacturing_director"
-                      : roleName.includes("采购") &&
-                          (roleName.includes("经理") ||
-                            roleName.includes("Manager"))
-                        ? "procurement_manager"
-                        : roleName.includes("采购") &&
-                            (roleName.includes("工程师") || roleName.includes("Engineer"))
-                          ? "procurement_engineer"
-                          : roleName.includes("采购") && roleName.includes("员")
-                            ? "buyer"
-                            : // 最后转换为下划线格式
-                              roleName
-                                .toLowerCase()
-                                .replace(/\s+/g, "_")
-                                .replace(/-/g, "_"))
+            roleMap[roleName] ||
+            // 尝试忽略大小写匹配
+            Object.keys(roleMap).find(
+              (key) => key.toLowerCase() === roleName.toLowerCase()
+            ) || (
+            // 智能匹配：如果角色名称包含特定关键词，映射到对应角色
+            roleName.includes("总经理") ||
+            roleName.includes("GeneralManager") ||
+            roleName === "GM" ?
+            "gm" :
+            roleName.includes("生产") && !roleName.includes("制造") ?
+            "production_manager" :
+            roleName.includes("制造") && roleName.includes("总监") ?
+            "manufacturing_director" :
+            roleName.includes("采购") && (
+            roleName.includes("经理") ||
+            roleName.includes("Manager")) ?
+            "procurement_manager" :
+            roleName.includes("采购") && (
+            roleName.includes("工程师") || roleName.includes("Engineer")) ?
+            "procurement_engineer" :
+            roleName.includes("采购") && roleName.includes("员") ?
+            "buyer" :
+            // 最后转换为下划线格式
+            roleName.
+            toLowerCase().
+            replace(/\s+/g, "_").
+            replace(/-/g, "_"));
           } else if (userData.is_superuser) {
             // 如果没有角色信息但 is_superuser 为 true，默认使用 super_admin
-            userRole = "super_admin"
+            userRole = "super_admin";
           }
 
           const frontendUser = {
@@ -214,20 +214,20 @@ export default function Login({ onLoginSuccess }) {
             is_active: userData.is_active,
             roles: userData.roles || [],
             role: userRole,
-            permissions: userData.permissions || [], // 保存权限列表
-          }
+            permissions: userData.permissions || [] // 保存权限列表
+          };
 
-          localStorage.setItem("user", JSON.stringify(frontendUser))
+          localStorage.setItem("user", JSON.stringify(frontendUser));
           logger.debug(
             "[Login] 用户权限已保存:",
             frontendUser.permissions.length,
-            "个权限",
-          )
-          onLoginSuccess()
-          return
+            "个权限"
+          );
+          onLoginSuccess();
+          return;
         }
       } catch (userErr) {
-        logger.warn("获取用户信息失败，使用备用信息:", userErr)
+        logger.warn("获取用户信息失败，使用备用信息:", userErr);
         // 如果获取用户信息失败，创建基本用户信息（默认为管理员）
         const fallbackUser = {
           id: 1,
@@ -237,74 +237,100 @@ export default function Login({ onLoginSuccess }) {
           is_superuser: true,
           isSuperuser: true,
           department: "系统",
-          roles: ["系统管理员"],
-        }
+          roles: ["系统管理员"]
+        };
 
-        localStorage.setItem("user", JSON.stringify(fallbackUser))
-        onLoginSuccess()
-        return
+        localStorage.setItem("user", JSON.stringify(fallbackUser));
+        onLoginSuccess();
+        return;
       }
 
-      onLoginSuccess()
+      onLoginSuccess();
     } catch (err) {
-      logger.error("登录错误:", err)
+      logger.error("登录错误:", err);
 
       // 更详细的错误信息
-      let errorMessage = "登录失败，请检查用户名和密码"
-      let errorCode = ""
+      let errorMessage = "登录失败，请检查用户名和密码";
+      let _errorCode_1 = "";
 
       if (err.code === "ECONNABORTED" || err.message?.includes("timeout")) {
         // 超时错误
-        errorMessage = "登录请求超时，请检查网络连接或稍后重试"
+        errorMessage = "登录请求超时，请检查网络连接或稍后重试";
       } else if (err.response) {
         // 服务器返回了错误响应
-        const detail = err.response.data?.detail
+        const detail = err.response.data?.detail;
+        const status = err.response.status;
+        const rawData = err.response.data;
+        const contentType =
+        err.response.headers?.["content-type"] ||
+        err.response.headers?.["Content-Type"];
+
+        // Vite 代理错误/后端不可达时，常见是 500 且返回文本包含 ECONNREFUSED 等关键字
+        if (
+        status === 500 && (
+        typeof rawData === "string" && (
+        rawData.includes("ECONNREFUSED") ||
+        rawData.includes("proxy") ||
+        rawData.includes("connect") ||
+        rawData.includes("127.0.0.1:8000")) ||
+        typeof contentType === "string" && (
+        contentType.includes("text/html") ||
+        contentType.includes("text/plain"))))
+        {
+          errorMessage =
+          "无法连接到后端服务（127.0.0.1:8000），请确认后端已启动（运行 ./start.sh）";
+          setError(errorMessage);
+          return;
+        }
 
         // 检查是否是新的错误响应格式（包含 error_code 和 message）
         if (detail && typeof detail === "object" && detail.error_code) {
-          errorCode = detail.error_code
-          errorMessage = detail.message
+          const _errorCode = detail.error_code;
+          errorMessage = detail.message;
 
           // 根据错误码添加额外提示
-          switch (detail.error_code) {
+          switch (_errorCode) {
             case "USER_NOT_FOUND":
               // 账号不存在
-              errorMessage = "该员工尚未开通系统账号，请联系管理员"
-              break
+              errorMessage = "该员工尚未开通系统账号，请联系管理员";
+              break;
             case "USER_INACTIVE":
               // 账号未激活
-              errorMessage = "账号待激活，请联系管理员开通系统访问权限"
-              break
+              errorMessage = "账号待激活，请联系管理员开通系统访问权限";
+              break;
             case "USER_DISABLED":
               // 账号已禁用
-              errorMessage = "账号已被禁用，如有疑问请联系管理员"
-              break
+              errorMessage = "账号已被禁用，如有疑问请联系管理员";
+              break;
             case "WRONG_PASSWORD":
               // 密码错误
-              errorMessage = "密码错误，忘记密码请联系管理员重置"
-              break
+              errorMessage = "密码错误，忘记密码请联系管理员重置";
+              break;
             default:
-              errorMessage = detail.message || errorMessage
-              break
+              errorMessage = detail.message || errorMessage;
+              break;
           }
         } else if (typeof detail === "string") {
-          errorMessage = detail
+          errorMessage = detail;
         } else if (err.response.data?.message) {
-          errorMessage = err.response.data.message || errorMessage
+          errorMessage = err.response.data.message || errorMessage;
+        } else if (status === 500) {
+          errorMessage =
+          "后端服务发生内部错误(500)。请查看后端日志 logs/backend.log 获取具体报错";
         }
       } else if (err.request) {
         // 请求已发出但没有收到响应
-        errorMessage = "无法连接到服务器，请检查后端服务是否启动"
+        errorMessage = "无法连接到服务器，请检查后端服务是否启动";
       } else {
         // 其他错误
-        errorMessage = err.message || errorMessage
+        errorMessage = err.message || errorMessage;
       }
 
-      setError(errorMessage)
+      setError(errorMessage);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex relative overflow-hidden">
@@ -323,25 +349,25 @@ export default function Login({ onLoginSuccess }) {
             `,
             backgroundSize: "60px 60px",
             maskImage: "radial-gradient(ellipse at center, black 0%, transparent 70%)"
-          }}
-        />
+          }} />
+
 
         {/* Animated glow orbs */}
         <motion.div
           animate={{ y: [0, -20, 0], scale: [1, 1.05, 1] }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -top-32 -left-16 w-[500px] h-[500px] rounded-full bg-violet-600/20 blur-[100px]"
-        />
+          className="absolute -top-32 -left-16 w-[500px] h-[500px] rounded-full bg-violet-600/20 blur-[100px]" />
+
         <motion.div
           animate={{ y: [0, 20, 0], scale: [1, 1.05, 1] }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          className="absolute -bottom-32 -right-16 w-[400px] h-[400px] rounded-full bg-indigo-600/15 blur-[80px]"
-        />
+          className="absolute -bottom-32 -right-16 w-[400px] h-[400px] rounded-full bg-indigo-600/15 blur-[80px]" />
+
         <motion.div
           animate={{ y: [0, -10, 0], scale: [1, 1.05, 1] }}
           transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 4 }}
-          className="absolute top-[10%] left-[5%] w-[300px] h-[300px] rounded-full border border-white/5"
-        />
+          className="absolute top-[10%] left-[5%] w-[300px] h-[300px] rounded-full border border-white/5" />
+
       </div>
 
       {/* Main Content */}
@@ -351,8 +377,8 @@ export default function Login({ onLoginSuccess }) {
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
+            transition={{ duration: 0.8, delay: 0.2 }}>
+
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/10 mb-8">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -373,14 +399,14 @@ export default function Login({ onLoginSuccess }) {
 
             {/* Features */}
             <div className="space-y-5">
-              {features.map((feature, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: 0.4 + i * 0.1 }}
-                  className="flex items-start gap-4"
-                >
+              {features.map((feature, i) =>
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 + i * 0.1 }}
+                className="flex items-start gap-4">
+
                   <div className="p-3 rounded-xl bg-primary/15 border border-primary/25">
                     <feature.icon className="h-5 w-5 text-primary" />
                   </div>
@@ -389,15 +415,15 @@ export default function Login({ onLoginSuccess }) {
                     <p className="text-sm text-slate-500">{feature.desc}</p>
                   </div>
                 </motion.div>
-              ))}
+              )}
             </div>
 
             {/* Stats */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.8 }}
-            >
+              transition={{ duration: 0.6, delay: 0.8 }}>
+
               <p className="text-sm text-slate-500">
                 受到 <span className="text-white font-medium">200+</span> {" "}
                 家企业的信赖
@@ -412,8 +438,8 @@ export default function Login({ onLoginSuccess }) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="w-full max-w-md"
-          >
+            className="w-full max-w-md">
+
             {/* Form Header */}
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -447,8 +473,8 @@ export default function Login({ onLoginSuccess }) {
                       "hover:bg-gray-100",
                       "focus:bg-white focus:border-primary focus:outline-none",
                       "focus:ring-4 focus:ring-primary/10"
-                    )}
-                  />
+                    )} />
+
                 </div>
               </div>
 
@@ -475,13 +501,13 @@ export default function Login({ onLoginSuccess }) {
                       "hover:bg-gray-100",
                       "focus:bg-white focus:border-primary focus:outline-none",
                       "focus:ring-4 focus:ring-primary/10"
-                    )}
-                  />
+                    )} />
+
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
-                  >
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 rounded-lg transition-colors">
+
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
@@ -494,19 +520,19 @@ export default function Login({ onLoginSuccess }) {
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="sr-only"
-                  />
+                    className="sr-only" />
+
                   <div className={cn(
                     "w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all",
-                    rememberMe
-                      ? "bg-primary border-primary"
-                      : "border-gray-300"
+                    rememberMe ?
+                    "bg-primary border-primary" :
+                    "border-gray-300"
                   )}>
-                    {rememberMe && (
-                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24">
+                    {rememberMe &&
+                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                       </svg>
-                    )}
+                    }
                   </div>
                   <span className="text-sm text-gray-600">记住登录状态</span>
                 </label>
@@ -516,25 +542,25 @@ export default function Login({ onLoginSuccess }) {
               </div>
 
               {/* Error */}
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-sm text-red-500 text-center space-y-2"
-                >
+              {error &&
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-sm text-red-500 text-center space-y-2">
+
                   <p>{error}</p>
                   <button
-                    type="button"
-                    onClick={() => {
-                      diagnoseLogin()
-                      alert("请查看浏览器控制台（F12）查看详细诊断信息")
-                    }}
-                    className="text-xs text-blue-500 hover:text-blue-700 underline"
-                  >
+                  type="button"
+                  onClick={() => {
+                    diagnoseLogin();
+                    alert("请查看浏览器控制台（F12）查看详细诊断信息");
+                  }}
+                  className="text-xs text-blue-500 hover:text-blue-700 underline">
+
                     点击运行诊断工具
                   </button>
                 </motion.div>
-              )}
+              }
 
               {/* Submit */}
               <motion.button
@@ -551,19 +577,19 @@ export default function Login({ onLoginSuccess }) {
                   "active:scale-[0.98]",
                   "transition-all duration-200",
                   "disabled:opacity-70 disabled:cursor-not-allowed"
-                )}
-              >
-                {loading ? (
-                  <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                )}>
+
+                {loading ?
+                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                ) : (
-                  <>
+                  </svg> :
+
+                <>
                     <span>登录</span>
                     <ArrowRight className="h-5 w-5" />
                   </>
-                )}
+                }
               </motion.button>
             </form>
 
@@ -586,8 +612,8 @@ export default function Login({ onLoginSuccess }) {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
-                    setUsername('zhengrucai')
-                    setPassword('123456')
+                    setUsername('zhengrucai');
+                    setPassword('123456');
                   }}
                   className={cn(
                     "flex items-center gap-1.5 p-2.5 rounded-lg",
@@ -595,8 +621,8 @@ export default function Login({ onLoginSuccess }) {
                     "border border-emerald-200 hover:border-emerald-300",
                     "transition-all duration-200",
                     "group text-xs"
-                  )}
-                >
+                  )}>
+
                   <div className="p-1.5 rounded-lg bg-emerald-100 group-hover:bg-emerald-200 transition-colors flex-shrink-0">
                     <Award className="h-3.5 w-3.5 text-emerald-600" />
                   </div>
@@ -612,8 +638,8 @@ export default function Login({ onLoginSuccess }) {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
-                    setUsername('luoyixing')
-                    setPassword('123456')
+                    setUsername('luoyixing');
+                    setPassword('123456');
                   }}
                   className={cn(
                     "flex items-center gap-1.5 p-2.5 rounded-lg",
@@ -621,8 +647,8 @@ export default function Login({ onLoginSuccess }) {
                     "border border-cyan-200 hover:border-cyan-300",
                     "transition-all duration-200",
                     "group text-xs"
-                  )}
-                >
+                  )}>
+
                   <div className="p-1.5 rounded-lg bg-cyan-100 group-hover:bg-cyan-200 transition-colors flex-shrink-0">
                     <Settings className="h-3.5 w-3.5 text-cyan-600" />
                   </div>
@@ -638,8 +664,8 @@ export default function Login({ onLoginSuccess }) {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
-                    setUsername('songkui')
-                    setPassword('123456')
+                    setUsername('songkui');
+                    setPassword('123456');
                   }}
                   className={cn(
                     "flex items-center gap-1.5 p-2.5 rounded-lg",
@@ -647,8 +673,8 @@ export default function Login({ onLoginSuccess }) {
                     "border border-rose-200 hover:border-rose-300",
                     "transition-all duration-200",
                     "group text-xs"
-                  )}
-                >
+                  )}>
+
                   <div className="p-1.5 rounded-lg bg-rose-100 group-hover:bg-rose-200 transition-colors flex-shrink-0">
                     <TrendingUp className="h-3.5 w-3.5 text-rose-600" />
                   </div>
@@ -664,8 +690,8 @@ export default function Login({ onLoginSuccess }) {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
-                    setUsername('zhengqin')
-                    setPassword('123456')
+                    setUsername('zhengqin');
+                    setPassword('123456');
                   }}
                   className={cn(
                     "flex items-center gap-1.5 p-2.5 rounded-lg",
@@ -673,8 +699,8 @@ export default function Login({ onLoginSuccess }) {
                     "border border-teal-200 hover:border-teal-300",
                     "transition-all duration-200",
                     "group text-xs"
-                  )}
-                >
+                  )}>
+
                   <div className="p-1.5 rounded-lg bg-teal-100 group-hover:bg-teal-200 transition-colors flex-shrink-0">
                     <DollarSign className="h-3.5 w-3.5 text-teal-600" />
                   </div>
@@ -690,8 +716,8 @@ export default function Login({ onLoginSuccess }) {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
-                    setUsername('yaohong')
-                    setPassword('123456')
+                    setUsername('yaohong');
+                    setPassword('123456');
                   }}
                   className={cn(
                     "flex items-center gap-1.5 p-2.5 rounded-lg",
@@ -699,8 +725,8 @@ export default function Login({ onLoginSuccess }) {
                     "border border-pink-200 hover:border-pink-300",
                     "transition-all duration-200",
                     "group text-xs"
-                  )}
-                >
+                  )}>
+
                   <div className="p-1.5 rounded-lg bg-pink-100 group-hover:bg-pink-200 transition-colors flex-shrink-0">
                     <Briefcase className="h-3.5 w-3.5 text-pink-600" />
                   </div>
@@ -716,8 +742,8 @@ export default function Login({ onLoginSuccess }) {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
-                    setUsername('changxiong')
-                    setPassword('123456')
+                    setUsername('changxiong');
+                    setPassword('123456');
                   }}
                   className={cn(
                     "flex items-center gap-1.5 p-2.5 rounded-lg",
@@ -725,8 +751,8 @@ export default function Login({ onLoginSuccess }) {
                     "border border-green-200 hover:border-green-300",
                     "transition-all duration-200",
                     "group text-xs"
-                  )}
-                >
+                  )}>
+
                   <div className="p-1.5 rounded-lg bg-green-100 group-hover:bg-green-200 transition-colors flex-shrink-0">
                     <ShoppingCart className="h-3.5 w-3.5 text-green-600" />
                   </div>
@@ -742,8 +768,8 @@ export default function Login({ onLoginSuccess }) {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
-                    setUsername('gaoyong')
-                    setPassword('123456')
+                    setUsername('gaoyong');
+                    setPassword('123456');
                   }}
                   className={cn(
                     "flex items-center gap-1.5 p-2.5 rounded-lg",
@@ -751,8 +777,8 @@ export default function Login({ onLoginSuccess }) {
                     "border border-amber-200 hover:border-amber-300",
                     "transition-all duration-200",
                     "group text-xs"
-                  )}
-                >
+                  )}>
+
                   <div className="p-1.5 rounded-lg bg-amber-100 group-hover:bg-amber-200 transition-colors flex-shrink-0">
                     <Hammer className="h-3.5 w-3.5 text-amber-600" />
                   </div>
@@ -768,8 +794,8 @@ export default function Login({ onLoginSuccess }) {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
-                    setUsername('chenliang')
-                    setPassword('123456')
+                    setUsername('chenliang');
+                    setPassword('123456');
                   }}
                   className={cn(
                     "flex items-center gap-1.5 p-2.5 rounded-lg",
@@ -777,8 +803,8 @@ export default function Login({ onLoginSuccess }) {
                     "border border-indigo-200 hover:border-indigo-300",
                     "transition-all duration-200",
                     "group text-xs"
-                  )}
-                >
+                  )}>
+
                   <div className="p-1.5 rounded-lg bg-indigo-100 group-hover:bg-indigo-200 transition-colors flex-shrink-0">
                     <Target className="h-3.5 w-3.5 text-indigo-600" />
                   </div>
@@ -794,8 +820,8 @@ export default function Login({ onLoginSuccess }) {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
-                    setUsername('tanzhangbin')
-                    setPassword('123456')
+                    setUsername('tanzhangbin');
+                    setPassword('123456');
                   }}
                   className={cn(
                     "flex items-center gap-1.5 p-2.5 rounded-lg",
@@ -803,8 +829,8 @@ export default function Login({ onLoginSuccess }) {
                     "border border-blue-200 hover:border-blue-300",
                     "transition-all duration-200",
                     "group text-xs"
-                  )}
-                >
+                  )}>
+
                   <div className="p-1.5 rounded-lg bg-blue-100 group-hover:bg-blue-200 transition-colors flex-shrink-0">
                     <GitBranch className="h-3.5 w-3.5 text-blue-600" />
                   </div>
@@ -820,8 +846,8 @@ export default function Login({ onLoginSuccess }) {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
-                    setUsername('yuzhenhua')
-                    setPassword('123456')
+                    setUsername('yuzhenhua');
+                    setPassword('123456');
                   }}
                   className={cn(
                     "flex items-center gap-1.5 p-2.5 rounded-lg",
@@ -829,8 +855,8 @@ export default function Login({ onLoginSuccess }) {
                     "border border-slate-200 hover:border-slate-300",
                     "transition-all duration-200",
                     "group text-xs"
-                  )}
-                >
+                  )}>
+
                   <div className="p-1.5 rounded-lg bg-slate-100 group-hover:bg-slate-200 transition-colors flex-shrink-0">
                     <UserCog className="h-3.5 w-3.5 text-slate-600" />
                   </div>
@@ -846,8 +872,8 @@ export default function Login({ onLoginSuccess }) {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
-                    setUsername('wangjun')
-                    setPassword('123456')
+                    setUsername('wangjun');
+                    setPassword('123456');
                   }}
                   className={cn(
                     "flex items-center gap-1.5 p-2.5 rounded-lg",
@@ -855,8 +881,8 @@ export default function Login({ onLoginSuccess }) {
                     "border border-violet-200 hover:border-violet-300",
                     "transition-all duration-200",
                     "group text-xs"
-                  )}
-                >
+                  )}>
+
                   <div className="p-1.5 rounded-lg bg-violet-100 group-hover:bg-violet-200 transition-colors flex-shrink-0">
                     <UserCircle className="h-3.5 w-3.5 text-violet-600" />
                   </div>
@@ -872,8 +898,8 @@ export default function Login({ onLoginSuccess }) {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
-                    setUsername('wangzhihong')
-                    setPassword('123456')
+                    setUsername('wangzhihong');
+                    setPassword('123456');
                   }}
                   className={cn(
                     "flex items-center gap-1.5 p-2.5 rounded-lg",
@@ -881,8 +907,8 @@ export default function Login({ onLoginSuccess }) {
                     "border border-teal-200 hover:border-teal-300",
                     "transition-all duration-200",
                     "group text-xs"
-                  )}
-                >
+                  )}>
+
                   <div className="p-1.5 rounded-lg bg-teal-100 group-hover:bg-teal-200 transition-colors flex-shrink-0">
                     <Headphones className="h-3.5 w-3.5 text-teal-600" />
                   </div>
@@ -905,6 +931,6 @@ export default function Login({ onLoginSuccess }) {
           </motion.div>
         </div>
       </div>
-    </div>
-  )
+    </div>);
+
 }

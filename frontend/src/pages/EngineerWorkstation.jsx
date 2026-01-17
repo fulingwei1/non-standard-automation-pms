@@ -34,8 +34,8 @@ import {
   Box,
   Layers,
   Target,
-  TrendingUp,
-} from "lucide-react";
+  TrendingUp } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -43,11 +43,11 @@ import {
   Button,
   Input,
   Badge,
-  Progress,
-} from "../components/ui";
+  Progress } from
+"../components/ui";
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
-import { taskCenterApi, progressApi, projectApi } from "../services/api";
+import { taskCenterApi, progressApi as _progressApi, projectApi as _projectApi } from "../services/api";
 
 // Import engineer components
 import GanttChart from "../components/engineer/GanttChart";
@@ -260,26 +260,26 @@ const taskTypeConfigs = {
     label: "结构设计",
     color: "text-blue-400",
     bgColor: "bg-blue-500/10",
-    icon: Box,
+    icon: Box
   },
   drawing: {
     label: "出图",
     color: "text-emerald-400",
     bgColor: "bg-emerald-500/10",
-    icon: FileText,
+    icon: FileText
   },
   bom: {
     label: "BOM",
     color: "text-amber-400",
     bgColor: "bg-amber-500/10",
-    icon: Layers,
+    icon: Layers
   },
   review: {
     label: "评审",
     color: "text-purple-400",
     bgColor: "bg-purple-500/10",
-    icon: ClipboardCheck,
-  },
+    icon: ClipboardCheck
+  }
 };
 
 // Status configs
@@ -288,26 +288,26 @@ const statusConfigs = {
     label: "待开始",
     icon: Circle,
     color: "text-slate-400",
-    bgColor: "bg-slate-500/10",
+    bgColor: "bg-slate-500/10"
   },
   in_progress: {
     label: "进行中",
     icon: PlayCircle,
     color: "text-blue-400",
-    bgColor: "bg-blue-500/10",
+    bgColor: "bg-blue-500/10"
   },
   blocked: {
     label: "已阻塞",
     icon: PauseCircle,
     color: "text-red-400",
-    bgColor: "bg-red-500/10",
+    bgColor: "bg-red-500/10"
   },
   completed: {
     label: "已完成",
     icon: CheckCircle2,
     color: "text-emerald-400",
-    bgColor: "bg-emerald-500/10",
-  },
+    bgColor: "bg-emerald-500/10"
+  }
 };
 
 // Priority configs
@@ -315,7 +315,7 @@ const priorityConfigs = {
   low: { label: "低", color: "text-slate-400", flagColor: "text-slate-400" },
   medium: { label: "中", color: "text-blue-400", flagColor: "text-blue-400" },
   high: { label: "高", color: "text-amber-400", flagColor: "text-amber-400" },
-  critical: { label: "紧急", color: "text-red-400", flagColor: "text-red-400" },
+  critical: { label: "紧急", color: "text-red-400", flagColor: "text-red-400" }
 };
 
 // View modes
@@ -323,7 +323,7 @@ const VIEW_MODES = {
   gantt: { id: "gantt", label: "甘特图", icon: BarChart3 },
   calendar: { id: "calendar", label: "日历", icon: CalendarDays },
   list: { id: "list", label: "列表", icon: List },
-  project: { id: "project", label: "项目视图", icon: Briefcase },
+  project: { id: "project", label: "项目视图", icon: Briefcase }
 };
 
 // Stats Card Component
@@ -335,11 +335,11 @@ function StatsCard({ label, value, icon: Icon, color, onClick, active }) {
       onClick={onClick}
       className={cn(
         "cursor-pointer rounded-xl border p-4 transition-all",
-        active
-          ? "bg-primary/10 border-primary/30"
-          : "bg-surface-1/50 border-border hover:border-border/80",
-      )}
-    >
+        active ?
+        "bg-primary/10 border-primary/30" :
+        "bg-surface-1/50 border-border hover:border-border/80"
+      )}>
+
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm text-slate-400">{label}</p>
@@ -347,8 +347,8 @@ function StatsCard({ label, value, icon: Icon, color, onClick, active }) {
         </div>
         <Icon className={cn("w-6 h-6", color)} />
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 }
 
 // Task List Item Component (for list view)
@@ -360,9 +360,9 @@ function TaskListItem({ task, onClick, isSelected }) {
   const TypeIcon = taskType.icon;
 
   const isOverdue =
-    task.status !== "completed" && new Date(task.plannedEnd) < new Date();
+  task.status !== "completed" && new Date(task.plannedEnd) < new Date();
   const daysUntilDue = Math.ceil(
-    (new Date(task.plannedEnd) - new Date()) / (1000 * 60 * 60 * 24),
+    (new Date(task.plannedEnd) - new Date()) / (1000 * 60 * 60 * 24)
   );
 
   return (
@@ -372,15 +372,15 @@ function TaskListItem({ task, onClick, isSelected }) {
       onClick={() => onClick(task)}
       className={cn(
         "rounded-xl border p-4 cursor-pointer transition-all",
-        isSelected
-          ? "bg-primary/10 border-primary/30"
-          : task.status === "blocked"
-            ? "bg-red-500/5 border-red-500/30 hover:border-red-500/50"
-            : isOverdue
-              ? "bg-amber-500/5 border-amber-500/30 hover:border-amber-500/50"
-              : "bg-surface-1/50 border-border hover:border-border/80",
-      )}
-    >
+        isSelected ?
+        "bg-primary/10 border-primary/30" :
+        task.status === "blocked" ?
+        "bg-red-500/5 border-red-500/30 hover:border-red-500/50" :
+        isOverdue ?
+        "bg-amber-500/5 border-amber-500/30 hover:border-amber-500/50" :
+        "bg-surface-1/50 border-border hover:border-border/80"
+      )}>
+
       <div className="flex items-start gap-4">
         {/* Status Icon */}
         <div className={cn("mt-0.5 p-2 rounded-lg", status.bgColor)}>
@@ -392,8 +392,8 @@ function TaskListItem({ task, onClick, isSelected }) {
           <div className="flex items-center gap-2 mb-1">
             <Badge
               variant="outline"
-              className={cn("text-xs", taskType.color, taskType.bgColor)}
-            >
+              className={cn("text-xs", taskType.color, taskType.bgColor)}>
+
               <TypeIcon className="w-3 h-3 mr-1" />
               {taskType.label}
             </Badge>
@@ -422,46 +422,46 @@ function TaskListItem({ task, onClick, isSelected }) {
             <span
               className={cn(
                 "flex items-center gap-1",
-                isOverdue
-                  ? "text-red-400"
-                  : daysUntilDue <= 3
-                    ? "text-amber-400"
-                    : "",
-              )}
-            >
+                isOverdue ?
+                "text-red-400" :
+                daysUntilDue <= 3 ?
+                "text-amber-400" :
+                ""
+              )}>
+
               <Calendar className="w-3 h-3" />
-              {isOverdue
-                ? `逾期 ${Math.abs(daysUntilDue)} 天`
-                : daysUntilDue <= 3 && daysUntilDue >= 0
-                  ? `剩余 ${daysUntilDue} 天`
-                  : task.plannedEnd}
+              {isOverdue ?
+              `逾期 ${Math.abs(daysUntilDue)} 天` :
+              daysUntilDue <= 3 && daysUntilDue >= 0 ?
+              `剩余 ${daysUntilDue} 天` :
+              task.plannedEnd}
             </span>
             <span className="flex items-center gap-1">
               <Timer className="w-3 h-3" />
               {task.actualHours}/{task.estimatedHours}h
             </span>
-            {task.deliverables.length > 0 && (
-              <span className="flex items-center gap-1">
+            {task.deliverables.length > 0 &&
+            <span className="flex items-center gap-1">
                 <FileText className="w-3 h-3" />
                 {task.deliverables.length} 文件
               </span>
-            )}
+            }
           </div>
 
           {/* Blocked reason */}
-          {task.blockedReason && (
-            <div className="mt-2 p-2 rounded-lg bg-red-500/10 text-xs text-red-300 flex items-center gap-2">
+          {task.blockedReason &&
+          <div className="mt-2 p-2 rounded-lg bg-red-500/10 text-xs text-red-300 flex items-center gap-2">
               <AlertTriangle className="w-3 h-3" />
               {task.blockedReason}
             </div>
-          )}
+          }
         </div>
 
         {/* Arrow */}
         <ChevronRight className="w-5 h-5 text-slate-500" />
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 }
 
 // Main Component
@@ -486,11 +486,11 @@ export default function EngineerWorkstation() {
       COMPLETED: "completed",
       DONE: "completed",
       BLOCKED: "blocked",
-      CANCELLED: "cancelled",
+      CANCELLED: "cancelled"
     };
     return (
-      statusMap[backendStatus] || backendStatus?.toLowerCase() || "pending"
-    );
+      statusMap[backendStatus] || backendStatus?.toLowerCase() || "pending");
+
   };
 
   // Map frontend status to backend status
@@ -499,7 +499,7 @@ export default function EngineerWorkstation() {
       pending: "PENDING",
       in_progress: "IN_PROGRESS",
       completed: "COMPLETED",
-      blocked: "BLOCKED",
+      blocked: "BLOCKED"
     };
     return statusMap[frontendStatus] || frontendStatus?.toUpperCase();
   };
@@ -512,7 +512,7 @@ export default function EngineerWorkstation() {
 
       const params = {
         page: 1,
-        page_size: 100,
+        page_size: 100
       };
 
       if (statusFilter !== "all") {
@@ -556,7 +556,7 @@ export default function EngineerWorkstation() {
         deliverables: [],
         bomItems: 0,
         reviewStatus: "pending",
-        notes: task.description || "",
+        notes: task.description || ""
       }));
 
       setTasks(transformedTasks);
@@ -588,13 +588,13 @@ export default function EngineerWorkstation() {
     return tasks.filter((task) => {
       if (statusFilter !== "all" && task.status !== statusFilter) return false;
       if (projectFilter !== "all" && task.projectId !== projectFilter)
-        return false;
+      return false;
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         return (
           task.titleCn.toLowerCase().includes(query) ||
-          task.projectName.toLowerCase().includes(query)
-        );
+          task.projectName.toLowerCase().includes(query));
+
       }
       return true;
     });
@@ -613,12 +613,12 @@ export default function EngineerWorkstation() {
       dueThisWeek: tasks.filter((t) => {
         const dueDate = new Date(t.plannedEnd);
         return (
-          t.status !== "completed" && dueDate >= today && dueDate <= weekEnd
-        );
+          t.status !== "completed" && dueDate >= today && dueDate <= weekEnd);
+
       }).length,
       overdue: tasks.filter((t) => {
         return t.status !== "completed" && new Date(t.plannedEnd) < today;
-      }).length,
+      }).length
     };
   }, [tasks]);
 
@@ -631,7 +631,7 @@ export default function EngineerWorkstation() {
   // Handle task update
   const handleTaskUpdate = (taskId, updates) => {
     setTasks((prev) =>
-      prev.map((t) => (t.id === taskId ? { ...t, ...updates } : t)),
+    prev.map((t) => t.id === taskId ? { ...t, ...updates } : t)
     );
     if (selectedTask?.id === taskId) {
       setSelectedTask((prev) => ({ ...prev, ...updates }));
@@ -650,15 +650,15 @@ export default function EngineerWorkstation() {
       <div className="space-y-6">
         <PageHeader
           title="我的工作台"
-          description="机械设计任务管理 · 时间轴视图"
-        />
+          description="机械设计任务管理 · 时间轴视图" />
+
         <ApiIntegrationError
           error={error}
           apiEndpoint="/api/v1/task-center/my-tasks"
-          onRetry={loadTasks}
-        />
-      </div>
-    );
+          onRetry={loadTasks} />
+
+      </div>);
+
   }
 
   if (loading) {
@@ -666,13 +666,13 @@ export default function EngineerWorkstation() {
       <div className="space-y-6">
         <PageHeader
           title="我的工作台"
-          description="机械设计任务管理 · 时间轴视图"
-        />
+          description="机械设计任务管理 · 时间轴视图" />
+
         <div className="text-center py-16">
           <div className="text-slate-400">加载中...</div>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -680,14 +680,14 @@ export default function EngineerWorkstation() {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       {/* Page Header */}
       <PageHeader
         title="我的工作台"
         description="机械设计任务管理 · 时间轴视图"
         actions={
-          <div className="flex gap-2">
+        <div className="flex gap-2">
             <Button variant="outline" size="sm">
               <Upload className="w-4 h-4 mr-1" />
               上传文件
@@ -697,58 +697,58 @@ export default function EngineerWorkstation() {
               申请评审
             </Button>
           </div>
-        }
-      />
+        } />
+
 
       {/* Stats Cards */}
       <motion.div
         variants={fadeIn}
-        className="grid grid-cols-2 md:grid-cols-5 gap-4"
-      >
+        className="grid grid-cols-2 md:grid-cols-5 gap-4">
+
         <StatsCard
           label="进行中"
           value={stats.inProgress}
           icon={PlayCircle}
           color="text-blue-400"
           onClick={() =>
-            setStatusFilter(
-              statusFilter === "in_progress" ? "all" : "in_progress",
-            )
+          setStatusFilter(
+            statusFilter === "in_progress" ? "all" : "in_progress"
+          )
           }
-          active={statusFilter === "in_progress"}
-        />
+          active={statusFilter === "in_progress"} />
+
         <StatsCard
           label="待开始"
           value={stats.pending}
           icon={Circle}
           color="text-slate-400"
           onClick={() =>
-            setStatusFilter(statusFilter === "pending" ? "all" : "pending")
+          setStatusFilter(statusFilter === "pending" ? "all" : "pending")
           }
-          active={statusFilter === "pending"}
-        />
+          active={statusFilter === "pending"} />
+
         <StatsCard
           label="已完成"
           value={stats.completed}
           icon={CheckCircle2}
           color="text-emerald-400"
           onClick={() =>
-            setStatusFilter(statusFilter === "completed" ? "all" : "completed")
+          setStatusFilter(statusFilter === "completed" ? "all" : "completed")
           }
-          active={statusFilter === "completed"}
-        />
+          active={statusFilter === "completed"} />
+
         <StatsCard
           label="本周到期"
           value={stats.dueThisWeek}
           icon={Calendar}
-          color="text-amber-400"
-        />
+          color="text-amber-400" />
+
         <StatsCard
           label="已逾期"
           value={stats.overdue}
           icon={AlertTriangle}
-          color="text-red-400"
-        />
+          color="text-red-400" />
+
       </motion.div>
 
       {/* View Toggle & Filters */}
@@ -758,18 +758,18 @@ export default function EngineerWorkstation() {
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
               {/* View Mode Toggle */}
               <div className="flex items-center gap-1 p-1 bg-surface-2 rounded-lg">
-                {Object.values(VIEW_MODES).map((mode) => (
-                  <Button
-                    key={mode.id}
-                    variant={viewMode === mode.id ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setViewMode(mode.id)}
-                    className="gap-2"
-                  >
+                {Object.values(VIEW_MODES).map((mode) =>
+                <Button
+                  key={mode.id}
+                  variant={viewMode === mode.id ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode(mode.id)}
+                  className="gap-2">
+
                     <mode.icon className="w-4 h-4" />
                     {mode.label}
                   </Button>
-                ))}
+                )}
               </div>
 
               {/* Filters */}
@@ -778,22 +778,22 @@ export default function EngineerWorkstation() {
                 <select
                   value={projectFilter}
                   onChange={(e) => setProjectFilter(e.target.value)}
-                  className="h-9 px-3 rounded-lg bg-surface-2 border border-border text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
-                >
+                  className="h-9 px-3 rounded-lg bg-surface-2 border border-border text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary/50">
+
                   <option value="all">全部项目</option>
-                  {projects.map((p) => (
-                    <option key={p.id} value={p.id}>
+                  {projects.map((p) =>
+                  <option key={p.id} value={p.id}>
                       {p.name}
                     </option>
-                  ))}
+                  )}
                 </select>
 
                 {/* Status Filter */}
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="h-9 px-3 rounded-lg bg-surface-2 border border-border text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
-                >
+                  className="h-9 px-3 rounded-lg bg-surface-2 border border-border text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary/50">
+
                   <option value="all">全部状态</option>
                   <option value="in_progress">进行中</option>
                   <option value="pending">待开始</option>
@@ -808,8 +808,8 @@ export default function EngineerWorkstation() {
                     placeholder="搜索任务..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 w-48"
-                  />
+                    className="pl-9 w-48" />
+
                 </div>
               </div>
             </div>
@@ -822,111 +822,111 @@ export default function EngineerWorkstation() {
         <div
           className={cn(
             "transition-all duration-300",
-            detailPanelOpen ? "mr-96" : "",
-          )}
-        >
+            detailPanelOpen ? "mr-96" : ""
+          )}>
+
           {/* Gantt View */}
-          {viewMode === "gantt" && (
-            <GanttChart
-              tasks={filteredTasks}
-              onTaskSelect={handleTaskSelect}
-              selectedTaskId={selectedTask?.id}
-            />
-          )}
+          {viewMode === "gantt" &&
+          <GanttChart
+            tasks={filteredTasks}
+            onTaskSelect={handleTaskSelect}
+            selectedTaskId={selectedTask?.id} />
+
+          }
 
           {/* Calendar View */}
-          {viewMode === "calendar" && (
-            <CalendarView
-              tasks={filteredTasks}
-              onTaskSelect={handleTaskSelect}
-              selectedTaskId={selectedTask?.id}
-            />
-          )}
+          {viewMode === "calendar" &&
+          <CalendarView
+            tasks={filteredTasks}
+            onTaskSelect={handleTaskSelect}
+            selectedTaskId={selectedTask?.id} />
+
+          }
 
           {/* List View */}
-          {viewMode === "list" && (
-            <div className="space-y-3">
-              {filteredTasks.map((task) => (
-                <TaskListItem
-                  key={task.id}
-                  task={task}
-                  onClick={handleTaskSelect}
-                  isSelected={selectedTask?.id === task.id}
-                />
-              ))}
+          {viewMode === "list" &&
+          <div className="space-y-3">
+              {filteredTasks.map((task) =>
+            <TaskListItem
+              key={task.id}
+              task={task}
+              onClick={handleTaskSelect}
+              isSelected={selectedTask?.id === task.id} />
 
-              {filteredTasks.length === 0 && (
-                <div className="text-center py-16">
+            )}
+
+              {filteredTasks.length === 0 &&
+            <div className="text-center py-16">
                   <Box className="w-16 h-16 mx-auto text-slate-600 mb-4" />
                   <h3 className="text-lg font-medium text-slate-400">
                     暂无任务
                   </h3>
                   <p className="text-sm text-slate-500 mt-1">
                     {searchQuery ||
-                    statusFilter !== "all" ||
-                    projectFilter !== "all"
-                      ? "没有符合条件的任务"
-                      : "当前没有分配给您的设计任务"}
+                statusFilter !== "all" ||
+                projectFilter !== "all" ?
+                "没有符合条件的任务" :
+                "当前没有分配给您的设计任务"}
                   </p>
                 </div>
-              )}
+            }
             </div>
-          )}
+          }
 
           {/* Project View - 按项目分组展示 */}
-          {viewMode === "project" && (
-            <div className="space-y-6">
+          {viewMode === "project" &&
+          <div className="space-y-6">
               {(() => {
-                // 按项目分组
-                const tasksByProject = {};
-                filteredTasks.forEach((task) => {
-                  const projectId = task.projectId || "other";
-                  const projectName = task.projectName || "未分配项目";
-                  if (!tasksByProject[projectId]) {
-                    tasksByProject[projectId] = {
-                      projectId,
-                      projectName,
-                      tasks: [],
-                      stats: {
-                        total: 0,
-                        inProgress: 0,
-                        completed: 0,
-                        pending: 0,
-                      },
-                    };
-                  }
-                  tasksByProject[projectId].tasks.push(task);
-                  tasksByProject[projectId].stats.total++;
-                  if (task.status === "in_progress")
-                    tasksByProject[projectId].stats.inProgress++;
-                  else if (task.status === "completed")
-                    tasksByProject[projectId].stats.completed++;
-                  else if (task.status === "pending")
-                    tasksByProject[projectId].stats.pending++;
-                });
+              // 按项目分组
+              const tasksByProject = {};
+              filteredTasks.forEach((task) => {
+                const projectId = task.projectId || "other";
+                const projectName = task.projectName || "未分配项目";
+                if (!tasksByProject[projectId]) {
+                  tasksByProject[projectId] = {
+                    projectId,
+                    projectName,
+                    tasks: [],
+                    stats: {
+                      total: 0,
+                      inProgress: 0,
+                      completed: 0,
+                      pending: 0
+                    }
+                  };
+                }
+                tasksByProject[projectId].tasks.push(task);
+                tasksByProject[projectId].stats.total++;
+                if (task.status === "in_progress")
+                tasksByProject[projectId].stats.inProgress++;else
+                if (task.status === "completed")
+                tasksByProject[projectId].stats.completed++;else
+                if (task.status === "pending")
+                tasksByProject[projectId].stats.pending++;
+              });
 
-                const projectGroups = Object.values(tasksByProject);
+              const projectGroups = Object.values(tasksByProject);
 
-                if (projectGroups.length === 0) {
-                  return (
-                    <div className="text-center py-16">
+              if (projectGroups.length === 0) {
+                return (
+                  <div className="text-center py-16">
                       <Box className="w-16 h-16 mx-auto text-slate-600 mb-4" />
                       <h3 className="text-lg font-medium text-slate-400">
                         暂无任务
                       </h3>
                       <p className="text-sm text-slate-500 mt-1">
                         {searchQuery ||
-                        statusFilter !== "all" ||
-                        projectFilter !== "all"
-                          ? "没有符合条件的任务"
-                          : "当前没有分配给您的设计任务"}
+                      statusFilter !== "all" ||
+                      projectFilter !== "all" ?
+                      "没有符合条件的任务" :
+                      "当前没有分配给您的设计任务"}
                       </p>
-                    </div>
-                  );
-                }
+                    </div>);
 
-                return projectGroups.map((group) => (
-                  <Card key={group.projectId} className="bg-surface-1/50">
+              }
+
+              return projectGroups.map((group) =>
+              <Card key={group.projectId} className="bg-surface-1/50">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
@@ -960,48 +960,48 @@ export default function EngineerWorkstation() {
                             </p>
                           </div>
                           <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                              navigate(`/projects/${group.projectId}/workspace`)
-                            }
-                          >
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                        navigate(`/projects/${group.projectId}/workspace`)
+                        }>
+
                             查看工作空间
                           </Button>
                         </div>
                       </div>
                       <div className="space-y-2">
-                        {group.tasks.map((task) => (
-                          <TaskListItem
-                            key={task.id}
-                            task={task}
-                            onClick={handleTaskSelect}
-                            isSelected={selectedTask?.id === task.id}
-                          />
-                        ))}
+                        {group.tasks.map((task) =>
+                    <TaskListItem
+                      key={task.id}
+                      task={task}
+                      onClick={handleTaskSelect}
+                      isSelected={selectedTask?.id === task.id} />
+
+                    )}
                       </div>
                     </CardContent>
                   </Card>
-                ));
-              })()}
+              );
+            })()}
             </div>
-          )}
+          }
         </div>
 
         {/* Task Detail Panel */}
         <AnimatePresence>
-          {detailPanelOpen && selectedTask && (
-            <TaskDetailPanel
-              task={selectedTask}
-              onClose={handleCloseDetail}
-              onUpdate={handleTaskUpdate}
-              statusConfigs={statusConfigs}
-              priorityConfigs={priorityConfigs}
-              taskTypeConfigs={taskTypeConfigs}
-            />
-          )}
+          {detailPanelOpen && selectedTask &&
+          <TaskDetailPanel
+            task={selectedTask}
+            onClose={handleCloseDetail}
+            onUpdate={handleTaskUpdate}
+            statusConfigs={statusConfigs}
+            priorityConfigs={priorityConfigs}
+            taskTypeConfigs={taskTypeConfigs} />
+
+          }
         </AnimatePresence>
       </motion.div>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

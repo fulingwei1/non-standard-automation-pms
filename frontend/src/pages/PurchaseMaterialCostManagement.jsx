@@ -23,8 +23,8 @@ import {
   Bell,
   AlertTriangle,
   Clock,
-  Settings,
-} from "lucide-react";
+  Settings } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -53,10 +53,10 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "../components/ui";
-import { cn, formatCurrency, formatDate } from "../lib/utils";
-import { fadeIn, staggerContainer } from "../lib/animations";
+  TableRow } from
+"../components/ui";
+import { cn as _cn, formatCurrency, formatDate } from "../lib/utils";
+import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
 import { salesTemplateApi, supplierApi } from "../services/api";
 
 export default function PurchaseMaterialCostManagement() {
@@ -101,7 +101,7 @@ export default function PurchaseMaterialCostManagement() {
     is_active: true,
     match_priority: 0,
     match_keywords: "",
-    remark: "",
+    remark: ""
   });
 
   useEffect(() => {
@@ -145,7 +145,7 @@ export default function PurchaseMaterialCostManagement() {
     try {
       const res = await salesTemplateApi.listPurchaseMaterialCosts({
         page: 1,
-        page_size: 1000,
+        page_size: 1000
       });
       const items = res.data?.data?.items || res.data?.items || [];
       setCosts(items);
@@ -172,9 +172,9 @@ export default function PurchaseMaterialCostManagement() {
     if (searchTerm) {
       filtered = filtered.filter(
         (c) =>
-          c.material_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          c.material_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          c.specification?.toLowerCase().includes(searchTerm.toLowerCase()),
+        c.material_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.material_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.specification?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -184,13 +184,13 @@ export default function PurchaseMaterialCostManagement() {
 
     if (standardFilter !== "all") {
       filtered = filtered.filter(
-        (c) => c.is_standard_part === (standardFilter === "standard"),
+        (c) => c.is_standard_part === (standardFilter === "standard")
       );
     }
 
     if (activeFilter !== "all") {
       filtered = filtered.filter(
-        (c) => c.is_active === (activeFilter === "active"),
+        (c) => c.is_active === (activeFilter === "active")
       );
     }
 
@@ -217,7 +217,7 @@ export default function PurchaseMaterialCostManagement() {
       is_active: true,
       match_priority: 0,
       match_keywords: "",
-      remark: "",
+      remark: ""
     });
     setShowCreateDialog(true);
   };
@@ -243,7 +243,7 @@ export default function PurchaseMaterialCostManagement() {
       is_active: cost.is_active !== false,
       match_priority: cost.match_priority || 0,
       match_keywords: cost.match_keywords || "",
-      remark: cost.remark || "",
+      remark: cost.remark || ""
     });
     setShowEditDialog(true);
   };
@@ -259,22 +259,22 @@ export default function PurchaseMaterialCostManagement() {
       const submitData = {
         ...formData,
         unit_cost: parseFloat(formData.unit_cost) || 0,
-        purchase_quantity: formData.purchase_quantity
-          ? parseFloat(formData.purchase_quantity)
-          : null,
-        lead_time_days: formData.lead_time_days
-          ? parseInt(formData.lead_time_days)
-          : null,
+        purchase_quantity: formData.purchase_quantity ?
+        parseFloat(formData.purchase_quantity) :
+        null,
+        lead_time_days: formData.lead_time_days ?
+        parseInt(formData.lead_time_days) :
+        null,
         match_priority: parseInt(formData.match_priority) || 0,
-        supplier_id: formData.supplier_id
-          ? parseInt(formData.supplier_id)
-          : null,
+        supplier_id: formData.supplier_id ?
+        parseInt(formData.supplier_id) :
+        null
       };
 
       if (selectedCost) {
         await salesTemplateApi.updatePurchaseMaterialCost(
           selectedCost.id,
-          submitData,
+          submitData
         );
       } else {
         await salesTemplateApi.createPurchaseMaterialCost(submitData);
@@ -320,28 +320,28 @@ export default function PurchaseMaterialCostManagement() {
       initial="hidden"
       animate="visible"
       variants={staggerContainer}
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       <PageHeader
         title="采购物料成本清单管理"
         description="采购部维护标准件等常用物料的历史采购成本，用于报价成本自动匹配"
         actions={
-          <div className="flex gap-2">
-            {reminder && (
-              <Button
-                variant={reminder.is_due ? "default" : "outline"}
-                className={
-                  reminder.is_due ? "bg-amber-500 hover:bg-amber-600" : ""
-                }
-                onClick={() => setShowReminderDialog(true)}
-              >
+        <div className="flex gap-2">
+            {reminder &&
+          <Button
+            variant={reminder.is_due ? "default" : "outline"}
+            className={
+            reminder.is_due ? "bg-amber-500 hover:bg-amber-600" : ""
+            }
+            onClick={() => setShowReminderDialog(true)}>
+
                 <Bell className="h-4 w-4 mr-2" />
                 {reminder.is_due ? "更新提醒" : "提醒设置"}
-                {reminder.is_due && (
-                  <Badge className="ml-2 bg-red-500">到期</Badge>
-                )}
+                {reminder.is_due &&
+            <Badge className="ml-2 bg-red-500">到期</Badge>
+            }
               </Button>
-            )}
+          }
             <Button variant="outline">
               <Download className="h-4 w-4 mr-2" />
               导出
@@ -355,16 +355,16 @@ export default function PurchaseMaterialCostManagement() {
               新增成本
             </Button>
           </div>
-        }
-      />
+        } />
+
 
       {/* Update Reminder Alert */}
-      {reminder && reminder.is_due && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-amber-900/20 border border-amber-500/50 rounded-lg p-4 mb-6"
-        >
+      {reminder && reminder.is_due &&
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-amber-900/20 border border-amber-500/50 rounded-lg p-4 mb-6">
+
           <div className="flex items-start gap-3">
             <AlertTriangle className="h-5 w-5 text-amber-400 mt-0.5 flex-shrink-0" />
             <div className="flex-1">
@@ -381,10 +381,10 @@ export default function PurchaseMaterialCostManagement() {
                   我已更新，确认提醒
                 </Button>
                 <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setShowReminderDialog(true)}
-                >
+                size="sm"
+                variant="outline"
+                onClick={() => setShowReminderDialog(true)}>
+
                   <Settings className="h-4 w-4 mr-2" />
                   设置提醒
                 </Button>
@@ -392,11 +392,11 @@ export default function PurchaseMaterialCostManagement() {
             </div>
           </div>
         </motion.div>
-      )}
+      }
 
       {/* Reminder Info Card (when not due) */}
-      {reminder && !reminder.is_due && reminder.days_until_next !== null && (
-        <Card className="mb-6 border-blue-500/30 bg-blue-900/10">
+      {reminder && !reminder.is_due && reminder.days_until_next !== null &&
+      <Card className="mb-6 border-blue-500/30 bg-blue-900/10">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -410,22 +410,22 @@ export default function PurchaseMaterialCostManagement() {
                     </strong>{" "}
                     天
                     {reminder.next_reminder_date &&
-                      ` (${formatDate(reminder.next_reminder_date)})`}
+                  ` (${formatDate(reminder.next_reminder_date)})`}
                   </div>
                 </div>
               </div>
               <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowReminderDialog(true)}
-              >
+              variant="outline"
+              size="sm"
+              onClick={() => setShowReminderDialog(true)}>
+
                 <Settings className="h-4 w-4 mr-2" />
                 设置
               </Button>
             </div>
           </CardContent>
         </Card>
-      )}
+      }
 
       {/* Filters */}
       <Card>
@@ -438,8 +438,8 @@ export default function PurchaseMaterialCostManagement() {
                   placeholder="搜索物料名称、编码或规格..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+                  className="pl-10" />
+
               </div>
             </div>
             <Select value={typeFilter} onValueChange={setTypeFilter}>
@@ -448,11 +448,11 @@ export default function PurchaseMaterialCostManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部类型</SelectItem>
-                {materialTypes.map((type) => (
-                  <SelectItem key={type} value={type}>
+                {materialTypes.map((type) =>
+                <SelectItem key={type} value={type}>
                     {type}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
             <Select value={standardFilter} onValueChange={setStandardFilter}>
@@ -502,16 +502,16 @@ export default function PurchaseMaterialCostManagement() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredCosts.map((cost) => (
-                <TableRow key={cost.id}>
+              {filteredCosts.map((cost) =>
+              <TableRow key={cost.id}>
                   <TableCell>
                     <div>
                       <div className="font-medium">{cost.material_name}</div>
-                      {cost.material_code && (
-                        <div className="text-xs text-slate-400">
+                      {cost.material_code &&
+                    <div className="text-xs text-slate-400">
                           {cost.material_code}
                         </div>
-                      )}
+                    }
                     </div>
                   </TableCell>
                   <TableCell>{cost.specification || "-"}</TableCell>
@@ -527,55 +527,55 @@ export default function PurchaseMaterialCostManagement() {
                   </TableCell>
                   <TableCell>
                     <Badge
-                      className={
-                        cost.match_priority > 0 ? "bg-blue-500" : "bg-slate-500"
-                      }
-                    >
+                    className={
+                    cost.match_priority > 0 ? "bg-blue-500" : "bg-slate-500"
+                    }>
+
                       {cost.match_priority}
                     </Badge>
                   </TableCell>
                   <TableCell>{cost.usage_count || 0}</TableCell>
                   <TableCell>
                     <Badge
-                      className={
-                        cost.is_active ? "bg-green-500" : "bg-slate-500"
-                      }
-                    >
+                    className={
+                    cost.is_active ? "bg-green-500" : "bg-slate-500"
+                    }>
+
                       {cost.is_active ? "启用" : "禁用"}
                     </Badge>
-                    {cost.is_standard_part && (
-                      <Badge className="ml-2 bg-purple-500">标准件</Badge>
-                    )}
+                    {cost.is_standard_part &&
+                  <Badge className="ml-2 bg-purple-500">标准件</Badge>
+                  }
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(cost)}
-                      >
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(cost)}>
+
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(cost)}
-                        className="text-red-400"
-                      >
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDelete(cost)}
+                      className="text-red-400">
+
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
 
-          {filteredCosts.length === 0 && !loading && (
-            <div className="text-center py-12 text-slate-400">
+          {filteredCosts.length === 0 && !loading &&
+          <div className="text-center py-12 text-slate-400">
               暂无成本记录，点击"新增成本"添加第一条记录
             </div>
-          )}
+          }
         </CardContent>
       </Card>
 
@@ -588,8 +588,8 @@ export default function PurchaseMaterialCostManagement() {
             setShowEditDialog(false);
             setSelectedCost(null);
           }
-        }}
-      >
+        }}>
+
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{selectedCost ? "编辑成本" : "新增成本"}</DialogTitle>
@@ -605,21 +605,21 @@ export default function PurchaseMaterialCostManagement() {
                 <Input
                   value={formData.material_code}
                   onChange={(e) =>
-                    setFormData({ ...formData, material_code: e.target.value })
+                  setFormData({ ...formData, material_code: e.target.value })
                   }
-                  placeholder="MAT-001"
-                />
+                  placeholder="MAT-001" />
+
               </div>
               <div>
                 <Label>物料名称 *</Label>
                 <Input
                   value={formData.material_name}
                   onChange={(e) =>
-                    setFormData({ ...formData, material_name: e.target.value })
+                  setFormData({ ...formData, material_name: e.target.value })
                   }
                   placeholder="工控机"
-                  required
-                />
+                  required />
+
               </div>
             </div>
 
@@ -629,20 +629,20 @@ export default function PurchaseMaterialCostManagement() {
                 <Input
                   value={formData.specification}
                   onChange={(e) =>
-                    setFormData({ ...formData, specification: e.target.value })
+                  setFormData({ ...formData, specification: e.target.value })
                   }
-                  placeholder="研华IPC-610H"
-                />
+                  placeholder="研华IPC-610H" />
+
               </div>
               <div>
                 <Label>品牌</Label>
                 <Input
                   value={formData.brand}
                   onChange={(e) =>
-                    setFormData({ ...formData, brand: e.target.value })
+                  setFormData({ ...formData, brand: e.target.value })
                   }
-                  placeholder="研华"
-                />
+                  placeholder="研华" />
+
               </div>
             </div>
 
@@ -652,33 +652,33 @@ export default function PurchaseMaterialCostManagement() {
                 <Input
                   value={formData.unit}
                   onChange={(e) =>
-                    setFormData({ ...formData, unit: e.target.value })
+                  setFormData({ ...formData, unit: e.target.value })
                   }
-                  placeholder="件"
-                />
+                  placeholder="件" />
+
               </div>
               <div>
                 <Label>物料类型</Label>
                 <Input
                   value={formData.material_type}
                   onChange={(e) =>
-                    setFormData({ ...formData, material_type: e.target.value })
+                  setFormData({ ...formData, material_type: e.target.value })
                   }
-                  placeholder="标准件/电气件"
-                />
+                  placeholder="标准件/电气件" />
+
               </div>
               <div className="flex items-center gap-2 pt-6">
                 <input
                   type="checkbox"
                   checked={formData.is_standard_part}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      is_standard_part: e.target.checked,
-                    })
+                  setFormData({
+                    ...formData,
+                    is_standard_part: e.target.checked
+                  })
                   }
-                  className="rounded"
-                />
+                  className="rounded" />
+
                 <Label>标准件</Label>
               </div>
               <div className="flex items-center gap-2 pt-6">
@@ -686,10 +686,10 @@ export default function PurchaseMaterialCostManagement() {
                   type="checkbox"
                   checked={formData.is_active}
                   onChange={(e) =>
-                    setFormData({ ...formData, is_active: e.target.checked })
+                  setFormData({ ...formData, is_active: e.target.checked })
                   }
-                  className="rounded"
-                />
+                  className="rounded" />
+
                 <Label>启用匹配</Label>
               </div>
             </div>
@@ -701,20 +701,20 @@ export default function PurchaseMaterialCostManagement() {
                   type="number"
                   value={formData.unit_cost}
                   onChange={(e) =>
-                    setFormData({ ...formData, unit_cost: e.target.value })
+                  setFormData({ ...formData, unit_cost: e.target.value })
                   }
                   placeholder="0.00"
-                  required
-                />
+                  required />
+
               </div>
               <div>
                 <Label>币种</Label>
                 <Select
                   value={formData.currency}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, currency: value })
-                  }
-                >
+                  setFormData({ ...formData, currency: value })
+                  }>
+
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -731,10 +731,10 @@ export default function PurchaseMaterialCostManagement() {
                   type="number"
                   value={formData.match_priority}
                   onChange={(e) =>
-                    setFormData({ ...formData, match_priority: e.target.value })
+                  setFormData({ ...formData, match_priority: e.target.value })
                   }
-                  placeholder="0"
-                />
+                  placeholder="0" />
+
               </div>
             </div>
 
@@ -745,25 +745,25 @@ export default function PurchaseMaterialCostManagement() {
                   value={formData.supplier_id?.toString()}
                   onValueChange={(value) => {
                     const supplier = suppliers.find(
-                      (s) => s.id.toString() === value,
+                      (s) => s.id.toString() === value
                     );
                     setFormData({
                       ...formData,
                       supplier_id: value,
-                      supplier_name: supplier?.supplier_name || "",
+                      supplier_name: supplier?.supplier_name || ""
                     });
-                  }}
-                >
+                  }}>
+
                   <SelectTrigger>
                     <SelectValue placeholder="选择供应商" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__none__">无</SelectItem>
-                    {suppliers.map((s) => (
-                      <SelectItem key={s.id} value={s.id.toString()}>
+                    {suppliers.map((s) =>
+                    <SelectItem key={s.id} value={s.id.toString()}>
                         {s.supplier_name}
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -772,10 +772,10 @@ export default function PurchaseMaterialCostManagement() {
                 <Input
                   value={formData.supplier_name}
                   onChange={(e) =>
-                    setFormData({ ...formData, supplier_name: e.target.value })
+                  setFormData({ ...formData, supplier_name: e.target.value })
                   }
-                  placeholder="供应商名称"
-                />
+                  placeholder="供应商名称" />
+
               </div>
             </div>
 
@@ -786,22 +786,22 @@ export default function PurchaseMaterialCostManagement() {
                   type="date"
                   value={formData.purchase_date}
                   onChange={(e) =>
-                    setFormData({ ...formData, purchase_date: e.target.value })
-                  }
-                />
+                  setFormData({ ...formData, purchase_date: e.target.value })
+                  } />
+
               </div>
               <div>
                 <Label>采购订单号</Label>
                 <Input
                   value={formData.purchase_order_no}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      purchase_order_no: e.target.value,
-                    })
+                  setFormData({
+                    ...formData,
+                    purchase_order_no: e.target.value
+                  })
                   }
-                  placeholder="PO-20250101-001"
-                />
+                  placeholder="PO-20250101-001" />
+
               </div>
               <div>
                 <Label>采购数量</Label>
@@ -809,13 +809,13 @@ export default function PurchaseMaterialCostManagement() {
                   type="number"
                   value={formData.purchase_quantity}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      purchase_quantity: e.target.value,
-                    })
+                  setFormData({
+                    ...formData,
+                    purchase_quantity: e.target.value
+                  })
                   }
-                  placeholder="0"
-                />
+                  placeholder="0" />
+
               </div>
             </div>
 
@@ -826,20 +826,20 @@ export default function PurchaseMaterialCostManagement() {
                   type="number"
                   value={formData.lead_time_days}
                   onChange={(e) =>
-                    setFormData({ ...formData, lead_time_days: e.target.value })
+                  setFormData({ ...formData, lead_time_days: e.target.value })
                   }
-                  placeholder="7"
-                />
+                  placeholder="7" />
+
               </div>
               <div>
                 <Label>匹配关键词</Label>
                 <Input
                   value={formData.match_keywords}
                   onChange={(e) =>
-                    setFormData({ ...formData, match_keywords: e.target.value })
+                  setFormData({ ...formData, match_keywords: e.target.value })
                   }
-                  placeholder="关键词1,关键词2（逗号分隔）"
-                />
+                  placeholder="关键词1,关键词2（逗号分隔）" />
+
               </div>
             </div>
 
@@ -848,11 +848,11 @@ export default function PurchaseMaterialCostManagement() {
               <Textarea
                 value={formData.remark}
                 onChange={(e) =>
-                  setFormData({ ...formData, remark: e.target.value })
+                setFormData({ ...formData, remark: e.target.value })
                 }
                 placeholder="备注信息..."
-                rows={3}
-              />
+                rows={3} />
+
             </div>
           </div>
 
@@ -863,14 +863,14 @@ export default function PurchaseMaterialCostManagement() {
                 setShowCreateDialog(false);
                 setShowEditDialog(false);
                 setSelectedCost(null);
-              }}
-            >
+              }}>
+
               取消
             </Button>
             <Button
               onClick={handleSave}
-              disabled={!formData.material_name || !formData.unit_cost}
-            >
+              disabled={!formData.material_name || !formData.unit_cost}>
+
               保存
             </Button>
           </DialogFooter>
@@ -890,8 +890,8 @@ export default function PurchaseMaterialCostManagement() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowDeleteDialog(false)}
-            >
+              onClick={() => setShowDeleteDialog(false)}>
+
               取消
             </Button>
             <Button variant="destructive" onClick={handleConfirmDelete}>
@@ -911,17 +911,17 @@ export default function PurchaseMaterialCostManagement() {
             </DialogDescription>
           </DialogHeader>
 
-          {reminder && (
-            <div className="space-y-4">
+          {reminder &&
+          <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>提醒间隔（天）</Label>
                   <Input
-                    type="number"
-                    value={reminder.reminder_interval_days || 30}
-                    disabled
-                    className="bg-slate-800"
-                  />
+                  type="number"
+                  value={reminder.reminder_interval_days || 30}
+                  disabled
+                  className="bg-slate-800" />
+
                   <div className="text-xs text-slate-400 mt-1">
                     当前设置为每 {reminder.reminder_interval_days || 30}{" "}
                     天提醒一次
@@ -930,29 +930,29 @@ export default function PurchaseMaterialCostManagement() {
                 <div>
                   <Label>下次提醒日期</Label>
                   <Input
-                    value={
-                      reminder.next_reminder_date
-                        ? formatDate(reminder.next_reminder_date)
-                        : "-"
-                    }
-                    disabled
-                    className="bg-slate-800"
-                  />
+                  value={
+                  reminder.next_reminder_date ?
+                  formatDate(reminder.next_reminder_date) :
+                  "-"
+                  }
+                  disabled
+                  className="bg-slate-800" />
+
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
                 <input
-                  type="checkbox"
-                  checked={reminder.is_enabled}
-                  disabled
-                  className="rounded"
-                />
+                type="checkbox"
+                checked={reminder.is_enabled}
+                disabled
+                className="rounded" />
+
                 <Label>启用提醒</Label>
               </div>
 
-              {reminder.is_due && (
-                <div className="bg-amber-900/20 border border-amber-500/50 rounded-lg p-3">
+              {reminder.is_due &&
+            <div className="bg-amber-900/20 border border-amber-500/50 rounded-lg p-3">
                   <div className="flex items-start gap-2">
                     <AlertTriangle className="h-5 w-5 text-amber-400 mt-0.5" />
                     <div>
@@ -965,26 +965,26 @@ export default function PurchaseMaterialCostManagement() {
                     </div>
                   </div>
                 </div>
-              )}
+            }
             </div>
-          )}
+          }
 
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowReminderDialog(false)}
-            >
+              onClick={() => setShowReminderDialog(false)}>
+
               关闭
             </Button>
-            {reminder?.is_due && (
-              <Button onClick={handleAcknowledgeReminder}>
+            {reminder?.is_due &&
+            <Button onClick={handleAcknowledgeReminder}>
                 <CheckCircle2 className="h-4 w-4 mr-2" />
                 我已更新，确认提醒
               </Button>
-            )}
+            }
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

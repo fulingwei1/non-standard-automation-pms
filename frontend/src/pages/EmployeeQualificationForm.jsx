@@ -14,15 +14,15 @@ import {
   Award,
   User,
   Calendar,
-  AlertCircle,
-} from "lucide-react";
+  AlertCircle } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -31,8 +31,8 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import { Badge } from "../components/ui/badge";
 import { CompetencyRadarChart } from "../components/qualification/CompetencyRadarChart";
 import { QualificationTrendChart } from "../components/qualification/QualificationTrendChart";
@@ -56,9 +56,9 @@ export default function EmployeeQualificationForm() {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors: _errors },
     setValue,
-    watch,
+    watch
   } = useForm({
     defaultValues: {
       employee_id: employeeId ? parseInt(employeeId) : "",
@@ -66,8 +66,8 @@ export default function EmployeeQualificationForm() {
       level_id: "",
       assessment_details: {},
       certified_date: "",
-      valid_until: "",
-    },
+      valid_until: ""
+    }
   });
 
   useEffect(() => {
@@ -83,7 +83,7 @@ export default function EmployeeQualificationForm() {
     try {
       const response = await qualificationApi.getLevels({
         page: 1,
-        page_size: 100,
+        page_size: 100
       });
       if (response.data?.code === 200) {
         setLevels(response.data.data?.items || []);
@@ -101,7 +101,7 @@ export default function EmployeeQualificationForm() {
       } else if (response.data?.data) {
         // 兼容不同的响应格式
         setEmployees(
-          Array.isArray(response.data.data) ? response.data.data : [],
+          Array.isArray(response.data.data) ? response.data.data : []
         );
       }
     } catch (error) {
@@ -113,7 +113,7 @@ export default function EmployeeQualificationForm() {
   const loadQualification = async () => {
     try {
       const response =
-        await qualificationApi.getEmployeeQualification(employeeId);
+      await qualificationApi.getEmployeeQualification(employeeId);
       if (response.data?.code === 200) {
         const qualData = response.data.data;
         setQualification(qualData);
@@ -146,7 +146,7 @@ export default function EmployeeQualificationForm() {
         const response = await qualificationApi.promoteEmployee(employeeId, {
           target_level_id: data.level_id,
           assessment_details: data.assessment_details,
-          assessment_period: new Date().toISOString().slice(0, 7),
+          assessment_period: new Date().toISOString().slice(0, 7)
         });
         if (response.data?.code === 200) {
           toast.success("晋升评估完成");
@@ -159,7 +159,7 @@ export default function EmployeeQualificationForm() {
           level_id: data.level_id,
           assessment_details: data.assessment_details,
           certified_date: data.certified_date || undefined,
-          valid_until: data.valid_until || undefined,
+          valid_until: data.valid_until || undefined
         });
         toast.success("员工认证成功");
         navigate("/qualifications");
@@ -212,7 +212,7 @@ export default function EmployeeQualificationForm() {
     project_management_skills: "项目管理",
     customer_service_skills: "客户服务",
     quality_skills: "质量意识",
-    efficiency_skills: "效率能力",
+    efficiency_skills: "效率能力"
   };
 
   const competencyDimensions = competencyModel?.competency_dimensions || {};
@@ -224,14 +224,14 @@ export default function EmployeeQualificationForm() {
         variants={fadeIn}
         initial="hidden"
         animate="show"
-        className="space-y-6"
-      >
+        className="space-y-6">
+
         <PageHeader
           title="员工任职资格详情"
           description={`员工 #${employeeId} 的任职资格信息`}
           icon={ArrowLeft}
-          onBack={() => navigate("/qualifications")}
-        />
+          onBack={() => navigate("/qualifications")} />
+
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* 基本信息 */}
@@ -260,28 +260,28 @@ export default function EmployeeQualificationForm() {
               <div>
                 <Label className="text-gray-500">认证日期</Label>
                 <p>
-                  {qualification.certified_date
-                    ? formatDate(qualification.certified_date)
-                    : "-"}
+                  {qualification.certified_date ?
+                  formatDate(qualification.certified_date) :
+                  "-"}
                 </p>
               </div>
               <div>
                 <Label className="text-gray-500">有效期至</Label>
                 <p>
-                  {qualification.valid_until
-                    ? formatDate(qualification.valid_until)
-                    : "-"}
+                  {qualification.valid_until ?
+                  formatDate(qualification.valid_until) :
+                  "-"}
                 </p>
               </div>
               <div>
                 <Label className="text-gray-500">状态</Label>
                 <Badge
                   className={
-                    qualification.status === "APPROVED"
-                      ? "bg-green-100 text-green-800"
-                      : ""
-                  }
-                >
+                  qualification.status === "APPROVED" ?
+                  "bg-green-100 text-green-800" :
+                  ""
+                  }>
+
                   {qualification.status}
                 </Badge>
               </div>
@@ -295,35 +295,35 @@ export default function EmployeeQualificationForm() {
             </CardHeader>
             <CardContent>
               {qualification.assessment_details &&
-              Object.keys(qualification.assessment_details).length > 0 ? (
-                <CompetencyRadarChart data={qualification.assessment_details} />
-              ) : (
-                <div className="flex items-center justify-center h-64 text-gray-400">
+              Object.keys(qualification.assessment_details).length > 0 ?
+              <CompetencyRadarChart data={qualification.assessment_details} /> :
+
+              <div className="flex items-center justify-center h-64 text-gray-400">
                   暂无评估数据
                 </div>
-              )}
+              }
             </CardContent>
           </Card>
         </div>
 
         {/* 评估历史趋势 */}
-        {assessments.length > 0 && (
-          <Card>
+        {assessments.length > 0 &&
+        <Card>
             <CardHeader>
               <CardTitle>评估历史趋势</CardTitle>
             </CardHeader>
             <CardContent>
               <QualificationTrendChart
-                data={assessments.map((a) => ({
-                  date: a.assessed_at || a.assessment_period,
-                  total_score: a.total_score,
-                  result: a.result,
-                  period: a.assessment_period,
-                }))}
-              />
+              data={assessments.map((a) => ({
+                date: a.assessed_at || a.assessment_period,
+                total_score: a.total_score,
+                result: a.result,
+                period: a.assessment_period
+              }))} />
+
             </CardContent>
           </Card>
-        )}
+        }
 
         {/* 操作按钮 */}
         <div className="flex justify-end gap-4">
@@ -333,15 +333,15 @@ export default function EmployeeQualificationForm() {
           </Button>
           <Button
             onClick={() =>
-              navigate(`/qualifications/employees/${employeeId}/promote`)
-            }
-          >
+            navigate(`/qualifications/employees/${employeeId}/promote`)
+            }>
+
             <TrendingUp className="h-4 w-4 mr-2" />
             晋升评估
           </Button>
         </div>
-      </motion.div>
-    );
+      </motion.div>);
+
   }
 
   // 认证/晋升模式
@@ -350,16 +350,16 @@ export default function EmployeeQualificationForm() {
       variants={fadeIn}
       initial="hidden"
       animate="show"
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       <PageHeader
         title={isPromote ? "员工晋升评估" : "员工任职资格认证"}
         description={
-          isPromote ? "评估员工是否满足晋升条件" : "为员工认证任职资格"
+        isPromote ? "评估员工是否满足晋升条件" : "为员工认证任职资格"
         }
         icon={ArrowLeft}
-        onBack={() => navigate("/qualifications")}
-      />
+        onBack={() => navigate("/qualifications")} />
+
 
       <Card>
         <CardHeader>
@@ -367,31 +367,31 @@ export default function EmployeeQualificationForm() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {!employeeId && (
-              <div className="space-y-2">
+            {!employeeId &&
+            <div className="space-y-2">
                 <Label htmlFor="employee_id">
                   选择员工 <span className="text-red-500">*</span>
                 </Label>
                 <Select
-                  value={watch("employee_id")?.toString()}
-                  onValueChange={(value) =>
-                    setValue("employee_id", parseInt(value))
-                  }
-                >
+                value={watch("employee_id")?.toString()}
+                onValueChange={(value) =>
+                setValue("employee_id", parseInt(value))
+                }>
+
                   <SelectTrigger id="employee_id">
                     <SelectValue placeholder="选择员工" />
                   </SelectTrigger>
                   <SelectContent>
-                    {employees.map((emp) => (
-                      <SelectItem key={emp.id} value={emp.id.toString()}>
+                    {employees.map((emp) =>
+                  <SelectItem key={emp.id} value={emp.id.toString()}>
                         {emp.employee_code || `E${emp.id}`} -{" "}
                         {emp.name || `员工${emp.id}`}
                       </SelectItem>
-                    ))}
+                  )}
                   </SelectContent>
                 </Select>
               </div>
-            )}
+            }
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
@@ -400,8 +400,8 @@ export default function EmployeeQualificationForm() {
                 </Label>
                 <Select
                   value={positionType}
-                  onValueChange={(value) => setValue("position_type", value)}
-                >
+                  onValueChange={(value) => setValue("position_type", value)}>
+
                   <SelectTrigger id="position_type">
                     <SelectValue placeholder="选择岗位类型" />
                   </SelectTrigger>
@@ -422,56 +422,56 @@ export default function EmployeeQualificationForm() {
                 <Select
                   value={levelId?.toString()}
                   onValueChange={(value) =>
-                    setValue("level_id", parseInt(value))
-                  }
-                >
+                  setValue("level_id", parseInt(value))
+                  }>
+
                   <SelectTrigger id="level_id">
                     <SelectValue placeholder="选择等级" />
                   </SelectTrigger>
                   <SelectContent>
-                    {levels.map((level) => (
-                      <SelectItem key={level.id} value={level.id.toString()}>
+                    {levels.map((level) =>
+                    <SelectItem key={level.id} value={level.id.toString()}>
                         {level.level_code} - {level.level_name}
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
               </div>
 
-              {!isPromote && (
-                <>
+              {!isPromote &&
+              <>
                   <div className="space-y-2">
                     <Label htmlFor="certified_date">认证日期</Label>
                     <Input
-                      id="certified_date"
-                      type="date"
-                      {...register("certified_date")}
-                    />
+                    id="certified_date"
+                    type="date"
+                    {...register("certified_date")} />
+
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="valid_until">有效期至</Label>
                     <Input
-                      id="valid_until"
-                      type="date"
-                      {...register("valid_until")}
-                    />
+                    id="valid_until"
+                    type="date"
+                    {...register("valid_until")} />
+
                   </div>
                 </>
-              )}
+              }
             </div>
 
             {/* 能力维度评分 */}
-            {positionType && levelId && competencyModel && (
-              <div className="space-y-4 pt-6 border-t">
+            {positionType && levelId && competencyModel &&
+            <div className="space-y-4 pt-6 border-t">
                 <h3 className="text-lg font-semibold">能力维度评分</h3>
                 <p className="text-sm text-gray-500">
                   根据能力模型要求，对各维度进行评分（0-100分）
                 </p>
 
                 {Object.entries(competencyDimensions).map(
-                  ([key, dimension]) => (
-                    <Card key={key} className="border">
+                ([key, dimension]) =>
+                <Card key={key} className="border">
                       <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                           <CardTitle className="text-base">
@@ -479,18 +479,18 @@ export default function EmployeeQualificationForm() {
                           </CardTitle>
                           <div className="flex items-center gap-2">
                             <Input
-                              type="number"
-                              min="0"
-                              max="100"
-                              value={assessmentDetails[key]?.score || 0}
-                              onChange={(e) =>
-                                updateScore(
-                                  key,
-                                  parseFloat(e.target.value) || 0,
-                                )
-                              }
-                              className="w-24"
-                            />
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={assessmentDetails[key]?.score || 0}
+                          onChange={(e) =>
+                          updateScore(
+                            key,
+                            parseFloat(e.target.value) || 0
+                          )
+                          }
+                          className="w-24" />
+
                             <span className="text-sm text-gray-500">分</span>
                           </div>
                         </div>
@@ -498,57 +498,57 @@ export default function EmployeeQualificationForm() {
                           权重: {dimension.weight}%
                         </p>
                       </CardHeader>
-                      {dimension.items && dimension.items.length > 0 && (
-                        <CardContent>
+                      {dimension.items && dimension.items.length > 0 &&
+                  <CardContent>
                           <div className="space-y-2">
-                            {dimension.items.map((item, itemIndex) => (
-                              <div
-                                key={itemIndex}
-                                className="flex items-center justify-between p-2 bg-gray-50 rounded"
-                              >
+                            {dimension.items.map((item, itemIndex) =>
+                      <div
+                        key={itemIndex}
+                        className="flex items-center justify-between p-2 bg-gray-50 rounded">
+
                                 <div>
                                   <p className="text-sm font-medium">
                                     {item.name}
                                   </p>
-                                  {item.description && (
-                                    <p className="text-xs text-gray-500">
+                                  {item.description &&
+                          <p className="text-xs text-gray-500">
                                       {item.description}
                                     </p>
-                                  )}
+                          }
                                 </div>
                                 <Input
-                                  type="number"
-                                  min="0"
-                                  max="100"
-                                  value={
-                                    assessmentDetails[key]?.items?.[
-                                      item.name
-                                    ] || 0
-                                  }
-                                  onChange={(e) => {
-                                    const details = { ...assessmentDetails };
-                                    if (!details[key])
-                                      details[key] = { score: 0, items: {} };
-                                    if (!details[key].items)
-                                      details[key].items = {};
-                                    details[key].items[item.name] =
-                                      parseFloat(e.target.value) || 0;
-                                    setValue("assessment_details", details);
-                                  }}
-                                  className="w-20"
-                                />
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={
+                          assessmentDetails[key]?.items?.[
+                          item.name] ||
+                          0
+                          }
+                          onChange={(e) => {
+                            const details = { ...assessmentDetails };
+                            if (!details[key])
+                            details[key] = { score: 0, items: {} };
+                            if (!details[key].items)
+                            details[key].items = {};
+                            details[key].items[item.name] =
+                            parseFloat(e.target.value) || 0;
+                            setValue("assessment_details", details);
+                          }}
+                          className="w-20" />
+
                               </div>
-                            ))}
+                      )}
                           </div>
                         </CardContent>
-                      )}
+                  }
                     </Card>
-                  ),
-                )}
+
+              )}
 
                 {/* 雷达图预览 */}
-                {Object.keys(assessmentDetails).length > 0 && (
-                  <Card>
+                {Object.keys(assessmentDetails).length > 0 &&
+              <Card>
                     <CardHeader>
                       <CardTitle>能力维度预览</CardTitle>
                     </CardHeader>
@@ -556,9 +556,9 @@ export default function EmployeeQualificationForm() {
                       <CompetencyRadarChart data={assessmentDetails} />
                     </CardContent>
                   </Card>
-                )}
+              }
               </div>
-            )}
+            }
 
             {/* 操作按钮 */}
             <div className="flex justify-end gap-4 pt-4 border-t">
@@ -566,26 +566,26 @@ export default function EmployeeQualificationForm() {
                 type="button"
                 variant="outline"
                 onClick={() => navigate("/qualifications")}
-                disabled={loading}
-              >
+                disabled={loading}>
+
                 <X className="h-4 w-4 mr-2" />
                 取消
               </Button>
               <Button
                 type="submit"
-                disabled={loading || !positionType || !levelId}
-              >
+                disabled={loading || !positionType || !levelId}>
+
                 <Save className="h-4 w-4 mr-2" />
-                {loading
-                  ? "提交中..."
-                  : isPromote
-                    ? "提交晋升评估"
-                    : "提交认证"}
+                {loading ?
+                "提交中..." :
+                isPromote ?
+                "提交晋升评估" :
+                "提交认证"}
               </Button>
             </div>
           </form>
         </CardContent>
       </Card>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

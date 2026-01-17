@@ -1,9 +1,9 @@
 /**
- * Alert Center Constants - 告警中心配置常量
- * 包含告警级别、状态、类型、规则、通知方式等配置
+ * Alert Center Constants - 预警中心配置常量
+ * 包含预警级别、状态、类型、规则、通知方式等配置
  */
 
-// ==================== 告警级别配置 ====================
+// ==================== 预警级别配置 ====================
 export const ALERT_LEVELS = {
   CRITICAL: {
     label: "严重",
@@ -72,13 +72,13 @@ export const ALERT_LEVELS = {
   }
 };
 
-// ==================== 告警状态配置 ====================
+// ==================== 预警状态配置 ====================
 export const ALERT_STATUS = {
   PENDING: {
     label: "待处理",
     color: "bg-amber-500",
     icon: "Clock",
-    description: "新产生的告警，等待处理",
+    description: "新产生的预警，等待处理",
     nextActions: ["确认", "分配", "忽略"],
     canEdit: true,
     canDelete: true
@@ -87,7 +87,7 @@ export const ALERT_STATUS = {
     label: "已确认",
     color: "bg-blue-500",
     icon: "CheckCircle2",
-    description: "告警已被确认，正在处理中",
+    description: "预警已被确认，正在处理中",
     nextActions: ["分配", "处理", "升级"],
     canEdit: true,
     canDelete: false
@@ -96,7 +96,7 @@ export const ALERT_STATUS = {
     label: "已分配",
     color: "bg-purple-500",
     icon: "User",
-    description: "告警已分配给具体处理人",
+    description: "预警已分配给具体处理人",
     nextActions: ["处理", "重新分配", "升级"],
     canEdit: true,
     canDelete: false
@@ -105,7 +105,7 @@ export const ALERT_STATUS = {
     label: "处理中",
     color: "bg-indigo-500",
     icon: "RefreshCw",
-    description: "告警正在处理过程中",
+    description: "预警正在处理过程中",
     nextActions: ["暂停", "解决", "升级"],
     canEdit: true,
     canDelete: false
@@ -114,7 +114,7 @@ export const ALERT_STATUS = {
     label: "已解决",
     color: "bg-emerald-500",
     icon: "CheckCircle2",
-    description: "告警问题已解决",
+    description: "预警问题已解决",
     nextActions: ["验证", "关闭", "重新打开"],
     canEdit: false,
     canDelete: false
@@ -123,7 +123,7 @@ export const ALERT_STATUS = {
     label: "已关闭",
     color: "bg-slate-500",
     icon: "XCircle",
-    description: "告警已关闭处理流程",
+    description: "预警已关闭处理流程",
     nextActions: ["重新打开"],
     canEdit: false,
     canDelete: true
@@ -132,14 +132,14 @@ export const ALERT_STATUS = {
     label: "已忽略",
     color: "bg-gray-500",
     icon: "X",
-    description: "告警被忽略，不进行处理",
+    description: "预警被忽略，不进行处理",
     nextActions: ["重新考虑"],
     canEdit: true,
     canDelete: true
   }
 };
 
-// ==================== 告警类型配置 ====================
+// ==================== 预警类型配置 ====================
 export const ALERT_TYPES = {
   PROJECT: {
     label: "项目预警",
@@ -154,7 +154,7 @@ export const ALERT_TYPES = {
     }
   },
   SYSTEM: {
-    label: "系统告警",
+    label: "系统预警",
     category: "系统监控",
     icon: "Monitor",
     subtypes: {
@@ -166,7 +166,7 @@ export const ALERT_TYPES = {
     }
   },
   BUSINESS: {
-    label: "业务告警",
+    label: "业务预警",
     category: "业务监控",
     icon: "TrendingUp",
     subtypes: {
@@ -178,7 +178,7 @@ export const ALERT_TYPES = {
     }
   },
   OPERATION: {
-    label: "运营告警",
+    label: "运营预警",
     category: "运营管理",
     icon: "Settings",
     subtypes: {
@@ -190,7 +190,7 @@ export const ALERT_TYPES = {
     }
   },
   QUALITY: {
-    label: "质量告警",
+    label: "质量预警",
     category: "质量管理",
     icon: "Shield",
     subtypes: {
@@ -203,7 +203,7 @@ export const ALERT_TYPES = {
   }
 };
 
-// ==================== 告警规则配置 ====================
+// ==================== 预警规则配置 ====================
 export const ALERT_RULES = {
   THRESHOLD: {
     label: "阈值规则",
@@ -308,7 +308,7 @@ export const NOTIFICATION_CHANNELS = {
   }
 };
 
-// ==================== 告警优先级配置 ====================
+// ==================== 预警优先级配置 ====================
 export const ALERT_PRIORITY = {
   IMMEDIATE: {
     label: "立即处理",
@@ -357,12 +357,12 @@ export const ALERT_PRIORITY = {
   }
 };
 
-// ==================== 告警处理配置 ====================
+// ==================== 预警处理配置 ====================
 export const ALERT_ACTIONS = {
   ACKNOWLEDGE: {
-    label: "确认告警",
+    label: "确认预警",
     icon: "CheckCircle2",
-    description: "确认收到告警，表示已知悉",
+    description: "确认收到预警，表示已知悉",
     allowedStatus: ["PENDING"],
     nextStatus: "ACKNOWLEDGED",
     requiredFields: ["acknowledged_by", "acknowledged_time", "note"]
@@ -370,50 +370,50 @@ export const ALERT_ACTIONS = {
   ASSIGN: {
     label: "分配处理",
     icon: "User",
-    description: "将告警分配给具体处理人",
+    description: "将预警分配给具体处理人",
     allowedStatus: ["PENDING", "ACKNOWLEDGED"],
     nextStatus: "ASSIGNED",
     requiredFields: ["assigned_to", "assigned_by", "assignment_note"]
   },
   ESCALATE: {
-    label: "升级告警",
+    label: "升级预警",
     icon: "TrendingUp",
-    description: "将告警升级给更高级别处理",
+    description: "将预警升级给更高级别处理",
     allowedStatus: ["PENDING", "ACKNOWLEDGED", "ASSIGNED", "IN_PROGRESS"],
     nextStatus: "ESCALATED",
     requiredFields: ["escalated_to", "escalated_by", "escalation_reason"]
   },
   RESOLVE: {
-    label: "解决告警",
+    label: "解决预警",
     icon: "CheckCircle2",
-    description: "标记告警问题已解决",
+    description: "标记预警问题已解决",
     allowedStatus: ["ASSIGNED", "IN_PROGRESS", "ESCALATED"],
     nextStatus: "RESOLVED",
     requiredFields: ["resolved_by", "resolved_time", "resolution_method", "resolution_note"]
   },
   CLOSE: {
-    label: "关闭告警",
+    label: "关闭预警",
     icon: "XCircle",
-    description: "关闭告警处理流程",
+    description: "关闭预警处理流程",
     allowedStatus: ["RESOLVED"],
     nextStatus: "CLOSED",
     requiredFields: ["closed_by", "closed_time", "closure_reason"]
   },
   IGNORE: {
-    label: "忽略告警",
+    label: "忽略预警",
     icon: "X",
-    description: "忽略告警，不进行处理",
+    description: "忽略预警，不进行处理",
     allowedStatus: ["PENDING"],
     nextStatus: "IGNORED",
     requiredFields: ["ignored_by", "ignored_time", "ignore_reason"]
   }
 };
 
-// ==================== 告警统计指标配置 ====================
+// ==================== 预警统计指标配置 ====================
 export const ALERT_METRICS = {
   RESPONSE_TIME: {
     label: "响应时间",
-    description: "从告警产生到首次处理的平均时间",
+    description: "从预警产生到首次处理的平均时间",
     unit: "分钟",
     calculation: "(first_action_time - created_time) / 60",
     target: {
@@ -425,7 +425,7 @@ export const ALERT_METRICS = {
   },
   RESOLUTION_TIME: {
     label: "解决时间",
-    description: "从告警产生到问题解决的平均时间",
+    description: "从预警产生到问题解决的平均时间",
     unit: "小时",
     calculation: "(resolved_time - created_time) / 3600",
     target: {
@@ -437,7 +437,7 @@ export const ALERT_METRICS = {
   },
   ESCALATION_RATE: {
     label: "升级率",
-    description: "告警升级处理的比例",
+    description: "预警升级处理的比例",
     unit: "%",
     calculation: "(escalated_count / total_count) * 100",
     target: {
@@ -449,28 +449,28 @@ export const ALERT_METRICS = {
   },
   FALSE_POSITIVE_RATE: {
     label: "误报率",
-    description: "被判定为误报的告警比例",
+    description: "被判定为误报的预警比例",
     unit: "%",
     calculation: "(false_positive_count / total_count) * 100",
     target: 5
   },
   MTBF: {
     label: "平均故障间隔",
-    description: "系统告警的平均间隔时间",
+    description: "系统预警的平均间隔时间",
     unit: "小时",
     calculation: "total_period / failure_count",
     target: 168 // 一周
   },
   MTTR: {
     label: "平均修复时间",
-    description: "告警修复的平均时间",
+    description: "预警修复的平均时间",
     unit: "小时",
     calculation: "total_downtime / failure_count",
     target: 4
   }
 };
 
-// ==================== 告警时间配置 ====================
+// ==================== 预警时间配置 ====================
 export const ALERT_TIME_CONFIG = {
   BUSINESS_HOURS: {
     START: "09:00",
@@ -497,28 +497,28 @@ export const ALERT_TIME_CONFIG = {
 // ==================== 工具函数 ====================
 
 /**
- * 获取告警级别配置
+ * 获取预警级别配置
  */
 export const getAlertLevelConfig = (level) => {
   return ALERT_LEVELS[level] || ALERT_LEVELS.INFO;
 };
 
 /**
- * 获取告警状态配置
+ * 获取预警状态配置
  */
 export const getAlertStatusConfig = (status) => {
   return ALERT_STATUS[status] || ALERT_STATUS.PENDING;
 };
 
 /**
- * 获取告警类型配置
+ * 获取预警类型配置
  */
 export const getAlertTypeConfig = (type) => {
   return ALERT_TYPES[type] || ALERT_TYPES.SYSTEM;
 };
 
 /**
- * 获取告警规则配置
+ * 获取预警规则配置
  */
 export const getAlertRuleConfig = (ruleType) => {
   return ALERT_RULES[ruleType] || ALERT_RULES.THRESHOLD;
@@ -532,7 +532,7 @@ export const getNotificationChannelConfig = (channel) => {
 };
 
 /**
- * 计算告警响应时间
+ * 计算预警响应时间
  */
 export const calculateResponseTime = (createdTime, firstActionTime) => {
   if (!createdTime || !firstActionTime) return 0;
@@ -544,7 +544,7 @@ export const calculateResponseTime = (createdTime, firstActionTime) => {
 };
 
 /**
- * 计算告警解决时间
+ * 计算预警解决时间
  */
 export const calculateResolutionTime = (createdTime, resolvedTime) => {
   if (!createdTime || !resolvedTime) return 0;
@@ -576,7 +576,7 @@ export const checkResolutionTimeSLA = (resolutionTime, alertLevel) => {
 };
 
 /**
- * 获取告警的下一个可执行操作
+ * 获取预警的下一个可执行操作
  */
 export const getAvailableActions = (alert) => {
   const statusConfig = getAlertStatusConfig(alert.status);
@@ -584,7 +584,7 @@ export const getAvailableActions = (alert) => {
 };
 
 /**
- * 验证告警规则配置
+ * 验证预警规则配置
  */
 export const validateAlertRule = (rule) => {
   const errors = [];
@@ -616,7 +616,7 @@ export const validateAlertRule = (rule) => {
 };
 
 /**
- * 生成告警编号
+ * 生成预警编号
  */
 export const generateAlertNumber = (type, date = new Date()) => {
   const typeCode = type.substring(0, 3).toUpperCase();
@@ -629,7 +629,7 @@ export const generateAlertNumber = (type, date = new Date()) => {
 };
 
 /**
- * 获取告警统计摘要
+ * 获取预警统计摘要
  */
 export const getAlertSummary = (alerts, dateRange = null) => {
   let filteredAlerts = alerts;
@@ -710,7 +710,7 @@ export const requiresEscalation = (alert, currentTime = new Date()) => {
 };
 
 /**
- * 获取告警严重程度分数
+ * 获取预警严重程度分数
  */
 export const getAlertSeverityScore = (level) => {
   const levelConfig = getAlertLevelConfig(level);
@@ -718,7 +718,7 @@ export const getAlertSeverityScore = (level) => {
 };
 
 /**
- * 检查告警是否在工作时间
+ * 检查预警是否在工作时间
  */
 export const isBusinessHour = (timestamp) => {
   const time = new Date(timestamp);
@@ -733,7 +733,7 @@ export const isBusinessHour = (timestamp) => {
 };
 
 /**
- * 格式化告警时间显示
+ * 格式化预警时间显示
  */
 export const formatAlertTime = (timestamp) => {
   if (!timestamp) return '-';

@@ -13,8 +13,8 @@ import {
   QualityRateTab,
   useProcurementData,
   TIME_RANGE_LABELS,
-  formatAmount,
-} from '../components/procurement-analysis';
+  formatAmount as _formatAmount } from
+'../components/procurement-analysis';
 
 export default function ProcurementAnalysis() {
   const [activeTab, setActiveTab] = useState('cost-trend');
@@ -22,7 +22,7 @@ export default function ProcurementAnalysis() {
 
   // 使用自定义 Hook 管理数据
   const {
-    loading,
+    loading: _loading,
     costTrendData,
     priceFluctuationData,
     deliveryPerformanceData,
@@ -32,7 +32,7 @@ export default function ProcurementAnalysis() {
     loadPriceFluctuation,
     loadDeliveryPerformance,
     loadRequestEfficiency,
-    loadQualityRate,
+    loadQualityRate
   } = useProcurementData(timeRange);
 
   // 初始加载
@@ -42,22 +42,22 @@ export default function ProcurementAnalysis() {
 
   // Tab切换时加载对应数据
   useEffect(() => {
-    if (activeTab === 'cost-trend') loadCostTrend();
-    else if (activeTab === 'price-fluctuation') loadPriceFluctuation();
-    else if (activeTab === 'delivery-performance') loadDeliveryPerformance();
-    else if (activeTab === 'request-efficiency') loadRequestEfficiency();
-    else if (activeTab === 'quality-rate') loadQualityRate();
+    if (activeTab === 'cost-trend') loadCostTrend();else
+    if (activeTab === 'price-fluctuation') loadPriceFluctuation();else
+    if (activeTab === 'delivery-performance') loadDeliveryPerformance();else
+    if (activeTab === 'request-efficiency') loadRequestEfficiency();else
+    if (activeTab === 'quality-rate') loadQualityRate();
   }, [activeTab, loadCostTrend, loadPriceFluctuation, loadDeliveryPerformance, loadRequestEfficiency, loadQualityRate]);
 
   // 导出报表
   const handleExport = () => {
     try {
       const exportData = [
-        ['采购分析报表'],
-        ['统计周期', TIME_RANGE_LABELS[timeRange] || timeRange],
-        ['导出日期', new Date().toLocaleDateString('zh-CN')],
-        [''],
-      ];
+      ['采购分析报表'],
+      ['统计周期', TIME_RANGE_LABELS[timeRange] || timeRange],
+      ['导出日期', new Date().toLocaleDateString('zh-CN')],
+      ['']];
+
 
       // 根据当前Tab添加数据
       if (activeTab === 'cost-trend' && costTrendData) {
@@ -69,7 +69,7 @@ export default function ProcurementAnalysis() {
           [''],
           ['月份', '采购金额', '订单数量', '环比增长率(%)']
         );
-        costTrendData.trend_data?.forEach(t => {
+        costTrendData.trend_data?.forEach((t) => {
           exportData.push([t.period, t.amount, t.order_count, t.mom_rate]);
         });
       } else if (activeTab === 'delivery-performance' && deliveryPerformanceData) {
@@ -81,15 +81,15 @@ export default function ProcurementAnalysis() {
           [''],
           ['供应商名称', '交货总数', '准时交货', '延期交货', '准时率(%)', '平均延期天数']
         );
-        deliveryPerformanceData.supplier_performance?.forEach(s => {
+        deliveryPerformanceData.supplier_performance?.forEach((s) => {
           exportData.push([
-            s.supplier_name,
-            s.total_deliveries,
-            s.on_time_deliveries,
-            s.delayed_deliveries,
-            s.on_time_rate,
-            s.avg_delay_days
-          ]);
+          s.supplier_name,
+          s.total_deliveries,
+          s.on_time_deliveries,
+          s.delayed_deliveries,
+          s.on_time_rate,
+          s.avg_delay_days]
+          );
         });
       } else if (activeTab === 'quality-rate' && qualityRateData) {
         exportData.push(
@@ -101,9 +101,9 @@ export default function ProcurementAnalysis() {
         );
       }
 
-      const csvContent = exportData
-        .map((row) => row.map((cell) => `"${cell}"`).join(','))
-        .join('\n');
+      const csvContent = exportData.
+      map((row) => row.map((cell) => `"${cell}"`).join(',')).
+      join('\n');
 
       const BOM = '\uFEFF';
       const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -129,8 +129,8 @@ export default function ProcurementAnalysis() {
         <ProcurementHeader
           timeRange={timeRange}
           onTimeRangeChange={setTimeRange}
-          onExport={handleExport}
-        />
+          onExport={handleExport} />
+
 
         {/* Tab内容 */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -168,6 +168,6 @@ export default function ProcurementAnalysis() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
-  );
+    </div>);
+
 }

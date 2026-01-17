@@ -12,8 +12,8 @@ import {
   BarChart3,
   Calendar,
   Filter,
-  DollarSign,
-} from "lucide-react";
+  DollarSign } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -32,21 +32,21 @@ import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger,
-} from "../components/ui";
-import { fadeIn, staggerContainer } from "../lib/animations";
+  TabsTrigger } from
+"../components/ui";
+import { fadeIn as _fadeIn, staggerContainer as _staggerContainer } from "../lib/animations";
 import { delayAnalysisApi } from "../services/api";
-import { formatAmount, formatDate } from "../lib/utils";
+import { formatAmount, formatDate as _formatDate } from "../lib/utils";
 
 export default function DelayAnalysis() {
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
   const [rootCauseData, setRootCauseData] = useState(null);
   const [impactData, setImpactData] = useState(null);
   const [trendsData, setTrendsData] = useState(null);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [projectId, setProjectId] = useState("");
-  const [months, setMonths] = useState(12);
+  const [months, _setMonths] = useState(12);
   const [activeTab, setActiveTab] = useState("root-cause");
 
   const loadRootCause = async () => {
@@ -124,8 +124,8 @@ export default function DelayAnalysis() {
               <Input
                 type="date"
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
+                onChange={(e) => setStartDate(e.target.value)} />
+
             </div>
             <div>
               <label className="text-sm text-slate-500 mb-1 block">
@@ -134,8 +134,8 @@ export default function DelayAnalysis() {
               <Input
                 type="date"
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
+                onChange={(e) => setEndDate(e.target.value)} />
+
             </div>
             <div>
               <label className="text-sm text-slate-500 mb-1 block">
@@ -145,8 +145,8 @@ export default function DelayAnalysis() {
                 type="number"
                 placeholder="项目ID"
                 value={projectId}
-                onChange={(e) => setProjectId(e.target.value)}
-              />
+                onChange={(e) => setProjectId(e.target.value)} />
+
             </div>
             <div className="flex items-end">
               <Button onClick={loadRootCause} className="w-full">
@@ -166,8 +166,8 @@ export default function DelayAnalysis() {
 
         {/* 根因分析 */}
         <TabsContent value="root-cause">
-          {rootCauseData && (
-            <div className="space-y-6">
+          {rootCauseData &&
+          <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card>
                   <CardContent className="pt-6">
@@ -201,8 +201,8 @@ export default function DelayAnalysis() {
                 </CardHeader>
                 <CardContent>
                   {rootCauseData.root_causes &&
-                    rootCauseData.root_causes.length > 0 && (
-                      <Table>
+                rootCauseData.root_causes.length > 0 &&
+                <Table>
                         <TableHeader>
                           <TableRow>
                             <TableHead>延期原因</TableHead>
@@ -212,8 +212,8 @@ export default function DelayAnalysis() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {rootCauseData.root_causes.map((cause, idx) => (
-                            <TableRow key={idx}>
+                          {rootCauseData.root_causes.map((cause, idx) =>
+                    <TableRow key={idx}>
                               <TableCell>{cause.reason}</TableCell>
                               <TableCell>{cause.count}</TableCell>
                               <TableCell>{cause.total_delay_days} 天</TableCell>
@@ -221,20 +221,20 @@ export default function DelayAnalysis() {
                                 {cause.average_delay_days} 天
                               </TableCell>
                             </TableRow>
-                          ))}
+                    )}
                         </TableBody>
                       </Table>
-                    )}
+                }
                 </CardContent>
               </Card>
             </div>
-          )}
+          }
         </TabsContent>
 
         {/* 影响分析 */}
         <TabsContent value="impact">
-          {impactData && (
-            <div className="space-y-6">
+          {impactData &&
+          <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Card>
                   <CardContent className="pt-6">
@@ -266,8 +266,8 @@ export default function DelayAnalysis() {
                 </CardHeader>
                 <CardContent>
                   {impactData.affected_projects &&
-                    impactData.affected_projects.length > 0 && (
-                      <Table>
+                impactData.affected_projects.length > 0 &&
+                <Table>
                         <TableHeader>
                           <TableRow>
                             <TableHead>项目编码</TableHead>
@@ -277,8 +277,8 @@ export default function DelayAnalysis() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {impactData.affected_projects.map((project, idx) => (
-                            <TableRow key={idx}>
+                          {impactData.affected_projects.map((project, idx) =>
+                    <TableRow key={idx}>
                               <TableCell>{project.project_code}</TableCell>
                               <TableCell>{project.project_name}</TableCell>
                               <TableCell>{project.delay_days} 天</TableCell>
@@ -286,20 +286,20 @@ export default function DelayAnalysis() {
                                 {formatAmount(project.cost_impact)}
                               </TableCell>
                             </TableRow>
-                          ))}
+                    )}
                         </TableBody>
                       </Table>
-                    )}
+                }
                 </CardContent>
               </Card>
             </div>
-          )}
+          }
         </TabsContent>
 
         {/* 趋势分析 */}
         <TabsContent value="trends">
-          {trendsData && (
-            <div className="space-y-6">
+          {trendsData &&
+          <div className="space-y-6">
               <Card>
                 <CardHeader>
                   <CardTitle>延期趋势分析</CardTitle>
@@ -315,15 +315,15 @@ export default function DelayAnalysis() {
                     </div>
                     <div className="text-sm text-slate-500">
                       趋势方向:{" "}
-                      {trendsData.summary?.trend_direction === "INCREASING"
-                        ? "上升"
-                        : trendsData.summary?.trend_direction === "DECREASING"
-                        ? "下降"
-                        : "稳定"}
+                      {trendsData.summary?.trend_direction === "INCREASING" ?
+                    "上升" :
+                    trendsData.summary?.trend_direction === "DECREASING" ?
+                    "下降" :
+                    "稳定"}
                     </div>
                   </div>
-                  {trendsData.trends && trendsData.trends.length > 0 && (
-                    <Table>
+                  {trendsData.trends && trendsData.trends.length > 0 &&
+                <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead>月份</TableHead>
@@ -334,8 +334,8 @@ export default function DelayAnalysis() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {trendsData.trends.map((trend, idx) => (
-                          <TableRow key={idx}>
+                        {trendsData.trends.map((trend, idx) =>
+                    <TableRow key={idx}>
                             <TableCell>{trend.month}</TableCell>
                             <TableCell>{trend.total_tasks}</TableCell>
                             <TableCell>{trend.delayed_tasks}</TableCell>
@@ -344,16 +344,16 @@ export default function DelayAnalysis() {
                             </TableCell>
                             <TableCell>{trend.total_delay_days} 天</TableCell>
                           </TableRow>
-                        ))}
+                    )}
                       </TableBody>
                     </Table>
-                  )}
+                }
                 </CardContent>
               </Card>
             </div>
-          )}
+          }
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>);
+
 }

@@ -18,7 +18,7 @@ export const useSalesTeamFilters = (defaultRange) => {
 
   // 筛选状态
   const [filters, setFilters] = useState({
-    departmentId: "",
+    departmentId: "all",
     region: "",
     startDate: resolvedDefaultRange.start,
     endDate: resolvedDefaultRange.end,
@@ -72,7 +72,7 @@ export const useSalesTeamFilters = (defaultRange) => {
   const handleResetFilters = useCallback(() => {
     const range = getDefaultDateRange();
     setFilters({
-      departmentId: "",
+      departmentId: "all",
       region: "",
       startDate: range.start,
       endDate: range.end,

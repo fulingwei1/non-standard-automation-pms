@@ -20,16 +20,16 @@ import {
   ChevronDown,
   Calendar,
   Building2,
-  DollarSign,
-} from "lucide-react";
+  DollarSign } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
-} from "../components/ui/card";
+  CardDescription } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -39,25 +39,25 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogBody,
-} from "../components/ui/dialog";
+  DialogBody } from
+"../components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import { Textarea } from "../components/ui/textarea";
 import { Label } from "../components/ui/label";
 import { cn } from "../lib/utils";
-import { fadeIn, staggerContainer } from "../lib/animations";
+import { fadeIn, staggerContainer as _staggerContainer } from "../lib/animations";
 import {
   purchaseApi,
   supplierApi,
   projectApi,
-  materialApi,
-} from "../services/api";
+  materialApi as _materialApi } from
+"../services/api";
 import { toast } from "../components/ui/toast";
 import { ApiIntegrationError } from "../components/ui";
 
@@ -74,8 +74,8 @@ import {
   APPROVAL_STATUS_CONFIGS,
   PROCUREMENT_CATEGORIES,
   SHIPPING_METHODS,
-  PurchaseOrderUtils,
-} from "../components/purchase-orders";
+  PurchaseOrderUtils } from
+"../components/purchase-orders";
 
 function OrderCard({ order, onView, onEdit, onDelete, onSubmit, onApprove }) {
   const status = ORDER_STATUS_CONFIGS[order.status];
@@ -89,7 +89,7 @@ function OrderCard({ order, onView, onEdit, onDelete, onSubmit, onApprove }) {
       Truck,
       CheckCircle2,
       AlertTriangle,
-      Trash2,
+      Trash2
     };
     return icons[iconName] || Package;
   }
@@ -97,8 +97,8 @@ function OrderCard({ order, onView, onEdit, onDelete, onSubmit, onApprove }) {
   return (
     <motion.div
       whileHover={{ scale: 1.01 }}
-      className="bg-surface-1 rounded-xl border border-border p-4 hover:border-border/80 transition-colors"
-    >
+      className="bg-surface-1 rounded-xl border border-border p-4 hover:border-border/80 transition-colors">
+
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div>
@@ -106,14 +106,14 @@ function OrderCard({ order, onView, onEdit, onDelete, onSubmit, onApprove }) {
             <span className="font-mono font-semibold text-white">
               {order.id}
             </span>
-            {order.urgency !== "normal" && (
-              <Badge
-                variant="outline"
-                className={cn("text-[10px] border", urgency?.color)}
-              >
+            {order.urgency !== "normal" &&
+            <Badge
+              variant="outline"
+              className={cn("text-[10px] border", urgency?.color)}>
+
                 {urgency?.label}
               </Badge>
-            )}
+            }
           </div>
           <p className="text-sm text-slate-400">{order.supplierName}</p>
         </div>
@@ -142,16 +142,16 @@ function OrderCard({ order, onView, onEdit, onDelete, onSubmit, onApprove }) {
           <div
             className={cn(
               "h-full rounded-full transition-all",
-              order.status === "completed"
-                ? "bg-emerald-500"
-                : order.status === "delayed"
-                  ? "bg-red-500"
-                  : "bg-accent",
+              order.status === "completed" ?
+              "bg-emerald-500" :
+              order.status === "delayed" ?
+              "bg-red-500" :
+              "bg-accent"
             )}
             style={{
-              width: `${(order.receivedCount / order.itemCount) * 100}%`,
-            }}
-          />
+              width: `${order.receivedCount / order.itemCount * 100}%`
+            }} />
+
         </div>
       </div>
 
@@ -168,21 +168,21 @@ function OrderCard({ order, onView, onEdit, onDelete, onSubmit, onApprove }) {
           <p
             className={cn(
               "font-medium",
-              order.status === "delayed" ? "text-red-400" : "text-white",
-            )}
-          >
+              order.status === "delayed" ? "text-red-400" : "text-white"
+            )}>
+
             {order.delayedDate || PurchaseOrderUtils.formatDate(order.expected_date)}
           </p>
         </div>
       </div>
 
       {/* Delay Reason */}
-      {order.delayReason && (
-        <div className="mb-3 p-2 rounded-lg bg-red-500/10 text-xs text-red-300 flex items-center gap-2">
+      {order.delayReason &&
+      <div className="mb-3 p-2 rounded-lg bg-red-500/10 text-xs text-red-300 flex items-center gap-2">
           <AlertTriangle className="w-3 h-3" />
           {order.delayReason}
         </div>
-      )}
+      }
 
       {/* Actions */}
       <div className="flex items-center justify-between pt-3 border-t border-border/50">
@@ -193,62 +193,62 @@ function OrderCard({ order, onView, onEdit, onDelete, onSubmit, onApprove }) {
             size="sm"
             className="h-7 px-2"
             onClick={() => onView(order)}
-            title="查看详情"
-          >
+            title="查看详情">
+
             <Eye className="w-3.5 h-3.5" />
           </Button>
-          {order.status === ORDER_STATUS.DRAFT && onEdit && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2"
-              onClick={() => onEdit(order)}
-              title="编辑"
-            >
+          {order.status === ORDER_STATUS.DRAFT && onEdit &&
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2"
+            onClick={() => onEdit(order)}
+            title="编辑">
+
               <Edit3 className="w-3.5 h-3.5" />
             </Button>
-          )}
-          {order.status === ORDER_STATUS.DRAFT && onDelete && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 text-red-400 hover:text-red-300"
-              onClick={() => onDelete(order)}
-              title="删除"
-            >
+          }
+          {order.status === ORDER_STATUS.DRAFT && onDelete &&
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-red-400 hover:text-red-300"
+            onClick={() => onDelete(order)}
+            title="删除">
+
               <Trash2 className="w-3.5 h-3.5" />
             </Button>
-          )}
-          {(order.status === ORDER_STATUS.PENDING || order.status === ORDER_STATUS.PARTIAL_RECEIVED) && onSubmit && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 text-blue-400 hover:text-blue-300"
-              onClick={() => onSubmit(order)}
-              title="确认收货"
-            >
+          }
+          {(order.status === ORDER_STATUS.PENDING || order.status === ORDER_STATUS.PARTIAL_RECEIVED) && onSubmit &&
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-blue-400 hover:text-blue-300"
+            onClick={() => onSubmit(order)}
+            title="确认收货">
+
               <CheckCircle2 className="w-3.5 h-3.5" />
             </Button>
-          )}
-          {order.status === ORDER_STATUS.DRAFT && onApprove && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 text-emerald-400 hover:text-emerald-300"
-              onClick={() => onApprove(order)}
-              title="提交审批"
-            >
+          }
+          {order.status === ORDER_STATUS.DRAFT && onApprove &&
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-emerald-400 hover:text-emerald-300"
+            onClick={() => onApprove(order)}
+            title="提交审批">
+
               <CheckCircle2 className="w-3.5 h-3.5" />
             </Button>
-          )}
+          }
         </div>
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 }
 
 export default function PurchaseOrders() {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialStatus = searchParams.get("status") || "all";
 
@@ -264,7 +264,7 @@ export default function PurchaseOrders() {
   // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
+  const [_showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showReceiveModal, setShowReceiveModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -272,7 +272,7 @@ export default function PurchaseOrders() {
   // Dropdown data
   const [suppliers, setSuppliers] = useState([]);
   const [projects, setProjects] = useState([]);
-  const [materials, setMaterials] = useState([]);
+  const [_materials, _setMaterials] = useState([]);
 
   // Form states
   const [newOrder, setNewOrder] = useState({
@@ -282,7 +282,7 @@ export default function PurchaseOrders() {
     payment_terms: PAYMENT_TERMS.NET30,
     shipping_method: SHIPPING_METHODS.STANDARD,
     notes: "",
-    urgency: ORDER_URGENCY.NORMAL,
+    urgency: ORDER_URGENCY.NORMAL
   });
 
   const [editOrder, setEditOrder] = useState({
@@ -293,13 +293,13 @@ export default function PurchaseOrders() {
     payment_terms: PAYMENT_TERMS.NET30,
     shipping_method: SHIPPING_METHODS.STANDARD,
     notes: "",
-    urgency: ORDER_URGENCY.NORMAL,
+    urgency: ORDER_URGENCY.NORMAL
   });
 
   const [receiveData, setReceiveData] = useState({
     received_items: [],
     notes: "",
-    received_date: new Date().toISOString().split('T')[0],
+    received_date: new Date().toISOString().split('T')[0]
   });
 
   // Load orders
@@ -310,11 +310,16 @@ export default function PurchaseOrders() {
       const params = {
         page_size: 1000,
         ...(statusFilter && statusFilter !== "all" && { status: statusFilter }),
-        ...(searchQuery && { search: searchQuery }),
+        ...(searchQuery && { search: searchQuery })
       };
 
       const response = await purchaseApi.list(params);
-      let ordersData = response.data?.items || response.data || [];
+      let ordersData = response.data?.data || response.data?.items || response.data || [];
+
+      // 确保 ordersData 是数组
+      if (!Array.isArray(ordersData)) {
+        ordersData = [];
+      }
 
       // Transform API response to component format
       const transformedOrders = ordersData.map((order) => {
@@ -338,7 +343,7 @@ export default function PurchaseOrders() {
           delayedDate: order.delayed_date || "",
           delayReason: order.delay_reason || "",
           totalAmount: parseFloat(
-            order.total_amount || order.amount_with_tax || 0,
+            order.total_amount || order.amount_with_tax || 0
           ),
           receivedAmount: 0,
           itemCount: itemCount,
@@ -348,16 +353,16 @@ export default function PurchaseOrders() {
             name: item.material_name || "",
             qty: item.quantity || 0,
             price: parseFloat(item.unit_price || 0),
-            received: item.received_qty || 0,
+            received: item.received_qty || 0
           })),
-          _original: order,
+          _original: order
         };
       });
 
       // Calculate received amounts
       transformedOrders.forEach((order) => {
         order.receivedAmount = PurchaseOrderUtils.calculateReceivedAmount(order.items);
-        
+
         // Check for delayed orders
         if (PurchaseOrderUtils.isOrderDelayed(order.expectedDate, order.status)) {
           order.status = ORDER_STATUS.DELAYED;
@@ -390,12 +395,12 @@ export default function PurchaseOrders() {
     const loadDropdownData = async () => {
       try {
         const [suppliersRes, projectsRes] = await Promise.all([
-          supplierApi.list({ page_size: 1000 }),
-          projectApi.list({ page_size: 1000 }),
-        ]);
+        supplierApi.list({ page_size: 1000 }),
+        projectApi.list({ page_size: 1000 })]
+        );
 
         const suppliersData =
-          suppliersRes.data?.items || suppliersRes.data || [];
+        suppliersRes.data?.items || suppliersRes.data || [];
         const projectsData = projectsRes.data?.items || projectsRes.data || [];
 
         setSuppliers(suppliersData);
@@ -415,11 +420,11 @@ export default function PurchaseOrders() {
   const sortedOrders = PurchaseOrderUtils.sortOrders(filteredOrders, sortBy, sortOrder);
 
   // Calculate stats
-  const stats = {
+  const _stats = {
     total: orders.length,
-    pending: orders.filter(o => o.status === ORDER_STATUS.PENDING).length,
-    delayed: orders.filter(o => o.status === ORDER_STATUS.DELAYED).length,
-    totalAmount: orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0),
+    pending: orders.filter((o) => o.status === ORDER_STATUS.PENDING).length,
+    delayed: orders.filter((o) => o.status === ORDER_STATUS.DELAYED).length,
+    totalAmount: orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0)
   };
 
   // Event handlers
@@ -435,7 +440,7 @@ export default function PurchaseOrders() {
         ...newOrder,
         id: PurchaseOrderUtils.generateOrderNumber(),
         total_amount: PurchaseOrderUtils.calculateOrderTotal(newOrder.items),
-        expected_date: newOrder.expected_date,
+        expected_date: newOrder.expected_date
       };
 
       await purchaseApi.create(orderData);
@@ -448,7 +453,7 @@ export default function PurchaseOrders() {
         payment_terms: PAYMENT_TERMS.NET30,
         shipping_method: SHIPPING_METHODS.STANDARD,
         notes: "",
-        urgency: ORDER_URGENCY.NORMAL,
+        urgency: ORDER_URGENCY.NORMAL
       });
       loadOrders();
     } catch (err) {
@@ -457,7 +462,7 @@ export default function PurchaseOrders() {
     }
   };
 
-  const handleEditOrder = async () => {
+  const _handleEditOrder = async () => {
     try {
       const errors = PurchaseOrderUtils.validateOrder(editOrder);
       if (errors.length > 0) {
@@ -467,7 +472,7 @@ export default function PurchaseOrders() {
 
       const orderData = {
         ...editOrder,
-        total_amount: PurchaseOrderUtils.calculateOrderTotal(editOrder.items),
+        total_amount: PurchaseOrderUtils.calculateOrderTotal(editOrder.items)
       };
 
       await purchaseApi.update(editOrder.id, orderData);
@@ -515,7 +520,7 @@ export default function PurchaseOrders() {
       setReceiveData({
         received_items: [],
         notes: "",
-        received_date: new Date().toISOString().split('T')[0],
+        received_date: new Date().toISOString().split('T')[0]
       });
       loadOrders();
     } catch (err) {
@@ -532,13 +537,13 @@ export default function PurchaseOrders() {
       "状态": ORDER_STATUS_CONFIGS[order.status]?.label,
       "金额": order.totalAmount,
       "采购员": order.buyer,
-      "预计到货": order.expectedDate,
+      "预计到货": order.expectedDate
     }));
 
     const csv = [
-      Object.keys(csvData[0]).join(","),
-      ...csvData.map((row) => Object.values(row).join(",")),
-    ].join("\n");
+    Object.keys(csvData[0]).join(","),
+    ...csvData.map((row) => Object.values(row).join(","))].
+    join("\n");
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
@@ -555,8 +560,8 @@ export default function PurchaseOrders() {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4"></div>
           <p className="text-text-secondary">加载采购订单...</p>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   if (error) {
@@ -566,18 +571,18 @@ export default function PurchaseOrders() {
           error={error}
           onRetry={loadOrders}
           title="加载采购订单失败"
-          description="无法获取采购订单数据，请检查网络连接后重试"
-        />
-      </div>
-    );
+          description="无法获取采购订单数据，请检查网络连接后重试" />
+
+      </div>);
+
   }
 
   return (
     <div className="min-h-screen bg-background">
       <PageHeader
         title="采购订单管理"
-        description="管理采购订单、供应商、审批流程和收货确认"
-      />
+        description="管理采购订单、供应商、审批流程和收货确认" />
+
 
       <div className="container mx-auto px-4 py-6">
         {/* Overview Section */}
@@ -595,8 +600,8 @@ export default function PurchaseOrders() {
                     placeholder="搜索订单编号、供应商..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 bg-surface-2 border-border"
-                  />
+                    className="pl-10 bg-surface-2 border-border" />
+
                 </div>
               </div>
 
@@ -608,11 +613,11 @@ export default function PurchaseOrders() {
                   </SelectTrigger>
                   <SelectContent className="bg-surface-2 border-border">
                     <SelectItem value="all">全部状态</SelectItem>
-                    {Object.entries(ORDER_STATUS_CONFIGS).map(([key, config]) => (
-                      <SelectItem key={key} value={key}>
+                    {Object.entries(ORDER_STATUS_CONFIGS).map(([key, config]) =>
+                    <SelectItem key={key} value={key}>
                         {config.label}
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
 
@@ -631,14 +636,14 @@ export default function PurchaseOrders() {
                   variant="outline"
                   size="icon"
                   onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-                  className="bg-surface-2 border-border"
-                >
+                  className="bg-surface-2 border-border">
+
                   <ChevronDown
                     className={cn(
                       "h-4 w-4 transition-transform",
                       sortOrder === "asc" && "rotate-180"
-                    )}
-                  />
+                    )} />
+
                 </Button>
               </div>
 
@@ -647,15 +652,15 @@ export default function PurchaseOrders() {
                 <Button
                   variant="outline"
                   onClick={handleExportData}
-                  className="bg-surface-2 border-border"
-                >
+                  className="bg-surface-2 border-border">
+
                   <Download className="h-4 w-4 mr-2" />
                   导出
                 </Button>
                 <Button
                   onClick={() => setShowCreateModal(true)}
-                  className="bg-accent hover:bg-accent/90"
-                >
+                  className="bg-accent hover:bg-accent/90">
+
                   <Plus className="h-4 w-4 mr-2" />
                   新建订单
                 </Button>
@@ -667,50 +672,50 @@ export default function PurchaseOrders() {
         {/* Orders Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           <AnimatePresence>
-            {sortedOrders.map((order) => (
-              <motion.div
-                key={order.id}
-                initial="hidden"
-                animate="visible"
-                exit="hidden"
-                variants={fadeIn}
-                layout
-              >
+            {sortedOrders.map((order) =>
+            <motion.div
+              key={order.id}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
+              variants={fadeIn}
+              layout>
+
                 <OrderCard
-                  order={order}
-                  onView={(order) => {
-                    setSelectedOrder(order);
-                    setShowDetailModal(true);
-                  }}
-                  onEdit={(order) => {
-                    setSelectedOrder(order);
-                    setEditOrder({
-                      ...order,
-                      payment_terms: order.paymentTerms || PAYMENT_TERMS.NET30,
-                      shipping_method: order.shippingMethod || SHIPPING_METHODS.STANDARD,
-                    });
-                    setShowEditModal(true);
-                  }}
-                  onDelete={(order) => {
-                    setSelectedOrder(order);
-                    setShowDeleteModal(true);
-                  }}
-                  onSubmit={(order) => {
-                    setSelectedOrder(order);
-                    setShowReceiveModal(true);
-                  }}
-                  onApprove={(order) => {
-                    setSelectedOrder(order);
-                    handleSubmitApproval();
-                  }}
-                />
+                order={order}
+                onView={(order) => {
+                  setSelectedOrder(order);
+                  setShowDetailModal(true);
+                }}
+                onEdit={(order) => {
+                  setSelectedOrder(order);
+                  setEditOrder({
+                    ...order,
+                    payment_terms: order.paymentTerms || PAYMENT_TERMS.NET30,
+                    shipping_method: order.shippingMethod || SHIPPING_METHODS.STANDARD
+                  });
+                  setShowEditModal(true);
+                }}
+                onDelete={(order) => {
+                  setSelectedOrder(order);
+                  setShowDeleteModal(true);
+                }}
+                onSubmit={(order) => {
+                  setSelectedOrder(order);
+                  setShowReceiveModal(true);
+                }}
+                onApprove={(order) => {
+                  setSelectedOrder(order);
+                  handleSubmitApproval();
+                }} />
+
               </motion.div>
-            ))}
+            )}
           </AnimatePresence>
         </div>
 
-        {sortedOrders.length === 0 && !loading && (
-          <div className="text-center py-12">
+        {sortedOrders.length === 0 && !loading &&
+        <div className="text-center py-12">
             <Package className="h-16 w-16 text-text-secondary mx-auto mb-4 opacity-50" />
             <h3 className="text-lg font-medium text-white mb-2">暂无采购订单</h3>
             <p className="text-text-secondary mb-4">还没有创建任何采购订单</p>
@@ -719,7 +724,7 @@ export default function PurchaseOrders() {
               创建第一个采购订单
             </Button>
           </div>
-        )}
+        }
 
         {/* Create Order Modal */}
         <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
@@ -734,18 +739,18 @@ export default function PurchaseOrders() {
                   <Select
                     value={newOrder.supplier_id}
                     onValueChange={(value) =>
-                      setNewOrder({ ...newOrder, supplier_id: value })
-                    }
-                  >
+                    setNewOrder({ ...newOrder, supplier_id: value })
+                    }>
+
                     <SelectTrigger className="bg-surface-2 border-border">
                       <SelectValue placeholder="选择供应商" />
                     </SelectTrigger>
                     <SelectContent className="bg-surface-2 border-border">
-                      {suppliers.map((supplier) => (
-                        <SelectItem key={supplier.id} value={supplier.id}>
+                      {suppliers.map((supplier) =>
+                      <SelectItem key={supplier.id} value={supplier.id}>
                           {supplier.name}
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -754,18 +759,18 @@ export default function PurchaseOrders() {
                   <Select
                     value={newOrder.project_id}
                     onValueChange={(value) =>
-                      setNewOrder({ ...newOrder, project_id: value })
-                    }
-                  >
+                    setNewOrder({ ...newOrder, project_id: value })
+                    }>
+
                     <SelectTrigger className="bg-surface-2 border-border">
                       <SelectValue placeholder="选择项目" />
                     </SelectTrigger>
                     <SelectContent className="bg-surface-2 border-border">
-                      {projects.map((project) => (
-                        <SelectItem key={project.id} value={project.id}>
+                      {projects.map((project) =>
+                      <SelectItem key={project.id} value={project.id}>
                           {project.name}
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -777,18 +782,18 @@ export default function PurchaseOrders() {
                   <Select
                     value={newOrder.payment_terms}
                     onValueChange={(value) =>
-                      setNewOrder({ ...newOrder, payment_terms: value })
-                    }
-                  >
+                    setNewOrder({ ...newOrder, payment_terms: value })
+                    }>
+
                     <SelectTrigger className="bg-surface-2 border-border">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-surface-2 border-border">
-                      {Object.entries(PAYMENT_TERMS_CONFIGS).map(([key, config]) => (
-                        <SelectItem key={key} value={key}>
+                      {Object.entries(PAYMENT_TERMS_CONFIGS).map(([key, config]) =>
+                      <SelectItem key={key} value={key}>
                           {config.label}
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -797,18 +802,18 @@ export default function PurchaseOrders() {
                   <Select
                     value={newOrder.shipping_method}
                     onValueChange={(value) =>
-                      setNewOrder({ ...newOrder, shipping_method: value })
-                    }
-                  >
+                    setNewOrder({ ...newOrder, shipping_method: value })
+                    }>
+
                     <SelectTrigger className="bg-surface-2 border-border">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-surface-2 border-border">
-                      {Object.entries(SHIPPING_METHODS).map(([key, config]) => (
-                        <SelectItem key={key} value={key}>
+                      {Object.entries(SHIPPING_METHODS).map(([key, config]) =>
+                      <SelectItem key={key} value={key}>
                           {config.label}
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -819,19 +824,19 @@ export default function PurchaseOrders() {
                 <Textarea
                   value={newOrder.notes}
                   onChange={(e) =>
-                    setNewOrder({ ...newOrder, notes: e.target.value })
+                  setNewOrder({ ...newOrder, notes: e.target.value })
                   }
                   placeholder="订单备注信息..."
-                  className="bg-surface-2 border-border"
-                />
+                  className="bg-surface-2 border-border" />
+
               </div>
             </div>
             <DialogFooter>
               <Button
                 variant="outline"
                 onClick={() => setShowCreateModal(false)}
-                className="bg-surface-2 border-border"
-              >
+                className="bg-surface-2 border-border">
+
                 取消
               </Button>
               <Button onClick={handleCreateOrder} className="bg-accent hover:bg-accent/90">
@@ -847,8 +852,8 @@ export default function PurchaseOrders() {
             <DialogHeader>
               <DialogTitle className="text-white">采购订单详情</DialogTitle>
             </DialogHeader>
-            {selectedOrder && (
-              <div className="space-y-6">
+            {selectedOrder &&
+            <div className="space-y-6">
                 {/* Order Info */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -905,8 +910,8 @@ export default function PurchaseOrders() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
-                        {selectedOrder.items?.map((item, index) => (
-                          <tr key={index}>
+                        {selectedOrder.items?.map((item, index) =>
+                      <tr key={index}>
                             <td className="px-4 py-2 text-sm text-white">{item.code}</td>
                             <td className="px-4 py-2 text-sm text-white">{item.name}</td>
                             <td className="px-4 py-2 text-sm text-white text-right">{item.qty}</td>
@@ -918,19 +923,19 @@ export default function PurchaseOrders() {
                             </td>
                             <td className="px-4 py-2 text-sm text-white text-right">{item.received}</td>
                           </tr>
-                        ))}
+                      )}
                       </tbody>
                     </table>
                   </div>
                 </div>
               </div>
-            )}
+            }
             <DialogFooter>
               <Button
                 variant="outline"
                 onClick={() => setShowDetailModal(false)}
-                className="bg-surface-2 border-border"
-              >
+                className="bg-surface-2 border-border">
+
                 关闭
               </Button>
             </DialogFooter>
@@ -952,15 +957,15 @@ export default function PurchaseOrders() {
               <Button
                 variant="outline"
                 onClick={() => setShowDeleteModal(false)}
-                className="bg-surface-2 border-border"
-              >
+                className="bg-surface-2 border-border">
+
                 取消
               </Button>
               <Button
                 variant="destructive"
                 onClick={handleDeleteOrder}
-                className="bg-red-500 hover:bg-red-600"
-              >
+                className="bg-red-500 hover:bg-red-600">
+
                 确认删除
               </Button>
             </DialogFooter>
@@ -980,29 +985,29 @@ export default function PurchaseOrders() {
                   type="date"
                   value={receiveData.received_date}
                   onChange={(e) =>
-                    setReceiveData({ ...receiveData, received_date: e.target.value })
+                  setReceiveData({ ...receiveData, received_date: e.target.value })
                   }
-                  className="bg-surface-2 border-border"
-                />
+                  className="bg-surface-2 border-border" />
+
               </div>
               <div>
                 <Label className="text-text-secondary">收货备注</Label>
                 <Textarea
                   value={receiveData.notes}
                   onChange={(e) =>
-                    setReceiveData({ ...receiveData, notes: e.target.value })
+                  setReceiveData({ ...receiveData, notes: e.target.value })
                   }
                   placeholder="收货情况说明..."
-                  className="bg-surface-2 border-border"
-                />
+                  className="bg-surface-2 border-border" />
+
               </div>
             </div>
             <DialogFooter>
               <Button
                 variant="outline"
                 onClick={() => setShowReceiveModal(false)}
-                className="bg-surface-2 border-border"
-              >
+                className="bg-surface-2 border-border">
+
                 取消
               </Button>
               <Button onClick={handleReceiveGoods} className="bg-accent hover:bg-accent/90">
@@ -1012,6 +1017,6 @@ export default function PurchaseOrders() {
           </DialogContent>
         </Dialog>
       </div>
-    </div>
-  );
+    </div>);
+
 }

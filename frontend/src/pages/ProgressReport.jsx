@@ -13,15 +13,15 @@ import {
   Plus,
   Save,
   FileText,
-  AlertTriangle,
-} from "lucide-react";
+  AlertTriangle } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -31,17 +31,17 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogBody,
-  DialogFooter,
-} from "../components/ui/dialog";
-import { cn, formatDate } from "../lib/utils";
+  DialogFooter } from
+"../components/ui/dialog";
+import { cn as _cn, formatDate } from "../lib/utils";
 import { progressApi, projectApi } from "../services/api";
 export default function ProgressReport() {
   const { id } = useParams();
@@ -51,7 +51,7 @@ export default function ProgressReport() {
   const [tasks, setTasks] = useState([]);
   const [reportType, setReportType] = useState("DAILY"); // DAILY or WEEKLY
   const [reportDate, setReportDate] = useState(
-    new Date().toISOString().split("T")[0],
+    new Date().toISOString().split("T")[0]
   );
   const [reportContent, setReportContent] = useState("");
   const [taskProgress, setTaskProgress] = useState({});
@@ -97,7 +97,7 @@ export default function ProgressReport() {
     try {
       await progressApi.tasks.updateProgress(selectedTask.id, {
         progress: progressValue,
-        note: progressNote,
+        note: progressNote
       });
       setShowTaskProgressDialog(false);
       setProgressValue(0);
@@ -119,7 +119,7 @@ export default function ProgressReport() {
         report_type: reportType,
         report_date: reportDate,
         content: reportContent,
-        task_progress: taskProgress,
+        task_progress: taskProgress
       });
       alert("提交成功");
       setReportContent("");
@@ -170,15 +170,15 @@ export default function ProgressReport() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate(`/projects/${id}`)}
-          >
+            onClick={() => navigate(`/projects/${id}`)}>
+
             <ArrowLeft className="w-4 h-4 mr-2" />
             返回项目
           </Button>
           <PageHeader
             title={`${project?.project_name || "项目"} - 进度填报`}
-            description="填写日报或周报，更新任务进度"
-          />
+            description="填写日报或周报，更新任务进度" />
+
         </div>
       </div>
       {/* Report Type Selection */}
@@ -202,8 +202,8 @@ export default function ProgressReport() {
               <Input
                 type="date"
                 value={reportDate}
-                onChange={(e) => setReportDate(e.target.value)}
-              />
+                onChange={(e) => setReportDate(e.target.value)} />
+
             </div>
           </div>
         </CardContent>
@@ -214,19 +214,19 @@ export default function ProgressReport() {
           <CardTitle>任务进度</CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="text-center py-8 text-slate-400">加载中...</div>
-          ) : tasks.length === 0 ? (
-            <div className="text-center py-8 text-slate-400">暂无任务</div>
-          ) : (
-            <div className="space-y-3">
+          {loading ?
+          <div className="text-center py-8 text-slate-400">加载中...</div> :
+          tasks.length === 0 ?
+          <div className="text-center py-8 text-slate-400">暂无任务</div> :
+
+          <div className="space-y-3">
               {tasks.map((task) => {
-                const progress = taskProgress[task.id] || task.progress || 0;
-                return (
-                  <div
-                    key={task.id}
-                    className="border rounded-lg p-4 hover:bg-slate-50 transition-colors"
-                  >
+              const progress = taskProgress[task.id] || task.progress || 0;
+              return (
+                <div
+                  key={task.id}
+                  className="border rounded-lg p-4 hover:bg-slate-50 transition-colors">
+
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
@@ -241,12 +241,12 @@ export default function ProgressReport() {
                             {formatDate(task.planned_start_date)} -{" "}
                             {formatDate(task.planned_end_date)}
                           </div>
-                          {task.assignee_name && (
-                            <div className="flex items-center gap-1">
+                          {task.assignee_name &&
+                        <div className="flex items-center gap-1">
                               <Clock className="w-4 h-4" />
                               {task.assignee_name}
                             </div>
-                          )}
+                        }
                         </div>
                       </div>
                       <div className="text-right mr-4">
@@ -256,20 +256,20 @@ export default function ProgressReport() {
                         <div className="text-xs text-slate-500">完成度</div>
                       </div>
                       <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openTaskProgressDialog(task)}
-                      >
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openTaskProgressDialog(task)}>
+
                         <Edit className="w-4 h-4 mr-2" />
                         更新进度
                       </Button>
                     </div>
                     <Progress value={progress} className="h-2" />
-                  </div>
-                );
-              })}
+                  </div>);
+
+            })}
             </div>
-          )}
+          }
         </CardContent>
       </Card>
       {/* Report Content */}
@@ -287,8 +287,8 @@ export default function ProgressReport() {
                 className="w-full min-h-[120px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={reportContent}
                 onChange={(e) => setReportContent(e.target.value)}
-                placeholder="请填写工作内容、完成情况、遇到的问题等..."
-              />
+                placeholder="请填写工作内容、完成情况、遇到的问题等..." />
+
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setReportContent("")}>
@@ -305,15 +305,15 @@ export default function ProgressReport() {
       {/* Task Progress Dialog */}
       <Dialog
         open={showTaskProgressDialog}
-        onOpenChange={setShowTaskProgressDialog}
-      >
+        onOpenChange={setShowTaskProgressDialog}>
+
         <DialogContent>
           <DialogHeader>
             <DialogTitle>更新任务进度</DialogTitle>
           </DialogHeader>
           <DialogBody>
-            {selectedTask && (
-              <div className="space-y-4">
+            {selectedTask &&
+            <div className="space-y-4">
                 <div>
                   <div className="text-sm text-slate-500 mb-1">任务名称</div>
                   <div className="font-medium">{selectedTask.task_name}</div>
@@ -324,14 +324,14 @@ export default function ProgressReport() {
                   </label>
                   <div className="space-y-2">
                     <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={progressValue}
-                      onChange={(e) =>
-                        setProgressValue(parseInt(e.target.value) || 0)
-                      }
-                    />
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={progressValue}
+                    onChange={(e) =>
+                    setProgressValue(parseInt(e.target.value) || 0)
+                    } />
+
                     <Progress value={progressValue} className="h-2" />
                   </div>
                 </div>
@@ -340,26 +340,26 @@ export default function ProgressReport() {
                     进度说明
                   </label>
                   <textarea
-                    className="w-full min-h-[80px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={progressNote}
-                    onChange={(e) => setProgressNote(e.target.value)}
-                    placeholder="填写进度说明..."
-                  />
+                  className="w-full min-h-[80px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={progressNote}
+                  onChange={(e) => setProgressNote(e.target.value)}
+                  placeholder="填写进度说明..." />
+
                 </div>
               </div>
-            )}
+            }
           </DialogBody>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowTaskProgressDialog(false)}
-            >
+              onClick={() => setShowTaskProgressDialog(false)}>
+
               取消
             </Button>
             <Button onClick={handleUpdateTaskProgress}>保存</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }

@@ -3,7 +3,7 @@
  * 商机过滤器组件 - 过选和搜索功能
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo as _useMemo } from "react";
 import {
   Search,
   Filter,
@@ -19,8 +19,8 @@ import {
   RotateCcw,
   Download,
   Eye,
-  EyeOff
-} from "lucide-react";
+  EyeOff } from
+"lucide-react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
@@ -36,8 +36,8 @@ import {
   opportunityTypeConfig,
   opportunitySizeConfig,
   quickFiltersConfig,
-  sortOptionsConfig
-} from "./opportunityBoardConstants";
+  sortOptionsConfig } from
+"./opportunityBoardConstants";
 
 /**
  * 过滤器组件属性
@@ -51,7 +51,7 @@ export const OpportunityFilters = ({
 }) => {
   const [filters, setFilters] = useState(initialFilters);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [showHiddenFilters, setShowHiddenFilters] = useState(false);
+  const [showHiddenFilters, _setShowHiddenFilters] = useState(false);
 
   // 状态选项
   const statusOptions = Object.entries(opportunityStatusConfig).map(([key, config]) => ({
@@ -60,12 +60,12 @@ export const OpportunityFilters = ({
   }));
 
   // 阶段选项
-  const stageOptions = Object.entries(opportunityStageConfig)
-    .sort(([, a], [, b]) => a.order - b.order)
-    .map(([key, config]) => ({
-      value: key,
-      label: config.label
-    }));
+  const stageOptions = Object.entries(opportunityStageConfig).
+  sort(([, a], [, b]) => a.order - b.order).
+  map(([key, config]) => ({
+    value: key,
+    label: config.label
+  }));
 
   // 优先级选项
   const priorityOptions = Object.entries(opportunityPriorityConfig).map(([key, config]) => ({
@@ -114,9 +114,9 @@ export const OpportunityFilters = ({
   // 切换过滤器值
   const toggleFilter = (key, value) => {
     const currentValues = filters[key] || [];
-    const newValues = currentValues.includes(value)
-      ? currentValues.filter(v => v !== value)
-      : [...currentValues, value];
+    const newValues = currentValues.includes(value) ?
+    currentValues.filter((v) => v !== value) :
+    [...currentValues, value];
 
     const newFilters = {
       ...filters,
@@ -152,7 +152,7 @@ export const OpportunityFilters = ({
 
   // 获取激活的过滤器数量
   const getActiveFilterCount = () => {
-    return Object.values(filters).filter(value => {
+    return Object.values(filters).filter((value) => {
       if (Array.isArray(value)) {
         return value.length > 0;
       }
@@ -161,38 +161,38 @@ export const OpportunityFilters = ({
   };
 
   // 渲染搜索框
-  const renderSearchBox = () => (
-    <div className="relative">
+  const renderSearchBox = () =>
+  <div className="relative">
       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
       <Input
-        placeholder="搜索商机名称、客户公司..."
-        value={filters.search || ''}
-        onChange={(e) => setRangeFilter('search', e.target.value)}
-        className="pl-10"
-      />
-    </div>
-  );
+      placeholder="搜索商机名称、客户公司..."
+      value={filters.search || ''}
+      onChange={(e) => setRangeFilter('search', e.target.value)}
+      className="pl-10" />
+
+    </div>;
+
 
   // 渲染快速过滤器
-  const renderQuickFilters = () => (
-    <div className="flex flex-wrap gap-2">
-      {quickFilterOptions.map(({ value, label, icon: Icon }) => (
-        <Button
-          key={value}
-          variant={filters.quick_filter === value ? "default" : "outline"}
-          size="sm"
-          className="h-8"
-          onClick={() => applyQuickFilter(value)}
-        >
+  const renderQuickFilters = () =>
+  <div className="flex flex-wrap gap-2">
+      {quickFilterOptions.map(({ value, label, icon: Icon }) =>
+    <Button
+      key={value}
+      variant={filters.quick_filter === value ? "default" : "outline"}
+      size="sm"
+      className="h-8"
+      onClick={() => applyQuickFilter(value)}>
+
           <Icon className="mr-1 h-3 w-3" />
           {label}
         </Button>
-      ))}
-    </div>
-  );
+    )}
+    </div>;
+
 
   // 渲染多选过滤器
-  const renderMultiSelectFilter = (title, options, key) => {
+  const _renderMultiSelectFilter = (title, options, key) => {
     const selectedValues = filters[key] || [];
 
     return (
@@ -201,54 +201,54 @@ export const OpportunityFilters = ({
           <div className="space-y-2">
             <div className="text-sm font-medium">{title}</div>
             <div className="flex flex-wrap gap-2">
-              {options.map(({ value, label }) => (
-                <Badge
-                  key={value}
-                  variant={selectedValues.includes(value) ? "default" : "outline"}
-                  className="cursor-pointer"
-                  onClick={() => toggleFilter(key, value)}
-                >
+              {options.map(({ value, label }) =>
+              <Badge
+                key={value}
+                variant={selectedValues.includes(value) ? "default" : "outline"}
+                className="cursor-pointer"
+                onClick={() => toggleFilter(key, value)}>
+
                   {label}
-                  {selectedValues.includes(value) && (
-                    <X className="ml-1 h-3 w-3" />
-                  )}
+                  {selectedValues.includes(value) &&
+                <X className="ml-1 h-3 w-3" />
+                }
                 </Badge>
-              ))}
+              )}
             </div>
           </div>
         </CollapsibleContent>
-      </Collapsible>
-    );
+      </Collapsible>);
+
   };
 
   // 渲染范围过滤器
-  const renderRangeFilter = (title, key, placeholder = "") => (
-    <div className="space-y-2">
+  const renderRangeFilter = (title, key, placeholder = "") =>
+  <div className="space-y-2">
       <div className="text-sm font-medium">{title}</div>
       <Input
-        type="number"
-        placeholder={placeholder}
-        value={filters[key] || ''}
-        onChange={(e) => setRangeFilter(key, e.target.value ? Number(e.target.value) : undefined)}
-      />
-    </div>
-  );
+      type="number"
+      placeholder={placeholder}
+      value={filters[key] || ''}
+      onChange={(e) => setRangeFilter(key, e.target.value ? Number(e.target.value) : undefined)} />
+
+    </div>;
+
 
   // 渲染日期范围过滤器
-  const renderDateRangeFilter = (title, key) => (
-    <div className="space-y-2">
+  const renderDateRangeFilter = (title, key) =>
+  <div className="space-y-2">
       <div className="text-sm font-medium">{title}</div>
       <Input
-        type="date"
-        value={filters[key] || ''}
-        onChange={(e) => setRangeFilter(key, e.target.value)}
-      />
-    </div>
-  );
+      type="date"
+      value={filters[key] || ''}
+      onChange={(e) => setRangeFilter(key, e.target.value)} />
+
+    </div>;
+
 
   // 渲染选择器过滤器
-  const renderSelectFilter = (title, options, key) => (
-    <div className="space-y-2">
+  const renderSelectFilter = (title, options, key) =>
+  <div className="space-y-2">
       <div className="text-sm font-medium">{title}</div>
       <Select value={filters[key] || ''} onValueChange={(value) => setRangeFilter(key, value || undefined)}>
         <SelectTrigger>
@@ -256,34 +256,34 @@ export const OpportunityFilters = ({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="">全部</SelectItem>
-          {options.map(({ value, label }) => (
-            <SelectItem key={value} value={value}>
+          {options.map(({ value, label }) =>
+        <SelectItem key={value} value={value}>
               {label}
             </SelectItem>
-          ))}
+        )}
         </SelectContent>
       </Select>
-    </div>
-  );
+    </div>;
+
 
   // 渲染排序选项
-  const renderSortSelector = () => (
-    <div className="space-y-2">
+  const renderSortSelector = () =>
+  <div className="space-y-2">
       <div className="text-sm font-medium">排序</div>
       <Select value={filters.sort || ''} onValueChange={(value) => setRangeFilter('sort', value || undefined)}>
         <SelectTrigger>
           <SelectValue placeholder="选择排序方式" />
         </SelectTrigger>
         <SelectContent>
-          {sortOptionsConfig.map(({ value, label }) => (
-            <SelectItem key={value} value={value}>
+          {sortOptionsConfig.map(({ value, label }) =>
+        <SelectItem key={value} value={value}>
               {label}
             </SelectItem>
-          ))}
+        )}
         </SelectContent>
       </Select>
-    </div>
-  );
+    </div>;
+
 
   return (
     <Card className={cn("w-full", className)}>
@@ -291,28 +291,28 @@ export const OpportunityFilters = ({
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">筛选商机</CardTitle>
           <div className="flex items-center gap-2">
-            {getActiveFilterCount() > 0 && (
-              <Badge variant="secondary">
+            {getActiveFilterCount() > 0 &&
+            <Badge variant="secondary">
                 {getActiveFilterCount()} 个筛选条件
               </Badge>
-            )}
+            }
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setIsExpanded(!isExpanded)}
-            >
+              onClick={() => setIsExpanded(!isExpanded)}>
+
               <Filter className="h-4 w-4 mr-1" />
               {isExpanded ? "收起" : "展开"}
             </Button>
-            {getActiveFilterCount() > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearAllFilters}
-              >
+            {getActiveFilterCount() > 0 &&
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearAllFilters}>
+
                 <RotateCcw className="h-4 w-4" />
               </Button>
-            )}
+            }
           </div>
         </div>
       </CardHeader>
@@ -325,8 +325,8 @@ export const OpportunityFilters = ({
         {showQuickFilters && renderQuickFilters()}
 
         {/* 高级过滤器 */}
-        {isExpanded && showAdvancedFilters && (
-          <div className="space-y-4 pt-4 border-t">
+        {isExpanded && showAdvancedFilters &&
+        <div className="space-y-4 pt-4 border-t">
             {/* 状态和阶段 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {renderSelectFilter("状态", statusOptions, "status")}
@@ -360,10 +360,10 @@ export const OpportunityFilters = ({
             {/* 排序 */}
             {renderSortSelector()}
           </div>
-        )}
+        }
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 };
 
 export default OpportunityFilters;

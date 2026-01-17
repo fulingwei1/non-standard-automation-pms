@@ -14,20 +14,20 @@ import {
   DialogHeader,
   DialogTitle,
   DialogBody,
-  DialogFooter
-} from "../../components/ui/dialog";
+  DialogFooter } from
+"../../components/ui/dialog";
 import {
   Tabs,
   TabsList,
   TabsTrigger,
-  TabsContent
-} from "../../components/ui/tabs";
+  TabsContent } from
+"../../components/ui/tabs";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
-} from "../../components/ui/tooltip";
+  TooltipTrigger } from
+"../../components/ui/tooltip";
 import {
   AlertCircle,
   CheckCircle2,
@@ -46,27 +46,27 @@ import {
   MapPin,
   Phone,
   Mail,
-  User
-} from "lucide-react";
+  User } from
+"lucide-react";
 import {
   cn,
-  formatDate,
+  formatDate as _formatDate,
   formatDateTime,
-  formatCurrency,
-  formatRelativeTime
-} from "../../lib/utils";
+  formatCurrency as _formatCurrency,
+  formatRelativeTime } from
+"../../lib/utils";
 import {
-  getReadinessStatusConfig,
-  getMaterialTypeConfig,
-  getUrgencyConfig,
-  calculateReadinessProgress,
-  formatReadinessStatus,
+  getReadinessStatusConfig as _getReadinessStatusConfig,
+  getMaterialTypeConfig as _getMaterialTypeConfig,
+  getUrgencyConfig as _getUrgencyConfig,
+  calculateReadinessProgress as _calculateReadinessProgress,
+  formatReadinessStatus as _formatReadinessStatus,
   formatMaterialType,
-  formatUrgency,
-  isMaterialReady,
-  isMaterialDelayed,
-  isMaterialCritical
-} from "./materialReadinessConstants";
+  formatUrgency as _formatUrgency,
+  isMaterialReady as _isMaterialReady,
+  isMaterialDelayed as _isMaterialDelayed,
+  isMaterialCritical as _isMaterialCritical } from
+"./materialReadinessConstants";
 
 /**
  * 警报级别配置
@@ -101,7 +101,7 @@ const alertLevelConfigs = {
     color: "bg-gray-500",
     textColor: "text-gray-50",
     icon: <Info className="h-4 w-4" />
-  },
+  }
 };
 
 /**
@@ -163,7 +163,7 @@ const alertTypeConfigs = {
     color: "bg-yellow-100",
     borderColor: "border-yellow-200",
     icon: <Package className="h-5 w-5 text-yellow-600" />
-  },
+  }
 };
 
 /**
@@ -188,7 +188,7 @@ const alertTypeConfigs = {
  */
 export function MaterialAlertItem({
   alert,
-  onView,
+  onView: _onView,
   onResolve,
   onEscalate,
   className
@@ -212,8 +212,8 @@ export function MaterialAlertItem({
           "border",
           alert.is_resolved && "opacity-60",
           className
-        )}
-      >
+        )}>
+
         <CardContent className="p-4">
           <div className="flex items-start justify-between">
             {/* 警报图标和信息 */}
@@ -230,21 +230,21 @@ export function MaterialAlertItem({
                   <h3 className="text-sm font-semibold text-gray-900 truncate">
                     {alert.title}
                   </h3>
-                  {!alert.is_resolved && (
-                    <Badge
-                      className={cn(
-                        "text-xs",
-                        levelConfig.color,
-                        levelConfig.textColor
-                      )}
-                    >
+                  {!alert.is_resolved &&
+                  <Badge
+                    className={cn(
+                      "text-xs",
+                      levelConfig.color,
+                      levelConfig.textColor
+                    )}>
+
                       {levelConfig.label}
                     </Badge>
-                  )}
+                  }
                   <Badge
                     variant="outline"
-                    className="text-xs"
-                  >
+                    className="text-xs">
+
                     {typeConfig.label}
                   </Badge>
                 </div>
@@ -282,8 +282,8 @@ export function MaterialAlertItem({
                     variant="ghost"
                     size="sm"
                     className="h-8 w-8 p-0"
-                    onClick={() => setShowDetail(!showDetail)}
-                  >
+                    onClick={() => setShowDetail(!showDetail)}>
+
                     <Eye className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
@@ -292,16 +292,16 @@ export function MaterialAlertItem({
                 </TooltipContent>
               </Tooltip>
 
-              {!alert.is_resolved && (
-                <>
+              {!alert.is_resolved &&
+              <>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={() => onResolve?.(alert)}
-                      >
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => onResolve?.(alert)}>
+
                         <CheckCircle2 className="h-4 w-4 text-green-600" />
                       </Button>
                     </TooltipTrigger>
@@ -313,11 +313,11 @@ export function MaterialAlertItem({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={() => onEscalate?.(alert)}
-                      >
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => onEscalate?.(alert)}>
+
                         <AlertTriangle className="h-4 w-4 text-orange-600" />
                       </Button>
                     </TooltipTrigger>
@@ -326,33 +326,33 @@ export function MaterialAlertItem({
                     </TooltipContent>
                   </Tooltip>
                 </>
-              )}
+              }
 
-              {alert.is_resolved && (
-                <div className="flex items-center space-x-1 text-xs text-gray-500">
+              {alert.is_resolved &&
+              <div className="flex items-center space-x-1 text-xs text-gray-500">
                   <CheckCircle2 className="h-3 w-3 text-green-600" />
                   <span>已解决</span>
                 </div>
-              )}
+              }
             </div>
           </div>
 
           {/* 时间信息 */}
           <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
             <span>{timeAgo}</span>
-            {alert.resolved_at && (
-              <span>
+            {alert.resolved_at &&
+            <span>
                 解决于 {formatDateTime(alert.resolved_at)}
               </span>
-            )}
+            }
           </div>
 
           {/* 详情对话框 */}
-          {showDetail && (
-            <Dialog
-              open={showDetail}
-              onOpenChange={setShowDetail}
-            >
+          {showDetail &&
+          <Dialog
+            open={showDetail}
+            onOpenChange={setShowDetail}>
+
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>警报详情</DialogTitle>
@@ -372,11 +372,11 @@ export function MaterialAlertItem({
                         <div className="flex justify-between">
                           <span className="text-gray-500">警报级别</span>
                           <Badge
-                            className={cn(
-                              levelConfig.color,
-                              levelConfig.textColor
-                            )}
-                          >
+                          className={cn(
+                            levelConfig.color,
+                            levelConfig.textColor
+                          )}>
+
                             {levelConfig.label}
                           </Badge>
                         </div>
@@ -401,8 +401,8 @@ export function MaterialAlertItem({
                         相关信息
                       </h4>
                       <div className="space-y-1 text-sm">
-                        {alert.material && (
-                          <>
+                        {alert.material &&
+                      <>
                             <div className="flex justify-between">
                               <span className="text-gray-500">物料编码</span>
                               <span>{alert.material.code}</span>
@@ -416,9 +416,9 @@ export function MaterialAlertItem({
                               <span>{formatMaterialType(alert.material.type)}</span>
                             </div>
                           </>
-                        )}
-                        {alert.supplier && (
-                          <>
+                      }
+                        {alert.supplier &&
+                      <>
                             <div className="flex justify-between">
                               <span className="text-gray-500">供应商</span>
                               <span>{alert.supplier.name}</span>
@@ -432,9 +432,9 @@ export function MaterialAlertItem({
                               <span>{alert.supplier.phone || '-'}</span>
                             </div>
                           </>
-                        )}
-                        {alert.project && (
-                          <>
+                      }
+                        {alert.project &&
+                      <>
                             <div className="flex justify-between">
                               <span className="text-gray-500">项目编码</span>
                               <span>{alert.project.code}</span>
@@ -444,7 +444,7 @@ export function MaterialAlertItem({
                               <span>{alert.project.name || '-'}</span>
                             </div>
                           </>
-                        )}
+                      }
                       </div>
                     </div>
 
@@ -458,21 +458,21 @@ export function MaterialAlertItem({
                           <span className="text-gray-500">创建时间</span>
                           <span>{formatDateTime(alert.created_at)}</span>
                         </div>
-                        {alert.resolved_at && (
-                          <div className="flex justify-between">
+                        {alert.resolved_at &&
+                      <div className="flex justify-between">
                             <span className="text-gray-500">解决时间</span>
                             <span>{formatDateTime(alert.resolved_at)}</span>
                           </div>
-                        )}
+                      }
                         <div className="flex justify-between">
                           <span className="text-gray-500">状态</span>
                           <Badge
-                            className={cn(
-                              alert.is_resolved
-                                ? "bg-green-500 text-green-50"
-                                : "bg-red-500 text-red-50"
-                            )}
-                          >
+                          className={cn(
+                            alert.is_resolved ?
+                            "bg-green-500 text-green-50" :
+                            "bg-red-500 text-red-50"
+                          )}>
+
                             {alert.is_resolved ? "已解决" : "未解决"}
                           </Badge>
                         </div>
@@ -480,8 +480,8 @@ export function MaterialAlertItem({
                     </div>
 
                     {/* 解决方案 */}
-                    {alert.resolution && (
-                      <div>
+                    {alert.resolution &&
+                  <div>
                         <h4 className="text-sm font-medium text-gray-700 mb-2">
                           解决方案
                         </h4>
@@ -489,12 +489,12 @@ export function MaterialAlertItem({
                           {alert.resolution}
                         </p>
                       </div>
-                    )}
+                  }
                   </div>
                 </DialogBody>
                 <DialogFooter>
-                  {!alert.is_resolved && (
-                    <>
+                  {!alert.is_resolved &&
+                <>
                       <Button variant="outline" onClick={() => onResolve?.(alert)}>
                         标记为已解决
                       </Button>
@@ -502,18 +502,18 @@ export function MaterialAlertItem({
                         升级警报
                       </Button>
                     </>
-                  )}
+                }
                   <Button onClick={() => setShowDetail(false)}>
                     关闭
                   </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
-          )}
+          }
         </CardContent>
       </Card>
-    </TooltipProvider>
-  );
+    </TooltipProvider>);
+
 }
 
 /**
@@ -547,9 +547,9 @@ export function MaterialAlerts({
     let filtered = [...alerts];
 
     if (filter === "active") {
-      filtered = filtered.filter(alert => !alert.is_resolved);
+      filtered = filtered.filter((alert) => !alert.is_resolved);
     } else if (filter === "resolved") {
-      filtered = filtered.filter(alert => alert.is_resolved);
+      filtered = filtered.filter((alert) => alert.is_resolved);
     }
 
     // 排序
@@ -568,19 +568,19 @@ export function MaterialAlerts({
   // 统计信息
   const stats = useMemo(() => {
     const total = alerts.length;
-    const critical = alerts.filter(a => a.level === "CRITICAL").length;
-    const high = alerts.filter(a => a.level === "HIGH").length;
-    const medium = alerts.filter(a => a.level === "MEDIUM").length;
-    const low = alerts.filter(a => a.level === "LOW").length;
-    const info = alerts.filter(a => a.level === "INFO").length;
-    const resolved = alerts.filter(a => a.is_resolved).length;
+    const critical = alerts.filter((a) => a.level === "CRITICAL").length;
+    const high = alerts.filter((a) => a.level === "HIGH").length;
+    const medium = alerts.filter((a) => a.level === "MEDIUM").length;
+    const low = alerts.filter((a) => a.level === "LOW").length;
+    const info = alerts.filter((a) => a.level === "INFO").length;
+    const resolved = alerts.filter((a) => a.is_resolved).length;
     const active = total - resolved;
 
     return { total, critical, high, medium, low, info, resolved, active };
   }, [alerts]);
 
   // 按级别分组
-  const alertsByLevel = useMemo(() => {
+  const _alertsByLevel = useMemo(() => {
     const grouped = {
       CRITICAL: [],
       HIGH: [],
@@ -589,7 +589,7 @@ export function MaterialAlerts({
       INFO: []
     };
 
-    filteredAlerts.forEach(alert => {
+    filteredAlerts.forEach((alert) => {
       grouped[alert.level].push(alert);
     });
 
@@ -609,32 +609,32 @@ export function MaterialAlerts({
           </p>
         </div>
         <div className="flex items-center space-x-2">
-          {onRefresh && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onRefresh}
-            >
+          {onRefresh &&
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onRefresh}>
+
               <RefreshCw className="h-4 w-4 mr-1" />
               刷新
             </Button>
-          )}
-          {onExport && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onExport}
-            >
+          }
+          {onExport &&
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onExport}>
+
               <Download className="h-4 w-4 mr-1" />
               导出
             </Button>
-          )}
+          }
         </div>
       </div>
 
       {/* 统计卡片 */}
-      {showStats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+      {showStats &&
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
           <Card>
             <CardContent className="p-3 text-center">
               <div className="text-2xl font-bold text-gray-900">
@@ -700,7 +700,7 @@ export function MaterialAlerts({
             </CardContent>
           </Card>
         </div>
-      )}
+      }
 
       {/* 过滤器和排序 */}
       <div className="flex items-center justify-between">
@@ -724,8 +724,8 @@ export function MaterialAlerts({
           <select
             className="text-sm border rounded px-2 py-1"
             value={sort}
-            onChange={(e) => sort = e.target.value}
-          >
+            onChange={(e) => sort = e.target.value}>
+
             <option value="newest">最新优先</option>
             <option value="oldest">最早优先</option>
             <option value="level">级别优先</option>
@@ -735,31 +735,31 @@ export function MaterialAlerts({
 
       {/* 警报列表 */}
       <div className="space-y-3">
-        {filteredAlerts.length === 0 ? (
-          <Card>
+        {filteredAlerts.length === 0 ?
+        <Card>
             <CardContent className="p-8 text-center">
               <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-500">
                 {filter === "resolved" ? "暂无已解决的警报" :
-                 filter === "active" ? "暂无未解决的警报" :
-                 "暂无警报"}
+              filter === "active" ? "暂无未解决的警报" :
+              "暂无警报"}
               </p>
             </CardContent>
-          </Card>
-        ) : (
-          filteredAlerts.map(alert => (
-            <MaterialAlertItem
-              key={alert.id}
-              alert={alert}
-              onView={onView}
-              onResolve={onResolve}
-              onEscalate={onEscalate}
-            />
-          ))
-        )}
+          </Card> :
+
+        filteredAlerts.map((alert) =>
+        <MaterialAlertItem
+          key={alert.id}
+          alert={alert}
+          onView={onView}
+          onResolve={onResolve}
+          onEscalate={onEscalate} />
+
+        )
+        }
       </div>
-    </div>
-  );
+    </div>);
+
 }
 
 export default MaterialAlerts;

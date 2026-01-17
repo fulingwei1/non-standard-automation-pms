@@ -3,7 +3,7 @@
  * Features: Financial statements, Profit & loss, Cash flow, Budget analysis, Export reports
  */
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo as _useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   BarChart3,
@@ -23,8 +23,8 @@ import {
   Target,
   ArrowUpRight,
   ArrowDownRight,
-  ChevronRight,
-} from "lucide-react";
+  ChevronRight } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -37,18 +37,18 @@ import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger,
-} from "../components/ui";
+  TabsTrigger } from
+"../components/ui";
 import { cn, formatCurrency } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
-import { financialReportApi, reportCenterApi } from "../services/api";
+import { financialReportApi, reportCenterApi as _reportCenterApi } from "../services/api";
 import {
   LineChart as LineChartComponent,
   BarChart as BarChartComponent,
   PieChart as PieChartComponent,
   AreaChart as AreaChartComponent,
-  DualAxesChart,
-} from "../components/charts";
+  DualAxesChart } from
+"../components/charts";
 
 // Mock financial data
 // Mock data - 已移除，使用真实API
@@ -56,19 +56,19 @@ import {
 // Mock data - 已移除，使用真实API
 // Mock data - 已移除，使用真实API
 const reportTypes = [
-  { id: "profit-loss", label: "损益表", icon: BarChart3 },
-  { id: "cash-flow", label: "现金流量表", icon: Wallet },
-  { id: "budget", label: "预算执行", icon: Target },
-  { id: "cost", label: "成本分析", icon: Receipt },
-  { id: "project", label: "项目盈利", icon: FileText },
-];
+{ id: "profit-loss", label: "损益表", icon: BarChart3 },
+{ id: "cash-flow", label: "现金流量表", icon: Wallet },
+{ id: "budget", label: "预算执行", icon: Target },
+{ id: "cost", label: "成本分析", icon: Receipt },
+{ id: "project", label: "项目盈利", icon: FileText }];
+
 
 export default function FinancialReports() {
   const [selectedPeriod, setSelectedPeriod] = useState("month"); // month, quarter, year
   const [selectedReport, setSelectedReport] = useState("profit-loss");
   const [dateRange, setDateRange] = useState("2024-07");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [_loading, setLoading] = useState(true);
+  const [_error, setError] = useState(null);
 
   // State initialized with empty data
   const [monthlyFinancials, setMonthlyFinancials] = useState([]);
@@ -83,15 +83,15 @@ export default function FinancialReports() {
       setError(null);
       try {
         const [summaryRes, costRes, projectRes, cashFlowRes] =
-          await Promise.allSettled([
-            financialReportApi.getMonthlyTrend({
-              period: selectedPeriod,
-              year: dateRange.split("-")[0],
-            }),
-            financialReportApi.getCostAnalysis({ period: selectedPeriod }),
-            financialReportApi.getProjectProfitability({ limit: 10 }),
-            financialReportApi.getCashFlow({ period: selectedPeriod }),
-          ]);
+        await Promise.allSettled([
+        financialReportApi.getMonthlyTrend({
+          period: selectedPeriod,
+          year: dateRange.split("-")[0]
+        }),
+        financialReportApi.getCostAnalysis({ period: selectedPeriod }),
+        financialReportApi.getProjectProfitability({ limit: 10 }),
+        financialReportApi.getCashFlow({ period: selectedPeriod })]
+        );
 
         if (summaryRes.status === "fulfilled" && summaryRes.value.data) {
           const data = summaryRes.value.data;
@@ -122,22 +122,22 @@ export default function FinancialReports() {
   const totalRevenue = monthlyFinancials.reduce((sum, m) => sum + m.revenue, 0);
   const totalCost = monthlyFinancials.reduce((sum, m) => sum + m.cost, 0);
   const totalProfit = monthlyFinancials.reduce((sum, m) => sum + m.profit, 0);
-  const avgMargin = (totalProfit / totalRevenue) * 100;
+  const avgMargin = totalProfit / totalRevenue * 100;
 
   return (
     <motion.div
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       {/* Page Header */}
       <PageHeader
         title="财务报表"
         description="财务数据统计、分析和报表导出"
         icon={BarChart3}
         actions={
-          <motion.div variants={fadeIn} className="flex gap-2">
+        <motion.div variants={fadeIn} className="flex gap-2">
             <Button variant="outline" className="flex items-center gap-2">
               <Filter className="w-4 h-4" />
               筛选
@@ -147,8 +147,8 @@ export default function FinancialReports() {
               导出报表
             </Button>
           </motion.div>
-        }
-      />
+        } />
+
 
       {/* Period Selector */}
       <motion.div variants={fadeIn}>
@@ -159,30 +159,30 @@ export default function FinancialReports() {
                 <Button
                   variant={selectedPeriod === "month" ? "default" : "ghost"}
                   size="sm"
-                  onClick={() => setSelectedPeriod("month")}
-                >
+                  onClick={() => setSelectedPeriod("month")}>
+
                   月度
                 </Button>
                 <Button
                   variant={selectedPeriod === "quarter" ? "default" : "ghost"}
                   size="sm"
-                  onClick={() => setSelectedPeriod("quarter")}
-                >
+                  onClick={() => setSelectedPeriod("quarter")}>
+
                   季度
                 </Button>
                 <Button
                   variant={selectedPeriod === "year" ? "default" : "ghost"}
                   size="sm"
-                  onClick={() => setSelectedPeriod("year")}
-                >
+                  onClick={() => setSelectedPeriod("year")}>
+
                   年度
                 </Button>
               </div>
               <select
                 value={dateRange}
                 onChange={(e) => setDateRange(e.target.value)}
-                className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
-              >
+                className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary">
+
                 <option value="2024-07">2024年7月</option>
                 <option value="2024-08">2024年8月</option>
                 <option value="2024-09">2024年9月</option>
@@ -201,8 +201,8 @@ export default function FinancialReports() {
         variants={staggerContainer}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4"
-      >
+        className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
+
         <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
@@ -295,12 +295,12 @@ export default function FinancialReports() {
                     <TabsTrigger
                       key={type.id}
                       value={type.id}
-                      className="flex items-center gap-2"
-                    >
+                      className="flex items-center gap-2">
+
                       <Icon className="w-4 h-4" />
                       {type.label}
-                    </TabsTrigger>
-                  );
+                    </TabsTrigger>);
+
                 })}
               </TabsList>
 
@@ -339,9 +339,9 @@ export default function FinancialReports() {
                         <div className="text-sm text-slate-400 mt-2">
                           利润率:{" "}
                           {(
-                            (currentData.profit / currentData.revenue) *
-                            100
-                          ).toFixed(1)}
+                          currentData.profit / currentData.revenue *
+                          100).
+                          toFixed(1)}
                           %
                         </div>
                       </div>
@@ -358,7 +358,7 @@ export default function FinancialReports() {
                         month: item.month,
                         revenue: item.revenue,
                         profit: item.profit,
-                        margin: ((item.profit / item.revenue) * 100).toFixed(1),
+                        margin: (item.profit / item.revenue * 100).toFixed(1)
                       }))}
                       xField="month"
                       yField={["revenue", "margin"]}
@@ -366,8 +366,8 @@ export default function FinancialReports() {
                       rightYAxisTitle="利润率 (%)"
                       height={280}
                       leftFormatter={(v) => `¥${(v / 10000).toFixed(0)}万`}
-                      rightFormatter={(v) => `${v}%`}
-                    />
+                      rightFormatter={(v) => `${v}%`} />
+
                   </div>
                 </div>
 
@@ -378,22 +378,22 @@ export default function FinancialReports() {
                   </h4>
                   <BarChartComponent
                     data={monthlyFinancials.flatMap((item) => [
-                      {
-                        month: item.month,
-                        type: "营业收入",
-                        value: item.revenue,
-                      },
-                      { month: item.month, type: "营业成本", value: item.cost },
-                      { month: item.month, type: "净利润", value: item.profit },
-                    ])}
+                    {
+                      month: item.month,
+                      type: "营业收入",
+                      value: item.revenue
+                    },
+                    { month: item.month, type: "营业成本", value: item.cost },
+                    { month: item.month, type: "净利润", value: item.profit }]
+                    )}
                     xField="month"
                     yField="value"
                     seriesField="type"
                     isGroup={true}
                     height={300}
                     colors={["#f59e0b", "#ef4444", "#10b981"]}
-                    formatter={(v) => `¥${(v / 10000).toFixed(0)}万`}
-                  />
+                    formatter={(v) => `¥${(v / 10000).toFixed(0)}万`} />
+
                 </div>
 
                 {/* Revenue Trend List */}
@@ -404,9 +404,9 @@ export default function FinancialReports() {
                   <div className="space-y-3">
                     {monthlyFinancials.map((item, index) => {
                       const maxRevenue = Math.max(
-                        ...monthlyFinancials.map((m) => m.revenue),
+                        ...monthlyFinancials.map((m) => m.revenue)
                       );
-                      const percentage = (item.revenue / maxRevenue) * 100;
+                      const percentage = item.revenue / maxRevenue * 100;
                       return (
                         <div key={index} className="space-y-2">
                           <div className="flex items-center justify-between text-sm">
@@ -415,37 +415,37 @@ export default function FinancialReports() {
                               <span className="text-white font-medium">
                                 {formatCurrency(item.revenue)}
                               </span>
-                              {index > 0 && (
-                                <span
-                                  className={cn(
-                                    "text-xs",
-                                    item.revenue >
-                                      monthlyFinancials[index - 1].revenue
-                                      ? "text-emerald-400"
-                                      : "text-red-400",
-                                  )}
-                                >
+                              {index > 0 &&
+                              <span
+                                className={cn(
+                                  "text-xs",
+                                  item.revenue >
+                                  monthlyFinancials[index - 1].revenue ?
+                                  "text-emerald-400" :
+                                  "text-red-400"
+                                )}>
+
                                   {item.revenue >
-                                  monthlyFinancials[index - 1].revenue
-                                    ? "↑"
-                                    : "↓"}
+                                monthlyFinancials[index - 1].revenue ?
+                                "↑" :
+                                "↓"}
                                   {Math.abs(
-                                    ((item.revenue -
-                                      monthlyFinancials[index - 1].revenue) /
-                                      monthlyFinancials[index - 1].revenue) *
-                                      100,
-                                  ).toFixed(1)}
+                                  (item.revenue -
+                                  monthlyFinancials[index - 1].revenue) /
+                                  monthlyFinancials[index - 1].revenue *
+                                  100
+                                ).toFixed(1)}
                                   %
                                 </span>
-                              )}
+                              }
                             </div>
                           </div>
                           <Progress
                             value={percentage}
-                            className="h-2 bg-slate-700/50"
-                          />
-                        </div>
-                      );
+                            className="h-2 bg-slate-700/50" />
+
+                        </div>);
+
                     })}
                   </div>
                 </div>
@@ -460,25 +460,25 @@ export default function FinancialReports() {
                   </h3>
                   <AreaChartComponent
                     data={cashFlowData.flatMap((item) => [
-                      {
-                        month: item.month,
-                        type: "现金流入",
-                        value: item.inflow,
-                      },
-                      {
-                        month: item.month,
-                        type: "现金流出",
-                        value: -item.outflow,
-                      },
-                      { month: item.month, type: "净现金流", value: item.net },
-                    ])}
+                    {
+                      month: item.month,
+                      type: "现金流入",
+                      value: item.inflow
+                    },
+                    {
+                      month: item.month,
+                      type: "现金流出",
+                      value: -item.outflow
+                    },
+                    { month: item.month, type: "净现金流", value: item.net }]
+                    )}
                     xField="month"
                     yField="value"
                     seriesField="type"
                     height={300}
                     colors={["#10b981", "#ef4444", "#3b82f6"]}
-                    formatter={(v) => `¥${(Math.abs(v) / 10000).toFixed(0)}万`}
-                  />
+                    formatter={(v) => `¥${(Math.abs(v) / 10000).toFixed(0)}万`} />
+
                 </div>
 
                 {/* 现金流明细 */}
@@ -489,14 +489,14 @@ export default function FinancialReports() {
                   <div className="space-y-4">
                     {cashFlowData.map((item, index) => {
                       const maxFlow = Math.max(
-                        ...cashFlowData.map((c) => Math.abs(c.net)),
+                        ...cashFlowData.map((c) => Math.abs(c.net))
                       );
-                      const percentage = (Math.abs(item.net) / maxFlow) * 100;
+                      const percentage = Math.abs(item.net) / maxFlow * 100;
                       return (
                         <div
                           key={index}
-                          className="p-4 bg-slate-800/40 rounded-lg"
-                        >
+                          className="p-4 bg-slate-800/40 rounded-lg">
+
                           <div className="flex items-center justify-between mb-3">
                             <span className="text-slate-400">{item.month}</span>
                             <div className="flex items-center gap-4">
@@ -523,11 +523,11 @@ export default function FinancialReports() {
                                 <div
                                   className={cn(
                                     "text-lg font-bold",
-                                    item.net > 0
-                                      ? "text-emerald-400"
-                                      : "text-red-400",
-                                  )}
-                                >
+                                    item.net > 0 ?
+                                    "text-emerald-400" :
+                                    "text-red-400"
+                                  )}>
+
                                   {formatCurrency(item.net)}
                                 </div>
                               </div>
@@ -537,13 +537,13 @@ export default function FinancialReports() {
                             value={percentage}
                             className={cn(
                               "h-2",
-                              item.net > 0
-                                ? "bg-emerald-500/20"
-                                : "bg-red-500/20",
-                            )}
-                          />
-                        </div>
-                      );
+                              item.net > 0 ?
+                              "bg-emerald-500/20" :
+                              "bg-red-500/20"
+                            )} />
+
+                        </div>);
+
                     })}
                   </div>
                 </div>
@@ -557,7 +557,7 @@ export default function FinancialReports() {
                   </h3>
                   <div className="space-y-3">
                     {costBreakdown.map((item, index) => {
-                      const used = (item.amount / item.budget) * 100;
+                      const used = item.amount / item.budget * 100;
                       return (
                         <div key={index} className="space-y-2">
                           <div className="flex items-center justify-between text-sm">
@@ -571,19 +571,19 @@ export default function FinancialReports() {
                               <span className="text-white font-medium">
                                 实际: {formatCurrency(item.amount)}
                               </span>
-                              {item.variance !== 0 && (
-                                <span
-                                  className={cn(
-                                    "text-xs",
-                                    item.variance > 0
-                                      ? "text-red-400"
-                                      : "text-emerald-400",
-                                  )}
-                                >
+                              {item.variance !== 0 &&
+                              <span
+                                className={cn(
+                                  "text-xs",
+                                  item.variance > 0 ?
+                                  "text-red-400" :
+                                  "text-emerald-400"
+                                )}>
+
                                   {item.variance > 0 ? "+" : ""}
                                   {formatCurrency(item.variance)}
                                 </span>
-                              )}
+                              }
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
@@ -591,19 +591,19 @@ export default function FinancialReports() {
                               value={used}
                               className={cn(
                                 "flex-1 h-2",
-                                used > 100
-                                  ? "bg-red-500/20"
-                                  : used > 90
-                                    ? "bg-amber-500/20"
-                                    : "bg-slate-700/50",
-                              )}
-                            />
+                                used > 100 ?
+                                "bg-red-500/20" :
+                                used > 90 ?
+                                "bg-amber-500/20" :
+                                "bg-slate-700/50"
+                              )} />
+
                             <span className="text-xs text-slate-400 w-16 text-right">
                               {used.toFixed(1)}%
                             </span>
                           </div>
-                        </div>
-                      );
+                        </div>);
+
                     })}
                   </div>
                 </div>
@@ -620,7 +620,7 @@ export default function FinancialReports() {
                     <PieChartComponent
                       data={costBreakdown.map((item) => ({
                         category: item.category,
-                        value: item.amount,
+                        value: item.amount
                       }))}
                       angleField="value"
                       colorField="category"
@@ -628,10 +628,10 @@ export default function FinancialReports() {
                       innerRadius={0.6}
                       label={{
                         type: "spider",
-                        content: "{name}: {percentage}",
+                        content: "{name}: {percentage}"
                       }}
-                      formatter={(v) => `¥${(v / 10000).toFixed(0)}万`}
-                    />
+                      formatter={(v) => `¥${(v / 10000).toFixed(0)}万`} />
+
                   </div>
 
                   {/* 成本明细列表 */}
@@ -643,17 +643,17 @@ export default function FinancialReports() {
                       {costBreakdown.map((item, index) => {
                         const total = costBreakdown.reduce(
                           (sum, c) => sum + c.amount,
-                          0,
+                          0
                         );
-                        const percentage = (item.amount / total) * 100;
+                        const percentage = item.amount / total * 100;
                         const colors = [
-                          "bg-blue-500",
-                          "bg-purple-500",
-                          "bg-amber-500",
-                          "bg-cyan-500",
-                          "bg-emerald-500",
-                          "bg-pink-500",
-                        ];
+                        "bg-blue-500",
+                        "bg-purple-500",
+                        "bg-amber-500",
+                        "bg-cyan-500",
+                        "bg-emerald-500",
+                        "bg-pink-500"];
+
                         return (
                           <div key={index} className="space-y-2">
                             <div className="flex items-center justify-between text-sm">
@@ -661,9 +661,9 @@ export default function FinancialReports() {
                                 <div
                                   className={cn(
                                     "w-3 h-3 rounded-full",
-                                    colors[index % colors.length],
-                                  )}
-                                />
+                                    colors[index % colors.length]
+                                  )} />
+
                                 <span className="text-slate-400">
                                   {item.category}
                                 </span>
@@ -679,10 +679,10 @@ export default function FinancialReports() {
                             </div>
                             <Progress
                               value={percentage}
-                              className="h-2 bg-slate-700/50"
-                            />
-                          </div>
-                        );
+                              className="h-2 bg-slate-700/50" />
+
+                          </div>);
+
                       })}
                     </div>
                   </div>
@@ -695,25 +695,25 @@ export default function FinancialReports() {
                   </h3>
                   <BarChartComponent
                     data={costBreakdown.flatMap((item) => [
-                      {
-                        category: item.category,
-                        type: "预算",
-                        value: item.budget,
-                      },
-                      {
-                        category: item.category,
-                        type: "实际",
-                        value: item.amount,
-                      },
-                    ])}
+                    {
+                      category: item.category,
+                      type: "预算",
+                      value: item.budget
+                    },
+                    {
+                      category: item.category,
+                      type: "实际",
+                      value: item.amount
+                    }]
+                    )}
                     xField="category"
                     yField="value"
                     seriesField="type"
                     isGroup={true}
                     height={280}
                     colors={["#64748b", "#3b82f6"]}
-                    formatter={(v) => `¥${(v / 10000).toFixed(0)}万`}
-                  />
+                    formatter={(v) => `¥${(v / 10000).toFixed(0)}万`} />
+
                 </div>
               </TabsContent>
 
@@ -727,28 +727,28 @@ export default function FinancialReports() {
                   <BarChartComponent
                     data={projectProfitability.map((p) => ({
                       project:
-                        p.project.length > 8
-                          ? p.project.slice(0, 8) + "..."
-                          : p.project,
-                      margin: p.margin,
+                      p.project.length > 8 ?
+                      p.project.slice(0, 8) + "..." :
+                      p.project,
+                      margin: p.margin
                     }))}
                     xField="project"
                     yField="margin"
                     height={250}
                     colors={projectProfitability.map((p) =>
-                      p.margin >= 30
-                        ? "#10b981"
-                        : p.margin >= 20
-                          ? "#f59e0b"
-                          : "#ef4444",
+                    p.margin >= 30 ?
+                    "#10b981" :
+                    p.margin >= 20 ?
+                    "#f59e0b" :
+                    "#ef4444"
                     )}
                     formatter={(v) => `${v}%`}
                     label={{
                       position: "top",
                       style: { fill: "#94a3b8" },
-                      formatter: (datum) => `${datum.margin}%`,
-                    }}
-                  />
+                      formatter: (datum) => `${datum.margin}%`
+                    }} />
+
                 </div>
 
                 {/* 项目收入成本对比 */}
@@ -758,31 +758,31 @@ export default function FinancialReports() {
                   </h3>
                   <BarChartComponent
                     data={projectProfitability.flatMap((p) => [
-                      {
-                        project:
-                          p.project.length > 8
-                            ? p.project.slice(0, 8) + "..."
-                            : p.project,
-                        type: "收入",
-                        value: p.revenue,
-                      },
-                      {
-                        project:
-                          p.project.length > 8
-                            ? p.project.slice(0, 8) + "..."
-                            : p.project,
-                        type: "成本",
-                        value: p.cost,
-                      },
-                    ])}
+                    {
+                      project:
+                      p.project.length > 8 ?
+                      p.project.slice(0, 8) + "..." :
+                      p.project,
+                      type: "收入",
+                      value: p.revenue
+                    },
+                    {
+                      project:
+                      p.project.length > 8 ?
+                      p.project.slice(0, 8) + "..." :
+                      p.project,
+                      type: "成本",
+                      value: p.cost
+                    }]
+                    )}
                     xField="project"
                     yField="value"
                     seriesField="type"
                     isGroup={true}
                     height={280}
                     colors={["#f59e0b", "#ef4444"]}
-                    formatter={(v) => `¥${(v / 10000).toFixed(0)}万`}
-                  />
+                    formatter={(v) => `¥${(v / 10000).toFixed(0)}万`} />
+
                 </div>
 
                 {/* 项目盈利明细列表 */}
@@ -795,13 +795,13 @@ export default function FinancialReports() {
                       const statusColors = {
                         good: "bg-emerald-500",
                         warning: "bg-amber-500",
-                        critical: "bg-red-500",
+                        critical: "bg-red-500"
                       };
                       return (
                         <div
                           key={index}
-                          className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50"
-                        >
+                          className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50">
+
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
@@ -811,9 +811,9 @@ export default function FinancialReports() {
                                 <div
                                   className={cn(
                                     "w-2 h-2 rounded-full",
-                                    statusColors[project.status],
-                                  )}
-                                />
+                                    statusColors[project.status]
+                                  )} />
+
                               </div>
                             </div>
                             <div className="text-right">
@@ -837,13 +837,13 @@ export default function FinancialReports() {
                               <span
                                 className={cn(
                                   "font-medium",
-                                  project.margin >= 30
-                                    ? "text-emerald-400"
-                                    : project.margin >= 20
-                                      ? "text-amber-400"
-                                      : "text-red-400",
-                                )}
-                              >
+                                  project.margin >= 30 ?
+                                  "text-emerald-400" :
+                                  project.margin >= 20 ?
+                                  "text-amber-400" :
+                                  "text-red-400"
+                                )}>
+
                                 {project.margin.toFixed(1)}%
                               </span>
                             </div>
@@ -851,16 +851,16 @@ export default function FinancialReports() {
                               value={project.margin}
                               className={cn(
                                 "h-2",
-                                project.margin >= 30
-                                  ? "bg-emerald-500/20"
-                                  : project.margin >= 20
-                                    ? "bg-amber-500/20"
-                                    : "bg-red-500/20",
-                              )}
-                            />
+                                project.margin >= 30 ?
+                                "bg-emerald-500/20" :
+                                project.margin >= 20 ?
+                                "bg-amber-500/20" :
+                                "bg-red-500/20"
+                              )} />
+
                           </div>
-                        </div>
-                      );
+                        </div>);
+
                     })}
                   </div>
                 </div>
@@ -869,6 +869,6 @@ export default function FinancialReports() {
           </CardHeader>
         </Card>
       </motion.div>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

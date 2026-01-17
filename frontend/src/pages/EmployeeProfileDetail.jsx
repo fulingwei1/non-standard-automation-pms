@@ -17,15 +17,15 @@ import {
   Heart,
   Zap,
   RefreshCw,
-  TrendingUp,
-} from "lucide-react";
+  TrendingUp } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
@@ -38,13 +38,13 @@ const TAG_TYPE_CONFIG = {
   DOMAIN: { label: "领域", color: "green", icon: Briefcase },
   ATTITUDE: { label: "态度", color: "orange", icon: Heart },
   CHARACTER: { label: "性格", color: "purple", icon: Star },
-  SPECIAL: { label: "特殊", color: "red", icon: Zap },
+  SPECIAL: { label: "特殊", color: "red", icon: Zap }
 };
 
 export default function EmployeeProfileDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
   const [profile, setProfile] = useState(null);
   const [evaluations, setEvaluations] = useState([]);
   const [performance, setPerformance] = useState([]);
@@ -54,10 +54,10 @@ export default function EmployeeProfileDetail() {
       setLoading(true);
       try {
         const [profileRes, evalRes, perfRes] = await Promise.all([
-          staffMatchingApi.getProfile(id),
-          staffMatchingApi.getEvaluations({ employee_id: id }),
-          staffMatchingApi.getPerformance({ employee_id: id }),
-        ]);
+        staffMatchingApi.getProfile(id),
+        staffMatchingApi.getEvaluations({ employee_id: id }),
+        staffMatchingApi.getPerformance({ employee_id: id })]
+        );
         if (profileRes.data) setProfile(profileRes.data);
         if (evalRes.data?.items) setEvaluations(evalRes.data.items);
         if (perfRes.data?.items) setPerformance(perfRes.data.items);
@@ -80,43 +80,43 @@ export default function EmployeeProfileDetail() {
 
   // 6维雷达图数据（简化显示为条形图）
   const dimensions = [
-    {
-      key: "skill",
-      label: "技能匹配",
-      score: profile.skill_score_avg,
-      weight: 30,
-    },
-    {
-      key: "domain",
-      label: "领域经验",
-      score: profile.domain_score_avg,
-      weight: 15,
-    },
-    {
-      key: "attitude",
-      label: "工作态度",
-      score: profile.attitude_score_avg,
-      weight: 20,
-    },
-    {
-      key: "quality",
-      label: "历史质量",
-      score: profile.quality_score_avg,
-      weight: 15,
-    },
-    {
-      key: "workload",
-      label: "工作负载",
-      score: 100 - profile.current_workload_pct,
-      weight: 15,
-    },
-    {
-      key: "special",
-      label: "特殊能力",
-      score: profile.special_score_avg || 75,
-      weight: 5,
-    },
-  ];
+  {
+    key: "skill",
+    label: "技能匹配",
+    score: profile.skill_score_avg,
+    weight: 30
+  },
+  {
+    key: "domain",
+    label: "领域经验",
+    score: profile.domain_score_avg,
+    weight: 15
+  },
+  {
+    key: "attitude",
+    label: "工作态度",
+    score: profile.attitude_score_avg,
+    weight: 20
+  },
+  {
+    key: "quality",
+    label: "历史质量",
+    score: profile.quality_score_avg,
+    weight: 15
+  },
+  {
+    key: "workload",
+    label: "工作负载",
+    score: 100 - profile.current_workload_pct,
+    weight: 15
+  },
+  {
+    key: "special",
+    label: "特殊能力",
+    score: profile.special_score_avg || 75,
+    weight: 5
+  }];
+
 
   const getScoreColor = (score) => {
     if (score >= 85) return "text-green-400";
@@ -129,7 +129,7 @@ export default function EmployeeProfileDetail() {
     const colors = {
       核心: "bg-green-500/20 text-green-400 border-green-500/30",
       骨干: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-      参与: "bg-slate-500/20 text-slate-400 border-slate-500/30",
+      参与: "bg-slate-500/20 text-slate-400 border-slate-500/30"
     };
     return colors[level] || colors["参与"];
   };
@@ -140,12 +140,12 @@ export default function EmployeeProfileDetail() {
         title="员工档案详情"
         description={`${profile.employee_name} - ${profile.department}`}
         actions={
-          <Button variant="outline" onClick={() => navigate(-1)}>
+        <Button variant="outline" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             返回
           </Button>
-        }
-      />
+        } />
+
 
       <div className="grid grid-cols-12 gap-6">
         {/* 左侧：基本信息和维度得分 */}
@@ -164,9 +164,9 @@ export default function EmployeeProfileDetail() {
                 <div className="mt-2">
                   <Badge
                     className={getContributionBadge(
-                      profile.avg_contribution_level,
-                    )}
-                  >
+                      profile.avg_contribution_level
+                    )}>
+
                     {profile.avg_contribution_level}
                   </Badge>
                 </div>
@@ -189,13 +189,13 @@ export default function EmployeeProfileDetail() {
                   <span className="text-slate-400">当前负载</span>
                   <span
                     className={cn(
-                      profile.current_workload_pct >= 90
-                        ? "text-red-400"
-                        : profile.current_workload_pct >= 70
-                          ? "text-yellow-400"
-                          : "text-green-400",
-                    )}
-                  >
+                      profile.current_workload_pct >= 90 ?
+                      "text-red-400" :
+                      profile.current_workload_pct >= 70 ?
+                      "text-yellow-400" :
+                      "text-green-400"
+                    )}>
+
                     {profile.current_workload_pct}%
                   </span>
                 </div>
@@ -209,8 +209,8 @@ export default function EmployeeProfileDetail() {
               <CardTitle className="text-sm">六维能力评估</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {dimensions.map((dim) => (
-                <div key={dim.key}>
+              {dimensions.map((dim) =>
+              <div key={dim.key}>
                   <div className="flex justify-between text-xs mb-1">
                     <span className="text-slate-400">
                       {dim.label} ({dim.weight}%)
@@ -221,7 +221,7 @@ export default function EmployeeProfileDetail() {
                   </div>
                   <Progress value={dim.score} className="h-2" />
                 </div>
-              ))}
+              )}
 
               <div className="pt-4 border-t border-white/10">
                 <div className="flex justify-between items-center">
@@ -229,9 +229,9 @@ export default function EmployeeProfileDetail() {
                   <span className="text-2xl font-bold text-primary">
                     {Math.round(
                       dimensions.reduce(
-                        (sum, d) => sum + (d.score * d.weight) / 100,
-                        0,
-                      ),
+                        (sum, d) => sum + d.score * d.weight / 100,
+                        0
+                      )
                     )}
                   </span>
                 </div>
@@ -262,37 +262,37 @@ export default function EmployeeProfileDetail() {
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
-                        {evals.map((eval_) => (
-                          <div
-                            key={eval_.id}
-                            className="p-3 rounded-lg border border-white/10 bg-white/5"
-                          >
+                        {evals.map((eval_) =>
+                        <div
+                          key={eval_.id}
+                          className="p-3 rounded-lg border border-white/10 bg-white/5">
+
                             <div className="flex items-center justify-between">
                               <span className="text-white">
                                 {eval_.tag_name}
                               </span>
                               <div className="flex items-center gap-1">
-                                {[1, 2, 3, 4, 5].map((i) => (
-                                  <Star
-                                    key={i}
-                                    className={cn(
-                                      "h-3 w-3",
-                                      i <= eval_.score
-                                        ? "text-yellow-400 fill-yellow-400"
-                                        : "text-slate-600",
-                                    )}
-                                  />
-                                ))}
+                                {[1, 2, 3, 4, 5].map((i) =>
+                              <Star
+                                key={i}
+                                className={cn(
+                                  "h-3 w-3",
+                                  i <= eval_.score ?
+                                  "text-yellow-400 fill-yellow-400" :
+                                  "text-slate-600"
+                                )} />
+
+                              )}
                               </div>
                             </div>
                             <div className="text-xs text-slate-500 mt-1">
                               {eval_.evaluator_name} · {eval_.evaluated_at}
                             </div>
                           </div>
-                        ))}
+                        )}
                       </div>
-                    </div>
-                  );
+                    </div>);
+
                 })}
               </div>
             </CardContent>
@@ -304,19 +304,19 @@ export default function EmployeeProfileDetail() {
               <CardTitle className="text-sm">项目绩效历史</CardTitle>
             </CardHeader>
             <CardContent>
-              {performance.length === 0 ? (
-                <div className="text-center py-8 text-slate-400">
+              {performance.length === 0 ?
+              <div className="text-center py-8 text-slate-400">
                   暂无绩效记录
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {performance.map((perf) => (
-                    <motion.div
-                      key={perf.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="p-4 rounded-lg border border-white/10 bg-white/5"
-                    >
+                </div> :
+
+              <div className="space-y-3">
+                  {performance.map((perf) =>
+                <motion.div
+                  key={perf.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="p-4 rounded-lg border border-white/10 bg-white/5">
+
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="font-medium text-white">
@@ -328,19 +328,19 @@ export default function EmployeeProfileDetail() {
                         </div>
                         <div className="flex items-center gap-4">
                           <Badge
-                            className={getContributionBadge(
-                              perf.contribution_level,
-                            )}
-                          >
+                        className={getContributionBadge(
+                          perf.contribution_level
+                        )}>
+
                             {perf.contribution_level}
                           </Badge>
                           <div className="text-center">
                             <div
-                              className={cn(
-                                "text-lg font-bold",
-                                getScoreColor(perf.quality_score),
-                              )}
-                            >
+                          className={cn(
+                            "text-lg font-bold",
+                            getScoreColor(perf.quality_score)
+                          )}>
+
                               {perf.quality_score}
                             </div>
                             <div className="text-xs text-slate-500">
@@ -350,13 +350,13 @@ export default function EmployeeProfileDetail() {
                         </div>
                       </div>
                     </motion.div>
-                  ))}
+                )}
                 </div>
-              )}
+              }
             </CardContent>
           </Card>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }

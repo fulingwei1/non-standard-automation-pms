@@ -43,7 +43,6 @@ export const useEvaluationTasks = (
   // 监听筛选条件变化
   useEffect(() => {
     loadTasks();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periodFilter, statusFilter]);
 
   // 过滤任务

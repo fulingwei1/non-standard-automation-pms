@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState as _useState } from "react";
 import { motion } from "framer-motion";
 import { Package, Truck, MapPin, Calendar } from "lucide-react";
 import { PageHeader } from "../components/layout";
@@ -6,11 +6,11 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
-import { fadeIn, staggerContainer } from "../lib/animations";
+import { fadeIn, staggerContainer as _staggerContainer } from "../lib/animations";
 
 export default function Shipments() {
   return (
@@ -18,12 +18,12 @@ export default function Shipments() {
       <PageHeader
         title="出货管理"
         actions={
-          <Button className="gap-2">
+        <Button className="gap-2">
             <Package className="w-4 h-4" />
             新建出货单
           </Button>
-        }
-      />
+        } />
+
       <div className="container mx-auto px-4 py-6">
         <motion.div variants={fadeIn} initial="hidden" animate="visible">
           <Card>
@@ -34,6 +34,6 @@ export default function Shipments() {
           </Card>
         </motion.div>
       </div>
-    </div>
-  );
+    </div>);
+
 }

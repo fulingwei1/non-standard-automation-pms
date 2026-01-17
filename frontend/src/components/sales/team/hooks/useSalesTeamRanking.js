@@ -8,8 +8,8 @@ import { salesTeamApi } from "../../../../services/api";
 import {
   DEFAULT_RANKING_METRICS,
   FALLBACK_RANKING_FIELDS,
-  buildMetricDetailMap,
-} from "../constants/salesTeamConstants";
+  buildMetricDetailMap as _buildMetricDetailMap } from
+"../constants/salesTeamConstants";
 
 export const useSalesTeamRanking = (filters, showRanking, dateError) => {
   const [loading, setRankingLoading] = useState(false);
@@ -31,7 +31,7 @@ export const useSalesTeamRanking = (filters, showRanking, dateError) => {
     try {
       const params = {
         ranking_type: rankingType,
-        limit: 20,
+        limit: 20
       };
       if (filters.departmentId) params.department_id = filters.departmentId;
       if (filters.region) params.region = filters.region.trim();
@@ -49,14 +49,14 @@ export const useSalesTeamRanking = (filters, showRanking, dateError) => {
       setRankingLoading(false);
     }
   }, [
-    showRanking,
-    rankingType,
-    filters.departmentId,
-    filters.region,
-    filters.startDate,
-    filters.endDate,
-    dateError,
-  ]);
+  showRanking,
+  rankingType,
+  filters.departmentId,
+  filters.region,
+  filters.startDate,
+  filters.endDate,
+  dateError]
+  );
 
   /**
    * 自动刷新排名数据
@@ -70,9 +70,9 @@ export const useSalesTeamRanking = (filters, showRanking, dateError) => {
    */
   const metricConfigList = useMemo(() => {
     const metrics =
-      config?.metrics?.length > 0
-        ? config.metrics
-        : DEFAULT_RANKING_METRICS;
+    config?.metrics?.length > 0 ?
+    config.metrics :
+    DEFAULT_RANKING_METRICS;
     return [...metrics].sort((a, b) => Number(b.weight || 0) - Number(a.weight || 0));
   }, [config]);
 
@@ -88,7 +88,7 @@ export const useSalesTeamRanking = (filters, showRanking, dateError) => {
       seenValues.add(value);
       options.push({
         value,
-        label: metric.label || metric.key || value,
+        label: metric.label || metric.key || value
       });
     });
     // 如果没有指标配置，使用备选字段
@@ -111,7 +111,7 @@ export const useSalesTeamRanking = (filters, showRanking, dateError) => {
    */
   const selectedRankingOption = useMemo(
     () => rankingOptions.find((option) => option.value === rankingType),
-    [rankingOptions, rankingType],
+    [rankingOptions, rankingType]
   );
 
   return {
@@ -126,6 +126,6 @@ export const useSalesTeamRanking = (filters, showRanking, dateError) => {
 
     // 操作方法
     setRankingType,
-    refreshRanking: fetchRanking,
+    refreshRanking: fetchRanking
   };
 };

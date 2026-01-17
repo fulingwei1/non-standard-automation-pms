@@ -4,8 +4,8 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
+  CardTitle } from
+"../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Progress } from "../../components/ui/progress";
 import { Button } from "../../components/ui/button";
@@ -22,8 +22,8 @@ import {
   Star,
   BarChart3,
   Activity,
-  Award,
-} from "lucide-react";
+  Award } from
+"lucide-react";
 import {
   REVIEW_STATUS,
   REVIEW_TYPES,
@@ -33,24 +33,24 @@ import {
   getEvaluationMetric,
   calculateReviewProgress,
   calculateReviewScore,
-  generateReviewRecommendations,
-} from "./projectReviewConstants";
+  generateReviewRecommendations } from
+"./projectReviewConstants";
 import { cn } from "../../lib/utils";
-import { formatCurrency, formatDate } from "../../lib/utils";
+import { formatCurrency as _formatCurrency, formatDate } from "../../lib/utils";
 
 /**
  * 📊 项目评审概览组件
  * 展示项目评审的关键信息、统计数据和评分结果
  */
-export function ProjectReviewOverview({ 
+export function ProjectReviewOverview({
   review = {},
   onEdit,
   onPublish,
   onArchive,
-  onDelete,
-  editable = false 
+  onDelete: _onDelete,
+  editable = false
 }) {
-  const [expandedSection, setExpandedSection] = useState(null);
+  const [_expandedSection, _setExpandedSection] = useState(null);
 
   // 计算关键指标
   const metrics = useMemo(() => {
@@ -65,7 +65,7 @@ export function ProjectReviewOverview({
       lessonsCount: review.lessons?.length || 0,
       practicesCount: review.best_practices?.length || 0,
       actionItemsCount: review.action_items?.length || 0,
-      attachmentsCount: review.attachments?.length || 0,
+      attachmentsCount: review.attachments?.length || 0
     };
   }, [review]);
 
@@ -73,7 +73,7 @@ export function ProjectReviewOverview({
   const evaluationDetails = useMemo(() => {
     if (!review.evaluations) return [];
 
-    return review.evaluations.map(evaluation => {
+    return review.evaluations.map((evaluation) => {
       const metric = getEvaluationMetric(evaluation.metric);
       return {
         ...evaluation,
@@ -101,11 +101,11 @@ export function ProjectReviewOverview({
   const ScoreIcon = scoreLevel.icon;
 
   // 关键指标卡片
-  const MetricCard = ({ title, value, icon: Icon, trend, color, description }) => (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6"
-    >
+  const MetricCard = ({ title, value, icon: Icon, trend, color, description }) =>
+  <motion.div
+    whileHover={{ scale: 1.02 }}
+    className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
+
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
@@ -117,28 +117,28 @@ export function ProjectReviewOverview({
               <p className="text-2xl font-bold text-white">{value}</p>
             </div>
           </div>
-          {description && (
-            <p className="text-xs text-slate-500 mt-2">{description}</p>
-          )}
+          {description &&
+        <p className="text-xs text-slate-500 mt-2">{description}</p>
+        }
         </div>
-        {trend && (
-          <div className="flex items-center gap-1">
-            {trend > 0 ? (
-              <TrendingUp className="w-4 h-4 text-green-400" />
-            ) : (
-              <TrendingDown className="w-4 h-4 text-red-400" />
-            )}
+        {trend &&
+      <div className="flex items-center gap-1">
+            {trend > 0 ?
+        <TrendingUp className="w-4 h-4 text-green-400" /> :
+
+        <TrendingDown className="w-4 h-4 text-red-400" />
+        }
             <span className={cn(
-              "text-sm font-medium",
-              trend > 0 ? 'text-green-400' : 'text-red-400'
-            )}>
+          "text-sm font-medium",
+          trend > 0 ? 'text-green-400' : 'text-red-400'
+        )}>
               {Math.abs(trend)}%
             </span>
           </div>
-        )}
+      }
       </div>
-    </motion.div>
-  );
+    </motion.div>;
+
 
   return (
     <div className="space-y-6">
@@ -151,16 +151,16 @@ export function ProjectReviewOverview({
               评审基本信息
             </CardTitle>
             <div className="flex items-center gap-2">
-              <Badge 
-                variant="outline" 
-                className={cn(statusInfo.borderColor, statusInfo.textColor)}
-              >
+              <Badge
+                variant="outline"
+                className={cn(statusInfo.borderColor, statusInfo.textColor)}>
+
                 {statusInfo.label}
               </Badge>
-              <Badge 
+              <Badge
                 variant="outline"
-                className={cn("border", typeInfo.color, "text-white")}
-              >
+                className={cn("border", typeInfo.color, "text-white")}>
+
                 {typeInfo.label}
               </Badge>
             </div>
@@ -209,29 +209,29 @@ export function ProjectReviewOverview({
           value={`${metrics.score}分`}
           icon={Star}
           color="bg-amber-500"
-          description={scoreLevel.label}
-        />
+          description={scoreLevel.label} />
+
         <MetricCard
           title="完成进度"
           value={`${metrics.progress}%`}
           icon={Target}
           color="bg-blue-500"
-          description="内容完成度"
-        />
+          description="内容完成度" />
+
         <MetricCard
           title="经验教训"
           value={metrics.lessonsCount}
           icon={FileText}
           color="bg-purple-500"
-          description="经验教训数量"
-        />
+          description="经验教训数量" />
+
         <MetricCard
           title="最佳实践"
           value={metrics.practicesCount}
           icon={Award}
           color="bg-green-500"
-          description="最佳实践数量"
-        />
+          description="最佳实践数量" />
+
       </div>
 
       {/* 评分详情 */}
@@ -251,8 +251,8 @@ export function ProjectReviewOverview({
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {evaluationDetails.map((evaluation, index) => (
-              <div key={index} className="space-y-2">
+            {evaluationDetails.map((evaluation, index) =>
+            <div key={index} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <span className="text-white font-medium">
@@ -270,12 +270,12 @@ export function ProjectReviewOverview({
                   </div>
                 </div>
                 <Progress
-                  value={evaluation.weightedScore}
-                  max={evaluation.maxWeightedScore}
-                  className="h-2"
-                />
+                value={evaluation.weightedScore}
+                max={evaluation.maxWeightedScore}
+                className="h-2" />
+
               </div>
-            ))}
+            )}
           </div>
         </CardContent>
       </Card>
@@ -303,20 +303,20 @@ export function ProjectReviewOverview({
             </p>
           </div>
 
-          {review.challenges_faced && (
-            <div>
+          {review.challenges_faced &&
+          <div>
               <h4 className="text-sm font-medium text-white mb-2">面临的挑战</h4>
               <p className="text-slate-300 leading-relaxed">
                 {review.challenges_faced}
               </p>
             </div>
-          )}
+          }
         </CardContent>
       </Card>
 
       {/* 改进建议 */}
-      {metrics.recommendations.length > 0 && (
-        <Card className="bg-slate-800/50 border-slate-700/50">
+      {metrics.recommendations.length > 0 &&
+      <Card className="bg-slate-800/50 border-slate-700/50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-white">
               <TrendingUp className="w-5 h-5" />
@@ -325,8 +325,8 @@ export function ProjectReviewOverview({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {metrics.recommendations.map((recommendation, index) => (
-                <div key={index} className="p-4 rounded-lg border border-slate-700/50">
+              {metrics.recommendations.map((recommendation, index) =>
+            <div key={index} className="p-4 rounded-lg border border-slate-700/50">
                   <div className="flex items-center gap-2 mb-2">
                     {recommendation.type === 'critical' && <AlertCircle className="w-4 h-4 text-red-400" />}
                     {recommendation.type === 'moderate' && <AlertCircle className="w-4 h-4 text-amber-400" />}
@@ -334,28 +334,28 @@ export function ProjectReviewOverview({
                     <h4 className="text-white font-medium">{recommendation.title}</h4>
                   </div>
                   <p className="text-slate-300 text-sm mb-2">{recommendation.description}</p>
-                  {recommendation.actions && (
-                    <ul className="text-slate-400 text-sm space-y-1">
-                      {recommendation.actions.map((action, actionIndex) => (
-                        <li key={actionIndex} className="flex items-center gap-2">
+                  {recommendation.actions &&
+              <ul className="text-slate-400 text-sm space-y-1">
+                      {recommendation.actions.map((action, actionIndex) =>
+                <li key={actionIndex} className="flex items-center gap-2">
                           <span className="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
                           {action}
                         </li>
-                      ))}
+                )}
                     </ul>
-                  )}
+              }
                 </div>
-              ))}
+            )}
             </div>
           </CardContent>
         </Card>
-      )}
+      }
 
       {/* 操作按钮 */}
-      {editable && (
-        <div className="flex items-center justify-end gap-3">
-          {review.status === 'DRAFT' && (
-            <>
+      {editable &&
+      <div className="flex items-center justify-end gap-3">
+          {review.status === 'DRAFT' &&
+        <>
               <Button variant="outline" onClick={onEdit}>
                 <CheckCircle2 className="w-4 h-4 mr-2" />
                 编辑
@@ -365,17 +365,17 @@ export function ProjectReviewOverview({
                 发布
               </Button>
             </>
-          )}
-          {review.status === 'PUBLISHED' && (
-            <Button variant="outline" onClick={onArchive}>
+        }
+          {review.status === 'PUBLISHED' &&
+        <Button variant="outline" onClick={onArchive}>
               <Clock className="w-4 h-4 mr-2" />
               归档
             </Button>
-          )}
+        }
         </div>
-      )}
-    </div>
-  );
+      }
+    </div>);
+
 }
 
 export default ProjectReviewOverview;

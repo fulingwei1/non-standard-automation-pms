@@ -20,8 +20,8 @@ import {
   Clock,
   Eye,
   Download,
-  Loader2,
-} from "lucide-react";
+  Loader2 } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -34,23 +34,23 @@ import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger,
-} from "../components/ui";
+  TabsTrigger } from
+"../components/ui";
 import { cn, formatCurrency } from "../lib/utils";
 import { staggerContainer } from "../lib/animations";
 import {
   SimpleBarChart,
   MonthlyTrendChart,
   SimplePieChart,
-  TrendComparisonCard,
-} from "../components/administrative/StatisticsCharts";
+  TrendComparisonCard } from
+"../components/administrative/StatisticsCharts";
 import { adminApi } from "../services/api";
 
 export default function AdministrativeApprovals() {
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [approvals, setApprovals] = useState([]);
-  const [approvedList, setApprovedList] = useState([]);
-  const [rejectedList, setRejectedList] = useState([]);
+  const [_approvedList, setApprovedList] = useState([]);
+  const [_rejectedList, setRejectedList] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
@@ -64,29 +64,29 @@ export default function AdministrativeApprovals() {
         if (res.data?.items) {
           setApprovals(res.data.items);
         }
-      } catch (err) {
+      } catch (_err) {
         console.log("Admin approvals API unavailable, using mock data");
       }
 
       try {
         const approvedRes = await adminApi.approvals.list({
-          status: "approved",
+          status: "approved"
         });
         if (approvedRes.data?.items) {
           setApprovedList(approvedRes.data.items);
         }
-      } catch (err) {
+      } catch (_err) {
         console.log("Approved approvals API unavailable");
       }
 
       try {
         const rejectedRes = await adminApi.approvals.list({
-          status: "rejected",
+          status: "rejected"
         });
         if (rejectedRes.data?.items) {
           setRejectedList(rejectedRes.data.items);
         }
-      } catch (err) {
+      } catch (_err) {
         console.log("Rejected approvals API unavailable");
       }
 
@@ -98,11 +98,11 @@ export default function AdministrativeApprovals() {
   const filteredApprovals = useMemo(() => {
     return approvals.filter((approval) => {
       const matchSearch =
-        approval.title.toLowerCase().includes(searchText.toLowerCase()) ||
-        approval.applicant.toLowerCase().includes(searchText.toLowerCase());
+      approval.title.toLowerCase().includes(searchText.toLowerCase()) ||
+      approval.applicant.toLowerCase().includes(searchText.toLowerCase());
       const matchType = typeFilter === "all" || approval.type === typeFilter;
       const matchPriority =
-        priorityFilter === "all" || approval.priority === priorityFilter;
+      priorityFilter === "all" || approval.priority === priorityFilter;
       return matchSearch && matchType && matchPriority;
     });
   }, [approvals, searchText, typeFilter, priorityFilter]);
@@ -111,7 +111,7 @@ export default function AdministrativeApprovals() {
     const total = approvals.length;
     const urgent = approvals.filter((a) => a.priority === "high").length;
     const officeSupplies = approvals.filter(
-      (a) => a.type === "office_supplies",
+      (a) => a.type === "office_supplies"
     ).length;
     const vehicle = approvals.filter((a) => a.type === "vehicle").length;
     return { total, urgent, officeSupplies, vehicle };
@@ -121,7 +121,7 @@ export default function AdministrativeApprovals() {
     try {
       await adminApi.approvals.approve(id, { comment: "同意" });
       setApprovals((prev) => prev.filter((a) => a.id !== id));
-    } catch (err) {
+    } catch (_err) {
       console.log("Approval API unavailable");
       // Simulate approval in demo mode
       setApprovals((prev) => prev.filter((a) => a.id !== id));
@@ -132,7 +132,7 @@ export default function AdministrativeApprovals() {
     try {
       await adminApi.approvals.reject(id, { reason: "不符合要求" });
       setApprovals((prev) => prev.filter((a) => a.id !== id));
-    } catch (err) {
+    } catch (_err) {
       console.log("Rejection API unavailable");
       // Simulate rejection in demo mode
       setApprovals((prev) => prev.filter((a) => a.id !== id));
@@ -145,7 +145,7 @@ export default function AdministrativeApprovals() {
       vehicle: Car,
       asset: Building2,
       meeting: Calendar,
-      leave: User,
+      leave: User
     };
     return icons[type] || ClipboardCheck;
   };
@@ -156,7 +156,7 @@ export default function AdministrativeApprovals() {
       vehicle: "车辆",
       asset: "资产",
       meeting: "会议",
-      leave: "请假",
+      leave: "请假"
     };
     return labels[type] || "其他";
   };
@@ -166,18 +166,18 @@ export default function AdministrativeApprovals() {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       <PageHeader
         title="行政审批中心"
         description="行政类审批事项管理、审批流程、审批历史"
         actions={
-          <Button variant="outline">
+        <Button variant="outline">
             <Download className="w-4 h-4 mr-2" />
             导出
           </Button>
-        }
-      />
+        } />
+
 
       {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -254,31 +254,31 @@ export default function AdministrativeApprovals() {
               <CardContent>
                 <SimplePieChart
                   data={[
-                    {
-                      label: "办公用品",
-                      value: stats.officeSupplies,
-                      color: "#3b82f6",
-                    },
-                    { label: "车辆", value: stats.vehicle, color: "#06b6d4" },
-                    {
-                      label: "资产",
-                      value: approvals.filter((a) => a.type === "asset").length,
-                      color: "#a855f7",
-                    },
-                    {
-                      label: "会议",
-                      value: approvals.filter((a) => a.type === "meeting")
-                        .length,
-                      color: "#10b981",
-                    },
-                    {
-                      label: "请假",
-                      value: approvals.filter((a) => a.type === "leave").length,
-                      color: "#f472b6",
-                    },
-                  ]}
-                  size={180}
-                />
+                  {
+                    label: "办公用品",
+                    value: stats.officeSupplies,
+                    color: "#3b82f6"
+                  },
+                  { label: "车辆", value: stats.vehicle, color: "#06b6d4" },
+                  {
+                    label: "资产",
+                    value: approvals.filter((a) => a.type === "asset").length,
+                    color: "#a855f7"
+                  },
+                  {
+                    label: "会议",
+                    value: approvals.filter((a) => a.type === "meeting").
+                    length,
+                    color: "#10b981"
+                  },
+                  {
+                    label: "请假",
+                    value: approvals.filter((a) => a.type === "leave").length,
+                    color: "#f472b6"
+                  }]
+                  }
+                  size={180} />
+
               </CardContent>
             </Card>
             <Card>
@@ -288,15 +288,15 @@ export default function AdministrativeApprovals() {
               <CardContent>
                 <MonthlyTrendChart
                   data={[
-                    { month: "2024-10", amount: 18 },
-                    { month: "2024-11", amount: 22 },
-                    { month: "2024-12", amount: 20 },
-                    { month: "2025-01", amount: stats.total },
-                  ]}
+                  { month: "2024-10", amount: 18 },
+                  { month: "2024-11", amount: 22 },
+                  { month: "2024-12", amount: 20 },
+                  { month: "2025-01", amount: stats.total }]
+                  }
                   valueKey="amount"
                   labelKey="month"
-                  height={150}
-                />
+                  height={150} />
+
               </CardContent>
             </Card>
           </div>
@@ -306,18 +306,18 @@ export default function AdministrativeApprovals() {
             <TrendComparisonCard
               title="待审批总数"
               current={stats.total}
-              previous={20}
-            />
+              previous={20} />
+
             <TrendComparisonCard
               title="紧急事项"
               current={stats.urgent}
-              previous={5}
-            />
+              previous={5} />
+
             <TrendComparisonCard
               title="办公用品审批"
               current={stats.officeSupplies}
-              previous={8}
-            />
+              previous={8} />
+
           </div>
 
           {/* Filters */}
@@ -328,13 +328,13 @@ export default function AdministrativeApprovals() {
                   placeholder="搜索申请标题、申请人..."
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
-                  className="flex-1"
-                />
+                  className="flex-1" />
+
                 <select
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
-                  className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white"
-                >
+                  className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white">
+
                   <option value="all">全部类型</option>
                   <option value="office_supplies">办公用品</option>
                   <option value="vehicle">车辆</option>
@@ -345,8 +345,8 @@ export default function AdministrativeApprovals() {
                 <select
                   value={priorityFilter}
                   onChange={(e) => setPriorityFilter(e.target.value)}
-                  className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white"
-                >
+                  className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white">
+
                   <option value="all">全部优先级</option>
                   <option value="high">紧急</option>
                   <option value="medium">普通</option>
@@ -374,48 +374,48 @@ export default function AdministrativeApprovals() {
                             variant="outline"
                             className={cn(
                               approval.type === "office_supplies" &&
-                                "bg-blue-500/20 text-blue-400 border-blue-500/30",
+                              "bg-blue-500/20 text-blue-400 border-blue-500/30",
                               approval.type === "vehicle" &&
-                                "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
+                              "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
                               approval.type === "asset" &&
-                                "bg-purple-500/20 text-purple-400 border-purple-500/30",
+                              "bg-purple-500/20 text-purple-400 border-purple-500/30",
                               approval.type === "meeting" &&
-                                "bg-green-500/20 text-green-400 border-green-500/30",
+                              "bg-green-500/20 text-green-400 border-green-500/30",
                               approval.type === "leave" &&
-                                "bg-pink-500/20 text-pink-400 border-pink-500/30",
-                            )}
-                          >
+                              "bg-pink-500/20 text-pink-400 border-pink-500/30"
+                            )}>
+
                             {getTypeLabel(approval.type)}
                           </Badge>
-                          {approval.priority === "high" && (
-                            <Badge className="text-xs bg-red-500/20 text-red-400 border-red-500/30">
+                          {approval.priority === "high" &&
+                          <Badge className="text-xs bg-red-500/20 text-red-400 border-red-500/30">
                               紧急
                             </Badge>
-                          )}
+                          }
                         </div>
                         <div className="text-sm text-slate-400 mb-2">
                           {approval.department} · {approval.applicant}
                         </div>
                         <div className="text-sm text-slate-500 mb-3">
                           {approval.items &&
-                            `物品: ${approval.items.join("、")}`}
+                          `物品: ${approval.items.join("、")}`}
                           {approval.purpose &&
-                            `用途: ${approval.purpose} · 目的地: ${approval.destination || "待定"}`}
+                          `用途: ${approval.purpose} · 目的地: ${approval.destination || "待定"}`}
                           {approval.item && `资产: ${approval.item}`}
                           {approval.room &&
-                            `会议室: ${approval.room} · 时间: ${approval.date} ${approval.time}`}
+                          `会议室: ${approval.room} · 时间: ${approval.date} ${approval.time}`}
                           {approval.leaveType &&
-                            `类型: ${approval.leaveType} · 天数: ${approval.days} 天 · 日期: ${approval.date}`}
+                          `类型: ${approval.leaveType} · 天数: ${approval.days} 天 · 日期: ${approval.date}`}
                         </div>
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-slate-500">
                             提交时间: {approval.submitTime}
                           </span>
-                          {approval.amount && (
-                            <span className="font-medium text-amber-400">
+                          {approval.amount &&
+                          <span className="font-medium text-amber-400">
                               {formatCurrency(approval.amount)}
                             </span>
-                          )}
+                          }
                         </div>
                       </div>
                       <div className="flex gap-2 ml-4">
@@ -424,22 +424,22 @@ export default function AdministrativeApprovals() {
                         </Button>
                         <Button
                           size="sm"
-                          onClick={() => handleApprove(approval.id)}
-                        >
+                          onClick={() => handleApprove(approval.id)}>
+
                           批准
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleReject(approval.id)}
-                        >
+                          onClick={() => handleReject(approval.id)}>
+
                           拒绝
                         </Button>
                       </div>
                     </div>
                   </CardContent>
-                </Card>
-              );
+                </Card>);
+
             })}
           </div>
         </TabsContent>
@@ -477,6 +477,6 @@ export default function AdministrativeApprovals() {
           </Card>
         </TabsContent>
       </Tabs>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

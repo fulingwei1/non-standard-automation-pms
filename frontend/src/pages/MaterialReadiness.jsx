@@ -3,7 +3,7 @@
  * 统一管理物料齐套检查（工单级别）和齐套分析（项目级别）
  */
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback as _useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Package,
@@ -35,15 +35,15 @@ import {
   Trash2,
   ArrowUp,
   ArrowDown,
-  Minus
-} from "lucide-react";
+  Minus } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -52,24 +52,24 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "../components/ui/table";
+  TableRow } from
+"../components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-} from "../components/ui/dialog";
-import { cn, formatDate } from "../lib/utils";
+  DialogFooter } from
+"../components/ui/dialog";
+import { cn as _cn, formatDate } from "../lib/utils";
 import { materialApi, projectApi, supplierApi } from "../services/api";
 import { toast } from "../components/ui/toast";
 import {
@@ -97,15 +97,15 @@ import {
   getPriorityLevelLabel,
   getMaterialStatusColor,
   getReadinessStatusColor,
-  getPriorityColor
-} from "../components/material-readiness";
+  getPriorityColor } from
+"../components/material-readiness";
 
 export default function MaterialReadiness() {
   const [loading, setLoading] = useState(true);
   const [materials, setMaterials] = useState([]);
   const [projects, setProjects] = useState([]);
-  const [suppliers, setSuppliers] = useState([]);
-  const [selectedProject, setSelectedProject] = useState("");
+  const [_suppliers, setSuppliers] = useState([]);
+  const [selectedProject, setSelectedProject] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterType, setFilterType] = useState("");
@@ -122,18 +122,18 @@ export default function MaterialReadiness() {
     setLoading(true);
     try {
       const params = {
-        project_id: selectedProject || undefined,
+        project_id: selectedProject && selectedProject !== "all" ? selectedProject : undefined,
         search: searchQuery,
         status: filterStatus || undefined,
         type: filterType || undefined,
-        priority: filterPriority || undefined,
+        priority: filterPriority || undefined
       };
 
       const [materialsRes, projectsRes, suppliersRes] = await Promise.all([
-        materialApi.list(params),
-        projectApi.list({ page_size: 1000 }),
-        supplierApi.list({ page_size: 1000 }),
-      ]);
+      materialApi.list(params),
+      projectApi.list({ page_size: 1000 }),
+      supplierApi.list({ page_size: 1000 })]
+      );
 
       setMaterials(materialsRes.data || []);
       setProjects(projectsRes.data || []);
@@ -167,12 +167,12 @@ export default function MaterialReadiness() {
   // 获取类型分布
   const typeDistribution = useMemo(() => {
     const distribution = {};
-    
-    Object.values(MATERIAL_TYPE).forEach(type => {
+
+    Object.values(MATERIAL_TYPE).forEach((type) => {
       distribution[type] = 0;
     });
 
-    materials.forEach(material => {
+    materials.forEach((material) => {
       if (material.type) {
         distribution[material.type] = (distribution[material.type] || 0) + 1;
       }
@@ -183,9 +183,9 @@ export default function MaterialReadiness() {
 
   // 获取紧急物料
   const urgentMaterials = useMemo(() => {
-    return materials.filter(material => 
-      material.priority === PRIORITY_LEVEL.URGENT && 
-      material.status !== MATERIAL_STATUS.AVAILABLE
+    return materials.filter((material) =>
+    material.priority === PRIORITY_LEVEL.URGENT &&
+    material.status !== MATERIAL_STATUS.AVAILABLE
     );
   }, [materials]);
 
@@ -193,57 +193,57 @@ export default function MaterialReadiness() {
   const arrivingMaterials = useMemo(() => {
     const today = new Date();
     const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-    
-    return materials.filter(material => 
-      material.status === MATERIAL_STATUS.ON_ORDER &&
-      material.expected_date &&
-      new Date(material.expected_date) <= nextWeek
+
+    return materials.filter((material) =>
+    material.status === MATERIAL_STATUS.ON_ORDER &&
+    material.expected_date &&
+    new Date(material.expected_date) <= nextWeek
     );
   }, [materials]);
 
   const getStatusBadge = (status) => {
     return (
-      <Badge 
-        variant="secondary" 
+      <Badge
+        variant="secondary"
         className="border-0"
-        style={{ 
+        style={{
           backgroundColor: getMaterialStatusColor(status) + '20',
           color: getMaterialStatusColor(status)
-        }}
-      >
+        }}>
+
         {getMaterialStatusLabel(status)}
-      </Badge>
-    );
+      </Badge>);
+
   };
 
   const getReadinessBadge = (status) => {
     return (
-      <Badge 
-        variant="secondary" 
+      <Badge
+        variant="secondary"
         className="border-0"
-        style={{ 
+        style={{
           backgroundColor: getReadinessStatusColor(status) + '20',
           color: getReadinessStatusColor(status)
-        }}
-      >
+        }}>
+
         {getReadinessStatusLabel(status)}
-      </Badge>
-    );
+      </Badge>);
+
   };
 
   const getPriorityBadge = (priority) => {
     return (
-      <Badge 
-        variant="secondary" 
+      <Badge
+        variant="secondary"
         className="border-0"
-        style={{ 
+        style={{
           backgroundColor: getPriorityColor(priority) + '20',
           color: getPriorityColor(priority)
-        }}
-      >
+        }}>
+
         {getPriorityLevelLabel(priority)}
-      </Badge>
-    );
+      </Badge>);
+
   };
 
   const getTypeIcon = (type) => {
@@ -254,9 +254,9 @@ export default function MaterialReadiness() {
       [MATERIAL_TYPE.TOOL]: Settings,
       [MATERIAL_TYPE.CONSUMABLE]: Zap,
       [MATERIAL_TYPE.SOFTWARE]: FileText,
-      [MATERIAL_TYPE.DOCUMENTATION]: FileText,
+      [MATERIAL_TYPE.DOCUMENTATION]: FileText
     };
-    
+
     const Icon = iconMap[type] || Package;
     return <Icon className="h-4 w-4" />;
   };
@@ -292,8 +292,8 @@ export default function MaterialReadiness() {
   };
 
   // 渲染概览视图
-  const renderOverview = () => (
-    <div className="space-y-6">
+  const renderOverview = () =>
+  <div className="space-y-6">
       {/* 关键指标 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
@@ -358,25 +358,25 @@ export default function MaterialReadiness() {
           <CardContent>
             <div className="space-y-3">
               {Object.entries(MATERIAL_STATUS).map(([key, value]) => {
-                const count = stats[key.toLowerCase()] || 0;
-                const percentage = stats.total > 0 ? (count / stats.total * 100).toFixed(1) : 0;
-                
-                return (
-                  <div key={value} className="flex items-center justify-between">
+              const count = stats[key.toLowerCase()] || 0;
+              const percentage = stats.total > 0 ? (count / stats.total * 100).toFixed(1) : 0;
+
+              return (
+                <div key={value} className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <div 
-                        className="w-3 h-3 rounded-full" 
-                        style={{ backgroundColor: getMaterialStatusColor(value) }}
-                      />
+                      <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: getMaterialStatusColor(value) }} />
+
                       <span className="text-sm">{getMaterialStatusLabel(value)}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Badge variant="secondary">{count}</Badge>
                       <span className="text-xs text-muted-foreground">{percentage}%</span>
                     </div>
-                  </div>
-                );
-              })}
+                  </div>);
+
+            })}
             </div>
           </CardContent>
         </Card>
@@ -423,20 +423,20 @@ export default function MaterialReadiness() {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {Object.entries(typeDistribution).map(([type, count]) => {
-              if (count === 0) return null;
-              const percentage = stats.total > 0 ? (count / stats.total * 100).toFixed(1) : 0;
-              
-              return (
-                <div key={type} className="text-center p-4 border rounded-lg">
+            if (count === 0) return null;
+            const percentage = stats.total > 0 ? (count / stats.total * 100).toFixed(1) : 0;
+
+            return (
+              <div key={type} className="text-center p-4 border rounded-lg">
                   <div className="flex justify-center mb-2">
                     {getTypeIcon(type)}
                   </div>
                   <p className="text-sm font-medium">{getMaterialTypeLabel(type)}</p>
                   <p className="text-2xl font-bold">{count}</p>
                   <p className="text-xs text-muted-foreground">{percentage}%</p>
-                </div>
-              );
-            })}
+                </div>);
+
+          })}
           </div>
         </CardContent>
       </Card>
@@ -448,50 +448,50 @@ export default function MaterialReadiness() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button 
-              variant="outline" 
-              className="h-auto p-4 flex flex-col items-center space-y-2"
-              onClick={() => handleQuickAction('createMaterial')}
-            >
+            <Button
+            variant="outline"
+            className="h-auto p-4 flex flex-col items-center space-y-2"
+            onClick={() => handleQuickAction('createMaterial')}>
+
               <Plus className="h-6 w-6" />
               <span className="text-sm">新建物料</span>
             </Button>
             
-            <Button 
-              variant="outline" 
-              className="h-auto p-4 flex flex-col items-center space-y-2"
-              onClick={() => handleQuickAction('criticalShortages')}
-            >
+            <Button
+            variant="outline"
+            className="h-auto p-4 flex flex-col items-center space-y-2"
+            onClick={() => handleQuickAction('criticalShortages')}>
+
               <AlertTriangle className="h-6 w-6" />
               <span className="text-sm">关键缺料</span>
             </Button>
             
-            <Button 
-              variant="outline" 
-              className="h-auto p-4 flex flex-col items-center space-y-2"
-              onClick={() => handleQuickAction('materialRequest')}
-            >
+            <Button
+            variant="outline"
+            className="h-auto p-4 flex flex-col items-center space-y-2"
+            onClick={() => handleQuickAction('materialRequest')}>
+
               <Truck className="h-6 w-6" />
               <span className="text-sm">物料申请</span>
             </Button>
             
-            <Button 
-              variant="outline" 
-              className="h-auto p-4 flex flex-col items-center space-y-2"
-              onClick={() => handleQuickAction('readinessAnalysis')}
-            >
+            <Button
+            variant="outline"
+            className="h-auto p-4 flex flex-col items-center space-y-2"
+            onClick={() => handleQuickAction('readinessAnalysis')}>
+
               <BarChart3 className="h-6 w-6" />
               <span className="text-sm">齐套分析</span>
             </Button>
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
+
 
   // 渲染列表视图
-  const renderListView = () => (
-    <Card>
+  const renderListView = () =>
+  <Card>
       <CardHeader>
         <CardTitle>物料列表</CardTitle>
       </CardHeader>
@@ -510,21 +510,21 @@ export default function MaterialReadiness() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading ? (
-                <TableRow>
+              {loading ?
+            <TableRow>
                   <TableCell colSpan={7} className="text-center py-8">
                     加载中...
                   </TableCell>
-                </TableRow>
-              ) : materials.length === 0 ? (
-                <TableRow>
+                </TableRow> :
+            materials.length === 0 ?
+            <TableRow>
                   <TableCell colSpan={7} className="text-center py-8">
                     暂无物料数据
                   </TableCell>
-                </TableRow>
-              ) : (
-                materials.map((material) => (
-                  <TableRow key={material.id}>
+                </TableRow> :
+
+            materials.map((material) =>
+            <TableRow key={material.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center space-x-2">
                         {getTypeIcon(material.type)}
@@ -543,42 +543,42 @@ export default function MaterialReadiness() {
                     <TableCell>
                       <div className="flex space-x-1">
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewMaterial(material)}
-                        >
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleViewMaterial(material)}>
+
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Button
-                          variant="ghost"
-                          size="sm"
-                        >
+                    variant="ghost"
+                    size="sm">
+
                           <Edit className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
                   </TableRow>
-                ))
-              )}
+            )
+            }
             </TableBody>
           </Table>
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>;
+
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       <PageHeader
         title="物料齐套管理"
         description="统一管理物料齐套检查和分析"
         actions={
-          <div className="flex space-x-2">
+        <div className="flex space-x-2">
             <Button variant="outline" onClick={handleRefreshData}>
               <RefreshCw className="mr-2 h-4 w-4" />
               刷新
@@ -588,8 +588,8 @@ export default function MaterialReadiness() {
               导出
             </Button>
           </div>
-        }
-      />
+        } />
+
 
       {/* 视图切换 */}
       <Card>
@@ -599,22 +599,22 @@ export default function MaterialReadiness() {
               <Button
                 variant={viewMode === "overview" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setViewMode("overview")}
-              >
+                onClick={() => setViewMode("overview")}>
+
                 概览
               </Button>
               <Button
                 variant={viewMode === "list" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setViewMode("list")}
-              >
+                onClick={() => setViewMode("list")}>
+
                 列表
               </Button>
               <Button
                 variant={viewMode === "analytics" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setViewMode("analytics")}
-              >
+                onClick={() => setViewMode("analytics")}>
+
                 分析
               </Button>
             </div>
@@ -626,8 +626,8 @@ export default function MaterialReadiness() {
                   placeholder="搜索物料..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
+                  className="pl-10" />
+
               </div>
               
               <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -635,11 +635,11 @@ export default function MaterialReadiness() {
                   <SelectValue placeholder="状态" />
                 </SelectTrigger>
                 <SelectContent>
-                  {MATERIAL_STATUS_FILTER_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
+                  {MATERIAL_STATUS_FILTER_OPTIONS.map((option) =>
+                  <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
 
@@ -648,11 +648,11 @@ export default function MaterialReadiness() {
                   <SelectValue placeholder="类型" />
                 </SelectTrigger>
                 <SelectContent>
-                  {TYPE_FILTER_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
+                  {TYPE_FILTER_OPTIONS.map((option) =>
+                  <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
 
@@ -661,12 +661,12 @@ export default function MaterialReadiness() {
                   <SelectValue placeholder="项目" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">全部项目</SelectItem>
-                  {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
+                  <SelectItem value="all">全部项目</SelectItem>
+                  {projects.map((project) =>
+                  <SelectItem key={project.id} value={project.id}>
                       {project.name}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -677,8 +677,8 @@ export default function MaterialReadiness() {
       {/* 主要内容区域 */}
       {viewMode === "overview" && renderOverview()}
       {viewMode === "list" && renderListView()}
-      {viewMode === "analytics" && (
-        <Card>
+      {viewMode === "analytics" &&
+      <Card>
           <CardHeader>
             <CardTitle>齐套分析</CardTitle>
           </CardHeader>
@@ -688,7 +688,7 @@ export default function MaterialReadiness() {
             </div>
           </CardContent>
         </Card>
-      )}
+      }
 
       {/* 详情对话框 */}
       <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
@@ -696,8 +696,8 @@ export default function MaterialReadiness() {
           <DialogHeader>
             <DialogTitle>物料详情</DialogTitle>
           </DialogHeader>
-          {selectedMaterial && (
-            <div className="space-y-4">
+          {selectedMaterial &&
+          <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">物料名称</p>
@@ -725,14 +725,14 @@ export default function MaterialReadiness() {
                 </div>
               </div>
               
-              {selectedMaterial.description && (
-                <div>
+              {selectedMaterial.description &&
+            <div>
                   <p className="text-sm text-muted-foreground">描述</p>
                   <p className="font-medium">{selectedMaterial.description}</p>
                 </div>
-              )}
+            }
             </div>
-          )}
+          }
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
               关闭
@@ -740,6 +740,6 @@ export default function MaterialReadiness() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

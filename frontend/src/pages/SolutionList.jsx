@@ -33,16 +33,16 @@ import {
   AlertTriangle,
   FileCheck,
   Download,
-  Share2,
-} from "lucide-react";
+  Share2 } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import { Button } from "../components/ui/button";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
@@ -51,34 +51,34 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../components/ui/dropdown-menu";
+  DropdownMenuTrigger } from
+"../components/ui/dropdown-menu";
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { presaleApi } from "../services/api";
 
 // 方案状态配置
 const solutionStatuses = [
-  { id: "all", name: "全部", color: "bg-slate-500" },
-  { id: "draft", name: "草稿", color: "bg-slate-500" },
-  { id: "in_progress", name: "编写中", color: "bg-blue-500" },
-  { id: "reviewing", name: "评审中", color: "bg-amber-500" },
-  { id: "published", name: "已发布", color: "bg-emerald-500" },
-  { id: "archived", name: "已归档", color: "bg-slate-600" },
-];
+{ id: "all", name: "全部", color: "bg-slate-500" },
+{ id: "draft", name: "草稿", color: "bg-slate-500" },
+{ id: "in_progress", name: "编写中", color: "bg-blue-500" },
+{ id: "reviewing", name: "评审中", color: "bg-amber-500" },
+{ id: "published", name: "已发布", color: "bg-emerald-500" },
+{ id: "archived", name: "已归档", color: "bg-slate-600" }];
+
 
 // 设备类型配置
 const deviceTypes = [
-  { id: "all", name: "全部类型" },
-  { id: "ict", name: "ICT测试设备" },
-  { id: "fct", name: "FCT功能测试" },
-  { id: "eol", name: "EOL测试设备" },
-  { id: "aging", name: "老化设备" },
-  { id: "burning", name: "烧录设备" },
-  { id: "vision", name: "视觉检测" },
-  { id: "assembly", name: "组装线" },
-  { id: "hybrid", name: "综合测试线" },
-];
+{ id: "all", name: "全部类型" },
+{ id: "ict", name: "ICT测试设备" },
+{ id: "fct", name: "FCT功能测试" },
+{ id: "eol", name: "EOL测试设备" },
+{ id: "aging", name: "老化设备" },
+{ id: "burning", name: "烧录设备" },
+{ id: "vision", name: "视觉检测" },
+{ id: "assembly", name: "组装线" },
+{ id: "hybrid", name: "综合测试线" }];
+
 
 // Mock 方案数据
 // Mock data - 已移除，使用真实API
@@ -96,14 +96,14 @@ const getStatusName = (status) => {
 
 // 方案卡片组件
 function SolutionCard({ solution, onView }) {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
 
   return (
     <motion.div
       variants={fadeIn}
       className="p-4 rounded-xl bg-surface-100/50 backdrop-blur-lg border border-white/5 hover:bg-white/[0.03] cursor-pointer transition-all group"
-      onClick={() => onView(solution)}
-    >
+      onClick={() => onView(solution)}>
+
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
@@ -125,8 +125,8 @@ function SolutionCard({ solution, onView }) {
               variant="ghost"
               size="icon"
               className="opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={(e) => e.stopPropagation()}
-            >
+              onClick={(e) => e.stopPropagation()}>
+
               <MoreHorizontal className="w-4 h-4 text-slate-400" />
             </Button>
           </DropdownMenuTrigger>
@@ -165,14 +165,14 @@ function SolutionCard({ solution, onView }) {
       </p>
 
       <div className="flex items-center gap-2 flex-wrap mb-3">
-        {solution.tags.slice(0, 3).map((tag, index) => (
-          <span
-            key={index}
-            className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded-full"
-          >
+        {solution.tags.slice(0, 3).map((tag, index) =>
+        <span
+          key={index}
+          className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded-full">
+
             {tag}
           </span>
-        ))}
+        )}
       </div>
 
       <div className="flex items-center gap-3 text-xs text-slate-500 mb-3">
@@ -186,15 +186,15 @@ function SolutionCard({ solution, onView }) {
         </span>
       </div>
 
-      {solution.status !== "published" && solution.status !== "archived" && (
-        <div className="space-y-1 mb-3">
+      {solution.status !== "published" && solution.status !== "archived" &&
+      <div className="space-y-1 mb-3">
           <div className="flex items-center justify-between text-xs">
             <span className="text-slate-400">进度</span>
             <span className="text-white">{solution.progress}%</span>
           </div>
           <Progress value={solution.progress} className="h-1.5" />
         </div>
-      )}
+      }
 
       <div className="flex items-center justify-between text-xs pt-3 border-t border-white/5">
         <div className="flex items-center gap-3 text-slate-500">
@@ -211,8 +211,8 @@ function SolutionCard({ solution, onView }) {
           ¥{solution.amount}万
         </span>
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 }
 
 // 方案表格行组件
@@ -221,8 +221,8 @@ function SolutionTableRow({ solution, onView }) {
     <motion.tr
       variants={fadeIn}
       className="border-b border-white/5 hover:bg-white/[0.03] cursor-pointer group"
-      onClick={() => onView(solution)}
-    >
+      onClick={() => onView(solution)}>
+
       <td className="px-4 py-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -273,8 +273,8 @@ function SolutionTableRow({ solution, onView }) {
             <Button
               variant="ghost"
               size="icon"
-              onClick={(e) => e.stopPropagation()}
-            >
+              onClick={(e) => e.stopPropagation()}>
+
               <MoreHorizontal className="w-4 h-4 text-slate-400" />
             </Button>
           </DropdownMenuTrigger>
@@ -294,8 +294,8 @@ function SolutionTableRow({ solution, onView }) {
           </DropdownMenuContent>
         </DropdownMenu>
       </td>
-    </motion.tr>
-  );
+    </motion.tr>);
+
 }
 
 export default function SolutionList() {
@@ -312,7 +312,7 @@ export default function SolutionList() {
     draft: 0,
     inProgress: 0,
     reviewing: 0,
-    published: 0,
+    published: 0
   });
 
   // Map backend status to frontend status
@@ -323,7 +323,7 @@ export default function SolutionList() {
       REVIEWING: "reviewing",
       APPROVED: "published",
       SUBMITTED: "published",
-      ARCHIVED: "archived",
+      ARCHIVED: "archived"
     };
     return statusMap[backendStatus] || "draft";
   };
@@ -336,7 +336,7 @@ export default function SolutionList() {
 
       const params = {
         page: 1,
-        page_size: 100,
+        page_size: 100
       };
 
       if (selectedStatus !== "all") {
@@ -345,7 +345,7 @@ export default function SolutionList() {
           in_progress: "IN_PROGRESS",
           reviewing: "REVIEWING",
           published: "APPROVED,SUBMITTED",
-          archived: "ARCHIVED",
+          archived: "ARCHIVED"
         };
         params.status = statusMap[selectedStatus] || selectedStatus;
       }
@@ -373,11 +373,11 @@ export default function SolutionList() {
         deviceType: solution.solution_type?.toLowerCase() || "",
         deviceTypeName: solution.solution_type || "",
         progress: solution.progress || 0,
-        amount: solution.estimated_cost
-          ? solution.estimated_cost / 10000
-          : solution.suggested_price
-            ? solution.suggested_price / 10000
-            : 0,
+        amount: solution.estimated_cost ?
+        solution.estimated_cost / 10000 :
+        solution.suggested_price ?
+        solution.suggested_price / 10000 :
+        0,
         deadline: solution.deadline || "",
         createdAt: solution.created_at || "",
         updatedAt: solution.updated_at || solution.created_at || "",
@@ -389,7 +389,7 @@ export default function SolutionList() {
         description: solution.description || "",
         deliverables: [],
         reviews: 0,
-        comments: 0,
+        comments: 0
       }));
 
       setSolutions(transformedSolutions);
@@ -399,10 +399,10 @@ export default function SolutionList() {
       setStats({
         total: allSolutions.length,
         draft: allSolutions.filter((s) => s.status === "draft").length,
-        inProgress: allSolutions.filter((s) => s.status === "in_progress")
-          .length,
+        inProgress: allSolutions.filter((s) => s.status === "in_progress").
+        length,
         reviewing: allSolutions.filter((s) => s.status === "reviewing").length,
-        published: allSolutions.filter((s) => s.status === "published").length,
+        published: allSolutions.filter((s) => s.status === "published").length
       });
     } catch (err) {
       console.error("Failed to load solutions:", err);
@@ -420,12 +420,12 @@ export default function SolutionList() {
   // 筛选方案
   const filteredSolutions = solutions.filter((solution) => {
     const matchesSearch =
-      solution.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      solution.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      solution.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      solution.tags.some((tag) =>
-        tag.toLowerCase().includes(searchTerm.toLowerCase()),
-      );
+    solution.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    solution.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    solution.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    solution.tags.some((tag) =>
+    tag.toLowerCase().includes(searchTerm.toLowerCase())
+    );
     return matchesSearch;
   });
 
@@ -438,14 +438,14 @@ export default function SolutionList() {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       {/* 页面头部 */}
       <PageHeader
         title="方案中心"
         description="管理技术方案、版本控制、协作评审"
         actions={
-          <motion.div variants={fadeIn} className="flex gap-2">
+        <motion.div variants={fadeIn} className="flex gap-2">
             <Button variant="outline" className="flex items-center gap-2">
               <History className="w-4 h-4" />
               历史方案
@@ -455,55 +455,55 @@ export default function SolutionList() {
               新建方案
             </Button>
           </motion.div>
-        }
-      />
+        } />
+
 
       {/* 统计卡片 */}
       <motion.div
         variants={fadeIn}
-        className="grid grid-cols-2 sm:grid-cols-5 gap-4"
-      >
+        className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+
         {[
-          {
-            label: "全部方案",
-            value: stats.total,
-            color: "text-white",
-            bg: "bg-slate-500/10",
-          },
-          {
-            label: "草稿",
-            value: stats.draft,
-            color: "text-slate-400",
-            bg: "bg-slate-500/10",
-          },
-          {
-            label: "编写中",
-            value: stats.inProgress,
-            color: "text-blue-400",
-            bg: "bg-blue-500/10",
-          },
-          {
-            label: "评审中",
-            value: stats.reviewing,
-            color: "text-amber-400",
-            bg: "bg-amber-500/10",
-          },
-          {
-            label: "已发布",
-            value: stats.published,
-            color: "text-emerald-400",
-            bg: "bg-emerald-500/10",
-          },
-        ].map((stat, index) => (
-          <Card
-            key={index}
-            className="bg-surface-100/50 backdrop-blur-lg border border-white/5 cursor-pointer hover:bg-white/[0.03] transition-colors"
-            onClick={() =>
-              setSelectedStatus(
-                index === 0 ? "all" : solutionStatuses[index].id,
-              )
-            }
-          >
+        {
+          label: "全部方案",
+          value: stats.total,
+          color: "text-white",
+          bg: "bg-slate-500/10"
+        },
+        {
+          label: "草稿",
+          value: stats.draft,
+          color: "text-slate-400",
+          bg: "bg-slate-500/10"
+        },
+        {
+          label: "编写中",
+          value: stats.inProgress,
+          color: "text-blue-400",
+          bg: "bg-blue-500/10"
+        },
+        {
+          label: "评审中",
+          value: stats.reviewing,
+          color: "text-amber-400",
+          bg: "bg-amber-500/10"
+        },
+        {
+          label: "已发布",
+          value: stats.published,
+          color: "text-emerald-400",
+          bg: "bg-emerald-500/10"
+        }].
+        map((stat, index) =>
+        <Card
+          key={index}
+          className="bg-surface-100/50 backdrop-blur-lg border border-white/5 cursor-pointer hover:bg-white/[0.03] transition-colors"
+          onClick={() =>
+          setSelectedStatus(
+            index === 0 ? "all" : solutionStatuses[index].id
+          )
+          }>
+
             <CardContent className="p-4">
               <p className="text-xs text-slate-400 mb-1">{stat.label}</p>
               <p className={cn("text-2xl font-bold", stat.color)}>
@@ -511,14 +511,14 @@ export default function SolutionList() {
               </p>
             </CardContent>
           </Card>
-        ))}
+        )}
       </motion.div>
 
       {/* 工具栏 */}
       <motion.div
         variants={fadeIn}
-        className="bg-surface-100/50 backdrop-blur-lg rounded-xl border border-white/5 shadow-lg p-4"
-      >
+        className="bg-surface-100/50 backdrop-blur-lg rounded-xl border border-white/5 shadow-lg p-4">
+
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
           {/* 搜索 */}
           <div className="relative flex-1 max-w-md">
@@ -528,8 +528,8 @@ export default function SolutionList() {
               placeholder="搜索方案名称、客户、编号、标签..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 w-full"
-            />
+              className="pl-9 w-full" />
+
           </div>
 
           {/* 筛选和视图切换 */}
@@ -537,38 +537,38 @@ export default function SolutionList() {
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="bg-surface-50 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              {solutionStatuses.map((status) => (
-                <option key={status.id} value={status.id}>
+              className="bg-surface-50 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary">
+
+              {solutionStatuses.map((status) =>
+              <option key={status.id} value={status.id}>
                   {status.name}
                 </option>
-              ))}
+              )}
             </select>
             <select
               value={selectedDeviceType}
               onChange={(e) => setSelectedDeviceType(e.target.value)}
-              className="bg-surface-50 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              {deviceTypes.map((type) => (
-                <option key={type.id} value={type.id}>
+              className="bg-surface-50 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary">
+
+              {deviceTypes.map((type) =>
+              <option key={type.id} value={type.id}>
                   {type.name}
                 </option>
-              ))}
+              )}
             </select>
             <div className="flex bg-surface-50 rounded-lg p-1">
               <Button
                 variant={viewMode === "grid" ? "default" : "ghost"}
                 size="icon"
-                onClick={() => setViewMode("grid")}
-              >
+                onClick={() => setViewMode("grid")}>
+
                 <LayoutGrid className="w-4 h-4" />
               </Button>
               <Button
                 variant={viewMode === "list" ? "default" : "ghost"}
                 size="icon"
-                onClick={() => setViewMode("list")}
-              >
+                onClick={() => setViewMode("list")}>
+
                 <List className="w-4 h-4" />
               </Button>
             </div>
@@ -577,49 +577,49 @@ export default function SolutionList() {
       </motion.div>
 
       {/* 加载状态 */}
-      {loading && (
-        <div className="text-center py-16 text-slate-400">
+      {loading &&
+      <div className="text-center py-16 text-slate-400">
           <FileText className="w-12 h-12 mx-auto mb-4 text-slate-600 animate-pulse" />
           <p className="text-lg font-medium">加载中...</p>
         </div>
-      )}
+      }
 
       {/* 错误提示 */}
-      {error && !loading && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400 text-sm">
+      {error && !loading &&
+      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400 text-sm">
           {error}
         </div>
-      )}
+      }
 
       {/* 方案列表 */}
       {!loading &&
-        !error &&
-        (viewMode === "grid" ? (
-          <motion.div
-            variants={fadeIn}
-            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
-          >
-            {filteredSolutions.length > 0 ? (
-              filteredSolutions.map((solution) => (
-                <SolutionCard
-                  key={solution.id}
-                  solution={solution}
-                  onView={handleViewSolution}
-                />
-              ))
-            ) : (
-              <div className="col-span-full text-center py-16 text-slate-400">
+      !error && (
+      viewMode === "grid" ?
+      <motion.div
+        variants={fadeIn}
+        className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+
+            {filteredSolutions.length > 0 ?
+        filteredSolutions.map((solution) =>
+        <SolutionCard
+          key={solution.id}
+          solution={solution}
+          onView={handleViewSolution} />
+
+        ) :
+
+        <div className="col-span-full text-center py-16 text-slate-400">
                 <FileText className="w-12 h-12 mx-auto mb-4 text-slate-600" />
                 <p className="text-lg font-medium">暂无方案</p>
                 <p className="text-sm">请调整筛选条件或创建新方案</p>
               </div>
-            )}
-          </motion.div>
-        ) : (
-          <motion.div
-            variants={fadeIn}
-            className="bg-surface-100/50 backdrop-blur-lg rounded-xl border border-white/5 shadow-lg overflow-hidden"
-          >
+        }
+          </motion.div> :
+
+      <motion.div
+        variants={fadeIn}
+        className="bg-surface-100/50 backdrop-blur-lg rounded-xl border border-white/5 shadow-lg overflow-hidden">
+
             <div className="overflow-x-auto custom-scrollbar">
               <table className="w-full text-left">
                 <thead className="text-xs text-slate-400 uppercase bg-surface-50/50">
@@ -636,31 +636,31 @@ export default function SolutionList() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredSolutions.length > 0 ? (
-                    filteredSolutions.map((solution) => (
-                      <SolutionTableRow
-                        key={solution.id}
-                        solution={solution}
-                        onView={handleViewSolution}
-                      />
-                    ))
-                  ) : (
-                    <tr>
+                  {filteredSolutions.length > 0 ?
+              filteredSolutions.map((solution) =>
+              <SolutionTableRow
+                key={solution.id}
+                solution={solution}
+                onView={handleViewSolution} />
+
+              ) :
+
+              <tr>
                       <td
-                        colSpan="9"
-                        className="text-center py-16 text-slate-400"
-                      >
+                  colSpan="9"
+                  className="text-center py-16 text-slate-400">
+
                         <FileText className="w-12 h-12 mx-auto mb-4 text-slate-600" />
                         <p className="text-lg font-medium">暂无方案</p>
                         <p className="text-sm">请调整筛选条件或创建新方案</p>
                       </td>
                     </tr>
-                  )}
+              }
                 </tbody>
               </table>
             </div>
-          </motion.div>
-        ))}
-    </motion.div>
-  );
+          </motion.div>)
+      }
+    </motion.div>);
+
 }

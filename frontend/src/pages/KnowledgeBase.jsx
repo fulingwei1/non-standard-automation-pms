@@ -3,7 +3,7 @@
  * 历史方案、产品知识、工艺知识、竞品情报、模板库 (重构版本)
  */
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback as _useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BookOpen,
@@ -36,8 +36,8 @@ import {
   Settings,
   Grid,
   List,
-  TrendingUp
-} from "lucide-react";
+  TrendingUp } from
+"lucide-react";
 
 import {
   Card,
@@ -72,8 +72,8 @@ import {
   Breadcrumb,
   Pagination,
   Empty,
-  Rate
-} from "antd";
+  Rate } from
+"antd";
 
 // 导入拆分后的组件
 import {
@@ -81,8 +81,8 @@ import {
   DocumentManager,
   CategoryManager,
   SearchAndFilter,
-  DocumentViewer
-} from '../components/knowledge-base';
+  DocumentViewer } from
+'../components/knowledge-base';
 
 import {
   KNOWLEDGE_TYPES,
@@ -95,11 +95,14 @@ import {
   IMPORTANCE_LEVELS,
   STATUS_OPTIONS,
   TABLE_CONFIG,
-  DEFAULT_FILTERS
-} from '../components/knowledge-base/knowledgeBaseConstants';
+  DEFAULT_FILTERS } from
+'../components/knowledge-base/knowledgeBaseConstants';
+
+// 导入API服务
+import { serviceApi } from '../services/api/service';
 
 const { Title, Text, Paragraph } = Typography;
-const { TabPane } = Tabs;
+// TabPane is deprecated - using items prop instead
 const { RangePicker } = DatePicker;
 const { TextArea } = Input;
 const { DirectoryTree } = Tree;
@@ -114,62 +117,38 @@ const KnowledgeBase = () => {
   const [viewLayout, setViewLayout] = useState('grid');
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [searchText, setSearchText] = useState('');
-  const [expandedKeys, setExpandedKeys] = useState(['0']);
-  const [selectedKeys, setSelectedKeys] = useState([]);
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingDocument, setEditingDocument] = useState(null);
+  const [_expandedKeys, _setExpandedKeys] = useState(['0']);
+  const [_selectedKeys, _setSelectedKeys] = useState([]);
+  const [_showUploadModal, setShowUploadModal] = useState(false);
+  const [_showCreateModal, setShowCreateModal] = useState(false);
+  const [_editingDocument, setEditingDocument] = useState(null);
 
-  // 模拟数据
-  const mockData = {
-    documents: [
-      {
-        id: 1,
-        title: '光伏电站建设方案模板',
-        type: 'solution',
-        category: 'engineering',
-        status: 'published',
-        accessLevel: 'internal',
-        author: '张工程师',
-        createdAt: '2024-01-15',
-        updatedAt: '2024-01-18',
-        viewCount: 156,
-        downloadCount: 45,
-        rating: 4.5,
-        tags: ['光伏', '建设', '模板'],
-        description: '标准光伏电站建设完整方案模板，包含设计、施工、验收等全流程',
-        fileUrl: '/documents/solution-template.pdf',
-        fileType: 'document',
-        size: '2.5MB'
-      },
-      // 更多模拟数据...
-    ],
-    categories: [
-      {
-        key: '0',
-        title: '全部文档',
-        children: [
-          {
-            key: '1',
-            title: '工程技术',
-            children: [
-              { key: '1-1', title: '历史方案' },
-              { key: '1-2', title: '产品知识' },
-              { key: '1-3', title: '工艺知识' }
-            ]
-          },
-          {
-            key: '2',
-            title: '销售支持',
-            children: [
-              { key: '2-1', title: '竞品情报' },
-              { key: '2-2', title: '销售模板' }
-            ]
-          }
-        ]
-      }
-    ]
-  };
+  // 默认分类树（静态数据，可后续改为从API获取）
+  const defaultCategories = [
+  {
+    key: '0',
+    title: '全部文档',
+    children: [
+    {
+      key: '1',
+      title: '工程技术',
+      children: [
+      { key: '1-1', title: '历史方案' },
+      { key: '1-2', title: '产品知识' },
+      { key: '1-3', title: '工艺知识' }]
+
+    },
+    {
+      key: '2',
+      title: '销售支持',
+      children: [
+      { key: '2-1', title: '竞品情报' },
+      { key: '2-2', title: '销售模板' }]
+
+    }]
+
+  }];
+
 
   // 数据加载
   useEffect(() => {
@@ -179,25 +158,65 @@ const KnowledgeBase = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      // 模拟API调用
-      setTimeout(() => {
-        setDocuments(mockData.documents);
-        setCategories(mockData.categories);
-        setLoading(false);
-      }, 1000);
+      // 调用真实API
+      const params = {
+        page: 1,
+        page_size: 100,
+        keyword: searchText || undefined,
+        category: filters.category || undefined,
+        status: filters.status || undefined,
+        is_faq: filters.is_faq || undefined
+      };
+
+      const response = await serviceApi.knowledgeBase.list(params);
+      const apiData = response.data || response;
+
+      // 映射API响应到组件期望的格式
+      const mappedDocuments = (apiData.items || []).map((item) => ({
+        id: item.id,
+        title: item.title,
+        type: item.is_faq ? 'faq' : item.file_path ? 'document' : 'article',
+        category: item.category || 'engineering',
+        status: item.status?.toLowerCase() || 'draft',
+        accessLevel: 'internal',
+        author: item.author_name || '未知',
+        createdAt: item.created_at?.split('T')[0] || '',
+        updatedAt: item.updated_at?.split('T')[0] || '',
+        viewCount: item.view_count || 0,
+        downloadCount: item.download_count || 0,
+        likeCount: item.like_count || 0,
+        helpfulCount: item.helpful_count || 0,
+        adoptCount: item.adopt_count || 0,
+        rating: item.rating || 0,
+        tags: item.tags || [],
+        description: item.content?.substring(0, 200) || '',
+        content: item.content,
+        fileUrl: item.file_path,
+        fileType: item.file_path ? 'document' : 'text',
+        fileName: item.file_name,
+        fileSize: item.file_size,
+        isFeatured: item.is_featured,
+        isFaq: item.is_faq,
+        allowDownload: item.allow_download
+      }));
+
+      setDocuments(mappedDocuments);
+      setCategories(defaultCategories);
     } catch (error) {
+      console.error('加载知识库数据失败:', error);
       message.error('加载数据失败');
+    } finally {
       setLoading(false);
     }
   };
 
   // 过滤数据
   const filteredDocuments = useMemo(() => {
-    return documents.filter(doc => {
-      const matchesSearch = !searchText || 
-        doc.title.toLowerCase().includes(searchText.toLowerCase()) ||
-        doc.description?.toLowerCase().includes(searchText.toLowerCase()) ||
-        doc.tags?.some(tag => tag.toLowerCase().includes(searchText.toLowerCase()));
+    return documents.filter((doc) => {
+      const matchesSearch = !searchText ||
+      doc.title.toLowerCase().includes(searchText.toLowerCase()) ||
+      doc.description?.toLowerCase().includes(searchText.toLowerCase()) ||
+      doc.tags?.some((tag) => tag.toLowerCase().includes(searchText.toLowerCase()));
 
       const matchesType = !filters.type || doc.type === filters.type;
       const matchesCategory = !filters.category || doc.category === filters.category;
@@ -209,7 +228,7 @@ const KnowledgeBase = () => {
   }, [documents, searchText, filters]);
 
   // 事件处理
-  const handleUploadDocument = () => {
+  const _handleUploadDocument = () => {
     setShowUploadModal(true);
   };
 
@@ -225,23 +244,23 @@ const KnowledgeBase = () => {
   const handleDeleteDocument = async (docId) => {
     try {
       setLoading(true);
-      // 模拟删除API调用
-      setTimeout(() => {
-        setDocuments(documents.filter(d => d.id !== docId));
-        message.success('删除成功');
-        setLoading(false);
-      }, 500);
+      // 调用真实删除API
+      await serviceApi.knowledgeBase.delete(docId);
+      setDocuments(documents.filter((d) => d.id !== docId));
+      message.success('删除成功');
     } catch (error) {
+      console.error('删除文档失败:', error);
       message.error('删除失败');
+    } finally {
       setLoading(false);
     }
   };
 
   const handleToggleFavorite = (docId) => {
-    setDocuments(documents.map(doc => 
-      doc.id === docId 
-        ? { ...doc, isFavorite: !doc.isFavorite }
-        : doc
+    setDocuments(documents.map((doc) =>
+    doc.id === docId ?
+    { ...doc, isFavorite: !doc.isFavorite } :
+    doc
     ));
     message.success('收藏状态更新成功');
   };
@@ -249,31 +268,31 @@ const KnowledgeBase = () => {
   const handleDocumentView = (doc) => {
     setSelectedDocument(doc);
     // 更新浏览次数
-    setDocuments(documents.map(d => 
-      d.id === doc.id 
-        ? { ...d, viewCount: (d.viewCount || 0) + 1 }
-        : d
+    setDocuments(documents.map((d) =>
+    d.id === doc.id ?
+    { ...d, viewCount: (d.viewCount || 0) + 1 } :
+    d
     ));
   };
 
   const handleDownload = (doc) => {
     message.success(`正在下载: ${doc.title}`);
     // 更新下载次数
-    setDocuments(documents.map(d => 
-      d.id === doc.id 
-        ? { ...d, downloadCount: (d.downloadCount || 0) + 1 }
-        : d
+    setDocuments(documents.map((d) =>
+    d.id === doc.id ?
+    { ...d, downloadCount: (d.downloadCount || 0) + 1 } :
+    d
     ));
   };
 
   // 表格列配置
   const documentColumns = [
-    {
-      title: '文档标题',
-      dataIndex: 'title',
-      key: 'title',
-      render: (text, record) => (
-        <div>
+  {
+    title: '文档标题',
+    dataIndex: 'title',
+    key: 'title',
+    render: (text, record) =>
+    <div>
           <div style={{ fontWeight: 'bold', cursor: 'pointer' }} onClick={() => handleDocumentView(record)}>
             {FILE_TYPES[record.fileType?.toUpperCase()]?.icon || '📄'} {text}
           </div>
@@ -283,143 +302,143 @@ const KnowledgeBase = () => {
             {record.isFavorite && <Star size={12} style={{ color: '#faad14' }} />}
           </div>
         </div>
-      )
-    },
-    {
-      title: '作者',
-      dataIndex: 'author',
-      key: 'author',
-      render: (author) => (
-        <div style={{ display: 'flex', alignItems: 'center' }}>
+
+  },
+  {
+    title: '作者',
+    dataIndex: 'author',
+    key: 'author',
+    render: (author) =>
+    <div style={{ display: 'flex', alignItems: 'center' }}>
           <Avatar size="small" icon={<Users />} />
           <span style={{ marginLeft: 8 }}>{author}</span>
         </div>
-      )
-    },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => {
-        const config = STATUS_OPTIONS[status?.toUpperCase()];
-        return <Tag color={config?.color}>{config?.label}</Tag>;
-      }
-    },
-    {
-      title: '访问级别',
-      dataIndex: 'accessLevel',
-      key: 'accessLevel',
-      render: (level) => {
-        const config = ACCESS_LEVELS[level?.toUpperCase()];
-        return <Tag color={config?.color}>{config?.label}</Tag>;
-      }
-    },
-    {
-      title: '统计',
-      key: 'stats',
-      render: (_, record) => (
-        <div>
+
+  },
+  {
+    title: '状态',
+    dataIndex: 'status',
+    key: 'status',
+    render: (status) => {
+      const config = STATUS_OPTIONS[status?.toUpperCase()];
+      return <Tag color={config?.color}>{config?.label}</Tag>;
+    }
+  },
+  {
+    title: '访问级别',
+    dataIndex: 'accessLevel',
+    key: 'accessLevel',
+    render: (level) => {
+      const config = ACCESS_LEVELS[level?.toUpperCase()];
+      return <Tag color={config?.color}>{config?.label}</Tag>;
+    }
+  },
+  {
+    title: '统计',
+    key: 'stats',
+    render: (_, record) =>
+    <div>
           <div style={{ fontSize: 12 }}>
             <Eye size={12} /> {record.viewCount || 0} 
             <Download size={12} style={{ marginLeft: 8 }} /> {record.downloadCount || 0}
           </div>
-          {record.rating && (
-            <Rate disabled value={record.rating} style={{ fontSize: 12 }} />
-          )}
+          {record.rating &&
+      <Rate disabled value={record.rating} style={{ fontSize: 12 }} />
+      }
         </div>
-      )
-    },
-    {
-      title: '更新时间',
-      dataIndex: 'updatedAt',
-      key: 'updatedAt',
-      render: (date) => <span style={{ fontSize: 12 }}>{date}</span>
-    },
-    {
-      title: '操作',
-      key: 'actions',
-      render: (_, record) => (
-        <Space>
-          <Button 
-            type="link" 
-            icon={<Eye size={16} />}
-            onClick={() => handleDocumentView(record)}
-          >
+
+  },
+  {
+    title: '更新时间',
+    dataIndex: 'updatedAt',
+    key: 'updatedAt',
+    render: (date) => <span style={{ fontSize: 12 }}>{date}</span>
+  },
+  {
+    title: '操作',
+    key: 'actions',
+    render: (_, record) =>
+    <Space>
+          <Button
+        type="link"
+        icon={<Eye size={16} />}
+        onClick={() => handleDocumentView(record)}>
+
             查看
           </Button>
-          <Button 
-            type="link" 
-            icon={<Download size={16} />}
-            onClick={() => handleDownload(record)}
-          >
+          <Button
+        type="link"
+        icon={<Download size={16} />}
+        onClick={() => handleDownload(record)}>
+
             下载
           </Button>
-          <Button 
-            type="link" 
-            icon={record.isFavorite ? <Star size={16} /> : <StarOff size={16} />}
-            onClick={() => handleToggleFavorite(record.id)}
-          >
+          <Button
+        type="link"
+        icon={record.isFavorite ? <Star size={16} /> : <StarOff size={16} />}
+        onClick={() => handleToggleFavorite(record.id)}>
+
             {record.isFavorite ? '已收藏' : '收藏'}
           </Button>
-          <Button 
-            type="link" 
-            icon={<Edit size={16} />}
-            onClick={() => handleEditDocument(record)}
-          >
+          <Button
+        type="link"
+        icon={<Edit size={16} />}
+        onClick={() => handleEditDocument(record)}>
+
             编辑
           </Button>
-          <Button 
-            type="link" 
-            danger
-            icon={<Trash2 size={16} />}
-            onClick={() => handleDeleteDocument(record.id)}
-          >
+          <Button
+        type="link"
+        danger
+        icon={<Trash2 size={16} />}
+        onClick={() => handleDeleteDocument(record.id)}>
+
             删除
           </Button>
         </Space>
-      )
-    }
-  ];
+
+  }];
+
 
   // 渲染文档网格
-  const renderDocumentGrid = () => (
-    <Row gutter={[16, 16]}>
-      {filteredDocuments.map(doc => {
-        const typeConfig = KNOWLEDGE_TYPES[doc.type?.toUpperCase()];
-        const fileConfig = FILE_TYPES[doc.fileType?.toUpperCase()];
-        
-        return (
-          <Col xs={24} sm={12} lg={8} xl={6} key={doc.id}>
+  const renderDocumentGrid = () =>
+  <Row gutter={[16, 16]}>
+      {filteredDocuments.map((doc) => {
+      const typeConfig = KNOWLEDGE_TYPES[doc.type?.toUpperCase()];
+      const fileConfig = FILE_TYPES[doc.fileType?.toUpperCase()];
+
+      return (
+        <Col xs={24} sm={12} lg={8} xl={6} key={doc.id}>
             <Card
-              hoverable
-              className="document-card"
-              cover={
-                <div style={{ 
-                  height: 120, 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  backgroundColor: typeConfig?.color || '#f0f0f0'
-                }}>
+            hoverable
+            className="document-card"
+            cover={
+            <div style={{
+              height: 120,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: typeConfig?.color || '#f0f0f0'
+            }}>
                   <span style={{ fontSize: 48 }}>{fileConfig?.icon || '📄'}</span>
                 </div>
-              }
-              actions={[
-                <Eye key="view" onClick={() => handleDocumentView(doc)} />,
-                <Download key="download" onClick={() => handleDownload(doc)} />,
-                doc.isFavorite ? 
-                  <Star key="favorite" onClick={() => handleToggleFavorite(doc.id)} /> :
-                  <StarOff key="favorite" onClick={() => handleToggleFavorite(doc.id)} />
-              ]}
-            >
+            }
+            actions={[
+            <Eye key="view" onClick={() => handleDocumentView(doc)} />,
+            <Download key="download" onClick={() => handleDownload(doc)} />,
+            doc.isFavorite ?
+            <Star key="favorite" onClick={() => handleToggleFavorite(doc.id)} /> :
+            <StarOff key="favorite" onClick={() => handleToggleFavorite(doc.id)} />]
+            }>
+
               <Card.Meta
-                title={
-                  <div style={{ fontSize: 14, height: 40, overflow: 'hidden' }}>
+              title={
+              <div style={{ fontSize: 14, height: 40, overflow: 'hidden' }}>
                     {doc.title}
                   </div>
-                }
-                description={
-                  <div>
+              }
+              description={
+              <div>
                     <div style={{ fontSize: 12, color: '#666', height: 40, overflow: 'hidden' }}>
                       {doc.description}
                     </div>
@@ -430,14 +449,14 @@ const KnowledgeBase = () => {
                       </div>
                     </div>
                   </div>
-                }
-              />
+              } />
+
             </Card>
-          </Col>
-        );
-      })}
-    </Row>
-  );
+          </Col>);
+
+    })}
+    </Row>;
+
 
   return (
     <motion.div
@@ -445,8 +464,8 @@ const KnowledgeBase = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
       className="knowledge-base-container"
-      style={{ padding: '24px', background: '#f5f5f5', minHeight: '100vh' }}
-    >
+      style={{ padding: '24px', minHeight: '100vh' }}>
+
       {/* 页面头部 */}
       <div className="page-header" style={{ marginBottom: '24px' }}>
         <div className="header-content" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -460,24 +479,24 @@ const KnowledgeBase = () => {
             </Text>
           </div>
           <Space>
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               icon={<Plus size={16} />}
-              onClick={handleCreateDocument}
-            >
+              onClick={handleCreateDocument}>
+
               创建文档
             </Button>
-            <Button 
+            <Button
               icon={<Upload size={16} />}
-              onClick={handleUploadModal}
-            >
+              onClick={() => setShowUploadModal(true)}>
+
               上传文档
             </Button>
-            <Radio.Group 
-              value={viewLayout} 
+            <Radio.Group
+              value={viewLayout}
               onChange={(e) => setViewLayout(e.target.value)}
-              buttonStyle="solid"
-            >
+              buttonStyle="solid">
+
               <Radio.Button value="grid"><Grid size={16} /></Radio.Button>
               <Radio.Button value="list"><List size={16} /></Radio.Button>
             </Radio.Group>
@@ -494,8 +513,8 @@ const KnowledgeBase = () => {
               prefix={<Search size={16} />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              allowClear
-            />
+              allowClear />
+
           </Col>
           <Col xs={24} md={12}>
             <Space>
@@ -504,39 +523,39 @@ const KnowledgeBase = () => {
                 value={filters.type}
                 onChange={(value) => setFilters({ ...filters, type: value })}
                 style={{ width: 150 }}
-                allowClear
-              >
-                {Object.values(KNOWLEDGE_TYPES).map(type => (
-                  <Select.Option key={type.value} value={type.value}>
+                allowClear>
+
+                {Object.values(KNOWLEDGE_TYPES).map((type) =>
+                <Select.Option key={type.value} value={type.value}>
                     {type.icon} {type.label}
                   </Select.Option>
-                ))}
+                )}
               </Select>
               <Select
                 placeholder="分类"
                 value={filters.category}
                 onChange={(value) => setFilters({ ...filters, category: value })}
                 style={{ width: 120 }}
-                allowClear
-              >
-                {Object.values(CATEGORIES).map(cat => (
-                  <Select.Option key={cat.value} value={cat.value}>
+                allowClear>
+
+                {Object.values(CATEGORIES).map((cat) =>
+                <Select.Option key={cat.value} value={cat.value}>
                     {cat.label}
                   </Select.Option>
-                ))}
+                )}
               </Select>
               <Select
                 placeholder="状态"
                 value={filters.status}
                 onChange={(value) => setFilters({ ...filters, status: value })}
                 style={{ width: 120 }}
-                allowClear
-              >
-                {Object.values(STATUS_OPTIONS).map(status => (
-                  <Select.Option key={status.value} value={status.value}>
+                allowClear>
+
+                {Object.values(STATUS_OPTIONS).map((status) =>
+                <Select.Option key={status.value} value={status.value}>
                     <Tag color={status.color}>{status.label}</Tag>
                   </Select.Option>
-                ))}
+                )}
               </Select>
             </Space>
           </Col>
@@ -544,106 +563,106 @@ const KnowledgeBase = () => {
       </Card>
 
       {/* 主要内容区域 */}
-      <Tabs 
-        activeKey={activeTab} 
+      <Tabs
+        activeKey={activeTab}
         onChange={setActiveTab}
         type="card"
         style={{ marginBottom: '24px' }}
-      >
-        <TabPane 
-          tab={
-            <span>
-              <TrendingUp size={16} />
-              概览分析
-            </span>
-          } 
-          key="overview"
-        >
-          <KnowledgeBaseOverview 
+        items={[
+        {
+          key: 'overview',
+          label:
+          <span>
+                <TrendingUp size={16} />
+                概览分析
+              </span>,
+
+          children:
+          <KnowledgeBaseOverview
             data={{ documents: filteredDocuments, categories }}
             loading={loading}
             onNavigate={(type, value) => {
               setActiveTab('documents');
               if (type === 'type') setFilters({ ...filters, type: value });
-            }}
-          />
-        </TabPane>
+            }} />
 
-        <TabPane 
-          tab={
-            <span>
-              <FileText size={16} />
-              文档管理 ({filteredDocuments.length})
-            </span>
-          } 
-          key="documents"
-        >
-          {loading ? (
-            <Spin size="large" style={{ display: 'block', textAlign: 'center', padding: '100px 0' }} />
-          ) : viewLayout === 'grid' ? (
-            renderDocumentGrid()
-          ) : (
-            <Table
-              columns={documentColumns}
-              dataSource={filteredDocuments}
-              rowKey="id"
-              pagination={TABLE_CONFIG.pagination}
-              scroll={TABLE_CONFIG.scroll}
-            />
-          )}
-        </TabPane>
 
-        <TabPane 
-          tab={
-            <span>
-              <Folder size={16} />
-              分类管理
-            </span>
-          } 
-          key="categories"
-        >
-          <CategoryManager 
+        },
+        {
+          key: 'documents',
+          label:
+          <span>
+                <FileText size={16} />
+                文档管理 ({filteredDocuments.length})
+              </span>,
+
+          children: loading ?
+          <Spin size="large" style={{ display: 'block', textAlign: 'center', padding: '100px 0' }} /> :
+          viewLayout === 'grid' ?
+          renderDocumentGrid() :
+
+          <Table
+            columns={documentColumns}
+            dataSource={filteredDocuments}
+            rowKey="id"
+            pagination={TABLE_CONFIG.pagination}
+            scroll={TABLE_CONFIG.scroll} />
+
+
+        },
+        {
+          key: 'categories',
+          label:
+          <span>
+                <Folder size={16} />
+                分类管理
+              </span>,
+
+          children:
+          <CategoryManager
             categories={categories}
             loading={loading}
-            onRefresh={loadData}
-          />
-        </TabPane>
+            onRefresh={loadData} />
 
-        <TabPane 
-          tab={
-            <span>
-              <Filter size={16} />
-              高级搜索
-            </span>
-          } 
-          key="search"
-        >
-          <SearchAndFilter 
+
+        },
+        {
+          key: 'search',
+          label:
+          <span>
+                <Filter size={16} />
+                高级搜索
+              </span>,
+
+          children:
+          <SearchAndFilter
             filters={filters}
             onFiltersChange={setFilters}
             documents={filteredDocuments}
-            loading={loading}
-          />
-        </TabPane>
-      </Tabs>
+            loading={loading} />
+
+
+        }]
+        } />
+
 
       {/* 文档查看器模态框 */}
       <Modal
         title={selectedDocument?.title}
-        visible={!!selectedDocument}
+        open={!!selectedDocument}
         onCancel={() => setSelectedDocument(null)}
         footer={null}
-        width={1000}
-      >
-        {selectedDocument && (
-          <DocumentViewer 
-            document={selectedDocument}
-            onClose={() => setSelectedDocument(null)}
-          />
-        )}
+        width={1000}>
+
+        {selectedDocument &&
+        <DocumentViewer
+          document={selectedDocument}
+          onClose={() => setSelectedDocument(null)} />
+
+        }
       </Modal>
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
 export default KnowledgeBase;

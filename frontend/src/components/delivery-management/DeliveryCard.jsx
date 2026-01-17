@@ -7,14 +7,14 @@ import { Progress } from "../ui/progress";
 import {
   Package, MapPin, Clock, Truck, User, Phone, MessageCircle,
   CheckCircle, XCircle, AlertTriangle, MoreVertical,
-  Eye, Edit, Trash2, Share
-} from 'lucide-react';
+  Eye, Edit, Trash2, Share } from
+'lucide-react';
 import { cn } from "../../lib/utils";
 import {
-  deliveryStatusConfigs,
-  deliveryPriorityConfigs,
-  deliveryMethodConfigs,
-  deliveryStageConfigs,
+  deliveryStatusConfigs as _deliveryStatusConfigs,
+  deliveryPriorityConfigs as _deliveryPriorityConfigs,
+  deliveryMethodConfigs as _deliveryMethodConfigs,
+  deliveryStageConfigs as _deliveryStageConfigs,
   getStatusConfig,
   getPriorityConfig,
   getMethodConfig,
@@ -22,8 +22,8 @@ import {
   formatStatus,
   formatPriority,
   formatMethod,
-  formatStage
-} from './deliveryConstants';
+  formatStage as _formatStage } from
+'./deliveryConstants';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 10 },
@@ -39,10 +39,10 @@ const pulse = {
  * 配送进度条组件
  */
 const DeliveryProgress = ({ stage }) => {
-  const stageConfig = getStageConfig(stage);
+  const _stageConfig = getStageConfig(stage);
   const stages = ['PREPARING', 'READY', 'DISPATCHED', 'LOADING', 'TRANSPORTING', 'UNLOADING', 'COMPLETED'];
   const currentStageIndex = stages.indexOf(stage);
-  const progress = ((currentStageIndex + 1) / stages.length) * 100;
+  const progress = (currentStageIndex + 1) / stages.length * 100;
 
   return (
     <div className="space-y-2">
@@ -52,18 +52,18 @@ const DeliveryProgress = ({ stage }) => {
       </div>
       <Progress value={progress} className="h-2" />
       <div className="flex justify-between text-xs text-slate-500">
-        {stages.map((s, idx) => (
-          <div key={s} className="text-center">
+        {stages.map((s, idx) =>
+        <div key={s} className="text-center">
             <div className={cn(
-              "w-3 h-3 rounded-full mx-auto mb-1",
-              idx <= currentStageIndex ? "bg-green-500" : "bg-slate-300"
-            )} />
+            "w-3 h-3 rounded-full mx-auto mb-1",
+            idx <= currentStageIndex ? "bg-green-500" : "bg-slate-300"
+          )} />
             <span className="text-xs">{getStageConfig(s).label}</span>
-          </div>
-        ))}
+        </div>
+        )}
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 /**
@@ -87,13 +87,13 @@ const LocationTracker = ({ locations = [] }) => {
       <div className="text-xs text-slate-500">
         更新时间: {new Date(currentLocation.timestamp).toLocaleString()}
       </div>
-      {locations.length > 1 && (
-        <div className="text-xs text-slate-500">
+      {locations.length > 1 &&
+      <div className="text-xs text-slate-500">
           已经过 {locations.length} 个节点
-        </div>
-      )}
-    </div>
-  );
+      </div>
+      }
+    </div>);
+
 };
 
 /**
@@ -134,8 +134,8 @@ export const DeliveryCard = ({
         selected && "ring-2 ring-blue-500",
         className
       )}
-      onClick={() => onSelect && onSelect(delivery)}
-    >
+      onClick={() => onSelect && onSelect(delivery)}>
+
       <Card className={cn(
         "hover:shadow-md border-l-4",
         statusConfig.color.replace("bg-", "border-l-")
@@ -152,14 +152,14 @@ export const DeliveryCard = ({
               <div className="flex-1">
                 <CardTitle className="text-base flex items-center gap-2">
                   <span>配送单号: {delivery.delivery_no}</span>
-                  {delivery.status === 'IN_TRANSIT' && (
-                    <motion.span
-                      variants={pulse}
-                      className="text-red-500"
-                    >
+                  {delivery.status === 'IN_TRANSIT' &&
+                  <motion.span
+                    variants={pulse}
+                    className="text-red-500">
+
                       <Truck className="w-4 h-4" />
-                    </motion.span>
-                  )}
+                  </motion.span>
+                  }
                 </CardTitle>
                 <div className="flex items-center gap-2 mt-1">
                   <Badge className={priorityConfig.color}>
@@ -168,49 +168,49 @@ export const DeliveryCard = ({
                   <Badge className={methodConfig.color}>
                     {formatMethod(delivery.delivery_method)}
                   </Badge>
-                  {delivery.is_urgent && (
-                    <Badge className="bg-red-500">紧急</Badge>
-                  )}
+                  {delivery.is_urgent &&
+                  <Badge className="bg-red-500">紧急</Badge>
+                  }
                 </div>
               </div>
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                {onView && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onView(delivery);
-                    }}
-                  >
+                {onView &&
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onView(delivery);
+                  }}>
+
                     <Eye className="w-4 h-4" />
-                  </Button>
-                )}
-                {onEdit && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEdit(delivery);
-                    }}
-                  >
+                </Button>
+                }
+                {onEdit &&
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(delivery);
+                  }}>
+
                     <Edit className="w-4 h-4" />
-                  </Button>
-                )}
-                {onCancel && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-red-500"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onCancel(delivery);
-                    }}
-                  >
+                </Button>
+                }
+                {onCancel &&
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-red-500"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onCancel(delivery);
+                  }}>
+
                     <Trash2 className="w-4 h-4" />
-                  </Button>
-                )}
+                </Button>
+                }
               </div>
             </div>
           </div>
@@ -237,8 +237,8 @@ export const DeliveryCard = ({
                 </div>
               </div>
 
-              {delivery.vehicle_info && (
-                <div>
+              {delivery.vehicle_info &&
+              <div>
                   <div className="text-sm text-slate-500 mb-1">配送车辆</div>
                   <div className="text-sm font-medium flex items-center gap-2">
                     <Truck className="w-4 h-4 text-slate-500" />
@@ -247,8 +247,8 @@ export const DeliveryCard = ({
                   <div className="text-sm text-slate-600">
                     {delivery.vehicle_info.driver_name}
                   </div>
-                </div>
-              )}
+              </div>
+              }
             </div>
 
             {/* 状态信息 */}
@@ -256,13 +256,13 @@ export const DeliveryCard = ({
               <div>
                 <div className="text-sm text-slate-500 mb-1">配送状态</div>
                 <div className="flex items-center gap-2">
-                  {delivery.status === 'DELIVERED' ? (
-                    <CheckCircle className="w-5 h-5 text-green-500" />
-                  ) : delivery.status === 'DELIVER_FAILED' ? (
-                    <XCircle className="w-5 h-5 text-red-500" />
-                  ) : delivery.status === 'IN_TRANSIT' ? (
-                    <AlertTriangle className="w-5 h-5 text-orange-500" />
-                  ) : null}
+                  {delivery.status === 'DELIVERED' ?
+                  <CheckCircle className="w-5 h-5 text-green-500" /> :
+                  delivery.status === 'DELIVER_FAILED' ?
+                  <XCircle className="w-5 h-5 text-red-500" /> :
+                  delivery.status === 'IN_TRANSIT' ?
+                  <AlertTriangle className="w-5 h-5 text-orange-500" /> :
+                  null}
                   <span className={cn(
                     "font-medium",
                     delivery.status === 'DELIVERED' ? "text-green-600" :
@@ -290,39 +290,39 @@ export const DeliveryCard = ({
 
           {/* 操作按钮 */}
           <div className="flex gap-2 mt-4 pt-4 border-t">
-            {onTrack && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onTrack(delivery);
-                }}
-                className="flex-1"
-              >
+            {onTrack &&
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onTrack(delivery);
+              }}
+              className="flex-1">
+
                 <MapPin className="w-4 h-4 mr-2" />
                 实时追踪
-              </Button>
-            )}
-            {onContact && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onContact(delivery);
-                }}
-                className="flex-1"
-              >
+            </Button>
+            }
+            {onContact &&
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onContact(delivery);
+              }}
+              className="flex-1">
+
                 <Phone className="w-4 h-4 mr-2" />
                 联系客户
-              </Button>
-            )}
+            </Button>
+            }
           </div>
         </CardContent>
       </Card>
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
 export default DeliveryCard;

@@ -12,8 +12,8 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -23,8 +23,8 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import { Checkbox } from "../components/ui/checkbox";
 import { qualificationApi } from "../services/api";
 import { toast } from "../components/ui/toast";
@@ -35,14 +35,14 @@ export default function QualificationLevelForm() {
   const { id } = useParams();
   const isEdit = !!id;
   const [loading, setLoading] = useState(false);
-  const [level, setLevel] = useState(null);
+  const [_level, setLevel] = useState(null);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     setValue,
-    watch,
+    watch
   } = useForm({
     defaultValues: {
       level_code: "",
@@ -50,8 +50,8 @@ export default function QualificationLevelForm() {
       level_order: 1,
       role_type: "",
       description: "",
-      is_active: true,
-    },
+      is_active: true
+    }
   });
 
   useEffect(() => {
@@ -105,14 +105,14 @@ export default function QualificationLevelForm() {
       variants={fadeIn}
       initial="hidden"
       animate="show"
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       <PageHeader
         title={isEdit ? "编辑任职资格等级" : "新建任职资格等级"}
         description={isEdit ? "修改等级信息" : "创建新的任职资格等级"}
         icon={ArrowLeft}
-        onBack={() => navigate("/qualifications")}
-      />
+        onBack={() => navigate("/qualifications")} />
+
 
       <Card>
         <CardHeader>
@@ -132,18 +132,18 @@ export default function QualificationLevelForm() {
                     required: "等级编码不能为空",
                     pattern: {
                       value: /^[A-Z_]+$/,
-                      message: "等级编码只能包含大写字母和下划线",
-                    },
+                      message: "等级编码只能包含大写字母和下划线"
+                    }
                   })}
                   placeholder="如: ASSISTANT, JUNIOR, MIDDLE, SENIOR, EXPERT"
-                  disabled={isEdit}
-                />
-                {errors.level_code && (
-                  <p className="text-sm text-red-500 flex items-center gap-1">
+                  disabled={isEdit} />
+
+                {errors.level_code &&
+                <p className="text-sm text-red-500 flex items-center gap-1">
                     <AlertCircle className="h-4 w-4" />
                     {errors.level_code.message}
                   </p>
-                )}
+                }
                 <p className="text-xs text-gray-500">
                   建议使用: ASSISTANT(助理级), JUNIOR(初级), MIDDLE(中级),
                   SENIOR(高级), EXPERT(专家级)
@@ -158,16 +158,16 @@ export default function QualificationLevelForm() {
                 <Input
                   id="level_name"
                   {...register("level_name", {
-                    required: "等级名称不能为空",
+                    required: "等级名称不能为空"
                   })}
-                  placeholder="如: 助理级、初级、中级、高级、专家级"
-                />
-                {errors.level_name && (
-                  <p className="text-sm text-red-500 flex items-center gap-1">
+                  placeholder="如: 助理级、初级、中级、高级、专家级" />
+
+                {errors.level_name &&
+                <p className="text-sm text-red-500 flex items-center gap-1">
                     <AlertCircle className="h-4 w-4" />
                     {errors.level_name.message}
                   </p>
-                )}
+                }
               </div>
 
               {/* 排序顺序 */}
@@ -181,16 +181,16 @@ export default function QualificationLevelForm() {
                   {...register("level_order", {
                     required: "排序顺序不能为空",
                     valueAsNumber: true,
-                    min: { value: 1, message: "排序顺序必须大于0" },
+                    min: { value: 1, message: "排序顺序必须大于0" }
                   })}
-                  placeholder="1-5"
-                />
-                {errors.level_order && (
-                  <p className="text-sm text-red-500 flex items-center gap-1">
+                  placeholder="1-5" />
+
+                {errors.level_order &&
+                <p className="text-sm text-red-500 flex items-center gap-1">
                     <AlertCircle className="h-4 w-4" />
                     {errors.level_order.message}
                   </p>
-                )}
+                }
                 <p className="text-xs text-gray-500">
                   数字越小，等级越低（1=最低，5=最高）
                 </p>
@@ -201,8 +201,8 @@ export default function QualificationLevelForm() {
                 <Label htmlFor="role_type">适用角色类型</Label>
                 <Select
                   value={watch("role_type")}
-                  onValueChange={(value) => setValue("role_type", value)}
-                >
+                  onValueChange={(value) => setValue("role_type", value)}>
+
                   <SelectTrigger id="role_type">
                     <SelectValue placeholder="选择适用角色（留空表示通用）" />
                   </SelectTrigger>
@@ -227,8 +227,8 @@ export default function QualificationLevelForm() {
                 id="description"
                 {...register("description")}
                 placeholder="描述该等级的能力要求、经验要求等..."
-                rows={4}
-              />
+                rows={4} />
+
             </div>
 
             {/* 启用状态 */}
@@ -236,8 +236,8 @@ export default function QualificationLevelForm() {
               <Checkbox
                 id="is_active"
                 checked={isActive}
-                onCheckedChange={(checked) => setValue("is_active", checked)}
-              />
+                onCheckedChange={(checked) => setValue("is_active", checked)} />
+
               <Label htmlFor="is_active" className="cursor-pointer">
                 启用该等级
               </Label>
@@ -249,8 +249,8 @@ export default function QualificationLevelForm() {
                 type="button"
                 variant="outline"
                 onClick={() => navigate("/qualifications")}
-                disabled={loading}
-              >
+                disabled={loading}>
+
                 <X className="h-4 w-4 mr-2" />
                 取消
               </Button>
@@ -262,6 +262,6 @@ export default function QualificationLevelForm() {
           </form>
         </CardContent>
       </Card>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

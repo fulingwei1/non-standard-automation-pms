@@ -4,7 +4,7 @@
  * Core Functions: Order management, delivery tracking, cost control, supplier evaluation
  */
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo as _useMemo, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -30,8 +30,8 @@ import {
   Send,
   Inbox,
   Zap,
-  PieChart,
-} from "lucide-react";
+  PieChart } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -41,9 +41,9 @@ import {
   Button,
   Badge,
   Progress,
-  Input,
-} from "../components/ui";
-import { cn, formatCurrency, formatDate } from "../lib/utils";
+  Input } from
+"../components/ui";
+import { cn, formatCurrency, formatDate as _formatDate } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { purchaseApi, shortageApi, supplierApi } from "../services/api";
 import { ApiIntegrationError } from "../components/ui";
@@ -57,7 +57,7 @@ const statConfig = {
     icon: ShoppingCart,
     color: "text-blue-400",
     bg: "bg-blue-500/10",
-    trend: "+2",
+    trend: "+2"
   },
   arrivedMaterial: {
     label: "本月到货",
@@ -66,7 +66,7 @@ const statConfig = {
     icon: Truck,
     color: "text-emerald-400",
     bg: "bg-emerald-500/10",
-    trend: "+5",
+    trend: "+5"
   },
   shortage: {
     label: "缺料预警",
@@ -75,7 +75,7 @@ const statConfig = {
     icon: AlertTriangle,
     color: "text-red-400",
     bg: "bg-red-500/10",
-    trend: "-1",
+    trend: "-1"
   },
   suppliers: {
     label: "在用供应商",
@@ -84,7 +84,7 @@ const statConfig = {
     icon: Building2,
     color: "text-purple-400",
     bg: "bg-purple-500/10",
-    trend: "+1",
+    trend: "+1"
   },
   budgetUsed: {
     label: "预算使用率",
@@ -92,7 +92,7 @@ const statConfig = {
     unit: "%",
     icon: PieChart,
     color: "text-amber-400",
-    bg: "bg-amber-500/10",
+    bg: "bg-amber-500/10"
   },
   onTimeRate: {
     label: "按期到货率",
@@ -100,8 +100,8 @@ const statConfig = {
     unit: "%",
     icon: CheckCircle2,
     color: "text-cyan-400",
-    bg: "bg-cyan-500/10",
-  },
+    bg: "bg-cyan-500/10"
+  }
 };
 
 // Mock data removed - 使用真实API
@@ -113,13 +113,13 @@ const taskTypeConfig = {
   arrival: { icon: Truck, label: "到货", color: "text-emerald-400" },
   inspection: { icon: CheckCircle2, label: "检验", color: "text-cyan-400" },
   supplier: { icon: Building2, label: "供应商", color: "text-purple-400" },
-  cost: { icon: DollarSign, label: "成本", color: "text-amber-400" },
+  cost: { icon: DollarSign, label: "成本", color: "text-amber-400" }
 };
 
 const priorityColors = {
   high: { bg: "bg-red-500/20", text: "text-red-400", label: "紧急" },
   medium: { bg: "bg-amber-500/20", text: "text-amber-400", label: "中等" },
-  low: { bg: "bg-blue-500/20", text: "text-blue-400", label: "普通" },
+  low: { bg: "bg-blue-500/20", text: "text-blue-400", label: "普通" }
 };
 
 const StatCard = ({ config }) => {
@@ -127,8 +127,8 @@ const StatCard = ({ config }) => {
   return (
     <motion.div
       variants={fadeIn}
-      className="relative overflow-hidden rounded-lg border border-slate-700/50 bg-gradient-to-br from-slate-800/50 to-slate-900/50 p-5 backdrop-blur"
-    >
+      className="relative overflow-hidden rounded-lg border border-slate-700/50 bg-gradient-to-br from-slate-800/50 to-slate-900/50 p-5 backdrop-blur">
+
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="mb-2 text-sm text-slate-400">{config.label}</p>
@@ -136,26 +136,26 @@ const StatCard = ({ config }) => {
             {config.value}
           </p>
           <p className="mt-1 text-xs text-slate-500">{config.unit}</p>
-          {config.trend && (
-            <p
-              className={cn(
-                "mt-2 text-xs font-semibold",
-                config.trend.startsWith("+")
-                  ? "text-emerald-400"
-                  : "text-amber-400",
-              )}
-            >
+          {config.trend &&
+          <p
+            className={cn(
+              "mt-2 text-xs font-semibold",
+              config.trend.startsWith("+") ?
+              "text-emerald-400" :
+              "text-amber-400"
+            )}>
+
               {config.trend}
             </p>
-          )}
+          }
         </div>
         <div className={cn("rounded-lg p-3", config.bg)}>
           <Icon className={cn("h-6 w-6", config.color)} />
         </div>
       </div>
       <div className="absolute right-0 top-0 h-20 w-20 rounded-full bg-gradient-to-br from-purple-500/10 to-transparent blur-2xl" />
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
 const TodoItem = ({ todo, onComplete }) => {
@@ -173,8 +173,8 @@ const TodoItem = ({ todo, onComplete }) => {
   return (
     <motion.div
       variants={fadeIn}
-      className="group flex items-start gap-3 rounded-lg border border-slate-700/50 bg-slate-800/40 p-4 transition-all hover:border-slate-600/80 hover:bg-slate-800/60"
-    >
+      className="group flex items-start gap-3 rounded-lg border border-slate-700/50 bg-slate-800/40 p-4 transition-all hover:border-slate-600/80 hover:bg-slate-800/60">
+
       <div className="relative mt-1 flex-shrink-0">
         <div className={cn("rounded-lg p-2", priorityConfig.bg)}>
           <Icon className={cn("h-5 w-5", typeConfig.color)} />
@@ -194,25 +194,25 @@ const TodoItem = ({ todo, onComplete }) => {
                 className={cn(
                   "text-xs",
                   priorityConfig.bg,
-                  priorityConfig.text,
-                )}
-              >
+                  priorityConfig.text
+                )}>
+
                 {priorityConfig.label}
               </Badge>
-              {todo.daysLeft === 0 ? (
-                <span className="text-xs font-medium text-red-400">
+              {todo.daysLeft === 0 ?
+              <span className="text-xs font-medium text-red-400">
                   今天截止
-                </span>
-              ) : (
-                <span
-                  className={cn(
-                    "text-xs font-medium",
-                    getDaysColor(todo.daysLeft),
-                  )}
-                >
+                </span> :
+
+              <span
+                className={cn(
+                  "text-xs font-medium",
+                  getDaysColor(todo.daysLeft)
+                )}>
+
                   {todo.daysLeft}天截止
                 </span>
-              )}
+              }
             </div>
           </div>
         </div>
@@ -223,13 +223,13 @@ const TodoItem = ({ todo, onComplete }) => {
           size="sm"
           variant="ghost"
           className="h-8 w-8 p-0"
-          onClick={() => onComplete(todo.id)}
-        >
+          onClick={() => onComplete(todo.id)}>
+
           <CheckCircle2 className="h-4 w-4 text-emerald-400" />
         </Button>
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
 const PurchaseOrderRow = ({ order }) => {
@@ -239,14 +239,14 @@ const PurchaseOrderRow = ({ order }) => {
     confirmed: { label: "已确认", color: "bg-purple-500/20 text-purple-400" },
     shipped: { label: "已发货", color: "bg-cyan-500/20 text-cyan-400" },
     received: { label: "已收货", color: "bg-emerald-500/20 text-emerald-400" },
-    completed: { label: "已完成", color: "bg-slate-500/20 text-slate-400" },
+    completed: { label: "已完成", color: "bg-slate-500/20 text-slate-400" }
   };
 
   const arrivalConfig = {
     pending: { label: "待发货", icon: Clock },
     in_transit: { label: "运输中", icon: Truck },
     delayed: { label: "已延期", icon: AlertTriangle },
-    completed: { label: "已到货", icon: CheckCircle2 },
+    completed: { label: "已到货", icon: CheckCircle2 }
   };
 
   const getDaysColor = (daysLeft) => {
@@ -261,8 +261,8 @@ const PurchaseOrderRow = ({ order }) => {
   return (
     <motion.div
       variants={fadeIn}
-      className="group flex items-center justify-between rounded-lg border border-slate-700/50 bg-slate-800/40 px-4 py-3 transition-all hover:border-slate-600/80 hover:bg-slate-800/60"
-    >
+      className="group flex items-center justify-between rounded-lg border border-slate-700/50 bg-slate-800/40 px-4 py-3 transition-all hover:border-slate-600/80 hover:bg-slate-800/60">
+
       <div className="flex-1">
         <div className="flex items-center gap-3">
           <span className="font-semibold text-slate-100">{order.id}</span>
@@ -291,9 +291,9 @@ const PurchaseOrderRow = ({ order }) => {
         </div>
         <div className="ml-4 flex flex-col items-end text-sm">
           <span className={cn("font-semibold", getDaysColor(order.daysLeft))}>
-            {order.daysLeft < 0
-              ? `逾期${Math.abs(order.daysLeft)}天`
-              : `${order.daysLeft}天`}
+            {order.daysLeft < 0 ?
+            `逾期${Math.abs(order.daysLeft)}天` :
+            `${order.daysLeft}天`}
           </span>
           <span className="text-xs text-slate-500">{order.dueDate}</span>
         </div>
@@ -307,22 +307,22 @@ const PurchaseOrderRow = ({ order }) => {
           <Edit className="h-4 w-4 text-amber-400" />
         </Button>
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
 const ShortageAlert = ({ shortage }) => {
   const priorityConfig = {
     high: { label: "紧急", color: "bg-red-500/20 text-red-400" },
     medium: { label: "中等", color: "bg-amber-500/20 text-amber-400" },
-    low: { label: "普通", color: "bg-blue-500/20 text-blue-400" },
+    low: { label: "普通", color: "bg-blue-500/20 text-blue-400" }
   };
 
   return (
     <motion.div
       variants={fadeIn}
-      className="rounded-lg border border-slate-700/50 bg-slate-800/40 p-4"
-    >
+      className="rounded-lg border border-slate-700/50 bg-slate-800/40 p-4">
+
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1">
           <p className="font-semibold text-slate-100">{shortage.material}</p>
@@ -355,8 +355,8 @@ const ShortageAlert = ({ shortage }) => {
           </span>
         </div>
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
 export default function ProcurementEngineerWorkstation() {
@@ -378,18 +378,18 @@ export default function ProcurementEngineerWorkstation() {
       // Load purchase orders
       const ordersResponse = await purchaseApi.orders.list({
         page: 1,
-        page_size: 20,
+        page_size: 20
       });
       const ordersData =
-        ordersResponse.data?.items || ordersResponse.data || [];
+      ordersResponse.data?.items || ordersResponse.data || [];
 
       // Load shortages
       const shortagesResponse = await shortageApi.list({
         page: 1,
-        page_size: 20,
+        page_size: 20
       });
       let shortageData =
-        shortagesResponse.data?.items || shortagesResponse.data || [];
+      shortagesResponse.data?.items || shortagesResponse.data || [];
 
       // Transform purchase orders
       const transformedOrders = ordersData.map((order) => {
@@ -399,28 +399,28 @@ export default function ProcurementEngineerWorkstation() {
 
         // Determine arrival status based on order status
         let arrivalStatus = "pending";
-        if (order.status === "SHIPPED") arrivalStatus = "in_transit";
-        else if (order.status === "RECEIVED") arrivalStatus = "completed";
-        else if (daysLeft < 0 && order.status !== "RECEIVED")
-          arrivalStatus = "delayed";
+        if (order.status === "SHIPPED") arrivalStatus = "in_transit";else
+        if (order.status === "RECEIVED") arrivalStatus = "completed";else
+        if (daysLeft < 0 && order.status !== "RECEIVED")
+        arrivalStatus = "delayed";
 
         return {
           id: order.order_no || order.id?.toString(),
           supplier: order.supplier_name || "",
           items: order.items?.map((i) => i.material_name).join(", ") || "",
           quantity:
-            order.items?.reduce((sum, i) => sum + (i.quantity || 0), 0) || 0,
+          order.items?.reduce((sum, i) => sum + (i.quantity || 0), 0) || 0,
           unit: "件",
           unitPrice: 0,
           totalAmount: parseFloat(
-            order.total_amount || order.amount_with_tax || 0,
+            order.total_amount || order.amount_with_tax || 0
           ),
           orderDate: order.order_date || order.created_at?.split("T")[0] || "",
           dueDate: order.required_date || order.due_date || "",
           daysLeft,
           status: order.status?.toLowerCase() || "draft",
           paymentStatus: order.payment_status?.toLowerCase() || "unpaid",
-          arrivalStatus,
+          arrivalStatus
         };
       });
 
@@ -435,16 +435,16 @@ export default function ProcurementEngineerWorkstation() {
         neededDate: s.needed_date || "",
         daysToNeeded: s.days_to_needed || 0,
         priority: s.priority?.toLowerCase() || "medium",
-        status: s.status?.toLowerCase() || "alert",
+        status: s.status?.toLowerCase() || "alert"
       }));
       setShortages(transformedShortages);
 
       // Calculate statistics
       const pendingOrders = ordersData.filter(
-        (o) => o.status === "DRAFT" || o.status === "SUBMITTED",
+        (o) => o.status === "DRAFT" || o.status === "SUBMITTED"
       ).length;
       const arrivedCount = ordersData.filter(
-        (o) => o.status === "RECEIVED",
+        (o) => o.status === "RECEIVED"
       ).length;
       const shortageCount = transformedShortages.length;
 
@@ -453,74 +453,74 @@ export default function ProcurementEngineerWorkstation() {
       try {
         const suppliersResponse = await supplierApi.list({
           page: 1,
-          page_size: 1,
+          page_size: 1
         });
         suppliersCount =
-          suppliersResponse.data?.total ||
-          suppliersResponse.data?.items?.length ||
-          24;
+        suppliersResponse.data?.total ||
+        suppliersResponse.data?.items?.length ||
+        24;
       } catch (err) {
         console.error("Failed to load suppliers:", err);
       }
 
-      const delayedOrders = transformedOrders.filter(
-        (o) => o.daysLeft < 0 && o.arrivalStatus !== "completed",
+      const _delayedOrders = transformedOrders.filter(
+        (o) => o.daysLeft < 0 && o.arrivalStatus !== "completed"
       ).length;
-      const inTransitOrders = transformedOrders.filter(
-        (o) => o.arrivalStatus === "in_transit",
+      const _inTransitOrders = transformedOrders.filter(
+        (o) => o.arrivalStatus === "in_transit"
       ).length;
 
       // Update stats
       setStats({
         pendingOrders: {
           ...statConfig.pendingOrders,
-          value: pendingOrders,
+          value: pendingOrders
         },
         arrivedMaterial: {
           ...statConfig.arrivedMaterial,
-          value: arrivedCount,
+          value: arrivedCount
         },
         shortage: {
           ...statConfig.shortage,
-          value: shortageCount,
+          value: shortageCount
         },
         suppliers: {
           ...statConfig.suppliers,
-          value: suppliersCount,
+          value: suppliersCount
         },
         budgetUsed: {
           ...statConfig.budgetUsed,
-          value: 68, // Default, can be calculated from actual data
+          value: 68 // Default, can be calculated from actual data
         },
         onTimeRate: {
           ...statConfig.onTimeRate,
           value:
-            transformedOrders.length > 0
-              ? Math.round(
-                  (transformedOrders.filter(
-                    (o) => o.daysLeft >= 0 || o.arrivalStatus === "completed",
-                  ).length /
-                    transformedOrders.length) *
-                    100,
-                )
-              : 94,
-        },
+          transformedOrders.length > 0 ?
+          Math.round(
+            transformedOrders.filter(
+              (o) => o.daysLeft >= 0 || o.arrivalStatus === "completed"
+            ).length /
+            transformedOrders.length *
+            100
+          ) :
+          94
+        }
       });
 
       // Create todos from purchase orders and shortages
-      const orderTodos = transformedOrders
-        .filter((o) => o.status === "draft" || o.status === "submitted")
-        .slice(0, 3)
-        .map((o, idx) => ({
-          id: `order-${o.id}`,
-          type: "order",
-          title: "采购订单待审核",
-          target: `${o.supplier} - ${o.items}`,
-          deadline: o.dueDate,
-          daysLeft: o.daysLeft,
-          priority: o.daysLeft <= 3 ? "high" : "medium",
-          status: "pending",
-        }));
+      const orderTodos = transformedOrders.
+      filter((o) => o.status === "draft" || o.status === "submitted").
+      slice(0, 3).
+      map((o, _idx) => ({
+        id: `order-${o.id}`,
+        type: "order",
+        title: "采购订单待审核",
+        target: `${o.supplier} - ${o.items}`,
+        deadline: o.dueDate,
+        daysLeft: o.daysLeft,
+        priority: o.daysLeft <= 3 ? "high" : "medium",
+        status: "pending"
+      }));
 
       const shortageTodos = shortages.slice(0, 3).map((s) => ({
         id: `shortage-${s.id}`,
@@ -530,7 +530,7 @@ export default function ProcurementEngineerWorkstation() {
         deadline: s.neededDate,
         daysLeft: s.daysToNeeded,
         priority: s.priority,
-        status: "pending",
+        status: "pending"
       }));
 
       setTodos([...orderTodos, ...shortageTodos]);
@@ -554,15 +554,15 @@ export default function ProcurementEngineerWorkstation() {
   };
 
   const urgentTodos = todos.filter(
-    (todo) => todo.daysLeft <= 3 && !completedTodos.includes(todo.id),
+    (todo) => todo.daysLeft <= 3 && !completedTodos.includes(todo.id)
   );
   const allTodos = todos.filter((todo) => !completedTodos.includes(todo.id));
 
   const delayedOrders = purchaseOrders.filter(
-    (o) => o.daysLeft < 0 && o.arrivalStatus !== "completed",
+    (o) => o.daysLeft < 0 && o.arrivalStatus !== "completed"
   ).length;
   const inTransitOrders = purchaseOrders.filter(
-    (o) => o.arrivalStatus === "in_transit",
+    (o) => o.arrivalStatus === "in_transit"
   ).length;
 
   return (
@@ -572,62 +572,62 @@ export default function ProcurementEngineerWorkstation() {
           title="采购工程师工作台"
           description="订单管理、物料跟踪、供应商管理、成本控制"
           actions={
-            <Button
-              onClick={() => navigate("/purchases?action=create")}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
+          <Button
+            onClick={() => navigate("/purchases?action=create")}
+            className="bg-blue-600 hover:bg-blue-700">
+
               <Plus className="w-4 h-4 mr-1" />
               新建采购订单
             </Button>
-          }
-        />
+          } />
+
 
         {/* Error state */}
-        {error && (
-          <ApiIntegrationError
-            error={error}
-            apiEndpoint="/api/v1/purchase/orders"
-            onRetry={loadData}
-          />
-        )}
+        {error &&
+        <ApiIntegrationError
+          error={error}
+          apiEndpoint="/api/v1/purchase/orders"
+          onRetry={loadData} />
+
+        }
 
         {/* Key statistics */}
-        {loading ? (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i} className="bg-surface-1/50 animate-pulse">
+        {loading ?
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            {[1, 2, 3, 4, 5, 6].map((i) =>
+          <Card key={i} className="bg-surface-1/50 animate-pulse">
                 <CardContent className="p-5">
                   <div className="h-20 bg-slate-700/50 rounded" />
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        ) : error ? (
-          <ApiIntegrationError
-            error={error}
-            apiEndpoint="/api/v1/purchase/orders"
-            onRetry={loadData}
-          />
-        ) : (
-          <motion.div
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6"
-          >
-            {Object.entries(stats).map(([key, config]) => (
-              <StatCard key={key} config={config} />
-            ))}
+          )}
+          </div> :
+        error ?
+        <ApiIntegrationError
+          error={error}
+          apiEndpoint="/api/v1/purchase/orders"
+          onRetry={loadData} /> :
+
+
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+
+            {Object.entries(stats).map(([key, config]) =>
+          <StatCard key={key} config={config} />
+          )}
           </motion.div>
-        )}
+        }
 
         {/* Main content - two column layout */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Left column - Todos (2/3 width) */}
           <div className="lg:col-span-2 space-y-6">
             {/* Urgent tasks */}
-            {urgentTodos.length > 0 && (
-              <Card className="border-red-500/30 bg-gradient-to-br from-red-500/10 to-slate-900/50">
+            {urgentTodos.length > 0 &&
+            <Card className="border-red-500/30 bg-gradient-to-br from-red-500/10 to-slate-900/50">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2">
@@ -641,22 +641,22 @@ export default function ProcurementEngineerWorkstation() {
                 </CardHeader>
                 <CardContent>
                   <motion.div
-                    variants={staggerContainer}
-                    initial="hidden"
-                    animate="visible"
-                    className="space-y-3"
-                  >
-                    {urgentTodos.slice(0, 3).map((todo) => (
-                      <TodoItem
-                        key={todo.id}
-                        todo={todo}
-                        onComplete={handleCompleteTodo}
-                      />
-                    ))}
+                  variants={staggerContainer}
+                  initial="hidden"
+                  animate="visible"
+                  className="space-y-3">
+
+                    {urgentTodos.slice(0, 3).map((todo) =>
+                  <TodoItem
+                    key={todo.id}
+                    todo={todo}
+                    onComplete={handleCompleteTodo} />
+
+                  )}
                   </motion.div>
                 </CardContent>
               </Card>
-            )}
+            }
 
             {/* All todos */}
             <Card>
@@ -676,15 +676,15 @@ export default function ProcurementEngineerWorkstation() {
                   variants={staggerContainer}
                   initial="hidden"
                   animate="visible"
-                  className="space-y-3"
-                >
-                  {allTodos.map((todo) => (
-                    <TodoItem
-                      key={todo.id}
-                      todo={todo}
-                      onComplete={handleCompleteTodo}
-                    />
-                  ))}
+                  className="space-y-3">
+
+                  {allTodos.map((todo) =>
+                  <TodoItem
+                    key={todo.id}
+                    todo={todo}
+                    onComplete={handleCompleteTodo} />
+
+                  )}
                 </motion.div>
               </CardContent>
             </Card>
@@ -699,73 +699,73 @@ export default function ProcurementEngineerWorkstation() {
               </CardHeader>
               <CardContent className="space-y-2">
                 {[
-                  {
-                    icon: Plus,
-                    label: "新建采购单",
-                    color: "text-blue-400",
-                    path: "/purchases",
-                    action: () => navigate("/purchases?action=create"),
-                  },
-                  {
-                    icon: ShoppingCart,
-                    label: "采购订单",
-                    color: "text-slate-400",
-                    path: "/purchases",
-                    action: () => navigate("/purchases"),
-                  },
-                  {
-                    icon: Truck,
-                    label: "到货管理",
-                    color: "text-emerald-400",
-                    path: "/purchases/receipts",
-                    action: () => navigate("/purchases/receipts"),
-                  },
-                  {
-                    icon: CheckCircle2,
-                    label: "来料检验",
-                    color: "text-cyan-400",
-                    path: "/purchases/receipts",
-                    action: () => navigate("/purchases/receipts"),
-                  },
-                  {
-                    icon: Building2,
-                    label: "供应商管理",
-                    color: "text-purple-400",
-                    path: "/suppliers",
-                    action: () => navigate("/suppliers"),
-                  },
-                  {
-                    icon: DollarSign,
-                    label: "成本分析",
-                    color: "text-amber-400",
-                    path: "/cost-analysis",
-                    action: () => navigate("/cost-analysis"),
-                  },
-                  {
-                    icon: AlertTriangle,
-                    label: "缺料预警",
-                    color: "text-red-400",
-                    path: "/shortage-alert",
-                    action: () => navigate("/shortage-alert"),
-                  },
-                  {
-                    icon: BarChart3,
-                    label: "采购报表",
-                    color: "text-indigo-400",
-                    path: "#",
-                    action: () => {},
-                  },
-                ].map((item, idx) => (
-                  <Button
-                    key={idx}
-                    variant="ghost"
-                    className="w-full justify-start gap-2 text-slate-400 hover:bg-slate-800/50 hover:text-slate-100"
-                    onClick={item.action}
-                  >
+                {
+                  icon: Plus,
+                  label: "新建采购单",
+                  color: "text-blue-400",
+                  path: "/purchases",
+                  action: () => navigate("/purchases?action=create")
+                },
+                {
+                  icon: ShoppingCart,
+                  label: "采购订单",
+                  color: "text-slate-400",
+                  path: "/purchases",
+                  action: () => navigate("/purchases")
+                },
+                {
+                  icon: Truck,
+                  label: "到货管理",
+                  color: "text-emerald-400",
+                  path: "/purchases/receipts",
+                  action: () => navigate("/purchases/receipts")
+                },
+                {
+                  icon: CheckCircle2,
+                  label: "来料检验",
+                  color: "text-cyan-400",
+                  path: "/purchases/receipts",
+                  action: () => navigate("/purchases/receipts")
+                },
+                {
+                  icon: Building2,
+                  label: "供应商管理",
+                  color: "text-purple-400",
+                  path: "/suppliers",
+                  action: () => navigate("/suppliers")
+                },
+                {
+                  icon: DollarSign,
+                  label: "成本分析",
+                  color: "text-amber-400",
+                  path: "/cost-analysis",
+                  action: () => navigate("/cost-analysis")
+                },
+                {
+                  icon: AlertTriangle,
+                  label: "缺料预警",
+                  color: "text-red-400",
+                  path: "/shortage-alert",
+                  action: () => navigate("/shortage-alert")
+                },
+                {
+                  icon: BarChart3,
+                  label: "采购报表",
+                  color: "text-indigo-400",
+                  path: "#",
+                  action: () => {}
+                }].
+                map((item, idx) =>
+                <Button
+                  key={idx}
+                  variant="ghost"
+                  className="w-full justify-start gap-2 text-slate-400 hover:bg-slate-800/50 hover:text-slate-100"
+                  onClick={item.action}>
+
                     <item.icon className={cn("h-4 w-4", item.color)} />
                     {item.label}
                   </Button>
-                ))}
+                )}
               </CardContent>
             </Card>
 
@@ -776,32 +776,32 @@ export default function ProcurementEngineerWorkstation() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {[
-                  {
-                    label: "采购单完成",
-                    value: 28,
-                    unit: "个",
-                    color: "text-blue-400",
-                  },
-                  {
-                    label: "按期到货率",
-                    value: 94,
-                    unit: "%",
-                    color: "text-emerald-400",
-                  },
-                  {
-                    label: "供应商评分",
-                    value: 4.2,
-                    unit: "/5",
-                    color: "text-purple-400",
-                  },
-                  {
-                    label: "成本节省",
-                    value: 52,
-                    unit: "万元",
-                    color: "text-amber-400",
-                  },
-                ].map((metric, idx) => (
-                  <div key={idx}>
+                {
+                  label: "采购单完成",
+                  value: 28,
+                  unit: "个",
+                  color: "text-blue-400"
+                },
+                {
+                  label: "按期到货率",
+                  value: 94,
+                  unit: "%",
+                  color: "text-emerald-400"
+                },
+                {
+                  label: "供应商评分",
+                  value: 4.2,
+                  unit: "/5",
+                  color: "text-purple-400"
+                },
+                {
+                  label: "成本节省",
+                  value: 52,
+                  unit: "万元",
+                  color: "text-amber-400"
+                }].
+                map((metric, idx) =>
+                <div key={idx}>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-slate-400">{metric.label}</span>
                       <span className={cn("font-semibold", metric.color)}>
@@ -810,11 +810,11 @@ export default function ProcurementEngineerWorkstation() {
                       </span>
                     </div>
                     <Progress
-                      value={Math.min(metric.value, 100)}
-                      className="mt-1 h-1.5 bg-slate-700/50"
-                    />
+                    value={Math.min(metric.value, 100)}
+                    className="mt-1 h-1.5 bg-slate-700/50" />
+
                   </div>
-                ))}
+                )}
               </CardContent>
             </Card>
 
@@ -860,18 +860,18 @@ export default function ProcurementEngineerWorkstation() {
               variants={staggerContainer}
               initial="hidden"
               animate="visible"
-              className="space-y-2"
-            >
-              {purchaseOrders.length > 0 ? (
-                purchaseOrders.map((order) => (
-                  <PurchaseOrderRow key={order.id} order={order} />
-                ))
-              ) : (
-                <div className="text-center py-8 text-slate-500">
+              className="space-y-2">
+
+              {purchaseOrders.length > 0 ?
+              purchaseOrders.map((order) =>
+              <PurchaseOrderRow key={order.id} order={order} />
+              ) :
+
+              <div className="text-center py-8 text-slate-500">
                   <Package className="h-12 w-12 mx-auto mb-3 text-slate-500/50" />
                   <p className="text-sm">暂无采购订单</p>
                 </div>
-              )}
+              }
             </motion.div>
           </CardContent>
         </Card>
@@ -894,22 +894,22 @@ export default function ProcurementEngineerWorkstation() {
               variants={staggerContainer}
               initial="hidden"
               animate="visible"
-              className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3"
-            >
-              {shortages.length > 0 ? (
-                shortages.map((shortage) => (
-                  <ShortageAlert key={shortage.id} shortage={shortage} />
-                ))
-              ) : (
-                <div className="text-center py-8 text-slate-500">
+              className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+
+              {shortages.length > 0 ?
+              shortages.map((shortage) =>
+              <ShortageAlert key={shortage.id} shortage={shortage} />
+              ) :
+
+              <div className="text-center py-8 text-slate-500">
                   <CheckCircle2 className="h-12 w-12 mx-auto mb-3 text-emerald-500/50" />
                   <p className="text-sm">暂无缺料预警</p>
                 </div>
-              )}
+              }
             </motion.div>
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>);
+
 }

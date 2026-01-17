@@ -14,10 +14,10 @@ import { Separator } from "../../components/ui/separator";
 import { cn, formatDate, formatCurrency } from "../../lib/utils";
 import {
   contractStatusConfigs,
-  customer360TabConfigs,
+  customer360TabConfigs as _customer360TabConfigs,
   getContractStatusConfig,
-  formatContractStatus,
-} from "./customer360Constants";
+  formatContractStatus } from
+"./customer360Constants";
 
 /**
  * PurchaseHistory - 客户采购历史组件
@@ -48,31 +48,31 @@ export function PurchaseHistory({
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="animate-pulse">
+            {[...Array(3)].map((_, i) =>
+            <div key={i} className="animate-pulse">
                 <div className="h-4 bg-slate-700 rounded mb-2 w-1/4"></div>
                 <div className="h-3 bg-slate-700 rounded mb-2"></div>
                 <div className="h-8 bg-slate-700 rounded w-1/3"></div>
-              </div>
-            ))}
+            </div>
+            )}
           </div>
         </CardContent>
-      </Card>
-    );
+      </Card>);
+
   }
 
   // 过滤采购记录
-  const filteredPurchases = purchases
-    .filter(purchase => {
-      if (filterStatus !== "all" && purchase.status !== filterStatus) return false;
-      if (filterYear !== "all") {
-        const purchaseYear = new Date(purchase.contract_date || purchase.created_at).getFullYear().toString();
-        if (purchaseYear !== filterYear) return false;
-      }
-      if (searchTerm && !purchase.project_name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-      return true;
-    })
-    .sort((a, b) => new Date(b.contract_date || b.created_at) - new Date(a.contract_date || a.created_at));
+  const filteredPurchases = purchases.
+  filter((purchase) => {
+    if (filterStatus !== "all" && purchase.status !== filterStatus) return false;
+    if (filterYear !== "all") {
+      const purchaseYear = new Date(purchase.contract_date || purchase.created_at).getFullYear().toString();
+      if (purchaseYear !== filterYear) return false;
+    }
+    if (searchTerm && !purchase.project_name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+    return true;
+  }).
+  sort((a, b) => new Date(b.contract_date || b.created_at) - new Date(a.contract_date || a.created_at));
 
   // 获取统计数据
   const getPurchaseStats = () => {
@@ -82,10 +82,10 @@ export function PurchaseHistory({
       avgAmount: 0,
       byStatus: {},
       byYear: {},
-      byType: {},
+      byType: {}
     };
 
-    purchases.forEach(purchase => {
+    purchases.forEach((purchase) => {
       const amount = Number(purchase.contract_amount || purchase.total_amount || 0);
       stats.totalAmount += amount;
 
@@ -111,23 +111,23 @@ export function PurchaseHistory({
 
   // 获取年度统计
   const getYearStats = () => {
-    const years = [...new Set(purchases.map(p =>
-      new Date(p.contract_date || p.created_at).getFullYear()
+    const years = [...new Set(purchases.map((p) =>
+    new Date(p.contract_date || p.created_at).getFullYear()
     ))].sort((a, b) => b - a);
 
-    return years.map(year => {
-      const yearPurchases = purchases.filter(p =>
-        new Date(p.contract_date || p.created_at).getFullYear() === year
+    return years.map((year) => {
+      const yearPurchases = purchases.filter((p) =>
+      new Date(p.contract_date || p.created_at).getFullYear() === year
       );
       const yearTotal = yearPurchases.reduce((sum, p) =>
-        sum + (Number(p.contract_amount || p.total_amount) || 0), 0
+      sum + (Number(p.contract_amount || p.total_amount) || 0), 0
       );
 
       return {
         year,
         count: yearPurchases.length,
         total: yearTotal,
-        avg: yearTotal / yearPurchases.length,
+        avg: yearTotal / yearPurchases.length
       };
     });
   };
@@ -187,8 +187,8 @@ export function PurchaseHistory({
                 placeholder="搜索项目名称..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
-              />
+                className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500" />
+
             </div>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger className="w-[160px] bg-slate-800 border-slate-700 text-white">
@@ -196,11 +196,11 @@ export function PurchaseHistory({
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-700">
                 <SelectItem value="all">全部状态</SelectItem>
-                {Object.entries(contractStatusConfigs).map(([status, config]) => (
-                  <SelectItem key={status} value={status} className="text-white">
+                {Object.entries(contractStatusConfigs).map(([status, config]) =>
+                <SelectItem key={status} value={status} className="text-white">
                     {config.icon} {config.label}
-                  </SelectItem>
-                ))}
+                </SelectItem>
+                )}
               </SelectContent>
             </Select>
             <Select value={filterYear} onValueChange={setFilterYear}>
@@ -209,17 +209,17 @@ export function PurchaseHistory({
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-700">
                 <SelectItem value="all">全部年份</SelectItem>
-                {[...new Set(yearStats.map(s => s.year))].sort((a, b) => b - a).map(year => (
-                  <SelectItem key={year} value={year} className="text-white">
+                {[...new Set(yearStats.map((s) => s.year))].sort((a, b) => b - a).map((year) =>
+                <SelectItem key={year} value={year} className="text-white">
                     {year}年
-                  </SelectItem>
-                ))}
+                </SelectItem>
+                )}
               </SelectContent>
             </Select>
             <Button
               onClick={onAddPurchase}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
+              className="bg-blue-600 hover:bg-blue-700 text-white">
+
               添加合同
             </Button>
           </div>
@@ -227,15 +227,15 @@ export function PurchaseHistory({
       </Card>
 
       {/* 年度统计 */}
-      {yearStats.length > 0 && (
-        <Card className="border-slate-700 bg-slate-800/50">
+      {yearStats.length > 0 &&
+      <Card className="border-slate-700 bg-slate-800/50">
           <CardHeader className="pb-3">
             <CardTitle className="text-base text-slate-400">年度统计</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {yearStats.slice(0, 5).map((stat, index) => (
-                <div key={stat.year} className="flex items-center justify-between py-2 border-b border-slate-700 last:border-b-0">
+              {yearStats.slice(0, 5).map((stat, _index) =>
+            <div key={stat.year} className="flex items-center justify-between py-2 border-b border-slate-700 last:border-b-0">
                   <div className="flex items-center gap-4">
                     <div className="text-sm font-medium text-white">
                       {stat.year}年
@@ -252,12 +252,12 @@ export function PurchaseHistory({
                       平均 {formatCurrency(stat.avg)}
                     </div>
                   </div>
-                </div>
-              ))}
+            </div>
+            )}
             </div>
           </CardContent>
-        </Card>
-      )}
+      </Card>
+      }
 
       {/* 采购记录列表 */}
       <Card className="border-slate-700 bg-slate-800/50">
@@ -265,21 +265,21 @@ export function PurchaseHistory({
           <CardTitle className="text-base text-slate-400">合同列表</CardTitle>
         </CardHeader>
         <CardContent>
-          {filteredPurchases.length === 0 ? (
-            <div className="text-center py-8 text-slate-500">
-              {searchTerm || filterStatus !== "all" || filterYear !== "all"
-                ? "没有找到匹配的合同记录"
-                : "暂无合同记录"
-              }
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {filteredPurchases.map((purchase) => {
-                const statusConfig = getContractStatusConfig(purchase.status || 'DRAFT');
-                const contractDate = purchase.contract_date || purchase.created_at;
+          {filteredPurchases.length === 0 ?
+          <div className="text-center py-8 text-slate-500">
+              {searchTerm || filterStatus !== "all" || filterYear !== "all" ?
+            "没有找到匹配的合同记录" :
+            "暂无合同记录"
+            }
+          </div> :
 
-                return (
-                  <div key={purchase.id} className="bg-slate-800/50 rounded-lg border border-slate-700 p-4 hover:border-slate-600 transition-colors">
+          <div className="space-y-3">
+              {filteredPurchases.map((purchase) => {
+              const statusConfig = getContractStatusConfig(purchase.status || 'DRAFT');
+              const contractDate = purchase.contract_date || purchase.created_at;
+
+              return (
+                <div key={purchase.id} className="bg-slate-800/50 rounded-lg border border-slate-700 p-4 hover:border-slate-600 transition-colors">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
@@ -287,10 +287,10 @@ export function PurchaseHistory({
                             {purchase.project_name || purchase.product_name || '未命名项目'}
                           </h3>
                           <Badge className={cn(
-                            statusConfig.color,
-                            statusConfig.textColor,
-                            "text-xs"
-                          )}>
+                          statusConfig.color,
+                          statusConfig.textColor,
+                          "text-xs"
+                        )}>
                             {formatContractStatus(purchase.status || 'DRAFT')}
                           </Badge>
                         </div>
@@ -328,46 +328,46 @@ export function PurchaseHistory({
                     </div>
 
                     {/* 项目描述 */}
-                    {purchase.description && (
-                      <div className="mt-3 pt-3 border-t border-slate-700">
+                    {purchase.description &&
+                  <div className="mt-3 pt-3 border-t border-slate-700">
                         <p className="text-sm text-slate-300">
                           {purchase.description}
                         </p>
-                      </div>
-                    )}
+                  </div>
+                  }
 
                     {/* 操作按钮 */}
                     <div className="flex justify-end gap-2 mt-4">
-                      {onEditPurchase && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => onEditPurchase(purchase)}
-                          className="border-slate-600 text-slate-300 hover:text-white hover:border-slate-500"
-                        >
+                      {onEditPurchase &&
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onEditPurchase(purchase)}
+                      className="border-slate-600 text-slate-300 hover:text-white hover:border-slate-500">
+
                           编辑
-                        </Button>
-                      )}
-                      {onDeletePurchase && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => onDeletePurchase(purchase)}
-                          className="border-slate-600 text-slate-300 hover:text-red-400 hover:border-red-500"
-                        >
+                    </Button>
+                    }
+                      {onDeletePurchase &&
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onDeletePurchase(purchase)}
+                      className="border-slate-600 text-slate-300 hover:text-red-400 hover:border-red-500">
+
                           删除
-                        </Button>
-                      )}
+                    </Button>
+                    }
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                </div>);
+
+            })}
+          </div>
+          }
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>);
+
 }
 
 /**
@@ -478,7 +478,7 @@ export function PurchaseDetail({ purchase }) {
             </div>
             <div>
               <span className="text-slate-500">付款方式:</span>
-              <span className="text-white ml-2">{payment_terms[payment_terms.find(t => t.value === purchase.payment_terms)?.value] || '未指定'}</span>
+              <span className="text-white ml-2">{payment_terms[payment_terms.find((t) => t.value === purchase.payment_terms)?.value] || '未指定'}</span>
             </div>
             <div>
               <span className="text-slate-500">质保期:</span>
@@ -488,25 +488,25 @@ export function PurchaseDetail({ purchase }) {
         </div>
 
         {/* 项目描述 */}
-        {purchase.description && (
-          <div>
+        {purchase.description &&
+        <div>
             <h3 className="text-sm font-medium text-white mb-2">项目描述</h3>
             <p className="text-sm text-slate-300 whitespace-pre-wrap">
               {purchase.description}
             </p>
-          </div>
-        )}
+        </div>
+        }
 
         {/* 附件列表 */}
-        {purchase.attachments && purchase.attachments.length > 0 && (
-          <div>
+        {purchase.attachments && purchase.attachments.length > 0 &&
+        <div>
             <h3 className="text-sm font-medium text-white mb-2">相关附件</h3>
             <div className="space-y-2">
-              {purchase.attachments.map((attachment, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-2 bg-slate-700/50 rounded text-sm"
-                >
+              {purchase.attachments.map((attachment, index) =>
+            <div
+              key={index}
+              className="flex items-center justify-between p-2 bg-slate-700/50 rounded text-sm">
+
                   <div className="flex items-center gap-2">
                     <span>📎</span>
                     <span className="text-slate-300">{attachment.name}</span>
@@ -514,14 +514,14 @@ export function PurchaseDetail({ purchase }) {
                   <div className="text-slate-500">
                     {(attachment.size / 1024).toFixed(1)}KB
                   </div>
-                </div>
-              ))}
             </div>
-          </div>
-        )}
+            )}
+            </div>
+        </div>
+        }
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 }
 
 // 付款方式选项
@@ -530,7 +530,7 @@ const payment_terms = {
   progress: "按进度付款",
   milestone: "里程碑付款",
   delivery: "交货付款",
-  acceptance: "验收付款",
+  acceptance: "验收付款"
 };
 
 export default PurchaseHistory;

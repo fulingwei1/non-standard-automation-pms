@@ -15,16 +15,16 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
-  RefreshCw
-} from "lucide-react";
+  RefreshCw } from
+"lucide-react";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "../../components/ui/table";
+  TableRow } from
+"../../components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
@@ -33,20 +33,20 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu";
+  DropdownMenuTrigger } from
+"../../components/ui/dropdown-menu";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
-} from "../../components/ui/tooltip";
+  TooltipTrigger } from
+"../../components/ui/tooltip";
 import {
   ALERT_LEVEL_STATS,
   ALERT_STATUS_STATS,
   ALERT_TYPE_STATS,
-  formatStatValue
-} from "./alertStatsConstants";
+  formatStatValue as _formatStatValue } from
+"./alertStatsConstants";
 
 export function AlertTable({
   data,
@@ -71,27 +71,27 @@ export function AlertTable({
 
     // 应用搜索过滤
     if (searchTerm) {
-      filtered = filtered.filter(alert =>
-        alert.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        alert.alert_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        alert.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        alert.project_name?.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter((alert) =>
+      alert.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      alert.alert_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      alert.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      alert.project_name?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     // 应用状态过滤
     if (statusFilter !== "all") {
-      filtered = filtered.filter(alert => alert.status === statusFilter);
+      filtered = filtered.filter((alert) => alert.status === statusFilter);
     }
 
     // 应用级别过滤
     if (levelFilter !== "all") {
-      filtered = filtered.filter(alert => alert.alert_level === levelFilter);
+      filtered = filtered.filter((alert) => alert.alert_level === levelFilter);
     }
 
     // 应用类型过滤
     if (typeFilter !== "all") {
-      filtered = filtered.filter(alert => alert.alert_type === typeFilter);
+      filtered = filtered.filter((alert) => alert.alert_type === typeFilter);
     }
 
     // 排序
@@ -136,11 +136,11 @@ export function AlertTable({
   // 获取排序图标
   const getSortIcon = (field) => {
     if (sortField !== field) return null;
-    return sortDirection === "asc" ? (
-      <ChevronUp className="h-4 w-4 ml-1" />
-    ) : (
-      <ChevronDown className="h-4 w-4 ml-1" />
-    );
+    return sortDirection === "asc" ?
+    <ChevronUp className="h-4 w-4 ml-1" /> :
+
+    <ChevronDown className="h-4 w-4 ml-1" />;
+
   };
 
   // 获取状态徽章
@@ -149,8 +149,8 @@ export function AlertTable({
     return (
       <Badge variant="secondary" className={config.color}>
         {config.label}
-      </Badge>
-    );
+      </Badge>);
+
   };
 
   // 获取级别徽章
@@ -159,8 +159,8 @@ export function AlertTable({
     return (
       <Badge variant="secondary" className={config.color}>
         {config.label}
-      </Badge>
-    );
+      </Badge>);
+
   };
 
   // 获取类型信息
@@ -172,8 +172,8 @@ export function AlertTable({
       <div className="flex items-center gap-2">
         <span className="text-lg">{typeConfig.icon}</span>
         <span className="text-sm text-gray-600">{subtypeConfig.label}</span>
-      </div>
-    );
+      </div>);
+
   };
 
   // 格式化时间
@@ -194,7 +194,7 @@ export function AlertTable({
   };
 
   // 渲染操作列
-  const renderActions = (alert) => {
+  const renderActions = (_alert) => {
     if (!showActions) return null;
 
     return (
@@ -205,8 +205,8 @@ export function AlertTable({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0"
-              >
+                className="h-8 w-8 p-0">
+
                 <Eye className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
@@ -219,8 +219,8 @@ export function AlertTable({
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0"
-            >
+              className="h-8 w-8 p-0">
+
               <RefreshCw className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -231,8 +231,8 @@ export function AlertTable({
             <DropdownMenuItem>标记为已解决</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      </div>
-    );
+      </div>);
+
   };
 
   // 无数据时的显示
@@ -246,8 +246,8 @@ export function AlertTable({
             <p className="text-sm">请检查数据源或调整筛选条件</p>
           </div>
         </CardContent>
-      </Card>
-    );
+      </Card>);
+
   }
 
   return (
@@ -264,13 +264,13 @@ export function AlertTable({
                 placeholder="搜索告警..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 w-64"
-              />
+                className="pl-10 w-64" />
+
             </div>
 
             {/* 过滤器 */}
-            {showFilters && (
-              <DropdownMenu>
+            {showFilters &&
+            <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">
                     <Filter className="h-4 w-4 mr-2" />
@@ -282,46 +282,46 @@ export function AlertTable({
                     <div>
                       <label className="text-sm font-medium">状态</label>
                       <select
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        className="w-full mt-1 text-sm border rounded p-1"
-                      >
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      className="w-full mt-1 text-sm border rounded p-1">
+
                         <option value="all">全部</option>
-                        {Object.entries(ALERT_STATUS_STATS).map(([key, config]) => (
-                          <option key={key} value={key}>{config.label}</option>
-                        ))}
+                        {Object.entries(ALERT_STATUS_STATS).map(([key, config]) =>
+                      <option key={key} value={key}>{config.label}</option>
+                      )}
                       </select>
                     </div>
                     <div>
                       <label className="text-sm font-medium">级别</label>
                       <select
-                        value={levelFilter}
-                        onChange={(e) => setLevelFilter(e.target.value)}
-                        className="w-full mt-1 text-sm border rounded p-1"
-                      >
+                      value={levelFilter}
+                      onChange={(e) => setLevelFilter(e.target.value)}
+                      className="w-full mt-1 text-sm border rounded p-1">
+
                         <option value="all">全部</option>
-                        {Object.entries(ALERT_LEVEL_STATS).map(([key, config]) => (
-                          <option key={key} value={key}>{config.label}</option>
-                        ))}
+                        {Object.entries(ALERT_LEVEL_STATS).map(([key, config]) =>
+                      <option key={key} value={key}>{config.label}</option>
+                      )}
                       </select>
                     </div>
                     <div>
                       <label className="text-sm font-medium">类型</label>
                       <select
-                        value={typeFilter}
-                        onChange={(e) => setTypeFilter(e.target.value)}
-                        className="w-full mt-1 text-sm border rounded p-1"
-                      >
+                      value={typeFilter}
+                      onChange={(e) => setTypeFilter(e.target.value)}
+                      className="w-full mt-1 text-sm border rounded p-1">
+
                         <option value="all">全部</option>
-                        {Object.entries(ALERT_TYPE_STATS).map(([key, config]) => (
-                          <option key={key} value={key}>{config.label}</option>
-                        ))}
+                        {Object.entries(ALERT_TYPE_STATS).map(([key, config]) =>
+                      <option key={key} value={key}>{config.label}</option>
+                      )}
                       </select>
                     </div>
                   </div>
                 </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+            </DropdownMenu>
+            }
 
             {/* 导出按钮 */}
             <Button variant="outline" size="sm">
@@ -341,8 +341,8 @@ export function AlertTable({
                 <TableRow>
                   <TableHead
                     className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => handleSort("alert_no")}
-                  >
+                    onClick={() => handleSort("alert_no")}>
+
                     <div className="flex items-center">
                       编号
                       {getSortIcon("alert_no")}
@@ -350,8 +350,8 @@ export function AlertTable({
                   </TableHead>
                   <TableHead
                     className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => handleSort("title")}
-                  >
+                    onClick={() => handleSort("title")}>
+
                     <div className="flex items-center">
                       标题
                       {getSortIcon("title")}
@@ -359,8 +359,8 @@ export function AlertTable({
                   </TableHead>
                   <TableHead
                     className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => handleSort("alert_level")}
-                  >
+                    onClick={() => handleSort("alert_level")}>
+
                     <div className="flex items-center">
                       级别
                       {getSortIcon("alert_level")}
@@ -368,8 +368,8 @@ export function AlertTable({
                   </TableHead>
                   <TableHead
                     className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => handleSort("alert_type")}
-                  >
+                    onClick={() => handleSort("alert_type")}>
+
                     <div className="flex items-center">
                       类型
                       {getSortIcon("alert_type")}
@@ -377,8 +377,8 @@ export function AlertTable({
                   </TableHead>
                   <TableHead
                     className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => handleSort("status")}
-                  >
+                    onClick={() => handleSort("status")}>
+
                     <div className="flex items-center">
                       状态
                       {getSortIcon("status")}
@@ -386,8 +386,8 @@ export function AlertTable({
                   </TableHead>
                   <TableHead
                     className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => handleSort("project_name")}
-                  >
+                    onClick={() => handleSort("project_name")}>
+
                     <div className="flex items-center">
                       项目
                       {getSortIcon("project_name")}
@@ -395,21 +395,21 @@ export function AlertTable({
                   </TableHead>
                   <TableHead
                     className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => handleSort("created_at")}
-                  >
+                    onClick={() => handleSort("created_at")}>
+
                     <div className="flex items-center">
                       创建时间
                       {getSortIcon("created_at")}
                     </div>
                   </TableHead>
-                  {showActions && (
-                    <TableHead className="w-24 text-center">操作</TableHead>
-                  )}
+                  {showActions &&
+                  <TableHead className="w-24 text-center">操作</TableHead>
+                  }
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedData.map((alert) => (
-                  <TableRow key={alert.id || alert.alert_no}>
+                {paginatedData.map((alert) =>
+                <TableRow key={alert.id || alert.alert_no}>
                     <TableCell className="font-medium text-sm">
                       {alert.alert_no}
                     </TableCell>
@@ -431,8 +431,9 @@ export function AlertTable({
                             <div className="text-xs">
                               <p>级别: {alert.alert_level}</p>
                               <p>目标响应时间: {
-                                ALERT_LEVEL_STATS[alert.alert_level]?.targetResponseTime || '未设置'
-                              }分钟</p>
+                              ALERT_LEVEL_STATS[alert.alert_level]?.targetResponseTime || '未设置'
+                              }分钟
+                              </p>
                             </div>
                           </TooltipContent>
                         </Tooltip>
@@ -450,20 +451,20 @@ export function AlertTable({
                     <TableCell className="text-sm text-gray-500">
                       {formatTime(alert.created_at)}
                     </TableCell>
-                    {showActions && (
-                      <TableCell className="text-center">
+                    {showActions &&
+                  <TableCell className="text-center">
                         {renderActions(alert)}
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))}
+                  </TableCell>
+                  }
+                </TableRow>
+                )}
               </TableBody>
             </Table>
           </div>
 
           {/* 分页 */}
-          {showPagination && totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t">
+          {showPagination && totalPages > 1 &&
+          <div className="flex items-center justify-between px-4 py-3 border-t">
               <div className="text-sm text-gray-600">
                 显示 {(currentPage - 1) * itemsPerPage + 1} -{' '}
                 {Math.min(currentPage * itemsPerPage, filteredAndSortedData.length)}{' '}
@@ -471,52 +472,52 @@ export function AlertTable({
               </div>
               <div className="flex items-center space-x-2">
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(currentPage - 1)}
-                  disabled={currentPage === 1}
-                >
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage === 1}>
+
                   上一页
                 </Button>
                 <div className="flex items-center space-x-1">
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let page;
-                    if (totalPages <= 5) {
-                      page = i + 1;
-                    } else if (currentPage <= 3) {
-                      page = i + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                      page = totalPages - 4 + i;
-                    } else {
-                      page = currentPage - 2 + i;
-                    }
+                  let page;
+                  if (totalPages <= 5) {
+                    page = i + 1;
+                  } else if (currentPage <= 3) {
+                    page = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    page = totalPages - 4 + i;
+                  } else {
+                    page = currentPage - 2 + i;
+                  }
 
-                    return (
-                      <Button
-                        key={page}
-                        variant={currentPage === page ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setCurrentPage(page)}
-                        className="h-8 w-8"
-                      >
+                  return (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(page)}
+                      className="h-8 w-8">
+
                         {page}
-                      </Button>
-                    );
-                  })}
+                    </Button>);
+
+                })}
                 </div>
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                >
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage === totalPages}>
+
                   下一页
                 </Button>
               </div>
-            </div>
-          )}
+          </div>
+          }
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 }

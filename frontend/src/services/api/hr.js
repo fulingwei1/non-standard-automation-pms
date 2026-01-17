@@ -12,12 +12,12 @@ export const employeeApi = {
 };
 
 export const departmentApi = {
-  list: (params) => api.get("/departments", { params }),
-  get: (id) => api.get(`/departments/${id}`),
-  create: (data) => api.post("/departments", data),
-  update: (id, data) => api.put(`/departments/${id}`, data),
-  delete: (id) => api.delete(`/departments/${id}`),
-  getStatistics: (params) => api.get("/departments/statistics", { params }),
+  list: (params) => api.get("/org/departments", { params }),
+  get: (id) => api.get(`/org/departments/${id}`),
+  create: (data) => api.post("/org/departments", data),
+  update: (id, data) => api.put(`/org/departments/${id}`, data),
+  delete: (id) => api.delete(`/org/departments/${id}`),
+  getStatistics: (params) => api.get("/org/departments/statistics", { params }),
 };
 
 export const hrApi = {

@@ -28,9 +28,9 @@ export default function ProgressReportDialog({
   data,
   onChange,
   onConfirm,
-  submitting,
+  submitting
 }) {
-  const progress = calculateProgress(data?.progress_percent || 0, order?.plan_qty || 0);
+  const _progress = calculateProgress(data?.progress_percent || 0, order?.plan_qty || 0);
 
   const handleQuickQuantity = (value) => {
     const planQty = order?.plan_qty || 0;
@@ -39,7 +39,7 @@ export default function ProgressReportDialog({
     onChange && onChange({
       ...data,
       progress_percent: newProgress,
-      completed_qty: qty,
+      completed_qty: qty
     });
   };
 
@@ -64,17 +64,17 @@ export default function ProgressReportDialog({
           <div>
             <Label className="text-white mb-2 block">快捷选择完成数量</Label>
             <div className="grid grid-cols-4 gap-2">
-              {QUICK_QUANTITY_OPTIONS.map((option) => (
-                <Button
-                  key={option.value}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleQuickQuantity(option.value)}
-                  className="bg-slate-800/50 border-slate-700/50 hover:bg-slate-700/50"
-                >
+              {QUICK_QUANTITY_OPTIONS.map((option) =>
+              <Button
+                key={option.value}
+                variant="outline"
+                size="sm"
+                onClick={() => handleQuickQuantity(option.value)}
+                className="bg-slate-800/50 border-slate-700/50 hover:bg-slate-700/50">
+
                   {option.label}
                 </Button>
-              ))}
+              )}
             </div>
           </div>
 
@@ -84,16 +84,16 @@ export default function ProgressReportDialog({
             <Slider
               value={[data?.progress_percent || 0]}
               onValueChange={([value]) =>
-                onChange && onChange({
-                  ...data,
-                  progress_percent: value,
-                  completed_qty: Math.round((value / 100) * (order?.plan_qty || 0)),
-                })
+              onChange && onChange({
+                ...data,
+                progress_percent: value,
+                completed_qty: Math.round(value / 100 * (order?.plan_qty || 0))
+              })
               }
               max={100}
               step={1}
-              className="py-2"
-            />
+              className="py-2" />
+
           </div>
 
           {/* 进度备注 */}
@@ -104,8 +104,8 @@ export default function ProgressReportDialog({
               value={data?.progress_note || ''}
               onChange={(e) => onChange && onChange({ ...data, progress_note: e.target.value })}
               placeholder="填写进度情况（可选）"
-              className="mt-1 bg-slate-800/50 border-slate-700/50 min-h-[80px]"
-            />
+              className="mt-1 bg-slate-800/50 border-slate-700/50 min-h-[80px]" />
+
           </div>
 
           {/* 当前问题 */}
@@ -116,26 +116,26 @@ export default function ProgressReportDialog({
               value={data?.current_issues || ''}
               onChange={(e) => onChange && onChange({ ...data, current_issues: e.target.value })}
               placeholder="记录遇到的问题（可选）"
-              className="mt-1 bg-slate-800/50 border-slate-700/50 min-h-[80px]"
-            />
+              className="mt-1 bg-slate-800/50 border-slate-700/50 min-h-[80px]" />
+
           </div>
         </DialogBody>
         <DialogFooter>
           <Button
             variant="outline"
             onClick={() => onOpenChange && onOpenChange(false)}
-            disabled={submitting}
-          >
+            disabled={submitting}>
+
             取消
           </Button>
           <Button
             onClick={onConfirm}
-            disabled={submitting || !data?.progress_percent || data?.progress_percent === 0}
-          >
+            disabled={submitting || !data?.progress_percent || data?.progress_percent === 0}>
+
             {submitting ? '提交中...' : '确认提交'}
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>);
+
 }

@@ -3,7 +3,7 @@
  * 用户筛选组件
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect as _useEffect } from "react";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -12,27 +12,27 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
-} from "../../components/ui/select";
+  SelectValue } from
+"../../components/ui/select";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter
-} from "../../components/ui/dialog";
+  DialogFooter } from
+"../../components/ui/dialog";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
   PopoverHeader,
   PopoverBody,
-  PopoverFooter
-} from "../../components/ui/popover";
+  PopoverFooter } from
+"../../components/ui/popover";
 import {
-  Label
-} from "../../components/ui/label";
+  Label } from
+"../../components/ui/label";
 import {
   Search,
   Filter,
@@ -47,8 +47,8 @@ import {
   Clock,
   Download,
   Upload,
-  RotateCcw
-} from "lucide-react";
+  RotateCcw } from
+"lucide-react";
 import {
   userStatusConfigs,
   userTypeConfigs,
@@ -57,16 +57,16 @@ import {
   userSortConfigs,
   getUserStatusConfig,
   formatUserRole,
-  formatUserStatus
-} from "./userManagementConstants";
+  formatUserStatus as _formatUserStatus } from
+"./userManagementConstants";
 import { cn } from "../../lib/utils";
 
 export function UserFilters({
   onFiltersChange,
   initialFilters,
-  availableDepartments = [],
-  availableRoles = [],
-  showAdvancedFilters = false,
+  availableDepartments: _availableDepartments = [],
+  availableRoles: _availableRoles = [],
+  showAdvancedFilters: _showAdvancedFilters = false,
   showExportOptions = true,
   className
 }) {
@@ -85,9 +85,9 @@ export function UserFilters({
   });
 
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [showDateRange, setShowDateRange] = useState(false);
+  const [_showDateRange, setShowDateRange] = useState(false);
   const [showBulkActions, setShowBulkActions] = useState(false);
-  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [selectedUsers, _setSelectedUsers] = useState([]);
 
   // 处理搜索
   const handleSearch = (value) => {
@@ -291,14 +291,14 @@ export function UserFilters({
   };
 
   // 渲染高级筛选对话框
-  const renderAdvancedFilters = () => (
-    <Dialog open={showAdvanced} onOpenChange={setShowAdvanced}>
+  const renderAdvancedFilters = () =>
+  <Dialog open={showAdvanced} onOpenChange={setShowAdvanced}>
       <DialogTrigger asChild>
         <Button
-          variant="outline"
-          size="sm"
-          className={cn(showAdvanced && "bg-blue-50 border-blue-200")}
-        >
+        variant="outline"
+        size="sm"
+        className={cn(showAdvanced && "bg-blue-50 border-blue-200")}>
+
           <Filter className="mr-2 h-4 w-4" />
           高级筛选
         </Button>
@@ -318,14 +318,14 @@ export function UserFilters({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">全部状态</SelectItem>
-                {Object.entries(userStatusConfigs).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
+                {Object.entries(userStatusConfigs).map(([key, config]) =>
+              <SelectItem key={key} value={key}>
                     <div className="flex items-center gap-2">
                       <span className={cn("w-2 h-2 rounded-full", config.color)} />
                       {config.label}
                     </div>
                   </SelectItem>
-                ))}
+              )}
               </SelectContent>
             </Select>
           </div>
@@ -339,14 +339,14 @@ export function UserFilters({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">全部类型</SelectItem>
-                {Object.entries(userTypeConfigs).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
+                {Object.entries(userTypeConfigs).map(([key, config]) =>
+              <SelectItem key={key} value={key}>
                     <div className="flex items-center gap-2">
                       <span>{config.icon}</span>
                       {config.label}
                     </div>
                   </SelectItem>
-                ))}
+              )}
               </SelectContent>
             </Select>
           </div>
@@ -360,14 +360,14 @@ export function UserFilters({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">全部部门</SelectItem>
-                {Object.entries(departmentConfigs).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
+                {Object.entries(departmentConfigs).map(([key, config]) =>
+              <SelectItem key={key} value={key}>
                     <div className="flex items-center gap-2">
                       <span>{config.icon}</span>
                       {config.label}
                     </div>
                   </SelectItem>
-                ))}
+              )}
               </SelectContent>
             </Select>
           </div>
@@ -381,14 +381,14 @@ export function UserFilters({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">全部角色</SelectItem>
-                {Object.entries(userRoleConfigs).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
+                {Object.entries(userRoleConfigs).map(([key, config]) =>
+              <SelectItem key={key} value={key}>
                     <div className="flex items-center gap-2">
                       <span>{config.icon}</span>
                       {config.label}
                     </div>
                   </SelectItem>
-                ))}
+              )}
               </SelectContent>
             </Select>
           </div>
@@ -398,28 +398,28 @@ export function UserFilters({
             <Label>积分范围</Label>
             <div className="flex gap-2">
               <Input
-                placeholder="最小积分"
-                type="number"
-                value={filters.minCredits}
-                onChange={(e) => {
-                  const newFilters = { ...filters };
-                  newFilters.minCredits = e.target.value;
-                  setFilters(newFilters);
-                  onFiltersChange?.(newFilters);
-                }}
-              />
+              placeholder="最小积分"
+              type="number"
+              value={filters.minCredits}
+              onChange={(e) => {
+                const newFilters = { ...filters };
+                newFilters.minCredits = e.target.value;
+                setFilters(newFilters);
+                onFiltersChange?.(newFilters);
+              }} />
+
               <span className="flex items-center text-muted-foreground">-</span>
               <Input
-                placeholder="最大积分"
-                type="number"
-                value={filters.maxCredits}
-                onChange={(e) => {
-                  const newFilters = { ...filters };
-                  newFilters.maxCredits = e.target.value;
-                  setFilters(newFilters);
-                  onFiltersChange?.(newFilters);
-                }}
-              />
+              placeholder="最大积分"
+              type="number"
+              value={filters.maxCredits}
+              onChange={(e) => {
+                const newFilters = { ...filters };
+                newFilters.maxCredits = e.target.value;
+                setFilters(newFilters);
+                onFiltersChange?.(newFilters);
+              }} />
+
             </div>
           </div>
         </div>
@@ -433,18 +433,18 @@ export function UserFilters({
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
+
 
   // 渲染批量操作
-  const renderBulkActions = () => (
-    <Dialog open={showBulkActions} onOpenChange={setShowBulkActions}>
+  const _renderBulkActions = () =>
+  <Dialog open={showBulkActions} onOpenChange={setShowBulkActions}>
       <DialogTrigger asChild>
         <Button
-          variant="outline"
-          size="sm"
-          disabled={selectedUsers.length === 0}
-        >
+        variant="outline"
+        size="sm"
+        disabled={selectedUsers.length === 0}>
+
           批量操作 ({selectedUsers.length})
         </Button>
       </DialogTrigger>
@@ -468,20 +468,20 @@ export function UserFilters({
             </Button>
           </div>
           <Button
-            variant="destructive"
-            disabled
-            className="col-span-2"
-          >
+          variant="destructive"
+          disabled
+          className="col-span-2">
+
             批量删除选中用户
           </Button>
         </div>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
+
 
   // 检查是否有活跃筛选
-  const hasActiveFilters = Object.values(filters).some(value =>
-    value !== null && value !== "" && value !== undefined
+  const hasActiveFilters = Object.values(filters).some((value) =>
+  value !== null && value !== "" && value !== undefined
   );
 
   return (
@@ -494,14 +494,14 @@ export function UserFilters({
             placeholder="搜索用户名、邮箱、工号..."
             value={filters.search}
             onChange={(e) => handleSearch(e.target.value)}
-            className="pl-10"
-          />
+            className="pl-10" />
+
         </div>
 
         <div className="flex gap-2">
           {renderAdvancedFilters()}
-          {showExportOptions && (
-            <>
+          {showExportOptions &&
+          <>
               <Button variant="outline" size="sm" onClick={handleImport}>
                 <Upload className="mr-2 h-4 w-4" />
                 导入
@@ -511,80 +511,80 @@ export function UserFilters({
                 导出
               </Button>
             </>
-          )}
-          {hasActiveFilters && (
-            <Button variant="outline" size="sm" onClick={handleClearFilters}>
+          }
+          {hasActiveFilters &&
+          <Button variant="outline" size="sm" onClick={handleClearFilters}>
               <RotateCcw className="mr-2 h-4 w-4" />
               清除
             </Button>
-          )}
+          }
         </div>
       </div>
 
       {/* 筛选标签 */}
-      {renderFilterTags().length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {renderFilterTags().map((tag, index) => (
-            <Badge
-              key={index}
-              variant="secondary"
-              className="cursor-pointer hover:bg-red-100"
-              onClick={tag.onRemove}
-            >
+      {renderFilterTags().length > 0 &&
+      <div className="flex flex-wrap gap-2">
+          {renderFilterTags().map((tag, index) =>
+        <Badge
+          key={index}
+          variant="secondary"
+          className="cursor-pointer hover:bg-red-100"
+          onClick={tag.onRemove}>
+
               {tag.label}
               <X className="ml-1 h-3 w-3" />
             </Badge>
-          ))}
+        )}
         </div>
-      )}
+      }
 
       {/* 快速筛选 */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
         <Button
           variant={filters.status === "ACTIVE" ? "default" : "outline"}
           size="sm"
-          onClick={() => handleStatusChange(filters.status === "ACTIVE" ? "" : "ACTIVE")}
-        >
+          onClick={() => handleStatusChange(filters.status === "ACTIVE" ? "" : "ACTIVE")}>
+
           <CheckCircle className="mr-1 h-3 w-3" />
           启用 ({filters.status === "ACTIVE" ? "✓" : ""})
         </Button>
         <Button
           variant={filters.status === "INACTIVE" ? "default" : "outline"}
           size="sm"
-          onClick={() => handleStatusChange(filters.status === "INACTIVE" ? "" : "INACTIVE")}
-        >
+          onClick={() => handleStatusChange(filters.status === "INACTIVE" ? "" : "INACTIVE")}>
+
           <UserX className="mr-1 h-3 w-3" />
           禁用 ({filters.status === "INACTIVE" ? "✓" : ""})
         </Button>
         <Button
           variant={filters.status === "PENDING" ? "default" : "outline"}
           size="sm"
-          onClick={() => handleStatusChange(filters.status === "PENDING" ? "" : "PENDING")}
-        >
+          onClick={() => handleStatusChange(filters.status === "PENDING" ? "" : "PENDING")}>
+
           <Clock className="mr-1 h-3 w-3" />
           待审核 ({filters.status === "PENDING" ? "✓" : ""})
         </Button>
         <Button
           variant={filters.department ? "default" : "outline"}
           size="sm"
-          onClick={() => handleDepartmentChange(filters.department ? "" : "ENGINEERING")}
-        >
+          onClick={() => handleDepartmentChange(filters.department ? "" : "ENGINEERING")}>
+
           <Building2 className="mr-1 h-3 w-3" />
           工程
         </Button>
         <Button
           variant={filters.role ? "default" : "outline"}
           size="sm"
-          onClick={() => handleRoleChange(filters.role ? "" : "SUPER_ADMIN")}
-        >
+          onClick={() => handleRoleChange(filters.role ? "" : "SUPER_ADMIN")}>
+
           <Shield className="mr-1 h-3 w-3" />
           管理员
         </Button>
         <Button
           variant={filters.userType ? "default" : "outline"}
           size="sm"
-          onClick={() => handleUserTypeChange(filters.userType ? "" : "INTERNAL")}
-        >
+          onClick={() => handleUserTypeChange(filters.userType ? "" : "INTERNAL")}>
+
           <User className="mr-1 h-3 w-3" />
           内部用户
         </Button>
@@ -598,14 +598,14 @@ export function UserFilters({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {userSortConfigs.map(config => (
-              <SelectItem key={config.value} value={config.value}>
+            {userSortConfigs.map((config) =>
+            <SelectItem key={config.value} value={config.value}>
                 {config.label}
               </SelectItem>
-            ))}
+            )}
           </SelectContent>
         </Select>
       </div>
-    </div>
-  );
+    </div>);
+
 }

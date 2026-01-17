@@ -4,7 +4,8 @@
  * 包含问题状态、严重程度、优先级、分类等配置
  */
 
-import { cn, formatDate, formatDateTime } from "../../lib/utils";
+import { cn as _cn, formatDate as _formatDate, formatDateTime as _formatDateTime } from "../../lib/utils";
+import { List, Kanban, BarChart3 } from "lucide-react";
 
 // ==================== 问题状态配置 ====================
 export const issueStatusConfig = {
@@ -17,7 +18,7 @@ export const issueStatusConfig = {
   },
   PROCESSING: {
     label: "处理中",
-    value: "PROCESSING", 
+    value: "PROCESSING",
     color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/30",
     icon: "Clock",
     order: 2
@@ -258,36 +259,36 @@ export const DEFAULT_ISSUE_STATS = {
 
 // ==================== 视图模式配置 ====================
 export const ISSUE_VIEW_MODES = [
-  {
-    value: "list",
-    label: "列表视图",
-    icon: "List",
-    description: "传统的表格列表形式展示"
-  },
-  {
-    value: "kanban",
-    label: "看板视图", 
-    icon: "Kanban",
-    description: "按状态分组的看板形式展示"
-  },
-  {
-    value: "analytics",
-    label: "分析视图",
-    icon: "BarChart3",
-    description: "统计图表和分析数据"
-  }
-];
+{
+  value: "list",
+  label: "列表视图",
+  icon: List,
+  description: "传统的表格列表形式展示"
+},
+{
+  value: "kanban",
+  label: "看板视图",
+  icon: Kanban,
+  description: "按状态分组的看板形式展示"
+},
+{
+  value: "analytics",
+  label: "分析视图",
+  icon: BarChart3,
+  description: "统计图表和分析数据"
+}];
+
 
 // ==================== 排序选项配置 ====================
 export const ISSUE_SORT_OPTIONS = [
-  { value: "created_desc", label: "创建时间（最新）" },
-  { value: "created_asc", label: "创建时间（最早）" },
-  { value: "updated_desc", label: "更新时间（最新）" },
-  { value: "priority_desc", label: "优先级（高到低）" },
-  { value: "severity_desc", label: "严重程度（高到低）" },
-  { value: "title_asc", label: "标题（A-Z）" },
-  { value: "title_desc", label: "标题（Z-A）" }
-];
+{ value: "created_desc", label: "创建时间（最新）" },
+{ value: "created_asc", label: "创建时间（最早）" },
+{ value: "updated_desc", label: "更新时间（最新）" },
+{ value: "priority_desc", label: "优先级（高到低）" },
+{ value: "severity_desc", label: "严重程度（高到低）" },
+{ value: "title_asc", label: "标题（A-Z）" },
+{ value: "title_desc", label: "标题（Z-A）" }];
+
 
 // ==================== SLA 配置 ====================
 export const ISSUE_SLA_CONFIG = {
@@ -354,14 +355,14 @@ export const calculateSLACompliance = (issue) => {
   if (!issue.createdAt || ['RESOLVED', 'CLOSED'].includes(issue.status)) {
     return null;
   }
-  
+
   const created = new Date(issue.createdAt);
   const now = new Date();
   const hoursElapsed = (now - created) / (1000 * 60 * 60);
-  
+
   const sla = ISSUE_SLA_CONFIG[issue.severity];
   if (!sla) return null;
-  
+
   return {
     response: hoursElapsed <= sla.response,
     resolution: hoursElapsed <= sla.resolution,
@@ -385,7 +386,7 @@ export const formatResolutionTime = (hours) => {
 // 获取状态操作按钮
 export const getIssueStatusActions = (currentStatus) => {
   const actions = [];
-  
+
   switch (currentStatus) {
     case 'OPEN':
       actions.push(
@@ -411,38 +412,38 @@ export const getIssueStatusActions = (currentStatus) => {
       );
       break;
   }
-  
+
   return actions;
 };
 
 // 验证问题数据
 export const validateIssueData = (data) => {
   const errors = [];
-  
+
   if (!data.title || data.title.trim() === '') {
     errors.push('问题标题不能为空');
   }
-  
+
   if (!data.description || data.description.trim() === '') {
     errors.push('问题描述不能为空');
   }
-  
+
   if (!data.category) {
     errors.push('问题分类必须选择');
   }
-  
+
   if (!data.severity) {
     errors.push('严重程度必须选择');
   }
-  
+
   if (!data.priority) {
     errors.push('优先级必须选择');
   }
-  
+
   if (data.dueDate && new Date(data.dueDate) <= new Date()) {
     errors.push('截止日期必须是未来时间');
   }
-  
+
   return errors;
 };
 

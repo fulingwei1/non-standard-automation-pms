@@ -10,23 +10,35 @@ export function diagnoseLogin() {
   const warnings = [];
   const info = [];
 
-  // 1. 检查后端服务
-  console.log("1️⃣ 检查后端服务...");
-  fetch("http://127.0.0.1:8000/health")
-    .then((res) => res.json())
-    .then((data) => {
-      console.log("✅ 后端服务正常:", data);
-      info.push("后端服务运行正常");
+  // 1. 通过前端代理检查后端服务（避免直接访问 8000 触发 CORS/跨域误判）
+  console.log("1️⃣ 检查后端服务（通过前端代理 /api）...");
+  fetch("/api/v1/health")
+    .then(async (res) => {
+      const text = await res.text();
+      if (!res.ok) {
+        console.error("❌ 后端健康检查失败:", res.status, text);
+        issues.push(`后端健康检查失败（通过代理 /api），HTTP ${res.status}`);
+        return;
+      }
+      try {
+        const data = JSON.parse(text);
+        console.log("✅ 后端服务正常:", data);
+      } catch {
+        console.log("✅ 后端服务正常（非JSON响应）:", text);
+      }
+      info.push("后端服务运行正常（通过代理）");
     })
     .catch((err) => {
-      console.error("❌ 后端服务无法连接:", err.message);
-      issues.push("后端服务未启动或无法连接 (http://127.0.0.1:8000)");
-      console.log("\n💡 解决方案: 运行 uvicorn app.main:app --reload");
+      console.error("❌ 后端服务无法连接（通过代理）:", err.message);
+      issues.push("后端服务未启动或前端代理无法连接后端 (/api -> 127.0.0.1:8000)");
+      console.log("\n💡 解决方案: 在项目根目录运行 ./start.sh");
+      console.log("   或手动启动后端: python3 -m uvicorn app.main:app --host 127.0.0.1 --port 8000");
+      console.log("   如果 8000 被占用或不可用，可改端口并设置：VITE_BACKEND_PORT=8001 pnpm dev");
     });
 
-  // 2. 检查API端点
-  console.log("\n2️⃣ 检查登录API端点...");
-  fetch("http://127.0.0.1:8000/api/v1/auth/login", {
+  // 2. 检查登录API端点（同样走代理）
+  console.log("\n2️⃣ 检查登录API端点（通过前端代理 /api）...");
+  fetch("/api/v1/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: "username=test&password=test",
@@ -90,7 +102,7 @@ export function diagnoseLogin() {
     }
 
     console.log("\n💡 快速解决方案:");
-    console.log("  1. 确保后端服务运行: uvicorn app.main:app --reload");
+    console.log("  1. 确保后端服务运行: ./start.sh");
     console.log("  2. 使用演示账户登录（无需后端）");
     console.log("  3. 检查浏览器控制台的Network标签查看请求详情");
     console.log("=".repeat(50));

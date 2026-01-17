@@ -22,16 +22,16 @@ import {
   ThumbsDown,
   Calendar,
   TrendingUp,
-  Eye,
-} from "lucide-react";
+  Eye } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
-} from "../components/ui/card";
+  CardDescription } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
@@ -40,24 +40,24 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "../components/ui/table";
+  TableRow } from
+"../components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-} from "../components/ui/dialog";
+  DialogFooter } from
+"../components/ui/dialog";
 import { Textarea } from "../components/ui/textarea";
 import { cn } from "../lib/utils";
 import { assemblyKitApi, projectApi } from "../services/api";
@@ -69,7 +69,7 @@ const stageIcons = {
   ELECTRIC: Zap,
   WIRING: Cable,
   DEBUG: Bug,
-  COSMETIC: Palette,
+  COSMETIC: Palette
 };
 
 // 预警级别配置
@@ -78,26 +78,26 @@ const alertLevelConfig = {
     label: "停工预警",
     color: "bg-red-600",
     textColor: "text-red-600",
-    bgLight: "bg-red-50 border-red-500",
+    bgLight: "bg-red-50 border-red-500"
   },
   L2: {
     label: "紧急预警",
     color: "bg-orange-500",
     textColor: "text-orange-600",
-    bgLight: "bg-orange-50 border-orange-500",
+    bgLight: "bg-orange-50 border-orange-500"
   },
   L3: {
     label: "提前预警",
     color: "bg-yellow-500",
     textColor: "text-yellow-600",
-    bgLight: "bg-yellow-50 border-yellow-500",
+    bgLight: "bg-yellow-50 border-yellow-500"
   },
   L4: {
     label: "常规预警",
     color: "bg-blue-500",
     textColor: "text-blue-600",
-    bgLight: "bg-blue-50 border-blue-500",
-  },
+    bgLight: "bg-blue-50 border-blue-500"
+  }
 };
 
 export default function AssemblyKitBoard() {
@@ -105,7 +105,7 @@ export default function AssemblyKitBoard() {
   const [dashboardData, setDashboardData] = useState(null);
   const [projects, setProjects] = useState([]);
   const [filterProject, setFilterProject] = useState("");
-  const [selectedAnalysis, setSelectedAnalysis] = useState(null);
+  const [_selectedAnalysis, _setSelectedAnalysis] = useState(null);
   const [analysisDetail, setAnalysisDetail] = useState(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
@@ -204,7 +204,7 @@ export default function AssemblyKitBoard() {
     }
     try {
       await assemblyKitApi.rejectSuggestion(selectedSuggestion.id, {
-        reject_reason: rejectReason,
+        reject_reason: rejectReason
       });
       console.log("已拒绝排产建议");
       setRejectDialogOpen(false);
@@ -223,7 +223,7 @@ export default function AssemblyKitBoard() {
     return "text-red-600";
   };
 
-  const getProgressColor = (rate) => {
+  const _getProgressColor = (rate) => {
     if (rate >= 100) return "bg-emerald-500";
     if (rate >= 80) return "bg-blue-500";
     if (rate >= 50) return "bg-amber-500";
@@ -234,8 +234,8 @@ export default function AssemblyKitBoard() {
     return (
       <div className="space-y-6 p-6">
         <div className="text-center py-8 text-slate-400">加载中...</div>
-      </div>
-    );
+      </div>);
+
   }
 
   const stats = dashboardData?.stats || {};
@@ -250,8 +250,8 @@ export default function AssemblyKitBoard() {
       <div className="flex items-center justify-between">
         <PageHeader
           title="装配齐套看板"
-          description="基于装配工艺路径的智能齐套分析，实现能做到哪一步的精准判断"
-        />
+          description="基于装配工艺路径的智能齐套分析，实现能做到哪一步的精准判断" />
+
         <div className="flex items-center gap-4">
           <Select value={filterProject} onValueChange={setFilterProject}>
             <SelectTrigger className="w-[200px]">
@@ -259,11 +259,11 @@ export default function AssemblyKitBoard() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">全部项目</SelectItem>
-              {projects.map((proj) => (
-                <SelectItem key={proj.id} value={proj.id.toString()}>
+              {projects.map((proj) =>
+              <SelectItem key={proj.id} value={proj.id.toString()}>
                   {proj.name || proj.project_name}
                 </SelectItem>
-              ))}
+              )}
             </SelectContent>
           </Select>
           <Button
@@ -271,16 +271,16 @@ export default function AssemblyKitBoard() {
             onClick={() => {
               fetchDashboardData();
               fetchAlerts();
-            }}
-          >
+            }}>
+
             <RefreshCw className="w-4 h-4 mr-2" />
             刷新
           </Button>
           <Button
             variant="outline"
             onClick={handleGenerateSuggestions}
-            disabled={loading}
-          >
+            disabled={loading}>
+
             <Calendar className="w-4 h-4 mr-2" />
             生成排产建议
           </Button>
@@ -323,9 +323,9 @@ export default function AssemblyKitBoard() {
                 <div
                   className={cn(
                     "text-2xl font-bold",
-                    getKitRateColor(stats.avg_kit_rate || 0),
-                  )}
-                >
+                    getKitRateColor(stats.avg_kit_rate || 0)
+                  )}>
+
                   {stats.avg_kit_rate || 0}%
                 </div>
               </div>
@@ -341,9 +341,9 @@ export default function AssemblyKitBoard() {
                 <div
                   className={cn(
                     "text-2xl font-bold",
-                    getKitRateColor(stats.avg_blocking_rate || 0),
-                  )}
-                >
+                    getKitRateColor(stats.avg_blocking_rate || 0)
+                  )}>
+
                   {stats.avg_blocking_rate || 0}%
                 </div>
               </div>
@@ -372,29 +372,29 @@ export default function AssemblyKitBoard() {
               return (
                 <div key={stage.stage_code} className="relative">
                   {/* Connection line */}
-                  {index < stageStats.length - 1 && (
-                    <div className="absolute top-8 left-1/2 w-full h-0.5 bg-slate-200 z-0" />
-                  )}
+                  {index < stageStats.length - 1 &&
+                  <div className="absolute top-8 left-1/2 w-full h-0.5 bg-slate-200 z-0" />
+                  }
                   <div
                     className={cn(
                       "relative z-10 flex flex-col items-center p-4 rounded-lg border-2 transition-all",
-                      isBlocked
-                        ? "border-red-300 bg-red-50"
-                        : "border-emerald-300 bg-emerald-50",
-                    )}
-                  >
+                      isBlocked ?
+                      "border-red-300 bg-red-50" :
+                      "border-emerald-300 bg-emerald-50"
+                    )}>
+
                     <div
                       className={cn(
                         "w-12 h-12 rounded-full flex items-center justify-center mb-2",
-                        isBlocked ? "bg-red-100" : "bg-emerald-100",
-                      )}
-                    >
+                        isBlocked ? "bg-red-100" : "bg-emerald-100"
+                      )}>
+
                       <Icon
                         className={cn(
                           "w-6 h-6",
-                          isBlocked ? "text-red-600" : "text-emerald-600",
-                        )}
-                      />
+                          isBlocked ? "text-red-600" : "text-emerald-600"
+                        )} />
+
                     </div>
                     <div className="text-sm font-medium text-center mb-1">
                       {stage.stage_name}
@@ -402,9 +402,9 @@ export default function AssemblyKitBoard() {
                     <div
                       className={cn(
                         "text-lg font-bold",
-                        getKitRateColor(stage.avg_kit_rate),
-                      )}
-                    >
+                        getKitRateColor(stage.avg_kit_rate)
+                      )}>
+
                       {stage.avg_kit_rate}%
                     </div>
                     <div className="flex gap-2 mt-2 text-xs">
@@ -416,8 +416,8 @@ export default function AssemblyKitBoard() {
                       </span>
                     </div>
                   </div>
-                </div>
-              );
+                </div>);
+
             })}
           </div>
         </CardContent>
@@ -433,9 +433,9 @@ export default function AssemblyKitBoard() {
               key={level}
               className={cn(
                 count > 0 && "border-l-4",
-                count > 0 && config.bgLight.split(" ")[1],
-              )}
-            >
+                count > 0 && config.bgLight.split(" ")[1]
+              )}>
+
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -445,22 +445,22 @@ export default function AssemblyKitBoard() {
                     <div
                       className={cn(
                         "text-2xl font-bold",
-                        count > 0 ? config.textColor : "text-slate-400",
-                      )}
-                    >
+                        count > 0 ? config.textColor : "text-slate-400"
+                      )}>
+
                       {count}
                     </div>
                   </div>
                   <AlertTriangle
                     className={cn(
                       "w-8 h-8",
-                      count > 0 ? config.textColor : "text-slate-300",
-                    )}
-                  />
+                      count > 0 ? config.textColor : "text-slate-300"
+                    )} />
+
                 </div>
               </CardContent>
-            </Card>
-          );
+            </Card>);
+
         })}
       </div>
 
@@ -471,30 +471,30 @@ export default function AssemblyKitBoard() {
             <CardTitle>最近齐套分析</CardTitle>
           </CardHeader>
           <CardContent>
-            {recentAnalyses.length > 0 ? (
-              <div className="space-y-3">
-                {recentAnalyses.map((analysis) => (
-                  <div
-                    key={analysis.id}
-                    className={cn(
-                      "p-4 rounded-lg border cursor-pointer hover:bg-slate-50 transition-colors",
-                      analysis.can_start
-                        ? "border-emerald-200 bg-emerald-50/50"
-                        : "border-red-200 bg-red-50/50",
-                    )}
-                    onClick={() => fetchAnalysisDetail(analysis.id)}
-                  >
+            {recentAnalyses.length > 0 ?
+            <div className="space-y-3">
+                {recentAnalyses.map((analysis) =>
+              <div
+                key={analysis.id}
+                className={cn(
+                  "p-4 rounded-lg border cursor-pointer hover:bg-slate-50 transition-colors",
+                  analysis.can_start ?
+                  "border-emerald-200 bg-emerald-50/50" :
+                  "border-red-200 bg-red-50/50"
+                )}
+                onClick={() => fetchAnalysisDetail(analysis.id)}>
+
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-medium">
                             {analysis.project_name || analysis.project_no}
                           </span>
-                          {analysis.machine_no && (
-                            <Badge variant="outline">
+                          {analysis.machine_no &&
+                      <Badge variant="outline">
                               {analysis.machine_no}
                             </Badge>
-                          )}
+                      }
                         </div>
                         <div className="text-sm text-slate-500 mb-2">
                           分析时间:{" "}
@@ -506,11 +506,11 @@ export default function AssemblyKitBoard() {
                               整体:
                             </span>
                             <span
-                              className={cn(
-                                "font-medium",
-                                getKitRateColor(analysis.overall_kit_rate),
-                              )}
-                            >
+                          className={cn(
+                            "font-medium",
+                            getKitRateColor(analysis.overall_kit_rate)
+                          )}>
+
                               {analysis.overall_kit_rate}%
                             </span>
                           </div>
@@ -519,35 +519,35 @@ export default function AssemblyKitBoard() {
                               阻塞:
                             </span>
                             <span
-                              className={cn(
-                                "font-medium",
-                                getKitRateColor(analysis.blocking_kit_rate),
-                              )}
-                            >
+                          className={cn(
+                            "font-medium",
+                            getKitRateColor(analysis.blocking_kit_rate)
+                          )}>
+
                               {analysis.blocking_kit_rate}%
                             </span>
                           </div>
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-2">
-                        {analysis.can_start ? (
-                          <Badge className="bg-emerald-500">可开工</Badge>
-                        ) : (
-                          <Badge className="bg-red-500">
+                        {analysis.can_start ?
+                    <Badge className="bg-emerald-500">可开工</Badge> :
+
+                    <Badge className="bg-red-500">
                             阻塞于 {analysis.first_blocked_stage}
                           </Badge>
-                        )}
+                    }
                         <Eye className="w-4 h-4 text-slate-400" />
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-slate-400">
+              )}
+              </div> :
+
+            <div className="text-center py-8 text-slate-400">
                 暂无分析记录
               </div>
-            )}
+            }
           </CardContent>
         </Card>
 
@@ -560,32 +560,32 @@ export default function AssemblyKitBoard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {pendingSuggestions.length > 0 ? (
-              <div className="space-y-3">
-                {pendingSuggestions.map((suggestion) => (
-                  <div
-                    key={suggestion.id}
-                    className="p-4 rounded-lg border bg-blue-50/50 border-blue-200"
-                  >
+            {pendingSuggestions.length > 0 ?
+            <div className="space-y-3">
+                {pendingSuggestions.map((suggestion) =>
+              <div
+                key={suggestion.id}
+                className="p-4 rounded-lg border bg-blue-50/50 border-blue-200">
+
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <div className="font-medium">
                           {suggestion.project_name || suggestion.project_no}
                         </div>
-                        {suggestion.machine_no && (
-                          <span className="text-sm text-slate-500">
+                        {suggestion.machine_no &&
+                    <span className="text-sm text-slate-500">
                             {suggestion.machine_no}
                           </span>
-                        )}
+                    }
                       </div>
                       <Badge variant="outline" className="bg-blue-100">
-                        {suggestion.suggestion_type === "CAN_START"
-                          ? "可立即开工"
-                          : suggestion.suggestion_type === "WAIT_MATERIAL"
-                            ? "等待物料"
-                            : suggestion.suggestion_type === "PARTIAL_START"
-                              ? "部分开工"
-                              : suggestion.suggestion_type}
+                        {suggestion.suggestion_type === "CAN_START" ?
+                    "可立即开工" :
+                    suggestion.suggestion_type === "WAIT_MATERIAL" ?
+                    "等待物料" :
+                    suggestion.suggestion_type === "PARTIAL_START" ?
+                    "部分开工" :
+                    suggestion.suggestion_type}
                       </Badge>
                     </div>
                     <div className="text-sm text-slate-600 mb-2">
@@ -598,104 +598,104 @@ export default function AssemblyKitBoard() {
                       <span>
                         齐套率:{" "}
                         <strong
-                          className={getKitRateColor(
-                            suggestion.current_kit_rate,
-                          )}
-                        >
+                      className={getKitRateColor(
+                        suggestion.current_kit_rate
+                      )}>
+
                           {suggestion.current_kit_rate}%
                         </strong>
                       </span>
                     </div>
-                    {suggestion.score_factors && (
-                      <div className="text-xs text-slate-500 mb-2 p-2 bg-white rounded">
+                    {suggestion.score_factors &&
+                <div className="text-xs text-slate-500 mb-2 p-2 bg-white rounded">
                         <div className="font-medium mb-1">评分详情：</div>
                         <div className="space-y-1">
                           {Object.entries(suggestion.score_factors).map(
-                            ([key, factor]) => (
-                              <div key={key} className="flex justify-between">
+                      ([key, factor]) =>
+                      <div key={key} className="flex justify-between">
                                 <span>{factor.description || key}:</span>
                                 <span className="font-medium">
                                   {factor.score}/{factor.max}分
                                 </span>
                               </div>
-                            ),
-                          )}
+
+                    )}
                         </div>
                       </div>
-                    )}
-                    {suggestion.resource_allocation && (
-                      <div className="text-xs text-slate-500 mb-2 p-2 bg-white rounded">
+                }
+                    {suggestion.resource_allocation &&
+                <div className="text-xs text-slate-500 mb-2 p-2 bg-white rounded">
                         <div className="font-medium mb-1">资源情况：</div>
                         <div className="space-y-1">
                           <div>
                             可用工位:{" "}
-                            {suggestion.resource_allocation
-                              .available_workstations || 0}
+                            {suggestion.resource_allocation.
+                      available_workstations || 0}
                             个
                           </div>
                           <div>
                             可用人员:{" "}
                             {suggestion.resource_allocation.available_workers ||
-                              0}
+                      0}
                             人
                           </div>
                           {suggestion.resource_allocation.conflicts &&
-                            suggestion.resource_allocation.conflicts.length >
-                              0 && (
-                              <div className="text-red-500">
+                    suggestion.resource_allocation.conflicts.length >
+                    0 &&
+                    <div className="text-red-500">
                                 资源冲突:{" "}
                                 {
-                                  suggestion.resource_allocation.conflicts
-                                    .length
-                                }
+                      suggestion.resource_allocation.conflicts.
+                      length
+                      }
                                 个
                               </div>
-                            )}
+                    }
                         </div>
                       </div>
-                    )}
-                    {suggestion.reason && (
-                      <div className="text-sm text-slate-500 mb-3 p-2 bg-white rounded">
+                }
+                    {suggestion.reason &&
+                <div className="text-sm text-slate-500 mb-3 p-2 bg-white rounded">
                         {suggestion.reason}
                       </div>
-                    )}
+                }
                     <div className="flex gap-2">
                       <Button
-                        size="sm"
-                        className="bg-emerald-500 hover:bg-emerald-600"
-                        onClick={() => handleAcceptSuggestion(suggestion.id)}
-                      >
+                    size="sm"
+                    className="bg-emerald-500 hover:bg-emerald-600"
+                    onClick={() => handleAcceptSuggestion(suggestion.id)}>
+
                         <ThumbsUp className="w-4 h-4 mr-1" />
                         接受
                       </Button>
                       <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-red-300 text-red-600 hover:bg-red-50"
-                        onClick={() => {
-                          setSelectedSuggestion(suggestion);
-                          setRejectDialogOpen(true);
-                        }}
-                      >
+                    size="sm"
+                    variant="outline"
+                    className="border-red-300 text-red-600 hover:bg-red-50"
+                    onClick={() => {
+                      setSelectedSuggestion(suggestion);
+                      setRejectDialogOpen(true);
+                    }}>
+
                         <ThumbsDown className="w-4 h-4 mr-1" />
                         拒绝
                       </Button>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-slate-400">
+              )}
+              </div> :
+
+            <div className="text-center py-8 text-slate-400">
                 暂无待处理建议
               </div>
-            )}
+            }
           </CardContent>
         </Card>
       </div>
 
       {/* Shortage Alerts List */}
-      {alerts && alerts.items && alerts.items.length > 0 && (
-        <Card>
+      {alerts && alerts.items && alerts.items.length > 0 &&
+      <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-red-500" />
@@ -720,20 +720,20 @@ export default function AssemblyKitBoard() {
               </TableHeader>
               <TableBody>
                 {alerts.items.map((alert) => {
-                  const config =
-                    alertLevelConfig[alert.alert_level] || alertLevelConfig.L4;
-                  return (
-                    <TableRow key={alert.shortage_id}>
+                const config =
+                alertLevelConfig[alert.alert_level] || alertLevelConfig.L4;
+                return (
+                  <TableRow key={alert.shortage_id}>
                       <TableCell>
                         <Badge className={config.color}>{config.label}</Badge>
                       </TableCell>
                       <TableCell>
                         <div className="font-medium">{alert.project_name}</div>
-                        {alert.machine_no && (
-                          <div className="text-xs text-slate-500">
+                        {alert.machine_no &&
+                      <div className="text-xs text-slate-500">
                             {alert.machine_no}
                           </div>
-                        )}
+                      }
                       </TableCell>
                       <TableCell>
                         <div>{alert.material_name}</div>
@@ -746,23 +746,23 @@ export default function AssemblyKitBoard() {
                         {alert.shortage_qty}
                       </TableCell>
                       <TableCell>
-                        {alert.is_blocking ? (
-                          <XCircle className="w-5 h-5 text-red-500" />
-                        ) : (
-                          <CheckCircle2 className="w-5 h-5 text-slate-300" />
-                        )}
+                        {alert.is_blocking ?
+                      <XCircle className="w-5 h-5 text-red-500" /> :
+
+                      <CheckCircle2 className="w-5 h-5 text-slate-300" />
+                      }
                       </TableCell>
                       <TableCell className="text-sm">
                         {new Date(alert.response_deadline).toLocaleString()}
                       </TableCell>
-                    </TableRow>
-                  );
-                })}
+                    </TableRow>);
+
+              })}
               </TableBody>
             </Table>
           </CardContent>
         </Card>
-      )}
+      }
 
       {/* Analysis Detail Dialog */}
       <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
@@ -773,42 +773,42 @@ export default function AssemblyKitBoard() {
               {analysisDetail?.readiness_no} - {analysisDetail?.project_name}
             </DialogDescription>
           </DialogHeader>
-          {analysisDetail && (
-            <div className="space-y-6">
+          {analysisDetail &&
+          <div className="space-y-6">
               {/* Summary */}
               <div className="grid grid-cols-4 gap-4">
                 <div className="p-3 bg-slate-50 rounded-lg">
                   <div className="text-sm text-slate-500">整体齐套率</div>
                   <div
-                    className={cn(
-                      "text-xl font-bold",
-                      getKitRateColor(analysisDetail.overall_kit_rate),
-                    )}
-                  >
+                  className={cn(
+                    "text-xl font-bold",
+                    getKitRateColor(analysisDetail.overall_kit_rate)
+                  )}>
+
                     {analysisDetail.overall_kit_rate}%
                   </div>
                 </div>
                 <div className="p-3 bg-slate-50 rounded-lg">
                   <div className="text-sm text-slate-500">阻塞齐套率</div>
                   <div
-                    className={cn(
-                      "text-xl font-bold",
-                      getKitRateColor(analysisDetail.blocking_kit_rate),
-                    )}
-                  >
+                  className={cn(
+                    "text-xl font-bold",
+                    getKitRateColor(analysisDetail.blocking_kit_rate)
+                  )}>
+
                     {analysisDetail.blocking_kit_rate}%
                   </div>
                 </div>
                 <div className="p-3 bg-slate-50 rounded-lg">
                   <div className="text-sm text-slate-500">开工状态</div>
                   <div
-                    className={cn(
-                      "text-xl font-bold",
-                      analysisDetail.can_start
-                        ? "text-emerald-600"
-                        : "text-red-600",
-                    )}
-                  >
+                  className={cn(
+                    "text-xl font-bold",
+                    analysisDetail.can_start ?
+                    "text-emerald-600" :
+                    "text-red-600"
+                  )}>
+
                     {analysisDetail.can_start ? "可开工" : "阻塞"}
                   </div>
                 </div>
@@ -824,48 +824,48 @@ export default function AssemblyKitBoard() {
               <div>
                 <h4 className="font-medium mb-3">各阶段齐套率</h4>
                 <div className="space-y-3">
-                  {analysisDetail.stage_kit_rates?.map((stage) => (
-                    <div
-                      key={stage.stage_code}
-                      className="flex items-center gap-4"
-                    >
+                  {analysisDetail.stage_kit_rates?.map((stage) =>
+                <div
+                  key={stage.stage_code}
+                  className="flex items-center gap-4">
+
                       <div className="w-24 text-sm font-medium">
                         {stage.stage_name}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <Progress
-                            value={stage.kit_rate}
-                            className="h-2 flex-1"
-                          />
+                        value={stage.kit_rate}
+                        className="h-2 flex-1" />
+
                           <span
-                            className={cn(
-                              "text-sm font-medium w-12",
-                              getKitRateColor(stage.kit_rate),
-                            )}
-                          >
+                        className={cn(
+                          "text-sm font-medium w-12",
+                          getKitRateColor(stage.kit_rate)
+                        )}>
+
                             {stage.kit_rate}%
                           </span>
                         </div>
                         <div className="text-xs text-slate-500">
                           阻塞: {stage.blocking_rate}% |
-                          {stage.can_start ? (
-                            <span className="text-emerald-600 ml-1">
+                          {stage.can_start ?
+                      <span className="text-emerald-600 ml-1">
                               可开始
-                            </span>
-                          ) : (
-                            <span className="text-red-600 ml-1">阻塞</span>
-                          )}
+                            </span> :
+
+                      <span className="text-red-600 ml-1">阻塞</span>
+                      }
                         </div>
                       </div>
                     </div>
-                  ))}
+                )}
                 </div>
               </div>
 
               {/* Shortage Details */}
-              {analysisDetail.shortage_details?.length > 0 && (
-                <div>
+              {analysisDetail.shortage_details?.length > 0 &&
+            <div>
                   <h4 className="font-medium mb-3">
                     缺料明细 ({analysisDetail.shortage_details.length} 项)
                   </h4>
@@ -883,8 +883,8 @@ export default function AssemblyKitBoard() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {analysisDetail.shortage_details.map((detail) => (
-                        <TableRow key={detail.id}>
+                      {analysisDetail.shortage_details.map((detail) =>
+                  <TableRow key={detail.id}>
                           <TableCell className="font-mono text-sm">
                             {detail.material_code}
                           </TableCell>
@@ -898,30 +898,30 @@ export default function AssemblyKitBoard() {
                             {detail.shortage_qty}
                           </TableCell>
                           <TableCell>
-                            {detail.is_blocking ? (
-                              <Badge className="bg-red-500">阻塞</Badge>
-                            ) : (
-                              <Badge variant="outline">可后补</Badge>
-                            )}
+                            {detail.is_blocking ?
+                      <Badge className="bg-red-500">阻塞</Badge> :
+
+                      <Badge variant="outline">可后补</Badge>
+                      }
                           </TableCell>
                           <TableCell>
                             <Badge
-                              className={
-                                alertLevelConfig[detail.alert_level]?.color ||
-                                "bg-slate-500"
-                              }
-                            >
+                        className={
+                        alertLevelConfig[detail.alert_level]?.color ||
+                        "bg-slate-500"
+                        }>
+
                               {detail.alert_level}
                             </Badge>
                           </TableCell>
                         </TableRow>
-                      ))}
+                  )}
                     </TableBody>
                   </Table>
                 </div>
-              )}
+            }
             </div>
-          )}
+          }
         </DialogContent>
       </Dialog>
 
@@ -936,24 +936,24 @@ export default function AssemblyKitBoard() {
             placeholder="请输入拒绝原因..."
             value={rejectReason}
             onChange={(e) => setRejectReason(e.target.value)}
-            rows={4}
-          />
+            rows={4} />
+
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setRejectDialogOpen(false)}
-            >
+              onClick={() => setRejectDialogOpen(false)}>
+
               取消
             </Button>
             <Button
               onClick={handleRejectSuggestion}
-              className="bg-red-500 hover:bg-red-600"
-            >
+              className="bg-red-500 hover:bg-red-600">
+
               确认拒绝
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }

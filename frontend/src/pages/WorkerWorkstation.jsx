@@ -27,16 +27,16 @@ import {
   Search,
   ArrowUpDown,
   ArrowUp,
-  ArrowDown,
-} from "lucide-react";
+  ArrowDown } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
-} from "../components/ui/card";
+  CardDescription } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -46,36 +46,36 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "../components/ui/table";
+  TableRow } from
+"../components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogBody,
-  DialogFooter,
-} from "../components/ui/dialog";
+  DialogFooter } from
+"../components/ui/dialog";
 import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger,
-} from "../components/ui/tabs";
-import { cn, formatDate } from "../lib/utils";
+  TabsTrigger } from
+"../components/ui/tabs";
+import { cn as _cn, formatDate } from "../lib/utils";
 import { productionApi } from "../services/api";
 import { toast } from "../components/ui/toast";
 
 // 导入重构后的组件
-import { 
+import {
   WorkerWorkOverview,
   WORK_ORDER_STATUS,
   REPORT_TYPE,
@@ -84,22 +84,22 @@ import {
   QUICK_QUANTITY_OPTIONS,
   calculateProgress,
   calculateWorkHours,
-  getStatusColor,
-  getReportTypeColor,
+  getStatusColor as _getStatusColor,
+  getReportTypeColor as _getReportTypeColor,
   validateReportData,
-  getQualityLevel,
+  getQualityLevel as _getQualityLevel,
   getNextAvailableActions,
-  formatWorkHours
-} from "../components/worker-workstation";
+  formatWorkHours } from
+"../components/worker-workstation";
 
 export default function WorkerWorkstation() {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [myWorkOrders, setMyWorkOrders] = useState([]);
   const [myReports, setMyReports] = useState([]);
   const [workerId, setWorkerId] = useState(null);
-  const [error, setError] = useState(null);
+  const [_error, setError] = useState(null);
 
   // 对话框状态
   const [showStartDialog, setShowStartDialog] = useState(false);
@@ -111,13 +111,13 @@ export default function WorkerWorkstation() {
   const [startData, setStartData] = useState({
     start_note: "",
     equipment_check: true,
-    material_check: true,
+    material_check: true
   });
 
   const [progressData, setProgressData] = useState({
     progress_percent: 0,
     progress_note: "",
-    current_issues: "",
+    current_issues: ""
   });
 
   const [completeData, setCompleteData] = useState({
@@ -125,7 +125,7 @@ export default function WorkerWorkstation() {
     qualified_qty: 0,
     defect_qty: 0,
     work_hours: 0,
-    report_note: "",
+    report_note: ""
   });
 
   // 照片状态
@@ -159,12 +159,12 @@ export default function WorkerWorkstation() {
   // 加载我的工单
   const fetchMyWorkOrders = useCallback(async () => {
     if (!workerId) return;
-    
+
     try {
       setLoading(true);
       const res = await productionApi.workOrders.list({
         assigned_to: workerId,
-        ordering: `${sortDirection === "desc" ? "-" : ""}${sortField}`,
+        ordering: `${sortDirection === "desc" ? "-" : ""}${sortField}`
       });
       setMyWorkOrders(res.data.results || []);
     } catch (error) {
@@ -178,11 +178,11 @@ export default function WorkerWorkstation() {
   // 加载我的报工记录
   const fetchMyReports = useCallback(async () => {
     if (!workerId) return;
-    
+
     try {
       const res = await productionApi.workReports.my({
         worker_id: workerId,
-        ordering: "-created_time",
+        ordering: "-created_time"
       });
       setMyReports(res.data.results || []);
     } catch (error) {
@@ -205,7 +205,7 @@ export default function WorkerWorkstation() {
 
     const errors = validateReportData('START', startData, selectedOrder);
     if (errors.length > 0) {
-      errors.forEach(error => toast.error(error));
+      errors.forEach((error) => toast.error(error));
       return;
     }
 
@@ -215,16 +215,16 @@ export default function WorkerWorkstation() {
         work_order_id: selectedOrder.id,
         start_note: startData.start_note,
         equipment_check: startData.equipment_check,
-        material_check: startData.material_check,
+        material_check: startData.material_check
       });
-      
+
       setShowStartDialog(false);
       setStartData({
         start_note: "",
         equipment_check: true,
-        material_check: true,
+        material_check: true
       });
-      
+
       await fetchMyWorkOrders();
       await fetchMyReports();
       toast.success("开工报工成功");
@@ -242,7 +242,7 @@ export default function WorkerWorkstation() {
 
     const errors = validateReportData('PROGRESS', progressData, selectedOrder);
     if (errors.length > 0) {
-      errors.forEach(error => toast.error(error));
+      errors.forEach((error) => toast.error(error));
       return;
     }
 
@@ -252,16 +252,16 @@ export default function WorkerWorkstation() {
         work_order_id: selectedOrder.id,
         progress_percent: progressData.progress_percent,
         progress_note: progressData.progress_note,
-        current_issues: progressData.current_issues,
+        current_issues: progressData.current_issues
       });
-      
+
       setShowProgressDialog(false);
       setProgressData({
         progress_percent: 0,
         progress_note: "",
-        current_issues: "",
+        current_issues: ""
       });
-      
+
       await fetchMyWorkOrders();
       await fetchMyReports();
       toast.success("进度报工成功");
@@ -279,7 +279,7 @@ export default function WorkerWorkstation() {
 
     const errors = validateReportData('COMPLETE', completeData, selectedOrder);
     if (errors.length > 0) {
-      errors.forEach(error => toast.error(error));
+      errors.forEach((error) => toast.error(error));
       return;
     }
 
@@ -300,19 +300,19 @@ export default function WorkerWorkstation() {
         qualified_qty: completeData.qualified_qty,
         defect_qty: defectQty,
         work_hours: workHours,
-        report_note: completeData.report_note || "",
+        report_note: completeData.report_note || ""
       });
-      
+
       setShowCompleteDialog(false);
       setCompleteData({
         completed_qty: 0,
         qualified_qty: 0,
         defect_qty: 0,
         work_hours: 0,
-        report_note: "",
+        report_note: ""
       });
       setPhotos([]);
-      
+
       await fetchMyWorkOrders();
       await fetchMyReports();
       toast.success("完工报工成功");
@@ -336,19 +336,19 @@ export default function WorkerWorkstation() {
         ...prev,
         completed_qty: qty,
         qualified_qty: qty, // 默认全部合格
-        defect_qty: 0,
+        defect_qty: 0
       }));
       // 同时更新进度
       setProgressData((prev) => ({
         ...prev,
-        progress_percent: progress,
+        progress_percent: progress
       }));
     } else if (type === "qualified") {
       setCompleteData((prev) => ({
         ...prev,
         qualified_qty: value === "all" ? prev.completed_qty : value,
         defect_qty:
-          prev.completed_qty - (value === "all" ? prev.completed_qty : value),
+        prev.completed_qty - (value === "all" ? prev.completed_qty : value)
       }));
     }
   };
@@ -356,22 +356,22 @@ export default function WorkerWorkstation() {
   // 照片处理
   const handlePhotoUpload = (e) => {
     const files = Array.from(e.target.files);
-    const newPhotos = files.map(file => ({
+    const newPhotos = files.map((file) => ({
       file,
       url: URL.createObjectURL(file),
-      name: file.name,
+      name: file.name
     }));
-    setPhotos(prev => [...prev, ...newPhotos]);
+    setPhotos((prev) => [...prev, ...newPhotos]);
   };
 
   const removePhoto = (index) => {
-    setPhotos(prev => prev.filter((_, i) => i !== index));
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
   };
 
   // 排序处理
-  const handleSort = (field) => {
+  const _handleSort = (field) => {
     if (sortField === field) {
-      setSortDirection(prev => prev === "asc" ? "desc" : "asc");
+      setSortDirection((prev) => prev === "asc" ? "desc" : "asc");
     } else {
       setSortField(field);
       setSortDirection("asc");
@@ -384,15 +384,15 @@ export default function WorkerWorkstation() {
 
     // 状态筛选
     if (filterStatus !== "all") {
-      filtered = filtered.filter(order => order.status === filterStatus);
+      filtered = filtered.filter((order) => order.status === filterStatus);
     }
 
     // 搜索筛选
     if (searchTerm) {
-      filtered = filtered.filter(order => 
-        order.order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.product_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.project_name?.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter((order) =>
+      order.order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.product_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.project_name?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -401,7 +401,7 @@ export default function WorkerWorkstation() {
 
   // 快速操作处理
   const handleQuickAction = (action) => {
-    const order = myWorkOrders.find(o => o.id === action.orderId);
+    const order = myWorkOrders.find((o) => o.id === action.orderId);
     if (!order) return;
 
     setSelectedOrder(order);
@@ -411,17 +411,17 @@ export default function WorkerWorkstation() {
         setShowStartDialog(true);
         break;
       case 'PROGRESS':
-        setProgressData(prev => ({
+        setProgressData((prev) => ({
           ...prev,
-          progress_percent: calculateProgress(order.completed_qty || 0, order.plan_qty || 0),
+          progress_percent: calculateProgress(order.completed_qty || 0, order.plan_qty || 0)
         }));
         setShowProgressDialog(true);
         break;
       case 'COMPLETE':
-        setCompleteData(prev => ({
+        setCompleteData((prev) => ({
           ...prev,
           completed_qty: order.plan_qty || 0,
-          qualified_qty: order.plan_qty || 0,
+          qualified_qty: order.plan_qty || 0
         }));
         setShowCompleteDialog(true);
         break;
@@ -430,13 +430,13 @@ export default function WorkerWorkstation() {
 
   // 计算工人当前绩效（模拟数据）
   const currentPerformance = useMemo(() => {
-    const todayReports = myReports.filter(report => {
+    const todayReports = myReports.filter((report) => {
       const reportDate = new Date(report.created_time);
       const today = new Date();
       return reportDate.toDateString() === today.toDateString();
     });
 
-    const completedReports = todayReports.filter(r => r.report_type === 'COMPLETE');
+    const completedReports = todayReports.filter((r) => r.report_type === 'COMPLETE');
     const totalCompleted = completedReports.reduce((sum, r) => sum + (r.completed_qty || 0), 0);
     const totalQualified = completedReports.reduce((sum, r) => sum + (r.qualified_qty || 0), 0);
     const totalHours = todayReports.reduce((sum, r) => sum + (r.work_hours || 0), 0);
@@ -444,7 +444,7 @@ export default function WorkerWorkstation() {
     return {
       efficiency: totalHours > 0 ? Math.min(8 / totalHours, 1.2) : 0,
       quality: totalCompleted > 0 ? totalQualified / totalCompleted : 0,
-      timeliness: myWorkOrders.filter(o => o.status === 'COMPLETED').length / Math.max(myWorkOrders.length, 1),
+      timeliness: myWorkOrders.filter((o) => o.status === 'COMPLETED').length / Math.max(myWorkOrders.length, 1),
       attendance: 1, // 假设全勤
       skill_improvement: 0.8 // 模拟值
     };
@@ -462,20 +462,20 @@ export default function WorkerWorkstation() {
       <div className="flex items-center justify-center min-h-screen">
         <RefreshCw className="h-8 w-8 animate-spin text-blue-500" />
         <span className="ml-2 text-gray-600">加载中...</span>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
     <div className="space-y-6">
-      <PageHeader 
-        title="工人工作站" 
+      <PageHeader
+        title="工人工作站"
         subtitle="管理工单和报工记录"
         breadcrumbs={[
-          { label: "生产管理", href: "/production" },
-          { label: "工人工作站" }
-        ]}
-      />
+        { label: "生产管理", href: "/production" },
+        { label: "工人工作站" }]
+        } />
+
 
       {/* 工作概览 */}
       <WorkerWorkOverview
@@ -483,8 +483,8 @@ export default function WorkerWorkstation() {
         workOrders={myWorkOrders}
         reports={myReports}
         performance={currentPerformance}
-        onQuickAction={handleQuickAction}
-      />
+        onQuickAction={handleQuickAction} />
+
 
       {/* 主要功能标签页 */}
       <Tabs defaultValue="orders" className="space-y-4">
@@ -507,19 +507,19 @@ export default function WorkerWorkstation() {
                     placeholder="搜索工单..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-64"
-                  />
+                    className="w-64" />
+
                   <Select value={filterStatus} onValueChange={setFilterStatus}>
                     <SelectTrigger className="w-32">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">全部状态</SelectItem>
-                      {Object.entries(WORK_ORDER_STATUS).map(([key, config]) => (
-                        <SelectItem key={key} value={key}>
+                      {Object.entries(WORK_ORDER_STATUS).map(([key, config]) =>
+                      <SelectItem key={key} value={key}>
                           {config.label}
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -567,29 +567,29 @@ export default function WorkerWorkstation() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
-                            {availableActions.map((action, index) => (
-                              <Button
-                                key={index}
-                                size="sm"
-                                variant="outline"
-                                className={`${action.color} text-white hover:opacity-90`}
-                                onClick={() => handleQuickAction(action)}
-                              >
+                            {availableActions.map((action, index) =>
+                            <Button
+                              key={index}
+                              size="sm"
+                              variant="outline"
+                              className={`${action.color} text-white hover:opacity-90`}
+                              onClick={() => handleQuickAction(action)}>
+
                                 <action.icon className="h-4 w-4" />
                               </Button>
-                            ))}
+                            )}
                           </div>
                         </TableCell>
-                      </TableRow>
-                    );
+                      </TableRow>);
+
                   })}
                 </TableBody>
               </Table>
-              {filteredWorkOrders.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
+              {filteredWorkOrders.length === 0 &&
+              <div className="text-center py-8 text-gray-500">
                   暂无工单数据
                 </div>
-              )}
+              }
             </CardContent>
           </Card>
         </TabsContent>
@@ -635,16 +635,16 @@ export default function WorkerWorkstation() {
                           </div>
                         </TableCell>
                         <TableCell>{formatWorkHours(report.work_hours)}</TableCell>
-                      </TableRow>
-                    );
+                      </TableRow>);
+
                   })}
                 </TableBody>
               </Table>
-              {myReports.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
+              {myReports.length === 0 &&
+              <div className="text-center py-8 text-gray-500">
                   暂无报工记录
                 </div>
-              )}
+              }
             </CardContent>
           </Card>
         </TabsContent>
@@ -657,36 +657,36 @@ export default function WorkerWorkstation() {
             <DialogTitle>开工报工</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {selectedOrder && (
-              <div className="text-sm text-gray-600">
+            {selectedOrder &&
+            <div className="text-sm text-gray-600">
                 工单号：{selectedOrder.order_number}
               </div>
-            )}
+            }
             <div>
               <label className="text-sm font-medium">开工说明</label>
               <textarea
                 className="w-full mt-1 p-2 border rounded-md"
                 rows={3}
                 value={startData.start_note}
-                onChange={(e) => setStartData(prev => ({ ...prev, start_note: e.target.value }))}
-                placeholder="请输入开工说明..."
-              />
+                onChange={(e) => setStartData((prev) => ({ ...prev, start_note: e.target.value }))}
+                placeholder="请输入开工说明..." />
+
             </div>
             <div className="flex items-center gap-4">
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   checked={startData.equipment_check}
-                  onChange={(e) => setStartData(prev => ({ ...prev, equipment_check: e.target.checked }))}
-                />
+                  onChange={(e) => setStartData((prev) => ({ ...prev, equipment_check: e.target.checked }))} />
+
                 <span className="text-sm">设备检查完成</span>
               </label>
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   checked={startData.material_check}
-                  onChange={(e) => setStartData(prev => ({ ...prev, material_check: e.target.checked }))}
-                />
+                  onChange={(e) => setStartData((prev) => ({ ...prev, material_check: e.target.checked }))} />
+
                 <span className="text-sm">物料检查完成</span>
               </label>
             </div>
@@ -694,15 +694,15 @@ export default function WorkerWorkstation() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowStartDialog(false)}
-            >
+              onClick={() => setShowStartDialog(false)}>
+
               取消
             </Button>
             <Button
               className="bg-blue-500 hover:bg-blue-600"
               onClick={handleStartWork}
-              disabled={submitting}
-            >
+              disabled={submitting}>
+
               {submitting ? "提交中..." : "确认开工"}
             </Button>
           </DialogFooter>
@@ -716,11 +716,11 @@ export default function WorkerWorkstation() {
             <DialogTitle>进度报工</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {selectedOrder && (
-              <div className="text-sm text-gray-600">
+            {selectedOrder &&
+            <div className="text-sm text-gray-600">
                 工单号：{selectedOrder.order_number}
               </div>
-            )}
+            }
             <div>
               <label className="text-sm font-medium">进度百分比</label>
               <div className="flex items-center gap-2 mt-1">
@@ -729,9 +729,9 @@ export default function WorkerWorkstation() {
                   min="0"
                   max="100"
                   value={progressData.progress_percent}
-                  onChange={(e) => setProgressData(prev => ({ ...prev, progress_percent: parseInt(e.target.value) || 0 }))}
-                  className="w-20 p-2 border rounded-md"
-                />
+                  onChange={(e) => setProgressData((prev) => ({ ...prev, progress_percent: parseInt(e.target.value) || 0 }))}
+                  className="w-20 p-2 border rounded-md" />
+
                 <span>%</span>
               </div>
             </div>
@@ -741,9 +741,9 @@ export default function WorkerWorkstation() {
                 className="w-full mt-1 p-2 border rounded-md"
                 rows={3}
                 value={progressData.progress_note}
-                onChange={(e) => setProgressData(prev => ({ ...prev, progress_note: e.target.value }))}
-                placeholder="请输入进度说明..."
-              />
+                onChange={(e) => setProgressData((prev) => ({ ...prev, progress_note: e.target.value }))}
+                placeholder="请输入进度说明..." />
+
             </div>
             <div>
               <label className="text-sm font-medium">当前问题</label>
@@ -751,23 +751,23 @@ export default function WorkerWorkstation() {
                 className="w-full mt-1 p-2 border rounded-md"
                 rows={2}
                 value={progressData.current_issues}
-                onChange={(e) => setProgressData(prev => ({ ...prev, current_issues: e.target.value }))}
-                placeholder="如有问题请在此说明..."
-              />
+                onChange={(e) => setProgressData((prev) => ({ ...prev, current_issues: e.target.value }))}
+                placeholder="如有问题请在此说明..." />
+
             </div>
           </div>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowProgressDialog(false)}
-            >
+              onClick={() => setShowProgressDialog(false)}>
+
               取消
             </Button>
             <Button
               className="bg-amber-500 hover:bg-amber-600"
               onClick={handleProgressReport}
-              disabled={submitting}
-            >
+              disabled={submitting}>
+
               {submitting ? "提交中..." : "确认报工"}
             </Button>
           </DialogFooter>
@@ -781,11 +781,11 @@ export default function WorkerWorkstation() {
             <DialogTitle>完工报工</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {selectedOrder && (
-              <div className="text-sm text-gray-600">
+            {selectedOrder &&
+            <div className="text-sm text-gray-600">
                 工单号：{selectedOrder.order_number} | 计划数量：{selectedOrder.plan_qty}
               </div>
-            )}
+            }
             
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -797,24 +797,24 @@ export default function WorkerWorkstation() {
                     max={selectedOrder?.plan_qty || 0}
                     value={completeData.completed_qty}
                     onChange={(e) => handleQuickQuantity("completed", parseInt(e.target.value) || 0)}
-                    className="w-24 p-2 border rounded-md"
-                  />
+                    className="w-24 p-2 border rounded-md" />
+
                   <div className="flex gap-1">
-                    {QUICK_QUANTITY_OPTIONS.COMMON.map((option, index) => (
-                      <Button
-                        key={index}
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleQuickQuantity("completed", option.value)}
-                      >
+                    {QUICK_QUANTITY_OPTIONS.COMMON.map((option, index) =>
+                    <Button
+                      key={index}
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleQuickQuantity("completed", option.value)}>
+
                         {option.label}
                       </Button>
-                    ))}
+                    )}
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleQuickQuantity("completed", "all")}
-                    >
+                      onClick={() => handleQuickQuantity("completed", "all")}>
+
                       全部
                     </Button>
                   </div>
@@ -829,9 +829,9 @@ export default function WorkerWorkstation() {
                     min="0"
                     max={completeData.completed_qty}
                     value={completeData.qualified_qty}
-                    onChange={(e) => setCompleteData(prev => ({ ...prev, qualified_qty: parseInt(e.target.value) || 0 }))}
-                    className="w-24 p-2 border rounded-md"
-                  />
+                    onChange={(e) => setCompleteData((prev) => ({ ...prev, qualified_qty: parseInt(e.target.value) || 0 }))}
+                    className="w-24 p-2 border rounded-md" />
+
                   <span className="text-sm text-gray-600">
                     不良：{completeData.completed_qty - completeData.qualified_qty}
                   </span>
@@ -847,9 +847,9 @@ export default function WorkerWorkstation() {
                   step="0.25"
                   min="0"
                   value={completeData.work_hours}
-                  onChange={(e) => setCompleteData(prev => ({ ...prev, work_hours: parseFloat(e.target.value) || 0 }))}
-                  className="w-24 p-2 border rounded-md"
-                />
+                  onChange={(e) => setCompleteData((prev) => ({ ...prev, work_hours: parseFloat(e.target.value) || 0 }))}
+                  className="w-24 p-2 border rounded-md" />
+
                 <span className="text-sm text-gray-600">小时</span>
               </div>
             </div>
@@ -860,9 +860,9 @@ export default function WorkerWorkstation() {
                 className="w-full mt-1 p-2 border rounded-md"
                 rows={3}
                 value={completeData.report_note}
-                onChange={(e) => setCompleteData(prev => ({ ...prev, report_note: e.target.value }))}
-                placeholder="请输入完工说明..."
-              />
+                onChange={(e) => setCompleteData((prev) => ({ ...prev, report_note: e.target.value }))}
+                placeholder="请输入完工说明..." />
+
             </div>
 
             <div>
@@ -874,56 +874,56 @@ export default function WorkerWorkstation() {
                   multiple
                   accept="image/*"
                   onChange={handlePhotoUpload}
-                  className="hidden"
-                />
+                  className="hidden" />
+
                 <Button
                   variant="outline"
-                  onClick={() => fileInputRef.current?.click()}
-                >
+                  onClick={() => fileInputRef.current?.click()}>
+
                   <Camera className="h-4 w-4 mr-2" />
                   选择照片
                 </Button>
               </div>
-              {photos.length > 0 && (
-                <div className="mt-2 grid grid-cols-4 gap-2">
-                  {photos.map((photo, index) => (
-                    <div key={index} className="relative">
+              {photos.length > 0 &&
+              <div className="mt-2 grid grid-cols-4 gap-2">
+                  {photos.map((photo, index) =>
+                <div key={index} className="relative">
                       <img
-                        src={photo.url}
-                        alt={photo.name}
-                        className="w-full h-20 object-cover rounded border"
-                      />
+                    src={photo.url}
+                    alt={photo.name}
+                    className="w-full h-20 object-cover rounded border" />
+
                       <Button
-                        size="sm"
-                        variant="destructive"
-                        className="absolute -top-2 -right-2 h-6 w-6 p-0"
-                        onClick={() => removePhoto(index)}
-                      >
+                    size="sm"
+                    variant="destructive"
+                    className="absolute -top-2 -right-2 h-6 w-6 p-0"
+                    onClick={() => removePhoto(index)}>
+
                         <X className="h-3 w-3" />
                       </Button>
                     </div>
-                  ))}
+                )}
                 </div>
-              )}
+              }
             </div>
           </div>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowCompleteDialog(false)}
-            >
+              onClick={() => setShowCompleteDialog(false)}>
+
               取消
             </Button>
             <Button
               className="bg-emerald-500 hover:bg-emerald-600"
               onClick={handleCompleteWork}
-              disabled={submitting}
-            >
+              disabled={submitting}>
+
               {submitting ? "提交中..." : "确认完工"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }

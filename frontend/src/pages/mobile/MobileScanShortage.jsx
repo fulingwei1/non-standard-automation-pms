@@ -2,7 +2,7 @@
  * Mobile Scan Shortage - 移动端扫码上报缺料
  * 功能：扫码工单，选择物料，上报缺料
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect as _useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -10,13 +10,13 @@ import {
   Scan,
   Package,
   AlertCircle,
-  Camera,
-} from "lucide-react";
+  Camera } from
+"lucide-react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Card, CardContent } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
-import { cn } from "../../lib/utils";
+import { cn as _cn } from "../../lib/utils";
 import { productionApi } from "../../services/api";
 
 export default function MobileScanShortage() {
@@ -37,7 +37,7 @@ export default function MobileScanShortage() {
       setError("");
       const res = await productionApi.workOrders.list({
         search: scanInput,
-        page_size: 10,
+        page_size: 10
       });
       const orders = res.data?.items || res.data || [];
       const order = orders.find((o) => o.work_order_no === scanInput);
@@ -53,7 +53,7 @@ export default function MobileScanShortage() {
     } catch (error) {
       console.error("Failed to scan work order:", error);
       setError(
-        "查找工单失败: " + (error.response?.data?.detail || error.message),
+        "查找工单失败: " + (error.response?.data?.detail || error.message)
       );
     } finally {
       setLoading(false);
@@ -70,8 +70,8 @@ export default function MobileScanShortage() {
               variant="ghost"
               size="sm"
               onClick={() => navigate(-1)}
-              className="p-2"
-            >
+              className="p-2">
+
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <h1 className="text-lg font-semibold">扫码上报缺料</h1>
@@ -104,13 +104,13 @@ export default function MobileScanShortage() {
                     }}
                     placeholder="扫描或输入工单号"
                     className="flex-1 text-lg"
-                    autoFocus
-                  />
+                    autoFocus />
+
                   <Button
                     onClick={handleScan}
                     disabled={loading}
-                    className="px-6"
-                  >
+                    className="px-6">
+
                     <Scan className="w-5 h-5" />
                   </Button>
                 </div>
@@ -121,8 +121,8 @@ export default function MobileScanShortage() {
                   onClick={() => {
                     // TODO: 打开相机扫码
                     alert("扫码功能需要调用相机API");
-                  }}
-                >
+                  }}>
+
                   <Camera className="w-4 h-4 mr-2" />
                   打开相机扫码
                 </Button>
@@ -132,18 +132,18 @@ export default function MobileScanShortage() {
         </Card>
 
         {/* 错误提示 */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+        {error &&
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <div className="text-sm font-medium text-red-800">{error}</div>
             </div>
           </div>
-        )}
+        }
 
         {/* 工单信息预览 */}
-        {workOrder && (
-          <Card>
+        {workOrder &&
+        <Card>
             <CardContent className="pt-6">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -171,7 +171,7 @@ export default function MobileScanShortage() {
               </div>
             </CardContent>
           </Card>
-        )}
+        }
 
         {/* 快捷入口 */}
         <Card>
@@ -181,16 +181,16 @@ export default function MobileScanShortage() {
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                onClick={() => navigate("/mobile/shortage-report")}
-              >
+                onClick={() => navigate("/mobile/shortage-report")}>
+
                 <Package className="w-4 h-4 mr-2" />
                 直接上报缺料（不扫码）
               </Button>
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                onClick={() => navigate("/mobile/my-shortage-reports")}
-              >
+                onClick={() => navigate("/mobile/my-shortage-reports")}>
+
                 <Package className="w-4 h-4 mr-2" />
                 我的上报记录
               </Button>
@@ -198,6 +198,6 @@ export default function MobileScanShortage() {
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>);
+
 }

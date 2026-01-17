@@ -3,8 +3,8 @@ import {
   BarChart3,
   TrendingUp,
   PieChart as PieChartIcon,
-  Calendar,
-} from "lucide-react";
+  Calendar } from
+"lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
 /**
@@ -17,14 +17,14 @@ export function BarChart({
   data,
   width = 400,
   height = 200,
-  color = "#3b82f6",
+  color = "#3b82f6"
 }) {
   if (!data || data.length === 0) {
     return (
       <div className="flex items-center justify-center h-full text-slate-400">
         暂无数据
-      </div>
-    );
+      </div>);
+
   }
 
   const maxValue = Math.max(...data.map((d) => d.value));
@@ -46,18 +46,18 @@ export function BarChart({
               y2={y}
               stroke="#334155"
               strokeWidth={1}
-              strokeDasharray="2,2"
-            />
+              strokeDasharray="2,2" />
+
             <text
               x={25}
               y={y + 4}
               textAnchor="end"
-              className="text-xs fill-slate-400"
-            >
+              className="text-xs fill-slate-400">
+
               {value}
             </text>
-          </g>
-        );
+          </g>);
+
       })}
 
       {/* 柱状图 */}
@@ -75,29 +75,29 @@ export function BarChart({
               height={barHeight}
               fill={color}
               rx={4}
-              className="hover:opacity-80 transition-opacity"
-            />
+              className="hover:opacity-80 transition-opacity" />
+
             <text
               x={x + barWidth / 2}
               y={height - 10}
               textAnchor="middle"
-              className="text-xs fill-slate-400"
-            >
+              className="text-xs fill-slate-400">
+
               {item.label}
             </text>
             <text
               x={x + barWidth / 2}
               y={y - 5}
               textAnchor="middle"
-              className="text-xs fill-slate-300 font-medium"
-            >
+              className="text-xs fill-slate-300 font-medium">
+
               {item.value.toFixed(1)}
             </text>
-          </g>
-        );
+          </g>);
+
       })}
-    </svg>
-  );
+    </svg>);
+
 }
 
 // 简单的折线图组件
@@ -105,14 +105,14 @@ export function LineChart({
   data,
   width = 400,
   height = 200,
-  color = "#10b981",
+  color = "#10b981"
 }) {
   if (!data || data.length === 0) {
     return (
       <div className="flex items-center justify-center h-full text-slate-400">
         暂无数据
-      </div>
-    );
+      </div>);
+
   }
 
   const maxValue = Math.max(...data.map((d) => d.value));
@@ -121,13 +121,13 @@ export function LineChart({
   const scale = (height - 60) / range;
   const stepX = (width - 60) / (data.length - 1 || 1);
 
-  const points = data
-    .map((item, index) => {
-      const x = 40 + index * stepX;
-      const y = height - 30 - (item.value - minValue) * scale;
-      return `${x},${y}`;
-    })
-    .join(" ");
+  const points = data.
+  map((item, index) => {
+    const x = 40 + index * stepX;
+    const y = height - 30 - (item.value - minValue) * scale;
+    return `${x},${y}`;
+  }).
+  join(" ");
 
   return (
     <svg width={width} height={height} className="overflow-visible">
@@ -144,18 +144,18 @@ export function LineChart({
               y2={y}
               stroke="#334155"
               strokeWidth={1}
-              strokeDasharray="2,2"
-            />
+              strokeDasharray="2,2" />
+
             <text
               x={25}
               y={y + 4}
               textAnchor="end"
-              className="text-xs fill-slate-400"
-            >
+              className="text-xs fill-slate-400">
+
               {value}
             </text>
-          </g>
-        );
+          </g>);
+
       })}
 
       {/* 折线 */}
@@ -164,8 +164,8 @@ export function LineChart({
         fill="none"
         stroke={color}
         strokeWidth={2}
-        className="drop-shadow-sm"
-      />
+        className="drop-shadow-sm" />
+
 
       {/* 数据点 */}
       {data.map((item, index) => {
@@ -178,21 +178,21 @@ export function LineChart({
               cy={y}
               r={4}
               fill={color}
-              className="hover:r-6 transition-all"
-            />
+              className="hover:r-6 transition-all" />
+
             <text
               x={x}
               y={height - 10}
               textAnchor="middle"
-              className="text-xs fill-slate-400"
-            >
+              className="text-xs fill-slate-400">
+
               {item.label}
             </text>
-          </g>
-        );
+          </g>);
+
       })}
-    </svg>
-  );
+    </svg>);
+
 }
 
 // 简单的饼图组件
@@ -201,19 +201,19 @@ export function PieChart({ data, width = 200, height = 200 }) {
     return (
       <div className="flex items-center justify-center h-full text-slate-400">
         暂无数据
-      </div>
-    );
+      </div>);
+
   }
 
   const total = data.reduce((sum, item) => sum + item.value, 0);
   const colors = [
-    "#3b82f6",
-    "#10b981",
-    "#f59e0b",
-    "#ef4444",
-    "#8b5cf6",
-    "#ec4899",
-  ];
+  "#3b82f6",
+  "#10b981",
+  "#f59e0b",
+  "#ef4444",
+  "#8b5cf6",
+  "#ec4899"];
+
 
   let currentAngle = -90;
   const radius = Math.min(width, height) / 2 - 20;
@@ -229,8 +229,8 @@ export function PieChart({ data, width = 200, height = 200 }) {
           const startAngle = currentAngle;
           const endAngle = currentAngle + angle;
 
-          const startAngleRad = (startAngle * Math.PI) / 180;
-          const endAngleRad = (endAngle * Math.PI) / 180;
+          const startAngleRad = startAngle * Math.PI / 180;
+          const endAngleRad = endAngle * Math.PI / 180;
 
           const x1 = centerX + radius * Math.cos(startAngleRad);
           const y1 = centerY + radius * Math.sin(startAngleRad);
@@ -240,11 +240,11 @@ export function PieChart({ data, width = 200, height = 200 }) {
           const largeArcFlag = angle > 180 ? 1 : 0;
 
           const pathData = [
-            `M ${centerX} ${centerY}`,
-            `L ${x1} ${y1}`,
-            `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
-            "Z",
-          ].join(" ");
+          `M ${centerX} ${centerY}`,
+          `L ${x1} ${y1}`,
+          `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+          "Z"].
+          join(" ");
 
           currentAngle = endAngle;
 
@@ -253,10 +253,10 @@ export function PieChart({ data, width = 200, height = 200 }) {
               <path
                 d={pathData}
                 fill={colors[index % colors.length]}
-                className="hover:opacity-80 transition-opacity cursor-pointer"
-              />
-            </g>
-          );
+                className="hover:opacity-80 transition-opacity cursor-pointer" />
+
+            </g>);
+
         })}
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
@@ -269,25 +269,25 @@ export function PieChart({ data, width = 200, height = 200 }) {
       </div>
       <div className="mt-4 space-y-2">
         {data.map((item, index) => {
-          const percentage = ((item.value / total) * 100).toFixed(1);
+          const percentage = (item.value / total * 100).toFixed(1);
           return (
             <div key={index} className="flex items-center gap-2 text-sm">
               <div
                 className="w-3 h-3 rounded"
                 style={{
-                  backgroundColor: colors[index % colors.length],
-                }}
-              />
+                  backgroundColor: colors[index % colors.length]
+                }} />
+
               <span className="text-slate-300">{item.label}</span>
               <span className="text-slate-400 ml-auto">
                 {item.value.toFixed(1)}h ({percentage}%)
               </span>
-            </div>
-          );
+            </div>);
+
         })}
       </div>
-    </div>
-  );
+    </div>);
+
 }
 
 // 工时趋势图卡片
@@ -296,7 +296,7 @@ export function TimesheetTrendChart({ data, title = "工时趋势" }) {
     if (!data || !Array.isArray(data)) return [];
     return data.map((item) => ({
       label: item.date || item.label || "",
-      value: parseFloat(item.hours || item.value || 0),
+      value: parseFloat(item.hours || item.value || 0)
     }));
   }, [data]);
 
@@ -313,8 +313,8 @@ export function TimesheetTrendChart({ data, title = "工时趋势" }) {
           <LineChart data={chartData} width={600} height={250} />
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 }
 
 // 部门对比图卡片
@@ -323,7 +323,7 @@ export function DepartmentComparisonChart({ data, title = "部门工时对比" }
     if (!data || !Array.isArray(data)) return [];
     return data.map((item) => ({
       label: item.department_name || item.label || "",
-      value: parseFloat(item.total_hours || item.value || 0),
+      value: parseFloat(item.total_hours || item.value || 0)
     }));
   }, [data]);
 
@@ -340,20 +340,20 @@ export function DepartmentComparisonChart({ data, title = "部门工时对比" }
           <BarChart data={chartData} width={600} height={250} color="#10b981" />
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 }
 
 // 项目工时分布图卡片
 export function ProjectDistributionChart({ data, title = "项目工时分布" }) {
   const chartData = useMemo(() => {
     if (!data || !Array.isArray(data)) return [];
-    return data
-      .slice(0, 6) // 只显示前6个项目
-      .map((item) => ({
-        label: item.project_name || item.label || "",
-        value: parseFloat(item.total_hours || item.value || 0),
-      }));
+    return data.
+    slice(0, 6) // 只显示前6个项目
+    .map((item) => ({
+      label: item.project_name || item.label || "",
+      value: parseFloat(item.total_hours || item.value || 0)
+    }));
   }, [data]);
 
   return (
@@ -369,12 +369,12 @@ export function ProjectDistributionChart({ data, title = "项目工时分布" })
           <PieChart data={chartData} width={300} height={300} />
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 }
 
 // 日历热力图（简化版）
-export function CalendarHeatmap({ data, title = "工时日历" }) {
+export function CalendarHeatmap({ data: _data, title = "工时日历" }) {
   // 这里实现一个简化的日历视图
   // 完整的热力图需要更复杂的实现
 
@@ -393,6 +393,6 @@ export function CalendarHeatmap({ data, title = "工时日历" }) {
           <span className="text-xs">将显示每日工时分布</span>
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 }

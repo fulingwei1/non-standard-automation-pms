@@ -17,15 +17,15 @@ import {
   getCustomerSourceConfig,
   getCustomerScoreConfig,
   getRiskLevelConfig,
-  formatCustomerType,
-  formatCustomerStatus,
-  formatCustomerIndustry,
-  formatCustomerSource,
-  formatCustomerScore,
-  formatRiskLevel,
+  formatCustomerType as _formatCustomerType,
+  formatCustomerStatus as _formatCustomerStatus,
+  formatCustomerIndustry as _formatCustomerIndustry,
+  formatCustomerSource as _formatCustomerSource,
+  formatCustomerScore as _formatCustomerScore,
+  formatRiskLevel as _formatRiskLevel,
   calculateCustomerValueScore,
-  DEFAULT_CUSTOMER_360_DATA,
-} from "./customer360Constants";
+  DEFAULT_CUSTOMER_360_DATA } from
+"./customer360Constants";
 
 /**
  * CustomerHeader - 客户头部信息组件
@@ -56,19 +56,19 @@ export function CustomerHeader({ customer, loading = false, onTabChange }) {
         </div>
 
         <div className="grid grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i}>
+          {[...Array(4)].map((_, i) =>
+          <Card key={i}>
               <CardHeader className="pb-2">
                 <div className="h-4 bg-slate-700 rounded w-20"></div>
               </CardHeader>
               <CardContent>
                 <div className="h-8 bg-slate-700 rounded"></div>
               </CardContent>
-            </Card>
-          ))}
+          </Card>
+          )}
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   // 使用默认数据或传入的客户数据
@@ -152,9 +152,9 @@ export function CustomerHeader({ customer, loading = false, onTabChange }) {
                 <div>
                   <div className="text-xs text-slate-500 mb-1">员工规模</div>
                   <div className="text-sm text-white">
-                    {customerData.business_info?.employee_count
-                      ? `${customerData.business_info.employee_count}人`
-                      : '未知'}
+                    {customerData.business_info?.employee_count ?
+                    `${customerData.business_info.employee_count}人` :
+                    '未知'}
                   </div>
                 </div>
               </div>
@@ -221,8 +221,8 @@ export function CustomerHeader({ customer, loading = false, onTabChange }) {
                 </div>
                 <Progress
                   value={customerData.statistics?.customer_score || 0}
-                  className="mt-2 h-1 bg-slate-700"
-                />
+                  className="mt-2 h-1 bg-slate-700" />
+
               </CardContent>
             </Card>
           </div>
@@ -239,20 +239,20 @@ export function CustomerHeader({ customer, loading = false, onTabChange }) {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-5 gap-3">
-                {valueScore.breakdown && Object.entries(valueScore.breakdown).map(([key, value]) => (
-                  <div key={key} className="text-center">
+                {valueScore.breakdown && Object.entries(valueScore.breakdown).map(([key, value]) =>
+                <div key={key} className="text-center">
                     <div className="text-xs text-slate-500 mb-1">
                       {key === 'revenue' ? '营收' :
-                       key === 'projects' ? '项目' :
-                       key === 'contracts' ? '合同' :
-                       key === 'activity' ? '活跃度' : '满意度'}
+                    key === 'projects' ? '项目' :
+                    key === 'contracts' ? '合同' :
+                    key === 'activity' ? '活跃度' : '满意度'}
                     </div>
                     <div className="text-sm font-semibold text-white">
                       {value}
                     </div>
                     <Progress value={value} className="mt-1 h-1 bg-slate-700" />
-                  </div>
-                ))}
+                </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -318,10 +318,10 @@ export function CustomerHeader({ customer, loading = false, onTabChange }) {
                 {/* 最新动态 */}
                 <div>
                   <div className="text-xs text-slate-500 mb-2">最新动态</div>
-                  {customerData.recent_activities && customerData.recent_activities.length > 0 ? (
-                    <div className="space-y-2 max-h-20 overflow-y-auto">
-                      {customerData.recentActivities.slice(0, 3).map((activity, index) => (
-                        <div key={index} className="text-xs text-slate-300">
+                  {customerData.recent_activities && customerData.recent_activities.length > 0 ?
+                  <div className="space-y-2 max-h-20 overflow-y-auto">
+                      {customerData.recentActivities.slice(0, 3).map((activity, index) =>
+                    <div key={index} className="text-xs text-slate-300">
                           <div className="flex items-start gap-2">
                             <span className="text-slate-500">•</span>
                             <span className="flex-1">{activity.description}</span>
@@ -329,12 +329,12 @@ export function CustomerHeader({ customer, loading = false, onTabChange }) {
                               {formatDate(activity.date)}
                             </span>
                           </div>
-                        </div>
-                      ))}
                     </div>
-                  ) : (
-                    <div className="text-xs text-slate-500">暂无动态记录</div>
-                  )}
+                    )}
+                  </div> :
+
+                  <div className="text-xs text-slate-500">暂无动态记录</div>
+                  }
                 </div>
               </CardContent>
             </Card>
@@ -349,25 +349,25 @@ export function CustomerHeader({ customer, loading = false, onTabChange }) {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            {customer360TabConfigs.map((tab) => (
-              <button
-                key={tab.value}
-                onClick={() => onTabChange && onTabChange(tab.value)}
-                className={cn(
-                  "px-4 py-2 rounded-lg text-sm font-medium transition-all",
-                  "hover:bg-slate-700/50 border border-slate-600",
-                  "flex items-center gap-2"
-                )}
-              >
+            {customer360TabConfigs.map((tab) =>
+            <button
+              key={tab.value}
+              onClick={() => onTabChange && onTabChange(tab.value)}
+              className={cn(
+                "px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                "hover:bg-slate-700/50 border border-slate-600",
+                "flex items-center gap-2"
+              )}>
+
                 <span>{tab.icon}</span>
                 <span>{tab.label}</span>
-              </button>
-            ))}
+            </button>
+            )}
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>);
+
 }
 
 /**
@@ -403,8 +403,8 @@ export function CustomerSummaryStats({ statistics }) {
           {stats.next_contact_date ? formatDate(stats.next_contact_date) : '未计划'}
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }
 
 export default CustomerHeader;

@@ -9,8 +9,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronDown, ChevronRight, MessageSquare, Phone,
   Mail, Calendar, Clock, AlertCircle, CheckCircle,
-  EllipsisVertical, Send, Copy, Download, MoreHorizontal
-} from "lucide-react";
+  EllipsisVertical, Send, Copy, Download, MoreHorizontal } from
+"lucide-react";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -18,15 +18,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
-} from "../ui/popover";
+  PopoverTrigger } from
+"../ui/popover";
 import { Edit, Delete } from "lucide-react";
 import { cn } from "../../lib/utils";
 import {
-  statusConfigs,
-  typeConfigs,
-  priorityConfigs,
-  channelConfigs,
+  statusConfigs as _statusConfigs,
+  typeConfigs as _typeConfigs,
+  priorityConfigs as _priorityConfigs,
+  channelConfigs as _channelConfigs,
   getStatusConfig,
   getTypeConfig,
   getPriorityConfig,
@@ -34,8 +34,8 @@ import {
   formatStatus,
   formatType,
   formatPriority,
-  formatChannel,
-} from "./communicationConstants";
+  formatChannel } from
+"./communicationConstants";
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -64,8 +64,8 @@ const CommunicationDetailCard = ({ communication }) => {
       variants={fadeIn}
       initial="hidden"
       animate="visible"
-      className="space-y-4"
-    >
+      className="space-y-4">
+
       {/* 基本信息卡片 */}
       <Card className="border-l-4" style={{ borderLeftColor: config.color.replace('bg-', '#').replace('-500', '') }}>
         <CardHeader className="pb-3">
@@ -82,8 +82,8 @@ const CommunicationDetailCard = ({ communication }) => {
                   {communication.title}
                   <Badge
                     variant="secondary"
-                    className={cn(typeConfig.color, typeConfig.textColor || "text-white")}
-                  >
+                    className={cn(typeConfig.color, typeConfig.textColor || "text-white")}>
+
                     {typeConfig.icon} {formatType(communication.communication_type)}
                   </Badge>
                 </CardTitle>
@@ -104,8 +104,8 @@ const CommunicationDetailCard = ({ communication }) => {
                 config.color.replace('bg-', 'border-'),
                 config.color.replace('bg-', 'text-'),
                 "border-2"
-              )}
-            >
+              )}>
+
               {formatStatus(communication.status)}
             </Badge>
           </div>
@@ -132,40 +132,40 @@ const CommunicationDetailCard = ({ communication }) => {
                 {priorityConfig.icon}
                 <Badge
                   variant="secondary"
-                  className={cn(priorityConfig.color, priorityConfig.textColor || "text-white")}
-                >
+                  className={cn(priorityConfig.color, priorityConfig.textColor || "text-white")}>
+
                   {formatPriority(communication.priority)}
                 </Badge>
               </div>
             </div>
           </div>
 
-          {communication.content && (
-            <div className="mb-4">
+          {communication.content &&
+          <div className="mb-4">
               <div className="text-sm text-slate-500 mb-1">沟通内容</div>
               <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded text-sm whitespace-pre-wrap">
                 {communication.content}
               </div>
-            </div>
-          )}
+          </div>
+          }
         </CardContent>
       </Card>
 
       {/* 沟通记录时间线 */}
-      {communication.communication_records && communication.communication_records.length > 0 && (
-        <Card>
+      {communication.communication_records && communication.communication_records.length > 0 &&
+      <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base">沟通记录</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {communication.communication_records.map((record, index) => (
-                <div key={index} className="flex gap-3">
+              {communication.communication_records.map((record, index) =>
+            <div key={index} className="flex gap-3">
                   <div className="flex flex-col items-center">
                     <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    {index < communication.communication_records.length - 1 && (
-                      <div className="w-0.5 h-16 bg-slate-200 dark:bg-slate-700 mt-2"></div>
-                    )}
+                    {index < communication.communication_records.length - 1 &&
+                <div className="w-0.5 h-16 bg-slate-200 dark:bg-slate-700 mt-2"></div>
+                }
                   </div>
                   <div className="flex-1 pb-4">
                     <div className="flex items-start justify-between">
@@ -175,33 +175,33 @@ const CommunicationDetailCard = ({ communication }) => {
                           {format(new Date(record.created_at), 'yyyy-MM-dd HH:mm', { locale: zhCN })}
                         </div>
                       </div>
-                      {record.result && (
-                        <div className="text-sm text-slate-500">结果: {record.result}</div>
-                      )}
+                      {record.result &&
+                  <div className="text-sm text-slate-500">结果: {record.result}</div>
+                  }
                     </div>
-                    {record.notes && (
-                      <div className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                    {record.notes &&
+                <div className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                         备注: {record.notes}
-                      </div>
-                    )}
-                  </div>
                 </div>
-              ))}
+                }
+                  </div>
+            </div>
+            )}
             </div>
           </CardContent>
-        </Card>
-      )}
+      </Card>
+      }
 
       {/* 附件信息 */}
-      {communication.attachments && communication.attachments.length > 0 && (
-        <Card>
+      {communication.attachments && communication.attachments.length > 0 &&
+      <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base">附件 ({communication.attachments.length})</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {communication.attachments.map((attachment, index) => (
-                <div key={index} className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-800 rounded">
+              {communication.attachments.map((attachment, index) =>
+            <div key={index} className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-800 rounded">
                   <div className="flex items-center gap-2">
                     <FileText className="w-4 h-4 text-slate-500" />
                     <span className="text-sm">{attachment.filename}</span>
@@ -214,14 +214,14 @@ const CommunicationDetailCard = ({ communication }) => {
                       <Download className="w-3 h-3" />
                     </Button>
                   </div>
-                </div>
-              ))}
+            </div>
+            )}
             </div>
           </CardContent>
-        </Card>
-      )}
-    </motion.div>
-  );
+      </Card>
+      }
+    </motion.div>);
+
 };
 
 /**
@@ -229,13 +229,13 @@ const CommunicationDetailCard = ({ communication }) => {
  */
 export const CommunicationCard = ({
   communication,
-  onSelect,
+  onSelect: _onSelect,
   onEdit,
   onDelete,
   onResend,
   className,
   expanded = false,
-  onToggleExpand,
+  onToggleExpand
 }) => {
   const [showActions, setShowActions] = useState(false);
 
@@ -256,8 +256,8 @@ export const CommunicationCard = ({
       variants={fadeIn}
       initial="hidden"
       animate="visible"
-      className={cn("border rounded-lg overflow-hidden", className)}
-    >
+      className={cn("border rounded-lg overflow-hidden", className)}>
+
       {/* 卡片主体 */}
       <div
         className="cursor-pointer"
@@ -265,8 +265,8 @@ export const CommunicationCard = ({
         onKeyDown={handleKeyDown}
         tabIndex={0}
         role="button"
-        aria-expanded={expanded}
-      >
+        aria-expanded={expanded}>
+
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
@@ -282,8 +282,8 @@ export const CommunicationCard = ({
                     {communication.title}
                     <Badge
                       variant="secondary"
-                      className={cn(typeConfig.color, typeConfig.textColor || "text-white")}
-                    >
+                      className={cn(typeConfig.color, typeConfig.textColor || "text-white")}>
+
                       {typeConfig.icon} {formatType(communication.communication_type)}
                     </Badge>
                     <Badge
@@ -292,8 +292,8 @@ export const CommunicationCard = ({
                         config.color.replace('bg-', 'border-'),
                         config.color.replace('bg-', 'text-'),
                         "border-2"
-                      )}
-                    >
+                      )}>
+
                       {formatStatus(communication.status)}
                     </Badge>
                   </CardTitle>
@@ -313,11 +313,11 @@ export const CommunicationCard = ({
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                {onToggleExpand && (
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                {onToggleExpand &&
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                     {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                  </Button>
-                )}
+                </Button>
+                }
                 <Popover open={showActions} onOpenChange={setShowActions}>
                   <PopoverTrigger asChild>
                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -326,56 +326,56 @@ export const CommunicationCard = ({
                   </PopoverTrigger>
                   <PopoverContent align="end" className="w-48">
                     <div className="flex flex-col gap-1">
-                      {onEdit && (
-                        <Button
-                          variant="ghost"
-                          className="w-full justify-start"
-                          onClick={() => {
-                            onEdit(communication);
-                            setShowActions(false);
-                          }}
-                        >
+                      {onEdit &&
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start"
+                        onClick={() => {
+                          onEdit(communication);
+                          setShowActions(false);
+                        }}>
+
                           <Edit className="w-4 h-4 mr-2" />
                           编辑
-                        </Button>
-                      )}
-                      {onResend && communication.status === "FAILED" && (
-                        <Button
-                          variant="ghost"
-                          className="w-full justify-start"
-                          onClick={() => {
-                            onResend(communication);
-                            setShowActions(false);
-                          }}
-                        >
+                      </Button>
+                      }
+                      {onResend && communication.status === "FAILED" &&
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start"
+                        onClick={() => {
+                          onResend(communication);
+                          setShowActions(false);
+                        }}>
+
                           <Send className="w-4 h-4 mr-2" />
                           重新发送
-                        </Button>
-                      )}
+                      </Button>
+                      }
                       <Button
                         variant="ghost"
                         className="w-full justify-start"
                         onClick={() => {
                           navigator.clipboard.writeText(communication.content);
                           setShowActions(false);
-                        }}
-                      >
+                        }}>
+
                         <Copy className="w-4 h-4 mr-2" />
                         复制内容
                       </Button>
-                      {onDelete && (
-                        <Button
-                          variant="ghost"
-                          className="w-full justify-start text-red-500"
-                          onClick={() => {
-                            onDelete(communication);
-                            setShowActions(false);
-                          }}
-                        >
+                      {onDelete &&
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start text-red-500"
+                        onClick={() => {
+                          onDelete(communication);
+                          setShowActions(false);
+                        }}>
+
                           <Delete className="w-4 h-4 mr-2" />
                           删除
-                        </Button>
-                      )}
+                      </Button>
+                      }
                     </div>
                   </PopoverContent>
                 </Popover>
@@ -387,19 +387,19 @@ export const CommunicationCard = ({
 
       {/* 展开的详情内容 */}
       <AnimatePresence>
-        {expanded && (
-          <motion.div
-            variants={slideDown}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-          >
+        {expanded &&
+        <motion.div
+          variants={slideDown}
+          initial="hidden"
+          animate="visible"
+          exit="exit">
+
             <CommunicationDetailCard communication={communication} />
-          </motion.div>
-        )}
+        </motion.div>
+        }
       </AnimatePresence>
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
 export default CommunicationCard;

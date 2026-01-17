@@ -11,12 +11,12 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../ui/select";
+  SelectValue } from
+"../ui/select";
 import {
   Progress,
-  ProgressValueLabel,
-} from "../ui/progress";
+  ProgressValueLabel } from
+"../ui/progress";
 import {
   BarChart3,
   Users,
@@ -32,8 +32,8 @@ import {
   User,
   Award as AwardIcon,
   RefreshCw,
-  Filter
-} from "lucide-react";
+  Filter } from
+"lucide-react";
 
 export function TeamPerformance({
   teamData = [],
@@ -48,78 +48,78 @@ export function TeamPerformance({
 
   // 模拟团队成员数据
   const teamMembers = teamData.length > 0 ? teamData : [
-    {
-      id: 1,
-      name: "张明",
-      avatar: "https://via.placeholder.com/40",
-      role: "高级客服专员",
-      department: "技术支持部",
-      ticketsAssigned: 45,
-      ticketsResolved: 38,
-      resolutionRate: 84.4,
-      avgResponseTime: 15,
-      avgResolutionTime: 4.2,
-      satisfactionScore: 4.6,
-      escalatedTickets: 2,
-      attendanceRate: 98,
-      overtimeHours: 12,
-      skills: ["技术支持", "产品咨询", "投诉处理"]
-    },
-    {
-      id: 2,
-      name: "李华",
-      avatar: "https://via.placeholder.com/40",
-      role: "客服专员",
-      department: "客户服务部",
-      ticketsAssigned: 52,
-      ticketsResolved: 45,
-      resolutionRate: 86.5,
-      avgResponseTime: 12,
-      avgResolutionTime: 3.8,
-      satisfactionScore: 4.7,
-      escalatedTickets: 1,
-      attendanceRate: 100,
-      overtimeHours: 8,
-      skills: ["客户关怀", "账单咨询", "培训服务"]
-    },
-    {
-      id: 3,
-      name: "王芳",
-      avatar: "https://via.placeholder.com/40",
-      role: "资深客服专家",
-      department: "VIP服务部",
-      ticketsAssigned: 35,
-      ticketsResolved: 33,
-      resolutionRate: 94.3,
-      avgResponseTime: 8,
-      avgResolutionTime: 2.5,
-      satisfactionScore: 4.9,
-      escalatedTickets: 0,
-      attendanceRate: 99,
-      overtimeHours: 5,
-      skills: ["VIP客户", "复杂问题", "团队培训"]
-    },
-    {
-      id: 4,
-      name: "赵强",
-      avatar: "https://via.placeholder.com/40",
-      role: "客服专员",
-      department: "客户服务部",
-      ticketsAssigned: 48,
-      ticketsResolved: 40,
-      resolutionRate: 83.3,
-      avgResponseTime: 18,
-      avgResolutionTime: 5.1,
-      satisfactionScore: 4.3,
-      escalatedTickets: 3,
-      attendanceRate: 95,
-      overtimeHours: 15,
-      skills: ["新客户", "现场服务", "设备维护"]
-    }
-  ];
+  {
+    id: 1,
+    name: "张明",
+    avatar: "https://via.placeholder.com/40",
+    role: "高级客服专员",
+    department: "技术支持部",
+    ticketsAssigned: 45,
+    ticketsResolved: 38,
+    resolutionRate: 84.4,
+    avgResponseTime: 15,
+    avgResolutionTime: 4.2,
+    satisfactionScore: 4.6,
+    escalatedTickets: 2,
+    attendanceRate: 98,
+    overtimeHours: 12,
+    skills: ["技术支持", "产品咨询", "投诉处理"]
+  },
+  {
+    id: 2,
+    name: "李华",
+    avatar: "https://via.placeholder.com/40",
+    role: "客服专员",
+    department: "客户服务部",
+    ticketsAssigned: 52,
+    ticketsResolved: 45,
+    resolutionRate: 86.5,
+    avgResponseTime: 12,
+    avgResolutionTime: 3.8,
+    satisfactionScore: 4.7,
+    escalatedTickets: 1,
+    attendanceRate: 100,
+    overtimeHours: 8,
+    skills: ["客户关怀", "账单咨询", "培训服务"]
+  },
+  {
+    id: 3,
+    name: "王芳",
+    avatar: "https://via.placeholder.com/40",
+    role: "资深客服专家",
+    department: "VIP服务部",
+    ticketsAssigned: 35,
+    ticketsResolved: 33,
+    resolutionRate: 94.3,
+    avgResponseTime: 8,
+    avgResolutionTime: 2.5,
+    satisfactionScore: 4.9,
+    escalatedTickets: 0,
+    attendanceRate: 99,
+    overtimeHours: 5,
+    skills: ["VIP客户", "复杂问题", "团队培训"]
+  },
+  {
+    id: 4,
+    name: "赵强",
+    avatar: "https://via.placeholder.com/40",
+    role: "客服专员",
+    department: "客户服务部",
+    ticketsAssigned: 48,
+    ticketsResolved: 40,
+    resolutionRate: 83.3,
+    avgResponseTime: 18,
+    avgResolutionTime: 5.1,
+    satisfactionScore: 4.3,
+    escalatedTickets: 3,
+    attendanceRate: 95,
+    overtimeHours: 15,
+    skills: ["新客户", "现场服务", "设备维护"]
+  }];
+
 
   // 处理排序
-  const handleSort = (field) => {
+  const _handleSort = (field) => {
     if (sortBy === field) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
@@ -170,7 +170,7 @@ export function TeamPerformance({
   };
 
   // 获取趋势图标
-  const getTrendIcon = (current, previous) => {
+  const _getTrendIcon = (current, previous) => {
     if (current > previous) return <TrendingUp className="w-4 h-4 text-green-500" />;
     if (current < previous) return <TrendingDown className="w-4 h-4 text-red-500" />;
     return null;
@@ -287,8 +287,8 @@ export function TeamPerformance({
                 <div
                   key={member.id}
                   className="p-4 border rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
-                  onClick={() => onTeamMemberClick?.(member)}
-                >
+                  onClick={() => onTeamMemberClick?.(member)}>
+
                   <div className="flex items-center justify-between">
                     {/* 左侧成员信息 */}
                     <div className="flex items-center gap-4">
@@ -296,8 +296,8 @@ export function TeamPerformance({
                         <img
                           src={member.avatar}
                           alt={member.name}
-                          className="w-12 h-12 rounded-full object-cover"
-                        />
+                          className="w-12 h-12 rounded-full object-cover" />
+
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
@@ -315,14 +315,14 @@ export function TeamPerformance({
                           {member.department}
                         </p>
                         <div className="flex items-center gap-2 mt-1">
-                          {member.skills.map((skill, idx) => (
-                            <span
-                              key={idx}
-                              className="text-xs text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded"
-                            >
+                          {member.skills.map((skill, idx) =>
+                          <span
+                            key={idx}
+                            className="text-xs text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">
+
                               {skill}
-                            </span>
-                          ))}
+                          </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -338,8 +338,8 @@ export function TeamPerformance({
                         </div>
                         <Progress
                           value={member.resolutionRate}
-                          className="mt-1 h-1.5"
-                        />
+                          className="mt-1 h-1.5" />
+
                       </div>
 
                       <div className="text-center">
@@ -369,11 +369,11 @@ export function TeamPerformance({
 
                       <div className="text-center">
                         <div className="flex items-center justify-center gap-1">
-                          {member.escalatedTickets === 0 ? (
-                            <CheckCircle2 className="w-5 h-5 text-green-500" />
-                          ) : (
-                            <AlertTriangle className="w-5 h-5 text-orange-500" />
-                          )}
+                          {member.escalatedTickets === 0 ?
+                          <CheckCircle2 className="w-5 h-5 text-green-500" /> :
+
+                          <AlertTriangle className="w-5 h-5 text-orange-500" />
+                          }
                           <span className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                             {member.escalatedTickets}
                           </span>
@@ -403,12 +403,12 @@ export function TeamPerformance({
                       </Badge>
                     </div>
                   </div>
-                </div>
-              );
+                </div>);
+
             })}
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>);
+
 }

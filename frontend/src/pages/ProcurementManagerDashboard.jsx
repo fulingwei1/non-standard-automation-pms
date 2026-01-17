@@ -30,8 +30,8 @@ import {
   PieChart,
   Calendar,
   Award,
-  ClipboardList,
-} from "lucide-react";
+  ClipboardList } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -45,10 +45,10 @@ import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger,
-} from "../components/ui";
-import { cn, formatCurrency, formatDate } from "../lib/utils";
-import { purchaseApi, supplierApi, progressApi } from "../services/api";
+  TabsTrigger } from
+"../components/ui";
+import { cn, formatCurrency, formatDate as _formatDate } from "../lib/utils";
+import { purchaseApi, supplierApi, progressApi as _progressApi } from "../services/api";
 import { ApiIntegrationError } from "../components/ui";
 
 // Mock statistics - 已移除，使用真实API
@@ -151,7 +151,7 @@ import { ApiIntegrationError } from "../components/ui";
   },
 ] */
 
-/* const mockCostAnalysis = {
+const mockCostAnalysis = {
   monthlyTrend: [
     { month: '8月', amount: 2200000 },
     { month: '9月', amount: 2450000 },
@@ -171,10 +171,10 @@ import { ApiIntegrationError } from "../components/ui";
     { project: 'ICT测试设备', amount: 380000, percentage: 13.3 },
     { project: '视觉检测设备', amount: 320000, percentage: 11.2 },
   ],
-} */
+};
 
 // Mock alerts
-const getStatusColor = (status) => {
+const _getStatusColor = (status) => {
   const colors = {
     active: "bg-emerald-500",
     pending: "bg-amber-500",
@@ -182,12 +182,12 @@ const getStatusColor = (status) => {
     completed: "bg-slate-500",
     excellent: "bg-emerald-500",
     good: "bg-blue-500",
-    warning: "bg-amber-500",
+    warning: "bg-amber-500"
   };
   return colors[status] || "bg-slate-500";
 };
 
-const getStatusLabel = (status) => {
+const _getStatusLabel = (status) => {
   const labels = {
     active: "正常",
     pending: "待处理",
@@ -195,7 +195,7 @@ const getStatusLabel = (status) => {
     completed: "已完成",
     excellent: "优秀",
     good: "良好",
-    warning: "需关注",
+    warning: "需关注"
   };
   return labels[status] || status;
 };
@@ -204,16 +204,16 @@ const getPriorityColor = (priority) => {
   const colors = {
     high: "bg-red-500",
     medium: "bg-amber-500",
-    low: "bg-blue-500",
+    low: "bg-blue-500"
   };
   return colors[priority] || "bg-slate-500";
 };
 
-const getAlertLevelColor = (level) => {
+const _getAlertLevelColor = (level) => {
   const colors = {
     critical: "bg-red-500",
     warning: "bg-amber-500",
-    info: "bg-blue-500",
+    info: "bg-blue-500"
   };
   return colors[level] || "bg-slate-500";
 };
@@ -222,7 +222,7 @@ export default function ProcurementManagerDashboard() {
   const [selectedTab, setSelectedTab] = useState("overview");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [stats, setStats] = useState(null);
   const [pendingApprovals, setPendingApprovals] = useState([]);
@@ -236,35 +236,35 @@ export default function ProcurementManagerDashboard() {
 
       // Load purchase orders with different statuses
       const [pendingResponse, inTransitResponse, allOrdersResponse] =
-        await Promise.all([
-          purchaseApi.orders.list({
-            status: "SUBMITTED",
-            page: 1,
-            page_size: 100,
-          }),
-          purchaseApi.orders.list({
-            status: "CONFIRMED",
-            page: 1,
-            page_size: 100,
-          }),
-          purchaseApi.orders.list({ page: 1, page_size: 100 }),
-        ]);
+      await Promise.all([
+      purchaseApi.orders.list({
+        status: "SUBMITTED",
+        page: 1,
+        page_size: 100
+      }),
+      purchaseApi.orders.list({
+        status: "CONFIRMED",
+        page: 1,
+        page_size: 100
+      }),
+      purchaseApi.orders.list({ page: 1, page_size: 100 })]
+      );
 
       const pendingOrders =
-        pendingResponse.data?.items || pendingResponse.data || [];
+      pendingResponse.data?.items || pendingResponse.data || [];
       const inTransitOrders =
-        inTransitResponse.data?.items || inTransitResponse.data || [];
+      inTransitResponse.data?.items || inTransitResponse.data || [];
       const allOrders =
-        allOrdersResponse.data?.items || allOrdersResponse.data || [];
+      allOrdersResponse.data?.items || allOrdersResponse.data || [];
 
       // Load suppliers
       const suppliersResponse = await supplierApi.list({
         page: 1,
         page_size: 100,
-        is_active: true,
+        is_active: true
       });
       const suppliersData =
-        suppliersResponse.data?.items || suppliersResponse.data || [];
+      suppliersResponse.data?.items || suppliersResponse.data || [];
       setSuppliers(suppliersData.slice(0, 4));
 
       // Calculate monthly spending (current month)
@@ -276,8 +276,8 @@ export default function ProcurementManagerDashboard() {
       });
       const monthlySpending = monthlyOrders.reduce(
         (sum, order) =>
-          sum + parseFloat(order.total_amount || order.amount_with_tax || 0),
-        0,
+        sum + parseFloat(order.total_amount || order.amount_with_tax || 0),
+        0
       );
 
       // Transform pending approvals
@@ -290,16 +290,16 @@ export default function ProcurementManagerDashboard() {
         submitter: order.created_by_name || "N/A",
         submitTime: order.created_at || "",
         priority:
-          parseFloat(order.total_amount || 0) > 100000
-            ? "high"
-            : parseFloat(order.total_amount || 0) > 50000
-              ? "medium"
-              : "low",
-        daysPending: order.created_at
-          ? Math.floor(
-              (new Date() - new Date(order.created_at)) / (1000 * 60 * 60 * 24),
-            )
-          : 0,
+        parseFloat(order.total_amount || 0) > 100000 ?
+        "high" :
+        parseFloat(order.total_amount || 0) > 50000 ?
+        "medium" :
+        "low",
+        daysPending: order.created_at ?
+        Math.floor(
+          (new Date() - new Date(order.created_at)) / (1000 * 60 * 60 * 24)
+        ) :
+        0
       }));
       setPendingApprovals(approvalsData);
 
@@ -314,7 +314,7 @@ export default function ProcurementManagerDashboard() {
         monthlySpending,
         costSavings: 0, // Can be calculated from price comparisons
         teamSize: 0, // Can be loaded from user management
-        activeTeamMembers: 0,
+        activeTeamMembers: 0
       });
     } catch (err) {
       console.error("Failed to load procurement statistics:", err);
@@ -332,42 +332,42 @@ export default function ProcurementManagerDashboard() {
     loadStatistics();
   }, [loadStatistics]);
 
+  const filteredApprovals = useMemo(() => {
+    return pendingApprovals.filter((approval) => {
+      const matchesSearch =
+      !searchQuery ||
+      approval.orderNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      approval.supplier.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus =
+      filterStatus === "all" || approval.priority === filterStatus;
+      return matchesSearch && matchesStatus;
+    });
+  }, [pendingApprovals, searchQuery, filterStatus]);
+
   // Show error state
   if (error && !stats) {
     return (
       <div className="space-y-6">
         <PageHeader
           title="采购经理仪表板"
-          description="团队管理、供应商管理、采购审批、成本分析、绩效监控"
-        />
+          description="团队管理、供应商管理、采购审批、成本分析、绩效监控" />
+
         <ApiIntegrationError
           error={error}
           apiEndpoint="/api/v1/purchase/orders"
-          onRetry={loadStatistics}
-        />
-      </div>
-    );
-  }
+          onRetry={loadStatistics} />
 
-  const filteredApprovals = useMemo(() => {
-    return pendingApprovals.filter((approval) => {
-      const matchesSearch =
-        !searchQuery ||
-        approval.orderNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        approval.supplier.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesStatus =
-        filterStatus === "all" || approval.priority === filterStatus;
-      return matchesSearch && matchesStatus;
-    });
-  }, [searchQuery, filterStatus]);
+      </div>);
+
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
       <PageHeader
         title="采购管理"
         subtitle="采购部经理工作台"
-        icon={ShoppingCart}
-      />
+        icon={ShoppingCart} />
+
 
       <div className="container mx-auto px-4 py-6 space-y-6">
         {/* Statistics Cards */}
@@ -375,8 +375,8 @@ export default function ProcurementManagerDashboard() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
+            transition={{ delay: 0.1 }}>
+
             <Card className="bg-surface-50 border-white/10">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -401,8 +401,8 @@ export default function ProcurementManagerDashboard() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
+            transition={{ delay: 0.2 }}>
+
             <Card className="bg-surface-50 border-white/10">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -427,8 +427,8 @@ export default function ProcurementManagerDashboard() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
+            transition={{ delay: 0.3 }}>
+
             <Card className="bg-surface-50 border-white/10">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -453,8 +453,8 @@ export default function ProcurementManagerDashboard() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
+            transition={{ delay: 0.4 }}>
+
             <Card className="bg-surface-50 border-white/10">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -482,8 +482,8 @@ export default function ProcurementManagerDashboard() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-          >
+            transition={{ delay: 0.5 }}>
+
             <Card className="bg-surface-50 border-white/10">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-3">
@@ -500,8 +500,8 @@ export default function ProcurementManagerDashboard() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-          >
+            transition={{ delay: 0.6 }}>
+
             <Card className="bg-surface-50 border-white/10">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-3">
@@ -518,8 +518,8 @@ export default function ProcurementManagerDashboard() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-          >
+            transition={{ delay: 0.7 }}>
+
             <Card className="bg-surface-50 border-white/10">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -538,8 +538,8 @@ export default function ProcurementManagerDashboard() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-          >
+            transition={{ delay: 0.8 }}>
+
             <Card className="bg-surface-50 border-white/10">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -560,8 +560,8 @@ export default function ProcurementManagerDashboard() {
         <Tabs
           value={selectedTab}
           onValueChange={setSelectedTab}
-          className="space-y-6"
-        >
+          className="space-y-6">
+
           <TabsList className="bg-surface-50 border-white/10">
             <TabsTrigger value="overview">采购概览</TabsTrigger>
             <TabsTrigger value="approvals">订单审批</TabsTrigger>
@@ -588,27 +588,27 @@ export default function ProcurementManagerDashboard() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {filteredApprovals.slice(0, 4).map((approval, index) => (
-                    <motion.div
-                      key={approval.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="p-4 rounded-lg bg-surface-100 border border-white/5 hover:bg-white/[0.03] cursor-pointer transition-colors"
-                    >
+                  {filteredApprovals.slice(0, 4).map((approval, index) =>
+                  <motion.div
+                    key={approval.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="p-4 rounded-lg bg-surface-100 border border-white/5 hover:bg-white/[0.03] cursor-pointer transition-colors">
+
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-3">
                           <Badge
-                            className={cn(
-                              "text-xs",
-                              getPriorityColor(approval.priority),
-                            )}
-                          >
-                            {approval.priority === "high"
-                              ? "紧急"
-                              : approval.priority === "medium"
-                                ? "中等"
-                                : "普通"}
+                          className={cn(
+                            "text-xs",
+                            getPriorityColor(approval.priority)
+                          )}>
+
+                            {approval.priority === "high" ?
+                          "紧急" :
+                          approval.priority === "medium" ?
+                          "中等" :
+                          "普通"}
                           </Badge>
                           <span className="text-sm font-semibold text-white">
                             {approval.orderNo}
@@ -628,7 +628,7 @@ export default function ProcurementManagerDashboard() {
                         </span>
                       </div>
                     </motion.div>
-                  ))}
+                  )}
                 </CardContent>
               </Card>
 
@@ -650,12 +650,12 @@ export default function ProcurementManagerDashboard() {
                     </div>
                     <Progress
                       value={
-                        stats.teamSize > 0
-                          ? (stats.activeTeamMembers / stats.teamSize) * 100
-                          : 0
+                      stats.teamSize > 0 ?
+                      stats.activeTeamMembers / stats.teamSize * 100 :
+                      0
                       }
-                      className="h-2"
-                    />
+                      className="h-2" />
+
                   </div>
                   <div className="p-4 rounded-lg bg-surface-100 border border-white/5">
                     <div className="flex items-center justify-between mb-2">
@@ -731,14 +731,14 @@ export default function ProcurementManagerDashboard() {
                     placeholder="搜索订单号或供应商..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 w-64 bg-surface-100 border-white/10"
-                  />
+                    className="pl-10 w-64 bg-surface-100 border-white/10" />
+
                 </div>
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className="px-4 py-2 rounded-lg bg-surface-100 border border-white/10 text-white text-sm"
-                >
+                  className="px-4 py-2 rounded-lg bg-surface-100 border border-white/10 text-white text-sm">
+
                   <option value="all">全部优先级</option>
                   <option value="high">紧急</option>
                   <option value="medium">中等</option>
@@ -780,14 +780,14 @@ export default function ProcurementManagerDashboard() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/10">
-                      {filteredApprovals.map((approval, index) => (
-                        <motion.tr
-                          key={approval.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.05 }}
-                          className="hover:bg-white/[0.02]"
-                        >
+                      {filteredApprovals.map((approval, index) =>
+                      <motion.tr
+                        key={approval.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="hover:bg-white/[0.02]">
+
                           <td className="px-6 py-4 text-sm font-semibold text-white">
                             {approval.orderNo}
                           </td>
@@ -808,16 +808,16 @@ export default function ProcurementManagerDashboard() {
                           </td>
                           <td className="px-6 py-4">
                             <Badge
-                              className={cn(
-                                "text-xs",
-                                getPriorityColor(approval.priority),
-                              )}
-                            >
-                              {approval.priority === "high"
-                                ? "紧急"
-                                : approval.priority === "medium"
-                                  ? "中等"
-                                  : "普通"}
+                            className={cn(
+                              "text-xs",
+                              getPriorityColor(approval.priority)
+                            )}>
+
+                              {approval.priority === "high" ?
+                            "紧急" :
+                            approval.priority === "medium" ?
+                            "中等" :
+                            "普通"}
                             </Badge>
                           </td>
                           <td className="px-6 py-4">
@@ -826,23 +826,23 @@ export default function ProcurementManagerDashboard() {
                                 <Eye className="w-4 h-4" />
                               </Button>
                               <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-emerald-400"
-                              >
+                              variant="ghost"
+                              size="sm"
+                              className="text-emerald-400">
+
                                 <CheckCircle2 className="w-4 h-4" />
                               </Button>
                               <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-red-400"
-                              >
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-400">
+
                                 <XCircle className="w-4 h-4" />
                               </Button>
                             </div>
                           </td>
                         </motion.tr>
-                      ))}
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -885,14 +885,14 @@ export default function ProcurementManagerDashboard() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/10">
-                      {suppliers.map((supplier, index) => (
-                        <motion.tr
-                          key={supplier.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.05 }}
-                          className="hover:bg-white/[0.02]"
-                        >
+                      {suppliers.map((supplier, index) =>
+                      <motion.tr
+                        key={supplier.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="hover:bg-white/[0.02]">
+
                           <td className="px-6 py-4">
                             <div>
                               <p className="text-sm font-semibold text-white">
@@ -925,9 +925,9 @@ export default function ProcurementManagerDashboard() {
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-2">
                               <Progress
-                                value={supplier.onTimeRate}
-                                className="h-2 w-16"
-                              />
+                              value={supplier.onTimeRate}
+                              className="h-2 w-16" />
+
                               <span className="text-sm text-slate-400">
                                 {supplier.onTimeRate}%
                               </span>
@@ -936,9 +936,9 @@ export default function ProcurementManagerDashboard() {
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-2">
                               <Progress
-                                value={supplier.qualityRate}
-                                className="h-2 w-16"
-                              />
+                              value={supplier.qualityRate}
+                              className="h-2 w-16" />
+
                               <span className="text-sm text-slate-400">
                                 {supplier.qualityRate}%
                               </span>
@@ -955,7 +955,7 @@ export default function ProcurementManagerDashboard() {
                             </div>
                           </td>
                         </motion.tr>
-                      ))}
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -968,61 +968,61 @@ export default function ProcurementManagerDashboard() {
             <div className="grid grid-cols-1 gap-4">
               {/* 团队成员 - 需要从API获取数据 */}
               {/* {mockTeamMembers.slice(0, 4).map((member, index) => (
-                <motion.div
-                  key={member.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Card className="bg-surface-50 border-white/10">
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-4">
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
-                              <span className="text-lg font-bold text-white">{member.name[0]}</span>
+                  <motion.div
+                    key={member.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <Card className="bg-surface-50 border-white/10">
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+                                <span className="text-lg font-bold text-white">{member.name[0]}</span>
+                              </div>
+                              <div>
+                                <p className="text-lg font-semibold text-white">{member.name}</p>
+                                <p className="text-sm text-slate-400">{member.role}</p>
+                              </div>
+                              <Badge className={cn('text-xs', getStatusColor(member.performance))}>
+                                {getStatusLabel(member.performance)}
+                              </Badge>
                             </div>
-                            <div>
-                              <p className="text-lg font-semibold text-white">{member.name}</p>
-                              <p className="text-sm text-slate-400">{member.role}</p>
+                            <div className="grid grid-cols-4 gap-4">
+                              <div>
+                                <p className="text-sm text-slate-400 mb-1">本月订单</p>
+                                <p className="text-lg font-semibold text-white">{member.monthlyOrders}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-slate-400 mb-1">完成率</p>
+                                <p className="text-lg font-semibold text-white">{member.completionRate}%</p>
+                                <Progress value={member.completionRate} className="h-1.5 mt-1" />
+                              </div>
+                              <div>
+                                <p className="text-sm text-slate-400 mb-1">按期率</p>
+                                <p className="text-lg font-semibold text-white">{member.onTimeRate}%</p>
+                                <Progress value={member.onTimeRate} className="h-1.5 mt-1" />
+                              </div>
+                              <div>
+                                <p className="text-sm text-slate-400 mb-1">成本节省</p>
+                                <p className="text-lg font-semibold text-amber-400">
+                                  {formatCurrency(member.costSavings)}
+                                </p>
+                              </div>
                             </div>
-                            <Badge className={cn('text-xs', getStatusColor(member.performance))}>
-                              {getStatusLabel(member.performance)}
-                            </Badge>
                           </div>
-                          <div className="grid grid-cols-4 gap-4">
-                            <div>
-                              <p className="text-sm text-slate-400 mb-1">本月订单</p>
-                              <p className="text-lg font-semibold text-white">{member.monthlyOrders}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-slate-400 mb-1">完成率</p>
-                              <p className="text-lg font-semibold text-white">{member.completionRate}%</p>
-                              <Progress value={member.completionRate} className="h-1.5 mt-1" />
-                            </div>
-                            <div>
-                              <p className="text-sm text-slate-400 mb-1">按期率</p>
-                              <p className="text-lg font-semibold text-white">{member.onTimeRate}%</p>
-                              <Progress value={member.onTimeRate} className="h-1.5 mt-1" />
-                            </div>
-                            <div>
-                              <p className="text-sm text-slate-400 mb-1">成本节省</p>
-                              <p className="text-lg font-semibold text-amber-400">
-                                {formatCurrency(member.costSavings)}
-                              </p>
-                            </div>
+                          <div className="ml-6 flex items-center gap-2">
+                            <Button variant="ghost" size="sm">
+                              <Eye className="w-4 h-4" />
+                            </Button>
                           </div>
                         </div>
-                        <div className="ml-6 flex items-center gap-2">
-                          <Button variant="ghost" size="sm">
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))} */}
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                 ))} */}
               <div className="text-center py-8 text-slate-500">
                 <p>团队成员数据需要从API获取</p>
               </div>
@@ -1041,8 +1041,8 @@ export default function ProcurementManagerDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {mockCostAnalysis.monthlyTrend.map((item, index) => (
-                      <div key={index}>
+                    {mockCostAnalysis.monthlyTrend.map((item, index) =>
+                    <div key={index}>
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm text-slate-400">
                             {item.month}
@@ -1052,17 +1052,17 @@ export default function ProcurementManagerDashboard() {
                           </span>
                         </div>
                         <Progress
-                          value={
-                            (item.amount /
-                              mockCostAnalysis.monthlyTrend[
-                                mockCostAnalysis.monthlyTrend.length - 1
-                              ].amount) *
-                            100
-                          }
-                          className="h-2"
-                        />
+                        value={
+                        item.amount /
+                        mockCostAnalysis.monthlyTrend[
+                        mockCostAnalysis.monthlyTrend.length - 1].
+                        amount *
+                        100
+                        }
+                        className="h-2" />
+
                       </div>
-                    ))}
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -1077,8 +1077,8 @@ export default function ProcurementManagerDashboard() {
                 <CardContent>
                   <div className="space-y-4">
                     {mockCostAnalysis.categoryDistribution.map(
-                      (item, index) => (
-                        <div key={index}>
+                      (item, index) =>
+                      <div key={index}>
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-sm text-slate-400">
                               {item.category}
@@ -1094,7 +1094,7 @@ export default function ProcurementManagerDashboard() {
                           </div>
                           <Progress value={item.percentage} className="h-2" />
                         </div>
-                      ),
+
                     )}
                   </div>
                 </CardContent>
@@ -1110,11 +1110,11 @@ export default function ProcurementManagerDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {mockCostAnalysis.topProjects.map((project, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-4 rounded-lg bg-surface-100 border border-white/5"
-                    >
+                  {mockCostAnalysis.topProjects.map((project, index) =>
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-4 rounded-lg bg-surface-100 border border-white/5">
+
                       <div className="flex items-center gap-4">
                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
                           <span className="text-sm font-bold text-white">
@@ -1134,7 +1134,7 @@ export default function ProcurementManagerDashboard() {
                         {formatCurrency(project.amount)}
                       </span>
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -1161,6 +1161,6 @@ export default function ProcurementManagerDashboard() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
-  );
+    </div>);
+
 }

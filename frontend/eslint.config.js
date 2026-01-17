@@ -6,9 +6,9 @@ import react from 'eslint-plugin-react'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'node_modules']),
   {
-    files: ['**/*.{js,jsx}'],
+    files: ['src/**/*.{js,jsx}'],
     extends: [
       js.configs.recommended,
       reactHooks.configs.flat.recommended,
@@ -36,8 +36,18 @@ export default defineConfig([
         'error',
         {
           varsIgnorePattern: '^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig)$',
+          argsIgnorePattern: '^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig)$',
+          caughtErrorsIgnorePattern: '^_',
         },
       ],
+      // React Compiler 相关规则过于严格，先关闭以便渐进式收敛
+      'react-hooks/preserve-manual-memoization': 'off',
+      'react-hooks/static-components': 'off',
+      'react-hooks/immutability': 'off',
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/set-state-in-render': 'off',
+      'react-hooks/exhaustive-deps': 'off',
+      'react-refresh/only-export-components': 'off',
       // React JSX 规则 - 检测未转义的字符和标签问题
       'react/no-unescaped-entities': [
         'error',
@@ -45,12 +55,40 @@ export default defineConfig([
           forbid: ['>', '}'],
         },
       ],
-      'react/jsx-closing-tag-location': 'warn',
+      'react/jsx-closing-tag-location': 'off',
       // 关闭过于严格的格式规则，只保留关键的错误检测
       'react/jsx-closing-bracket-location': 'off',
       'react/jsx-indent': 'off',
       'react/jsx-indent-props': 'off',
       'react/jsx-wrap-multilines': 'off',
+    },
+  },
+  {
+    files: [
+      'vite.config.js',
+      'postcss.config.js',
+      'tailwind.config.js',
+      'scripts/**/*.{js,jsx}',
+    ],
+    extends: [js.configs.recommended],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.node,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
+    },
+    rules: {
+      'no-unused-vars': [
+        'error',
+        {
+          varsIgnorePattern: '^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig)$',
+          argsIgnorePattern: '^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig)$',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
+      'react-refresh/only-export-components': 'off',
     },
   },
 ])

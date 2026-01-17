@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback as _useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -15,16 +15,16 @@ import {
   FileText,
   AlertCircle,
   ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+  ChevronUp } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
-} from "../components/ui/card";
+  CardDescription } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -34,28 +34,28 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "../components/ui/table";
+  TableRow } from
+"../components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogBody,
-  DialogFooter,
-} from "../components/ui/dialog";
+  DialogFooter } from
+"../components/ui/dialog";
 import { Textarea } from "../components/ui/textarea";
-import { cn } from "../lib/utils";
-import { fadeIn, staggerContainer } from "../lib/animations";
-import { purchaseApi, bomApi, projectApi, supplierApi } from "../services/api";
+import { cn as _cn } from "../lib/utils";
+import { fadeIn, staggerContainer as _staggerContainer } from "../lib/animations";
+import { purchaseApi, bomApi, projectApi as _projectApi, supplierApi } from "../services/api";
 import { toast } from "../components/ui/toast";
 import { LoadingCard } from "../components/common";
 import { ErrorMessage } from "../components/common";
@@ -70,7 +70,7 @@ export default function PurchaseOrderFromBOM() {
   // Step 1: BOM selection
   const [boms, setBoms] = useState([]);
   const [selectedBomId, setSelectedBomId] = useState(null);
-  const [selectedBom, setSelectedBom] = useState(null);
+  const [_selectedBom, setSelectedBom] = useState(null);
   const [defaultSupplierId, setDefaultSupplierId] = useState(null);
   const [suppliers, setSuppliers] = useState([]);
 
@@ -123,7 +123,7 @@ export default function PurchaseOrderFromBOM() {
 
       const params = {
         bom_id: parseInt(selectedBomId),
-        create_orders: false, // Preview only
+        create_orders: false // Preview only
       };
       if (defaultSupplierId) {
         params.supplier_id = defaultSupplierId;
@@ -171,7 +171,7 @@ export default function PurchaseOrderFromBOM() {
 
       const params = {
         bom_id: preview.bom_id,
-        create_orders: true,
+        create_orders: true
       };
       if (defaultSupplierId) {
         params.supplier_id = defaultSupplierId;
@@ -208,18 +208,18 @@ export default function PurchaseOrderFromBOM() {
           title="从BOM生成采购订单"
           description="根据BOM物料清单，按供应商分组批量创建采购订单"
           actions={
-            <Button variant="outline" onClick={() => navigate("/purchases")}>
+          <Button variant="outline" onClick={() => navigate("/purchases")}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               返回
             </Button>
-          }
-        />
+          } />
+
 
         {error && <ErrorMessage message={error} />}
 
         {/* Step 1: Select BOM */}
-        {step === 1 && (
-          <motion.div variants={fadeIn} className="max-w-2xl mx-auto">
+        {step === 1 &&
+        <motion.div variants={fadeIn} className="max-w-2xl mx-auto">
             <Card className="bg-slate-800/50 border-slate-700/50">
               <CardHeader>
                 <CardTitle className="text-slate-200">选择BOM</CardTitle>
@@ -228,30 +228,30 @@ export default function PurchaseOrderFromBOM() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {boms.length === 0 ? (
-                  <EmptyState
-                    icon={Package}
-                    title="暂无已发布的BOM"
-                    description="请先在BOM管理中发布BOM，然后才能生成采购订单"
-                  />
-                ) : (
-                  <>
+                {boms.length === 0 ?
+              <EmptyState
+                icon={Package}
+                title="暂无已发布的BOM"
+                description="请先在BOM管理中发布BOM，然后才能生成采购订单" /> :
+
+
+              <>
                     <div>
                       <Label className="text-slate-400">BOM *</Label>
                       <Select
-                        value={selectedBomId?.toString() || ""}
-                        onValueChange={setSelectedBomId}
-                      >
+                    value={selectedBomId?.toString() || ""}
+                    onValueChange={setSelectedBomId}>
+
                         <SelectTrigger className="bg-slate-900/50 border-slate-700">
                           <SelectValue placeholder="选择BOM" />
                         </SelectTrigger>
                         <SelectContent>
-                          {boms.map((bom) => (
-                            <SelectItem key={bom.id} value={bom.id.toString()}>
+                          {boms.map((bom) =>
+                      <SelectItem key={bom.id} value={bom.id.toString()}>
                               {bom.bom_no} -{" "}
                               {bom.project_name || bom.machine_name || ""}
                             </SelectItem>
-                          ))}
+                      )}
                         </SelectContent>
                       </Select>
                     </div>
@@ -260,24 +260,24 @@ export default function PurchaseOrderFromBOM() {
                         默认供应商（可选）
                       </Label>
                       <Select
-                        value={defaultSupplierId?.toString() || ""}
-                        onValueChange={(val) =>
-                          setDefaultSupplierId(val ? parseInt(val) : null)
-                        }
-                      >
+                    value={defaultSupplierId?.toString() || ""}
+                    onValueChange={(val) =>
+                    setDefaultSupplierId(val ? parseInt(val) : null)
+                    }>
+
                         <SelectTrigger className="bg-slate-900/50 border-slate-700">
                           <SelectValue placeholder="选择默认供应商（可选）" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">无</SelectItem>
-                          {suppliers.map((supplier) => (
-                            <SelectItem
-                              key={supplier.id}
-                              value={supplier.id.toString()}
-                            >
+                          {suppliers.map((supplier) =>
+                      <SelectItem
+                        key={supplier.id}
+                        value={supplier.id.toString()}>
+
                               {supplier.supplier_name}
                             </SelectItem>
-                          ))}
+                      )}
                         </SelectContent>
                       </Select>
                       <p className="text-xs text-slate-500 mt-1">
@@ -286,23 +286,23 @@ export default function PurchaseOrderFromBOM() {
                     </div>
                     <div className="flex gap-2 pt-4">
                       <Button
-                        onClick={handleGeneratePreview}
-                        disabled={!selectedBomId || loading}
-                        className="flex-1 bg-blue-600 hover:bg-blue-700"
-                      >
+                    onClick={handleGeneratePreview}
+                    disabled={!selectedBomId || loading}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700">
+
                         {loading ? "生成中..." : "生成预览"}
                       </Button>
                     </div>
                   </>
-                )}
+              }
               </CardContent>
             </Card>
           </motion.div>
-        )}
+        }
 
         {/* Step 2: Preview Orders */}
-        {step === 2 && preview && (
-          <motion.div variants={fadeIn} className="space-y-6">
+        {step === 2 && preview &&
+        <motion.div variants={fadeIn} className="space-y-6">
             {/* Summary */}
             <Card className="bg-slate-800/50 border-slate-700/50">
               <CardHeader>
@@ -331,7 +331,7 @@ export default function PurchaseOrderFromBOM() {
                     <p className="text-slate-200 text-2xl font-bold text-emerald-400">
                       ¥
                       {preview.summary?.total_amount_with_tax?.toFixed(2) ||
-                        "0.00"}
+                    "0.00"}
                     </p>
                   </div>
                 </div>
@@ -340,11 +340,11 @@ export default function PurchaseOrderFromBOM() {
 
             {/* Orders Preview */}
             <div className="space-y-4">
-              {preview.preview?.map((order, index) => (
-                <Card
-                  key={index}
-                  className="bg-slate-800/50 border-slate-700/50"
-                >
+              {preview.preview?.map((order, index) =>
+            <Card
+              key={index}
+              className="bg-slate-800/50 border-slate-700/50">
+
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div>
@@ -357,10 +357,10 @@ export default function PurchaseOrderFromBOM() {
                       </div>
                       <div className="flex gap-2">
                         <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEditOrder(index)}
-                        >
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleEditOrder(index)}>
+
                           <Edit className="w-4 h-4 mr-1" />
                           编辑
                         </Button>
@@ -444,11 +444,11 @@ export default function PurchaseOrderFromBOM() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {order.items?.map((item, itemIndex) => (
-                              <TableRow
-                                key={itemIndex}
-                                className="border-slate-700"
-                              >
+                            {order.items?.map((item, itemIndex) =>
+                        <TableRow
+                          key={itemIndex}
+                          className="border-slate-700">
+
                                 <TableCell className="text-slate-300">
                                   {item.item_no}
                                 </TableCell>
@@ -480,14 +480,14 @@ export default function PurchaseOrderFromBOM() {
                                   ¥{item.amount_with_tax?.toFixed(2)}
                                 </TableCell>
                               </TableRow>
-                            ))}
+                        )}
                           </TableBody>
                         </Table>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+            )}
             </div>
 
             {/* Actions */}
@@ -496,21 +496,21 @@ export default function PurchaseOrderFromBOM() {
                 重新选择
               </Button>
               <Button
-                onClick={handleCreateOrders}
-                disabled={loading}
-                className="bg-emerald-600 hover:bg-emerald-700"
-              >
-                {loading
-                  ? "创建中..."
-                  : `创建 ${preview.preview?.length || 0} 个采购订单`}
+              onClick={handleCreateOrders}
+              disabled={loading}
+              className="bg-emerald-600 hover:bg-emerald-700">
+
+                {loading ?
+              "创建中..." :
+              `创建 ${preview.preview?.length || 0} 个采购订单`}
               </Button>
             </div>
           </motion.div>
-        )}
+        }
 
         {/* Step 3: Result */}
-        {step === 3 && createdOrders && (
-          <motion.div variants={fadeIn} className="max-w-2xl mx-auto">
+        {step === 3 && createdOrders &&
+        <motion.div variants={fadeIn} className="max-w-2xl mx-auto">
             <Card className="bg-slate-800/50 border-slate-700/50">
               <CardHeader>
                 <CardTitle className="text-slate-200 flex items-center gap-2">
@@ -523,11 +523,11 @@ export default function PurchaseOrderFromBOM() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  {createdOrders.map((order, index) => (
-                    <div
-                      key={index}
-                      className="p-3 border border-slate-700 rounded-lg bg-slate-900/30 flex items-center justify-between"
-                    >
+                  {createdOrders.map((order, index) =>
+                <div
+                  key={index}
+                  className="p-3 border border-slate-700 rounded-lg bg-slate-900/30 flex items-center justify-between">
+
                       <div>
                         <p className="text-slate-200 font-mono">
                           {order.order_no}
@@ -541,44 +541,44 @@ export default function PurchaseOrderFromBOM() {
                           ¥{order.total_amount?.toFixed(2)}
                         </p>
                         <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() =>
-                            navigate(`/purchases/${order.order_id}`)
-                          }
-                        >
+                      size="sm"
+                      variant="ghost"
+                      onClick={() =>
+                      navigate(`/purchases/${order.order_id}`)
+                      }>
+
                           查看
                         </Button>
                       </div>
                     </div>
-                  ))}
+                )}
                 </div>
                 <div className="flex gap-2 pt-4">
                   <Button
-                    variant="outline"
-                    onClick={handleReset}
-                    className="flex-1"
-                  >
+                  variant="outline"
+                  onClick={handleReset}
+                  className="flex-1">
+
                     继续创建
                   </Button>
                   <Button
-                    onClick={() => navigate("/purchases")}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700"
-                  >
+                  onClick={() => navigate("/purchases")}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700">
+
                     查看订单列表
                   </Button>
                 </div>
               </CardContent>
             </Card>
           </motion.div>
-        )}
+        }
 
         {/* Edit Order Dialog */}
-        {editingOrder && (
-          <Dialog
-            open={!!editingOrder}
-            onOpenChange={() => setEditingOrder(null)}
-          >
+        {editingOrder &&
+        <Dialog
+          open={!!editingOrder}
+          onOpenChange={() => setEditingOrder(null)}>
+
             <DialogContent className="max-w-2xl bg-slate-900 border-slate-700">
               <DialogHeader>
                 <DialogTitle className="text-slate-200">
@@ -590,29 +590,29 @@ export default function PurchaseOrderFromBOM() {
                   <div>
                     <Label className="text-slate-400">订单标题</Label>
                     <Input
-                      value={editingOrder.order_title}
-                      onChange={(e) =>
-                        setEditingOrder({
-                          ...editingOrder,
-                          order_title: e.target.value,
-                        })
-                      }
-                      className="bg-slate-800 border-slate-700 text-slate-200"
-                    />
+                    value={editingOrder.order_title}
+                    onChange={(e) =>
+                    setEditingOrder({
+                      ...editingOrder,
+                      order_title: e.target.value
+                    })
+                    }
+                    className="bg-slate-800 border-slate-700 text-slate-200" />
+
                   </div>
                   <div>
                     <Label className="text-slate-400">备注</Label>
                     <Textarea
-                      value={editingOrder.remark || ""}
-                      onChange={(e) =>
-                        setEditingOrder({
-                          ...editingOrder,
-                          remark: e.target.value,
-                        })
-                      }
-                      className="bg-slate-800 border-slate-700 text-slate-200"
-                      rows={3}
-                    />
+                    value={editingOrder.remark || ""}
+                    onChange={(e) =>
+                    setEditingOrder({
+                      ...editingOrder,
+                      remark: e.target.value
+                    })
+                    }
+                    className="bg-slate-800 border-slate-700 text-slate-200"
+                    rows={3} />
+
                   </div>
                 </div>
               </DialogBody>
@@ -624,8 +624,8 @@ export default function PurchaseOrderFromBOM() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-        )}
+        }
       </div>
-    </div>
-  );
+    </div>);
+
 }

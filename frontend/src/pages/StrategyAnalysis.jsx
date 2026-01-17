@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState as _useState } from "react";
 import { motion } from "framer-motion";
 import { Target, TrendingUp, BarChart3, PieChart } from "lucide-react";
 import { PageHeader } from "../components/layout";
@@ -6,8 +6,8 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { fadeIn } from "../lib/animations";
 
 export default function StrategyAnalysis() {
@@ -24,6 +24,6 @@ export default function StrategyAnalysis() {
           </Card>
         </motion.div>
       </div>
-    </div>
-  );
+    </div>);
+
 }

@@ -2,20 +2,13 @@
  * useIntersectionObserver - Intersection Observer Hook
  * 用于实现数据预加载、无限滚动等功能
  */
-import { useEffect, useRef, useState, useCallback } from "react";
-
-interface UseIntersectionObserverOptions {
-  threshold?: number | number[];
-  root?: Element | null;
-  rootMargin?: string;
-  enabled?: boolean;
-}
+import { useEffect, useRef, useState } from "react";
 
 /**
  * 基础 Intersection Observer Hook
  */
 export function useIntersectionObserver(
-  options: UseIntersectionObserverOptions = {}
+  options = {}
 ) {
   const {
     threshold = 0,
@@ -24,7 +17,7 @@ export function useIntersectionObserver(
     enabled = true,
   } = options;
 
-  const elementRef = useRef<Element | null>(null);
+  const elementRef = useRef(null);
   const [isIntersecting, setIsIntersecting] = useState(false);
   const [hasIntersected, setHasIntersected] = useState(false);
 
@@ -61,8 +54,8 @@ export function useIntersectionObserver(
  * 用于触发加载的 Hook（无限滚动等场景）
  */
 export function useInfiniteScroll(
-  callback: () => void,
-  options: UseIntersectionObserverOptions = {}
+  callback,
+  options = {}
 ) {
   const { elementRef, isIntersecting } = useIntersectionObserver({
     ...options,
@@ -82,10 +75,8 @@ export function useInfiniteScroll(
  * 用于预加载数据的 Hook
  */
 export function usePreload(
-  callback: () => void | Promise<void>,
-  options: UseIntersectionObserverOptions & {
-    preloadDistance?: number; // 预加载距离（px）
-  } = {}
+  callback,
+  options = {}
 ) {
   const { preloadDistance = 200, ...observerOptions } = options;
 

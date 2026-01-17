@@ -6,15 +6,15 @@ import {
   Edit3,
   Trash2,
   Upload,
-  AlertCircle,
-} from "lucide-react";
+  AlertCircle } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -23,8 +23,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-} from "../components/ui/dialog";
+  DialogFooter } from
+"../components/ui/dialog";
 import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
 import {
@@ -32,15 +32,15 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import api from "../services/api";
 
 export default function TechnicalSpecManagement() {
   const [requirements, setRequirements] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [projectId, setProjectId] = useState(null);
+  const [projectId, _setProjectId] = useState(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingRequirement, setEditingRequirement] = useState(null);
 
@@ -53,7 +53,7 @@ export default function TechnicalSpecManagement() {
     brand: "",
     model: "",
     requirement_level: "REQUIRED",
-    remark: "",
+    remark: ""
   });
 
   useEffect(() => {
@@ -68,7 +68,7 @@ export default function TechnicalSpecManagement() {
       if (searchKeyword) params.keyword = searchKeyword;
 
       const response = await api.get("/technical-spec/requirements", {
-        params,
+        params
       });
       setRequirements(response.data.items || []);
     } catch (error) {
@@ -94,7 +94,7 @@ export default function TechnicalSpecManagement() {
     try {
       await api.put(
         `/technical-spec/requirements/${editingRequirement.id}`,
-        formData,
+        formData
       );
       setEditingRequirement(null);
       resetForm();
@@ -127,7 +127,7 @@ export default function TechnicalSpecManagement() {
       brand: "",
       model: "",
       requirement_level: "REQUIRED",
-      remark: "",
+      remark: ""
     });
   };
 
@@ -142,7 +142,7 @@ export default function TechnicalSpecManagement() {
       brand: requirement.brand || "",
       model: requirement.model || "",
       requirement_level: requirement.requirement_level,
-      remark: requirement.remark || "",
+      remark: requirement.remark || ""
     });
     setShowCreateDialog(true);
   };
@@ -151,26 +151,26 @@ export default function TechnicalSpecManagement() {
     const colors = {
       REQUIRED: "bg-red-100 text-red-800",
       OPTIONAL: "bg-yellow-100 text-yellow-800",
-      STRICT: "bg-purple-100 text-purple-800",
+      STRICT: "bg-purple-100 text-purple-800"
     };
     const labels = {
       REQUIRED: "必需",
       OPTIONAL: "可选",
-      STRICT: "严格",
+      STRICT: "严格"
     };
     return (
       <Badge className={colors[level] || "bg-gray-100 text-gray-800"}>
         {labels[level] || level}
-      </Badge>
-    );
+      </Badge>);
+
   };
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="技术规格管理"
-        description="管理项目技术规格要求，支持从文档提取或手动录入"
-      />
+        description="管理项目技术规格要求，支持从文档提取或手动录入" />
+
 
       <Card>
         <CardHeader>
@@ -183,16 +183,16 @@ export default function TechnicalSpecManagement() {
                   placeholder="搜索物料名称、规格..."
                   value={searchKeyword}
                   onChange={(e) => setSearchKeyword(e.target.value)}
-                  className="pl-10 w-64"
-                />
+                  className="pl-10 w-64" />
+
               </div>
               <Button
                 onClick={() => {
                   resetForm();
                   setEditingRequirement(null);
                   setShowCreateDialog(true);
-                }}
-              >
+                }}>
+
                 <Plus className="w-4 h-4 mr-2" />
                 新增规格要求
               </Button>
@@ -200,19 +200,19 @@ export default function TechnicalSpecManagement() {
           </div>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="text-center py-8">加载中...</div>
-          ) : requirements.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+          {loading ?
+          <div className="text-center py-8">加载中...</div> :
+          requirements.length === 0 ?
+          <div className="text-center py-8 text-gray-500">
               暂无规格要求，点击"新增规格要求"开始添加
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {requirements.map((req) => (
-                <div
-                  key={req.id}
-                  className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                >
+            </div> :
+
+          <div className="space-y-4">
+              {requirements.map((req) =>
+            <div
+              key={req.id}
+              className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
@@ -220,52 +220,52 @@ export default function TechnicalSpecManagement() {
                           {req.material_name}
                         </h3>
                         {getRequirementLevelBadge(req.requirement_level)}
-                        {req.material_code && (
-                          <Badge variant="outline">{req.material_code}</Badge>
-                        )}
+                        {req.material_code &&
+                    <Badge variant="outline">{req.material_code}</Badge>
+                    }
                       </div>
                       <p className="text-sm text-gray-600 mb-2">
                         <span className="font-medium">规格要求:</span>{" "}
                         {req.specification}
                       </p>
-                      {req.brand && (
-                        <p className="text-sm text-gray-500">
+                      {req.brand &&
+                  <p className="text-sm text-gray-500">
                           <span className="font-medium">品牌:</span> {req.brand}
-                          {req.model && (
-                            <span className="ml-4">
+                          {req.model &&
+                    <span className="ml-4">
                               <span className="font-medium">型号:</span>{" "}
                               {req.model}
                             </span>
-                          )}
+                    }
                         </p>
-                      )}
-                      {req.remark && (
-                        <p className="text-sm text-gray-500 mt-2">
+                  }
+                      {req.remark &&
+                  <p className="text-sm text-gray-500 mt-2">
                           {req.remark}
                         </p>
-                      )}
+                  }
                     </div>
                     <div className="flex items-center gap-2">
                       <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openEditDialog(req)}
-                      >
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => openEditDialog(req)}>
+
                         <Edit3 className="w-4 h-4" />
                       </Button>
                       <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(req.id)}
-                      >
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDelete(req.id)}>
+
                         <Trash2 className="w-4 h-4 text-red-500" />
                       </Button>
                     </div>
                   </div>
                 </div>
-              ))}
+            )}
             </div>
-          )}
+          }
         </CardContent>
       </Card>
 
@@ -284,31 +284,31 @@ export default function TechnicalSpecManagement() {
                 type="number"
                 value={formData.project_id}
                 onChange={(e) =>
-                  setFormData({ ...formData, project_id: e.target.value })
+                setFormData({ ...formData, project_id: e.target.value })
                 }
-                placeholder="请输入项目ID"
-              />
+                placeholder="请输入项目ID" />
+
             </div>
             <div>
               <Label>物料名称 *</Label>
               <Input
                 value={formData.material_name}
                 onChange={(e) =>
-                  setFormData({ ...formData, material_name: e.target.value })
+                setFormData({ ...formData, material_name: e.target.value })
                 }
-                placeholder="请输入物料名称"
-              />
+                placeholder="请输入物料名称" />
+
             </div>
             <div>
               <Label>规格型号 *</Label>
               <Textarea
                 value={formData.specification}
                 onChange={(e) =>
-                  setFormData({ ...formData, specification: e.target.value })
+                setFormData({ ...formData, specification: e.target.value })
                 }
                 placeholder="请输入规格型号要求"
-                rows={3}
-              />
+                rows={3} />
+
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -316,19 +316,19 @@ export default function TechnicalSpecManagement() {
                 <Input
                   value={formData.material_code}
                   onChange={(e) =>
-                    setFormData({ ...formData, material_code: e.target.value })
+                  setFormData({ ...formData, material_code: e.target.value })
                   }
-                  placeholder="可选"
-                />
+                  placeholder="可选" />
+
               </div>
               <div>
                 <Label>要求级别</Label>
                 <Select
                   value={formData.requirement_level}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, requirement_level: value })
-                  }
-                >
+                  setFormData({ ...formData, requirement_level: value })
+                  }>
+
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -346,20 +346,20 @@ export default function TechnicalSpecManagement() {
                 <Input
                   value={formData.brand}
                   onChange={(e) =>
-                    setFormData({ ...formData, brand: e.target.value })
+                  setFormData({ ...formData, brand: e.target.value })
                   }
-                  placeholder="可选"
-                />
+                  placeholder="可选" />
+
               </div>
               <div>
                 <Label>型号</Label>
                 <Input
                   value={formData.model}
                   onChange={(e) =>
-                    setFormData({ ...formData, model: e.target.value })
+                  setFormData({ ...formData, model: e.target.value })
                   }
-                  placeholder="可选"
-                />
+                  placeholder="可选" />
+
               </div>
             </div>
             <div>
@@ -367,18 +367,18 @@ export default function TechnicalSpecManagement() {
               <Textarea
                 value={formData.remark}
                 onChange={(e) =>
-                  setFormData({ ...formData, remark: e.target.value })
+                setFormData({ ...formData, remark: e.target.value })
                 }
                 placeholder="可选"
-                rows={2}
-              />
+                rows={2} />
+
             </div>
           </div>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowCreateDialog(false)}
-            >
+              onClick={() => setShowCreateDialog(false)}>
+
               取消
             </Button>
             <Button onClick={editingRequirement ? handleUpdate : handleCreate}>
@@ -387,6 +387,6 @@ export default function TechnicalSpecManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }

@@ -17,16 +17,16 @@ import {
   User,
   Calendar,
   Package,
-  TrendingUp,
-} from "lucide-react";
+  TrendingUp } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
-} from "../components/ui/card";
+  CardDescription } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -36,25 +36,25 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "../components/ui/table";
+  TableRow } from
+"../components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogBody,
-  DialogFooter,
-} from "../components/ui/dialog";
-import { cn, formatDate } from "../lib/utils";
+  DialogFooter } from
+"../components/ui/dialog";
+import { cn as _cn, formatDate } from "../lib/utils";
 import { productionApi, projectApi } from "../services/api";
 const statusConfigs = {
   PENDING: { label: "待派工", color: "bg-slate-500" },
@@ -62,13 +62,13 @@ const statusConfigs = {
   IN_PROGRESS: { label: "进行中", color: "bg-amber-500" },
   PAUSED: { label: "已暂停", color: "bg-purple-500" },
   COMPLETED: { label: "已完成", color: "bg-emerald-500" },
-  CANCELLED: { label: "已取消", color: "bg-gray-500" },
+  CANCELLED: { label: "已取消", color: "bg-gray-500" }
 };
 const priorityConfigs = {
   URGENT: { label: "紧急", color: "bg-red-500" },
   HIGH: { label: "高", color: "bg-orange-500" },
   MEDIUM: { label: "中", color: "bg-amber-500" },
-  LOW: { label: "低", color: "bg-blue-500" },
+  LOW: { label: "低", color: "bg-blue-500" }
 };
 export default function WorkOrderManagement() {
   const navigate = useNavigate();
@@ -102,11 +102,11 @@ export default function WorkOrderManagement() {
     plan_end_date: "",
     priority: "MEDIUM",
     work_content: "",
-    remark: "",
+    remark: ""
   });
   const [assignData, setAssignData] = useState({
     assigned_to: null,
-    workstation_id: null,
+    workstation_id: null
   });
   useEffect(() => {
     fetchProjects();
@@ -161,7 +161,7 @@ export default function WorkOrderManagement() {
         plan_end_date: "",
         priority: "MEDIUM",
         work_content: "",
-        remark: "",
+        remark: ""
       });
       fetchWorkOrders();
     } catch (error) {
@@ -185,7 +185,7 @@ export default function WorkOrderManagement() {
       setShowAssignDialog(false);
       setAssignData({
         assigned_to: null,
-        workstation_id: null,
+        workstation_id: null
       });
       fetchWorkOrders();
       if (showDetailDialog) {
@@ -203,8 +203,8 @@ export default function WorkOrderManagement() {
         return (
           order.work_order_no?.toLowerCase().includes(keyword) ||
           order.task_name?.toLowerCase().includes(keyword) ||
-          order.material_name?.toLowerCase().includes(keyword)
-        );
+          order.material_name?.toLowerCase().includes(keyword));
+
       }
       return true;
     });
@@ -213,8 +213,8 @@ export default function WorkOrderManagement() {
     <div className="space-y-6 p-6">
       <PageHeader
         title="工单管理"
-        description="生产工单管理，支持创建、派工、进度跟踪"
-      />
+        description="生产工单管理，支持创建、派工、进度跟踪" />
+
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
@@ -225,8 +225,8 @@ export default function WorkOrderManagement() {
                 placeholder="搜索工单号、任务名称..."
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
-                className="pl-10"
-              />
+                className="pl-10" />
+
             </div>
             <Select value={filterProject} onValueChange={setFilterProject}>
               <SelectTrigger>
@@ -234,11 +234,11 @@ export default function WorkOrderManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部项目</SelectItem>
-                {projects.map((proj) => (
-                  <SelectItem key={proj.id} value={proj.id.toString()}>
+                {projects.map((proj) =>
+                <SelectItem key={proj.id} value={proj.id.toString()}>
                     {proj.project_name}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -247,11 +247,11 @@ export default function WorkOrderManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部状态</SelectItem>
-                {Object.entries(statusConfigs).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
+                {Object.entries(statusConfigs).map(([key, config]) =>
+                <SelectItem key={key} value={key}>
                     {config.label}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
             <Select value={filterPriority} onValueChange={setFilterPriority}>
@@ -260,11 +260,11 @@ export default function WorkOrderManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部优先级</SelectItem>
-                {Object.entries(priorityConfigs).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
+                {Object.entries(priorityConfigs).map(([key, config]) =>
+                <SelectItem key={key} value={key}>
                     {config.label}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -284,12 +284,12 @@ export default function WorkOrderManagement() {
           <CardDescription>共 {filteredOrders.length} 个工单</CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="text-center py-8 text-slate-400">加载中...</div>
-          ) : filteredOrders.length === 0 ? (
-            <div className="text-center py-8 text-slate-400">暂无工单</div>
-          ) : (
-            <Table>
+          {loading ?
+          <div className="text-center py-8 text-slate-400">加载中...</div> :
+          filteredOrders.length === 0 ?
+          <div className="text-center py-8 text-slate-400">暂无工单</div> :
+
+          <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>工单号</TableHead>
@@ -306,8 +306,8 @@ export default function WorkOrderManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredOrders.map((order) => (
-                  <TableRow key={order.id}>
+                {filteredOrders.map((order) =>
+              <TableRow key={order.id}>
                     <TableCell className="font-mono text-sm">
                       {order.work_order_no}
                     </TableCell>
@@ -317,11 +317,11 @@ export default function WorkOrderManagement() {
                     <TableCell>{order.project_name || "-"}</TableCell>
                     <TableCell>
                       {order.material_name || "-"}
-                      {order.specification && (
-                        <div className="text-xs text-slate-500">
+                      {order.specification &&
+                  <div className="text-xs text-slate-500">
                           {order.specification}
                         </div>
-                      )}
+                  }
                     </TableCell>
                     <TableCell>{order.plan_qty || 0}</TableCell>
                     <TableCell className="font-medium">
@@ -333,70 +333,70 @@ export default function WorkOrderManagement() {
                           <span>{order.progress || 0}%</span>
                         </div>
                         <Progress
-                          value={order.progress || 0}
-                          className="h-1.5"
-                        />
+                      value={order.progress || 0}
+                      className="h-1.5" />
+
                       </div>
                     </TableCell>
                     <TableCell>
                       <Badge
-                        className={
-                          priorityConfigs[order.priority]?.color ||
-                          "bg-slate-500"
-                        }
-                      >
+                    className={
+                    priorityConfigs[order.priority]?.color ||
+                    "bg-slate-500"
+                    }>
+
                         {priorityConfigs[order.priority]?.label ||
-                          order.priority}
+                    order.priority}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <Badge
-                        className={
-                          statusConfigs[order.status]?.color || "bg-slate-500"
-                        }
-                      >
+                    className={
+                    statusConfigs[order.status]?.color || "bg-slate-500"
+                    }>
+
                         {statusConfigs[order.status]?.label || order.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-slate-500 text-sm">
-                      {order.plan_start_date
-                        ? formatDate(order.plan_start_date)
-                        : "-"}
-                      {order.plan_end_date && (
-                        <>
+                      {order.plan_start_date ?
+                  formatDate(order.plan_start_date) :
+                  "-"}
+                      {order.plan_end_date &&
+                  <>
                           <span className="mx-1">-</span>
                           {formatDate(order.plan_end_date)}
                         </>
-                      )}
+                  }
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => navigate(`/work-orders/${order.id}`)}
-                        >
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate(`/work-orders/${order.id}`)}>
+
                           <Eye className="w-4 h-4" />
                         </Button>
-                        {order.status === "PENDING" && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedOrder(order);
-                              setShowAssignDialog(true);
-                            }}
-                          >
+                        {order.status === "PENDING" &&
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedOrder(order);
+                        setShowAssignDialog(true);
+                      }}>
+
                             <User className="w-4 h-4" />
                           </Button>
-                        )}
+                    }
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+              )}
               </TableBody>
             </Table>
-          )}
+          }
         </CardContent>
       </Card>
       {/* Create Work Order Dialog */}
@@ -414,10 +414,10 @@ export default function WorkOrderManagement() {
                 <Input
                   value={newOrder.task_name}
                   onChange={(e) =>
-                    setNewOrder({ ...newOrder, task_name: e.target.value })
+                  setNewOrder({ ...newOrder, task_name: e.target.value })
                   }
-                  placeholder="请输入任务名称"
-                />
+                  placeholder="请输入任务名称" />
+
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -427,21 +427,21 @@ export default function WorkOrderManagement() {
                   <Select
                     value={newOrder.project_id?.toString() || ""}
                     onValueChange={(val) =>
-                      setNewOrder({
-                        ...newOrder,
-                        project_id: val ? parseInt(val) : null,
-                      })
-                    }
-                  >
+                    setNewOrder({
+                      ...newOrder,
+                      project_id: val ? parseInt(val) : null
+                    })
+                    }>
+
                     <SelectTrigger>
                       <SelectValue placeholder="选择项目" />
                     </SelectTrigger>
                     <SelectContent>
-                      {projects.map((proj) => (
-                        <SelectItem key={proj.id} value={proj.id.toString()}>
+                      {projects.map((proj) =>
+                      <SelectItem key={proj.id} value={proj.id.toString()}>
                           {proj.project_name}
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -452,9 +452,9 @@ export default function WorkOrderManagement() {
                   <Select
                     value={newOrder.task_type}
                     onValueChange={(val) =>
-                      setNewOrder({ ...newOrder, task_type: val })
-                    }
-                  >
+                    setNewOrder({ ...newOrder, task_type: val })
+                    }>
+
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -476,26 +476,26 @@ export default function WorkOrderManagement() {
                   <Input
                     value={newOrder.material_name}
                     onChange={(e) =>
-                      setNewOrder({
-                        ...newOrder,
-                        material_name: e.target.value,
-                      })
+                    setNewOrder({
+                      ...newOrder,
+                      material_name: e.target.value
+                    })
                     }
-                    placeholder="物料名称"
-                  />
+                    placeholder="物料名称" />
+
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-2 block">规格</label>
                   <Input
                     value={newOrder.specification}
                     onChange={(e) =>
-                      setNewOrder({
-                        ...newOrder,
-                        specification: e.target.value,
-                      })
+                    setNewOrder({
+                      ...newOrder,
+                      specification: e.target.value
+                    })
                     }
-                    placeholder="规格"
-                  />
+                    placeholder="规格" />
+
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -507,13 +507,13 @@ export default function WorkOrderManagement() {
                     type="number"
                     value={newOrder.plan_qty}
                     onChange={(e) =>
-                      setNewOrder({
-                        ...newOrder,
-                        plan_qty: parseFloat(e.target.value) || 0,
-                      })
+                    setNewOrder({
+                      ...newOrder,
+                      plan_qty: parseFloat(e.target.value) || 0
+                    })
                     }
-                    placeholder="0"
-                  />
+                    placeholder="0" />
+
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-2 block">
@@ -523,13 +523,13 @@ export default function WorkOrderManagement() {
                     type="number"
                     value={newOrder.standard_hours}
                     onChange={(e) =>
-                      setNewOrder({
-                        ...newOrder,
-                        standard_hours: parseFloat(e.target.value) || 0,
-                      })
+                    setNewOrder({
+                      ...newOrder,
+                      standard_hours: parseFloat(e.target.value) || 0
+                    })
                     }
-                    placeholder="0"
-                  />
+                    placeholder="0" />
+
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -541,12 +541,12 @@ export default function WorkOrderManagement() {
                     type="date"
                     value={newOrder.plan_start_date}
                     onChange={(e) =>
-                      setNewOrder({
-                        ...newOrder,
-                        plan_start_date: e.target.value,
-                      })
-                    }
-                  />
+                    setNewOrder({
+                      ...newOrder,
+                      plan_start_date: e.target.value
+                    })
+                    } />
+
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-2 block">
@@ -556,12 +556,12 @@ export default function WorkOrderManagement() {
                     type="date"
                     value={newOrder.plan_end_date}
                     onChange={(e) =>
-                      setNewOrder({
-                        ...newOrder,
-                        plan_end_date: e.target.value,
-                      })
-                    }
-                  />
+                    setNewOrder({
+                      ...newOrder,
+                      plan_end_date: e.target.value
+                    })
+                    } />
+
                 </div>
               </div>
               <div>
@@ -569,18 +569,18 @@ export default function WorkOrderManagement() {
                 <Select
                   value={newOrder.priority}
                   onValueChange={(val) =>
-                    setNewOrder({ ...newOrder, priority: val })
-                  }
-                >
+                  setNewOrder({ ...newOrder, priority: val })
+                  }>
+
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(priorityConfigs).map(([key, config]) => (
-                      <SelectItem key={key} value={key}>
+                    {Object.entries(priorityConfigs).map(([key, config]) =>
+                    <SelectItem key={key} value={key}>
                         {config.label}
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -592,18 +592,18 @@ export default function WorkOrderManagement() {
                   className="w-full min-h-[80px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={newOrder.work_content}
                   onChange={(e) =>
-                    setNewOrder({ ...newOrder, work_content: e.target.value })
+                  setNewOrder({ ...newOrder, work_content: e.target.value })
                   }
-                  placeholder="工作内容描述..."
-                />
+                  placeholder="工作内容描述..." />
+
               </div>
             </div>
           </DialogBody>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowCreateDialog(false)}
-            >
+              onClick={() => setShowCreateDialog(false)}>
+
               取消
             </Button>
             <Button onClick={handleCreateOrder}>创建</Button>
@@ -619,8 +619,8 @@ export default function WorkOrderManagement() {
             </DialogTitle>
           </DialogHeader>
           <DialogBody>
-            {selectedOrder && (
-              <div className="space-y-4">
+            {selectedOrder &&
+            <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <div className="text-sm text-slate-500 mb-1">工单号</div>
@@ -631,8 +631,8 @@ export default function WorkOrderManagement() {
                   <div>
                     <div className="text-sm text-slate-500 mb-1">状态</div>
                     <Badge
-                      className={statusConfigs[selectedOrder.status]?.color}
-                    >
+                    className={statusConfigs[selectedOrder.status]?.color}>
+
                       {statusConfigs[selectedOrder.status]?.label}
                     </Badge>
                   </div>
@@ -643,8 +643,8 @@ export default function WorkOrderManagement() {
                   <div>
                     <div className="text-sm text-slate-500 mb-1">优先级</div>
                     <Badge
-                      className={priorityConfigs[selectedOrder.priority]?.color}
-                    >
+                    className={priorityConfigs[selectedOrder.priority]?.color}>
+
                       {priorityConfigs[selectedOrder.priority]?.label}
                     </Badge>
                   </div>
@@ -667,9 +667,9 @@ export default function WorkOrderManagement() {
                         {selectedOrder.progress || 0}%
                       </div>
                       <Progress
-                        value={selectedOrder.progress || 0}
-                        className="h-2"
-                      />
+                      value={selectedOrder.progress || 0}
+                      className="h-2" />
+
                     </div>
                   </div>
                   <div>
@@ -679,47 +679,47 @@ export default function WorkOrderManagement() {
                   <div>
                     <div className="text-sm text-slate-500 mb-1">计划开始</div>
                     <div>
-                      {selectedOrder.plan_start_date
-                        ? formatDate(selectedOrder.plan_start_date)
-                        : "-"}
+                      {selectedOrder.plan_start_date ?
+                    formatDate(selectedOrder.plan_start_date) :
+                    "-"}
                     </div>
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">计划结束</div>
                     <div>
-                      {selectedOrder.plan_end_date
-                        ? formatDate(selectedOrder.plan_end_date)
-                        : "-"}
+                      {selectedOrder.plan_end_date ?
+                    formatDate(selectedOrder.plan_end_date) :
+                    "-"}
                     </div>
                   </div>
                 </div>
-                {selectedOrder.work_content && (
-                  <div>
+                {selectedOrder.work_content &&
+              <div>
                     <div className="text-sm text-slate-500 mb-1">工作内容</div>
                     <div>{selectedOrder.work_content}</div>
                   </div>
-                )}
+              }
               </div>
-            )}
+            }
           </DialogBody>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowDetailDialog(false)}
-            >
+              onClick={() => setShowDetailDialog(false)}>
+
               关闭
             </Button>
-            {selectedOrder && selectedOrder.status === "PENDING" && (
-              <Button
-                onClick={() => {
-                  setShowDetailDialog(false);
-                  setShowAssignDialog(true);
-                }}
-              >
+            {selectedOrder && selectedOrder.status === "PENDING" &&
+            <Button
+              onClick={() => {
+                setShowDetailDialog(false);
+                setShowAssignDialog(true);
+              }}>
+
                 <User className="w-4 h-4 mr-2" />
                 派工
               </Button>
-            )}
+            }
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -730,8 +730,8 @@ export default function WorkOrderManagement() {
             <DialogTitle>派工</DialogTitle>
           </DialogHeader>
           <DialogBody>
-            {selectedOrder && (
-              <div className="space-y-4">
+            {selectedOrder &&
+            <div className="space-y-4">
                 <div>
                   <div className="text-sm text-slate-500 mb-1">工单号</div>
                   <div className="font-mono">{selectedOrder.work_order_no}</div>
@@ -745,49 +745,49 @@ export default function WorkOrderManagement() {
                     分配人员
                   </label>
                   <Input
-                    type="number"
-                    value={assignData.assigned_to || ""}
-                    onChange={(e) =>
-                      setAssignData({
-                        ...assignData,
-                        assigned_to: e.target.value
-                          ? parseInt(e.target.value)
-                          : null,
-                      })
-                    }
-                    placeholder="人员ID"
-                  />
+                  type="number"
+                  value={assignData.assigned_to || ""}
+                  onChange={(e) =>
+                  setAssignData({
+                    ...assignData,
+                    assigned_to: e.target.value ?
+                    parseInt(e.target.value) :
+                    null
+                  })
+                  }
+                  placeholder="人员ID" />
+
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-2 block">工位</label>
                   <Input
-                    type="number"
-                    value={assignData.workstation_id || ""}
-                    onChange={(e) =>
-                      setAssignData({
-                        ...assignData,
-                        workstation_id: e.target.value
-                          ? parseInt(e.target.value)
-                          : null,
-                      })
-                    }
-                    placeholder="工位ID"
-                  />
+                  type="number"
+                  value={assignData.workstation_id || ""}
+                  onChange={(e) =>
+                  setAssignData({
+                    ...assignData,
+                    workstation_id: e.target.value ?
+                    parseInt(e.target.value) :
+                    null
+                  })
+                  }
+                  placeholder="工位ID" />
+
                 </div>
               </div>
-            )}
+            }
           </DialogBody>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowAssignDialog(false)}
-            >
+              onClick={() => setShowAssignDialog(false)}>
+
               取消
             </Button>
             <Button onClick={handleAssign}>确认派工</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }

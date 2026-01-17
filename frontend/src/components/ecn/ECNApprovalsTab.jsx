@@ -12,7 +12,7 @@ import { CheckCircle2, XCircle } from 'lucide-react';
  * 获取审批节点样式配置
  */
 const getApprovalNodeStyle = (approval) => {
-  const isCompleted = approval.status === 'COMPLETED';
+  const _isCompleted = approval.status === 'COMPLETED';
   const isApproved = approval.approval_result === 'APPROVED';
   const isRejected = approval.approval_result === 'REJECTED';
   const isPending = approval.status === 'PENDING';
@@ -41,7 +41,7 @@ const getApprovalStatusBadge = (approval) => {
  * 时间线节点组件
  */
 const TimelineNode = ({ approval, index }) => {
-  const { color, icon } = getApprovalNodeStyle(approval);
+  const { color, icon: _icon } = getApprovalNodeStyle(approval);
   const isCompleted = approval.status === 'COMPLETED';
   const isApproved = approval.approval_result === 'APPROVED';
   const isRejected = approval.approval_result === 'REJECTED';
@@ -49,22 +49,22 @@ const TimelineNode = ({ approval, index }) => {
   return (
     <div className="relative z-10">
       <div
-        className={`w-10 h-10 rounded-full flex items-center justify-center ${color} text-white font-bold shadow-lg`}
-      >
-        {isCompleted ? (
-          isApproved ? (
-            <CheckCircle2 className="w-5 h-5" />
-          ) : isRejected ? (
-            <XCircle className="w-5 h-5" />
-          ) : (
-            index + 1
-          )
-        ) : (
-          index + 1
-        )}
+        className={`w-10 h-10 rounded-full flex items-center justify-center ${color} text-white font-bold shadow-lg`}>
+
+        {isCompleted ?
+        isApproved ?
+        <CheckCircle2 className="w-5 h-5" /> :
+        isRejected ?
+        <XCircle className="w-5 h-5" /> :
+
+        index + 1 :
+
+
+        index + 1
+        }
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 /**
@@ -102,9 +102,9 @@ const ApprovalCard = ({ approval, onApprove, onReject, formatDate }) => {
             <Badge className={statusBadge.className}>
               {statusBadge.label}
             </Badge>
-            {approval.is_overdue && (
-              <Badge className="bg-red-500">超期</Badge>
-            )}
+            {approval.is_overdue &&
+            <Badge className="bg-red-500">超期</Badge>
+            }
           </div>
         </div>
       </CardHeader>
@@ -116,52 +116,52 @@ const ApprovalCard = ({ approval, onApprove, onReject, formatDate }) => {
         </div>
 
         {/* 审批时间 */}
-        {approval.approved_at && (
-          <div className="text-sm">
+        {approval.approved_at &&
+        <div className="text-sm">
             <span className="text-slate-500">审批时间:</span>{' '}
             {formatDate(approval.approved_at)}
           </div>
-        )}
+        }
 
         {/* 审批期限 */}
-        {approval.due_date && (
-          <div className="text-sm">
+        {approval.due_date &&
+        <div className="text-sm">
             <span className="text-slate-500">审批期限:</span>{' '}
             {formatDate(approval.due_date)}
-            {approval.is_overdue && (
-              <span className="text-red-500 ml-2">（已超期）</span>
-            )}
+            {approval.is_overdue &&
+          <span className="text-red-500 ml-2">（已超期）</span>
+          }
           </div>
-        )}
+        }
 
         {/* 审批意见 */}
-        {approval.approval_opinion && (
-          <div>
+        {approval.approval_opinion &&
+        <div>
             <div className="text-sm text-slate-500 mb-1">审批意见:</div>
             <div className="p-2 bg-slate-50 rounded text-sm">
               {approval.approval_opinion}
             </div>
           </div>
-        )}
+        }
 
         {/* 审批操作按钮（仅待审批状态显示） */}
-        {isPending && (
-          <div className="flex justify-end gap-2 pt-2">
+        {isPending &&
+        <div className="flex justify-end gap-2 pt-2">
             <Button
-              size="sm"
-              variant="outline"
-              onClick={handleReject}
-            >
+            size="sm"
+            variant="outline"
+            onClick={handleReject}>
+
               驳回
             </Button>
             <Button size="sm" onClick={handleApprove}>
               通过
             </Button>
           </div>
-        )}
+        }
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 };
 
 /**
@@ -171,7 +171,7 @@ export const ECNApprovalsTab = ({
   approvals = [],
   onApprove,
   onReject,
-  formatDate,
+  formatDate
 }) => {
   // 空状态
   if (approvals.length === 0) {
@@ -180,8 +180,8 @@ export const ECNApprovalsTab = ({
         <CardContent className="py-8 text-center text-slate-400">
           暂无审批记录
         </CardContent>
-      </Card>
-    );
+      </Card>);
+
   }
 
   return (
@@ -191,26 +191,26 @@ export const ECNApprovalsTab = ({
 
       {/* 审批节点列表 */}
       <div className="space-y-6">
-        {approvals.map((approval, index) => (
-          <div
-            key={approval.id}
-            className="relative flex items-start gap-4"
-          >
+        {approvals.map((approval, index) =>
+        <div
+          key={approval.id}
+          className="relative flex items-start gap-4">
+
             {/* 时间线节点 */}
             <TimelineNode approval={approval} index={index} />
 
             {/* 审批卡片 */}
             <ApprovalCard
-              approval={approval}
-              onApprove={onApprove}
-              onReject={onReject}
-              formatDate={formatDate}
-            />
+            approval={approval}
+            onApprove={onApprove}
+            onReject={onReject}
+            formatDate={formatDate} />
+
           </div>
-        ))}
+        )}
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default ECNApprovalsTab;

@@ -14,16 +14,16 @@ import {
   Clock,
   AlertTriangle,
   FileText,
-  TrendingUp,
-} from "lucide-react";
+  TrendingUp } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
-} from "../components/ui/card";
+  CardDescription } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -32,35 +32,35 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "../components/ui/table";
+  TableRow } from
+"../components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogBody,
-  DialogFooter,
-} from "../components/ui/dialog";
-import { cn, formatDate } from "../lib/utils";
+  DialogFooter } from
+"../components/ui/dialog";
+import { cn as _cn, formatDate } from "../lib/utils";
 import { productionApi, projectApi } from "../services/api";
 const statusConfigs = {
   PENDING: { label: "待审批", color: "bg-blue-500" },
   APPROVED: { label: "已批准", color: "bg-emerald-500" },
   REJECTED: { label: "已驳回", color: "bg-red-500" },
   ISSUED: { label: "已发料", color: "bg-violet-500" },
-  CANCELLED: { label: "已取消", color: "bg-gray-500" },
+  CANCELLED: { label: "已取消", color: "bg-gray-500" }
 };
 export default function MaterialRequisitionList() {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [requisitions, setRequisitions] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -78,11 +78,11 @@ export default function MaterialRequisitionList() {
     work_order_id: null,
     project_id: null,
     apply_reason: "",
-    items: [],
+    items: []
   });
   const [approveData, setApproveData] = useState({
     approved_qty: {},
-    approve_comment: "",
+    approve_comment: ""
   });
   useEffect(() => {
     fetchProjects();
@@ -124,13 +124,13 @@ export default function MaterialRequisitionList() {
         work_order_id: null,
         project_id: null,
         apply_reason: "",
-        items: [],
+        items: []
       });
       fetchRequisitions();
     } catch (error) {
       console.error("Failed to create requisition:", error);
       alert(
-        "创建领料单失败: " + (error.response?.data?.detail || error.message),
+        "创建领料单失败: " + (error.response?.data?.detail || error.message)
       );
     }
   };
@@ -148,12 +148,12 @@ export default function MaterialRequisitionList() {
     try {
       await productionApi.materialRequisitions.approve(
         selectedRequisition.id,
-        approveData,
+        approveData
       );
       setShowApproveDialog(false);
       setApproveData({
         approved_qty: {},
-        approve_comment: "",
+        approve_comment: ""
       });
       fetchRequisitions();
       if (showDetailDialog) {
@@ -170,8 +170,8 @@ export default function MaterialRequisitionList() {
         const keyword = searchKeyword.toLowerCase();
         return (
           req.requisition_no?.toLowerCase().includes(keyword) ||
-          req.work_order_no?.toLowerCase().includes(keyword)
-        );
+          req.work_order_no?.toLowerCase().includes(keyword));
+
       }
       return true;
     });
@@ -180,8 +180,8 @@ export default function MaterialRequisitionList() {
     <div className="space-y-6 p-6">
       <PageHeader
         title="领料单管理"
-        description="领料单列表、创建、审批、发料"
-      />
+        description="领料单列表、创建、审批、发料" />
+
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
@@ -192,8 +192,8 @@ export default function MaterialRequisitionList() {
                 placeholder="搜索领料单号、工单号..."
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
-                className="pl-10"
-              />
+                className="pl-10" />
+
             </div>
             <Select value={filterProject} onValueChange={setFilterProject}>
               <SelectTrigger>
@@ -201,11 +201,11 @@ export default function MaterialRequisitionList() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部项目</SelectItem>
-                {projects.map((proj) => (
-                  <SelectItem key={proj.id} value={proj.id.toString()}>
+                {projects.map((proj) =>
+                <SelectItem key={proj.id} value={proj.id.toString()}>
                     {proj.project_name}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -214,11 +214,11 @@ export default function MaterialRequisitionList() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部状态</SelectItem>
-                {Object.entries(statusConfigs).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
+                {Object.entries(statusConfigs).map(([key, config]) =>
+                <SelectItem key={key} value={key}>
                     {config.label}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -240,12 +240,12 @@ export default function MaterialRequisitionList() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="text-center py-8 text-slate-400">加载中...</div>
-          ) : filteredRequisitions.length === 0 ? (
-            <div className="text-center py-8 text-slate-400">暂无领料单</div>
-          ) : (
-            <Table>
+          {loading ?
+          <div className="text-center py-8 text-slate-400">加载中...</div> :
+          filteredRequisitions.length === 0 ?
+          <div className="text-center py-8 text-slate-400">暂无领料单</div> :
+
+          <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>领料单号</TableHead>
@@ -259,8 +259,8 @@ export default function MaterialRequisitionList() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredRequisitions.map((req) => (
-                  <TableRow key={req.id}>
+                {filteredRequisitions.map((req) =>
+              <TableRow key={req.id}>
                     <TableCell className="font-mono text-sm">
                       {req.requisition_no}
                     </TableCell>
@@ -281,41 +281,41 @@ export default function MaterialRequisitionList() {
                     </TableCell>
                     <TableCell>
                       <Badge
-                        className={
-                          statusConfigs[req.status]?.color || "bg-slate-500"
-                        }
-                      >
+                    className={
+                    statusConfigs[req.status]?.color || "bg-slate-500"
+                    }>
+
                         {statusConfigs[req.status]?.label || req.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewDetail(req.id)}
-                        >
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleViewDetail(req.id)}>
+
                           <Eye className="w-4 h-4" />
                         </Button>
-                        {req.status === "PENDING" && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedRequisition(req);
-                              setShowApproveDialog(true);
-                            }}
-                          >
+                        {req.status === "PENDING" &&
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedRequisition(req);
+                        setShowApproveDialog(true);
+                      }}>
+
                             <CheckCircle2 className="w-4 h-4" />
                           </Button>
-                        )}
+                    }
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+              )}
               </TableBody>
             </Table>
-          )}
+          }
         </CardContent>
       </Card>
       {/* Create Requisition Dialog */}
@@ -331,22 +331,22 @@ export default function MaterialRequisitionList() {
                 <Select
                   value={newRequisition.project_id?.toString() || ""}
                   onValueChange={(val) =>
-                    setNewRequisition({
-                      ...newRequisition,
-                      project_id: val ? parseInt(val) : null,
-                    })
-                  }
-                >
+                  setNewRequisition({
+                    ...newRequisition,
+                    project_id: val ? parseInt(val) : null
+                  })
+                  }>
+
                   <SelectTrigger>
                     <SelectValue placeholder="选择项目" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">无</SelectItem>
-                    {projects.map((proj) => (
-                      <SelectItem key={proj.id} value={proj.id.toString()}>
+                    {projects.map((proj) =>
+                    <SelectItem key={proj.id} value={proj.id.toString()}>
                         {proj.project_name}
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -357,13 +357,13 @@ export default function MaterialRequisitionList() {
                 <Input
                   value={newRequisition.apply_reason}
                   onChange={(e) =>
-                    setNewRequisition({
-                      ...newRequisition,
-                      apply_reason: e.target.value,
-                    })
+                  setNewRequisition({
+                    ...newRequisition,
+                    apply_reason: e.target.value
+                  })
                   }
-                  placeholder="填写申请原因"
-                />
+                  placeholder="填写申请原因" />
+
               </div>
               <div className="text-sm text-slate-500">
                 物料明细需要单独添加，创建后可在详情页添加物料项
@@ -373,8 +373,8 @@ export default function MaterialRequisitionList() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowCreateDialog(false)}
-            >
+              onClick={() => setShowCreateDialog(false)}>
+
               取消
             </Button>
             <Button onClick={handleCreateRequisition}>创建</Button>
@@ -390,8 +390,8 @@ export default function MaterialRequisitionList() {
             </DialogTitle>
           </DialogHeader>
           <DialogBody>
-            {selectedRequisition && (
-              <div className="space-y-4">
+            {selectedRequisition &&
+            <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <div className="text-sm text-slate-500 mb-1">领料单号</div>
@@ -402,10 +402,10 @@ export default function MaterialRequisitionList() {
                   <div>
                     <div className="text-sm text-slate-500 mb-1">状态</div>
                     <Badge
-                      className={
-                        statusConfigs[selectedRequisition.status]?.color
-                      }
-                    >
+                    className={
+                    statusConfigs[selectedRequisition.status]?.color
+                    }>
+
                       {statusConfigs[selectedRequisition.status]?.label}
                     </Badge>
                   </div>
@@ -422,9 +422,9 @@ export default function MaterialRequisitionList() {
                   <div>
                     <div className="text-sm text-slate-500 mb-1">申请时间</div>
                     <div>
-                      {selectedRequisition.apply_time
-                        ? formatDate(selectedRequisition.apply_time)
-                        : "-"}
+                      {selectedRequisition.apply_time ?
+                    formatDate(selectedRequisition.apply_time) :
+                    "-"}
                     </div>
                   </div>
                   <div>
@@ -433,8 +433,8 @@ export default function MaterialRequisitionList() {
                   </div>
                 </div>
                 {selectedRequisition.items &&
-                  selectedRequisition.items.length > 0 && (
-                    <div>
+              selectedRequisition.items.length > 0 &&
+              <div>
                       <div className="text-sm font-medium mb-3">物料明细</div>
                       <Table>
                         <TableHeader>
@@ -448,8 +448,8 @@ export default function MaterialRequisitionList() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {selectedRequisition.items.map((item) => (
-                            <TableRow key={item.id}>
+                          {selectedRequisition.items.map((item) =>
+                    <TableRow key={item.id}>
                               <TableCell className="font-mono text-sm">
                                 {item.material_code}
                               </TableCell>
@@ -463,33 +463,33 @@ export default function MaterialRequisitionList() {
                               </TableCell>
                               <TableCell>{item.unit}</TableCell>
                             </TableRow>
-                          ))}
+                    )}
                         </TableBody>
                       </Table>
                     </div>
-                  )}
+              }
               </div>
-            )}
+            }
           </DialogBody>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowDetailDialog(false)}
-            >
+              onClick={() => setShowDetailDialog(false)}>
+
               关闭
             </Button>
             {selectedRequisition &&
-              selectedRequisition.status === "PENDING" && (
-                <Button
-                  onClick={() => {
-                    setShowDetailDialog(false);
-                    setShowApproveDialog(true);
-                  }}
-                >
+            selectedRequisition.status === "PENDING" &&
+            <Button
+              onClick={() => {
+                setShowDetailDialog(false);
+                setShowApproveDialog(true);
+              }}>
+
                   <CheckCircle2 className="w-4 h-4 mr-2" />
                   审批
                 </Button>
-              )}
+            }
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -500,8 +500,8 @@ export default function MaterialRequisitionList() {
             <DialogTitle>审批领料单</DialogTitle>
           </DialogHeader>
           <DialogBody>
-            {selectedRequisition && (
-              <div className="space-y-4">
+            {selectedRequisition &&
+            <div className="space-y-4">
                 <div>
                   <div className="text-sm text-slate-500 mb-1">领料单号</div>
                   <div className="font-mono">
@@ -509,69 +509,69 @@ export default function MaterialRequisitionList() {
                   </div>
                 </div>
                 {selectedRequisition.items &&
-                  selectedRequisition.items.length > 0 && (
-                    <div>
+              selectedRequisition.items.length > 0 &&
+              <div>
                       <div className="text-sm font-medium mb-2">批准数量</div>
                       <div className="space-y-2">
-                        {selectedRequisition.items.map((item) => (
-                          <div
-                            key={item.id}
-                            className="flex items-center gap-2"
-                          >
+                        {selectedRequisition.items.map((item) =>
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-2">
+
                             <div className="flex-1 text-sm">
                               {item.material_name} (申请: {item.request_qty})
                             </div>
                             <Input
-                              type="number"
-                              className="w-24"
-                              value={
-                                approveData.approved_qty[item.id] ||
-                                item.request_qty
-                              }
-                              onChange={(e) =>
-                                setApproveData({
-                                  ...approveData,
-                                  approved_qty: {
-                                    ...approveData.approved_qty,
-                                    [item.id]: parseFloat(e.target.value) || 0,
-                                  },
-                                })
-                              }
-                            />
+                      type="number"
+                      className="w-24"
+                      value={
+                      approveData.approved_qty[item.id] ||
+                      item.request_qty
+                      }
+                      onChange={(e) =>
+                      setApproveData({
+                        ...approveData,
+                        approved_qty: {
+                          ...approveData.approved_qty,
+                          [item.id]: parseFloat(e.target.value) || 0
+                        }
+                      })
+                      } />
+
                           </div>
-                        ))}
+                  )}
                       </div>
                     </div>
-                  )}
+              }
                 <div>
                   <label className="text-sm font-medium mb-2 block">
                     审批意见
                   </label>
                   <Input
-                    value={approveData.approve_comment}
-                    onChange={(e) =>
-                      setApproveData({
-                        ...approveData,
-                        approve_comment: e.target.value,
-                      })
-                    }
-                    placeholder="审批意见"
-                  />
+                  value={approveData.approve_comment}
+                  onChange={(e) =>
+                  setApproveData({
+                    ...approveData,
+                    approve_comment: e.target.value
+                  })
+                  }
+                  placeholder="审批意见" />
+
                 </div>
               </div>
-            )}
+            }
           </DialogBody>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowApproveDialog(false)}
-            >
+              onClick={() => setShowApproveDialog(false)}>
+
               取消
             </Button>
             <Button onClick={handleApprove}>批准</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }

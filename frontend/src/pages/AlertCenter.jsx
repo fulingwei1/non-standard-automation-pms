@@ -1,14 +1,14 @@
 /**
  * Alert Center Management (重构版)
- * 告警中心 - 统一告警管理平台
+ * 预警中心 - 统一预警管理平台
  *
  * 功能：
- * 1. 告警创建、编辑、查看
- * 2. 告警级别和状态管理
- * 3. 告警规则配置和触发条件
+ * 1. 预警创建、编辑、查看
+ * 2. 预警级别和状态管理
+ * 3. 预警规则配置和触发条件
  * 4. 多渠道通知设置
  * 5. SLA监控和分析
- * 6. 告警批量处理和导出
+ * 6. 预警批量处理和导出
  */
 
 import { useState, useMemo, useEffect, useCallback } from "react";
@@ -34,15 +34,15 @@ import {
   CheckSquare,
   Square,
   ArrowUpDown,
-  Filter,
-} from "lucide-react";
+  Filter } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -55,14 +55,14 @@ import {
   DialogTitle,
   DialogFooter,
   DialogBody,
-  DialogDescription,
-} from "../components/ui/dialog";
-import { cn } from "../lib/utils";
+  DialogDescription } from
+"../components/ui/dialog";
+import { cn as _cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { alertApi, projectApi } from "../services/api";
 
 // 导入重构后的组件
-import { 
+import {
   AlertCenterOverview,
   ALERT_LEVELS,
   ALERT_STATUS,
@@ -72,12 +72,12 @@ import {
   getAlertStatusConfig,
   getAlertTypeConfig,
   getAvailableActions,
-  calculateResponseTime,
-  calculateResolutionTime,
-  checkResponseTimeSLA,
-  requiresEscalation,
-  getAlertSummary
-} from "../components/alert-center";
+  calculateResponseTime as _calculateResponseTime,
+  calculateResolutionTime as _calculateResolutionTime,
+  checkResponseTimeSLA as _checkResponseTimeSLA,
+  requiresEscalation as _requiresEscalation,
+  getAlertSummary as _getAlertSummary } from
+"../components/alert-center";
 
 export default function AlertCenter() {
   const navigate = useNavigate();
@@ -89,7 +89,7 @@ export default function AlertCenter() {
     critical: 0,
     today_new: 0,
     urgent: 0,
-    warning: 0,
+    warning: 0
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -106,10 +106,10 @@ export default function AlertCenter() {
   const [showResolveDialog, setShowResolveDialog] = useState(false);
   const [showCloseDialog, setShowCloseDialog] = useState(false);
   const [resolveResult, setResolveResult] = useState("");
-  const [closeReason, setCloseReason] = useState("");
+  const [_closeReason, setCloseReason] = useState("");
   const [selectedAlerts, setSelectedAlerts] = useState(new Set());
   const [sortBy, setSortBy] = useState("triggered_at");
-  const [sortOrder, setSortOrder] = useState("desc");
+  const [sortOrder, _setSortOrder] = useState("desc");
   const [projects, setProjects] = useState([]);
 
   // 加载项目列表
@@ -122,31 +122,31 @@ export default function AlertCenter() {
       // 转换为组件所需格式
       const transformedProjects = projectList.map((project) => ({
         id: project.id || project.project_code,
-        name: project.project_name || "",
+        name: project.project_name || ""
       }));
 
       setProjects(transformedProjects);
     } catch (error) {
       console.error("Failed to load projects:", error);
       const mockProjects = [
-        { id: 1, name: "测试项目A" },
-        { id: 2, name: "测试项目B" },
-        { id: 3, name: "测试项目C" },
-      ];
+      { id: 1, name: "测试项目A" },
+      { id: 2, name: "测试项目B" },
+      { id: 3, name: "测试项目C" }];
+
       setProjects(mockProjects);
     }
   }, []);
 
-  // 加载告警数据
+  // 加载预警数据
   const loadAlerts = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const params = {
         page,
-        page_size: pageSize,
+        page_size: pageSize
       };
-      
+
       if (selectedLevel !== "ALL") {
         params.alert_level = selectedLevel;
       }
@@ -165,17 +165,17 @@ export default function AlertCenter() {
       if (searchQuery) {
         params.keyword = searchQuery;
       }
-      
+
       params.ordering = sortOrder === "desc" ? `-${sortBy}` : sortBy;
 
       const response = await alertApi.list(params);
       const data = response.data?.data || response.data || response;
-      
+
       setAlerts(data.items || data || []);
       setTotal(data.total || data.length || 0);
     } catch (error) {
       console.error("Failed to load alerts:", error);
-      setError(error.response?.data?.detail || error.message || "加载告警失败");
+      setError(error.response?.data?.detail || error.message || "加载预警失败");
       setAlerts([]);
     } finally {
       setLoading(false);
@@ -187,7 +187,7 @@ export default function AlertCenter() {
     try {
       const response = await alertApi.statistics();
       const data = response.data?.data || response.data || {};
-      
+
       setStats({
         total: data.total || 0,
         pending: data.pending || 0,
@@ -195,7 +195,7 @@ export default function AlertCenter() {
         critical: data.critical || 0,
         today_new: data.today_new || 0,
         urgent: data.urgent || 0,
-        warning: data.warning || 0,
+        warning: data.warning || 0
       });
     } catch (error) {
       console.error("Failed to load statistics:", error);
@@ -212,40 +212,40 @@ export default function AlertCenter() {
     loadStatistics();
   }, [loadAlerts, loadStatistics]);
 
-  // 批量确认告警
+  // 批量确认预警
   const handleBatchAcknowledge = useCallback(async () => {
     if (selectedAlerts.size === 0) return;
 
     try {
       const promises = Array.from(selectedAlerts).map((id) =>
-        alertApi.acknowledge(id),
+      alertApi.acknowledge(id)
       );
       await Promise.all(promises);
       await loadAlerts();
       await loadStatistics();
       const count = selectedAlerts.size;
       setSelectedAlerts(new Set());
-      toast.success(`已批量确认 ${count} 条告警`);
+      toast.success(`已批量确认 ${count} 条预警`);
     } catch (error) {
       console.error("Failed to batch acknowledge:", error);
       toast.error("批量确认失败，请稍后重试");
     }
   }, [selectedAlerts, loadAlerts, loadStatistics]);
 
-  // 批量解决告警
+  // 批量解决预警
   const handleBatchResolve = useCallback(async () => {
     if (selectedAlerts.size === 0) return;
 
     try {
       const promises = Array.from(selectedAlerts).map((id) =>
-        alertApi.resolve(id, { resolution_method: "批量解决", resolution_note: "批量操作" }),
+      alertApi.resolve(id, { resolution_method: "批量解决", resolution_note: "批量操作" })
       );
       await Promise.all(promises);
       await loadAlerts();
       await loadStatistics();
       const count = selectedAlerts.size;
       setSelectedAlerts(new Set());
-      toast.success(`已批量解决 ${count} 条告警`);
+      toast.success(`已批量解决 ${count} 条预警`);
     } catch (error) {
       console.error("Failed to batch resolve:", error);
       toast.error("批量解决失败，请稍后重试");
@@ -260,19 +260,19 @@ export default function AlertCenter() {
         alert_level: selectedLevel !== "ALL" ? selectedLevel : undefined,
         status: selectedStatus !== "ALL" ? selectedStatus : undefined,
         start_date: dateRange.start || undefined,
-        end_date: dateRange.end || undefined,
+        end_date: dateRange.end || undefined
       };
 
       const response = await alertApi.exportExcel(params);
       const blob = new Blob([response.data], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
       });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
       link.setAttribute(
         "download",
-        `告警报表_${new Date().toISOString().split("T")[0]}.xlsx`,
+        `预警报表_${new Date().toISOString().split("T")[0]}.xlsx`
       );
       document.body.appendChild(link);
       link.click();
@@ -293,7 +293,7 @@ export default function AlertCenter() {
         alert_level: selectedLevel !== "ALL" ? selectedLevel : undefined,
         status: selectedStatus !== "ALL" ? selectedStatus : undefined,
         start_date: dateRange.start || undefined,
-        end_date: dateRange.end || undefined,
+        end_date: dateRange.end || undefined
       };
 
       const response = await alertApi.exportPdf(params);
@@ -303,7 +303,7 @@ export default function AlertCenter() {
       link.href = url;
       link.setAttribute(
         "download",
-        `告警报表_${new Date().toISOString().split("T")[0]}.pdf`,
+        `预警报表_${new Date().toISOString().split("T")[0]}.pdf`
       );
       document.body.appendChild(link);
       link.click();
@@ -328,42 +328,42 @@ export default function AlertCenter() {
       await alertApi.acknowledge(alertId);
       await loadAlerts();
       await loadStatistics();
-      toast.success("告警确认成功");
+      toast.success("预警确认成功");
     } catch (error) {
       console.error("Failed to acknowledge:", error);
       toast.error("确认失败，请稍后重试");
     }
   }, [loadAlerts, loadStatistics]);
 
-  // 解决告警
+  // 解决预警
   const handleResolve = useCallback(async (alertId, result) => {
     try {
       await alertApi.resolve(alertId, {
         resolution_method: "手动解决",
-        resolution_note: result,
+        resolution_note: result
       });
       setShowResolveDialog(false);
       setResolveResult("");
       await loadAlerts();
       await loadStatistics();
-      toast.success("告警解决成功");
+      toast.success("预警解决成功");
     } catch (error) {
       console.error("Failed to resolve:", error);
       toast.error("解决失败，请稍后重试");
     }
   }, [loadAlerts, loadStatistics]);
 
-  // 关闭告警
-  const handleClose = useCallback(async (alertId, reason) => {
+  // 关闭预警
+  const _handleClose = useCallback(async (alertId, reason) => {
     try {
       await alertApi.close(alertId, {
-        closure_reason: reason,
+        closure_reason: reason
       });
       setShowCloseDialog(false);
       setCloseReason("");
       await loadAlerts();
       await loadStatistics();
-      toast.success("告警关闭成功");
+      toast.success("预警关闭成功");
     } catch (error) {
       console.error("Failed to close:", error);
       toast.error("关闭失败，请稍后重试");
@@ -376,19 +376,19 @@ export default function AlertCenter() {
     const sorted = [...alerts].sort((a, b) => {
       let aValue = a[sortBy];
       let bValue = b[sortBy];
-      
+
       if (sortBy === "triggered_at" && aValue) {
         aValue = new Date(aValue).getTime();
         bValue = new Date(bValue).getTime();
       }
-      
+
       if (sortOrder === "desc") {
         return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
       } else {
         return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
       }
     });
-    
+
     return sorted;
   }, [alerts, sortBy, sortOrder]);
 
@@ -397,7 +397,7 @@ export default function AlertCenter() {
     if (selectedAlerts.size === filteredAlerts.length) {
       setSelectedAlerts(new Set());
     } else {
-      setSelectedAlerts(new Set(filteredAlerts.map(alert => alert.id)));
+      setSelectedAlerts(new Set(filteredAlerts.map((alert) => alert.id)));
     }
   }, [filteredAlerts, selectedAlerts.size]);
 
@@ -415,11 +415,11 @@ export default function AlertCenter() {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (
-        (e.ctrlKey || e.metaKey) &&
-        e.key === "a" &&
-        e.target.tagName !== "INPUT" &&
-        e.target.tagName !== "TEXTAREA"
-      ) {
+      (e.ctrlKey || e.metaKey) &&
+      e.key === "a" &&
+      e.target.tagName !== "INPUT" &&
+      e.target.tagName !== "TEXTAREA")
+      {
         e.preventDefault();
         handleSelectAll();
       }
@@ -428,18 +428,18 @@ export default function AlertCenter() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [
-    showDetail,
-    showResolveDialog,
-    showCloseDialog,
-    filteredAlerts,
-    handleSelectAll,
-  ]);
+  showDetail,
+  showResolveDialog,
+  showCloseDialog,
+  filteredAlerts,
+  handleSelectAll]
+  );
 
   // 快速操作处理
   const handleQuickAction = useCallback((action) => {
     switch (action) {
       case 'createAlert':
-        // 跳转到创建告警页面
+        // 跳转到创建预警页面
         navigate('/alerts/create');
         break;
       case 'manageRules':
@@ -459,45 +459,45 @@ export default function AlertCenter() {
 
   if (loading && alerts.length === 0) {
     return (
-      <LoadingCard message="加载告警数据中..." />
-    );
+      <LoadingCard message="加载预警数据中..." />);
+
   }
 
   if (error) {
     return (
-      <ErrorMessage 
-        message={error} 
-        onRetry={loadAlerts}
-      />
-    );
+      <ErrorMessage
+        message={error}
+        onRetry={loadAlerts} />);
+
+
   }
 
   return (
     <div className="min-h-screen bg-slate-900 text-white">
       <PageHeader
-        title="告警中心"
-        subtitle="统一告警管理平台 - 实时监控、智能分析、快速响应"
+        title="预警中心"
+        subtitle="统一预警管理平台 - 实时监控、智能分析、快速响应"
         breadcrumbs={[
-          { label: "系统管理", href: "/system" },
-          { label: "告警中心" }
-        ]}
+        { label: "系统管理", href: "/system" },
+        { label: "预警中心" }]
+        }
         actions={[
-          {
-            label: "新建规则",
-            icon: Settings,
-            onClick: () => navigate('/alerts/rules/create'),
-            variant: "default"
-          }
-        ]}
-      />
+        {
+          label: "新建规则",
+          icon: Settings,
+          onClick: () => navigate('/alerts/rules/create'),
+          variant: "default"
+        }]
+        } />
+
 
       <div className="container mx-auto px-4 py-6 space-y-6">
-        {/* 告警概览 */}
+        {/* 预警概览 */}
         <AlertCenterOverview
           alerts={alerts}
           stats={stats}
-          onQuickAction={handleQuickAction}
-        />
+          onQuickAction={handleQuickAction} />
+
 
         {/* 筛选和搜索 */}
         <motion.div variants={fadeIn} initial="hidden" animate="visible">
@@ -508,68 +508,68 @@ export default function AlertCenter() {
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
-                      placeholder="搜索告警标题、描述、项目..."
+                      placeholder="搜索预警标题、描述、项目..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 bg-slate-800/50 border-slate-700"
-                    />
+                      className="pl-10 bg-slate-800/50 border-slate-700" />
+
                   </div>
                 </div>
                 <div className="flex gap-2 flex-wrap">
                   <select
                     value={selectedLevel}
                     onChange={(e) => setSelectedLevel(e.target.value)}
-                    className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white"
-                  >
+                    className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white">
+
                     <option value="ALL">全部级别</option>
-                    {Object.entries(ALERT_LEVELS).map(([key, config]) => (
-                      <option key={key} value={key}>
+                    {Object.entries(ALERT_LEVELS).map(([key, config]) =>
+                    <option key={key} value={key}>
                         {config.label}
                       </option>
-                    ))}
+                    )}
                   </select>
                   <select
                     value={selectedStatus}
                     onChange={(e) => setSelectedStatus(e.target.value)}
-                    className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white"
-                  >
+                    className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white">
+
                     <option value="ALL">全部状态</option>
-                    {Object.entries(ALERT_STATUS).map(([key, config]) => (
-                      <option key={key} value={key}>
+                    {Object.entries(ALERT_STATUS).map(([key, config]) =>
+                    <option key={key} value={key}>
                         {config.label}
                       </option>
-                    ))}
+                    )}
                   </select>
                   <select
                     value={selectedProject}
                     onChange={(e) => setSelectedProject(e.target.value)}
-                    className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white"
-                  >
+                    className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white">
+
                     <option value="ALL">全部项目</option>
-                    {projects.map(project => (
-                      <option key={project.id} value={project.id}>
+                    {projects.map((project) =>
+                    <option key={project.id} value={project.id}>
                         {project.name}
                       </option>
-                    ))}
+                    )}
                   </select>
                   <Input
                     type="date"
                     value={dateRange.start}
-                    onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                    onChange={(e) => setDateRange((prev) => ({ ...prev, start: e.target.value }))}
                     className="w-40"
-                    placeholder="开始日期"
-                  />
+                    placeholder="开始日期" />
+
                   <Input
                     type="date"
                     value={dateRange.end}
-                    onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                    onChange={(e) => setDateRange((prev) => ({ ...prev, end: e.target.value }))}
                     className="w-40"
-                    placeholder="结束日期"
-                  />
+                    placeholder="结束日期" />
+
                   <Button
                     variant="outline"
-                    onClick={() => setSortBy(prev => prev === sortBy ? 'triggered_at' : prev)}
-                  >
+                    onClick={() => setSortBy((prev) => prev === sortBy ? 'triggered_at' : prev)}>
+
                     <ArrowUpDown className="h-4 w-4 mr-2" />
                     {sortBy === 'triggered_at' ? '默认排序' : '按时间排序'}
                   </Button>
@@ -579,83 +579,83 @@ export default function AlertCenter() {
           </Card>
         </motion.div>
 
-        {/* 告警列表 */}
+        {/* 预警列表 */}
         <motion.div
           variants={staggerContainer}
           initial="hidden"
-          animate="visible"
-        >
-          {filteredAlerts.length === 0 ? (
-            <Card>
+          animate="visible">
+
+          {filteredAlerts.length === 0 ?
+          <Card>
               <CardContent className="p-8">
                 <EmptyState
-                  icon={AlertTriangle}
-                  title="暂无告警"
-                  description={searchQuery || selectedLevel !== "ALL" || selectedStatus !== "ALL" ? "没有找到匹配的告警" : "系统运行正常，暂无告警"}
-                  action={
-                    <Button
-                      onClick={() => navigate('/alerts/create')}
-                      className="mt-4"
-                    >
+                icon={AlertTriangle}
+                title="暂无预警"
+                description={searchQuery || selectedLevel !== "ALL" || selectedStatus !== "ALL" ? "没有找到匹配的预警" : "系统运行正常，暂无预警"}
+                action={
+                <Button
+                  onClick={() => navigate('/alerts/create')}
+                  className="mt-4">
+
                       <AlertTriangle className="h-4 w-4 mr-2" />
-                      创建测试告警
+                      创建测试预警
                     </Button>
-                  }
-                />
+                } />
+
               </CardContent>
-            </Card>
-          ) : (
-            <>
+            </Card> :
+
+          <>
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold">告警列表</h3>
+                    <h3 className="text-lg font-semibold">预警列表</h3>
                     <div className="flex items-center gap-2">
-                      {selectedAlerts.size > 0 && (
-                        <>
+                      {selectedAlerts.size > 0 &&
+                    <>
                           <Button
-                            size="sm"
-                            onClick={handleBatchAcknowledge}
-                            className="bg-blue-500 hover:bg-blue-600"
-                          >
+                        size="sm"
+                        onClick={handleBatchAcknowledge}
+                        className="bg-blue-500 hover:bg-blue-600">
+
                             批量确认 ({selectedAlerts.size})
                           </Button>
                           <Button
-                            size="sm"
-                            onClick={handleBatchResolve}
-                            className="bg-emerald-500 hover:bg-emerald-600"
-                          >
+                        size="sm"
+                        onClick={handleBatchResolve}
+                        className="bg-emerald-500 hover:bg-emerald-600">
+
                             批量解决 ({selectedAlerts.size})
                           </Button>
                         </>
-                      )}
+                    }
                       <Button
-                        size="sm"
-                        onClick={() =>
-                          setSelectedAlerts(
-                            new Set(filteredAlerts.map((alert) => alert.id)),
-                          )
-                        }
-                        variant="outline"
-                      >
-                        {selectedAlerts.size === filteredAlerts.length
-                          ? "取消全选"
-                          : "全选"}
+                      size="sm"
+                      onClick={() =>
+                      setSelectedAlerts(
+                        new Set(filteredAlerts.map((alert) => alert.id))
+                      )
+                      }
+                      variant="outline">
+
+                        {selectedAlerts.size === filteredAlerts.length ?
+                      "取消全选" :
+                      "全选"}
                       </Button>
                       <div className="flex gap-1">
                         <Button
-                          size="sm"
-                          onClick={handleExportExcel}
-                          variant="outline"
-                        >
+                        size="sm"
+                        onClick={handleExportExcel}
+                        variant="outline">
+
                           <Download className="h-4 w-4 mr-2" />
                           Excel
                         </Button>
                         <Button
-                          size="sm"
-                          onClick={handleExportPdf}
-                          variant="outline"
-                        >
+                        size="sm"
+                        onClick={handleExportPdf}
+                        variant="outline">
+
                           <Download className="h-4 w-4 mr-2" />
                           PDF
                         </Button>
@@ -665,7 +665,7 @@ export default function AlertCenter() {
                 </CardContent>
               </Card>
 
-              {/* 告警列表内容 */}
+              {/* 预警列表内容 */}
               <div className="space-y-4">
               {filteredAlerts.map((alert, index) => {
                 const levelConfig = getAlertLevelConfig(alert.alert_level);
@@ -677,8 +677,8 @@ export default function AlertCenter() {
                   <motion.div
                     key={alert.id}
                     variants={fadeIn}
-                    custom={index}
-                  >
+                    custom={index}>
+
                     <Card className="bg-slate-800/50 border-slate-700 hover:bg-slate-800/70 transition-colors">
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between">
@@ -687,13 +687,13 @@ export default function AlertCenter() {
                               type="checkbox"
                               checked={selectedAlerts.has(alert.id)}
                               onChange={(e) => handleSelectOne(alert.id, e.target.checked)}
-                              className="mt-1"
-                            />
+                              className="mt-1" />
+
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-3 mb-2">
                                 <div className={`w-3 h-3 rounded-full ${levelConfig.color}`} />
                                 <h4 className="text-lg font-semibold text-white">
-                                  {alert.title || '未命名告警'}
+                                  {alert.title || '未命名预警'}
                                 </h4>
                                 <Badge className={levelConfig.color}>
                                   {levelConfig.label}
@@ -720,42 +720,42 @@ export default function AlertCenter() {
                                 </div>
                               </div>
 
-                              {alert.description && (
-                                <div className="mb-3">
+                              {alert.description &&
+                              <div className="mb-3">
                                   <p className="text-sm text-slate-300 mb-1">描述:</p>
                                   <p className="text-sm text-white line-clamp-2">
                                     {alert.description}
                                   </p>
                                 </div>
-                              )}
+                              }
 
                               <div className="flex flex-wrap gap-2">
-                                {availableActions.includes('确认') && (
-                                  <Button
-                                    size="sm"
-                                    onClick={() => handleAcknowledge(alert.id)}
-                                    className="bg-blue-500 hover:bg-blue-600"
-                                  >
+                                {availableActions.includes('确认') &&
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleAcknowledge(alert.id)}
+                                  className="bg-blue-500 hover:bg-blue-600">
+
                                     确认
                                   </Button>
-                                )}
-                                {availableActions.includes('解决') && (
-                                  <Button
-                                    size="sm"
-                                    onClick={() => {
-                                      setSelectedAlert(alert);
-                                      setShowResolveDialog(true);
-                                    }}
-                                    className="bg-emerald-500 hover:bg-emerald-600"
-                                  >
+                                }
+                                {availableActions.includes('解决') &&
+                                <Button
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedAlert(alert);
+                                    setShowResolveDialog(true);
+                                  }}
+                                  className="bg-emerald-500 hover:bg-emerald-600">
+
                                     解决
                                   </Button>
-                                )}
+                                }
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => handleViewDetail(alert)}
-                                >
+                                  onClick={() => handleViewDetail(alert)}>
+
                                   <Eye className="h-4 w-4 mr-2" />
                                   详情
                                 </Button>
@@ -765,50 +765,50 @@ export default function AlertCenter() {
                         </div>
                       </CardContent>
                     </Card>
-                  </motion.div>
-                );
+                  </motion.div>);
+
               })}
               </div>
             </>
-          )}
+          }
 
           {/* 分页 */}
-          {total > pageSize && (
-            <div className="flex justify-center items-center gap-2 mt-6">
+          {total > pageSize &&
+          <div className="flex justify-center items-center gap-2 mt-6">
               <Button
-                variant="outline"
-                onClick={() => setPage(prev => Math.max(1, prev - 1))}
-                disabled={page <= 1}
-              >
+              variant="outline"
+              onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+              disabled={page <= 1}>
+
                 上一页
               </Button>
               <span className="text-sm text-slate-400">
                 第 {page} 页，共 {Math.ceil(total / pageSize)} 页
               </span>
               <Button
-                variant="outline"
-                onClick={() => setPage(prev => prev + 1)}
-                disabled={page >= Math.ceil(total / pageSize)}
-              >
+              variant="outline"
+              onClick={() => setPage((prev) => prev + 1)}
+              disabled={page >= Math.ceil(total / pageSize)}>
+
                 下一页
               </Button>
             </div>
-          )}
+          }
         </motion.div>
 
-        {/* 解决告警对话框 */}
+        {/* 解决预警对话框 */}
         <Dialog open={showResolveDialog} onOpenChange={setShowResolveDialog}>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>解决告警</DialogTitle>
+              <DialogTitle>解决预警</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              {selectedAlert && (
-                <div className="text-sm text-slate-300">
-                  <p><strong>告警:</strong> {selectedAlert.title}</p>
+              {selectedAlert &&
+              <div className="text-sm text-slate-300">
+                  <p><strong>预警:</strong> {selectedAlert.title}</p>
                   <p><strong>级别:</strong> {getAlertLevelConfig(selectedAlert.alert_level).label}</p>
                 </div>
-              )}
+              }
               <div>
                 <label className="text-sm font-medium text-slate-300">解决方案</label>
                 <textarea
@@ -816,51 +816,51 @@ export default function AlertCenter() {
                   onChange={(e) => setResolveResult(e.target.value)}
                   className="w-full mt-1 p-2 bg-slate-800 border border-slate-700 rounded text-white"
                   rows={3}
-                  placeholder="请输入解决方案..."
-                />
+                  placeholder="请输入解决方案..." />
+
               </div>
             </div>
             <DialogFooter>
               <Button
                 variant="outline"
-                onClick={() => setShowResolveDialog(false)}
-              >
+                onClick={() => setShowResolveDialog(false)}>
+
                 取消
               </Button>
               <Button
                 onClick={() => handleResolve(selectedAlert.id, resolveResult)}
-                className="bg-emerald-500 hover:bg-emerald-600"
-              >
+                className="bg-emerald-500 hover:bg-emerald-600">
+
                 确认解决
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
 
-        {/* 告警详情对话框 */}
+        {/* 预警详情对话框 */}
         <Dialog open={showDetail} onOpenChange={setShowDetail}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>告警详情</DialogTitle>
+              <DialogTitle>预警详情</DialogTitle>
             </DialogHeader>
-            {selectedAlert && (
-              <div className="space-y-6">
+            {selectedAlert &&
+            <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <h3 className="text-lg font-semibold text-white mb-4">基本信息</h3>
                     <div className="space-y-3">
                       <div>
-                        <span className="text-sm text-slate-400">告警编号:</span>
+                        <span className="text-sm text-slate-400">预警编号:</span>
                         <p className="text-white">{selectedAlert.alert_no || '-'}</p>
                       </div>
                       <div>
-                        <span className="text-sm text-slate-400">告警级别:</span>
+                        <span className="text-sm text-slate-400">预警级别:</span>
                         <p className="text-white">
                           {getAlertLevelConfig(selectedAlert.alert_level).label}
                         </p>
                       </div>
                       <div>
-                        <span className="text-sm text-slate-400">告警类型:</span>
+                        <span className="text-sm text-slate-400">预警类型:</span>
                         <p className="text-white">
                           {getAlertTypeConfig(selectedAlert.alert_type).label}
                         </p>
@@ -882,54 +882,54 @@ export default function AlertCenter() {
                           {selectedAlert.triggered_at ? new Date(selectedAlert.triggered_at).toLocaleString() : '-'}
                         </p>
                       </div>
-                      {selectedAlert.first_action_time && (
-                        <div>
+                      {selectedAlert.first_action_time &&
+                    <div>
                           <span className="text-sm text-slate-400">首次响应:</span>
                           <p className="text-white">
                             {new Date(selectedAlert.first_action_time).toLocaleString()}
                           </p>
                         </div>
-                      )}
-                      {selectedAlert.resolved_time && (
-                        <div>
+                    }
+                      {selectedAlert.resolved_time &&
+                    <div>
                           <span className="text-sm text-slate-400">解决时间:</span>
                           <p className="text-white">
                             {new Date(selectedAlert.resolved_time).toLocaleString()}
                           </p>
                         </div>
-                      )}
+                    }
                     </div>
                   </div>
                 </div>
 
-                {selectedAlert.description && (
-                  <div>
+                {selectedAlert.description &&
+              <div>
                     <h3 className="text-lg font-semibold text-white mb-4">详细描述</h3>
                     <p className="text-slate-300">{selectedAlert.description}</p>
                   </div>
-                )}
+              }
 
-                {selectedAlert.trigger_data && (
-                  <div>
+                {selectedAlert.trigger_data &&
+              <div>
                     <h3 className="text-lg font-semibold text-white mb-4">触发数据</h3>
                     <pre className="bg-slate-800 p-4 rounded text-sm text-slate-300 overflow-auto">
                       {JSON.stringify(selectedAlert.trigger_data, null, 2)}
                     </pre>
                   </div>
-                )}
+              }
               </div>
-            )}
+            }
             <DialogFooter>
               <Button
                 onClick={() => setShowDetail(false)}
-                className="w-full"
-              >
+                className="w-full">
+
                 关闭
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
-    </div>
-  );
+    </div>);
+
 }

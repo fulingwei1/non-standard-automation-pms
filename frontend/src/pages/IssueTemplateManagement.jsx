@@ -14,16 +14,16 @@ import {
   Tag,
   AlertCircle,
   CheckCircle2,
-  XCircle,
-} from "lucide-react";
+  XCircle } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
-} from "../components/ui/card";
+  CardDescription } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -32,58 +32,58 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "../components/ui/table";
+  TableRow } from
+"../components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-} from "../components/ui/dialog";
+  DialogFooter } from
+"../components/ui/dialog";
 import { Textarea } from "../components/ui/textarea";
 import { Label } from "../components/ui/label";
 import { formatDate } from "../lib/utils";
 import {
   issueTemplateApi,
-  issueApi,
+  issueApi as _issueApi,
   projectApi,
-  machineApi,
-} from "../services/api";
-import { cn } from "../lib/utils";
+  machineApi } from
+"../services/api";
+import { cn as _cn } from "../lib/utils";
 
 const categoryConfigs = {
   PROJECT: { label: "项目问题", color: "bg-blue-500" },
   TASK: { label: "任务问题", color: "bg-purple-500" },
-  ACCEPTANCE: { label: "验收问题", color: "bg-emerald-500" },
+  ACCEPTANCE: { label: "验收问题", color: "bg-emerald-500" }
 };
 
 const issueTypeConfigs = {
   DEFECT: { label: "缺陷", color: "bg-red-500" },
   RISK: { label: "风险", color: "bg-orange-500" },
   BLOCKER: { label: "阻塞", color: "bg-red-600" },
-  TASK: { label: "任务", color: "bg-blue-500" },
+  TASK: { label: "任务", color: "bg-blue-500" }
 };
 
 const severityConfigs = {
   CRITICAL: { label: "严重", color: "bg-red-500" },
   MAJOR: { label: "重要", color: "bg-orange-500" },
-  MINOR: { label: "一般", color: "bg-blue-500" },
+  MINOR: { label: "一般", color: "bg-blue-500" }
 };
 
 const priorityConfigs = {
   URGENT: { label: "紧急", color: "bg-red-500" },
   HIGH: { label: "高", color: "bg-orange-500" },
   MEDIUM: { label: "中", color: "bg-yellow-500" },
-  LOW: { label: "低", color: "bg-blue-500" },
+  LOW: { label: "低", color: "bg-blue-500" }
 };
 
 export default function IssueTemplateManagement() {
@@ -121,7 +121,7 @@ export default function IssueTemplateManagement() {
     default_impact_scope: "",
     default_is_blocking: false,
     is_active: true,
-    remark: "",
+    remark: ""
   });
 
   const [createIssueForm, setCreateIssueForm] = useState({
@@ -133,7 +133,7 @@ export default function IssueTemplateManagement() {
     severity: "",
     priority: "",
     title: "",
-    description: "",
+    description: ""
   });
 
   const [tagInput, setTagInput] = useState("");
@@ -182,7 +182,7 @@ export default function IssueTemplateManagement() {
     try {
       const res = await machineApi.list({
         project_id: projectId,
-        page_size: 1000,
+        page_size: 1000
       });
       const items = res.data?.items || res.data?.data?.items || res.data || [];
       setMachines(items);
@@ -212,7 +212,7 @@ export default function IssueTemplateManagement() {
       default_impact_scope: "",
       default_is_blocking: false,
       is_active: true,
-      remark: "",
+      remark: ""
     });
     setTagInput("");
     setShowCreateDialog(true);
@@ -231,22 +231,22 @@ export default function IssueTemplateManagement() {
       title_template: template.title_template || "",
       description_template: template.description_template || "",
       solution_template: template.solution_template || "",
-      default_tags: Array.isArray(template.default_tags)
-        ? template.default_tags
-        : template.default_tags
-          ? JSON.parse(template.default_tags)
-          : [],
+      default_tags: Array.isArray(template.default_tags) ?
+      template.default_tags :
+      template.default_tags ?
+      JSON.parse(template.default_tags) :
+      [],
       default_impact_scope: template.default_impact_scope || "",
       default_is_blocking: template.default_is_blocking || false,
       is_active: template.is_active !== false,
-      remark: template.remark || "",
+      remark: template.remark || ""
     });
     setTagInput(
-      template.default_tags
-        ? Array.isArray(template.default_tags)
-          ? template.default_tags.join(",")
-          : JSON.parse(template.default_tags).join(",")
-        : "",
+      template.default_tags ?
+      Array.isArray(template.default_tags) ?
+      template.default_tags.join(",") :
+      JSON.parse(template.default_tags).join(",") :
+      ""
     );
     setShowEditDialog(true);
   };
@@ -277,7 +277,7 @@ export default function IssueTemplateManagement() {
       severity: "",
       priority: "",
       title: "",
-      description: "",
+      description: ""
     });
     setShowCreateIssueDialog(true);
   };
@@ -291,16 +291,16 @@ export default function IssueTemplateManagement() {
     try {
       setLoading(true);
       // 处理标签
-      const tags = tagInput
-        ? tagInput
-            .split(",")
-            .map((t) => t.trim())
-            .filter((t) => t)
-        : [];
+      const tags = tagInput ?
+      tagInput.
+      split(",").
+      map((t) => t.trim()).
+      filter((t) => t) :
+      [];
 
       const formData = {
         ...templateForm,
-        default_tags: tags,
+        default_tags: tags
       };
 
       if (selectedTemplate) {
@@ -343,22 +343,22 @@ export default function IssueTemplateManagement() {
       setLoading(true);
       const formData = {
         ...createIssueForm,
-        project_id: createIssueForm.project_id
-          ? parseInt(createIssueForm.project_id)
-          : null,
-        machine_id: createIssueForm.machine_id
-          ? parseInt(createIssueForm.machine_id)
-          : null,
-        task_id: createIssueForm.task_id
-          ? parseInt(createIssueForm.task_id)
-          : null,
-        assignee_id: createIssueForm.assignee_id
-          ? parseInt(createIssueForm.assignee_id)
-          : null,
+        project_id: createIssueForm.project_id ?
+        parseInt(createIssueForm.project_id) :
+        null,
+        machine_id: createIssueForm.machine_id ?
+        parseInt(createIssueForm.machine_id) :
+        null,
+        task_id: createIssueForm.task_id ?
+        parseInt(createIssueForm.task_id) :
+        null,
+        assignee_id: createIssueForm.assignee_id ?
+        parseInt(createIssueForm.assignee_id) :
+        null,
         severity: createIssueForm.severity || null,
         priority: createIssueForm.priority || null,
         title: createIssueForm.title || null,
-        description: createIssueForm.description || null,
+        description: createIssueForm.description || null
       };
 
       await issueTemplateApi.createIssue(selectedTemplate.id, formData);
@@ -379,8 +379,8 @@ export default function IssueTemplateManagement() {
         const keyword = searchKeyword.toLowerCase();
         return (
           template.template_name?.toLowerCase().includes(keyword) ||
-          template.template_code?.toLowerCase().includes(keyword)
-        );
+          template.template_code?.toLowerCase().includes(keyword));
+
       }
       return true;
     });
@@ -390,8 +390,8 @@ export default function IssueTemplateManagement() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <PageHeader
         title="问题模板管理"
-        description="管理问题模板，快速创建常见问题类型"
-      />
+        description="管理问题模板，快速创建常见问题类型" />
+
 
       <div className="container mx-auto px-4 py-6 space-y-6">
         {/* Filters */}
@@ -404,8 +404,8 @@ export default function IssueTemplateManagement() {
                   placeholder="搜索模板名称、编码..."
                   value={searchKeyword}
                   onChange={(e) => setSearchKeyword(e.target.value)}
-                  className="pl-10 bg-surface-100 border-white/10 text-white"
-                />
+                  className="pl-10 bg-surface-100 border-white/10 text-white" />
+
               </div>
               <Select value={filterCategory} onValueChange={setFilterCategory}>
                 <SelectTrigger className="bg-surface-100 border-white/10 text-white">
@@ -413,11 +413,11 @@ export default function IssueTemplateManagement() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部分类</SelectItem>
-                  {Object.entries(categoryConfigs).map(([key, config]) => (
-                    <SelectItem key={key} value={key}>
+                  {Object.entries(categoryConfigs).map(([key, config]) =>
+                  <SelectItem key={key} value={key}>
                       {config.label}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
               <Select value={filterActive} onValueChange={setFilterActive}>
@@ -438,8 +438,8 @@ export default function IssueTemplateManagement() {
         <div className="flex justify-end">
           <Button
             onClick={handleCreate}
-            className="bg-primary hover:bg-primary/90"
-          >
+            className="bg-primary hover:bg-primary/90">
+
             <Plus className="w-4 h-4 mr-2" />
             新建模板
           </Button>
@@ -454,12 +454,12 @@ export default function IssueTemplateManagement() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {loading ? (
-              <div className="text-center py-8 text-slate-400">加载中...</div>
-            ) : filteredTemplates.length === 0 ? (
-              <div className="text-center py-8 text-slate-400">暂无模板</div>
-            ) : (
-              <Table>
+            {loading ?
+            <div className="text-center py-8 text-slate-400">加载中...</div> :
+            filteredTemplates.length === 0 ?
+            <div className="text-center py-8 text-slate-400">暂无模板</div> :
+
+            <Table>
                 <TableHeader>
                   <TableRow className="border-white/10">
                     <TableHead className="text-slate-300">模板名称</TableHead>
@@ -476,11 +476,11 @@ export default function IssueTemplateManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredTemplates.map((template) => (
-                    <TableRow
-                      key={template.id}
-                      className="border-white/10 hover:bg-surface-100/50"
-                    >
+                  {filteredTemplates.map((template) =>
+                <TableRow
+                  key={template.id}
+                  className="border-white/10 hover:bg-surface-100/50">
+
                       <TableCell className="font-medium text-white">
                         {template.template_name}
                       </TableCell>
@@ -489,93 +489,93 @@ export default function IssueTemplateManagement() {
                       </TableCell>
                       <TableCell>
                         <Badge
-                          className={
-                            categoryConfigs[template.category]?.color ||
-                            "bg-slate-500"
-                          }
-                        >
+                      className={
+                      categoryConfigs[template.category]?.color ||
+                      "bg-slate-500"
+                      }>
+
                           {categoryConfigs[template.category]?.label ||
-                            template.category}
+                      template.category}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge
-                          className={
-                            issueTypeConfigs[template.issue_type]?.color ||
-                            "bg-slate-500"
-                          }
-                        >
+                      className={
+                      issueTypeConfigs[template.issue_type]?.color ||
+                      "bg-slate-500"
+                      }>
+
                           {issueTypeConfigs[template.issue_type]?.label ||
-                            template.issue_type}
+                      template.issue_type}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge
-                          className={
-                            priorityConfigs[template.default_priority]?.color ||
-                            "bg-slate-500"
-                          }
-                        >
+                      className={
+                      priorityConfigs[template.default_priority]?.color ||
+                      "bg-slate-500"
+                      }>
+
                           {priorityConfigs[template.default_priority]?.label ||
-                            template.default_priority}
+                      template.default_priority}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-slate-300">
                         {template.usage_count || 0}
                       </TableCell>
                       <TableCell>
-                        {template.is_active ? (
-                          <Badge className="bg-green-500">启用</Badge>
-                        ) : (
-                          <Badge className="bg-gray-500">禁用</Badge>
-                        )}
+                        {template.is_active ?
+                    <Badge className="bg-green-500">启用</Badge> :
+
+                    <Badge className="bg-gray-500">禁用</Badge>
+                    }
                       </TableCell>
                       <TableCell className="text-slate-400 text-sm">
-                        {template.created_at
-                          ? formatDate(template.created_at)
-                          : "-"}
+                        {template.created_at ?
+                    formatDate(template.created_at) :
+                    "-"}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleViewDetail(template.id)}
-                            className="text-slate-300 hover:text-white"
-                          >
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleViewDetail(template.id)}
+                        className="text-slate-300 hover:text-white">
+
                             <Eye className="w-4 h-4" />
                           </Button>
                           <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(template)}
-                            className="text-slate-300 hover:text-white"
-                          >
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(template)}
+                        className="text-slate-300 hover:text-white">
+
                             <Edit className="w-4 h-4" />
                           </Button>
                           <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleCreateIssue(template)}
-                            className="text-slate-300 hover:text-white"
-                          >
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleCreateIssue(template)}
+                        className="text-slate-300 hover:text-white">
+
                             <Copy className="w-4 h-4" />
                           </Button>
                           <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(template)}
-                            className="text-red-400 hover:text-red-300"
-                          >
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(template)}
+                        className="text-red-400 hover:text-red-300">
+
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                )}
                 </TableBody>
               </Table>
-            )}
+            }
           </CardContent>
         </Card>
       </div>
@@ -589,8 +589,8 @@ export default function IssueTemplateManagement() {
             setShowEditDialog(false);
             setSelectedTemplate(null);
           }
-        }}
-      >
+        }}>
+
         <DialogContent className="bg-surface-50 border-white/10 max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-white">
@@ -604,28 +604,28 @@ export default function IssueTemplateManagement() {
                 <Input
                   value={templateForm.template_name}
                   onChange={(e) =>
-                    setTemplateForm({
-                      ...templateForm,
-                      template_name: e.target.value,
-                    })
+                  setTemplateForm({
+                    ...templateForm,
+                    template_name: e.target.value
+                  })
                   }
                   className="bg-surface-100 border-white/10 text-white"
-                  placeholder="例如：温度控制问题模板"
-                />
+                  placeholder="例如：温度控制问题模板" />
+
               </div>
               <div>
                 <Label className="text-slate-300">模板编码 *</Label>
                 <Input
                   value={templateForm.template_code}
                   onChange={(e) =>
-                    setTemplateForm({
-                      ...templateForm,
-                      template_code: e.target.value,
-                    })
+                  setTemplateForm({
+                    ...templateForm,
+                    template_code: e.target.value
+                  })
                   }
                   className="bg-surface-100 border-white/10 text-white"
-                  placeholder="例如：TEMP_CTRL_001"
-                />
+                  placeholder="例如：TEMP_CTRL_001" />
+
               </div>
             </div>
 
@@ -635,18 +635,18 @@ export default function IssueTemplateManagement() {
                 <Select
                   value={templateForm.category}
                   onValueChange={(value) =>
-                    setTemplateForm({ ...templateForm, category: value })
-                  }
-                >
+                  setTemplateForm({ ...templateForm, category: value })
+                  }>
+
                   <SelectTrigger className="bg-surface-100 border-white/10 text-white">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(categoryConfigs).map(([key, config]) => (
-                      <SelectItem key={key} value={key}>
+                    {Object.entries(categoryConfigs).map(([key, config]) =>
+                    <SelectItem key={key} value={key}>
                         {config.label}
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -655,18 +655,18 @@ export default function IssueTemplateManagement() {
                 <Select
                   value={templateForm.issue_type}
                   onValueChange={(value) =>
-                    setTemplateForm({ ...templateForm, issue_type: value })
-                  }
-                >
+                  setTemplateForm({ ...templateForm, issue_type: value })
+                  }>
+
                   <SelectTrigger className="bg-surface-100 border-white/10 text-white">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(issueTypeConfigs).map(([key, config]) => (
-                      <SelectItem key={key} value={key}>
+                    {Object.entries(issueTypeConfigs).map(([key, config]) =>
+                    <SelectItem key={key} value={key}>
                         {config.label}
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -678,21 +678,21 @@ export default function IssueTemplateManagement() {
                 <Select
                   value={templateForm.default_severity}
                   onValueChange={(value) =>
-                    setTemplateForm({
-                      ...templateForm,
-                      default_severity: value,
-                    })
-                  }
-                >
+                  setTemplateForm({
+                    ...templateForm,
+                    default_severity: value
+                  })
+                  }>
+
                   <SelectTrigger className="bg-surface-100 border-white/10 text-white">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(severityConfigs).map(([key, config]) => (
-                      <SelectItem key={key} value={key}>
+                    {Object.entries(severityConfigs).map(([key, config]) =>
+                    <SelectItem key={key} value={key}>
                         {config.label}
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -701,21 +701,21 @@ export default function IssueTemplateManagement() {
                 <Select
                   value={templateForm.default_priority}
                   onValueChange={(value) =>
-                    setTemplateForm({
-                      ...templateForm,
-                      default_priority: value,
-                    })
-                  }
-                >
+                  setTemplateForm({
+                    ...templateForm,
+                    default_priority: value
+                  })
+                  }>
+
                   <SelectTrigger className="bg-surface-100 border-white/10 text-white">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(priorityConfigs).map(([key, config]) => (
-                      <SelectItem key={key} value={key}>
+                    {Object.entries(priorityConfigs).map(([key, config]) =>
+                    <SelectItem key={key} value={key}>
                         {config.label}
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -726,14 +726,14 @@ export default function IssueTemplateManagement() {
               <Input
                 value={templateForm.title_template}
                 onChange={(e) =>
-                  setTemplateForm({
-                    ...templateForm,
-                    title_template: e.target.value,
-                  })
+                setTemplateForm({
+                  ...templateForm,
+                  title_template: e.target.value
+                })
                 }
                 className="bg-surface-100 border-white/10 text-white"
-                placeholder="例如：{project_name} - 温度控制问题"
-              />
+                placeholder="例如：{project_name} - 温度控制问题" />
+
               <p className="text-xs text-slate-400 mt-1">
                 支持变量：{"{project_name}"}, {"{machine_code}"}, {"{date}"}
               </p>
@@ -744,15 +744,15 @@ export default function IssueTemplateManagement() {
               <Textarea
                 value={templateForm.description_template}
                 onChange={(e) =>
-                  setTemplateForm({
-                    ...templateForm,
-                    description_template: e.target.value,
-                  })
+                setTemplateForm({
+                  ...templateForm,
+                  description_template: e.target.value
+                })
                 }
                 className="bg-surface-100 border-white/10 text-white"
                 rows={4}
-                placeholder="例如：项目 {project_code} 在 {date} 发现温度控制问题..."
-              />
+                placeholder="例如：项目 {project_code} 在 {date} 发现温度控制问题..." />
+
             </div>
 
             <div>
@@ -760,15 +760,15 @@ export default function IssueTemplateManagement() {
               <Textarea
                 value={templateForm.solution_template}
                 onChange={(e) =>
-                  setTemplateForm({
-                    ...templateForm,
-                    solution_template: e.target.value,
-                  })
+                setTemplateForm({
+                  ...templateForm,
+                  solution_template: e.target.value
+                })
                 }
                 className="bg-surface-100 border-white/10 text-white"
                 rows={3}
-                placeholder="解决方案描述..."
-              />
+                placeholder="解决方案描述..." />
+
             </div>
 
             <div>
@@ -777,8 +777,8 @@ export default function IssueTemplateManagement() {
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
                 className="bg-surface-100 border-white/10 text-white"
-                placeholder="例如：温度控制,FAT"
-              />
+                placeholder="例如：温度控制,FAT" />
+
             </div>
 
             <div className="flex items-center gap-4">
@@ -788,17 +788,17 @@ export default function IssueTemplateManagement() {
                   id="is_blocking"
                   checked={templateForm.default_is_blocking}
                   onChange={(e) =>
-                    setTemplateForm({
-                      ...templateForm,
-                      default_is_blocking: e.target.checked,
-                    })
+                  setTemplateForm({
+                    ...templateForm,
+                    default_is_blocking: e.target.checked
+                  })
                   }
-                  className="w-4 h-4"
-                />
+                  className="w-4 h-4" />
+
                 <Label
                   htmlFor="is_blocking"
-                  className="text-slate-300 cursor-pointer"
-                >
+                  className="text-slate-300 cursor-pointer">
+
                   默认是否阻塞
                 </Label>
               </div>
@@ -808,17 +808,17 @@ export default function IssueTemplateManagement() {
                   id="is_active"
                   checked={templateForm.is_active}
                   onChange={(e) =>
-                    setTemplateForm({
-                      ...templateForm,
-                      is_active: e.target.checked,
-                    })
+                  setTemplateForm({
+                    ...templateForm,
+                    is_active: e.target.checked
+                  })
                   }
-                  className="w-4 h-4"
-                />
+                  className="w-4 h-4" />
+
                 <Label
                   htmlFor="is_active"
-                  className="text-slate-300 cursor-pointer"
-                >
+                  className="text-slate-300 cursor-pointer">
+
                   启用
                 </Label>
               </div>
@@ -829,12 +829,12 @@ export default function IssueTemplateManagement() {
               <Textarea
                 value={templateForm.remark}
                 onChange={(e) =>
-                  setTemplateForm({ ...templateForm, remark: e.target.value })
+                setTemplateForm({ ...templateForm, remark: e.target.value })
                 }
                 className="bg-surface-100 border-white/10 text-white"
                 rows={2}
-                placeholder="备注说明..."
-              />
+                placeholder="备注说明..." />
+
             </div>
           </div>
           <DialogFooter>
@@ -845,14 +845,14 @@ export default function IssueTemplateManagement() {
                 setShowEditDialog(false);
                 setSelectedTemplate(null);
               }}
-              className="border-white/10 text-slate-300"
-            >
+              className="border-white/10 text-slate-300">
+
               取消
             </Button>
             <Button
               onClick={handleSaveTemplate}
-              className="bg-primary hover:bg-primary/90"
-            >
+              className="bg-primary hover:bg-primary/90">
+
               保存
             </Button>
           </DialogFooter>
@@ -865,8 +865,8 @@ export default function IssueTemplateManagement() {
           <DialogHeader>
             <DialogTitle className="text-white">模板详情</DialogTitle>
           </DialogHeader>
-          {selectedTemplate && (
-            <div className="space-y-4">
+          {selectedTemplate &&
+          <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-slate-400">模板名称</Label>
@@ -879,25 +879,25 @@ export default function IssueTemplateManagement() {
                 <div>
                   <Label className="text-slate-400">分类</Label>
                   <Badge
-                    className={
-                      categoryConfigs[selectedTemplate.category]?.color ||
-                      "bg-slate-500"
-                    }
-                  >
+                  className={
+                  categoryConfigs[selectedTemplate.category]?.color ||
+                  "bg-slate-500"
+                  }>
+
                     {categoryConfigs[selectedTemplate.category]?.label ||
-                      selectedTemplate.category}
+                  selectedTemplate.category}
                   </Badge>
                 </div>
                 <div>
                   <Label className="text-slate-400">问题类型</Label>
                   <Badge
-                    className={
-                      issueTypeConfigs[selectedTemplate.issue_type]?.color ||
-                      "bg-slate-500"
-                    }
-                  >
+                  className={
+                  issueTypeConfigs[selectedTemplate.issue_type]?.color ||
+                  "bg-slate-500"
+                  }>
+
                     {issueTypeConfigs[selectedTemplate.issue_type]?.label ||
-                      selectedTemplate.issue_type}
+                  selectedTemplate.issue_type}
                   </Badge>
                 </div>
                 <div>
@@ -909,9 +909,9 @@ export default function IssueTemplateManagement() {
                 <div>
                   <Label className="text-slate-400">最后使用时间</Label>
                   <p className="text-white">
-                    {selectedTemplate.last_used_at
-                      ? formatDate(selectedTemplate.last_used_at)
-                      : "未使用"}
+                    {selectedTemplate.last_used_at ?
+                  formatDate(selectedTemplate.last_used_at) :
+                  "未使用"}
                   </p>
                 </div>
               </div>
@@ -921,30 +921,30 @@ export default function IssueTemplateManagement() {
                   {selectedTemplate.title_template}
                 </p>
               </div>
-              {selectedTemplate.description_template && (
-                <div>
+              {selectedTemplate.description_template &&
+            <div>
                   <Label className="text-slate-400">描述模板</Label>
                   <p className="text-white bg-surface-100 p-2 rounded whitespace-pre-wrap">
                     {selectedTemplate.description_template}
                   </p>
                 </div>
-              )}
-              {selectedTemplate.solution_template && (
-                <div>
+            }
+              {selectedTemplate.solution_template &&
+            <div>
                   <Label className="text-slate-400">解决方案模板</Label>
                   <p className="text-white bg-surface-100 p-2 rounded whitespace-pre-wrap">
                     {selectedTemplate.solution_template}
                   </p>
                 </div>
-              )}
+            }
             </div>
-          )}
+          }
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() => setShowDetailDialog(false)}
-              className="border-white/10 text-slate-300"
-            >
+              className="border-white/10 text-slate-300">
+
               关闭
             </Button>
           </DialogFooter>
@@ -965,14 +965,14 @@ export default function IssueTemplateManagement() {
             <Button
               variant="outline"
               onClick={() => setShowDeleteDialog(false)}
-              className="border-white/10 text-slate-300"
-            >
+              className="border-white/10 text-slate-300">
+
               取消
             </Button>
             <Button
               onClick={handleConfirmDelete}
-              className="bg-red-500 hover:bg-red-600"
-            >
+              className="bg-red-500 hover:bg-red-600">
+
               删除
             </Button>
           </DialogFooter>
@@ -982,14 +982,14 @@ export default function IssueTemplateManagement() {
       {/* Create Issue Dialog */}
       <Dialog
         open={showCreateIssueDialog}
-        onOpenChange={setShowCreateIssueDialog}
-      >
+        onOpenChange={setShowCreateIssueDialog}>
+
         <DialogContent className="bg-surface-50 border-white/10 max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-white">从模板创建问题</DialogTitle>
           </DialogHeader>
-          {selectedTemplate && (
-            <div className="space-y-4">
+          {selectedTemplate &&
+          <div className="space-y-4">
               <div className="p-3 bg-surface-100 rounded border border-white/10">
                 <p className="text-sm text-slate-400">
                   模板：{selectedTemplate.template_name}
@@ -999,65 +999,65 @@ export default function IssueTemplateManagement() {
                 <div>
                   <Label className="text-slate-300">关联项目</Label>
                   <Select
-                    value={createIssueForm.project_id}
-                    onValueChange={(value) =>
-                      setCreateIssueForm({
-                        ...createIssueForm,
-                        project_id: value,
-                        machine_id: "",
-                      })
-                    }
-                  >
+                  value={createIssueForm.project_id}
+                  onValueChange={(value) =>
+                  setCreateIssueForm({
+                    ...createIssueForm,
+                    project_id: value,
+                    machine_id: ""
+                  })
+                  }>
+
                     <SelectTrigger className="bg-surface-100 border-white/10 text-white">
                       <SelectValue placeholder="选择项目" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="__none__">不关联</SelectItem>
-                      {projects.map((project) => (
-                        <SelectItem
-                          key={project.id}
-                          value={project.id.toString()}
-                        >
+                      {projects.map((project) =>
+                    <SelectItem
+                      key={project.id}
+                      value={project.id.toString()}>
+
                           {project.project_name} ({project.project_code})
                         </SelectItem>
-                      ))}
+                    )}
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
                   <Label className="text-slate-300">关联机台</Label>
                   <Select
-                    value={createIssueForm.machine_id}
-                    onValueChange={(value) =>
-                      setCreateIssueForm({
-                        ...createIssueForm,
-                        machine_id: value,
-                      })
-                    }
-                    disabled={!createIssueForm.project_id}
-                  >
+                  value={createIssueForm.machine_id}
+                  onValueChange={(value) =>
+                  setCreateIssueForm({
+                    ...createIssueForm,
+                    machine_id: value
+                  })
+                  }
+                  disabled={!createIssueForm.project_id}>
+
                     <SelectTrigger
-                      className="bg-surface-100 border-white/10 text-white"
-                      disabled={!createIssueForm.project_id}
-                    >
+                    className="bg-surface-100 border-white/10 text-white"
+                    disabled={!createIssueForm.project_id}>
+
                       <SelectValue
-                        placeholder={
-                          createIssueForm.project_id
-                            ? "选择机台"
-                            : "请先选择项目"
-                        }
-                      />
+                      placeholder={
+                      createIssueForm.project_id ?
+                      "选择机台" :
+                      "请先选择项目"
+                      } />
+
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="__none__">不关联</SelectItem>
-                      {machines.map((machine) => (
-                        <SelectItem
-                          key={machine.id}
-                          value={machine.id.toString()}
-                        >
+                      {machines.map((machine) =>
+                    <SelectItem
+                      key={machine.id}
+                      value={machine.id.toString()}>
+
                           {machine.machine_name} ({machine.machine_code})
                         </SelectItem>
-                      ))}
+                    )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -1065,16 +1065,16 @@ export default function IssueTemplateManagement() {
               <div>
                 <Label className="text-slate-300">要求完成日期</Label>
                 <Input
-                  type="date"
-                  value={createIssueForm.due_date}
-                  onChange={(e) =>
-                    setCreateIssueForm({
-                      ...createIssueForm,
-                      due_date: e.target.value,
-                    })
-                  }
-                  className="bg-surface-100 border-white/10 text-white"
-                />
+                type="date"
+                value={createIssueForm.due_date}
+                onChange={(e) =>
+                setCreateIssueForm({
+                  ...createIssueForm,
+                  due_date: e.target.value
+                })
+                }
+                className="bg-surface-100 border-white/10 text-white" />
+
               </div>
               <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded">
                 <p className="text-sm text-blue-300">
@@ -1082,24 +1082,24 @@ export default function IssueTemplateManagement() {
                 </p>
               </div>
             </div>
-          )}
+          }
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() => setShowCreateIssueDialog(false)}
-              className="border-white/10 text-slate-300"
-            >
+              className="border-white/10 text-slate-300">
+
               取消
             </Button>
             <Button
               onClick={handleConfirmCreateIssue}
-              className="bg-primary hover:bg-primary/90"
-            >
+              className="bg-primary hover:bg-primary/90">
+
               创建问题
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }

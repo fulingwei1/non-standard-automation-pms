@@ -94,7 +94,6 @@ export function ToastContainer({ toasts, onClose }) {
 let toastId = 0;
 const toastListeners = new Set();
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const toast = {
   success: (message, duration) => showToast("success", message, duration),
   error: (message, duration) => showToast("error", message, duration),
@@ -109,7 +108,6 @@ function showToast(type, message, duration = 3000) {
   return id;
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export function useToast() {
   const [toasts, setToasts] = useState([]);
 

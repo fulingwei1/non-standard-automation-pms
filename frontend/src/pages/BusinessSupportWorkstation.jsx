@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo as _useMemo, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FileText,
@@ -34,8 +34,8 @@ import {
   Archive,
   FileCheck,
   Calculator,
-  CreditCard,
-} from "lucide-react";
+  CreditCard } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -51,8 +51,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
-} from "../components/ui";
+  DialogFooter } from
+"../components/ui";
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { businessSupportApi } from "../services/api";
@@ -65,7 +65,7 @@ const getStatConfig = (dashboardData) => ({
     unit: "个",
     icon: Briefcase,
     color: "text-blue-400",
-    bg: "bg-blue-500/10",
+    bg: "bg-blue-500/10"
   },
   pendingAmount: {
     label: "待回款金额",
@@ -74,7 +74,7 @@ const getStatConfig = (dashboardData) => ({
     icon: DollarSign,
     color: "text-amber-400",
     bg: "bg-amber-500/10",
-    format: "currency",
+    format: "currency"
   },
   overdueAmount: {
     label: "逾期款项",
@@ -83,7 +83,7 @@ const getStatConfig = (dashboardData) => ({
     icon: AlertTriangle,
     color: "text-red-400",
     bg: "bg-red-500/10",
-    format: "currency",
+    format: "currency"
   },
   invoiceRate: {
     label: "本月开票率",
@@ -91,7 +91,7 @@ const getStatConfig = (dashboardData) => ({
     unit: "%",
     icon: Receipt,
     color: "text-emerald-400",
-    bg: "bg-emerald-500/10",
+    bg: "bg-emerald-500/10"
   },
   bidCount: {
     label: "进行中投标",
@@ -99,7 +99,7 @@ const getStatConfig = (dashboardData) => ({
     unit: "个",
     icon: Target,
     color: "text-purple-400",
-    bg: "bg-purple-500/10",
+    bg: "bg-purple-500/10"
   },
   acceptanceRate: {
     label: "验收按期率",
@@ -107,15 +107,15 @@ const getStatConfig = (dashboardData) => ({
     unit: "%",
     icon: CheckCircle2,
     color: "text-cyan-400",
-    bg: "bg-cyan-500/10",
-  },
+    bg: "bg-cyan-500/10"
+  }
 });
 
 // Task priority colors
 const priorityColors = {
   high: { bg: "bg-red-500/20", text: "text-red-400", label: "紧急" },
   medium: { bg: "bg-amber-500/20", text: "text-amber-400", label: "中等" },
-  low: { bg: "bg-blue-500/20", text: "text-blue-400", label: "普通" },
+  low: { bg: "bg-blue-500/20", text: "text-blue-400", label: "普通" }
 };
 
 // Task type configuration
@@ -127,7 +127,7 @@ const taskTypeConfig = {
   acceptance: { icon: CheckCircle2, label: "验收", color: "text-emerald-400" },
   shipping: { icon: Package, label: "出货", color: "text-cyan-400" },
   document: { icon: Archive, label: "归档", color: "text-slate-400" },
-  customer: { icon: Building2, label: "客户", color: "text-indigo-400" },
+  customer: { icon: Building2, label: "客户", color: "text-indigo-400" }
 };
 
 // Mock data for todos
@@ -141,7 +141,7 @@ const formatCurrency = (value) => {
   return new Intl.NumberFormat("zh-CN", {
     style: "currency",
     currency: "CNY",
-    minimumFractionDigits: 0,
+    minimumFractionDigits: 0
   }).format(value);
 };
 
@@ -170,8 +170,8 @@ const StatCard = ({ config, value }) => {
     <motion.div
       variants={fadeIn}
       className="relative overflow-hidden rounded-lg border border-slate-700/50 bg-gradient-to-br from-slate-800/50 to-slate-900/50 p-5 backdrop-blur transition-all hover:border-slate-600/80 hover:shadow-lg"
-      style={{ height: "140px" }}
-    >
+      style={{ height: "140px" }}>
+
       <div className="flex items-start justify-between h-full">
         <div className="flex-1 flex flex-col justify-between">
           <p className="text-sm font-normal text-slate-400 mb-2">
@@ -181,11 +181,11 @@ const StatCard = ({ config, value }) => {
             <p className={cn("text-2xl font-bold mb-1", config.color)}>
               {displayValue}
             </p>
-            {!isValueCurrency && (
-              <p className="text-xs font-normal text-slate-500">
+            {!isValueCurrency &&
+            <p className="text-xs font-normal text-slate-500">
                 {config.unit}
               </p>
-            )}
+            }
           </div>
         </div>
         <div className={cn("rounded-lg p-3 bg-opacity-20", config.bg)}>
@@ -194,8 +194,8 @@ const StatCard = ({ config, value }) => {
       </div>
       {/* Background glow effect */}
       <div className="absolute right-0 bottom-0 h-20 w-20 rounded-full bg-gradient-to-br from-purple-500/10 to-transparent blur-2xl opacity-30" />
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
 const TodoItem = ({ todo, onComplete }) => {
@@ -206,8 +206,8 @@ const TodoItem = ({ todo, onComplete }) => {
   return (
     <motion.div
       variants={fadeIn}
-      className="group flex items-start gap-3 rounded-lg border border-slate-700/50 bg-slate-800/40 p-4 transition-all hover:border-slate-600/80 hover:bg-slate-800/60"
-    >
+      className="group flex items-start gap-3 rounded-lg border border-slate-700/50 bg-slate-800/40 p-4 transition-all hover:border-slate-600/80 hover:bg-slate-800/60">
+
       <div className="relative mt-1 flex-shrink-0">
         <div className={cn("rounded-lg p-2", priorityConfig.bg)}>
           <Icon className={cn("h-5 w-5", typeConfig.color)} />
@@ -227,25 +227,25 @@ const TodoItem = ({ todo, onComplete }) => {
                 className={cn(
                   "text-xs",
                   priorityConfig.bg,
-                  priorityConfig.text,
-                )}
-              >
+                  priorityConfig.text
+                )}>
+
                 {priorityConfig.label}
               </Badge>
-              {todo.daysLeft === 0 ? (
-                <span className="text-xs font-medium text-red-400">
+              {todo.daysLeft === 0 ?
+              <span className="text-xs font-medium text-red-400">
                   今天截止
-                </span>
-              ) : (
-                <span
-                  className={cn(
-                    "text-xs font-medium",
-                    getDaysColor(todo.daysLeft),
-                  )}
-                >
+                </span> :
+
+              <span
+                className={cn(
+                  "text-xs font-medium",
+                  getDaysColor(todo.daysLeft)
+                )}>
+
                   {todo.daysLeft}天截止
                 </span>
-              )}
+              }
             </div>
           </div>
         </div>
@@ -256,21 +256,21 @@ const TodoItem = ({ todo, onComplete }) => {
           size="sm"
           variant="ghost"
           className="h-8 w-8 p-0"
-          onClick={() => onComplete(todo.id)}
-        >
+          onClick={() => onComplete(todo.id)}>
+
           <CheckCircle2 className="h-4 w-4 text-emerald-400" />
         </Button>
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
 const ContractCard = ({ contract }) => {
   return (
     <motion.div
       variants={fadeIn}
-      className="group overflow-hidden rounded-lg border border-slate-700/50 bg-gradient-to-br from-slate-800/50 to-slate-900/50 p-5 backdrop-blur transition-all hover:border-slate-600 hover:shadow-lg cursor-pointer"
-    >
+      className="group overflow-hidden rounded-lg border border-slate-700/50 bg-gradient-to-br from-slate-800/50 to-slate-900/50 p-5 backdrop-blur transition-all hover:border-slate-600 hover:shadow-lg cursor-pointer">
+
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1">
           <div className="flex items-start gap-2">
@@ -299,47 +299,47 @@ const ContractCard = ({ contract }) => {
         <div className="flex items-center justify-between">
           <span className="text-sm text-slate-400">回款进度:</span>
           <span className="text-sm font-medium text-slate-300">
-            {contract.paidAmount >= 10000
-              ? `¥${(contract.paidAmount / 10000).toFixed(1)}万`
-              : formatCurrency(contract.paidAmount)}{" "}
+            {contract.paidAmount >= 10000 ?
+            `¥${(contract.paidAmount / 10000).toFixed(1)}万` :
+            formatCurrency(contract.paidAmount)}{" "}
             /{" "}
-            {contract.contractAmount >= 10000
-              ? `¥${(contract.contractAmount / 10000).toFixed(1)}万`
-              : formatCurrency(contract.contractAmount)}
+            {contract.contractAmount >= 10000 ?
+            `¥${(contract.contractAmount / 10000).toFixed(1)}万` :
+            formatCurrency(contract.contractAmount)}
           </span>
         </div>
         <Progress
           value={contract.paymentProgress}
-          className="h-2 bg-slate-700/50"
-        />
+          className="h-2 bg-slate-700/50" />
+
       </div>
 
       {/* Payment stages */}
       <div className="mt-3 space-y-1.5">
         <p className="text-xs text-slate-400 mb-2">支付阶段:</p>
-        {contract.paymentStages.map((stage, idx) => (
-          <div key={idx} className="flex items-center justify-between text-xs">
+        {contract.paymentStages.map((stage, idx) =>
+        <div key={idx} className="flex items-center justify-between text-xs">
             <span className="text-slate-400">└─ {stage.type}</span>
             <div className="flex items-center gap-2">
               <span className="font-medium text-slate-300">
-                {stage.amount >= 10000
-                  ? `¥${(stage.amount / 10000).toFixed(1)}万`
-                  : formatCurrency(stage.amount)}
+                {stage.amount >= 10000 ?
+              `¥${(stage.amount / 10000).toFixed(1)}万` :
+              formatCurrency(stage.amount)}
               </span>
               <Badge
-                variant="outline"
-                className={cn(
-                  "text-xs",
-                  stage.status === "paid"
-                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
-                    : "bg-slate-700/40 text-slate-400 border-slate-600/30",
-                )}
-              >
+              variant="outline"
+              className={cn(
+                "text-xs",
+                stage.status === "paid" ?
+                "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" :
+                "bg-slate-700/40 text-slate-400 border-slate-600/30"
+              )}>
+
                 {stage.status === "paid" ? "已到账" : "待回款"}
               </Badge>
             </div>
           </div>
-        ))}
+        )}
       </div>
 
       {/* Status indicators */}
@@ -348,11 +348,11 @@ const ContractCard = ({ contract }) => {
           variant="outline"
           className={cn(
             "text-xs",
-            contract.invoiceStatus === "complete"
-              ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
-              : "bg-amber-500/20 text-amber-400 border-amber-500/30",
-          )}
-        >
+            contract.invoiceStatus === "complete" ?
+            "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" :
+            "bg-amber-500/20 text-amber-400 border-amber-500/30"
+          )}>
+
           <Receipt className="mr-1 h-3 w-3" />
           发票: {contract.invoiceCount}张
         </Badge>
@@ -360,24 +360,24 @@ const ContractCard = ({ contract }) => {
           variant="outline"
           className={cn(
             "text-xs",
-            contract.acceptanceStatus === "completed"
-              ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
-              : contract.acceptanceStatus === "in_progress"
-                ? "bg-blue-500/20 text-blue-400 border-blue-500/30"
-                : "bg-slate-500/20 text-slate-400 border-slate-500/30",
-          )}
-        >
+            contract.acceptanceStatus === "completed" ?
+            "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" :
+            contract.acceptanceStatus === "in_progress" ?
+            "bg-blue-500/20 text-blue-400 border-blue-500/30" :
+            "bg-slate-500/20 text-slate-400 border-slate-500/30"
+          )}>
+
           <CheckCircle2 className="mr-1 h-3 w-3" />
           验收:{" "}
-          {contract.acceptanceStatus === "completed"
-            ? "已完成"
-            : contract.acceptanceStatus === "in_progress"
-              ? "进行中"
-              : "待开始"}
+          {contract.acceptanceStatus === "completed" ?
+          "已完成" :
+          contract.acceptanceStatus === "in_progress" ?
+          "进行中" :
+          "待开始"}
         </Badge>
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
 const BiddingCard = ({ bid }) => {
@@ -387,28 +387,28 @@ const BiddingCard = ({ bid }) => {
     technical_evaluation: "技术评标",
     commercial_evaluation: "商务评标",
     won: "中标",
-    lost: "未中标",
+    lost: "未中标"
   };
 
   const documentStatusMap = {
     draft: "编制中",
     review: "审核中",
-    submitted: "已提交",
+    submitted: "已提交"
   };
 
   return (
     <motion.div
       variants={fadeIn}
-      className="group overflow-hidden rounded-lg border border-slate-700/50 bg-gradient-to-br from-slate-800/50 to-slate-900/50 p-4 backdrop-blur transition-all hover:border-slate-600 hover:shadow-lg cursor-pointer"
-    >
+      className="group overflow-hidden rounded-lg border border-slate-700/50 bg-gradient-to-br from-slate-800/50 to-slate-900/50 p-4 backdrop-blur transition-all hover:border-slate-600 hover:shadow-lg cursor-pointer">
+
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1">
           <p className="font-semibold text-slate-100">{bid.projectName}</p>
           <p className="mt-1 text-sm text-slate-400">{bid.customerName}</p>
           <p className="mt-2 text-lg font-bold text-purple-400">
-            {bid.bidAmount >= 10000
-              ? `¥${(bid.bidAmount / 10000).toFixed(0)}万`
-              : formatCurrency(bid.bidAmount)}
+            {bid.bidAmount >= 10000 ?
+            `¥${(bid.bidAmount / 10000).toFixed(0)}万` :
+            formatCurrency(bid.bidAmount)}
           </p>
         </div>
         <div className="flex-shrink-0 text-right">
@@ -416,20 +416,20 @@ const BiddingCard = ({ bid }) => {
             variant="outline"
             className={cn(
               "text-xs mb-2 block",
-              bid.status === "won"
-                ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
-                : bid.status === "technical_evaluation" ||
-                    bid.status === "commercial_evaluation"
-                  ? "bg-blue-500/20 text-blue-400 border-blue-500/30"
-                  : "bg-slate-500/20 text-slate-400 border-slate-500/30",
-            )}
-          >
+              bid.status === "won" ?
+              "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" :
+              bid.status === "technical_evaluation" ||
+              bid.status === "commercial_evaluation" ?
+              "bg-blue-500/20 text-blue-400 border-blue-500/30" :
+              "bg-slate-500/20 text-slate-400 border-slate-500/30"
+            )}>
+
             {statusMap[bid.status]}
           </Badge>
           <Badge
             variant="outline"
-            className="block text-xs bg-slate-700/40 text-slate-400 border-slate-600/30"
-          >
+            className="block text-xs bg-slate-700/40 text-slate-400 border-slate-600/30">
+
             {documentStatusMap[bid.documentStatus]}
           </Badge>
         </div>
@@ -456,8 +456,8 @@ const BiddingCard = ({ bid }) => {
           </span>
         </span>
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
 export default function BusinessSupportWorkstation() {
@@ -474,7 +474,7 @@ export default function BusinessSupportWorkstation() {
     active_bidding_count: 0,
     acceptance_rate: 0,
     urgent_tasks: [],
-    today_todos: [],
+    today_todos: []
   });
 
   // Load dashboard data
@@ -494,12 +494,12 @@ export default function BusinessSupportWorkstation() {
         active_bidding_count: data.active_bidding_count || 0,
         acceptance_rate: parseFloat(data.acceptance_rate || 0),
         urgent_tasks: data.urgent_tasks || [],
-        today_todos: data.today_todos || [],
+        today_todos: data.today_todos || []
       });
     } catch (err) {
       console.error("Failed to load dashboard:", err);
       setError(
-        err.response?.data?.detail || err.message || "加载工作台数据失败",
+        err.response?.data?.detail || err.message || "加载工作台数据失败"
       );
     } finally {
       setLoading(false);
@@ -518,14 +518,16 @@ export default function BusinessSupportWorkstation() {
   // Use API data instead of mock data
   const urgentTodos = (dashboardData.urgent_tasks || []).filter((todo) => {
     const daysLeft =
-      todo.daysLeft !== null && todo.daysLeft !== undefined
-        ? todo.daysLeft
-        : 999;
+    todo.daysLeft !== null && todo.daysLeft !== undefined ?
+    todo.daysLeft :
+    999;
     return daysLeft <= 3 && !completedTodos.includes(todo.id);
   });
   const allTodos = (dashboardData.today_todos || []).filter(
-    (todo) => !completedTodos.includes(todo.id),
+    (todo) => !completedTodos.includes(todo.id)
   );
+  const activeContracts = dashboardData.active_contracts || [];
+  const biddingProjects = dashboardData.bidding_projects || [];
 
   return (
     <div className="space-y-6 pb-8">
@@ -533,7 +535,7 @@ export default function BusinessSupportWorkstation() {
         title="商务支持工作台"
         description="合同管理、单据处理、回款跟踪、投标支持"
         actions={
-          <motion.div variants={fadeIn} className="flex gap-2">
+        <motion.div variants={fadeIn} className="flex gap-2">
             <Button variant="outline" className="flex items-center gap-2">
               <Download className="w-4 h-4" />
               导出报表
@@ -543,46 +545,46 @@ export default function BusinessSupportWorkstation() {
               新建合同
             </Button>
           </motion.div>
-        }
-      />
+        } />
+
 
       {/* Key statistics - 6 column grid */}
-      {loading ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Card key={i} className="bg-surface-1/50 animate-pulse">
+      {loading ?
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+          {[1, 2, 3, 4, 5, 6].map((i) =>
+        <Card key={i} className="bg-surface-1/50 animate-pulse">
               <CardContent className="p-4">
                 <div className="h-20 bg-slate-700/50 rounded" />
               </CardContent>
             </Card>
-          ))}
-        </div>
-      ) : error ? (
-        <Card className="bg-red-500/10 border-red-500/30">
+        )}
+        </div> :
+      error ?
+      <Card className="bg-red-500/10 border-red-500/30">
           <CardContent className="p-4">
             <p className="text-red-400 text-sm">{error}</p>
           </CardContent>
-        </Card>
-      ) : (
-        <motion.div
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-          className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6"
-        >
-          {Object.entries(getStatConfig(dashboardData)).map(([key, config]) => (
-            <StatCard key={key} config={config} value={config.value} />
-          ))}
+        </Card> :
+
+      <motion.div
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+
+          {Object.entries(getStatConfig(dashboardData)).map(([key, config]) =>
+        <StatCard key={key} config={config} value={config.value} />
+        )}
         </motion.div>
-      )}
+      }
 
       {/* Main content - two column layout (2/3 + 1/3) */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Left column - Todos and Tasks (2/3 width) */}
         <div className="lg:col-span-2 space-y-6">
           {/* Urgent tasks panel */}
-          {urgentTodos.length > 0 && (
-            <motion.div variants={fadeIn}>
+          {urgentTodos.length > 0 &&
+          <motion.div variants={fadeIn}>
               <Card className="border-red-500/30 bg-gradient-to-br from-red-500/10 via-red-500/5 to-slate-900/50">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
@@ -597,23 +599,23 @@ export default function BusinessSupportWorkstation() {
                 </CardHeader>
                 <CardContent>
                   <motion.div
-                    variants={staggerContainer}
-                    initial="hidden"
-                    animate="visible"
-                    className="space-y-3"
-                  >
-                    {urgentTodos.slice(0, 3).map((todo) => (
-                      <TodoItem
-                        key={todo.id}
-                        todo={todo}
-                        onComplete={handleCompleteTodo}
-                      />
-                    ))}
+                  variants={staggerContainer}
+                  initial="hidden"
+                  animate="visible"
+                  className="space-y-3">
+
+                    {urgentTodos.slice(0, 3).map((todo) =>
+                  <TodoItem
+                    key={todo.id}
+                    todo={todo}
+                    onComplete={handleCompleteTodo} />
+
+                  )}
                   </motion.div>
                 </CardContent>
               </Card>
             </motion.div>
-          )}
+          }
 
           {/* All todos - Today's work list */}
           <motion.div variants={fadeIn}>
@@ -625,7 +627,7 @@ export default function BusinessSupportWorkstation() {
                     今日工作清单
                   </CardTitle>
                   <Badge variant="secondary" className="text-xs">
-                    {allTodos.length} / {mockTodos.length}
+                    {allTodos.length} / {(dashboardData.today_todos || []).length}
                   </Badge>
                 </div>
               </CardHeader>
@@ -634,22 +636,22 @@ export default function BusinessSupportWorkstation() {
                   variants={staggerContainer}
                   initial="hidden"
                   animate="visible"
-                  className="space-y-3"
-                >
-                  {allTodos.length > 0 ? (
-                    allTodos.map((todo) => (
-                      <TodoItem
-                        key={todo.id}
-                        todo={todo}
-                        onComplete={handleCompleteTodo}
-                      />
-                    ))
-                  ) : (
-                    <div className="text-center py-8 text-slate-500">
+                  className="space-y-3">
+
+                  {allTodos.length > 0 ?
+                  allTodos.map((todo) =>
+                  <TodoItem
+                    key={todo.id}
+                    todo={todo}
+                    onComplete={handleCompleteTodo} />
+
+                  ) :
+
+                  <div className="text-center py-8 text-slate-500">
                       <CheckCircle2 className="h-12 w-12 mx-auto mb-3 text-emerald-500/50" />
                       <p className="text-sm">所有任务已完成！</p>
                     </div>
-                  )}
+                  }
                 </motion.div>
               </CardContent>
             </Card>
@@ -666,66 +668,66 @@ export default function BusinessSupportWorkstation() {
               </CardHeader>
               <CardContent className="space-y-1">
                 {[
-                  {
-                    icon: Plus,
-                    label: "新建合同",
-                    color: "text-blue-400",
-                    bg: "bg-blue-500/10",
-                  },
-                  {
-                    icon: FileCheck,
-                    label: "合同审核",
-                    color: "text-slate-400",
-                    bg: "bg-slate-500/10",
-                  },
-                  {
-                    icon: Receipt,
-                    label: "申请开票",
-                    color: "text-amber-400",
-                    bg: "bg-amber-500/10",
-                  },
-                  {
-                    icon: Package,
-                    label: "出货审批",
-                    color: "text-cyan-400",
-                    bg: "bg-cyan-500/10",
-                  },
-                  {
-                    icon: Target,
-                    label: "投标管理",
-                    color: "text-purple-400",
-                    bg: "bg-purple-500/10",
-                  },
-                  {
-                    icon: DollarSign,
-                    label: "催款跟进",
-                    color: "text-red-400",
-                    bg: "bg-red-500/10",
-                  },
-                  {
-                    icon: Building2,
-                    label: "客户管理",
-                    color: "text-indigo-400",
-                    bg: "bg-indigo-500/10",
-                  },
-                  {
-                    icon: Archive,
-                    label: "文件归档",
-                    color: "text-slate-500",
-                    bg: "bg-slate-500/10",
-                  },
-                ].map((item, idx) => (
-                  <Button
-                    key={idx}
-                    variant="ghost"
-                    className="w-full justify-start gap-3 text-slate-400 hover:bg-slate-800/60 hover:text-slate-100 transition-colors"
-                  >
+                {
+                  icon: Plus,
+                  label: "新建合同",
+                  color: "text-blue-400",
+                  bg: "bg-blue-500/10"
+                },
+                {
+                  icon: FileCheck,
+                  label: "合同审核",
+                  color: "text-slate-400",
+                  bg: "bg-slate-500/10"
+                },
+                {
+                  icon: Receipt,
+                  label: "申请开票",
+                  color: "text-amber-400",
+                  bg: "bg-amber-500/10"
+                },
+                {
+                  icon: Package,
+                  label: "出货审批",
+                  color: "text-cyan-400",
+                  bg: "bg-cyan-500/10"
+                },
+                {
+                  icon: Target,
+                  label: "投标管理",
+                  color: "text-purple-400",
+                  bg: "bg-purple-500/10"
+                },
+                {
+                  icon: DollarSign,
+                  label: "催款跟进",
+                  color: "text-red-400",
+                  bg: "bg-red-500/10"
+                },
+                {
+                  icon: Building2,
+                  label: "客户管理",
+                  color: "text-indigo-400",
+                  bg: "bg-indigo-500/10"
+                },
+                {
+                  icon: Archive,
+                  label: "文件归档",
+                  color: "text-slate-500",
+                  bg: "bg-slate-500/10"
+                }].
+                map((item, idx) =>
+                <Button
+                  key={idx}
+                  variant="ghost"
+                  className="w-full justify-start gap-3 text-slate-400 hover:bg-slate-800/60 hover:text-slate-100 transition-colors">
+
                     <div className={cn("p-1.5 rounded", item.bg)}>
                       <item.icon className={cn("h-4 w-4", item.color)} />
                     </div>
                     <span>{item.label}</span>
                   </Button>
-                ))}
+                )}
               </CardContent>
             </Card>
           </motion.div>
@@ -738,36 +740,36 @@ export default function BusinessSupportWorkstation() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {[
-                  {
-                    label: "新签合同",
-                    value: 3,
-                    unit: "份",
-                    color: "text-blue-400",
-                    progress: 75,
-                  },
-                  {
-                    label: "回款完成率",
-                    value: 78,
-                    unit: "%",
-                    color: "text-emerald-400",
-                    progress: 78,
-                  },
-                  {
-                    label: "开票及时率",
-                    value: 92,
-                    unit: "%",
-                    color: "text-purple-400",
-                    progress: 92,
-                  },
-                  {
-                    label: "文件流转",
-                    value: 28,
-                    unit: "份",
-                    color: "text-amber-400",
-                    progress: 70,
-                  },
-                ].map((metric, idx) => (
-                  <div key={idx} className="space-y-2">
+                {
+                  label: "新签合同",
+                  value: 3,
+                  unit: "份",
+                  color: "text-blue-400",
+                  progress: 75
+                },
+                {
+                  label: "回款完成率",
+                  value: 78,
+                  unit: "%",
+                  color: "text-emerald-400",
+                  progress: 78
+                },
+                {
+                  label: "开票及时率",
+                  value: 92,
+                  unit: "%",
+                  color: "text-purple-400",
+                  progress: 92
+                },
+                {
+                  label: "文件流转",
+                  value: 28,
+                  unit: "份",
+                  color: "text-amber-400",
+                  progress: 70
+                }].
+                map((metric, idx) =>
+                <div key={idx} className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-slate-400">{metric.label}</span>
                       <span className={cn("font-semibold", metric.color)}>
@@ -776,11 +778,11 @@ export default function BusinessSupportWorkstation() {
                       </span>
                     </div>
                     <Progress
-                      value={metric.progress}
-                      className="h-1.5 bg-slate-700/50"
-                    />
+                    value={metric.progress}
+                    className="h-1.5 bg-slate-700/50" />
+
                   </div>
-                ))}
+                )}
               </CardContent>
             </Card>
           </motion.div>
@@ -794,24 +796,24 @@ export default function BusinessSupportWorkstation() {
               <CardContent className="space-y-1">
                 <Button
                   variant="ghost"
-                  className="w-full justify-start gap-3 text-slate-400 hover:bg-slate-800/60 hover:text-slate-100 transition-colors"
-                >
+                  className="w-full justify-start gap-3 text-slate-400 hover:bg-slate-800/60 hover:text-slate-100 transition-colors">
+
                   <Phone className="h-4 w-4 text-cyan-400" />
                   <span className="flex-1 text-left">联系IT支持</span>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start gap-3 text-slate-400 hover:bg-slate-800/60 hover:text-slate-100 transition-colors"
-                >
+                  className="w-full justify-start gap-3 text-slate-400 hover:bg-slate-800/60 hover:text-slate-100 transition-colors">
+
                   <FileText className="h-4 w-4 text-blue-400" />
                   <span className="flex-1 text-left">查看文档库</span>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start gap-3 text-slate-400 hover:bg-slate-800/60 hover:text-slate-100 transition-colors"
-                >
+                  className="w-full justify-start gap-3 text-slate-400 hover:bg-slate-800/60 hover:text-slate-100 transition-colors">
+
                   <BarChart3 className="h-4 w-4 text-purple-400" />
                   <span className="flex-1 text-left">系统报表</span>
                   <ChevronRight className="h-4 w-4" />
@@ -836,11 +838,11 @@ export default function BusinessSupportWorkstation() {
               variants={staggerContainer}
               initial="hidden"
               animate="visible"
-              className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
-            >
-              {mockContracts.map((contract) => (
-                <ContractCard key={contract.id} contract={contract} />
-              ))}
+              className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+
+              {activeContracts.map((contract) =>
+              <ContractCard key={contract.id} contract={contract} />
+              )}
             </motion.div>
           </CardContent>
         </Card>
@@ -857,9 +859,9 @@ export default function BusinessSupportWorkstation() {
               </CardTitle>
               <Badge
                 variant="outline"
-                className="bg-purple-500/20 text-purple-400 border-purple-500/30"
-              >
-                {mockBidding.length} 个项目
+                className="bg-purple-500/20 text-purple-400 border-purple-500/30">
+
+                {biddingProjects.length} 个项目
               </Badge>
             </div>
           </CardHeader>
@@ -868,15 +870,15 @@ export default function BusinessSupportWorkstation() {
               variants={staggerContainer}
               initial="hidden"
               animate="visible"
-              className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
-            >
-              {mockBidding.map((bid) => (
-                <BiddingCard key={bid.id} bid={bid} />
-              ))}
+              className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+
+              {biddingProjects.map((bid) =>
+              <BiddingCard key={bid.id} bid={bid} />
+              )}
             </motion.div>
           </CardContent>
         </Card>
       </motion.div>
-    </div>
-  );
+    </div>);
+
 }

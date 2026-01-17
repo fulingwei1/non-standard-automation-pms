@@ -3,7 +3,7 @@
  * 商机管道视图组件 - 看板式商机管理
  */
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback as _useCallback } from "react";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import {
@@ -19,13 +19,13 @@ import {
   Grid,
   List,
   Calendar,
-  Eye
-} from "lucide-react";
+  Eye } from
+"lucide-react";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
-import { cn } from "../../lib/utils";
+import { cn, formatCurrency } from "../../lib/utils";
 import OpportunityCard from "./OpportunityCard";
 import OpportunityFilters from "./OpportunityFilters";
 import {
@@ -33,8 +33,8 @@ import {
   opportunityStageFlow,
   getOpportunityStats,
   filterOpportunities,
-  sortOpportunities
-} from "./opportunityBoardConstants";
+  sortOpportunities } from
+"./opportunityBoardConstants";
 
 /**
  * 看板列组件
@@ -69,14 +69,14 @@ const PipelineColumn = ({
 
   // 过滤当前阶段的机会
   const stageOpportunities = useMemo(() => {
-    return opportunities.filter(opp => opp.stage === stage);
+    return opportunities.filter((opp) => opp.stage === stage);
   }, [opportunities, stage]);
 
   // 计算统计信息
   const stageStats = useMemo(() => {
     const total = stageOpportunities.length;
-    const highValue = stageOpportunities.filter(opp =>
-      (opp.expected_amount || 0) > 1000000
+    const highValue = stageOpportunities.filter((opp) =>
+    (opp.expected_amount || 0) > 1000000
     ).length;
     const totalAmount = stageOpportunities.reduce(
       (sum, opp) => sum + (opp.expected_amount || 0), 0
@@ -102,20 +102,20 @@ const PipelineColumn = ({
               </Badge>
             </CardTitle>
           </div>
-          {stageStats.total > 0 && (
-            <div className="text-xs text-gray-500">
+          {stageStats.total > 0 &&
+          <div className="text-xs text-gray-500">
               {formatCurrency(stageStats.totalAmount)}
             </div>
-          )}
+          }
         </div>
 
         {/* 列统计 */}
-        {stageStats.highValue > 0 && (
-          <div className="flex items-center gap-2 text-xs text-gray-500">
+        {stageStats.highValue > 0 &&
+        <div className="flex items-center gap-2 text-xs text-gray-500">
             <BarChart3 className="h-3 w-3" />
             <span>{stageStats.highValue} 个高价值商机</span>
           </div>
-        )}
+        }
       </CardHeader>
 
       {/* 列内容 */}
@@ -126,28 +126,28 @@ const PipelineColumn = ({
           "min-h-[400px]",
           "transition-all duration-200",
           isOver && "bg-gray-50 rounded-lg"
-        )}
-      >
-        {stageOpportunities.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+        )}>
+
+        {stageOpportunities.length === 0 ?
+        <div className="flex flex-col items-center justify-center h-64 text-gray-400">
             <Target className="h-12 w-12 mb-2" />
             <p className="text-sm">暂无商机</p>
-          </div>
-        ) : (
-          stageOpportunities.map((opportunity) => (
-            <OpportunityCard
-              key={opportunity.id}
-              opportunity={opportunity}
-              onStageChange={onStageChange}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onView={onView}
-              onSelect={onSelect}
-              isSelected={isSelected}
-              compact={false}
-            />
-          ))
-        )}
+          </div> :
+
+        stageOpportunities.map((opportunity) =>
+        <OpportunityCard
+          key={opportunity.id}
+          opportunity={opportunity}
+          onStageChange={onStageChange}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onView={onView}
+          onSelect={onSelect}
+          isSelected={isSelected}
+          compact={false} />
+
+        )
+        }
       </CardContent>
 
       {/* 添加按钮 */}
@@ -159,14 +159,14 @@ const PipelineColumn = ({
           onClick={() => {
             // 这里应该打开创建商机的对话框
             console.log(`Create new opportunity for ${stage}`);
-          }}
-        >
+          }}>
+
           <Plus className="mr-1 h-3 w-3" />
           添加商机
         </Button>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 /**
@@ -178,7 +178,7 @@ export const OpportunityPipeline = ({
   onEdit,
   onDelete,
   onView,
-  onSelect,
+  onSelect: _onSelect,
   className,
   refreshTrigger,
   onRefresh
@@ -252,8 +252,8 @@ export const OpportunityPipeline = ({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={onRefresh}
-                >
+                  onClick={onRefresh}>
+
                   <RefreshCw className="mr-1 h-3 w-3" />
                   刷新
                 </Button>
@@ -305,8 +305,8 @@ export const OpportunityPipeline = ({
           <div className="w-80 flex-shrink-0">
             <OpportunityFilters
               onFilterChange={setFilters}
-              initialFilters={filters}
-            />
+              initialFilters={filters} />
+
           </div>
 
           {/* 主要内容区 */}
@@ -331,72 +331,72 @@ export const OpportunityPipeline = ({
                   </TabsList>
                 </Tabs>
 
-                {selectedOpportunities.size > 0 && (
-                  <div className="flex items-center gap-2">
+                {selectedOpportunities.size > 0 &&
+                <div className="flex items-center gap-2">
                     <Badge variant="secondary">
                       {selectedOpportunities.size} 个已选中
                     </Badge>
                     <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelectedOpportunities(new Set())}
-                    >
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedOpportunities(new Set())}>
+
                       取消选择
                     </Button>
                   </div>
-                )}
+                }
               </div>
             </div>
 
             {/* 看板视图 */}
-            {selectedView === "kanban" && (
-              <div className="flex-1 overflow-x-auto">
+            {selectedView === "kanban" &&
+            <div className="flex-1 overflow-x-auto">
                 <div className="flex gap-4 min-w-max">
-                  {opportunityStageFlow.map((stage) => (
-                    <div
-                      key={stage}
-                      className="w-80 flex-shrink-0"
-                    >
+                  {opportunityStageFlow.map((stage) =>
+                <div
+                  key={stage}
+                  className="w-80 flex-shrink-0">
+
                       <PipelineColumn
-                        stage={stage}
-                        opportunities={filteredOpportunities}
-                        onStageChange={handleStageChange}
-                        onEdit={onEdit}
-                        onDelete={onDelete}
-                        onView={onView}
-                        onSelect={handleSelectOpportunity}
-                        isSelected={isOpportunitySelected}
-                      />
+                    stage={stage}
+                    opportunities={filteredOpportunities}
+                    onStageChange={handleStageChange}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    onView={onView}
+                    onSelect={handleSelectOpportunity}
+                    isSelected={isOpportunitySelected} />
+
                     </div>
-                  ))}
+                )}
                 </div>
               </div>
-            )}
+            }
 
             {/* 列表视图 */}
-            {selectedView === "list" && (
-              <div className="flex-1">
+            {selectedView === "list" &&
+            <div className="flex-1">
                 <div className="space-y-3">
-                  {filteredOpportunities.map((opportunity) => (
-                    <OpportunityCard
-                      key={opportunity.id}
-                      opportunity={opportunity}
-                      onStageChange={handleStageChange}
-                      onEdit={onEdit}
-                      onDelete={onDelete}
-                      onView={onView}
-                      onSelect={handleSelectOpportunity}
-                      isSelected={isOpportunitySelected(opportunity.id)}
-                      compact={true}
-                    />
-                  ))}
+                  {filteredOpportunities.map((opportunity) =>
+                <OpportunityCard
+                  key={opportunity.id}
+                  opportunity={opportunity}
+                  onStageChange={handleStageChange}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  onView={onView}
+                  onSelect={handleSelectOpportunity}
+                  isSelected={isOpportunitySelected(opportunity.id)}
+                  compact={true} />
+
+                )}
                 </div>
               </div>
-            )}
+            }
 
             {/* 统计视图 */}
-            {selectedView === "stats" && (
-              <div className="flex-1">
+            {selectedView === "stats" &&
+            <div className="flex-1">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {/* 阶段分布统计 */}
                   <Card>
@@ -406,29 +406,29 @@ export const OpportunityPipeline = ({
                     <CardContent>
                       <div className="space-y-2">
                         {opportunityStageFlow.map((stage) => {
-                          const stageConfig = opportunityStageConfig[stage];
-                          const stageCount = filteredOpportunities.filter(
-                            opp => opp.stage === stage
-                          ).length;
-                          const percentage = stats.total > 0
-                            ? (stageCount / stats.total * 100).toFixed(1)
-                            : 0;
+                        const stageConfig = opportunityStageConfig[stage];
+                        const stageCount = filteredOpportunities.filter(
+                          (opp) => opp.stage === stage
+                        ).length;
+                        const percentage = stats.total > 0 ?
+                        (stageCount / stats.total * 100).toFixed(1) :
+                        0;
 
-                          return (
-                            <div key={stage} className="space-y-1">
+                        return (
+                          <div key={stage} className="space-y-1">
                               <div className="flex justify-between text-sm">
                                 <span>{stageConfig.label}</span>
                                 <span>{percentage}%</span>
                               </div>
                               <div className="w-full bg-gray-200 rounded-full h-2">
                                 <div
-                                  className="bg-blue-600 h-2 rounded-full"
-                                  style={{ width: `${percentage}%` }}
-                                />
+                                className="bg-blue-600 h-2 rounded-full"
+                                style={{ width: `${percentage}%` }} />
+
                               </div>
-                            </div>
-                          );
-                        })}
+                            </div>);
+
+                      })}
                       </div>
                     </CardContent>
                   </Card>
@@ -450,17 +450,17 @@ export const OpportunityPipeline = ({
                           <div className="flex justify-between text-sm">
                             <span>平均金额</span>
                             <span>
-                              {stats.total > 0
-                                ? formatCurrency(stats.total_expected_amount / stats.total)
-                                : formatCurrency(0)}
+                              {stats.total > 0 ?
+                            formatCurrency(stats.total_expected_amount / stats.total) :
+                            formatCurrency(0)}
                             </span>
                           </div>
                           <div className="flex justify-between text-sm">
                             <span>最大金额</span>
                             <span>
                               {formatCurrency(
-                                Math.max(...filteredOpportunities.map(opp => opp.expected_amount || 0), 0)
-                              )}
+                              Math.max(...filteredOpportunities.map((opp) => opp.expected_amount || 0), 0)
+                            )}
                             </span>
                           </div>
                         </div>
@@ -476,18 +476,18 @@ export const OpportunityPipeline = ({
                     <CardContent>
                       <div className="space-y-3">
                         {opportunityStageFlow.slice(0, -1).map((stage, index) => {
-                          const stageCount = filteredOpportunities.filter(
-                            opp => opp.stage === stage
-                          ).length;
-                          const nextStageCount = filteredOpportunities.filter(
-                            opp => opp.stage === opportunityStageFlow[index + 1]
-                          ).length;
-                          const conversionRate = stageCount > 0
-                            ? (nextStageCount / stageCount * 100).toFixed(1)
-                            : 0;
+                        const stageCount = filteredOpportunities.filter(
+                          (opp) => opp.stage === stage
+                        ).length;
+                        const nextStageCount = filteredOpportunities.filter(
+                          (opp) => opp.stage === opportunityStageFlow[index + 1]
+                        ).length;
+                        const conversionRate = stageCount > 0 ?
+                        (nextStageCount / stageCount * 100).toFixed(1) :
+                        0;
 
-                          return (
-                            <div key={stage} className="space-y-1">
+                        return (
+                          <div key={stage} className="space-y-1">
                               <div className="flex justify-between text-sm">
                                 <span>{opportunityStageConfig[stage].label}</span>
                                 <span>{conversionRate}%</span>
@@ -496,20 +496,20 @@ export const OpportunityPipeline = ({
                                 <div className="flex-1 bg-gray-200 rounded h-2" />
                                 <div className="flex-1 bg-green-500 rounded h-2" style={{ width: `${conversionRate}%` }} />
                               </div>
-                            </div>
-                          );
-                        })}
+                            </div>);
+
+                      })}
                       </div>
                     </CardContent>
                   </Card>
                 </div>
               </div>
-            )}
+            }
           </div>
         </div>
       </div>
-    </DndProvider>
-  );
+    </DndProvider>);
+
 };
 
 export default OpportunityPipeline;

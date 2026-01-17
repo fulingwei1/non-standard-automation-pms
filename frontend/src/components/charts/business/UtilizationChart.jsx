@@ -22,17 +22,17 @@ export default function UtilizationChart({
   title,
   style,
 }) {
+  const sortedData = useMemo(() => {
+    return [...data]
+      .sort(
+        (a, b) =>
+          (b.rate || b.utilization || 0) - (a.rate || a.utilization || 0),
+      )
+      .slice(0, 15);
+  }, [data]);
+
   // 水平条形图（人员排名）
   if (chartType === "bar") {
-    const sortedData = useMemo(() => {
-      return [...data]
-        .sort(
-          (a, b) =>
-            (b.rate || b.utilization || 0) - (a.rate || a.utilization || 0),
-        )
-        .slice(0, 15);
-    }, [data]);
-
     const barConfig = {
       data: sortedData,
       xField: "rate" in (sortedData[0] || {}) ? "rate" : "utilization",

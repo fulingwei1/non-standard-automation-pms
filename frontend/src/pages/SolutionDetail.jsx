@@ -43,16 +43,16 @@ import {
   GitBranch,
   Send,
   Target,
-  ExternalLink,
-} from "lucide-react";
+  ExternalLink } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import { Button } from "../components/ui/button";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
@@ -62,8 +62,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../components/ui/dropdown-menu";
+  DropdownMenuTrigger } from
+"../components/ui/dropdown-menu";
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { presaleApi } from "../services/api";
@@ -104,13 +104,13 @@ const getDeliverableStatus = (status) => {
 
 // Tab 配置
 const tabs = [
-  { id: "overview", name: "概览", icon: FileText },
-  { id: "specs", name: "技术规格", icon: Cpu },
-  { id: "equipment", name: "设备配置", icon: Package },
-  { id: "deliverables", name: "交付物", icon: Paperclip },
-  { id: "cost", name: "成本估算", icon: DollarSign },
-  { id: "history", name: "版本历史", icon: History },
-];
+{ id: "overview", name: "概览", icon: FileText },
+{ id: "specs", name: "技术规格", icon: Cpu },
+{ id: "equipment", name: "设备配置", icon: Package },
+{ id: "deliverables", name: "交付物", icon: Paperclip },
+{ id: "cost", name: "成本估算", icon: DollarSign },
+{ id: "history", name: "版本历史", icon: History }];
+
 
 export default function SolutionDetail() {
   const { id } = useParams();
@@ -138,10 +138,10 @@ export default function SolutionDetail() {
       try {
         const costResponse = await presaleApi.solutions.getCost(id);
         costData = costResponse.data;
-      } catch (err) {
+      } catch (_err) {
+
         // Cost estimate may not exist, ignore error
       }
-
       // Transform solution data
       const transformedSolution = {
         id: solutionData.id,
@@ -154,11 +154,11 @@ export default function SolutionDetail() {
         deviceType: solutionData.solution_type?.toLowerCase() || "",
         deviceTypeName: solutionData.solution_type || "",
         progress: solutionData.progress || 0,
-        amount: solutionData.estimated_cost
-          ? solutionData.estimated_cost / 10000
-          : solutionData.suggested_price
-            ? solutionData.suggested_price / 10000
-            : 0,
+        amount: solutionData.estimated_cost ?
+        solutionData.estimated_cost / 10000 :
+        solutionData.suggested_price ?
+        solutionData.suggested_price / 10000 :
+        0,
         deadline: solutionData.deadline || "",
         createdAt: solutionData.created_at || "",
         updatedAt: solutionData.updated_at || solutionData.created_at || "",
@@ -173,7 +173,7 @@ export default function SolutionDetail() {
         deliverables: solutionData.deliverables || [],
         versionHistory: [],
         reviews: [],
-        collaborators: [],
+        collaborators: []
       };
 
       setSolution(transformedSolution);
@@ -198,8 +198,8 @@ export default function SolutionDetail() {
           <FileText className="w-12 h-12 mx-auto mb-4 text-slate-600 animate-pulse" />
           <p className="text-lg font-medium">加载中...</p>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   if (error || !solution) {
@@ -213,8 +213,8 @@ export default function SolutionDetail() {
             返回方案列表
           </Button>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   const statusStyle = getStatusStyle(solution.status);
@@ -224,16 +224,16 @@ export default function SolutionDetail() {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       {/* 返回按钮和头部 */}
       <motion.div variants={fadeIn} className="flex items-center gap-4">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => navigate("/solutions")}
-          className="text-slate-400 hover:text-white"
-        >
+          className="text-slate-400 hover:text-white">
+
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div className="flex-1">
@@ -293,8 +293,8 @@ export default function SolutionDetail() {
       {/* 基本信息卡片 */}
       <motion.div
         variants={fadeIn}
-        className="grid grid-cols-1 lg:grid-cols-4 gap-4"
-      >
+        className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+
         <Card className="bg-surface-100/50 backdrop-blur-lg border border-white/5">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -375,26 +375,26 @@ export default function SolutionDetail() {
       {/* Tab 导航 */}
       <motion.div variants={fadeIn}>
         <div className="flex overflow-x-auto custom-scrollbar pb-2 gap-1 border-b border-white/5">
-          {tabs.map((tab) => (
-            <Button
-              key={tab.id}
-              variant={activeTab === tab.id ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setActiveTab(tab.id)}
-              className="flex items-center gap-2 whitespace-nowrap"
-            >
+          {tabs.map((tab) =>
+          <Button
+            key={tab.id}
+            variant={activeTab === tab.id ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setActiveTab(tab.id)}
+            className="flex items-center gap-2 whitespace-nowrap">
+
               <tab.icon className="w-4 h-4" />
               {tab.name}
             </Button>
-          ))}
+          )}
         </div>
       </motion.div>
 
       {/* Tab 内容 */}
       <motion.div variants={fadeIn}>
         {/* 概览 Tab */}
-        {activeTab === "overview" && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {activeTab === "overview" &&
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* 左侧 - 描述和标签 */}
             <div className="lg:col-span-2 space-y-6">
               <Card className="bg-surface-100/50 backdrop-blur-lg border border-white/5">
@@ -406,14 +406,14 @@ export default function SolutionDetail() {
                     {solution.description}
                   </p>
                   <div className="flex flex-wrap gap-2 mt-4">
-                    {solution.tags.map((tag, index) => (
-                      <span
-                        key={index}
-                        className="px-3 py-1 bg-primary/10 text-primary text-xs rounded-full"
-                      >
+                    {solution.tags.map((tag, index) =>
+                  <span
+                    key={index}
+                    className="px-3 py-1 bg-primary/10 text-primary text-xs rounded-full">
+
                         {tag}
                       </span>
-                    ))}
+                  )}
                   </div>
                 </CardContent>
               </Card>
@@ -457,8 +457,8 @@ export default function SolutionDetail() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {solution.reviews.map((review) => (
-                    <div key={review.id} className="flex gap-3">
+                  {solution.reviews.map((review) =>
+                <div key={review.id} className="flex gap-3">
                       <Avatar className="w-8 h-8">
                         <AvatarFallback className="bg-primary/20 text-primary text-sm">
                           {review.avatar}
@@ -473,20 +473,20 @@ export default function SolutionDetail() {
                             {review.date}
                           </span>
                           <Badge
-                            className={cn(
-                              "text-xs",
-                              review.status === "approved"
-                                ? "bg-emerald-500"
-                                : review.status === "pending"
-                                  ? "bg-amber-500"
-                                  : "bg-red-500",
-                            )}
-                          >
-                            {review.status === "approved"
-                              ? "已通过"
-                              : review.status === "pending"
-                                ? "待审核"
-                                : "需修改"}
+                        className={cn(
+                          "text-xs",
+                          review.status === "approved" ?
+                          "bg-emerald-500" :
+                          review.status === "pending" ?
+                          "bg-amber-500" :
+                          "bg-red-500"
+                        )}>
+
+                            {review.status === "approved" ?
+                        "已通过" :
+                        review.status === "pending" ?
+                        "待审核" :
+                        "需修改"}
                           </Badge>
                         </div>
                         <p className="text-sm text-slate-400">
@@ -494,7 +494,7 @@ export default function SolutionDetail() {
                         </p>
                       </div>
                     </div>
-                  ))}
+                )}
                 </CardContent>
               </Card>
             </div>
@@ -509,8 +509,8 @@ export default function SolutionDetail() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {solution.collaborators.map((person, index) => (
-                    <div key={index} className="flex items-center gap-3">
+                  {solution.collaborators.map((person, index) =>
+                <div key={index} className="flex items-center gap-3">
                       <Avatar className="w-8 h-8">
                         <AvatarFallback className="bg-primary/20 text-primary text-sm">
                           {person.avatar}
@@ -523,7 +523,7 @@ export default function SolutionDetail() {
                         <p className="text-xs text-slate-500">{person.role}</p>
                       </div>
                     </div>
-                  ))}
+                )}
                 </CardContent>
               </Card>
 
@@ -552,34 +552,34 @@ export default function SolutionDetail() {
               </Card>
             </div>
           </div>
-        )}
+        }
 
         {/* 技术规格 Tab */}
-        {activeTab === "specs" && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {activeTab === "specs" &&
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="bg-surface-100/50 backdrop-blur-lg border border-white/5">
               <CardHeader>
                 <CardTitle className="text-lg">产品信息</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
                 {Object.entries(solution.techSpecs.productInfo).map(
-                  ([key, value]) => (
-                    <div key={key} className="flex justify-between">
+                ([key, value]) =>
+                <div key={key} className="flex justify-between">
                       <span className="text-slate-500">
-                        {key === "name"
-                          ? "产品名称"
-                          : key === "model"
-                            ? "型号规格"
-                            : key === "size"
-                              ? "外形尺寸"
-                              : key === "weight"
-                                ? "重量"
-                                : "材质"}
+                        {key === "name" ?
+                    "产品名称" :
+                    key === "model" ?
+                    "型号规格" :
+                    key === "size" ?
+                    "外形尺寸" :
+                    key === "weight" ?
+                    "重量" :
+                    "材质"}
                       </span>
                       <span className="text-white">{value}</span>
                     </div>
-                  ),
-                )}
+
+              )}
               </CardContent>
             </Card>
 
@@ -621,11 +621,11 @@ export default function SolutionDetail() {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
-                  {solution.techSpecs.testItems.map((item, index) => (
-                    <Badge key={index} variant="outline" className="text-xs">
+                  {solution.techSpecs.testItems.map((item, index) =>
+                <Badge key={index} variant="outline" className="text-xs">
                       {item}
                     </Badge>
-                  ))}
+                )}
                 </div>
               </CardContent>
             </Card>
@@ -636,11 +636,11 @@ export default function SolutionDetail() {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
-                  {solution.techSpecs.testStandards.map((standard, index) => (
-                    <Badge key={index} className="text-xs bg-blue-500">
+                  {solution.techSpecs.testStandards.map((standard, index) =>
+                <Badge key={index} className="text-xs bg-blue-500">
                       {standard}
                     </Badge>
-                  ))}
+                )}
                 </div>
               </CardContent>
             </Card>
@@ -652,37 +652,37 @@ export default function SolutionDetail() {
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   {Object.entries(solution.techSpecs.environment).map(
-                    ([key, value]) => (
-                      <div
-                        key={key}
-                        className="text-center p-3 bg-surface-50 rounded-lg"
-                      >
+                  ([key, value]) =>
+                  <div
+                    key={key}
+                    className="text-center p-3 bg-surface-50 rounded-lg">
+
                         <p className="text-xs text-slate-500 mb-1">
-                          {key === "temperature"
-                            ? "温度范围"
-                            : key === "humidity"
-                              ? "湿度范围"
-                              : key === "power"
-                                ? "电源"
-                                : key === "airPressure"
-                                  ? "气压"
-                                  : "占地面积"}
+                          {key === "temperature" ?
+                      "温度范围" :
+                      key === "humidity" ?
+                      "湿度范围" :
+                      key === "power" ?
+                      "电源" :
+                      key === "airPressure" ?
+                      "气压" :
+                      "占地面积"}
                         </p>
                         <p className="text-sm font-medium text-white">
                           {value}
                         </p>
                       </div>
-                    ),
-                  )}
+
+                )}
                 </div>
               </CardContent>
             </Card>
           </div>
-        )}
+        }
 
         {/* 设备配置 Tab */}
-        {activeTab === "equipment" && (
-          <div className="space-y-6">
+        {activeTab === "equipment" &&
+        <div className="space-y-6">
             <Card className="bg-surface-100/50 backdrop-blur-lg border border-white/5">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -703,8 +703,8 @@ export default function SolutionDetail() {
                       </tr>
                     </thead>
                     <tbody>
-                      {solution.equipment.main.map((item, index) => (
-                        <tr key={index} className="border-b border-white/5">
+                      {solution.equipment.main.map((item, index) =>
+                    <tr key={index} className="border-b border-white/5">
                           <td className="py-3 text-white">{item.name}</td>
                           <td className="py-3 text-slate-400">{item.model}</td>
                           <td className="py-3 text-right text-white">
@@ -717,7 +717,7 @@ export default function SolutionDetail() {
                             ¥{item.totalPrice.toLocaleString()}
                           </td>
                         </tr>
-                      ))}
+                    )}
                     </tbody>
                   </table>
                 </div>
@@ -744,8 +744,8 @@ export default function SolutionDetail() {
                       </tr>
                     </thead>
                     <tbody>
-                      {solution.equipment.auxiliary.map((item, index) => (
-                        <tr key={index} className="border-b border-white/5">
+                      {solution.equipment.auxiliary.map((item, index) =>
+                    <tr key={index} className="border-b border-white/5">
                           <td className="py-3 text-white">{item.name}</td>
                           <td className="py-3 text-slate-400">{item.model}</td>
                           <td className="py-3 text-right text-white">
@@ -758,7 +758,7 @@ export default function SolutionDetail() {
                             ¥{item.totalPrice.toLocaleString()}
                           </td>
                         </tr>
-                      ))}
+                    )}
                     </tbody>
                   </table>
                 </div>
@@ -774,11 +774,11 @@ export default function SolutionDetail() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {solution.equipment.software.map((item, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 bg-surface-50 rounded-lg"
-                    >
+                  {solution.equipment.software.map((item, index) =>
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 bg-surface-50 rounded-lg">
+
                       <div>
                         <p className="text-sm font-medium text-white">
                           {item.name}
@@ -789,7 +789,7 @@ export default function SolutionDetail() {
                         ¥{item.price.toLocaleString()}
                       </span>
                     </div>
-                  ))}
+                )}
                 </CardContent>
               </Card>
 
@@ -801,11 +801,11 @@ export default function SolutionDetail() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {solution.equipment.fixtures.map((item, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 bg-surface-50 rounded-lg"
-                    >
+                  {solution.equipment.fixtures.map((item, index) =>
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 bg-surface-50 rounded-lg">
+
                       <div>
                         <p className="text-sm font-medium text-white">
                           {item.name}
@@ -818,18 +818,18 @@ export default function SolutionDetail() {
                         ¥{item.totalPrice.toLocaleString()}
                       </span>
                     </div>
-                  ))}
+                )}
                 </CardContent>
               </Card>
             </div>
           </div>
-        )}
+        }
 
         {/* 成本估算 Tab */}
-        {activeTab === "cost" && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {costEstimate ? (
-              <>
+        {activeTab === "cost" &&
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {costEstimate ?
+          <>
                 <Card className="lg:col-span-2 bg-surface-100/50 backdrop-blur-lg border border-white/5">
                   <CardHeader>
                     <CardTitle className="text-lg">成本明细</CardTitle>
@@ -837,55 +837,55 @@ export default function SolutionDetail() {
                   <CardContent>
                     <div className="space-y-4">
                       {[
-                        {
-                          name: "硬件成本",
-                          value: costEstimate.hardware_cost || 0,
-                          color: "bg-blue-500",
-                        },
-                        {
-                          name: "软件成本",
-                          value: costEstimate.software_cost || 0,
-                          color: "bg-violet-500",
-                        },
-                        {
-                          name: "治具成本",
-                          value: costEstimate.fixture_cost || 0,
-                          color: "bg-amber-500",
-                        },
-                        {
-                          name: "安装调试",
-                          value: costEstimate.installation_cost || 0,
-                          color: "bg-emerald-500",
-                        },
-                        {
-                          name: "培训费用",
-                          value: costEstimate.training_cost || 0,
-                          color: "bg-pink-500",
-                        },
-                        {
-                          name: "运输费用",
-                          value: costEstimate.shipping_cost || 0,
-                          color: "bg-slate-500",
-                        },
-                      ].map((item, index) => {
-                        const total = costEstimate.total_cost || 1;
-                        return (
-                          <div key={index} className="flex items-center gap-4">
+                  {
+                    name: "硬件成本",
+                    value: costEstimate.hardware_cost || 0,
+                    color: "bg-blue-500"
+                  },
+                  {
+                    name: "软件成本",
+                    value: costEstimate.software_cost || 0,
+                    color: "bg-violet-500"
+                  },
+                  {
+                    name: "治具成本",
+                    value: costEstimate.fixture_cost || 0,
+                    color: "bg-amber-500"
+                  },
+                  {
+                    name: "安装调试",
+                    value: costEstimate.installation_cost || 0,
+                    color: "bg-emerald-500"
+                  },
+                  {
+                    name: "培训费用",
+                    value: costEstimate.training_cost || 0,
+                    color: "bg-pink-500"
+                  },
+                  {
+                    name: "运输费用",
+                    value: costEstimate.shipping_cost || 0,
+                    color: "bg-slate-500"
+                  }].
+                  map((item, index) => {
+                    const total = costEstimate.total_cost || 1;
+                    return (
+                      <div key={index} className="flex items-center gap-4">
                             <div className="w-24 text-sm text-slate-400">
                               {item.name}
                             </div>
                             <div className="flex-1">
                               <Progress
-                                value={(item.value / total) * 100}
-                                className="h-2"
-                              />
+                            value={item.value / total * 100}
+                            className="h-2" />
+
                             </div>
                             <div className="w-28 text-right text-sm text-white">
                               ¥{item.value.toLocaleString()}
                             </div>
-                          </div>
-                        );
-                      })}
+                          </div>);
+
+                  })}
                       <div className="flex items-center gap-4 pt-4 border-t border-white/5">
                         <div className="w-24 text-sm font-medium text-white">
                           总成本
@@ -924,28 +924,28 @@ export default function SolutionDetail() {
                         <p className="text-xl font-bold text-emerald-400">
                           ¥
                           {(
-                            (costEstimate.suggested_price || 0) -
-                            (costEstimate.total_cost || 0)
-                          ).toLocaleString()}
+                      (costEstimate.suggested_price || 0) - (
+                      costEstimate.total_cost || 0)).
+                      toLocaleString()}
                         </p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-              </>
-            ) : (
-              <div className="col-span-full text-center py-16 text-slate-400">
+              </> :
+
+          <div className="col-span-full text-center py-16 text-slate-400">
                 <Calculator className="w-12 h-12 mx-auto mb-4 text-slate-600" />
                 <p className="text-lg font-medium">暂无成本估算</p>
                 <p className="text-sm">请先进行成本核算</p>
               </div>
-            )}
+          }
           </div>
-        )}
+        }
 
         {/* 交付物 Tab */}
-        {activeTab === "deliverables" && (
-          <Card className="bg-surface-100/50 backdrop-blur-lg border border-white/5">
+        {activeTab === "deliverables" &&
+        <Card className="bg-surface-100/50 backdrop-blur-lg border border-white/5">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg">交付物清单</CardTitle>
               <Button size="sm" className="flex items-center gap-2">
@@ -956,13 +956,13 @@ export default function SolutionDetail() {
             <CardContent>
               <div className="space-y-3">
                 {solution.deliverables.map((item) => {
-                  const statusConfig = getDeliverableStatus(item.status);
-                  const StatusIcon = statusConfig.icon;
-                  return (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between p-4 bg-surface-50 rounded-lg hover:bg-white/[0.03] transition-colors"
-                    >
+                const statusConfig = getDeliverableStatus(item.status);
+                const StatusIcon = statusConfig.icon;
+                return (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between p-4 bg-surface-50 rounded-lg hover:bg-white/[0.03] transition-colors">
+
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                           <FileText className="w-5 h-5 text-primary" />
@@ -971,41 +971,41 @@ export default function SolutionDetail() {
                           <p className="text-sm font-medium text-white">
                             {item.name}
                           </p>
-                          {item.file ? (
-                            <p className="text-xs text-slate-500">
+                          {item.file ?
+                        <p className="text-xs text-slate-500">
                               {item.file} ({item.size})
-                            </p>
-                          ) : (
-                            <p className="text-xs text-slate-500">待上传</p>
-                          )}
+                            </p> :
+
+                        <p className="text-xs text-slate-500">待上传</p>
+                        }
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
                           <StatusIcon
-                            className={cn("w-4 h-4", statusConfig.color)}
-                          />
+                          className={cn("w-4 h-4", statusConfig.color)} />
+
                           <span className={cn("text-xs", statusConfig.color)}>
                             {statusConfig.text}
                           </span>
                         </div>
-                        {item.file && (
-                          <Button variant="ghost" size="sm">
+                        {item.file &&
+                      <Button variant="ghost" size="sm">
                             <Download className="w-4 h-4" />
                           </Button>
-                        )}
+                      }
                       </div>
-                    </div>
-                  );
-                })}
+                    </div>);
+
+              })}
               </div>
             </CardContent>
           </Card>
-        )}
+        }
 
         {/* 版本历史 Tab */}
-        {activeTab === "history" && (
-          <Card className="bg-surface-100/50 backdrop-blur-lg border border-white/5">
+        {activeTab === "history" &&
+        <Card className="bg-surface-100/50 backdrop-blur-lg border border-white/5">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <GitBranch className="w-5 h-5 text-primary" />
@@ -1014,30 +1014,30 @@ export default function SolutionDetail() {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {solution.versionHistory.map((version, index) => (
-                  <div key={index} className="flex gap-4">
+                {solution.versionHistory.map((version, index) =>
+              <div key={index} className="flex gap-4">
                     <div className="flex flex-col items-center">
                       <div
-                        className={cn(
-                          "w-8 h-8 rounded-full flex items-center justify-center",
-                          index === 0 ? "bg-primary" : "bg-slate-600",
-                        )}
-                      >
+                    className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center",
+                      index === 0 ? "bg-primary" : "bg-slate-600"
+                    )}>
+
                         <History className="w-4 h-4 text-white" />
                       </div>
-                      {index < solution.versionHistory.length - 1 && (
-                        <div className="w-px h-full bg-slate-700 my-2" />
-                      )}
+                      {index < solution.versionHistory.length - 1 &&
+                  <div className="w-px h-full bg-slate-700 my-2" />
+                  }
                     </div>
                     <div className="flex-1 pb-6">
                       <div className="flex items-center gap-3 mb-1">
                         <Badge
-                          variant="outline"
-                          className={cn(
-                            "text-xs",
-                            index === 0 && "border-primary text-primary",
-                          )}
-                        >
+                      variant="outline"
+                      className={cn(
+                        "text-xs",
+                        index === 0 && "border-primary text-primary"
+                      )}>
+
                           {version.version}
                         </Badge>
                         <span className="text-sm text-slate-400">
@@ -1050,12 +1050,12 @@ export default function SolutionDetail() {
                       <p className="text-sm text-white">{version.changes}</p>
                     </div>
                   </div>
-                ))}
+              )}
               </div>
             </CardContent>
           </Card>
-        )}
+        }
       </motion.div>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

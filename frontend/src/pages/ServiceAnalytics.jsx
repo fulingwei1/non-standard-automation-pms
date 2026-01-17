@@ -12,7 +12,7 @@
  * 7. 数据报表导出
  */
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo as _useMemo, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   BarChart3,
@@ -32,15 +32,15 @@ import {
   Phone,
   Mail,
   MessageSquare,
-  MapPin,
-} from "lucide-react";
+  MapPin } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { LoadingCard, ErrorMessage } from "../components/common";
@@ -50,52 +50,54 @@ import { fadeIn, staggerContainer } from "../lib/animations";
 import { serviceApi } from "../services/api";
 
 // Mock data for fallback
-const mockData = {
+const _mockData = {
   ticketTrends: [
-    { month: "2025-10", count: 12, resolved: 10 },
-    { month: "2025-11", count: 15, resolved: 13 },
-    { month: "2025-12", count: 18, resolved: 16 },
-    { month: "2026-01", count: 14, resolved: 12 },
-  ],
+  { month: "2025-10", count: 12, resolved: 10 },
+  { month: "2025-11", count: 15, resolved: 13 },
+  { month: "2025-12", count: 18, resolved: 16 },
+  { month: "2026-01", count: 14, resolved: 12 }],
+
   serviceTypeDistribution: [
-    { type: "安装调试", count: 35, percentage: 39.3 },
-    { type: "操作培训", count: 28, percentage: 31.5 },
-    { type: "定期维护", count: 18, percentage: 20.2 },
-    { type: "故障维修", count: 8, percentage: 9.0 },
-  ],
+  { type: "安装调试", count: 35, percentage: 39.3 },
+  { type: "操作培训", count: 28, percentage: 31.5 },
+  { type: "定期维护", count: 18, percentage: 20.2 },
+  { type: "故障维修", count: 8, percentage: 9.0 }],
+
   problemTypeDistribution: [
-    { type: "软件问题", count: 45, percentage: 28.8 },
-    { type: "机械问题", count: 38, percentage: 24.4 },
-    { type: "电气问题", count: 32, percentage: 20.5 },
-    { type: "操作问题", count: 28, percentage: 17.9 },
-    { type: "其他", count: 13, percentage: 8.3 },
-  ],
+  { type: "软件问题", count: 45, percentage: 28.8 },
+  { type: "机械问题", count: 38, percentage: 24.4 },
+  { type: "电气问题", count: 32, percentage: 20.5 },
+  { type: "操作问题", count: 28, percentage: 17.9 },
+  { type: "其他", count: 13, percentage: 8.3 }],
+
   satisfactionTrends: [
-    { month: "2025-10", score: 4.1 },
-    { month: "2025-11", score: 4.2 },
-    { month: "2025-12", score: 4.4 },
-    { month: "2026-01", score: 4.3 },
-  ],
+  { month: "2025-10", score: 4.1 },
+  { month: "2025-11", score: 4.2 },
+  { month: "2025-12", score: 4.4 },
+  { month: "2026-01", score: 4.3 }],
+
   responseTimeDistribution: [
-    { range: "0-2小时", count: 68, percentage: 43.6 },
-    { range: "2-4小时", count: 45, percentage: 28.8 },
-    { range: "4-8小时", count: 28, percentage: 17.9 },
-    { range: "8-24小时", count: 12, percentage: 7.7 },
-    { range: ">24小时", count: 3, percentage: 1.9 },
-  ],
+  { range: "0-2小时", count: 68, percentage: 43.6 },
+  { range: "2-4小时", count: 45, percentage: 28.8 },
+  { range: "4-8小时", count: 28, percentage: 17.9 },
+  { range: "8-24小时", count: 12, percentage: 7.7 },
+  { range: ">24小时", count: 3, percentage: 1.9 }],
+
   topCustomers: [
-    { customer: "东莞XX电子", tickets: 23, satisfaction: 4.5 },
-    { customer: "惠州XX电池", tickets: 18, satisfaction: 4.2 },
-    { customer: "深圳XX科技", tickets: 15, satisfaction: 4.6 },
-    { customer: "广州XX制造", tickets: 12, satisfaction: 4.0 },
-  ],
+  { customer: "东莞XX电子", tickets: 23, satisfaction: 4.5 },
+  { customer: "惠州XX电池", tickets: 18, satisfaction: 4.2 },
+  { customer: "深圳XX科技", tickets: 15, satisfaction: 4.6 },
+  { customer: "广州XX制造", tickets: 12, satisfaction: 4.0 }],
+
   engineerPerformance: [
-    { engineer: "张工程师", tickets: 45, avgTime: 6.5, satisfaction: 4.5 },
-    { engineer: "王工程师", tickets: 38, avgTime: 7.2, satisfaction: 4.3 },
-    { engineer: "李工程师", tickets: 32, avgTime: 8.1, satisfaction: 4.2 },
-    { engineer: "当前用户", tickets: 41, avgTime: 6.8, satisfaction: 4.4 },
-  ],
+  { engineer: "张工程师", tickets: 45, avgTime: 6.5, satisfaction: 4.5 },
+  { engineer: "王工程师", tickets: 38, avgTime: 7.2, satisfaction: 4.3 },
+  { engineer: "李工程师", tickets: 32, avgTime: 8.1, satisfaction: 4.2 },
+  { engineer: "当前用户", tickets: 41, avgTime: 6.8, satisfaction: 4.4 }]
+
 };
+
+const mockAnalytics = _mockData;
 
 export default function ServiceAnalytics() {
   const [analytics, setAnalytics] = useState(null);
@@ -114,39 +116,39 @@ export default function ServiceAnalytics() {
 
       // Load statistics from multiple APIs
       const [
-        ticketsStats,
-        satisfactionStats,
-        satisfactionList,
-        ticketsList,
-        recordsList,
-        communicationsList,
-      ] = await Promise.all([
-        serviceApi.tickets.getStatistics().catch(() => ({ data: {} })),
-        serviceApi.satisfaction.statistics().catch(() => ({ data: {} })),
-        serviceApi.satisfaction
-          .list({ page: 1, page_size: 1000 })
-          .catch(() => ({ data: { items: [] } })),
-        serviceApi.tickets
-          .list({ page: 1, page_size: 1000 })
-          .catch(() => ({ data: { items: [] } })),
-        serviceApi.records
-          .list({ page: 1, page_size: 1000 })
-          .catch(() => ({ data: { items: [] } })),
-        serviceApi.communications
-          .list({ page: 1, page_size: 1000 })
-          .catch(() => ({ data: { items: [] } })),
-      ]);
+      ticketsStats,
+      satisfactionStats,
+      satisfactionList,
+      ticketsList,
+      recordsList,
+      communicationsList] =
+      await Promise.all([
+      serviceApi.tickets.getStatistics().catch(() => ({ data: {} })),
+      serviceApi.satisfaction.statistics().catch(() => ({ data: {} })),
+      serviceApi.satisfaction.
+      list({ page: 1, page_size: 1000 }).
+      catch(() => ({ data: { items: [] } })),
+      serviceApi.tickets.
+      list({ page: 1, page_size: 1000 }).
+      catch(() => ({ data: { items: [] } })),
+      serviceApi.records.
+      list({ page: 1, page_size: 1000 }).
+      catch(() => ({ data: { items: [] } })),
+      serviceApi.communications.
+      list({ page: 1, page_size: 1000 }).
+      catch(() => ({ data: { items: [] } }))]
+      );
 
       const tickets = ticketsList.data?.items || ticketsList.data || [];
       const records = recordsList.data?.items || recordsList.data || [];
       const communications =
-        communicationsList.data?.items || communicationsList.data || [];
+      communicationsList.data?.items || communicationsList.data || [];
       const satisfactions =
-        satisfactionList.data?.items || satisfactionList.data || [];
+      satisfactionList.data?.items || satisfactionList.data || [];
       const ticketsStatsData = ticketsStats.data || {};
       const satisfactionStatsData = {
         ...(satisfactionStats.data || {}),
-        items: satisfactions,
+        items: satisfactions
       };
 
       // Calculate overview
@@ -158,38 +160,38 @@ export default function ServiceAnalytics() {
       // Calculate average response time (from tickets)
       const ticketsWithResponseTime = tickets.filter((t) => t.response_time);
       const avgResponseTime =
-        ticketsWithResponseTime.length > 0
-          ? ticketsWithResponseTime.reduce((sum, t) => {
-              const responseTime =
-                new Date(t.response_time) -
-                new Date(t.reported_time || t.created_at);
-              return sum + responseTime / (1000 * 60 * 60); // Convert to hours
-            }, 0) / ticketsWithResponseTime.length
-          : 2.5;
+      ticketsWithResponseTime.length > 0 ?
+      ticketsWithResponseTime.reduce((sum, t) => {
+        const responseTime =
+        new Date(t.response_time) -
+        new Date(t.reported_time || t.created_at);
+        return sum + responseTime / (1000 * 60 * 60); // Convert to hours
+      }, 0) / ticketsWithResponseTime.length :
+      2.5;
 
       // Calculate average resolution time (from tickets)
       const resolvedTickets = tickets.filter(
-        (t) => t.resolved_time && t.reported_time,
+        (t) => t.resolved_time && t.reported_time
       );
       const avgResolutionTime =
-        resolvedTickets.length > 0
-          ? resolvedTickets.reduce((sum, t) => {
-              const resolutionTime =
-                new Date(t.resolved_time) -
-                new Date(t.reported_time || t.created_at);
-              return sum + resolutionTime / (1000 * 60 * 60); // Convert to hours
-            }, 0) / resolvedTickets.length
-          : 8.5;
+      resolvedTickets.length > 0 ?
+      resolvedTickets.reduce((sum, t) => {
+        const resolutionTime =
+        new Date(t.resolved_time) -
+        new Date(t.reported_time || t.created_at);
+        return sum + resolutionTime / (1000 * 60 * 60); // Convert to hours
+      }, 0) / resolvedTickets.length :
+      8.5;
 
       // Calculate average satisfaction
       const avgSatisfaction = satisfactionStatsData.average_score || 4.3;
 
       // Calculate completion rate
       const completedTickets = tickets.filter(
-        (t) => t.status === "CLOSED" || t.status === "已关闭",
+        (t) => t.status === "CLOSED" || t.status === "已关闭"
       ).length;
       const completionRate =
-        totalTickets > 0 ? (completedTickets / totalTickets) * 100 : 0;
+      totalTickets > 0 ? completedTickets / totalTickets * 100 : 0;
 
       // Calculate service type distribution (from records)
       const serviceTypeCounts = {};
@@ -203,10 +205,10 @@ export default function ServiceAnalytics() {
           type,
           count,
           percentage:
-            totalRecordsCount > 0
-              ? ((count / totalRecordsCount) * 100).toFixed(1)
-              : 0,
-        }),
+          totalRecordsCount > 0 ?
+          (count / totalRecordsCount * 100).toFixed(1) :
+          0
+        })
       );
 
       // Calculate problem type distribution (from tickets)
@@ -221,10 +223,10 @@ export default function ServiceAnalytics() {
           type,
           count,
           percentage:
-            totalTicketsCount > 0
-              ? ((count / totalTicketsCount) * 100).toFixed(1)
-              : 0,
-        }),
+          totalTicketsCount > 0 ?
+          (count / totalTicketsCount * 100).toFixed(1) :
+          0
+        })
       );
 
       // Calculate response time distribution
@@ -233,18 +235,18 @@ export default function ServiceAnalytics() {
         "2-4小时": 0,
         "4-8小时": 0,
         "8-24小时": 0,
-        ">24小时": 0,
+        ">24小时": 0
       };
       ticketsWithResponseTime.forEach((t) => {
         const hours =
-          (new Date(t.response_time) -
-            new Date(t.reported_time || t.created_at)) /
-          (1000 * 60 * 60);
-        if (hours <= 2) responseTimeRanges["0-2小时"]++;
-        else if (hours <= 4) responseTimeRanges["2-4小时"]++;
-        else if (hours <= 8) responseTimeRanges["4-8小时"]++;
-        else if (hours <= 24) responseTimeRanges["8-24小时"]++;
-        else responseTimeRanges[">24小时"]++;
+        (new Date(t.response_time) -
+        new Date(t.reported_time || t.created_at)) / (
+        1000 * 60 * 60);
+        if (hours <= 2) responseTimeRanges["0-2小时"]++;else
+        if (hours <= 4) responseTimeRanges["2-4小时"]++;else
+        if (hours <= 8) responseTimeRanges["4-8小时"]++;else
+        if (hours <= 24) responseTimeRanges["8-24小时"]++;else
+        responseTimeRanges[">24小时"]++;
       });
       const totalWithResponseTime = ticketsWithResponseTime.length;
       const responseTimeDistribution = Object.entries(responseTimeRanges).map(
@@ -252,10 +254,10 @@ export default function ServiceAnalytics() {
           range,
           count,
           percentage:
-            totalWithResponseTime > 0
-              ? ((count / totalWithResponseTime) * 100).toFixed(1)
-              : 0,
-        }),
+          totalWithResponseTime > 0 ?
+          (count / totalWithResponseTime * 100).toFixed(1) :
+          0
+        })
       );
 
       // Group tickets by month for trends
@@ -271,10 +273,10 @@ export default function ServiceAnalytics() {
           ticketTrends[month].resolved++;
         }
       });
-      const ticketTrendsArray = Object.entries(ticketTrends)
-        .sort((a, b) => a[0].localeCompare(b[0]))
-        .slice(-4)
-        .map(([month, data]) => ({ month, ...data }));
+      const ticketTrendsArray = Object.entries(ticketTrends).
+      sort((a, b) => a[0].localeCompare(b[0])).
+      slice(-4).
+      map(([month, data]) => ({ month, ...data }));
 
       // Calculate satisfaction trends from satisfaction data
       const satisfactionTrendsData = {};
@@ -287,18 +289,18 @@ export default function ServiceAnalytics() {
           }
           satisfactionTrendsData[month].total++;
           satisfactionTrendsData[month].sum += parseFloat(
-            s.overall_score || s.score || 0,
+            s.overall_score || s.score || 0
           );
         });
       }
-      const satisfactionTrendsArray = Object.entries(satisfactionTrendsData)
-        .sort((a, b) => a[0].localeCompare(b[0]))
-        .slice(-4)
-        .map(([month, data]) => ({
-          month,
-          score:
-            data.total > 0 ? parseFloat((data.sum / data.total).toFixed(1)) : 0,
-        }));
+      const satisfactionTrendsArray = Object.entries(satisfactionTrendsData).
+      sort((a, b) => a[0].localeCompare(b[0])).
+      slice(-4).
+      map(([month, data]) => ({
+        month,
+        score:
+        data.total > 0 ? parseFloat((data.sum / data.total).toFixed(1)) : 0
+      }));
 
       // Calculate top customers from tickets
       const customerTicketCounts = {};
@@ -306,7 +308,7 @@ export default function ServiceAnalytics() {
       tickets.forEach((t) => {
         const customerName = t.customer_name || t.customer || "未知客户";
         customerTicketCounts[customerName] =
-          (customerTicketCounts[customerName] || 0) + 1;
+        (customerTicketCounts[customerName] || 0) + 1;
       });
       // Get satisfaction scores for customers
       if (satisfactionStatsData.items) {
@@ -317,44 +319,44 @@ export default function ServiceAnalytics() {
           }
           customerSatisfaction[customerName].total++;
           customerSatisfaction[customerName].sum += parseFloat(
-            s.overall_score || s.score || 0,
+            s.overall_score || s.score || 0
           );
         });
       }
-      const topCustomersArray = Object.entries(customerTicketCounts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 4)
-        .map(([customer, ticketCount]) => ({
-          customer,
-          tickets: ticketCount,
-          satisfaction: customerSatisfaction[customer]
-            ? parseFloat(
-                (
-                  customerSatisfaction[customer].sum /
-                  customerSatisfaction[customer].total
-                ).toFixed(1),
-              )
-            : 0,
-        }));
+      const topCustomersArray = Object.entries(customerTicketCounts).
+      sort((a, b) => b[1] - a[1]).
+      slice(0, 4).
+      map(([customer, ticketCount]) => ({
+        customer,
+        tickets: ticketCount,
+        satisfaction: customerSatisfaction[customer] ?
+        parseFloat(
+          (
+          customerSatisfaction[customer].sum /
+          customerSatisfaction[customer].total).
+          toFixed(1)
+        ) :
+        0
+      }));
 
       // Calculate engineer performance from tickets
       const engineerStats = {};
       tickets.forEach((t) => {
         const engineerName =
-          t.engineer_name || t.assignee_name || t.assignee || "未知工程师";
+        t.engineer_name || t.assignee_name || t.assignee || "未知工程师";
         if (!engineerStats[engineerName]) {
           engineerStats[engineerName] = {
             tickets: 0,
             totalTime: 0,
             satisfactionSum: 0,
-            satisfactionCount: 0,
+            satisfactionCount: 0
           };
         }
         engineerStats[engineerName].tickets++;
         if (t.resolved_time && t.reported_time) {
           const time =
-            (new Date(t.resolved_time) - new Date(t.reported_time)) /
-            (1000 * 60 * 60);
+          (new Date(t.resolved_time) - new Date(t.reported_time)) / (
+          1000 * 60 * 60);
           engineerStats[engineerName].totalTime += time;
         }
       });
@@ -365,28 +367,28 @@ export default function ServiceAnalytics() {
           if (engineerStats[engineerName]) {
             engineerStats[engineerName].satisfactionCount++;
             engineerStats[engineerName].satisfactionSum += parseFloat(
-              s.overall_score || s.score || 0,
+              s.overall_score || s.score || 0
             );
           }
         });
       }
-      const engineerPerformanceArray = Object.entries(engineerStats)
-        .map(([engineer, stats]) => ({
-          engineer,
-          tickets: stats.tickets,
-          avgTime:
-            stats.tickets > 0
-              ? parseFloat((stats.totalTime / stats.tickets).toFixed(1))
-              : 0,
-          satisfaction:
-            stats.satisfactionCount > 0
-              ? parseFloat(
-                  (stats.satisfactionSum / stats.satisfactionCount).toFixed(1),
-                )
-              : 0,
-        }))
-        .sort((a, b) => b.tickets - a.tickets)
-        .slice(0, 4);
+      const engineerPerformanceArray = Object.entries(engineerStats).
+      map(([engineer, stats]) => ({
+        engineer,
+        tickets: stats.tickets,
+        avgTime:
+        stats.tickets > 0 ?
+        parseFloat((stats.totalTime / stats.tickets).toFixed(1)) :
+        0,
+        satisfaction:
+        stats.satisfactionCount > 0 ?
+        parseFloat(
+          (stats.satisfactionSum / stats.satisfactionCount).toFixed(1)
+        ) :
+        0
+      })).
+      sort((a, b) => b.tickets - a.tickets).
+      slice(0, 4);
 
       // Build analytics object
       const analyticsData = {
@@ -398,36 +400,36 @@ export default function ServiceAnalytics() {
           averageResponseTime: parseFloat(avgResponseTime.toFixed(1)),
           averageResolutionTime: parseFloat(avgResolutionTime.toFixed(1)),
           averageSatisfaction: parseFloat(avgSatisfaction.toFixed(1)),
-          completionRate: parseFloat(completionRate.toFixed(1)),
+          completionRate: parseFloat(completionRate.toFixed(1))
         },
         ticketTrends:
-          ticketTrendsArray.length > 0
-            ? ticketTrendsArray
-            : mockAnalytics.ticketTrends,
+        ticketTrendsArray.length > 0 ?
+        ticketTrendsArray :
+        mockAnalytics.ticketTrends,
         serviceTypeDistribution:
-          serviceTypeDistribution.length > 0
-            ? serviceTypeDistribution
-            : mockAnalytics.serviceTypeDistribution,
+        serviceTypeDistribution.length > 0 ?
+        serviceTypeDistribution :
+        mockAnalytics.serviceTypeDistribution,
         problemTypeDistribution:
-          problemTypeDistribution.length > 0
-            ? problemTypeDistribution
-            : mockAnalytics.problemTypeDistribution,
+        problemTypeDistribution.length > 0 ?
+        problemTypeDistribution :
+        mockAnalytics.problemTypeDistribution,
         satisfactionTrends:
-          satisfactionTrendsArray.length > 0
-            ? satisfactionTrendsArray
-            : mockAnalytics.satisfactionTrends,
+        satisfactionTrendsArray.length > 0 ?
+        satisfactionTrendsArray :
+        mockAnalytics.satisfactionTrends,
         responseTimeDistribution:
-          responseTimeDistribution.length > 0
-            ? responseTimeDistribution
-            : mockAnalytics.responseTimeDistribution,
+        responseTimeDistribution.length > 0 ?
+        responseTimeDistribution :
+        mockAnalytics.responseTimeDistribution,
         topCustomers:
-          topCustomersArray.length > 0
-            ? topCustomersArray
-            : mockAnalytics.topCustomers,
+        topCustomersArray.length > 0 ?
+        topCustomersArray :
+        mockAnalytics.topCustomers,
         engineerPerformance:
-          engineerPerformanceArray.length > 0
-            ? engineerPerformanceArray
-            : mockAnalytics.engineerPerformance,
+        engineerPerformanceArray.length > 0 ?
+        engineerPerformanceArray :
+        mockAnalytics.engineerPerformance
       };
 
       setAnalytics(analyticsData);
@@ -449,13 +451,13 @@ export default function ServiceAnalytics() {
       // 准备导出数据
       const exportData = {
         统计周期:
-          period === "DAILY"
-            ? "今日"
-            : period === "WEEKLY"
-              ? "本周"
-              : period === "MONTHLY"
-                ? "本月"
-                : "本年",
+        period === "DAILY" ?
+        "今日" :
+        period === "WEEKLY" ?
+        "本周" :
+        period === "MONTHLY" ?
+        "本月" :
+        "本年",
         导出日期: new Date().toLocaleDateString("zh-CN"),
         概览: {
           工单总数: analytics.overview.totalTickets,
@@ -465,42 +467,42 @@ export default function ServiceAnalytics() {
           平均响应时间: `${analytics.overview.averageResponseTime}小时`,
           平均解决时间: `${analytics.overview.averageResolutionTime}小时`,
           平均满意度: analytics.overview.averageSatisfaction,
-          完成率: `${analytics.overview.completionRate}%`,
+          完成率: `${analytics.overview.completionRate}%`
         },
         工单趋势: analytics.ticketTrends.map((t) => ({
           月份: t.month,
           工单数: t.count,
-          已解决: t.resolved,
+          已解决: t.resolved
         })),
         服务类型分布: analytics.serviceTypeDistribution.map((d) => ({
           类型: d.type,
           数量: d.count,
-          占比: `${d.percentage}%`,
+          占比: `${d.percentage}%`
         })),
         问题类型分布: analytics.problemTypeDistribution.map((d) => ({
           类型: d.type,
           数量: d.count,
-          占比: `${d.percentage}%`,
+          占比: `${d.percentage}%`
         })),
         响应时间分布: analytics.responseTimeDistribution.map((d) => ({
           时间范围: d.range,
           数量: d.count,
-          占比: `${d.percentage}%`,
-        })),
+          占比: `${d.percentage}%`
+        }))
       };
 
       if (format === "excel") {
         // Excel格式导出（使用HTML table方式）
         const htmlContent = generateExcelHTML(exportData);
         const blob = new Blob([htmlContent], {
-          type: "application/vnd.ms-excel",
+          type: "application/vnd.ms-excel"
         });
         const link = document.createElement("a");
         const url = URL.createObjectURL(blob);
         link.setAttribute("href", url);
         link.setAttribute(
           "download",
-          `服务数据分析报表_${period}_${new Date().toISOString().split("T")[0]}.xls`,
+          `服务数据分析报表_${period}_${new Date().toISOString().split("T")[0]}.xls`
         );
         link.style.visibility = "hidden";
         document.body.appendChild(link);
@@ -564,14 +566,14 @@ export default function ServiceAnalytics() {
         // 添加BOM以支持中文
         const BOM = "\uFEFF";
         const blob = new Blob([BOM + csvContent], {
-          type: "text/csv;charset=utf-8;",
+          type: "text/csv;charset=utf-8;"
         });
         const link = document.createElement("a");
         const url = URL.createObjectURL(blob);
         link.setAttribute("href", url);
         link.setAttribute(
           "download",
-          `服务数据分析报表_${period}_${new Date().toISOString().split("T")[0]}.csv`,
+          `服务数据分析报表_${period}_${new Date().toISOString().split("T")[0]}.csv`
         );
         link.style.visibility = "hidden";
         document.body.appendChild(link);
@@ -661,8 +663,8 @@ export default function ServiceAnalytics() {
         <div className="container mx-auto px-4 py-6">
           <LoadingCard rows={5} />
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   if (error && !analytics) {
@@ -672,8 +674,8 @@ export default function ServiceAnalytics() {
         <div className="container mx-auto px-4 py-6">
           <ErrorMessage error={error} onRetry={loadAnalytics} />
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   if (!analytics) return null;
@@ -684,63 +686,63 @@ export default function ServiceAnalytics() {
         title="服务数据分析"
         description="分析服务数据，了解服务质量和效率"
         actions={
-          <div className="flex gap-2">
+        <div className="flex gap-2">
             <div className="flex gap-1 bg-slate-800/50 rounded-lg p-1">
-              {["DAILY", "WEEKLY", "MONTHLY", "YEARLY"].map((p) => (
-                <Button
-                  key={p}
-                  variant={period === p ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setPeriod(p)}
-                >
-                  {p === "DAILY"
-                    ? "今日"
-                    : p === "WEEKLY"
-                      ? "本周"
-                      : p === "MONTHLY"
-                        ? "本月"
-                        : "本年"}
+              {["DAILY", "WEEKLY", "MONTHLY", "YEARLY"].map((p) =>
+            <Button
+              key={p}
+              variant={period === p ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setPeriod(p)}>
+
+                  {p === "DAILY" ?
+              "今日" :
+              p === "WEEKLY" ?
+              "本周" :
+              p === "MONTHLY" ?
+              "本月" :
+              "本年"}
                 </Button>
-              ))}
+            )}
             </div>
             <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={() => {
-                loadAnalytics();
-                toast.success("数据已刷新");
-              }}
-              disabled={loading}
-            >
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() => {
+              loadAnalytics();
+              toast.success("数据已刷新");
+            }}
+            disabled={loading}>
+
               <RefreshCw
-                className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
-              />
+              className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+
               刷新
             </Button>
             <div className="flex gap-2">
               <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => handleExport("csv")}
-              >
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => handleExport("csv")}>
+
                 <Download className="w-4 h-4" />
                 导出CSV
               </Button>
               <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => handleExport("excel")}
-              >
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => handleExport("excel")}>
+
                 <Download className="w-4 h-4" />
                 导出Excel
               </Button>
             </div>
           </div>
-        }
-      />
+        } />
+
 
       <div className="container mx-auto px-4 py-6 space-y-6">
         {/* Overview Stats */}
@@ -748,8 +750,8 @@ export default function ServiceAnalytics() {
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
-        >
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
           <motion.div variants={fadeIn}>
             <Card className="bg-blue-500/10 border-blue-500/20">
               <CardContent className="p-4">
@@ -817,8 +819,8 @@ export default function ServiceAnalytics() {
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
-        >
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
           <motion.div variants={fadeIn}>
             <Card className="bg-slate-800/30 border-slate-700">
               <CardContent className="p-4">
@@ -869,18 +871,18 @@ export default function ServiceAnalytics() {
                     {analytics.overview.averageSatisfaction}
                   </p>
                   <div className="flex items-center gap-0.5">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <Star
-                        key={i}
-                        className={cn(
-                          "w-3 h-3",
-                          i <=
-                            Math.floor(analytics.overview.averageSatisfaction)
-                            ? "fill-yellow-400 text-yellow-400"
-                            : "text-slate-600",
-                        )}
-                      />
-                    ))}
+                    {[1, 2, 3, 4, 5].map((i) =>
+                    <Star
+                      key={i}
+                      className={cn(
+                        "w-3 h-3",
+                        i <=
+                        Math.floor(analytics.overview.averageSatisfaction) ?
+                        "fill-yellow-400 text-yellow-400" :
+                        "text-slate-600"
+                      )} />
+
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-1 mt-1">
@@ -924,8 +926,8 @@ export default function ServiceAnalytics() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {analytics.serviceTypeDistribution.map((item, index) => (
-                    <div key={index} className="space-y-2">
+                  {analytics.serviceTypeDistribution.map((item, index) =>
+                  <div key={index} className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-white">{item.type}</span>
                         <span className="text-slate-400">
@@ -934,12 +936,12 @@ export default function ServiceAnalytics() {
                       </div>
                       <div className="w-full bg-slate-800/50 rounded-full h-2">
                         <div
-                          className="bg-primary h-2 rounded-full transition-all"
-                          style={{ width: `${item.percentage}%` }}
-                        />
+                        className="bg-primary h-2 rounded-full transition-all"
+                        style={{ width: `${item.percentage}%` }} />
+
                       </div>
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -956,8 +958,8 @@ export default function ServiceAnalytics() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {analytics.problemTypeDistribution.map((item, index) => (
-                    <div key={index} className="space-y-2">
+                  {analytics.problemTypeDistribution.map((item, index) =>
+                  <div key={index} className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-white">{item.type}</span>
                         <span className="text-slate-400">
@@ -966,12 +968,12 @@ export default function ServiceAnalytics() {
                       </div>
                       <div className="w-full bg-slate-800/50 rounded-full h-2">
                         <div
-                          className="bg-red-500 h-2 rounded-full transition-all"
-                          style={{ width: `${item.percentage}%` }}
-                        />
+                        className="bg-red-500 h-2 rounded-full transition-all"
+                        style={{ width: `${item.percentage}%` }} />
+
                       </div>
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -988,8 +990,8 @@ export default function ServiceAnalytics() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {analytics.responseTimeDistribution.map((item, index) => (
-                    <div key={index} className="space-y-2">
+                  {analytics.responseTimeDistribution.map((item, index) =>
+                  <div key={index} className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-white">{item.range}</span>
                         <span className="text-slate-400">
@@ -998,12 +1000,12 @@ export default function ServiceAnalytics() {
                       </div>
                       <div className="w-full bg-slate-800/50 rounded-full h-2">
                         <div
-                          className="bg-blue-500 h-2 rounded-full transition-all"
-                          style={{ width: `${item.percentage}%` }}
-                        />
+                        className="bg-blue-500 h-2 rounded-full transition-all"
+                        style={{ width: `${item.percentage}%` }} />
+
                       </div>
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -1020,57 +1022,57 @@ export default function ServiceAnalytics() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {analytics.satisfactionTrends.map((item, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between"
-                    >
+                  {analytics.satisfactionTrends.map((item, index) =>
+                  <div
+                    key={index}
+                    className="flex items-center justify-between">
+
                       <span className="text-sm text-slate-400">
                         {item.month}
                       </span>
                       <div className="flex items-center gap-2">
                         <div className="flex items-center gap-0.5">
-                          {[1, 2, 3, 4, 5].map((i) => (
-                            <Star
-                              key={i}
-                              className={cn(
-                                "w-3 h-3",
-                                i <= Math.floor(item.score)
-                                  ? "fill-yellow-400 text-yellow-400"
-                                  : "text-slate-600",
-                              )}
-                            />
-                          ))}
+                          {[1, 2, 3, 4, 5].map((i) =>
+                        <Star
+                          key={i}
+                          className={cn(
+                            "w-3 h-3",
+                            i <= Math.floor(item.score) ?
+                            "fill-yellow-400 text-yellow-400" :
+                            "text-slate-600"
+                          )} />
+
+                        )}
                         </div>
                         <span className="text-white font-medium w-12 text-right">
                           {item.score}/5.0
                         </span>
-                        {index > 0 && (
-                          <span
-                            className={cn(
-                              "text-xs",
-                              item.score >
-                                analytics.satisfactionTrends[index - 1].score
-                                ? "text-emerald-400"
-                                : item.score <
-                                    analytics.satisfactionTrends[index - 1]
-                                      .score
-                                  ? "text-red-400"
-                                  : "text-slate-400",
-                            )}
-                          >
+                        {index > 0 &&
+                      <span
+                        className={cn(
+                          "text-xs",
+                          item.score >
+                          analytics.satisfactionTrends[index - 1].score ?
+                          "text-emerald-400" :
+                          item.score <
+                          analytics.satisfactionTrends[index - 1].
+                          score ?
+                          "text-red-400" :
+                          "text-slate-400"
+                        )}>
+
                             {item.score >
-                            analytics.satisfactionTrends[index - 1].score ? (
-                              <TrendingUp className="w-3 h-3 inline" />
-                            ) : item.score <
-                              analytics.satisfactionTrends[index - 1].score ? (
-                              <TrendingDown className="w-3 h-3 inline" />
-                            ) : null}
+                        analytics.satisfactionTrends[index - 1].score ?
+                        <TrendingUp className="w-3 h-3 inline" /> :
+                        item.score <
+                        analytics.satisfactionTrends[index - 1].score ?
+                        <TrendingDown className="w-3 h-3 inline" /> :
+                        null}
                           </span>
-                        )}
+                      }
                       </div>
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -1090,11 +1092,11 @@ export default function ServiceAnalytics() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {analytics.topCustomers.map((customer, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg"
-                    >
+                  {analytics.topCustomers.map((customer, index) =>
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+
                       <div className="flex-1">
                         <p className="text-white font-medium">
                           {customer.customer}
@@ -1105,24 +1107,24 @@ export default function ServiceAnalytics() {
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="flex items-center gap-0.5">
-                          {[1, 2, 3, 4, 5].map((i) => (
-                            <Star
-                              key={i}
-                              className={cn(
-                                "w-3 h-3",
-                                i <= Math.floor(customer.satisfaction)
-                                  ? "fill-yellow-400 text-yellow-400"
-                                  : "text-slate-600",
-                              )}
-                            />
-                          ))}
+                          {[1, 2, 3, 4, 5].map((i) =>
+                        <Star
+                          key={i}
+                          className={cn(
+                            "w-3 h-3",
+                            i <= Math.floor(customer.satisfaction) ?
+                            "fill-yellow-400 text-yellow-400" :
+                            "text-slate-600"
+                          )} />
+
+                        )}
                         </div>
                         <span className="text-white font-medium w-12 text-right">
                           {customer.satisfaction}/5
                         </span>
                       </div>
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -1139,8 +1141,8 @@ export default function ServiceAnalytics() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {analytics.engineerPerformance.map((engineer, index) => (
-                    <div key={index} className="p-3 bg-slate-800/50 rounded-lg">
+                  {analytics.engineerPerformance.map((engineer, index) =>
+                  <div key={index} className="p-3 bg-slate-800/50 rounded-lg">
                       <div className="flex items-center justify-between mb-2">
                         <p className="text-white font-medium">
                           {engineer.engineer}
@@ -1159,17 +1161,17 @@ export default function ServiceAnalytics() {
                         <div className="flex items-center gap-1">
                           <span className="text-slate-400">满意度:</span>
                           <div className="flex items-center gap-0.5">
-                            {[1, 2, 3, 4, 5].map((i) => (
-                              <Star
-                                key={i}
-                                className={cn(
-                                  "w-3 h-3",
-                                  i <= Math.floor(engineer.satisfaction)
-                                    ? "fill-yellow-400 text-yellow-400"
-                                    : "text-slate-600",
-                                )}
-                              />
-                            ))}
+                            {[1, 2, 3, 4, 5].map((i) =>
+                          <Star
+                            key={i}
+                            className={cn(
+                              "w-3 h-3",
+                              i <= Math.floor(engineer.satisfaction) ?
+                              "fill-yellow-400 text-yellow-400" :
+                              "text-slate-600"
+                            )} />
+
+                          )}
                           </div>
                           <span className="text-white ml-1">
                             {engineer.satisfaction}/5
@@ -1177,7 +1179,7 @@ export default function ServiceAnalytics() {
                         </div>
                       </div>
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -1197,9 +1199,9 @@ export default function ServiceAnalytics() {
               <div className="space-y-4">
                 {analytics.ticketTrends.map((item, index) => {
                   const resolutionRate =
-                    item.count > 0
-                      ? ((item.resolved / item.count) * 100).toFixed(1)
-                      : 0;
+                  item.count > 0 ?
+                  (item.resolved / item.count * 100).toFixed(1) :
+                  0;
                   return (
                     <div key={index} className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
@@ -1220,24 +1222,24 @@ export default function ServiceAnalytics() {
                         <div
                           className="bg-emerald-500 h-3 transition-all"
                           style={{
-                            width: `${(item.resolved / item.count) * 100}%`,
-                          }}
-                        />
+                            width: `${item.resolved / item.count * 100}%`
+                          }} />
+
                         <div
                           className="bg-amber-500 h-3 transition-all"
                           style={{
-                            width: `${((item.count - item.resolved) / item.count) * 100}%`,
-                          }}
-                        />
+                            width: `${(item.count - item.resolved) / item.count * 100}%`
+                          }} />
+
                       </div>
-                    </div>
-                  );
+                    </div>);
+
                 })}
               </div>
             </CardContent>
           </Card>
         </motion.div>
       </div>
-    </div>
-  );
+    </div>);
+
 }

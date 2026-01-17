@@ -29,19 +29,19 @@ const EvaluationTaskList = () => {
       name: "李经理",
       role: "dept_manager",
       department: "技术开发部",
-      projects: ["项目A", "项目B"],
+      projects: ["项目A", "项目B"]
     };
   }, []);
 
   // 使用自定义Hook管理任务数据
-  const { filteredTasks, statistics, availablePeriods, isLoading, error } =
-    useEvaluationTasks(
-      periodFilter,
-      statusFilter,
-      searchTerm,
-      typeFilter,
-      [],
-    );
+  const { filteredTasks, statistics, availablePeriods, isLoading, error: _error } =
+  useEvaluationTasks(
+    periodFilter,
+    statusFilter,
+    searchTerm,
+    typeFilter,
+    []
+  );
 
   // 处理评价
   const handleEvaluate = (task) => {
@@ -52,7 +52,7 @@ const EvaluationTaskList = () => {
   const fadeIn = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.4 },
+    transition: { duration: 0.4 }
   };
 
   return (
@@ -61,8 +61,8 @@ const EvaluationTaskList = () => {
         className="max-w-7xl mx-auto space-y-6"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
+        transition={{ duration: 0.5 }}>
+
         {/* 页面标题 */}
         <motion.div {...fadeIn}>
           <div className="flex items-center justify-between">
@@ -95,33 +95,33 @@ const EvaluationTaskList = () => {
             setStatusFilter={setStatusFilter}
             typeFilter={typeFilter}
             setTypeFilter={setTypeFilter}
-            availablePeriods={availablePeriods}
-          />
+            availablePeriods={availablePeriods} />
+
         </motion.div>
 
         {/* 任务列表 */}
         <motion.div {...fadeIn} transition={{ delay: 0.3 }}>
           <div className="space-y-4">
-            {isLoading ? (
-              <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-12 border border-slate-700/50 text-center">
+            {isLoading ?
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-12 border border-slate-700/50 text-center">
                 <div className="animate-spin h-12 w-12 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
                 <p className="text-slate-400">加载中...</p>
-              </div>
-            ) : filteredTasks.length === 0 ? (
-              <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-12 border border-slate-700/50 text-center">
+              </div> :
+            filteredTasks.length === 0 ?
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-12 border border-slate-700/50 text-center">
                 <AlertCircle className="h-12 w-12 text-slate-600 mx-auto mb-4" />
                 <p className="text-slate-400">暂无评价任务</p>
-              </div>
-            ) : (
-              filteredTasks.map((task, index) => (
-                <TaskItem
-                  key={task.id}
-                  task={task}
-                  index={index}
-                  onEvaluate={handleEvaluate}
-                />
-              ))
-            )}
+              </div> :
+
+            filteredTasks.map((task, index) =>
+            <TaskItem
+              key={task.id}
+              task={task}
+              index={index}
+              onEvaluate={handleEvaluate} />
+
+            )
+            }
           </div>
         </motion.div>
 
@@ -142,8 +142,8 @@ const EvaluationTaskList = () => {
           </div>
         </motion.div>
       </motion.div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default EvaluationTaskList;

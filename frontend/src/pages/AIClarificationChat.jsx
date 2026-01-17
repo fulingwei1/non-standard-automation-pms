@@ -11,8 +11,8 @@ import {
   Bot,
   User,
   MessageSquare,
-  Loader,
-} from "lucide-react";
+  Loader } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -22,18 +22,18 @@ import {
   Button,
   Input,
   Textarea,
-  Badge,
-} from "../components/ui";
+  Badge } from
+"../components/ui";
 import { technicalAssessmentApi } from "../services/api";
 
 export default function AIClarificationChat() {
   const { sourceType, sourceId } = useParams();
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
 
   const [clarifications, setClarifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [currentRound, setCurrentRound] = useState(1);
+  const [_currentRound, setCurrentRound] = useState(1);
   const [questions, setQuestions] = useState("");
   const [answers, setAnswers] = useState({}); // {questionIndex: answer}
 
@@ -46,7 +46,7 @@ export default function AIClarificationChat() {
       setLoading(true);
       const response = await technicalAssessmentApi.getAIClarifications({
         source_type: sourceType?.toUpperCase(),
-        source_id: parseInt(sourceId),
+        source_id: parseInt(sourceId)
       });
       const items = response.data.items || response.data || [];
       setClarifications(items);
@@ -72,18 +72,16 @@ export default function AIClarificationChat() {
       const questionsArray = questions.split("\n").filter((q) => q.trim());
       const questionsJson = JSON.stringify(questionsArray);
 
-      let response;
       if (sourceType === "lead") {
-        response = await technicalAssessmentApi.createAIClarificationForLead(
+        await technicalAssessmentApi.createAIClarificationForLead(
           parseInt(sourceId),
-          { questions: questionsJson },
+          { questions: questionsJson }
         );
       } else {
-        response =
-          await technicalAssessmentApi.createAIClarificationForOpportunity(
-            parseInt(sourceId),
-            { questions: questionsJson },
-          );
+        await technicalAssessmentApi.createAIClarificationForOpportunity(
+          parseInt(sourceId),
+          { questions: questionsJson }
+        );
       }
 
       setQuestions("");
@@ -98,7 +96,7 @@ export default function AIClarificationChat() {
 
   const handleSubmitAnswers = async (clarificationId) => {
     const currentClarification = clarifications.find(
-      (c) => c.id === clarificationId,
+      (c) => c.id === clarificationId
     );
     if (!currentClarification) return;
 
@@ -113,7 +111,7 @@ export default function AIClarificationChat() {
     try {
       setSending(true);
       await technicalAssessmentApi.updateAIClarification(clarificationId, {
-        answers: JSON.stringify(answersArray),
+        answers: JSON.stringify(answersArray)
       });
       setAnswers({});
       await loadClarifications();
@@ -134,30 +132,30 @@ export default function AIClarificationChat() {
       <PageHeader
         title="AI澄清对话"
         breadcrumbs={[
-          { label: "销售管理", path: "/sales" },
-          {
-            label: sourceType === "lead" ? "线索管理" : "商机管理",
-            path:
-              sourceType === "lead" ? "/sales/leads" : "/sales/opportunities",
-          },
-          { label: "AI澄清", path: "" },
-        ]}
-      />
+        { label: "销售管理", path: "/sales" },
+        {
+          label: sourceType === "lead" ? "线索管理" : "商机管理",
+          path:
+          sourceType === "lead" ? "/sales/leads" : "/sales/opportunities"
+        },
+        { label: "AI澄清", path: "" }]
+        } />
+
 
       <div className="mt-6 space-y-6">
         {/* 澄清记录列表 */}
         {clarifications.map((clarification) => {
           const questionsArray = JSON.parse(clarification.questions || "[]");
-          const answersArray = clarification.answers
-            ? JSON.parse(clarification.answers)
-            : [];
+          const answersArray = clarification.answers ?
+          JSON.parse(clarification.answers) :
+          [];
           const hasAnswers = answersArray.length > 0;
 
           return (
             <Card
               key={clarification.id}
-              className="bg-gray-800 border-gray-700"
-            >
+              className="bg-gray-800 border-gray-700">
+
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
@@ -165,8 +163,8 @@ export default function AIClarificationChat() {
                     {clarification.round} 轮澄清
                   </CardTitle>
                   <Badge
-                    className={hasAnswers ? "bg-green-500" : "bg-yellow-500"}
-                  >
+                    className={hasAnswers ? "bg-green-500" : "bg-yellow-500"}>
+
                     {hasAnswers ? "已回复" : "待回复"}
                   </Badge>
                 </div>
@@ -179,13 +177,13 @@ export default function AIClarificationChat() {
                     AI问题
                   </div>
                   <div className="space-y-2 pl-6">
-                    {questionsArray.map((question, idx) => (
-                      <div key={idx} className="p-3 bg-gray-700 rounded-lg">
+                    {questionsArray.map((question, idx) =>
+                    <div key={idx} className="p-3 bg-gray-700 rounded-lg">
                         <div className="text-sm mb-2">
                           {idx + 1}. {question}
                         </div>
-                        {hasAnswers ? (
-                          <div className="mt-2 p-2 bg-gray-600 rounded text-sm">
+                        {hasAnswers ?
+                      <div className="mt-2 p-2 bg-gray-600 rounded text-sm">
                             <div className="flex items-center gap-2 mb-1">
                               <User className="w-3 h-3" />
                               <span className="text-xs text-gray-400">
@@ -193,41 +191,41 @@ export default function AIClarificationChat() {
                               </span>
                             </div>
                             {answersArray[idx]}
-                          </div>
-                        ) : (
-                          <Textarea
-                            className="mt-2 bg-gray-600 border-gray-500 text-white"
-                            placeholder="请输入回答..."
-                            rows={2}
-                            value={answers[idx] || ""}
-                            onChange={(e) =>
-                              setAnswers({ ...answers, [idx]: e.target.value })
-                            }
-                          />
-                        )}
+                          </div> :
+
+                      <Textarea
+                        className="mt-2 bg-gray-600 border-gray-500 text-white"
+                        placeholder="请输入回答..."
+                        rows={2}
+                        value={answers[idx] || ""}
+                        onChange={(e) =>
+                        setAnswers({ ...answers, [idx]: e.target.value })
+                        } />
+
+                      }
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
 
                 {/* 提交按钮 */}
-                {!hasAnswers && (
-                  <Button
-                    onClick={() => handleSubmitAnswers(clarification.id)}
-                    disabled={sending}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    {sending ? (
-                      <Loader className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <Send className="w-4 h-4 mr-2" />
-                    )}
+                {!hasAnswers &&
+                <Button
+                  onClick={() => handleSubmitAnswers(clarification.id)}
+                  disabled={sending}
+                  className="bg-blue-600 hover:bg-blue-700">
+
+                    {sending ?
+                  <Loader className="w-4 h-4 mr-2 animate-spin" /> :
+
+                  <Send className="w-4 h-4 mr-2" />
+                  }
                     提交回答
                   </Button>
-                )}
+                }
               </CardContent>
-            </Card>
-          );
+            </Card>);
+
         })}
 
         {/* 创建新澄清 */}
@@ -246,25 +244,25 @@ export default function AIClarificationChat() {
                   placeholder="请输入问题，每行一个&#10;例如：&#10;接口协议是否已确定？&#10;节拍要求是否可调整？"
                   rows={6}
                   value={questions}
-                  onChange={(e) => setQuestions(e.target.value)}
-                />
+                  onChange={(e) => setQuestions(e.target.value)} />
+
               </div>
               <Button
                 onClick={handleCreateQuestions}
                 disabled={sending || !questions.trim()}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                {sending ? (
-                  <Loader className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <Send className="w-4 h-4 mr-2" />
-                )}
+                className="bg-blue-600 hover:bg-blue-700">
+
+                {sending ?
+                <Loader className="w-4 h-4 mr-2 animate-spin" /> :
+
+                <Send className="w-4 h-4 mr-2" />
+                }
                 创建澄清
               </Button>
             </div>
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>);
+
 }

@@ -17,13 +17,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger
-} from '@/components/ui';
+  DialogTrigger } from
+'@/components/ui';
 import {
-  PROJECT_ROLES
-} from './projectDetailConstants';
+  PROJECT_ROLES } from
+'./projectDetailConstants';
 import { format } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
+import { zhCN as _zhCN } from 'date-fns/locale';
 import { Mail, Phone, Calendar, UserCheck, UserX } from 'lucide-react';
 
 const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole }) => {
@@ -50,8 +50,8 @@ const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole
       return 0;
     }
 
-    const activeProjects = member.assigned_projects.filter(p =>
-      p.status === 'ACTIVE' || p.status === 'DELAYED'
+    const activeProjects = member.assigned_projects.filter((p) =>
+    p.status === 'ACTIVE' || p.status === 'DELAYED'
     ).length;
 
     return Math.min(activeProjects * 20, 100);
@@ -76,7 +76,7 @@ const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole
   };
 
   // Render member card
-  const renderMemberCard = (member, index) => {
+  const renderMemberCard = (member, _index) => {
     const roleInfo = getRoleInfo(member.role);
     const workload = calculateWorkload(member);
     const workloadText = formatWorkload(workload);
@@ -88,8 +88,8 @@ const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole
         onClick={() => {
           setSelectedMember(member);
           setIsDialogOpen(true);
-        }}
-      >
+        }}>
+
         <div className="flex items-start gap-3">
           <div className="relative">
             <Avatar className="w-12 h-12">
@@ -97,8 +97,8 @@ const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole
             </Avatar>
             <div
               className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white flex items-center justify-center text-xs"
-              style={{ backgroundColor: roleInfo.color }}
-            >
+              style={{ backgroundColor: roleInfo.color }}>
+
               {roleInfo.code}
             </div>
           </div>
@@ -119,33 +119,33 @@ const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole
                 style={{
                   borderColor: getWorkloadColor(workload),
                   color: getWorkloadColor(workload)
-                }}
-              >
+                }}>
+
                 {workloadText}
               </Badge>
             </div>
 
             <div className="mt-2 space-y-1">
-              {member.email && (
-                <div className="flex items-center gap-2 text-xs text-gray-500">
+              {member.email &&
+              <div className="flex items-center gap-2 text-xs text-gray-500">
                   <Mail className="w-3 h-3" />
                   <span className="truncate">{member.email}</span>
                 </div>
-              )}
-              {member.phone && (
-                <div className="flex items-center gap-2 text-xs text-gray-500">
+              }
+              {member.phone &&
+              <div className="flex items-center gap-2 text-xs text-gray-500">
                   <Phone className="w-3 h-3" />
                   <span>{member.phone}</span>
                 </div>
-              )}
-              {member.join_date && (
-                <div className="flex items-center gap-2 text-xs text-gray-500">
+              }
+              {member.join_date &&
+              <div className="flex items-center gap-2 text-xs text-gray-500">
                   <Calendar className="w-3 h-3" />
                   <span>
                     加入于 {format(new Date(member.join_date), 'yyyy-MM-dd')}
                   </span>
                 </div>
-              )}
+              }
             </div>
 
             <div className="mt-2">
@@ -156,31 +156,31 @@ const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole
               <Progress value={workload} className="h-1.5" />
             </div>
 
-            {member.assigned_projects && member.assigned_projects.length > 0 && (
-              <div className="mt-2">
+            {member.assigned_projects && member.assigned_projects.length > 0 &&
+            <div className="mt-2">
                 <div className="text-xs text-gray-500 mb-1">负责项目</div>
                 <div className="flex flex-wrap gap-1">
-                  {member.assigned_projects.slice(0, 3).map(proj => (
-                    <Badge
-                      key={proj.id}
-                      variant="secondary"
-                      className="text-xs"
-                    >
+                  {member.assigned_projects.slice(0, 3).map((proj) =>
+                <Badge
+                  key={proj.id}
+                  variant="secondary"
+                  className="text-xs">
+
                       {proj.name}
                     </Badge>
-                  ))}
-                  {member.assigned_projects.length > 3 && (
-                    <Badge variant="secondary" className="text-xs">
+                )}
+                  {member.assigned_projects.length > 3 &&
+                <Badge variant="secondary" className="text-xs">
                       +{member.assigned_projects.length - 3}
                     </Badge>
-                  )}
+                }
                 </div>
               </div>
-            )}
+            }
           </div>
         </div>
-      </div>
-    );
+      </div>);
+
   };
 
   // Render team statistics
@@ -188,7 +188,7 @@ const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole
     const totalMembers = project.team_members?.length || 0;
     const roleCounts = {};
 
-    project.team_members?.forEach(member => {
+    project.team_members?.forEach((member) => {
       const role = getRoleInfo(member.role);
       roleCounts[role.code] = (roleCounts[role.code] || 0) + 1;
     });
@@ -236,8 +236,8 @@ const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole
             </div>
           </CardContent>
         </Card>
-      </div>
-    );
+      </div>);
+
   };
 
   return (
@@ -260,24 +260,24 @@ const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[600px] pr-4">
-            {project.team_members && project.team_members.length > 0 ? (
-              <div className="space-y-3">
-                {project.team_members.map((member, index) => (
-                  <React.Fragment key={member.id}>
+            {project.team_members && project.team_members.length > 0 ?
+            <div className="space-y-3">
+                {project.team_members.map((member, index) =>
+              <React.Fragment key={member.id}>
                     {renderMemberCard(member, index)}
-                    {index < project.team_members.length - 1 && (
-                      <Separator />
-                    )}
+                    {index < project.team_members.length - 1 &&
+                <Separator />
+                }
                   </React.Fragment>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12 text-gray-500">
+              )}
+              </div> :
+
+            <div className="text-center py-12 text-gray-500">
                 <UserX className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                 <p className="text-lg font-medium mb-2">暂无团队成员</p>
                 <p className="text-sm">点击"添加成员"按钮邀请团队成员</p>
               </div>
-            )}
+            }
           </ScrollArea>
         </CardContent>
       </Card>
@@ -285,8 +285,8 @@ const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole
       {/* Member Detail Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
-          {selectedMember && (
-            <>
+          {selectedMember &&
+          <>
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-3">
                   <Avatar className="w-10 h-10">
@@ -295,13 +295,13 @@ const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole
                   <div>
                     <div>{selectedMember.name}</div>
                     <Badge
-                      variant="outline"
-                      className="mt-1"
-                      style={{
-                        borderColor: getRoleInfo(selectedMember.role).color,
-                        color: getRoleInfo(selectedMember.role).color
-                      }}
-                    >
+                    variant="outline"
+                    className="mt-1"
+                    style={{
+                      borderColor: getRoleInfo(selectedMember.role).color,
+                      color: getRoleInfo(selectedMember.role).color
+                    }}>
+
                       {getRoleInfo(selectedMember.role).name}
                     </Badge>
                   </div>
@@ -326,10 +326,10 @@ const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-gray-400" />
                       <span>
-                        加入于 {selectedMember.join_date
-                          ? format(new Date(selectedMember.join_date), 'yyyy-MM-dd')
-                          : '未知'
-                        }
+                        加入于 {selectedMember.join_date ?
+                      format(new Date(selectedMember.join_date), 'yyyy-MM-dd') :
+                      '未知'
+                      }
                       </span>
                     </div>
                   </div>
@@ -351,45 +351,45 @@ const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole
 
                 <div>
                   <h4 className="font-medium mb-2">负责项目</h4>
-                  {selectedMember.assigned_projects && selectedMember.assigned_projects.length > 0 ? (
-                    <div className="space-y-2">
-                      {selectedMember.assigned_projects.map(proj => (
-                        <div
-                          key={proj.id}
-                          className="flex items-center justify-between p-2 bg-gray-50 rounded"
-                        >
+                  {selectedMember.assigned_projects && selectedMember.assigned_projects.length > 0 ?
+                <div className="space-y-2">
+                      {selectedMember.assigned_projects.map((proj) =>
+                  <div
+                    key={proj.id}
+                    className="flex items-center justify-between p-2 bg-gray-50 rounded">
+
                           <span className="text-sm">{proj.name}</span>
                           <Badge variant="outline" className="text-xs">
                             {proj.status}
                           </Badge>
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-500">暂无其他项目</p>
                   )}
+                    </div> :
+
+                <p className="text-sm text-gray-500">暂无其他项目</p>
+                }
                 </div>
               </div>
 
               <DialogFooter className="flex gap-2">
                 <Button
-                  variant="outline"
-                  onClick={() => {
-                    onUpdateRole(selectedMember);
-                    setRoleDialogOpen(true);
-                  }}
-                >
+                variant="outline"
+                onClick={() => {
+                  onUpdateRole(selectedMember);
+                  setRoleDialogOpen(true);
+                }}>
+
                   更新角色
                 </Button>
                 <Button
-                  variant="outline"
-                  onClick={() => onRemoveMember(selectedMember.id)}
-                >
+                variant="outline"
+                onClick={() => onRemoveMember(selectedMember.id)}>
+
                   移除成员
                 </Button>
               </DialogFooter>
             </>
-          )}
+          }
         </DialogContent>
       </Dialog>
 
@@ -400,28 +400,28 @@ const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole
             <DialogTitle>更新成员角色</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            {Object.values(PROJECT_ROLES).map(role => (
-              <Button
-                key={role.code}
-                variant="outline"
-                className="w-full justify-start"
-                style={{
-                  borderColor: role.color,
-                  color: role.color
-                }}
-                onClick={() => {
-                  onUpdateRole(selectedMember, role.code);
-                  setRoleDialogOpen(false);
-                }}
-              >
+            {Object.values(PROJECT_ROLES).map((role) =>
+            <Button
+              key={role.code}
+              variant="outline"
+              className="w-full justify-start"
+              style={{
+                borderColor: role.color,
+                color: role.color
+              }}
+              onClick={() => {
+                onUpdateRole(selectedMember, role.code);
+                setRoleDialogOpen(false);
+              }}>
+
                 {role.icon} {role.name}
               </Button>
-            ))}
+            )}
           </div>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 };
 
 export default ProjectTeamCard;

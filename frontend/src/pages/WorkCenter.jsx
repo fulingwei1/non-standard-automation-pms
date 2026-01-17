@@ -22,15 +22,15 @@ import {
   Award,
   BookOpen,
   BarChart3,
-  Zap,
-} from "lucide-react";
+  Zap } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
@@ -40,7 +40,7 @@ import { workLogApi, taskCenterApi } from "../services/api";
 export default function WorkCenter() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [userInfo, setUserInfo] = useState(null);
+  const [userInfo, _setUserInfo] = useState(null);
 
   // 快速统计数据
   const [stats, setStats] = useState({
@@ -51,67 +51,67 @@ export default function WorkCenter() {
     recentWorkLogs: 0,
     thisMonthWorkLogs: 0,
     pendingApprovals: 0,
-    upcomingDeadlines: 0,
+    upcomingDeadlines: 0
   });
 
   // 快速操作数据
-  const [quickActions, setQuickActions] = useState([
-    {
-      title: "填写工作日志",
-      description: "记录今天的工作内容",
-      icon: ClipboardList,
-      color: "bg-blue-500",
-      action: () => navigate("/work-log"),
-    },
-    {
-      title: "查看任务",
-      description: "管理我的待办任务",
-      icon: Target,
-      color: "bg-green-500",
-      action: () => navigate("/tasks"),
-    },
-    {
-      title: "工时填报",
-      description: "填写项目工时",
-      icon: Timer,
-      color: "bg-orange-500",
-      action: () => navigate("/timesheet"),
-    },
-  ]);
+  const [quickActions, _setQuickActions] = useState([
+  {
+    title: "填写工作日志",
+    description: "记录今天的工作内容",
+    icon: ClipboardList,
+    color: "bg-blue-500",
+    action: () => navigate("/work-log")
+  },
+  {
+    title: "查看任务",
+    description: "管理我的待办任务",
+    icon: Target,
+    color: "bg-green-500",
+    action: () => navigate("/tasks")
+  },
+  {
+    title: "工时填报",
+    description: "填写项目工时",
+    icon: Timer,
+    color: "bg-orange-500",
+    action: () => navigate("/timesheet")
+  }]
+  );
 
   // 今日概览数据
-  const [todayOverview, setTodayOverview] = useState({
+  const [todayOverview, _setTodayOverview] = useState({
     currentStatus: "working", // working, break, offline
     workStartTime: "09:00",
     todayProgress: 65,
     todayHours: 6.5,
-    targetHours: 8,
+    targetHours: 8
   });
 
   // 最近活动
-  const [recentActivities, setRecentActivities] = useState([
-    {
-      id: 1,
-      type: "task_completed",
-      title: "完成机械结构设计",
-      time: "2小时前",
-      project: "BMS老化测试设备",
-    },
-    {
-      id: 2,
-      type: "work_log",
-      title: "提交了工作日志",
-      time: "3小时前",
-      content: "完成了设备框架的3D建模...",
-    },
-    {
-      id: 3,
-      type: "notification",
-      title: "收到新的任务分配",
-      time: "5小时前",
-      content: "BOM整理发布任务已分配给您",
-    },
-  ]);
+  const [recentActivities, _setRecentActivities] = useState([
+  {
+    id: 1,
+    type: "task_completed",
+    title: "完成机械结构设计",
+    time: "2小时前",
+    project: "BMS老化测试设备"
+  },
+  {
+    id: 2,
+    type: "work_log",
+    title: "提交了工作日志",
+    time: "3小时前",
+    content: "完成了设备框架的3D建模..."
+  },
+  {
+    id: 3,
+    type: "notification",
+    title: "收到新的任务分配",
+    time: "5小时前",
+    content: "BOM整理发布任务已分配给您"
+  }]
+  );
 
   useEffect(() => {
     fetchWorkCenterData();
@@ -123,34 +123,34 @@ export default function WorkCenter() {
 
       // 并行获取各种数据
       const [workLogsRes, tasksRes] = await Promise.allSettled([
-        workLogApi.list({ page: 1, page_size: 5 }),
-        taskCenterApi.getMyTasks(),
-      ]);
+      workLogApi.list({ page: 1, page_size: 5 }),
+      taskCenterApi.getMyTasks()]
+      );
 
       // 处理工作日志数据
       if (workLogsRes.status === "fulfilled") {
         const workLogData =
-          workLogsRes.value.data?.data || workLogsRes.value.data || {};
+        workLogsRes.value.data?.data || workLogsRes.value.data || {};
         const workLogs = workLogData.items || [];
 
         // 计算工作日志统计
         const today = new Date().toISOString().split("T")[0];
         const todayLogs = workLogs.filter(
-          (log) => log.work_date === today,
+          (log) => log.work_date === today
         ).length;
         const thisMonthLogs = workLogs.filter((log) => {
           const logDate = new Date(log.work_date);
           const now = new Date();
           return (
             logDate.getMonth() === now.getMonth() &&
-            logDate.getFullYear() === now.getFullYear()
-          );
+            logDate.getFullYear() === now.getFullYear());
+
         }).length;
 
         setStats((prev) => ({
           ...prev,
           recentWorkLogs: todayLogs,
-          thisMonthWorkLogs: thisMonthLogs,
+          thisMonthWorkLogs: thisMonthLogs
         }));
       }
 
@@ -160,10 +160,10 @@ export default function WorkCenter() {
         const tasks = taskData.items || taskData || [];
 
         const pendingTasks = tasks.filter(
-          (task) => task.status === "pending" || task.status === "in_progress",
+          (task) => task.status === "pending" || task.status === "in_progress"
         ).length;
         const completedTasks = tasks.filter(
-          (task) => task.status === "completed",
+          (task) => task.status === "completed"
         ).length;
         const todayTasks = tasks.filter((task) => {
           const taskDate = new Date(task.due_date);
@@ -175,7 +175,7 @@ export default function WorkCenter() {
           ...prev,
           todayTasks,
           pendingTasks,
-          completedTasks,
+          completedTasks
         }));
       }
     } catch (error) {
@@ -218,16 +218,16 @@ export default function WorkCenter() {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-gray-500">加载工作中心数据...</p>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
     <div className="space-y-6 p-6">
       <PageHeader
         title="工作中心"
-        description="您的个人工作台，快速访问日常工作功能"
-      />
+        description="您的个人工作台，快速访问日常工作功能" />
+
 
       {/* 欢迎区域和状态 */}
       <Card className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
@@ -246,15 +246,16 @@ export default function WorkCenter() {
                 <div
                   className={cn(
                     "w-3 h-3 rounded-full",
-                    getStatusColor(todayOverview.currentStatus),
-                  )}
-                ></div>
+                    getStatusColor(todayOverview.currentStatus)
+                  )}>
+
+                </div>
                 <span className="text-sm">
-                  {todayOverview.currentStatus === "working"
-                    ? "工作中"
-                    : todayOverview.currentStatus === "break"
-                      ? "休息中"
-                      : "离线"}
+                  {todayOverview.currentStatus === "working" ?
+                  "工作中" :
+                  todayOverview.currentStatus === "break" ?
+                  "休息中" :
+                  "离线"}
                 </span>
               </div>
               <p className="text-sm text-blue-100">
@@ -340,18 +341,18 @@ export default function WorkCenter() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {quickActions.map((action, index) => (
-                  <button
-                    key={index}
-                    onClick={action.action}
-                    className="flex items-center gap-4 p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors text-left"
-                  >
+                {quickActions.map((action, index) =>
+                <button
+                  key={index}
+                  onClick={action.action}
+                  className="flex items-center gap-4 p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors text-left">
+
                     <div
-                      className={cn(
-                        "w-12 h-12 rounded-lg flex items-center justify-center",
-                        action.color,
-                      )}
-                    >
+                    className={cn(
+                      "w-12 h-12 rounded-lg flex items-center justify-center",
+                      action.color
+                    )}>
+
                       <action.icon className="w-6 h-6 text-white" />
                     </div>
                     <div>
@@ -362,7 +363,7 @@ export default function WorkCenter() {
                     </div>
                     <ChevronRight className="w-4 h-4 text-gray-400 ml-auto" />
                   </button>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
@@ -377,32 +378,32 @@ export default function WorkCenter() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentActivities.map((activity) => (
-                  <div key={activity.id} className="flex items-start gap-3">
+                {recentActivities.map((activity) =>
+                <div key={activity.id} className="flex items-start gap-3">
                     {getActivityIcon(activity.type)}
                     <div className="flex-1">
                       <p className="font-medium">{activity.title}</p>
-                      {activity.content && (
-                        <p className="text-sm text-gray-600">
+                      {activity.content &&
+                    <p className="text-sm text-gray-600">
                           {activity.content}
                         </p>
-                      )}
-                      {activity.project && (
-                        <p className="text-sm text-blue-600">
+                    }
+                      {activity.project &&
+                    <p className="text-sm text-blue-600">
                           {activity.project}
                         </p>
-                      )}
+                    }
                       <p className="text-xs text-gray-500">{activity.time}</p>
                     </div>
                   </div>
-                ))}
+                )}
               </div>
 
               <Button
                 variant="outline"
                 className="w-full mt-4"
-                onClick={() => navigate("/tasks")}
-              >
+                onClick={() => navigate("/tasks")}>
+
                 查看所有活动
               </Button>
             </CardContent>
@@ -454,37 +455,37 @@ export default function WorkCenter() {
               <div className="space-y-2">
                 <button
                   onClick={() => navigate("/notifications")}
-                  className="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-50 text-left"
-                >
+                  className="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-50 text-left">
+
                   <Bell className="w-4 h-4 text-gray-500" />
                   <span className="text-sm">通知中心</span>
-                  {stats.unreadNotifications > 0 && (
-                    <Badge className="ml-auto" variant="destructive">
+                  {stats.unreadNotifications > 0 &&
+                  <Badge className="ml-auto" variant="destructive">
                       {stats.unreadNotifications}
                     </Badge>
-                  )}
+                  }
                 </button>
 
                 <button
                   onClick={() => navigate("/settings")}
-                  className="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-50 text-left"
-                >
+                  className="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-50 text-left">
+
                   <Settings className="w-4 h-4 text-gray-500" />
                   <span className="text-sm">个人设置</span>
                 </button>
 
                 <button
-                  onClick={() => navigate("/settings?section=knowledge")}
-                  className="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-50 text-left"
-                >
+                  onClick={() => navigate("/knowledge-base")}
+                  className="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-50 text-left">
+
                   <BookOpen className="w-4 h-4 text-gray-500" />
                   <span className="text-sm">知识库</span>
                 </button>
 
                 <button
                   onClick={() => navigate("/projects")}
-                  className="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-50 text-left"
-                >
+                  className="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-50 text-left">
+
                   <Award className="w-4 h-4 text-gray-500" />
                   <span className="text-sm">项目列表</span>
                 </button>
@@ -493,6 +494,6 @@ export default function WorkCenter() {
           </Card>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }

@@ -17,20 +17,20 @@ import {
   BarChart3,
   RefreshCw,
   Eye,
-  ArrowRight,
-} from "lucide-react";
+  ArrowRight } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
 import { ApiIntegrationError } from "../components/ui";
-import { cn, formatDate } from "../lib/utils";
+import { cn as _cn, formatDate as _formatDate } from "../lib/utils";
 import { productionApi } from "../services/api";
 export default function ProductionDashboard() {
   const navigate = useNavigate();
@@ -63,12 +63,12 @@ export default function ProductionDashboard() {
         <div className="container mx-auto px-4 py-6">
           <PageHeader
             title="生产驾驶舱"
-            description="生产管理总览看板，实时监控生产状态"
-          />
+            description="生产管理总览看板，实时监控生产状态" />
+
           <div className="text-center py-16 text-slate-400">加载中...</div>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   if (error) {
@@ -77,16 +77,16 @@ export default function ProductionDashboard() {
         <div className="container mx-auto px-4 py-6 space-y-6">
           <PageHeader
             title="生产驾驶舱"
-            description="生产管理总览看板，实时监控生产状态"
-          />
+            description="生产管理总览看板，实时监控生产状态" />
+
           <ApiIntegrationError
             error={error}
             apiEndpoint="/api/v1/production/dashboard"
-            onRetry={fetchDashboardData}
-          />
+            onRetry={fetchDashboardData} />
+
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   if (!dashboardData) {
@@ -95,8 +95,8 @@ export default function ProductionDashboard() {
         <div className="container mx-auto px-4 py-6 space-y-6">
           <PageHeader
             title="生产驾驶舱"
-            description="生产管理总览看板，实时监控生产状态"
-          />
+            description="生产管理总览看板，实时监控生产状态" />
+
           <Card>
             <CardContent className="p-12 text-center">
               <Factory className="w-16 h-16 mx-auto text-slate-600 mb-4" />
@@ -107,16 +107,16 @@ export default function ProductionDashboard() {
               <Button
                 variant="outline"
                 className="mt-4"
-                onClick={fetchDashboardData}
-              >
+                onClick={fetchDashboardData}>
+
                 <RefreshCw className="w-4 h-4 mr-2" />
                 刷新
               </Button>
             </CardContent>
           </Card>
         </div>
-      </div>
-    );
+      </div>);
+
   }
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
@@ -124,8 +124,8 @@ export default function ProductionDashboard() {
         <div className="flex items-center justify-between">
           <PageHeader
             title="生产驾驶舱"
-            description="生产管理总览看板，实时监控生产状态"
-          />
+            description="生产管理总览看板，实时监控生产状态" />
+
           <Button variant="outline" onClick={fetchDashboardData}>
             <RefreshCw className="w-4 h-4 mr-2" />
             刷新
@@ -268,8 +268,8 @@ export default function ProductionDashboard() {
               </div>
               <Progress
                 value={dashboardData.today_completion_rate || 0}
-                className="h-2 mt-2"
-              />
+                className="h-2 mt-2" />
+
             </CardContent>
           </Card>
           <Card>
@@ -285,8 +285,8 @@ export default function ProductionDashboard() {
               </div>
               <Progress
                 value={dashboardData.today_pass_rate || 0}
-                className="h-2 mt-2"
-              />
+                className="h-2 mt-2" />
+
             </CardContent>
           </Card>
           <Card>
@@ -371,32 +371,32 @@ export default function ProductionDashboard() {
               <Button
                 variant="outline"
                 className="h-auto py-4 flex-col"
-                onClick={() => navigate("/work-orders")}
-              >
+                onClick={() => navigate("/work-orders")}>
+
                 <Package className="w-6 h-6 mb-2" />
                 <span>工单管理</span>
               </Button>
               <Button
                 variant="outline"
                 className="h-auto py-4 flex-col"
-                onClick={() => navigate("/production-plans")}
-              >
+                onClick={() => navigate("/production-plans")}>
+
                 <BarChart3 className="w-6 h-6 mb-2" />
                 <span>生产计划</span>
               </Button>
               <Button
                 variant="outline"
                 className="h-auto py-4 flex-col"
-                onClick={() => navigate("/work-reports")}
-              >
+                onClick={() => navigate("/work-reports")}>
+
                 <CheckCircle2 className="w-6 h-6 mb-2" />
                 <span>报工管理</span>
               </Button>
               <Button
                 variant="outline"
                 className="h-auto py-4 flex-col"
-                onClick={() => navigate("/material-requisitions")}
-              >
+                onClick={() => navigate("/material-requisitions")}>
+
                 <Package className="w-6 h-6 mb-2" />
                 <span>领料管理</span>
               </Button>
@@ -404,6 +404,6 @@ export default function ProductionDashboard() {
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>);
+
 }

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { cn } from "../lib/utils";
+import { cn as _cn } from "../lib/utils";
 import { pmoApi } from "../services/api";
 import { formatDate, formatCurrency } from "../lib/utils";
 import { PageHeader } from "../components/layout/PageHeader";
@@ -12,16 +12,16 @@ import {
   Button,
   Badge,
   Input,
-  SkeletonCard,
-} from "../components/ui";
+  SkeletonCard } from
+"../components/ui";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogBody,
-  DialogFooter,
-} from "../components/ui";
+  DialogFooter } from
+"../components/ui";
 import {
   Plus,
   Search,
@@ -31,20 +31,20 @@ import {
   XCircle,
   Clock,
   Eye,
-  AlertCircle,
-} from "lucide-react";
+  AlertCircle } from
+"lucide-react";
 
-const staggerContainer = {
+const _staggerContainer = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.05, delayChildren: 0.1 },
-  },
+    transition: { staggerChildren: 0.05, delayChildren: 0.1 }
+  }
 };
 
 const staggerChild = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 },
+  visible: { opacity: 1, y: 0 }
 };
 
 const getStatusBadge = (status) => {
@@ -53,7 +53,7 @@ const getStatusBadge = (status) => {
     SUBMITTED: { label: "已提交", variant: "info" },
     REVIEWING: { label: "评审中", variant: "warning" },
     APPROVED: { label: "已通过", variant: "success" },
-    REJECTED: { label: "已驳回", variant: "danger" },
+    REJECTED: { label: "已驳回", variant: "danger" }
   };
   return badges[status] || badges.DRAFT;
 };
@@ -82,7 +82,7 @@ export default function InitiationManagement() {
         page,
         page_size: pageSize,
         keyword: keyword || undefined,
-        status: statusFilter || undefined,
+        status: statusFilter || undefined
       };
       const res = await pmoApi.initiations.list(params);
       const data = res.data;
@@ -137,12 +137,12 @@ export default function InitiationManagement() {
         title="立项管理"
         description="项目立项申请与评审管理"
         action={
-          <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
+        <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
             <Plus className="h-4 w-4" />
             新建申请
           </Button>
-        }
-      />
+        } />
+
 
       {/* Filters */}
       <Card className="mb-6">
@@ -154,14 +154,14 @@ export default function InitiationManagement() {
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 className="w-full"
-                icon={Search}
-              />
+                icon={Search} />
+
             </div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            >
+              className="px-4 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+
               <option value="">全部状态</option>
               <option value="DRAFT">草稿</option>
               <option value="SUBMITTED">已提交</option>
@@ -174,8 +174,8 @@ export default function InitiationManagement() {
       </Card>
 
       {/* Error Message */}
-      {error && (
-        <Card className="mb-6 border-red-500/30 bg-red-500/10">
+      {error &&
+      <Card className="mb-6 border-red-500/30 bg-red-500/10">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-red-400">
@@ -183,38 +183,38 @@ export default function InitiationManagement() {
                 <span>{error}</span>
               </div>
               <Button
-                size="sm"
-                variant="outline"
-                onClick={fetchData}
-                className="border-red-500/30 text-red-400 hover:bg-red-500/20"
-              >
+              size="sm"
+              variant="outline"
+              onClick={fetchData}
+              className="border-red-500/30 text-red-400 hover:bg-red-500/20">
+
                 重试
               </Button>
             </div>
           </CardContent>
         </Card>
-      )}
+      }
 
       {/* List */}
-      {loading ? (
+      {loading ?
+      <div className="grid grid-cols-1 gap-4">
+          {Array(5).
+        fill(null).
+        map((_, i) =>
+        <SkeletonCard key={i} />
+        )}
+        </div> :
+      error ? null :
+      <>
+          {initiations.length > 0 ?
         <div className="grid grid-cols-1 gap-4">
-          {Array(5)
-            .fill(null)
-            .map((_, i) => (
-              <SkeletonCard key={i} />
-            ))}
-        </div>
-      ) : error ? null : (
-        <>
-          {initiations.length > 0 ? (
-            <div className="grid grid-cols-1 gap-4">
               {initiations.map((initiation) => {
-                if (!initiation || !initiation.id) {
-                  return null;
-                }
-                const statusBadge = getStatusBadge(initiation.status);
-                return (
-                  <motion.div key={initiation.id} variants={staggerChild}>
+            if (!initiation || !initiation.id) {
+              return null;
+            }
+            const statusBadge = getStatusBadge(initiation.status);
+            return (
+              <motion.div key={initiation.id} variants={staggerChild}>
                     <Card className="hover:bg-white/[0.02] transition-colors">
                       <CardContent className="p-5">
                         <div className="flex items-start justify-between mb-4">
@@ -246,9 +246,9 @@ export default function InitiationManagement() {
                           <div>
                             <span className="text-slate-400">合同金额</span>
                             <p className="text-white mt-1">
-                              {initiation.contract_amount
-                                ? formatCurrency(initiation.contract_amount)
-                                : "未设置"}
+                              {initiation.contract_amount ?
+                          formatCurrency(initiation.contract_amount) :
+                          "未设置"}
                             </p>
                           </div>
                           <div>
@@ -260,99 +260,99 @@ export default function InitiationManagement() {
                           <div>
                             <span className="text-slate-400">申请时间</span>
                             <p className="text-white mt-1">
-                              {initiation.apply_time
-                                ? formatDate(initiation.apply_time)
-                                : "未设置"}
+                              {initiation.apply_time ?
+                          formatDate(initiation.apply_time) :
+                          "未设置"}
                             </p>
                           </div>
                         </div>
 
                         <div className="flex items-center justify-between pt-4 border-t border-white/5">
                           <div className="flex items-center gap-2">
-                            {initiation.status === "DRAFT" && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleSubmit(initiation.id)}
-                              >
+                            {initiation.status === "DRAFT" &&
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleSubmit(initiation.id)}>
+
                                 提交评审
                               </Button>
-                            )}
+                        }
                             {initiation.status === "APPROVED" &&
-                              initiation.project_id && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() =>
-                                    navigate(
-                                      `/projects/${initiation.project_id}`,
-                                    )
-                                  }
-                                >
+                        initiation.project_id &&
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                          navigate(
+                            `/projects/${initiation.project_id}`
+                          )
+                          }>
+
                                   查看项目
                                 </Button>
-                              )}
+                        }
                           </div>
                           <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() =>
-                              navigate(`/pmo/initiations/${initiation.id}`)
-                            }
-                          >
+                        size="sm"
+                        variant="ghost"
+                        onClick={() =>
+                        navigate(`/pmo/initiations/${initiation.id}`)
+                        }>
+
                             <Eye className="h-4 w-4 mr-2" />
                             查看详情
                           </Button>
                         </div>
                       </CardContent>
                     </Card>
-                  </motion.div>
-                );
-              })}
-            </div>
-          ) : (
-            <Card>
+                  </motion.div>);
+
+          })}
+            </div> :
+
+        <Card>
               <CardContent className="p-12 text-center text-slate-500">
                 暂无立项申请
               </CardContent>
             </Card>
-          )}
+        }
         </>
-      )}
+      }
 
       {/* Pagination */}
-      {total > pageSize && (
-        <div className="flex items-center justify-center gap-2 mt-6">
+      {total > pageSize &&
+      <div className="flex items-center justify-center gap-2 mt-6">
           <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-          >
+          variant="outline"
+          size="sm"
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          disabled={page === 1}>
+
             上一页
           </Button>
           <span className="text-sm text-slate-400">
             第 {page} 页，共 {Math.ceil(total / pageSize)} 页
           </span>
           <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage((p) => p + 1)}
-            disabled={page >= Math.ceil(total / pageSize)}
-          >
+          variant="outline"
+          size="sm"
+          onClick={() => setPage((p) => p + 1)}
+          disabled={page >= Math.ceil(total / pageSize)}>
+
             下一页
           </Button>
         </div>
-      )}
+      }
 
       {/* Create Dialog */}
       <CreateInitiationDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
-        onSubmit={handleCreate}
-      />
-    </div>
-  );
+        onSubmit={handleCreate} />
+
+    </div>);
+
 }
 
 function CreateInitiationDialog({ open, onOpenChange, onSubmit }) {
@@ -369,7 +369,7 @@ function CreateInitiationDialog({ open, onOpenChange, onSubmit }) {
     technical_difficulty: "",
     estimated_hours: "",
     resource_requirements: "",
-    risk_assessment: "",
+    risk_assessment: ""
   });
 
   const handleSubmit = () => {
@@ -391,7 +391,7 @@ function CreateInitiationDialog({ open, onOpenChange, onSubmit }) {
       technical_difficulty: "",
       estimated_hours: "",
       resource_requirements: "",
-      risk_assessment: "",
+      risk_assessment: ""
     });
   };
 
@@ -411,10 +411,10 @@ function CreateInitiationDialog({ open, onOpenChange, onSubmit }) {
                 <Input
                   value={formData.project_name}
                   onChange={(e) =>
-                    setFormData({ ...formData, project_name: e.target.value })
+                  setFormData({ ...formData, project_name: e.target.value })
                   }
-                  placeholder="请输入项目名称"
-                />
+                  placeholder="请输入项目名称" />
+
               </div>
               <div>
                 <label className="block text-sm font-medium text-white mb-2">
@@ -423,10 +423,10 @@ function CreateInitiationDialog({ open, onOpenChange, onSubmit }) {
                 <Input
                   value={formData.customer_name}
                   onChange={(e) =>
-                    setFormData({ ...formData, customer_name: e.target.value })
+                  setFormData({ ...formData, customer_name: e.target.value })
                   }
-                  placeholder="请输入客户名称"
-                />
+                  placeholder="请输入客户名称" />
+
               </div>
             </div>
 
@@ -438,10 +438,10 @@ function CreateInitiationDialog({ open, onOpenChange, onSubmit }) {
                 <Input
                   value={formData.contract_no}
                   onChange={(e) =>
-                    setFormData({ ...formData, contract_no: e.target.value })
+                  setFormData({ ...formData, contract_no: e.target.value })
                   }
-                  placeholder="请输入合同编号"
-                />
+                  placeholder="请输入合同编号" />
+
               </div>
               <div>
                 <label className="block text-sm font-medium text-white mb-2">
@@ -451,13 +451,13 @@ function CreateInitiationDialog({ open, onOpenChange, onSubmit }) {
                   type="number"
                   value={formData.contract_amount}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      contract_amount: e.target.value,
-                    })
+                  setFormData({
+                    ...formData,
+                    contract_amount: e.target.value
+                  })
                   }
-                  placeholder="请输入合同金额"
-                />
+                  placeholder="请输入合同金额" />
+
               </div>
             </div>
 
@@ -470,12 +470,12 @@ function CreateInitiationDialog({ open, onOpenChange, onSubmit }) {
                   type="date"
                   value={formData.required_start_date}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      required_start_date: e.target.value,
-                    })
-                  }
-                />
+                  setFormData({
+                    ...formData,
+                    required_start_date: e.target.value
+                  })
+                  } />
+
               </div>
               <div>
                 <label className="block text-sm font-medium text-white mb-2">
@@ -485,12 +485,12 @@ function CreateInitiationDialog({ open, onOpenChange, onSubmit }) {
                   type="date"
                   value={formData.required_end_date}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      required_end_date: e.target.value,
-                    })
-                  }
-                />
+                  setFormData({
+                    ...formData,
+                    required_end_date: e.target.value
+                  })
+                  } />
+
               </div>
             </div>
 
@@ -501,15 +501,15 @@ function CreateInitiationDialog({ open, onOpenChange, onSubmit }) {
               <textarea
                 value={formData.requirement_summary}
                 onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    requirement_summary: e.target.value,
-                  })
+                setFormData({
+                  ...formData,
+                  requirement_summary: e.target.value
+                })
                 }
                 placeholder="请输入需求概述"
                 className="w-full px-4 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                rows={3}
-              />
+                rows={3} />
+
             </div>
           </div>
         </DialogBody>
@@ -520,6 +520,6 @@ function CreateInitiationDialog({ open, onOpenChange, onSubmit }) {
           <Button onClick={handleSubmit}>创建</Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>);
+
 }

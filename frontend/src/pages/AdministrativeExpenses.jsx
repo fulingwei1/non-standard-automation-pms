@@ -19,8 +19,8 @@ import {
   Building2,
   Coffee,
   Printer,
-  Loader2,
-} from "lucide-react";
+  Loader2 } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -33,8 +33,8 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-  Progress,
-} from "../components/ui";
+  Progress } from
+"../components/ui";
 import { cn, formatCurrency } from "../lib/utils";
 import { staggerContainer } from "../lib/animations";
 import {
@@ -42,79 +42,79 @@ import {
   SimplePieChart,
   MonthlyTrendChart,
   TrendComparisonCard,
-  CategoryBreakdownCard,
-} from "../components/administrative/StatisticsCharts";
+  CategoryBreakdownCard } from
+"../components/administrative/StatisticsCharts";
 import { adminApi } from "../services/api";
 
 // Mock data
-const expenseStats = {
+const _expenseStats = {
   monthlyBudget: 500000,
   monthlySpent: 385000,
   budgetUtilization: 77,
   remainingBudget: 115000,
   lastMonthSpent: 420000,
-  trend: -8.3,
+  trend: -8.3
 };
 
-const categoryExpenses = [
-  {
-    category: "办公用品",
-    amount: 45000,
-    percentage: 11.7,
-    icon: Package,
-    color: "text-blue-400",
-  },
-  {
-    category: "车辆费用",
-    amount: 28000,
-    percentage: 7.3,
-    icon: Car,
-    color: "text-cyan-400",
-  },
-  {
-    category: "固定资产",
-    amount: 120000,
-    percentage: 31.2,
-    icon: Building2,
-    color: "text-purple-400",
-  },
-  {
-    category: "会议费用",
-    amount: 15000,
-    percentage: 3.9,
-    icon: Coffee,
-    color: "text-green-400",
-  },
-  {
-    category: "设备维护",
-    amount: 35000,
-    percentage: 9.1,
-    icon: Printer,
-    color: "text-amber-400",
-  },
-  {
-    category: "其他费用",
-    amount: 152000,
-    percentage: 39.5,
-    icon: DollarSign,
-    color: "text-slate-400",
-  },
-];
+const _categoryExpenses = [
+{
+  category: "办公用品",
+  amount: 45000,
+  percentage: 11.7,
+  icon: Package,
+  color: "text-blue-400"
+},
+{
+  category: "车辆费用",
+  amount: 28000,
+  percentage: 7.3,
+  icon: Car,
+  color: "text-cyan-400"
+},
+{
+  category: "固定资产",
+  amount: 120000,
+  percentage: 31.2,
+  icon: Building2,
+  color: "text-purple-400"
+},
+{
+  category: "会议费用",
+  amount: 15000,
+  percentage: 3.9,
+  icon: Coffee,
+  color: "text-green-400"
+},
+{
+  category: "设备维护",
+  amount: 35000,
+  percentage: 9.1,
+  icon: Printer,
+  color: "text-amber-400"
+},
+{
+  category: "其他费用",
+  amount: 152000,
+  percentage: 39.5,
+  icon: DollarSign,
+  color: "text-slate-400"
+}];
 
-const monthlyTrend = [
-  { month: "2024-07", amount: 380000 },
-  { month: "2024-08", amount: 395000 },
-  { month: "2024-09", amount: 410000 },
-  { month: "2024-10", amount: 425000 },
-  { month: "2024-11", amount: 420000 },
-  { month: "2024-12", amount: 385000 },
-];
+
+const _monthlyTrend = [
+{ month: "2024-07", amount: 380000 },
+{ month: "2024-08", amount: 395000 },
+{ month: "2024-09", amount: 410000 },
+{ month: "2024-10", amount: 425000 },
+{ month: "2024-11", amount: 420000 },
+{ month: "2024-12", amount: 385000 }];
+
 
 export default function AdministrativeExpenses() {
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [expenseStats, setExpenseStats] = useState(expenseStats);
-  const [categoryExpenses, setCategoryExpenses] = useState(categoryExpenses);
-  const [monthlyTrend, setMonthlyTrend] = useState(monthlyTrend);
+  const [categoryExpenses, _setCategoryExpenses] = useState(categoryExpenses);
+  const [monthlyTrend, _setMonthlyTrend] = useState(monthlyTrend);
   const [periodFilter, setPeriodFilter] = useState("month");
 
   // Load data from API with fallback to mock data
@@ -123,12 +123,12 @@ export default function AdministrativeExpenses() {
       setLoading(true);
       try {
         const statsRes = await adminApi.expenses.getStatistics({
-          period: periodFilter,
+          period: periodFilter
         });
         if (statsRes.data) {
           setExpenseStats(statsRes.data);
         }
-      } catch (err) {
+      } catch (_err) {
         console.log("Expense statistics API unavailable, using mock data");
       }
       setLoading(false);
@@ -145,29 +145,29 @@ export default function AdministrativeExpenses() {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       <PageHeader
         title="行政费用统计"
         description="行政费用统计分析、预算执行、费用趋势"
         actions={
-          <div className="flex gap-2">
+        <div className="flex gap-2">
             <Button variant="outline">
               <Download className="w-4 h-4 mr-2" />
               导出报表
             </Button>
             <select
-              value={periodFilter}
-              onChange={(e) => setPeriodFilter(e.target.value)}
-              className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white"
-            >
+            value={periodFilter}
+            onChange={(e) => setPeriodFilter(e.target.value)}
+            className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white">
+
               <option value="month">本月</option>
               <option value="quarter">本季度</option>
               <option value="year">本年</option>
             </select>
           </div>
-        }
-      />
+        } />
+
 
       {/* Key Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -219,21 +219,21 @@ export default function AdministrativeExpenses() {
                   {expenseStats.budgetUtilization}%
                 </p>
                 <div className="flex items-center gap-1 mt-1">
-                  {expenseStats.trend < 0 ? (
-                    <>
+                  {expenseStats.trend < 0 ?
+                  <>
                       <TrendingDown className="w-3 h-3 text-emerald-400" />
                       <span className="text-xs text-emerald-400">
                         {Math.abs(expenseStats.trend)}%
                       </span>
-                    </>
-                  ) : (
-                    <>
+                    </> :
+
+                  <>
                       <TrendingUp className="w-3 h-3 text-red-400" />
                       <span className="text-xs text-red-400">
                         +{expenseStats.trend}%
                       </span>
                     </>
-                  )}
+                  }
                   <span className="text-xs text-slate-500 ml-1">vs 上月</span>
                 </div>
               </div>
@@ -266,8 +266,8 @@ export default function AdministrativeExpenses() {
             </div>
             <Progress
               value={expenseStats.budgetUtilization}
-              className="h-4 bg-slate-700/50"
-            />
+              className="h-4 bg-slate-700/50" />
+
             <div className="flex items-center justify-between text-sm">
               <span className="text-slate-400">
                 使用率: {expenseStats.budgetUtilization}%
@@ -300,20 +300,20 @@ export default function AdministrativeExpenses() {
                   label: item.category,
                   value: item.amount,
                   color:
-                    index === 0
-                      ? "#3b82f6"
-                      : index === 1
-                        ? "#06b6d4"
-                        : index === 2
-                          ? "#a855f7"
-                          : index === 3
-                            ? "#10b981"
-                            : index === 4
-                              ? "#f59e0b"
-                              : "#64748b",
+                  index === 0 ?
+                  "#3b82f6" :
+                  index === 1 ?
+                  "#06b6d4" :
+                  index === 2 ?
+                  "#a855f7" :
+                  index === 3 ?
+                  "#10b981" :
+                  index === 4 ?
+                  "#f59e0b" :
+                  "#64748b"
                 }))}
-                size={200}
-              />
+                size={200} />
+
             </CardContent>
           </Card>
 
@@ -329,21 +329,21 @@ export default function AdministrativeExpenses() {
                   label: item.category,
                   value: item.amount,
                   color:
-                    index === 0
-                      ? "#3b82f6"
-                      : index === 1
-                        ? "#06b6d4"
-                        : index === 2
-                          ? "#a855f7"
-                          : index === 3
-                            ? "#10b981"
-                            : index === 4
-                              ? "#f59e0b"
-                              : "#64748b",
+                  index === 0 ?
+                  "#3b82f6" :
+                  index === 1 ?
+                  "#06b6d4" :
+                  index === 2 ?
+                  "#a855f7" :
+                  index === 3 ?
+                  "#10b981" :
+                  index === 4 ?
+                  "#f59e0b" :
+                  "#64748b"
                 }))}
                 total={totalExpenses}
-                formatValue={formatCurrency}
-              />
+                formatValue={formatCurrency} />
+
             </CardContent>
           </Card>
 
@@ -374,11 +374,11 @@ export default function AdministrativeExpenses() {
                     </div>
                     <Progress
                       value={item.percentage}
-                      className="h-2 bg-slate-700/50"
-                    />
+                      className="h-2 bg-slate-700/50" />
+
                   </CardContent>
-                </Card>
-              );
+                </Card>);
+
             })}
           </div>
         </TabsContent>
@@ -394,8 +394,8 @@ export default function AdministrativeExpenses() {
                 data={monthlyTrend}
                 valueKey="amount"
                 labelKey="month"
-                height={200}
-              />
+                height={200} />
+
             </CardContent>
           </Card>
 
@@ -405,20 +405,20 @@ export default function AdministrativeExpenses() {
               title="本月费用"
               current={expenseStats.monthlySpent}
               previous={expenseStats.lastMonthSpent}
-              formatValue={formatCurrency}
-            />
+              formatValue={formatCurrency} />
+
             <TrendComparisonCard
               title="预算使用率"
               current={expenseStats.budgetUtilization}
               previous={85}
-              unit="%"
-            />
+              unit="%" />
+
             <TrendComparisonCard
               title="剩余预算"
               current={expenseStats.remainingBudget}
               previous={80000}
-              formatValue={formatCurrency}
-            />
+              formatValue={formatCurrency} />
+
           </div>
 
           {/* Category Trend */}
@@ -431,7 +431,7 @@ export default function AdministrativeExpenses() {
                 {categoryExpenses.slice(0, 3).map((item, index) => {
                   const trendData = monthlyTrend.map((month) => ({
                     label: month.month,
-                    value: Math.floor(month.amount * (item.percentage / 100)),
+                    value: Math.floor(month.amount * (item.percentage / 100))
                   }));
                   return (
                     <div key={index} className="space-y-2">
@@ -450,15 +450,15 @@ export default function AdministrativeExpenses() {
                         data={trendData}
                         height={80}
                         color={
-                          index === 0
-                            ? "bg-blue-500"
-                            : index === 1
-                              ? "bg-cyan-500"
-                              : "bg-purple-500"
-                        }
-                      />
-                    </div>
-                  );
+                        index === 0 ?
+                        "bg-blue-500" :
+                        index === 1 ?
+                        "bg-cyan-500" :
+                        "bg-purple-500"
+                        } />
+
+                    </div>);
+
                 })}
               </div>
             </CardContent>
@@ -472,33 +472,33 @@ export default function AdministrativeExpenses() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {categoryExpenses
-                  .flatMap((category, catIndex) => {
-                    // 模拟每个分类下的明细
-                    const detailCount = Math.floor(category.amount / 5000) || 1;
-                    return Array.from(
-                      { length: Math.min(detailCount, 5) },
-                      (_, i) => ({
-                        id: `${catIndex}-${i}`,
-                        category: category.category,
-                        description: `${category.category}相关费用 ${i + 1}`,
-                        amount: Math.floor(category.amount / detailCount),
-                        date: `2025-01-${String(i + 1).padStart(2, "0")}`,
-                        department: [
-                          "销售部",
-                          "项目部",
-                          "技术开发部",
-                          "生产部",
-                          "行政部",
-                        ][i % 5],
-                      }),
-                    );
-                  })
-                  .map((detail) => (
-                    <div
-                      key={detail.id}
-                      className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50"
-                    >
+                {categoryExpenses.
+                flatMap((category, catIndex) => {
+                  // 模拟每个分类下的明细
+                  const detailCount = Math.floor(category.amount / 5000) || 1;
+                  return Array.from(
+                    { length: Math.min(detailCount, 5) },
+                    (_, i) => ({
+                      id: `${catIndex}-${i}`,
+                      category: category.category,
+                      description: `${category.category}相关费用 ${i + 1}`,
+                      amount: Math.floor(category.amount / detailCount),
+                      date: `2025-01-${String(i + 1).padStart(2, "0")}`,
+                      department: [
+                      "销售部",
+                      "项目部",
+                      "技术开发部",
+                      "生产部",
+                      "行政部"][
+                      i % 5]
+                    })
+                  );
+                }).
+                map((detail) =>
+                <div
+                  key={detail.id}
+                  className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50">
+
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
@@ -518,12 +518,12 @@ export default function AdministrativeExpenses() {
                         </div>
                       </div>
                     </div>
-                  ))}
+                )}
               </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

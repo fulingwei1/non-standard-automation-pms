@@ -7,15 +7,15 @@ import {
   FileText,
   Sparkles,
   CheckCircle2,
-  UploadCloud,
-} from "lucide-react";
+  UploadCloud } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Input } from "../components/ui/input";
@@ -25,19 +25,19 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
-} from "../components/ui/dialog";
+  DialogFooter } from
+"../components/ui/dialog";
 import { Textarea } from "../components/ui/textarea";
 import { Label } from "../components/ui/label";
-import { fadeIn, staggerContainer } from "../lib/animations";
-import { cn, formatDate } from "../lib/utils";
+import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
+import { cn, formatDate as _formatDate } from "../lib/utils";
 import { salesTemplateApi } from "../services/api";
 
 const tabs = [
-  { key: "quote", label: "报价模板", icon: Layers },
-  { key: "contract", label: "合同模板", icon: ClipboardList },
-  { key: "cpq", label: "CPQ规则", icon: Sparkles },
-];
+{ key: "quote", label: "报价模板", icon: Layers },
+{ key: "contract", label: "合同模板", icon: ClipboardList },
+{ key: "cpq", label: "CPQ规则", icon: Sparkles }];
+
 
 export default function SalesTemplateCenter() {
   const [activeTab, setActiveTab] = useState("quote");
@@ -57,7 +57,7 @@ export default function SalesTemplateCenter() {
     visibility_scope: "TEAM",
     version_no: "v1",
     sections: '{"sections":[]}',
-    pricing_rules: '{"base_price":0}',
+    pricing_rules: '{"base_price":0}'
   });
   const [newContractTemplate, setNewContractTemplate] = useState({
     template_code: "",
@@ -65,7 +65,7 @@ export default function SalesTemplateCenter() {
     contract_type: "",
     visibility_scope: "TEAM",
     version_no: "v1",
-    clause_sections: '{"sections":[]}',
+    clause_sections: '{"sections":[]}'
   });
   const [newRuleSet, setNewRuleSet] = useState({
     rule_code: "",
@@ -73,7 +73,7 @@ export default function SalesTemplateCenter() {
     base_price: 0,
     config_schema: '{"options":[]}',
     pricing_matrix: '{"items":{}}',
-    approval_threshold: '{"max_discount_pct":10}',
+    approval_threshold: '{"max_discount_pct":10}'
   });
 
   useEffect(() => {
@@ -84,10 +84,10 @@ export default function SalesTemplateCenter() {
     try {
       setLoading(true);
       const [quoteRes, contractRes, ruleRes] = await Promise.all([
-        salesTemplateApi.listQuoteTemplates({ page: 1, page_size: 50 }),
-        salesTemplateApi.listContractTemplates({ page: 1, page_size: 50 }),
-        salesTemplateApi.listRuleSets({ page: 1, page_size: 50 }),
-      ]);
+      salesTemplateApi.listQuoteTemplates({ page: 1, page_size: 50 }),
+      salesTemplateApi.listContractTemplates({ page: 1, page_size: 50 }),
+      salesTemplateApi.listRuleSets({ page: 1, page_size: 50 })]
+      );
       setQuoteTemplates(quoteRes.data?.items || quoteRes.items || []);
       setContractTemplates(contractRes.data?.items || contractRes.items || []);
       setRuleSets(ruleRes.data?.items || ruleRes.items || []);
@@ -98,10 +98,10 @@ export default function SalesTemplateCenter() {
     }
   };
 
-  const parseJsonField = (value, fallback = {}) => {
+  const parseJsonField = (value, _fallback = {}) => {
     try {
       return JSON.parse(value || "{}");
-    } catch (error) {
+    } catch (_error) {
       throw new Error("JSON 字段格式不正确");
     }
   };
@@ -116,15 +116,15 @@ export default function SalesTemplateCenter() {
         initial_version: {
           version_no: newQuoteTemplate.version_no,
           sections: parseJsonField(newQuoteTemplate.sections),
-          pricing_rules: parseJsonField(newQuoteTemplate.pricing_rules),
-        },
+          pricing_rules: parseJsonField(newQuoteTemplate.pricing_rules)
+        }
       };
       await salesTemplateApi.createQuoteTemplate(payload);
       setShowQuoteDialog(false);
       loadData();
     } catch (error) {
       alert(
-        "创建报价模板失败: " + (error.response?.data?.detail || error.message),
+        "创建报价模板失败: " + (error.response?.data?.detail || error.message)
       );
     }
   };
@@ -138,15 +138,15 @@ export default function SalesTemplateCenter() {
         visibility_scope: newContractTemplate.visibility_scope,
         initial_version: {
           version_no: newContractTemplate.version_no,
-          clause_sections: parseJsonField(newContractTemplate.clause_sections),
-        },
+          clause_sections: parseJsonField(newContractTemplate.clause_sections)
+        }
       };
       await salesTemplateApi.createContractTemplate(payload);
       setShowContractDialog(false);
       loadData();
     } catch (error) {
       alert(
-        "创建合同模板失败: " + (error.response?.data?.detail || error.message),
+        "创建合同模板失败: " + (error.response?.data?.detail || error.message)
       );
     }
   };
@@ -159,14 +159,14 @@ export default function SalesTemplateCenter() {
         base_price: Number(newRuleSet.base_price) || 0,
         config_schema: parseJsonField(newRuleSet.config_schema),
         pricing_matrix: parseJsonField(newRuleSet.pricing_matrix),
-        approval_threshold: parseJsonField(newRuleSet.approval_threshold),
+        approval_threshold: parseJsonField(newRuleSet.approval_threshold)
       };
       await salesTemplateApi.createRuleSet(payload);
       setShowRuleDialog(false);
       loadData();
     } catch (error) {
       alert(
-        "创建规则集失败: " + (error.response?.data?.detail || error.message),
+        "创建规则集失败: " + (error.response?.data?.detail || error.message)
       );
     }
   };
@@ -185,7 +185,7 @@ export default function SalesTemplateCenter() {
   const handlePreviewQuoteTemplate = async (template) => {
     try {
       const res = await salesTemplateApi.applyQuoteTemplate(template.id, {
-        selections: {},
+        selections: {}
       });
       setPreviewPayload(res.data || res);
       setShowPreviewDialog(true);
@@ -194,8 +194,8 @@ export default function SalesTemplateCenter() {
     }
   };
 
-  const renderQuoteTab = () => (
-    <div className="space-y-4">
+  const renderQuoteTab = () =>
+  <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold">标准报价模板库</h3>
@@ -205,14 +205,14 @@ export default function SalesTemplateCenter() {
         </div>
         <Button onClick={() => setShowQuoteDialog(true)}>新增模板</Button>
       </div>
-      {quoteTemplates.length === 0 && !loading && (
-        <div className="text-center text-muted-foreground py-8 border rounded-md">
+      {quoteTemplates.length === 0 && !loading &&
+    <div className="text-center text-muted-foreground py-8 border rounded-md">
           暂无模板，点击「新增模板」开始配置。
         </div>
-      )}
+    }
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {quoteTemplates.map((template) => (
-          <Card key={template.id}>
+        {quoteTemplates.map((template) =>
+      <Card key={template.id}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-base">
                 {template.template_name}
@@ -229,25 +229,25 @@ export default function SalesTemplateCenter() {
               </div>
               <div className="flex gap-2">
                 <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handlePublishQuoteVersion(template)}
-                >
+              size="sm"
+              variant="outline"
+              onClick={() => handlePublishQuoteVersion(template)}>
+
                   <CheckCircle2 className="w-4 h-4 mr-1" /> 发布最新
                 </Button>
                 <Button
-                  size="sm"
-                  onClick={() => handlePreviewQuoteTemplate(template)}
-                >
+              size="sm"
+              onClick={() => handlePreviewQuoteTemplate(template)}>
+
                   <PenTool className="w-4 h-4 mr-1" /> 应用/预测
                 </Button>
               </div>
               <div className="space-y-2">
-                {(template.versions || []).slice(0, 3).map((version) => (
-                  <div
-                    key={version.id}
-                    className="border rounded-md p-2 text-xs flex items-center justify-between"
-                  >
+                {(template.versions || []).slice(0, 3).map((version) =>
+            <div
+              key={version.id}
+              className="border rounded-md p-2 text-xs flex items-center justify-between">
+
                     <div>
                       <div className="font-medium">{version.version_no}</div>
                       <div className="text-muted-foreground">
@@ -256,14 +256,14 @@ export default function SalesTemplateCenter() {
                     </div>
                     <Badge variant="secondary">{version.status}</Badge>
                   </div>
-                ))}
+            )}
               </div>
             </CardContent>
           </Card>
-        ))}
+      )}
       </div>
-    </div>
-  );
+    </div>;
+
 
   const handlePublishContractVersion = async (template) => {
     if (!template.versions?.length) return;
@@ -276,8 +276,8 @@ export default function SalesTemplateCenter() {
     }
   };
 
-  const renderContractTab = () => (
-    <div className="space-y-4">
+  const renderContractTab = () =>
+  <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold">合同条款模板</h3>
@@ -289,14 +289,14 @@ export default function SalesTemplateCenter() {
           新增合同模板
         </Button>
       </div>
-      {contractTemplates.length === 0 && !loading && (
-        <div className="text-center text-muted-foreground py-8 border rounded-md">
+      {contractTemplates.length === 0 && !loading &&
+    <div className="text-center text-muted-foreground py-8 border rounded-md">
           尚未配置合同模板。
         </div>
-      )}
+    }
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {contractTemplates.map((template) => (
-          <Card key={template.id}>
+        {contractTemplates.map((template) =>
+      <Card key={template.id}>
             <CardHeader>
               <CardTitle className="flex items-center justify-between text-base">
                 <span>{template.template_name}</span>
@@ -313,10 +313,10 @@ export default function SalesTemplateCenter() {
               </div>
               <div className="flex gap-2">
                 <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handlePublishContractVersion(template)}
-                >
+              size="sm"
+              variant="outline"
+              onClick={() => handlePublishContractVersion(template)}>
+
                   <UploadCloud className="w-4 h-4 mr-1" /> 发布
                 </Button>
                 <Button size="sm" onClick={loadData}>
@@ -324,11 +324,11 @@ export default function SalesTemplateCenter() {
                 </Button>
               </div>
               <div className="space-y-2">
-                {(template.versions || []).slice(0, 3).map((version) => (
-                  <div
-                    key={version.id}
-                    className="border rounded-md p-2 text-xs flex items-center justify-between"
-                  >
+                {(template.versions || []).slice(0, 3).map((version) =>
+            <div
+              key={version.id}
+              className="border rounded-md p-2 text-xs flex items-center justify-between">
+
                     <div>
                       <div className="font-medium">{version.version_no}</div>
                       <div className="text-muted-foreground">
@@ -337,17 +337,17 @@ export default function SalesTemplateCenter() {
                     </div>
                     <Badge variant="secondary">{version.status}</Badge>
                   </div>
-                ))}
+            )}
               </div>
             </CardContent>
           </Card>
-        ))}
+      )}
       </div>
-    </div>
-  );
+    </div>;
 
-  const renderCpqTab = () => (
-    <div className="space-y-4">
+
+  const renderCpqTab = () =>
+  <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold">CPQ 定价规则</h3>
@@ -357,14 +357,14 @@ export default function SalesTemplateCenter() {
         </div>
         <Button onClick={() => setShowRuleDialog(true)}>新增规则集</Button>
       </div>
-      {ruleSets.length === 0 && !loading && (
-        <div className="text-center text-muted-foreground py-8 border rounded-md">
+      {ruleSets.length === 0 && !loading &&
+    <div className="text-center text-muted-foreground py-8 border rounded-md">
           规则集为空，先创建一个基础规则集。
         </div>
-      )}
+    }
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {ruleSets.map((rule) => (
-          <Card key={rule.id}>
+        {ruleSets.map((rule) =>
+      <Card key={rule.id}>
             <CardHeader>
               <CardTitle className="flex items-center justify-between text-base">
                 <span>{rule.rule_name}</span>
@@ -380,22 +380,22 @@ export default function SalesTemplateCenter() {
               </div>
             </CardContent>
           </Card>
-        ))}
+      )}
       </div>
-    </div>
-  );
+    </div>;
+
 
   return (
     <motion.div
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       <PageHeader
         title="模板与 CPQ 中心"
-        description="管理报价/合同模板与配置化定价资产，提高交付复用与预测准确性。"
-      />
+        description="管理报价/合同模板与配置化定价资产，提高交付复用与预测准确性。" />
+
       <div className="flex gap-2">
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -404,25 +404,25 @@ export default function SalesTemplateCenter() {
               key={tab.key}
               variant={activeTab === tab.key ? "default" : "ghost"}
               onClick={() => setActiveTab(tab.key)}
-              className="flex items-center gap-2"
-            >
+              className="flex items-center gap-2">
+
               <Icon className="w-4 h-4" />
               {tab.label}
-            </Button>
-          );
+            </Button>);
+
         })}
       </div>
-      {loading ? (
-        <div className="py-20 text-center text-muted-foreground">
+      {loading ?
+      <div className="py-20 text-center text-muted-foreground">
           数据加载中...
-        </div>
-      ) : (
-        <>
+        </div> :
+
+      <>
           {activeTab === "quote" && renderQuoteTab()}
           {activeTab === "contract" && renderContractTab()}
           {activeTab === "cpq" && renderCpqTab()}
         </>
-      )}
+      }
 
       {/* Quote Template Dialog */}
       <Dialog open={showQuoteDialog} onOpenChange={setShowQuoteDialog}>
@@ -440,12 +440,12 @@ export default function SalesTemplateCenter() {
                 className="col-span-3"
                 value={newQuoteTemplate.template_code}
                 onChange={(e) =>
-                  setNewQuoteTemplate((prev) => ({
-                    ...prev,
-                    template_code: e.target.value,
-                  }))
-                }
-              />
+                setNewQuoteTemplate((prev) => ({
+                  ...prev,
+                  template_code: e.target.value
+                }))
+                } />
+
             </div>
             <div className="grid grid-cols-4 gap-2 items-center">
               <Label>模板名称</Label>
@@ -453,12 +453,12 @@ export default function SalesTemplateCenter() {
                 className="col-span-3"
                 value={newQuoteTemplate.template_name}
                 onChange={(e) =>
-                  setNewQuoteTemplate((prev) => ({
-                    ...prev,
-                    template_name: e.target.value,
-                  }))
-                }
-              />
+                setNewQuoteTemplate((prev) => ({
+                  ...prev,
+                  template_name: e.target.value
+                }))
+                } />
+
             </div>
             <div className="grid grid-cols-4 gap-2 items-center">
               <Label>版本号</Label>
@@ -466,12 +466,12 @@ export default function SalesTemplateCenter() {
                 className="col-span-3"
                 value={newQuoteTemplate.version_no}
                 onChange={(e) =>
-                  setNewQuoteTemplate((prev) => ({
-                    ...prev,
-                    version_no: e.target.value,
-                  }))
-                }
-              />
+                setNewQuoteTemplate((prev) => ({
+                  ...prev,
+                  version_no: e.target.value
+                }))
+                } />
+
             </div>
             <div className="grid grid-cols-4 gap-2 items-start">
               <Label>模板结构 JSON</Label>
@@ -479,12 +479,12 @@ export default function SalesTemplateCenter() {
                 className="col-span-3 min-h-[120px]"
                 value={newQuoteTemplate.sections}
                 onChange={(e) =>
-                  setNewQuoteTemplate((prev) => ({
-                    ...prev,
-                    sections: e.target.value,
-                  }))
-                }
-              />
+                setNewQuoteTemplate((prev) => ({
+                  ...prev,
+                  sections: e.target.value
+                }))
+                } />
+
             </div>
             <div className="grid grid-cols-4 gap-2 items-start">
               <Label>定价规则 JSON</Label>
@@ -492,12 +492,12 @@ export default function SalesTemplateCenter() {
                 className="col-span-3 min-h-[120px]"
                 value={newQuoteTemplate.pricing_rules}
                 onChange={(e) =>
-                  setNewQuoteTemplate((prev) => ({
-                    ...prev,
-                    pricing_rules: e.target.value,
-                  }))
-                }
-              />
+                setNewQuoteTemplate((prev) => ({
+                  ...prev,
+                  pricing_rules: e.target.value
+                }))
+                } />
+
             </div>
           </div>
           <DialogFooter>
@@ -525,12 +525,12 @@ export default function SalesTemplateCenter() {
                 className="col-span-3"
                 value={newContractTemplate.template_code}
                 onChange={(e) =>
-                  setNewContractTemplate((prev) => ({
-                    ...prev,
-                    template_code: e.target.value,
-                  }))
-                }
-              />
+                setNewContractTemplate((prev) => ({
+                  ...prev,
+                  template_code: e.target.value
+                }))
+                } />
+
             </div>
             <div className="grid grid-cols-4 gap-2 items-center">
               <Label>模板名称</Label>
@@ -538,12 +538,12 @@ export default function SalesTemplateCenter() {
                 className="col-span-3"
                 value={newContractTemplate.template_name}
                 onChange={(e) =>
-                  setNewContractTemplate((prev) => ({
-                    ...prev,
-                    template_name: e.target.value,
-                  }))
-                }
-              />
+                setNewContractTemplate((prev) => ({
+                  ...prev,
+                  template_name: e.target.value
+                }))
+                } />
+
             </div>
             <div className="grid grid-cols-4 gap-2 items-center">
               <Label>合同类型</Label>
@@ -551,12 +551,12 @@ export default function SalesTemplateCenter() {
                 className="col-span-3"
                 value={newContractTemplate.contract_type}
                 onChange={(e) =>
-                  setNewContractTemplate((prev) => ({
-                    ...prev,
-                    contract_type: e.target.value,
-                  }))
-                }
-              />
+                setNewContractTemplate((prev) => ({
+                  ...prev,
+                  contract_type: e.target.value
+                }))
+                } />
+
             </div>
             <div className="grid grid-cols-4 gap-2 items-center">
               <Label>版本号</Label>
@@ -564,12 +564,12 @@ export default function SalesTemplateCenter() {
                 className="col-span-3"
                 value={newContractTemplate.version_no}
                 onChange={(e) =>
-                  setNewContractTemplate((prev) => ({
-                    ...prev,
-                    version_no: e.target.value,
-                  }))
-                }
-              />
+                setNewContractTemplate((prev) => ({
+                  ...prev,
+                  version_no: e.target.value
+                }))
+                } />
+
             </div>
             <div className="grid grid-cols-4 gap-2 items-start">
               <Label>条款结构 JSON</Label>
@@ -577,19 +577,19 @@ export default function SalesTemplateCenter() {
                 className="col-span-3 min-h-[120px]"
                 value={newContractTemplate.clause_sections}
                 onChange={(e) =>
-                  setNewContractTemplate((prev) => ({
-                    ...prev,
-                    clause_sections: e.target.value,
-                  }))
-                }
-              />
+                setNewContractTemplate((prev) => ({
+                  ...prev,
+                  clause_sections: e.target.value
+                }))
+                } />
+
             </div>
           </div>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowContractDialog(false)}
-            >
+              onClick={() => setShowContractDialog(false)}>
+
               取消
             </Button>
             <Button onClick={handleCreateContractTemplate}>保存</Button>
@@ -613,12 +613,12 @@ export default function SalesTemplateCenter() {
                 className="col-span-3"
                 value={newRuleSet.rule_code}
                 onChange={(e) =>
-                  setNewRuleSet((prev) => ({
-                    ...prev,
-                    rule_code: e.target.value,
-                  }))
-                }
-              />
+                setNewRuleSet((prev) => ({
+                  ...prev,
+                  rule_code: e.target.value
+                }))
+                } />
+
             </div>
             <div className="grid grid-cols-4 gap-2 items-center">
               <Label>规则名称</Label>
@@ -626,12 +626,12 @@ export default function SalesTemplateCenter() {
                 className="col-span-3"
                 value={newRuleSet.rule_name}
                 onChange={(e) =>
-                  setNewRuleSet((prev) => ({
-                    ...prev,
-                    rule_name: e.target.value,
-                  }))
-                }
-              />
+                setNewRuleSet((prev) => ({
+                  ...prev,
+                  rule_name: e.target.value
+                }))
+                } />
+
             </div>
             <div className="grid grid-cols-4 gap-2 items-center">
               <Label>基准价格</Label>
@@ -640,12 +640,12 @@ export default function SalesTemplateCenter() {
                 className="col-span-3"
                 value={newRuleSet.base_price}
                 onChange={(e) =>
-                  setNewRuleSet((prev) => ({
-                    ...prev,
-                    base_price: e.target.value,
-                  }))
-                }
-              />
+                setNewRuleSet((prev) => ({
+                  ...prev,
+                  base_price: e.target.value
+                }))
+                } />
+
             </div>
             <div className="grid grid-cols-4 gap-2 items-start">
               <Label>配置项 JSON</Label>
@@ -653,12 +653,12 @@ export default function SalesTemplateCenter() {
                 className="col-span-3 min-h-[120px]"
                 value={newRuleSet.config_schema}
                 onChange={(e) =>
-                  setNewRuleSet((prev) => ({
-                    ...prev,
-                    config_schema: e.target.value,
-                  }))
-                }
-              />
+                setNewRuleSet((prev) => ({
+                  ...prev,
+                  config_schema: e.target.value
+                }))
+                } />
+
             </div>
             <div className="grid grid-cols-4 gap-2 items-start">
               <Label>定价矩阵 JSON</Label>
@@ -666,12 +666,12 @@ export default function SalesTemplateCenter() {
                 className="col-span-3 min-h-[120px]"
                 value={newRuleSet.pricing_matrix}
                 onChange={(e) =>
-                  setNewRuleSet((prev) => ({
-                    ...prev,
-                    pricing_matrix: e.target.value,
-                  }))
-                }
-              />
+                setNewRuleSet((prev) => ({
+                  ...prev,
+                  pricing_matrix: e.target.value
+                }))
+                } />
+
             </div>
             <div className="grid grid-cols-4 gap-2 items-start">
               <Label>审批阈值 JSON</Label>
@@ -679,12 +679,12 @@ export default function SalesTemplateCenter() {
                 className="col-span-3 min-h-[120px]"
                 value={newRuleSet.approval_threshold}
                 onChange={(e) =>
-                  setNewRuleSet((prev) => ({
-                    ...prev,
-                    approval_threshold: e.target.value,
-                  }))
-                }
-              />
+                setNewRuleSet((prev) => ({
+                  ...prev,
+                  approval_threshold: e.target.value
+                }))
+                } />
+
             </div>
           </div>
           <DialogFooter>
@@ -705,8 +705,8 @@ export default function SalesTemplateCenter() {
               自动计算的完工价格、折扣与调价轨迹。
             </DialogDescription>
           </DialogHeader>
-          {previewPayload ? (
-            <div className="space-y-4">
+          {previewPayload ?
+          <div className="space-y-4">
               <Card>
                 <CardHeader>
                   <CardTitle>价格预估</CardTitle>
@@ -744,11 +744,11 @@ export default function SalesTemplateCenter() {
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
                   {(previewPayload.cpq_preview?.adjustments || []).map(
-                    (adj) => (
-                      <div
-                        key={adj.key}
-                        className="border rounded-md p-2 flex items-center justify-between"
-                      >
+                  (adj) =>
+                  <div
+                    key={adj.key}
+                    className="border rounded-md p-2 flex items-center justify-between">
+
                         <div>
                           <div className="font-medium">{adj.label}</div>
                           <div className="text-xs text-muted-foreground">
@@ -756,37 +756,37 @@ export default function SalesTemplateCenter() {
                           </div>
                         </div>
                         <div
-                          className={cn(
-                            "font-semibold",
-                            adj.value >= 0
-                              ? "text-emerald-600"
-                              : "text-red-500",
-                          )}
-                        >
+                      className={cn(
+                        "font-semibold",
+                        adj.value >= 0 ?
+                        "text-emerald-600" :
+                        "text-red-500"
+                      )}>
+
                           {adj.value}
                         </div>
                       </div>
-                    ),
-                  )}
+
+                )}
                   {(previewPayload.cpq_preview?.adjustments || []).length ===
-                    0 && (
-                    <div className="text-muted-foreground text-sm">
+                0 &&
+                <div className="text-muted-foreground text-sm">
                       暂无调价轨迹
                     </div>
-                  )}
+                }
                 </CardContent>
               </Card>
-            </div>
-          ) : (
-            <div className="py-10 text-center text-muted-foreground">
+            </div> :
+
+          <div className="py-10 text-center text-muted-foreground">
               暂无预览数据
             </div>
-          )}
+          }
           <DialogFooter>
             <Button onClick={() => setShowPreviewDialog(false)}>关闭</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

@@ -20,8 +20,8 @@ import {
   PolarGrid,
   PolarAngleAxis,
   PolarRadiusAxis,
-  Radar
-} from "recharts";
+  Radar } from
+"recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import { Badge } from "../../components/ui/badge";
@@ -31,8 +31,8 @@ import {
   ALERT_STATUS_STATS,
   ALERT_TYPE_STATS,
   CHART_TYPES,
-  formatStatValue
-} from "./alertStatsConstants";
+  formatStatValue as _formatStatValue } from
+"./alertStatsConstants";
 
 export function AlertDistribution({
   data,
@@ -57,16 +57,16 @@ export function AlertDistribution({
       INFO: { ...ALERT_LEVEL_STATS.INFO, count: 0 }
     };
 
-    data.forEach(alert => {
+    data.forEach((alert) => {
       const level = alert.alert_level || 'INFO';
       if (distribution[level]) {
         distribution[level].count += 1;
       }
     });
 
-    return Object.values(distribution)
-      .filter(item => item.count > 0)
-      .sort((a, b) => b.count - a.count);
+    return Object.values(distribution).
+    filter((item) => item.count > 0).
+    sort((a, b) => b.count - a.count);
   }, [data]);
 
   // 计算告警状态分布
@@ -83,16 +83,16 @@ export function AlertDistribution({
       IGNORED: { ...ALERT_STATUS_STATS.IGNORED, count: 0 }
     };
 
-    data.forEach(alert => {
+    data.forEach((alert) => {
       const status = alert.status || 'PENDING';
       if (distribution[status]) {
         distribution[status].count += 1;
       }
     });
 
-    return Object.values(distribution)
-      .filter(item => item.count > 0)
-      .sort((a, b) => b.count - a.count);
+    return Object.values(distribution).
+    filter((item) => item.count > 0).
+    sort((a, b) => b.count - a.count);
   }, [data]);
 
   // 计算告警类型分布
@@ -102,7 +102,7 @@ export function AlertDistribution({
     const distribution = {};
     const subtypes = {};
 
-    data.forEach(alert => {
+    data.forEach((alert) => {
       const type = alert.alert_type || 'SYSTEM';
       const subtype = alert.alert_subtype || 'OTHER';
 
@@ -127,13 +127,13 @@ export function AlertDistribution({
     });
 
     // 合并子类型数据
-    Object.keys(distribution).forEach(type => {
+    Object.keys(distribution).forEach((type) => {
       distribution[type].subtypes = subtypes[type] || {};
     });
 
-    return Object.values(distribution)
-      .filter(item => item.count > 0)
-      .sort((a, b) => b.count - a.count);
+    return Object.values(distribution).
+    filter((item) => item.count > 0).
+    sort((a, b) => b.count - a.count);
   }, [data]);
 
   // 计算项目分布
@@ -142,7 +142,7 @@ export function AlertDistribution({
 
     const distribution = {};
 
-    data.forEach(alert => {
+    data.forEach((alert) => {
       const project = alert.project_name || alert.project_id || '未分类';
 
       if (!distribution[project]) {
@@ -165,10 +165,10 @@ export function AlertDistribution({
       }
     });
 
-    return Object.values(distribution)
-      .filter(item => item.count > 0)
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 10); // 只显示前10个项目
+    return Object.values(distribution).
+    filter((item) => item.count > 0).
+    sort((a, b) => b.count - a.count).
+    slice(0, 10); // 只显示前10个项目
   }, [data]);
 
   // 计算雷达图数据
@@ -176,42 +176,42 @@ export function AlertDistribution({
     if (!data || data.length === 0) return [];
 
     return [
-      {
-        subject: '严重告警',
-        A: (levelDistribution.find(d => d.label === '严重')?.count || 0) / data.length * 100,
-        fullMark: 100
-      },
-      {
-        subject: '高优先级',
-        A: (levelDistribution.find(d => d.label === '高')?.count || 0) / data.length * 100,
-        fullMark: 100
-      },
-      {
-        subject: '待处理',
-        A: (statusDistribution.find(d => d.label === '待处理')?.count || 0) / data.length * 100,
-        fullMark: 100
-      },
-      {
-        subject: '已解决',
-        A: (statusDistribution.find(d => d.label === '已解决')?.count || 0) / data.length * 100,
-        fullMark: 100
-      },
-      {
-        subject: '系统告警',
-        A: (typeDistribution.find(d => d.label === '系统告警')?.count || 0) / data.length * 100,
-        fullMark: 100
-      },
-      {
-        subject: '项目告警',
-        A: (typeDistribution.find(d => d.label === '项目预警')?.count || 0) / data.length * 100,
-        fullMark: 100
-      }
-    ];
+    {
+      subject: '严重告警',
+      A: (levelDistribution.find((d) => d.label === '严重')?.count || 0) / data.length * 100,
+      fullMark: 100
+    },
+    {
+      subject: '高优先级',
+      A: (levelDistribution.find((d) => d.label === '高')?.count || 0) / data.length * 100,
+      fullMark: 100
+    },
+    {
+      subject: '待处理',
+      A: (statusDistribution.find((d) => d.label === '待处理')?.count || 0) / data.length * 100,
+      fullMark: 100
+    },
+    {
+      subject: '已解决',
+      A: (statusDistribution.find((d) => d.label === '已解决')?.count || 0) / data.length * 100,
+      fullMark: 100
+    },
+    {
+      subject: '系统告警',
+      A: (typeDistribution.find((d) => d.label === '系统告警')?.count || 0) / data.length * 100,
+      fullMark: 100
+    },
+    {
+      subject: '项目告警',
+      A: (typeDistribution.find((d) => d.label === '项目预警')?.count || 0) / data.length * 100,
+      fullMark: 100
+    }];
+
   }, [data, levelDistribution, statusDistribution, typeDistribution]);
 
   // 渲染饼图
-  const renderPieChart = (data, title) => {
-    const COLORS = data.map(item => item.color || item.bgColor);
+  const renderPieChart = (data, _title) => {
+    const COLORS = data.map((item) => item.color || item.bgColor);
 
     return (
       <ResponsiveContainer width="100%" height={height}>
@@ -224,53 +224,13 @@ export function AlertDistribution({
             label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
             outerRadius={height / 2 - 40}
             fill="#8884d8"
-            dataKey="count"
-          >
-            {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index]} />
-            ))}
-          </Pie>
-          {showTooltip && (
-            <Tooltip
-              formatter={(value) => [value, '数量']}
-              contentStyle={{
-                backgroundColor: '#fff',
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-              }}
-            />
-          )}
-          {showLegend && (
-            <Legend
-              layout="vertical"
-              verticalAlign="middle"
-              align="right"
-              wrapperStyle={{ paddingLeft: '20px' }}
-            />
-          )}
-        </PieChart>
-      </ResponsiveContainer>
-    );
-  };
+            dataKey="count">
 
-  // 渲染柱状图
-  const renderBarChart = (data, title) => (
-    <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-        {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />}
-        <XAxis
-          dataKey="name"
-          tick={{ fontSize: 12 }}
-          axisLine={false}
-          tickLine={false}
-        />
-        <YAxis
-          tick={{ fontSize: 12 }}
-          axisLine={false}
-          tickLine={false}
-        />
-        {showTooltip && (
+            {data.map((entry, index) =>
+            <Cell key={`cell-${index}`} fill={COLORS[index]} />
+            )}
+          </Pie>
+          {showTooltip &&
           <Tooltip
             formatter={(value) => [value, '数量']}
             contentStyle={{
@@ -278,70 +238,110 @@ export function AlertDistribution({
               border: '1px solid #e5e7eb',
               borderRadius: '8px',
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-            }}
-          />
-        )}
-        {showLegend && (
+            }} />
+
+          }
+          {showLegend &&
           <Legend
-            wrapperStyle={{ paddingTop: '20px' }}
-            iconType="circle"
-          />
-        )}
+            layout="vertical"
+            verticalAlign="middle"
+            align="right"
+            wrapperStyle={{ paddingLeft: '20px' }} />
+
+          }
+        </PieChart>
+      </ResponsiveContainer>);
+
+  };
+
+  // 渲染柱状图
+  const renderBarChart = (data, _title) =>
+  <ResponsiveContainer width="100%" height={height}>
+      <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+        {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />}
+        <XAxis
+        dataKey="name"
+        tick={{ fontSize: 12 }}
+        axisLine={false}
+        tickLine={false} />
+
+        <YAxis
+        tick={{ fontSize: 12 }}
+        axisLine={false}
+        tickLine={false} />
+
+        {showTooltip &&
+      <Tooltip
+        formatter={(value) => [value, '数量']}
+        contentStyle={{
+          backgroundColor: '#fff',
+          border: '1px solid #e5e7eb',
+          borderRadius: '8px',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+        }} />
+
+      }
+        {showLegend &&
+      <Legend
+        wrapperStyle={{ paddingTop: '20px' }}
+        iconType="circle" />
+
+      }
         <Bar
-          dataKey="count"
-          fill="#8884d8"
-          name="数量"
-        />
+        dataKey="count"
+        fill="#8884d8"
+        name="数量" />
+
       </BarChart>
-    </ResponsiveContainer>
-  );
+  </ResponsiveContainer>;
+
 
   // 渲染雷达图
-  const renderRadarChart = () => (
-    <ResponsiveContainer width="100%" height={height}>
+  const renderRadarChart = () =>
+  <ResponsiveContainer width="100%" height={height}>
       <RadarChart data={radarData}>
         <PolarGrid />
         <PolarAngleAxis
-          dataKey="subject"
-          tick={{ fontSize: 12 }}
-        />
+        dataKey="subject"
+        tick={{ fontSize: 12 }} />
+
         <PolarRadiusAxis
-          angle={30}
-          domain={[0, 100]}
-          tick={{ fontSize: 12 }}
-        />
+        angle={30}
+        domain={[0, 100]}
+        tick={{ fontSize: 12 }} />
+
         <Radar
-          name="告警分布"
-          dataKey="A"
-          stroke="#8884d8"
-          fill="#8884d8"
-          fillOpacity={0.3}
-        />
-        {showTooltip && (
-          <Tooltip
-            formatter={(value) => [`${value.toFixed(1)}%`, '占比']}
-            contentStyle={{
-              backgroundColor: '#fff',
-              border: '1px solid #e5e7eb',
-              borderRadius: '8px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-            }}
-          />
-        )}
-        {showLegend && (
-          <Legend
-            wrapperStyle={{ paddingTop: '20px' }}
-          />
-        )}
+        name="告警分布"
+        dataKey="A"
+        stroke="#8884d8"
+        fill="#8884d8"
+        fillOpacity={0.3} />
+
+        {showTooltip &&
+      <Tooltip
+        formatter={(value) => [`${value.toFixed(1)}%`, '占比']}
+        contentStyle={{
+          backgroundColor: '#fff',
+          border: '1px solid #e5e7eb',
+          borderRadius: '8px',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+        }} />
+
+      }
+        {showLegend &&
+      <Legend
+        wrapperStyle={{ paddingTop: '20px' }} />
+
+      }
       </RadarChart>
-    </ResponsiveContainer>
-  );
+  </ResponsiveContainer>;
+
 
   // 渲染类型分布详细视图
-  const renderTypeDetail = () => (
-    <div className="space-y-6">
-      {typeDistribution.map((typeData, index) => (
-        <Card key={index}>
+  const renderTypeDetail = () =>
+  <div className="space-y-6">
+      {typeDistribution.map((typeData, index) =>
+    <Card key={index}>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <span className="text-xl">{typeData.icon}</span>
@@ -351,8 +351,8 @@ export function AlertDistribution({
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-              {Object.entries(typeData.subtypes).map(([subtype, subtypeData]) => (
-                <div key={subtype} className="text-center">
+              {Object.entries(typeData.subtypes).map(([subtype, subtypeData]) =>
+          <div key={subtype} className="text-center">
                   <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-gray-100 flex items-center justify-center">
                     <div className={`w-3 h-3 rounded-full ${ALERT_TYPE_STATS[typeData.category]?.subtypes[subtype]?.color || 'bg-gray-400'}`} />
                   </div>
@@ -362,14 +362,14 @@ export function AlertDistribution({
                   <div className="text-lg font-bold text-gray-900">
                     {subtypeData.count}
                   </div>
-                </div>
-              ))}
+          </div>
+          )}
             </div>
           </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
+    </Card>
+    )}
+  </div>;
+
 
   // 无数据时的显示
   if (!data || data.length === 0) {
@@ -381,8 +381,8 @@ export function AlertDistribution({
             <p className="text-sm">请检查数据源或选择其他时间范围</p>
           </div>
         </CardContent>
-      </Card>
-    );
+      </Card>);
+
   }
 
   // 获取当前分布数据
@@ -440,15 +440,15 @@ export function AlertDistribution({
                   <Button
                     variant={chartType === 'pie' ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => setChartType('pie')}
-                  >
+                    onClick={() => setChartType('pie')}>
+
                     饼图
                   </Button>
                   <Button
                     variant={chartType === 'bar' ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => setChartType('bar')}
-                  >
+                    onClick={() => setChartType('bar')}>
+
                     柱状图
                   </Button>
                 </div>
@@ -460,15 +460,15 @@ export function AlertDistribution({
                   <Button
                     variant={chartType === 'pie' ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => setChartType('pie')}
-                  >
+                    onClick={() => setChartType('pie')}>
+
                     饼图
                   </Button>
                   <Button
                     variant={chartType === 'bar' ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => setChartType('bar')}
-                  >
+                    onClick={() => setChartType('bar')}>
+
                     柱状图
                   </Button>
                 </div>
@@ -481,24 +481,24 @@ export function AlertDistribution({
                     <Button
                       variant={chartType === 'pie' ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setChartType('pie')}
-                    >
+                      onClick={() => setChartType('pie')}>
+
                       饼图
                     </Button>
                     <Button
                       variant={chartType === 'bar' ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setChartType('bar')}
-                    >
+                      onClick={() => setChartType('bar')}>
+
                       柱状图
                     </Button>
                   </div>
                 </div>
-                {chartType === 'pie' || chartType === 'bar' ? (
-                  renderCurrentChart()
-                ) : (
-                  renderTypeDetail()
-                )}
+                {chartType === 'pie' || chartType === 'bar' ?
+                renderCurrentChart() :
+
+                renderTypeDetail()
+                }
               </TabsContent>
 
               <TabsContent value="project" className="mt-4">
@@ -507,8 +507,8 @@ export function AlertDistribution({
                     variant={chartType === 'bar' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setChartType('bar')}
-                    disabled
-                  >
+                    disabled>
+
                     柱状图
                   </Button>
                 </div>
@@ -522,8 +522,8 @@ export function AlertDistribution({
           </div>
         </div>
       </CardHeader>
-    </Card>
-  );
+    </Card>);
+
 }
 
 export default AlertDistribution;

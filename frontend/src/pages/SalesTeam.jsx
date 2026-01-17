@@ -4,16 +4,16 @@
  * Features: Team member management, Performance tracking, Target assignment, Team analytics
  */
 
-import { useState, useMemo, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useMemo, useEffect, useRef as _useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Users,
   UserPlus,
   TrendingUp,
   BarChart3,
-  Download,
-} from "lucide-react";
+  Download } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import { Button } from "../components/ui";
 import { salesTeamApi } from "../services/api";
@@ -27,12 +27,16 @@ import {
   TeamFilters,
   TeamRankingBoard,
   TeamMemberList,
-  TeamMemberDetailDialog,
-} from "../components/sales/team";
+  TeamMemberDetailDialog } from
+"../components/sales/team";
 
 export default function SalesTeam() {
   const navigate = useNavigate();
+  const location = useLocation();
   const defaultRange = useMemo(() => getDefaultDateRange(), []);
+
+  // 根据 URL 路径判断初始显示模式
+  const isRankingPath = location.pathname.includes('/ranking');
 
   // 筛选器状态管理
   const {
@@ -45,7 +49,7 @@ export default function SalesTeam() {
     handleApplyQuickRange,
     handleResetFilters,
     triggerAutoRefreshToast,
-    validateDateRange,
+    validateDateRange
   } = useSalesTeamFilters(defaultRange);
 
   // 团队数据获取
@@ -56,11 +60,11 @@ export default function SalesTeam() {
     usingMockData,
     departmentOptions,
     regionOptions,
-    fetchTeamData,
+    fetchTeamData
   } = useSalesTeamData(filters, defaultRange, triggerAutoRefreshToast);
 
   // 排名数据管理
-  const [showRanking, setShowRanking] = useState(true);
+  const [showRanking, setShowRanking] = useState(isRankingPath || true);
   const {
     loading: rankingLoading,
     data: rankingData,
@@ -69,7 +73,7 @@ export default function SalesTeam() {
     metricConfigList,
     rankingOptions,
     selectedRankingOption,
-    setRankingType,
+    setRankingType
   } = useSalesTeamRanking(filters, showRanking, dateError);
 
   // 搜索和导出状态
@@ -90,13 +94,13 @@ export default function SalesTeam() {
     if (dateError) return;
     fetchTeamData();
   }, [
-    filters.departmentId,
-    filters.region,
-    filters.startDate,
-    filters.endDate,
-    dateError,
-    fetchTeamData,
-  ]);
+  filters.departmentId,
+  filters.region,
+  filters.startDate,
+  filters.endDate,
+  dateError,
+  fetchTeamData]
+  );
 
   // 搜索过滤
   const filteredMembers = useMemo(() => {
@@ -109,15 +113,15 @@ export default function SalesTeam() {
       return (
         name.includes(keyword) ||
         role.includes(keyword) ||
-        regionText.includes(keyword)
-      );
+        regionText.includes(keyword));
+
     });
   }, [teamMembers, searchTerm]);
 
   // 页面头部描述
   const headerDescription = `团队规模: ${teamStats.totalMembers}人 | 活跃成员: ${teamStats.activeMembers}人 | 平均完成率: ${teamStats.avgAchievementRate}% | 统计区间: ${filters.startDate} ~ ${filters.endDate}${
-    usingMockData ? " | 当前展示演示环境备用数据" : ""
-  }`;
+  usingMockData ? " | 当前展示演示环境备用数据" : ""}`;
+
 
   // 导出数据
   const handleExport = async () => {
@@ -170,48 +174,48 @@ export default function SalesTeam() {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       {/* Page Header */}
       <PageHeader
         title="团队管理"
         description={headerDescription}
         actions={
-          <motion.div
-            variants={fadeIn}
-            className="flex flex-wrap gap-2 justify-end"
-          >
+        <motion.div
+          variants={fadeIn}
+          className="flex flex-wrap gap-2 justify-end">
+
             <Button
-              variant="outline"
-              className="flex items-center gap-2"
-              onClick={() => setShowRanking(!showRanking)}
-            >
+            variant="outline"
+            className="flex items-center gap-2"
+            onClick={() => setShowRanking(!showRanking)}>
+
               <BarChart3 className="w-4 h-4" />
               {showRanking ? "隐藏排名" : "业绩排名"}
             </Button>
             <Button
-              variant="outline"
-              className="flex items-center gap-2"
-              onClick={handleExport}
-              loading={exporting}
-              disabled={usingMockData || exporting || !!dateError}
-            >
+            variant="outline"
+            className="flex items-center gap-2"
+            onClick={handleExport}
+            loading={exporting}
+            disabled={usingMockData || exporting || !!dateError}>
+
               <Download className="w-4 h-4" />
               导出
             </Button>
             <Button
-              variant="outline"
-              className="flex items-center gap-2"
-              onClick={() => navigate("/performance")}
-            >
+            variant="outline"
+            className="flex items-center gap-2"
+            onClick={() => navigate("/performance")}>
+
               <TrendingUp className="w-4 h-4" />
               绩效中心
             </Button>
             <Button
-              variant="outline"
-              className="flex items-center gap-2"
-              onClick={() => navigate("/customers")}
-            >
+            variant="outline"
+            className="flex items-center gap-2"
+            onClick={() => navigate("/customers")}>
+
               <Users className="w-4 h-4" />
               CRM
             </Button>
@@ -220,15 +224,15 @@ export default function SalesTeam() {
               添加成员
             </Button>
           </motion.div>
-        }
-      />
+        } />
+
 
       {/* Mock数据提示 */}
-      {usingMockData && (
-        <p className="text-xs text-amber-400 px-1">
+      {usingMockData &&
+      <p className="text-xs text-amber-400 px-1">
           接口不可用时已自动启用"演示环境备用数据"兜底，真实数据可用时将立即恢复。
         </p>
-      )}
+      }
 
       {/* 筛选器 */}
       <TeamFilters
@@ -241,27 +245,27 @@ export default function SalesTeam() {
         onReset={handleResetFilters}
         activeQuickRange={activeQuickRange}
         lastAutoRefreshAt={lastAutoRefreshAt}
-        highlightAutoRefresh={highlightAutoRefresh}
-      />
+        highlightAutoRefresh={highlightAutoRefresh} />
+
 
       {/* 团队统计卡片 */}
       <TeamStatsCards teamStats={teamStats} />
 
       {/* 业绩排名 */}
-      {showRanking && (
-        <TeamRankingBoard
-          rankingData={rankingData}
-          rankingConfig={rankingConfig}
-          rankingType={rankingType}
-          onRankingTypeChange={setRankingType}
-          filters={filters}
-          onConfigClick={() => navigate("/sales-director-dashboard")}
-          loading={rankingLoading}
-          metricConfigList={metricConfigList}
-          rankingOptions={rankingOptions}
-          selectedRankingOption={selectedRankingOption}
-        />
-      )}
+      {showRanking &&
+      <TeamRankingBoard
+        rankingData={rankingData}
+        rankingConfig={rankingConfig}
+        rankingType={rankingType}
+        onRankingTypeChange={setRankingType}
+        filters={filters}
+        onConfigClick={() => navigate("/sales-director-dashboard")}
+        loading={rankingLoading}
+        metricConfigList={metricConfigList}
+        rankingOptions={rankingOptions}
+        selectedRankingOption={selectedRankingOption} />
+
+      }
 
       {/* 搜索框 */}
       <motion.div variants={fadeIn}>
@@ -273,8 +277,8 @@ export default function SalesTeam() {
                 placeholder="搜索团队成员..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+                className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+
               <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             </div>
           </div>
@@ -287,8 +291,8 @@ export default function SalesTeam() {
         members={filteredMembers}
         onViewDetail={handleViewMember}
         onNavigatePerformance={handleNavigatePerformance}
-        onNavigateCRM={handleNavigateCRM}
-      />
+        onNavigateCRM={handleNavigateCRM} />
+
 
       {/* 成员详情对话框 */}
       <TeamMemberDetailDialog
@@ -296,8 +300,8 @@ export default function SalesTeam() {
         onOpenChange={setShowMemberDialog}
         member={selectedMember}
         onNavigatePerformance={handleNavigatePerformance}
-        onNavigateCRM={handleNavigateCRM}
-      />
-    </motion.div>
-  );
+        onNavigateCRM={handleNavigateCRM} />
+
+    </motion.div>);
+
 }

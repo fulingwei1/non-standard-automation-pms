@@ -10,35 +10,35 @@ import {
   AlertTriangle,
   BarChart3,
   Eye,
-  Calendar,
-} from "lucide-react";
+  Calendar } from
+"lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
-import { 
-  OpportunityUtils, 
+import {
+  OpportunityUtils,
   OPPORTUNITY_STAGES,
   OPPORTUNITY_STAGE_CONFIGS,
-  OPPORTUNITY_PRIORITY,
-} from "./opportunityBoardConstants";
+  OPPORTUNITY_PRIORITY } from
+"./opportunityBoardConstants";
 
 export default function OpportunityBoardOverview({ opportunities = [] }) {
   // 计算统计数据
   const stats = {
     total: opportunities.length,
-    hot: opportunities.filter(opp => OpportunityUtils.isHotOpportunity(opp)).length,
-    overdue: opportunities.filter(opp => OpportunityUtils.isOverdue(opp)).length,
+    hot: opportunities.filter((opp) => OpportunityUtils.isHotOpportunity(opp)).length,
+    overdue: opportunities.filter((opp) => OpportunityUtils.isOverdue(opp)).length,
     totalValue: opportunities.reduce((sum, opp) => sum + (opp.expectedAmount || 0), 0),
     expectedRevenue: opportunities.reduce((sum, opp) => sum + OpportunityUtils.calculateExpectedRevenue(opp), 0),
-    wonThisMonth: opportunities.filter(opp => {
-      return opp.stage === OPPORTUNITY_STAGES.WON && 
-             new Date(opp.createdDate || opp.createdAt).getMonth() === new Date().getMonth();
-    }).length,
+    wonThisMonth: opportunities.filter((opp) => {
+      return opp.stage === OPPORTUNITY_STAGES.WON &&
+      new Date(opp.createdDate || opp.createdAt).getMonth() === new Date().getMonth();
+    }).length
   };
 
   // 计算阶段分布
-  const stageDistribution = Object.values(OPPORTUNITY_STAGES).map(stage => {
+  const stageDistribution = Object.values(OPPORTUNITY_STAGES).map((stage) => {
     const config = OPPORTUNITY_STAGE_CONFIGS[stage];
-    const stageOpportunities = opportunities.filter(opp => opp.stage === stage);
+    const stageOpportunities = opportunities.filter((opp) => opp.stage === stage);
     const count = stageOpportunities.length;
     const value = stageOpportunities.reduce((sum, opp) => sum + (opp.expectedAmount || 0), 0);
     const percentage = stats.total > 0 ? (count / stats.total * 100).toFixed(1) : 0;
@@ -50,59 +50,59 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
       count,
       value,
       percentage,
-      probability: config.probability,
+      probability: config.probability
     };
   });
 
   // 获取热门机会
-  const hotOpportunities = opportunities
-    .filter(opp => OpportunityUtils.isHotOpportunity(opp))
-    .slice(0, 5)
-    .map(opp => ({
-      id: opp.id,
-      name: opp.name,
-      customerName: opp.customerName,
-      expectedAmount: opp.expectedAmount,
-      stage: opp.stage,
-      score: OpportunityUtils.calculateOpportunityScore(opp),
-      priority: opp.priority,
-    }));
+  const hotOpportunities = opportunities.
+  filter((opp) => OpportunityUtils.isHotOpportunity(opp)).
+  slice(0, 5).
+  map((opp) => ({
+    id: opp.id,
+    name: opp.name,
+    customerName: opp.customerName,
+    expectedAmount: opp.expectedAmount,
+    stage: opp.stage,
+    score: OpportunityUtils.calculateOpportunityScore(opp),
+    priority: opp.priority
+  }));
 
   // 获取超期机会
-  const overdueOpportunities = opportunities
-    .filter(opp => OpportunityUtils.isOverdue(opp))
-    .slice(0, 5)
-    .map(opp => ({
-      id: opp.id,
-      name: opp.name,
-      customerName: opp.customerName,
-      expectedCloseDate: opp.expectedCloseDate,
-      overdueDays: OpportunityUtils.getOverdueDays(opp),
-      expectedAmount: opp.expectedAmount,
-    }));
+  const overdueOpportunities = opportunities.
+  filter((opp) => OpportunityUtils.isOverdue(opp)).
+  slice(0, 5).
+  map((opp) => ({
+    id: opp.id,
+    name: opp.name,
+    customerName: opp.customerName,
+    expectedCloseDate: opp.expectedCloseDate,
+    overdueDays: OpportunityUtils.getOverdueDays(opp),
+    expectedAmount: opp.expectedAmount
+  }));
 
   // 获取即将到期的机会（7天内）
-  const upcomingOpportunities = opportunities
-    .filter(opp => {
-      const expectedDate = new Date(opp.expectedCloseDate);
-      const sevenDaysFromNow = new Date();
-      sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
-      return expectedDate >= new Date() && expectedDate <= sevenDaysFromNow;
-    })
-    .slice(0, 5)
-    .map(opp => ({
-      id: opp.id,
-      name: opp.name,
-      customerName: opp.customerName,
-      expectedCloseDate: opp.expectedCloseDate,
-      expectedAmount: opp.expectedAmount,
-      stage: opp.stage,
-    }));
+  const upcomingOpportunities = opportunities.
+  filter((opp) => {
+    const expectedDate = new Date(opp.expectedCloseDate);
+    const sevenDaysFromNow = new Date();
+    sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+    return expectedDate >= new Date() && expectedDate <= sevenDaysFromNow;
+  }).
+  slice(0, 5).
+  map((opp) => ({
+    id: opp.id,
+    name: opp.name,
+    customerName: opp.customerName,
+    expectedCloseDate: opp.expectedCloseDate,
+    expectedAmount: opp.expectedAmount,
+    stage: opp.stage
+  }));
 
   // 计算转化率
-  const conversionRates = OpportunityUtils.calculateConversionRates(opportunities);
-  const overallConversionRate = opportunities.filter(opp => opp.stage === OPPORTUNITY_STAGES.WON).length / 
-                               (opportunities.length || 1) * 100;
+  const _conversionRates = OpportunityUtils.calculateConversionRates(opportunities);
+  const overallConversionRate = opportunities.filter((opp) => opp.stage === OPPORTUNITY_STAGES.WON).length / (
+  opportunities.length || 1) * 100;
 
   return (
     <div className="space-y-6">
@@ -110,8 +110,8 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <motion.div
           whileHover={{ scale: 1.02 }}
-          className="bg-surface-1 rounded-xl border border-border p-4"
-        >
+          className="bg-surface-1 rounded-xl border border-border p-4">
+
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-text-secondary">总机会数</p>
@@ -128,8 +128,8 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
 
         <motion.div
           whileHover={{ scale: 1.02 }}
-          className="bg-surface-1 rounded-xl border border-border p-4"
-        >
+          className="bg-surface-1 rounded-xl border border-border p-4">
+
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-text-secondary">预期收入</p>
@@ -148,8 +148,8 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
 
         <motion.div
           whileHover={{ scale: 1.02 }}
-          className="bg-surface-1 rounded-xl border border-border p-4"
-        >
+          className="bg-surface-1 rounded-xl border border-border p-4">
+
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-text-secondary">超期机会</p>
@@ -166,8 +166,8 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
 
         <motion.div
           whileHover={{ scale: 1.02 }}
-          className="bg-surface-1 rounded-xl border border-border p-4"
-        >
+          className="bg-surface-1 rounded-xl border border-border p-4">
+
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-text-secondary">赢单率</p>
@@ -193,12 +193,12 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {stageDistribution.map((stage) => (
-              <motion.div
-                key={stage.stage}
-                whileHover={{ scale: 1.05 }}
-                className="text-center"
-              >
+            {stageDistribution.map((stage) =>
+            <motion.div
+              key={stage.stage}
+              whileHover={{ scale: 1.05 }}
+              className="text-center">
+
                 <div className={`w-12 h-12 ${stage.color} rounded-lg mx-auto mb-2 flex items-center justify-center`}>
                   <span className="text-white font-semibold text-sm">{stage.count}</span>
                 </div>
@@ -208,7 +208,7 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
                   {stage.probability}% 成功率
                 </p>
               </motion.div>
-            ))}
+            )}
           </div>
         </CardContent>
       </Card>
@@ -223,13 +223,13 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {hotOpportunities.length > 0 ? (
-              <div className="space-y-3">
-                {hotOpportunities.map((opp) => (
-                  <div
-                    key={opp.id}
-                    className="flex items-center justify-between p-3 bg-surface-2 rounded-lg"
-                  >
+            {hotOpportunities.length > 0 ?
+            <div className="space-y-3">
+                {hotOpportunities.map((opp) =>
+              <div
+                key={opp.id}
+                className="flex items-center justify-between p-3 bg-surface-2 rounded-lg">
+
                     <div className="flex-1">
                       <p className="text-sm font-medium text-white truncate">{opp.name}</p>
                       <p className="text-xs text-text-secondary">{opp.customerName}</p>
@@ -243,14 +243,14 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
                       </Badge>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
+              )}
+              </div> :
+
+            <div className="text-center py-8">
                 <Flame className="h-12 w-12 text-slate-400 mx-auto mb-2" />
                 <p className="text-text-secondary">暂无热门机会</p>
               </div>
-            )}
+            }
           </CardContent>
         </Card>
 
@@ -263,13 +263,13 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {overdueOpportunities.length > 0 ? (
-              <div className="space-y-3">
-                {overdueOpportunities.map((opp) => (
-                  <div
-                    key={opp.id}
-                    className="flex items-center justify-between p-3 bg-surface-2 rounded-lg"
-                  >
+            {overdueOpportunities.length > 0 ?
+            <div className="space-y-3">
+                {overdueOpportunities.map((opp) =>
+              <div
+                key={opp.id}
+                className="flex items-center justify-between p-3 bg-surface-2 rounded-lg">
+
                     <div className="flex-1">
                       <p className="text-sm font-medium text-white truncate">{opp.name}</p>
                       <p className="text-xs text-text-secondary">{opp.customerName}</p>
@@ -283,14 +283,14 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
                       </p>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
+              )}
+              </div> :
+
+            <div className="text-center py-8">
                 <CheckCircle2 className="h-12 w-12 text-emerald-400 mx-auto mb-2" />
                 <p className="text-text-secondary">暂无超期机会</p>
               </div>
-            )}
+            }
           </CardContent>
         </Card>
 
@@ -303,13 +303,13 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {upcomingOpportunities.length > 0 ? (
-              <div className="space-y-3">
-                {upcomingOpportunities.map((opp) => (
-                  <div
-                    key={opp.id}
-                    className="flex items-center justify-between p-3 bg-surface-2 rounded-lg"
-                  >
+            {upcomingOpportunities.length > 0 ?
+            <div className="space-y-3">
+                {upcomingOpportunities.map((opp) =>
+              <div
+                key={opp.id}
+                className="flex items-center justify-between p-3 bg-surface-2 rounded-lg">
+
                     <div className="flex-1">
                       <p className="text-sm font-medium text-white truncate">{opp.name}</p>
                       <p className="text-xs text-text-secondary">{opp.customerName}</p>
@@ -323,14 +323,14 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
                       </Badge>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
+              )}
+              </div> :
+
+            <div className="text-center py-8">
                 <Calendar className="h-12 w-12 text-blue-400 mx-auto mb-2" />
                 <p className="text-text-secondary">7天内无到期机会</p>
               </div>
-            )}
+            }
           </CardContent>
         </Card>
       </div>
@@ -346,8 +346,8 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
               <div>
                 <p className="text-xs text-text-secondary">平均赢单周期</p>
                 <p className="text-lg font-semibold text-white">
-                  {Math.round(opportunities.reduce((sum, opp) => 
-                    sum + OpportunityUtils.calculateSalesCycle(opp), 0) / (opportunities.length || 1))}天
+                  {Math.round(opportunities.reduce((sum, opp) =>
+                  sum + OpportunityUtils.calculateSalesCycle(opp), 0) / (opportunities.length || 1))}天
                 </p>
               </div>
             </div>
@@ -363,9 +363,9 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
               <div>
                 <p className="text-xs text-text-secondary">平均赢单金额</p>
                 <p className="text-lg font-semibold text-white">
-                  ¥{(opportunities.filter(opp => opp.stage === OPPORTUNITY_STAGES.WON)
-                    .reduce((sum, opp) => sum + (opp.expectedAmount || 0), 0) / 
-                    (opportunities.filter(opp => opp.stage === OPPORTUNITY_STAGES.WON).length || 1) / 10000).toFixed(1)}万
+                  ¥{(opportunities.filter((opp) => opp.stage === OPPORTUNITY_STAGES.WON).
+                  reduce((sum, opp) => sum + (opp.expectedAmount || 0), 0) / (
+                  opportunities.filter((opp) => opp.stage === OPPORTUNITY_STAGES.WON).length || 1) / 10000).toFixed(1)}万
                 </p>
               </div>
             </div>
@@ -381,7 +381,7 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
               <div>
                 <p className="text-xs text-text-secondary">高优先级机会</p>
                 <p className="text-lg font-semibold text-white">
-                  {opportunities.filter(opp => opp.priority === OPPORTUNITY_PRIORITY.HIGH).length}
+                  {opportunities.filter((opp) => opp.priority === OPPORTUNITY_PRIORITY.HIGH).length}
                 </p>
               </div>
             </div>
@@ -397,14 +397,14 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
               <div>
                 <p className="text-xs text-text-secondary">平均机会评分</p>
                 <p className="text-lg font-semibold text-white">
-                  {Math.round(opportunities.reduce((sum, opp) => 
-                    sum + OpportunityUtils.calculateOpportunityScore(opp), 0) / (opportunities.length || 1))}分
+                  {Math.round(opportunities.reduce((sum, opp) =>
+                  sum + OpportunityUtils.calculateOpportunityScore(opp), 0) / (opportunities.length || 1))}分
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>);
+
 }

@@ -13,15 +13,15 @@ import {
   Clock,
   Trash2,
   Filter,
-  Search,
-} from "lucide-react";
+  Search } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -33,14 +33,14 @@ import { ApiIntegrationError } from "../components/ui";
 // Mock notification data - 已移除，使用真实API
 
 const notificationTypes = [
-  { value: "all", label: "全部", icon: Bell },
-  { value: "alert", label: "预警", icon: AlertTriangle },
-  { value: "task", label: "任务", icon: FileText },
-  { value: "material", label: "物料", icon: Package },
-  { value: "approval", label: "审批", icon: Users },
-  { value: "system", label: "系统", icon: Info },
-  { value: "milestone", label: "里程碑", icon: Calendar },
-];
+{ value: "all", label: "全部", icon: Bell },
+{ value: "alert", label: "预警", icon: AlertTriangle },
+{ value: "task", label: "任务", icon: FileText },
+{ value: "material", label: "物料", icon: Package },
+{ value: "approval", label: "审批", icon: Users },
+{ value: "system", label: "系统", icon: Info },
+{ value: "milestone", label: "里程碑", icon: Calendar }];
+
 
 const getNotificationIcon = (type) => {
   const icons = {
@@ -49,7 +49,7 @@ const getNotificationIcon = (type) => {
     material: Package,
     approval: Users,
     system: Info,
-    milestone: Calendar,
+    milestone: Calendar
   };
   return icons[type] || Bell;
 };
@@ -64,7 +64,7 @@ const getNotificationColor = (type, priority) => {
     material: "text-emerald-400 bg-emerald-400/10",
     approval: "text-purple-400 bg-purple-400/10",
     system: "text-slate-400 bg-slate-400/10",
-    milestone: "text-cyan-400 bg-cyan-400/10",
+    milestone: "text-cyan-400 bg-cyan-400/10"
   };
   return colors[type] || "text-slate-400 bg-slate-400/10";
 };
@@ -73,7 +73,7 @@ function NotificationItem({ notification, onMarkRead, onDelete }) {
   const Icon = getNotificationIcon(notification.type);
   const colorClass = getNotificationColor(
     notification.type,
-    notification.priority,
+    notification.priority
   );
   const isCc = notification.isCc || false; // 检查是否是抄送通知
 
@@ -86,16 +86,16 @@ function NotificationItem({ notification, onMarkRead, onDelete }) {
       whileHover={{ scale: 1.01 }}
       className={cn(
         "group relative p-4 rounded-xl border transition-all duration-200",
-        notification.read
-          ? "bg-surface-1/50 border-border/50"
-          : "bg-surface-2 border-border shadow-lg shadow-black/10",
-        isCc && "border-dashed border-slate-600/50", // 抄送通知使用虚线边框
-      )}
-    >
+        notification.read ?
+        "bg-surface-1/50 border-border/50" :
+        "bg-surface-2 border-border shadow-lg shadow-black/10",
+        isCc && "border-dashed border-slate-600/50" // 抄送通知使用虚线边框
+      )}>
+
       {/* Unread indicator */}
-      {!notification.read && (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-accent rounded-r-full" />
-      )}
+      {!notification.read &&
+      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-accent rounded-r-full" />
+      }
 
       <div className="flex items-start gap-4">
         {/* Icon */}
@@ -109,24 +109,24 @@ function NotificationItem({ notification, onMarkRead, onDelete }) {
             <h4
               className={cn(
                 "font-medium",
-                notification.read ? "text-slate-300" : "text-white",
-              )}
-            >
+                notification.read ? "text-slate-300" : "text-white"
+              )}>
+
               {notification.title}
             </h4>
-            {isCc && (
-              <Badge
-                variant="outline"
-                className="text-[10px] px-1.5 py-0 text-slate-400 border-slate-600"
-              >
+            {isCc &&
+            <Badge
+              variant="outline"
+              className="text-[10px] px-1.5 py-0 text-slate-400 border-slate-600">
+
                 抄送
               </Badge>
-            )}
-            {notification.priority === "high" && (
-              <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
+            }
+            {notification.priority === "high" &&
+            <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
                 紧急
               </Badge>
-            )}
+            }
           </div>
           <p className="text-sm text-slate-400 line-clamp-2">
             {notification.message}
@@ -136,38 +136,38 @@ function NotificationItem({ notification, onMarkRead, onDelete }) {
               <Clock className="w-3 h-3" />
               {notification.timestamp}
             </span>
-            {notification.relatedId && (
-              <span className="text-xs text-accent">
+            {notification.relatedId &&
+            <span className="text-xs text-accent">
                 #{notification.relatedId}
               </span>
-            )}
+            }
           </div>
         </div>
 
         {/* Actions */}
         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          {!notification.read && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onMarkRead(notification.id)}
-              className="h-8 w-8 p-0"
-            >
+          {!notification.read &&
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onMarkRead(notification.id)}
+            className="h-8 w-8 p-0">
+
               <Check className="w-4 h-4" />
             </Button>
-          )}
+          }
           <Button
             variant="ghost"
             size="sm"
             onClick={() => onDelete(notification.id)}
-            className="h-8 w-8 p-0 text-slate-400 hover:text-red-400"
-          >
+            className="h-8 w-8 p-0 text-slate-400 hover:text-red-400">
+
             <Trash2 className="w-4 h-4" />
           </Button>
         </div>
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 }
 
 export default function NotificationCenter() {
@@ -178,8 +178,8 @@ export default function NotificationCenter() {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
-  const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
+  const [page, _setPage] = useState(1);
+  const [_total, setTotal] = useState(0);
 
   // Map API notification type to display type
   const getNotificationType = (notification) => {
@@ -189,13 +189,13 @@ export default function NotificationCenter() {
       MATERIAL: "material",
       APPROVAL: "approval",
       SYSTEM: "system",
-      MILESTONE: "milestone",
+      MILESTONE: "milestone"
     };
     return (
       typeMap[notification.notification_type] ||
       notification.notification_type?.toLowerCase() ||
-      "system"
-    );
+      "system");
+
   };
 
   // Format notification for display
@@ -208,15 +208,15 @@ export default function NotificationCenter() {
       type: getNotificationType(notification),
       title: notification.title || "通知",
       message: notification.content || notification.message || "",
-      timestamp: notification.created_at
-        ? new Date(notification.created_at).toLocaleString("zh-CN")
-        : "",
+      timestamp: notification.created_at ?
+      new Date(notification.created_at).toLocaleString("zh-CN") :
+      "",
       read: notification.is_read || false,
       priority: notification.priority?.toLowerCase() || "normal",
       relatedId: notification.source_id,
       relatedType: notification.source_type?.toLowerCase(),
       isCc: isCc, // 标记是否为抄送通知
-      extraData: notification.extra_data || {},
+      extraData: notification.extra_data || {}
     };
   };
 
@@ -229,7 +229,7 @@ export default function NotificationCenter() {
         page,
         page_size: 50,
         is_read: showUnreadOnly ? false : undefined,
-        notification_type: filter !== "all" ? filter.toUpperCase() : undefined,
+        notification_type: filter !== "all" ? filter.toUpperCase() : undefined
       };
       const response = await notificationApi.list(params);
       const data = response.data || response;
@@ -267,7 +267,7 @@ export default function NotificationCenter() {
 
   const filteredNotifications = notifications.filter((n) => {
     if (search && !n.title?.includes(search) && !n.content?.includes(search))
-      return false;
+    return false;
     return true;
   });
 
@@ -324,11 +324,11 @@ export default function NotificationCenter() {
           <ApiIntegrationError
             error={error}
             apiEndpoint="/api/v1/notifications"
-            onRetry={loadNotifications}
-          />
+            onRetry={loadNotifications} />
+
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -338,48 +338,48 @@ export default function NotificationCenter() {
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
-          className="space-y-6"
-        >
+          className="space-y-6">
+
           <PageHeader
             title="通知中心"
-            description={`您有 ${unreadCount} 条未读通知`}
-          />
+            description={`您有 ${unreadCount} 条未读通知`} />
+
 
           {/* Stats Cards */}
           <motion.div
             variants={fadeIn}
-            className="grid grid-cols-2 md:grid-cols-4 gap-4"
-          >
+            className="grid grid-cols-2 md:grid-cols-4 gap-4">
+
             {[
-              {
-                label: "全部通知",
-                value: notifications.length,
-                icon: Bell,
-                color: "text-blue-400",
-              },
-              {
-                label: "未读",
-                value: unreadCount,
-                icon: Info,
-                color: "text-amber-400",
-              },
-              {
-                label: "紧急",
-                value: notifications.filter((n) => n.priority === "high")
-                  .length,
-                icon: AlertTriangle,
-                color: "text-red-400",
-              },
-              {
-                label: "待审批",
-                value: notifications.filter(
-                  (n) => n.type === "approval" && !n.read,
-                ).length,
-                icon: Users,
-                color: "text-purple-400",
-              },
-            ].map((stat, index) => (
-              <Card key={index} className="bg-surface-1/50">
+            {
+              label: "全部通知",
+              value: notifications.length,
+              icon: Bell,
+              color: "text-blue-400"
+            },
+            {
+              label: "未读",
+              value: unreadCount,
+              icon: Info,
+              color: "text-amber-400"
+            },
+            {
+              label: "紧急",
+              value: notifications.filter((n) => n.priority === "high").
+              length,
+              icon: AlertTriangle,
+              color: "text-red-400"
+            },
+            {
+              label: "待审批",
+              value: notifications.filter(
+                (n) => n.type === "approval" && !n.read
+              ).length,
+              icon: Users,
+              color: "text-purple-400"
+            }].
+            map((stat, index) =>
+            <Card key={index} className="bg-surface-1/50">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -392,7 +392,7 @@ export default function NotificationCenter() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            )}
           </motion.div>
 
           {/* Filters & Actions */}
@@ -402,22 +402,22 @@ export default function NotificationCenter() {
                 <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
                   {/* Type Filter */}
                   <div className="flex flex-wrap gap-2">
-                    {notificationTypes.map((type) => (
-                      <Button
-                        key={type.value}
-                        variant={filter === type.value ? "default" : "ghost"}
-                        size="sm"
-                        onClick={() => setFilter(type.value)}
-                        className={cn(
-                          "gap-1.5",
-                          filter === type.value &&
-                            "bg-accent text-white hover:bg-accent/90",
-                        )}
-                      >
+                    {notificationTypes.map((type) =>
+                    <Button
+                      key={type.value}
+                      variant={filter === type.value ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setFilter(type.value)}
+                      className={cn(
+                        "gap-1.5",
+                        filter === type.value &&
+                        "bg-accent text-white hover:bg-accent/90"
+                      )}>
+
                         <type.icon className="w-4 h-4" />
                         {type.label}
                       </Button>
-                    ))}
+                    )}
                   </div>
 
                   {/* Search & Actions */}
@@ -428,17 +428,17 @@ export default function NotificationCenter() {
                         placeholder="搜索通知..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="pl-9"
-                      />
+                        className="pl-9" />
+
                     </div>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setShowUnreadOnly(!showUnreadOnly)}
                       className={cn(
-                        showUnreadOnly && "bg-accent/10 border-accent",
-                      )}
-                    >
+                        showUnreadOnly && "bg-accent/10 border-accent"
+                      )}>
+
                       <Filter className="w-4 h-4 mr-1" />
                       未读
                     </Button>
@@ -449,11 +449,11 @@ export default function NotificationCenter() {
           </motion.div>
 
           {/* Actions Bar */}
-          {unreadCount > 0 && (
-            <motion.div
-              variants={fadeIn}
-              className="flex items-center justify-between"
-            >
+          {unreadCount > 0 &&
+          <motion.div
+            variants={fadeIn}
+            className="flex items-center justify-between">
+
               <span className="text-sm text-slate-400">
                 显示 {filteredNotifications.length} 条通知
               </span>
@@ -463,64 +463,64 @@ export default function NotificationCenter() {
                   全部已读
                 </Button>
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleClearAll}
-                  className="text-red-400 hover:text-red-300"
-                >
+                variant="outline"
+                size="sm"
+                onClick={handleClearAll}
+                className="text-red-400 hover:text-red-300">
+
                   <Trash2 className="w-4 h-4 mr-1" />
                   清空
                 </Button>
               </div>
             </motion.div>
-          )}
+          }
 
           {/* Notification List */}
           <motion.div variants={fadeIn} className="space-y-3">
-            {loading ? (
-              <div className="text-center py-16">
+            {loading ?
+            <div className="text-center py-16">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto"></div>
                 <p className="text-sm text-slate-400 mt-4">加载中...</p>
-              </div>
-            ) : error ? (
-              <div className="text-center py-16">
+              </div> :
+            error ?
+            <div className="text-center py-16">
                 <AlertTriangle className="w-16 h-16 mx-auto text-red-400 mb-4" />
                 <h3 className="text-lg font-medium text-red-400">加载失败</h3>
                 <p className="text-sm text-slate-500 mt-1">请刷新页面重试</p>
-              </div>
-            ) : (
-              <AnimatePresence mode="popLayout">
-                {filteredNotifications.length > 0 ? (
-                  filteredNotifications.map((notification) => (
-                    <NotificationItem
-                      key={notification.id}
-                      notification={notification}
-                      onMarkRead={handleMarkRead}
-                      onDelete={handleDelete}
-                    />
-                  ))
-                ) : (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-center py-16"
-                  >
+              </div> :
+
+            <AnimatePresence mode="popLayout">
+                {filteredNotifications.length > 0 ?
+              filteredNotifications.map((notification) =>
+              <NotificationItem
+                key={notification.id}
+                notification={notification}
+                onMarkRead={handleMarkRead}
+                onDelete={handleDelete} />
+
+              ) :
+
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-16">
+
                     <Bell className="w-16 h-16 mx-auto text-slate-600 mb-4" />
                     <h3 className="text-lg font-medium text-slate-400">
                       暂无通知
                     </h3>
                     <p className="text-sm text-slate-500 mt-1">
-                      {search || showUnreadOnly
-                        ? "没有符合条件的通知"
-                        : "所有通知都已处理"}
+                      {search || showUnreadOnly ?
+                  "没有符合条件的通知" :
+                  "所有通知都已处理"}
                     </p>
                   </motion.div>
-                )}
+              }
               </AnimatePresence>
-            )}
+            }
           </motion.div>
         </motion.div>
       </div>
-    </div>
-  );
+    </div>);
+
 }

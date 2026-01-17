@@ -13,8 +13,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   Button,
-  Badge,
-} from "../ui";
+  Badge } from
+"../ui";
 import {
   MoreHorizontal,
   ArrowRight,
@@ -24,8 +24,8 @@ import {
   FileText,
   Download,
   Settings,
-  Loader2,
-} from "lucide-react";
+  Loader2 } from
+"lucide-react";
 import { projectApi } from "../../services/api";
 import { toast } from "../ui/toast";
 import { useNavigate } from "react-router-dom";
@@ -65,7 +65,7 @@ export default function QuickActionPanel({ project, onRefresh }) {
   };
 
   // 更新项目状态
-  const handleUpdateStatus = (status) => {
+  const handleUpdateStatus = (_status) => {
     // 可以打开状态更新对话框
     toast.info("状态更新功能即将上线");
   };
@@ -87,18 +87,18 @@ export default function QuickActionPanel({ project, onRefresh }) {
         <DropdownMenuSeparator />
 
         {/* 阶段推进 */}
-        {canAdvanceStage() && (
-          <>
+        {canAdvanceStage() &&
+        <>
             <DropdownMenuItem
-              onClick={handleCheckAutoTransition}
-              disabled={loading}
-            >
+            onClick={handleCheckAutoTransition}
+            disabled={loading}>
+
               <ArrowRight className="h-4 w-4 mr-2" />
               检查自动流转
             </DropdownMenuItem>
             <DropdownMenuSeparator />
           </>
-        )}
+        }
 
         {/* 状态更新 */}
         <DropdownMenuItem onClick={() => handleUpdateStatus("ST08")}>
@@ -108,11 +108,11 @@ export default function QuickActionPanel({ project, onRefresh }) {
 
         {/* 刷新数据 */}
         <DropdownMenuItem onClick={onRefresh} disabled={loading}>
-          {loading ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <RefreshCw className="h-4 w-4 mr-2" />
-          )}
+          {loading ?
+          <Loader2 className="h-4 w-4 mr-2 animate-spin" /> :
+
+          <RefreshCw className="h-4 w-4 mr-2" />
+          }
           刷新数据
         </DropdownMenuItem>
 
@@ -120,8 +120,8 @@ export default function QuickActionPanel({ project, onRefresh }) {
 
         {/* 其他操作 */}
         <DropdownMenuItem
-          onClick={() => navigate(`/projects/${project.id}/documents`)}
-        >
+          onClick={() => navigate(`/projects/${project.id}/documents`)}>
+
           <FileText className="h-4 w-4 mr-2" />
           查看文档
         </DropdownMenuItem>
@@ -132,12 +132,12 @@ export default function QuickActionPanel({ project, onRefresh }) {
         </DropdownMenuItem>
 
         <DropdownMenuItem
-          onClick={() => navigate(`/projects/${project.id}/settings`)}
-        >
+          onClick={() => navigate(`/projects/${project.id}/settings`)}>
+
           <Settings className="h-4 w-4 mr-2" />
           项目设置
         </DropdownMenuItem>
       </DropdownMenuContent>
-    </DropdownMenu>
-  );
+    </DropdownMenu>);
+
 }

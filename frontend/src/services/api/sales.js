@@ -23,6 +23,8 @@ export const opportunityApi = {
   getWinProbability: (id) =>
     api.get(`/sales/opportunities/${id}/win-probability`),
   list: (params) => api.get("/sales/opportunities", { params }),
+  // Alias for backward compatibility
+  getOpportunities: (params) => api.get("/sales/opportunities", { params }),
   get: (id) => api.get(`/sales/opportunities/${id}`),
   create: (data) => api.post("/sales/opportunities", data),
   update: (id, data) => api.put(`/sales/opportunities/${id}`, data),
@@ -34,6 +36,9 @@ export const opportunityApi = {
 
 export const quoteApi = {
   list: (params) => api.get("/sales/quotes", { params }),
+  // Aliases for backward compatibility
+  getQuotes: (params) => api.get("/sales/quotes", { params }),
+  getStats: (params) => api.get("/sales/statistics/quote-stats", { params }),
   get: (id) => api.get(`/sales/quotes/${id}`),
   create: (data) => api.post("/sales/quotes", data),
   update: (id, data) => api.put(`/sales/quotes/${id}`, data),
@@ -269,6 +274,8 @@ export const salesStatisticsApi = {
   prediction: (params) => api.get("/sales/statistics/prediction", { params }),
   predictionAccuracy: (params) =>
     api.get("/sales/statistics/prediction/accuracy", { params }),
+  // 销售业绩报告
+  performance: (params) => api.get("/sales/reports/sales-performance", { params }),
 };
 
 export const salesApi = {

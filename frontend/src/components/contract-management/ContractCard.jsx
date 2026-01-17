@@ -12,8 +12,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator
-} from "../../components/ui/dropdown-menu";
+  DropdownMenuSeparator } from
+"../../components/ui/dropdown-menu";
 import {
   MoreHorizontal,
   Eye,
@@ -25,17 +25,17 @@ import {
   User,
   AlertTriangle,
   CheckCircle2,
-  Clock
-} from "lucide-react";
+  Clock } from
+"lucide-react";
 import {
   getStatusConfig,
   getTypeConfig,
   getAmountRangeConfig,
   riskLevelConfigs,
   fulfillmentStatusConfigs,
-  formatStatus,
-  formatType
-} from "./contractManagementConstants";
+  formatStatus as _formatStatus,
+  formatType } from
+"./contractManagementConstants";
 import { cn, formatDate, formatCurrency } from "../../lib/utils";
 
 export function ContractCard({
@@ -45,20 +45,20 @@ export function ContractCard({
   onDelete,
   onTransition,
   transitionLoading,
-  currentUser,
+  currentUser: _currentUser,
   className
 }) {
   const [showTransitionMenu, setShowTransitionMenu] = useState(false);
-  const [transitionAction, setTransitionAction] = useState(null);
+  const [_transitionAction, setTransitionAction] = useState(null);
 
   const statusConfig = getStatusConfig(contract.status);
   const typeConfig = getTypeConfig(contract.type);
-  const amountRangeConfig = getAmountRangeConfig(contract.contract_amount);
+  const _amountRangeConfig = getAmountRangeConfig(contract.contract_amount);
   const riskConfig = contract.risk_level ?
-    riskLevelConfigs[contract.risk_level] : riskLevelConfigs.MEDIUM;
+  riskLevelConfigs[contract.risk_level] : riskLevelConfigs.MEDIUM;
   const fulfillmentConfig = contract.fulfillment_status ?
-    fulfillmentStatusConfigs[contract.fulfillment_status] :
-    fulfillmentStatusConfigs.NOT_STARTED;
+  fulfillmentStatusConfigs[contract.fulfillment_status] :
+  fulfillmentStatusConfigs.NOT_STARTED;
 
   const getProgressColor = (status) => {
     switch (status) {
@@ -142,16 +142,16 @@ export function ContractCard({
     setShowTransitionMenu(false);
   };
 
-  const transitionMenuItem = (status, label, icon) => (
-    <DropdownMenuItem
-      onClick={() => handleTransition(status)}
-      disabled={transitionLoading}
-      className="flex items-center gap-2"
-    >
+  const transitionMenuItem = (status, label, icon) =>
+  <DropdownMenuItem
+    onClick={() => handleTransition(status)}
+    disabled={transitionLoading}
+    className="flex items-center gap-2">
+
       {icon}
       {label}
-    </DropdownMenuItem>
-  );
+  </DropdownMenuItem>;
+
 
   return (
     <Card className={cn("h-full hover:shadow-md transition-shadow duration-200", className)}>
@@ -167,8 +167,8 @@ export function ContractCard({
               </Badge>
               <Badge
                 variant="secondary"
-                className={cn("text-xs", fulfillmentConfig.color)}
-              >
+                className={cn("text-xs", fulfillmentConfig.color)}>
+
                 {fulfillmentConfig.label}
               </Badge>
             </div>
@@ -203,8 +203,8 @@ export function ContractCard({
               {(contract.status === 'DRAFT' || contract.status === 'PENDING_SIGNATURE' || contract.status === 'UNDER_REVIEW') && transitionMenuItem('CANCELLED', '取消合同', <Trash2 className="h-4 w-4" />)}
               <DropdownMenuItem
                 onClick={() => onDelete(contract)}
-                className="text-red-600 focus:text-red-600"
-              >
+                className="text-red-600 focus:text-red-600">
+
                 <Trash2 className="mr-2 h-4 w-4" />
                 删除合同
               </DropdownMenuItem>
@@ -256,8 +256,8 @@ export function ContractCard({
                 "h-2 rounded-full transition-all duration-300",
                 getProgressColor(contract.status)
               )}
-              style={{ width: `${getProgressPercentage(contract.status)}%` }}
-            />
+              style={{ width: `${getProgressPercentage(contract.status)}%` }} />
+
           </div>
         </div>
 
@@ -268,8 +268,8 @@ export function ContractCard({
               <span className="text-xs text-muted-foreground">状态</span>
               <Badge
                 variant="secondary"
-                className={cn("text-xs", statusConfig.color)}
-              >
+                className={cn("text-xs", statusConfig.color)}>
+
                 {statusConfig.label}
               </Badge>
             </div>
@@ -286,8 +286,8 @@ export function ContractCard({
               <span className="text-xs text-muted-foreground">风险等级</span>
               <Badge
                 variant="secondary"
-                className={cn("text-xs", riskConfig.color)}
-              >
+                className={cn("text-xs", riskConfig.color)}>
+
                 {riskConfig.label}
               </Badge>
             </div>
@@ -322,31 +322,31 @@ export function ContractCard({
             )}>
               {contract.due_date ? formatDate(contract.due_date) : '-'}
               {isOverdue && <span className="ml-1 text-red-500">(已逾期)</span>}
-              {isDueSoon?.isSoon && !isOverdue && (
-                <span className="ml-1 text-orange-500">({isDueSoon.days}天后到期)</span>
-              )}
+              {isDueSoon?.isSoon && !isOverdue &&
+              <span className="ml-1 text-orange-500">({isDueSoon.days}天后到期)</span>
+              }
             </div>
           </div>
         </div>
 
         {/* 附件数量 */}
-        {contract.document_count > 0 && (
-          <div className="flex items-center justify-between pt-2 border-t">
+        {contract.document_count > 0 &&
+        <div className="flex items-center justify-between pt-2 border-t">
             <span className="text-xs text-muted-foreground">
               <FileText className="inline h-3 w-3 mr-1" />
               附件 ({contract.document_count})
             </span>
             <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 px-2 text-xs"
-              onClick={() => onView(contract)}
-            >
+            variant="ghost"
+            size="sm"
+            className="h-6 px-2 text-xs"
+            onClick={() => onView(contract)}>
+
               查看详情
             </Button>
-          </div>
-        )}
+        </div>
+        }
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 }

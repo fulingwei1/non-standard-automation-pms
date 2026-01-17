@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { cn } from "../lib/utils";
+import { cn as _cn } from "../lib/utils";
 import { rdProjectApi } from "../services/api";
 import { formatDate } from "../lib/utils";
 import { PageHeader } from "../components/layout/PageHeader";
@@ -16,8 +16,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogBody,
-  DialogFooter,
-} from "../components/ui";
+  DialogFooter } from
+"../components/ui";
 import {
   ArrowLeft,
   Plus,
@@ -29,14 +29,14 @@ import {
   XCircle,
   AlertCircle,
   Edit2,
-  Trash2,
-} from "lucide-react";
+  Trash2 } from
+"lucide-react";
 
 const statusMap = {
   DRAFT: { label: "草稿", color: "secondary" },
   PENDING: { label: "待审核", color: "warning" },
   APPROVED: { label: "已通过", color: "success" },
-  REJECTED: { label: "已驳回", color: "danger" },
+  REJECTED: { label: "已驳回", color: "danger" }
 };
 
 export default function RdProjectWorklogs() {
@@ -51,14 +51,14 @@ export default function RdProjectWorklogs() {
     work_date: new Date().toISOString().split("T")[0],
     work_hours: "",
     work_type: "NORMAL",
-    description: "",
+    description: ""
   });
   const [formLoading, setFormLoading] = useState(false);
   const [pagination, setPagination] = useState({
     page: 1,
     page_size: 20,
     total: 0,
-    pages: 0,
+    pages: 0
   });
 
   useEffect(() => {
@@ -84,7 +84,7 @@ export default function RdProjectWorklogs() {
     try {
       const response = await rdProjectApi.getWorklogs(id, {
         page: pagination.page,
-        page_size: pagination.page_size,
+        page_size: pagination.page_size
       });
       const data = response.data?.data || response.data || response;
 
@@ -94,7 +94,7 @@ export default function RdProjectWorklogs() {
           page: data.page || 1,
           page_size: data.page_size || 20,
           total: data.total || 0,
-          pages: data.pages || 0,
+          pages: data.pages || 0
         });
       } else {
         setWorklogs(Array.isArray(data) ? data : []);
@@ -115,7 +115,7 @@ export default function RdProjectWorklogs() {
         work_date: new Date().toISOString().split("T")[0],
         work_hours: "",
         work_type: "NORMAL",
-        description: "",
+        description: ""
       });
       fetchWorklogs();
     } catch (err) {
@@ -137,12 +137,12 @@ export default function RdProjectWorklogs() {
         <Button
           variant="outline"
           className="mt-4"
-          onClick={() => navigate("/rd-projects")}
-        >
+          onClick={() => navigate("/rd-projects")}>
+
           返回列表
         </Button>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -153,8 +153,8 @@ export default function RdProjectWorklogs() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate(`/rd-projects/${id}`)}
-          >
+            onClick={() => navigate(`/rd-projects/${id}`)}>
+
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
@@ -183,12 +183,12 @@ export default function RdProjectWorklogs() {
             <div className="p-4 rounded-lg bg-white/[0.03]">
               <p className="text-sm text-slate-400 mb-1">总工时</p>
               <p className="text-2xl font-semibold text-primary">
-                {worklogs
-                  .reduce(
-                    (sum, log) => sum + parseFloat(log.work_hours || 0),
-                    0,
-                  )
-                  .toFixed(1)}{" "}
+                {worklogs.
+                reduce(
+                  (sum, log) => sum + parseFloat(log.work_hours || 0),
+                  0
+                ).
+                toFixed(1)}{" "}
                 小时
               </p>
             </div>
@@ -208,15 +208,15 @@ export default function RdProjectWorklogs() {
           <h3 className="text-lg font-semibold text-white mb-4">
             工作日志列表
           </h3>
-          {worklogs.length > 0 ? (
-            <div className="space-y-3">
+          {worklogs.length > 0 ?
+          <div className="space-y-3">
               {worklogs.map((log) => {
-                const status = statusMap[log.status] || statusMap.DRAFT;
-                return (
-                  <div
-                    key={log.id}
-                    className="flex items-center justify-between p-4 rounded-lg bg-white/[0.02] hover:bg-white/[0.04] transition-colors"
-                  >
+              const status = statusMap[log.status] || statusMap.DRAFT;
+              return (
+                <div
+                  key={log.id}
+                  className="flex items-center justify-between p-4 rounded-lg bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
+
                     <div className="flex items-center gap-4 flex-1">
                       <div className="p-2 rounded-lg bg-primary/20">
                         <Clock className="h-5 w-5 text-primary" />
@@ -237,24 +237,24 @@ export default function RdProjectWorklogs() {
                             <Clock className="h-4 w-4" />
                             <span>{log.work_hours} 小时</span>
                           </div>
-                          {log.work_type !== "NORMAL" && (
-                            <Badge variant="outline" className="text-xs">
-                              {log.work_type === "OVERTIME"
-                                ? "加班"
-                                : log.work_type}
+                          {log.work_type !== "NORMAL" &&
+                        <Badge variant="outline" className="text-xs">
+                              {log.work_type === "OVERTIME" ?
+                          "加班" :
+                          log.work_type}
                             </Badge>
-                          )}
+                        }
                         </div>
-                        {log.description && (
-                          <p className="text-sm text-slate-500 mt-2 line-clamp-2">
+                        {log.description &&
+                      <p className="text-sm text-slate-500 mt-2 line-clamp-2">
                             {log.description}
                           </p>
-                        )}
+                      }
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {log.status === "DRAFT" && (
-                        <>
+                      {log.status === "DRAFT" &&
+                    <>
                           <Button variant="ghost" size="icon">
                             <Edit2 className="h-4 w-4" />
                           </Button>
@@ -262,38 +262,38 @@ export default function RdProjectWorklogs() {
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </>
-                      )}
+                    }
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-12 text-slate-500">
+                  </div>);
+
+            })}
+            </div> :
+
+          <div className="text-center py-12 text-slate-500">
               <FileText className="h-12 w-12 mx-auto mb-4 text-slate-600" />
               <p>暂无工作日志</p>
               <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => setFormOpen(true)}
-              >
+              variant="outline"
+              className="mt-4"
+              onClick={() => setFormOpen(true)}>
+
                 <Plus className="h-4 w-4 mr-2" />
                 记录第一条工作日志
               </Button>
             </div>
-          )}
+          }
 
           {/* Pagination */}
-          {pagination.pages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-6">
+          {pagination.pages > 1 &&
+          <div className="flex items-center justify-center gap-2 mt-6">
               <Button
-                variant="secondary"
-                size="sm"
-                onClick={() =>
-                  setPagination({ ...pagination, page: pagination.page - 1 })
-                }
-                disabled={pagination.page <= 1}
-              >
+              variant="secondary"
+              size="sm"
+              onClick={() =>
+              setPagination({ ...pagination, page: pagination.page - 1 })
+              }
+              disabled={pagination.page <= 1}>
+
                 上一页
               </Button>
               <span className="text-sm text-slate-400">
@@ -301,17 +301,17 @@ export default function RdProjectWorklogs() {
                 {pagination.total} 条
               </span>
               <Button
-                variant="secondary"
-                size="sm"
-                onClick={() =>
-                  setPagination({ ...pagination, page: pagination.page + 1 })
-                }
-                disabled={pagination.page >= pagination.pages}
-              >
+              variant="secondary"
+              size="sm"
+              onClick={() =>
+              setPagination({ ...pagination, page: pagination.page + 1 })
+              }
+              disabled={pagination.page >= pagination.pages}>
+
                 下一页
               </Button>
             </div>
-          )}
+          }
         </CardContent>
       </Card>
 
@@ -332,10 +332,10 @@ export default function RdProjectWorklogs() {
                     type="date"
                     value={formData.work_date}
                     onChange={(e) =>
-                      setFormData({ ...formData, work_date: e.target.value })
+                    setFormData({ ...formData, work_date: e.target.value })
                     }
-                    required
-                  />
+                    required />
+
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -348,11 +348,11 @@ export default function RdProjectWorklogs() {
                     max="24"
                     value={formData.work_hours}
                     onChange={(e) =>
-                      setFormData({ ...formData, work_hours: e.target.value })
+                    setFormData({ ...formData, work_hours: e.target.value })
                     }
                     placeholder="0.0"
-                    required
-                  />
+                    required />
+
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -362,9 +362,9 @@ export default function RdProjectWorklogs() {
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
                     value={formData.work_type}
                     onChange={(e) =>
-                      setFormData({ ...formData, work_type: e.target.value })
-                    }
-                  >
+                    setFormData({ ...formData, work_type: e.target.value })
+                    }>
+
                     <option value="NORMAL">正常</option>
                     <option value="OVERTIME">加班</option>
                     <option value="LEAVE">请假</option>
@@ -380,18 +380,18 @@ export default function RdProjectWorklogs() {
                   rows={4}
                   value={formData.description}
                   onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
+                  setFormData({ ...formData, description: e.target.value })
                   }
-                  placeholder="请描述今天的工作内容..."
-                />
+                  placeholder="请描述今天的工作内容..." />
+
               </div>
             </DialogBody>
             <DialogFooter>
               <Button
                 type="button"
                 variant="secondary"
-                onClick={() => setFormOpen(false)}
-              >
+                onClick={() => setFormOpen(false)}>
+
                 取消
               </Button>
               <Button type="submit" loading={formLoading}>
@@ -401,6 +401,6 @@ export default function RdProjectWorklogs() {
           </form>
         </DialogContent>
       </Dialog>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

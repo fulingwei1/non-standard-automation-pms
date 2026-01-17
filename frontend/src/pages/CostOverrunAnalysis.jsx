@@ -13,8 +13,8 @@ import {
   Building2,
   BarChart3,
   Calendar,
-  Filter,
-} from "lucide-react";
+  Filter } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -33,14 +33,14 @@ import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger,
-} from "../components/ui";
-import { fadeIn, staggerContainer } from "../lib/animations";
+  TabsTrigger } from
+"../components/ui";
+import { fadeIn as _fadeIn, staggerContainer as _staggerContainer } from "../lib/animations";
 import { costOverrunApi } from "../services/api";
-import { formatAmount, formatDate } from "../lib/utils";
+import { formatAmount, formatDate as _formatDate } from "../lib/utils";
 
 export default function CostOverrunAnalysis() {
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
   const [reasonsData, setReasonsData] = useState(null);
   const [accountabilityData, setAccountabilityData] = useState(null);
   const [impactData, setImpactData] = useState(null);
@@ -128,8 +128,8 @@ export default function CostOverrunAnalysis() {
               <Input
                 type="date"
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
+                onChange={(e) => setStartDate(e.target.value)} />
+
             </div>
             <div>
               <label className="text-sm text-slate-500 mb-1 block">
@@ -138,8 +138,8 @@ export default function CostOverrunAnalysis() {
               <Input
                 type="date"
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
+                onChange={(e) => setEndDate(e.target.value)} />
+
             </div>
             <div>
               <label className="text-sm text-slate-500 mb-1 block">
@@ -149,8 +149,8 @@ export default function CostOverrunAnalysis() {
                 type="number"
                 placeholder="项目ID"
                 value={projectId}
-                onChange={(e) => setProjectId(e.target.value)}
-              />
+                onChange={(e) => setProjectId(e.target.value)} />
+
             </div>
             <div className="flex items-end">
               <Button onClick={loadReasons} className="w-full">
@@ -170,8 +170,8 @@ export default function CostOverrunAnalysis() {
 
         {/* 超支原因 */}
         <TabsContent value="reasons">
-          {reasonsData && (
-            <div className="space-y-6">
+          {reasonsData &&
+          <div className="space-y-6">
               <Card>
                 <CardContent className="pt-6">
                   <div className="text-sm text-slate-500">
@@ -188,8 +188,8 @@ export default function CostOverrunAnalysis() {
                   <CardTitle>超支原因统计</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {reasonsData.reasons && reasonsData.reasons.length > 0 && (
-                    <Table>
+                  {reasonsData.reasons && reasonsData.reasons.length > 0 &&
+                <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead>超支原因</TableHead>
@@ -199,8 +199,8 @@ export default function CostOverrunAnalysis() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {reasonsData.reasons.map((reason, idx) => (
-                          <TableRow key={idx}>
+                        {reasonsData.reasons.map((reason, idx) =>
+                    <TableRow key={idx}>
                             <TableCell>{reason.reason}</TableCell>
                             <TableCell>{reason.count}</TableCell>
                             <TableCell>
@@ -210,27 +210,27 @@ export default function CostOverrunAnalysis() {
                               {formatAmount(reason.average_overrun)}
                             </TableCell>
                           </TableRow>
-                        ))}
+                    )}
                       </TableBody>
                     </Table>
-                  )}
+                }
                 </CardContent>
               </Card>
             </div>
-          )}
+          }
         </TabsContent>
 
         {/* 归责分析 */}
         <TabsContent value="accountability">
-          {accountabilityData && (
-            <Card>
+          {accountabilityData &&
+          <Card>
               <CardHeader>
                 <CardTitle>按人员归责</CardTitle>
               </CardHeader>
               <CardContent>
                 {accountabilityData.by_person &&
-                  accountabilityData.by_person.length > 0 && (
-                    <Table>
+              accountabilityData.by_person.length > 0 &&
+              <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead>人员</TableHead>
@@ -241,8 +241,8 @@ export default function CostOverrunAnalysis() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {accountabilityData.by_person.map((person, idx) => (
-                          <TableRow key={idx}>
+                        {accountabilityData.by_person.map((person, idx) =>
+                  <TableRow key={idx}>
                             <TableCell>{person.person_name}</TableCell>
                             <TableCell>
                               {person.department || "未设置"}
@@ -252,24 +252,24 @@ export default function CostOverrunAnalysis() {
                               {formatAmount(person.total_overrun)}
                             </TableCell>
                             <TableCell>
-                              {Object.keys(person.reasons || {})
-                                .slice(0, 2)
-                                .join(", ")}
+                              {Object.keys(person.reasons || {}).
+                      slice(0, 2).
+                      join(", ")}
                             </TableCell>
                           </TableRow>
-                        ))}
+                  )}
                       </TableBody>
                     </Table>
-                  )}
+              }
               </CardContent>
             </Card>
-          )}
+          }
         </TabsContent>
 
         {/* 影响分析 */}
         <TabsContent value="impact">
-          {impactData && (
-            <div className="space-y-6">
+          {impactData &&
+          <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card>
                   <CardContent className="pt-6">
@@ -284,8 +284,8 @@ export default function CostOverrunAnalysis() {
                     <div className="text-sm text-slate-500">总合同金额</div>
                     <div className="text-2xl font-bold mt-2">
                       {formatAmount(
-                        impactData.summary?.total_contract_amount || 0
-                      )}
+                      impactData.summary?.total_contract_amount || 0
+                    )}
                     </div>
                   </CardContent>
                 </Card>
@@ -305,8 +305,8 @@ export default function CostOverrunAnalysis() {
                 </CardHeader>
                 <CardContent>
                   {impactData.affected_projects &&
-                    impactData.affected_projects.length > 0 && (
-                      <Table>
+                impactData.affected_projects.length > 0 &&
+                <Table>
                         <TableHeader>
                           <TableRow>
                             <TableHead>项目编码</TableHead>
@@ -316,8 +316,8 @@ export default function CostOverrunAnalysis() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {impactData.affected_projects.map((project, idx) => (
-                            <TableRow key={idx}>
+                          {impactData.affected_projects.map((project, idx) =>
+                    <TableRow key={idx}>
                               <TableCell>{project.project_code}</TableCell>
                               <TableCell>
                                 {formatAmount(project.contract_amount)}
@@ -329,16 +329,16 @@ export default function CostOverrunAnalysis() {
                                 {project.margin_impact?.toFixed(2) || 0}%
                               </TableCell>
                             </TableRow>
-                          ))}
+                    )}
                         </TableBody>
                       </Table>
-                    )}
+                }
                 </CardContent>
               </Card>
             </div>
-          )}
+          }
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>);
+
 }

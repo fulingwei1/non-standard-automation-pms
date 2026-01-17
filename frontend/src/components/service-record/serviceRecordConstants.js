@@ -13,13 +13,13 @@ export const SERVICE_TYPES = {
     difficulty: "medium",
     requiredSkills: ["电气知识", "机械安装", "调试经验"],
     checklist: [
-      "现场环境检查",
-      "设备安装定位",
-      "电气连接测试",
-      "功能调试验证",
-      "安全规范检查",
-      "客户操作培训"
-    ]
+    "现场环境检查",
+    "设备安装定位",
+    "电气连接测试",
+    "功能调试验证",
+    "安全规范检查",
+    "客户操作培训"]
+
   },
   TRAINING: {
     label: "操作培训",
@@ -29,13 +29,13 @@ export const SERVICE_TYPES = {
     difficulty: "low",
     requiredSkills: ["教学能力", "产品知识", "沟通技巧"],
     checklist: [
-      "培训需求确认",
-      "培训材料准备",
-      "理论培训实施",
-      "实操演示指导",
-      "考核评估",
-      "培训证书发放"
-    ]
+    "培训需求确认",
+    "培训材料准备",
+    "理论培训实施",
+    "实操演示指导",
+    "考核评估",
+    "培训证书发放"]
+
   },
   MAINTENANCE: {
     label: "定期维护",
@@ -45,13 +45,13 @@ export const SERVICE_TYPES = {
     difficulty: "low",
     requiredSkills: ["设备维护", "故障诊断", "预防性维护"],
     checklist: [
-      "维护计划确认",
-      "设备清洁检查",
-      "功能测试验证",
-      "易损件检查",
-      "维护记录更新",
-      "下次维护计划"
-    ]
+    "维护计划确认",
+    "设备清洁检查",
+    "功能测试验证",
+    "易损件检查",
+    "维护记录更新",
+    "下次维护计划"]
+
   },
   REPAIR: {
     label: "故障维修",
@@ -61,13 +61,13 @@ export const SERVICE_TYPES = {
     difficulty: "high",
     requiredSkills: ["故障诊断", "维修技术", "应急处理"],
     checklist: [
-      "故障现象确认",
-      "原因分析诊断",
-      "维修方案制定",
-      "备件准备更换",
-      "功能测试验证",
-      "预防建议提供"
-    ]
+    "故障现象确认",
+    "原因分析诊断",
+    "维修方案制定",
+    "备件准备更换",
+    "功能测试验证",
+    "预防建议提供"]
+
   },
   UPGRADE: {
     label: "升级改造",
@@ -77,13 +77,13 @@ export const SERVICE_TYPES = {
     difficulty: "high",
     requiredSkills: ["系统升级", "软硬件集成", "项目管理"],
     checklist: [
-      "升级方案设计",
-      "兼容性检查",
-      "升级实施执行",
-      "数据迁移备份",
-      "功能验证测试",
-      "文档更新完善"
-    ]
+    "升级方案设计",
+    "兼容性检查",
+    "升级实施执行",
+    "数据迁移备份",
+    "功能验证测试",
+    "文档更新完善"]
+
   },
   CONSULTATION: {
     label: "技术咨询",
@@ -93,13 +93,13 @@ export const SERVICE_TYPES = {
     difficulty: "low",
     requiredSkills: ["专业知识", "解决方案", "客户沟通"],
     checklist: [
-      "需求分析确认",
-      "技术方案建议",
-      "问题解答指导",
-      "改进建议提供",
-      "后续跟踪服务",
-      "知识分享传递"
-    ]
+    "需求分析确认",
+    "技术方案建议",
+    "问题解答指导",
+    "改进建议提供",
+    "后续跟踪服务",
+    "知识分享传递"]
+
   }
 };
 
@@ -260,42 +260,42 @@ export const ISSUE_CATEGORIES = {
   TECHNICAL: {
     label: "技术问题",
     subcategories: [
-      "设备故障",
-      "软件bug",
-      "兼容性问题",
-      "性能问题",
-      "安全漏洞"
-    ]
+    "设备故障",
+    "软件bug",
+    "兼容性问题",
+    "性能问题",
+    "安全漏洞"]
+
   },
   SERVICE: {
     label: "服务问题",
     subcategories: [
-      "响应不及时",
-      "技术能力不足",
-      "态度问题",
-      "沟通不清晰",
-      "服务不完整"
-    ]
+    "响应不及时",
+    "技术能力不足",
+    "态度问题",
+    "沟通不清晰",
+    "服务不完整"]
+
   },
   PRODUCT: {
     label: "产品问题",
     subcategories: [
-      "设计缺陷",
-      "质量问题",
-      "功能不符",
-      "文档不清",
-      "配件缺失"
-    ]
+    "设计缺陷",
+    "质量问题",
+    "功能不符",
+    "文档不清",
+    "配件缺失"]
+
   },
   PROCESS: {
     label: "流程问题",
     subcategories: [
-      "预约不便",
-      "流程繁琐",
-      "信息不准确",
-      "协调不畅",
-      "反馈滞后"
-    ]
+    "预约不便",
+    "流程繁琐",
+    "信息不准确",
+    "协调不畅",
+    "反馈滞后"]
+
   }
 };
 
@@ -304,53 +304,53 @@ export const REPORT_TEMPLATES = {
   BASIC: {
     label: "基础报告",
     sections: [
-      "服务概述",
-      "问题描述",
-      "解决方案",
-      "服务结果",
-      "客户确认"
-    ],
+    "服务概述",
+    "问题描述",
+    "解决方案",
+    "服务结果",
+    "客户确认"],
+
     requiredFields: ["service_date", "customer_name", "description", "result"],
     optionalFields: ["photos", "recommendations"]
   },
   DETAILED: {
     label: "详细报告",
     sections: [
-      "服务概述",
-      "问题背景",
-      "检查过程",
-      "故障分析",
-      "解决方案",
-      "实施过程",
-      "测试验证",
-      "服务结果",
-      "客户培训",
-      "预防建议",
-      "客户确认"
-    ],
+    "服务概述",
+    "问题背景",
+    "检查过程",
+    "故障分析",
+    "解决方案",
+    "实施过程",
+    "测试验证",
+    "服务结果",
+    "客户培训",
+    "预防建议",
+    "客户确认"],
+
     requiredFields: [
-      "service_date", "customer_name", "background", "check_process",
-      "analysis", "solution", "implementation", "test_result", "result"
-    ],
+    "service_date", "customer_name", "background", "check_process",
+    "analysis", "solution", "implementation", "test_result", "result"],
+
     optionalFields: ["photos", "training_materials", "maintenance_plan"]
   },
   MAINTENANCE: {
     label: "维护报告",
     sections: [
-      "维护概述",
-      "设备状态",
-      "维护项目",
-      "检查结果",
-      "更换部件",
-      "性能参数",
-      "维护建议",
-      "下次计划",
-      "客户确认"
-    ],
+    "维护概述",
+    "设备状态",
+    "维护项目",
+    "检查结果",
+    "更换部件",
+    "性能参数",
+    "维护建议",
+    "下次计划",
+    "客户确认"],
+
     requiredFields: [
-      "maintenance_date", "equipment_status", "maintenance_items",
-      "check_results", "result", "next_plan"
-    ],
+    "maintenance_date", "equipment_status", "maintenance_items",
+    "check_results", "result", "next_plan"],
+
     optionalFields: ["photos", "performance_data", "parts_replaced"]
   }
 };
@@ -358,22 +358,22 @@ export const REPORT_TEMPLATES = {
 // ==================== 服务成本配置 ====================
 export const SERVICE_COSTS = {
   LABOR_RATES: {
-    JUNIOR: 150,    // 初级工程师 - 元/小时
+    JUNIOR: 150, // 初级工程师 - 元/小时
     INTERMEDIATE: 250, // 中级工程师 - 元/小时
-    SENIOR: 350,    // 高级工程师 - 元/小时
-    EXPERT: 500     // 专家 - 元/小时
+    SENIOR: 350, // 高级工程师 - 元/小时
+    EXPERT: 500 // 专家 - 元/小时
   },
   TRAVEL_COSTS: {
-    LOCAL: 0.8,     // 本地交通 - 元/公里
+    LOCAL: 0.8, // 本地交通 - 元/公里
     OUT_OF_TOWN: 1.2, // 外地交通 - 元/公里
     ACCOMMODATION: 300, // 住宿补贴 - 元/天
-    MEALS: 150      // 餐补 - 元/天
+    MEALS: 150 // 餐补 - 元/天
   },
   MATERIAL_COSTS: {
-    SMALL_PARTS: 50,    // 小零件 - 元
+    SMALL_PARTS: 50, // 小零件 - 元
     STANDARD_TOOLS: 100, // 标准工具 - 元
     SPECIAL_EQUIPMENT: 500, // 特殊设备 - 元/天
-    CONSUMABLES: 30      // 消耗品 - 元
+    CONSUMABLES: 30 // 消耗品 - 元
   }
 };
 
@@ -388,10 +388,10 @@ export const SERVICE_TIME_CONFIG = {
     HOLIDAYS: [] // 节假日列表
   },
   RESPONSE_TIMES: {
-    URGENT: 2,      // 紧急 - 2小时
-    HIGH: 4,         // 高 - 4小时
-    NORMAL: 8,       // 普通 - 8小时
-    LOW: 24          // 低 - 24小时
+    URGENT: 2, // 紧急 - 2小时
+    HIGH: 4, // 高 - 4小时
+    NORMAL: 8, // 普通 - 8小时
+    LOW: 24 // 低 - 24小时
   },
   SERVICE_WINDOWS: {
     MORNING: { start: "08:00", end: "12:00" },
@@ -436,12 +436,12 @@ export const getFeedbackConfig = (rating) => {
  */
 export const calculateServiceDuration = (startTime, endTime) => {
   if (!startTime || !endTime) return 0;
-  
+
   const start = new Date(startTime);
   const end = new Date(endTime);
   const diffMs = end - start;
   const diffHours = diffMs / (1000 * 60 * 60);
-  
+
   return Math.round(diffHours * 100) / 100; // 保留两位小数
 };
 
@@ -450,12 +450,12 @@ export const calculateServiceDuration = (startTime, endTime) => {
  */
 export const calculateResponseTime = (requestTime, startTime) => {
   if (!requestTime || !startTime) return 0;
-  
+
   const request = new Date(requestTime);
   const start = new Date(startTime);
   const diffMs = start - request;
   const diffHours = diffMs / (1000 * 60 * 60);
-  
+
   return Math.round(diffHours * 100) / 100;
 };
 
@@ -475,7 +475,7 @@ export const calculateServiceCost = (engineerLevel, duration, distance = 0, mate
   const laborCost = laborRate * duration;
   const travelCost = distance * SERVICE_COSTS.TRAVEL_COSTS.LOCAL;
   const materialCost = materials;
-  
+
   return {
     labor: laborCost,
     travel: travelCost,
@@ -498,26 +498,26 @@ export const getServiceChecklist = (serviceType) => {
 export const validateServiceData = (data, template) => {
   const templateConfig = REPORT_TEMPLATES[template] || REPORT_TEMPLATES.BASIC;
   const errors = [];
-  
+
   // 检查必填字段
-  templateConfig.requiredFields.forEach(field => {
+  templateConfig.requiredFields.forEach((field) => {
     if (!data[field] || data[field] === '') {
       errors.push(`${field} 为必填项`);
     }
   });
-  
+
   // 检查时间逻辑
   if (data.start_time && data.end_time) {
     if (new Date(data.end_time) <= new Date(data.start_time)) {
       errors.push('结束时间必须晚于开始时间');
     }
   }
-  
+
   // 检查评分范围
   if (data.rating && (data.rating < 1 || data.rating > 5)) {
     errors.push('评分必须在1-5之间');
   }
-  
+
   return errors;
 };
 
@@ -530,7 +530,7 @@ export const generateServiceReportNumber = (serviceType, date = new Date()) => {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-  
+
   return `SR${typeCode}${year}${month}${day}${random}`;
 };
 
@@ -539,11 +539,11 @@ export const generateServiceReportNumber = (serviceType, date = new Date()) => {
  */
 export const getServiceStatusHistory = (records) => {
   if (!records || records.length === 0) return [];
-  
+
   const history = [];
   let previousStatus = null;
-  
-  records.forEach((record, index) => {
+
+  records.forEach((record, _index) => {
     if (record.status !== previousStatus) {
       history.push({
         timestamp: record.created_time,
@@ -554,7 +554,7 @@ export const getServiceStatusHistory = (records) => {
       previousStatus = record.status;
     }
   });
-  
+
   return history;
 };
 
@@ -568,15 +568,15 @@ export const getNextServiceRecommendation = (serviceType, lastServiceDate) => {
     [SERVICE_TYPES.CONSULTATION.label]: { days: 30, unit: 'monthly' },
     [SERVICE_TYPES.REPAIR.label]: { days: 7, unit: 'weekly' }
   };
-  
+
   const serviceTypeConfig = getServiceTypeConfig(serviceType);
   const recommendation = recommendations[serviceTypeConfig.label];
-  
+
   if (!recommendation) return null;
-  
+
   const nextDate = new Date(lastServiceDate);
   nextDate.setDate(nextDate.getDate() + recommendation.days);
-  
+
   return {
     date: nextDate,
     unit: recommendation.unit,
@@ -589,21 +589,21 @@ export const getNextServiceRecommendation = (serviceType, lastServiceDate) => {
  */
 export const calculateServiceCompletionRate = (services, dateRange = null) => {
   let filteredServices = services;
-  
+
   if (dateRange) {
-    filteredServices = services.filter(service => {
+    filteredServices = services.filter((service) => {
       const serviceDate = new Date(service.created_time);
       return serviceDate >= dateRange.start && serviceDate <= dateRange.end;
     });
   }
-  
-  const completedServices = filteredServices.filter(service => 
-    service.status === SERVICE_STATUS.COMPLETED.label
+
+  const completedServices = filteredServices.filter((service) =>
+  service.status === SERVICE_STATUS.COMPLETED.label
   );
-  
-  return filteredServices.length > 0 
-    ? Math.round((completedServices.length / filteredServices.length) * 100)
-    : 0;
+
+  return filteredServices.length > 0 ?
+  Math.round(completedServices.length / filteredServices.length * 100) :
+  0;
 };
 
 /**
@@ -611,9 +611,9 @@ export const calculateServiceCompletionRate = (services, dateRange = null) => {
  */
 export const getServiceQualityScore = (feedbacks) => {
   if (!feedbacks || feedbacks.length === 0) return 0;
-  
+
   const totalScore = feedbacks.reduce((sum, feedback) => sum + feedback.rating, 0);
-  return Math.round((totalScore / feedbacks.length) * 100) / 100;
+  return Math.round(totalScore / feedbacks.length * 100) / 100;
 };
 
 /**
@@ -621,10 +621,10 @@ export const getServiceQualityScore = (feedbacks) => {
  */
 export const requiresEscalation = (feedback, issueCategory) => {
   const feedbackConfig = getFeedbackConfig(feedback.rating);
-  
-  return feedbackConfig.autoEscalate || 
-         issueCategory === ISSUE_CATEGORIES.TECHNICAL.label ||
-         feedback.rating <= 2; // 不满意或非常不满意
+
+  return feedbackConfig.autoEscalate ||
+  issueCategory === ISSUE_CATEGORIES.TECHNICAL.label ||
+  feedback.rating <= 2; // 不满意或非常不满意
 };
 
 // ==================== 导出默认配置 ====================

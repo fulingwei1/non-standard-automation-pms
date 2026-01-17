@@ -3,7 +3,7 @@
  * Features: 安装调试派工单管理、批量派工、进度跟踪
  */
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo as _useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Plus,
@@ -24,16 +24,16 @@ import {
   CheckCircle2,
   XCircle,
   RefreshCw,
-  Download,
-} from "lucide-react";
+  Download } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
-} from "../components/ui/card";
+  CardDescription } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -42,34 +42,34 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "../components/ui/table";
+  TableRow } from
+"../components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogBody,
-  DialogFooter,
-} from "../components/ui/dialog";
+  DialogFooter } from
+"../components/ui/dialog";
 import { Textarea } from "../components/ui/textarea";
 import { cn, formatDate } from "../lib/utils";
 import {
   installationDispatchApi,
   userApi,
   projectApi,
-  machineApi,
-} from "../services/api";
+  machineApi } from
+"../services/api";
 import { toast } from "../components/ui/toast";
-import { 
+import {
   InstallationDispatchOverview,
   DISPATCH_STATUS,
   DISPATCH_STATUS_LABELS,
@@ -81,49 +81,49 @@ import {
   INSTALLATION_TYPE_LABELS,
   DISPATCH_FILTER_OPTIONS,
   PRIORITY_FILTER_OPTIONS,
-  validateDispatchData
-} from "../components/installation-dispatch";
+  validateDispatchData } from
+"../components/installation-dispatch";
 
 // 状态配置 - 使用新的配置系统
 const statusConfig = {
   [DISPATCH_STATUS.PENDING]: {
     label: DISPATCH_STATUS_LABELS[DISPATCH_STATUS.PENDING],
-    color: DISPATCH_STATUS_COLORS[DISPATCH_STATUS.PENDING],
+    color: DISPATCH_STATUS_COLORS[DISPATCH_STATUS.PENDING]
   },
   [DISPATCH_STATUS.ASSIGNED]: {
     label: DISPATCH_STATUS_LABELS[DISPATCH_STATUS.ASSIGNED],
-    color: DISPATCH_STATUS_COLORS[DISPATCH_STATUS.ASSIGNED],
+    color: DISPATCH_STATUS_COLORS[DISPATCH_STATUS.ASSIGNED]
   },
   [DISPATCH_STATUS.IN_PROGRESS]: {
     label: DISPATCH_STATUS_LABELS[DISPATCH_STATUS.IN_PROGRESS],
-    color: DISPATCH_STATUS_COLORS[DISPATCH_STATUS.IN_PROGRESS],
+    color: DISPATCH_STATUS_COLORS[DISPATCH_STATUS.IN_PROGRESS]
   },
   [DISPATCH_STATUS.COMPLETED]: {
     label: DISPATCH_STATUS_LABELS[DISPATCH_STATUS.COMPLETED],
-    color: DISPATCH_STATUS_COLORS[DISPATCH_STATUS.COMPLETED],
+    color: DISPATCH_STATUS_COLORS[DISPATCH_STATUS.COMPLETED]
   },
   [DISPATCH_STATUS.CANCELLED]: {
     label: DISPATCH_STATUS_LABELS[DISPATCH_STATUS.CANCELLED],
-    color: DISPATCH_STATUS_COLORS[DISPATCH_STATUS.CANCELLED],
-  },
+    color: DISPATCH_STATUS_COLORS[DISPATCH_STATUS.CANCELLED]
+  }
 };
 
 const priorityConfig = {
-  [DISPATCH_PRIORITY.LOW]: { 
-    label: DISPATCH_PRIORITY_LABELS[DISPATCH_PRIORITY.LOW], 
-    color: PRIORITY_COLORS[DISPATCH_PRIORITY.LOW], 
-    bg: "bg-slate-500/20" 
+  [DISPATCH_PRIORITY.LOW]: {
+    label: DISPATCH_PRIORITY_LABELS[DISPATCH_PRIORITY.LOW],
+    color: PRIORITY_COLORS[DISPATCH_PRIORITY.LOW],
+    bg: "bg-slate-500/20"
   },
-  [DISPATCH_PRIORITY.MEDIUM]: { 
-    label: DISPATCH_PRIORITY_LABELS[DISPATCH_PRIORITY.MEDIUM], 
-    color: PRIORITY_COLORS[DISPATCH_PRIORITY.MEDIUM], 
-    bg: "bg-blue-500/20" 
+  [DISPATCH_PRIORITY.MEDIUM]: {
+    label: DISPATCH_PRIORITY_LABELS[DISPATCH_PRIORITY.MEDIUM],
+    color: PRIORITY_COLORS[DISPATCH_PRIORITY.MEDIUM],
+    bg: "bg-blue-500/20"
   },
-  [DISPATCH_PRIORITY.HIGH]: { 
-    label: DISPATCH_PRIORITY_LABELS[DISPATCH_PRIORITY.HIGH], 
-    color: PRIORITY_COLORS[DISPATCH_PRIORITY.HIGH], 
-    bg: "bg-amber-500/20" 
-  },
+  [DISPATCH_PRIORITY.HIGH]: {
+    label: DISPATCH_PRIORITY_LABELS[DISPATCH_PRIORITY.HIGH],
+    color: PRIORITY_COLORS[DISPATCH_PRIORITY.HIGH],
+    bg: "bg-amber-500/20"
+  }
 };
 
 const taskTypeConfig = {
@@ -131,7 +131,7 @@ const taskTypeConfig = {
   [INSTALLATION_TYPE.MAINTENANCE]: { label: INSTALLATION_TYPE_LABELS[INSTALLATION_TYPE.MAINTENANCE], icon: "🔨" },
   [INSTALLATION_TYPE.REPAIR]: { label: INSTALLATION_TYPE_LABELS[INSTALLATION_TYPE.REPAIR], icon: "🛠️" },
   [INSTALLATION_TYPE.UPGRADE]: { label: INSTALLATION_TYPE_LABELS[INSTALLATION_TYPE.UPGRADE], icon: "⚙️" },
-  [INSTALLATION_TYPE.INSPECTION]: { label: INSTALLATION_TYPE_LABELS[INSTALLATION_TYPE.INSPECTION], icon: "👥" },
+  [INSTALLATION_TYPE.INSPECTION]: { label: INSTALLATION_TYPE_LABELS[INSTALLATION_TYPE.INSPECTION], icon: "👥" }
 };
 
 export default function InstallationDispatchManagement() {
@@ -141,14 +141,14 @@ export default function InstallationDispatchManagement() {
   const [users, setUsers] = useState([]);
   const [projects, setProjects] = useState([]);
   const [machines, setMachines] = useState([]);
-  const [stats, setStats] = useState({
+  const [_stats, setStats] = useState({
     total: 0,
     pending: 0,
     assigned: 0,
     in_progress: 0,
     completed: 0,
     cancelled: 0,
-    urgent: 0,
+    urgent: 0
   });
 
   // Filters
@@ -168,19 +168,19 @@ export default function InstallationDispatchManagement() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [progressData, setProgressData] = useState({
     progress: 0,
-    execution_notes: "",
+    execution_notes: ""
   });
   const [completeData, setCompleteData] = useState({
     actual_hours: "",
     execution_notes: "",
     issues_found: "",
     solution_provided: "",
-    photos: [],
+    photos: []
   });
 
   const [assignData, setAssignData] = useState({
     assigned_to_id: null,
-    remark: "",
+    remark: ""
   });
 
   const [createData, setCreateData] = useState({
@@ -197,7 +197,7 @@ export default function InstallationDispatchManagement() {
     customer_contact: "",
     customer_phone: "",
     customer_address: "",
-    remark: "",
+    remark: ""
   });
 
   useEffect(() => {
@@ -206,12 +206,12 @@ export default function InstallationDispatchManagement() {
     fetchOrders();
     fetchStatistics();
   }, [
-    filterStatus,
-    filterPriority,
-    filterProject,
-    filterTaskType,
-    searchQuery,
-  ]);
+  filterStatus,
+  filterPriority,
+  filterProject,
+  filterTaskType,
+  searchQuery]
+  );
 
   useEffect(() => {
     if (createData.project_id) {
@@ -247,7 +247,7 @@ export default function InstallationDispatchManagement() {
     try {
       const res = await machineApi.list({
         page_size: 1000,
-        project_id: projectId,
+        project_id: projectId
       });
       setMachines(res.data || []);
     } catch (error) {
@@ -261,7 +261,7 @@ export default function InstallationDispatchManagement() {
     try {
       const params = {
         page: 1,
-        page_size: 1000,
+        page_size: 1000
       };
       if (filterStatus) params.status = filterStatus;
       if (filterPriority) params.priority = filterPriority;
@@ -314,7 +314,7 @@ export default function InstallationDispatchManagement() {
         customer_contact: "",
         customer_phone: "",
         customer_address: "",
-        remark: "",
+        remark: ""
       });
       fetchOrders();
       fetchStatistics();
@@ -361,7 +361,7 @@ export default function InstallationDispatchManagement() {
         execution_notes: "",
         issues_found: "",
         solution_provided: "",
-        photos: [],
+        photos: []
       });
       fetchOrders();
       fetchStatistics();
@@ -371,7 +371,7 @@ export default function InstallationDispatchManagement() {
     }
   };
 
-  const handleDeleteOrder = async (orderId) => {
+  const _handleDeleteOrder = async (orderId) => {
     if (!confirm("确定要删除这个派工单吗？")) return;
 
     try {
@@ -399,7 +399,7 @@ export default function InstallationDispatchManagement() {
       await installationDispatchApi.batchAssign({
         order_ids: Array.from(selectedOrders),
         assigned_to_id: assignData.assigned_to_id,
-        remark: assignData.remark,
+        remark: assignData.remark
       });
       toast.success("批量派工成功");
       setShowAssignDialog(false);
@@ -445,12 +445,12 @@ export default function InstallationDispatchManagement() {
           "bg-blue-500 text-white": status === DISPATCH_STATUS.ASSIGNED,
           "bg-amber-500 text-white": status === DISPATCH_STATUS.IN_PROGRESS,
           "bg-emerald-500 text-white": status === DISPATCH_STATUS.COMPLETED,
-          "bg-red-500 text-white": status === DISPATCH_STATUS.CANCELLED,
-        })}
-      >
+          "bg-red-500 text-white": status === DISPATCH_STATUS.CANCELLED
+        })}>
+
         {config.label}
-      </Badge>
-    );
+      </Badge>);
+
   };
 
   const getPriorityBadge = (priority) => {
@@ -463,12 +463,12 @@ export default function InstallationDispatchManagement() {
         className={cn("border-0", config.bg, {
           "text-slate-400": priority === DISPATCH_PRIORITY.LOW,
           "text-blue-400": priority === DISPATCH_PRIORITY.MEDIUM,
-          "text-amber-400": priority === DISPATCH_PRIORITY.HIGH,
-        })}
-      >
+          "text-amber-400": priority === DISPATCH_PRIORITY.HIGH
+        })}>
+
         {config.label}
-      </Badge>
-    );
+      </Badge>);
+
   };
 
   const getTaskTypeDisplay = (type) => {
@@ -488,8 +488,10 @@ export default function InstallationDispatchManagement() {
         break;
       case 'viewOverdue':
         // Filter overdue tasks
-        const today = new Date().toISOString().split('T')[0];
-        setSearchQuery(today);
+        {
+          const today = new Date().toISOString().split('T')[0];
+          setSearchQuery(today);
+        }
         break;
       case 'technicianSchedule':
         // Navigate to technician schedule view
@@ -506,19 +508,19 @@ export default function InstallationDispatchManagement() {
         title="安装调试派工管理"
         description="管理安装调试派工单、批量派工、进度跟踪"
         actions={
-          <Button onClick={() => setShowCreateDialog(true)}>
+        <Button onClick={() => setShowCreateDialog(true)}>
             <Plus className="mr-2 h-4 w-4" />
             新建派工单
           </Button>
-        }
-      />
+        } />
+
 
       {/* Overview Section */}
       <InstallationDispatchOverview
         dispatches={orders}
         technicians={users}
-        onQuickAction={handleQuickAction}
-      />
+        onQuickAction={handleQuickAction} />
+
 
       {/* Filters and Search */}
       <Card>
@@ -537,8 +539,8 @@ export default function InstallationDispatchManagement() {
                   placeholder="搜索派工单..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
+                  className="pl-10" />
+
               </div>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -547,11 +549,11 @@ export default function InstallationDispatchManagement() {
                   <SelectValue placeholder="状态" />
                 </SelectTrigger>
                 <SelectContent>
-                  {DISPATCH_FILTER_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
+                  {DISPATCH_FILTER_OPTIONS.map((option) =>
+                  <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
               <Select value={filterPriority} onValueChange={setFilterPriority}>
@@ -559,11 +561,11 @@ export default function InstallationDispatchManagement() {
                   <SelectValue placeholder="优先级" />
                 </SelectTrigger>
                 <SelectContent>
-                  {PRIORITY_FILTER_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
+                  {PRIORITY_FILTER_OPTIONS.map((option) =>
+                  <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
               <Select value={filterProject} onValueChange={setFilterProject}>
@@ -571,11 +573,11 @@ export default function InstallationDispatchManagement() {
                   <SelectValue placeholder="项目" />
                 </SelectTrigger>
                 <SelectContent>
-                  {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
+                  {projects.map((project) =>
+                  <SelectItem key={project.id} value={project.id}>
                       {project.name}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
               <Select value={filterTaskType} onValueChange={setFilterTaskType}>
@@ -583,19 +585,19 @@ export default function InstallationDispatchManagement() {
                   <SelectValue placeholder="任务类型" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(INSTALLATION_TYPE).map(([key, value]) => (
-                    <SelectItem key={value} value={value}>
+                  {Object.entries(INSTALLATION_TYPE).map(([_key, value]) =>
+                  <SelectItem key={value} value={value}>
                       {INSTALLATION_TYPE_LABELS[value]}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           {/* Batch Actions */}
-          {selectedOrders.size > 0 && (
-            <div className="flex items-center justify-between p-4 bg-muted rounded-lg mb-4">
+          {selectedOrders.size > 0 &&
+          <div className="flex items-center justify-between p-4 bg-muted rounded-lg mb-4">
               <div className="flex items-center space-x-2">
                 <CheckSquare className="h-4 w-4" />
                 <span className="text-sm font-medium">
@@ -604,23 +606,23 @@ export default function InstallationDispatchManagement() {
               </div>
               <div className="flex space-x-2">
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowAssignDialog(true)}
-                >
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAssignDialog(true)}>
+
                   <Users className="mr-2 h-4 w-4" />
                   批量派工
                 </Button>
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedOrders(new Set())}
-                >
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedOrders(new Set())}>
+
                   取消选择
                 </Button>
               </div>
             </div>
-          )}
+          }
 
           {/* Orders Table */}
           <div className="rounded-md border">
@@ -630,8 +632,8 @@ export default function InstallationDispatchManagement() {
                   <TableHead className="w-12">
                     <CheckSquare
                       className="h-4 w-4 cursor-pointer"
-                      onClick={handleSelectAll}
-                    />
+                      onClick={handleSelectAll} />
+
                   </TableHead>
                   <TableHead>派工单号</TableHead>
                   <TableHead>任务标题</TableHead>
@@ -645,29 +647,29 @@ export default function InstallationDispatchManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {loading ? (
-                  <TableRow>
+                {loading ?
+                <TableRow>
                     <TableCell colSpan={10} className="text-center py-8">
                       加载中...
                     </TableCell>
-                  </TableRow>
-                ) : orders.length === 0 ? (
-                  <TableRow>
+                  </TableRow> :
+                orders.length === 0 ?
+                <TableRow>
                     <TableCell colSpan={10} className="text-center py-8">
                       暂无派工单
                     </TableCell>
-                  </TableRow>
-                ) : (
-                  orders.map((order) => (
-                    <TableRow key={order.id}>
+                  </TableRow> :
+
+                orders.map((order) =>
+                <TableRow key={order.id}>
                       <TableCell>
                         <Square
-                          className={cn(
-                            "h-4 w-4 cursor-pointer",
-                            selectedOrders.has(order.id) && "text-blue-500"
-                          )}
-                          onClick={() => handleSelectOrder(order.id)}
-                        />
+                      className={cn(
+                        "h-4 w-4 cursor-pointer",
+                        selectedOrders.has(order.id) && "text-blue-500"
+                      )}
+                      onClick={() => handleSelectOrder(order.id)} />
+
                       </TableCell>
                       <TableCell className="font-medium">
                         {order.order_number}
@@ -686,56 +688,56 @@ export default function InstallationDispatchManagement() {
                       <TableCell>
                         <div className="flex space-x-1">
                           <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedOrder(order);
-                              setShowDetailDialog(true);
-                            }}
-                          >
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedOrder(order);
+                          setShowDetailDialog(true);
+                        }}>
+
                             <Eye className="h-4 w-4" />
                           </Button>
-                          {order.status === DISPATCH_STATUS.PENDING && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedOrder(order);
-                                setShowAssignDialog(true);
-                              }}
-                            >
+                          {order.status === DISPATCH_STATUS.PENDING &&
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedOrder(order);
+                          setShowAssignDialog(true);
+                        }}>
+
                               <Users className="h-4 w-4" />
                             </Button>
-                          )}
-                          {order.status === DISPATCH_STATUS.IN_PROGRESS && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedOrder(order);
-                                setShowProgressDialog(true);
-                              }}
-                            >
+                      }
+                          {order.status === DISPATCH_STATUS.IN_PROGRESS &&
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedOrder(order);
+                          setShowProgressDialog(true);
+                        }}>
+
                               <Clock className="h-4 w-4" />
                             </Button>
-                          )}
-                          {order.status === DISPATCH_STATUS.IN_PROGRESS && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedOrder(order);
-                                setShowCompleteDialog(true);
-                              }}
-                            >
+                      }
+                          {order.status === DISPATCH_STATUS.IN_PROGRESS &&
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedOrder(order);
+                          setShowCompleteDialog(true);
+                        }}>
+
                               <CheckCircle2 className="h-4 w-4" />
                             </Button>
-                          )}
+                      }
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
+                )
+                }
               </TableBody>
             </Table>
           </div>
@@ -754,18 +756,18 @@ export default function InstallationDispatchManagement() {
               <Select
                 value={createData.project_id}
                 onValueChange={(value) =>
-                  setCreateData({ ...createData, project_id: value })
-                }
-              >
+                setCreateData({ ...createData, project_id: value })
+                }>
+
                 <SelectTrigger>
                   <SelectValue placeholder="选择项目" />
                 </SelectTrigger>
                 <SelectContent>
-                  {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
+                  {projects.map((project) =>
+                  <SelectItem key={project.id} value={project.id}>
                       {project.name}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -774,18 +776,18 @@ export default function InstallationDispatchManagement() {
               <Select
                 value={createData.machine_id}
                 onValueChange={(value) =>
-                  setCreateData({ ...createData, machine_id: value })
-                }
-              >
+                setCreateData({ ...createData, machine_id: value })
+                }>
+
                 <SelectTrigger>
                   <SelectValue placeholder="选择设备" />
                 </SelectTrigger>
                 <SelectContent>
-                  {machines.map((machine) => (
-                    <SelectItem key={machine.id} value={machine.id}>
+                  {machines.map((machine) =>
+                  <SelectItem key={machine.id} value={machine.id}>
                       {machine.name}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -794,18 +796,18 @@ export default function InstallationDispatchManagement() {
               <Select
                 value={createData.task_type}
                 onValueChange={(value) =>
-                  setCreateData({ ...createData, task_type: value })
-                }
-              >
+                setCreateData({ ...createData, task_type: value })
+                }>
+
                 <SelectTrigger>
                   <SelectValue placeholder="选择任务类型" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(INSTALLATION_TYPE).map(([key, value]) => (
-                    <SelectItem key={value} value={value}>
+                  {Object.entries(INSTALLATION_TYPE).map(([_key, value]) =>
+                  <SelectItem key={value} value={value}>
                       {INSTALLATION_TYPE_LABELS[value]}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -814,18 +816,18 @@ export default function InstallationDispatchManagement() {
               <Select
                 value={createData.priority}
                 onValueChange={(value) =>
-                  setCreateData({ ...createData, priority: value })
-                }
-              >
+                setCreateData({ ...createData, priority: value })
+                }>
+
                 <SelectTrigger>
                   <SelectValue placeholder="选择优先级" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(DISPATCH_PRIORITY).map(([key, value]) => (
-                    <SelectItem key={value} value={value}>
+                  {Object.entries(DISPATCH_PRIORITY).map(([_key, value]) =>
+                  <SelectItem key={value} value={value}>
                       {DISPATCH_PRIORITY_LABELS[value]}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -834,34 +836,34 @@ export default function InstallationDispatchManagement() {
               <Input
                 value={createData.task_title}
                 onChange={(e) =>
-                  setCreateData({ ...createData, task_title: e.target.value })
+                setCreateData({ ...createData, task_title: e.target.value })
                 }
-                placeholder="输入任务标题"
-              />
+                placeholder="输入任务标题" />
+
             </div>
             <div className="col-span-2">
               <label className="text-sm font-medium">任务描述</label>
               <Textarea
                 value={createData.task_description}
                 onChange={(e) =>
-                  setCreateData({
-                    ...createData,
-                    task_description: e.target.value,
-                  })
+                setCreateData({
+                  ...createData,
+                  task_description: e.target.value
+                })
                 }
                 placeholder="输入任务描述"
-                rows={3}
-              />
+                rows={3} />
+
             </div>
             <div>
               <label className="text-sm font-medium">地点</label>
               <Input
                 value={createData.location}
                 onChange={(e) =>
-                  setCreateData({ ...createData, location: e.target.value })
+                setCreateData({ ...createData, location: e.target.value })
                 }
-                placeholder="输入安装地点"
-              />
+                placeholder="输入安装地点" />
+
             </div>
             <div>
               <label className="text-sm font-medium">计划日期</label>
@@ -869,12 +871,12 @@ export default function InstallationDispatchManagement() {
                 type="date"
                 value={createData.scheduled_date}
                 onChange={(e) =>
-                  setCreateData({
-                    ...createData,
-                    scheduled_date: e.target.value,
-                  })
-                }
-              />
+                setCreateData({
+                  ...createData,
+                  scheduled_date: e.target.value
+                })
+                } />
+
             </div>
             <div>
               <label className="text-sm font-medium">预计工时</label>
@@ -882,50 +884,50 @@ export default function InstallationDispatchManagement() {
                 type="number"
                 value={createData.estimated_hours}
                 onChange={(e) =>
-                  setCreateData({
-                    ...createData,
-                    estimated_hours: e.target.value,
-                  })
+                setCreateData({
+                  ...createData,
+                  estimated_hours: e.target.value
+                })
                 }
-                placeholder="小时"
-              />
+                placeholder="小时" />
+
             </div>
             <div>
               <label className="text-sm font-medium">客户电话</label>
               <Input
                 value={createData.customer_phone}
                 onChange={(e) =>
-                  setCreateData({
-                    ...createData,
-                    customer_phone: e.target.value,
-                  })
+                setCreateData({
+                  ...createData,
+                  customer_phone: e.target.value
+                })
                 }
-                placeholder="输入客户电话"
-              />
+                placeholder="输入客户电话" />
+
             </div>
             <div className="col-span-2">
               <label className="text-sm font-medium">客户地址</label>
               <Input
                 value={createData.customer_address}
                 onChange={(e) =>
-                  setCreateData({
-                    ...createData,
-                    customer_address: e.target.value,
-                  })
+                setCreateData({
+                  ...createData,
+                  customer_address: e.target.value
+                })
                 }
-                placeholder="输入客户地址"
-              />
+                placeholder="输入客户地址" />
+
             </div>
             <div className="col-span-2">
               <label className="text-sm font-medium">备注</label>
               <Textarea
                 value={createData.remark}
                 onChange={(e) =>
-                  setCreateData({ ...createData, remark: e.target.value })
+                setCreateData({ ...createData, remark: e.target.value })
                 }
                 placeholder="输入备注信息"
-                rows={2}
-              />
+                rows={2} />
+
             </div>
           </div>
           <DialogFooter>
@@ -951,20 +953,20 @@ export default function InstallationDispatchManagement() {
               <Select
                 value={assignData.assigned_to_id}
                 onValueChange={(value) =>
-                  setAssignData({ ...assignData, assigned_to_id: value })
-                }
-              >
+                setAssignData({ ...assignData, assigned_to_id: value })
+                }>
+
                 <SelectTrigger>
                   <SelectValue placeholder="选择派工人员" />
                 </SelectTrigger>
                 <SelectContent>
-                  {users
-                    .filter((user) => user.role === "technician")
-                    .map((user) => (
-                      <SelectItem key={user.id} value={user.id}>
+                  {users.
+                  filter((user) => user.role === "technician").
+                  map((user) =>
+                  <SelectItem key={user.id} value={user.id}>
                         {user.name}
                       </SelectItem>
-                    ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -973,11 +975,11 @@ export default function InstallationDispatchManagement() {
               <Textarea
                 value={assignData.remark}
                 onChange={(e) =>
-                  setAssignData({ ...assignData, remark: e.target.value })
+                setAssignData({ ...assignData, remark: e.target.value })
                 }
                 placeholder="输入派工备注"
-                rows={3}
-              />
+                rows={3} />
+
             </div>
           </div>
           <DialogFooter>
@@ -986,11 +988,11 @@ export default function InstallationDispatchManagement() {
             </Button>
             <Button
               onClick={() =>
-                selectedOrders.size > 0
-                  ? handleBatchAssign()
-                  : handleAssignOrder(selectedOrder.id)
-              }
-            >
+              selectedOrders.size > 0 ?
+              handleBatchAssign() :
+              handleAssignOrder(selectedOrder.id)
+              }>
+
               {selectedOrders.size > 0 ? "批量派工" : "派工"}
             </Button>
           </DialogFooter>
@@ -1003,8 +1005,8 @@ export default function InstallationDispatchManagement() {
           <DialogHeader>
             <DialogTitle>派工单详情</DialogTitle>
           </DialogHeader>
-          {selectedOrder && (
-            <div className="space-y-4">
+          {selectedOrder &&
+          <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium">派工单号</label>
@@ -1073,16 +1075,16 @@ export default function InstallationDispatchManagement() {
                 <label className="text-sm font-medium">客户地址</label>
                 <p className="mt-1 text-sm">{selectedOrder.customer_address}</p>
               </div>
-              {selectedOrder.remark && (
-                <div>
+              {selectedOrder.remark &&
+            <div>
                   <label className="text-sm font-medium">备注</label>
                   <p className="mt-1 text-sm whitespace-pre-wrap">
                     {selectedOrder.remark}
                   </p>
                 </div>
-              )}
+            }
             </div>
-          )}
+          }
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
               关闭
@@ -1106,26 +1108,26 @@ export default function InstallationDispatchManagement() {
                 max="100"
                 value={progressData.progress}
                 onChange={(e) =>
-                  setProgressData({
-                    ...progressData,
-                    progress: parseInt(e.target.value) || 0,
-                  })
-                }
-              />
+                setProgressData({
+                  ...progressData,
+                  progress: parseInt(e.target.value) || 0
+                })
+                } />
+
             </div>
             <div>
               <label className="text-sm font-medium">执行记录</label>
               <Textarea
                 value={progressData.execution_notes}
                 onChange={(e) =>
-                  setProgressData({
-                    ...progressData,
-                    execution_notes: e.target.value,
-                  })
+                setProgressData({
+                  ...progressData,
+                  execution_notes: e.target.value
+                })
                 }
                 placeholder="输入执行记录"
-                rows={4}
-              />
+                rows={4} />
+
             </div>
           </div>
           <DialogFooter>
@@ -1150,55 +1152,55 @@ export default function InstallationDispatchManagement() {
                 type="number"
                 value={completeData.actual_hours}
                 onChange={(e) =>
-                  setCompleteData({
-                    ...completeData,
-                    actual_hours: e.target.value,
-                  })
+                setCompleteData({
+                  ...completeData,
+                  actual_hours: e.target.value
+                })
                 }
-                placeholder="小时"
-              />
+                placeholder="小时" />
+
             </div>
             <div>
               <label className="text-sm font-medium">执行记录</label>
               <Textarea
                 value={completeData.execution_notes}
                 onChange={(e) =>
-                  setCompleteData({
-                    ...completeData,
-                    execution_notes: e.target.value,
-                  })
+                setCompleteData({
+                  ...completeData,
+                  execution_notes: e.target.value
+                })
                 }
                 placeholder="输入执行记录"
-                rows={4}
-              />
+                rows={4} />
+
             </div>
             <div>
               <label className="text-sm font-medium">发现问题</label>
               <Textarea
                 value={completeData.issues_found}
                 onChange={(e) =>
-                  setCompleteData({
-                    ...completeData,
-                    issues_found: e.target.value,
-                  })
+                setCompleteData({
+                  ...completeData,
+                  issues_found: e.target.value
+                })
                 }
                 placeholder="输入发现的问题"
-                rows={3}
-              />
+                rows={3} />
+
             </div>
             <div>
               <label className="text-sm font-medium">解决方案</label>
               <Textarea
                 value={completeData.solution_provided}
                 onChange={(e) =>
-                  setCompleteData({
-                    ...completeData,
-                    solution_provided: e.target.value,
-                  })
+                setCompleteData({
+                  ...completeData,
+                  solution_provided: e.target.value
+                })
                 }
                 placeholder="输入解决方案"
-                rows={3}
-              />
+                rows={3} />
+
             </div>
           </div>
           <DialogFooter>
@@ -1209,6 +1211,6 @@ export default function InstallationDispatchManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }

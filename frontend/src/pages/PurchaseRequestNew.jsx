@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback as _useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -13,15 +13,15 @@ import {
   Building2,
   Calendar,
   DollarSign,
-  AlertCircle,
-} from "lucide-react";
+  AlertCircle } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -32,24 +32,24 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogBody,
-} from "../components/ui/dialog";
-import { cn } from "../lib/utils";
+  DialogBody } from
+"../components/ui/dialog";
+import { cn as _cn } from "../lib/utils";
 import { fadeIn } from "../lib/animations";
 import {
   purchaseApi,
   projectApi,
   materialApi,
   machineApi,
-  supplierApi,
-} from "../services/api";
+  supplierApi } from
+"../services/api";
 import { toast } from "../components/ui/toast";
 import { LoadingCard } from "../components/common";
 import { ErrorMessage } from "../components/common";
@@ -72,7 +72,7 @@ export default function PurchaseRequestNew() {
     request_reason: "",
     required_date: "",
     remark: "",
-    items: [],
+    items: []
   });
 
   // Dropdown data
@@ -110,15 +110,15 @@ export default function PurchaseRequestNew() {
         const response = await machineApi.list({
           project_id: formData.project_id,
           page: 1,
-          page_size: 100,
+          page_size: 100
         });
         const machineList = response.data?.items || response.data || [];
         setMachines(
           machineList.map((m) => ({
             id: m.id,
             machine_code: m.machine_code || m.machine_no,
-            machine_name: m.machine_name || m.machine_code || `机台${m.id}`,
-          })),
+            machine_name: m.machine_name || m.machine_code || `机台${m.id}`
+          }))
         );
       } catch (err) {
         console.error("Failed to load machines:", err);
@@ -170,7 +170,7 @@ export default function PurchaseRequestNew() {
             request_reason: data.request_reason || "",
             required_date: data.required_date || "",
             remark: data.remark || "",
-            items: data.items || [],
+            items: data.items || []
           });
         } catch (err) {
           console.error("Failed to load request:", err);
@@ -186,8 +186,8 @@ export default function PurchaseRequestNew() {
   // Calculate total amount
   const totalAmount = formData.items.reduce((sum, item) => {
     return (
-      sum + parseFloat(item.quantity || 0) * parseFloat(item.unit_price || 0)
-    );
+      sum + parseFloat(item.quantity || 0) * parseFloat(item.unit_price || 0));
+
   }, 0);
 
   // Filter materials for search
@@ -196,8 +196,8 @@ export default function PurchaseRequestNew() {
     const query = materialSearchQuery.toLowerCase();
     return (
       m.material_code?.toLowerCase().includes(query) ||
-      m.material_name?.toLowerCase().includes(query)
-    );
+      m.material_name?.toLowerCase().includes(query));
+
   });
 
   // Add item
@@ -205,19 +205,19 @@ export default function PurchaseRequestNew() {
     setFormData({
       ...formData,
       items: [
-        ...formData.items,
-        {
-          material_id: null,
-          material_code: "",
-          material_name: "",
-          specification: "",
-          unit: "件",
-          quantity: 1,
-          unit_price: 0,
-          required_date: formData.required_date || "",
-          remark: "",
-        },
-      ],
+      ...formData.items,
+      {
+        material_id: null,
+        material_code: "",
+        material_name: "",
+        specification: "",
+        unit: "件",
+        quantity: 1,
+        unit_price: 0,
+        required_date: formData.required_date || "",
+        remark: ""
+      }]
+
     });
   };
 
@@ -244,7 +244,7 @@ export default function PurchaseRequestNew() {
         material_code: material.material_code,
         material_name: material.material_name,
         unit: material.unit || "件",
-        unit_price: material.standard_price || material.last_price || 0,
+        unit_price: material.standard_price || material.last_price || 0
       };
       setFormData({ ...formData, items: newItems });
       setShowMaterialDialog(false);
@@ -300,8 +300,8 @@ export default function PurchaseRequestNew() {
           quantity: parseFloat(item.quantity),
           unit_price: parseFloat(item.unit_price || 0),
           required_date: item.required_date || null,
-          remark: item.remark || null,
-        })),
+          remark: item.remark || null
+        }))
       };
 
       if (isEdit) {
@@ -350,8 +350,8 @@ export default function PurchaseRequestNew() {
         <div className="container mx-auto px-4 py-6">
           <LoadingCard />
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -361,22 +361,22 @@ export default function PurchaseRequestNew() {
           title={isEdit ? "编辑采购申请" : "新建采购申请"}
           description={isEdit ? "修改采购申请信息" : "创建新的采购申请"}
           actions={
-            <Button
-              variant="outline"
-              onClick={() => navigate("/purchase-requests")}
-            >
+          <Button
+            variant="outline"
+            onClick={() => navigate("/purchase-requests")}>
+
               <ArrowLeft className="w-4 h-4 mr-2" />
               返回
             </Button>
-          }
-        />
+          } />
+
 
         {error && <ErrorMessage message={error} />}
 
         <motion.div
           variants={fadeIn}
-          className="grid grid-cols-1 lg:grid-cols-3 gap-6"
-        >
+          className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
           {/* Main Form */}
           <div className="lg:col-span-2 space-y-6">
             {/* Basic Info */}
@@ -391,26 +391,26 @@ export default function PurchaseRequestNew() {
                     <Select
                       value={formData.project_id?.toString() || ""}
                       onValueChange={(val) =>
-                        setFormData({
-                          ...formData,
-                          project_id: val ? parseInt(val) : null,
-                          machine_id: null,
-                        })
-                      }
-                    >
+                      setFormData({
+                        ...formData,
+                        project_id: val ? parseInt(val) : null,
+                        machine_id: null
+                      })
+                      }>
+
                       <SelectTrigger className="bg-slate-900/50 border-slate-700">
                         <SelectValue placeholder="选择项目（可选）" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">无</SelectItem>
-                        {projects.map((project) => (
-                          <SelectItem
-                            key={project.id}
-                            value={project.id.toString()}
-                          >
+                        {projects.map((project) =>
+                        <SelectItem
+                          key={project.id}
+                          value={project.id.toString()}>
+
                             {project.project_name}
                           </SelectItem>
-                        ))}
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -419,29 +419,29 @@ export default function PurchaseRequestNew() {
                     <Select
                       value={formData.machine_id?.toString() || ""}
                       onValueChange={(val) =>
-                        setFormData({
-                          ...formData,
-                          machine_id: val ? parseInt(val) : null,
-                        })
+                      setFormData({
+                        ...formData,
+                        machine_id: val ? parseInt(val) : null
+                      })
                       }
-                      disabled={!formData.project_id}
-                    >
+                      disabled={!formData.project_id}>
+
                       <SelectTrigger
                         className="bg-slate-900/50 border-slate-700"
-                        disabled={!formData.project_id}
-                      >
+                        disabled={!formData.project_id}>
+
                         <SelectValue placeholder="选择设备（可选）" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">无</SelectItem>
-                        {machines.map((machine) => (
-                          <SelectItem
-                            key={machine.id}
-                            value={machine.id.toString()}
-                          >
+                        {machines.map((machine) =>
+                        <SelectItem
+                          key={machine.id}
+                          value={machine.id.toString()}>
+
                             {machine.machine_code} - {machine.machine_name}
                           </SelectItem>
-                        ))}
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -455,24 +455,24 @@ export default function PurchaseRequestNew() {
                         } else {
                           setFormData({
                             ...formData,
-                            supplier_id: parseInt(val),
+                            supplier_id: parseInt(val)
                           });
                         }
-                      }}
-                    >
+                      }}>
+
                       <SelectTrigger className="bg-slate-900/50 border-slate-700">
                         <SelectValue placeholder="选择供应商" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">未指定</SelectItem>
-                        {suppliers.map((supplier) => (
-                          <SelectItem
-                            key={supplier.id}
-                            value={supplier.id.toString()}
-                          >
+                        {suppliers.map((supplier) =>
+                        <SelectItem
+                          key={supplier.id}
+                          value={supplier.id.toString()}>
+
                             {supplier.supplier_name || supplier.name}
                           </SelectItem>
-                        ))}
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -481,9 +481,9 @@ export default function PurchaseRequestNew() {
                     <Select
                       value={formData.request_type}
                       onValueChange={(val) =>
-                        setFormData({ ...formData, request_type: val })
-                      }
-                    >
+                      setFormData({ ...formData, request_type: val })
+                      }>
+
                       <SelectTrigger className="bg-slate-900/50 border-slate-700">
                         <SelectValue />
                       </SelectTrigger>
@@ -499,13 +499,13 @@ export default function PurchaseRequestNew() {
                       type="date"
                       value={formData.required_date}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          required_date: e.target.value,
-                        })
+                      setFormData({
+                        ...formData,
+                        required_date: e.target.value
+                      })
                       }
-                      className="bg-slate-900/50 border-slate-700"
-                    />
+                      className="bg-slate-900/50 border-slate-700" />
+
                   </div>
                 </div>
                 <div>
@@ -513,27 +513,27 @@ export default function PurchaseRequestNew() {
                   <Textarea
                     value={formData.request_reason}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        request_reason: e.target.value,
-                      })
+                    setFormData({
+                      ...formData,
+                      request_reason: e.target.value
+                    })
                     }
                     placeholder="填写申请原因..."
                     className="bg-slate-900/50 border-slate-700 text-slate-200"
-                    rows={3}
-                  />
+                    rows={3} />
+
                 </div>
                 <div>
                   <Label className="text-slate-400">备注</Label>
                   <Textarea
                     value={formData.remark}
                     onChange={(e) =>
-                      setFormData({ ...formData, remark: e.target.value })
+                    setFormData({ ...formData, remark: e.target.value })
                     }
                     placeholder="备注信息（可选）..."
                     className="bg-slate-900/50 border-slate-700 text-slate-200"
-                    rows={2}
-                  />
+                    rows={2} />
+
                 </div>
               </CardContent>
             </Card>
@@ -550,28 +550,28 @@ export default function PurchaseRequestNew() {
                 </div>
               </CardHeader>
               <CardContent>
-                {formData.items.length === 0 ? (
-                  <div className="text-center py-8 text-slate-400">
+                {formData.items.length === 0 ?
+                <div className="text-center py-8 text-slate-400">
                     <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
                     <p>暂无物料，点击上方按钮添加</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {formData.items.map((item, index) => (
-                      <div
-                        key={index}
-                        className="p-4 border border-slate-700 rounded-lg bg-slate-900/30"
-                      >
+                  </div> :
+
+                <div className="space-y-3">
+                    {formData.items.map((item, index) =>
+                  <div
+                    key={index}
+                    className="p-4 border border-slate-700 rounded-lg bg-slate-900/30">
+
                         <div className="flex items-start justify-between mb-3">
                           <Badge className="bg-blue-500/20 text-blue-400">
                             物料 {index + 1}
                           </Badge>
                           <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleRemoveItem(index)}
-                            className="text-red-400 hover:text-red-300"
-                          >
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleRemoveItem(index)}
+                        className="text-red-400 hover:text-red-300">
+
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
@@ -582,124 +582,124 @@ export default function PurchaseRequestNew() {
                             </Label>
                             <div className="flex gap-2">
                               <Input
-                                placeholder="物料编码"
-                                value={item.material_code}
-                                onChange={(e) =>
-                                  handleUpdateItem(
-                                    index,
-                                    "material_code",
-                                    e.target.value,
-                                  )
-                                }
-                                className="bg-slate-800 border-slate-700 text-slate-200"
-                              />
+                            placeholder="物料编码"
+                            value={item.material_code}
+                            onChange={(e) =>
+                            handleUpdateItem(
+                              index,
+                              "material_code",
+                              e.target.value
+                            )
+                            }
+                            className="bg-slate-800 border-slate-700 text-slate-200" />
+
                               <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleOpenMaterialDialog(index)}
-                                className="whitespace-nowrap"
-                              >
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleOpenMaterialDialog(index)}
+                            className="whitespace-nowrap">
+
                                 <Search className="w-4 h-4" />
                               </Button>
                             </div>
                             <Input
-                              placeholder="物料名称 *"
-                              value={item.material_name}
-                              onChange={(e) =>
-                                handleUpdateItem(
-                                  index,
-                                  "material_name",
-                                  e.target.value,
-                                )
-                              }
-                              className="bg-slate-800 border-slate-700 text-slate-200 mt-2"
-                            />
+                          placeholder="物料名称 *"
+                          value={item.material_name}
+                          onChange={(e) =>
+                          handleUpdateItem(
+                            index,
+                            "material_name",
+                            e.target.value
+                          )
+                          }
+                          className="bg-slate-800 border-slate-700 text-slate-200 mt-2" />
+
                           </div>
                           <div>
                             <Label className="text-slate-400 text-xs">
                               数量 *
                             </Label>
                             <Input
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              value={item.quantity}
-                              onChange={(e) =>
-                                handleUpdateItem(
-                                  index,
-                                  "quantity",
-                                  parseFloat(e.target.value) || 0,
-                                )
-                              }
-                              className="bg-slate-800 border-slate-700 text-slate-200"
-                            />
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={item.quantity}
+                          onChange={(e) =>
+                          handleUpdateItem(
+                            index,
+                            "quantity",
+                            parseFloat(e.target.value) || 0
+                          )
+                          }
+                          className="bg-slate-800 border-slate-700 text-slate-200" />
+
                           </div>
                           <div>
                             <Label className="text-slate-400 text-xs">
                               单位
                             </Label>
                             <Input
-                              value={item.unit}
-                              onChange={(e) =>
-                                handleUpdateItem(index, "unit", e.target.value)
-                              }
-                              className="bg-slate-800 border-slate-700 text-slate-200"
-                            />
+                          value={item.unit}
+                          onChange={(e) =>
+                          handleUpdateItem(index, "unit", e.target.value)
+                          }
+                          className="bg-slate-800 border-slate-700 text-slate-200" />
+
                           </div>
                           <div>
                             <Label className="text-slate-400 text-xs">
                               单价
                             </Label>
                             <Input
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              value={item.unit_price}
-                              onChange={(e) =>
-                                handleUpdateItem(
-                                  index,
-                                  "unit_price",
-                                  parseFloat(e.target.value) || 0,
-                                )
-                              }
-                              className="bg-slate-800 border-slate-700 text-slate-200"
-                            />
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={item.unit_price}
+                          onChange={(e) =>
+                          handleUpdateItem(
+                            index,
+                            "unit_price",
+                            parseFloat(e.target.value) || 0
+                          )
+                          }
+                          className="bg-slate-800 border-slate-700 text-slate-200" />
+
                           </div>
                           <div>
                             <Label className="text-slate-400 text-xs">
                               金额
                             </Label>
                             <Input
-                              value={(
-                                parseFloat(item.quantity || 0) *
-                                parseFloat(item.unit_price || 0)
-                              ).toFixed(2)}
-                              disabled
-                              className="bg-slate-800/50 border-slate-700 text-slate-300"
-                            />
+                          value={(
+                          parseFloat(item.quantity || 0) *
+                          parseFloat(item.unit_price || 0)).
+                          toFixed(2)}
+                          disabled
+                          className="bg-slate-800/50 border-slate-700 text-slate-300" />
+
                           </div>
                           <div>
                             <Label className="text-slate-400 text-xs">
                               需求日期
                             </Label>
                             <Input
-                              type="date"
-                              value={item.required_date}
-                              onChange={(e) =>
-                                handleUpdateItem(
-                                  index,
-                                  "required_date",
-                                  e.target.value,
-                                )
-                              }
-                              className="bg-slate-800 border-slate-700 text-slate-200"
-                            />
+                          type="date"
+                          value={item.required_date}
+                          onChange={(e) =>
+                          handleUpdateItem(
+                            index,
+                            "required_date",
+                            e.target.value
+                          )
+                          }
+                          className="bg-slate-800 border-slate-700 text-slate-200" />
+
                           </div>
                         </div>
                       </div>
-                    ))}
+                  )}
                   </div>
-                )}
+                }
               </CardContent>
             </Card>
           </div>
@@ -727,16 +727,16 @@ export default function PurchaseRequestNew() {
                   <Button
                     className="w-full bg-blue-600 hover:bg-blue-700"
                     onClick={handleSave}
-                    disabled={saving}
-                  >
+                    disabled={saving}>
+
                     <Save className="w-4 h-4 mr-2" />
                     {saving ? "保存中..." : "保存草稿"}
                   </Button>
                   <Button
                     className="w-full bg-emerald-600 hover:bg-emerald-700"
                     onClick={handleSubmit}
-                    disabled={saving}
-                  >
+                    disabled={saving}>
+
                     <Send className="w-4 h-4 mr-2" />
                     {saving ? "提交中..." : "保存并提交"}
                   </Button>
@@ -759,21 +759,21 @@ export default function PurchaseRequestNew() {
                   value={materialSearchQuery}
                   onChange={(e) => setMaterialSearchQuery(e.target.value)}
                   icon={Search}
-                  className="bg-slate-800 border-slate-700"
-                />
+                  className="bg-slate-800 border-slate-700" />
+
                 <div className="max-h-96 overflow-y-auto space-y-2">
-                  {filteredMaterials.length === 0 ? (
-                    <div className="text-center py-8 text-slate-400">
+                  {filteredMaterials.length === 0 ?
+                  <div className="text-center py-8 text-slate-400">
                       <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
                       <p>未找到物料</p>
-                    </div>
-                  ) : (
-                    filteredMaterials.map((material) => (
-                      <div
-                        key={material.id}
-                        onClick={() => handleSelectMaterial(material)}
-                        className="p-3 border border-slate-700 rounded-lg hover:border-blue-500 cursor-pointer transition-colors"
-                      >
+                    </div> :
+
+                  filteredMaterials.map((material) =>
+                  <div
+                    key={material.id}
+                    onClick={() => handleSelectMaterial(material)}
+                    className="p-3 border border-slate-700 rounded-lg hover:border-blue-500 cursor-pointer transition-colors">
+
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-slate-200 font-medium">
@@ -787,8 +787,8 @@ export default function PurchaseRequestNew() {
                             <p className="text-slate-300">
                               ¥
                               {material.standard_price ||
-                                material.last_price ||
-                                0}
+                          material.last_price ||
+                          0}
                             </p>
                             <p className="text-slate-500 text-xs">
                               {material.unit || "件"}
@@ -796,14 +796,14 @@ export default function PurchaseRequestNew() {
                           </div>
                         </div>
                       </div>
-                    ))
-                  )}
+                  )
+                  }
                 </div>
               </div>
             </DialogBody>
           </DialogContent>
         </Dialog>
       </div>
-    </div>
-  );
+    </div>);
+
 }

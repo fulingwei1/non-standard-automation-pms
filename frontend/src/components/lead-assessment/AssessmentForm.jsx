@@ -16,8 +16,8 @@ import {
   AlertCircle,
   CheckCircle,
   Calculator,
-  Info
-} from "lucide-react";
+  Info } from
+"lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -29,22 +29,22 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../../components/ui/select";
+  SelectValue } from
+"../../components/ui/select";
 import {
   RadioGroup,
-  RadioGroupItem,
-} from "../../components/ui/radio-group";
+  RadioGroupItem } from
+"../../components/ui/radio-group";
 import { Checkbox } from "../../components/ui/checkbox";
 import {
-  Textarea,
-} from "../../components/ui/textarea";
+  Textarea } from
+"../../components/ui/textarea";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
-} from "../../components/ui/dialog";
+  DialogTitle } from
+"../../components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { cn } from "../../lib/utils";
@@ -59,8 +59,8 @@ import {
   INDUSTRIES,
   LEAD_SOURCES,
   LEAD_PRIORITIES,
-  LEAD_STATUSES
-} from "./leadAssessmentConstants";
+  LEAD_STATUSES } from
+"./leadAssessmentConstants";
 
 export const AssessmentForm = ({
   lead,
@@ -75,7 +75,7 @@ export const AssessmentForm = ({
   const [formData, setFormData] = useState({});
   const [scores, setScores] = useState({});
   const [isCalculating, setIsCalculating] = useState(false);
-  const [showResults, setShowResults] = useState(false);
+  const [_showResults, setShowResults] = useState(false);
   const [formErrors, setFormErrors] = useState({});
   const [draftSaved, setDraftSaved] = useState(false);
 
@@ -128,7 +128,7 @@ export const AssessmentForm = ({
         return 0;
       }
 
-      ASSESSMENT_QUESTIONS[category].forEach(question => {
+      ASSESSMENT_QUESTIONS[category].forEach((question) => {
         const answer = questionData[question.id];
         if (answer !== undefined && answer !== null) {
           let questionScore = 0;
@@ -138,11 +138,13 @@ export const AssessmentForm = ({
               questionScore = answer ? question.weight * 5 : 0;
               break;
             case 'rating':
-              questionScore = (answer / 5) * question.weight * 5;
+              questionScore = answer / 5 * question.weight * 5;
               break;
             case 'select':
-              const option = question.options.find(opt => opt.value === answer);
-              questionScore = option ? option.score : 0;
+              {
+                const option = question.options.find((opt) => opt.value === answer);
+                questionScore = option ? option.score : 0;
+              }
               break;
             default:
               questionScore = answer * question.weight;
@@ -154,7 +156,7 @@ export const AssessmentForm = ({
       });
 
       // 将 0-5 的评分标准转换为 0-100 的百分制，便于与进度条/阈值配置一致
-      return totalWeight > 0 ? Math.round(((totalScore / totalWeight) * 20) * 100) / 100 : 0;
+      return totalWeight > 0 ? Math.round(totalScore / totalWeight * 20 * 100) / 100 : 0;
     };
   }, []);
 
@@ -163,29 +165,29 @@ export const AssessmentForm = ({
     let weightedSum = 0;
     let totalWeight = 0;
 
-    SCORING_CATEGORIES.forEach(category => {
+    SCORING_CATEGORIES.forEach((category) => {
       const categoryScore = calculateCategoryScore(category.id, formData.assessmentQuestions);
       const weightedScore = categoryScore * (category.weight / 100);
 
       weightedSum += weightedScore;
       totalWeight += category.weight / 100;
 
-      setScores(prev => ({
+      setScores((prev) => ({
         ...prev,
         [category.id]: categoryScore,
         [`${category.id}_weighted`]: weightedScore
       }));
     });
 
-    const finalScore = totalWeight > 0 ? Math.round((weightedSum / totalWeight) * 100) / 100 : 0;
-    setScores(prev => ({ ...prev, total: finalScore }));
+    const finalScore = totalWeight > 0 ? Math.round(weightedSum / totalWeight * 100) / 100 : 0;
+    setScores((prev) => ({ ...prev, total: finalScore }));
 
     return finalScore;
   }, [formData.assessmentQuestions, calculateCategoryScore]);
 
   // 获取评分等级
   const getScoreLevel = useMemo(() => {
-    return Object.values(SCORE_THRESHOLDS).find(threshold => {
+    return Object.values(SCORE_THRESHOLDS).find((threshold) => {
       const score = totalScore;
       if (threshold.min && threshold.max) {
         return score >= threshold.min && score <= threshold.max;
@@ -199,7 +201,7 @@ export const AssessmentForm = ({
 
   // 获取跟进策略
   const getFollowUpStrategy = useMemo(() => {
-    return FOLLOW_UP_STRATEGIES.find(strategy => {
+    return FOLLOW_UP_STRATEGIES.find((strategy) => {
       const score = totalScore;
       return score >= strategy.scoreRange[0] && score <= strategy.scoreRange[1];
     }) || FOLLOW_UP_STRATEGIES[FOLLOW_UP_STRATEGIES.length - 1];
@@ -207,7 +209,7 @@ export const AssessmentForm = ({
 
   // 处理表单字段变化
   const handleFieldChange = (field, value) => {
-    setFormData(prev => {
+    setFormData((prev) => {
       const updatedData = { ...prev, [field]: value };
       if (onChange) onChange(updatedData);
       return updatedData;
@@ -224,7 +226,7 @@ export const AssessmentForm = ({
       }
     };
 
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       assessmentQuestions: updatedQuestions
     }));
@@ -257,7 +259,7 @@ export const AssessmentForm = ({
     setIsCalculating(true);
 
     // 模拟计算过程
-    await new Promise(resolve => setTimeout(resolve, 800));
+    await new Promise((resolve) => setTimeout(resolve, 800));
 
     setIsCalculating(false);
     setShowResults(true);
@@ -319,12 +321,12 @@ export const AssessmentForm = ({
             <Info className="h-4 w-4 text-slate-500 mt-0.5 flex-shrink-0" />
           </div>
 
-          {question.type === 'boolean' && (
-            <RadioGroup
-              value={currentValue || ""}
-              onValueChange={(value) => handleQuestionChange(categoryId, question.id, value === 'true')}
-              className="flex gap-4"
-            >
+          {question.type === 'boolean' &&
+          <RadioGroup
+            value={currentValue || ""}
+            onValueChange={(value) => handleQuestionChange(categoryId, question.id, value === 'true')}
+            className="flex gap-4">
+
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="true" id={`${questionId}_yes`} />
                 <Label htmlFor={`${questionId}_yes`} className="text-sm">是</Label>
@@ -334,58 +336,58 @@ export const AssessmentForm = ({
                 <Label htmlFor={`${questionId}_no`} className="text-sm">否</Label>
               </div>
             </RadioGroup>
-          )}
+          }
 
-          {question.type === 'rating' && (
-            <div className="space-y-2">
+          {question.type === 'rating' &&
+          <div className="space-y-2">
               <RadioGroup
-                value={currentValue || ""}
-                onValueChange={(value) => handleQuestionChange(categoryId, question.id, parseInt(value))}
-                className="flex gap-4"
-              >
-                {[1, 2, 3, 4, 5].map(rating => (
-                  <div key={rating} className="flex items-center space-x-2">
+              value={currentValue || ""}
+              onValueChange={(value) => handleQuestionChange(categoryId, question.id, parseInt(value))}
+              className="flex gap-4">
+
+                {[1, 2, 3, 4, 5].map((rating) =>
+              <div key={rating} className="flex items-center space-x-2">
                     <RadioGroupItem value={rating.toString()} id={`${questionId}_${rating}`} />
                     <Label htmlFor={`${questionId}_${rating}`} className="text-sm flex items-center gap-1">
-                      {[...Array(rating)].map((_, i) => (
-                        <span key={i} className="text-amber-500">★</span>
-                      ))}
+                      {[...Array(rating)].map((_, i) =>
+                  <span key={i} className="text-amber-500">★</span>
+                  )}
                     </Label>
                   </div>
-                ))}
+              )}
               </RadioGroup>
               <div className="text-xs text-slate-500 text-right">
                 权重: {(question.weight * 100).toFixed(0)}%
               </div>
             </div>
-          )}
+          }
 
-          {question.type === 'select' && (
-            <Select
-              value={currentValue || ""}
-              onValueChange={(value) => handleQuestionChange(categoryId, question.id, value)}
-            >
+          {question.type === 'select' &&
+          <Select
+            value={currentValue || ""}
+            onValueChange={(value) => handleQuestionChange(categoryId, question.id, value)}>
+
               <SelectTrigger>
                 <SelectValue placeholder="请选择..." />
               </SelectTrigger>
               <SelectContent>
-                {question.options.map(option => (
-                  <SelectItem key={option.value} value={option.value}>
+                {question.options.map((option) =>
+              <SelectItem key={option.value} value={option.value}>
                     <div className="flex items-center justify-between w-full">
                       <span>{option.label}</span>
-                      {option.score && (
-                        <Badge variant="secondary" className="ml-2">
+                      {option.score &&
+                  <Badge variant="secondary" className="ml-2">
                           +{option.score}分
                         </Badge>
-                      )}
+                  }
                     </div>
                   </SelectItem>
-                ))}
+              )}
               </SelectContent>
             </Select>
-          )}
-        </div>
-      );
+          }
+        </div>);
+
     });
   };
 
@@ -403,19 +405,19 @@ export const AssessmentForm = ({
         </div>
 
         <div className="space-y-3">
-          {SCORING_CATEGORIES.map(category => {
+          {SCORING_CATEGORIES.map((category) => {
             const score = scores[category.id] || 0;
-            const weightedScore = scores[`${category.id}_weighted`] || 0;
+            const _weightedScore = scores[`${category.id}_weighted`] || 0;
 
             return (
               <div key={category.id} className="space-y-1">
                 <div className="flex justify-between text-sm">
                   <span className="font-medium">{category.name}</span>
-                  <span className="text-slate-600">{score.toFixed(1)}分 ({(category.weight)}%)</span>
+                  <span className="text-slate-600">{score.toFixed(1)}分 ({category.weight}%)</span>
                 </div>
                 <Progress value={score} className="h-2" />
-              </div>
-            );
+              </div>);
+
           })}
         </div>
 
@@ -433,17 +435,17 @@ export const AssessmentForm = ({
             </div>
           </AlertDescription>
         </Alert>
-      </div>
-    );
+      </div>);
+
   };
 
   // 表单标签页
   const tabs = [
-    { value: "basic", label: "基础信息" },
-    { value: "project", label: "项目详情" },
-    { value: "assessment", label: "评估问答" },
-    { value: "summary", label: "评分结果" }
-  ];
+  { value: "basic", label: "基础信息" },
+  { value: "project", label: "项目详情" },
+  { value: "assessment", label: "评估问答" },
+  { value: "summary", label: "评分结果" }];
+
 
   if (!isOpen) return null;
 
@@ -454,11 +456,11 @@ export const AssessmentForm = ({
           <DialogTitle className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5" />
             线索评估
-            {lead && (
-              <Badge variant="outline" className="ml-2">
+            {lead &&
+            <Badge variant="outline" className="ml-2">
                 {lead.contactName} - {lead.companyName}
               </Badge>
-            )}
+            }
           </DialogTitle>
         </DialogHeader>
 
@@ -469,25 +471,25 @@ export const AssessmentForm = ({
               <Calculator className="h-4 w-4" />
               评估进度
             </div>
-            <Progress value={activeTab === "summary" ? 100 : (tabs.findIndex(t => t.value === activeTab) + 1) * 25} className="flex-1 mx-4" />
+            <Progress value={activeTab === "summary" ? 100 : (tabs.findIndex((t) => t.value === activeTab) + 1) * 25} className="flex-1 mx-4" />
             <div className="text-sm font-medium">
               {activeTab === "summary" && "计算完成"}
-              {activeTab !== "summary" && `${tabs.findIndex(t => t.value === activeTab) + 1}/${tabs.length}`}
+              {activeTab !== "summary" && `${tabs.findIndex((t) => t.value === activeTab) + 1}/${tabs.length}`}
             </div>
           </div>
 
           {/* 表单标签页 */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-4">
-              {tabs.map(tab => (
-                <TabsTrigger
-                  key={tab.value}
-                  value={tab.value}
-                  className="text-xs"
-                >
+              {tabs.map((tab) =>
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className="text-xs">
+
                   {tab.label}
                 </TabsTrigger>
-              ))}
+              )}
             </TabsList>
 
             {/* 基础信息 */}
@@ -503,19 +505,19 @@ export const AssessmentForm = ({
                       <Input
                         value={formData.contactName || ""}
                         onChange={(e) => handleFieldChange("contactName", e.target.value)}
-                        placeholder="请输入联系人姓名"
-                      />
-                      {formErrors.contactName && (
-                        <div className="text-sm text-red-600">{formErrors.contactName}</div>
-                      )}
+                        placeholder="请输入联系人姓名" />
+
+                      {formErrors.contactName &&
+                      <div className="text-sm text-red-600">{formErrors.contactName}</div>
+                      }
                     </div>
                     <div className="space-y-2">
                       <Label>职位</Label>
                       <Input
                         value={formData.contactTitle || ""}
                         onChange={(e) => handleFieldChange("contactTitle", e.target.value)}
-                        placeholder="请输入职位"
-                      />
+                        placeholder="请输入职位" />
+
                     </div>
                   </div>
 
@@ -525,8 +527,8 @@ export const AssessmentForm = ({
                       <Input
                         value={formData.contactPhone || ""}
                         onChange={(e) => handleFieldChange("contactPhone", e.target.value)}
-                        placeholder="请输入联系电话"
-                      />
+                        placeholder="请输入联系电话" />
+
                     </div>
                     <div className="space-y-2">
                       <Label>联系邮箱</Label>
@@ -534,8 +536,8 @@ export const AssessmentForm = ({
                         type="email"
                         value={formData.contactEmail || ""}
                         onChange={(e) => handleFieldChange("contactEmail", e.target.value)}
-                        placeholder="请输入联系邮箱"
-                      />
+                        placeholder="请输入联系邮箱" />
+
                     </div>
                   </div>
                 </CardContent>
@@ -551,8 +553,8 @@ export const AssessmentForm = ({
                     <Input
                       value={formData.companyName || ""}
                       onChange={(e) => handleFieldChange("companyName", e.target.value)}
-                      placeholder="请输入公司名称"
-                    />
+                      placeholder="请输入公司名称" />
+
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -561,8 +563,8 @@ export const AssessmentForm = ({
                       <Input
                         value={formData.companyType || ""}
                         onChange={(e) => handleFieldChange("companyType", e.target.value)}
-                        placeholder="如：国企、外企、民营"
-                      />
+                        placeholder="如：国企、外企、民营" />
+
                     </div>
                     <div className="space-y-2">
                       <Label>行业领域 *</Label>
@@ -571,8 +573,8 @@ export const AssessmentForm = ({
                           <SelectValue placeholder="请选择行业领域" />
                         </SelectTrigger>
                         <SelectContent>
-                          {INDUSTRIES.map(industry => (
-                            <SelectItem key={industry.value} value={industry.value}>
+                          {INDUSTRIES.map((industry) =>
+                          <SelectItem key={industry.value} value={industry.value}>
                               <div className="flex items-center justify-between w-full">
                                 <span>{industry.label}</span>
                                 <Badge variant="secondary" className="ml-2">
@@ -580,12 +582,12 @@ export const AssessmentForm = ({
                                 </Badge>
                               </div>
                             </SelectItem>
-                          ))}
+                          )}
                         </SelectContent>
                       </Select>
-                      {formErrors.industry && (
-                        <div className="text-sm text-red-600">{formErrors.industry}</div>
-                      )}
+                      {formErrors.industry &&
+                      <div className="text-sm text-red-600">{formErrors.industry}</div>
+                      }
                     </div>
                   </div>
 
@@ -596,8 +598,8 @@ export const AssessmentForm = ({
                         <SelectValue placeholder="请选择线索来源" />
                       </SelectTrigger>
                       <SelectContent>
-                        {LEAD_SOURCES.map(source => (
-                          <SelectItem key={source.value} value={source.value}>
+                        {LEAD_SOURCES.map((source) =>
+                        <SelectItem key={source.value} value={source.value}>
                             <div className="flex items-center justify-between w-full">
                               <span>{source.label}</span>
                               <Badge variant="secondary" className="ml-2">
@@ -605,7 +607,7 @@ export const AssessmentForm = ({
                               </Badge>
                             </div>
                           </SelectItem>
-                        ))}
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -625,8 +627,8 @@ export const AssessmentForm = ({
                     <Input
                       value={formData.projectName || ""}
                       onChange={(e) => handleFieldChange("projectName", e.target.value)}
-                      placeholder="请输入项目名称"
-                    />
+                      placeholder="请输入项目名称" />
+
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -635,8 +637,8 @@ export const AssessmentForm = ({
                       <Input
                         value={formData.projectType || ""}
                         onChange={(e) => handleFieldChange("projectType", e.target.value)}
-                        placeholder="如：ICT测试设备、老化设备等"
-                      />
+                        placeholder="如：ICT测试设备、老化设备等" />
+
                     </div>
                     <div className="space-y-2">
                       <Label>客户类型</Label>
@@ -645,14 +647,14 @@ export const AssessmentForm = ({
                           <SelectValue placeholder="请选择客户类型" />
                         </SelectTrigger>
                         <SelectContent>
-                          {LEAD_TYPES.map(type => (
-                            <SelectItem key={type.value} value={type.value}>
+                          {LEAD_TYPES.map((type) =>
+                          <SelectItem key={type.value} value={type.value}>
                               <div className="flex items-center justify-between w-full">
                                 <span>{type.label}</span>
                                 {type.score && <Badge variant="secondary" className="ml-2">+{type.score}分</Badge>}
                               </div>
                             </SelectItem>
-                          ))}
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
@@ -664,8 +666,8 @@ export const AssessmentForm = ({
                       value={formData.application || ""}
                       onChange={(e) => handleFieldChange("application", e.target.value)}
                       placeholder="请描述项目应用领域"
-                      rows={3}
-                    />
+                      rows={3} />
+
                   </div>
                 </CardContent>
               </Card>
@@ -682,14 +684,14 @@ export const AssessmentForm = ({
                         <SelectValue placeholder="请选择预算范围" />
                       </SelectTrigger>
                       <SelectContent>
-                        {BUDGET_RANGES.map(budget => (
-                          <SelectItem key={budget.value} value={budget.value}>
+                        {BUDGET_RANGES.map((budget) =>
+                        <SelectItem key={budget.value} value={budget.value}>
                             <div>
                               <div className="font-medium">{budget.label}</div>
                               <div className="text-sm text-slate-600">{budget.description}</div>
                             </div>
                           </SelectItem>
-                        ))}
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -701,8 +703,8 @@ export const AssessmentForm = ({
                         type="number"
                         value={formData.budgetEstimate || ""}
                         onChange={(e) => handleFieldChange("budgetEstimate", e.target.value)}
-                        placeholder="请输入预计预算"
-                      />
+                        placeholder="请输入预计预算" />
+
                     </div>
                     <div className="space-y-2">
                       <Label>决策时间 *</Label>
@@ -711,8 +713,8 @@ export const AssessmentForm = ({
                           <SelectValue placeholder="请选择决策时间" />
                         </SelectTrigger>
                         <SelectContent>
-                          {DECISION_TIMELINES.map(timeline => (
-                            <SelectItem key={timeline.value} value={timeline.value}>
+                          {DECISION_TIMELINES.map((timeline) =>
+                          <SelectItem key={timeline.value} value={timeline.value}>
                               <div className="flex items-center justify-between w-full">
                                 <span>{timeline.label}</span>
                                 <Badge variant="secondary" className="ml-2">
@@ -720,12 +722,12 @@ export const AssessmentForm = ({
                                 </Badge>
                               </div>
                             </SelectItem>
-                          ))}
+                          )}
                         </SelectContent>
                       </Select>
-                      {formErrors.decisionTimeline && (
-                        <div className="text-sm text-red-600">{formErrors.decisionTimeline}</div>
-                      )}
+                      {formErrors.decisionTimeline &&
+                      <div className="text-sm text-red-600">{formErrors.decisionTimeline}</div>
+                      }
                     </div>
                   </div>
 
@@ -735,8 +737,8 @@ export const AssessmentForm = ({
                       <Input
                         type="date"
                         value={formData.projectStartDate || ""}
-                        onChange={(e) => handleFieldChange("projectStartDate", e.target.value)}
-                      />
+                        onChange={(e) => handleFieldChange("projectStartDate", e.target.value)} />
+
                     </div>
                     <div className="space-y-2">
                       <Label>预计项目周期</Label>
@@ -759,8 +761,8 @@ export const AssessmentForm = ({
 
             {/* 评估问答 */}
             <TabsContent value="assessment" className="space-y-6">
-              {SCORING_CATEGORIES.map((category, index) => (
-                <Card key={category.id}>
+              {SCORING_CATEGORIES.map((category, index) =>
+              <Card key={category.id}>
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center justify-between">
                       <span>{index + 1}. {category.name}</span>
@@ -773,7 +775,7 @@ export const AssessmentForm = ({
                     {renderAssessmentQuestions(category.id)}
                   </CardContent>
                 </Card>
-              ))}
+              )}
 
               <div className="flex justify-between items-center">
                 <Button variant="outline" onClick={() => setActiveTab("basic")}>
@@ -816,9 +818,9 @@ export const AssessmentForm = ({
                       <div className="space-y-3">
                         <div>
                           <strong>跟进频率:</strong> {getFollowUpStrategy.frequency === 'daily' ? '每天' :
-                            getFollowUpStrategy.frequency === 'every_2_days' ? '每两天' :
-                            getFollowUpStrategy.frequency === 'weekly' ? '每周' :
-                            getFollowUpStrategy.frequency === 'biweekly' ? '每两周' : '每月'}
+                          getFollowUpStrategy.frequency === 'every_2_days' ? '每两天' :
+                          getFollowUpStrategy.frequency === 'weekly' ? '每周' :
+                          getFollowUpStrategy.frequency === 'biweekly' ? '每两周' : '每月'}
                         </div>
                         <div>
                           <strong>推荐联系方式:</strong> {getFollowUpStrategy.contactMethod}
@@ -843,14 +845,14 @@ export const AssessmentForm = ({
               </Button>
             </div>
 
-            {draftSaved && (
-              <Alert className="max-w-sm">
+            {draftSaved &&
+            <Alert className="max-w-sm">
                 <CheckCircle className="h-4 w-4" />
                 <AlertDescription className="text-sm">
                   草稿已保存
                 </AlertDescription>
               </Alert>
-            )}
+            }
 
             <div className="flex gap-2">
               <Button variant="outline" onClick={onClose}>
@@ -863,8 +865,8 @@ export const AssessmentForm = ({
           </div>
         </div>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>);
+
 };
 
 export default AssessmentForm;

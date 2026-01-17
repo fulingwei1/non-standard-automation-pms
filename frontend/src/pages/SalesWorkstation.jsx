@@ -27,8 +27,8 @@ import {
   Flame,
   Filter,
   LayoutGrid,
-  List,
-} from "lucide-react";
+  List } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -38,8 +38,8 @@ import {
   Button,
   Badge,
   Progress,
-  Input,
-} from "../components/ui";
+  Input } from
+"../components/ui";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { cn, formatDate } from "../lib/utils";
 import {
@@ -48,8 +48,8 @@ import {
   OpportunityCard,
   PaymentTimeline,
   PaymentStats,
-  AdvantageProducts,
-} from "../components/sales";
+  AdvantageProducts } from
+"../components/sales";
 import {
   salesStatisticsApi,
   opportunityApi,
@@ -58,8 +58,8 @@ import {
   invoiceApi,
   projectApi,
   quoteApi,
-  taskCenterApi,
-} from "../services/api";
+  taskCenterApi } from
+"../services/api";
 import { ApiIntegrationError } from "../components/ui";
 
 const DEFAULT_STATS = {
@@ -70,7 +70,7 @@ const DEFAULT_STATS = {
   pendingPayment: 0,
   overduePayment: 0,
   customerCount: 0,
-  newCustomers: 0,
+  newCustomers: 0
 };
 
 const OPPORTUNITY_STAGE_MAP = {
@@ -80,7 +80,7 @@ const OPPORTUNITY_STAGE_MAP = {
   NEGOTIATION: "negotiate",
   WON: "won",
   LOST: "lost",
-  ON_HOLD: "contact",
+  ON_HOLD: "contact"
 };
 
 const PROJECT_STAGE_LABELS = {
@@ -90,7 +90,7 @@ const PROJECT_STAGE_LABELS = {
   PRODUCTION: "生产",
   DELIVERY: "交付",
   ACCEPTANCE: "验收",
-  CLOSED: "结项",
+  CLOSED: "结项"
 };
 
 const HEALTH_MAP = {
@@ -102,11 +102,11 @@ const HEALTH_MAP = {
   YELLOW: "warning",
   H3: "critical",
   HEALTH_RED: "critical",
-  RED: "critical",
+  RED: "critical"
 };
 
 const mapOpportunityStage = (stage) =>
-  OPPORTUNITY_STAGE_MAP[stage?.toUpperCase?.()] || "lead";
+OPPORTUNITY_STAGE_MAP[stage?.toUpperCase?.()] || "lead";
 
 const mapOpportunityPriority = (priority) => {
   const value = (priority || "").toString().toLowerCase();
@@ -135,8 +135,8 @@ const isCurrentMonth = (date) => {
   const now = new Date();
   return (
     checkDate.getFullYear() === now.getFullYear() &&
-    checkDate.getMonth() === now.getMonth()
-  );
+    checkDate.getMonth() === now.getMonth());
+
 };
 
 const mapTaskToTodoType = (task) => {
@@ -159,49 +159,49 @@ const calculateDaysBetween = (date) => {
 
 const transformOpportunity = (opportunity) => {
   const stage = mapOpportunityStage(
-    opportunity.stage || opportunity.opportunity_stage,
+    opportunity.stage || opportunity.opportunity_stage
   );
   const expectedCloseDate =
-    opportunity.estimated_close_date || opportunity.expected_close_date || "";
+  opportunity.estimated_close_date || opportunity.expected_close_date || "";
   const probability = Number(
-    opportunity.win_probability ?? opportunity.success_rate ?? 0,
+    opportunity.win_probability ?? opportunity.success_rate ?? 0
   );
   return {
     id: opportunity.id,
     name:
-      opportunity.opportunity_name ||
-      opportunity.name ||
-      opportunity.opportunity_code ||
-      "未命名商机",
+    opportunity.opportunity_name ||
+    opportunity.name ||
+    opportunity.opportunity_code ||
+    "未命名商机",
     customerName:
-      opportunity.customer?.customer_name || opportunity.customer_name || "",
+    opportunity.customer?.customer_name || opportunity.customer_name || "",
     customerShort:
-      opportunity.customer?.short_name ||
-      opportunity.customer?.customer_name ||
-      opportunity.customer_name ||
-      "",
+    opportunity.customer?.short_name ||
+    opportunity.customer?.customer_name ||
+    opportunity.customer_name ||
+    "",
     stage,
     priority: mapOpportunityPriority(opportunity.priority),
     expectedAmount: parseFloat(
-      opportunity.est_amount || opportunity.expected_amount || 0,
+      opportunity.est_amount || opportunity.expected_amount || 0
     ),
-    expectedCloseDate: expectedCloseDate
-      ? formatDate(expectedCloseDate)
-      : "未设置",
+    expectedCloseDate: expectedCloseDate ?
+    formatDate(expectedCloseDate) :
+    "未设置",
     probability,
     owner:
-      opportunity.owner?.real_name ||
-      opportunity.owner_name ||
-      opportunity.owner?.username ||
-      "未分配",
+    opportunity.owner?.real_name ||
+    opportunity.owner_name ||
+    opportunity.owner?.username ||
+    "未分配",
     daysInStage: calculateDaysBetween(
-      opportunity.stage_updated_at || opportunity.updated_at,
+      opportunity.stage_updated_at || opportunity.updated_at
     ),
     isHot: probability >= 70,
-    isOverdue: expectedCloseDate
-      ? new Date(expectedCloseDate) < new Date() && stage !== "won"
-      : false,
-    tags: opportunity.industry ? [opportunity.industry] : [],
+    isOverdue: expectedCloseDate ?
+    new Date(expectedCloseDate) < new Date() && stage !== "won" :
+    false,
+    tags: opportunity.industry ? [opportunity.industry] : []
   };
 };
 
@@ -209,15 +209,15 @@ const transformCustomer = (customer) => ({
   id: customer.id,
   name: customer.customer_name || customer.name || "未命名客户",
   shortName:
-    customer.short_name || customer.customer_name || customer.name || "客户",
+  customer.short_name || customer.customer_name || customer.name || "客户",
   grade: (customer.grade || customer.level || "B").toUpperCase(),
   status: (customer.status || "active").toLowerCase(),
   industry: customer.industry || customer.category || "未分类",
   location:
-    [customer.region, customer.city, customer.address]
-      .filter(Boolean)
-      .slice(0, 2)
-      .join(" · ") || "未设置",
+  [customer.region, customer.city, customer.address].
+  filter(Boolean).
+  slice(0, 2).
+  join(" · ") || "未设置",
   contactPerson: customer.contact_person || customer.primary_contact?.name,
   phone: customer.contact_phone || customer.primary_contact?.phone,
   totalAmount: parseFloat(customer.total_contract_amount || 0),
@@ -225,10 +225,10 @@ const transformCustomer = (customer) => ({
   projectCount: customer.project_count || 0,
   opportunityCount: customer.opportunity_count || 0,
   tags: customer.tags || [],
-  lastContact: customer.last_follow_up_at
-    ? formatDate(customer.last_follow_up_at)
-    : "无记录",
-  createdAt: customer.created_at,
+  lastContact: customer.last_follow_up_at ?
+  formatDate(customer.last_follow_up_at) :
+  "无记录",
+  createdAt: customer.created_at
 });
 
 const transformInvoiceToPayment = (invoice) => {
@@ -236,7 +236,7 @@ const transformInvoiceToPayment = (invoice) => {
     PAID: "paid",
     PENDING: "pending",
     ISSUED: "invoiced",
-    OVERDUE: "overdue",
+    OVERDUE: "overdue"
   };
   const backendStatus = invoice.payment_status || invoice.status;
   const status = statusMap[backendStatus] || "pending";
@@ -246,14 +246,14 @@ const transformInvoiceToPayment = (invoice) => {
     projectName: invoice.project_name || invoice.contract_name || "未关联项目",
     amount: parseFloat(invoice.amount || invoice.invoice_amount || 0),
     dueDate:
-      invoice.due_date ||
-      invoice.payment_due_date ||
-      invoice.expected_payment_date ||
-      "",
+    invoice.due_date ||
+    invoice.payment_due_date ||
+    invoice.expected_payment_date ||
+    "",
     paidDate: invoice.paid_date || "",
     status,
     invoiceNo: invoice.invoice_code,
-    notes: invoice.remark || "",
+    notes: invoice.remark || ""
   };
 };
 
@@ -261,20 +261,20 @@ const transformProject = (project) => ({
   id: project.id || project.project_id,
   name: project.project_name || project.name || project.project_code || "项目",
   customer:
-    project.customer?.customer_name || project.customer_name || "未设置",
+  project.customer?.customer_name || project.customer_name || "未设置",
   stageLabel: mapProjectStageLabel(
-    project.stage || project.project_stage || project.status,
+    project.stage || project.project_stage || project.status
   ),
   progress: Math.round(project.progress_pct ?? project.progress ?? 0),
   health: mapProjectHealth(
-    project.health || project.health_status || project.health_level,
+    project.health || project.health_status || project.health_level
   ),
   acceptanceDate:
-    project.acceptance_date ||
-    project.delivery_date ||
-    project.target_acceptance_date ||
-    project.expected_acceptance_date ||
-    "未设置",
+  project.acceptance_date ||
+  project.delivery_date ||
+  project.target_acceptance_date ||
+  project.expected_acceptance_date ||
+  "未设置"
 });
 
 const transformTaskToTodo = (task) => {
@@ -287,12 +287,12 @@ const transformTaskToTodo = (task) => {
     target: task.project_name || task.source_name || task.task_code,
     time: deadline ? formatDate(deadline) : "无截止",
     priority:
-      priority === "urgent"
-        ? "urgent"
-        : priority === "high"
-          ? "high"
-          : "normal",
-    done: task.status === "COMPLETED",
+    priority === "urgent" ?
+    "urgent" :
+    priority === "high" ?
+    "high" :
+    "normal",
+    done: task.status === "COMPLETED"
   };
 };
 
@@ -302,26 +302,26 @@ const todoTypeConfig = {
   payment: {
     icon: DollarSign,
     color: "text-emerald-400",
-    bg: "bg-emerald-500/20",
+    bg: "bg-emerald-500/20"
   },
   visit: { icon: Building2, color: "text-purple-400", bg: "bg-purple-500/20" },
   acceptance: {
     icon: CheckCircle2,
     color: "text-pink-400",
-    bg: "bg-pink-500/20",
+    bg: "bg-pink-500/20"
   },
   approval: {
     icon: CheckCircle2,
     color: "text-orange-400",
-    bg: "bg-orange-500/20",
+    bg: "bg-orange-500/20"
   },
-  reminder: { icon: AlertTriangle, color: "text-red-400", bg: "bg-red-500/20" },
+  reminder: { icon: AlertTriangle, color: "text-red-400", bg: "bg-red-500/20" }
 };
 
 const healthColors = {
   good: "bg-emerald-500",
   warning: "bg-amber-500",
-  critical: "bg-red-500",
+  critical: "bg-red-500"
 };
 
 export default function SalesWorkstation() {
@@ -332,7 +332,7 @@ export default function SalesWorkstation() {
   const [payments, setPayments] = useState([]);
   const [opportunities, setOpportunities] = useState([]);
   const [funnelData, setFunnelData] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   // Load sales statistics
@@ -342,78 +342,88 @@ export default function SalesWorkstation() {
       setError(null);
 
       const now = new Date();
-      const startDate = new Date(now.getFullYear(), now.getMonth(), 1)
-        .toISOString()
-        .split("T")[0];
-      const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-        .toISOString()
-        .split("T")[0];
+      const startDate = new Date(now.getFullYear(), now.getMonth(), 1).
+      toISOString().
+      split("T")[0];
+      const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0).
+      toISOString().
+      split("T")[0];
       const params = { start_date: startDate, end_date: endDate };
 
-      const [
-        summaryResponse,
-        funnelResponse,
-        opportunitiesResponse,
-        customersResponse,
-        contractsResponse,
-        invoicesResponse,
-      ] = await Promise.all([
-        salesStatisticsApi.summary(params),
-        salesStatisticsApi.funnel(params),
-        opportunityApi.list({ page: 1, page_size: 100 }),
-        customerApi.list({ page: 1, page_size: 10 }),
-        contractApi.list({ page: 1, page_size: 10, status: "SIGNED" }),
-        invoiceApi.list({ page: 1, page_size: 10 }),
-      ]);
+      // 使用 Promise.allSettled 以便单个API失败不会影响其他API
+      const results = await Promise.allSettled([
+      salesStatisticsApi.summary(params),
+      salesStatisticsApi.funnel(params),
+      opportunityApi.list({ page: 1, page_size: 100 }),
+      customerApi.list({ page: 1, page_size: 10 }),
+      contractApi.list({ page: 1, page_size: 10, status: "SIGNED" }).catch(() => ({ data: { items: [] } })),
+      invoiceApi.list({ page: 1, page_size: 10 }).catch(() => ({ data: { items: [] } }))]
+      );
+
+      // 解析 Promise.allSettled 结果
+      const getValue = (result, fallback = {}) =>
+      result.status === "fulfilled" ? result.value : fallback;
+
+      const summaryResponse = getValue(results[0], { data: {} });
+      const funnelResponse = getValue(results[1], { data: {} });
+      const opportunitiesResponse = getValue(results[2], { data: { items: [] } });
+      const customersResponse = getValue(results[3], { data: { items: [] } });
+      const contractsResponse = getValue(results[4], { data: { items: [] } });
+      const invoicesResponse = getValue(results[5], { data: { items: [] } });
+
+      // 检查核心API (summary/funnel) 是否成功
+      if (results[0].status === "rejected" && results[1].status === "rejected") {
+        throw new Error("无法加载销售统计数据");
+      }
 
       const summaryData =
-        summaryResponse.data?.data || summaryResponse.data || summaryResponse;
+      summaryResponse.data?.data || summaryResponse.data || summaryResponse;
       const funnelPayload =
-        funnelResponse.data?.data || funnelResponse.data || {};
+      funnelResponse.data?.data || funnelResponse.data || {};
       const oppsData =
-        opportunitiesResponse.data?.items || opportunitiesResponse.data || [];
+      opportunitiesResponse.data?.items || opportunitiesResponse.data || [];
       const customersData =
-        customersResponse.data?.items || customersResponse.data || [];
+      customersResponse.data?.items || customersResponse.data || [];
       const contractsData =
-        contractsResponse.data?.items || contractsResponse.data || [];
+      contractsResponse.data?.items || contractsResponse.data || [];
       const invoicesData =
-        invoicesResponse.data?.items || invoicesResponse.data || [];
+      invoicesResponse.data?.items || invoicesResponse.data || [];
 
       const normalizedOpportunities = oppsData.map(transformOpportunity);
       setOpportunities(normalizedOpportunities.slice(0, 5));
       const hotOpportunities = normalizedOpportunities.filter(
-        (opp) => opp.isHot,
+        (opp) => opp.isHot
       ).length;
 
-      const normalizedCustomers = customersData
-        .slice(0, 3)
-        .map(transformCustomer);
+      const normalizedCustomers = customersData.
+      slice(0, 3).
+      map(transformCustomer);
       setCustomers(normalizedCustomers);
       const newCustomerCount = normalizedCustomers.filter((c) =>
-        isCurrentMonth(c.createdAt),
+      isCurrentMonth(c.createdAt)
       ).length;
       const totalCustomers =
-        customersResponse.data?.total ?? customersData.length;
+      customersResponse.data?.total ?? customersData.length;
 
       const paymentEntries = invoicesData.map(transformInvoiceToPayment);
       setPayments(paymentEntries);
-      const pendingPayment = paymentEntries
-        .filter((p) => p.status === "pending" || p.status === "invoiced")
-        .reduce((sum, p) => sum + (p.amount || 0), 0);
-      const overduePayment = paymentEntries
-        .filter((p) => {
-          if (p.status === "overdue") return true;
-          if (p.status !== "paid" && p.dueDate) {
-            return new Date(p.dueDate) < new Date();
-          }
-          return false;
-        })
-        .reduce((sum, p) => sum + (p.amount || 0), 0);
+      const pendingPayment = paymentEntries.
+      filter((p) => p.status === "pending" || p.status === "invoiced").
+      reduce((sum, p) => sum + (p.amount || 0), 0);
+      const overduePayment = paymentEntries.
+      filter((p) => {
+        if (p.status === "overdue") return true;
+        if (p.status !== "paid" && p.dueDate) {
+          return new Date(p.dueDate) < new Date();
+        }
+        return false;
+      }).
+      reduce((sum, p) => sum + (p.amount || 0), 0);
 
-      const projectIds = contractsData
-        .map((c) => c.project_id)
-        .filter(Boolean)
-        .slice(0, 3);
+      const projectIds = contractsData.
+      map((c) => c.project_id).
+      filter(Boolean).
+      slice(0, 3);
       const projectDetails = await Promise.all(
         projectIds.map(async (projectId) => {
           try {
@@ -424,7 +434,7 @@ export default function SalesWorkstation() {
             console.error(`Failed to load project ${projectId}:`, err);
             return null;
           }
-        }),
+        })
       );
       setProjects(projectDetails.filter(Boolean));
 
@@ -433,25 +443,25 @@ export default function SalesWorkstation() {
         contact: funnelPayload.opportunities || 0,
         quote: funnelPayload.quotes || 0,
         negotiate: Math.max(
-          (funnelPayload.contracts || 0) -
-            (summaryData?.won_opportunities || 0),
-          0,
+          (funnelPayload.contracts || 0) - (
+          summaryData?.won_opportunities || 0),
+          0
         ),
-        won: summaryData?.won_opportunities || funnelPayload.contracts || 0,
+        won: summaryData?.won_opportunities || funnelPayload.contracts || 0
       };
       setFunnelData(funnelCounts);
 
       setStats({
         monthlyTarget:
-          summaryData?.monthly_target || DEFAULT_STATS.monthlyTarget,
+        summaryData?.monthly_target || DEFAULT_STATS.monthlyTarget,
         monthlyAchieved: summaryData?.total_contract_amount || 0,
         opportunityCount:
-          summaryData?.total_opportunities || normalizedOpportunities.length,
+        summaryData?.total_opportunities || normalizedOpportunities.length,
         hotOpportunities,
         pendingPayment,
         overduePayment,
         customerCount: totalCustomers || summaryData?.total_leads || 0,
-        newCustomers: newCustomerCount,
+        newCustomers: newCustomerCount
       });
     } catch (err) {
       console.error("Failed to load sales statistics:", err);
@@ -469,14 +479,25 @@ export default function SalesWorkstation() {
 
   const loadTodos = useCallback(async () => {
     try {
-      const [tasksResponse, quotesResponse] = await Promise.all([
-        taskCenterApi.myTasks({
-          page: 1,
-          page_size: 10,
-          status: "IN_PROGRESS",
-        }),
-        quoteApi.list({ status: "SUBMITTED", page_size: 5 }),
-      ]);
+      // 使用 Promise.allSettled 避免单个API失败影响其他
+      const results = await Promise.allSettled([
+      taskCenterApi.myTasks({
+        page: 1,
+        page_size: 10,
+        status: "IN_PROGRESS"
+      }),
+      quoteApi.list({ status: "SUBMITTED", page_size: 5 })]
+      );
+
+      // 解析结果，失败的API返回空数组
+      const tasksResponse =
+      results[0].status === "fulfilled" ?
+      results[0].value :
+      { data: { items: [] } };
+      const quotesResponse =
+      results[1].status === "fulfilled" ?
+      results[1].value :
+      { data: { items: [] } };
 
       const taskItems = tasksResponse.data?.items || tasksResponse.data || [];
       const taskTodos = taskItems.map(transformTaskToTodo);
@@ -488,27 +509,27 @@ export default function SalesWorkstation() {
           try {
             const statusResponse = await quoteApi.getApprovalStatus(quote.id);
             const statusData =
-              statusResponse.data?.data ||
-              statusResponse.data ||
-              statusResponse;
+            statusResponse.data?.data ||
+            statusResponse.data ||
+            statusResponse;
             if (
-              (statusData.status || statusData.approval_status) === "PENDING"
-            ) {
+            (statusData.status || statusData.approval_status) === "PENDING")
+            {
               approvalTodos.push({
                 id: `approval-quote-${quote.id}`,
                 type: "approval",
                 title: `报价审批 - ${quote.quote_code || quote.code}`,
                 target:
-                  quote.customer?.customer_name || quote.customer_name || "",
+                quote.customer?.customer_name || quote.customer_name || "",
                 time: "待审批",
                 priority: "high",
-                done: false,
+                done: false
               });
             }
           } catch (err) {
             console.error("Failed to load quote approval status:", err);
           }
-        }),
+        })
       );
 
       setTodos([...taskTodos, ...approvalTodos]);
@@ -525,13 +546,13 @@ export default function SalesWorkstation() {
   }, [loadStatistics, loadTodos]);
 
   const achievementRate =
-    stats.monthlyTarget > 0
-      ? ((stats.monthlyAchieved / stats.monthlyTarget) * 100).toFixed(1)
-      : "0";
+  stats.monthlyTarget > 0 ?
+  (stats.monthlyAchieved / stats.monthlyTarget * 100).toFixed(1) :
+  "0";
 
   const toggleTodo = (id) => {
     setTodos((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t)),
+    prev.map((t) => t.id === id ? { ...t, done: !t.done } : t)
     );
   };
 
@@ -541,15 +562,15 @@ export default function SalesWorkstation() {
       <div className="space-y-6">
         <PageHeader
           title="销售工作台"
-          description="销售业绩、商机管理、客户跟进"
-        />
+          description="销售业绩、商机管理、客户跟进" />
+
         <ApiIntegrationError
           error={error}
           apiEndpoint="/api/v1/sales/statistics/summary"
-          onRetry={loadStatistics}
-        />
-      </div>
-    );
+          onRetry={loadStatistics} />
+
+      </div>);
+
   }
 
   return (
@@ -557,14 +578,14 @@ export default function SalesWorkstation() {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       {/* Page Header */}
       <PageHeader
         title="销售工作台"
         description={`业绩目标: ¥${(stats.monthlyTarget / 10000).toFixed(0)}万 | 已完成: ¥${(stats.monthlyAchieved / 10000).toFixed(0)}万 (${achievementRate}%)`}
         actions={
-          <motion.div variants={fadeIn} className="flex gap-2">
+        <motion.div variants={fadeIn} className="flex gap-2">
             <Button variant="outline" className="flex items-center gap-2">
               <Users className="w-4 h-4" />
               新建客户
@@ -574,14 +595,14 @@ export default function SalesWorkstation() {
               新建商机
             </Button>
           </motion.div>
-        }
-      />
+        } />
+
 
       {/* Stats Cards */}
       <motion.div
         variants={fadeIn}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
-      >
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
         {/* Monthly Sales */}
         <Card className="bg-gradient-to-br from-amber-500/10 to-orange-500/5 border-amber-500/20">
           <CardContent className="p-4">
@@ -692,8 +713,8 @@ export default function SalesWorkstation() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-xs text-primary"
-                >
+                  className="text-xs text-primary">
+
                   查看详情 <ChevronRight className="w-3 h-3 ml-1" />
                 </Button>
               </div>
@@ -702,9 +723,9 @@ export default function SalesWorkstation() {
               <SalesFunnel
                 data={funnelData || undefined}
                 onStageClick={() => {
+
                   // Handle stage click if needed
-                }}
-              />
+                }} />
             </CardContent>
           </Card>
 
@@ -719,52 +740,52 @@ export default function SalesWorkstation() {
               </div>
             </CardHeader>
             <CardContent className="space-y-2">
-              {todos.length === 0 ? (
-                <div className="text-center py-8 text-slate-500 text-sm">
+              {todos.length === 0 ?
+              <div className="text-center py-8 text-slate-500 text-sm">
                   暂无待办事项
-                </div>
-              ) : (
-                todos.map((todo) => {
-                  const config = todoTypeConfig[todo.type] || {
-                    icon: Clock,
-                    color: "text-slate-400",
-                    bg: "bg-slate-500/20",
-                  };
-                  const Icon = config.icon;
-                  return (
-                    <motion.div
-                      key={todo.id}
-                      variants={fadeIn}
-                      onClick={() => toggleTodo(todo.id)}
-                      className={cn(
-                        "flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all",
-                        "hover:bg-surface-100",
-                        todo.done && "opacity-50",
-                      )}
-                    >
+                </div> :
+
+              todos.map((todo) => {
+                const config = todoTypeConfig[todo.type] || {
+                  icon: Clock,
+                  color: "text-slate-400",
+                  bg: "bg-slate-500/20"
+                };
+                const Icon = config.icon;
+                return (
+                  <motion.div
+                    key={todo.id}
+                    variants={fadeIn}
+                    onClick={() => toggleTodo(todo.id)}
+                    className={cn(
+                      "flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all",
+                      "hover:bg-surface-100",
+                      todo.done && "opacity-50"
+                    )}>
+
                       <div
-                        className={cn(
-                          "w-8 h-8 rounded-lg flex items-center justify-center",
-                          config.bg,
-                        )}
-                      >
+                      className={cn(
+                        "w-8 h-8 rounded-lg flex items-center justify-center",
+                        config.bg
+                      )}>
+
                         <Icon className={cn("w-4 h-4", config.color)} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span
-                            className={cn(
-                              "font-medium text-sm",
-                              todo.done
-                                ? "line-through text-slate-500"
-                                : "text-white",
-                            )}
-                          >
+                          className={cn(
+                            "font-medium text-sm",
+                            todo.done ?
+                            "line-through text-slate-500" :
+                            "text-white"
+                          )}>
+
                             {todo.title}
                           </span>
-                          {todo.priority === "high" && !todo.done && (
-                            <AlertTriangle className="w-3 h-3 text-red-400" />
-                          )}
+                          {todo.priority === "high" && !todo.done &&
+                        <AlertTriangle className="w-3 h-3 text-red-400" />
+                        }
                         </div>
                         <span className="text-xs text-slate-400">
                           {todo.target}
@@ -773,10 +794,10 @@ export default function SalesWorkstation() {
                       <span className="text-xs text-slate-500">
                         {todo.time}
                       </span>
-                    </motion.div>
-                  );
-                })
-              )}
+                    </motion.div>);
+
+              })
+              }
             </CardContent>
           </Card>
         </motion.div>
@@ -791,19 +812,19 @@ export default function SalesWorkstation() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-xs text-primary"
-                >
+                  className="text-xs text-primary">
+
                   全部项目 <ChevronRight className="w-3 h-3 ml-1" />
                 </Button>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {projects.map((project) => (
-                <motion.div
-                  key={project.id}
-                  variants={fadeIn}
-                  className="p-3 bg-surface-50 rounded-lg hover:bg-surface-100 transition-colors cursor-pointer"
-                >
+              {projects.map((project) =>
+              <motion.div
+                key={project.id}
+                variants={fadeIn}
+                className="p-3 bg-surface-50 rounded-lg hover:bg-surface-100 transition-colors cursor-pointer">
+
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <h4 className="font-medium text-white text-sm">
@@ -821,46 +842,46 @@ export default function SalesWorkstation() {
                   {/* Progress Steps */}
                   <div className="flex items-center gap-1 mb-2">
                     {["方案", "设计", "采购", "装配", "验收"].map(
-                      (step, index) => {
-                        const stepProgress = index * 20 + 20;
-                        const isActive = project.progress >= stepProgress;
-                        const isCurrent =
-                          project.progress >= stepProgress - 20 &&
-                          project.progress < stepProgress;
-                        return (
-                          <div key={step} className="flex items-center">
+                    (step, index) => {
+                      const stepProgress = index * 20 + 20;
+                      const isActive = project.progress >= stepProgress;
+                      const isCurrent =
+                      project.progress >= stepProgress - 20 &&
+                      project.progress < stepProgress;
+                      return (
+                        <div key={step} className="flex items-center">
                             <div
-                              className={cn(
-                                "w-2 h-2 rounded-full",
-                                isActive
-                                  ? "bg-primary"
-                                  : isCurrent
-                                    ? "bg-amber-500"
-                                    : "bg-slate-600",
-                              )}
-                            />
-                            {index < 4 && (
-                              <div
-                                className={cn(
-                                  "w-6 h-0.5",
-                                  isActive ? "bg-primary" : "bg-slate-600",
-                                )}
-                              />
-                            )}
-                          </div>
-                        );
-                      },
-                    )}
+                            className={cn(
+                              "w-2 h-2 rounded-full",
+                              isActive ?
+                              "bg-primary" :
+                              isCurrent ?
+                              "bg-amber-500" :
+                              "bg-slate-600"
+                            )} />
+
+                            {index < 4 &&
+                          <div
+                            className={cn(
+                              "w-6 h-0.5",
+                              isActive ? "bg-primary" : "bg-slate-600"
+                            )} />
+
+                          }
+                          </div>);
+
+                    }
+                  )}
                   </div>
 
                   <div className="flex items-center justify-between text-xs">
                     <div className="flex items-center gap-2">
                       <div
-                        className={cn(
-                          "w-2 h-2 rounded-full",
-                          healthColors[project.health],
-                        )}
-                      />
+                      className={cn(
+                        "w-2 h-2 rounded-full",
+                        healthColors[project.health]
+                      )} />
+
                       <span className="text-slate-400">
                         进度 {project.progress}%
                       </span>
@@ -870,7 +891,7 @@ export default function SalesWorkstation() {
                     </span>
                   </div>
                 </motion.div>
-              ))}
+              )}
             </CardContent>
           </Card>
 
@@ -882,8 +903,8 @@ export default function SalesWorkstation() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-xs text-primary"
-                >
+                  className="text-xs text-primary">
+
                   全部回款 <ChevronRight className="w-3 h-3 ml-1" />
                 </Button>
               </div>
@@ -904,23 +925,23 @@ export default function SalesWorkstation() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-xs text-primary"
-                >
+                  className="text-xs text-primary">
+
                   客户管理 <ChevronRight className="w-3 h-3 ml-1" />
                 </Button>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              {customers.map((customer) => (
-                <CustomerCard
-                  key={customer.id}
-                  customer={customer}
-                  compact
-                  onClick={() => {
-                    // Handle customer click if needed
-                  }}
-                />
-              ))}
+              {customers.map((customer) =>
+              <CustomerCard
+                key={customer.id}
+                customer={customer}
+                compact
+                onClick={() => {
+
+                  // Handle customer click if needed
+                }} />
+              )}
             </CardContent>
           </Card>
 
@@ -952,8 +973,8 @@ export default function SalesWorkstation() {
                 onProductSelect={(product) => {
                   console.log("Selected product:", product);
                   // 可以复制产品信息或跳转到相关页面
-                }}
-              />
+                }} />
+
             </CardContent>
           </Card>
 
@@ -965,29 +986,29 @@ export default function SalesWorkstation() {
             <CardContent className="grid grid-cols-2 gap-2">
               <Button
                 variant="outline"
-                className="h-auto py-3 flex flex-col gap-1"
-              >
+                className="h-auto py-3 flex flex-col gap-1">
+
                 <FileText className="w-4 h-4 text-amber-400" />
                 <span className="text-xs">新建报价</span>
               </Button>
               <Button
                 variant="outline"
-                className="h-auto py-3 flex flex-col gap-1"
-              >
+                className="h-auto py-3 flex flex-col gap-1">
+
                 <Send className="w-4 h-4 text-blue-400" />
                 <span className="text-xs">发送方案</span>
               </Button>
               <Button
                 variant="outline"
-                className="h-auto py-3 flex flex-col gap-1"
-              >
+                className="h-auto py-3 flex flex-col gap-1">
+
                 <Receipt className="w-4 h-4 text-emerald-400" />
                 <span className="text-xs">申请开票</span>
               </Button>
               <Button
                 variant="outline"
-                className="h-auto py-3 flex flex-col gap-1"
-              >
+                className="h-auto py-3 flex flex-col gap-1">
+
                 <Calendar className="w-4 h-4 text-purple-400" />
                 <span className="text-xs">安排拜访</span>
               </Button>
@@ -995,6 +1016,6 @@ export default function SalesWorkstation() {
           </Card>
         </motion.div>
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

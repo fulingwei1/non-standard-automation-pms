@@ -3,7 +3,7 @@
  * 可视化评分矩阵 - 线索评分的视觉化展示和分析
  */
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect as _useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   TrendingUp,
@@ -21,8 +21,8 @@ import {
   Clock,
   ArrowUpRight,
   ArrowDownRight,
-  Minus
-} from "lucide-react";
+  Minus } from
+"lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -39,8 +39,8 @@ import {
   INDUSTRIES,
   BUDGET_RANGES,
   DECISION_TIMELINES,
-  LEAD_STATUSES
-} from "./leadAssessmentConstants";
+  LEAD_STATUSES } from
+"./leadAssessmentConstants";
 
 export const ScoringMatrix = ({
   leads = [],
@@ -60,24 +60,24 @@ export const ScoringMatrix = ({
     let result = leads;
 
     if (filters.status && filters.status !== "all") {
-      result = result.filter(lead => lead.status === filters.status);
+      result = result.filter((lead) => lead.status === filters.status);
     }
 
     if (filters.industry && filters.industry !== "all") {
-      result = result.filter(lead => lead.industry === filters.industry);
+      result = result.filter((lead) => lead.industry === filters.industry);
     }
 
     if (filters.source && filters.source !== "all") {
-      result = result.filter(lead => lead.source === filters.source);
+      result = result.filter((lead) => lead.source === filters.source);
     }
 
     if (filters.priority && filters.priority !== "all") {
-      result = result.filter(lead => lead.priority === filters.priority);
+      result = result.filter((lead) => lead.priority === filters.priority);
     }
 
     if (filters.scoreRange) {
       const [min, max] = filters.scoreRange;
-      result = result.filter(lead => {
+      result = result.filter((lead) => {
         const score = lead.assessmentScore || 0;
         return score >= min && score <= max;
       });
@@ -85,10 +85,10 @@ export const ScoringMatrix = ({
 
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
-      result = result.filter(lead =>
-        (lead.contactName?.toLowerCase().includes(searchLower)) ||
-        (lead.companyName?.toLowerCase().includes(searchLower)) ||
-        (lead.projectName?.toLowerCase().includes(searchLower))
+      result = result.filter((lead) =>
+      lead.contactName?.toLowerCase().includes(searchLower) ||
+      lead.companyName?.toLowerCase().includes(searchLower) ||
+      lead.projectName?.toLowerCase().includes(searchLower)
       );
     }
 
@@ -119,10 +119,10 @@ export const ScoringMatrix = ({
   // 统计数据
   const stats = useMemo(() => {
     const total = filteredLeads.length;
-    const assessed = filteredLeads.filter(lead => lead.assessmentScore).length;
-    const highScore = filteredLeads.filter(lead => (lead.assessmentScore || 0) >= 80).length;
-    const mediumScore = filteredLeads.filter(lead => (lead.assessmentScore || 0) >= 60 && (lead.assessmentScore || 0) < 80).length;
-    const lowScore = filteredLeads.filter(lead => (lead.assessmentScore || 0) < 60).length;
+    const assessed = filteredLeads.filter((lead) => lead.assessmentScore).length;
+    const highScore = filteredLeads.filter((lead) => (lead.assessmentScore || 0) >= 80).length;
+    const mediumScore = filteredLeads.filter((lead) => (lead.assessmentScore || 0) >= 60 && (lead.assessmentScore || 0) < 80).length;
+    const lowScore = filteredLeads.filter((lead) => (lead.assessmentScore || 0) < 60).length;
 
     // 计算平均分
     const totalScore = filteredLeads.reduce((sum, lead) => sum + (lead.assessmentScore || 0), 0);
@@ -130,19 +130,19 @@ export const ScoringMatrix = ({
 
     // 计算各来源分布
     const sourceDistribution = {};
-    filteredLeads.forEach(lead => {
+    filteredLeads.forEach((lead) => {
       sourceDistribution[lead.source] = (sourceDistribution[lead.source] || 0) + 1;
     });
 
     // 计算各行业分布
     const industryDistribution = {};
-    filteredLeads.forEach(lead => {
+    filteredLeads.forEach((lead) => {
       industryDistribution[lead.industry] = (industryDistribution[lead.industry] || 0) + 1;
     });
 
     // 计算预算分布
     const budgetDistribution = {};
-    filteredLeads.forEach(lead => {
+    filteredLeads.forEach((lead) => {
       budgetDistribution[lead.budgetRange] = (budgetDistribution[lead.budgetRange] || 0) + 1;
     });
 
@@ -157,7 +157,7 @@ export const ScoringMatrix = ({
       sourceDistribution,
       industryDistribution,
       budgetDistribution,
-      conversionRate: total > 0 ? ((assessed / total) * 100).toFixed(1) : 0
+      conversionRate: total > 0 ? (assessed / total * 100).toFixed(1) : 0
     };
   }, [filteredLeads]);
 
@@ -171,7 +171,7 @@ export const ScoringMatrix = ({
   };
 
   // 处理排序
-  const handleSort = (key) => {
+  const _handleSort = (key) => {
     let direction = "asc";
     if (sortConfig.key === key && sortConfig.direction === "asc") {
       direction = "desc";
@@ -181,7 +181,7 @@ export const ScoringMatrix = ({
 
   // 切换选择状态
   const toggleLeadSelection = (lead) => {
-    const index = selectedLeads.findIndex(l => l.id === lead.id);
+    const index = selectedLeads.findIndex((l) => l.id === lead.id);
     if (index >= 0) {
       setSelectedLeads(selectedLeads.filter((_, i) => i !== index));
     } else {
@@ -190,7 +190,7 @@ export const ScoringMatrix = ({
   };
 
   // 全选/取消全选
-  const toggleSelectAll = () => {
+  const _toggleSelectAll = () => {
     if (selectedLeads.length === filteredLeads.length) {
       setSelectedLeads([]);
     } else {
@@ -199,17 +199,17 @@ export const ScoringMatrix = ({
   };
 
   // 渲染雷达图数据
-  const radarData = useMemo(() => {
-    const categories = SCORING_CATEGORIES.map(cat => cat.name);
+  const _radarData = useMemo(() => {
+    const categories = SCORING_CATEGORIES.map((cat) => cat.name);
     const datasets = [];
 
     // 平均分数据
-    const avgScores = SCORING_CATEGORIES.map(category => {
-      const categoryLeads = filteredLeads.filter(lead => lead.scores?.[category.id]);
+    const avgScores = SCORING_CATEGORIES.map((category) => {
+      const categoryLeads = filteredLeads.filter((lead) => lead.scores?.[category.id]);
       if (categoryLeads.length === 0) return 0;
 
       const avgScore = categoryLeads.reduce((sum, lead) =>
-        sum + (lead.scores[category.id] || 0), 0) / categoryLeads.length;
+      sum + (lead.scores[category.id] || 0), 0) / categoryLeads.length;
       return Number(avgScore.toFixed(1));
     });
 
@@ -224,14 +224,14 @@ export const ScoringMatrix = ({
   }, [filteredLeads]);
 
   // 渲染柱状图数据
-  const barChartData = useMemo(() => {
+  const _barChartData = useMemo(() => {
     const data = {
       good: { count: 0, color: "#52c41a" },
       average: { count: 0, color: "#faad14" },
       poor: { count: 0, color: "#ff4d4f" }
     };
 
-    filteredLeads.forEach(lead => {
+    filteredLeads.forEach((lead) => {
       const score = lead.assessmentScore || 0;
       if (score >= 60) {
         data.good.count++;
@@ -245,10 +245,10 @@ export const ScoringMatrix = ({
     return [{
       label: "线索质量分布",
       data: [
-        { name: "优质", value: data.good.count, color: data.good.color },
-        { name: "一般", value: data.average.count, color: data.average.color },
-        { name: "较差", value: data.poor.count, color: data.poor.color }
-      ]
+      { name: "优质", value: data.good.count, color: data.good.color },
+      { name: "一般", value: data.average.count, color: data.average.color },
+      { name: "较差", value: data.poor.count, color: data.poor.color }]
+
     }];
   }, [filteredLeads]);
 
@@ -259,8 +259,8 @@ export const ScoringMatrix = ({
         <div className="flex flex-col items-center justify-center h-64 text-slate-500">
           <BarChart3 className="h-12 w-12 mb-4" />
           <p>暂无线索数据</p>
-        </div>
-      );
+        </div>);
+
     }
 
     return (
@@ -278,18 +278,18 @@ export const ScoringMatrix = ({
               className="relative bg-white rounded-lg border border-slate-200 p-4 hover:shadow-lg transition-all duration-200 cursor-pointer"
               onMouseEnter={() => setHoveredLead(lead)}
               onMouseLeave={() => setHoveredLead(null)}
-              onClick={() => onLeadSelect && onLeadSelect(lead)}
-            >
+              onClick={() => onLeadSelect && onLeadSelect(lead)}>
+
               {/* 健康度指示条 */}
               <div className="absolute top-0 left-0 right-0 h-1 rounded-t-lg" style={{ backgroundColor: healthColor }} />
 
               <div className="space-y-3">
                 {/* 选择框 */}
                 <Checkbox
-                  checked={selectedLeads.some(l => l.id === lead.id)}
+                  checked={selectedLeads.some((l) => l.id === lead.id)}
                   onCheckedChange={() => toggleLeadSelection(lead)}
-                  className="absolute top-2 right-2"
-                />
+                  className="absolute top-2 right-2" />
+
 
                 {/* 联系人信息 */}
                 <div className="flex items-start gap-3">
@@ -297,23 +297,23 @@ export const ScoringMatrix = ({
                     <h3 className="font-semibold text-slate-900 truncate">
                       {lead.contactName}
                     </h3>
-                    {lead.companyName && (
-                      <p className="text-sm text-slate-600 truncate">
+                    {lead.companyName &&
+                    <p className="text-sm text-slate-600 truncate">
                         {lead.companyName}
                       </p>
-                    )}
+                    }
                   </div>
                 </div>
 
                 {/* 项目信息 */}
-                {lead.projectName && (
-                  <div>
+                {lead.projectName &&
+                <div>
                     <p className="text-sm font-medium text-slate-700 mb-1">项目</p>
                     <p className="text-sm text-slate-900 truncate">
                       {lead.projectName}
                     </p>
                   </div>
-                )}
+                }
 
                 {/* 评分 */}
                 <div className="space-y-2">
@@ -339,71 +339,71 @@ export const ScoringMatrix = ({
                   <div className="flex items-center gap-1 text-slate-600">
                     <span>来源:</span>
                     <span className="text-slate-900 truncate">
-                      {LEAD_SOURCES.find(s => s.value === lead.source)?.label || lead.source}
+                      {LEAD_SOURCES.find((s) => s.value === lead.source)?.label || lead.source}
                     </span>
                   </div>
                   <div className="flex items-center gap-1 text-slate-600">
                     <span>行业:</span>
                     <span className="text-sline-900 truncate">
-                      {INDUSTRIES.find(i => i.value === lead.industry)?.label || lead.industry}
+                      {INDUSTRIES.find((i) => i.value === lead.industry)?.label || lead.industry}
                     </span>
                   </div>
                   <div className="flex items-center gap-1 text-slate-600">
                     <span>预算:</span>
                     <span className="text-slate-900">
-                      {BUDGET_RANGES.find(b => b.value === lead.budgetRange)?.label || lead.budgetRange}
+                      {BUDGET_RANGES.find((b) => b.value === lead.budgetRange)?.label || lead.budgetRange}
                     </span>
                   </div>
                   <div className="flex items-center gap-1 text-slate-600">
                     <span>状态:</span>
                     <span className="text-slate-900">
-                      {LEAD_STATUSES.find(s => s.value === lead.status)?.label || lead.status}
+                      {LEAD_STATUSES.find((s) => s.value === lead.status)?.label || lead.status}
                     </span>
                   </div>
                 </div>
 
                 {/* 鼠标悬停时显示详细信息 */}
-                {hoveredLead?.id === lead.id && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="absolute inset-0 bg-white/95 rounded-lg border border-slate-200 p-4 z-10"
-                  >
+                {hoveredLead?.id === lead.id &&
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="absolute inset-0 bg-white/95 rounded-lg border border-slate-200 p-4 z-10">
+
                     <div className="space-y-2">
-                      {lead.contactEmail && (
-                        <div className="flex items-center gap-2 text-sm">
+                      {lead.contactEmail &&
+                    <div className="flex items-center gap-2 text-sm">
                           <Mail className="h-4 w-4 text-slate-500" />
                           <span>{lead.contactEmail}</span>
                         </div>
-                      )}
-                      {lead.contactPhone && (
-                        <div className="flex items-center gap-2 text-sm">
+                    }
+                      {lead.contactPhone &&
+                    <div className="flex items-center gap-2 text-sm">
                           <Phone className="h-4 w-4 text-slate-500" />
                           <span>{lead.contactPhone}</span>
                         </div>
-                      )}
-                      {lead.description && (
-                        <div>
+                    }
+                      {lead.description &&
+                    <div>
                           <p className="text-sm font-medium text-slate-700 mb-1">描述</p>
                           <p className="text-sm text-slate-600 line-clamp-2">
                             {lead.description}
                           </p>
                         </div>
-                      )}
+                    }
                     </div>
                   </motion.div>
-                )}
+                }
               </div>
-            </motion.div>
-          );
+            </motion.div>);
+
         })}
-      </div>
-    );
+      </div>);
+
   };
 
   // 渲染统计卡片
-  const renderStatCard = (title, value, change, icon, color, unit = "") => (
-    <Card>
+  const renderStatCard = (title, value, change, icon, color, unit = "") =>
+  <Card>
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div>
@@ -413,21 +413,21 @@ export const ScoringMatrix = ({
                 {value}
                 {unit && <span className="text-lg font-normal text-slate-600">{unit}</span>}
               </p>
-              {change !== null && (
-                <div className={cn(
-                  "flex items-center gap-1 text-xs",
-                  change > 0 ? "text-green-600" : change < 0 ? "text-red-600" : "text-slate-600"
-                )}>
-                  {change > 0 ? (
-                    <ArrowUpRight className="h-3 w-3" />
-                  ) : change < 0 ? (
-                    <ArrowDownRight className="h-3 w-3" />
-                  ) : (
-                    <Minus className="h-3 w-3" />
-                  )}
+              {change !== null &&
+            <div className={cn(
+              "flex items-center gap-1 text-xs",
+              change > 0 ? "text-green-600" : change < 0 ? "text-red-600" : "text-slate-600"
+            )}>
+                  {change > 0 ?
+              <ArrowUpRight className="h-3 w-3" /> :
+              change < 0 ?
+              <ArrowDownRight className="h-3 w-3" /> :
+
+              <Minus className="h-3 w-3" />
+              }
                   <span>{Math.abs(change)}%</span>
                 </div>
-              )}
+            }
             </div>
           </div>
           <div className={cn("p-2 rounded-lg", color)}>
@@ -435,8 +435,8 @@ export const ScoringMatrix = ({
           </div>
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>;
+
 
   return (
     <div className={cn("space-y-6", className)}>
@@ -458,11 +458,11 @@ export const ScoringMatrix = ({
               <SelectItem value="list">列表视图</SelectItem>
             </SelectContent>
           </Select>
-          {selectedLeads.length > 0 && (
-            <Button variant="outline" onClick={() => onBulkAction && onBulkAction("score", selectedLeads)}>
+          {selectedLeads.length > 0 &&
+          <Button variant="outline" onClick={() => onBulkAction && onBulkAction("score", selectedLeads)}>
               批量评分
             </Button>
-          )}
+          }
         </div>
       </div>
 
@@ -506,8 +506,8 @@ export const ScoringMatrix = ({
               placeholder="搜索联系人、公司或项目..."
               value={filters.search || ""}
               onChange={(e) => onFilterChange({ ...filters, search: e.target.value })}
-              className="w-64"
-            />
+              className="w-64" />
+
 
             <Select value={filters.status || "all"} onValueChange={(value) => onFilterChange({ ...filters, status: value })}>
               <SelectTrigger className="w-32">
@@ -515,11 +515,11 @@ export const ScoringMatrix = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">所有状态</SelectItem>
-                {LEAD_STATUSES.map(status => (
-                  <SelectItem key={status.value} value={status.value}>
+                {LEAD_STATUSES.map((status) =>
+                <SelectItem key={status.value} value={status.value}>
                     {status.label}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
 
@@ -529,11 +529,11 @@ export const ScoringMatrix = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">所有行业</SelectItem>
-                {INDUSTRIES.map(industry => (
-                  <SelectItem key={industry.value} value={industry.value}>
+                {INDUSTRIES.map((industry) =>
+                <SelectItem key={industry.value} value={industry.value}>
                     {industry.label}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
 
@@ -543,11 +543,11 @@ export const ScoringMatrix = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">所有来源</SelectItem>
-                {LEAD_SOURCES.slice(0, 5).map(source => (
-                  <SelectItem key={source.value} value={source.value}>
+                {LEAD_SOURCES.slice(0, 5).map((source) =>
+                <SelectItem key={source.value} value={source.value}>
                     {source.label}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
 
@@ -582,7 +582,7 @@ export const ScoringMatrix = ({
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-slate-600">优质线索 (≥80分)</span>
                     <div className="flex items-center gap-2">
-                      <div className="w-12 h-2 rounded-full bg-green-500" style={{ width: `${(stats.highScore / stats.total * 100) || 0}%` }} />
+                      <div className="w-12 h-2 rounded-full bg-green-500" style={{ width: `${stats.highScore / stats.total * 100 || 0}%` }} />
                       <span className="text-sm font-medium">{stats.highScore}</span>
                     </div>
                   </div>
@@ -590,7 +590,7 @@ export const ScoringMatrix = ({
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-slate-600">良好线索 (60-79分)</span>
                     <div className="flex items-center gap-2">
-                      <div className="w-12 h-2 rounded-full bg-blue-500" style={{ width: `${(stats.mediumScore / stats.total * 100) || 0}%` }} />
+                      <div className="w-12 h-2 rounded-full bg-blue-500" style={{ width: `${stats.mediumScore / stats.total * 100 || 0}%` }} />
                       <span className="text-sm font-medium">{stats.mediumScore}</span>
                     </div>
                   </div>
@@ -598,7 +598,7 @@ export const ScoringMatrix = ({
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-slate-600">一般线索 (40-59分)</span>
                     <div className="flex items-center gap-2">
-                      <div className="w-12 h-2 rounded-full bg-amber-500" style={{ width: `${(stats.lowScore / stats.total * 100) || 0}%` }} />
+                      <div className="w-12 h-2 rounded-full bg-amber-500" style={{ width: `${stats.lowScore / stats.total * 100 || 0}%` }} />
                       <span className="text-sm font-medium">{stats.lowScore}</span>
                     </div>
                   </div>
@@ -619,8 +619,8 @@ export const ScoringMatrix = ({
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {FOLLOW_UP_STRATEGIES.slice(0, 3).map(strategy => {
-                    const count = filteredLeads.filter(lead => {
+                  {FOLLOW_UP_STRATEGIES.slice(0, 3).map((strategy) => {
+                    const count = filteredLeads.filter((lead) => {
                       const score = lead.assessmentScore || 0;
                       return score >= strategy.scoreRange[0] && score <= strategy.scoreRange[1];
                     }).length;
@@ -638,8 +638,8 @@ export const ScoringMatrix = ({
                             {strategy.description}
                           </p>
                         </div>
-                      </div>
-                    );
+                      </div>);
+
                   })}
                 </div>
               </CardContent>
@@ -656,7 +656,7 @@ export const ScoringMatrix = ({
               <CardContent>
                 <div className="space-y-2">
                   {Object.entries(stats.sourceDistribution).map(([source, count]) => {
-                    const sourceConfig = LEAD_SOURCES.find(s => s.value === source);
+                    const sourceConfig = LEAD_SOURCES.find((s) => s.value === source);
                     const percentage = stats.total > 0 ? (count / stats.total * 100).toFixed(1) : 0;
 
                     return (
@@ -668,8 +668,8 @@ export const ScoringMatrix = ({
                             {percentage}%
                           </span>
                         </div>
-                      </div>
-                    );
+                      </div>);
+
                   })}
                 </div>
               </CardContent>
@@ -682,7 +682,7 @@ export const ScoringMatrix = ({
               <CardContent>
                 <div className="space-y-2">
                   {Object.entries(stats.industryDistribution).map(([industry, count]) => {
-                    const industryConfig = INDUSTRIES.find(i => i.value === industry);
+                    const industryConfig = INDUSTRIES.find((i) => i.value === industry);
                     const percentage = stats.total > 0 ? (count / stats.total * 100).toFixed(1) : 0;
 
                     return (
@@ -694,8 +694,8 @@ export const ScoringMatrix = ({
                             {percentage}%
                           </span>
                         </div>
-                      </div>
-                    );
+                      </div>);
+
                   })}
                 </div>
               </CardContent>
@@ -708,7 +708,7 @@ export const ScoringMatrix = ({
               <CardContent>
                 <div className="space-y-2">
                   {Object.entries(stats.budgetDistribution).map(([budget, count]) => {
-                    const budgetConfig = BUDGET_RANGES.find(b => b.value === budget);
+                    const budgetConfig = BUDGET_RANGES.find((b) => b.value === budget);
                     const percentage = stats.total > 0 ? (count / stats.total * 100).toFixed(1) : 0;
 
                     return (
@@ -720,8 +720,8 @@ export const ScoringMatrix = ({
                             {percentage}%
                           </span>
                         </div>
-                      </div>
-                    );
+                      </div>);
+
                   })}
                 </div>
               </CardContent>
@@ -729,8 +729,8 @@ export const ScoringMatrix = ({
           </div>
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>);
+
 };
 
 export default ScoringMatrix;

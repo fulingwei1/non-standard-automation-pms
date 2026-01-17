@@ -14,15 +14,15 @@ import {
   Target,
   TrendingUp,
   Edit,
-  Eye,
-} from "lucide-react";
+  Eye } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -31,23 +31,23 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogBody,
-  DialogFooter,
-} from "../components/ui/dialog";
+  DialogFooter } from
+"../components/ui/dialog";
 import { cn, formatDate } from "../lib/utils";
 import { milestoneApi, projectApi } from "../services/api";
 const statusConfigs = {
   PENDING: { label: "待开始", color: "bg-slate-500", icon: Clock },
   IN_PROGRESS: { label: "进行中", color: "bg-blue-500", icon: TrendingUp },
   COMPLETED: { label: "已完成", color: "bg-emerald-500", icon: CheckCircle2 },
-  OVERDUE: { label: "已逾期", color: "bg-red-500", icon: AlertTriangle },
+  OVERDUE: { label: "已逾期", color: "bg-red-500", icon: AlertTriangle }
 };
 export default function MilestoneManagement() {
   const { id } = useParams();
@@ -68,7 +68,7 @@ export default function MilestoneManagement() {
     planned_date: "",
     target_amount: 0,
     description: "",
-    auto_invoice: false,
+    auto_invoice: false
   });
   useEffect(() => {
     if (id) {
@@ -106,7 +106,7 @@ export default function MilestoneManagement() {
     try {
       await milestoneApi.create({
         ...newMilestone,
-        project_id: parseInt(id),
+        project_id: parseInt(id)
       });
       setShowCreateDialog(false);
       setNewMilestone({
@@ -115,13 +115,13 @@ export default function MilestoneManagement() {
         planned_date: "",
         target_amount: 0,
         description: "",
-        auto_invoice: false,
+        auto_invoice: false
       });
       fetchMilestones();
     } catch (error) {
       console.error("Failed to create milestone:", error);
       alert(
-        "创建里程碑失败: " + (error.response?.data?.detail || error.message),
+        "创建里程碑失败: " + (error.response?.data?.detail || error.message)
       );
     }
   };
@@ -133,7 +133,7 @@ export default function MilestoneManagement() {
     } catch (error) {
       console.error("Failed to complete milestone:", error);
       alert(
-        "完成里程碑失败: " + (error.response?.data?.detail || error.message),
+        "完成里程碑失败: " + (error.response?.data?.detail || error.message)
       );
     }
   };
@@ -163,15 +163,15 @@ export default function MilestoneManagement() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate(`/projects/${id}`)}
-          >
+            onClick={() => navigate(`/projects/${id}`)}>
+
             <ArrowLeft className="w-4 h-4 mr-2" />
             返回项目
           </Button>
           <PageHeader
             title={`${project?.project_name || "项目"} - 里程碑管理`}
-            description="里程碑列表、创建、完成、时间线展示"
-          />
+            description="里程碑列表、创建、完成、时间线展示" />
+
         </div>
         <Button onClick={() => setShowCreateDialog(true)}>
           <Plus className="w-4 h-4 mr-2" />
@@ -188,11 +188,11 @@ export default function MilestoneManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部状态</SelectItem>
-                {Object.entries(statusConfigs).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
+                {Object.entries(statusConfigs).map(([key, config]) =>
+                <SelectItem key={key} value={key}>
                     {config.label}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -204,28 +204,28 @@ export default function MilestoneManagement() {
           <CardTitle>里程碑时间线</CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="text-center py-8 text-slate-400">加载中...</div>
-          ) : milestones.length === 0 ? (
-            <div className="text-center py-8 text-slate-400">暂无里程碑</div>
-          ) : (
-            <div className="space-y-4">
-              {milestones.map((milestone, index) => {
-                const overdue = isOverdue(milestone);
-                const status = overdue ? "OVERDUE" : milestone.status;
-                const config = statusConfigs[status] || statusConfigs.PENDING;
-                return (
-                  <div
-                    key={milestone.id}
-                    className="relative border-l-2 border-slate-200 pl-6 pb-6 last:pb-0"
-                  >
+          {loading ?
+          <div className="text-center py-8 text-slate-400">加载中...</div> :
+          milestones.length === 0 ?
+          <div className="text-center py-8 text-slate-400">暂无里程碑</div> :
+
+          <div className="space-y-4">
+              {milestones.map((milestone, _index) => {
+              const overdue = isOverdue(milestone);
+              const status = overdue ? "OVERDUE" : milestone.status;
+              const config = statusConfigs[status] || statusConfigs.PENDING;
+              return (
+                <div
+                  key={milestone.id}
+                  className="relative border-l-2 border-slate-200 pl-6 pb-6 last:pb-0">
+
                     <div className="absolute -left-2.5 top-0">
                       <div
-                        className={cn(
-                          "w-5 h-5 rounded-full border-2 border-white",
-                          config.color,
-                        )}
-                      >
+                      className={cn(
+                        "w-5 h-5 rounded-full border-2 border-white",
+                        config.color
+                      )}>
+
                         {getStatusIcon(status)}
                       </div>
                     </div>
@@ -236,72 +236,72 @@ export default function MilestoneManagement() {
                             {milestone.milestone_name}
                           </h3>
                           <Badge className={config.color}>{config.label}</Badge>
-                          {milestone.milestone_type && (
-                            <Badge variant="outline">
+                          {milestone.milestone_type &&
+                        <Badge variant="outline">
                               {milestone.milestone_type}
                             </Badge>
-                          )}
-                          {overdue && (
-                            <Badge className="bg-red-500">
+                        }
+                          {overdue &&
+                        <Badge className="bg-red-500">
                               <AlertTriangle className="w-3 h-3 mr-1" />
                               逾期
                             </Badge>
-                          )}
+                        }
                         </div>
-                        {milestone.description && (
-                          <p className="text-sm text-slate-500 mb-2">
+                        {milestone.description &&
+                      <p className="text-sm text-slate-500 mb-2">
                             {milestone.description}
                           </p>
-                        )}
+                      }
                         <div className="flex items-center gap-4 text-sm text-slate-500">
                           <div className="flex items-center gap-1">
                             <Calendar className="w-4 h-4" />
-                            {milestone.planned_date
-                              ? formatDate(milestone.planned_date)
-                              : "-"}
+                            {milestone.planned_date ?
+                          formatDate(milestone.planned_date) :
+                          "-"}
                           </div>
-                          {milestone.target_amount > 0 && (
-                            <div className="flex items-center gap-1">
+                          {milestone.target_amount > 0 &&
+                        <div className="flex items-center gap-1">
                               <Target className="w-4 h-4" />
                               目标金额: ¥
                               {milestone.target_amount.toLocaleString()}
                             </div>
-                          )}
-                          {milestone.completed_date && (
-                            <div className="flex items-center gap-1 text-emerald-600">
+                        }
+                          {milestone.completed_date &&
+                        <div className="flex items-center gap-1 text-emerald-600">
                               <CheckCircle2 className="w-4 h-4" />
                               完成时间: {formatDate(milestone.completed_date)}
                             </div>
-                          )}
+                        }
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewDetail(milestone.id)}
-                        >
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleViewDetail(milestone.id)}>
+
                           <Eye className="w-4 h-4" />
                         </Button>
-                        {milestone.status !== "COMPLETED" && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                              handleCompleteMilestone(milestone.id)
-                            }
-                          >
+                        {milestone.status !== "COMPLETED" &&
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                        handleCompleteMilestone(milestone.id)
+                        }>
+
                             <CheckCircle2 className="w-4 h-4 mr-2" />
                             完成
                           </Button>
-                        )}
+                      }
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  </div>);
+
+            })}
             </div>
-          )}
+          }
         </CardContent>
       </Card>
       {/* Create Milestone Dialog */}
@@ -319,13 +319,13 @@ export default function MilestoneManagement() {
                 <Input
                   value={newMilestone.milestone_name}
                   onChange={(e) =>
-                    setNewMilestone({
-                      ...newMilestone,
-                      milestone_name: e.target.value,
-                    })
+                  setNewMilestone({
+                    ...newMilestone,
+                    milestone_name: e.target.value
+                  })
                   }
-                  placeholder="请输入里程碑名称"
-                />
+                  placeholder="请输入里程碑名称" />
+
               </div>
               <div>
                 <label className="text-sm font-medium mb-2 block">
@@ -334,9 +334,9 @@ export default function MilestoneManagement() {
                 <Select
                   value={newMilestone.milestone_type}
                   onValueChange={(val) =>
-                    setNewMilestone({ ...newMilestone, milestone_type: val })
-                  }
-                >
+                  setNewMilestone({ ...newMilestone, milestone_type: val })
+                  }>
+
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -356,12 +356,12 @@ export default function MilestoneManagement() {
                   type="date"
                   value={newMilestone.planned_date}
                   onChange={(e) =>
-                    setNewMilestone({
-                      ...newMilestone,
-                      planned_date: e.target.value,
-                    })
-                  }
-                />
+                  setNewMilestone({
+                    ...newMilestone,
+                    planned_date: e.target.value
+                  })
+                  } />
+
               </div>
               <div>
                 <label className="text-sm font-medium mb-2 block">
@@ -371,34 +371,34 @@ export default function MilestoneManagement() {
                   type="number"
                   value={newMilestone.target_amount}
                   onChange={(e) =>
-                    setNewMilestone({
-                      ...newMilestone,
-                      target_amount: parseFloat(e.target.value) || 0,
-                    })
+                  setNewMilestone({
+                    ...newMilestone,
+                    target_amount: parseFloat(e.target.value) || 0
+                  })
                   }
-                  placeholder="0.00"
-                />
+                  placeholder="0.00" />
+
               </div>
               <div>
                 <label className="text-sm font-medium mb-2 block">描述</label>
                 <Input
                   value={newMilestone.description}
                   onChange={(e) =>
-                    setNewMilestone({
-                      ...newMilestone,
-                      description: e.target.value,
-                    })
+                  setNewMilestone({
+                    ...newMilestone,
+                    description: e.target.value
+                  })
                   }
-                  placeholder="里程碑描述"
-                />
+                  placeholder="里程碑描述" />
+
               </div>
             </div>
           </DialogBody>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowCreateDialog(false)}
-            >
+              onClick={() => setShowCreateDialog(false)}>
+
               取消
             </Button>
             <Button onClick={handleCreateMilestone}>创建</Button>
@@ -412,8 +412,8 @@ export default function MilestoneManagement() {
             <DialogTitle>里程碑详情</DialogTitle>
           </DialogHeader>
           <DialogBody>
-            {selectedMilestone && (
-              <div className="space-y-4">
+            {selectedMilestone &&
+            <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <div className="text-sm text-slate-500 mb-1">
@@ -426,8 +426,8 @@ export default function MilestoneManagement() {
                   <div>
                     <div className="text-sm text-slate-500 mb-1">状态</div>
                     <Badge
-                      className={statusConfigs[selectedMilestone.status]?.color}
-                    >
+                    className={statusConfigs[selectedMilestone.status]?.color}>
+
                       {statusConfigs[selectedMilestone.status]?.label}
                     </Badge>
                   </div>
@@ -438,13 +438,13 @@ export default function MilestoneManagement() {
                   <div>
                     <div className="text-sm text-slate-500 mb-1">计划日期</div>
                     <div>
-                      {selectedMilestone.planned_date
-                        ? formatDate(selectedMilestone.planned_date)
-                        : "-"}
+                      {selectedMilestone.planned_date ?
+                    formatDate(selectedMilestone.planned_date) :
+                    "-"}
                     </div>
                   </div>
-                  {selectedMilestone.target_amount > 0 && (
-                    <div>
+                  {selectedMilestone.target_amount > 0 &&
+                <div>
                       <div className="text-sm text-slate-500 mb-1">
                         目标金额
                       </div>
@@ -452,43 +452,43 @@ export default function MilestoneManagement() {
                         ¥{selectedMilestone.target_amount.toLocaleString()}
                       </div>
                     </div>
-                  )}
-                  {selectedMilestone.completed_date && (
-                    <div>
+                }
+                  {selectedMilestone.completed_date &&
+                <div>
                       <div className="text-sm text-slate-500 mb-1">
                         完成日期
                       </div>
                       <div>{formatDate(selectedMilestone.completed_date)}</div>
                     </div>
-                  )}
+                }
                 </div>
-                {selectedMilestone.description && (
-                  <div>
+                {selectedMilestone.description &&
+              <div>
                     <div className="text-sm text-slate-500 mb-1">描述</div>
                     <div>{selectedMilestone.description}</div>
                   </div>
-                )}
+              }
               </div>
-            )}
+            }
           </DialogBody>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowDetailDialog(false)}
-            >
+              onClick={() => setShowDetailDialog(false)}>
+
               关闭
             </Button>
-            {selectedMilestone && selectedMilestone.status !== "COMPLETED" && (
-              <Button
-                onClick={() => handleCompleteMilestone(selectedMilestone.id)}
-              >
+            {selectedMilestone && selectedMilestone.status !== "COMPLETED" &&
+            <Button
+              onClick={() => handleCompleteMilestone(selectedMilestone.id)}>
+
                 <CheckCircle2 className="w-4 h-4 mr-2" />
                 完成里程碑
               </Button>
-            )}
+            }
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }

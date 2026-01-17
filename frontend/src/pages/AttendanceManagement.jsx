@@ -16,8 +16,8 @@ import {
   CheckCircle2,
   XCircle,
   Download,
-  BarChart3,
-} from "lucide-react";
+  BarChart3 } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -31,21 +31,22 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-  Progress,
-} from "../components/ui";
+  Progress } from
+"../components/ui";
 import { cn } from "../lib/utils";
 import { staggerContainer } from "../lib/animations";
 import {
   SimpleBarChart,
   MonthlyTrendChart,
-  TrendComparisonCard,
-} from "../components/administrative/StatisticsCharts";
+  TrendComparisonCard } from
+"../components/administrative/StatisticsCharts";
 import { adminApi } from "../services/api";
 
 export default function AttendanceManagement() {
-  const [searchText, setSearchText] = useState("");
-  const [dateFilter, setDateFilter] = useState("today");
-  const [loading, setLoading] = useState(false);
+  const mockLeaveApplications = [];
+  const [_searchText, _setSearchText] = useState("");
+  const [dateFilter, _setDateFilter] = useState("today");
+  const [_loading, setLoading] = useState(false);
   const [attendanceStats, setAttendanceStats] = useState([]);
 
   // Fetch data from API
@@ -59,7 +60,7 @@ export default function AttendanceManagement() {
         } else if (Array.isArray(res.data)) {
           setAttendanceStats(res.data);
         }
-      } catch (err) {
+      } catch (_err) {
         console.log("Attendance API unavailable, using mock data");
       }
       setLoading(false);
@@ -72,7 +73,7 @@ export default function AttendanceManagement() {
     const present = attendanceStats.reduce((sum, s) => sum + s.present, 0);
     const leave = attendanceStats.reduce((sum, s) => sum + s.leave, 0);
     const late = attendanceStats.reduce((sum, s) => sum + s.late, 0);
-    const attendanceRate = total > 0 ? (present / total) * 100 : 0;
+    const attendanceRate = total > 0 ? present / total * 100 : 0;
     return { total, present, leave, late, attendanceRate };
   }, [attendanceStats]);
 
@@ -81,13 +82,13 @@ export default function AttendanceManagement() {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       <PageHeader
         title="员工考勤管理"
         description="员工考勤记录、统计分析、请假管理、加班管理"
         actions={
-          <div className="flex gap-2">
+        <div className="flex gap-2">
             <Button variant="outline">
               <Download className="w-4 h-4 mr-2" />
               导出报表
@@ -97,8 +98,8 @@ export default function AttendanceManagement() {
               统计分析
             </Button>
           </div>
-        }
-      />
+        } />
+
 
       {/* Overall Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -180,8 +181,8 @@ export default function AttendanceManagement() {
 
         <TabsContent value="statistics" className="space-y-4">
           <div className="grid grid-cols-1 gap-4">
-            {attendanceStats.map((stat, index) => (
-              <Card key={index}>
+            {attendanceStats.map((stat, index) =>
+            <Card key={index}>
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div>
@@ -228,7 +229,7 @@ export default function AttendanceManagement() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            )}
           </div>
         </TabsContent>
 
@@ -250,11 +251,11 @@ export default function AttendanceManagement() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockLeaveApplications.map((app) => (
-                  <div
-                    key={app.id}
-                    className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50"
-                  >
+                {mockLeaveApplications.map((app) =>
+                <div
+                  key={app.id}
+                  className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50">
+
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
@@ -263,14 +264,14 @@ export default function AttendanceManagement() {
                           </span>
                           <Badge variant="outline">{app.department}</Badge>
                           <Badge
-                            variant="outline"
-                            className={cn(
-                              app.status === "pending" &&
-                                "bg-amber-500/20 text-amber-400 border-amber-500/30",
-                              app.status === "approved" &&
-                                "bg-green-500/20 text-green-400 border-green-500/30",
-                            )}
-                          >
+                          variant="outline"
+                          className={cn(
+                            app.status === "pending" &&
+                            "bg-amber-500/20 text-amber-400 border-amber-500/30",
+                            app.status === "approved" &&
+                            "bg-green-500/20 text-green-400 border-green-500/30"
+                          )}>
+
                             {app.status === "pending" ? "待审批" : "已批准"}
                           </Badge>
                         </div>
@@ -287,8 +288,8 @@ export default function AttendanceManagement() {
                           </p>
                         </div>
                       </div>
-                      {app.status === "pending" && (
-                        <div className="flex gap-2">
+                      {app.status === "pending" &&
+                    <div className="flex gap-2">
                           <Button size="sm" variant="outline">
                             批准
                           </Button>
@@ -296,10 +297,10 @@ export default function AttendanceManagement() {
                             拒绝
                           </Button>
                         </div>
-                      )}
+                    }
                     </div>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
@@ -316,6 +317,6 @@ export default function AttendanceManagement() {
           </Card>
         </TabsContent>
       </Tabs>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

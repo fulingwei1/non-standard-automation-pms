@@ -2,20 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
-  Phone, 
-  Mail, 
-  MessageSquare, 
-  Users, 
-  Clock, 
-  CheckCircle, 
+import {
+  Phone,
+  Mail,
+  MessageSquare,
+  Users,
+  Clock,
+  CheckCircle,
   AlertCircle,
   TrendingUp,
   Star,
   Calendar,
   BarChart3,
-  Filter
-} from 'lucide-react';
+  Filter } from
+'lucide-react';
 import {
   COMMUNICATION_STATUS,
   COMMUNICATION_STATUS_LABELS,
@@ -33,13 +33,13 @@ import {
   getCommunicationStatusStats,
   getCommunicationTypeStats,
   getTopicDistributionStats,
-  getCommunicationTypeIcon
-} from './customerCommunicationConstants';
+  getCommunicationTypeIcon } from
+'./customerCommunicationConstants';
 
-const CustomerCommunicationOverview = ({ 
-  communications = [], 
-  customers = [], 
-  onQuickAction 
+const CustomerCommunicationOverview = ({
+  communications = [],
+  customers = [],
+  onQuickAction
 }) => {
   const [stats, setStats] = useState({
     totalCommunications: 0,
@@ -59,7 +59,7 @@ const CustomerCommunicationOverview = ({
       const statusStats = getCommunicationStatusStats(communications);
       const typeStatsData = getCommunicationTypeStats(communications);
       const topicStatsData = getTopicDistributionStats(communications);
-      
+
       setStats({
         totalCommunications: statusStats.total,
         pendingCommunications: statusStats.pending,
@@ -75,16 +75,16 @@ const CustomerCommunicationOverview = ({
     }
   }, [communications]);
 
-  const todayCommunications = communications.filter(comm => 
-    new Date(comm.communication_date).toDateString() === new Date().toDateString()
+  const todayCommunications = communications.filter((comm) =>
+  new Date(comm.communication_date).toDateString() === new Date().toDateString()
   ).length;
 
-  const highPriorityCommunications = communications.filter(comm => 
-    comm.priority === COMMUNICATION_PRIORITY.HIGH && 
-    comm.status !== COMMUNICATION_STATUS.COMPLETED
+  const highPriorityCommunications = communications.filter((comm) =>
+  comm.priority === COMMUNICATION_PRIORITY.HIGH &&
+  comm.status !== COMMUNICATION_STATUS.COMPLETED
   ).length;
 
-  const overdueCommunications = communications.filter(comm => {
+  const overdueCommunications = communications.filter((comm) => {
     if (comm.status === COMMUNICATION_STATUS.COMPLETED) return false;
     const communicationDate = new Date(comm.communication_date);
     const now = new Date();
@@ -93,30 +93,30 @@ const CustomerCommunicationOverview = ({
   }).length;
 
   const getTopCommunicationTypes = () => {
-    return Object.entries(typeStats)
-      .filter(([type, count]) => count > 0)
-      .sort(([,a], [,b]) => b - a)
-      .slice(0, 3)
-      .map(([type, count]) => ({
-        type,
-        label: COMMUNICATION_TYPE_LABELS[type],
-        icon: getCommunicationTypeIcon(type),
-        count,
-        percentage: ((count / communications.length) * 100).toFixed(1)
-      }));
+    return Object.entries(typeStats).
+    filter(([_type, count]) => count > 0).
+    sort(([, a], [, b]) => b - a).
+    slice(0, 3).
+    map(([type, count]) => ({
+      type,
+      label: COMMUNICATION_TYPE_LABELS[type],
+      icon: getCommunicationTypeIcon(type),
+      count,
+      percentage: (count / communications.length * 100).toFixed(1)
+    }));
   };
 
   const getTopTopics = () => {
-    return Object.entries(topicStats)
-      .filter(([topic, count]) => count > 0)
-      .sort(([,a], [,b]) => b - a)
-      .slice(0, 3)
-      .map(([topic, count]) => ({
-        topic,
-        label: COMMUNICATION_TOPIC_LABELS[topic],
-        count,
-        percentage: ((count / communications.length) * 100).toFixed(1)
-      }));
+    return Object.entries(topicStats).
+    filter(([_topic, count]) => count > 0).
+    sort(([, a], [, b]) => b - a).
+    slice(0, 3).
+    map(([topic, count]) => ({
+      topic,
+      label: COMMUNICATION_TOPIC_LABELS[topic],
+      count,
+      percentage: (count / communications.length * 100).toFixed(1)
+    }));
   };
 
   const getSatisfactionLevel = () => {
@@ -201,22 +201,22 @@ const CustomerCommunicationOverview = ({
               {Object.entries(COMMUNICATION_STATUS).map(([key, value]) => {
                 const count = stats[`${key.toLowerCase()}Communications`] || 0;
                 const percentage = stats.totalCommunications > 0 ? (count / stats.totalCommunications * 100).toFixed(1) : 0;
-                
+
                 return (
                   <div key={value} className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <div 
-                        className="w-3 h-3 rounded-full" 
-                        style={{ backgroundColor: COMMUNICATION_STATUS_COLORS[value] }}
-                      />
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: COMMUNICATION_STATUS_COLORS[value] }} />
+
                       <span className="text-sm">{COMMUNICATION_STATUS_LABELS[value]}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Badge variant="secondary">{count}</Badge>
                       <span className="text-xs text-muted-foreground">{percentage}%</span>
                     </div>
-                  </div>
-                );
+                  </div>);
+
               })}
             </div>
           </CardContent>
@@ -264,8 +264,8 @@ const CustomerCommunicationOverview = ({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {topTypes.map((typeData, index) => (
-                <div key={typeData.type} className="flex items-center justify-between">
+              {topTypes.map((typeData, _index) =>
+              <div key={typeData.type} className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <span className="text-lg">{typeData.icon}</span>
                     <span className="text-sm font-medium">{typeData.label}</span>
@@ -274,8 +274,8 @@ const CustomerCommunicationOverview = ({
                     <Badge variant="secondary">{typeData.count}</Badge>
                     <span className="text-xs text-muted-foreground">{typeData.percentage}%</span>
                   </div>
-                </div>
-              ))}
+              </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -286,21 +286,21 @@ const CustomerCommunicationOverview = ({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {topTopics.map((topicData, index) => (
-                <div key={topicData.topic} className="flex items-center justify-between">
+              {topTopics.map((topicData, _index) =>
+              <div key={topicData.topic} className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <div 
-                      className="w-3 h-3 rounded-full" 
-                      style={{ backgroundColor: COMMUNICATION_TOPIC[topicData.topic] ? '#3B82F6' : '#6B7280' }}
-                    />
+                    <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: COMMUNICATION_TOPIC[topicData.topic] ? '#3B82F6' : '#6B7280' }} />
+
                     <span className="text-sm font-medium">{topicData.label}</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Badge variant="secondary">{topicData.count}</Badge>
                     <span className="text-xs text-muted-foreground">{topicData.percentage}%</span>
                   </div>
-                </div>
-              ))}
+              </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -313,38 +313,38 @@ const CustomerCommunicationOverview = ({
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="h-auto p-4 flex flex-col items-center space-y-2"
-              onClick={() => onQuickAction?.('createCommunication')}
-            >
+              onClick={() => onQuickAction?.('createCommunication')}>
+
               <MessageSquare className="h-6 w-6" />
               <span className="text-sm">新建沟通记录</span>
             </Button>
             
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="h-auto p-4 flex flex-col items-center space-y-2"
-              onClick={() => onQuickAction?.('viewPending')}
-            >
+              onClick={() => onQuickAction?.('viewPending')}>
+
               <Clock className="h-6 w-6" />
               <span className="text-sm">待处理列表</span>
             </Button>
             
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="h-auto p-4 flex flex-col items-center space-y-2"
-              onClick={() => onQuickAction?.('viewOverdue')}
-            >
+              onClick={() => onQuickAction?.('viewOverdue')}>
+
               <AlertCircle className="h-6 w-6" />
               <span className="text-sm">超期提醒</span>
             </Button>
             
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="h-auto p-4 flex flex-col items-center space-y-2"
-              onClick={() => onQuickAction?.('viewAnalytics')}
-            >
+              onClick={() => onQuickAction?.('viewAnalytics')}>
+
               <BarChart3 className="h-6 w-6" />
               <span className="text-sm">统计分析</span>
             </Button>
@@ -377,7 +377,7 @@ const CustomerCommunicationOverview = ({
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">{stats.followUpCommunications}</div>
             <p className="text-xs text-muted-foreground">
-              占比: {stats.totalCommunications > 0 ? ((stats.followUpCommunications / stats.totalCommunications) * 100).toFixed(1) : 0}%
+              占比: {stats.totalCommunications > 0 ? (stats.followUpCommunications / stats.totalCommunications * 100).toFixed(1) : 0}%
             </p>
           </CardContent>
         </Card>
@@ -395,8 +395,8 @@ const CustomerCommunicationOverview = ({
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default CustomerCommunicationOverview;

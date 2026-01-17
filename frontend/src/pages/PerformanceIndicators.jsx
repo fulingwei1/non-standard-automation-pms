@@ -20,15 +20,15 @@ import {
   TrendingUp,
   Percent,
   Settings,
-  Loader2,
-} from "lucide-react";
+  Loader2 } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+  CardTitle } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Input } from "../components/ui/input";
@@ -39,26 +39,26 @@ import { performanceApi } from "../services/api";
 // Mock data
 // Mock data - 已移除，使用真实API
 const categories = [
-  { value: "ALL", label: "全部", color: "slate" },
-  { value: "WORKLOAD", label: "工作量类", color: "blue" },
-  { value: "TASK", label: "任务类", color: "purple" },
-  { value: "QUALITY", label: "质量类", color: "emerald" },
-  { value: "COLLABORATION", label: "协作类", color: "amber" },
-  { value: "GROWTH", label: "成长类", color: "cyan" },
-];
+{ value: "ALL", label: "全部", color: "slate" },
+{ value: "WORKLOAD", label: "工作量类", color: "blue" },
+{ value: "TASK", label: "任务类", color: "purple" },
+{ value: "QUALITY", label: "质量类", color: "emerald" },
+{ value: "COLLABORATION", label: "协作类", color: "amber" },
+{ value: "GROWTH", label: "成长类", color: "cyan" }];
+
 
 const statusOptions = [
-  { value: "ACTIVE", label: "启用", color: "emerald" },
-  { value: "INACTIVE", label: "停用", color: "slate" },
-];
+{ value: "ACTIVE", label: "启用", color: "emerald" },
+{ value: "INACTIVE", label: "停用", color: "slate" }];
+
 
 export default function PerformanceIndicators() {
   const [selectedCategory, setSelectedCategory] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [editingIndicator, setEditingIndicator] = useState(null);
+  const [_showAddModal, setShowAddModal] = useState(false);
+  const [_editingIndicator, setEditingIndicator] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [_error, setError] = useState(null);
   const [indicators, setIndicators] = useState([]);
 
   // Fetch indicators from API
@@ -84,16 +84,16 @@ export default function PerformanceIndicators() {
 
   const filteredIndicators = indicators.filter((indicator) => {
     const matchesCategory =
-      selectedCategory === "ALL" || indicator.category === selectedCategory;
+    selectedCategory === "ALL" || indicator.category === selectedCategory;
     const matchesSearch =
-      indicator.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      indicator.code.toLowerCase().includes(searchQuery.toLowerCase());
+    indicator.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    indicator.code.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
-  const totalWeight = indicators
-    .filter((ind) => ind.status === "ACTIVE")
-    .reduce((sum, ind) => sum + ind.weight, 0);
+  const totalWeight = indicators.
+  filter((ind) => ind.status === "ACTIVE").
+  reduce((sum, ind) => sum + ind.weight, 0);
 
   const getCategoryColor = (category) => {
     const cat = categories.find((c) => c.value === category);
@@ -110,13 +110,13 @@ export default function PerformanceIndicators() {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       <PageHeader
         title="绩效指标配置"
         description="配置和管理绩效考核指标体系"
         actions={
-          <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3">
             <Button variant="outline" className="flex items-center gap-2">
               <Upload className="w-4 h-4" />
               导入模板
@@ -126,33 +126,33 @@ export default function PerformanceIndicators() {
               导出配置
             </Button>
             <Button
-              className="flex items-center gap-2"
-              onClick={() => setShowAddModal(true)}
-            >
+            className="flex items-center gap-2"
+            onClick={() => setShowAddModal(true)}>
+
               <Plus className="w-4 h-4" />
               新建指标
             </Button>
           </div>
-        }
-      />
+        } />
+
 
       {/* Summary Cards */}
       <motion.div
         variants={fadeIn}
-        className="grid grid-cols-1 md:grid-cols-4 gap-4"
-      >
+        className="grid grid-cols-1 md:grid-cols-4 gap-4">
+
         <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400 mb-1">指标总数</p>
-                {loading ? (
-                  <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
-                ) : (
-                  <p className="text-3xl font-bold text-white">
+                {loading ?
+                <Loader2 className="h-8 w-8 animate-spin text-slate-400" /> :
+
+                <p className="text-3xl font-bold text-white">
                     {indicators.length}
                   </p>
-                )}
+                }
               </div>
               <Target className="h-8 w-8 text-blue-400" />
             </div>
@@ -164,13 +164,13 @@ export default function PerformanceIndicators() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400 mb-1">启用中</p>
-                {loading ? (
-                  <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
-                ) : (
-                  <p className="text-3xl font-bold text-emerald-400">
+                {loading ?
+                <Loader2 className="h-8 w-8 animate-spin text-slate-400" /> :
+
+                <p className="text-3xl font-bold text-emerald-400">
                     {indicators.filter((i) => i.status === "ACTIVE").length}
                   </p>
-                )}
+                }
               </div>
               <TrendingUp className="h-8 w-8 text-emerald-400" />
             </div>
@@ -188,12 +188,12 @@ export default function PerformanceIndicators() {
               </div>
               <Percent className="h-8 w-8 text-cyan-400" />
             </div>
-            {totalWeight !== 100 && (
-              <div className="mt-2 flex items-center gap-1 text-xs text-amber-400">
+            {totalWeight !== 100 &&
+            <div className="mt-2 flex items-center gap-1 text-xs text-amber-400">
                 <AlertCircle className="w-3 h-3" />
                 <span>权重总和应为100%</span>
               </div>
-            )}
+            }
           </CardContent>
         </Card>
 
@@ -225,30 +225,30 @@ export default function PerformanceIndicators() {
                     placeholder="搜索指标名称或编号..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 bg-slate-900/50 border-slate-700"
-                  />
+                    className="pl-10 bg-slate-900/50 border-slate-700" />
+
                 </div>
               </div>
 
               {/* Category Filter */}
               <div className="flex gap-2 flex-wrap">
-                {categories.map((cat) => (
-                  <Button
-                    key={cat.value}
-                    variant={
-                      selectedCategory === cat.value ? "default" : "outline"
-                    }
-                    size="sm"
-                    onClick={() => setSelectedCategory(cat.value)}
-                    className={cn(
-                      "transition-all",
-                      selectedCategory === cat.value &&
-                        `bg-${cat.color}-500/20 border-${cat.color}-500/50 text-${cat.color}-400`,
-                    )}
-                  >
+                {categories.map((cat) =>
+                <Button
+                  key={cat.value}
+                  variant={
+                  selectedCategory === cat.value ? "default" : "outline"
+                  }
+                  size="sm"
+                  onClick={() => setSelectedCategory(cat.value)}
+                  className={cn(
+                    "transition-all",
+                    selectedCategory === cat.value &&
+                    `bg-${cat.color}-500/20 border-${cat.color}-500/50 text-${cat.color}-400`
+                  )}>
+
                     {cat.label}
                   </Button>
-                ))}
+                )}
               </div>
             </div>
           </CardContent>
@@ -269,12 +269,12 @@ export default function PerformanceIndicators() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {filteredIndicators.map((indicator) => (
-                <motion.div
-                  key={indicator.id}
-                  variants={fadeIn}
-                  className="p-4 rounded-lg bg-slate-800/40 border border-slate-700/50 hover:border-slate-600/80 transition-all"
-                >
+              {filteredIndicators.map((indicator) =>
+              <motion.div
+                key={indicator.id}
+                variants={fadeIn}
+                className="p-4 rounded-lg bg-slate-800/40 border border-slate-700/50 hover:border-slate-600/80 transition-all">
+
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 space-y-3">
                       <div className="flex items-center gap-3">
@@ -282,24 +282,24 @@ export default function PerformanceIndicators() {
                           {indicator.name}
                         </h3>
                         <Badge
-                          className={cn(
-                            "text-xs",
-                            `bg-${getCategoryColor(indicator.category)}-500/20 text-${getCategoryColor(indicator.category)}-400 border-${getCategoryColor(indicator.category)}-500/50`,
-                          )}
-                        >
+                        className={cn(
+                          "text-xs",
+                          `bg-${getCategoryColor(indicator.category)}-500/20 text-${getCategoryColor(indicator.category)}-400 border-${getCategoryColor(indicator.category)}-500/50`
+                        )}>
+
                           {indicator.categoryName}
                         </Badge>
                         <Badge
-                          className={cn(
-                            "text-xs",
-                            `bg-${getStatusColor(indicator.status)}-500/20 text-${getStatusColor(indicator.status)}-400 border-${getStatusColor(indicator.status)}-500/50`,
-                          )}
-                        >
+                        className={cn(
+                          "text-xs",
+                          `bg-${getStatusColor(indicator.status)}-500/20 text-${getStatusColor(indicator.status)}-400 border-${getStatusColor(indicator.status)}-500/50`
+                        )}>
+
                           {
-                            statusOptions.find(
-                              (s) => s.value === indicator.status,
-                            )?.label
-                          }
+                        statusOptions.find(
+                          (s) => s.value === indicator.status
+                        )?.label
+                        }
                         </Badge>
                         <span className="text-xs text-slate-500">
                           {indicator.code}
@@ -342,38 +342,38 @@ export default function PerformanceIndicators() {
 
                     <div className="flex items-center gap-2">
                       <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={() => setEditingIndicator(indicator)}
-                      >
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => setEditingIndicator(indicator)}>
+
                         <Edit2 className="h-4 w-4" />
                       </Button>
                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                         <Copy className="h-4 w-4" />
                       </Button>
                       <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 text-red-400 hover:text-red-300"
-                      >
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 text-red-400 hover:text-red-300">
+
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
                 </motion.div>
-              ))}
+              )}
 
-              {filteredIndicators.length === 0 && (
-                <div className="text-center py-12">
+              {filteredIndicators.length === 0 &&
+              <div className="text-center py-12">
                   <Target className="h-12 w-12 text-slate-600 mx-auto mb-3" />
                   <p className="text-slate-400">暂无符合条件的指标</p>
                 </div>
-              )}
+              }
             </div>
           </CardContent>
         </Card>
       </motion.div>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

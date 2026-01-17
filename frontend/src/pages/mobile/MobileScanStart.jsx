@@ -10,20 +10,20 @@ import {
   Scan,
   CheckCircle2,
   AlertCircle,
-  Camera,
-} from "lucide-react";
+  Camera } from
+"lucide-react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Card, CardContent } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
-import { cn } from "../../lib/utils";
+import { cn as _cn } from "../../lib/utils";
 import { productionApi } from "../../services/api";
 
 const statusConfigs = {
   PENDING: { label: "待派工", color: "bg-slate-500" },
   ASSIGNED: { label: "待开工", color: "bg-blue-500" },
   STARTED: { label: "已开始", color: "bg-amber-500" },
-  IN_PROGRESS: { label: "进行中", color: "bg-amber-500" },
+  IN_PROGRESS: { label: "进行中", color: "bg-amber-500" }
 };
 
 export default function MobileScanStart() {
@@ -52,7 +52,7 @@ export default function MobileScanStart() {
 
       if (order.status !== "ASSIGNED") {
         setError(
-          `工单状态为"${statusConfigs[order.status]?.label || order.status}"，无法开工`,
+          `工单状态为"${statusConfigs[order.status]?.label || order.status}"，无法开工`
         );
         return;
       }
@@ -61,7 +61,7 @@ export default function MobileScanStart() {
     } catch (error) {
       console.error("Failed to fetch work order:", error);
       setError(
-        "查找工单失败: " + (error.response?.data?.detail || error.message),
+        "查找工单失败: " + (error.response?.data?.detail || error.message)
       );
     } finally {
       setLoading(false);
@@ -79,7 +79,7 @@ export default function MobileScanStart() {
       setError("");
       const res = await productionApi.workOrders.list({
         search: scanInput,
-        page_size: 10,
+        page_size: 10
       });
       const orders = res.data?.items || res.data || [];
       const order = orders.find((o) => o.work_order_no === scanInput);
@@ -91,7 +91,7 @@ export default function MobileScanStart() {
 
       if (order.status !== "ASSIGNED") {
         setError(
-          `工单状态为"${statusConfigs[order.status]?.label || order.status}"，无法开工`,
+          `工单状态为"${statusConfigs[order.status]?.label || order.status}"，无法开工`
         );
         return;
       }
@@ -100,7 +100,7 @@ export default function MobileScanStart() {
     } catch (error) {
       console.error("Failed to scan work order:", error);
       setError(
-        "查找工单失败: " + (error.response?.data?.detail || error.message),
+        "查找工单失败: " + (error.response?.data?.detail || error.message)
       );
     } finally {
       setLoading(false);
@@ -115,7 +115,7 @@ export default function MobileScanStart() {
       setError("");
       await productionApi.workReports.start({
         work_order_id: workOrder.id,
-        report_note: "",
+        report_note: ""
       });
       setSuccess(true);
       setTimeout(() => {
@@ -139,8 +139,8 @@ export default function MobileScanStart() {
               variant="ghost"
               size="sm"
               onClick={() => navigate(-1)}
-              className="p-2"
-            >
+              className="p-2">
+
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <h1 className="text-lg font-semibold">扫码开工</h1>
@@ -150,8 +150,8 @@ export default function MobileScanStart() {
 
       <div className="p-4 space-y-4">
         {/* 扫码输入框 */}
-        {!workOrder && (
-          <Card>
+        {!workOrder &&
+        <Card>
             <CardContent className="pt-6">
               <div className="space-y-4">
                 <div className="text-center">
@@ -165,34 +165,34 @@ export default function MobileScanStart() {
                 <div className="space-y-3">
                   <div className="flex gap-2">
                     <Input
-                      value={scanInput}
-                      onChange={(e) => setScanInput(e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === "Enter") {
-                          handleScan();
-                        }
-                      }}
-                      placeholder="扫描或输入工单号"
-                      className="flex-1 text-lg"
-                      autoFocus
-                    />
+                    value={scanInput}
+                    onChange={(e) => setScanInput(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        handleScan();
+                      }
+                    }}
+                    placeholder="扫描或输入工单号"
+                    className="flex-1 text-lg"
+                    autoFocus />
+
                     <Button
-                      onClick={handleScan}
-                      disabled={loading}
-                      className="px-6"
-                    >
+                    onClick={handleScan}
+                    disabled={loading}
+                    className="px-6">
+
                       <Scan className="w-5 h-5" />
                     </Button>
                   </div>
 
                   <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => {
-                      // TODO: 打开相机扫码
-                      alert("扫码功能需要调用相机API");
-                    }}
-                  >
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    // TODO: 打开相机扫码
+                    alert("扫码功能需要调用相机API");
+                  }}>
+
                     <Camera className="w-4 h-4 mr-2" />
                     打开相机扫码
                   </Button>
@@ -200,21 +200,21 @@ export default function MobileScanStart() {
               </div>
             </CardContent>
           </Card>
-        )}
+        }
 
         {/* 错误提示 */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+        {error &&
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <div className="text-sm font-medium text-red-800">{error}</div>
             </div>
           </div>
-        )}
+        }
 
         {/* 成功提示 */}
-        {success && (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 flex items-center gap-3">
+        {success &&
+        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 flex items-center gap-3">
             <CheckCircle2 className="w-5 h-5 text-emerald-500" />
             <div className="flex-1">
               <div className="text-sm font-medium text-emerald-800">
@@ -222,20 +222,20 @@ export default function MobileScanStart() {
               </div>
             </div>
           </div>
-        )}
+        }
 
         {/* 工单信息 */}
-        {workOrder && !success && (
-          <Card>
+        {workOrder && !success &&
+        <Card>
             <CardContent className="pt-6">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-semibold">工单信息</h2>
                   <Badge
-                    className={
-                      statusConfigs[workOrder.status]?.color || "bg-slate-500"
-                    }
-                  >
+                  className={
+                  statusConfigs[workOrder.status]?.color || "bg-slate-500"
+                  }>
+
                     {statusConfigs[workOrder.status]?.label || workOrder.status}
                   </Badge>
                 </div>
@@ -280,18 +280,18 @@ export default function MobileScanStart() {
 
                 <div className="pt-4 border-t border-slate-200">
                   <Button
-                    onClick={handleStart}
-                    disabled={loading}
-                    className="w-full bg-blue-500 hover:bg-blue-600 h-12 text-base"
-                  >
+                  onClick={handleStart}
+                  disabled={loading}
+                  className="w-full bg-blue-500 hover:bg-blue-600 h-12 text-base">
+
                     {loading ? "开工中..." : "确认开工"}
                   </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
-        )}
+        }
       </div>
-    </div>
-  );
+    </div>);
+
 }

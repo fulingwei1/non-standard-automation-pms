@@ -16,16 +16,16 @@ import {
   ChevronDown,
   CheckCircle2,
   Circle,
-  Settings,
-} from "lucide-react";
+  Settings } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
-} from "../components/ui/card";
+  CardDescription } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -35,24 +35,24 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "../components/ui/table";
+  TableRow } from
+"../components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogBody,
-  DialogFooter,
-} from "../components/ui/dialog";
+  DialogFooter } from
+"../components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
-import { cn, formatDate } from "../lib/utils";
+  SelectValue } from
+"../components/ui/select";
+import { cn as _cn, formatDate } from "../lib/utils";
 import { progressApi, projectApi } from "../services/api";
 export default function WBSTemplateManagement() {
   const navigate = useNavigate();
@@ -73,7 +73,7 @@ export default function WBSTemplateManagement() {
   const [newTemplate, setNewTemplate] = useState({
     template_name: "",
     template_type: "SINGLE_MACHINE", // SINGLE_MACHINE or LINE
-    description: "",
+    description: ""
   });
   const [selectedProject, setSelectedProject] = useState("");
   useEffect(() => {
@@ -85,7 +85,7 @@ export default function WBSTemplateManagement() {
       setLoading(true);
       const params = {
         page: 1,
-        page_size: 100,
+        page_size: 100
       };
       if (filterType) params.project_type = filterType;
       if (searchKeyword) params.keyword = searchKeyword;
@@ -131,7 +131,7 @@ export default function WBSTemplateManagement() {
       setNewTemplate({
         template_name: "",
         template_type: "SINGLE_MACHINE",
-        description: "",
+        description: ""
       });
       fetchTemplates();
     } catch (error) {
@@ -146,7 +146,7 @@ export default function WBSTemplateManagement() {
     }
     try {
       await progressApi.projects.initWBS(selectedProject, {
-        template_id: selectedTemplate.id,
+        template_id: selectedTemplate.id
       });
       setShowInitDialog(false);
       setSelectedProject("");
@@ -155,7 +155,7 @@ export default function WBSTemplateManagement() {
     } catch (error) {
       console.error("Failed to init WBS:", error);
       alert(
-        "初始化WBS失败: " + (error.response?.data?.detail || error.message),
+        "初始化WBS失败: " + (error.response?.data?.detail || error.message)
       );
     }
   };
@@ -170,14 +170,14 @@ export default function WBSTemplateManagement() {
   };
   const typeConfigs = {
     SINGLE_MACHINE: { label: "单机类", color: "bg-blue-500" },
-    LINE: { label: "线体类", color: "bg-purple-500" },
+    LINE: { label: "线体类", color: "bg-purple-500" }
   };
   return (
     <div className="space-y-6 p-6">
       <PageHeader
         title="WBS模板管理"
-        description="工作分解结构模板管理，支持从模板快速初始化项目WBS"
-      />
+        description="工作分解结构模板管理，支持从模板快速初始化项目WBS" />
+
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
@@ -188,8 +188,8 @@ export default function WBSTemplateManagement() {
                 placeholder="搜索模板名称..."
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
-                className="pl-10"
-              />
+                className="pl-10" />
+
             </div>
             <Select value={filterType} onValueChange={setFilterType}>
               <SelectTrigger>
@@ -197,11 +197,11 @@ export default function WBSTemplateManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部类型</SelectItem>
-                {Object.entries(typeConfigs).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
+                {Object.entries(typeConfigs).map(([key, config]) =>
+                <SelectItem key={key} value={key}>
                     {config.label}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
             <Button onClick={() => setShowCreateDialog(true)}>
@@ -218,17 +218,17 @@ export default function WBSTemplateManagement() {
           <CardDescription>共 {templates.length} 个模板</CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="text-center py-8 text-slate-400">加载中...</div>
-          ) : templates.length === 0 ? (
-            <div className="text-center py-8 text-slate-400">暂无模板数据</div>
-          ) : (
-            <div className="space-y-3">
-              {templates.map((template) => (
-                <Card
-                  key={template.id}
-                  className="hover:bg-slate-50 transition-colors"
-                >
+          {loading ?
+          <div className="text-center py-8 text-slate-400">加载中...</div> :
+          templates.length === 0 ?
+          <div className="text-center py-8 text-slate-400">暂无模板数据</div> :
+
+          <div className="space-y-3">
+              {templates.map((template) =>
+            <Card
+              key={template.id}
+              className="hover:bg-slate-50 transition-colors">
+
                   <CardContent className="pt-4">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
@@ -237,18 +237,18 @@ export default function WBSTemplateManagement() {
                             {template.template_name}
                           </h3>
                           <Badge
-                            className={
-                              typeConfigs[template.template_type]?.color
-                            }
-                          >
+                        className={
+                        typeConfigs[template.template_type]?.color
+                        }>
+
                             {typeConfigs[template.template_type]?.label}
                           </Badge>
                         </div>
-                        {template.description && (
-                          <p className="text-sm text-slate-500 mb-2">
+                        {template.description &&
+                    <p className="text-sm text-slate-500 mb-2">
                             {template.description}
                           </p>
-                        )}
+                    }
                         <div className="flex items-center gap-4 text-sm text-slate-500">
                           <span>任务数: {template.task_count || 0}</span>
                           <span>
@@ -258,21 +258,21 @@ export default function WBSTemplateManagement() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewDetail(template)}
-                        >
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleViewDetail(template)}>
+
                           <Eye className="w-4 h-4 mr-2" />
                           查看
                         </Button>
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedTemplate(template);
-                            setShowInitDialog(true);
-                          }}
-                        >
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedTemplate(template);
+                        setShowInitDialog(true);
+                      }}>
+
                           <Copy className="w-4 h-4 mr-2" />
                           应用到项目
                         </Button>
@@ -280,9 +280,9 @@ export default function WBSTemplateManagement() {
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+            )}
             </div>
-          )}
+          }
         </CardContent>
       </Card>
       {/* Template Detail Dialog */}
@@ -292,16 +292,16 @@ export default function WBSTemplateManagement() {
             <DialogTitle>{selectedTemplate?.template_name}</DialogTitle>
           </DialogHeader>
           <DialogBody>
-            {selectedTemplate && (
-              <div className="space-y-4">
+            {selectedTemplate &&
+            <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <div className="text-sm text-slate-500 mb-1">模板类型</div>
                     <Badge
-                      className={
-                        typeConfigs[selectedTemplate.template_type]?.color
-                      }
-                    >
+                    className={
+                    typeConfigs[selectedTemplate.template_type]?.color
+                    }>
+
                       {typeConfigs[selectedTemplate.template_type]?.label}
                     </Badge>
                   </div>
@@ -310,93 +310,93 @@ export default function WBSTemplateManagement() {
                     <div>{selectedTemplate.task_count || 0}</div>
                   </div>
                 </div>
-                {selectedTemplate.description && (
-                  <div>
+                {selectedTemplate.description &&
+              <div>
                     <div className="text-sm text-slate-500 mb-1">描述</div>
                     <div>{selectedTemplate.description}</div>
                   </div>
-                )}
+              }
                 <div>
                   <div className="text-sm font-medium mb-3">模板任务列表</div>
-                  {templateTasks.length === 0 ? (
-                    <div className="text-center py-4 text-slate-400">
+                  {templateTasks.length === 0 ?
+                <div className="text-center py-4 text-slate-400">
                       暂无任务
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {templateTasks.map((task) => (
-                        <div
-                          key={task.id}
-                          className="border rounded-lg p-3 hover:bg-slate-50"
-                        >
+                    </div> :
+
+                <div className="space-y-2">
+                      {templateTasks.map((task) =>
+                  <div
+                    key={task.id}
+                    className="border rounded-lg p-3 hover:bg-slate-50">
+
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                              {task.children && task.children.length > 0 ? (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => toggleTaskExpand(task.id)}
-                                >
-                                  {expandedTasks.has(task.id) ? (
-                                    <ChevronDown className="w-4 h-4" />
-                                  ) : (
-                                    <ChevronRight className="w-4 h-4" />
-                                  )}
-                                </Button>
-                              ) : (
-                                <div className="w-8" />
-                              )}
+                              {task.children && task.children.length > 0 ?
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleTaskExpand(task.id)}>
+
+                                  {expandedTasks.has(task.id) ?
+                          <ChevronDown className="w-4 h-4" /> :
+
+                          <ChevronRight className="w-4 h-4" />
+                          }
+                                </Button> :
+
+                        <div className="w-8" />
+                        }
                               <div>
                                 <div className="font-medium">
                                   {task.task_name}
                                 </div>
-                                {task.description && (
-                                  <div className="text-sm text-slate-500">
+                                {task.description &&
+                          <div className="text-sm text-slate-500">
                                     {task.description}
                                   </div>
-                                )}
+                          }
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              {task.planned_duration && (
-                                <Badge variant="outline">
+                              {task.planned_duration &&
+                        <Badge variant="outline">
                                   {task.planned_duration} 天
                                 </Badge>
-                              )}
+                        }
                             </div>
                           </div>
-                          {expandedTasks.has(task.id) && task.children && (
-                            <div className="ml-8 mt-2 space-y-2">
-                              {task.children.map((child) => (
-                                <div
-                                  key={child.id}
-                                  className="border-l-2 pl-3 py-2 text-sm"
-                                >
+                          {expandedTasks.has(task.id) && task.children &&
+                    <div className="ml-8 mt-2 space-y-2">
+                              {task.children.map((child) =>
+                      <div
+                        key={child.id}
+                        className="border-l-2 pl-3 py-2 text-sm">
+
                                   <div className="font-medium">
                                     {child.task_name}
                                   </div>
-                                  {child.description && (
-                                    <div className="text-slate-500">
+                                  {child.description &&
+                        <div className="text-slate-500">
                                       {child.description}
                                     </div>
-                                  )}
+                        }
                                 </div>
-                              ))}
+                      )}
                             </div>
-                          )}
+                    }
                         </div>
-                      ))}
-                    </div>
                   )}
+                    </div>
+                }
                 </div>
               </div>
-            )}
+            }
           </DialogBody>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowDetailDialog(false)}
-            >
+              onClick={() => setShowDetailDialog(false)}>
+
               关闭
             </Button>
           </DialogFooter>
@@ -417,13 +417,13 @@ export default function WBSTemplateManagement() {
                 <Input
                   value={newTemplate.template_name}
                   onChange={(e) =>
-                    setNewTemplate({
-                      ...newTemplate,
-                      template_name: e.target.value,
-                    })
+                  setNewTemplate({
+                    ...newTemplate,
+                    template_name: e.target.value
+                  })
                   }
-                  placeholder="请输入模板名称"
-                />
+                  placeholder="请输入模板名称" />
+
               </div>
               <div>
                 <label className="text-sm font-medium mb-2 block">
@@ -432,18 +432,18 @@ export default function WBSTemplateManagement() {
                 <Select
                   value={newTemplate.template_type}
                   onValueChange={(val) =>
-                    setNewTemplate({ ...newTemplate, template_type: val })
-                  }
-                >
+                  setNewTemplate({ ...newTemplate, template_type: val })
+                  }>
+
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(typeConfigs).map(([key, config]) => (
-                      <SelectItem key={key} value={key}>
+                    {Object.entries(typeConfigs).map(([key, config]) =>
+                    <SelectItem key={key} value={key}>
                         {config.label}
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -452,21 +452,21 @@ export default function WBSTemplateManagement() {
                 <Input
                   value={newTemplate.description}
                   onChange={(e) =>
-                    setNewTemplate({
-                      ...newTemplate,
-                      description: e.target.value,
-                    })
+                  setNewTemplate({
+                    ...newTemplate,
+                    description: e.target.value
+                  })
                   }
-                  placeholder="模板描述"
-                />
+                  placeholder="模板描述" />
+
               </div>
             </div>
           </DialogBody>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowCreateDialog(false)}
-            >
+              onClick={() => setShowCreateDialog(false)}>
+
               取消
             </Button>
             <Button onClick={handleCreateTemplate}>创建</Button>
@@ -487,22 +487,22 @@ export default function WBSTemplateManagement() {
                 </label>
                 <Select
                   value={selectedProject}
-                  onValueChange={setSelectedProject}
-                >
+                  onValueChange={setSelectedProject}>
+
                   <SelectTrigger>
                     <SelectValue placeholder="选择项目" />
                   </SelectTrigger>
                   <SelectContent>
-                    {projects.map((proj) => (
-                      <SelectItem key={proj.id} value={proj.id.toString()}>
+                    {projects.map((proj) =>
+                    <SelectItem key={proj.id} value={proj.id.toString()}>
                         {proj.project_name}
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
               </div>
-              {selectedTemplate && (
-                <div>
+              {selectedTemplate &&
+              <div>
                   <div className="text-sm text-slate-500 mb-1">模板信息</div>
                   <div className="p-3 bg-slate-50 rounded-lg">
                     <div className="font-medium">
@@ -514,7 +514,7 @@ export default function WBSTemplateManagement() {
                     </div>
                   </div>
                 </div>
-              )}
+              }
             </div>
           </DialogBody>
           <DialogFooter>
@@ -527,6 +527,6 @@ export default function WBSTemplateManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }

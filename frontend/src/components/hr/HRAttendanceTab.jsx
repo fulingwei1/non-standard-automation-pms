@@ -3,11 +3,11 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { 
+import {
   Clock, CalendarCheck, UserCheck, AlertCircle,
-  BarChart3, Download, Calendar
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+  BarChart3, Download, Calendar } from
+'lucide-react';
+import { cn as _cn } from '@/lib/utils';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -17,25 +17,25 @@ const fadeIn = {
 /**
  * 考勤统计卡片
  */
-const AttendanceStatCard = ({ title, value, icon: Icon, progress }) => (
-  <Card className="bg-surface-50 border-white/10">
+const AttendanceStatCard = ({ title, value, icon: Icon, progress }) =>
+<Card className="bg-surface-50 border-white/10">
     <CardContent className="p-6">
       <div className="flex items-center justify-between mb-3">
         <p className="text-sm text-slate-400">{title}</p>
         <p className="text-lg font-bold text-white">{value}</p>
       </div>
-      {progress !== undefined && (
-        <Progress value={progress} className="h-2" />
-      )}
+      {progress !== undefined &&
+    <Progress value={progress} className="h-2" />
+    }
     </CardContent>
-  </Card>
-);
+  </Card>;
+
 
 /**
  * 考勤趋势项
  */
-const AttendanceTrendItem = ({ date, attendanceRate, lateCount, leaveCount }) => (
-  <div className="space-y-2">
+const AttendanceTrendItem = ({ date, attendanceRate, lateCount, leaveCount }) =>
+<div className="space-y-2">
     <div className="flex items-center justify-between">
       <span className="text-sm font-medium text-slate-300">{date}</span>
       <div className="flex items-center gap-4">
@@ -54,8 +54,8 @@ const AttendanceTrendItem = ({ date, attendanceRate, lateCount, leaveCount }) =>
       </div>
     </div>
     <Progress value={attendanceRate} className="h-2" />
-  </div>
-);
+  </div>;
+
 
 /**
  * 考勤统计标签页组件
@@ -82,32 +82,32 @@ export const HRAttendanceTab = ({
       variants={fadeIn}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       {/* 统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <AttendanceStatCard
           title="今日出勤率"
           value={`${stats.todayAttendanceRate}%`}
           icon={UserCheck}
-          progress={stats.todayAttendanceRate}
-        />
+          progress={stats.todayAttendanceRate} />
+
         <AttendanceStatCard
           title="本月出勤率"
           value={`${stats.monthlyAttendanceRate}%`}
           icon={CalendarCheck}
-          progress={stats.monthlyAttendanceRate}
-        />
+          progress={stats.monthlyAttendanceRate} />
+
         <AttendanceStatCard
           title="今日迟到"
           value={`${stats.lateCount}人`}
-          icon={Clock}
-        />
+          icon={Clock} />
+
         <AttendanceStatCard
           title="今日缺勤"
           value={`${stats.absentCount}人`}
-          icon={AlertCircle}
-        />
+          icon={AlertCircle} />
+
       </div>
 
       {/* 考勤趋势 */}
@@ -118,27 +118,27 @@ export const HRAttendanceTab = ({
               <BarChart3 className="h-5 w-5 text-blue-400" />
               最近7天考勤趋势
             </CardTitle>
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               className="text-xs text-primary"
-              onClick={onViewDetails}
-            >
+              onClick={onViewDetails}>
+
               查看详情
             </Button>
           </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {trends.length > 0 ? (
-              trends.map((trend, index) => (
-                <AttendanceTrendItem key={index} {...trend} />
-              ))
-            ) : (
-              <div className="text-center py-8 text-slate-400">
+            {trends.length > 0 ?
+            trends.map((trend, index) =>
+            <AttendanceTrendItem key={index} {...trend} />
+            ) :
+
+            <div className="text-center py-8 text-slate-400">
                 暂无考勤趋势数据
               </div>
-            )}
+            }
           </div>
         </CardContent>
       </Card>
@@ -149,10 +149,10 @@ export const HRAttendanceTab = ({
           <CardTitle className="text-base">快速操作</CardTitle>
         </CardHeader>
         <CardContent className="flex gap-3">
-          <Button 
+          <Button
             className="flex items-center gap-2"
-            onClick={onExport}
-          >
+            onClick={onExport}>
+
             <Download className="w-4 h-4" />
             导出考勤
           </Button>
@@ -166,8 +166,8 @@ export const HRAttendanceTab = ({
           </Button>
         </CardContent>
       </Card>
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
 export default HRAttendanceTab;

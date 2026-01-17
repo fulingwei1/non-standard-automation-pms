@@ -9,35 +9,39 @@ import { motion } from "framer-motion";
 import { PageHeader } from "../components/layout";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
-import { cn } from "../lib/utils";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Textarea } from "../components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import { cn as _cn } from "../lib/utils";
 
 // Import refactored components
 import {
   IssueStatsOverview,
   IssueListManager,
   DEFAULT_ISSUE_STATS,
-  ISSUE_VIEW_MODES
-} from "../components/issue";
+  ISSUE_VIEW_MODES } from
+"../components/issue";
 
 // Import services
-import { issueApi, issueTemplateApi } from "../services/api";
+import { issueApi, issueTemplateApi as _issueTemplateApi } from "../services/api";
 
 // Import utilities
 import { fadeIn, staggerContainer } from "../lib/animations";
 
 export default function IssueManagement() {
   // 状态管理
-  const [issues, setIssues] = useState([]);
+  const [_issues, setIssues] = useState([]);
   const [filteredIssues, setFilteredIssues] = useState([]);
   const [selectedIssue, setSelectedIssue] = useState(null);
   const [selectedIssues, setSelectedIssues] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
-  
+
   // 统计数据
   const [stats, setStats] = useState(DEFAULT_ISSUE_STATS);
-  
+
   // 视图和筛选
   const [viewMode, setViewMode] = useState("list");
   const [searchTerm, setSearchTerm] = useState("");
@@ -51,63 +55,92 @@ export default function IssueManagement() {
   const [sortBy, setSortBy] = useState("created_desc");
   const [timeRange, setTimeRange] = useState("week");
 
+  // 新建问题表单数据
+  const [newIssue, setNewIssue] = useState({
+    title: "",
+    description: "",
+    category: "PROJECT",
+    issue_type: "DEFECT",
+    severity: "MAJOR",
+    priority: "MEDIUM"
+  });
+  const [creating, setCreating] = useState(false);
+
   // 获取问题列表
   const fetchIssues = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await issueApi.getIssues({
-        ...filters,
-        search: searchTerm,
-        sort: sortBy,
-        timeRange
-      });
-      const issuesData = response.data || [];
+      // 过滤掉值为 "all" 的参数，后端不接受 "all" 作为筛选值
+      const apiParams = {};
+      if (filters.status && filters.status !== "all") apiParams.status = filters.status;
+      if (filters.severity && filters.severity !== "all") apiParams.severity = filters.severity;
+      if (filters.category && filters.category !== "all") apiParams.category = filters.category;
+      if (filters.priority && filters.priority !== "all") apiParams.priority = filters.priority;
+      if (searchTerm) apiParams.keyword = searchTerm;
+
+      const response = await issueApi.getIssues(apiParams);
+      // API 返回 {items: [...], total, page, page_size, pages}
+      const rawData = response.data?.items || response.data || [];
+      // 映射 API 字段名到前端期望的字段名
+      const issuesData = rawData.map((issue) => ({
+        ...issue,
+        // 兼容字段映射
+        id: issue.issue_no || issue.id,
+        assignee: issue.assignee_name || issue.assignee,
+        reporter: issue.reporter_name || issue.reporter,
+        createdAt: issue.created_at || issue.createdAt,
+        updatedAt: issue.updated_at || issue.updatedAt,
+        dueDate: issue.due_date || issue.dueDate,
+        resolvedAt: issue.resolved_at || issue.resolvedAt,
+        projectName: issue.project_name || issue.projectName,
+        machineName: issue.machine_name || issue.machineName
+      }));
       setIssues(issuesData);
       setFilteredIssues(issuesData);
     } catch (error) {
       console.error('Failed to fetch issues:', error);
       // 使用模拟数据
       const mockIssues = [
-        {
-          id: "ISS-001",
-          title: "系统登录页面无法正常显示",
-          description: "用户反馈登录页面在Chrome浏览器中显示异常，部分按钮无法点击",
-          status: "OPEN",
-          severity: "MAJOR",
-          priority: "HIGH",
-          category: "TECHNICAL",
-          assignee: "张三",
-          createdAt: "2024-01-14T10:00:00Z",
-          updatedAt: "2024-01-14T10:00:00Z",
-          dueDate: "2024-01-17T10:00:00Z"
-        },
-        {
-          id: "ISS-002", 
-          title: "数据库连接超时",
-          description: "高峰期数据库连接超时，影响用户体验",
-          status: "PROCESSING",
-          severity: "CRITICAL",
-          priority: "URGENT",
-          category: "TECHNICAL",
-          assignee: "李四",
-          createdAt: "2024-01-13T15:30:00Z",
-          updatedAt: "2024-01-14T09:15:00Z",
-          dueDate: "2024-01-15T15:30:00Z"
-        },
-        {
-          id: "ISS-003",
-          title: "报表生成速度缓慢",
-          description: "月度报表生成需要超过5分钟时间",
-          status: "RESOLVED",
-          severity: "MINOR",
-          priority: "MEDIUM",
-          category: "PERFORMANCE",
-          assignee: "王五",
-          createdAt: "2024-01-12T08:00:00Z",
-          updatedAt: "2024-01-14T11:20:00Z",
-          dueDate: "2024-01-19T08:00:00Z"
-        }
-      ];
+      {
+        id: "ISS-001",
+        title: "系统登录页面无法正常显示",
+        description: "用户反馈登录页面在Chrome浏览器中显示异常，部分按钮无法点击",
+        status: "OPEN",
+        severity: "MAJOR",
+        priority: "HIGH",
+        category: "TECHNICAL",
+        assignee: "张三",
+        createdAt: "2024-01-14T10:00:00Z",
+        updatedAt: "2024-01-14T10:00:00Z",
+        dueDate: "2024-01-17T10:00:00Z"
+      },
+      {
+        id: "ISS-002",
+        title: "数据库连接超时",
+        description: "高峰期数据库连接超时，影响用户体验",
+        status: "PROCESSING",
+        severity: "CRITICAL",
+        priority: "URGENT",
+        category: "TECHNICAL",
+        assignee: "李四",
+        createdAt: "2024-01-13T15:30:00Z",
+        updatedAt: "2024-01-14T09:15:00Z",
+        dueDate: "2024-01-15T15:30:00Z"
+      },
+      {
+        id: "ISS-003",
+        title: "报表生成速度缓慢",
+        description: "月度报表生成需要超过5分钟时间",
+        status: "RESOLVED",
+        severity: "MINOR",
+        priority: "MEDIUM",
+        category: "PERFORMANCE",
+        assignee: "王五",
+        createdAt: "2024-01-12T08:00:00Z",
+        updatedAt: "2024-01-14T11:20:00Z",
+        dueDate: "2024-01-19T08:00:00Z"
+      }];
+
       setIssues(mockIssues);
       setFilteredIssues(mockIssues);
     } finally {
@@ -119,7 +152,25 @@ export default function IssueManagement() {
   const fetchStats = useCallback(async () => {
     try {
       const response = await issueApi.getStats({ timeRange });
-      setStats(response.data || DEFAULT_ISSUE_STATS);
+      const apiStats = response.data || {};
+      // 映射 snake_case 到 camelCase
+      setStats({
+        total: apiStats.total || 0,
+        open: apiStats.open || 0,
+        processing: apiStats.processing || 0,
+        resolved: apiStats.resolved || 0,
+        closed: apiStats.closed || 0,
+        blocking: apiStats.blocking || 0,
+        overdue: apiStats.overdue || 0,
+        byStatus: apiStats.by_status || apiStats.byStatus || {},
+        bySeverity: apiStats.by_severity || apiStats.bySeverity || {},
+        byCategory: apiStats.by_category || apiStats.byCategory || {},
+        byType: apiStats.by_type || apiStats.byType || {},
+        createdToday: apiStats.created_today || apiStats.createdToday || 0,
+        resolvedToday: apiStats.resolved_today || apiStats.resolvedToday || 0,
+        avgResolutionTime: apiStats.avg_resolution_time || apiStats.avgResolutionTime || 0,
+        slaCompliance: apiStats.sla_compliance || apiStats.slaCompliance || 0
+      });
     } catch (error) {
       console.error('Failed to fetch stats:', error);
       // 使用模拟数据
@@ -178,8 +229,36 @@ export default function IssueManagement() {
   // 处理创建问题
   const handleIssueCreate = useCallback(() => {
     setSelectedIssue(null);
+    setNewIssue({
+      title: "",
+      description: "",
+      category: "PROJECT",
+      issue_type: "DEFECT",
+      severity: "MAJOR",
+      priority: "MEDIUM"
+    });
     setShowCreateDialog(true);
   }, []);
+
+  // 提交新问题
+  const handleSubmitIssue = useCallback(async () => {
+    if (!newIssue.title || !newIssue.description) {
+      alert("请填写标题和描述");
+      return;
+    }
+    try {
+      setCreating(true);
+      await issueApi.create(newIssue);
+      setShowCreateDialog(false);
+      fetchIssues();
+      fetchStats();
+    } catch (error) {
+      console.error("Failed to create issue:", error);
+      alert("创建问题失败: " + (error.response?.data?.detail || error.message));
+    } finally {
+      setCreating(false);
+    }
+  }, [newIssue, fetchIssues, fetchStats]);
 
   // 处理筛选变化
   const handleFilterChange = useCallback((newFilters) => {
@@ -221,34 +300,34 @@ export default function IssueManagement() {
   return (
     <motion.div
       initial="hidden"
-      animate="show"
+      animate="visible"
       variants={staggerContainer}
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       <PageHeader
         title="问题管理"
         subtitle="问题跟踪、状态管理、优先级分配、分析统计"
         breadcrumbs={[
-          { label: "项目管理", href: "/projects" },
-          { label: "问题管理", href: "/issues" },
-        ]}
+        { label: "项目管理", href: "/projects" },
+        { label: "问题管理", href: "/issues" }]
+        }
         actions={
-          <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3">
             <Button
-              variant="outline"
-              onClick={() => window.location.href = "/issue-analytics"}
-            >
+            variant="outline"
+            onClick={() => window.location.href = "/issue-statistics-snapshot"}>
+
               数据分析
             </Button>
             <Button
-              onClick={handleIssueCreate}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
+            onClick={handleIssueCreate}
+            className="bg-blue-600 hover:bg-blue-700 text-white">
+
               新建问题
             </Button>
           </div>
-        }
-      />
+        } />
+
 
       <motion.div variants={fadeIn} className="space-y-6">
         {/* 统计概览 */}
@@ -259,8 +338,8 @@ export default function IssueManagement() {
           onRefresh={handleRefresh}
           loading={loading}
           timeRange={timeRange}
-          onTimeRangeChange={setTimeRange}
-        />
+          onTimeRangeChange={setTimeRange} />
+
 
         {/* 问题列表管理 */}
         <IssueListManager
@@ -279,8 +358,8 @@ export default function IssueManagement() {
           onIssueCreate={handleIssueCreate}
           onExport={handleExport}
           onImport={handleImport}
-          loading={loading}
-        />
+          loading={loading} />
+
       </motion.div>
 
       {/* 问题详情对话框 */}
@@ -292,8 +371,8 @@ export default function IssueManagement() {
               <span className="text-sm text-slate-400">#{selectedIssue?.id}</span>
             </DialogTitle>
           </DialogHeader>
-          {selectedIssue && (
-            <div className="space-y-6">
+          {selectedIssue &&
+          <div className="space-y-6">
               {/* 基本信息 */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -340,22 +419,22 @@ export default function IssueManagement() {
               {/* 操作按钮 */}
               <div className="flex justify-end gap-3 pt-4 border-t border-slate-700">
                 <Button
-                  variant="outline"
-                  onClick={() => setShowDetailDialog(false)}
-                >
+                variant="outline"
+                onClick={() => setShowDetailDialog(false)}>
+
                   关闭
                 </Button>
                 <Button
-                  onClick={() => {
-                    handleIssueEdit(selectedIssue);
-                    setShowDetailDialog(false);
-                  }}
-                >
+                onClick={() => {
+                  handleIssueEdit(selectedIssue);
+                  setShowDetailDialog(false);
+                }}>
+
                   编辑
                 </Button>
               </div>
             </div>
-          )}
+          }
         </DialogContent>
       </Dialog>
 
@@ -366,21 +445,125 @@ export default function IssueManagement() {
             <DialogTitle>新建问题</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <p className="text-slate-400">创建新问题的表单将在这里显示</p>
-            <div className="flex justify-end gap-3 pt-4">
+            {/* 标题 */}
+            <div className="space-y-2">
+              <Label htmlFor="title">问题标题 *</Label>
+              <Input
+                id="title"
+                placeholder="请输入问题标题"
+                value={newIssue.title}
+                onChange={(e) => setNewIssue({ ...newIssue, title: e.target.value })}
+                className="bg-slate-800 border-slate-700" />
+
+            </div>
+
+            {/* 描述 */}
+            <div className="space-y-2">
+              <Label htmlFor="description">问题描述 *</Label>
+              <Textarea
+                id="description"
+                placeholder="请详细描述问题"
+                value={newIssue.description}
+                onChange={(e) => setNewIssue({ ...newIssue, description: e.target.value })}
+                className="bg-slate-800 border-slate-700 min-h-[100px]" />
+
+            </div>
+
+            {/* 分类和类型 */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>问题分类</Label>
+                <Select
+                  value={newIssue.category}
+                  onValueChange={(value) => setNewIssue({ ...newIssue, category: value })}>
+
+                  <SelectTrigger className="bg-slate-800 border-slate-700">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PROJECT">项目问题</SelectItem>
+                    <SelectItem value="TECHNICAL">技术问题</SelectItem>
+                    <SelectItem value="QUALITY">质量问题</SelectItem>
+                    <SelectItem value="PROCUREMENT">采购问题</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>问题类型</Label>
+                <Select
+                  value={newIssue.issue_type}
+                  onValueChange={(value) => setNewIssue({ ...newIssue, issue_type: value })}>
+
+                  <SelectTrigger className="bg-slate-800 border-slate-700">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="DEFECT">缺陷</SelectItem>
+                    <SelectItem value="RISK">风险</SelectItem>
+                    <SelectItem value="IMPROVEMENT">改进</SelectItem>
+                    <SelectItem value="TECHNICAL">技术问题</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* 严重程度和优先级 */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>严重程度</Label>
+                <Select
+                  value={newIssue.severity}
+                  onValueChange={(value) => setNewIssue({ ...newIssue, severity: value })}>
+
+                  <SelectTrigger className="bg-slate-800 border-slate-700">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="CRITICAL">严重</SelectItem>
+                    <SelectItem value="MAJOR">主要</SelectItem>
+                    <SelectItem value="MINOR">次要</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>优先级</Label>
+                <Select
+                  value={newIssue.priority}
+                  onValueChange={(value) => setNewIssue({ ...newIssue, priority: value })}>
+
+                  <SelectTrigger className="bg-slate-800 border-slate-700">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="URGENT">紧急</SelectItem>
+                    <SelectItem value="HIGH">高</SelectItem>
+                    <SelectItem value="MEDIUM">中</SelectItem>
+                    <SelectItem value="LOW">低</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* 操作按钮 */}
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-700">
               <Button
                 variant="outline"
                 onClick={() => setShowCreateDialog(false)}
-              >
+                disabled={creating}>
+
                 取消
               </Button>
-              <Button>
-                创建
+              <Button
+                onClick={handleSubmitIssue}
+                disabled={creating}
+                className="bg-blue-600 hover:bg-blue-700">
+
+                {creating ? "创建中..." : "创建问题"}
               </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

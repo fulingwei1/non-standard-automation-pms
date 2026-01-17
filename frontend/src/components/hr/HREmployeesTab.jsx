@@ -234,7 +234,7 @@ export const HREmployeesTab = ({
               <p className="text-sm text-slate-400">
                 在职 <span className="font-semibold text-emerald-400">
                   {employees.filter(e => e.is_active).length}
-                </span> 人
+                   </span> 人
               </p>
             </div>
           )}

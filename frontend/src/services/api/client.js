@@ -8,14 +8,37 @@ const api = axios.create({
   timeout: 5000, // 5秒超时，更快响应
 });
 
+// 公开的 API 端点（不需要认证）
+const PUBLIC_ENDPOINTS = [
+  "/auth/login",
+  "/auth/register",
+  "/health",
+  "/docs",
+  "/openapi.json",
+];
+
+// 判断是否为公开 API
+const isPublicEndpoint = (url) => {
+  if (!url) return false;
+  return PUBLIC_ENDPOINTS.some((endpoint) => url.includes(endpoint));
+};
+
 // Request interceptor for adding auth token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
     const url = config.url || "";
+    const isPublic = isPublicEndpoint(url);
 
     // 调试日志（总是启用，帮助诊断问题）
     console.log(`[API请求] ${config.method?.toUpperCase()} ${url}`);
+    
+    // 如果是公开 API，不检查 token
+    if (isPublic) {
+      console.log("[API] ℹ️ 公开API，无需认证");
+      return config;
+    }
+
     console.log(
       `[API] Token状态:`,
       token
@@ -30,7 +53,11 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
       console.log(`[API] ✅ 已添加Authorization头`);
     } else if (!token) {
-      console.warn("[API] ⚠️ 未找到token，请求可能失败 (Not authenticated)");
+      // 只在需要认证的 API 请求时显示警告
+      console.warn(
+        "[API] ⚠️ 未找到token，请求可能失败 (Not authenticated)",
+        "\n提示：如果这是登录前的请求，请先完成登录"
+      );
     } else {
       console.log("[API] ℹ️ 演示账号token，不发送Authorization头");
     }
@@ -44,6 +71,25 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    try {
+      const method = error?.config?.method?.toUpperCase?.() || "?"
+      const url = error?.config?.url || ""
+      const status = error?.response?.status
+      const contentType = error?.response?.headers?.["content-type"]
+      const data = error?.response?.data
+
+      if (status) {
+        console.error(`[API错误] ${method} ${url} -> ${status}`, contentType || "")
+        if (typeof data === "string" && data.trim()) {
+          console.error("[API错误] 响应内容(截断):", data.slice(0, 400))
+        } else if (data) {
+          console.error("[API错误] 响应数据:", data)
+        }
+      }
+    } catch {
+      // best-effort logging; never block the original error
+    }
+
     if (error.response && error.response.status === 401) {
       const token = localStorage.getItem("token");
       const requestUrl = error.config?.url || "";
@@ -78,4 +124,3 @@ api.interceptors.response.use(
 
 export default api;
 export { api };
-

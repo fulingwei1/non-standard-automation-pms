@@ -16,8 +16,8 @@ import {
   XCircle,
   AlertTriangle,
   Download,
-  BarChart3,
-} from "lucide-react";
+  BarChart3 } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -30,16 +30,16 @@ import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger,
-} from "../components/ui";
-import { cn, formatDate } from "../lib/utils";
-import { fadeIn, staggerContainer } from "../lib/animations";
+  TabsTrigger } from
+"../components/ui";
+import { cn, formatDate as _formatDate } from "../lib/utils";
+import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
 import {
   SimpleBarChart,
   MonthlyTrendChart,
   SimplePieChart,
-  TrendComparisonCard,
-} from "../components/administrative/StatisticsCharts";
+  TrendComparisonCard } from
+"../components/administrative/StatisticsCharts";
 import { adminApi } from "../services/api";
 
 // Mock data - 已移除，使用真实API
@@ -48,8 +48,8 @@ export default function LeaveManagement() {
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [_loading, setLoading] = useState(false);
+  const [_error, _setError] = useState(null);
   const [leaveApplications, setLeaveApplications] = useState([]);
 
   // Fetch data from API
@@ -63,7 +63,7 @@ export default function LeaveManagement() {
         } else if (Array.isArray(res.data)) {
           setLeaveApplications(res.data);
         }
-      } catch (err) {
+      } catch (_err) {
         console.log("Leave API unavailable, using mock data");
       }
       setLoading(false);
@@ -74,8 +74,8 @@ export default function LeaveManagement() {
   const filteredApplications = useMemo(() => {
     return leaveApplications.filter((app) => {
       const matchSearch =
-        app.employee.toLowerCase().includes(searchText.toLowerCase()) ||
-        app.department.toLowerCase().includes(searchText.toLowerCase());
+      app.employee.toLowerCase().includes(searchText.toLowerCase()) ||
+      app.department.toLowerCase().includes(searchText.toLowerCase());
       const matchStatus = statusFilter === "all" || app.status === statusFilter;
       const matchType = typeFilter === "all" || app.type === typeFilter;
       return matchSearch && matchStatus && matchType;
@@ -84,17 +84,17 @@ export default function LeaveManagement() {
 
   const stats = useMemo(() => {
     const pending = leaveApplications.filter(
-      (a) => a.status === "pending",
+      (a) => a.status === "pending"
     ).length;
     const approved = leaveApplications.filter(
-      (a) => a.status === "approved",
+      (a) => a.status === "approved"
     ).length;
     const rejected = leaveApplications.filter(
-      (a) => a.status === "rejected",
+      (a) => a.status === "rejected"
     ).length;
-    const totalDays = leaveApplications
-      .filter((a) => a.status === "approved")
-      .reduce((sum, a) => sum + a.days, 0);
+    const totalDays = leaveApplications.
+    filter((a) => a.status === "approved").
+    reduce((sum, a) => sum + a.days, 0);
     return { pending, approved, rejected, totalDays };
   }, [leaveApplications]);
 
@@ -103,13 +103,13 @@ export default function LeaveManagement() {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       <PageHeader
         title="请假管理"
         description="员工请假申请、审批流程、假期余额管理"
         actions={
-          <div className="flex gap-2">
+        <div className="flex gap-2">
             <Button variant="outline">
               <Download className="w-4 h-4 mr-2" />
               导出
@@ -119,8 +119,8 @@ export default function LeaveManagement() {
               统计分析
             </Button>
           </div>
-        }
-      />
+        } />
+
 
       {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -196,27 +196,27 @@ export default function LeaveManagement() {
               <CardContent>
                 <SimplePieChart
                   data={[
-                    {
-                      label: "年假",
-                      value: leaveApplications.filter((a) => a.type === "年假")
-                        .length,
-                      color: "#3b82f6",
-                    },
-                    {
-                      label: "病假",
-                      value: leaveApplications.filter((a) => a.type === "病假")
-                        .length,
-                      color: "#10b981",
-                    },
-                    {
-                      label: "事假",
-                      value: leaveApplications.filter((a) => a.type === "事假")
-                        .length,
-                      color: "#f59e0b",
-                    },
-                  ]}
-                  size={180}
-                />
+                  {
+                    label: "年假",
+                    value: leaveApplications.filter((a) => a.type === "年假").
+                    length,
+                    color: "#3b82f6"
+                  },
+                  {
+                    label: "病假",
+                    value: leaveApplications.filter((a) => a.type === "病假").
+                    length,
+                    color: "#10b981"
+                  },
+                  {
+                    label: "事假",
+                    value: leaveApplications.filter((a) => a.type === "事假").
+                    length,
+                    color: "#f59e0b"
+                  }]
+                  }
+                  size={180} />
+
               </CardContent>
             </Card>
             <Card>
@@ -226,15 +226,15 @@ export default function LeaveManagement() {
               <CardContent>
                 <MonthlyTrendChart
                   data={[
-                    { month: "2024-10", amount: 12 },
-                    { month: "2024-11", amount: 15 },
-                    { month: "2024-12", amount: 18 },
-                    { month: "2025-01", amount: leaveApplications.length },
-                  ]}
+                  { month: "2024-10", amount: 12 },
+                  { month: "2024-11", amount: 15 },
+                  { month: "2024-12", amount: 18 },
+                  { month: "2025-01", amount: leaveApplications.length }]
+                  }
                   valueKey="amount"
                   labelKey="month"
-                  height={150}
-                />
+                  height={150} />
+
               </CardContent>
             </Card>
           </div>
@@ -244,18 +244,18 @@ export default function LeaveManagement() {
             <TrendComparisonCard
               title="待审批"
               current={stats.pending}
-              previous={5}
-            />
+              previous={5} />
+
             <TrendComparisonCard
               title="已批准"
               current={stats.approved}
-              previous={10}
-            />
+              previous={10} />
+
             <TrendComparisonCard
               title="已批准天数"
               current={stats.totalDays}
-              previous={25}
-            />
+              previous={25} />
+
           </div>
 
           {/* Filters */}
@@ -266,13 +266,13 @@ export default function LeaveManagement() {
                   placeholder="搜索员工姓名、部门..."
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
-                  className="flex-1"
-                />
+                  className="flex-1" />
+
                 <select
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
-                  className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white"
-                >
+                  className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white">
+
                   <option value="all">全部类型</option>
                   <option value="年假">年假</option>
                   <option value="病假">病假</option>
@@ -281,8 +281,8 @@ export default function LeaveManagement() {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white"
-                >
+                  className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white">
+
                   <option value="all">全部状态</option>
                   <option value="pending">待审批</option>
                   <option value="approved">已批准</option>
@@ -294,8 +294,8 @@ export default function LeaveManagement() {
 
           {/* Applications List */}
           <div className="space-y-4">
-            {filteredApplications.map((app) => (
-              <Card key={app.id}>
+            {filteredApplications.map((app) =>
+            <Card key={app.id}>
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -306,21 +306,21 @@ export default function LeaveManagement() {
                         <Badge variant="outline">{app.department}</Badge>
                         <Badge variant="outline">{app.type}</Badge>
                         <Badge
-                          variant="outline"
-                          className={cn(
-                            app.status === "pending" &&
-                              "bg-amber-500/20 text-amber-400 border-amber-500/30",
-                            app.status === "approved" &&
-                              "bg-green-500/20 text-green-400 border-green-500/30",
-                            app.status === "rejected" &&
-                              "bg-red-500/20 text-red-400 border-red-500/30",
-                          )}
-                        >
-                          {app.status === "pending"
-                            ? "待审批"
-                            : app.status === "approved"
-                              ? "已批准"
-                              : "已拒绝"}
+                        variant="outline"
+                        className={cn(
+                          app.status === "pending" &&
+                          "bg-amber-500/20 text-amber-400 border-amber-500/30",
+                          app.status === "approved" &&
+                          "bg-green-500/20 text-green-400 border-green-500/30",
+                          app.status === "rejected" &&
+                          "bg-red-500/20 text-red-400 border-red-500/30"
+                        )}>
+
+                          {app.status === "pending" ?
+                        "待审批" :
+                        app.status === "approved" ?
+                        "已批准" :
+                        "已拒绝"}
                         </Badge>
                       </div>
                       <div className="grid grid-cols-4 gap-4 text-sm mb-3">
@@ -352,28 +352,28 @@ export default function LeaveManagement() {
                       <div className="text-sm text-slate-400 mb-2">
                         原因: {app.reason}
                       </div>
-                      {app.rejectReason && (
-                        <div className="text-sm text-red-400 mb-2">
+                      {app.rejectReason &&
+                    <div className="text-sm text-red-400 mb-2">
                           拒绝原因: {app.rejectReason}
                         </div>
-                      )}
+                    }
                       <div className="text-xs text-slate-500">
                         提交时间: {app.submitTime}
                         {app.approveTime && ` · 审批时间: ${app.approveTime}`}
                       </div>
                     </div>
-                    {app.status === "pending" && (
-                      <div className="flex gap-2 ml-4">
+                    {app.status === "pending" &&
+                  <div className="flex gap-2 ml-4">
                         <Button size="sm">批准</Button>
                         <Button size="sm" variant="outline">
                           拒绝
                         </Button>
                       </div>
-                    )}
+                  }
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            )}
           </div>
         </TabsContent>
 
@@ -399,6 +399,6 @@ export default function LeaveManagement() {
           </Card>
         </TabsContent>
       </Tabs>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

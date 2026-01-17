@@ -13,16 +13,16 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
-  Package,
-} from "lucide-react";
+  Package } from
+"lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
-} from "../components/ui/card";
+  CardDescription } from
+"../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -31,38 +31,38 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+  SelectValue } from
+"../components/ui/select";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "../components/ui/table";
+  TableRow } from
+"../components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogBody,
-  DialogFooter,
-} from "../components/ui/dialog";
-import { cn, formatDate } from "../lib/utils";
+  DialogFooter } from
+"../components/ui/dialog";
+import { cn as _cn, formatDate } from "../lib/utils";
 import { shortageApi, projectApi } from "../services/api";
 const statusConfigs = {
   REPORTED: { label: "已上报", color: "bg-blue-500" },
   CONFIRMED: { label: "已确认", color: "bg-emerald-500" },
   HANDLING: { label: "处理中", color: "bg-amber-500" },
   RESOLVED: { label: "已解决", color: "bg-green-500" },
-  REJECTED: { label: "已驳回", color: "bg-red-500" },
+  REJECTED: { label: "已驳回", color: "bg-red-500" }
 };
 const urgentLevelConfigs = {
   URGENT: { label: "紧急", color: "bg-red-500" },
   HIGH: { label: "高", color: "bg-orange-500" },
   MEDIUM: { label: "中", color: "bg-amber-500" },
-  LOW: { label: "低", color: "bg-blue-500" },
+  LOW: { label: "低", color: "bg-blue-500" }
 };
 export default function ShortageReportList() {
   const navigate = useNavigate();
@@ -135,8 +135,8 @@ export default function ShortageReportList() {
         return (
           report.report_no?.toLowerCase().includes(keyword) ||
           report.material_code?.toLowerCase().includes(keyword) ||
-          report.material_name?.toLowerCase().includes(keyword)
-        );
+          report.material_name?.toLowerCase().includes(keyword));
+
       }
       return true;
     });
@@ -145,8 +145,8 @@ export default function ShortageReportList() {
     <div className="space-y-6 p-6">
       <PageHeader
         title="缺料上报管理"
-        description="缺料上报列表、创建、确认、处理、解决"
-      />
+        description="缺料上报列表、创建、确认、处理、解决" />
+
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
@@ -157,8 +157,8 @@ export default function ShortageReportList() {
                 placeholder="搜索上报单号、物料编码..."
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
-                className="pl-10"
-              />
+                className="pl-10" />
+
             </div>
             <Select value={filterProject} onValueChange={setFilterProject}>
               <SelectTrigger>
@@ -166,11 +166,11 @@ export default function ShortageReportList() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部项目</SelectItem>
-                {projects.map((proj) => (
-                  <SelectItem key={proj.id} value={proj.id.toString()}>
+                {projects.map((proj) =>
+                <SelectItem key={proj.id} value={proj.id.toString()}>
                     {proj.project_name}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -179,27 +179,27 @@ export default function ShortageReportList() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部状态</SelectItem>
-                {Object.entries(statusConfigs).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
+                {Object.entries(statusConfigs).map(([key, config]) =>
+                <SelectItem key={key} value={key}>
                     {config.label}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
             <Select
               value={filterUrgentLevel}
-              onValueChange={setFilterUrgentLevel}
-            >
+              onValueChange={setFilterUrgentLevel}>
+
               <SelectTrigger>
                 <SelectValue placeholder="选择紧急程度" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部</SelectItem>
-                {Object.entries(urgentLevelConfigs).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
+                {Object.entries(urgentLevelConfigs).map(([key, config]) =>
+                <SelectItem key={key} value={key}>
                     {config.label}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -221,12 +221,12 @@ export default function ShortageReportList() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="text-center py-8 text-slate-400">加载中...</div>
-          ) : filteredReports.length === 0 ? (
-            <div className="text-center py-8 text-slate-400">暂无缺料上报</div>
-          ) : (
-            <Table>
+          {loading ?
+          <div className="text-center py-8 text-slate-400">加载中...</div> :
+          filteredReports.length === 0 ?
+          <div className="text-center py-8 text-slate-400">暂无缺料上报</div> :
+
+          <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>上报单号</TableHead>
@@ -241,8 +241,8 @@ export default function ShortageReportList() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredReports.map((report) => (
-                  <TableRow key={report.id}>
+                {filteredReports.map((report) =>
+              <TableRow key={report.id}>
                     <TableCell className="font-mono text-sm">
                       {report.report_no}
                     </TableCell>
@@ -258,54 +258,54 @@ export default function ShortageReportList() {
                     </TableCell>
                     <TableCell>
                       <Badge
-                        className={
-                          urgentLevelConfigs[report.urgent_level]?.color ||
-                          "bg-slate-500"
-                        }
-                      >
+                    className={
+                    urgentLevelConfigs[report.urgent_level]?.color ||
+                    "bg-slate-500"
+                    }>
+
                         {urgentLevelConfigs[report.urgent_level]?.label ||
-                          report.urgent_level}
+                    report.urgent_level}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-slate-500 text-sm">
-                      {report.report_time
-                        ? formatDate(report.report_time)
-                        : "-"}
+                      {report.report_time ?
+                  formatDate(report.report_time) :
+                  "-"}
                     </TableCell>
                     <TableCell>
                       <Badge
-                        className={
-                          statusConfigs[report.status]?.color || "bg-slate-500"
-                        }
-                      >
+                    className={
+                    statusConfigs[report.status]?.color || "bg-slate-500"
+                    }>
+
                         {statusConfigs[report.status]?.label || report.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewDetail(report.id)}
-                        >
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleViewDetail(report.id)}>
+
                           <Eye className="w-4 h-4" />
                         </Button>
-                        {report.status === "REPORTED" && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleConfirm(report.id)}
-                          >
+                        {report.status === "REPORTED" &&
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleConfirm(report.id)}>
+
                             <CheckCircle2 className="w-4 h-4" />
                           </Button>
-                        )}
+                    }
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+              )}
               </TableBody>
             </Table>
-          )}
+          }
         </CardContent>
       </Card>
       {/* Report Detail Dialog */}
@@ -317,8 +317,8 @@ export default function ShortageReportList() {
             </DialogTitle>
           </DialogHeader>
           <DialogBody>
-            {selectedReport && (
-              <div className="space-y-4">
+            {selectedReport &&
+            <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <div className="text-sm text-slate-500 mb-1">上报单号</div>
@@ -327,8 +327,8 @@ export default function ShortageReportList() {
                   <div>
                     <div className="text-sm text-slate-500 mb-1">状态</div>
                     <Badge
-                      className={statusConfigs[selectedReport.status]?.color}
-                    >
+                    className={statusConfigs[selectedReport.status]?.color}>
+
                       {statusConfigs[selectedReport.status]?.label}
                     </Badge>
                   </div>
@@ -355,59 +355,59 @@ export default function ShortageReportList() {
                   <div>
                     <div className="text-sm text-slate-500 mb-1">紧急程度</div>
                     <Badge
-                      className={
-                        urgentLevelConfigs[selectedReport.urgent_level]?.color
-                      }
-                    >
+                    className={
+                    urgentLevelConfigs[selectedReport.urgent_level]?.color
+                    }>
+
                       {urgentLevelConfigs[selectedReport.urgent_level]?.label}
                     </Badge>
                   </div>
                   <div>
                     <div className="text-sm text-slate-500 mb-1">上报时间</div>
                     <div>
-                      {selectedReport.report_time
-                        ? formatDate(selectedReport.report_time)
-                        : "-"}
+                      {selectedReport.report_time ?
+                    formatDate(selectedReport.report_time) :
+                    "-"}
                     </div>
                   </div>
                 </div>
-                {selectedReport.report_description && (
-                  <div>
+                {selectedReport.report_description &&
+              <div>
                     <div className="text-sm text-slate-500 mb-1">上报说明</div>
                     <div>{selectedReport.report_description}</div>
                   </div>
-                )}
-                {selectedReport.handle_plan && (
-                  <div>
+              }
+                {selectedReport.handle_plan &&
+              <div>
                     <div className="text-sm text-slate-500 mb-1">处理方案</div>
                     <div>{selectedReport.handle_plan}</div>
                   </div>
-                )}
-                {selectedReport.resolve_method && (
-                  <div>
+              }
+                {selectedReport.resolve_method &&
+              <div>
                     <div className="text-sm text-slate-500 mb-1">解决方式</div>
                     <div>{selectedReport.resolve_method}</div>
                   </div>
-                )}
+              }
               </div>
-            )}
+            }
           </DialogBody>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowDetailDialog(false)}
-            >
+              onClick={() => setShowDetailDialog(false)}>
+
               关闭
             </Button>
-            {selectedReport && selectedReport.status === "REPORTED" && (
-              <Button onClick={() => handleConfirm(selectedReport.id)}>
+            {selectedReport && selectedReport.status === "REPORTED" &&
+            <Button onClick={() => handleConfirm(selectedReport.id)}>
                 <CheckCircle2 className="w-4 h-4 mr-2" />
                 确认上报
               </Button>
-            )}
+            }
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }

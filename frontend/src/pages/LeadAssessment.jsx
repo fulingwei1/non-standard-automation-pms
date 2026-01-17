@@ -36,8 +36,8 @@ import {
   Settings,
   RefreshCw,
   Download,
-  Upload
-} from "lucide-react";
+  Upload } from
+"lucide-react";
 
 import {
   Card,
@@ -73,8 +73,8 @@ import {
   Rate,
   InputNumber,
   Slider,
-  Steps
-} from "antd";
+  Steps } from
+"antd";
 
 // 导入拆分后的组件
 import {
@@ -82,8 +82,8 @@ import {
   LeadList,
   AssessmentForm,
   ScoringEngine,
-  FollowUpManager
-} from '../components/lead-assessment';
+  FollowUpManager } from
+'../components/lead-assessment';
 
 import {
   LEAD_SOURCES,
@@ -98,8 +98,8 @@ import {
   TASK_TYPES,
   SCORE_COLORS,
   TABLE_CONFIG,
-  DEFAULT_FILTERS
-} from '../components/lead-assessment/leadAssessmentConstants';
+  DEFAULT_FILTERS } from
+'../components/lead-assessment/leadAssessmentConstants';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
@@ -111,7 +111,7 @@ const LeadAssessment = () => {
   // 状态管理
   const [loading, setLoading] = useState(false);
   const [leads, setLeads] = useState([]);
-  const [selectedLead, setSelectedLead] = useState(null);
+  const [_selectedLead, setSelectedLead] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [viewLayout, setViewLayout] = useState('grid');
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
@@ -122,52 +122,52 @@ const LeadAssessment = () => {
   // 模拟数据
   const mockData = {
     leads: [
-      {
-        id: 1,
-        companyName: '智能制造科技有限公司',
-        contactPerson: '张总',
-        position: 'CEO',
-        phone: '13800138000',
-        email: 'zhang@smartmanufacturing.com',
-        industry: 'manufacturing',
-        companySize: 'medium',
-        source: 'referral',
-        status: 'contacted',
-        qualification: 'hot',
-        score: 85,
-        budget: 'high',
-        authority: 'ceo',
-        need: 'urgent',
-        timeline: 'immediate',
-        address: '北京市海淀区',
-        createdAt: '2024-01-15',
-        lastContact: '2024-01-18',
-        description: '需要智能制造解决方案，预算充足，决策者直接对接'
-      },
-      // 更多模拟数据...
+    {
+      id: 1,
+      companyName: '智能制造科技有限公司',
+      contactPerson: '张总',
+      position: 'CEO',
+      phone: '13800138000',
+      email: 'zhang@smartmanufacturing.com',
+      industry: 'manufacturing',
+      companySize: 'medium',
+      source: 'referral',
+      status: 'contacted',
+      qualification: 'hot',
+      score: 85,
+      budget: 'high',
+      authority: 'ceo',
+      need: 'urgent',
+      timeline: 'immediate',
+      address: '北京市海淀区',
+      createdAt: '2024-01-15',
+      lastContact: '2024-01-18',
+      description: '需要智能制造解决方案，预算充足，决策者直接对接'
+    }
+    // 更多模拟数据...
     ],
     followUps: [
-      {
-        id: 1,
-        leadId: 1,
-        leadCompany: '智能制造科技有限公司',
-        type: 'meeting',
-        description: '商务洽谈',
-        dueDate: '2024-01-25',
-        status: 'pending'
-      }
-    ],
+    {
+      id: 1,
+      leadId: 1,
+      leadCompany: '智能制造科技有限公司',
+      type: 'meeting',
+      description: '商务洽谈',
+      dueDate: '2024-01-25',
+      status: 'pending'
+    }],
+
     overdueFollowUps: [
-      {
-        id: 2,
-        leadId: 2,
-        leadCompany: '绿色能源公司',
-        type: 'call',
-        description: '电话跟进',
-        dueDate: '2024-01-15',
-        status: 'overdue'
-      }
-    ],
+    {
+      id: 2,
+      leadId: 2,
+      leadCompany: '绿色能源公司',
+      type: 'call',
+      description: '电话跟进',
+      dueDate: '2024-01-15',
+      status: 'overdue'
+    }],
+
     monthlyStats: {
       growth: 12.5,
       newLeads: 45,
@@ -188,7 +188,7 @@ const LeadAssessment = () => {
         setLeads(mockData.leads);
         setLoading(false);
       }, 1000);
-    } catch (error) {
+    } catch (_error) {
       message.error('加载数据失败');
       setLoading(false);
     }
@@ -196,11 +196,11 @@ const LeadAssessment = () => {
 
   // 过滤数据
   const filteredLeads = useMemo(() => {
-    return leads.filter(lead => {
-      const matchesSearch = !searchText || 
-        lead.companyName.toLowerCase().includes(searchText.toLowerCase()) ||
-        lead.contactPerson?.toLowerCase().includes(searchText.toLowerCase()) ||
-        lead.phone?.includes(searchText);
+    return leads.filter((lead) => {
+      const matchesSearch = !searchText ||
+      lead.companyName.toLowerCase().includes(searchText.toLowerCase()) ||
+      lead.contactPerson?.toLowerCase().includes(searchText.toLowerCase()) ||
+      lead.phone?.includes(searchText);
 
       const matchesSource = !filters.source || lead.source === filters.source;
       const matchesStatus = !filters.status || lead.status === filters.status;
@@ -227,11 +227,11 @@ const LeadAssessment = () => {
       setLoading(true);
       // 模拟删除API调用
       setTimeout(() => {
-        setLeads(leads.filter(l => l.id !== leadId));
+        setLeads(leads.filter((l) => l.id !== leadId));
         message.success('删除成功');
         setLoading(false);
       }, 500);
-    } catch (error) {
+    } catch (_error) {
       message.error('删除失败');
       setLoading(false);
     }
@@ -253,38 +253,38 @@ const LeadAssessment = () => {
   // 评分计算
   const calculateLeadScore = (lead) => {
     let totalScore = 0;
-    
+
     // 预算评分
     const budgetScore =
-      (BUDGET_RANGES.find((b) => b.value === lead.budget)?.weight || 0) * 5;
+    (BUDGET_RANGES.find((b) => b.value === lead.budget)?.weight || 0) * 5;
     totalScore += budgetScore * ASSESSMENT_CRITERIA.BUDGET.weight;
-    
+
     // 权限评分
     const authorityScore = DECISION_MAKER_ROLES[lead.authority?.toUpperCase()]?.weight || 0;
     totalScore += authorityScore * ASSESSMENT_CRITERIA.AUTHORITY.weight;
-    
+
     // 需求评分
     const needScore = lead.need === 'urgent' ? 5 : lead.need === 'moderate' ? 3 : 1;
     totalScore += needScore * ASSESSMENT_CRITERIA.NEED.weight;
-    
+
     // 时间评分
     const timeScore = lead.timeline === 'immediate' ? 5 : lead.timeline === 'quarter' ? 3 : 1;
     totalScore += timeScore * ASSESSMENT_CRITERIA.TIMELINE.weight;
-    
+
     // 竞争评分（简化）
     const competitionScore = 3; // 假设中等竞争
     totalScore += competitionScore * ASSESSMENT_CRITERIA.COMPETITION.weight;
-    
+
     return Math.round(totalScore);
   };
 
   // 表格列配置
-  const leadColumns = [
-    {
-      title: '公司信息',
-      key: 'company',
-      render: (_, record) => (
-        <div>
+  const _leadColumns = [
+  {
+    title: '公司信息',
+    key: 'company',
+    render: (_, record) =>
+    <div>
           <div style={{ fontWeight: 'bold', cursor: 'pointer' }}>
             <Building2 size={16} /> {record.companyName}
           </div>
@@ -296,13 +296,13 @@ const LeadAssessment = () => {
             {COMPANY_SIZES[record.companySize?.toUpperCase()]?.label}
           </div>
         </div>
-      )
-    },
-    {
-      title: '联系方式',
-      key: 'contact',
-      render: (_, record) => (
-        <div>
+
+  },
+  {
+    title: '联系方式',
+    key: 'contact',
+    render: (_, record) =>
+    <div>
           <div style={{ fontSize: 12 }}>
             <Phone size={12} /> {record.phone}
           </div>
@@ -310,135 +310,135 @@ const LeadAssessment = () => {
             <Mail size={12} /> {record.email}
           </div>
         </div>
-      )
-    },
-    {
-      title: '状态',
-      key: 'status',
-      render: (_, record) => (
-        <div>
+
+  },
+  {
+    title: '状态',
+    key: 'status',
+    render: (_, record) =>
+    <div>
           <Tag color={LEAD_STATUS[record.status?.toUpperCase()]?.color}>
             {LEAD_STATUS[record.status?.toUpperCase()]?.label}
           </Tag>
           <div style={{ marginTop: 4 }}>
-            <Tag 
-              size="small" 
-              color={QUALIFICATION_LEVELS[record.qualification?.toUpperCase()]?.color}
-            >
+            <Tag
+          size="small"
+          color={QUALIFICATION_LEVELS[record.qualification?.toUpperCase()]?.color}>
+
               {QUALIFICATION_LEVELS[record.qualification?.toUpperCase()]?.label}
             </Tag>
           </div>
         </div>
-      )
-    },
-    {
-      title: '评分',
-      dataIndex: 'score',
-      key: 'score',
-      render: (score) => {
-        const color = Object.values(SCORE_COLORS).find(c => score >= c.min);
-        return (
-          <div>
-            <div style={{ 
-              color: color?.color, 
-              fontWeight: 'bold', 
-              fontSize: 16 
-            }}>
+
+  },
+  {
+    title: '评分',
+    dataIndex: 'score',
+    key: 'score',
+    render: (score) => {
+      const color = Object.values(SCORE_COLORS).find((c) => score >= c.min);
+      return (
+        <div>
+            <div style={{
+            color: color?.color,
+            fontWeight: 'bold',
+            fontSize: 16
+          }}>
               {score}
             </div>
-            <Progress 
-              percent={score} 
-              strokeColor={color?.color}
-              showInfo={false}
-              size="small"
-              style={{ marginTop: 4 }}
-            />
-          </div>
-        );
-      }
-    },
-    {
-      title: '来源',
-      dataIndex: 'source',
-      key: 'source',
-      render: (source) => {
-        const config = LEAD_SOURCES.find((item) => item.value === source);
-        return (
-          <Tag color={config?.color}>
+            <Progress
+            percent={score}
+            strokeColor={color?.color}
+            showInfo={false}
+            size="small"
+            style={{ marginTop: 4 }} />
+
+          </div>);
+
+    }
+  },
+  {
+    title: '来源',
+    dataIndex: 'source',
+    key: 'source',
+    render: (source) => {
+      const config = LEAD_SOURCES.find((item) => item.value === source);
+      return (
+        <Tag color={config?.color}>
             {config?.icon} {config?.label || source}
-          </Tag>
-        );
-      }
-    },
-    {
-      title: '最后联系',
-      dataIndex: 'lastContact',
-      key: 'lastContact',
-      render: (date) => (
-        <div style={{ fontSize: 12 }}>
+          </Tag>);
+
+    }
+  },
+  {
+    title: '最后联系',
+    dataIndex: 'lastContact',
+    key: 'lastContact',
+    render: (date) =>
+    <div style={{ fontSize: 12 }}>
           <Calendar size={12} /> {date}
         </div>
-      )
-    },
-    {
-      title: '操作',
-      key: 'actions',
-      render: (_, record) => (
-        <Space>
-          <Button 
-            type="link" 
-            icon={<Eye size={16} />}
-            onClick={() => setSelectedLead(record)}
-          >
+
+  },
+  {
+    title: '操作',
+    key: 'actions',
+    render: (_, record) =>
+    <Space>
+          <Button
+        type="link"
+        icon={<Eye size={16} />}
+        onClick={() => setSelectedLead(record)}>
+
             查看
           </Button>
-          <Button 
-            type="link" 
-            icon={<Edit size={16} />}
-            onClick={() => handleEditLead(record)}
-          >
+          <Button
+        type="link"
+        icon={<Edit size={16} />}
+        onClick={() => handleEditLead(record)}>
+
             编辑
           </Button>
-          <Button 
-            type="link" 
-            icon={<Target size={16} />}
-            onClick={() => handleAssessLead(record)}
-          >
+          <Button
+        type="link"
+        icon={<Target size={16} />}
+        onClick={() => handleAssessLead(record)}>
+
             评估
           </Button>
-          {record.qualification === 'hot' && (
-            <Button 
-              type="link" 
-              icon={<CheckCircle2 size={16} />}
-              onClick={() => handleConvertLead(record)}
-            >
+          {record.qualification === 'hot' &&
+      <Button
+        type="link"
+        icon={<CheckCircle2 size={16} />}
+        onClick={() => handleConvertLead(record)}>
+
               转化
             </Button>
-          )}
+      }
           <Dropdown
-            overlay={
-              <Menu>
+        overlay={
+        <Menu>
                 <Menu.Item onClick={() => handleExportLeads('Excel')}>
                   <FileText size={14} /> 导出Excel
                 </Menu.Item>
                 <Menu.Divider />
-                <Menu.Item 
-                  danger
-                  onClick={() => handleDeleteLead(record.id)}
-                >
+                <Menu.Item
+            danger
+            onClick={() => handleDeleteLead(record.id)}>
+
                   <XCircle size={14} /> 删除线索
                 </Menu.Item>
               </Menu>
-            }
-          >
+        }>
+
             <Button type="link" icon={<Settings size={16} />}>
               更多
             </Button>
           </Dropdown>
         </Space>
-      )
-    }
-  ];
+
+  }];
+
 
   return (
     <motion.div
@@ -446,8 +446,8 @@ const LeadAssessment = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
       className="lead-assessment-container"
-      style={{ padding: '24px', background: '#f5f5f5', minHeight: '100vh' }}
-    >
+      style={{ padding: '24px', background: '#f5f5f5', minHeight: '100vh' }}>
+
       {/* 页面头部 */}
       <div className="page-header" style={{ marginBottom: '24px' }}>
         <div className="header-content" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -461,28 +461,28 @@ const LeadAssessment = () => {
             </Text>
           </div>
           <Space>
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               icon={<Plus size={16} />}
-              onClick={handleCreateLead}
-            >
+              onClick={handleCreateLead}>
+
               新建线索
             </Button>
-            <Button 
-              icon={<Upload size={16} />}
-            >
+            <Button
+              icon={<Upload size={16} />}>
+
               批量导入
             </Button>
-            <Button 
-              icon={<Download size={16} />}
-            >
+            <Button
+              icon={<Download size={16} />}>
+
               导出数据
             </Button>
-            <Radio.Group 
-              value={viewLayout} 
+            <Radio.Group
+              value={viewLayout}
               onChange={(e) => setViewLayout(e.target.value)}
-              buttonStyle="solid"
-            >
+              buttonStyle="solid">
+
               <Radio.Button value="grid"><LayoutGrid size={16} /></Radio.Button>
               <Radio.Button value="list"><ListIcon size={16} /></Radio.Button>
             </Radio.Group>
@@ -499,8 +499,8 @@ const LeadAssessment = () => {
               prefix={<Search size={16} />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              allowClear
-            />
+              allowClear />
+
           </Col>
           <Col xs={24} md={12}>
             <Space>
@@ -509,52 +509,52 @@ const LeadAssessment = () => {
                 value={filters.source}
                 onChange={(value) => setFilters({ ...filters, source: value })}
                 style={{ width: 120 }}
-                allowClear
-              >
-                {Object.values(LEAD_SOURCES).map(source => (
-                  <Select.Option key={source.value} value={source.value}>
+                allowClear>
+
+                {Object.values(LEAD_SOURCES).map((source) =>
+                <Select.Option key={source.value} value={source.value}>
                     {source.icon} {source.label}
                   </Select.Option>
-                ))}
+                )}
               </Select>
               <Select
                 placeholder="状态"
                 value={filters.status}
                 onChange={(value) => setFilters({ ...filters, status: value })}
                 style={{ width: 100 }}
-                allowClear
-              >
-                {Object.values(LEAD_STATUS).map(status => (
-                  <Select.Option key={status.value} value={status.value}>
+                allowClear>
+
+                {Object.values(LEAD_STATUS).map((status) =>
+                <Select.Option key={status.value} value={status.value}>
                     <Tag color={status.color}>{status.label}</Tag>
                   </Select.Option>
-                ))}
+                )}
               </Select>
               <Select
                 placeholder="资格分级"
                 value={filters.qualification}
                 onChange={(value) => setFilters({ ...filters, qualification: value })}
                 style={{ width: 120 }}
-                allowClear
-              >
-                {Object.values(QUALIFICATION_LEVELS).map(qual => (
-                  <Select.Option key={qual.value} value={qual.value}>
+                allowClear>
+
+                {Object.values(QUALIFICATION_LEVELS).map((qual) =>
+                <Select.Option key={qual.value} value={qual.value}>
                     <Tag color={qual.color}>{qual.label}</Tag>
                   </Select.Option>
-                ))}
+                )}
               </Select>
               <Select
                 placeholder="行业"
                 value={filters.industry}
                 onChange={(value) => setFilters({ ...filters, industry: value })}
                 style={{ width: 100 }}
-                allowClear
-              >
-                {Object.values(INDUSTRY_TYPES).map(industry => (
-                  <Select.Option key={industry.value} value={industry.value}>
+                allowClear>
+
+                {Object.values(INDUSTRY_TYPES).map((industry) =>
+                <Select.Option key={industry.value} value={industry.value}>
                     {industry.label}
                   </Select.Option>
-                ))}
+                )}
               </Select>
             </Space>
           </Col>
@@ -562,25 +562,25 @@ const LeadAssessment = () => {
       </Card>
 
       {/* 主要内容区域 */}
-      <Tabs 
-        activeKey={activeTab} 
+      <Tabs
+        activeKey={activeTab}
         onChange={setActiveTab}
         type="card"
-        style={{ marginBottom: '24px' }}
-      >
-        <TabPane 
+        style={{ marginBottom: '24px' }}>
+
+        <TabPane
           tab={
-            <span>
+          <span>
               <BarChart3 size={16} />
               概览分析
             </span>
-          } 
-          key="overview"
-        >
-          <LeadOverview 
+          }
+          key="overview">
+
+          <LeadOverview
             data={mockData}
             loading={loading}
-            onNavigate={(type, value) => {
+            onNavigate={(type, _value) => {
               if (type === 'hot-leads') {
                 setFilters({ ...filters, qualification: 'hot' });
                 setActiveTab('leads');
@@ -590,43 +590,43 @@ const LeadAssessment = () => {
                 setFilters({ ...filters, status: 'overdue' });
                 setActiveTab('leads');
               }
-            }}
-          />
+            }} />
+
         </TabPane>
 
-        <TabPane 
+        <TabPane
           tab={
-            <span>
+          <span>
               <Users size={16} />
               线索列表 ({filteredLeads.length})
             </span>
-          } 
-          key="leads"
-        >
-          <LeadList 
+          }
+          key="leads">
+
+          <LeadList
             leads={filteredLeads}
             loading={loading}
             onEdit={handleEditLead}
             onDelete={handleDeleteLead}
             onAssess={handleAssessLead}
-            onConvert={handleConvertLead}
-          />
+            onConvert={handleConvertLead} />
+
         </TabPane>
 
-        <TabPane 
+        <TabPane
           tab={
-            <span>
+          <span>
               <Award size={16} />
               评估表单
             </span>
-          } 
-          key="assessment"
-        >
-          <AssessmentForm 
+          }
+          key="assessment">
+
+          <AssessmentForm
             lead={editingLead}
             onSave={(lead) => {
               if (lead.id) {
-                setLeads(leads.map(l => l.id === lead.id ? { ...lead, score: calculateLeadScore(lead) } : l));
+                setLeads(leads.map((l) => l.id === lead.id ? { ...lead, score: calculateLeadScore(lead) } : l));
               } else {
                 const newLead = { ...lead, id: Date.now(), score: calculateLeadScore(lead), createdAt: new Date().toISOString().split('T')[0] };
                 setLeads([...leads, newLead]);
@@ -638,63 +638,63 @@ const LeadAssessment = () => {
             onCancel={() => {
               setShowAssessmentModal(false);
               setEditingLead(null);
-            }}
-          />
+            }} />
+
         </TabPane>
 
-        <TabPane 
+        <TabPane
           tab={
-            <span>
+          <span>
               <Target size={16} />
               评分引擎
             </span>
-          } 
-          key="scoring"
-        >
-          <ScoringEngine 
+          }
+          key="scoring">
+
+          <ScoringEngine
             leads={leads}
             criteria={ASSESSMENT_CRITERIA}
             onReScore={(updatedLeads) => {
               setLeads(updatedLeads);
               message.success('重新评分完成');
-            }}
-          />
+            }} />
+
         </TabPane>
 
-        <TabPane 
+        <TabPane
           tab={
-            <span>
+          <span>
               <MessageSquare size={16} />
               跟进管理
             </span>
-          } 
-          key="followups"
-        >
-          <FollowUpManager 
+          }
+          key="followups">
+
+          <FollowUpManager
             followUps={mockData.followUps}
             leads={leads}
             loading={loading}
-            onRefresh={loadData}
-          />
+            onRefresh={loadData} />
+
         </TabPane>
       </Tabs>
 
       {/* 线索评估模态框 */}
       <Modal
         title={editingLead ? '编辑线索' : '新建线索'}
-        visible={showAssessmentModal}
+        open={showAssessmentModal}
         onCancel={() => {
           setShowAssessmentModal(false);
           setEditingLead(null);
         }}
         footer={null}
-        width={1000}
-      >
-        <AssessmentForm 
+        width={1000}>
+
+        <AssessmentForm
           lead={editingLead}
           onSave={(lead) => {
             if (lead.id) {
-              setLeads(leads.map(l => l.id === lead.id ? { ...lead, score: calculateLeadScore(lead) } : l));
+              setLeads(leads.map((l) => l.id === lead.id ? { ...lead, score: calculateLeadScore(lead) } : l));
             } else {
               const newLead = { ...lead, id: Date.now(), score: calculateLeadScore(lead), createdAt: new Date().toISOString().split('T')[0] };
               setLeads([...leads, newLead]);
@@ -706,11 +706,11 @@ const LeadAssessment = () => {
           onCancel={() => {
             setShowAssessmentModal(false);
             setEditingLead(null);
-          }}
-        />
+          }} />
+
       </Modal>
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
 export default LeadAssessment;

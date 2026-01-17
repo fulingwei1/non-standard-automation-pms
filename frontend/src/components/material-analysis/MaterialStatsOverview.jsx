@@ -12,8 +12,8 @@ import {
   Activity,
   Target,
   Zap,
-  RefreshCw
-} from "lucide-react";
+  RefreshCw } from
+"lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Progress } from "../../components/ui/progress";
@@ -28,20 +28,20 @@ import {
   getMaterialType,
   getImpactLevel,
   calculateReadinessRate,
-  calculateAnalysisScore,
-} from "./materialAnalysisConstants";
+  calculateAnalysisScore as _calculateAnalysisScore } from
+"./materialAnalysisConstants";
 import { cn } from "../../lib/utils";
 
 /**
  * 📊 材料统计概览组件
  * 展示材料分析的关键指标和统计信息
  */
-export function MaterialStatsOverview({ 
-  projects = [], 
-  materials = [], 
+export function MaterialStatsOverview({
+  projects = [],
+  materials = [],
   loading = false,
   refreshInterval = 30000,
-  onRefresh 
+  onRefresh
 }) {
   const [trendData, setTrendData] = useState([]);
   const [trendPeriod, setTrendPeriod] = useState('weekly');
@@ -75,24 +75,24 @@ export function MaterialStatsOverview({
         totalMaterials: 0,
         arrived: 0,
         delayed: 0,
-        inTransit: 0,
+        inTransit: 0
       }
     );
 
     // 计算关键指标
     const readyRate = calculateReadinessRate(stats.arrived, stats.totalMaterials);
-    const onTimeDelivery = stats.totalMaterials > 0 
-      ? Math.round(((stats.arrived + stats.inTransit) / stats.totalMaterials) * 100) 
-      : 0;
+    const onTimeDelivery = stats.totalMaterials > 0 ?
+    Math.round((stats.arrived + stats.inTransit) / stats.totalMaterials * 100) :
+    0;
 
     // 计算风险项目数量
     const riskCount = projects.filter(
-      p => p.readyRate < 80 || (p.materialStats?.delayed || 0) > 5
+      (p) => p.readyRate < 80 || (p.materialStats?.delayed || 0) > 5
     ).length;
 
     // 计算关键物料数量
     const criticalMaterials = projects.reduce(
-      (acc, project) => acc + (project.criticalMaterials?.length || 0), 
+      (acc, project) => acc + (project.criticalMaterials?.length || 0),
       0
     );
 
@@ -111,8 +111,8 @@ export function MaterialStatsOverview({
   // 材料状态分布数据
   const statusDistribution = useMemo(() => {
     const statusCount = {};
-    
-    projects.forEach(project => {
+
+    projects.forEach((project) => {
       const stats = project.materialStats || {};
       statusCount.arrived = (statusCount.arrived || 0) + (stats.arrived || 0);
       statusCount.delayed = (statusCount.delayed || 0) + (stats.delayed || 0);
@@ -130,8 +130,8 @@ export function MaterialStatsOverview({
   // 材料类型分布数据
   const typeDistribution = useMemo(() => {
     const typeCount = {};
-    
-    materials.forEach(material => {
+
+    materials.forEach((material) => {
       const type = getMaterialType(material.type);
       typeCount[type.label] = (typeCount[type.label] || 0) + 1;
     });
@@ -145,10 +145,10 @@ export function MaterialStatsOverview({
 
   // 风险分析数据
   const riskAnalysis = useMemo(() => {
-    const risks = projects.map(project => {
+    const risks = projects.map((project) => {
       const riskScore = 100 - project.readyRate;
       const riskLevel = riskScore > 30 ? 'high' : riskScore > 15 ? 'medium' : 'low';
-      
+
       return {
         name: project.name || project.id,
         riskScore,
@@ -193,13 +193,13 @@ export function MaterialStatsOverview({
   }, [refreshInterval, onRefresh]);
 
   // 关键指标卡片
-  const MetricCard = ({ title, value, icon: Icon, trend, trendValue, color, description }) => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ scale: 1.02 }}
-      className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6"
-    >
+  const MetricCard = ({ title, value, icon: Icon, trend, trendValue, color, description }) =>
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    whileHover={{ scale: 1.02 }}
+    className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
+
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
@@ -211,39 +211,39 @@ export function MaterialStatsOverview({
               <p className="text-2xl font-bold text-white">{value}</p>
             </div>
           </div>
-          {trend && (
-            <div className="flex items-center gap-1 mt-2">
-              {trend === 'up' ? (
-                <TrendingUp className="w-4 h-4 text-green-400" />
-              ) : (
-                <TrendingDown className="w-4 h-4 text-red-400" />
-              )}
+          {trend &&
+        <div className="flex items-center gap-1 mt-2">
+              {trend === 'up' ?
+          <TrendingUp className="w-4 h-4 text-green-400" /> :
+
+          <TrendingDown className="w-4 h-4 text-red-400" />
+          }
               <span className={cn(
-                "text-sm font-medium",
-                trend === 'up' ? 'text-green-400' : 'text-red-400'
-              )}>
+            "text-sm font-medium",
+            trend === 'up' ? 'text-green-400' : 'text-red-400'
+          )}>
                 {trendValue}%
               </span>
             </div>
-          )}
-          {description && (
-            <p className="text-xs text-slate-500 mt-2">{description}</p>
-          )}
+        }
+          {description &&
+        <p className="text-xs text-slate-500 mt-2">{description}</p>
+        }
         </div>
       </div>
-    </motion.div>
-  );
+    </motion.div>;
+
 
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 animate-pulse">
+        {Array.from({ length: 4 }).map((_, i) =>
+        <div key={i} className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 animate-pulse">
             <div className="h-20 bg-slate-700/50 rounded-lg"></div>
           </div>
-        ))}
-      </div>
-    );
+        )}
+      </div>);
+
   }
 
   return (
@@ -257,8 +257,8 @@ export function MaterialStatsOverview({
           trend={overallStats.readyRate >= 90 ? 'up' : 'down'}
           trendValue={Math.abs(overallStats.readyRate - 90)}
           color="bg-blue-500"
-          description="材料到货齐套率"
-        />
+          description="材料到货齐套率" />
+
         
         <MetricCard
           title="准时交付"
@@ -267,8 +267,8 @@ export function MaterialStatsOverview({
           trend={overallStats.onTimeDelivery >= 85 ? 'up' : 'down'}
           trendValue={Math.abs(overallStats.onTimeDelivery - 85)}
           color="bg-green-500"
-          description="准时交付率"
-        />
+          description="准时交付率" />
+
         
         <MetricCard
           title="质量合格率"
@@ -277,8 +277,8 @@ export function MaterialStatsOverview({
           trend="up"
           trendValue="2.5"
           color="bg-purple-500"
-          description="材料检验合格率"
-        />
+          description="材料检验合格率" />
+
         
         <MetricCard
           title="风险项目"
@@ -287,8 +287,8 @@ export function MaterialStatsOverview({
           trend={overallStats.riskCount <= 3 ? 'up' : 'down'}
           trendValue={overallStats.riskCount}
           color="bg-red-500"
-          description="需要关注的项目数量"
-        />
+          description="需要关注的项目数量" />
+
       </div>
 
       {/* 详细的统计信息 */}
@@ -307,21 +307,21 @@ export function MaterialStatsOverview({
                 data={statusDistribution}
                 valueKey="value"
                 nameKey="name"
-                colors={statusDistribution.map(d => d.color)}
-              />
+                colors={statusDistribution.map((d) => d.color)} />
+
             </div>
             <div className="grid grid-cols-2 gap-2 mt-4">
-              {statusDistribution.map((item, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <div 
-                    className="w-3 h-3 rounded-full" 
-                    style={{ backgroundColor: item.color }}
-                  />
+              {statusDistribution.map((item, index) =>
+              <div key={index} className="flex items-center gap-2">
+                  <div
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: item.color }} />
+
                   <span className="text-sm text-slate-300">
                     {item.name}: {item.value}
                   </span>
                 </div>
-              ))}
+              )}
             </div>
           </CardContent>
         </Card>
@@ -340,8 +340,8 @@ export function MaterialStatsOverview({
                 data={typeDistribution}
                 xAxisKey="name"
                 yAxisKey="value"
-                color="#3b82f6"
-              />
+                color="#3b82f6" />
+
             </div>
           </CardContent>
         </Card>
@@ -356,8 +356,8 @@ export function MaterialStatsOverview({
           </CardHeader>
           <CardContent>
             <div className="space-y-3 max-h-64 overflow-y-auto">
-              {riskAnalysis.map((risk, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg">
+              {riskAnalysis.map((risk, index) =>
+              <div key={index} className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium text-white truncate">
@@ -374,13 +374,13 @@ export function MaterialStatsOverview({
                   </div>
                   <div className="text-right">
                     <div className="text-lg font-bold text-white">{risk.riskScore}%</div>
-                    <Progress 
-                      value={risk.riskScore} 
-                      className="w-16 h-2 mt-1"
-                    />
+                    <Progress
+                    value={risk.riskScore}
+                    className="w-16 h-2 mt-1" />
+
                   </div>
                 </div>
-              ))}
+              )}
             </div>
           </CardContent>
         </Card>
@@ -398,8 +398,8 @@ export function MaterialStatsOverview({
               <select
                 value={trendPeriod}
                 onChange={(e) => setTrendPeriod(e.target.value)}
-                className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm"
-              >
+                className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm">
+
                 <option value="daily">每日</option>
                 <option value="weekly">每周</option>
                 <option value="monthly">每月</option>
@@ -408,8 +408,8 @@ export function MaterialStatsOverview({
                 variant="outline"
                 size="sm"
                 onClick={() => onRefresh && onRefresh()}
-                className="flex items-center gap-2"
-              >
+                className="flex items-center gap-2">
+
                 <RefreshCw className="w-4 h-4" />
                 刷新
               </Button>
@@ -423,8 +423,8 @@ export function MaterialStatsOverview({
               xAxisKey="date"
               yAxisKeys={['readinessRate', 'onTimeDelivery', 'qualityRate']}
               colors={['#3b82f6', '#10b981', '#8b5cf6']}
-              labels={['齐套率', '准时交付', '质量合格']}
-            />
+              labels={['齐套率', '准时交付', '质量合格']} />
+
           </div>
           <div className="flex items-center justify-between mt-4 text-xs text-slate-400">
             <span>最后更新: {lastRefreshTime.toLocaleTimeString()}</span>
@@ -432,8 +432,8 @@ export function MaterialStatsOverview({
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>);
+
 }
 
 export default MaterialStatsOverview;

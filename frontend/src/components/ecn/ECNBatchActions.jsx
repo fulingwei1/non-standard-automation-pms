@@ -152,9 +152,9 @@ export function ECNBatchActions({
             >
               {getOperationIcon(operation.value)}
                 {operation.label}
-              </Button>
+            </Button>
             ))}
-          </div>
+        </div>
         </div>
 
         {/* 选中ECN列表预览 */}

@@ -11,13 +11,31 @@ export function useDashboardData({
   enabled = true,
   refetchInterval,
   onSuccess,
-  onError,
+  onError
 }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const cacheRef = useRef(null);
+  const _cacheRef = useRef(null);
   const intervalRef = useRef(null);
+
+  // Use refs to store callbacks to avoid infinite loops
+  const fetchFnRef = useRef(fetchFn);
+  const onSuccessRef = useRef(onSuccess);
+  const onErrorRef = useRef(onError);
+
+  // Update refs when props change
+  useEffect(() => {
+    fetchFnRef.current = fetchFn;
+  }, [fetchFn]);
+
+  useEffect(() => {
+    onSuccessRef.current = onSuccess;
+  }, [onSuccess]);
+
+  useEffect(() => {
+    onErrorRef.current = onError;
+  }, [onError]);
 
   // 从缓存读取数据
   const getCachedData = useCallback(() => {
@@ -48,14 +66,14 @@ export function useDashboardData({
           cacheKey,
           JSON.stringify({
             data: dataToCache,
-            timestamp: Date.now(),
-          }),
+            timestamp: Date.now()
+          })
         );
       } catch (e) {
         console.warn("Failed to save cache:", e);
       }
     },
-    [cacheKey],
+    [cacheKey]
   );
 
   // 获取数据
@@ -77,21 +95,21 @@ export function useDashboardData({
         setLoading(true);
         setError(null);
 
-        const result = await fetchFn();
+        const result = await fetchFnRef.current();
         const resultData = result?.data || result;
 
         setData(resultData);
         setCachedData(resultData);
 
-        if (onSuccess) {
-          onSuccess(resultData);
+        if (onSuccessRef.current) {
+          onSuccessRef.current(resultData);
         }
       } catch (err) {
         const errorMessage =
-          err?.response?.data?.detail || err?.message || "数据加载失败";
+        err?.response?.data?.detail || err?.message || "数据加载失败";
         setError(errorMessage);
-        if (onError) {
-          onError(err);
+        if (onErrorRef.current) {
+          onErrorRef.current(err);
         } else {
           console.error("Dashboard data fetch error:", err);
         }
@@ -99,20 +117,14 @@ export function useDashboardData({
         setLoading(false);
       }
     },
-    [
-      enabled,
-      fetchFn,
-      cacheKey,
-      getCachedData,
-      setCachedData,
-      onSuccess,
-      onError,
-    ],
+    [enabled, cacheKey, getCachedData, setCachedData]
   );
 
-  // 初始加载
+  // 初始加载 - only run once when enabled changes
+  const initialFetchDone = useRef(false);
   useEffect(() => {
-    if (enabled) {
+    if (enabled && !initialFetchDone.current) {
+      initialFetchDone.current = true;
       fetchData();
     }
   }, [enabled, fetchData]);
@@ -149,7 +161,7 @@ export function useDashboardData({
     loading,
     error,
     refetch,
-    clearCache,
+    clearCache
   };
 }
 
@@ -168,10 +180,10 @@ export function useMultipleDashboardData(queries) {
         setError(null);
 
         const promises = queries.map((query) =>
-          query.fetchFn().catch((err) => ({
-            error: err?.response?.data?.detail || err?.message || "加载失败",
-            key: query.key,
-          })),
+        query.fetchFn().catch((err) => ({
+          error: err?.response?.data?.detail || err?.message || "加载失败",
+          key: query.key
+        }))
         );
 
         const results = await Promise.allSettled(promises);
@@ -184,7 +196,7 @@ export function useMultipleDashboardData(queries) {
               dataMap[key] = { error: result.value.error };
             } else {
               dataMap[key] = {
-                data: result.value?.data || result.value,
+                data: result.value?.data || result.value
               };
             }
           } else {

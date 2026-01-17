@@ -2,26 +2,14 @@
  * usePreloadData - 数据预加载Hook
  * 结合 Intersection Observer 实现智能数据预加载
  */
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { usePreload } from "./useIntersectionObserver";
-
-/**
- * 预加载数据配置
- */
-interface PreloadConfig {
-  fetchFn: () => Promise<any>;
-  cacheKey?: string;
-  enabled?: boolean;
-  preloadDistance?: number;
-  onSuccess?: (data: any) => void;
-  onError?: (error: any) => void;
-}
 
 /**
  * 数据预加载Hook
  * 当元素进入视口时自动加载数据
  */
-export function usePreloadData(config: PreloadConfig) {
+export function usePreloadData(config) {
   const {
     fetchFn,
     cacheKey,
@@ -127,18 +115,5 @@ export function usePreloadData(config: PreloadConfig) {
     hasPreloaded,
     hasLoaded,
     refetch: loadData,
-  };
-}
-
-/**
- * 批量预加载多个数据源
- */
-export function useBatchPreload(configs: PreloadConfig[]) {
-  const results = configs.map((config) => usePreloadData(config));
-
-  return {
-    results,
-    allLoaded: results.every((r) => r.hasLoaded),
-    allLoading: results.some((r) => r.loading),
   };
 }

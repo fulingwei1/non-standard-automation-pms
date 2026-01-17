@@ -17,13 +17,13 @@ const staggerContainer = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.05, delayChildren: 0.1 },
-  },
+    transition: { staggerChildren: 0.05, delayChildren: 0.1 }
+  }
 };
 
 const staggerChild = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 },
+  visible: { opacity: 1, y: 0 }
 };
 
 export function DashboardLayout({
@@ -31,22 +31,22 @@ export function DashboardLayout({
   description,
   actions,
   children,
-  loading = false,
+  loading: _loading = false
 }) {
   return (
     <motion.div
       initial="hidden"
       animate="visible"
       variants={staggerContainer}
-      className="space-y-6"
-    >
+      className="space-y-6">
+
       <motion.div variants={staggerChild}>
         <PageHeader title={title} description={description} actions={actions} />
       </motion.div>
 
       <motion.div variants={staggerChild}>{children}</motion.div>
-    </motion.div>
-  );
+    </motion.div>);
+
 }
 
 export default DashboardLayout;
