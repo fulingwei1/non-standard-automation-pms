@@ -11,36 +11,53 @@
 """
 
 import logging
-from typing import Any, List, Optional
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 logger = logging.getLogger(__name__)
+from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import or_, desc
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
-from app.models.project import Project, Machine
 from app.models.outsourcing import (
-    OutsourcingVendor, OutsourcingOrder, OutsourcingOrderItem,
-    OutsourcingDelivery, OutsourcingDeliveryItem,
-    OutsourcingInspection, OutsourcingProgress, OutsourcingEvaluation, OutsourcingPayment
+    OutsourcingDelivery,
+    OutsourcingDeliveryItem,
+    OutsourcingEvaluation,
+    OutsourcingInspection,
+    OutsourcingOrder,
+    OutsourcingOrderItem,
+    OutsourcingPayment,
+    OutsourcingProgress,
+    OutsourcingVendor,
 )
+from app.models.project import Machine, Project
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.outsourcing import (
-    VendorCreate, VendorUpdate, VendorResponse,
-    OutsourcingOrderCreate, OutsourcingOrderUpdate, OutsourcingOrderResponse, OutsourcingOrderListResponse,
-    OutsourcingOrderItemCreate, OutsourcingOrderItemResponse,
-    OutsourcingDeliveryCreate, OutsourcingDeliveryResponse,
-    OutsourcingInspectionCreate, OutsourcingInspectionResponse,
-    OutsourcingProgressCreate, OutsourcingProgressResponse,
-    OutsourcingPaymentCreate, OutsourcingPaymentUpdate, OutsourcingPaymentResponse
+    OutsourcingDeliveryCreate,
+    OutsourcingDeliveryResponse,
+    OutsourcingInspectionCreate,
+    OutsourcingInspectionResponse,
+    OutsourcingOrderCreate,
+    OutsourcingOrderItemCreate,
+    OutsourcingOrderItemResponse,
+    OutsourcingOrderListResponse,
+    OutsourcingOrderResponse,
+    OutsourcingOrderUpdate,
+    OutsourcingPaymentCreate,
+    OutsourcingPaymentResponse,
+    OutsourcingPaymentUpdate,
+    OutsourcingProgressCreate,
+    OutsourcingProgressResponse,
+    VendorCreate,
+    VendorResponse,
+    VendorUpdate,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
 
 router = APIRouter()
 
@@ -93,14 +110,7 @@ def generate_inspection_no(db: Session) -> str:
     return f"IQ-{today}-{seq:03d}"
 
 
-
-from fastapi import APIRouter
-
-router = APIRouter(
-    prefix="/outsourcing/payments",
-    tags=["payments"]
-)
-
+# NOTE: keep flat routes (no extra prefix) to preserve the original API paths.
 # 共 4 个路由
 
 # ==================== 外协付款 ====================
@@ -138,46 +148,46 @@ def read_outsourcing_payments(
     获取外协付款记录列表
     """
     query = db.query(OutsourcingPayment)
-    
+
     if vendor_id:
         query = query.filter(OutsourcingPayment.vendor_id == vendor_id)
-    
+
     if order_id:
         query = query.filter(OutsourcingPayment.order_id == order_id)
-    
+
     if payment_type:
         query = query.filter(OutsourcingPayment.payment_type == payment_type)
-    
+
     if status:
         query = query.filter(OutsourcingPayment.status == status)
-    
+
     if start_date:
         query = query.filter(OutsourcingPayment.payment_date >= start_date)
-    
+
     if end_date:
         query = query.filter(OutsourcingPayment.payment_date <= end_date)
-    
+
     total = query.count()
     offset = (page - 1) * page_size
     payments = query.order_by(desc(OutsourcingPayment.payment_date)).offset(offset).limit(page_size).all()
-    
+
     items = []
     for payment in payments:
         vendor_name = None
         if payment.vendor_id:
             vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == payment.vendor_id).first()
             vendor_name = vendor.vendor_name if vendor else None
-        
+
         order_no = None
         if payment.order_id:
             order = db.query(OutsourcingOrder).filter(OutsourcingOrder.id == payment.order_id).first()
             order_no = order.order_no if order else None
-        
+
         approved_by_name = None
         if payment.approved_by:
             approver = db.query(User).filter(User.id == payment.approved_by).first()
             approved_by_name = approver.real_name or approver.username if approver else None
-        
+
         items.append(OutsourcingPaymentResponse(
             id=payment.id,
             payment_no=payment.payment_no,
@@ -200,7 +210,7 @@ def read_outsourcing_payments(
             created_at=payment.created_at,
             updated_at=payment.updated_at
         ))
-    
+
     return PaginatedResponse(
         items=items,
         total=total,
@@ -224,7 +234,7 @@ def create_outsourcing_payment(
     vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == payment_in.vendor_id).first()
     if not vendor:
         raise HTTPException(status_code=404, detail="外协商不存在")
-    
+
     # 验证外协订单（如果提供）
     if payment_in.order_id:
         order = db.query(OutsourcingOrder).filter(OutsourcingOrder.id == payment_in.order_id).first()
@@ -232,9 +242,9 @@ def create_outsourcing_payment(
             raise HTTPException(status_code=404, detail="外协订单不存在")
         if order.vendor_id != payment_in.vendor_id:
             raise HTTPException(status_code=400, detail="外协订单不属于该外协商")
-    
+
     payment_no = generate_payment_no(db)
-    
+
     payment = OutsourcingPayment(
         payment_no=payment_no,
         vendor_id=payment_in.vendor_id,
@@ -249,9 +259,9 @@ def create_outsourcing_payment(
         status="DRAFT",
         created_by=current_user.id
     )
-    
+
     db.add(payment)
-    
+
     # 如果关联了订单，更新订单的已付金额和付款状态
     if payment_in.order_id:
         order = db.query(OutsourcingOrder).filter(OutsourcingOrder.id == payment_in.order_id).first()
@@ -264,17 +274,17 @@ def create_outsourcing_payment(
                 order.payment_status = "PARTIAL"
             else:
                 order.payment_status = "UNPAID"
-    
+
     db.commit()
     db.refresh(payment)
-    
+
     # 构建响应
     vendor_name = vendor.vendor_name
     order_no = None
     if payment.order_id:
         order = db.query(OutsourcingOrder).filter(OutsourcingOrder.id == payment.order_id).first()
         order_no = order.order_no if order else None
-    
+
     return OutsourcingPaymentResponse(
         id=payment.id,
         payment_no=payment.payment_no,
@@ -312,18 +322,18 @@ def print_outsourcing_order(
     order = db.query(OutsourcingOrder).filter(OutsourcingOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="外协订单不存在")
-    
+
     vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == order.vendor_id).first()
     project = db.query(Project).filter(Project.id == order.project_id).first()
     machine = None
     if order.machine_id:
         machine = db.query(Machine).filter(Machine.id == order.machine_id).first()
-    
+
     # 获取订单明细
     order_items = db.query(OutsourcingOrderItem).filter(
         OutsourcingOrderItem.order_id == order_id
     ).order_by(OutsourcingOrderItem.item_no).all()
-    
+
     items_data = []
     for item in order_items:
         items_data.append({
@@ -339,12 +349,12 @@ def print_outsourcing_order(
             "amount": float(item.amount),
             "material_provided": item.material_provided,
         })
-    
+
     # 获取交付记录
     deliveries = db.query(OutsourcingDelivery).filter(
         OutsourcingDelivery.order_id == order_id
     ).order_by(OutsourcingDelivery.delivery_date).all()
-    
+
     deliveries_data = []
     for delivery in deliveries:
         deliveries_data.append({
@@ -353,12 +363,12 @@ def print_outsourcing_order(
             "delivery_qty": float(delivery.delivery_qty or 0),
             "status": delivery.status,
         })
-    
+
     # 获取付款记录
     payments = db.query(OutsourcingPayment).filter(
         OutsourcingPayment.order_id == order_id
     ).order_by(OutsourcingPayment.payment_date).all()
-    
+
     payments_data = []
     for payment in payments:
         payments_data.append({
@@ -368,7 +378,7 @@ def print_outsourcing_order(
             "payment_method": payment.payment_method,
             "status": payment.status,
         })
-    
+
     return {
         "order": {
             "order_no": order.order_no,
@@ -422,7 +432,7 @@ def get_vendor_statement(
     vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == vendor_id).first()
     if not vendor:
         raise HTTPException(status_code=404, detail="外协供应商不存在")
-    
+
     # 获取订单列表
     orders_query = db.query(OutsourcingOrder).filter(OutsourcingOrder.vendor_id == vendor_id)
     if start_date:
@@ -430,39 +440,39 @@ def get_vendor_statement(
     if end_date:
         orders_query = orders_query.filter(OutsourcingOrder.order_date <= end_date)
     orders = orders_query.order_by(OutsourcingOrder.order_date).all()
-    
+
     # 构建对账单明细
     statement_items = []
     total_order_amount = Decimal("0")
     total_paid_amount = Decimal("0")
     total_pending_amount = Decimal("0")
-    
+
     for order in orders:
         # 获取订单明细
         order_items = db.query(OutsourcingOrderItem).filter(
             OutsourcingOrderItem.order_id == order.id
         ).all()
-        
+
         order_total = sum(float(item.unit_price or 0) * float(item.quantity or 0) for item in order_items)
         total_order_amount += Decimal(str(order_total))
-        
+
         # 获取付款记录
         payments = db.query(OutsourcingPayment).filter(
             OutsourcingPayment.order_id == order.id,
             OutsourcingPayment.status == 'PAID'
         ).all()
-        
+
         paid_amount = sum(float(payment.payment_amount or 0) for payment in payments)
         total_paid_amount += Decimal(str(paid_amount))
-        
+
         pending_amount = order_total - paid_amount
         total_pending_amount += Decimal(str(pending_amount))
-        
+
         # 获取交付记录
         deliveries = db.query(OutsourcingDelivery).filter(
             OutsourcingDelivery.order_id == order.id
         ).all()
-        
+
         statement_items.append({
             "order_id": order.id,
             "order_no": order.order_no,
@@ -489,7 +499,7 @@ def get_vendor_statement(
                 for p in payments
             ]
         })
-    
+
     return ResponseModel(
         code=200,
         message="success",
@@ -511,5 +521,4 @@ def get_vendor_statement(
             "generated_at": datetime.now().isoformat()
         }
     )
-
 

@@ -3,21 +3,23 @@
 商务支持模块 - 销售报表 API endpoints
 """
 
-from typing import Optional
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
 from sqlalchemy import func, text
+from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.models.user import User
-from app.models.business_support import SalesOrder, BiddingProject
+from app.models.business_support import BiddingProject, SalesOrder
 from app.models.sales import Contract, Invoice
+from app.models.user import User
 from app.schemas.business_support import (
-    SalesReportResponse, PaymentReportResponse,
-    ContractReportResponse, InvoiceReportResponse
+    ContractReportResponse,
+    InvoiceReportResponse,
+    PaymentReportResponse,
+    SalesReportResponse,
 )
 from app.schemas.common import ResponseModel
 
@@ -351,13 +353,13 @@ async def get_sales_monthly_report(
 ):
     """获取销售月报"""
     from app.services.sales_monthly_report_service import (
-        parse_month_string,
-        calculate_month_range,
+        calculate_bidding_statistics,
         calculate_contract_statistics,
+        calculate_invoice_statistics,
+        calculate_month_range,
         calculate_order_statistics,
         calculate_receipt_statistics,
-        calculate_invoice_statistics,
-        calculate_bidding_statistics
+        parse_month_string,
     )
 
     try:

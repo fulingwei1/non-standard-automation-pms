@@ -10,31 +10,40 @@
 核心功能：周工时表、批量填报、审批流程
 """
 
-from typing import Any, List, Optional, Dict
+from calendar import monthrange
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from calendar import monthrange
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from sqlalchemy import and_, case, desc, extract, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, and_, func, case, extract
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User
-from app.models.project import Project
+from app.core.config import settings
 from app.models.organization import Department, Employee
+from app.models.project import Project
 from app.models.rd_project import RdProject
 from app.models.timesheet import (
-    Timesheet, TimesheetBatch, TimesheetSummary,
-    OvertimeApplication, TimesheetApprovalLog, TimesheetRule
+    OvertimeApplication,
+    Timesheet,
+    TimesheetApprovalLog,
+    TimesheetBatch,
+    TimesheetRule,
+    TimesheetSummary,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.timesheet import (
-    TimesheetCreate, TimesheetUpdate, TimesheetResponse, TimesheetListResponse,
-    TimesheetBatchCreate, WeekTimesheetResponse, MonthSummaryResponse,
-    TimesheetStatisticsResponse
+    MonthSummaryResponse,
+    TimesheetBatchCreate,
+    TimesheetCreate,
+    TimesheetListResponse,
+    TimesheetResponse,
+    TimesheetStatisticsResponse,
+    TimesheetUpdate,
+    WeekTimesheetResponse,
 )
 
 router = APIRouter()
@@ -133,15 +142,15 @@ def submit_timesheets(
         Timesheet.user_id == current_user.id,
         Timesheet.status == "DRAFT"
     ).all()
-    
+
     if not timesheets:
         raise HTTPException(status_code=400, detail="没有可提交的记录")
-    
+
     for ts in timesheets:
         ts.status = "PENDING"
-    
+
     db.commit()
-    
+
     return ResponseModel(message=f"已提交 {len(timesheets)} 条工时记录")
 
 
@@ -172,7 +181,7 @@ def approve_timesheet(
     timesheet.approver_name = current_user.real_name or current_user.username
     timesheet.approve_time = datetime.now()
     timesheet.approve_comment = comment
-    
+
     # 记录审批日志
     log = TimesheetApprovalLog(
         timesheet_id=timesheet.id,
@@ -183,7 +192,7 @@ def approve_timesheet(
     )
     db.add(log)
     db.commit()
-    
+
     # 审批通过后自动同步到各系统
     try:
         from app.services.timesheet_sync_service import TimesheetSyncService
@@ -194,7 +203,7 @@ def approve_timesheet(
         import logging
         logger = logging.getLogger(__name__)
         logger.warning(f"工时记录{timesheet.id}审批通过后自动同步失败: {str(e)}")
-    
+
     return ResponseModel(message="工时记录已审批通过")
 
 
@@ -213,13 +222,16 @@ def approve_timesheets(
         Timesheet.id.in_(timesheet_ids),
         Timesheet.status == "PENDING"
     ).all()
-    
+
     if not timesheets:
         raise HTTPException(status_code=400, detail="没有待审核的记录")
 
     # 检查审批权限
     if not security.check_timesheet_approval_permission(current_user, db, timesheets):
         raise HTTPException(status_code=403, detail="您没有权限审批这些工时记录")
+
+    approved_timesheets: List[Timesheet] = []
+    no_permission_ids: List[int] = []
 
     for ts in timesheets:
         if check_timesheet_approval_permission(db, ts, current_user):
@@ -236,7 +248,7 @@ def approve_timesheets(
         ts.approver_name = current_user.real_name or current_user.username
         ts.approve_time = datetime.now()
         ts.approve_comment = comment
-        
+
         # 记录审批日志
         log = TimesheetApprovalLog(
             timesheet_id=ts.id,
@@ -246,9 +258,9 @@ def approve_timesheets(
             comment=comment
         )
         db.add(log)
-    
+
     db.commit()
-    
+
     # 批量审批通过后自动同步
     try:
         from app.services.timesheet_sync_service import TimesheetSyncService
@@ -302,16 +314,16 @@ def reject_timesheets(
         Timesheet.id.in_(timesheet_ids),
         Timesheet.status == "PENDING"
     ).all()
-    
+
     if not timesheets:
         raise HTTPException(status_code=400, detail="没有待审核的记录")
-    
+
     for ts in timesheets:
         ts.status = "REJECTED"
         ts.approver_id = current_user.id
         ts.approver_name = current_user.real_name or current_user.username
         ts.approve_time = datetime.now()
-        
+
         log = TimesheetApprovalLog(
             timesheet_id=ts.id,
             approver_id=current_user.id,
@@ -319,10 +331,9 @@ def reject_timesheets(
             approval_comment=comment
         )
         db.add(log)
-    
-    db.commit()
-    
-    return ResponseModel(message=f"已拒绝 {len(timesheets)} 条工时记录")
 
+    db.commit()
+
+    return ResponseModel(message=f"已拒绝 {len(timesheets)} 条工时记录")
 
 

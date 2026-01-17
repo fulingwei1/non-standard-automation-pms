@@ -13,7 +13,8 @@
 """
 
 from fastapi import APIRouter
-from . import templates, orders, issues, reports
+
+from . import issues, orders, reports, templates
 
 # 创建主路由
 router = APIRouter()
@@ -35,11 +36,11 @@ router.include_router(reports.router, tags=["acceptance-reports"])
 
 # 导出工具函数供外部使用
 from .utils import (
+    generate_issue_no,
+    generate_order_no,
     validate_acceptance_rules,
     validate_completion_rules,
     validate_edit_rules,
-    generate_order_no,
-    generate_issue_no
 )
 
 __all__ = [

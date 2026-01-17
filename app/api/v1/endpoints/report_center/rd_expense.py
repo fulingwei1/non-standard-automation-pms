@@ -10,35 +10,45 @@
 核心功能：多角色视角报表、智能生成、导出分享
 """
 
-from typing import Any, List, Optional, Dict
+import os
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from fastapi.responses import FileResponse
+from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
-import os
-from sqlalchemy import desc, func, and_, or_
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User, Role
-from app.models.project import Project, Machine, ProjectPaymentPlan
-from app.models.rd_project import RdProject, RdCost, RdCostType
-from app.models.timesheet import Timesheet
-from app.models.sales import Contract
-from app.models.outsourcing import OutsourcingVendor, OutsourcingOrder
+from app.core.config import settings
+from app.models.outsourcing import OutsourcingOrder, OutsourcingVendor
+from app.models.project import Machine, Project, ProjectPaymentPlan
+from app.models.rd_project import RdCost, RdCostType, RdProject
 from app.models.report_center import (
-    ReportTemplate, ReportDefinition, ReportGeneration,
-    ReportSubscription
+    ReportDefinition,
+    ReportGeneration,
+    ReportSubscription,
+    ReportTemplate,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
+from app.models.sales import Contract
+from app.models.timesheet import Timesheet
+from app.models.user import Role, User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.report_center import (
-    ReportRoleResponse, ReportTypeResponse, RoleReportMatrixResponse,
-    ReportGenerateRequest, ReportGenerateResponse, ReportPreviewResponse,
-    ReportCompareRequest, ReportCompareResponse, ReportExportRequest,
-    ReportTemplateResponse, ReportTemplateListResponse, ApplyTemplateRequest
+    ApplyTemplateRequest,
+    ReportCompareRequest,
+    ReportCompareResponse,
+    ReportExportRequest,
+    ReportGenerateRequest,
+    ReportGenerateResponse,
+    ReportPreviewResponse,
+    ReportRoleResponse,
+    ReportTemplateListResponse,
+    ReportTemplateResponse,
+    ReportTypeResponse,
+    RoleReportMatrixResponse,
 )
 
 router = APIRouter()
@@ -71,19 +81,19 @@ def get_rd_auxiliary_ledger(
     query = db.query(RdCost).join(RdProject).filter(
         func.extract('year', RdCost.cost_date) == year
     )
-    
+
     if project_id:
         query = query.filter(RdCost.rd_project_id == project_id)
-    
+
     costs = query.order_by(RdCost.rd_project_id, RdCost.cost_date, RdCost.cost_type_id).all()
-    
+
     # 按项目和费用类型汇总
     ledger_items = []
     current_project_id = None
     current_type_id = None
     project_total = Decimal("0")
     type_total = Decimal("0")
-    
+
     for cost in costs:
         if current_project_id != cost.rd_project_id:
             if current_project_id:
@@ -100,7 +110,7 @@ def get_rd_auxiliary_ledger(
             project_total = Decimal("0")
             type_total = Decimal("0")
             current_type_id = cost.cost_type_id
-        
+
         if current_type_id != cost.cost_type_id:
             if current_type_id:
                 ledger_items.append({
@@ -114,10 +124,10 @@ def get_rd_auxiliary_ledger(
             current_type_id = cost.cost_type_id
             cost_type = db.query(RdCostType).filter(RdCostType.id == cost.cost_type_id).first()
             type_total = Decimal("0")
-        
+
         type_total += cost.cost_amount or Decimal("0")
         project_total += cost.cost_amount or Decimal("0")
-        
+
         ledger_items.append({
             "date": cost.cost_date.isoformat() if cost.cost_date else None,
             "cost_no": cost.cost_no,
@@ -125,7 +135,7 @@ def get_rd_auxiliary_ledger(
             "amount": float(cost.cost_amount or 0),
             "deductible_amount": float(cost.deductible_amount or 0)
         })
-    
+
     return ResponseModel(
         code=200,
         message="success",
@@ -152,16 +162,16 @@ def get_rd_deduction_detail(
         func.extract('year', RdCost.cost_date) == year,
         RdCost.deductible_amount > 0
     )
-    
+
     if project_id:
         query = query.filter(RdCost.rd_project_id == project_id)
-    
+
     costs = query.order_by(RdCost.rd_project_id, RdCost.cost_type_id).all()
-    
+
     # 按费用类型汇总
     by_type = {}
     total_deductible = Decimal("0")
-    
+
     for cost in costs:
         type_id = cost.cost_type_id
         if type_id not in by_type:
@@ -173,12 +183,12 @@ def get_rd_deduction_detail(
                 "deductible_amount": Decimal("0"),
                 "items": []
             }
-        
+
         deductible = cost.deductible_amount or Decimal("0")
         by_type[type_id]["total_amount"] += cost.cost_amount or Decimal("0")
         by_type[type_id]["deductible_amount"] += deductible
         total_deductible += deductible
-        
+
         by_type[type_id]["items"].append({
             "cost_no": cost.cost_no,
             "date": cost.cost_date.isoformat() if cost.cost_date else None,
@@ -186,7 +196,7 @@ def get_rd_deduction_detail(
             "amount": float(cost.cost_amount or 0),
             "deductible_amount": float(deductible)
         })
-    
+
     return ResponseModel(
         code=200,
         message="success",
@@ -222,25 +232,25 @@ def get_rd_high_tech_report(
     costs = db.query(RdCost).join(RdProject).filter(
         func.extract('year', RdCost.cost_date) == year
     ).all()
-    
+
     # 按费用类型汇总（六大费用类型）
     by_type = {}
     total_cost = Decimal("0")
-    
+
     for cost in costs:
         cost_type = db.query(RdCostType).filter(RdCostType.id == cost.cost_type_id).first()
         type_code = cost_type.type_code if cost_type else "OTHER"
-        
+
         if type_code not in by_type:
             by_type[type_code] = {
                 "type_code": type_code,
                 "type_name": cost_type.type_name if cost_type else "其他",
                 "amount": Decimal("0")
             }
-        
+
         by_type[type_code]["amount"] += cost.cost_amount or Decimal("0")
         total_cost += cost.cost_amount or Decimal("0")
-    
+
     return ResponseModel(
         code=200,
         message="success",
@@ -272,29 +282,29 @@ def get_rd_intensity_report(
     研发费用/营业收入
     """
     intensity_data = []
-    
+
     for year in range(start_year, end_year + 1):
         # 计算研发费用
         rd_costs = db.query(func.sum(RdCost.cost_amount)).filter(
             func.extract('year', RdCost.cost_date) == year
         ).scalar() or Decimal("0")
-        
+
         # 从项目收款计划获取营业收入（按实际收款日期统计）
         revenue = db.query(func.sum(ProjectPaymentPlan.actual_amount)).filter(
             func.extract('year', ProjectPaymentPlan.actual_date) == year,
             ProjectPaymentPlan.status.in_(['COMPLETED', 'PARTIAL']),
             ProjectPaymentPlan.actual_amount.isnot(None)
         ).scalar() or Decimal("0")
-        
+
         intensity = (float(rd_costs) / float(revenue) * 100) if revenue > 0 else 0.0
-        
+
         intensity_data.append({
             "year": year,
             "rd_cost": float(rd_costs),
             "revenue": float(revenue),
             "intensity": round(intensity, 2)
         })
-    
+
     return ResponseModel(
         code=200,
         message="success",
@@ -322,7 +332,7 @@ def get_rd_personnel_report(
         func.extract('year', RdProject.start_date) <= year,
         func.extract('year', RdProject.end_date) >= year
     ).all()
-    
+
     # 通过工时记录统计研发人员
     rd_user_ids = set()
     for project in rd_projects:
@@ -333,12 +343,12 @@ def get_rd_personnel_report(
                 Timesheet.status == 'APPROVED'
             ).all()
             rd_user_ids.update([ts.user_id for ts in timesheets])
-    
+
     # 获取所有用户
     all_users = db.query(User).filter(User.is_active == True).all()
     total_users = len(all_users)
     rd_users_count = len(rd_user_ids)
-    
+
     rd_personnel_list = []
     for user_id in rd_user_ids:
         user = db.query(User).filter(User.id == user_id).first()
@@ -348,7 +358,7 @@ def get_rd_personnel_report(
                 "user_name": user.real_name or user.username,
                 "department": user.department
             })
-    
+
     return ResponseModel(
         code=200,
         message="success",
@@ -375,8 +385,8 @@ def export_rd_report(
     """
     导出研发费用报表
     """
-    from app.services.report_export_service import report_export_service
     from app.services.rd_report_data_service import get_rd_report_data
+    from app.services.report_export_service import report_export_service
 
     # 获取报表数据
     try:

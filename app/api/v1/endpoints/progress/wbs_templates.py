@@ -7,17 +7,22 @@
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
 from sqlalchemy import or_
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
 from app.models.progress import WbsTemplate, WbsTemplateTask
+from app.models.user import User
 from app.schemas.progress import (
-    WbsTemplateCreate, WbsTemplateUpdate, WbsTemplateResponse, WbsTemplateListResponse,
-    WbsTemplateTaskCreate, WbsTemplateTaskUpdate, WbsTemplateTaskResponse,
+    WbsTemplateCreate,
+    WbsTemplateListResponse,
+    WbsTemplateResponse,
+    WbsTemplateTaskCreate,
+    WbsTemplateTaskResponse,
+    WbsTemplateTaskUpdate,
+    WbsTemplateUpdate,
 )
 
 router = APIRouter()

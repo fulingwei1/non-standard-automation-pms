@@ -10,35 +10,45 @@
 核心功能：多角色视角报表、智能生成、导出分享
 """
 
-from typing import Any, List, Optional, Dict
+import os
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from fastapi.responses import FileResponse
+from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
-import os
-from sqlalchemy import desc, func, and_, or_
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User, Role
-from app.models.project import Project, Machine, ProjectPaymentPlan
-from app.models.rd_project import RdProject, RdCost, RdCostType
-from app.models.timesheet import Timesheet
-from app.models.sales import Contract
-from app.models.outsourcing import OutsourcingVendor, OutsourcingOrder
+from app.core.config import settings
+from app.models.outsourcing import OutsourcingOrder, OutsourcingVendor
+from app.models.project import Machine, Project, ProjectPaymentPlan
+from app.models.rd_project import RdCost, RdCostType, RdProject
 from app.models.report_center import (
-    ReportTemplate, ReportDefinition, ReportGeneration,
-    ReportSubscription
+    ReportDefinition,
+    ReportGeneration,
+    ReportSubscription,
+    ReportTemplate,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
+from app.models.sales import Contract
+from app.models.timesheet import Timesheet
+from app.models.user import Role, User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.report_center import (
-    ReportRoleResponse, ReportTypeResponse, RoleReportMatrixResponse,
-    ReportGenerateRequest, ReportGenerateResponse, ReportPreviewResponse,
-    ReportCompareRequest, ReportCompareResponse, ReportExportRequest,
-    ReportTemplateResponse, ReportTemplateListResponse, ApplyTemplateRequest
+    ApplyTemplateRequest,
+    ReportCompareRequest,
+    ReportCompareResponse,
+    ReportExportRequest,
+    ReportGenerateRequest,
+    ReportGenerateResponse,
+    ReportPreviewResponse,
+    ReportRoleResponse,
+    ReportTemplateListResponse,
+    ReportTemplateResponse,
+    ReportTypeResponse,
+    RoleReportMatrixResponse,
 )
 
 router = APIRouter()
@@ -405,7 +415,10 @@ def export_direct(
     """
     直接导出报表（不需要先生成报表记录）
     """
-    from app.services.report_export_service import report_export_service, ReportGenerator
+    from app.services.report_export_service import (
+        ReportGenerator,
+        report_export_service,
+    )
 
     # 根据报表类型生成数据
     report_data = {}

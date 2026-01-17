@@ -1,19 +1,23 @@
-from typing import Any, List, Optional
-from pathlib import Path
 import os
+from pathlib import Path
+from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Form
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from fastapi.responses import FileResponse, StreamingResponse
+from sqlalchemy import and_, desc
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, and_
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
+from app.core.config import settings
+from app.models.project import Machine, Project, ProjectDocument
 from app.models.user import User
-from app.models.project import ProjectDocument, Project, Machine
-from app.schemas.project import ProjectDocumentCreate, ProjectDocumentResponse, ProjectDocumentUpdate
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.schemas.project import (
+    ProjectDocumentCreate,
+    ProjectDocumentResponse,
+    ProjectDocumentUpdate,
+)
 from app.utils.permission_helpers import check_project_access_or_raise
 
 router = APIRouter()
@@ -39,7 +43,7 @@ def read_documents(
     获取文档记录列表（支持分页、筛选）
     """
     query = db.query(ProjectDocument)
-    
+
     if project_id:
         query = query.filter(ProjectDocument.project_id == project_id)
     if machine_id:
@@ -54,7 +58,7 @@ def read_documents(
     total = query.count()
     offset = (page - 1) * page_size
     documents = query.order_by(desc(ProjectDocument.created_at)).offset(offset).limit(page_size).all()
-    
+
     return PaginatedResponse(
         items=documents,
         total=total,
@@ -79,14 +83,14 @@ def get_project_documents(
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
-    
+
     query = db.query(ProjectDocument).filter(ProjectDocument.project_id == project_id)
-    
+
     if machine_id:
         query = query.filter(ProjectDocument.machine_id == machine_id)
     if doc_type:
         query = query.filter(ProjectDocument.doc_type == doc_type)
-    
+
     documents = query.order_by(desc(ProjectDocument.created_at)).all()
     return documents
 
@@ -125,7 +129,7 @@ def create_document(
     project = db.query(Project).filter(Project.id == doc_in.project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
-    
+
     # 如果指定了机台ID，验证机台是否存在且属于该项目
     if doc_in.machine_id:
         machine = db.query(Machine).filter(
@@ -140,7 +144,7 @@ def create_document(
 
     doc_data = doc_in.model_dump()
     doc_data['uploaded_by'] = current_user.id
-    
+
     document = ProjectDocument(**doc_data)
     db.add(document)
     db.commit()
@@ -162,12 +166,12 @@ def create_project_document(
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
-    
+
     # 确保project_id一致
     doc_data = doc_in.model_dump()
     doc_data['project_id'] = project_id
     doc_data['uploaded_by'] = current_user.id
-    
+
     # 如果指定了机台ID，验证机台是否存在且属于该项目
     if doc_data.get('machine_id'):
         machine = db.query(Machine).filter(
@@ -179,7 +183,7 @@ def create_project_document(
                 status_code=404,
                 detail="机台不存在或不属于该项目"
             )
-    
+
     document = ProjectDocument(**doc_data)
     db.add(document)
     db.commit()
@@ -210,7 +214,7 @@ def update_document(
     for field, value in update_data.items():
         if hasattr(document, field):
             setattr(document, field, value)
-    
+
     db.add(document)
     db.commit()
     db.refresh(document)
@@ -276,22 +280,22 @@ def get_document_versions(
     document = db.query(ProjectDocument).filter(ProjectDocument.id == doc_id).first()
     if not document:
         raise HTTPException(status_code=404, detail="文档记录不存在")
-    
+
     # 根据文档编号或名称查找所有版本
     query = db.query(ProjectDocument).filter(
         ProjectDocument.project_id == document.project_id
     )
-    
+
     if document.doc_no:
         query = query.filter(ProjectDocument.doc_no == document.doc_no)
     else:
         # 如果没有文档编号，使用文档名称匹配
         query = query.filter(ProjectDocument.doc_name == document.doc_name)
-    
+
     # 如果指定了机台，也按机台筛选
     if document.machine_id:
         query = query.filter(ProjectDocument.machine_id == document.machine_id)
-    
+
     versions = query.order_by(desc(ProjectDocument.created_at)).all()
     return versions
 
@@ -317,5 +321,5 @@ def delete_document(
 
     db.delete(document)
     db.commit()
-    
+
     return ResponseModel(code=200, message="文档记录已删除")

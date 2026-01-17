@@ -9,36 +9,45 @@
 缺料管理 API endpoints
 包含：缺料上报、到货跟踪、物料替代、物料调拨、缺料统计
 """
-from typing import Any, List, Optional, Dict
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, and_, func
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
 from app.core.security import require_shortage_report_access
-from app.models.user import User
-from app.models.project import Project
 from app.models.machine import Machine
 from app.models.material import Material
-from app.models.supplier import Supplier
+from app.models.project import Project
 from app.models.purchase import PurchaseOrder
 from app.models.shortage import (
-    ShortageReport, MaterialArrival, ArrivalFollowUp,
-    MaterialSubstitution, MaterialTransfer, ShortageDailyReport
+    ArrivalFollowUp,
+    MaterialArrival,
+    MaterialSubstitution,
+    MaterialTransfer,
+    ShortageDailyReport,
+    ShortageReport,
 )
+from app.models.supplier import Supplier
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.shortage import (
-    ShortageReportCreate, ShortageReportResponse,
-    MaterialArrivalCreate, MaterialArrivalResponse,
-    ArrivalFollowUpCreate, ArrivalFollowUpResponse,
-    MaterialSubstitutionCreate, MaterialSubstitutionResponse,
-    MaterialTransferCreate, MaterialTransferResponse
+    ArrivalFollowUpCreate,
+    ArrivalFollowUpResponse,
+    MaterialArrivalCreate,
+    MaterialArrivalResponse,
+    MaterialSubstitutionCreate,
+    MaterialSubstitutionResponse,
+    MaterialTransferCreate,
+    MaterialTransferResponse,
+    ShortageReportCreate,
+    ShortageReportResponse,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
 
 router = APIRouter()
 
@@ -87,9 +96,9 @@ def _build_shortage_daily_report(report: ShortageDailyReport) -> Dict[str, Any]:
 
 def generate_report_no(db: Session) -> str:
     """生成缺料上报单号：SR-yymmdd-xxx"""
-    from app.utils.number_generator import generate_sequential_no
     from app.models.shortage import ShortageReport
-    
+    from app.utils.number_generator import generate_sequential_no
+
     return generate_sequential_no(
         db=db,
         model_class=ShortageReport,
@@ -103,9 +112,9 @@ def generate_report_no(db: Session) -> str:
 
 def generate_arrival_no(db: Session) -> str:
     """生成到货跟踪单号：ARR-yymmdd-xxx"""
-    from app.utils.number_generator import generate_sequential_no
     from app.models.shortage import MaterialArrival
-    
+    from app.utils.number_generator import generate_sequential_no
+
     return generate_sequential_no(
         db=db,
         model_class=MaterialArrival,
@@ -119,9 +128,9 @@ def generate_arrival_no(db: Session) -> str:
 
 def generate_substitution_no(db: Session) -> str:
     """生成替代单号：SUB-yymmdd-xxx"""
-    from app.utils.number_generator import generate_sequential_no
     from app.models.shortage import MaterialSubstitution
-    
+    from app.utils.number_generator import generate_sequential_no
+
     return generate_sequential_no(
         db=db,
         model_class=MaterialSubstitution,
@@ -135,9 +144,9 @@ def generate_substitution_no(db: Session) -> str:
 
 def generate_transfer_no(db: Session) -> str:
     """生成调拨单号：TRF-yymmdd-xxx"""
-    from app.utils.number_generator import generate_sequential_no
     from app.models.shortage import MaterialTransfer
-    
+    from app.utils.number_generator import generate_sequential_no
+
     return generate_sequential_no(
         db=db,
         model_class=MaterialTransfer,
@@ -176,30 +185,30 @@ def get_shortage_dashboard(
     confirmed = db.query(ShortageReport).filter(ShortageReport.status == 'CONFIRMED').count()
     handling = db.query(ShortageReport).filter(ShortageReport.status == 'HANDLING').count()
     resolved = db.query(ShortageReport).filter(ShortageReport.status == 'RESOLVED').count()
-    
+
     # 统计紧急缺料
     urgent_reports = db.query(ShortageReport).filter(
         ShortageReport.urgent_level.in_(['URGENT', 'CRITICAL']),
         ShortageReport.status != 'RESOLVED'
     ).count()
-    
+
     # 统计到货跟踪
     total_arrivals = db.query(MaterialArrival).count()
     pending_arrivals = db.query(MaterialArrival).filter(MaterialArrival.status == 'PENDING').count()
     delayed_arrivals = db.query(MaterialArrival).filter(MaterialArrival.is_delayed == True).count()
-    
+
     # 统计物料替代
     total_substitutions = db.query(MaterialSubstitution).count()
     pending_substitutions = db.query(MaterialSubstitution).filter(
         MaterialSubstitution.status.in_(['DRAFT', 'TECH_PENDING', 'PROD_PENDING'])
     ).count()
-    
+
     # 统计物料调拨
     total_transfers = db.query(MaterialTransfer).count()
     pending_transfers = db.query(MaterialTransfer).filter(
         MaterialTransfer.status.in_(['DRAFT', 'PENDING'])
     ).count()
-    
+
     # 最近缺料上报
     recent_reports = db.query(ShortageReport).order_by(desc(ShortageReport.created_at)).limit(10).all()
     recent_reports_list = []
@@ -215,7 +224,7 @@ def get_shortage_dashboard(
             'status': report.status,
             'report_time': report.report_time
         })
-    
+
     return ResponseModel(
         code=200,
         message="success",
@@ -258,7 +267,7 @@ def get_supplier_delivery_analysis(
     供应商交期分析
     """
     from datetime import timedelta
-    
+
     # 默认使用当前月
     today = date.today()
     if not start_date:
@@ -268,17 +277,17 @@ def get_supplier_delivery_analysis(
             end_date = date(today.year + 1, 1, 1) - timedelta(days=1)
         else:
             end_date = date(today.year, today.month + 1, 1) - timedelta(days=1)
-    
+
     query = db.query(MaterialArrival).filter(
         MaterialArrival.expected_date >= start_date,
         MaterialArrival.expected_date <= end_date
     )
-    
+
     if supplier_id:
         query = query.filter(MaterialArrival.supplier_id == supplier_id)
-    
+
     arrivals = query.all()
-    
+
     # 按供应商统计
     supplier_stats = {}
     for arrival in arrivals:
@@ -293,20 +302,20 @@ def get_supplier_delivery_analysis(
                     "delayed": 0,
                     "avg_delay_days": 0.0
                 }
-            
+
             supplier_stats[supplier_key]["total_orders"] += 1
             if arrival.is_delayed:
                 supplier_stats[supplier_key]["delayed"] += 1
                 supplier_stats[supplier_key]["avg_delay_days"] += arrival.delay_days or 0
             else:
                 supplier_stats[supplier_key]["on_time"] += 1
-    
+
     # 计算平均延迟天数
     for key, stats in supplier_stats.items():
         if stats["delayed"] > 0:
             stats["avg_delay_days"] = round(stats["avg_delay_days"] / stats["delayed"], 2)
         stats["on_time_rate"] = round(stats["on_time"] / stats["total_orders"] * 100, 2) if stats["total_orders"] > 0 else 0.0
-    
+
     return ResponseModel(
         code=200,
         message="success",
@@ -328,12 +337,12 @@ def get_daily_report(
     """
     if not report_date:
         report_date = date.today()
-    
+
     # 统计当日缺料上报
     daily_reports = db.query(ShortageReport).filter(
         func.date(ShortageReport.report_time) == report_date
     ).all()
-    
+
     # 按紧急程度统计
     by_urgent = {}
     for report in daily_reports:
@@ -341,7 +350,7 @@ def get_daily_report(
         if level not in by_urgent:
             by_urgent[level] = 0
         by_urgent[level] += 1
-    
+
     # 按状态统计
     by_status = {}
     for report in daily_reports:
@@ -349,7 +358,7 @@ def get_daily_report(
         if status not in by_status:
             by_status[status] = 0
         by_status[status] += 1
-    
+
     # 按物料统计
     by_material = {}
     for report in daily_reports:
@@ -363,7 +372,7 @@ def get_daily_report(
             }
         by_material[material_key]["count"] += 1
         by_material[material_key]["total_shortage_qty"] += float(report.shortage_qty)
-    
+
     return ResponseModel(
         code=200,
         message="success",
@@ -389,14 +398,14 @@ def get_latest_shortage_daily_report(
     latest_date = db.query(func.max(ShortageDailyReport.report_date)).scalar()
     if not latest_date:
         return ResponseModel(data=None)
-    
+
     report = db.query(ShortageDailyReport).filter(
         ShortageDailyReport.report_date == latest_date
     ).first()
-    
+
     if not report:
         return ResponseModel(data=None)
-    
+
     return ResponseModel(data=_build_shortage_daily_report(report))
 
 
@@ -413,10 +422,10 @@ def get_shortage_daily_report_by_date(
     report = db.query(ShortageDailyReport).filter(
         ShortageDailyReport.report_date == report_date
     ).first()
-    
+
     if not report:
         raise HTTPException(status_code=404, detail="指定日期不存在缺料日报")
-    
+
     return ResponseModel(data=_build_shortage_daily_report(report))
 
 
@@ -432,7 +441,7 @@ def get_cause_analysis(
     缺料原因分析
     """
     from datetime import timedelta
-    
+
     # 默认使用当前月
     today = date.today()
     if not start_date:
@@ -442,17 +451,17 @@ def get_cause_analysis(
             end_date = date(today.year + 1, 1, 1) - timedelta(days=1)
         else:
             end_date = date(today.year, today.month + 1, 1) - timedelta(days=1)
-    
+
     query = db.query(ShortageReport).filter(
         func.date(ShortageReport.report_time) >= start_date,
         func.date(ShortageReport.report_time) <= end_date
     )
-    
+
     if project_id:
         query = query.filter(ShortageReport.project_id == project_id)
-    
+
     reports = query.all()
-    
+
     # 按解决方案类型统计
     by_solution = {}
     for report in reports:
@@ -466,17 +475,17 @@ def get_cause_analysis(
             }
         by_solution[solution]["count"] += 1
         by_solution[solution]["total_shortage_qty"] += float(report.shortage_qty)
-        
+
         # 计算平均解决时间
         if report.resolved_at and report.report_time:
             resolve_time = (report.resolved_at - report.report_time).total_seconds() / 3600  # 小时
             by_solution[solution]["avg_resolve_time"] += resolve_time
-    
+
     # 计算平均解决时间
     for key, stats in by_solution.items():
         if stats["count"] > 0:
             stats["avg_resolve_time"] = round(stats["avg_resolve_time"] / stats["count"], 2)
-    
+
     # 按紧急程度统计
     by_urgent = {}
     for report in reports:
@@ -489,7 +498,7 @@ def get_cause_analysis(
             }
         by_urgent[level]["count"] += 1
         by_urgent[level]["total_shortage_qty"] += float(report.shortage_qty)
-    
+
     # 按项目统计
     by_project = {}
     for report in reports:
@@ -504,7 +513,7 @@ def get_cause_analysis(
             }
         by_project[project_name]["count"] += 1
         by_project[project_name]["total_shortage_qty"] += float(report.shortage_qty)
-    
+
     return ResponseModel(
         code=200,
         message="success",
@@ -533,46 +542,46 @@ def get_kit_rate_statistics(
     按项目/车间/时间维度统计齐套率
     """
     from app.services.kit_rate_statistics_service import (
+        calculate_daily_kit_statistics,
         calculate_date_range,
         calculate_project_kit_statistics,
+        calculate_summary_statistics,
         calculate_workshop_kit_statistics,
-        calculate_daily_kit_statistics,
-        calculate_summary_statistics
     )
-    
+
     # 默认使用当前月
     today = date.today()
     if not start_date or not end_date:
         default_start, default_end = calculate_date_range(today)
         start_date = start_date or default_start
         end_date = end_date or default_end
-    
+
     # 获取项目列表
     query = db.query(Project).filter(Project.is_active == True)
     if project_id:
         query = query.filter(Project.id == project_id)
     projects = query.all()
-    
+
     statistics = []
-    
+
     if group_by == "project":
         # 按项目统计
         for project in projects:
             stat = calculate_project_kit_statistics(db, project)
             if stat:
                 statistics.append(stat)
-    
+
     elif group_by == "workshop":
         # 按车间统计
         statistics = calculate_workshop_kit_statistics(db, workshop_id, projects)
-    
+
     elif group_by == "day":
         # 按日期统计
         statistics = calculate_daily_kit_statistics(db, start_date, end_date, projects)
-    
+
     # 计算汇总
     summary = calculate_summary_statistics(statistics, group_by)
-    
+
     return ResponseModel(
         code=200,
         message="success",

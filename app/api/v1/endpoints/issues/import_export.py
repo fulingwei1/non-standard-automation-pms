@@ -5,27 +5,31 @@
 包含：导出Excel、从Excel导入
 """
 
-from typing import Any, Optional
-from datetime import datetime, date
-from fastapi import APIRouter, Depends, HTTPException, Query, File, UploadFile
-from fastapi.responses import StreamingResponse
-from sqlalchemy.orm import Session
-from sqlalchemy import desc
 import io
+from datetime import date, datetime
+from typing import Any, Optional
+from urllib.parse import quote
+
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from fastapi.responses import StreamingResponse
+from sqlalchemy import desc
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
 from app.models.issue import Issue
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.data_scope_service import DataScopeService
+
 from .utils import generate_issue_no
 
 router = APIRouter()
 
 # 检查Excel库是否可用
 try:
-    import pandas as pd
     import openpyxl
+    import pandas as pd
     EXCEL_AVAILABLE = True
 except ImportError:
     EXCEL_AVAILABLE = False
@@ -48,7 +52,8 @@ def export_issues(
             detail="Excel处理库未安装，请安装pandas和openpyxl"
         )
 
-    query = db.query(Issue)
+    query = db.query(Issue).filter(Issue.status != 'DELETED')
+    query = DataScopeService.filter_issues_by_scope(db, query, current_user)
 
     if category:
         query = query.filter(Issue.category == category)
@@ -120,11 +125,19 @@ def export_issues(
     output.seek(0)
 
     filename = f"问题列表_{datetime.now().strftime('%Y%m%d%H%M%S')}.xlsx"
+    encoded_filename = quote(filename)
 
     return StreamingResponse(
         io.BytesIO(output.read()),
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={
+            # Use RFC 5987 encoding to support non-ASCII filenames.
+            "Content-Disposition": (
+                "attachment; "
+                "filename=\"issues.xlsx\"; "
+                f"filename*=UTF-8''{encoded_filename}"
+            )
+        },
     )
 
 

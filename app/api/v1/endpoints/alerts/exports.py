@@ -4,46 +4,53 @@ EXPORTS - 自动生成
 从 alerts.py 拆分
 """
 
+from datetime import date, datetime, timedelta
+from decimal import Decimal
 from typing import Any, List, Optional
 
-from datetime import date, datetime, timedelta
-
-from decimal import Decimal
-
-from fastapi import APIRouter, Depends, HTTPException, Query, status, Body
-
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
-
+from sqlalchemy import and_, case, func, or_
 from sqlalchemy.orm import Session, joinedload, selectinload
 
-from sqlalchemy import or_, and_, func, case
-
 from app.api import deps
-
 from app.core import security
-
 from app.core.config import settings
-
-from app.models.user import User
-
-from app.models.project import Project, Machine
-
-from app.models.issue import Issue
-
 from app.models.alert import (
-    AlertRule, AlertRuleTemplate, AlertRecord, AlertNotification,
-    ExceptionEvent, ExceptionAction, ExceptionEscalation,
-    AlertStatistics, ProjectHealthSnapshot, AlertSubscription
+    AlertNotification,
+    AlertRecord,
+    AlertRule,
+    AlertRuleTemplate,
+    AlertStatistics,
+    AlertSubscription,
+    ExceptionAction,
+    ExceptionEscalation,
+    ExceptionEvent,
+    ProjectHealthSnapshot,
 )
+from app.models.issue import Issue
+from app.models.project import Machine, Project
+from app.models.user import User
 from app.schemas.alert import (
-    AlertRuleCreate, AlertRuleUpdate, AlertRuleResponse,
-    AlertRecordHandle, AlertRecordResponse, AlertRecordListResponse,
-    ExceptionEventCreate, ExceptionEventUpdate, ExceptionEventResolve,
-    ExceptionEventVerify, ExceptionEventResponse, ExceptionEventListResponse,
-    ProjectHealthResponse, AlertStatisticsResponse,
-    AlertSubscriptionCreate, AlertSubscriptionUpdate, AlertSubscriptionResponse
+    AlertRecordHandle,
+    AlertRecordListResponse,
+    AlertRecordResponse,
+    AlertRuleCreate,
+    AlertRuleResponse,
+    AlertRuleUpdate,
+    AlertStatisticsResponse,
+    AlertSubscriptionCreate,
+    AlertSubscriptionResponse,
+    AlertSubscriptionUpdate,
+    ExceptionEventCreate,
+    ExceptionEventListResponse,
+    ExceptionEventResolve,
+    ExceptionEventResponse,
+    ExceptionEventUpdate,
+    ExceptionEventVerify,
+    ProjectHealthResponse,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
+from app.schemas.common import PaginatedResponse, ResponseModel
 
 router = APIRouter(tags=["exports"])
 
@@ -64,24 +71,25 @@ def export_alerts_excel(
 ) -> Any:
     """
     导出预警数据到 Excel
-    
+
     支持筛选参数（与列表接口一致）
     支持多 Sheet（按级别或类型分组）
     """
     try:
-        import pandas as pd
-        import openpyxl
         import io
-        from openpyxl.styles import Font, PatternFill, Alignment
+
+        import openpyxl
+        import pandas as pd
+        from openpyxl.styles import Alignment, Font, PatternFill
     except ImportError:
         raise HTTPException(
             status_code=500,
             detail="Excel处理库未安装，请安装pandas和openpyxl: pip install pandas openpyxl"
         )
-    
+
     # 构建查询（与列表接口一致）
     query = db.query(AlertRecord).filter(AlertRecord.triggered_at.isnot(None))
-    
+
     if project_id:
         query = query.filter(AlertRecord.project_id == project_id)
     if alert_level:
@@ -94,12 +102,12 @@ def export_alerts_excel(
         query = query.filter(AlertRecord.triggered_at >= datetime.combine(start_date, datetime.min.time()))
     if end_date:
         query = query.filter(AlertRecord.triggered_at <= datetime.combine(end_date, datetime.max.time()))
-    
+
     alerts = query.order_by(AlertRecord.triggered_at.desc()).all()
-    
+
     if not alerts:
         raise HTTPException(status_code=404, detail="没有符合条件的数据")
-    
+
     # 准备数据
     data = []
     for alert in alerts:
@@ -110,7 +118,7 @@ def export_alerts_excel(
             handler = db.query(User).filter(User.id == alert.handler_id).first()
         elif alert.acknowledged_by:
             handler = db.query(User).filter(User.id == alert.acknowledged_by).first()
-        
+
         data.append({
             '预警编号': alert.alert_no,
             '预警级别': alert.alert_level,
@@ -126,10 +134,10 @@ def export_alerts_excel(
             '是否升级': '是' if alert.is_escalated else '否',
             '处理结果': alert.handle_result or '',
         })
-    
+
     # 创建 Excel 文件
     output = io.BytesIO()
-    
+
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         if group_by == 'level':
             # 按级别分组
@@ -139,16 +147,16 @@ def export_alerts_excel(
                 if level not in level_groups:
                     level_groups[level] = []
                 level_groups[level].append(item)
-            
+
             for level, items in level_groups.items():
                 df = pd.DataFrame(items)
                 sheet_name = f"{level}级预警"[:31]  # Excel sheet名称限制31字符
                 df.to_excel(writer, sheet_name=sheet_name, index=False)
-                
+
                 # 设置样式
                 worksheet = writer.sheets[sheet_name]
                 _format_alert_excel_sheet(worksheet, level)
-        
+
         elif group_by == 'type':
             # 按类型分组
             type_groups = {}
@@ -157,30 +165,30 @@ def export_alerts_excel(
                 if rule_type not in type_groups:
                     type_groups[rule_type] = []
                 type_groups[rule_type].append(item)
-            
+
             for rule_type, items in type_groups.items():
                 df = pd.DataFrame(items)
                 sheet_name = rule_type[:31]  # Excel sheet名称限制31字符
                 df.to_excel(writer, sheet_name=sheet_name, index=False)
-                
+
                 # 设置样式
                 worksheet = writer.sheets[sheet_name]
                 _format_alert_excel_sheet(worksheet, None)
-        
+
         else:
             # 不分组，单个Sheet
             df = pd.DataFrame(data)
             df.to_excel(writer, sheet_name='预警列表', index=False)
-            
+
             # 设置样式
             worksheet = writer.sheets['预警列表']
             _format_alert_excel_sheet(worksheet, None)
-    
+
     output.seek(0)
-    
+
     # 生成文件名
     filename = f"预警报表_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
-    
+
     return StreamingResponse(
         io.BytesIO(output.read()),
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -192,8 +200,8 @@ def export_alerts_excel(
 
 def _format_alert_excel_sheet(worksheet, level: Optional[str] = None):
     """格式化 Excel Sheet"""
-    from openpyxl.styles import Font, PatternFill, Alignment
-    
+    from openpyxl.styles import Alignment, Font, PatternFill
+
     # 级别颜色映射
     level_colors = {
         'URGENT': 'FF0000',      # 红色
@@ -201,17 +209,17 @@ def _format_alert_excel_sheet(worksheet, level: Optional[str] = None):
         'WARNING': 'FFD700',     # 黄色
         'INFO': '4169E1',        # 蓝色
     }
-    
+
     # 设置表头样式
     header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
     header_font = Font(bold=True, color="FFFFFF", size=11)
     header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-    
+
     for cell in worksheet[1]:
         cell.fill = header_fill
         cell.font = header_font
         cell.alignment = header_alignment
-    
+
     # 设置列宽
     column_widths = {
         'A': 20,  # 预警编号
@@ -230,7 +238,7 @@ def _format_alert_excel_sheet(worksheet, level: Optional[str] = None):
     }
     for col, width in column_widths.items():
         worksheet.column_dimensions[col].width = width
-    
+
     # 根据级别设置行颜色
     if level and level in level_colors:
         fill_color = level_colors[level]
@@ -239,7 +247,7 @@ def _format_alert_excel_sheet(worksheet, level: Optional[str] = None):
             if row[1].value == level:
                 row[1].fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
                 row[1].font = Font(color="FFFFFF", bold=True)
-    
+
     # 设置数据行对齐
     for row in worksheet.iter_rows(min_row=2, max_row=worksheet.max_row):
         for cell in row:
@@ -262,34 +270,35 @@ def export_alerts_pdf(
 ) -> Any:
     """
     导出预警数据到 PDF
-    
+
     包含统计摘要和预警列表
     支持分页
     """
     import io
+
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.units import cm
     from reportlab.platypus import SimpleDocTemplate
-    
+
     from app.services.alert_pdf_service import (
         build_alert_query,
+        build_pdf_content,
         get_pdf_styles,
-        build_pdf_content
     )
-    
+
     try:
         # 构建查询
         query = build_alert_query(
             db, project_id, alert_level, status, rule_type, start_date, end_date
         )
         alerts = query.all()
-        
+
         if not alerts:
             raise HTTPException(status_code=404, detail="没有符合条件的数据")
-        
+
         # 创建PDF缓冲区
         buffer = io.BytesIO()
-        
+
         # 创建PDF文档
         doc = SimpleDocTemplate(
             buffer,
@@ -299,20 +308,20 @@ def export_alerts_pdf(
             topMargin=2*cm,
             bottomMargin=2*cm
         )
-        
+
         # 获取样式
         title_style, heading_style, normal_style, _ = get_pdf_styles()
-        
+
         # 构建PDF内容
         story = build_pdf_content(db, alerts, title_style, heading_style, normal_style)
-        
+
         # 生成PDF
         doc.build(story)
         buffer.seek(0)
-        
+
         # 生成文件名
         filename = f"预警报表_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-        
+
         return StreamingResponse(
             io.BytesIO(buffer.read()),
             media_type="application/pdf",

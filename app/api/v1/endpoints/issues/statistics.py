@@ -5,28 +5,29 @@
 包含：统计概览、工程师设计问题分析、原因分析、快照
 """
 
-from typing import Any, List, Optional
-from datetime import datetime, date
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
-from sqlalchemy import and_
-from decimal import Decimal
 import json
 import logging
+from datetime import date, datetime
+from decimal import Decimal
+from typing import Any, List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import and_, desc
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
 from app.models.issue import Issue, IssueStatisticsSnapshot
 from app.models.user import User
 from app.schemas.issue import (
+    EngineerIssueStatistics,
     IssueResponse,
     IssueStatistics,
-    EngineerIssueStatistics,
-    IssueStatisticsSnapshotResponse,
     IssueStatisticsSnapshotListResponse,
+    IssueStatisticsSnapshotResponse,
 )
+from app.services.data_scope_service import DataScopeService
 from app.services.issue_cost_service import IssueCostService
-from sqlalchemy import desc
 
 router = APIRouter()
 
@@ -39,6 +40,8 @@ def get_issue_statistics(
 ) -> Any:
     """获取问题统计"""
     query = db.query(Issue)
+    query = query.filter(Issue.status != 'DELETED')
+    query = DataScopeService.filter_issues_by_scope(db, query, current_user)
     if project_id:
         query = query.filter(Issue.project_id == project_id)
 
@@ -63,13 +66,13 @@ def get_issue_statistics(
 
     # 按分类统计
     by_category = {}
-    categories = db.query(Issue.category).distinct().all()
+    categories = query.with_entities(Issue.category).distinct().all()
     for cat in categories:
         by_category[cat[0]] = query.filter(Issue.category == cat[0]).count()
 
     # 按类型统计
     by_type = {}
-    types = db.query(Issue.issue_type).distinct().all()
+    types = query.with_entities(Issue.issue_type).distinct().all()
     for t in types:
         by_type[t[0]] = query.filter(Issue.issue_type == t[0]).count()
 
@@ -107,6 +110,7 @@ def get_engineer_design_issues_statistics(
         Issue.root_cause == 'DESIGN_ERROR',
         Issue.status != 'DELETED'
     )
+    query = DataScopeService.filter_issues_by_scope(db, query, current_user)
 
     # 筛选条件
     if engineer_id:
@@ -230,6 +234,7 @@ def get_issue_cause_analysis(
 ) -> Any:
     """获取问题原因分析（Top N原因统计）"""
     query = db.query(Issue).filter(Issue.status != 'DELETED')
+    query = DataScopeService.filter_issues_by_scope(db, query, current_user)
 
     if project_id:
         query = query.filter(Issue.project_id == project_id)

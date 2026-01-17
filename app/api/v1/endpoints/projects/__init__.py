@@ -18,7 +18,18 @@
 """
 
 from fastapi import APIRouter
-from . import core, status, payment_plans, templates, cache, archive, extended, overview, sync
+
+from . import (
+    archive,
+    cache,
+    core,
+    extended,
+    overview,
+    payment_plans,
+    status,
+    sync,
+    templates,
+)
 
 # 创建主路由
 router = APIRouter()

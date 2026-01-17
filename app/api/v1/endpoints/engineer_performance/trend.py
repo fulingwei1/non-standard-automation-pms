@@ -3,15 +3,16 @@
 绩效趋势分析 API 端点
 """
 
-from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, Query, Body
-from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field
+from typing import List, Optional
 
-from app.api.deps import get_db, get_current_user
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
+
+from app.api.deps import get_current_user, get_db
 from app.models.user import User
-from app.services.performance_trend_service import PerformanceTrendService
 from app.schemas.common import ResponseModel
+from app.services.performance_trend_service import PerformanceTrendService
 
 router = APIRouter(prefix="/trend", tags=["趋势分析"])
 

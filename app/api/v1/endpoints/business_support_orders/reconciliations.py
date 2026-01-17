@@ -3,23 +3,26 @@
 商务支持模块 - 客户对账单 API endpoints
 """
 
-from typing import Optional
 from datetime import date
 from decimal import Decimal
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
 from sqlalchemy import desc, or_, text
+from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.models.user import User
-from app.models.project import Customer
 from app.models.business_support import Reconciliation
+from app.models.project import Customer
+from app.models.user import User
 from app.schemas.business_support import (
-    ReconciliationCreate, ReconciliationUpdate, ReconciliationResponse
+    ReconciliationCreate,
+    ReconciliationResponse,
+    ReconciliationUpdate,
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
-from .utils import generate_reconciliation_no, _send_department_notification
+
+from .utils import _send_department_notification, generate_reconciliation_no
 
 router = APIRouter()
 

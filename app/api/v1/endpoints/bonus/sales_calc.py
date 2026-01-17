@@ -9,46 +9,81 @@
 奖金激励模块 API 端点
 """
 
-from typing import Any, List, Optional, Tuple
-from datetime import datetime, date
-from decimal import Decimal
-
-from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File, Form
-from fastapi.responses import FileResponse
-from sqlalchemy.orm import Session
-from sqlalchemy import desc, func
-import os
 import io
+import os
 import uuid
+from datetime import date, datetime
+from decimal import Decimal
 from pathlib import Path
+from typing import Any, List, Optional, Tuple
+
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    UploadFile,
+    status,
+)
+from fastapi.responses import FileResponse
+from sqlalchemy import desc, func
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
 from app.models.bonus import (
-    BonusRule, BonusCalculation, BonusDistribution, TeamBonusAllocation, BonusAllocationSheet
+    BonusAllocationSheet,
+    BonusCalculation,
+    BonusDistribution,
+    BonusRule,
+    TeamBonusAllocation,
 )
-from app.models.performance import PerformanceResult, ProjectContribution, PerformancePeriod
+from app.models.performance import (
+    PerformancePeriod,
+    PerformanceResult,
+    ProjectContribution,
+)
+from app.models.presale import PresaleSupportTicket
 from app.models.project import Project, ProjectMilestone
 from app.models.sales import Contract, Invoice
-from app.models.presale import PresaleSupportTicket
+from app.models.user import User
 from app.schemas.bonus import (
-    BonusRuleCreate, BonusRuleUpdate, BonusRuleResponse, BonusRuleListResponse,
-    BonusCalculationCreate, BonusCalculationResponse, BonusCalculationListResponse,
-    BonusCalculationApprove, BonusCalculationQuery,
-    BonusDistributionCreate, BonusDistributionResponse, BonusDistributionListResponse,
-    BonusDistributionPay, BonusDistributionQuery,
-    TeamBonusAllocationCreate, TeamBonusAllocationResponse, TeamBonusAllocationListResponse,
+    BonusAllocationRow,
+    BonusAllocationSheetConfirm,
+    BonusAllocationSheetResponse,
+    BonusCalculationApprove,
+    BonusCalculationCreate,
+    BonusCalculationListResponse,
+    BonusCalculationQuery,
+    BonusCalculationResponse,
+    BonusDistributionCreate,
+    BonusDistributionListResponse,
+    BonusDistributionPay,
+    BonusDistributionQuery,
+    BonusDistributionResponse,
+    BonusRuleCreate,
+    BonusRuleListResponse,
+    BonusRuleResponse,
+    BonusRuleUpdate,
+    BonusStatisticsResponse,
+    CalculateMilestoneBonusRequest,
+    CalculatePerformanceBonusRequest,
+    CalculatePresaleBonusRequest,
+    CalculateProjectBonusRequest,
+    CalculateSalesBonusRequest,
+    CalculateSalesDirectorBonusRequest,
+    CalculateTeamBonusRequest,
+    MyBonusResponse,
     TeamBonusAllocationApprove,
-    CalculatePerformanceBonusRequest, CalculateProjectBonusRequest,
-    CalculateMilestoneBonusRequest, CalculateTeamBonusRequest,
-    CalculateSalesBonusRequest, CalculateSalesDirectorBonusRequest, CalculatePresaleBonusRequest,
-    MyBonusResponse, BonusStatisticsResponse,
-    BonusAllocationSheetResponse, BonusAllocationSheetConfirm, BonusAllocationRow
+    TeamBonusAllocationCreate,
+    TeamBonusAllocationListResponse,
+    TeamBonusAllocationResponse,
 )
-from app.schemas.common import ResponseModel, PageParams
-from app.services.bonus_calculator import BonusCalculator
+from app.schemas.common import PageParams, ResponseModel
+from app.services.bonus import BonusCalculator
 
 router = APIRouter()
 
@@ -74,7 +109,7 @@ def calculate_sales_bonus(
 ) -> Any:
     """
     计算销售奖金
-    
+
     支持两种计算方式：
     1. CONTRACT: 基于合同签订金额
     2. PAYMENT: 基于回款金额
@@ -82,9 +117,9 @@ def calculate_sales_bonus(
     contract = db.query(Contract).filter(Contract.id == request.contract_id).first()
     if not contract:
         raise HTTPException(status_code=404, detail="合同不存在")
-    
+
     calculator = BonusCalculator(db)
-    
+
     # 获取规则
     if request.rule_id:
         rule = db.query(BonusRule).filter(BonusRule.id == request.rule_id).first()
@@ -95,15 +130,15 @@ def calculate_sales_bonus(
         if not rules:
             raise HTTPException(status_code=404, detail="未找到销售奖金规则")
         rule = rules[0]
-    
+
     calculation = calculator.calculate_sales_bonus(contract, rule, request.based_on)
     if not calculation:
         raise HTTPException(status_code=400, detail="不满足计算条件")
-    
+
     db.add(calculation)
     db.commit()
     db.refresh(calculation)
-    
+
     return ResponseModel(code=200, message="计算完成", data=calculation)
 
 
@@ -118,7 +153,7 @@ def calculate_sales_director_bonus(
     计算销售总监奖金（基于团队业绩）
     """
     calculator = BonusCalculator(db)
-    
+
     # 获取规则
     if request.rule_id:
         rule = db.query(BonusRule).filter(BonusRule.id == request.rule_id).first()
@@ -129,21 +164,21 @@ def calculate_sales_director_bonus(
         if not rules:
             raise HTTPException(status_code=404, detail="未找到销售总监奖金规则")
         rule = rules[0]
-    
+
     calculation = calculator.calculate_sales_director_bonus(
         request.director_id,
         request.period_start,
         request.period_end,
         rule
     )
-    
+
     if not calculation:
         raise HTTPException(status_code=400, detail="该周期内无团队业绩")
-    
+
     db.add(calculation)
     db.commit()
     db.refresh(calculation)
-    
+
     return ResponseModel(code=200, message="计算完成", data=calculation)
 
 
@@ -156,7 +191,7 @@ def calculate_presale_bonus(
 ) -> Any:
     """
     计算售前技术支持奖金
-    
+
     支持两种计算方式：
     1. COMPLETION: 基于工单完成
     2. WON: 基于中标
@@ -166,9 +201,9 @@ def calculate_presale_bonus(
     ).first()
     if not ticket:
         raise HTTPException(status_code=404, detail="售前支持工单不存在")
-    
+
     calculator = BonusCalculator(db)
-    
+
     # 获取规则
     if request.rule_id:
         rule = db.query(BonusRule).filter(BonusRule.id == request.rule_id).first()
@@ -179,15 +214,15 @@ def calculate_presale_bonus(
         if not rules:
             raise HTTPException(status_code=404, detail="未找到售前技术支持奖金规则")
         rule = rules[0]
-    
+
     calculation = calculator.calculate_presale_bonus(ticket, rule, request.based_on)
     if not calculation:
         raise HTTPException(status_code=400, detail="不满足计算条件")
-    
+
     db.add(calculation)
     db.commit()
     db.refresh(calculation)
-    
+
     return ResponseModel(code=200, message="计算完成", data=calculation)
 
 
@@ -202,7 +237,7 @@ def get_bonus_calculations(
     获取奖金计算记录列表
     """
     query = db.query(BonusCalculation)
-    
+
     if query_params.rule_id:
         query = query.filter(BonusCalculation.rule_id == query_params.rule_id)
     if query_params.user_id:
@@ -219,12 +254,12 @@ def get_bonus_calculations(
         query = query.filter(BonusCalculation.calculated_at >= datetime.combine(query_params.start_date, datetime.min.time()))
     if query_params.end_date:
         query = query.filter(BonusCalculation.calculated_at <= datetime.combine(query_params.end_date, datetime.max.time()))
-    
+
     total = query.count()
     calculations = query.order_by(desc(BonusCalculation.calculated_at)).offset(
         (query_params.page - 1) * query_params.page_size
     ).limit(query_params.page_size).all()
-    
+
     return BonusCalculationListResponse(
         items=calculations,
         total=total,
@@ -247,7 +282,7 @@ def get_bonus_calculation(
     calculation = db.query(BonusCalculation).filter(BonusCalculation.id == calc_id).first()
     if not calculation:
         raise HTTPException(status_code=404, detail="计算记录不存在")
-    
+
     return ResponseModel(code=200, data=calculation)
 
 
@@ -265,7 +300,7 @@ def approve_bonus_calculation(
     calculation = db.query(BonusCalculation).filter(BonusCalculation.id == calc_id).first()
     if not calculation:
         raise HTTPException(status_code=404, detail="计算记录不存在")
-    
+
     if approve_in.approved:
         calculation.status = 'APPROVED'
         calculation.approved_by = current_user.id
@@ -276,10 +311,10 @@ def approve_bonus_calculation(
         calculation.approved_by = current_user.id
         calculation.approved_at = datetime.now()
         calculation.approval_comment = approve_in.comment
-    
+
     db.commit()
     db.refresh(calculation)
-    
+
     return ResponseModel(code=200, message="审批完成", data=calculation)
 
 

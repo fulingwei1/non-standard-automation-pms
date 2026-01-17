@@ -1,102 +1,31 @@
 # -*- coding: utf-8 -*-
 """
-研发项目工作日志 - 自动生成
-从 rd_project.py 拆分
+研发项目工作日志管理
 """
-
-# -*- coding: utf-8 -*-
-"""
-研发项目管理 API endpoints
-包含：研发项目立项、审批、结项、费用归集、报表生成
-适用场景：IPO合规、高新技术企业认定、研发费用加计扣除
-"""
-from typing import Any, List, Optional, Dict
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
-from pathlib import Path
-import os
-import uuid
+from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status, UploadFile, File, Form
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, and_, func
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-
-# 文档上传目录
-DOCUMENT_UPLOAD_DIR = Path(settings.UPLOAD_DIR) / "documents" / "rd_projects"
-DOCUMENT_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-from app.models.user import User
-from app.models.project import Project
+from app.models.rd_project import RdProject
 from app.models.timesheet import Timesheet
-from app.models.project import ProjectDocument
-from app.models.rd_project import (
-    RdProject, RdProjectCategory, RdCost, RdCostType,
-    RdCostAllocationRule, RdReportRecord
-)
-from app.schemas.rd_project import (
-    RdProjectCategoryCreate, RdProjectCategoryUpdate, RdProjectCategoryResponse,
-    RdProjectCreate, RdProjectUpdate, RdProjectResponse,
-    RdProjectApproveRequest, RdProjectCloseRequest, RdProjectLinkRequest,
-    RdCostTypeCreate, RdCostTypeResponse,
-    RdCostCreate, RdCostUpdate, RdCostResponse,
-    RdCostCalculateLaborRequest, RdCostSummaryResponse,
-    RdCostAllocationRuleCreate, RdCostAllocationRuleResponse,
-    RdReportRecordResponse
-)
+from app.models.user import User
+from app.schemas.common import ResponseModel
 from app.schemas.timesheet import (
-    TimesheetCreate, TimesheetUpdate, TimesheetResponse, TimesheetListResponse
+    TimesheetCreate,
+    TimesheetListResponse,
+    TimesheetResponse,
 )
-from app.schemas.project import (
-    ProjectDocumentCreate, ProjectDocumentUpdate, ProjectDocumentResponse
-)
-from app.schemas.common import ResponseModel, PaginatedResponse
 
 router = APIRouter()
 
-
-def generate_project_no(db: Session) -> str:
-    """生成研发项目编号：RD-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_project = (
-        db.query(RdProject)
-        .filter(RdProject.project_no.like(f"RD-{today}-%"))
-        .order_by(desc(RdProject.project_no))
-        .first()
-    )
-    if max_project:
-        seq = int(max_project.project_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"RD-{today}-{seq:03d}"
-
-
-def generate_cost_no(db: Session) -> str:
-    """生成研发费用编号：RC-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_cost = (
-        db.query(RdCost)
-        .filter(RdCost.cost_no.like(f"RC-{today}-%"))
-        .order_by(desc(RdCost.cost_no))
-        .first()
-    )
-    if max_cost:
-        seq = int(max_cost.cost_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"RC-{today}-{seq:03d}"
-
-
-
-from fastapi import APIRouter
-
-router = APIRouter(
-    prefix="/rd-project/worklogs",
-    tags=["worklogs"]
-)
+# ==================== 研发项目工作日志 ====================
 
 # 共 2 个路由
 
@@ -121,10 +50,10 @@ def get_rd_project_worklogs(
     project = db.query(RdProject).filter(RdProject.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="研发项目不存在")
-    
+
     offset = (page - 1) * page_size
     query = db.query(Timesheet).filter(Timesheet.rd_project_id == project_id)
-    
+
     if user_id:
         query = query.filter(Timesheet.user_id == user_id)
     if start_date:
@@ -133,10 +62,10 @@ def get_rd_project_worklogs(
         query = query.filter(Timesheet.work_date <= end_date)
     if status:
         query = query.filter(Timesheet.status == status)
-    
+
     total = query.count()
     timesheets = query.order_by(desc(Timesheet.work_date), desc(Timesheet.created_at)).offset(offset).limit(page_size).all()
-    
+
     items = []
     for ts in timesheets:
         items.append(TimesheetResponse(
@@ -158,7 +87,7 @@ def get_rd_project_worklogs(
             created_at=ts.created_at,
             updated_at=ts.updated_at
         ))
-    
+
     return ResponseModel(
         code=200,
         message="success",
@@ -186,7 +115,7 @@ def create_rd_project_worklog(
     project = db.query(RdProject).filter(RdProject.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="研发项目不存在")
-    
+
     # 检查同一天是否已有记录
     existing = db.query(Timesheet).filter(
         Timesheet.user_id == current_user.id,
@@ -194,10 +123,10 @@ def create_rd_project_worklog(
         Timesheet.rd_project_id == project_id,
         Timesheet.status != "REJECTED"
     ).first()
-    
+
     if existing:
         raise HTTPException(status_code=400, detail="该日期已有工作日志记录，请更新或删除后重试")
-    
+
     timesheet = Timesheet(
         user_id=current_user.id,
         user_name=current_user.name,
@@ -211,11 +140,11 @@ def create_rd_project_worklog(
         status="DRAFT",
         created_by=current_user.id
     )
-    
+
     db.add(timesheet)
     db.commit()
     db.refresh(timesheet)
-    
+
     return ResponseModel(
         code=201,
         message="工作日志创建成功",

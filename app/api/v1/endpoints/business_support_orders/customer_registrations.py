@@ -3,24 +3,29 @@
 商务支持模块 - 客户供应商入驻管理 API endpoints
 """
 
-from typing import Optional
 from datetime import date
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
 from sqlalchemy import desc, or_
+from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.models.user import User
-from app.models.project import Customer
 from app.models.business_support import CustomerSupplierRegistration
+from app.models.project import Customer
+from app.models.user import User
 from app.schemas.business_support import (
-    CustomerSupplierRegistrationCreate, CustomerSupplierRegistrationUpdate,
-    CustomerSupplierRegistrationResponse, SupplierRegistrationReviewRequest
+    CustomerSupplierRegistrationCreate,
+    CustomerSupplierRegistrationResponse,
+    CustomerSupplierRegistrationUpdate,
+    SupplierRegistrationReviewRequest,
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
+
 from .utils import (
-    generate_registration_no, _serialize_attachments, _to_registration_response
+    _serialize_attachments,
+    _to_registration_response,
+    generate_registration_no,
 )
 
 router = APIRouter()

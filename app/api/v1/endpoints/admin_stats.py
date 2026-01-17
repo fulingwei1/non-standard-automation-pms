@@ -4,13 +4,14 @@
 提供用户、角色、权限等系统统计数据
 """
 from typing import Any
+
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 from sqlalchemy import func
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.user import User, Role, Permission, UserRole, RolePermission
+from app.models.user import Permission, Role, RolePermission, User, UserRole
 from app.schemas.common import ResponseModel
 
 router = APIRouter()

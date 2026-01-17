@@ -9,8 +9,8 @@ from sqlalchemy.orm import Session
 
 def generate_plan_no(db: Session) -> str:
     """生成生产计划编号：PP-yymmdd-xxx"""
-    from app.utils.number_generator import generate_sequential_no
     from app.models.production import ProductionPlan
+    from app.utils.number_generator import generate_sequential_no
 
     return generate_sequential_no(
         db=db,
@@ -25,8 +25,8 @@ def generate_plan_no(db: Session) -> str:
 
 def generate_work_order_no(db: Session) -> str:
     """生成工单编号：WO-yymmdd-xxx"""
-    from app.utils.number_generator import generate_sequential_no
     from app.models.production import WorkOrder
+    from app.utils.number_generator import generate_sequential_no
 
     return generate_sequential_no(
         db=db,
@@ -41,8 +41,8 @@ def generate_work_order_no(db: Session) -> str:
 
 def generate_report_no(db: Session) -> str:
     """生成报工单号：WR-yymmdd-xxx"""
-    from app.utils.number_generator import generate_sequential_no
     from app.models.production import WorkReport
+    from app.utils.number_generator import generate_sequential_no
 
     return generate_sequential_no(
         db=db,

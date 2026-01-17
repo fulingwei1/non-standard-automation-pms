@@ -6,37 +6,47 @@
 """
 
 import logging
-from typing import Any, List, Optional
 from datetime import datetime
 from decimal import Decimal
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
 from sqlalchemy import desc
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
-from app.models.project import Project, Machine
 from app.models.acceptance import (
-    AcceptanceTemplate, TemplateCategory, TemplateCheckItem,
-    AcceptanceOrder, AcceptanceOrderItem,
-    AcceptanceIssue, IssueFollowUp,
-    AcceptanceSignature, AcceptanceReport
+    AcceptanceIssue,
+    AcceptanceOrder,
+    AcceptanceOrderItem,
+    AcceptanceReport,
+    AcceptanceSignature,
+    AcceptanceTemplate,
+    IssueFollowUp,
+    TemplateCategory,
+    TemplateCheckItem,
 )
+from app.models.project import Machine, Project
+from app.models.user import User
 from app.schemas.acceptance import (
-    AcceptanceOrderCreate, AcceptanceOrderUpdate, AcceptanceOrderStart, AcceptanceOrderComplete,
-    AcceptanceOrderResponse, AcceptanceOrderListResponse,
-    CheckItemResultUpdate, CheckItemResultResponse
+    AcceptanceOrderComplete,
+    AcceptanceOrderCreate,
+    AcceptanceOrderListResponse,
+    AcceptanceOrderResponse,
+    AcceptanceOrderStart,
+    AcceptanceOrderUpdate,
+    CheckItemResultResponse,
+    CheckItemResultUpdate,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
+from app.schemas.common import PaginatedResponse, ResponseModel
 
 from .utils import (
+    generate_order_no,
     validate_acceptance_rules,
     validate_completion_rules,
     validate_edit_rules,
-    generate_order_no
 )
 
 router = APIRouter()
@@ -560,14 +570,14 @@ def complete_acceptance(
     完成验收（自动触发收款计划开票）
     """
     from app.services.acceptance_completion_service import (
-        validate_required_check_items,
-        update_acceptance_order_status,
-        trigger_invoice_on_acceptance,
+        check_auto_stage_transition_after_acceptance,
         handle_acceptance_status_transition,
         handle_progress_integration,
-        check_auto_stage_transition_after_acceptance,
+        trigger_bonus_calculation,
+        trigger_invoice_on_acceptance,
         trigger_warranty_period,
-        trigger_bonus_calculation
+        update_acceptance_order_status,
+        validate_required_check_items,
     )
 
     logger = logging.getLogger(__name__)

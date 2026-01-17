@@ -11,15 +11,19 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
 from app.core import security
-from app.models.user import User
-from app.models.project import Project
 from app.models.progress import Task, TaskDependency
-from app.schemas.progress import (
-    ProgressForecastResponse, DependencyCheckResponse,
-)
+from app.models.project import Project
+from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.schemas.progress import (
+    DependencyCheckResponse,
+    ProgressForecastResponse,
+)
+
 from .utils import (
-    _build_project_forecast, _analyze_dependency_graph, _notify_dependency_alerts
+    _analyze_dependency_graph,
+    _build_project_forecast,
+    _notify_dependency_alerts,
 )
 
 router = APIRouter()

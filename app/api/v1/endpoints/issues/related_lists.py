@@ -6,17 +6,19 @@
 """
 
 from typing import Any, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
 from sqlalchemy import desc
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.issue import Issue
-from app.models.user import User
-from app.models.progress import Task
 from app.models.acceptance import AcceptanceOrder
-from app.schemas.issue import IssueResponse, IssueListResponse
+from app.models.issue import Issue
+from app.models.progress import Task
+from app.models.user import User
+from app.schemas.issue import IssueListResponse, IssueResponse
+from app.services.data_scope_service import DataScopeService
 
 router = APIRouter()
 
@@ -97,6 +99,7 @@ def get_project_issues(
         Issue.project_id == project_id,
         Issue.status != 'DELETED'
     )
+    query = DataScopeService.filter_issues_by_scope(db, query, current_user)
 
     if status:
         query = query.filter(Issue.status == status)
@@ -121,6 +124,7 @@ def get_machine_issues(
         Issue.machine_id == machine_id,
         Issue.status != 'DELETED'
     )
+    query = DataScopeService.filter_issues_by_scope(db, query, current_user)
 
     if status:
         query = query.filter(Issue.status == status)
@@ -150,6 +154,7 @@ def get_task_issues(
         Issue.task_id == task_id,
         Issue.status != 'DELETED'
     )
+    query = DataScopeService.filter_issues_by_scope(db, query, current_user)
 
     if status:
         query = query.filter(Issue.status == status)
@@ -179,6 +184,7 @@ def get_acceptance_order_issues(
         Issue.acceptance_order_id == order_id,
         Issue.status != 'DELETED'
     )
+    query = DataScopeService.filter_issues_by_scope(db, query, current_user)
 
     if status:
         query = query.filter(Issue.status == status)

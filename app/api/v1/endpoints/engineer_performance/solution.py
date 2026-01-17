@@ -5,15 +5,16 @@
 
 from decimal import Decimal
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, Body
-from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field
 
-from app.api.deps import get_db, get_current_user
-from app.models.user import User
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
+
+from app.api.deps import get_current_user, get_db
 from app.models.performance import PerformancePeriod
-from app.services.solution_engineer_bonus_service import SolutionEngineerBonusService
+from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.solution_engineer_bonus_service import SolutionEngineerBonusService
 
 router = APIRouter(prefix="/solution", tags=["方案工程师"])
 

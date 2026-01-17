@@ -4,25 +4,23 @@
 
 包含：车间CRUD、产能统计
 """
-from typing import Any, Optional
 from datetime import date
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
+from app.core.config import settings
+from app.models.production import ProductionDailyReport, WorkOrder, Workshop
 from app.models.user import User
-from app.models.production import (
-    Workshop, WorkOrder, ProductionDailyReport
-)
+from app.schemas.common import PaginatedResponse
 from app.schemas.production import (
     WorkshopCreate,
-    WorkshopUpdate,
     WorkshopResponse,
+    WorkshopUpdate,
 )
-from app.schemas.common import PaginatedResponse
 
 router = APIRouter()
 
@@ -188,8 +186,8 @@ def get_workshop_capacity(
     worker_count = workshop.worker_count or 0
 
     # 如果没有指定日期范围，使用当前月
-    from datetime import timedelta
     from calendar import monthrange
+    from datetime import timedelta
     today = date.today()
     if not start_date:
         start_date = date(today.year, today.month, 1)

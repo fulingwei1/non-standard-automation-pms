@@ -11,36 +11,53 @@
 """
 
 import logging
-from typing import Any, List, Optional
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 logger = logging.getLogger(__name__)
+from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import or_, desc
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
-from app.models.project import Project, Machine
 from app.models.outsourcing import (
-    OutsourcingVendor, OutsourcingOrder, OutsourcingOrderItem,
-    OutsourcingDelivery, OutsourcingDeliveryItem,
-    OutsourcingInspection, OutsourcingProgress, OutsourcingEvaluation, OutsourcingPayment
+    OutsourcingDelivery,
+    OutsourcingDeliveryItem,
+    OutsourcingEvaluation,
+    OutsourcingInspection,
+    OutsourcingOrder,
+    OutsourcingOrderItem,
+    OutsourcingPayment,
+    OutsourcingProgress,
+    OutsourcingVendor,
 )
+from app.models.project import Machine, Project
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.outsourcing import (
-    VendorCreate, VendorUpdate, VendorResponse,
-    OutsourcingOrderCreate, OutsourcingOrderUpdate, OutsourcingOrderResponse, OutsourcingOrderListResponse,
-    OutsourcingOrderItemCreate, OutsourcingOrderItemResponse,
-    OutsourcingDeliveryCreate, OutsourcingDeliveryResponse,
-    OutsourcingInspectionCreate, OutsourcingInspectionResponse,
-    OutsourcingProgressCreate, OutsourcingProgressResponse,
-    OutsourcingPaymentCreate, OutsourcingPaymentUpdate, OutsourcingPaymentResponse
+    OutsourcingDeliveryCreate,
+    OutsourcingDeliveryResponse,
+    OutsourcingInspectionCreate,
+    OutsourcingInspectionResponse,
+    OutsourcingOrderCreate,
+    OutsourcingOrderItemCreate,
+    OutsourcingOrderItemResponse,
+    OutsourcingOrderListResponse,
+    OutsourcingOrderResponse,
+    OutsourcingOrderUpdate,
+    OutsourcingPaymentCreate,
+    OutsourcingPaymentResponse,
+    OutsourcingPaymentUpdate,
+    OutsourcingProgressCreate,
+    OutsourcingProgressResponse,
+    VendorCreate,
+    VendorResponse,
+    VendorUpdate,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
 
 router = APIRouter()
 
@@ -93,14 +110,7 @@ def generate_inspection_no(db: Session) -> str:
     return f"IQ-{today}-{seq:03d}"
 
 
-
-from fastapi import APIRouter
-
-router = APIRouter(
-    prefix="/outsourcing/deliveries",
-    tags=["deliveries"]
-)
-
+# NOTE: keep flat routes (no extra prefix) to preserve the original API paths.
 # 共 2 个路由
 
 # ==================== 外协交付 ====================
@@ -119,25 +129,25 @@ def read_outsourcing_deliveries(
     获取交付记录列表
     """
     query = db.query(OutsourcingDelivery)
-    
+
     if order_id:
         query = query.filter(OutsourcingDelivery.order_id == order_id)
-    
+
     if vendor_id:
         query = query.filter(OutsourcingDelivery.vendor_id == vendor_id)
-    
+
     if status:
         query = query.filter(OutsourcingDelivery.status == status)
-    
+
     total = query.count()
     offset = (page - 1) * page_size
     deliveries = query.order_by(desc(OutsourcingDelivery.delivery_date)).offset(offset).limit(page_size).all()
-    
+
     items = []
     for delivery in deliveries:
         vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == delivery.vendor_id).first()
         order = db.query(OutsourcingOrder).filter(OutsourcingOrder.id == delivery.order_id).first()
-        
+
         items.append(OutsourcingDeliveryResponse(
             id=delivery.id,
             delivery_no=delivery.delivery_no,
@@ -151,7 +161,7 @@ def read_outsourcing_deliveries(
             created_at=delivery.created_at,
             updated_at=delivery.updated_at
         ))
-    
+
     return PaginatedResponse(
         items=items,
         total=total,
@@ -175,19 +185,19 @@ def create_outsourcing_delivery(
     order = db.query(OutsourcingOrder).filter(OutsourcingOrder.id == delivery_in.order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="外协订单不存在")
-    
+
     if order.status not in ["APPROVED", "IN_PROGRESS"]:
         raise HTTPException(status_code=400, detail="只能为已审批或进行中的订单创建交付记录")
-    
+
     vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == order.vendor_id).first()
     if not vendor:
         raise HTTPException(status_code=404, detail="外协商不存在")
-    
+
     if not delivery_in.items:
         raise HTTPException(status_code=400, detail="交付明细不能为空")
-    
+
     delivery_no = generate_delivery_no(db)
-    
+
     delivery = OutsourcingDelivery(
         delivery_no=delivery_no,
         order_id=delivery_in.order_id,
@@ -201,16 +211,16 @@ def create_outsourcing_delivery(
         created_by=current_user.id,
         remark=delivery_in.remark
     )
-    
+
     db.add(delivery)
     db.flush()  # 获取delivery.id
-    
+
     # 创建交付明细
     for item_in in delivery_in.items:
         order_item = db.query(OutsourcingOrderItem).filter(OutsourcingOrderItem.id == item_in.order_item_id).first()
         if not order_item or order_item.order_id != delivery_in.order_id:
             raise HTTPException(status_code=400, detail=f"订单明细ID {item_in.order_item_id} 不存在或不属于该订单")
-        
+
         delivery_item = OutsourcingDeliveryItem(
             delivery_id=delivery.id,
             order_item_id=item_in.order_item_id,
@@ -220,22 +230,22 @@ def create_outsourcing_delivery(
             remark=item_in.remark
         )
         db.add(delivery_item)
-        
+
         # 更新订单明细的已交付数量
         order_item.delivered_quantity = (order_item.delivered_quantity or Decimal("0")) + item_in.delivery_quantity
         db.add(order_item)
-    
+
     # 更新订单状态
     if order.status == "APPROVED":
         order.status = "IN_PROGRESS"
         db.add(order)
-    
+
     db.commit()
     db.refresh(delivery)
-    
+
     vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == delivery.vendor_id).first()
     order = db.query(OutsourcingOrder).filter(OutsourcingOrder.id == delivery.order_id).first()
-    
+
     return OutsourcingDeliveryResponse(
         id=delivery.id,
         delivery_no=delivery.delivery_no,
@@ -249,6 +259,5 @@ def create_outsourcing_delivery(
         created_at=delivery.created_at,
         updated_at=delivery.updated_at
     )
-
 
 

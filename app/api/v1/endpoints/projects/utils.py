@@ -5,21 +5,25 @@
 包含编码生成、序列化函数、阶段门校验等公共辅助函数
 """
 
-from typing import Any, Dict, List, Optional, Tuple
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
-
-from sqlalchemy.orm import Session
-from sqlalchemy import desc, and_
+from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import HTTPException
-from app.models.user import User
-from app.models.project import (
-    Project, Machine, ProjectStatusLog, ProjectPaymentPlan,
-    ProjectTemplate, ProjectTemplateVersion
-)
-from app.models.business_support import InvoiceRequest
+from sqlalchemy import and_, desc
+from sqlalchemy.orm import Session
+
 from app.core.config import settings
+from app.models.business_support import InvoiceRequest
+from app.models.project import (
+    Machine,
+    Project,
+    ProjectPaymentPlan,
+    ProjectStatusLog,
+    ProjectTemplate,
+    ProjectTemplateVersion,
+)
+from app.models.user import User
 
 
 def _sync_invoice_request_receipt_status(db: Session, plan: ProjectPaymentPlan) -> None:
@@ -44,7 +48,7 @@ def _sync_invoice_request_receipt_status(db: Session, plan: ProjectPaymentPlan) 
     for invoice_request in invoice_requests:
         if invoice_request.receipt_status != receipt_status:
             invoice_request.receipt_status = receipt_status
-            invoice_request.receipt_updated_at = datetime.utcnow()
+            invoice_request.receipt_updated_at = datetime.now(timezone.utc)
             db.add(invoice_request)
 
 

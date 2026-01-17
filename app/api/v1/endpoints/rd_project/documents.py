@@ -1,102 +1,43 @@
 # -*- coding: utf-8 -*-
 """
-研发项目文档管理 - 自动生成
-从 rd_project.py 拆分
+研发项目文档管理
 """
-
-# -*- coding: utf-8 -*-
-"""
-研发项目管理 API endpoints
-包含：研发项目立项、审批、结项、费用归集、报表生成
-适用场景：IPO合规、高新技术企业认定、研发费用加计扣除
-"""
-from typing import Any, List, Optional, Dict
-from datetime import date, datetime
+import uuid
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
-import os
-import uuid
+from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status, UploadFile, File, Form
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    UploadFile,
+    status,
+)
 from fastapi.responses import FileResponse
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, and_, func
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
+from app.models.project import ProjectDocument
+from app.models.rd_project import RdProject
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
+from app.schemas.project import ProjectDocumentCreate, ProjectDocumentResponse
 
 # 文档上传目录
 DOCUMENT_UPLOAD_DIR = Path(settings.UPLOAD_DIR) / "documents" / "rd_projects"
 DOCUMENT_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-from app.models.user import User
-from app.models.project import Project
-from app.models.timesheet import Timesheet
-from app.models.project import ProjectDocument
-from app.models.rd_project import (
-    RdProject, RdProjectCategory, RdCost, RdCostType,
-    RdCostAllocationRule, RdReportRecord
-)
-from app.schemas.rd_project import (
-    RdProjectCategoryCreate, RdProjectCategoryUpdate, RdProjectCategoryResponse,
-    RdProjectCreate, RdProjectUpdate, RdProjectResponse,
-    RdProjectApproveRequest, RdProjectCloseRequest, RdProjectLinkRequest,
-    RdCostTypeCreate, RdCostTypeResponse,
-    RdCostCreate, RdCostUpdate, RdCostResponse,
-    RdCostCalculateLaborRequest, RdCostSummaryResponse,
-    RdCostAllocationRuleCreate, RdCostAllocationRuleResponse,
-    RdReportRecordResponse
-)
-from app.schemas.timesheet import (
-    TimesheetCreate, TimesheetUpdate, TimesheetResponse, TimesheetListResponse
-)
-from app.schemas.project import (
-    ProjectDocumentCreate, ProjectDocumentUpdate, ProjectDocumentResponse
-)
-from app.schemas.common import ResponseModel, PaginatedResponse
 
 router = APIRouter()
 
-
-def generate_project_no(db: Session) -> str:
-    """生成研发项目编号：RD-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_project = (
-        db.query(RdProject)
-        .filter(RdProject.project_no.like(f"RD-{today}-%"))
-        .order_by(desc(RdProject.project_no))
-        .first()
-    )
-    if max_project:
-        seq = int(max_project.project_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"RD-{today}-{seq:03d}"
-
-
-def generate_cost_no(db: Session) -> str:
-    """生成研发费用编号：RC-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_cost = (
-        db.query(RdCost)
-        .filter(RdCost.cost_no.like(f"RC-{today}-%"))
-        .order_by(desc(RdCost.cost_no))
-        .first()
-    )
-    if max_cost:
-        seq = int(max_cost.cost_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"RC-{today}-{seq:03d}"
-
-
-
-from fastapi import APIRouter
-
-router = APIRouter(
-    prefix="/rd-project/documents",
-    tags=["documents"]
-)
+# ==================== 研发项目文档管理 ====================
 
 # 共 4 个路由
 
@@ -120,20 +61,20 @@ def get_rd_project_documents(
     project = db.query(RdProject).filter(RdProject.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="研发项目不存在")
-    
+
     offset = (page - 1) * page_size
     query = db.query(ProjectDocument).filter(ProjectDocument.rd_project_id == project_id)
-    
+
     if doc_type:
         query = query.filter(ProjectDocument.doc_type == doc_type)
     if doc_category:
         query = query.filter(ProjectDocument.doc_category == doc_category)
     if status:
         query = query.filter(ProjectDocument.status == status)
-    
+
     total = query.count()
     documents = query.order_by(desc(ProjectDocument.created_at)).offset(offset).limit(page_size).all()
-    
+
     return ResponseModel(
         code=200,
         message="success",
@@ -161,17 +102,17 @@ def create_rd_project_document(
     project = db.query(RdProject).filter(RdProject.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="研发项目不存在")
-    
+
     doc_data = doc_in.model_dump()
     doc_data["rd_project_id"] = project_id
     doc_data["project_id"] = project.linked_project_id  # 如果有关联的非标项目，也记录
     doc_data["uploaded_by"] = current_user.id
-    
+
     document = ProjectDocument(**doc_data)
     db.add(document)
     db.commit()
     db.refresh(document)
-    
+
     return ResponseModel(
         code=201,
         message="文档创建成功",
@@ -199,13 +140,13 @@ async def upload_rd_project_document(
     project = db.query(RdProject).filter(RdProject.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="研发项目不存在")
-    
+
     # 生成唯一文件名
     file_ext = Path(file.filename).suffix
     unique_filename = f"{uuid.uuid4()}{file_ext}"
     file_path = DOCUMENT_UPLOAD_DIR / str(project_id) / unique_filename
     file_path.parent.mkdir(parents=True, exist_ok=True)
-    
+
     # 保存文件
     try:
         with open(file_path, "wb") as f:
@@ -213,7 +154,7 @@ async def upload_rd_project_document(
             f.write(content)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"文件保存失败: {str(e)}")
-    
+
     # 创建文档记录
     doc_data = {
         "rd_project_id": project_id,
@@ -231,12 +172,12 @@ async def upload_rd_project_document(
         "uploaded_by": current_user.id,
         "status": "DRAFT",
     }
-    
+
     document = ProjectDocument(**doc_data)
     db.add(document)
     db.commit()
     db.refresh(document)
-    
+
     return ResponseModel(
         code=201,
         message="文档上传成功",
@@ -258,12 +199,12 @@ def download_rd_project_document(
     project = db.query(RdProject).filter(RdProject.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="研发项目不存在")
-    
+
     document = db.query(ProjectDocument).filter(
         ProjectDocument.id == doc_id,
         ProjectDocument.rd_project_id == project_id
     ).first()
-    
+
     if not document:
         raise HTTPException(status_code=404, detail="文档不存在")
 

@@ -10,31 +10,40 @@
 核心功能：周工时表、批量填报、审批流程
 """
 
-from typing import Any, List, Optional, Dict
+from calendar import monthrange
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from calendar import monthrange
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from sqlalchemy import and_, case, desc, extract, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, and_, func, case, extract
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User
-from app.models.project import Project
+from app.core.config import settings
 from app.models.organization import Department, Employee
+from app.models.project import Project
 from app.models.rd_project import RdProject
 from app.models.timesheet import (
-    Timesheet, TimesheetBatch, TimesheetSummary,
-    OvertimeApplication, TimesheetApprovalLog, TimesheetRule
+    OvertimeApplication,
+    Timesheet,
+    TimesheetApprovalLog,
+    TimesheetBatch,
+    TimesheetRule,
+    TimesheetSummary,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.timesheet import (
-    TimesheetCreate, TimesheetUpdate, TimesheetResponse, TimesheetListResponse,
-    TimesheetBatchCreate, WeekTimesheetResponse, MonthSummaryResponse,
-    TimesheetStatisticsResponse
+    MonthSummaryResponse,
+    TimesheetBatchCreate,
+    TimesheetCreate,
+    TimesheetListResponse,
+    TimesheetResponse,
+    TimesheetStatisticsResponse,
+    TimesheetUpdate,
+    WeekTimesheetResponse,
 )
 
 router = APIRouter()
@@ -132,7 +141,7 @@ def get_timesheet_statistics(
     工时统计分析（多维统计）
     """
     query = db.query(Timesheet).filter(Timesheet.status == "APPROVED")
-    
+
     # 权限控制
     if not hasattr(current_user, 'is_superuser') or not current_user.is_superuser:
         if user_id and user_id != current_user.id:
@@ -140,59 +149,59 @@ def get_timesheet_statistics(
         query = query.filter(Timesheet.user_id == current_user.id)
     elif user_id:
         query = query.filter(Timesheet.user_id == user_id)
-    
+
     if project_id:
         query = query.filter(Timesheet.project_id == project_id)
     if start_date:
         query = query.filter(Timesheet.work_date >= start_date)
     if end_date:
         query = query.filter(Timesheet.work_date <= end_date)
-    
+
     timesheets = query.all()
-    
+
     total_hours = Decimal("0")
     billable_hours = Decimal("0")
     by_user = {}
     by_project = {}
     by_date = {}
     by_work_type = {}
-    
+
     for ts in timesheets:
         hours = ts.hours or Decimal("0")
         total_hours += hours
-        
+
         if True:  # 所有已审批的工时都是可计费的
             billable_hours += hours
-        
+
         # 按用户统计
         user = db.query(User).filter(User.id == ts.user_id).first()
         user_name = user.real_name or user.username if user else f"用户{ts.user_id}"
         if user_name not in by_user:
             by_user[user_name] = Decimal("0")
         by_user[user_name] += hours
-        
+
         # 按项目统计
         project_name = "未分配项目"
         if ts.project_id:
             project = db.query(Project).filter(Project.id == ts.project_id).first()
             project_name = project.project_name if project else "未知项目"
-        
+
         if project_name not in by_project:
             by_project[project_name] = Decimal("0")
         by_project[project_name] += hours
-        
+
         # 按日期统计
         date_str = ts.work_date.isoformat()
         if date_str not in by_date:
             by_date[date_str] = Decimal("0")
         by_date[date_str] += hours
-        
+
         # 按工作类型统计
         work_type = ts.overtime_type or "NORMAL"
         if work_type not in by_work_type:
             by_work_type[work_type] = Decimal("0")
         by_work_type[work_type] += hours
-    
+
     return TimesheetStatisticsResponse(
         total_hours=total_hours,
         billable_hours=billable_hours,
@@ -218,34 +227,34 @@ def get_my_timesheet_summary(
         Timesheet.user_id == current_user.id,
         Timesheet.status == 'APPROVED'
     )
-    
+
     if start_date:
         query = query.filter(Timesheet.work_date >= start_date)
     if end_date:
         query = query.filter(Timesheet.work_date <= end_date)
-    
+
     timesheets = query.all()
-    
+
     # 统计汇总
     total_hours = Decimal(0)
     billable_hours = Decimal(0)
     by_project = {}
     by_date = {}
     by_work_type = {}
-    
+
     for ts in timesheets:
         hours = Decimal(str(ts.hours or 0))
         total_hours += hours
-        
+
         if True:  # 所有已审批的工时都是可计费的
             billable_hours += hours
-        
+
         # 按项目统计
         project_name = "未分配项目"
         if ts.project_id:
             project = db.query(Project).filter(Project.id == ts.project_id).first()
             project_name = project.project_name if project else "未知项目"
-        
+
         if project_name not in by_project:
             by_project[project_name] = {
                 'project_id': ts.project_id,
@@ -255,19 +264,19 @@ def get_my_timesheet_summary(
             }
         by_project[project_name]['total_hours'] += hours
         by_project[project_name]['days'] += 1
-        
+
         # 按日期统计
         date_str = ts.work_date.isoformat()
         if date_str not in by_date:
             by_date[date_str] = Decimal(0)
         by_date[date_str] += hours
-        
+
         # 按工作类型统计
         work_type = ts.overtime_type or "NORMAL"
         if work_type not in by_work_type:
             by_work_type[work_type] = Decimal(0)
         by_work_type[work_type] += hours
-    
+
     return ResponseModel(
         code=200,
         message="success",
@@ -302,11 +311,11 @@ def get_department_timesheet_summary(
     department = db.query(Department).filter(Department.id == dept_id).first()
     if not department:
         raise HTTPException(status_code=404, detail="部门不存在")
-    
+
     # 获取部门成员
     dept_users = db.query(User).filter(User.department_id == dept_id).all()
     user_ids = [u.id for u in dept_users]
-    
+
     if not user_ids:
         return ResponseModel(
             code=200,
@@ -321,32 +330,32 @@ def get_department_timesheet_summary(
                 "by_date": {},
             }
         )
-    
+
     # 查询部门成员的工时记录
     query = db.query(Timesheet).filter(
         Timesheet.user_id.in_(user_ids),
         Timesheet.status == 'APPROVED'
     )
-    
+
     if start_date:
         query = query.filter(Timesheet.work_date >= start_date)
     if end_date:
         query = query.filter(Timesheet.work_date <= end_date)
-    
+
     timesheets = query.all()
-    
+
     # 统计汇总
     total_hours = Decimal(0)
     by_user = {}
     by_project = {}
     by_date = {}
     participants = set()
-    
+
     for ts in timesheets:
         hours = Decimal(str(ts.hours or 0))
         total_hours += hours
         participants.add(ts.user_id)
-        
+
         # 按用户统计
         user = db.query(User).filter(User.id == ts.user_id).first()
         user_name = user.real_name or user.username if user else f"用户{ts.user_id}"
@@ -359,13 +368,13 @@ def get_department_timesheet_summary(
             }
         by_user[user_name]['total_hours'] += hours
         by_user[user_name]['days'] += 1
-        
+
         # 按项目统计
         project_name = "未分配项目"
         if ts.project_id:
             project = db.query(Project).filter(Project.id == ts.project_id).first()
             project_name = project.project_name if project else "未知项目"
-        
+
         if project_name not in by_project:
             by_project[project_name] = {
                 'project_id': ts.project_id,
@@ -375,18 +384,18 @@ def get_department_timesheet_summary(
             }
         by_project[project_name]['total_hours'] += hours
         by_project[project_name]['participants'].add(ts.user_id)
-        
+
         # 按日期统计
         date_str = ts.work_date.isoformat()
         if date_str not in by_date:
             by_date[date_str] = Decimal(0)
         by_date[date_str] += hours
-    
+
     # 转换participants为数量
     for proj_name, proj_data in by_project.items():
         proj_data['participant_count'] = len(proj_data['participants'])
         del proj_data['participants']
-    
+
     return ResponseModel(
         code=200,
         message="success",

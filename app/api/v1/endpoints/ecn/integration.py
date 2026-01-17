@@ -6,25 +6,25 @@ ECN模块集成/同步 API endpoints
 """
 
 import logging
-from typing import Any, List
 from datetime import datetime, timedelta
 from decimal import Decimal
+from typing import Any, List
 
-from fastapi import APIRouter, Depends, HTTPException, Body, status
+from fastapi import APIRouter, Body, Depends, HTTPException, status
 
 logger = logging.getLogger(__name__)
-from sqlalchemy.orm import Session
 from sqlalchemy import desc
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.user import User
-from app.models.project import Project
 from app.models.ecn import Ecn, EcnAffectedMaterial, EcnAffectedOrder, EcnTask
-from app.services.ecn_notification_service import notify_task_assigned
-from app.services.ecn_auto_assign_service import auto_assign_task
-from app.schemas.ecn import EcnTaskCreate
+from app.models.project import Project
+from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.schemas.ecn import EcnTaskCreate
+from app.services.ecn_auto_assign_service import auto_assign_task
+from app.services.ecn_notification_service import notify_task_assigned
 
 router = APIRouter()
 

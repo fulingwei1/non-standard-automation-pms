@@ -10,42 +10,59 @@
 核心功能：多层级绩效视图、绩效对比、趋势分析、排行榜
 """
 
-from typing import Any, List, Optional, Dict
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import and_, case, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, and_, func, case
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User
-from app.models.project import Project
+from app.core.config import settings
 from app.models.organization import Department, Employee
-from app.models.performance import (
-    PerformancePeriod, PerformanceIndicator, PerformanceResult,
-    PerformanceEvaluation, PerformanceAppeal, ProjectContribution,
+from app.models.performance import (  # New Performance System
+    EvaluationWeightConfig,
+    MonthlyWorkSummary,
+    PerformanceAppeal,
+    PerformanceEvaluation,
+    PerformanceEvaluationRecord,
+    PerformanceIndicator,
+    PerformancePeriod,
     PerformanceRankingSnapshot,
-    # New Performance System
-    MonthlyWorkSummary, PerformanceEvaluationRecord, EvaluationWeightConfig
+    PerformanceResult,
+    ProjectContribution,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
-from app.schemas.performance import (
-    PersonalPerformanceResponse, PerformanceTrendResponse,
-    TeamPerformanceResponse, DepartmentPerformanceResponse, PerformanceRankingResponse,
-    ProjectPerformanceResponse, ProjectProgressReportResponse, PerformanceCompareResponse,
-    # New Performance System
-    MonthlyWorkSummaryCreate, MonthlyWorkSummaryUpdate, MonthlyWorkSummaryResponse,
-    MonthlyWorkSummaryListItem, PerformanceEvaluationRecordCreate,
-    PerformanceEvaluationRecordUpdate, PerformanceEvaluationRecordResponse,
-    EvaluationTaskItem, EvaluationTaskListResponse, EvaluationDetailResponse,
-    MyPerformanceResponse, EvaluationWeightConfigCreate, EvaluationWeightConfigResponse,
-    EvaluationWeightConfigListResponse
+from app.models.project import Project
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
+from app.schemas.performance import (  # New Performance System
+    DepartmentPerformanceResponse,
+    EvaluationDetailResponse,
+    EvaluationTaskItem,
+    EvaluationTaskListResponse,
+    EvaluationWeightConfigCreate,
+    EvaluationWeightConfigListResponse,
+    EvaluationWeightConfigResponse,
+    MonthlyWorkSummaryCreate,
+    MonthlyWorkSummaryListItem,
+    MonthlyWorkSummaryResponse,
+    MonthlyWorkSummaryUpdate,
+    MyPerformanceResponse,
+    PerformanceCompareResponse,
+    PerformanceEvaluationRecordCreate,
+    PerformanceEvaluationRecordResponse,
+    PerformanceEvaluationRecordUpdate,
+    PerformanceRankingResponse,
+    PerformanceTrendResponse,
+    PersonalPerformanceResponse,
+    ProjectPerformanceResponse,
+    ProjectProgressReportResponse,
+    TeamPerformanceResponse,
 )
-from app.services.performance_service import PerformanceService
 from app.services.performance_integration_service import PerformanceIntegrationService
+from app.services.performance_service import PerformanceService
 
 router = APIRouter()
 
@@ -225,31 +242,31 @@ def get_project_performance(
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
-    
+
     if period_id:
         period = db.query(PerformancePeriod).filter(PerformancePeriod.id == period_id).first()
     else:
         period = db.query(PerformancePeriod).filter(
             PerformancePeriod.status == "FINALIZED"
         ).order_by(desc(PerformancePeriod.end_date)).first()
-    
+
     if not period:
         raise HTTPException(status_code=404, detail="未找到考核周期")
-    
+
     # 获取项目贡献
     contributions = db.query(ProjectContribution).filter(
         ProjectContribution.period_id == period.id,
         ProjectContribution.project_id == project_id
     ).all()
-    
+
     members = []
     total_contribution = Decimal("0")
-    
+
     for contrib in contributions:
         user = db.query(User).filter(User.id == contrib.user_id).first()
         score = contrib.contribution_score or Decimal("0")
         total_contribution += score
-        
+
         members.append({
             "user_id": contrib.user_id,
             "user_name": user.real_name or user.username if user else None,
@@ -257,10 +274,10 @@ def get_project_performance(
             "work_hours": float(contrib.hours_spent) if contrib.hours_spent else 0,
             "task_count": contrib.task_count or 0
         })
-    
+
     # 按贡献分排序
     members.sort(key=lambda x: x["contribution_score"], reverse=True)
-    
+
     return ProjectPerformanceResponse(
         project_id=project_id,
         project_name=project.project_name,
@@ -383,29 +400,29 @@ def compare_performance(
     绩效对比（多人对比）
     """
     user_id_list = [int(uid.strip()) for uid in user_ids.split(",") if uid.strip()]
-    
+
     if period_id:
         period = db.query(PerformancePeriod).filter(PerformancePeriod.id == period_id).first()
     else:
         period = db.query(PerformancePeriod).filter(
             PerformancePeriod.status == "FINALIZED"
         ).order_by(desc(PerformancePeriod.end_date)).first()
-    
+
     if not period:
         raise HTTPException(status_code=404, detail="未找到考核周期")
-    
+
     comparison_data = []
-    
+
     for user_id in user_id_list:
         user = db.query(User).filter(User.id == user_id).first()
         if not user:
             continue
-        
+
         result = db.query(PerformanceResult).filter(
             PerformanceResult.period_id == period.id,
             PerformanceResult.user_id == user_id
         ).first()
-        
+
         comparison_data.append({
             "user_id": user_id,
             "user_name": user.real_name or user.username,
@@ -413,7 +430,7 @@ def compare_performance(
             "level": result.level if result else "QUALIFIED",
             "department_name": result.department_name if result else None
         })
-    
+
     return PerformanceCompareResponse(
         user_ids=user_id_list,
         period_id=period.id,

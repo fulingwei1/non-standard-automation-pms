@@ -9,36 +9,45 @@
 缺料管理 API endpoints
 包含：缺料上报、到货跟踪、物料替代、物料调拨、缺料统计
 """
-from typing import Any, List, Optional, Dict
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, and_, func
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
 from app.core.security import require_shortage_report_access
-from app.models.user import User
-from app.models.project import Project
 from app.models.machine import Machine
 from app.models.material import Material
-from app.models.supplier import Supplier
+from app.models.project import Project
 from app.models.purchase import PurchaseOrder
 from app.models.shortage import (
-    ShortageReport, MaterialArrival, ArrivalFollowUp,
-    MaterialSubstitution, MaterialTransfer, ShortageDailyReport
+    ArrivalFollowUp,
+    MaterialArrival,
+    MaterialSubstitution,
+    MaterialTransfer,
+    ShortageDailyReport,
+    ShortageReport,
 )
+from app.models.supplier import Supplier
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.shortage import (
-    ShortageReportCreate, ShortageReportResponse,
-    MaterialArrivalCreate, MaterialArrivalResponse,
-    ArrivalFollowUpCreate, ArrivalFollowUpResponse,
-    MaterialSubstitutionCreate, MaterialSubstitutionResponse,
-    MaterialTransferCreate, MaterialTransferResponse
+    ArrivalFollowUpCreate,
+    ArrivalFollowUpResponse,
+    MaterialArrivalCreate,
+    MaterialArrivalResponse,
+    MaterialSubstitutionCreate,
+    MaterialSubstitutionResponse,
+    MaterialTransferCreate,
+    MaterialTransferResponse,
+    ShortageReportCreate,
+    ShortageReportResponse,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
 
 router = APIRouter()
 
@@ -87,9 +96,9 @@ def _build_shortage_daily_report(report: ShortageDailyReport) -> Dict[str, Any]:
 
 def generate_report_no(db: Session) -> str:
     """生成缺料上报单号：SR-yymmdd-xxx"""
-    from app.utils.number_generator import generate_sequential_no
     from app.models.shortage import ShortageReport
-    
+    from app.utils.number_generator import generate_sequential_no
+
     return generate_sequential_no(
         db=db,
         model_class=ShortageReport,
@@ -103,9 +112,9 @@ def generate_report_no(db: Session) -> str:
 
 def generate_arrival_no(db: Session) -> str:
     """生成到货跟踪单号：ARR-yymmdd-xxx"""
-    from app.utils.number_generator import generate_sequential_no
     from app.models.shortage import MaterialArrival
-    
+    from app.utils.number_generator import generate_sequential_no
+
     return generate_sequential_no(
         db=db,
         model_class=MaterialArrival,
@@ -119,9 +128,9 @@ def generate_arrival_no(db: Session) -> str:
 
 def generate_substitution_no(db: Session) -> str:
     """生成替代单号：SUB-yymmdd-xxx"""
-    from app.utils.number_generator import generate_sequential_no
     from app.models.shortage import MaterialSubstitution
-    
+    from app.utils.number_generator import generate_sequential_no
+
     return generate_sequential_no(
         db=db,
         model_class=MaterialSubstitution,
@@ -135,9 +144,9 @@ def generate_substitution_no(db: Session) -> str:
 
 def generate_transfer_no(db: Session) -> str:
     """生成调拨单号：TRF-yymmdd-xxx"""
-    from app.utils.number_generator import generate_sequential_no
     from app.models.shortage import MaterialTransfer
-    
+    from app.utils.number_generator import generate_sequential_no
+
     return generate_sequential_no(
         db=db,
         model_class=MaterialTransfer,
@@ -176,7 +185,7 @@ def read_substitutions(
     替代申请列表
     """
     query = db.query(MaterialSubstitution)
-    
+
     if keyword:
         query = query.filter(
             or_(
@@ -185,23 +194,23 @@ def read_substitutions(
                 MaterialSubstitution.substitute_material_code.like(f"%{keyword}%"),
             )
         )
-    
+
     if status:
         query = query.filter(MaterialSubstitution.status == status)
-    
+
     if project_id:
         query = query.filter(MaterialSubstitution.project_id == project_id)
-    
+
     total = query.count()
     offset = (page - 1) * page_size
     substitutions = query.order_by(desc(MaterialSubstitution.created_at)).offset(offset).limit(page_size).all()
-    
+
     items = []
     for sub in substitutions:
         project = db.query(Project).filter(Project.id == sub.project_id).first()
         tech_approver = db.query(User).filter(User.id == sub.tech_approver_id).first() if sub.tech_approver_id else None
         prod_approver = db.query(User).filter(User.id == sub.prod_approver_id).first() if sub.prod_approver_id else None
-        
+
         items.append(MaterialSubstitutionResponse(
             id=sub.id,
             substitution_no=sub.substitution_no,
@@ -230,7 +239,7 @@ def read_substitutions(
             created_at=sub.created_at,
             updated_at=sub.updated_at,
         ))
-    
+
     return PaginatedResponse(
         items=items,
         total=total,
@@ -253,11 +262,11 @@ def read_substitution(
     substitution = db.query(MaterialSubstitution).filter(MaterialSubstitution.id == substitution_id).first()
     if not substitution:
         raise HTTPException(status_code=404, detail="替代申请不存在")
-    
+
     project = db.query(Project).filter(Project.id == substitution.project_id).first()
     tech_approver = db.query(User).filter(User.id == substitution.tech_approver_id).first() if substitution.tech_approver_id else None
     prod_approver = db.query(User).filter(User.id == substitution.prod_approver_id).first() if substitution.prod_approver_id else None
-    
+
     return MaterialSubstitutionResponse(
         id=substitution.id,
         substitution_no=substitution.substitution_no,
@@ -302,16 +311,16 @@ def create_substitution(
     project = db.query(Project).filter(Project.id == substitution_in.project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
-    
+
     # 验证物料
     original_material = db.query(Material).filter(Material.id == substitution_in.original_material_id).first()
     if not original_material:
         raise HTTPException(status_code=404, detail="原物料不存在")
-    
+
     substitute_material = db.query(Material).filter(Material.id == substitution_in.substitute_material_id).first()
     if not substitute_material:
         raise HTTPException(status_code=404, detail="替代物料不存在")
-    
+
     substitution = MaterialSubstitution(
         substitution_no=generate_substitution_no(db),
         shortage_report_id=substitution_in.shortage_report_id,
@@ -332,13 +341,13 @@ def create_substitution(
         created_by=current_user.id,
         remark=substitution_in.remark
     )
-    
+
     db.add(substitution)
     db.commit()
     db.refresh(substitution)
-    
+
     project = db.query(Project).filter(Project.id == substitution.project_id).first()
-    
+
     return MaterialSubstitutionResponse(
         id=substitution.id,
         substitution_no=substitution.substitution_no,
@@ -384,10 +393,10 @@ def tech_approve_substitution(
     substitution = db.query(MaterialSubstitution).filter(MaterialSubstitution.id == substitution_id).first()
     if not substitution:
         raise HTTPException(status_code=404, detail="替代申请不存在")
-    
+
     if substitution.status != 'DRAFT':
         raise HTTPException(status_code=400, detail="只有草稿状态的申请才能进行技术审批")
-    
+
     if approved:
         substitution.status = 'TECH_APPROVED'
         substitution.tech_approver_id = current_user.id
@@ -400,14 +409,14 @@ def tech_approve_substitution(
         substitution.tech_approver_id = current_user.id
         substitution.tech_approved_at = datetime.now()
         substitution.tech_approval_note = approval_note
-    
+
     db.add(substitution)
     db.commit()
     db.refresh(substitution)
-    
+
     project = db.query(Project).filter(Project.id == substitution.project_id).first()
     tech_approver = db.query(User).filter(User.id == substitution.tech_approver_id).first() if substitution.tech_approver_id else None
-    
+
     return MaterialSubstitutionResponse(
         id=substitution.id,
         substitution_no=substitution.substitution_no,
@@ -453,10 +462,10 @@ def prod_approve_substitution(
     substitution = db.query(MaterialSubstitution).filter(MaterialSubstitution.id == substitution_id).first()
     if not substitution:
         raise HTTPException(status_code=404, detail="替代申请不存在")
-    
+
     if substitution.status != 'PROD_PENDING':
         raise HTTPException(status_code=400, detail="只有待生产审批状态的申请才能进行生产审批")
-    
+
     if approved:
         substitution.status = 'APPROVED'
         substitution.prod_approver_id = current_user.id
@@ -467,15 +476,15 @@ def prod_approve_substitution(
         substitution.prod_approver_id = current_user.id
         substitution.prod_approved_at = datetime.now()
         substitution.prod_approval_note = approval_note
-    
+
     db.add(substitution)
     db.commit()
     db.refresh(substitution)
-    
+
     project = db.query(Project).filter(Project.id == substitution.project_id).first()
     tech_approver = db.query(User).filter(User.id == substitution.tech_approver_id).first() if substitution.tech_approver_id else None
     prod_approver = db.query(User).filter(User.id == substitution.prod_approver_id).first() if substitution.prod_approver_id else None
-    
+
     return MaterialSubstitutionResponse(
         id=substitution.id,
         substitution_no=substitution.substitution_no,
@@ -520,27 +529,27 @@ def execute_substitution(
     substitution = db.query(MaterialSubstitution).filter(MaterialSubstitution.id == substitution_id).first()
     if not substitution:
         raise HTTPException(status_code=404, detail="替代申请不存在")
-    
+
     if substitution.status != 'APPROVED':
         raise HTTPException(status_code=400, detail="只有已批准的申请才能执行")
-    
+
     substitution.status = 'EXECUTED'
     substitution.executed_at = datetime.now()
     substitution.executed_by = current_user.id
     substitution.execution_note = execution_note
-    
+
     # Note: 更新BOM或库存记录需要与BOM管理和库存管理系统集成
     # 如果substitution.bom_item_id存在，应更新对应BOM项的物料信息
     # 如果存在库存系统，应更新库存记录（减少原物料，增加替代物料）
-    
+
     db.add(substitution)
     db.commit()
     db.refresh(substitution)
-    
+
     project = db.query(Project).filter(Project.id == substitution.project_id).first()
     tech_approver = db.query(User).filter(User.id == substitution.tech_approver_id).first() if substitution.tech_approver_id else None
     prod_approver = db.query(User).filter(User.id == substitution.prod_approver_id).first() if substitution.prod_approver_id else None
-    
+
     return MaterialSubstitutionResponse(
         id=substitution.id,
         substitution_no=substitution.substitution_no,

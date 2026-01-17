@@ -4,16 +4,19 @@
 """
 
 from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db, get_current_user
+from app.api.deps import get_current_user, get_db
 from app.models.user import User
-from app.services.knowledge_contribution_service import KnowledgeContributionService
-from app.schemas.engineer_performance import (
-    KnowledgeContributionCreate, KnowledgeContributionUpdate, KnowledgeReuseCreate
-)
 from app.schemas.common import ResponseModel
+from app.schemas.engineer_performance import (
+    KnowledgeContributionCreate,
+    KnowledgeContributionUpdate,
+    KnowledgeReuseCreate,
+)
+from app.services.knowledge_contribution_service import KnowledgeContributionService
 
 router = APIRouter(prefix="/knowledge", tags=["知识贡献"])
 

@@ -5,13 +5,13 @@
 
 from fastapi import APIRouter
 
-from .individual import router as individual_router
-from .team import router as team_router
-from .project import router as project_router
 from .employee_api import router as employee_api_router
-from .manager_api import router as manager_api_router
 from .hr_api import router as hr_api_router
+from .individual import router as individual_router
 from .integration import router as integration_router
+from .manager_api import router as manager_api_router
+from .project import router as project_router
+from .team import router as team_router
 
 router = APIRouter()
 

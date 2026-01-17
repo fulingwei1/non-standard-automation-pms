@@ -1,76 +1,217 @@
 # -*- coding: utf-8 -*-
 """
-客服communications管理 - 自动生成
-从 service.py 拆分
+客户沟通管理 API endpoints
 """
 
-from typing import Any, List, Optional
-from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import desc, or_
+from datetime import date, datetime, timedelta
+from typing import Any, Optional
 
-from app.api.deps import get_db, get_current_active_user
-from app.core.config import settings
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import desc, or_
+from sqlalchemy.orm import Session
+
+from app.api import deps
 from app.core import security
+from app.core.config import settings
+from app.models.service import CustomerCommunication
 from app.models.user import User
-from app.models.service import ServiceTicket, ServiceRecord
-from app.schemas.service import ServiceTicketResponse, ServiceRecordResponse
-from app.schemas.common import Response
+from app.schemas.common import PaginatedResponse, ResponseModel
+from app.schemas.service import (
+    CustomerCommunicationCreate,
+    CustomerCommunicationResponse,
+    CustomerCommunicationUpdate,
+)
+
+from .number_utils import generate_communication_no
 
 router = APIRouter()
 
 
-@router.get("/service/communications", response_model=Response[List[ServiceTicketResponse]])
-def get_service_communications(
-    db: Session = Depends(get_db),
-    skip: int = Query(0, ge=0, description="跳过记录数"),
-    limit: int = Query(50, ge=1, le=200, description="返回记录数"),
+@router.get("/statistics", response_model=dict, status_code=status.HTTP_200_OK)
+def get_customer_communication_statistics(
+    db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.get_current_active_user),
-):
+) -> Any:
     """
-    获取客服communications列表
-    
-    Args:
-        db: 数据库会话
-        skip: 跳过记录数
-        limit: 返回记录数
-        current_user: 当前用户
-    
-    Returns:
-        Response[List[ServiceTicketResponse]]: 客服communications列表
+    获取客户沟通统计
     """
-    try:
-        # TODO: 实现communications查询逻辑
-        tickets = db.query(ServiceTicket).offset(skip).limit(limit).all()
-        
-        return Response.success(
-            data=[ServiceTicketResponse.from_orm(ticket) for ticket in tickets],
-            message="客服communications列表获取成功"
+    total = db.query(CustomerCommunication).count()
+
+    # 本周沟通数
+    today = date.today()
+    week_start = today - timedelta(days=today.weekday())
+    this_week = db.query(CustomerCommunication).filter(CustomerCommunication.communication_date >= week_start).count()
+
+    # 本月沟通数
+    this_month_start = date(today.year, today.month, 1)
+    this_month = db.query(CustomerCommunication).filter(CustomerCommunication.communication_date >= this_month_start).count()
+
+    # 待跟进数
+    pending_follow_up = db.query(CustomerCommunication).filter(
+        CustomerCommunication.follow_up_required == True,
+        CustomerCommunication.follow_up_status == "待处理"
+    ).count()
+
+    # 按类型统计
+    by_type = {}
+    from sqlalchemy import func
+    types = db.query(CustomerCommunication.communication_type, func.count(CustomerCommunication.id)).group_by(CustomerCommunication.communication_type).all()
+    for comm_type, count in types:
+        by_type[comm_type] = count
+
+    return {
+        "total": total,
+        "this_week": this_week,
+        "this_month": this_month,
+        "pending_follow_up": pending_follow_up,
+        "by_type": by_type,
+    }
+
+
+@router.get("", response_model=PaginatedResponse[CustomerCommunicationResponse], status_code=status.HTTP_200_OK)
+def read_customer_communications(
+    db: Session = Depends(deps.get_db),
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    communication_type: Optional[str] = Query(None, description="沟通方式筛选"),
+    topic: Optional[str] = Query(None, description="沟通主题筛选"),
+    importance: Optional[str] = Query(None, description="重要性筛选"),
+    follow_up_required: Optional[bool] = Query(None, description="是否需要跟进"),
+    date_from: Optional[date] = Query(None, description="开始日期"),
+    date_to: Optional[date] = Query(None, description="结束日期"),
+    keyword: Optional[str] = Query(None, description="关键词搜索"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取客户沟通记录列表
+    """
+    query = db.query(CustomerCommunication)
+
+    if communication_type:
+        query = query.filter(CustomerCommunication.communication_type == communication_type)
+    if topic:
+        query = query.filter(CustomerCommunication.topic == topic)
+    if importance:
+        query = query.filter(CustomerCommunication.importance == importance)
+    if follow_up_required is not None:
+        query = query.filter(CustomerCommunication.follow_up_required == follow_up_required)
+    if date_from:
+        query = query.filter(CustomerCommunication.communication_date >= date_from)
+    if date_to:
+        query = query.filter(CustomerCommunication.communication_date <= date_to)
+    if keyword:
+        query = query.filter(
+            or_(
+                CustomerCommunication.communication_no.like(f"%{keyword}%"),
+                CustomerCommunication.customer_name.like(f"%{keyword}%"),
+                CustomerCommunication.subject.like(f"%{keyword}%"),
+                CustomerCommunication.content.like(f"%{keyword}%"),
+            )
         )
-    except Exception as e:
-        return Response.error(message=f"获取客服communications失败: {str(e)}")
+
+    total = query.count()
+    items = query.order_by(desc(CustomerCommunication.communication_date)).offset((page - 1) * page_size).limit(page_size).all()
+
+    # 获取创建人姓名
+    for item in items:
+        if item.created_by:
+            creator = db.query(User).filter(User.id == item.created_by).first()
+            if creator:
+                item.created_by_name = creator.name or creator.username
+
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "pages": (total + page_size - 1) // page_size,
+    }
 
 
-@router.post("/service/communications")
-def create_service_communications(
-    ticket_data: dict,
-    db: Session = Depends(get_db),
+@router.post("", response_model=CustomerCommunicationResponse, status_code=status.HTTP_201_CREATED)
+def create_customer_communication(
+    *,
+    db: Session = Depends(deps.get_db),
+    comm_in: CustomerCommunicationCreate,
     current_user: User = Depends(security.get_current_active_user),
-):
+) -> Any:
     """
-    创建客服communications
-    
-    Args:
-        ticket_data: 工单数据
-        db: 数据库会话
-        current_user: 当前用户
-    
-    Returns:
-        Response: 创建结果
+    创建客户沟通记录
     """
-    try:
-        # TODO: 实现communications创建逻辑
-        return Response.success(message="客服communications创建成功")
-    except Exception as e:
-        return Response.error(message=f"创建客服communications失败: {str(e)}")
+    comm = CustomerCommunication(
+        communication_no=generate_communication_no(db),
+        communication_type=comm_in.communication_type,
+        customer_name=comm_in.customer_name,
+        customer_contact=comm_in.customer_contact,
+        customer_phone=comm_in.customer_phone,
+        customer_email=comm_in.customer_email,
+        project_code=comm_in.project_code,
+        project_name=comm_in.project_name,
+        communication_date=comm_in.communication_date,
+        communication_time=comm_in.communication_time,
+        duration=comm_in.duration,
+        location=comm_in.location,
+        topic=comm_in.topic,
+        subject=comm_in.subject,
+        content=comm_in.content,
+        follow_up_required=comm_in.follow_up_required or False,
+        follow_up_task=comm_in.follow_up_task,
+        follow_up_due_date=comm_in.follow_up_due_date,
+        tags=comm_in.tags or [],
+        importance=comm_in.importance or "中",
+        created_by=current_user.id,
+        created_by_name=current_user.real_name or current_user.username,
+    )
+    db.add(comm)
+    db.commit()
+    db.refresh(comm)
+
+    return comm
+
+
+@router.get("/{comm_id}", response_model=CustomerCommunicationResponse, status_code=status.HTTP_200_OK)
+def read_customer_communication(
+    *,
+    db: Session = Depends(deps.get_db),
+    comm_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取客户沟通记录详情
+    """
+    comm = db.query(CustomerCommunication).filter(CustomerCommunication.id == comm_id).first()
+    if not comm:
+        raise HTTPException(status_code=404, detail="沟通记录不存在")
+
+    return comm
+
+
+@router.put("/{comm_id}", response_model=CustomerCommunicationResponse, status_code=status.HTTP_200_OK)
+def update_customer_communication(
+    *,
+    db: Session = Depends(deps.get_db),
+    comm_id: int,
+    comm_in: CustomerCommunicationUpdate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    更新客户沟通记录
+    """
+    comm = db.query(CustomerCommunication).filter(CustomerCommunication.id == comm_id).first()
+    if not comm:
+        raise HTTPException(status_code=404, detail="沟通记录不存在")
+
+    if comm_in.content is not None:
+        comm.content = comm_in.content
+    if comm_in.follow_up_task is not None:
+        comm.follow_up_task = comm_in.follow_up_task
+    if comm_in.follow_up_status is not None:
+        comm.follow_up_status = comm_in.follow_up_status
+    if comm_in.tags is not None:
+        comm.tags = comm_in.tags
+
+    db.add(comm)
+    db.commit()
+    db.refresh(comm)
+
+    return comm

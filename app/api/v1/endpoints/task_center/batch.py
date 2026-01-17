@@ -10,31 +10,43 @@
 核心功能：多来源任务聚合、智能排序、转办协作
 """
 
-from typing import Any, List, Optional, Dict
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from sqlalchemy import and_, case, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, and_, func, case
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User
-from app.models.project import Project
+from app.core.config import settings
 from app.models.notification import Notification
-from app.services.sales_reminder_service import create_notification
+from app.models.project import Project
 from app.models.task_center import (
-    TaskUnified, TaskComment, TaskOperationLog, TaskReminder, JobDutyTemplate
+    JobDutyTemplate,
+    TaskComment,
+    TaskOperationLog,
+    TaskReminder,
+    TaskUnified,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.task_center import (
-    TaskOverviewResponse, TaskUnifiedCreate, TaskUnifiedUpdate, TaskUnifiedResponse,
-    TaskUnifiedListResponse, TaskProgressUpdate, TaskTransferRequest,
-    TaskCommentCreate, TaskCommentResponse, BatchTaskOperation, BatchOperationResponse,
-    BatchOperationStatistics
+    BatchOperationResponse,
+    BatchOperationStatistics,
+    BatchTaskOperation,
+    TaskCommentCreate,
+    TaskCommentResponse,
+    TaskOverviewResponse,
+    TaskProgressUpdate,
+    TaskTransferRequest,
+    TaskUnifiedCreate,
+    TaskUnifiedListResponse,
+    TaskUnifiedResponse,
+    TaskUnifiedUpdate,
 )
+from app.services.sales_reminder import create_notification
 
 router = APIRouter()
 
@@ -42,7 +54,7 @@ router = APIRouter()
 def generate_task_code(db: Session) -> str:
     """生成任务编号：TASK-yymmdd-xxx"""
     from app.utils.number_generator import generate_sequential_no
-    
+
     return generate_sequential_no(
         db=db,
         model_class=TaskUnified,
@@ -104,32 +116,32 @@ def batch_complete_tasks(
         TaskUnified.id.in_(task_ids),
         TaskUnified.assignee_id == current_user.id
     ).all()
-    
+
     success_count = 0
     failed_tasks = []
-    
+
     for task in tasks:
         try:
             if task.status == "COMPLETED":
                 failed_tasks.append({"task_id": task.id, "reason": "任务已完成"})
                 continue
-            
+
             task.status = "COMPLETED"
             task.progress = 100
             task.actual_end_date = datetime.now().date()
             task.updated_by = current_user.id
-            
+
             log_task_operation(
                 db, task.id, "BATCH_COMPLETE", f"批量完成任务：{task.title}",
                 current_user.id, current_user.real_name or current_user.username
             )
-            
+
             success_count += 1
         except Exception as e:
             failed_tasks.append({"task_id": task.id, "reason": str(e)})
-    
+
     db.commit()
-    
+
     return BatchOperationResponse(
         success_count=success_count,
         failed_count=len(failed_tasks),
@@ -152,21 +164,21 @@ def batch_transfer_tasks(
     target_user = db.query(User).filter(User.id == target_user_id).first()
     if not target_user:
         raise HTTPException(status_code=404, detail="目标用户不存在")
-    
+
     tasks = db.query(TaskUnified).filter(
         TaskUnified.id.in_(task_ids),
         TaskUnified.assignee_id == current_user.id
     ).all()
-    
+
     success_count = 0
     failed_tasks = []
-    
+
     for task in tasks:
         try:
             if task.status == "COMPLETED":
                 failed_tasks.append({"task_id": task.id, "reason": "已完成的任务不能转办"})
                 continue
-            
+
             task.assignee_id = target_user_id
             task.assignee_name = target_user.real_name or target_user.username
             task.is_transferred = True
@@ -176,19 +188,19 @@ def batch_transfer_tasks(
             task.transfer_time = datetime.now()
             task.status = "PENDING"
             task.updated_by = current_user.id
-            
+
             log_task_operation(
                 db, task.id, "BATCH_TRANSFER",
                 f"批量转办任务：{task.title} -> {target_user.real_name or target_user.username}",
                 current_user.id, current_user.real_name or current_user.username
             )
-            
+
             success_count += 1
         except Exception as e:
             failed_tasks.append({"task_id": task.id, "reason": str(e)})
-    
+
     db.commit()
-    
+
     return BatchOperationResponse(
         success_count=success_count,
         failed_count=len(failed_tasks),
@@ -209,21 +221,21 @@ def batch_set_priority(
     """
     if priority not in ["URGENT", "HIGH", "MEDIUM", "LOW"]:
         raise HTTPException(status_code=400, detail="无效的优先级")
-    
+
     tasks = db.query(TaskUnified).filter(
         TaskUnified.id.in_(task_ids),
         TaskUnified.assignee_id == current_user.id
     ).all()
-    
+
     success_count = 0
     failed_tasks = []
-    
+
     for task in tasks:
         try:
             old_priority = task.priority
             task.priority = priority
             task.updated_by = current_user.id
-            
+
             log_task_operation(
                 db, task.id, "BATCH_SET_PRIORITY",
                 f"批量设置优先级：{old_priority} -> {priority}",
@@ -231,13 +243,13 @@ def batch_set_priority(
                 old_value={"priority": old_priority},
                 new_value={"priority": priority}
             )
-            
+
             success_count += 1
         except Exception as e:
             failed_tasks.append({"task_id": task.id, "reason": str(e)})
-    
+
     db.commit()
-    
+
     return BatchOperationResponse(
         success_count=success_count,
         failed_count=len(failed_tasks),
@@ -260,25 +272,25 @@ def batch_update_progress(
         TaskUnified.id.in_(task_ids),
         TaskUnified.assignee_id == current_user.id
     ).all()
-    
+
     success_count = 0
     failed_tasks = []
-    
+
     for task in tasks:
         try:
             old_progress = task.progress
             task.progress = progress
             task.updated_by = current_user.id
-            
+
             if progress >= 100 and task.status != "COMPLETED":
                 task.status = "COMPLETED"
                 task.actual_end_date = datetime.now().date()
-            
+
             if progress > 0 and task.status == "ACCEPTED":
                 task.status = "IN_PROGRESS"
                 if not task.actual_start_date:
                     task.actual_start_date = datetime.now().date()
-            
+
             log_task_operation(
                 db, task.id, "BATCH_UPDATE_PROGRESS",
                 f"批量更新进度：{old_progress}% -> {progress}%",
@@ -286,13 +298,13 @@ def batch_update_progress(
                 old_value={"progress": old_progress},
                 new_value={"progress": progress}
             )
-            
+
             success_count += 1
         except Exception as e:
             failed_tasks.append({"task_id": task.id, "reason": str(e)})
-    
+
     db.commit()
-    
+
     return BatchOperationResponse(
         success_count=success_count,
         failed_count=len(failed_tasks),
@@ -315,28 +327,28 @@ def batch_delete_tasks(
         TaskUnified.assignee_id == current_user.id,
         TaskUnified.task_type == "PERSONAL"  # 只能删除个人任务
     ).all()
-    
+
     success_count = 0
     failed_tasks = []
-    
+
     for task in tasks:
         try:
             if task.task_type != "PERSONAL":
                 failed_tasks.append({"task_id": task.id, "reason": "只能删除个人任务"})
                 continue
-            
+
             log_task_operation(
                 db, task.id, "BATCH_DELETE", f"批量删除任务：{task.title}",
                 current_user.id, current_user.real_name or current_user.username
             )
-            
+
             db.delete(task)
             success_count += 1
         except Exception as e:
             failed_tasks.append({"task_id": task.id, "reason": str(e)})
-    
+
     db.commit()
-    
+
     return BatchOperationResponse(
         success_count=success_count,
         failed_count=len(failed_tasks),
@@ -358,35 +370,35 @@ def batch_start_tasks(
         TaskUnified.id.in_(task_ids),
         TaskUnified.assignee_id == current_user.id
     ).all()
-    
+
     success_count = 0
     failed_tasks = []
-    
+
     for task in tasks:
         try:
             if task.status in ["IN_PROGRESS", "COMPLETED"]:
                 failed_tasks.append({"task_id": task.id, "reason": "任务已开始或已完成"})
                 continue
-            
+
             old_status = task.status
             task.status = "IN_PROGRESS"
             if not task.actual_start_date:
                 task.actual_start_date = datetime.now().date()
             task.updated_by = current_user.id
-            
+
             log_task_operation(
                 db, task.id, "BATCH_START", f"批量开始任务：{task.title}",
                 current_user.id, current_user.real_name or current_user.username,
                 old_value={"status": old_status},
                 new_value={"status": "IN_PROGRESS"}
             )
-            
+
             success_count += 1
         except Exception as e:
             failed_tasks.append({"task_id": task.id, "reason": str(e)})
-    
+
     db.commit()
-    
+
     return BatchOperationResponse(
         success_count=success_count,
         failed_count=len(failed_tasks),
@@ -408,33 +420,33 @@ def batch_pause_tasks(
         TaskUnified.id.in_(task_ids),
         TaskUnified.assignee_id == current_user.id
     ).all()
-    
+
     success_count = 0
     failed_tasks = []
-    
+
     for task in tasks:
         try:
             if task.status != "IN_PROGRESS":
                 failed_tasks.append({"task_id": task.id, "reason": "只能暂停进行中的任务"})
                 continue
-            
+
             old_status = task.status
             task.status = "PAUSED"
             task.updated_by = current_user.id
-            
+
             log_task_operation(
                 db, task.id, "BATCH_PAUSE", f"批量暂停任务：{task.title}",
                 current_user.id, current_user.real_name or current_user.username,
                 old_value={"status": old_status},
                 new_value={"status": "PAUSED"}
             )
-            
+
             success_count += 1
         except Exception as e:
             failed_tasks.append({"task_id": task.id, "reason": str(e)})
-    
+
     db.commit()
-    
+
     return BatchOperationResponse(
         success_count=success_count,
         failed_count=len(failed_tasks),
@@ -457,10 +469,10 @@ def batch_tag_tasks(
         TaskUnified.id.in_(task_ids),
         TaskUnified.assignee_id == current_user.id
     ).all()
-    
+
     success_count = 0
     failed_tasks = []
-    
+
     for task in tasks:
         try:
             old_tags = task.tags if task.tags else []
@@ -468,20 +480,20 @@ def batch_tag_tasks(
             new_tags = list(set((old_tags or []) + tags))
             task.tags = new_tags
             task.updated_by = current_user.id
-            
+
             log_task_operation(
                 db, task.id, "BATCH_TAG", f"批量打标签：{tags}",
                 current_user.id, current_user.real_name or current_user.username,
                 old_value={"tags": old_tags},
                 new_value={"tags": new_tags}
             )
-            
+
             success_count += 1
         except Exception as e:
             failed_tasks.append({"task_id": task.id, "reason": str(e)})
-    
+
     db.commit()
-    
+
     return BatchOperationResponse(
         success_count=success_count,
         failed_count=len(failed_tasks),
@@ -503,20 +515,20 @@ def batch_urge_tasks(
     tasks = db.query(TaskUnified).filter(
         TaskUnified.id.in_(task_ids)
     ).all()
-    
+
     success_count = 0
     failed_tasks = []
-    
+
     for task in tasks:
         try:
             if not task.assignee_id:
                 failed_tasks.append({"task_id": task.id, "reason": "任务未分配负责人"})
                 continue
-            
+
             if task.status == "COMPLETED":
                 failed_tasks.append({"task_id": task.id, "reason": "已完成的任务无需催办"})
                 continue
-            
+
             # 创建催办通知
             notification = Notification(
                 user_id=task.assignee_id,
@@ -535,19 +547,19 @@ def batch_urge_tasks(
                 }
             )
             db.add(notification)
-            
+
             log_task_operation(
                 db, task.id, "BATCH_URGE",
                 f"批量催办任务：{task.title}",
                 current_user.id, current_user.real_name or current_user.username
             )
-            
+
             success_count += 1
         except Exception as e:
             failed_tasks.append({"task_id": task.id, "reason": str(e)})
-    
+
     db.commit()
-    
+
     return BatchOperationResponse(
         success_count=success_count,
         failed_count=len(failed_tasks),
@@ -570,28 +582,28 @@ def get_batch_operation_statistics(
         TaskOperationLog.operator_id == current_user.id,
         TaskOperationLog.operation_type.like("BATCH_%")
     )
-    
+
     if start_date:
         start_date_str = start_date.strftime("%Y-%m-%d")
         query = query.filter(func.date(TaskOperationLog.operation_time) >= start_date_str)
     if end_date:
         end_date_str = end_date.strftime("%Y-%m-%d")
         query = query.filter(func.date(TaskOperationLog.operation_time) <= end_date_str)
-    
+
     logs = query.order_by(desc(TaskOperationLog.operation_time)).all()
-    
+
     # 按操作类型统计
     by_operation_type = {}
     for log in logs:
         op_type = log.operation_type.replace("BATCH_", "")
         by_operation_type[op_type] = by_operation_type.get(op_type, 0) + 1
-    
+
     # 按日期统计
     by_date = {}
     for log in logs:
         date_str = log.operation_time.date().isoformat()
         by_date[date_str] = by_date.get(date_str, 0) + 1
-    
+
     # 最近操作
     recent_operations = []
     for log in logs[:20]:  # 最近20条
@@ -601,7 +613,7 @@ def get_batch_operation_statistics(
             "operation_time": log.operation_time.isoformat(),
             "task_id": log.task_id
         })
-    
+
     return BatchOperationStatistics(
         total_operations=len(logs),
         by_operation_type=by_operation_type,

@@ -3,24 +3,26 @@
 时薪配置管理 API
 """
 
-from typing import Any, List, Optional
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
 from sqlalchemy import desc
+from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User, Role
-from app.models.organization import Department
+from app.core.config import settings
 from app.models.hourly_rate import HourlyRateConfig
-from app.schemas.hourly_rate import (
-    HourlyRateConfigCreate, HourlyRateConfigUpdate, HourlyRateConfigResponse
-)
+from app.models.organization import Department
+from app.models.user import Role, User
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.schemas.hourly_rate import (
+    HourlyRateConfigCreate,
+    HourlyRateConfigResponse,
+    HourlyRateConfigUpdate,
+)
 
 router = APIRouter()
 
@@ -41,7 +43,7 @@ def list_hourly_rate_configs(
     获取时薪配置列表
     """
     query = db.query(HourlyRateConfig)
-    
+
     if config_type:
         query = query.filter(HourlyRateConfig.config_type == config_type)
     if user_id:
@@ -52,11 +54,11 @@ def list_hourly_rate_configs(
         query = query.filter(HourlyRateConfig.dept_id == dept_id)
     if is_active is not None:
         query = query.filter(HourlyRateConfig.is_active == is_active)
-    
+
     total = query.count()
     offset = (page - 1) * page_size
     configs = query.order_by(desc(HourlyRateConfig.created_at)).offset(offset).limit(page_size).all()
-    
+
     items = []
     for config in configs:
         config_dict = {
@@ -66,7 +68,7 @@ def list_hourly_rate_configs(
             "dept_name": config.dept.dept_name if config.dept else None,
         }
         items.append(HourlyRateConfigResponse(**config_dict))
-    
+
     return PaginatedResponse(
         items=items,
         total=total,
@@ -93,7 +95,7 @@ def create_hourly_rate_config(
         raise HTTPException(status_code=400, detail="角色配置必须指定role_id")
     if config_in.config_type == "DEPT" and not config_in.dept_id:
         raise HTTPException(status_code=400, detail="部门配置必须指定dept_id")
-    
+
     # 检查是否已存在相同配置
     existing = None
     if config_in.config_type == "USER" and config_in.user_id:
@@ -119,25 +121,25 @@ def create_hourly_rate_config(
             HourlyRateConfig.config_type == "DEFAULT",
             HourlyRateConfig.is_active == True
         ).first()
-    
+
     if existing:
         raise HTTPException(status_code=400, detail="该配置已存在，请先禁用或删除现有配置")
-    
+
     config_data = config_in.model_dump()
     config_data['created_by'] = current_user.id
-    
+
     config = HourlyRateConfig(**config_data)
     db.add(config)
     db.commit()
     db.refresh(config)
-    
+
     config_dict = {
         **{c.name: getattr(config, c.name) for c in config.__table__.columns},
         "user_name": config.user.real_name if config.user else None,
         "role_name": config.role.role_name if config.role else None,
         "dept_name": config.dept.dept_name if config.dept else None,
     }
-    
+
     return HourlyRateConfigResponse(**config_dict)
 
 
@@ -154,14 +156,14 @@ def get_hourly_rate_config(
     config = db.query(HourlyRateConfig).filter(HourlyRateConfig.id == config_id).first()
     if not config:
         raise HTTPException(status_code=404, detail="时薪配置不存在")
-    
+
     config_dict = {
         **{c.name: getattr(config, c.name) for c in config.__table__.columns},
         "user_name": config.user.real_name if config.user else None,
         "role_name": config.role.role_name if config.role else None,
         "dept_name": config.dept.dept_name if config.dept else None,
     }
-    
+
     return HourlyRateConfigResponse(**config_dict)
 
 
@@ -179,23 +181,23 @@ def update_hourly_rate_config(
     config = db.query(HourlyRateConfig).filter(HourlyRateConfig.id == config_id).first()
     if not config:
         raise HTTPException(status_code=404, detail="时薪配置不存在")
-    
+
     update_data = config_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         if hasattr(config, field):
             setattr(config, field, value)
-    
+
     db.add(config)
     db.commit()
     db.refresh(config)
-    
+
     config_dict = {
         **{c.name: getattr(config, c.name) for c in config.__table__.columns},
         "user_name": config.user.real_name if config.user else None,
         "role_name": config.role.role_name if config.role else None,
         "dept_name": config.dept.dept_name if config.dept else None,
     }
-    
+
     return HourlyRateConfigResponse(**config_dict)
 
 
@@ -212,10 +214,10 @@ def delete_hourly_rate_config(
     config = db.query(HourlyRateConfig).filter(HourlyRateConfig.id == config_id).first()
     if not config:
         raise HTTPException(status_code=404, detail="时薪配置不存在")
-    
+
     db.delete(config)
     db.commit()
-    
+
     return ResponseModel(code=200, message="时薪配置已删除")
 
 
@@ -230,9 +232,10 @@ def get_user_hourly_rate(
     """
     获取用户时薪（按优先级：用户配置 > 角色配置 > 部门配置 > 默认配置）
     """
-    from app.services.hourly_rate_service import HourlyRateService
     from datetime import datetime
-    
+
+    from app.services.hourly_rate_service import HourlyRateService
+
     work_date_obj = None
     if work_date:
         try:
@@ -241,7 +244,7 @@ def get_user_hourly_rate(
             raise HTTPException(status_code=400, detail="日期格式错误，应为YYYY-MM-DD")
 
     hourly_rate = HourlyRateService.get_user_hourly_rate(db, user_id, work_date_obj)
-    
+
     return ResponseModel(
         code=200,
         message="success",
@@ -265,9 +268,10 @@ def get_users_hourly_rates(
     """
     批量获取多个用户的时薪
     """
-    from app.services.hourly_rate_service import HourlyRateService
     from datetime import datetime
-    
+
+    from app.services.hourly_rate_service import HourlyRateService
+
     work_date_obj = None
     if work_date:
         try:
@@ -276,7 +280,7 @@ def get_users_hourly_rates(
             raise HTTPException(status_code=400, detail="日期格式错误，应为YYYY-MM-DD")
 
     hourly_rates = HourlyRateService.get_users_hourly_rates(db, user_ids, work_date_obj)
-    
+
     return ResponseModel(
         code=200,
         message="success",
@@ -304,9 +308,10 @@ def get_hourly_rate_history(
     """
     获取时薪配置历史记录
     """
-    from app.services.hourly_rate_service import HourlyRateService
     from datetime import datetime
-    
+
+    from app.services.hourly_rate_service import HourlyRateService
+
     start_date_obj = None
     if start_date:
         try:
@@ -320,11 +325,11 @@ def get_hourly_rate_history(
             end_date_obj = datetime.strptime(end_date, "%Y-%m-%d").date()
         except ValueError:
             raise HTTPException(status_code=400, detail="结束日期格式错误，应为YYYY-MM-DD")
-    
+
     history = HourlyRateService.get_hourly_rate_history(
         db, user_id, role_id, dept_id, start_date_obj, end_date_obj
     )
-    
+
     # 转换日期为字符串
     for item in history:
         if item.get("effective_date"):
@@ -337,7 +342,7 @@ def get_hourly_rate_history(
             item["updated_at"] = item["updated_at"].isoformat() if hasattr(item["updated_at"], "isoformat") else str(item["updated_at"])
         if item.get("hourly_rate"):
             item["hourly_rate"] = float(item["hourly_rate"])
-    
+
     return ResponseModel(
         code=200,
         message="success",

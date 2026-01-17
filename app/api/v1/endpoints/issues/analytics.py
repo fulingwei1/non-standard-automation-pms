@@ -5,8 +5,9 @@
 包含：看板数据、趋势分析
 """
 
+from datetime import date, datetime, timedelta
 from typing import Any, Optional
-from datetime import datetime, date, timedelta
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
@@ -14,6 +15,7 @@ from app.api import deps
 from app.core import security
 from app.models.issue import Issue
 from app.models.user import User
+from app.services.data_scope_service import DataScopeService
 
 router = APIRouter()
 
@@ -25,7 +27,8 @@ def get_issue_board(
     current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """获取问题看板数据（按状态分组）"""
-    query = db.query(Issue)
+    query = db.query(Issue).filter(Issue.status != 'DELETED')
+    query = DataScopeService.filter_issues_by_scope(db, query, current_user)
 
     if project_id:
         query = query.filter(Issue.project_id == project_id)
@@ -91,6 +94,8 @@ def get_issue_trend(
         Issue.report_date >= datetime.combine(start_date, datetime.min.time()),
         Issue.report_date <= datetime.combine(end_date, datetime.max.time())
     )
+    query = query.filter(Issue.status != 'DELETED')
+    query = DataScopeService.filter_issues_by_scope(db, query, current_user)
 
     if project_id:
         query = query.filter(Issue.project_id == project_id)

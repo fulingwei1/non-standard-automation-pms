@@ -6,25 +6,26 @@ ECN任务管理 API endpoints
 """
 
 import logging
-from typing import Any, List
 from datetime import datetime
+from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 logger = logging.getLogger(__name__)
-from sqlalchemy.orm import Session
 from sqlalchemy import desc
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.user import User
 from app.models.ecn import Ecn, EcnTask
+from app.models.user import User
+from app.schemas.ecn import EcnTaskCreate, EcnTaskResponse
+from app.services.ecn_auto_assign_service import auto_assign_task
 from app.services.ecn_notification_service import (
     notify_task_assigned,
     notify_task_completed,
 )
-from app.services.ecn_auto_assign_service import auto_assign_task
-from app.schemas.ecn import EcnTaskCreate, EcnTaskResponse
+
 from .utils import get_user_display_name
 
 router = APIRouter()

@@ -9,36 +9,52 @@
 售前技术支持 API endpoints
 包含：支持工单管理、技术方案管理、方案模板库、投标管理、售前统计
 """
-from typing import Any, List, Optional, Dict
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, func
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
+from app.models.presale import (
+    PresaleSolution,
+    PresaleSolutionCost,
+    PresaleSolutionTemplate,
+    PresaleSupportTicket,
+    PresaleTenderRecord,
+    PresaleTicketDeliverable,
+    PresaleTicketProgress,
+    PresaleWorkload,
+)
 from app.models.project import Project
 from app.models.sales import Opportunity
-from app.models.presale import (
-    PresaleSupportTicket, PresaleTicketDeliverable, PresaleTicketProgress,
-    PresaleSolution, PresaleSolutionCost, PresaleSolutionTemplate,
-    PresaleTenderRecord, PresaleWorkload
-)
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.presale import (
-    TicketCreate, TicketUpdate, TicketResponse, TicketAcceptRequest,
-    TicketProgressUpdate, DeliverableCreate, DeliverableResponse,
-    TicketRatingRequest, TicketBoardResponse,
-    SolutionCreate, SolutionUpdate, SolutionResponse, SolutionReviewRequest,
+    DeliverableCreate,
+    DeliverableResponse,
     SolutionCostResponse,
-    TemplateCreate, TemplateResponse,
-    TenderCreate, TenderResultUpdate, TenderResponse
+    SolutionCreate,
+    SolutionResponse,
+    SolutionReviewRequest,
+    SolutionUpdate,
+    TemplateCreate,
+    TemplateResponse,
+    TenderCreate,
+    TenderResponse,
+    TenderResultUpdate,
+    TicketAcceptRequest,
+    TicketBoardResponse,
+    TicketCreate,
+    TicketProgressUpdate,
+    TicketRatingRequest,
+    TicketResponse,
+    TicketUpdate,
 )
-from app.models.presale import PresaleSolutionTemplate
-from app.schemas.common import ResponseModel, PaginatedResponse
 
 router = APIRouter()
 
@@ -120,7 +136,7 @@ def read_tickets(
     工单列表
     """
     query = db.query(PresaleSupportTicket)
-    
+
     if keyword:
         query = query.filter(
             or_(
@@ -128,26 +144,26 @@ def read_tickets(
                 PresaleSupportTicket.title.like(f"%{keyword}%"),
             )
         )
-    
+
     if status:
         query = query.filter(PresaleSupportTicket.status == status)
-    
+
     if ticket_type:
         query = query.filter(PresaleSupportTicket.ticket_type == ticket_type)
-    
+
     if applicant_id:
         query = query.filter(PresaleSupportTicket.applicant_id == applicant_id)
-    
+
     if assignee_id:
         query = query.filter(PresaleSupportTicket.assignee_id == assignee_id)
-    
+
     if customer_id:
         query = query.filter(PresaleSupportTicket.customer_id == customer_id)
-    
+
     total = query.count()
     offset = (page - 1) * page_size
     tickets = query.order_by(desc(PresaleSupportTicket.created_at)).offset(offset).limit(page_size).all()
-    
+
     items = []
     for ticket in tickets:
         items.append(TicketResponse(
@@ -178,7 +194,7 @@ def read_tickets(
             created_at=ticket.created_at,
             updated_at=ticket.updated_at,
         ))
-    
+
     return PaginatedResponse(
         items=items,
         total=total,
@@ -217,11 +233,11 @@ def create_ticket(
         status='PENDING',
         created_by=current_user.id
     )
-    
+
     db.add(ticket)
     db.commit()
     db.refresh(ticket)
-    
+
     return TicketResponse(
         id=ticket.id,
         ticket_no=ticket.ticket_no,
@@ -265,7 +281,7 @@ def read_ticket(
     ticket = db.query(PresaleSupportTicket).filter(PresaleSupportTicket.id == ticket_id).first()
     if not ticket:
         raise HTTPException(status_code=404, detail="工单不存在")
-    
+
     return TicketResponse(
         id=ticket.id,
         ticket_no=ticket.ticket_no,
@@ -310,24 +326,24 @@ def accept_ticket(
     ticket = db.query(PresaleSupportTicket).filter(PresaleSupportTicket.id == ticket_id).first()
     if not ticket:
         raise HTTPException(status_code=404, detail="工单不存在")
-    
+
     if ticket.status != 'PENDING':
         raise HTTPException(status_code=400, detail="只有待处理状态的工单才能接单")
-    
+
     assignee_id = accept_request.assignee_id or current_user.id
     assignee = db.query(User).filter(User.id == assignee_id).first()
     if not assignee:
         raise HTTPException(status_code=404, detail="处理人不存在")
-    
+
     ticket.assignee_id = assignee_id
     ticket.assignee_name = assignee.real_name or assignee.username
     ticket.accept_time = datetime.now()
     ticket.status = 'ACCEPTED'
-    
+
     db.add(ticket)
     db.commit()
     db.refresh(ticket)
-    
+
     return read_ticket(db=db, ticket_id=ticket_id, current_user=current_user)
 
 
@@ -345,12 +361,12 @@ def update_ticket_progress(
     ticket = db.query(PresaleSupportTicket).filter(PresaleSupportTicket.id == ticket_id).first()
     if not ticket:
         raise HTTPException(status_code=404, detail="工单不存在")
-    
+
     if ticket.status not in ['ACCEPTED', 'IN_PROGRESS']:
         raise HTTPException(status_code=400, detail="只有已接单或进行中的工单才能更新进度")
-    
+
     ticket.status = 'IN_PROGRESS'
-    
+
     # 记录进度
     progress = PresaleTicketProgress(
         ticket_id=ticket_id,
@@ -360,11 +376,11 @@ def update_ticket_progress(
         updated_at=datetime.now()
     )
     db.add(progress)
-    
+
     db.add(ticket)
     db.commit()
     db.refresh(ticket)
-    
+
     return read_ticket(db=db, ticket_id=ticket_id, current_user=current_user)
 
 
@@ -382,7 +398,7 @@ def create_deliverable(
     ticket = db.query(PresaleSupportTicket).filter(PresaleSupportTicket.id == ticket_id).first()
     if not ticket:
         raise HTTPException(status_code=404, detail="工单不存在")
-    
+
     deliverable = PresaleTicketDeliverable(
         ticket_id=ticket_id,
         deliverable_name=deliverable_in.deliverable_name,
@@ -392,11 +408,11 @@ def create_deliverable(
         description=deliverable_in.description,
         created_by=current_user.id
     )
-    
+
     db.add(deliverable)
     db.commit()
     db.refresh(deliverable)
-    
+
     return DeliverableResponse(
         id=deliverable.id,
         ticket_id=deliverable.ticket_id,
@@ -424,16 +440,16 @@ def complete_ticket(
     ticket = db.query(PresaleSupportTicket).filter(PresaleSupportTicket.id == ticket_id).first()
     if not ticket:
         raise HTTPException(status_code=404, detail="工单不存在")
-    
+
     ticket.status = 'COMPLETED'
     ticket.complete_time = datetime.now()
     if actual_hours:
         ticket.actual_hours = Decimal(str(actual_hours))
-    
+
     db.add(ticket)
     db.commit()
     db.refresh(ticket)
-    
+
     return read_ticket(db=db, ticket_id=ticket_id, current_user=current_user)
 
 
@@ -451,17 +467,17 @@ def rate_ticket(
     ticket = db.query(PresaleSupportTicket).filter(PresaleSupportTicket.id == ticket_id).first()
     if not ticket:
         raise HTTPException(status_code=404, detail="工单不存在")
-    
+
     if ticket.applicant_id != current_user.id:
         raise HTTPException(status_code=403, detail="只有申请人才能评价")
-    
+
     ticket.satisfaction_score = rating_request.satisfaction_score
     ticket.feedback = rating_request.feedback
-    
+
     db.add(ticket)
     db.commit()
     db.refresh(ticket)
-    
+
     return read_ticket(db=db, ticket_id=ticket_id, current_user=current_user)
 
 
@@ -475,17 +491,17 @@ def get_ticket_board(
     工单看板
     """
     query = db.query(PresaleSupportTicket)
-    
+
     if assignee_id:
         query = query.filter(PresaleSupportTicket.assignee_id == assignee_id)
-    
+
     tickets = query.order_by(PresaleSupportTicket.created_at).all()
-    
+
     pending = []
     accepted = []
     in_progress = []
     completed = []
-    
+
     for ticket in tickets:
         ticket_resp = TicketResponse(
             id=ticket.id,
@@ -515,7 +531,7 @@ def get_ticket_board(
             created_at=ticket.created_at,
             updated_at=ticket.updated_at,
         )
-        
+
         if ticket.status == 'PENDING':
             pending.append(ticket_resp)
         elif ticket.status == 'ACCEPTED':
@@ -524,7 +540,7 @@ def get_ticket_board(
             in_progress.append(ticket_resp)
         elif ticket.status == 'COMPLETED':
             completed.append(ticket_resp)
-    
+
     return TicketBoardResponse(
         pending=pending,
         accepted=accepted,

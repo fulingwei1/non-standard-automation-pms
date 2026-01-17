@@ -10,31 +10,43 @@
 核心功能：多来源任务聚合、智能排序、转办协作
 """
 
-from typing import Any, List, Optional, Dict
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from sqlalchemy import and_, case, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, and_, func, case
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User
-from app.models.project import Project
+from app.core.config import settings
 from app.models.notification import Notification
-from app.services.sales_reminder_service import create_notification
+from app.models.project import Project
 from app.models.task_center import (
-    TaskUnified, TaskComment, TaskOperationLog, TaskReminder, JobDutyTemplate
+    JobDutyTemplate,
+    TaskComment,
+    TaskOperationLog,
+    TaskReminder,
+    TaskUnified,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.task_center import (
-    TaskOverviewResponse, TaskUnifiedCreate, TaskUnifiedUpdate, TaskUnifiedResponse,
-    TaskUnifiedListResponse, TaskProgressUpdate, TaskTransferRequest,
-    TaskCommentCreate, TaskCommentResponse, BatchTaskOperation, BatchOperationResponse,
-    BatchOperationStatistics
+    BatchOperationResponse,
+    BatchOperationStatistics,
+    BatchTaskOperation,
+    TaskCommentCreate,
+    TaskCommentResponse,
+    TaskOverviewResponse,
+    TaskProgressUpdate,
+    TaskTransferRequest,
+    TaskUnifiedCreate,
+    TaskUnifiedListResponse,
+    TaskUnifiedResponse,
+    TaskUnifiedUpdate,
 )
+from app.services.sales_reminder import create_notification
 
 router = APIRouter()
 
@@ -42,7 +54,7 @@ router = APIRouter()
 def generate_task_code(db: Session) -> str:
     """生成任务编号：TASK-yymmdd-xxx"""
     from app.utils.number_generator import generate_sequential_no
-    
+
     return generate_sequential_no(
         db=db,
         model_class=TaskUnified,
@@ -102,22 +114,22 @@ def get_task_overview(
     user_id = current_user.id
     today = datetime.now().date()
     week_start = today - timedelta(days=today.weekday())
-    
+
     # 总任务数
     total_tasks = db.query(TaskUnified).filter(TaskUnified.assignee_id == user_id).count()
-    
+
     # 待接收任务（转办任务）
     pending_tasks = db.query(TaskUnified).filter(
         TaskUnified.assignee_id == user_id,
         TaskUnified.status == "PENDING"
     ).count()
-    
+
     # 进行中任务
     in_progress_tasks = db.query(TaskUnified).filter(
         TaskUnified.assignee_id == user_id,
         TaskUnified.status == "IN_PROGRESS"
     ).count()
-    
+
     # 逾期任务
     today_str = today.strftime("%Y-%m-%d")
     overdue_tasks = db.query(TaskUnified).filter(
@@ -126,21 +138,21 @@ def get_task_overview(
         TaskUnified.deadline.isnot(None),
         func.date(TaskUnified.deadline) < today_str
     ).count()
-    
+
     # 本周任务
     this_week_tasks = db.query(TaskUnified).filter(
         TaskUnified.assignee_id == user_id,
         TaskUnified.plan_start_date >= week_start,
         TaskUnified.plan_start_date <= week_start + timedelta(days=6)
     ).count()
-    
+
     # 紧急任务
     urgent_tasks = db.query(TaskUnified).filter(
         TaskUnified.assignee_id == user_id,
         TaskUnified.status.in_(["PENDING", "ACCEPTED", "IN_PROGRESS"]),
         or_(TaskUnified.is_urgent == True, TaskUnified.priority == "URGENT")
     ).count()
-    
+
     # 按状态统计
     status_stats = {}
     status_counts = (
@@ -151,7 +163,7 @@ def get_task_overview(
     )
     for status, count in status_counts:
         status_stats[status] = count
-    
+
     # 按优先级统计
     priority_stats = {}
     priority_counts = (
@@ -162,7 +174,7 @@ def get_task_overview(
     )
     for priority, count in priority_counts:
         priority_stats[priority] = count
-    
+
     # 按类型统计
     type_stats = {}
     type_counts = (
@@ -173,7 +185,7 @@ def get_task_overview(
     )
     for task_type, count in type_counts:
         type_stats[task_type] = count
-    
+
     return TaskOverviewResponse(
         total_tasks=total_tasks,
         pending_tasks=pending_tasks,

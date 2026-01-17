@@ -5,17 +5,17 @@
 包含：项目概览、仪表盘、在产项目汇总、项目时间线等
 """
 
-from typing import Any, Optional
 from datetime import date, timedelta
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query, status
-from sqlalchemy.orm import Session
 from sqlalchemy import desc
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.models.project import Machine, Project, ProjectMilestone, ProjectStatusLog
 from app.models.user import User
-from app.models.project import Project, Machine, ProjectStatusLog, ProjectMilestone
 from app.schemas.common import ResponseModel
 
 router = APIRouter()

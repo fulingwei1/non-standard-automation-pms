@@ -5,23 +5,27 @@ ECN受影响物料/订单管理 API endpoints
 包含：受影响物料CRUD、受影响订单CRUD
 """
 
-from typing import Any, List
 from datetime import datetime
 from decimal import Decimal
+from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
 from sqlalchemy import func
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.user import User
 from app.models.ecn import Ecn, EcnAffectedMaterial, EcnAffectedOrder
-from app.schemas.ecn import (
-    EcnAffectedMaterialCreate, EcnAffectedMaterialUpdate, EcnAffectedMaterialResponse,
-    EcnAffectedOrderCreate, EcnAffectedOrderUpdate, EcnAffectedOrderResponse
-)
+from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.schemas.ecn import (
+    EcnAffectedMaterialCreate,
+    EcnAffectedMaterialResponse,
+    EcnAffectedMaterialUpdate,
+    EcnAffectedOrderCreate,
+    EcnAffectedOrderResponse,
+    EcnAffectedOrderUpdate,
+)
 
 router = APIRouter()
 

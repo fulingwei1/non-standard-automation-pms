@@ -4,20 +4,21 @@
 包含：批量更新任务进度、批量分配任务负责人
 """
 
-from typing import Any
 from datetime import date
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.models.progress import ProgressLog, Task
 from app.models.user import User
-from app.models.progress import Task, ProgressLog
-from app.schemas.progress import (
-    BatchTaskProgressUpdate, BatchTaskAssigneeUpdate,
-)
 from app.schemas.common import ResponseModel
+from app.schemas.progress import (
+    BatchTaskAssigneeUpdate,
+    BatchTaskProgressUpdate,
+)
 
 router = APIRouter()
 

@@ -3,30 +3,34 @@
 文化墙 API endpoints
 包含：文化墙内容、个人目标、文化墙汇总
 """
-from typing import Any, List, Optional
 from datetime import date, datetime, timedelta
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, and_, or_, func
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
 from app.models.culture_wall import (
     CultureWallContent,
+    CultureWallReadRecord,
     PersonalGoal,
-    CultureWallReadRecord
 )
 from app.models.culture_wall_config import CultureWallConfig
 from app.models.notification import Notification
-from app.schemas.culture_wall import (
-    CultureWallContentCreate, CultureWallContentUpdate, CultureWallContentResponse,
-    PersonalGoalCreate, PersonalGoalUpdate, PersonalGoalResponse,
-    CultureWallSummary
-)
+from app.models.user import User
 from app.schemas.common import PaginatedResponse
+from app.schemas.culture_wall import (
+    CultureWallContentCreate,
+    CultureWallContentResponse,
+    CultureWallContentUpdate,
+    CultureWallSummary,
+    PersonalGoalCreate,
+    PersonalGoalResponse,
+    PersonalGoalUpdate,
+)
 
 router = APIRouter()
 
@@ -43,25 +47,29 @@ def get_culture_wall_summary(
     根据配置过滤内容和角色
     """
     from app.services.culture_wall_service import (
-        get_culture_wall_config,
-        check_user_role_permission,
-        get_content_types_config,
         build_content_query,
-        query_content_by_type,
-        get_read_records,
+        check_user_role_permission,
         format_content,
-        get_personal_goals,
         format_goal,
-        get_notifications
+        get_content_types_config,
+        get_culture_wall_config,
+        get_notifications,
+        get_personal_goals,
+        get_read_records,
+        query_content_by_type,
     )
-    
+
     today = date.today()
-    
+
     # 获取配置
     config = get_culture_wall_config(db)
-    
-    # 检查角色权限
-    user_role = current_user.role or ''
+
+    # 检查角色权限 - 获取用户的第一个角色代码
+    user_roles = list(current_user.roles)
+    user_role = ''
+    if user_roles:
+        role_obj = user_roles[0].role
+        user_role = role_obj.role_code if role_obj else ''
     if not check_user_role_permission(config, user_role):
         # 如果用户角色不在可见列表中，返回空数据
         return CultureWallSummary(
@@ -73,31 +81,31 @@ def get_culture_wall_summary(
             personal_goals=[],
             notifications=[],
         )
-    
+
     # 获取内容类型配置
     content_types_config = get_content_types_config(config)
-    
+
     # 构建内容查询
     content_query = build_content_query(db, today)
-    
+
     # 按类型查询内容
     strategies = query_content_by_type(content_query, 'STRATEGY', content_types_config)
     cultures = query_content_by_type(content_query, 'CULTURE', content_types_config)
     important_items = query_content_by_type(content_query, 'IMPORTANT', content_types_config)
     notices = query_content_by_type(content_query, 'NOTICE', content_types_config)
     rewards = query_content_by_type(content_query, 'REWARD', content_types_config)
-    
+
     # 检查阅读状态
     all_contents = strategies + cultures + important_items + notices + rewards
     content_ids = [c.id for c in all_contents]
     read_records = get_read_records(db, content_ids, current_user.id)
-    
+
     # 获取个人目标
     personal_goals = get_personal_goals(db, current_user.id, today, content_types_config)
-    
+
     # 获取系统通知
     notification_list = get_notifications(db, current_user.id, content_types_config)
-    
+
     return CultureWallSummary(
         strategies=[format_content(c, read_records) for c in strategies],
         cultures=[format_content(c, read_records) for c in cultures],
@@ -125,13 +133,13 @@ def read_culture_wall_contents(
     获取文化墙内容列表
     """
     query = db.query(CultureWallContent)
-    
+
     if content_type:
         query = query.filter(CultureWallContent.content_type == content_type)
-    
+
     if is_published is not None:
         query = query.filter(CultureWallContent.is_published == is_published)
-    
+
     if keyword:
         query = query.filter(
             or_(
@@ -140,11 +148,11 @@ def read_culture_wall_contents(
                 CultureWallContent.summary.like(f"%{keyword}%")
             )
         )
-    
+
     total = query.count()
     offset = (page - 1) * page_size
     contents = query.order_by(desc(CultureWallContent.priority), desc(CultureWallContent.created_at)).offset(offset).limit(page_size).all()
-    
+
     items = []
     for content in contents:
         items.append(CultureWallContentResponse(
@@ -171,7 +179,7 @@ def read_culture_wall_contents(
             updated_at=content.updated_at,
             is_read=False,
         ))
-    
+
     return PaginatedResponse(
         items=items,
         total=total,
@@ -209,11 +217,11 @@ def create_culture_wall_content(
         published_by_name=current_user.real_name if content_data.is_published else None,
         created_by=current_user.id,
     )
-    
+
     db.add(content)
     db.commit()
     db.refresh(content)
-    
+
     return CultureWallContentResponse(
         id=content.id,
         content_type=content.content_type,
@@ -252,10 +260,10 @@ def read_culture_wall_content(
     content = db.query(CultureWallContent).filter(CultureWallContent.id == content_id).first()
     if not content:
         raise HTTPException(status_code=404, detail="内容不存在")
-    
+
     # 增加浏览次数
     content.view_count = (content.view_count or 0) + 1
-    
+
     # 记录阅读
     read_record = db.query(CultureWallReadRecord).filter(
         and_(
@@ -263,7 +271,7 @@ def read_culture_wall_content(
             CultureWallReadRecord.user_id == current_user.id
         )
     ).first()
-    
+
     if not read_record:
         read_record = CultureWallReadRecord(
             content_id=content_id,
@@ -271,12 +279,12 @@ def read_culture_wall_content(
             read_at=datetime.now(),
         )
         db.add(read_record)
-    
+
     db.commit()
-    
+
     # 检查是否已读
     is_read = read_record is not None
-    
+
     return CultureWallContentResponse(
         id=content.id,
         content_type=content.content_type,
@@ -316,15 +324,15 @@ def read_personal_goals(
     获取个人目标列表
     """
     query = db.query(PersonalGoal).filter(PersonalGoal.user_id == current_user.id)
-    
+
     if goal_type:
         query = query.filter(PersonalGoal.goal_type == goal_type)
-    
+
     if period:
         query = query.filter(PersonalGoal.period == period)
-    
+
     goals = query.order_by(desc(PersonalGoal.created_at)).all()
-    
+
     return [
         PersonalGoalResponse(
             id=goal.id,
@@ -372,11 +380,11 @@ def create_personal_goal(
         notes=goal_data.notes,
         created_by=current_user.id,
     )
-    
+
     db.add(goal)
     db.commit()
     db.refresh(goal)
-    
+
     return PersonalGoalResponse(
         id=goal.id,
         user_id=goal.user_id,
@@ -415,24 +423,24 @@ def update_personal_goal(
             PersonalGoal.user_id == current_user.id
         )
     ).first()
-    
+
     if not goal:
         raise HTTPException(status_code=404, detail="目标不存在")
-    
+
     update_data = goal_data.dict(exclude_unset=True)
     for field, value in update_data.items():
         setattr(goal, field, value)
-    
+
     # 如果状态更新为已完成，自动设置完成日期
     if goal_data.status == 'COMPLETED' and not goal.completed_date:
         goal.completed_date = date.today()
         # 自动计算进度为100%
         if goal.progress < 100:
             goal.progress = 100
-    
+
     db.commit()
     db.refresh(goal)
-    
+
     return PersonalGoalResponse(
         id=goal.id,
         user_id=goal.user_id,

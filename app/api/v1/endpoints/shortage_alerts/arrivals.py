@@ -4,54 +4,46 @@
 从 shortage_alerts.py 拆分
 """
 
+from datetime import date, datetime
+from decimal import Decimal
 from typing import Any, List, Optional
 
-from datetime import date, datetime
-
-from decimal import Decimal
-
-from fastapi import APIRouter, Depends, HTTPException, Query, Body
-
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from sqlalchemy import desc, func, or_
 from sqlalchemy.orm import Session
 
-from sqlalchemy import desc, or_, func
-
 from app.api import deps
-
-from app.core.config import settings
-
 from app.core import security
-
-from app.models.user import User
-
-from app.models.material import MaterialShortage, Material, BomItem
-
-from app.models.project import Project, Machine
-
+from app.core.config import settings
+from app.models.material import BomItem, Material, MaterialShortage
+from app.models.production import WorkOrder
+from app.models.project import Machine, Project
+from app.models.purchase import PurchaseOrder, PurchaseOrderItem
 from app.models.shortage import (
-    ShortageReport,
-    MaterialArrival,
     ArrivalFollowUp,
+    MaterialArrival,
     MaterialSubstitution,
     MaterialTransfer,
+    ShortageReport,
 )
-from app.models.purchase import PurchaseOrder, PurchaseOrderItem
-from app.models.production import WorkOrder
-from app.schemas.common import ResponseModel, PaginatedResponse
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.shortage import (
-    ShortageReportCreate,
-    ShortageReportResponse,
-    ShortageReportListResponse,
-    MaterialArrivalResponse,
-    MaterialArrivalListResponse,
     ArrivalFollowUpCreate,
+    MaterialArrivalListResponse,
+    MaterialArrivalResponse,
     MaterialSubstitutionCreate,
-    MaterialSubstitutionResponse,
     MaterialSubstitutionListResponse,
+    MaterialSubstitutionResponse,
     MaterialTransferCreate,
-    MaterialTransferResponse,
     MaterialTransferListResponse,
+    MaterialTransferResponse,
+    ShortageReportCreate,
+    ShortageReportListResponse,
+    ShortageReportResponse,
 )
+
+from .utils import generate_arrival_no
 
 router = APIRouter(tags=["arrivals"])
 
@@ -72,7 +64,7 @@ def read_material_arrivals(
     到货跟踪列表
     """
     query = db.query(MaterialArrival)
-    
+
     if shortage_report_id:
         query = query.filter(MaterialArrival.shortage_report_id == shortage_report_id)
     if purchase_order_id:
@@ -81,18 +73,18 @@ def read_material_arrivals(
         query = query.filter(MaterialArrival.status == status)
     if is_delayed is not None:
         query = query.filter(MaterialArrival.is_delayed == is_delayed)
-    
+
     total = query.count()
     offset = (page - 1) * page_size
     arrivals = query.order_by(MaterialArrival.expected_date).offset(offset).limit(page_size).all()
-    
+
     items = []
     for arrival in arrivals:
         from app.models.material import Supplier
         supplier = None
         if arrival.supplier_id:
             supplier = db.query(Supplier).filter(Supplier.id == arrival.supplier_id).first()
-        
+
         items.append(MaterialArrivalResponse(
             id=arrival.id,
             arrival_no=arrival.arrival_no,
@@ -117,7 +109,7 @@ def read_material_arrivals(
             created_at=arrival.created_at,
             updated_at=arrival.updated_at
         ))
-    
+
     return PaginatedResponse(
         items=items,
         total=total,
@@ -145,27 +137,27 @@ def create_material_arrival(
     material = db.query(Material).filter(Material.id == material_id).first()
     if not material:
         raise HTTPException(status_code=404, detail="物料不存在")
-    
+
     purchase_order_id = None
     if purchase_order_item_id:
         po_item = db.query(PurchaseOrderItem).filter(PurchaseOrderItem.id == purchase_order_item_id).first()
         if not po_item:
             raise HTTPException(status_code=404, detail="采购订单明细不存在")
         purchase_order_id = po_item.order_id
-    
+
     if shortage_report_id:
         report = db.query(ShortageReport).filter(ShortageReport.id == shortage_report_id).first()
         if not report:
             raise HTTPException(status_code=404, detail="缺料上报不存在")
-    
+
     from app.models.material import Supplier
     supplier_name = None
     if supplier_id:
         supplier = db.query(Supplier).filter(Supplier.id == supplier_id).first()
         supplier_name = supplier.supplier_name if supplier else None
-    
+
     arrival_no = generate_arrival_no(db)
-    
+
     arrival = MaterialArrival(
         arrival_no=arrival_no,
         shortage_report_id=shortage_report_id,
@@ -180,11 +172,11 @@ def create_material_arrival(
         expected_date=expected_date,
         status="PENDING"
     )
-    
+
     db.add(arrival)
     db.commit()
     db.refresh(arrival)
-    
+
     return read_material_arrival(arrival.id, db, current_user)
 
 
@@ -200,12 +192,12 @@ def read_material_arrival(
     arrival = db.query(MaterialArrival).filter(MaterialArrival.id == arrival_id).first()
     if not arrival:
         raise HTTPException(status_code=404, detail="到货跟踪不存在")
-    
+
     from app.models.material import Supplier
     supplier = None
     if arrival.supplier_id:
         supplier = db.query(Supplier).filter(Supplier.id == arrival.supplier_id).first()
-    
+
     return MaterialArrivalResponse(
         id=arrival.id,
         arrival_no=arrival.arrival_no,
@@ -246,20 +238,20 @@ def update_arrival_status(
     arrival = db.query(MaterialArrival).filter(MaterialArrival.id == arrival_id).first()
     if not arrival:
         raise HTTPException(status_code=404, detail="到货跟踪不存在")
-    
+
     arrival.status = status
-    
+
     # 如果标记为延迟，计算延迟天数
     if status == "DELAYED" and arrival.expected_date:
         today = datetime.now().date()
         if today > arrival.expected_date:
             arrival.is_delayed = True
             arrival.delay_days = (today - arrival.expected_date).days
-    
+
     db.add(arrival)
     db.commit()
     db.refresh(arrival)
-    
+
     return read_material_arrival(arrival_id, db, current_user)
 
 
@@ -277,7 +269,7 @@ def create_arrival_follow_up(
     arrival = db.query(MaterialArrival).filter(MaterialArrival.id == arrival_id).first()
     if not arrival:
         raise HTTPException(status_code=404, detail="到货跟踪不存在")
-    
+
     follow_up = ArrivalFollowUp(
         arrival_id=arrival_id,
         follow_up_type=follow_up_in.follow_up_type,
@@ -286,14 +278,14 @@ def create_arrival_follow_up(
         next_follow_up_date=follow_up_in.next_follow_up_date,
         followed_by=current_user.id
     )
-    
+
     arrival.follow_up_count = (arrival.follow_up_count or 0) + 1
     arrival.last_follow_up_at = datetime.now()
-    
+
     db.add(follow_up)
     db.add(arrival)
     db.commit()
-    
+
     return ResponseModel(message="跟催记录创建成功")
 
 
@@ -311,25 +303,24 @@ def receive_material_arrival(
     arrival = db.query(MaterialArrival).filter(MaterialArrival.id == arrival_id).first()
     if not arrival:
         raise HTTPException(status_code=404, detail="到货跟踪不存在")
-    
+
     if arrival.status == "RECEIVED":
         raise HTTPException(status_code=400, detail="已经收货")
-    
+
     arrival.status = "RECEIVED"
     arrival.received_qty = received_qty
     arrival.received_by = current_user.id
     arrival.received_at = datetime.now()
     arrival.actual_date = datetime.now().date()
-    
+
     # 更新延迟状态
     if arrival.expected_date and arrival.actual_date > arrival.expected_date:
         arrival.is_delayed = True
         arrival.delay_days = (arrival.actual_date - arrival.expected_date).days
-    
+
     db.add(arrival)
     db.commit()
     db.refresh(arrival)
-    
-    return read_material_arrival(arrival_id, db, current_user)
 
+    return read_material_arrival(arrival_id, db, current_user)
 

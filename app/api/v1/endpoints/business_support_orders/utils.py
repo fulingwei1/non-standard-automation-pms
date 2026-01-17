@@ -7,23 +7,27 @@
 
 import json
 import logging
-from typing import Optional, List
 from datetime import datetime
 from decimal import Decimal
+from typing import List, Optional
 
-from sqlalchemy.orm import Session
 from sqlalchemy import desc
+from sqlalchemy.orm import Session
 
-from app.models.user import User
-from app.models.project import ProjectMember
-from app.models.organization import Department
 from app.models.business_support import (
-    SalesOrder, DeliveryOrder, InvoiceRequest,
-    CustomerSupplierRegistration, Reconciliation
+    CustomerSupplierRegistration,
+    DeliveryOrder,
+    InvoiceRequest,
+    Reconciliation,
+    SalesOrder,
 )
+from app.models.organization import Department
+from app.models.project import ProjectMember
 from app.models.sales import Invoice
+from app.models.user import User
 from app.schemas.business_support import (
-    InvoiceRequestResponse, CustomerSupplierRegistrationResponse
+    CustomerSupplierRegistrationResponse,
+    InvoiceRequestResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -109,7 +113,7 @@ def _send_project_department_notifications(
     ).all()
 
     # 根据角色分类发送通知
-    from app.models.user import UserRole, Role
+    from app.models.user import Role, UserRole
 
     # 获取相关部门的ID
     dept_mapping = {

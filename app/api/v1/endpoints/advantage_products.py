@@ -5,26 +5,31 @@
 
 import io
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Query
-from sqlalchemy.orm import Session
+
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from sqlalchemy import func, or_
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.models.advantage_product import (
+    DEFAULT_CATEGORIES,
+    AdvantageProduct,
+    AdvantageProductCategory,
+)
 from app.models.user import User
-from app.models.advantage_product import AdvantageProduct, AdvantageProductCategory, DEFAULT_CATEGORIES
 from app.schemas.advantage_product import (
     AdvantageProductCategoryCreate,
-    AdvantageProductCategoryUpdate,
     AdvantageProductCategoryResponse,
+    AdvantageProductCategoryUpdate,
     AdvantageProductCreate,
-    AdvantageProductUpdate,
-    AdvantageProductResponse,
-    AdvantageProductSimple,
     AdvantageProductGrouped,
     AdvantageProductImportResult,
+    AdvantageProductResponse,
+    AdvantageProductSimple,
+    AdvantageProductUpdate,
     ProductMatchCheckRequest,
-    ProductMatchCheckResponse
+    ProductMatchCheckResponse,
 )
 
 router = APIRouter()
@@ -417,9 +422,9 @@ async def import_from_excel(
         clear_existing_data,
         ensure_categories_exist,
         parse_product_from_cell,
-        process_product_row
+        process_product_row,
     )
-    
+
     try:
         import pandas as pd
     except ImportError:
@@ -465,7 +470,7 @@ async def import_from_excel(
 
                 # 检查是否是系列编号
                 product_code, product_name = parse_product_from_cell(cell_str, current_series, row_idx, col_idx)
-                
+
                 if product_code is None:
                     current_series = product_name
                     continue
@@ -474,7 +479,7 @@ async def import_from_excel(
                 is_created, is_updated, is_skipped = process_product_row(
                     db, product_code, product_name, category_id, current_series, clear_existing
                 )
-                
+
                 if is_created:
                     products_created += 1
                 elif is_updated:

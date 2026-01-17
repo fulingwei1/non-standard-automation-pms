@@ -9,46 +9,81 @@
 奖金激励模块 API 端点
 """
 
-from typing import Any, List, Optional, Tuple
-from datetime import datetime, date
-from decimal import Decimal
-
-from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File, Form
-from fastapi.responses import FileResponse
-from sqlalchemy.orm import Session
-from sqlalchemy import desc, func
-import os
 import io
+import os
 import uuid
+from datetime import date, datetime
+from decimal import Decimal
 from pathlib import Path
+from typing import Any, List, Optional, Tuple
+
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    UploadFile,
+    status,
+)
+from fastapi.responses import FileResponse
+from sqlalchemy import desc, func
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
 from app.models.bonus import (
-    BonusRule, BonusCalculation, BonusDistribution, TeamBonusAllocation, BonusAllocationSheet
+    BonusAllocationSheet,
+    BonusCalculation,
+    BonusDistribution,
+    BonusRule,
+    TeamBonusAllocation,
 )
-from app.models.performance import PerformanceResult, ProjectContribution, PerformancePeriod
+from app.models.performance import (
+    PerformancePeriod,
+    PerformanceResult,
+    ProjectContribution,
+)
+from app.models.presale import PresaleSupportTicket
 from app.models.project import Project, ProjectMilestone
 from app.models.sales import Contract, Invoice
-from app.models.presale import PresaleSupportTicket
+from app.models.user import User
 from app.schemas.bonus import (
-    BonusRuleCreate, BonusRuleUpdate, BonusRuleResponse, BonusRuleListResponse,
-    BonusCalculationCreate, BonusCalculationResponse, BonusCalculationListResponse,
-    BonusCalculationApprove, BonusCalculationQuery,
-    BonusDistributionCreate, BonusDistributionResponse, BonusDistributionListResponse,
-    BonusDistributionPay, BonusDistributionQuery,
-    TeamBonusAllocationCreate, TeamBonusAllocationResponse, TeamBonusAllocationListResponse,
+    BonusAllocationRow,
+    BonusAllocationSheetConfirm,
+    BonusAllocationSheetResponse,
+    BonusCalculationApprove,
+    BonusCalculationCreate,
+    BonusCalculationListResponse,
+    BonusCalculationQuery,
+    BonusCalculationResponse,
+    BonusDistributionCreate,
+    BonusDistributionListResponse,
+    BonusDistributionPay,
+    BonusDistributionQuery,
+    BonusDistributionResponse,
+    BonusRuleCreate,
+    BonusRuleListResponse,
+    BonusRuleResponse,
+    BonusRuleUpdate,
+    BonusStatisticsResponse,
+    CalculateMilestoneBonusRequest,
+    CalculatePerformanceBonusRequest,
+    CalculatePresaleBonusRequest,
+    CalculateProjectBonusRequest,
+    CalculateSalesBonusRequest,
+    CalculateSalesDirectorBonusRequest,
+    CalculateTeamBonusRequest,
+    MyBonusResponse,
     TeamBonusAllocationApprove,
-    CalculatePerformanceBonusRequest, CalculateProjectBonusRequest,
-    CalculateMilestoneBonusRequest, CalculateTeamBonusRequest,
-    CalculateSalesBonusRequest, CalculateSalesDirectorBonusRequest, CalculatePresaleBonusRequest,
-    MyBonusResponse, BonusStatisticsResponse,
-    BonusAllocationSheetResponse, BonusAllocationSheetConfirm, BonusAllocationRow
+    TeamBonusAllocationCreate,
+    TeamBonusAllocationListResponse,
+    TeamBonusAllocationResponse,
 )
-from app.schemas.common import ResponseModel, PageParams
-from app.services.bonus_calculator import BonusCalculator
+from app.schemas.common import PageParams, ResponseModel
+from app.services.bonus import BonusCalculator
 
 router = APIRouter()
 
@@ -90,12 +125,12 @@ def create_bonus_rule(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"规则编码 {rule_in.rule_code} 已存在"
         )
-    
+
     rule = BonusRule(**rule_in.model_dump())
     db.add(rule)
     db.commit()
     db.refresh(rule)
-    
+
     return ResponseModel(code=200, message="创建成功", data=rule)
 
 
@@ -113,17 +148,17 @@ def get_bonus_rules(
     获取奖金规则列表
     """
     query = db.query(BonusRule)
-    
+
     if bonus_type:
         query = query.filter(BonusRule.bonus_type == bonus_type)
     if is_active is not None:
         query = query.filter(BonusRule.is_active == is_active)
-    
+
     total = query.count()
     rules = query.order_by(desc(BonusRule.priority), desc(BonusRule.created_at)).offset(
         (page - 1) * page_size
     ).limit(page_size).all()
-    
+
     return BonusRuleListResponse(
         items=rules,
         total=total,
@@ -146,7 +181,7 @@ def get_bonus_rule(
     rule = db.query(BonusRule).filter(BonusRule.id == rule_id).first()
     if not rule:
         raise HTTPException(status_code=404, detail="规则不存在")
-    
+
     return ResponseModel(code=200, data=rule)
 
 
@@ -164,14 +199,14 @@ def update_bonus_rule(
     rule = db.query(BonusRule).filter(BonusRule.id == rule_id).first()
     if not rule:
         raise HTTPException(status_code=404, detail="规则不存在")
-    
+
     update_data = rule_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(rule, field, value)
-    
+
     db.commit()
     db.refresh(rule)
-    
+
     return ResponseModel(code=200, message="更新成功", data=rule)
 
 
@@ -188,7 +223,7 @@ def delete_bonus_rule(
     rule = db.query(BonusRule).filter(BonusRule.id == rule_id).first()
     if not rule:
         raise HTTPException(status_code=404, detail="规则不存在")
-    
+
     # 检查是否有计算记录
     calc_count = db.query(BonusCalculation).filter(BonusCalculation.rule_id == rule_id).count()
     if calc_count > 0:
@@ -196,10 +231,10 @@ def delete_bonus_rule(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"该规则已有 {calc_count} 条计算记录，无法删除"
         )
-    
+
     db.delete(rule)
     db.commit()
-    
+
     return ResponseModel(code=200, message="删除成功")
 
 
@@ -216,10 +251,10 @@ def activate_bonus_rule(
     rule = db.query(BonusRule).filter(BonusRule.id == rule_id).first()
     if not rule:
         raise HTTPException(status_code=404, detail="规则不存在")
-    
+
     rule.is_active = True
     db.commit()
-    
+
     return ResponseModel(code=200, message="启用成功")
 
 
@@ -236,10 +271,10 @@ def deactivate_bonus_rule(
     rule = db.query(BonusRule).filter(BonusRule.id == rule_id).first()
     if not rule:
         raise HTTPException(status_code=404, detail="规则不存在")
-    
+
     rule.is_active = False
     db.commit()
-    
+
     return ResponseModel(code=200, message="停用成功")
 
 

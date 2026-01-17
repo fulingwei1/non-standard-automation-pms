@@ -5,19 +5,19 @@
 
 from fastapi import APIRouter
 
-from .summary import router as summary_router
-from .ranking import router as ranking_router
-from .engineer import router as engineer_router
 from .collaboration import router as collaboration_router
-from .knowledge import router as knowledge_router
 from .config import router as config_router
 from .data_collection import router as data_collection_router
-from .manager_evaluation import router as manager_evaluation_router
 from .data_integrity import router as data_integrity_router
-from .feedback import router as feedback_router
-from .trend import router as trend_router
-from .solution import router as solution_router
 from .data_sync import router as data_sync_router
+from .engineer import router as engineer_router
+from .feedback import router as feedback_router
+from .knowledge import router as knowledge_router
+from .manager_evaluation import router as manager_evaluation_router
+from .ranking import router as ranking_router
+from .solution import router as solution_router
+from .summary import router as summary_router
+from .trend import router as trend_router
 
 router = APIRouter(prefix="/engineer-performance", tags=["工程师绩效"])
 

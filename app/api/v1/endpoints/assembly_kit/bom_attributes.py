@@ -15,50 +15,74 @@ import json
 import logging
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 logger = logging.getLogger(__name__)
+from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_
 
 from app.api import deps
 from app.core import security
 from app.models import (
-    AssemblyStage, AssemblyTemplate, CategoryStageMapping,
-    BomItemAssemblyAttrs, MaterialReadiness, ShortageDetail,
-    ShortageAlertRule, SchedulingSuggestion,
-    Project, Machine, BomHeader, BomItem, Material, MaterialCategory,
-    User
+    AssemblyStage,
+    AssemblyTemplate,
+    BomHeader,
+    BomItem,
+    BomItemAssemblyAttrs,
+    CategoryStageMapping,
+    Machine,
+    Material,
+    MaterialCategory,
+    MaterialReadiness,
+    Project,
+    SchedulingSuggestion,
+    ShortageAlertRule,
+    ShortageDetail,
+    User,
 )
 from app.models.enums import (
-    AssemblyStageEnum, ImportanceLevelEnum, ShortageAlertLevelEnum,
-    SuggestionTypeEnum, SuggestionStatusEnum
+    AssemblyStageEnum,
+    ImportanceLevelEnum,
+    ShortageAlertLevelEnum,
+    SuggestionStatusEnum,
+    SuggestionTypeEnum,
 )
-from app.schemas.assembly_kit import (
-    # Stage
-    AssemblyStageCreate, AssemblyStageUpdate, AssemblyStageResponse,
-    # Template
-    AssemblyTemplateCreate, AssemblyTemplateUpdate, AssemblyTemplateResponse,
-    # Category Mapping
-    CategoryStageMappingCreate, CategoryStageMappingUpdate, CategoryStageMappingResponse,
-    # BOM Assembly Attrs
-    BomItemAssemblyAttrsCreate, BomItemAssemblyAttrsBatchCreate,
-    BomItemAssemblyAttrsUpdate, BomItemAssemblyAttrsResponse,
-    BomAssemblyAttrsAutoRequest, BomAssemblyAttrsTemplateRequest,
-    # Readiness
-    MaterialReadinessCreate, MaterialReadinessResponse, MaterialReadinessDetailResponse, StageKitRate,
-    # Shortage
-    ShortageDetailResponse, ShortageAlertItem, ShortageAlertListResponse,
-    # Alert Rule
-    ShortageAlertRuleCreate, ShortageAlertRuleUpdate, ShortageAlertRuleResponse,
-    # Suggestion
-    SchedulingSuggestionResponse, SchedulingSuggestionAccept, SchedulingSuggestionReject,
-    # Dashboard
-    AssemblyDashboardResponse, AssemblyDashboardStats, AssemblyDashboardStageStats
+from app.schemas.assembly_kit import (  # Stage; Template; Category Mapping; BOM Assembly Attrs; Readiness; Shortage; Alert Rule; Suggestion; Dashboard
+    AssemblyDashboardResponse,
+    AssemblyDashboardStageStats,
+    AssemblyDashboardStats,
+    AssemblyStageCreate,
+    AssemblyStageResponse,
+    AssemblyStageUpdate,
+    AssemblyTemplateCreate,
+    AssemblyTemplateResponse,
+    AssemblyTemplateUpdate,
+    BomAssemblyAttrsAutoRequest,
+    BomAssemblyAttrsTemplateRequest,
+    BomItemAssemblyAttrsBatchCreate,
+    BomItemAssemblyAttrsCreate,
+    BomItemAssemblyAttrsResponse,
+    BomItemAssemblyAttrsUpdate,
+    CategoryStageMappingCreate,
+    CategoryStageMappingResponse,
+    CategoryStageMappingUpdate,
+    MaterialReadinessCreate,
+    MaterialReadinessDetailResponse,
+    MaterialReadinessResponse,
+    SchedulingSuggestionAccept,
+    SchedulingSuggestionReject,
+    SchedulingSuggestionResponse,
+    ShortageAlertItem,
+    ShortageAlertListResponse,
+    ShortageAlertRuleCreate,
+    ShortageAlertRuleResponse,
+    ShortageAlertRuleUpdate,
+    ShortageDetailResponse,
+    StageKitRate,
 )
-from app.schemas.common import ResponseModel, MessageResponse
+from app.schemas.common import MessageResponse, ResponseModel
 
 router = APIRouter()
 
@@ -267,7 +291,7 @@ async def get_assembly_attr_recommendations(
 ):
     """获取装配属性推荐结果（不应用，仅返回推荐）"""
     from app.services.assembly_attr_recommender import AssemblyAttrRecommender
-    
+
     # 验证BOM存在
     bom = db.query(BomHeader).filter(BomHeader.id == bom_id).first()
     if not bom:
@@ -285,7 +309,7 @@ async def get_assembly_attr_recommendations(
         material = db.query(Material).filter(Material.id == bom_item.material_id).first()
         if not material:
             continue
-        
+
         rec = recommendations.get(bom_item.id)
         if rec:
             result.append({
@@ -317,7 +341,7 @@ async def smart_recommend_assembly_attrs(
 ):
     """智能推荐装配属性（多级推荐规则）"""
     from app.services.assembly_attr_recommender import AssemblyAttrRecommender
-    
+
     # 验证BOM存在
     bom = db.query(BomHeader).filter(BomHeader.id == bom_id).first()
     if not bom:

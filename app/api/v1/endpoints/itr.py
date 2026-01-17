@@ -4,8 +4,8 @@ ITR流程 API endpoints
 提供端到端流程视图
 """
 
-from typing import Any, Optional
 from datetime import datetime
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -14,17 +14,16 @@ from app.api import deps
 from app.core import security
 from app.models.user import User
 from app.schemas.common import ResponseModel
-
-from app.services.itr_service import (
-    get_ticket_timeline,
-    get_issue_related_data,
-    get_itr_dashboard_data
-)
 from app.services.itr_analytics_service import (
     analyze_resolution_time,
     analyze_satisfaction_trend,
+    analyze_sla_performance,
     identify_bottlenecks,
-    analyze_sla_performance
+)
+from app.services.itr_service import (
+    get_issue_related_data,
+    get_itr_dashboard_data,
+    get_ticket_timeline,
 )
 
 router = APIRouter()
@@ -42,13 +41,13 @@ def get_ticket_timeline_api(
     整合工单、问题、验收、SLA监控等数据
     """
     timeline_data = get_ticket_timeline(db, ticket_id)
-    
+
     if not timeline_data:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="工单不存在"
         )
-    
+
     return ResponseModel(
         code=200,
         message="获取成功",
@@ -67,13 +66,13 @@ def get_issue_related_data_api(
     获取问题关联数据（工单、验收单等）
     """
     related_data = get_issue_related_data(db, issue_id)
-    
+
     if not related_data:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="问题不存在"
         )
-    
+
     return ResponseModel(
         code=200,
         message="获取成功",
@@ -95,7 +94,7 @@ def get_itr_dashboard(
     """
     start_dt = None
     end_dt = None
-    
+
     if start_date:
         try:
             start_dt = datetime.strptime(start_date, "%Y-%m-%d")
@@ -104,7 +103,7 @@ def get_itr_dashboard(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="开始日期格式错误，应为 YYYY-MM-DD"
             )
-    
+
     if end_date:
         try:
             end_dt = datetime.strptime(end_date, "%Y-%m-%d")
@@ -113,14 +112,14 @@ def get_itr_dashboard(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="结束日期格式错误，应为 YYYY-MM-DD"
             )
-    
+
     dashboard_data = get_itr_dashboard_data(
         db,
         project_id=project_id,
         start_date=start_dt,
         end_date=end_dt
     )
-    
+
     return ResponseModel(
         code=200,
         message="获取成功",
@@ -143,7 +142,7 @@ def get_itr_efficiency_analysis(
     """
     start_dt = None
     end_dt = None
-    
+
     if start_date:
         try:
             start_dt = datetime.strptime(start_date, "%Y-%m-%d")
@@ -152,7 +151,7 @@ def get_itr_efficiency_analysis(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="开始日期格式错误，应为 YYYY-MM-DD"
             )
-    
+
     if end_date:
         try:
             end_dt = datetime.strptime(end_date, "%Y-%m-%d")
@@ -161,10 +160,10 @@ def get_itr_efficiency_analysis(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="结束日期格式错误，应为 YYYY-MM-DD"
             )
-    
+
     resolution_analysis = analyze_resolution_time(db, start_dt, end_dt, project_id)
     bottlenecks = identify_bottlenecks(db, start_dt, end_dt)
-    
+
     return ResponseModel(
         code=200,
         message="获取成功",
@@ -189,7 +188,7 @@ def get_satisfaction_trend(
     """
     start_dt = None
     end_dt = None
-    
+
     if start_date:
         try:
             start_dt = datetime.strptime(start_date, "%Y-%m-%d")
@@ -198,7 +197,7 @@ def get_satisfaction_trend(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="开始日期格式错误，应为 YYYY-MM-DD"
             )
-    
+
     if end_date:
         try:
             end_dt = datetime.strptime(end_date, "%Y-%m-%d")
@@ -207,9 +206,9 @@ def get_satisfaction_trend(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="结束日期格式错误，应为 YYYY-MM-DD"
             )
-    
+
     satisfaction_trend = analyze_satisfaction_trend(db, start_dt, end_dt, project_id)
-    
+
     return ResponseModel(
         code=200,
         message="获取成功",
@@ -230,7 +229,7 @@ def get_bottlenecks_analysis(
     """
     start_dt = None
     end_dt = None
-    
+
     if start_date:
         try:
             start_dt = datetime.strptime(start_date, "%Y-%m-%d")
@@ -239,7 +238,7 @@ def get_bottlenecks_analysis(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="开始日期格式错误，应为 YYYY-MM-DD"
             )
-    
+
     if end_date:
         try:
             end_dt = datetime.strptime(end_date, "%Y-%m-%d")
@@ -248,9 +247,9 @@ def get_bottlenecks_analysis(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="结束日期格式错误，应为 YYYY-MM-DD"
             )
-    
+
     bottlenecks = identify_bottlenecks(db, start_dt, end_dt)
-    
+
     return ResponseModel(
         code=200,
         message="获取成功",
@@ -272,7 +271,7 @@ def get_sla_performance_analysis(
     """
     start_dt = None
     end_dt = None
-    
+
     if start_date:
         try:
             start_dt = datetime.strptime(start_date, "%Y-%m-%d")
@@ -281,7 +280,7 @@ def get_sla_performance_analysis(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="开始日期格式错误，应为 YYYY-MM-DD"
             )
-    
+
     if end_date:
         try:
             end_dt = datetime.strptime(end_date, "%Y-%m-%d")
@@ -290,9 +289,9 @@ def get_sla_performance_analysis(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="结束日期格式错误，应为 YYYY-MM-DD"
             )
-    
+
     sla_performance = analyze_sla_performance(db, start_dt, end_dt, policy_id)
-    
+
     return ResponseModel(
         code=200,
         message="获取成功",

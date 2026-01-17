@@ -3,15 +3,18 @@
 绩效排名端点
 """
 
-from typing import Optional, List
+from typing import List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db, get_current_user
-from app.models.user import User
+from app.api.deps import get_current_user, get_db
 from app.models.performance import PerformancePeriod
-from app.services.engineer_performance_service import EngineerPerformanceService
+from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.engineer_performance.engineer_performance_service import (
+    EngineerPerformanceService,
+)
 
 router = APIRouter(prefix="/ranking", tags=["绩效排名"])
 

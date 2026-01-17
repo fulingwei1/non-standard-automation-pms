@@ -10,31 +10,40 @@
 核心功能：周工时表、批量填报、审批流程
 """
 
-from typing import Any, List, Optional, Dict
+from calendar import monthrange
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from calendar import monthrange
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from sqlalchemy import and_, case, desc, extract, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, and_, func, case, extract
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User
-from app.models.project import Project
+from app.core.config import settings
 from app.models.organization import Department, Employee
+from app.models.project import Project
 from app.models.rd_project import RdProject
 from app.models.timesheet import (
-    Timesheet, TimesheetBatch, TimesheetSummary,
-    OvertimeApplication, TimesheetApprovalLog, TimesheetRule
+    OvertimeApplication,
+    Timesheet,
+    TimesheetApprovalLog,
+    TimesheetBatch,
+    TimesheetRule,
+    TimesheetSummary,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.timesheet import (
-    TimesheetCreate, TimesheetUpdate, TimesheetResponse, TimesheetListResponse,
-    TimesheetBatchCreate, WeekTimesheetResponse, MonthSummaryResponse,
-    TimesheetStatisticsResponse
+    MonthSummaryResponse,
+    TimesheetBatchCreate,
+    TimesheetCreate,
+    TimesheetListResponse,
+    TimesheetResponse,
+    TimesheetStatisticsResponse,
+    TimesheetUpdate,
+    WeekTimesheetResponse,
 )
 
 router = APIRouter()
@@ -133,11 +142,11 @@ def aggregate_timesheet(
     手动触发工时汇总
     """
     from app.services.timesheet_aggregation_service import TimesheetAggregationService
-    
+
     try:
         service = TimesheetAggregationService(db)
         result = service.aggregate_monthly_timesheet(year, month, user_id, department_id, project_id)
-        
+
         return ResponseModel(
             code=200,
             message="工时汇总完成",
@@ -160,16 +169,17 @@ def get_hr_report(
     """
     获取HR加班工资报表
     """
+    from fastapi.responses import StreamingResponse
+
     from app.services.timesheet_aggregation_service import TimesheetAggregationService
     from app.services.timesheet_report_service import TimesheetReportService
-    from fastapi.responses import StreamingResponse
-    
+
     try:
         if format == "excel":
             # 生成Excel报表
             report_service = TimesheetReportService(db)
             excel_file = report_service.generate_hr_report_excel(year, month, department_id)
-            
+
             filename = f"HR加班工资表_{year}年{month}月.xlsx"
             return StreamingResponse(
                 excel_file,
@@ -180,7 +190,7 @@ def get_hr_report(
             # 返回JSON数据
             service = TimesheetAggregationService(db)
             data = service.generate_hr_report(year, month, department_id)
-            
+
             return ResponseModel(
                 code=200,
                 message="success",
@@ -203,16 +213,17 @@ def get_finance_report(
     """
     获取财务报表（项目成本核算表）
     """
+    from fastapi.responses import StreamingResponse
+
     from app.services.timesheet_aggregation_service import TimesheetAggregationService
     from app.services.timesheet_report_service import TimesheetReportService
-    from fastapi.responses import StreamingResponse
-    
+
     try:
         if format == "excel":
             # 生成Excel报表
             report_service = TimesheetReportService(db)
             excel_file = report_service.generate_finance_report_excel(year, month, project_id)
-            
+
             filename = f"项目成本核算表_{year}年{month}月.xlsx"
             return StreamingResponse(
                 excel_file,
@@ -223,7 +234,7 @@ def get_finance_report(
             # 返回JSON数据
             service = TimesheetAggregationService(db)
             data = service.generate_finance_report(year, month, project_id)
-            
+
             return ResponseModel(
                 code=200,
                 message="success",
@@ -246,16 +257,17 @@ def get_rd_report(
     """
     获取研发报表（研发费用核算表）
     """
+    from fastapi.responses import StreamingResponse
+
     from app.services.timesheet_aggregation_service import TimesheetAggregationService
     from app.services.timesheet_report_service import TimesheetReportService
-    from fastapi.responses import StreamingResponse
-    
+
     try:
         if format == "excel":
             # 生成Excel报表
             report_service = TimesheetReportService(db)
             excel_file = report_service.generate_rd_report_excel(year, month, rd_project_id)
-            
+
             filename = f"研发费用核算表_{year}年{month}月.xlsx"
             return StreamingResponse(
                 excel_file,
@@ -266,7 +278,7 @@ def get_rd_report(
             # 返回JSON数据
             service = TimesheetAggregationService(db)
             data = service.generate_rd_report(year, month, rd_project_id)
-            
+
             return ResponseModel(
                 code=200,
                 message="success",
@@ -289,20 +301,21 @@ def get_project_report(
     """
     获取项目报表（项目工时统计）
     """
+    from fastapi.responses import StreamingResponse
+
     from app.services.timesheet_aggregation_service import TimesheetAggregationService
     from app.services.timesheet_report_service import TimesheetReportService
-    from fastapi.responses import StreamingResponse
-    
+
     try:
         if format == "excel":
             # 生成Excel报表
             report_service = TimesheetReportService(db)
             excel_file = report_service.generate_project_report_excel(project_id, start_date, end_date)
-            
+
             project = db.query(Project).filter(Project.id == project_id).first()
             project_name = project.project_name if project else f"项目{project_id}"
             filename = f"{project_name}_工时报表.xlsx"
-            
+
             return StreamingResponse(
                 excel_file,
                 media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -312,7 +325,7 @@ def get_project_report(
             # 返回JSON数据
             service = TimesheetAggregationService(db)
             data = service.generate_project_report(project_id, start_date, end_date)
-            
+
             return ResponseModel(
                 code=200,
                 message="success",
@@ -338,11 +351,11 @@ def sync_timesheet(
     手动触发数据同步
     """
     from app.services.timesheet_sync_service import TimesheetSyncService
-    
+
     try:
         service = TimesheetSyncService(db)
         results = {}
-        
+
         if timesheet_id:
             # 同步单个工时记录
             if sync_target in ["all", "finance"]:
@@ -367,7 +380,7 @@ def sync_timesheet(
                 results['hr'] = service.sync_to_hr(year=year, month=month)
         else:
             raise HTTPException(status_code=400, detail="参数不完整")
-        
+
         return ResponseModel(
             code=200,
             message="数据同步完成",
@@ -388,13 +401,13 @@ def get_sync_status(
     获取工时记录的同步状态
     """
     from app.models.finance import FinancialProjectCost
-    from app.models.rd_project import RdCost
     from app.models.project import ProjectCost
-    
+    from app.models.rd_project import RdCost
+
     timesheet = db.query(Timesheet).filter(Timesheet.id == timesheet_id).first()
     if not timesheet:
         raise HTTPException(status_code=404, detail="工时记录不存在")
-    
+
     # 检查同步状态
     sync_status = {
         'finance': {'status': 'not_synced', 'message': '未同步'},
@@ -402,7 +415,7 @@ def get_sync_status(
         'project': {'status': 'not_synced', 'message': '未同步'},
         'hr': {'status': 'not_synced', 'message': '未同步'},
     }
-    
+
     # 检查财务同步状态
     if timesheet.project_id and timesheet.status == 'APPROVED':
         finance_cost = db.query(FinancialProjectCost).filter(
@@ -416,7 +429,7 @@ def get_sync_status(
                 'cost_id': finance_cost.id,
                 'sync_time': finance_cost.created_at.isoformat() if finance_cost.created_at else None
             }
-    
+
     # 检查研发同步状态
     if timesheet.rd_project_id and timesheet.status == 'APPROVED':
         rd_cost = db.query(RdCost).filter(
@@ -430,7 +443,7 @@ def get_sync_status(
                 'cost_id': rd_cost.id,
                 'sync_time': rd_cost.created_at.isoformat() if rd_cost.created_at else None
             }
-    
+
     # 检查项目同步状态（通过ProjectCost）
     if timesheet.project_id and timesheet.status == 'APPROVED':
         # 项目成本通过LaborCostService更新，这里检查是否有对应的成本记录
@@ -445,7 +458,7 @@ def get_sync_status(
                 'cost_id': project_cost.id,
                 'sync_time': project_cost.updated_at.isoformat() if project_cost.updated_at else None
             }
-    
+
     # HR同步状态（审批通过即视为已同步到HR）
     if timesheet.status == 'APPROVED':
         sync_status['hr'] = {
@@ -453,7 +466,7 @@ def get_sync_status(
             'message': '已同步',
             'sync_time': timesheet.approve_time.isoformat() if timesheet.approve_time else None
         }
-    
+
     return ResponseModel(
         code=200,
         message="success",

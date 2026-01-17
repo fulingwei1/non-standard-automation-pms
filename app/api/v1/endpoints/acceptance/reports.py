@@ -5,16 +5,26 @@
 包含：签字管理、报告生成、报告下载、客户签署文件上传、奖金计算触发
 """
 
-import os
 import logging
-from typing import Any, List
+import os
 from datetime import datetime
 from io import BytesIO
+from typing import Any, List
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status, Request, Response, UploadFile, File
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    HTTPException,
+    Query,
+    Request,
+    Response,
+    UploadFile,
+    status,
+)
 from fastapi.responses import FileResponse
-from sqlalchemy.orm import Session
 from sqlalchemy import desc
+from sqlalchemy.orm import Session
 
 try:
     from reportlab.lib.pagesizes import A4
@@ -27,15 +37,15 @@ except ImportError:
 from app.api import deps
 from app.core import security
 from app.core.config import settings
+from app.models.acceptance import AcceptanceOrder, AcceptanceReport, AcceptanceSignature
+from app.models.project import Machine, Project
 from app.models.user import User
-from app.models.project import Project, Machine
-from app.models.acceptance import (
-    AcceptanceOrder, AcceptanceSignature, AcceptanceReport
-)
 from app.schemas.acceptance import (
     AcceptanceOrderResponse,
-    AcceptanceSignatureCreate, AcceptanceSignatureResponse,
-    AcceptanceReportGenerateRequest, AcceptanceReportResponse
+    AcceptanceReportGenerateRequest,
+    AcceptanceReportResponse,
+    AcceptanceSignatureCreate,
+    AcceptanceSignatureResponse,
 )
 from app.schemas.common import ResponseModel
 
@@ -191,15 +201,15 @@ def generate_pdf_report(
             detail="PDF生成功能不可用，请安装reportlab库：pip install reportlab"
         )
 
-    from app.services.pdf_styles import get_pdf_styles
     from app.services.pdf_content_builders import (
         build_basic_info_section,
-        build_statistics_section,
         build_conclusion_section,
+        build_footer_section,
         build_issues_section,
         build_signatures_section,
-        build_footer_section
+        build_statistics_section,
     )
+    from app.services.pdf_styles import get_pdf_styles
 
     # 创建PDF缓冲区
     buffer = BytesIO()
@@ -267,10 +277,10 @@ def generate_acceptance_report(
     生成验收报告
     """
     from app.services.acceptance_report_service import (
+        build_report_content,
         generate_report_no,
         get_report_version,
-        build_report_content,
-        save_report_file
+        save_report_file,
     )
 
     order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
@@ -563,7 +573,7 @@ def trigger_bonus_calculation_endpoint(
         raise HTTPException(status_code=404, detail="关联的项目不存在")
 
     try:
-        from app.services.bonus_calculator import BonusCalculator
+        from app.services.bonus import BonusCalculator
         calculator = BonusCalculator(db)
 
         # 触发奖金计算

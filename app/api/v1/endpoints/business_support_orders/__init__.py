@@ -6,14 +6,15 @@
 """
 
 from fastapi import APIRouter
+
 from . import (
-    sales_orders,
-    delivery_orders,
     acceptance_tracking,
-    reconciliations,
-    invoice_requests,
     customer_registrations,
-    reports
+    delivery_orders,
+    invoice_requests,
+    reconciliations,
+    reports,
+    sales_orders,
 )
 
 # 创建主路由

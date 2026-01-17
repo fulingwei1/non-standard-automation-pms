@@ -5,28 +5,30 @@
 包含：模板CRUD、从模板创建问题
 """
 
-from typing import Any, Optional
-from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_
-from uuid import uuid4
 import json
+from datetime import datetime
+from typing import Any, Optional
+from uuid import uuid4
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import desc, or_
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
 from app.models.issue import Issue, IssueTemplate
+from app.models.project import Machine, Project
 from app.models.user import User
-from app.models.project import Project, Machine
+from app.schemas.common import ResponseModel
 from app.schemas.issue import (
+    IssueFromTemplateRequest,
     IssueResponse,
     IssueTemplateCreate,
-    IssueTemplateUpdate,
-    IssueTemplateResponse,
     IssueTemplateListResponse,
-    IssueFromTemplateRequest,
+    IssueTemplateResponse,
+    IssueTemplateUpdate,
 )
-from app.schemas.common import ResponseModel
+
 from .utils import generate_issue_no
 
 router = APIRouter()

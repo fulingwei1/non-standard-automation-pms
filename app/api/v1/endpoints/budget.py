@@ -3,26 +3,36 @@
 项目预算管理 API
 """
 
-from typing import Any, List, Optional
-from decimal import Decimal
 from datetime import date, datetime
+from decimal import Decimal
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
 from sqlalchemy import desc, func
+from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User
+from app.core.config import settings
+from app.models.budget import (
+    ProjectBudget,
+    ProjectBudgetItem,
+    ProjectCostAllocationRule,
+)
 from app.models.project import Project
-from app.models.budget import ProjectBudget, ProjectBudgetItem, ProjectCostAllocationRule
+from app.models.user import User
 from app.schemas.budget import (
-    ProjectBudgetCreate, ProjectBudgetUpdate, ProjectBudgetResponse,
-    ProjectBudgetItemCreate, ProjectBudgetItemUpdate, ProjectBudgetItemResponse,
     ProjectBudgetApproveRequest,
-    ProjectCostAllocationRuleCreate, ProjectCostAllocationRuleUpdate,
-    ProjectCostAllocationRuleResponse, ProjectCostAllocationRequest
+    ProjectBudgetCreate,
+    ProjectBudgetItemCreate,
+    ProjectBudgetItemResponse,
+    ProjectBudgetItemUpdate,
+    ProjectBudgetResponse,
+    ProjectBudgetUpdate,
+    ProjectCostAllocationRequest,
+    ProjectCostAllocationRuleCreate,
+    ProjectCostAllocationRuleResponse,
+    ProjectCostAllocationRuleUpdate,
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
 
@@ -38,12 +48,12 @@ def generate_budget_no(db: Session) -> str:
         .order_by(desc(ProjectBudget.budget_no))
         .first()
     )
-    
+
     if max_budget:
         seq = int(max_budget.budget_no.split("-")[-1]) + 1
     else:
         seq = 1
-    
+
     return f"BUD-{today}-{seq:03d}"
 
 
@@ -55,7 +65,7 @@ def generate_budget_version(db: Session, project_id: int) -> str:
         .order_by(desc(ProjectBudget.version))
         .first()
     )
-    
+
     if max_version:
         # 提取版本号并递增
         version_parts = max_version.version.split('.')
@@ -63,7 +73,7 @@ def generate_budget_version(db: Session, project_id: int) -> str:
             major = int(version_parts[0].replace('V', ''))
             minor = int(version_parts[1])
             return f"V{major + 1}.0"
-    
+
     return "V1.0"
 
 
@@ -83,18 +93,18 @@ def list_budgets(
     获取预算列表（支持分页、筛选）
     """
     query = db.query(ProjectBudget)
-    
+
     if project_id:
         query = query.filter(ProjectBudget.project_id == project_id)
     if status:
         query = query.filter(ProjectBudget.status == status)
     if budget_type:
         query = query.filter(ProjectBudget.budget_type == budget_type)
-    
+
     total = query.count()
     offset = (page - 1) * page_size
     budgets = query.order_by(desc(ProjectBudget.created_at)).offset(offset).limit(page_size).all()
-    
+
     # 构建响应数据
     items = []
     for budget in budgets:
@@ -104,11 +114,11 @@ def list_budgets(
             "project_name": budget.project.project_name if budget.project else None,
             "submitter_name": budget.submitter.real_name if budget.submitter else None,
             "approver_name": budget.approver.real_name if budget.approver else None,
-            "items": [ProjectBudgetItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns}) 
+            "items": [ProjectBudgetItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns})
                      for item in budget.items]
         }
         items.append(ProjectBudgetResponse(**budget_dict))
-    
+
     return PaginatedResponse(
         items=items,
         total=total,
@@ -132,13 +142,13 @@ def get_project_budgets(
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
-    
+
     query = db.query(ProjectBudget).filter(ProjectBudget.project_id == project_id)
     if status:
         query = query.filter(ProjectBudget.status == status)
-    
+
     budgets = query.order_by(desc(ProjectBudget.version)).all()
-    
+
     items = []
     for budget in budgets:
         budget_dict = {
@@ -147,11 +157,11 @@ def get_project_budgets(
             "project_name": project.project_name,
             "submitter_name": budget.submitter.real_name if budget.submitter else None,
             "approver_name": budget.approver.real_name if budget.approver else None,
-            "items": [ProjectBudgetItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns}) 
+            "items": [ProjectBudgetItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns})
                      for item in budget.items]
         }
         items.append(ProjectBudgetResponse(**budget_dict))
-    
+
     return items
 
 
@@ -168,44 +178,44 @@ def create_budget(
     project = db.query(Project).filter(Project.id == budget_in.project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
-    
+
     # 生成预算编号和版本号
     budget_no = generate_budget_no(db)
     version = generate_budget_version(db, budget_in.project_id)
-    
+
     # 创建预算
     budget_data = budget_in.model_dump(exclude={'items'})
     budget_data['budget_no'] = budget_no
     budget_data['version'] = version
     budget_data['created_by'] = current_user.id
-    
+
     budget = ProjectBudget(**budget_data)
     db.add(budget)
     db.flush()
-    
+
     # 创建预算明细
     if budget_in.items:
         for item_data in budget_in.items:
             item = ProjectBudgetItem(budget_id=budget.id, **item_data.model_dump())
             db.add(item)
-    
+
     # 如果是初始预算且审批通过，更新项目预算金额
     if budget_in.budget_type == "INITIAL" and budget.status == "APPROVED":
         project.budget_amount = budget.total_amount
         db.add(project)
-    
+
     db.commit()
     db.refresh(budget)
-    
+
     # 构建响应
     budget_dict = {
         **{c.name: getattr(budget, c.name) for c in budget.__table__.columns},
         "project_code": project.project_code,
         "project_name": project.project_name,
-        "items": [ProjectBudgetItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns}) 
+        "items": [ProjectBudgetItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns})
                  for item in budget.items]
     }
-    
+
     return ProjectBudgetResponse(**budget_dict)
 
 
@@ -344,17 +354,17 @@ def get_budget(
     budget = db.query(ProjectBudget).filter(ProjectBudget.id == budget_id).first()
     if not budget:
         raise HTTPException(status_code=404, detail="预算不存在")
-    
+
     budget_dict = {
         **{c.name: getattr(budget, c.name) for c in budget.__table__.columns},
         "project_code": budget.project.project_code if budget.project else None,
         "project_name": budget.project.project_name if budget.project else None,
         "submitter_name": budget.submitter.real_name if budget.submitter else None,
         "approver_name": budget.approver.real_name if budget.approver else None,
-        "items": [ProjectBudgetItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns}) 
+        "items": [ProjectBudgetItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns})
                  for item in budget.items]
     }
-    
+
     return ProjectBudgetResponse(**budget_dict)
 
 
@@ -372,27 +382,27 @@ def update_budget(
     budget = db.query(ProjectBudget).filter(ProjectBudget.id == budget_id).first()
     if not budget:
         raise HTTPException(status_code=404, detail="预算不存在")
-    
+
     if budget.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只能更新草稿状态的预算")
-    
+
     update_data = budget_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         if hasattr(budget, field):
             setattr(budget, field, value)
-    
+
     db.add(budget)
     db.commit()
     db.refresh(budget)
-    
+
     budget_dict = {
         **{c.name: getattr(budget, c.name) for c in budget.__table__.columns},
         "project_code": budget.project.project_code if budget.project else None,
         "project_name": budget.project.project_name if budget.project else None,
-        "items": [ProjectBudgetItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns}) 
+        "items": [ProjectBudgetItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns})
                  for item in budget.items]
     }
-    
+
     return ProjectBudgetResponse(**budget_dict)
 
 
@@ -409,26 +419,26 @@ def submit_budget(
     budget = db.query(ProjectBudget).filter(ProjectBudget.id == budget_id).first()
     if not budget:
         raise HTTPException(status_code=404, detail="预算不存在")
-    
+
     if budget.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只能提交草稿状态的预算")
-    
+
     budget.status = "SUBMITTED"
     budget.submitted_at = datetime.now()
     budget.submitted_by = current_user.id
-    
+
     db.add(budget)
     db.commit()
     db.refresh(budget)
-    
+
     budget_dict = {
         **{c.name: getattr(budget, c.name) for c in budget.__table__.columns},
         "project_code": budget.project.project_code if budget.project else None,
         "project_name": budget.project.project_name if budget.project else None,
-        "items": [ProjectBudgetItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns}) 
+        "items": [ProjectBudgetItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns})
                  for item in budget.items]
     }
-    
+
     return ProjectBudgetResponse(**budget_dict)
 
 
@@ -446,50 +456,50 @@ def approve_budget(
     budget = db.query(ProjectBudget).filter(ProjectBudget.id == budget_id).first()
     if not budget:
         raise HTTPException(status_code=404, detail="预算不存在")
-    
+
     if budget.status != "SUBMITTED":
         raise HTTPException(status_code=400, detail="只能审批已提交的预算")
-    
+
     if approve_request.approved:
         budget.status = "APPROVED"
         budget.approved_at = datetime.now()
         budget.approved_by = current_user.id
-        
+
         # 如果是初始预算或修订预算，更新项目预算金额
         if budget.budget_type in ["INITIAL", "REVISED"]:
             project = db.query(Project).filter(Project.id == budget.project_id).first()
             if project:
                 project.budget_amount = budget.total_amount
                 db.add(project)
-        
+
         # 将其他版本的预算设为非生效
         db.query(ProjectBudget).filter(
             ProjectBudget.project_id == budget.project_id,
             ProjectBudget.id != budget_id,
             ProjectBudget.is_active == True
         ).update({"is_active": False})
-        
+
         budget.is_active = True
     else:
         budget.status = "REJECTED"
         budget.approved_at = datetime.now()
         budget.approved_by = current_user.id
-    
+
     if approve_request.approval_note:
         budget.approval_note = approve_request.approval_note
-    
+
     db.add(budget)
     db.commit()
     db.refresh(budget)
-    
+
     budget_dict = {
         **{c.name: getattr(budget, c.name) for c in budget.__table__.columns},
         "project_code": budget.project.project_code if budget.project else None,
         "project_name": budget.project.project_name if budget.project else None,
-        "items": [ProjectBudgetItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns}) 
+        "items": [ProjectBudgetItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns})
                  for item in budget.items]
     }
-    
+
     return ProjectBudgetResponse(**budget_dict)
 
 
@@ -506,13 +516,13 @@ def delete_budget(
     budget = db.query(ProjectBudget).filter(ProjectBudget.id == budget_id).first()
     if not budget:
         raise HTTPException(status_code=404, detail="预算不存在")
-    
+
     if budget.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只能删除草稿状态的预算")
-    
+
     db.delete(budget)
     db.commit()
-    
+
     return ResponseModel(code=200, message="预算已删除")
 
 
@@ -531,12 +541,12 @@ def get_budget_items(
     budget = db.query(ProjectBudget).filter(ProjectBudget.id == budget_id).first()
     if not budget:
         raise HTTPException(status_code=404, detail="预算不存在")
-    
+
     items = db.query(ProjectBudgetItem).filter(
         ProjectBudgetItem.budget_id == budget_id
     ).order_by(ProjectBudgetItem.item_no).all()
-    
-    return [ProjectBudgetItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns}) 
+
+    return [ProjectBudgetItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns})
             for item in items]
 
 
@@ -554,20 +564,20 @@ def create_budget_item(
     budget = db.query(ProjectBudget).filter(ProjectBudget.id == budget_id).first()
     if not budget:
         raise HTTPException(status_code=404, detail="预算不存在")
-    
+
     if budget.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只能为草稿状态的预算添加明细")
-    
+
     item = ProjectBudgetItem(budget_id=budget_id, **item_in.model_dump())
     db.add(item)
-    
+
     # 更新预算总额
     budget.total_amount = (budget.total_amount or 0) + item.budget_amount
     db.add(budget)
-    
+
     db.commit()
     db.refresh(item)
-    
+
     return ProjectBudgetItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns})
 
 
@@ -585,26 +595,26 @@ def update_budget_item(
     item = db.query(ProjectBudgetItem).filter(ProjectBudgetItem.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="预算明细不存在")
-    
+
     if item.budget.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只能更新草稿状态预算的明细")
-    
+
     old_amount = item.budget_amount
     update_data = item_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         if hasattr(item, field):
             setattr(item, field, value)
-    
+
     # 更新预算总额
     if item_in.budget_amount is not None:
         budget = item.budget
         budget.total_amount = (budget.total_amount or 0) - old_amount + item.budget_amount
         db.add(budget)
-    
+
     db.add(item)
     db.commit()
     db.refresh(item)
-    
+
     return ProjectBudgetItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns})
 
 
@@ -621,16 +631,16 @@ def delete_budget_item(
     item = db.query(ProjectBudgetItem).filter(ProjectBudgetItem.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="预算明细不存在")
-    
+
     if item.budget.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只能删除草稿状态预算的明细")
-    
+
     budget = item.budget
     budget.total_amount = max(0, (budget.total_amount or 0) - item.budget_amount)
     db.add(budget)
-    
+
     db.delete(item)
     db.commit()
-    
+
     return ResponseModel(code=200, message="预算明细已删除")
 

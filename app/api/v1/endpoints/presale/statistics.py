@@ -9,36 +9,52 @@
 售前技术支持 API endpoints
 包含：支持工单管理、技术方案管理、方案模板库、投标管理、售前统计
 """
-from typing import Any, List, Optional, Dict
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, func
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
+from app.models.presale import (
+    PresaleSolution,
+    PresaleSolutionCost,
+    PresaleSolutionTemplate,
+    PresaleSupportTicket,
+    PresaleTenderRecord,
+    PresaleTicketDeliverable,
+    PresaleTicketProgress,
+    PresaleWorkload,
+)
 from app.models.project import Project
 from app.models.sales import Opportunity
-from app.models.presale import (
-    PresaleSupportTicket, PresaleTicketDeliverable, PresaleTicketProgress,
-    PresaleSolution, PresaleSolutionCost, PresaleSolutionTemplate,
-    PresaleTenderRecord, PresaleWorkload
-)
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.presale import (
-    TicketCreate, TicketUpdate, TicketResponse, TicketAcceptRequest,
-    TicketProgressUpdate, DeliverableCreate, DeliverableResponse,
-    TicketRatingRequest, TicketBoardResponse,
-    SolutionCreate, SolutionUpdate, SolutionResponse, SolutionReviewRequest,
+    DeliverableCreate,
+    DeliverableResponse,
     SolutionCostResponse,
-    TemplateCreate, TemplateResponse,
-    TenderCreate, TenderResultUpdate, TenderResponse
+    SolutionCreate,
+    SolutionResponse,
+    SolutionReviewRequest,
+    SolutionUpdate,
+    TemplateCreate,
+    TemplateResponse,
+    TenderCreate,
+    TenderResponse,
+    TenderResultUpdate,
+    TicketAcceptRequest,
+    TicketBoardResponse,
+    TicketCreate,
+    TicketProgressUpdate,
+    TicketRatingRequest,
+    TicketResponse,
+    TicketUpdate,
 )
-from app.models.presale import PresaleSolutionTemplate
-from app.schemas.common import ResponseModel, PaginatedResponse
 
 router = APIRouter()
 
@@ -115,7 +131,7 @@ def get_workload_stats(
     工作量统计
     """
     from datetime import timedelta
-    
+
     # 默认使用当前月
     today = date.today()
     if not start_date:
@@ -125,17 +141,17 @@ def get_workload_stats(
             end_date = date(today.year + 1, 1, 1) - timedelta(days=1)
         else:
             end_date = date(today.year, today.month + 1, 1) - timedelta(days=1)
-    
+
     query = db.query(PresaleWorkload).filter(
         PresaleWorkload.stat_date >= start_date,
         PresaleWorkload.stat_date <= end_date
     )
-    
+
     if user_id:
         query = query.filter(PresaleWorkload.user_id == user_id)
-    
+
     workloads = query.all()
-    
+
     # 汇总统计
     total_pending = sum(w.pending_tickets or 0 for w in workloads)
     total_processing = sum(w.processing_tickets or 0 for w in workloads)
@@ -143,7 +159,7 @@ def get_workload_stats(
     total_planned_hours = sum(float(w.planned_hours or 0) for w in workloads)
     total_actual_hours = sum(float(w.actual_hours or 0) for w in workloads)
     total_solutions = sum(w.solutions_count or 0 for w in workloads)
-    
+
     return ResponseModel(
         code=200,
         message="success",
@@ -185,7 +201,7 @@ def get_response_time_stats(
     响应时效统计
     """
     from datetime import timedelta
-    
+
     # 默认使用当前月
     today = date.today()
     if not start_date:
@@ -195,22 +211,22 @@ def get_response_time_stats(
             end_date = date(today.year + 1, 1, 1) - timedelta(days=1)
         else:
             end_date = date(today.year, today.month + 1, 1) - timedelta(days=1)
-    
+
     # 统计接单响应时间（从申请到接单的时间差）
     tickets = db.query(PresaleSupportTicket).filter(
         PresaleSupportTicket.apply_time >= datetime.combine(start_date, datetime.min.time()),
         PresaleSupportTicket.apply_time <= datetime.combine(end_date, datetime.max.time()),
         PresaleSupportTicket.accept_time.isnot(None)
     ).all()
-    
+
     response_times = []
     for ticket in tickets:
         if ticket.accept_time and ticket.apply_time:
             delta = ticket.accept_time - ticket.apply_time
             response_times.append(delta.total_seconds() / 3600)  # 转换为小时
-    
+
     avg_response_time = sum(response_times) / len(response_times) if response_times else 0.0
-    
+
     # 统计完成时间（从接单到完成的时间差）
     completed_tickets = [t for t in tickets if t.complete_time]
     completion_times = []
@@ -218,9 +234,9 @@ def get_response_time_stats(
         if ticket.complete_time and ticket.accept_time:
             delta = ticket.complete_time - ticket.accept_time
             completion_times.append(delta.total_seconds() / 3600)
-    
+
     avg_completion_time = sum(completion_times) / len(completion_times) if completion_times else 0.0
-    
+
     return ResponseModel(
         code=200,
         message="success",
@@ -253,7 +269,7 @@ def get_conversion_stats(
     方案转化率
     """
     from datetime import timedelta
-    
+
     # 默认使用当前月
     today = date.today()
     if not start_date:
@@ -263,20 +279,20 @@ def get_conversion_stats(
             end_date = date(today.year + 1, 1, 1) - timedelta(days=1)
         else:
             end_date = date(today.year, today.month + 1, 1) - timedelta(days=1)
-    
+
     # 统计方案数量
     total_solutions = db.query(PresaleSolution).filter(
         PresaleSolution.created_at >= datetime.combine(start_date, datetime.min.time()),
         PresaleSolution.created_at <= datetime.combine(end_date, datetime.max.time())
     ).count()
-    
+
     # 统计关联商机的方案
     solutions_with_opp = db.query(PresaleSolution).filter(
         PresaleSolution.created_at >= datetime.combine(start_date, datetime.min.time()),
         PresaleSolution.created_at <= datetime.combine(end_date, datetime.max.time()),
         PresaleSolution.opportunity_id.isnot(None)
     ).count()
-    
+
     # 统计转化为项目的方案（通过商机 -> 合同 -> 项目）
     from app.models.sales import Contract
     solutions_with_opp_list = db.query(PresaleSolution).filter(
@@ -284,7 +300,7 @@ def get_conversion_stats(
         PresaleSolution.created_at <= datetime.combine(end_date, datetime.max.time()),
         PresaleSolution.opportunity_id.isnot(None)
     ).all()
-    
+
     converted_count = 0
     for solution in solutions_with_opp_list:
         if solution.opportunity_id:
@@ -295,9 +311,9 @@ def get_conversion_stats(
             ).first()
             if contract:
                 converted_count += 1
-    
+
     conversion_rate = (converted_count / total_solutions * 100) if total_solutions > 0 else 0.0
-    
+
     return ResponseModel(
         code=200,
         message="success",
@@ -323,7 +339,7 @@ def get_performance_stats(
     人员绩效
     """
     from datetime import timedelta
-    
+
     # 默认使用当前月
     today = date.today()
     if not start_date:
@@ -333,13 +349,13 @@ def get_performance_stats(
             end_date = date(today.year + 1, 1, 1) - timedelta(days=1)
         else:
             end_date = date(today.year, today.month + 1, 1) - timedelta(days=1)
-    
+
     # 获取人员列表
     query_users = db.query(User).filter(User.is_active == True)
     if user_id:
         query_users = query_users.filter(User.id == user_id)
     users = query_users.all()
-    
+
     performance_list = []
     for user in users:
         # 统计工单
@@ -348,21 +364,21 @@ def get_performance_stats(
             PresaleSupportTicket.apply_time >= datetime.combine(start_date, datetime.min.time()),
             PresaleSupportTicket.apply_time <= datetime.combine(end_date, datetime.max.time())
         ).all()
-        
+
         completed_tickets = [t for t in tickets if t.status == 'COMPLETED']
         total_hours = sum(float(t.actual_hours or 0) for t in completed_tickets)
-        
+
         # 统计方案
         solutions = db.query(PresaleSolution).filter(
             PresaleSolution.author_id == user.id,
             PresaleSolution.created_at >= datetime.combine(start_date, datetime.min.time()),
             PresaleSolution.created_at <= datetime.combine(end_date, datetime.max.time())
         ).count()
-        
+
         # 统计满意度
         rated_tickets = [t for t in completed_tickets if t.satisfaction_score]
         avg_satisfaction = sum(t.satisfaction_score for t in rated_tickets) / len(rated_tickets) if rated_tickets else 0.0
-        
+
         performance_list.append({
             "user_id": user.id,
             "user_name": user.real_name or user.username,
@@ -373,7 +389,7 @@ def get_performance_stats(
             "solutions_count": solutions,
             "avg_satisfaction": round(avg_satisfaction, 2)
         })
-    
+
     return ResponseModel(
         code=200,
         message="success",

@@ -5,19 +5,20 @@
 """
 
 from typing import Any, List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
 from app.core import security
-from app.models.user import User
+from app.models.issue import Issue
 from app.models.project import Project, ProjectDocument, ProjectMember
 from app.models.task_center import TaskUnified
-from app.models.issue import Issue
+from app.models.user import User
+from app.schemas.common import ResponseModel
 from app.services.project_bonus_service import ProjectBonusService
 from app.services.project_meeting_service import ProjectMeetingService
 from app.services.project_solution_service import ProjectSolutionService
-from app.schemas.common import ResponseModel
 
 router = APIRouter()
 
@@ -32,25 +33,25 @@ def get_project_workspace(
     获取项目工作空间数据
     整合项目概览、团队、任务、奖金、会议、问题、文档等信息
     """
-    from app.utils.permission_helpers import check_project_access_or_raise
     from app.services.project_workspace_service import (
-        build_project_basic_info,
-        build_team_info,
-        build_task_info,
         build_bonus_info,
-        build_meeting_info,
+        build_document_info,
         build_issue_info,
+        build_meeting_info,
+        build_project_basic_info,
         build_solution_info,
-        build_document_info
+        build_task_info,
+        build_team_info,
     )
-    
+    from app.utils.permission_helpers import check_project_access_or_raise
+
     # 检查项目访问权限
     check_project_access_or_raise(db, current_user, project_id)
-    
+
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
-    
+
     # 构建各类信息
     project_info = build_project_basic_info(project)
     team_info = build_team_info(db, project_id)
@@ -60,7 +61,7 @@ def get_project_workspace(
     issue_info = build_issue_info(db, project_id)
     solution_info = build_solution_info(db, project_id)
     document_info = build_document_info(db, project_id)
-    
+
     return {
         'project': project_info,
         'team': team_info,
@@ -84,9 +85,9 @@ def get_project_bonuses(
     """
     from app.utils.permission_helpers import check_project_access_or_raise
     check_project_access_or_raise(db, current_user, project_id)
-    
+
     bonus_service = ProjectBonusService(db)
-    
+
     return {
         'rules': [
             {
@@ -124,14 +125,14 @@ def get_project_meetings(
     """
     from app.utils.permission_helpers import check_project_access_or_raise
     check_project_access_or_raise(db, current_user, project_id)
-    
+
     meeting_service = ProjectMeetingService(db)
     meetings = meeting_service.get_project_meetings(
         project_id,
         status=status,
         rhythm_level=rhythm_level
     )
-    
+
     return {
         'meetings': [
             {
@@ -163,17 +164,17 @@ def link_meeting_to_project(
     """
     from app.utils.permission_helpers import check_project_access_or_raise
     check_project_access_or_raise(db, current_user, project_id)
-    
+
     meeting_service = ProjectMeetingService(db)
     success = meeting_service.link_meeting_to_project(
         meeting_id,
         project_id,
         is_primary=is_primary
     )
-    
+
     if not success:
         raise HTTPException(status_code=400, detail="关联失败")
-    
+
     return ResponseModel(code=200, message="关联成功")
 
 
@@ -189,15 +190,15 @@ def get_project_issues(
     """
     from app.utils.permission_helpers import check_project_access_or_raise
     check_project_access_or_raise(db, current_user, project_id)
-    
+
     from app.models.issue import Issue
     query = db.query(Issue).filter(Issue.project_id == project_id)
-    
+
     if status:
         query = query.filter(Issue.status == status)
-    
+
     issues = query.order_by(Issue.report_date.desc()).all()
-    
+
     return {
         'issues': [
             {
@@ -228,9 +229,9 @@ def get_project_solutions(
     """
     from app.utils.permission_helpers import check_project_access_or_raise
     check_project_access_or_raise(db, current_user, project_id)
-    
+
     solution_service = ProjectSolutionService(db)
-    
+
     return {
         'solutions': solution_service.get_project_solutions(
             project_id,

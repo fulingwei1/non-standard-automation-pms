@@ -5,40 +5,46 @@
 包含：基础CRUD、状态管理、分配、解决、验证、跟进记录
 """
 
-from typing import Any, List, Optional
-from datetime import datetime, date
 import json
+from datetime import date, datetime
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import and_, desc, or_
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import desc, or_, and_
 
 from app.api import deps
 from app.core import security
 from app.models.issue import Issue, IssueFollowUpRecord
-from app.models.user import User
 from app.models.project import Project
-from app.services.sales_reminder_service import create_notification
+from app.models.user import User
 from app.schemas.issue import (
+    IssueAssignRequest,
     IssueCreate,
-    IssueUpdate,
-    IssueResponse,
-    IssueListResponse,
     IssueFollowUpCreate,
     IssueFollowUpResponse,
-    IssueAssignRequest,
+    IssueListResponse,
     IssueResolveRequest,
-    IssueVerifyRequest,
+    IssueResponse,
     IssueStatusChangeRequest,
+    IssueUpdate,
+    IssueVerifyRequest,
 )
+from app.services.data_scope_service import DataScopeService
+from app.services.sales_reminder import create_notification
 
 from .utils import (
-    generate_issue_no,
+    close_blocking_issue_alerts,
     create_blocking_issue_alert,
-    close_blocking_issue_alerts
+    generate_issue_no,
 )
 
 router = APIRouter()
+
+def _get_scoped_issue(db: Session, current_user: User, issue_id: int) -> Optional[Issue]:
+    query = db.query(Issue).filter(Issue.id == issue_id)
+    query = DataScopeService.filter_issues_by_scope(db, query, current_user)
+    return query.first()
 
 
 @router.get("/", response_model=IssueListResponse)
@@ -60,14 +66,37 @@ def list_issues(
     is_blocking: Optional[bool] = Query(None, description="是否阻塞"),
     is_overdue: Optional[bool] = Query(None, description="是否逾期"),
     keyword: Optional[str] = Query(None, description="关键词搜索"),
+    search: Optional[str] = Query(None, description="关键词搜索（兼容search参数）"),
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(20, ge=1, le=100, description="每页数量"),
 ) -> Any:
     """获取问题列表"""
+    def _normalize_str_filter(value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        normalized = value.strip()
+        if not normalized:
+            return None
+        if normalized.lower() == "all":
+            return None
+        return normalized
+
+    # 兼容老前端：status/severity/category/priority 可能传 "all"（后端应视为不筛选）
+    category = _normalize_str_filter(category)
+    issue_type = _normalize_str_filter(issue_type)
+    severity = _normalize_str_filter(severity)
+    priority = _normalize_str_filter(priority)
+    issue_status = _normalize_str_filter(issue_status)
+    root_cause = _normalize_str_filter(root_cause)
+    keyword = _normalize_str_filter(keyword) or _normalize_str_filter(search)
+
     query = db.query(Issue)
 
     # 排除已删除的问题
     query = query.filter(Issue.status != 'DELETED')
+
+    # 数据权限：默认仅返回与当前用户相关的问题（管理员/ALL范围除外）
+    query = DataScopeService.filter_issues_by_scope(db, query, current_user)
 
     # 筛选条件
     if category:
@@ -193,10 +222,14 @@ def get_issue(
     current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """获取问题详情"""
-    issue = db.query(Issue).options(
+    query = db.query(Issue).options(
         joinedload(Issue.project),
         joinedload(Issue.machine)
-    ).filter(Issue.id == issue_id).first()
+    ).filter(Issue.id == issue_id)
+
+    # 数据权限过滤
+    query = DataScopeService.filter_issues_by_scope(db, query, current_user)
+    issue = query.first()
     if not issue:
         raise HTTPException(status_code=404, detail="问题不存在")
 
@@ -275,7 +308,7 @@ def update_issue(
     current_user: User = Depends(security.require_permission("issue:update")),
 ) -> Any:
     """更新问题"""
-    issue = db.query(Issue).filter(Issue.id == issue_id).first()
+    issue = _get_scoped_issue(db, current_user, issue_id)
     if not issue:
         raise HTTPException(status_code=404, detail="问题不存在")
 
@@ -331,7 +364,7 @@ def assign_issue(
     current_user: User = Depends(security.require_permission("issue:assign")),
 ) -> Any:
     """分配问题"""
-    issue = db.query(Issue).filter(Issue.id == issue_id).first()
+    issue = _get_scoped_issue(db, current_user, issue_id)
     if not issue:
         raise HTTPException(status_code=404, detail="问题不存在")
 
@@ -412,7 +445,7 @@ def resolve_issue(
     current_user: User = Depends(security.require_permission("issue:resolve")),
 ) -> Any:
     """解决问题"""
-    issue = db.query(Issue).filter(Issue.id == issue_id).first()
+    issue = _get_scoped_issue(db, current_user, issue_id)
     if not issue:
         raise HTTPException(status_code=404, detail="问题不存在")
 
@@ -501,7 +534,7 @@ def verify_issue(
     current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """验证问题"""
-    issue = db.query(Issue).filter(Issue.id == issue_id).first()
+    issue = _get_scoped_issue(db, current_user, issue_id)
     if not issue:
         raise HTTPException(status_code=404, detail="问题不存在")
 
@@ -561,7 +594,7 @@ def change_issue_status(
     current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """变更问题状态"""
-    issue = db.query(Issue).filter(Issue.id == issue_id).first()
+    issue = _get_scoped_issue(db, current_user, issue_id)
     if not issue:
         raise HTTPException(status_code=404, detail="问题不存在")
 
@@ -594,7 +627,7 @@ def get_issue_follow_ups(
     current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """获取问题跟进记录"""
-    issue = db.query(Issue).filter(Issue.id == issue_id).first()
+    issue = _get_scoped_issue(db, current_user, issue_id)
     if not issue:
         raise HTTPException(status_code=404, detail="问题不存在")
 
@@ -627,7 +660,7 @@ def create_issue_follow_up(
     current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """创建问题跟进记录"""
-    issue = db.query(Issue).filter(Issue.id == issue_id).first()
+    issue = _get_scoped_issue(db, current_user, issue_id)
     if not issue:
         raise HTTPException(status_code=404, detail="问题不存在")
 

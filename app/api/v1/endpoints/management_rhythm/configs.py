@@ -9,46 +9,61 @@
 管理节律 API endpoints
 包含：节律配置、战略会议、行动项、仪表盘、会议地图
 """
-from typing import Any, List, Optional, Dict
 from datetime import date, datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, and_, func
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
+from app.models.enums import (
+    ActionItemStatus,
+    MeetingCycleType,
+    MeetingRhythmLevel,
+    RhythmHealthStatus,
+)
 from app.models.management_rhythm import (
     ManagementRhythmConfig,
-    StrategicMeeting,
     MeetingActionItem,
-    RhythmDashboardSnapshot,
     MeetingReport,
     MeetingReportConfig,
-    ReportMetricDefinition
+    ReportMetricDefinition,
+    RhythmDashboardSnapshot,
+    StrategicMeeting,
 )
-from app.models.enums import (
-    MeetingRhythmLevel,
-    MeetingCycleType,
-    ActionItemStatus,
-    RhythmHealthStatus
-)
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.management_rhythm import (
-    RhythmConfigCreate, RhythmConfigUpdate, RhythmConfigResponse,
-    StrategicMeetingCreate, StrategicMeetingUpdate, StrategicMeetingMinutesRequest,
+    ActionItemCreate,
+    ActionItemResponse,
+    ActionItemUpdate,
+    AvailableMetricsResponse,
+    MeetingCalendarResponse,
+    MeetingMapItem,
+    MeetingMapResponse,
+    MeetingReportConfigCreate,
+    MeetingReportConfigResponse,
+    MeetingReportConfigUpdate,
+    MeetingReportGenerateRequest,
+    MeetingReportResponse,
+    MeetingStatisticsResponse,
+    ReportMetricDefinitionCreate,
+    ReportMetricDefinitionResponse,
+    ReportMetricDefinitionUpdate,
+    RhythmConfigCreate,
+    RhythmConfigResponse,
+    RhythmConfigUpdate,
+    RhythmDashboardResponse,
+    RhythmDashboardSummary,
+    StrategicMeetingCreate,
+    StrategicMeetingMinutesRequest,
     StrategicMeetingResponse,
-    ActionItemCreate, ActionItemUpdate, ActionItemResponse,
-    RhythmDashboardResponse, RhythmDashboardSummary,
-    MeetingMapItem, MeetingMapResponse, MeetingCalendarResponse, MeetingStatisticsResponse,
+    StrategicMeetingUpdate,
     StrategicStructureTemplate,
-    MeetingReportGenerateRequest, MeetingReportResponse,
-    MeetingReportConfigCreate, MeetingReportConfigUpdate, MeetingReportConfigResponse,
-    ReportMetricDefinitionCreate, ReportMetricDefinitionUpdate, ReportMetricDefinitionResponse,
-    AvailableMetricsResponse
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
 
 router = APIRouter()
 
@@ -80,23 +95,23 @@ def read_rhythm_configs(
     获取节律配置列表
     """
     query = db.query(ManagementRhythmConfig)
-    
+
     if rhythm_level:
         query = query.filter(ManagementRhythmConfig.rhythm_level == rhythm_level)
-    
+
     if cycle_type:
         query = query.filter(ManagementRhythmConfig.cycle_type == cycle_type)
-    
+
     if is_active:
         query = query.filter(ManagementRhythmConfig.is_active == is_active)
-    
+
     if keyword:
         query = query.filter(ManagementRhythmConfig.config_name.like(f"%{keyword}%"))
-    
+
     total = query.count()
     offset = (page - 1) * page_size
     configs = query.order_by(desc(ManagementRhythmConfig.created_at)).offset(offset).limit(page_size).all()
-    
+
     items = []
     for config in configs:
         items.append(RhythmConfigResponse(
@@ -113,7 +128,7 @@ def read_rhythm_configs(
             created_at=config.created_at,
             updated_at=config.updated_at,
         ))
-    
+
     return PaginatedResponse(
         items=items,
         total=total,
@@ -143,11 +158,11 @@ def create_rhythm_config(
         is_active=config_data.is_active or "ACTIVE",
         created_by=current_user.id,
     )
-    
+
     db.add(config)
     db.commit()
     db.refresh(config)
-    
+
     return RhythmConfigResponse(
         id=config.id,
         rhythm_level=config.rhythm_level,
@@ -176,7 +191,7 @@ def read_rhythm_config(
     config = db.query(ManagementRhythmConfig).filter(ManagementRhythmConfig.id == config_id).first()
     if not config:
         raise HTTPException(status_code=404, detail="节律配置不存在")
-    
+
     return RhythmConfigResponse(
         id=config.id,
         rhythm_level=config.rhythm_level,
@@ -206,14 +221,14 @@ def update_rhythm_config(
     config = db.query(ManagementRhythmConfig).filter(ManagementRhythmConfig.id == config_id).first()
     if not config:
         raise HTTPException(status_code=404, detail="节律配置不存在")
-    
+
     update_data = config_data.dict(exclude_unset=True)
     for field, value in update_data.items():
         setattr(config, field, value)
-    
+
     db.commit()
     db.refresh(config)
-    
+
     return RhythmConfigResponse(
         id=config.id,
         rhythm_level=config.rhythm_level,

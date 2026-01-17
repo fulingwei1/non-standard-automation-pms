@@ -9,36 +9,52 @@
 售前技术支持 API endpoints
 包含：支持工单管理、技术方案管理、方案模板库、投标管理、售前统计
 """
-from typing import Any, List, Optional, Dict
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, func
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
+from app.models.presale import (
+    PresaleSolution,
+    PresaleSolutionCost,
+    PresaleSolutionTemplate,
+    PresaleSupportTicket,
+    PresaleTenderRecord,
+    PresaleTicketDeliverable,
+    PresaleTicketProgress,
+    PresaleWorkload,
+)
 from app.models.project import Project
 from app.models.sales import Opportunity
-from app.models.presale import (
-    PresaleSupportTicket, PresaleTicketDeliverable, PresaleTicketProgress,
-    PresaleSolution, PresaleSolutionCost, PresaleSolutionTemplate,
-    PresaleTenderRecord, PresaleWorkload
-)
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.presale import (
-    TicketCreate, TicketUpdate, TicketResponse, TicketAcceptRequest,
-    TicketProgressUpdate, DeliverableCreate, DeliverableResponse,
-    TicketRatingRequest, TicketBoardResponse,
-    SolutionCreate, SolutionUpdate, SolutionResponse, SolutionReviewRequest,
+    DeliverableCreate,
+    DeliverableResponse,
     SolutionCostResponse,
-    TemplateCreate, TemplateResponse,
-    TenderCreate, TenderResultUpdate, TenderResponse
+    SolutionCreate,
+    SolutionResponse,
+    SolutionReviewRequest,
+    SolutionUpdate,
+    TemplateCreate,
+    TemplateResponse,
+    TenderCreate,
+    TenderResponse,
+    TenderResultUpdate,
+    TicketAcceptRequest,
+    TicketBoardResponse,
+    TicketCreate,
+    TicketProgressUpdate,
+    TicketRatingRequest,
+    TicketResponse,
+    TicketUpdate,
 )
-from app.models.presale import PresaleSolutionTemplate
-from app.schemas.common import ResponseModel, PaginatedResponse
 
 router = APIRouter()
 
@@ -117,7 +133,7 @@ def read_tenders(
     投标记录列表
     """
     query = db.query(PresaleTenderRecord)
-    
+
     if keyword:
         query = query.filter(
             or_(
@@ -125,17 +141,17 @@ def read_tenders(
                 PresaleTenderRecord.tender_name.like(f"%{keyword}%"),
             )
         )
-    
+
     if result:
         query = query.filter(PresaleTenderRecord.result == result)
-    
+
     if customer_name:
         query = query.filter(PresaleTenderRecord.customer_name.like(f"%{customer_name}%"))
-    
+
     total = query.count()
     offset = (page - 1) * page_size
     tenders = query.order_by(desc(PresaleTenderRecord.created_at)).offset(offset).limit(page_size).all()
-    
+
     items = []
     for tender in tenders:
         items.append(TenderResponse(
@@ -159,7 +175,7 @@ def read_tenders(
             created_at=tender.created_at,
             updated_at=tender.updated_at,
         ))
-    
+
     return PaginatedResponse(
         items=items,
         total=total,
@@ -197,11 +213,11 @@ def create_tender(
         leader_id=tender_in.leader_id,
         team_members=tender_in.team_members
     )
-    
+
     db.add(tender)
     db.commit()
     db.refresh(tender)
-    
+
     return TenderResponse(
         id=tender.id,
         ticket_id=tender.ticket_id,
@@ -238,7 +254,7 @@ def read_tender(
     tender = db.query(PresaleTenderRecord).filter(PresaleTenderRecord.id == tender_id).first()
     if not tender:
         raise HTTPException(status_code=404, detail="投标记录不存在")
-    
+
     return TenderResponse(
         id=tender.id,
         ticket_id=tender.ticket_id,
@@ -276,7 +292,7 @@ def update_tender_result(
     tender = db.query(PresaleTenderRecord).filter(PresaleTenderRecord.id == tender_id).first()
     if not tender:
         raise HTTPException(status_code=404, detail="投标记录不存在")
-    
+
     tender.result = result_request.result
     tender.result_reason = result_request.result_reason
     if result_request.technical_score:
@@ -285,11 +301,11 @@ def update_tender_result(
         tender.commercial_score = result_request.commercial_score
     if result_request.total_score:
         tender.total_score = result_request.total_score
-    
+
     db.add(tender)
     db.commit()
     db.refresh(tender)
-    
+
     return TenderResponse(
         id=tender.id,
         ticket_id=tender.ticket_id,
@@ -324,7 +340,7 @@ def get_tender_analysis(
     投标分析报表
     """
     from datetime import timedelta
-    
+
     # 默认使用当前月
     today = date.today()
     if not start_date:
@@ -334,26 +350,26 @@ def get_tender_analysis(
             end_date = date(today.year + 1, 1, 1) - timedelta(days=1)
         else:
             end_date = date(today.year, today.month + 1, 1) - timedelta(days=1)
-    
+
     # 获取时间段内的投标记录
     tenders = db.query(PresaleTenderRecord).filter(
         PresaleTenderRecord.created_at >= datetime.combine(start_date, datetime.min.time()),
         PresaleTenderRecord.created_at <= datetime.combine(end_date, datetime.max.time())
     ).all()
-    
+
     # 统计结果
     total_tenders = len(tenders)
     won_count = len([t for t in tenders if t.result == 'WON'])
     lost_count = len([t for t in tenders if t.result == 'LOST'])
     pending_count = len([t for t in tenders if t.result == 'PENDING'])
-    
+
     win_rate = (won_count / total_tenders * 100) if total_tenders > 0 else 0.0
-    
+
     # 统计金额
     total_budget = sum(float(t.budget_amount or 0) for t in tenders)
     total_bid = sum(float(t.our_bid_amount or 0) for t in tenders)
     won_bid = sum(float(t.our_bid_amount or 0) for t in tenders if t.result == 'WON')
-    
+
     # 按行业统计
     industry_stats = {}
     for tender in tenders:
@@ -363,10 +379,10 @@ def get_tender_analysis(
             opp = db.query(Opportunity).filter(Opportunity.id == tender.opportunity_id).first()
             if opp and opp.industry:
                 industry = opp.industry
-        
+
         if industry not in industry_stats:
             industry_stats[industry] = {"total": 0, "won": 0, "lost": 0, "pending": 0}
-        
+
         industry_stats[industry]["total"] += 1
         if tender.result == 'WON':
             industry_stats[industry]["won"] += 1
@@ -374,20 +390,20 @@ def get_tender_analysis(
             industry_stats[industry]["lost"] += 1
         else:
             industry_stats[industry]["pending"] += 1
-    
+
     # 按月份统计
     monthly_stats = {}
     for tender in tenders:
         month_key = tender.created_at.strftime("%Y-%m")
         if month_key not in monthly_stats:
             monthly_stats[month_key] = {"total": 0, "won": 0, "lost": 0}
-        
+
         monthly_stats[month_key]["total"] += 1
         if tender.result == 'WON':
             monthly_stats[month_key]["won"] += 1
         elif tender.result == 'LOST':
             monthly_stats[month_key]["lost"] += 1
-    
+
     return ResponseModel(
         code=200,
         message="success",

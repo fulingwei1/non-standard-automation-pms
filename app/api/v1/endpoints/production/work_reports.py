@@ -4,27 +4,26 @@
 
 包含：开工报告、进度上报、完工报告、审批、我的报工
 """
-from typing import Any, Optional
 from datetime import datetime
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
 from sqlalchemy import desc
+from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
+from app.core.config import settings
+from app.models.production import Worker, WorkOrder, WorkReport, Workstation
 from app.models.user import User
-from app.models.production import (
-    Workstation, WorkOrder, WorkReport, Worker
-)
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.production import (
-    WorkReportStartRequest,
-    WorkReportProgressRequest,
     WorkReportCompleteRequest,
+    WorkReportProgressRequest,
     WorkReportResponse,
+    WorkReportStartRequest,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
+
 from .utils import generate_report_no
 
 router = APIRouter()

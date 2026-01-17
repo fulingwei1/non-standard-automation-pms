@@ -1,104 +1,33 @@
 # -*- coding: utf-8 -*-
 """
-研发项目立项 - 自动生成
-从 rd_project.py 拆分
+研发项目立项管理
 """
-
-# -*- coding: utf-8 -*-
-"""
-研发项目管理 API endpoints
-包含：研发项目立项、审批、结项、费用归集、报表生成
-适用场景：IPO合规、高新技术企业认定、研发费用加计扣除
-"""
-from typing import Any, List, Optional, Dict
 from datetime import date, datetime
-from decimal import Decimal
-from pathlib import Path
-import os
-import uuid
+from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status, UploadFile, File, Form
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, and_, func
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-
-# 文档上传目录
-DOCUMENT_UPLOAD_DIR = Path(settings.UPLOAD_DIR) / "documents" / "rd_projects"
-DOCUMENT_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-from app.models.user import User
 from app.models.project import Project
-from app.models.timesheet import Timesheet
-from app.models.project import ProjectDocument
-from app.models.rd_project import (
-    RdProject, RdProjectCategory, RdCost, RdCostType,
-    RdCostAllocationRule, RdReportRecord
-)
+from app.models.rd_project import RdProject
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.rd_project import (
-    RdProjectCategoryCreate, RdProjectCategoryUpdate, RdProjectCategoryResponse,
-    RdProjectCreate, RdProjectUpdate, RdProjectResponse,
-    RdProjectApproveRequest, RdProjectCloseRequest, RdProjectLinkRequest,
-    RdCostTypeCreate, RdCostTypeResponse,
-    RdCostCreate, RdCostUpdate, RdCostResponse,
-    RdCostCalculateLaborRequest, RdCostSummaryResponse,
-    RdCostAllocationRuleCreate, RdCostAllocationRuleResponse,
-    RdReportRecordResponse
+    RdProjectApproveRequest,
+    RdProjectCloseRequest,
+    RdProjectCreate,
+    RdProjectLinkRequest,
+    RdProjectResponse,
+    RdProjectUpdate,
 )
-from app.schemas.timesheet import (
-    TimesheetCreate, TimesheetUpdate, TimesheetResponse, TimesheetListResponse
-)
-from app.schemas.project import (
-    ProjectDocumentCreate, ProjectDocumentUpdate, ProjectDocumentResponse
-)
-from app.schemas.common import ResponseModel, PaginatedResponse
+
+from .utils import generate_project_no
 
 router = APIRouter()
-
-
-def generate_project_no(db: Session) -> str:
-    """生成研发项目编号：RD-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_project = (
-        db.query(RdProject)
-        .filter(RdProject.project_no.like(f"RD-{today}-%"))
-        .order_by(desc(RdProject.project_no))
-        .first()
-    )
-    if max_project:
-        seq = int(max_project.project_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"RD-{today}-{seq:03d}"
-
-
-def generate_cost_no(db: Session) -> str:
-    """生成研发费用编号：RC-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_cost = (
-        db.query(RdCost)
-        .filter(RdCost.cost_no.like(f"RC-{today}-%"))
-        .order_by(desc(RdCost.cost_no))
-        .first()
-    )
-    if max_cost:
-        seq = int(max_cost.cost_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"RC-{today}-{seq:03d}"
-
-
-
-from fastapi import APIRouter
-
-router = APIRouter(
-    prefix="/rd-project/initiation",
-    tags=["initiation"]
-)
-
-# 共 7 个路由
 
 # ==================== 研发项目立项 ====================
 
@@ -119,7 +48,7 @@ def get_rd_projects(
     获取研发项目列表（支持分页、搜索、筛选）
     """
     query = db.query(RdProject)
-    
+
     # 关键词搜索
     if keyword:
         query = query.filter(
@@ -128,7 +57,7 @@ def get_rd_projects(
                 RdProject.project_no.contains(keyword),
             )
         )
-    
+
     # 筛选条件
     if category_id:
         query = query.filter(RdProject.category_id == category_id)
@@ -140,16 +69,16 @@ def get_rd_projects(
         query = query.filter(RdProject.approval_status == approval_status)
     if project_manager_id:
         query = query.filter(RdProject.project_manager_id == project_manager_id)
-    
+
     # 总数
     total = query.count()
-    
+
     # 分页
     offset = (page - 1) * page_size
     projects = query.order_by(desc(RdProject.created_at)).offset(offset).limit(page_size).all()
-    
+
     items = [RdProjectResponse.model_validate(proj) for proj in projects]
-    
+
     return PaginatedResponse(
         items=items,
         total=total,
@@ -171,14 +100,14 @@ def create_rd_project(
     """
     # 生成项目编号
     project_no = generate_project_no(db)
-    
+
     # 获取项目负责人姓名
     project_manager_name = None
     if project_in.project_manager_id:
         manager = db.query(User).filter(User.id == project_in.project_manager_id).first()
         if manager:
             project_manager_name = manager.real_name or manager.username
-    
+
     # 创建研发项目
     project = RdProject(
         project_no=project_no,
@@ -200,11 +129,11 @@ def create_rd_project(
         approval_status='PENDING',
         remark=project_in.remark,
     )
-    
+
     db.add(project)
     db.commit()
     db.refresh(project)
-    
+
     return ResponseModel(
         code=201,
         message="研发项目创建成功",
@@ -225,7 +154,7 @@ def get_rd_project(
     project = db.query(RdProject).filter(RdProject.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="研发项目不存在")
-    
+
     return ResponseModel(
         code=200,
         message="success",
@@ -247,27 +176,27 @@ def update_rd_project(
     project = db.query(RdProject).filter(RdProject.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="研发项目不存在")
-    
+
     # 只有草稿状态才能更新
     if project.status != 'DRAFT':
         raise HTTPException(status_code=400, detail="只有草稿状态的研发项目才能更新")
-    
+
     # 更新字段
     update_data = project_in.model_dump(exclude_unset=True)
-    
+
     # 更新项目负责人姓名
     if 'project_manager_id' in update_data and update_data['project_manager_id']:
         manager = db.query(User).filter(User.id == update_data['project_manager_id']).first()
         if manager:
             update_data['project_manager_name'] = manager.real_name or manager.username
-    
+
     for field, value in update_data.items():
         setattr(project, field, value)
-    
+
     db.add(project)
     db.commit()
     db.refresh(project)
-    
+
     return ResponseModel(
         code=200,
         message="研发项目更新成功",
@@ -289,10 +218,10 @@ def approve_rd_project(
     project = db.query(RdProject).filter(RdProject.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="研发项目不存在")
-    
+
     if project.approval_status != 'PENDING':
         raise HTTPException(status_code=400, detail="只有待审批状态的研发项目才能审批")
-    
+
     if approve_request.approved:
         project.approval_status = 'APPROVED'
         project.status = 'APPROVED'
@@ -301,13 +230,13 @@ def approve_rd_project(
     else:
         project.approval_status = 'REJECTED'
         project.status = 'DRAFT'
-    
+
     project.approval_remark = approve_request.approval_remark
-    
+
     db.add(project)
     db.commit()
     db.refresh(project)
-    
+
     return ResponseModel(
         code=200,
         message="研发项目审批成功" if approve_request.approved else "研发项目已驳回",
@@ -329,20 +258,20 @@ def close_rd_project(
     project = db.query(RdProject).filter(RdProject.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="研发项目不存在")
-    
+
     if project.status in ['COMPLETED', 'CANCELLED']:
         raise HTTPException(status_code=400, detail="项目已结项或已取消")
-    
+
     project.status = 'COMPLETED'
     project.close_date = date.today()
     project.close_reason = close_request.close_reason
     project.close_result = close_request.close_result
     project.closed_by = current_user.id
-    
+
     db.add(project)
     db.commit()
     db.refresh(project)
-    
+
     return ResponseModel(
         code=200,
         message="研发项目结项成功",
@@ -364,18 +293,18 @@ def link_rd_project(
     project = db.query(RdProject).filter(RdProject.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="研发项目不存在")
-    
+
     # 验证关联的非标项目是否存在
     linked_project = db.query(Project).filter(Project.id == link_request.linked_project_id).first()
     if not linked_project:
         raise HTTPException(status_code=404, detail="关联的非标项目不存在")
-    
+
     project.linked_project_id = link_request.linked_project_id
-    
+
     db.add(project)
     db.commit()
     db.refresh(project)
-    
+
     return ResponseModel(
         code=200,
         message="关联非标项目成功",

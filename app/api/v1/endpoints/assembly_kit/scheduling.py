@@ -15,50 +15,74 @@ import json
 import logging
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 logger = logging.getLogger(__name__)
+from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_
 
 from app.api import deps
 from app.core import security
 from app.models import (
-    AssemblyStage, AssemblyTemplate, CategoryStageMapping,
-    BomItemAssemblyAttrs, MaterialReadiness, ShortageDetail,
-    ShortageAlertRule, SchedulingSuggestion,
-    Project, Machine, BomHeader, BomItem, Material, MaterialCategory,
-    User
+    AssemblyStage,
+    AssemblyTemplate,
+    BomHeader,
+    BomItem,
+    BomItemAssemblyAttrs,
+    CategoryStageMapping,
+    Machine,
+    Material,
+    MaterialCategory,
+    MaterialReadiness,
+    Project,
+    SchedulingSuggestion,
+    ShortageAlertRule,
+    ShortageDetail,
+    User,
 )
 from app.models.enums import (
-    AssemblyStageEnum, ImportanceLevelEnum, ShortageAlertLevelEnum,
-    SuggestionTypeEnum, SuggestionStatusEnum
+    AssemblyStageEnum,
+    ImportanceLevelEnum,
+    ShortageAlertLevelEnum,
+    SuggestionStatusEnum,
+    SuggestionTypeEnum,
 )
-from app.schemas.assembly_kit import (
-    # Stage
-    AssemblyStageCreate, AssemblyStageUpdate, AssemblyStageResponse,
-    # Template
-    AssemblyTemplateCreate, AssemblyTemplateUpdate, AssemblyTemplateResponse,
-    # Category Mapping
-    CategoryStageMappingCreate, CategoryStageMappingUpdate, CategoryStageMappingResponse,
-    # BOM Assembly Attrs
-    BomItemAssemblyAttrsCreate, BomItemAssemblyAttrsBatchCreate,
-    BomItemAssemblyAttrsUpdate, BomItemAssemblyAttrsResponse,
-    BomAssemblyAttrsAutoRequest, BomAssemblyAttrsTemplateRequest,
-    # Readiness
-    MaterialReadinessCreate, MaterialReadinessResponse, MaterialReadinessDetailResponse, StageKitRate,
-    # Shortage
-    ShortageDetailResponse, ShortageAlertItem, ShortageAlertListResponse,
-    # Alert Rule
-    ShortageAlertRuleCreate, ShortageAlertRuleUpdate, ShortageAlertRuleResponse,
-    # Suggestion
-    SchedulingSuggestionResponse, SchedulingSuggestionAccept, SchedulingSuggestionReject,
-    # Dashboard
-    AssemblyDashboardResponse, AssemblyDashboardStats, AssemblyDashboardStageStats
+from app.schemas.assembly_kit import (  # Stage; Template; Category Mapping; BOM Assembly Attrs; Readiness; Shortage; Alert Rule; Suggestion; Dashboard
+    AssemblyDashboardResponse,
+    AssemblyDashboardStageStats,
+    AssemblyDashboardStats,
+    AssemblyStageCreate,
+    AssemblyStageResponse,
+    AssemblyStageUpdate,
+    AssemblyTemplateCreate,
+    AssemblyTemplateResponse,
+    AssemblyTemplateUpdate,
+    BomAssemblyAttrsAutoRequest,
+    BomAssemblyAttrsTemplateRequest,
+    BomItemAssemblyAttrsBatchCreate,
+    BomItemAssemblyAttrsCreate,
+    BomItemAssemblyAttrsResponse,
+    BomItemAssemblyAttrsUpdate,
+    CategoryStageMappingCreate,
+    CategoryStageMappingResponse,
+    CategoryStageMappingUpdate,
+    MaterialReadinessCreate,
+    MaterialReadinessDetailResponse,
+    MaterialReadinessResponse,
+    SchedulingSuggestionAccept,
+    SchedulingSuggestionReject,
+    SchedulingSuggestionResponse,
+    ShortageAlertItem,
+    ShortageAlertListResponse,
+    ShortageAlertRuleCreate,
+    ShortageAlertRuleResponse,
+    ShortageAlertRuleUpdate,
+    ShortageDetailResponse,
+    StageKitRate,
 )
-from app.schemas.common import ResponseModel, MessageResponse
+from app.schemas.common import MessageResponse, ResponseModel
 
 router = APIRouter()
 
@@ -83,15 +107,15 @@ async def generate_scheduling_suggestions(
 ):
     """生成智能排产建议"""
     from app.services.scheduling_suggestion_service import SchedulingSuggestionService
-    
+
     project_id_list = None
     if project_ids:
         project_id_list = [int(x.strip()) for x in project_ids.split(",") if x.strip().isdigit()]
-    
+
     suggestions = SchedulingSuggestionService.generate_scheduling_suggestions(
         db, scope=scope, project_ids=project_id_list
     )
-    
+
     return ResponseModel(
         code=200,
         message="排产建议生成成功",

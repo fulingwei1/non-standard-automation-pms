@@ -3,26 +3,29 @@
 商务支持模块 - 销售订单管理 API endpoints
 """
 
-from typing import Optional
 from datetime import datetime
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
 from sqlalchemy import desc, or_
+from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.models.user import User
-from app.models.project import Customer, Project
 from app.models.business_support import SalesOrder, SalesOrderItem
+from app.models.project import Customer, Project
 from app.models.sales import Contract
+from app.models.user import User
 from app.schemas.business_support import (
-    SalesOrderCreate, SalesOrderUpdate, SalesOrderResponse,
-    SalesOrderItemResponse, AssignProjectRequest, SendNoticeRequest
+    AssignProjectRequest,
+    SalesOrderCreate,
+    SalesOrderItemResponse,
+    SalesOrderResponse,
+    SalesOrderUpdate,
+    SendNoticeRequest,
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
-from .utils import (
-    generate_order_no, _send_project_department_notifications
-)
+
+from .utils import _send_project_department_notifications, generate_order_no
 
 router = APIRouter()
 

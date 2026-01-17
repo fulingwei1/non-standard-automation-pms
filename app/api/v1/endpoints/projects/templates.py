@@ -5,31 +5,34 @@
 包含模板的创建、更新、删除、版本管理、从模板创建项目等操作
 """
 
-from typing import Any, List, Optional, Dict
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from sqlalchemy import desc
+from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User
+from app.core.config import settings
 from app.models.project import (
-    Project, ProjectTemplate, ProjectTemplateVersion,
-    Machine, ProjectMilestone
+    Machine,
+    Project,
+    ProjectMilestone,
+    ProjectTemplate,
+    ProjectTemplateVersion,
 )
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.project import (
     ProjectTemplateCreate,
-    ProjectTemplateUpdate,
     ProjectTemplateResponse,
+    ProjectTemplateUpdate,
     ProjectTemplateVersionCreate,
-    ProjectTemplateVersionUpdate,
     ProjectTemplateVersionResponse,
+    ProjectTemplateVersionUpdate,
 )
-from app.schemas.common import PaginatedResponse, ResponseModel
 
 router = APIRouter()
 

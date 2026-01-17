@@ -4,21 +4,24 @@
 包含：项目进度汇总、机台进度汇总、甘特图数据、进度看板
 """
 
-from typing import Any
 from datetime import date
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.user import User
-from app.models.project import Project, Machine
 from app.models.progress import Task, TaskDependency
+from app.models.project import Machine, Project
+from app.models.user import User
 from app.schemas.progress import (
-    ProgressSummaryResponse, MachineProgressSummaryResponse,
-    GanttDataResponse, GanttTaskItem,
-    ProgressBoardResponse, ProgressBoardColumn,
+    GanttDataResponse,
+    GanttTaskItem,
+    MachineProgressSummaryResponse,
+    ProgressBoardColumn,
+    ProgressBoardResponse,
+    ProgressSummaryResponse,
 )
 
 router = APIRouter()

@@ -4,46 +4,53 @@ RECORDS - 自动生成
 从 alerts.py 拆分
 """
 
+from datetime import date, datetime, timedelta
+from decimal import Decimal
 from typing import Any, List, Optional
 
-from datetime import date, datetime, timedelta
-
-from decimal import Decimal
-
-from fastapi import APIRouter, Depends, HTTPException, Query, status, Body
-
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
-
+from sqlalchemy import and_, case, func, or_
 from sqlalchemy.orm import Session, joinedload, selectinload
 
-from sqlalchemy import or_, and_, func, case
-
 from app.api import deps
-
 from app.core import security
-
 from app.core.config import settings
-
-from app.models.user import User
-
-from app.models.project import Project, Machine
-
-from app.models.issue import Issue
-
 from app.models.alert import (
-    AlertRule, AlertRuleTemplate, AlertRecord, AlertNotification,
-    ExceptionEvent, ExceptionAction, ExceptionEscalation,
-    AlertStatistics, ProjectHealthSnapshot, AlertSubscription
+    AlertNotification,
+    AlertRecord,
+    AlertRule,
+    AlertRuleTemplate,
+    AlertStatistics,
+    AlertSubscription,
+    ExceptionAction,
+    ExceptionEscalation,
+    ExceptionEvent,
+    ProjectHealthSnapshot,
 )
+from app.models.issue import Issue
+from app.models.project import Machine, Project
+from app.models.user import User
 from app.schemas.alert import (
-    AlertRuleCreate, AlertRuleUpdate, AlertRuleResponse,
-    AlertRecordHandle, AlertRecordResponse, AlertRecordListResponse,
-    ExceptionEventCreate, ExceptionEventUpdate, ExceptionEventResolve,
-    ExceptionEventVerify, ExceptionEventResponse, ExceptionEventListResponse,
-    ProjectHealthResponse, AlertStatisticsResponse,
-    AlertSubscriptionCreate, AlertSubscriptionUpdate, AlertSubscriptionResponse
+    AlertRecordHandle,
+    AlertRecordListResponse,
+    AlertRecordResponse,
+    AlertRuleCreate,
+    AlertRuleResponse,
+    AlertRuleUpdate,
+    AlertStatisticsResponse,
+    AlertSubscriptionCreate,
+    AlertSubscriptionResponse,
+    AlertSubscriptionUpdate,
+    ExceptionEventCreate,
+    ExceptionEventListResponse,
+    ExceptionEventResolve,
+    ExceptionEventResponse,
+    ExceptionEventUpdate,
+    ExceptionEventVerify,
+    ProjectHealthResponse,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
+from app.schemas.common import PaginatedResponse, ResponseModel
 
 router = APIRouter(tags=["records"])
 
@@ -70,27 +77,27 @@ def read_alert_records(
     获取预警记录列表
     """
     query = db.query(AlertRecord)
-    
+
     # 项目筛选
     if project_id:
         query = query.filter(AlertRecord.project_id == project_id)
-    
+
     # 机台筛选
     if machine_id:
         query = query.filter(AlertRecord.machine_id == machine_id)
-    
+
     # 预警级别筛选
     if alert_level:
         query = query.filter(AlertRecord.alert_level == alert_level)
-    
+
     # 状态筛选
     if status:
         query = query.filter(AlertRecord.status == status)
-    
+
     # 对象类型筛选
     if target_type:
         query = query.filter(AlertRecord.target_type == target_type)
-    
+
     # 日期范围筛选（支持 start_date/end_date 和 date_from/date_to）
     date_from_value = date_from or start_date
     date_to_value = date_to or end_date
@@ -98,10 +105,10 @@ def read_alert_records(
         query = query.filter(AlertRecord.triggered_at >= datetime.combine(date_from_value, datetime.min.time()))
     if date_to_value:
         query = query.filter(AlertRecord.triggered_at <= datetime.combine(date_to_value, datetime.max.time()))
-    
+
     # 计算总数
     total = query.count()
-    
+
     # 分页 - 使用 eager loading 避免 N+1 查询
     offset = (page - 1) * page_size
     alerts = query.options(
@@ -109,25 +116,25 @@ def read_alert_records(
         joinedload(AlertRecord.project),
         joinedload(AlertRecord.machine)
     ).order_by(AlertRecord.triggered_at.desc()).offset(offset).limit(page_size).all()
-    
+
     # 批量获取处理人信息（避免循环查询）
     handler_ids = [alert.handler_id for alert in alerts if alert.handler_id]
     handlers_map = {}
     if handler_ids:
         handlers = db.query(User).filter(User.id.in_(handler_ids)).all()
         handlers_map = {h.id: h for h in handlers}
-    
+
     # 补充关联信息
     items = []
     for alert in alerts:
         rule_name = alert.rule.rule_name if alert.rule else None
         project_name = alert.project.project_name if alert.project else None
-        
+
         handler_name = None
         if alert.handler_id and alert.handler_id in handlers_map:
             handler = handlers_map[alert.handler_id]
             handler_name = handler.real_name or handler.username
-        
+
         items.append({
             "id": alert.id,
             "alert_no": alert.alert_no,
@@ -140,7 +147,7 @@ def read_alert_records(
             "status": alert.status,
             "handler_name": handler_name
         })
-    
+
     return PaginatedResponse(
         items=items,
         total=total,
@@ -166,16 +173,16 @@ def read_alert_record(
     ).filter(AlertRecord.id == alert_id).first()
     if not alert:
         raise HTTPException(status_code=404, detail="预警记录不存在")
-    
+
     # 补充关联信息（已通过 eager loading 加载）
     rule_name = alert.rule.rule_name if alert.rule else None
     project_name = alert.project.project_name if alert.project else None
-    
+
     handler_name = None
     if alert.handler_id:
         handler = db.query(User).filter(User.id == alert.handler_id).first()
         handler_name = handler.real_name or handler.username if handler else None
-    
+
     return {
         "id": alert.id,
         "alert_no": alert.alert_no,
@@ -219,18 +226,18 @@ def acknowledge_alert(
     alert = db.query(AlertRecord).filter(AlertRecord.id == alert_id).first()
     if not alert:
         raise HTTPException(status_code=404, detail="预警记录不存在")
-    
+
     if alert.status != "PENDING":
         raise HTTPException(status_code=400, detail="只能确认待处理状态的预警")
-    
+
     alert.status = "ACKNOWLEDGED"
     alert.acknowledged_by = current_user.id
     alert.acknowledged_at = datetime.now()
-    
+
     db.add(alert)
     db.commit()
     db.refresh(alert)
-    
+
     # 返回详情（需要重新查询以获取关联信息）
     return read_alert_record(alert_id, db, current_user)
 
@@ -249,24 +256,24 @@ def resolve_alert(
     alert = db.query(AlertRecord).filter(AlertRecord.id == alert_id).first()
     if not alert:
         raise HTTPException(status_code=404, detail="预警记录不存在")
-    
+
     if alert.status == "RESOLVED":
         raise HTTPException(status_code=400, detail="预警已处理")
-    
+
     # 如果还未开始处理，设置开始时间
     if not alert.handle_start_at:
         alert.handle_start_at = datetime.now()
         alert.handler_id = current_user.id
-    
+
     alert.status = "RESOLVED"
     alert.handle_end_at = datetime.now()
     alert.handle_result = handle_in.handle_result
     alert.handle_note = handle_in.handle_note
-    
+
     db.add(alert)
     db.commit()
     db.refresh(alert)
-    
+
     return read_alert_record(alert_id, db, current_user)
 
 
@@ -284,20 +291,20 @@ def close_alert(
     alert = db.query(AlertRecord).filter(AlertRecord.id == alert_id).first()
     if not alert:
         raise HTTPException(status_code=404, detail="预警记录不存在")
-    
+
     if alert.status == "CLOSED":
         raise HTTPException(status_code=400, detail="预警已关闭")
-    
+
     alert.status = "CLOSED"
     alert.handler_id = current_user.id
     alert.handle_end_at = datetime.now()
     if handle_in.handle_result:
         alert.handle_result = handle_in.handle_result
-    
+
     db.add(alert)
     db.commit()
     db.refresh(alert)
-    
+
     return read_alert_record(alert_id, db, current_user)
 
 
@@ -314,17 +321,17 @@ def ignore_alert(
     alert = db.query(AlertRecord).filter(AlertRecord.id == alert_id).first()
     if not alert:
         raise HTTPException(status_code=404, detail="预警记录不存在")
-    
+
     if alert.status == "RESOLVED":
         raise HTTPException(status_code=400, detail="已处理的预警不能忽略")
-    
+
     alert.status = "IGNORED"
     alert.handler_id = current_user.id
     alert.handle_end_at = datetime.now()
     alert.handle_result = "已忽略"
-    
+
     db.add(alert)
     db.commit()
     db.refresh(alert)
-    
+
     return read_alert_record(alert_id, db, current_user)

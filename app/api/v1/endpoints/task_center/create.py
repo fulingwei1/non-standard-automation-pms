@@ -10,31 +10,45 @@
 核心功能：多来源任务聚合、智能排序、转办协作
 """
 
-from typing import Any, List, Optional, Dict
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from sqlalchemy import and_, case, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, and_, func, case
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User
-from app.models.project import Project
+from app.core.config import settings
 from app.models.notification import Notification
-from app.services.sales_reminder_service import create_notification
+from app.models.project import Project
 from app.models.task_center import (
-    TaskUnified, TaskComment, TaskOperationLog, TaskReminder, JobDutyTemplate
+    JobDutyTemplate,
+    TaskComment,
+    TaskOperationLog,
+    TaskReminder,
+    TaskUnified,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.task_center import (
-    TaskOverviewResponse, TaskUnifiedCreate, TaskUnifiedUpdate, TaskUnifiedResponse,
-    TaskUnifiedListResponse, TaskProgressUpdate, TaskTransferRequest,
-    TaskCommentCreate, TaskCommentResponse, BatchTaskOperation, BatchOperationResponse,
-    BatchOperationStatistics
+    BatchOperationResponse,
+    BatchOperationStatistics,
+    BatchTaskOperation,
+    TaskCommentCreate,
+    TaskCommentResponse,
+    TaskOverviewResponse,
+    TaskProgressUpdate,
+    TaskTransferRequest,
+    TaskUnifiedCreate,
+    TaskUnifiedListResponse,
+    TaskUnifiedResponse,
+    TaskUnifiedUpdate,
 )
+from app.services.sales_reminder import create_notification
+
+from .detail import get_task_detail
 
 router = APIRouter()
 
@@ -42,7 +56,7 @@ router = APIRouter()
 def generate_task_code(db: Session) -> str:
     """生成任务编号：TASK-yymmdd-xxx"""
     from app.utils.number_generator import generate_sequential_no
-    
+
     return generate_sequential_no(
         db=db,
         model_class=TaskUnified,
@@ -105,9 +119,9 @@ def create_personal_task(
         project = db.query(Project).filter(Project.id == task_in.project_id).first()
         if not project:
             raise HTTPException(status_code=404, detail="项目不存在")
-    
+
     task_code = generate_task_code(db)
-    
+
     task = TaskUnified(
         task_code=task_code,
         title=task_in.title,
@@ -131,23 +145,22 @@ def create_personal_task(
         status="ACCEPTED",
         created_by=current_user.id
     )
-    
+
     if task_in.project_id:
         project = db.query(Project).filter(Project.id == task_in.project_id).first()
         if project:
             task.project_code = project.project_code
             task.project_name = project.project_name
-    
+
     db.add(task)
     db.commit()
     db.refresh(task)
-    
+
     log_task_operation(
         db, task.id, "CREATE", f"创建个人任务：{task.title}",
         current_user.id, current_user.real_name or current_user.username
     )
-    
-    return get_task_detail(task.id, db, current_user)
 
+    return get_task_detail(task.id, db, current_user)
 
 

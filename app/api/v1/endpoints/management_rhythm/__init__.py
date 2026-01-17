@@ -5,14 +5,14 @@
 
 from fastapi import APIRouter
 
-from .configs import router as configs_router
-from .meetings import router as meetings_router
 from .action_items import router as action_items_router
+from .configs import router as configs_router
 from .dashboard import router as dashboard_router
-from .meeting_map import router as meeting_map_router
 from .integrations import router as integrations_router
-from .report_configs import router as report_configs_router
+from .meeting_map import router as meeting_map_router
+from .meetings import router as meetings_router
 from .metrics import router as metrics_router
+from .report_configs import router as report_configs_router
 from .reports import router as reports_router
 
 router = APIRouter()

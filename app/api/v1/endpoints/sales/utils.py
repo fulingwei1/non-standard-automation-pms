@@ -6,22 +6,33 @@
 """
 
 import calendar
-from typing import Optional, List, Tuple, Dict
 from datetime import date, datetime, timedelta
-from sqlalchemy.orm import Session
-from sqlalchemy import desc, and_
+from typing import Dict, List, Optional, Tuple
 
 from fastapi import HTTPException
-from app.models.user import User, UserRole, Role
-from app.models.sales import (
-    Lead, Opportunity, OpportunityRequirement, Quote, QuoteVersion, QuoteItem,
-    Contract, ContractDeliverable, ContractAmendment, Invoice
-)
-from app.models.enums import (
-    AssessmentSourceTypeEnum, AssessmentStatusEnum, AssessmentDecisionEnum
-)
+from sqlalchemy import and_, desc
+from sqlalchemy.orm import Session
+
 from app.core import security
 from app.core.config import settings
+from app.models.enums import (
+    AssessmentDecisionEnum,
+    AssessmentSourceTypeEnum,
+    AssessmentStatusEnum,
+)
+from app.models.sales import (
+    Contract,
+    ContractAmendment,
+    ContractDeliverable,
+    Invoice,
+    Lead,
+    Opportunity,
+    OpportunityRequirement,
+    Quote,
+    QuoteItem,
+    QuoteVersion,
+)
+from app.models.user import Role, User, UserRole
 
 
 def get_entity_creator_id(entity) -> Optional[int]:
@@ -198,8 +209,8 @@ def get_previous_range(start_date_value: date, end_date_value: date) -> Tuple[da
 
 
 def validate_g1_lead_to_opportunity(
-    lead: Lead, 
-    requirement: Optional[OpportunityRequirement] = None, 
+    lead: Lead,
+    requirement: Optional[OpportunityRequirement] = None,
     db: Optional[Session] = None
 ) -> Tuple[bool, List[str]]:
     """
@@ -210,7 +221,7 @@ def validate_g1_lead_to_opportunity(
     """
     errors = []
     warnings = []
-    
+
     # 检查客户基本信息
     if not lead.customer_name:
         errors.append("客户名称不能为空")
@@ -218,7 +229,7 @@ def validate_g1_lead_to_opportunity(
         errors.append("联系人不能为空")
     if not lead.contact_phone:
         errors.append("联系电话不能为空")
-    
+
     # 检查需求模板必填项
     if requirement:
         if not requirement.product_object:
@@ -233,7 +244,7 @@ def validate_g1_lead_to_opportunity(
             errors.append("验收依据不能为空")
     else:
         errors.append("需求信息不能为空")
-    
+
     # 可选：检查技术评估状态（如果已申请）
     if db and lead.assessment_id:
         from app.models.sales import TechnicalAssessment
@@ -243,7 +254,7 @@ def validate_g1_lead_to_opportunity(
                 warnings.append(f"技术评估状态为{assessment.status}，建议等待评估完成")
             elif assessment.decision == AssessmentDecisionEnum.NOT_RECOMMEND.value:
                 warnings.append("技术评估建议为'不建议立项'，请谨慎考虑")
-    
+
     # 检查未决事项（阻塞报价的）
     if db:
         from app.models.sales import OpenItem
@@ -257,7 +268,7 @@ def validate_g1_lead_to_opportunity(
         ).count()
         if blocking_items > 0:
             warnings.append(f"存在{blocking_items}个阻塞报价的未决事项，建议先解决")
-    
+
     return len(errors) == 0, errors + warnings
 
 
@@ -268,7 +279,7 @@ def validate_g2_opportunity_to_quote(opportunity: Opportunity) -> Tuple[bool, Li
     技术可行性初评通过
     """
     errors = []
-    
+
     if not opportunity.budget_range:
         errors.append("预算范围不能为空")
     if not opportunity.decision_chain:
@@ -277,18 +288,18 @@ def validate_g2_opportunity_to_quote(opportunity: Opportunity) -> Tuple[bool, Li
         errors.append("交付窗口不能为空")
     if not opportunity.acceptance_basis:
         errors.append("验收标准不能为空")
-    
+
     # 技术可行性初评（简化：检查是否有评分）
     if opportunity.score is None or opportunity.score < 60:
         errors.append("技术可行性初评未通过（评分需≥60分）")
-    
+
     return len(errors) == 0, errors
 
 
 def validate_g3_quote_to_contract(
-    quote: Quote, 
-    version: QuoteVersion, 
-    items: List[QuoteItem], 
+    quote: Quote,
+    version: QuoteVersion,
+    items: List[QuoteItem],
     db: Optional[Session] = None
 ) -> Tuple[bool, List[str], Optional[str]]:
     """
@@ -299,7 +310,7 @@ def validate_g3_quote_to_contract(
     """
     errors = []
     warnings = []
-    
+
     # 检查成本拆解
     if not items or len(items) == 0:
         errors.append("报价明细不能为空")
@@ -307,11 +318,11 @@ def validate_g3_quote_to_contract(
         items_without_cost = [item for item in items if not item.cost or float(item.cost or 0) == 0]
         if items_without_cost:
             errors.append(f"有{len(items_without_cost)}个报价明细项未填写成本")
-        
+
         total_cost = sum(float(item.cost or 0) * float(item.qty or 0) for item in items)
         if total_cost == 0:
             errors.append("成本拆解不完整，总成本不能为0")
-    
+
     # 检查毛利率
     total_price = float(version.total_price or 0)
     total_cost = float(version.cost_total or 0)
@@ -319,7 +330,7 @@ def validate_g3_quote_to_contract(
         gross_margin = (total_price - total_cost) / total_price * 100
         margin_threshold = settings.SALES_GROSS_MARGIN_THRESHOLD
         margin_warning = settings.SALES_GROSS_MARGIN_WARNING
-        
+
         if gross_margin < margin_threshold:
             errors.append(f"毛利率过低（{gross_margin:.2f}%），低于最低阈值{margin_threshold}%，需要审批")
         elif gross_margin < margin_warning:
@@ -334,7 +345,9 @@ def validate_g3_quote_to_contract(
             warnings.append(f"交期较短（{version.lead_time_days}天），低于建议最小交期{min_lead_time}天，请确认关键物料交期和设计/装配/调试周期")
 
         if db is not None:
-            from app.services.delivery_validation_service import delivery_validation_service
+            from app.services.delivery_validation_service import (
+                delivery_validation_service,
+            )
             validation_result = delivery_validation_service.validate_delivery_date(
                 db, quote, version, items
             )
@@ -350,14 +363,14 @@ def validate_g3_quote_to_contract(
 
     if not version.risk_terms:
         warnings.append("风险条款未补充，建议补充风险条款与边界条款")
-    
+
     warning_msg = "; ".join(warnings) if warnings else None
     return len(errors) == 0, errors, warning_msg
 
 
 def validate_g4_contract_to_project(
-    contract: Contract, 
-    deliverables: List[ContractDeliverable], 
+    contract: Contract,
+    deliverables: List[ContractDeliverable],
     db: Optional[Session] = None
 ) -> Tuple[bool, List[str]]:
     """
@@ -366,33 +379,33 @@ def validate_g4_contract_to_project(
     SOW/验收标准/BOM初版/里程碑基线冻结
     """
     errors = []
-    
+
     if not deliverables or len(deliverables) == 0:
         errors.append("合同交付物不能为空")
     else:
         required_deliverables = [d for d in deliverables if d.required_for_payment]
         if len(required_deliverables) == 0:
             errors.append("至少需要一个付款必需的交付物")
-        
+
         incomplete_deliverables = [d for d in deliverables if not d.deliverable_name or len(d.deliverable_name.strip()) == 0]
         if incomplete_deliverables:
             errors.append(f"有{len(incomplete_deliverables)}个交付物名称不完整")
-    
+
     if not contract.contract_amount or contract.contract_amount <= 0:
         errors.append("合同金额不能为空或必须大于0")
-    
+
     if not contract.acceptance_summary:
         errors.append("验收摘要不能为空，请补充验收标准")
-    
+
     if not contract.payment_terms_summary:
         errors.append("付款条款摘要不能为空，请补充付款节点信息")
-    
+
     if contract.status != "SIGNED":
         errors.append("只有已签订的合同才能生成项目")
-    
+
     if contract.project_id:
         errors.append("合同已关联项目，不能重复生成")
-    
+
     if db is not None:
         freeze_checks = []
 
@@ -447,9 +460,9 @@ def validate_g4_contract_to_project(
 
 def generate_lead_code(db: Session) -> str:
     """生成线索编码：L2507-001"""
-    from app.utils.number_generator import generate_monthly_no
     from app.models.sales import Lead
-    
+    from app.utils.number_generator import generate_monthly_no
+
     return generate_monthly_no(
         db=db,
         model_class=Lead,
@@ -462,9 +475,9 @@ def generate_lead_code(db: Session) -> str:
 
 def generate_opportunity_code(db: Session) -> str:
     """生成商机编码：O2507-001"""
-    from app.utils.number_generator import generate_monthly_no
     from app.models.sales import Opportunity
-    
+    from app.utils.number_generator import generate_monthly_no
+
     return generate_monthly_no(
         db=db,
         model_class=Opportunity,
@@ -477,9 +490,9 @@ def generate_opportunity_code(db: Session) -> str:
 
 def generate_quote_code(db: Session) -> str:
     """生成报价编码：Q2507-001"""
-    from app.utils.number_generator import generate_monthly_no
     from app.models.sales import Quote
-    
+    from app.utils.number_generator import generate_monthly_no
+
     return generate_monthly_no(
         db=db,
         model_class=Quote,
@@ -492,9 +505,9 @@ def generate_quote_code(db: Session) -> str:
 
 def generate_contract_code(db: Session) -> str:
     """生成合同编码：HT2507-001"""
-    from app.utils.number_generator import generate_monthly_no
     from app.models.sales import Contract
-    
+    from app.utils.number_generator import generate_monthly_no
+
     return generate_monthly_no(
         db=db,
         model_class=Contract,
@@ -508,7 +521,7 @@ def generate_contract_code(db: Session) -> str:
 def generate_amendment_no(db: Session, contract_code: str) -> str:
     """生成合同变更编号：{合同编码}-BG{序号}"""
     from app.models.sales import ContractAmendment
-    
+
     prefix = f"{contract_code}-BG"
     count = db.query(ContractAmendment).filter(
         ContractAmendment.amendment_no.like(f"{prefix}%")
@@ -519,9 +532,9 @@ def generate_amendment_no(db: Session, contract_code: str) -> str:
 
 def generate_invoice_code(db: Session) -> str:
     """生成发票编码：INV-yymmdd-xxx"""
-    from app.utils.number_generator import generate_sequential_no
     from app.models.sales import Invoice
-    
+    from app.utils.number_generator import generate_sequential_no
+
     return generate_sequential_no(
         db=db,
         model_class=Invoice,

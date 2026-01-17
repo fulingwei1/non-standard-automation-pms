@@ -9,46 +9,81 @@
 奖金激励模块 API 端点
 """
 
-from typing import Any, List, Optional, Tuple
-from datetime import datetime, date
-from decimal import Decimal
-
-from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File, Form
-from fastapi.responses import FileResponse
-from sqlalchemy.orm import Session
-from sqlalchemy import desc, func
-import os
 import io
+import os
 import uuid
+from datetime import date, datetime
+from decimal import Decimal
 from pathlib import Path
+from typing import Any, List, Optional, Tuple
+
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    UploadFile,
+    status,
+)
+from fastapi.responses import FileResponse
+from sqlalchemy import desc, func
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
 from app.models.bonus import (
-    BonusRule, BonusCalculation, BonusDistribution, TeamBonusAllocation, BonusAllocationSheet
+    BonusAllocationSheet,
+    BonusCalculation,
+    BonusDistribution,
+    BonusRule,
+    TeamBonusAllocation,
 )
-from app.models.performance import PerformanceResult, ProjectContribution, PerformancePeriod
+from app.models.performance import (
+    PerformancePeriod,
+    PerformanceResult,
+    ProjectContribution,
+)
+from app.models.presale import PresaleSupportTicket
 from app.models.project import Project, ProjectMilestone
 from app.models.sales import Contract, Invoice
-from app.models.presale import PresaleSupportTicket
+from app.models.user import User
 from app.schemas.bonus import (
-    BonusRuleCreate, BonusRuleUpdate, BonusRuleResponse, BonusRuleListResponse,
-    BonusCalculationCreate, BonusCalculationResponse, BonusCalculationListResponse,
-    BonusCalculationApprove, BonusCalculationQuery,
-    BonusDistributionCreate, BonusDistributionResponse, BonusDistributionListResponse,
-    BonusDistributionPay, BonusDistributionQuery,
-    TeamBonusAllocationCreate, TeamBonusAllocationResponse, TeamBonusAllocationListResponse,
+    BonusAllocationRow,
+    BonusAllocationSheetConfirm,
+    BonusAllocationSheetResponse,
+    BonusCalculationApprove,
+    BonusCalculationCreate,
+    BonusCalculationListResponse,
+    BonusCalculationQuery,
+    BonusCalculationResponse,
+    BonusDistributionCreate,
+    BonusDistributionListResponse,
+    BonusDistributionPay,
+    BonusDistributionQuery,
+    BonusDistributionResponse,
+    BonusRuleCreate,
+    BonusRuleListResponse,
+    BonusRuleResponse,
+    BonusRuleUpdate,
+    BonusStatisticsResponse,
+    CalculateMilestoneBonusRequest,
+    CalculatePerformanceBonusRequest,
+    CalculatePresaleBonusRequest,
+    CalculateProjectBonusRequest,
+    CalculateSalesBonusRequest,
+    CalculateSalesDirectorBonusRequest,
+    CalculateTeamBonusRequest,
+    MyBonusResponse,
     TeamBonusAllocationApprove,
-    CalculatePerformanceBonusRequest, CalculateProjectBonusRequest,
-    CalculateMilestoneBonusRequest, CalculateTeamBonusRequest,
-    CalculateSalesBonusRequest, CalculateSalesDirectorBonusRequest, CalculatePresaleBonusRequest,
-    MyBonusResponse, BonusStatisticsResponse,
-    BonusAllocationSheetResponse, BonusAllocationSheetConfirm, BonusAllocationRow
+    TeamBonusAllocationCreate,
+    TeamBonusAllocationListResponse,
+    TeamBonusAllocationResponse,
 )
-from app.schemas.common import ResponseModel, PageParams
-from app.services.bonus_calculator import BonusCalculator
+from app.schemas.common import PageParams, ResponseModel
+from app.services.bonus import BonusCalculator
 
 router = APIRouter()
 
@@ -82,37 +117,37 @@ def get_bonus_statistics(
         calc_query = calc_query.filter(BonusCalculation.calculated_at >= datetime.combine(start_date, datetime.min.time()))
     if end_date:
         calc_query = calc_query.filter(BonusCalculation.calculated_at <= datetime.combine(end_date, datetime.max.time()))
-    
+
     total_calculated = calc_query.with_entities(func.sum(BonusCalculation.calculated_amount)).scalar() or Decimal('0')
     calculation_count = calc_query.count()
-    
+
     # 发放记录统计
     dist_query = db.query(BonusDistribution)
     if start_date:
         dist_query = dist_query.filter(BonusDistribution.distribution_date >= start_date)
     if end_date:
         dist_query = dist_query.filter(BonusDistribution.distribution_date <= end_date)
-    
+
     total_distributed = dist_query.filter(
         BonusDistribution.status == 'PAID'
     ).with_entities(func.sum(BonusDistribution.distributed_amount)).scalar() or Decimal('0')
-    
+
     total_pending = dist_query.filter(
         BonusDistribution.status == 'PENDING'
     ).with_entities(func.sum(BonusDistribution.distributed_amount)).scalar() or Decimal('0')
-    
+
     distribution_count = dist_query.count()
-    
+
     # 按类型统计
     by_type = {}
     type_query = calc_query.join(BonusRule).with_entities(
         BonusRule.bonus_type,
         func.sum(BonusCalculation.calculated_amount)
     ).group_by(BonusRule.bonus_type).all()
-    
+
     for bonus_type, amount in type_query:
         by_type[bonus_type] = amount or Decimal('0')
-    
+
     # 按部门统计（关联用户表）
     from app.models.user import User
     by_department = {}
@@ -120,11 +155,11 @@ def get_bonus_statistics(
         User.department,
         func.sum(BonusCalculation.calculated_amount)
     ).group_by(User.department).all()
-    
+
     for dept_name, amount in dept_query:
         if dept_name:  # 只统计有部门信息的记录
             by_department[dept_name] = amount or Decimal('0')
-    
+
     return ResponseModel(
         code=200,
         data=BonusStatisticsResponse(

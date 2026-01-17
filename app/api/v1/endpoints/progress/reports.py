@@ -4,8 +4,8 @@
 包含：进度报告CRUD、进度报告统计
 """
 
-from typing import Any, Optional
 from datetime import date, timedelta
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -13,13 +13,16 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.core.config import settings
+from app.models.progress import ProgressReport, Task
+from app.models.project import Machine, Project
 from app.models.user import User
-from app.models.project import Project, Machine
-from app.models.progress import Task, ProgressReport
-from app.schemas.progress import (
-    ProgressReportCreate, ProgressReportUpdate, ProgressReportResponse, ProgressReportListResponse,
-)
 from app.schemas.common import ResponseModel
+from app.schemas.progress import (
+    ProgressReportCreate,
+    ProgressReportListResponse,
+    ProgressReportResponse,
+    ProgressReportUpdate,
+)
 
 router = APIRouter()
 

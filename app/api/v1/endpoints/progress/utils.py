@@ -3,21 +3,23 @@
 进度跟踪模块 - 公共工具函数
 """
 
-from typing import Dict, List, Tuple, Optional
-from datetime import date, datetime, timedelta
-from decimal import Decimal
-from collections import defaultdict
 import math
+from collections import defaultdict
+from datetime import date, datetime, timedelta, timezone
+from decimal import Decimal
+from typing import Dict, List, Optional, Tuple
 
 from sqlalchemy.orm import Session
 
-from app.models.project import Project
-from app.models.progress import Task, TaskDependency
 from app.models.notification import Notification
+from app.models.progress import Task, TaskDependency
+from app.models.project import Project
 from app.schemas.progress import (
-    TaskForecastItem, ProgressForecastResponse, DependencyIssue
+    DependencyIssue,
+    ProgressForecastResponse,
+    TaskForecastItem,
 )
-from app.services.sales_reminder_service import create_notification
+from app.services.sales_reminder import create_notification
 
 
 def _calculate_task_forecast(task: Task, today: Optional[date] = None) -> Tuple[TaskForecastItem, bool]:
@@ -307,7 +309,7 @@ def _notify_dependency_alerts(
     if not recipients:
         return
 
-    window_start = datetime.utcnow() - timedelta(hours=6)
+    window_start = datetime.now(timezone.utc) - timedelta(hours=6)
     summary_parts = []
     if cycle_count:
         summary_parts.append(f"{cycle_count} 个循环依赖")

@@ -3,31 +3,44 @@
 商机管理 API endpoints
 """
 
-from typing import Any, List, Optional
 from datetime import date, datetime
+from typing import Any, List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import desc, func, or_
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import desc, or_, func
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User
+from app.core.config import settings
+from app.models.enums import OpportunityStageEnum
 from app.models.project import Customer
 from app.models.sales import Opportunity, OpportunityRequirement
-from app.models.enums import OpportunityStageEnum
-from app.schemas.sales import (
-    OpportunityCreate, OpportunityUpdate, OpportunityResponse,
-    OpportunityRequirementResponse, GateSubmitRequest
-)
+from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.schemas.sales import (
+    OpportunityCreate,
+    OpportunityRequirementResponse,
+    OpportunityResponse,
+    OpportunityUpdate,
+)
+
 from .utils import (
-    get_entity_creator_id,
     generate_opportunity_code,
-    validate_g2_opportunity_to_quote
+    get_entity_creator_id,
+    validate_g2_opportunity_to_quote,
 )
 
 router = APIRouter()
+
+
+class OpportunityGateSubmitRequest(BaseModel):
+    """商机阶段门提交请求（轻量版，用于 gate_status 更新）"""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    gate_status: str = Field(..., description="阶段门状态：PASS/REJECT")
 
 
 @router.get("/opportunities", response_model=PaginatedResponse[OpportunityResponse])
@@ -114,7 +127,7 @@ def create_opportunity(
     创建商机
     """
     opp_data = opp_in.model_dump(exclude={"requirement"})
-    
+
     # 如果没有提供编码，自动生成
     if not opp_data.get("opp_code"):
         opp_data["opp_code"] = generate_opportunity_code(db)
@@ -123,7 +136,7 @@ def create_opportunity(
         existing = db.query(Opportunity).filter(Opportunity.opp_code == opp_data["opp_code"]).first()
         if existing:
             raise HTTPException(status_code=400, detail="商机编码已存在")
-    
+
     # 如果没有指定负责人，默认使用当前用户
     if not opp_data.get("owner_id"):
         opp_data["owner_id"] = current_user.id
@@ -236,7 +249,7 @@ def submit_opportunity_gate(
     *,
     db: Session = Depends(deps.get_db),
     opp_id: int,
-    gate_request: GateSubmitRequest,
+    gate_request: OpportunityGateSubmitRequest,
     gate_type: str = Query("G2", description="阶段门类型: G1, G2, G3, G4"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
@@ -327,7 +340,7 @@ def update_opportunity_score(
         raise HTTPException(status_code=404, detail="商机不存在")
 
     opportunity.score = score
-    
+
     # 根据评分自动更新风险等级
     if score >= 80:
         opportunity.risk_level = "LOW"
@@ -335,7 +348,7 @@ def update_opportunity_score(
         opportunity.risk_level = "MEDIUM"
     else:
         opportunity.risk_level = "HIGH"
-    
+
     db.commit()
     db.refresh(opportunity)
 
@@ -430,19 +443,19 @@ def get_opportunity_funnel(
     按阶段统计商机数量和金额，计算转化率
     """
     query = db.query(Opportunity)
-    
+
     if start_date:
         query = query.filter(Opportunity.created_at >= datetime.combine(start_date, datetime.min.time()))
     if end_date:
         query = query.filter(Opportunity.created_at <= datetime.combine(end_date, datetime.max.time()))
     if owner_id:
         query = query.filter(Opportunity.owner_id == owner_id)
-    
+
     stages = [stage.value for stage in OpportunityStageEnum]
     funnel_data = {}
     total_count = 0
     total_amount = 0
-    
+
     for stage in stages:
         stage_query = query.filter(Opportunity.stage == stage)
         count = stage_query.count()
@@ -454,7 +467,7 @@ def get_opportunity_funnel(
         if owner_id:
             amount_query = amount_query.filter(Opportunity.owner_id == owner_id)
         amount_result = amount_query.scalar() or 0
-        
+
         funnel_data[stage] = {
             "count": count,
             "total_amount": float(amount_result),
@@ -462,7 +475,7 @@ def get_opportunity_funnel(
         }
         total_count += count
         total_amount += float(amount_result)
-    
+
     # 计算转化率（从前一阶段到当前阶段）
     conversion_rates = {}
     prev_count = None
@@ -473,7 +486,7 @@ def get_opportunity_funnel(
         else:
             conversion_rates[stage] = 100.0 if current_count > 0 else 0.0
         prev_count = current_count
-    
+
     return ResponseModel(
         code=200,
         message="success",
@@ -522,7 +535,10 @@ def export_opportunities(
     """
     Issue 4.2: 导出商机列表（Excel）
     """
-    from app.services.excel_export_service import ExcelExportService, create_excel_response
+    from app.services.excel_export_service import (
+        ExcelExportService,
+        create_excel_response,
+    )
 
     query = db.query(Opportunity)
     if keyword:

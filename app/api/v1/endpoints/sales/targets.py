@@ -3,24 +3,23 @@
 销售目标管理 API endpoints
 """
 
-from typing import Any, Optional
 from datetime import date
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
 from sqlalchemy import desc, or_
+from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User
-from app.models.sales import SalesTarget
+from app.core.config import settings
 from app.models.organization import Department
-from app.schemas.sales import (
-    SalesTargetCreate, SalesTargetUpdate, SalesTargetResponse
-)
+from app.models.sales import SalesTarget
+from app.models.user import User
 from app.schemas.common import PaginatedResponse
+from app.schemas.sales import SalesTargetCreate, SalesTargetResponse, SalesTargetUpdate
 from app.services.sales_team_service import SalesTeamService
+
 from .utils import get_user_role_code
 
 router = APIRouter()

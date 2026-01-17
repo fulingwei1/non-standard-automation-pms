@@ -5,12 +5,12 @@
 
 from fastapi import APIRouter
 
-from .suppliers import router as suppliers_router
-from .orders import router as orders_router
 from .deliveries import router as deliveries_router
-from .quality import router as quality_router
-from .progress import router as progress_router
+from .orders import router as orders_router
 from .payments import router as payments_router
+from .progress import router as progress_router
+from .quality import router as quality_router
+from .suppliers import router as suppliers_router
 
 router = APIRouter()
 

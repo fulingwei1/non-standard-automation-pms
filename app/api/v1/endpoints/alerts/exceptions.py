@@ -4,46 +4,55 @@ EXCEPTIONS - 自动生成
 从 alerts.py 拆分
 """
 
+from datetime import date, datetime, timedelta
+from decimal import Decimal
 from typing import Any, List, Optional
 
-from datetime import date, datetime, timedelta
-
-from decimal import Decimal
-
-from fastapi import APIRouter, Depends, HTTPException, Query, status, Body
-
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
-
+from sqlalchemy import and_, case, func, or_
 from sqlalchemy.orm import Session, joinedload, selectinload
 
-from sqlalchemy import or_, and_, func, case
-
 from app.api import deps
-
 from app.core import security
-
 from app.core.config import settings
-
-from app.models.user import User
-
-from app.models.project import Project, Machine
-
-from app.models.issue import Issue
-
 from app.models.alert import (
-    AlertRule, AlertRuleTemplate, AlertRecord, AlertNotification,
-    ExceptionEvent, ExceptionAction, ExceptionEscalation,
-    AlertStatistics, ProjectHealthSnapshot, AlertSubscription
+    AlertNotification,
+    AlertRecord,
+    AlertRule,
+    AlertRuleTemplate,
+    AlertStatistics,
+    AlertSubscription,
+    ExceptionAction,
+    ExceptionEscalation,
+    ExceptionEvent,
+    ProjectHealthSnapshot,
 )
+from app.models.issue import Issue
+from app.models.project import Machine, Project
+from app.models.user import User
 from app.schemas.alert import (
-    AlertRuleCreate, AlertRuleUpdate, AlertRuleResponse,
-    AlertRecordHandle, AlertRecordResponse, AlertRecordListResponse,
-    ExceptionEventCreate, ExceptionEventUpdate, ExceptionEventResolve,
-    ExceptionEventVerify, ExceptionEventResponse, ExceptionEventListResponse,
-    ProjectHealthResponse, AlertStatisticsResponse,
-    AlertSubscriptionCreate, AlertSubscriptionUpdate, AlertSubscriptionResponse
+    AlertRecordHandle,
+    AlertRecordListResponse,
+    AlertRecordResponse,
+    AlertRuleCreate,
+    AlertRuleResponse,
+    AlertRuleUpdate,
+    AlertStatisticsResponse,
+    AlertSubscriptionCreate,
+    AlertSubscriptionResponse,
+    AlertSubscriptionUpdate,
+    ExceptionEventCreate,
+    ExceptionEventListResponse,
+    ExceptionEventResolve,
+    ExceptionEventResponse,
+    ExceptionEventUpdate,
+    ExceptionEventVerify,
+    ProjectHealthResponse,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
+from app.schemas.common import PaginatedResponse, ResponseModel
+
+from .notifications import generate_exception_no
 
 router = APIRouter(tags=["exceptions"])
 
@@ -67,7 +76,7 @@ def read_exception_events(
     获取异常事件列表（支持分页和筛选）
     """
     query = db.query(ExceptionEvent)
-    
+
     # 关键词搜索
     if keyword:
         query = query.filter(
@@ -76,34 +85,34 @@ def read_exception_events(
                 ExceptionEvent.event_title.like(f"%{keyword}%"),
             )
         )
-    
+
     # 项目筛选
     if project_id:
         query = query.filter(ExceptionEvent.project_id == project_id)
-    
+
     # 异常类型筛选
     if event_type:
         query = query.filter(ExceptionEvent.event_type == event_type)
-    
+
     # 严重程度筛选
     if severity:
         query = query.filter(ExceptionEvent.severity == severity)
-    
+
     # 状态筛选
     if status:
         query = query.filter(ExceptionEvent.status == status)
-    
+
     # 责任人筛选
     if responsible_user_id:
         query = query.filter(ExceptionEvent.responsible_user_id == responsible_user_id)
-    
+
     # 计算总数
     total = query.count()
-    
+
     # 分页
     offset = (page - 1) * page_size
     events = query.order_by(ExceptionEvent.created_at.desc()).offset(offset).limit(page_size).all()
-    
+
     # 构建响应数据
     items = []
     for event in events:
@@ -111,7 +120,7 @@ def read_exception_events(
         if event.discovered_by:
             user = db.query(User).filter(User.id == event.discovered_by).first()
             discovered_by_name = user.real_name if user else None
-        
+
         items.append({
             "id": event.id,
             "event_no": event.event_no,
@@ -133,7 +142,7 @@ def read_exception_events(
             "is_overdue": event.is_overdue or False,
             "created_at": event.created_at.isoformat() if event.created_at else None,
         })
-    
+
     return PaginatedResponse(
         items=items,
         total=total,
@@ -158,16 +167,16 @@ def create_exception_event(
         project = db.query(Project).filter(Project.id == event_in.project_id).first()
         if not project:
             raise HTTPException(status_code=404, detail="项目不存在")
-    
+
     # 验证设备
     if event_in.machine_id:
         machine = db.query(Machine).filter(Machine.id == event_in.machine_id).first()
         if not machine:
             raise HTTPException(status_code=404, detail="设备不存在")
-    
+
     # 生成异常编号
     event_no = generate_exception_no(db)
-    
+
     # 创建异常事件
     event = ExceptionEvent(
         event_no=event_no,
@@ -197,7 +206,7 @@ def create_exception_event(
     db.add(event)
     db.commit()
     db.refresh(event)
-    
+
     return read_exception_event(event.id, db, current_user)
 
 
@@ -213,13 +222,13 @@ def read_exception_event(
     event = db.query(ExceptionEvent).filter(ExceptionEvent.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="异常事件不存在")
-    
+
     # 获取发现人姓名
     discovered_by_name = None
     if event.discovered_by:
         user = db.query(User).filter(User.id == event.discovered_by).first()
         discovered_by_name = user.real_name if user else None
-    
+
     # 获取处理记录
     actions = event.actions.order_by(ExceptionAction.created_at.desc()).all()
     action_list = []
@@ -235,7 +244,7 @@ def read_exception_event(
             "action_user_name": action_user.real_name if action_user else None,
             "created_at": action.created_at.isoformat() if action.created_at else None,
         })
-    
+
     return {
         "id": event.id,
         "event_no": event.event_no,
@@ -293,19 +302,19 @@ def update_exception_status(
     event = db.query(ExceptionEvent).filter(ExceptionEvent.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="异常事件不存在")
-    
+
     old_status = event.status
     event.status = status
-    
+
     # 如果状态为RESOLVED，记录解决时间
     if status == "RESOLVED" and not event.resolved_at:
         event.resolved_at = datetime.now()
         event.resolved_by = current_user.id
-    
+
     db.add(event)
     db.commit()
     db.refresh(event)
-    
+
     return read_exception_event(event_id, db, current_user)
 
 
@@ -324,7 +333,7 @@ def add_exception_action(
     event = db.query(ExceptionEvent).filter(ExceptionEvent.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="异常事件不存在")
-    
+
     action = ExceptionAction(
         event_id=event_id,
         action_type=action_type,
@@ -335,7 +344,7 @@ def add_exception_action(
     )
     db.add(action)
     db.commit()
-    
+
     return ResponseModel(
         code=200,
         message="处理记录已添加",
@@ -362,7 +371,7 @@ def escalate_exception(
     event = db.query(ExceptionEvent).filter(ExceptionEvent.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="异常事件不存在")
-    
+
     # 创建升级记录
     escalation = ExceptionEscalation(
         event_id=event_id,
@@ -373,23 +382,23 @@ def escalate_exception(
         escalation_level=1,  # 升级层级，可以根据实际情况计算
     )
     db.add(escalation)
-    
+
     # 更新责任人
     if escalate_to_user_id:
         event.responsible_user_id = escalate_to_user_id
     if escalate_to_dept:
         event.responsible_dept = escalate_to_dept
-    
+
     # 如果严重程度不是最高，可以提升严重程度
     if event.severity == "MINOR":
         event.severity = "MAJOR"
     elif event.severity == "MAJOR":
         event.severity = "CRITICAL"
-    
+
     db.add(event)
     db.commit()
     db.refresh(event)
-    
+
     return read_exception_event(event_id, db, current_user)
 
 
@@ -408,10 +417,10 @@ def create_exception_from_issue(
     issue = db.query(Issue).filter(Issue.id == issue_id).first()
     if not issue:
         raise HTTPException(status_code=404, detail="问题不存在")
-    
+
     # 生成异常编号
     event_no = generate_exception_no(db)
-    
+
     # 创建异常事件
     event = ExceptionEvent(
         event_no=event_no,
@@ -434,7 +443,7 @@ def create_exception_from_issue(
     db.add(event)
     db.commit()
     db.refresh(event)
-    
+
     return read_exception_event(event.id, db, current_user)
 
 

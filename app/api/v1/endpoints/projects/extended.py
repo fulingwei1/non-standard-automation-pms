@@ -3,18 +3,18 @@
 项目扩展管理 API endpoints (重构版)
 """
 
-from typing import Any, List, Optional
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
+from app.core.config import settings
 from app.models.user import User
-from app.schemas.common import ResponseModel, PaginatedResponse
+from app.schemas.common import PaginatedResponse, ResponseModel
 
 router = APIRouter()
 

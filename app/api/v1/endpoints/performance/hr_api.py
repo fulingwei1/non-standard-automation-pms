@@ -10,42 +10,59 @@
 核心功能：多层级绩效视图、绩效对比、趋势分析、排行榜
 """
 
-from typing import Any, List, Optional, Dict
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import and_, case, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, and_, func, case
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User
-from app.models.project import Project
+from app.core.config import settings
 from app.models.organization import Department, Employee
-from app.models.performance import (
-    PerformancePeriod, PerformanceIndicator, PerformanceResult,
-    PerformanceEvaluation, PerformanceAppeal, ProjectContribution,
+from app.models.performance import (  # New Performance System
+    EvaluationWeightConfig,
+    MonthlyWorkSummary,
+    PerformanceAppeal,
+    PerformanceEvaluation,
+    PerformanceEvaluationRecord,
+    PerformanceIndicator,
+    PerformancePeriod,
     PerformanceRankingSnapshot,
-    # New Performance System
-    MonthlyWorkSummary, PerformanceEvaluationRecord, EvaluationWeightConfig
+    PerformanceResult,
+    ProjectContribution,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
-from app.schemas.performance import (
-    PersonalPerformanceResponse, PerformanceTrendResponse,
-    TeamPerformanceResponse, DepartmentPerformanceResponse, PerformanceRankingResponse,
-    ProjectPerformanceResponse, ProjectProgressReportResponse, PerformanceCompareResponse,
-    # New Performance System
-    MonthlyWorkSummaryCreate, MonthlyWorkSummaryUpdate, MonthlyWorkSummaryResponse,
-    MonthlyWorkSummaryListItem, PerformanceEvaluationRecordCreate,
-    PerformanceEvaluationRecordUpdate, PerformanceEvaluationRecordResponse,
-    EvaluationTaskItem, EvaluationTaskListResponse, EvaluationDetailResponse,
-    MyPerformanceResponse, EvaluationWeightConfigCreate, EvaluationWeightConfigResponse,
-    EvaluationWeightConfigListResponse
+from app.models.project import Project
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
+from app.schemas.performance import (  # New Performance System
+    DepartmentPerformanceResponse,
+    EvaluationDetailResponse,
+    EvaluationTaskItem,
+    EvaluationTaskListResponse,
+    EvaluationWeightConfigCreate,
+    EvaluationWeightConfigListResponse,
+    EvaluationWeightConfigResponse,
+    MonthlyWorkSummaryCreate,
+    MonthlyWorkSummaryListItem,
+    MonthlyWorkSummaryResponse,
+    MonthlyWorkSummaryUpdate,
+    MyPerformanceResponse,
+    PerformanceCompareResponse,
+    PerformanceEvaluationRecordCreate,
+    PerformanceEvaluationRecordResponse,
+    PerformanceEvaluationRecordUpdate,
+    PerformanceRankingResponse,
+    PerformanceTrendResponse,
+    PersonalPerformanceResponse,
+    ProjectPerformanceResponse,
+    ProjectProgressReportResponse,
+    TeamPerformanceResponse,
 )
-from app.services.performance_service import PerformanceService
 from app.services.performance_integration_service import PerformanceIntegrationService
+from app.services.performance_service import PerformanceService
 
 router = APIRouter()
 

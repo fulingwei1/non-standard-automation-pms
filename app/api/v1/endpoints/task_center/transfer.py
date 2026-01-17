@@ -10,39 +10,55 @@
 核心功能：多来源任务聚合、智能排序、转办协作
 """
 
-from typing import Any, List, Optional, Dict
+import logging
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from sqlalchemy import and_, case, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, and_, func, case
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User
-from app.models.project import Project
+from app.core.config import settings
 from app.models.notification import Notification
-from app.services.sales_reminder_service import create_notification
+from app.models.project import Project
 from app.models.task_center import (
-    TaskUnified, TaskComment, TaskOperationLog, TaskReminder, JobDutyTemplate
+    JobDutyTemplate,
+    TaskComment,
+    TaskOperationLog,
+    TaskReminder,
+    TaskUnified,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.task_center import (
-    TaskOverviewResponse, TaskUnifiedCreate, TaskUnifiedUpdate, TaskUnifiedResponse,
-    TaskUnifiedListResponse, TaskProgressUpdate, TaskTransferRequest,
-    TaskCommentCreate, TaskCommentResponse, BatchTaskOperation, BatchOperationResponse,
-    BatchOperationStatistics
+    BatchOperationResponse,
+    BatchOperationStatistics,
+    BatchTaskOperation,
+    TaskCommentCreate,
+    TaskCommentResponse,
+    TaskOverviewResponse,
+    TaskProgressUpdate,
+    TaskTransferRequest,
+    TaskUnifiedCreate,
+    TaskUnifiedListResponse,
+    TaskUnifiedResponse,
+    TaskUnifiedUpdate,
 )
+from app.services.sales_reminder import create_notification
+
+from .detail import get_task_detail
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 def generate_task_code(db: Session) -> str:
     """生成任务编号：TASK-yymmdd-xxx"""
     from app.utils.number_generator import generate_sequential_no
-    
+
     return generate_sequential_no(
         db=db,
         model_class=TaskUnified,
@@ -104,24 +120,24 @@ def transfer_task(
     task = db.query(TaskUnified).filter(TaskUnified.id == task_id).first()
     if not task:
         raise HTTPException(status_code=404, detail="任务不存在")
-    
+
     if task.assignee_id != current_user.id:
         raise HTTPException(status_code=403, detail="无权转办此任务")
-    
+
     if task.status == "COMPLETED":
         raise HTTPException(status_code=400, detail="已完成的任务不能转办")
-    
+
     # 验证目标用户
     target_user = db.query(User).filter(User.id == transfer_in.target_user_id).first()
     if not target_user:
         raise HTTPException(status_code=404, detail="目标用户不存在")
-    
+
     if target_user.id == current_user.id:
         raise HTTPException(status_code=400, detail="不能转办给自己")
-    
+
     old_assignee_id = task.assignee_id
     old_assignee_name = task.assignee_name
-    
+
     task.assignee_id = transfer_in.target_user_id
     task.assignee_name = target_user.real_name or target_user.username
     task.is_transferred = True
@@ -131,11 +147,11 @@ def transfer_task(
     task.transfer_time = datetime.now()
     task.status = "PENDING"  # 转办后需要接收
     task.updated_by = current_user.id
-    
+
     db.add(task)
     db.commit()
     db.refresh(task)
-    
+
     log_task_operation(
         db, task.id, "TRANSFER",
         f"转办任务：{old_assignee_name} -> {task.assignee_name}，原因：{transfer_in.transfer_reason}",
@@ -143,7 +159,7 @@ def transfer_task(
         old_value={"assignee_id": old_assignee_id, "assignee_name": old_assignee_name},
         new_value={"assignee_id": transfer_in.target_user_id, "assignee_name": task.assignee_name}
     )
-    
+
     # 发送通知给目标用户
     try:
         target_user = db.query(User).filter(User.id == transfer_in.target_user_id).first()
@@ -161,11 +177,8 @@ def transfer_task(
                 extra_data={"task_id": task.id, "from_user": current_user.real_name or current_user.username}
             )
             db.commit()
-    except Exception as e:
+    except Exception:
         # 通知发送失败不影响主流程
-        pass
-    
+        logger.warning("任务转办通知发送失败，不影响主流程", exc_info=True)
+
     return get_task_detail(task_id, db, current_user)
-
-
-

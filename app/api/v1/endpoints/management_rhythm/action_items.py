@@ -9,46 +9,61 @@
 管理节律 API endpoints
 包含：节律配置、战略会议、行动项、仪表盘、会议地图
 """
-from typing import Any, List, Optional, Dict
 from datetime import date, datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, and_, func
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
+from app.models.enums import (
+    ActionItemStatus,
+    MeetingCycleType,
+    MeetingRhythmLevel,
+    RhythmHealthStatus,
+)
 from app.models.management_rhythm import (
     ManagementRhythmConfig,
-    StrategicMeeting,
     MeetingActionItem,
-    RhythmDashboardSnapshot,
     MeetingReport,
     MeetingReportConfig,
-    ReportMetricDefinition
+    ReportMetricDefinition,
+    RhythmDashboardSnapshot,
+    StrategicMeeting,
 )
-from app.models.enums import (
-    MeetingRhythmLevel,
-    MeetingCycleType,
-    ActionItemStatus,
-    RhythmHealthStatus
-)
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.management_rhythm import (
-    RhythmConfigCreate, RhythmConfigUpdate, RhythmConfigResponse,
-    StrategicMeetingCreate, StrategicMeetingUpdate, StrategicMeetingMinutesRequest,
+    ActionItemCreate,
+    ActionItemResponse,
+    ActionItemUpdate,
+    AvailableMetricsResponse,
+    MeetingCalendarResponse,
+    MeetingMapItem,
+    MeetingMapResponse,
+    MeetingReportConfigCreate,
+    MeetingReportConfigResponse,
+    MeetingReportConfigUpdate,
+    MeetingReportGenerateRequest,
+    MeetingReportResponse,
+    MeetingStatisticsResponse,
+    ReportMetricDefinitionCreate,
+    ReportMetricDefinitionResponse,
+    ReportMetricDefinitionUpdate,
+    RhythmConfigCreate,
+    RhythmConfigResponse,
+    RhythmConfigUpdate,
+    RhythmDashboardResponse,
+    RhythmDashboardSummary,
+    StrategicMeetingCreate,
+    StrategicMeetingMinutesRequest,
     StrategicMeetingResponse,
-    ActionItemCreate, ActionItemUpdate, ActionItemResponse,
-    RhythmDashboardResponse, RhythmDashboardSummary,
-    MeetingMapItem, MeetingMapResponse, MeetingCalendarResponse, MeetingStatisticsResponse,
+    StrategicMeetingUpdate,
     StrategicStructureTemplate,
-    MeetingReportGenerateRequest, MeetingReportResponse,
-    MeetingReportConfigCreate, MeetingReportConfigUpdate, MeetingReportConfigResponse,
-    ReportMetricDefinitionCreate, ReportMetricDefinitionUpdate, ReportMetricDefinitionResponse,
-    AvailableMetricsResponse
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
 
 router = APIRouter()
 
@@ -76,12 +91,12 @@ def read_meeting_action_items(
     获取会议行动项列表
     """
     query = db.query(MeetingActionItem).filter(MeetingActionItem.meeting_id == meeting_id)
-    
+
     if status:
         query = query.filter(MeetingActionItem.status == status)
-    
+
     action_items = query.order_by(MeetingActionItem.due_date, MeetingActionItem.created_at).all()
-    
+
     return [
         ActionItemResponse(
             id=item.id,
@@ -116,7 +131,7 @@ def create_action_item(
     meeting = db.query(StrategicMeeting).filter(StrategicMeeting.id == meeting_id).first()
     if not meeting:
         raise HTTPException(status_code=404, detail="会议不存在")
-    
+
     action_item = MeetingActionItem(
         meeting_id=meeting_id,
         action_description=item_data.action_description,
@@ -126,11 +141,11 @@ def create_action_item(
         priority=item_data.priority or "NORMAL",
         created_by=current_user.id,
     )
-    
+
     db.add(action_item)
     db.commit()
     db.refresh(action_item)
-    
+
     return ActionItemResponse(
         id=action_item.id,
         meeting_id=action_item.meeting_id,
@@ -165,31 +180,31 @@ def update_action_item(
             MeetingActionItem.meeting_id == meeting_id
         )
     ).first()
-    
+
     if not action_item:
         raise HTTPException(status_code=404, detail="行动项不存在")
-    
+
     update_data = item_data.dict(exclude_unset=True)
-    
+
     # 如果状态更新为已完成，自动设置完成日期
     if update_data.get("status") == ActionItemStatus.COMPLETED.value and not action_item.completed_date:
         update_data["completed_date"] = date.today()
-    
+
     # 如果状态更新为已完成，但完成日期被清除，则恢复为待处理
     if update_data.get("status") != ActionItemStatus.COMPLETED.value and action_item.completed_date:
         if "completed_date" not in update_data:
             update_data["completed_date"] = None
-    
+
     for field, value in update_data.items():
         setattr(action_item, field, value)
-    
+
     # 检查是否逾期
     if action_item.status != ActionItemStatus.COMPLETED.value and action_item.due_date < date.today():
         action_item.status = ActionItemStatus.OVERDUE.value
-    
+
     db.commit()
     db.refresh(action_item)
-    
+
     return ActionItemResponse(
         id=action_item.id,
         meeting_id=action_item.meeting_id,

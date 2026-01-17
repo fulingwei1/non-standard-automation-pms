@@ -10,42 +10,59 @@
 核心功能：多层级绩效视图、绩效对比、趋势分析、排行榜
 """
 
-from typing import Any, List, Optional, Dict
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import and_, case, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, and_, func, case
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User
-from app.models.project import Project
+from app.core.config import settings
 from app.models.organization import Department, Employee
-from app.models.performance import (
-    PerformancePeriod, PerformanceIndicator, PerformanceResult,
-    PerformanceEvaluation, PerformanceAppeal, ProjectContribution,
+from app.models.performance import (  # New Performance System
+    EvaluationWeightConfig,
+    MonthlyWorkSummary,
+    PerformanceAppeal,
+    PerformanceEvaluation,
+    PerformanceEvaluationRecord,
+    PerformanceIndicator,
+    PerformancePeriod,
     PerformanceRankingSnapshot,
-    # New Performance System
-    MonthlyWorkSummary, PerformanceEvaluationRecord, EvaluationWeightConfig
+    PerformanceResult,
+    ProjectContribution,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
-from app.schemas.performance import (
-    PersonalPerformanceResponse, PerformanceTrendResponse,
-    TeamPerformanceResponse, DepartmentPerformanceResponse, PerformanceRankingResponse,
-    ProjectPerformanceResponse, ProjectProgressReportResponse, PerformanceCompareResponse,
-    # New Performance System
-    MonthlyWorkSummaryCreate, MonthlyWorkSummaryUpdate, MonthlyWorkSummaryResponse,
-    MonthlyWorkSummaryListItem, PerformanceEvaluationRecordCreate,
-    PerformanceEvaluationRecordUpdate, PerformanceEvaluationRecordResponse,
-    EvaluationTaskItem, EvaluationTaskListResponse, EvaluationDetailResponse,
-    MyPerformanceResponse, EvaluationWeightConfigCreate, EvaluationWeightConfigResponse,
-    EvaluationWeightConfigListResponse
+from app.models.project import Project
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
+from app.schemas.performance import (  # New Performance System
+    DepartmentPerformanceResponse,
+    EvaluationDetailResponse,
+    EvaluationTaskItem,
+    EvaluationTaskListResponse,
+    EvaluationWeightConfigCreate,
+    EvaluationWeightConfigListResponse,
+    EvaluationWeightConfigResponse,
+    MonthlyWorkSummaryCreate,
+    MonthlyWorkSummaryListItem,
+    MonthlyWorkSummaryResponse,
+    MonthlyWorkSummaryUpdate,
+    MyPerformanceResponse,
+    PerformanceCompareResponse,
+    PerformanceEvaluationRecordCreate,
+    PerformanceEvaluationRecordResponse,
+    PerformanceEvaluationRecordUpdate,
+    PerformanceRankingResponse,
+    PerformanceTrendResponse,
+    PersonalPerformanceResponse,
+    ProjectPerformanceResponse,
+    ProjectProgressReportResponse,
+    TeamPerformanceResponse,
 )
-from app.services.performance_service import PerformanceService
 from app.services.performance_integration_service import PerformanceIntegrationService
+from app.services.performance_service import PerformanceService
 
 router = APIRouter()
 
@@ -230,16 +247,16 @@ def get_my_performance(
             PerformancePeriod.period_type == period_type,
             PerformancePeriod.status == "FINALIZED"
         ).order_by(desc(PerformancePeriod.end_date)).first()
-    
+
     if not period:
         raise HTTPException(status_code=404, detail="未找到对应的考核周期")
-    
+
     # 获取绩效结果
     result = db.query(PerformanceResult).filter(
         PerformanceResult.period_id == period.id,
         PerformanceResult.user_id == current_user.id
     ).first()
-    
+
     if not result:
         return PersonalPerformanceResponse(
             user_id=current_user.id,
@@ -254,7 +271,7 @@ def get_my_performance(
             indicators=[],
             project_contributions=[]
         )
-    
+
     # 获取指标明细
     indicators = []
     if result.indicator_scores:
@@ -268,13 +285,13 @@ def get_my_performance(
                     "score": float(score),
                     "weight": float(indicator.weight) if indicator.weight else 0
                 })
-    
+
     # 获取项目贡献
     contributions = db.query(ProjectContribution).filter(
         ProjectContribution.period_id == period.id,
         ProjectContribution.user_id == current_user.id
     ).all()
-    
+
     project_contributions = []
     for contrib in contributions:
         project = db.query(Project).filter(Project.id == contrib.project_id).first()
@@ -285,18 +302,18 @@ def get_my_performance(
             "work_hours": float(contrib.hours_spent) if contrib.hours_spent else 0,
             "task_count": contrib.task_count or 0
         })
-    
+
     # 计算排名
     rank = None
     all_results = db.query(PerformanceResult).filter(
         PerformanceResult.period_id == period.id
     ).order_by(desc(PerformanceResult.total_score)).all()
-    
+
     for idx, r in enumerate(all_results, 1):
         if r.user_id == current_user.id:
             rank = idx
             break
-    
+
     return PersonalPerformanceResponse(
         user_id=current_user.id,
         user_name=current_user.real_name or current_user.username,
@@ -331,7 +348,7 @@ def get_user_performance(
     target_user = db.query(User).filter(User.id == user_id).first()
     if not target_user:
         raise HTTPException(status_code=404, detail="用户不存在")
-    
+
     # 获取周期
     if period_id:
         period = db.query(PerformancePeriod).filter(PerformancePeriod.id == period_id).first()
@@ -339,15 +356,15 @@ def get_user_performance(
         period = db.query(PerformancePeriod).filter(
             PerformancePeriod.status == "FINALIZED"
         ).order_by(desc(PerformancePeriod.end_date)).first()
-    
+
     if not period:
         raise HTTPException(status_code=404, detail="未找到考核周期")
-    
+
     result = db.query(PerformanceResult).filter(
         PerformanceResult.period_id == period.id,
         PerformanceResult.user_id == user_id
     ).first()
-    
+
     if not result:
         return PersonalPerformanceResponse(
             user_id=user_id,
@@ -362,7 +379,7 @@ def get_user_performance(
             indicators=[],
             project_contributions=[]
         )
-    
+
     # 获取指标明细
     indicators = []
     if result.indicator_scores:
@@ -376,13 +393,13 @@ def get_user_performance(
                     "score": float(score),
                     "weight": float(indicator.weight) if indicator.weight else 0
                 })
-    
+
     # 获取项目贡献
     contributions = db.query(ProjectContribution).filter(
         ProjectContribution.period_id == period.id,
         ProjectContribution.user_id == user_id
     ).all()
-    
+
     project_contributions = []
     for contrib in contributions:
         project = db.query(Project).filter(Project.id == contrib.project_id).first()
@@ -393,18 +410,18 @@ def get_user_performance(
             "work_hours": float(contrib.hours_spent) if contrib.hours_spent else 0,
             "task_count": contrib.task_count or 0
         })
-    
+
     # 计算排名
     rank = None
     all_results = db.query(PerformanceResult).filter(
         PerformanceResult.period_id == period.id
     ).order_by(desc(PerformanceResult.total_score)).all()
-    
+
     for idx, r in enumerate(all_results, 1):
         if r.user_id == user_id:
             rank = idx
             break
-    
+
     return PersonalPerformanceResponse(
         user_id=user_id,
         user_name=target_user.real_name or target_user.username,
@@ -440,25 +457,25 @@ def get_performance_trends(
     target_user = db.query(User).filter(User.id == user_id).first()
     if not target_user:
         raise HTTPException(status_code=404, detail="用户不存在")
-    
+
     # 获取最近的几个周期
     periods = db.query(PerformancePeriod).filter(
         PerformancePeriod.period_type == period_type,
         PerformancePeriod.status == "FINALIZED"
     ).order_by(desc(PerformancePeriod.end_date)).limit(periods_count).all()
-    
+
     periods_data = []
     scores = []
-    
+
     for period in periods:
         result = db.query(PerformanceResult).filter(
             PerformanceResult.period_id == period.id,
             PerformanceResult.user_id == user_id
         ).first()
-        
+
         score = float(result.total_score) if result and result.total_score else 0
         scores.append(score)
-        
+
         periods_data.append({
             "period_id": period.id,
             "period_name": period.period_name,
@@ -467,7 +484,7 @@ def get_performance_trends(
             "score": score,
             "level": result.level if result else "QUALIFIED"
         })
-    
+
     # 计算趋势
     if len(scores) >= 2:
         recent_avg = sum(scores[:3]) / min(3, len(scores))
@@ -480,11 +497,11 @@ def get_performance_trends(
             trend_direction = "STABLE"
     else:
         trend_direction = "STABLE"
-    
+
     avg_score = Decimal(str(sum(scores) / len(scores))) if scores else Decimal("0")
     max_score = Decimal(str(max(scores))) if scores else Decimal("0")
     min_score = Decimal(str(min(scores))) if scores else Decimal("0")
-    
+
     return PerformanceTrendResponse(
         user_id=user_id,
         user_name=target_user.real_name or target_user.username,

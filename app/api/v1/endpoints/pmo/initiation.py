@@ -9,38 +9,65 @@
 PMO 项目管理部 API endpoints
 包含：立项管理、项目阶段门管理、风险管理、项目结项管理、PMO驾驶舱
 """
-from typing import Any, List, Optional, Dict
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, func
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
-from app.models.project import Project, Customer
 from app.models.pmo import (
-    PmoProjectInitiation, PmoProjectPhase, PmoProjectRisk,
-    PmoProjectClosure, PmoResourceAllocation, PmoMeeting
+    PmoMeeting,
+    PmoProjectClosure,
+    PmoProjectInitiation,
+    PmoProjectPhase,
+    PmoProjectRisk,
+    PmoResourceAllocation,
 )
+from app.models.project import Customer, Project
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.pmo import (
-    InitiationCreate, InitiationUpdate, InitiationResponse,
-    InitiationApproveRequest, InitiationRejectRequest,
-    PhaseResponse, PhaseEntryCheckRequest, PhaseExitCheckRequest,
-    PhaseReviewRequest, PhaseAdvanceRequest,
-    RiskCreate, RiskAssessRequest, RiskResponseRequest,
-    RiskStatusUpdateRequest, RiskCloseRequest, RiskResponse,
-    ClosureCreate, ClosureReviewRequest, ClosureLessonsRequest, ClosureResponse,
-    DashboardResponse, DashboardSummary, WeeklyReportResponse,
-    ResourceOverviewResponse, RiskWallResponse,
-    MeetingCreate, MeetingUpdate, MeetingMinutesRequest, MeetingResponse
+    ClosureCreate,
+    ClosureLessonsRequest,
+    ClosureResponse,
+    ClosureReviewRequest,
+    DashboardResponse,
+    DashboardSummary,
+    InitiationApproveRequest,
+    InitiationCreate,
+    InitiationRejectRequest,
+    InitiationResponse,
+    InitiationUpdate,
+    MeetingCreate,
+    MeetingMinutesRequest,
+    MeetingResponse,
+    MeetingUpdate,
+    PhaseAdvanceRequest,
+    PhaseEntryCheckRequest,
+    PhaseExitCheckRequest,
+    PhaseResponse,
+    PhaseReviewRequest,
+    ResourceOverviewResponse,
+    RiskAssessRequest,
+    RiskCloseRequest,
+    RiskCreate,
+    RiskResponse,
+    RiskResponseRequest,
+    RiskStatusUpdateRequest,
+    RiskWallResponse,
+    WeeklyReportResponse,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
 
-router = APIRouter()
+# This module is included into `app.api.v1.endpoints.pmo.router` without an
+# additional prefix. Decorators below already contain `/pmo/...` paths, so we
+# must NOT set a router-level prefix here (otherwise paths become duplicated and
+# clients hit 404).
+router = APIRouter(tags=["pmo-initiation"])
 
 
 def generate_initiation_no(db: Session) -> str:
@@ -74,15 +101,6 @@ def generate_risk_no(db: Session) -> str:
         seq = 1
     return f"RISK-{today}-{seq:03d}"
 
-
-
-from fastapi import APIRouter
-
-router = APIRouter(
-    prefix="/pmo/initiation",
-    tags=["initiation"]
-)
-
 # 共 7 个路由
 
 # ==================== 立项管理 ====================
@@ -101,7 +119,7 @@ def read_initiations(
     立项申请列表
     """
     query = db.query(PmoProjectInitiation)
-    
+
     if keyword:
         query = query.filter(
             or_(
@@ -109,17 +127,17 @@ def read_initiations(
                 PmoProjectInitiation.project_name.like(f"%{keyword}%"),
             )
         )
-    
+
     if status:
         query = query.filter(PmoProjectInitiation.status == status)
-    
+
     if applicant_id:
         query = query.filter(PmoProjectInitiation.applicant_id == applicant_id)
-    
+
     total = query.count()
     offset = (page - 1) * page_size
     initiations = query.order_by(desc(PmoProjectInitiation.created_at)).offset(offset).limit(page_size).all()
-    
+
     items = []
     for init in initiations:
         items.append(InitiationResponse(
@@ -152,7 +170,7 @@ def read_initiations(
             created_at=init.created_at,
             updated_at=init.updated_at,
         ))
-    
+
     return PaginatedResponse(
         items=items,
         total=total,
@@ -193,11 +211,11 @@ def create_initiation(
         apply_time=datetime.now(),
         status='DRAFT'
     )
-    
+
     db.add(initiation)
     db.commit()
     db.refresh(initiation)
-    
+
     return InitiationResponse(
         id=initiation.id,
         application_no=initiation.application_no,
@@ -243,7 +261,7 @@ def read_initiation(
     initiation = db.query(PmoProjectInitiation).filter(PmoProjectInitiation.id == initiation_id).first()
     if not initiation:
         raise HTTPException(status_code=404, detail="立项申请不存在")
-    
+
     return InitiationResponse(
         id=initiation.id,
         application_no=initiation.application_no,
@@ -290,18 +308,18 @@ def update_initiation(
     initiation = db.query(PmoProjectInitiation).filter(PmoProjectInitiation.id == initiation_id).first()
     if not initiation:
         raise HTTPException(status_code=404, detail="立项申请不存在")
-    
+
     if initiation.status != 'DRAFT':
         raise HTTPException(status_code=400, detail="只有草稿状态的申请才能修改")
-    
+
     update_data = initiation_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(initiation, field, value)
-    
+
     db.add(initiation)
     db.commit()
     db.refresh(initiation)
-    
+
     return read_initiation(db=db, initiation_id=initiation_id, current_user=current_user)
 
 
@@ -318,14 +336,14 @@ def submit_initiation(
     initiation = db.query(PmoProjectInitiation).filter(PmoProjectInitiation.id == initiation_id).first()
     if not initiation:
         raise HTTPException(status_code=404, detail="立项申请不存在")
-    
+
     if initiation.status != 'DRAFT':
         raise HTTPException(status_code=400, detail="只有草稿状态的申请才能提交")
-    
+
     initiation.status = 'SUBMITTED'
     db.add(initiation)
     db.commit()
-    
+
     return ResponseModel(code=200, message="提交成功")
 
 
@@ -343,33 +361,33 @@ def approve_initiation(
     initiation = db.query(PmoProjectInitiation).filter(PmoProjectInitiation.id == initiation_id).first()
     if not initiation:
         raise HTTPException(status_code=404, detail="立项申请不存在")
-    
+
     if initiation.status not in ['SUBMITTED', 'REVIEWING']:
         raise HTTPException(status_code=400, detail="只有已提交或评审中的申请才能审批")
-    
+
     initiation.status = 'APPROVED'
     initiation.review_result = approve_request.review_result
     initiation.approved_pm_id = approve_request.approved_pm_id
     initiation.approved_level = approve_request.approved_level
     initiation.approved_at = datetime.now()
     initiation.approved_by = current_user.id
-    
+
     # 如果指定了项目经理，创建项目
     if approve_request.approved_pm_id:
         # 生成项目编码（简化实现）
         from datetime import date
         today = date.today()
         project_code = f"PJ{today.strftime('%y%m%d')}{initiation.id:03d}"
-        
+
         # 检查项目编码是否已存在
         existing = db.query(Project).filter(Project.project_code == project_code).first()
         if existing:
             project_code = f"PJ{today.strftime('%y%m%d')}{initiation.id:04d}"
-        
+
         # 查找或创建客户
         customer = db.query(Customer).filter(Customer.customer_name == initiation.customer_name).first()
         customer_id = customer.id if customer else None
-        
+
         # 创建项目
         project = Project(
             project_code=project_code,
@@ -387,25 +405,25 @@ def approve_initiation(
             status='ST01',
             health='H1',
         )
-        
+
         # 填充项目经理信息
         pm = db.query(User).filter(User.id == approve_request.approved_pm_id).first()
         if pm:
             project.pm_name = pm.real_name or pm.username
-        
+
         db.add(project)
         db.flush()
-        
+
         # 关联立项申请和项目
         initiation.project_id = project.id
-        
+
         # 初始化项目阶段
         from app.utils.project_utils import init_project_stages
         init_project_stages(db, project.id)
-    
+
     db.add(initiation)
     db.commit()
-    
+
     return ResponseModel(
         code=200,
         message="审批通过",
@@ -427,19 +445,18 @@ def reject_initiation(
     initiation = db.query(PmoProjectInitiation).filter(PmoProjectInitiation.id == initiation_id).first()
     if not initiation:
         raise HTTPException(status_code=404, detail="立项申请不存在")
-    
+
     if initiation.status not in ['SUBMITTED', 'REVIEWING']:
         raise HTTPException(status_code=400, detail="只有已提交或评审中的申请才能驳回")
-    
+
     initiation.status = 'REJECTED'
     initiation.review_result = reject_request.review_result
     initiation.approved_at = datetime.now()
     initiation.approved_by = current_user.id
-    
+
     db.add(initiation)
     db.commit()
-    
-    return ResponseModel(code=200, message="已驳回")
 
+    return ResponseModel(code=200, message="已驳回")
 
 

@@ -4,23 +4,23 @@
 """
 from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from sqlalchemy import desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, func
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User
+from app.core.config import settings
 from app.models.notification import Notification, NotificationSettings
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.notification import (
-    NotificationResponse,
+    BatchReadRequest,
     NotificationListResponse,
+    NotificationResponse,
     NotificationSettingsResponse,
     NotificationSettingsUpdate,
-    BatchReadRequest,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
 
 router = APIRouter()
 
@@ -39,26 +39,26 @@ def read_notifications(
     获取通知列表（分页+已读筛选）
     """
     query = db.query(Notification).filter(Notification.user_id == current_user.id)
-    
+
     # 已读筛选
     if is_read is not None:
         query = query.filter(Notification.is_read == is_read)
-    
+
     # 通知类型筛选
     if notification_type:
         query = query.filter(Notification.notification_type == notification_type)
-    
+
     # 优先级筛选
     if priority:
         query = query.filter(Notification.priority == priority)
-    
+
     # 总数
     total = query.count()
-    
+
     # 分页
     offset = (page - 1) * page_size
     notifications = query.order_by(desc(Notification.created_at)).offset(offset).limit(page_size).all()
-    
+
     # 构建响应数据
     items = []
     for notification in notifications:
@@ -79,7 +79,7 @@ def read_notifications(
             created_at=notification.created_at,
             updated_at=notification.updated_at,
         ))
-    
+
     return PaginatedResponse(
         items=items,
         total=total,
@@ -104,7 +104,7 @@ def get_unread_count(
         .filter(Notification.is_read == False)
         .count()
     )
-    
+
     return {
         "unread_count": count
     }
@@ -126,17 +126,17 @@ def mark_notification_read(
         .filter(Notification.user_id == current_user.id)
         .first()
     )
-    
+
     if not notification:
         raise HTTPException(status_code=404, detail="通知不存在")
-    
+
     if not notification.is_read:
         notification.is_read = True
         from datetime import datetime
         notification.read_at = datetime.now()
         db.add(notification)
         db.commit()
-    
+
     return ResponseModel(
         code=200,
         message="通知已标记为已读"
@@ -155,28 +155,28 @@ def batch_mark_read(
     """
     if not request.notification_ids:
         raise HTTPException(status_code=400, detail="通知ID列表不能为空")
-    
+
     notifications = (
         db.query(Notification)
         .filter(Notification.id.in_(request.notification_ids))
         .filter(Notification.user_id == current_user.id)
         .all()
     )
-    
+
     if len(notifications) != len(request.notification_ids):
         raise HTTPException(status_code=400, detail="部分通知不存在或不属于当前用户")
-    
+
     from datetime import datetime
     read_time = datetime.now()
-    
+
     for notification in notifications:
         if not notification.is_read:
             notification.is_read = True
             notification.read_at = read_time
             db.add(notification)
-    
+
     db.commit()
-    
+
     return ResponseModel(
         code=200,
         message=f"已标记 {len(notifications)} 条通知为已读"
@@ -193,7 +193,7 @@ def mark_all_read(
     全部标记已读
     """
     from datetime import datetime
-    
+
     count = (
         db.query(Notification)
         .filter(Notification.user_id == current_user.id)
@@ -203,9 +203,9 @@ def mark_all_read(
             Notification.read_at: datetime.now()
         })
     )
-    
+
     db.commit()
-    
+
     return ResponseModel(
         code=200,
         message=f"已标记 {count} 条通知为已读"
@@ -228,13 +228,13 @@ def delete_notification(
         .filter(Notification.user_id == current_user.id)
         .first()
     )
-    
+
     if not notification:
         raise HTTPException(status_code=404, detail="通知不存在")
-    
+
     db.delete(notification)
     db.commit()
-    
+
     return ResponseModel(
         code=200,
         message="通知已删除"
@@ -255,7 +255,7 @@ def get_notification_settings(
         .filter(NotificationSettings.user_id == current_user.id)
         .first()
     )
-    
+
     # 如果不存在，创建默认设置
     if not settings:
         settings = NotificationSettings(
@@ -264,7 +264,7 @@ def get_notification_settings(
         db.add(settings)
         db.commit()
         db.refresh(settings)
-    
+
     return NotificationSettingsResponse(
         id=settings.id,
         user_id=settings.user_id,
@@ -299,20 +299,20 @@ def update_notification_settings(
         .filter(NotificationSettings.user_id == current_user.id)
         .first()
     )
-    
+
     # 如果不存在，创建
     if not settings:
         settings = NotificationSettings(user_id=current_user.id)
         db.add(settings)
-    
+
     update_data = settings_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(settings, field, value)
-    
+
     db.add(settings)
     db.commit()
     db.refresh(settings)
-    
+
     return NotificationSettingsResponse(
         id=settings.id,
         user_id=settings.user_id,

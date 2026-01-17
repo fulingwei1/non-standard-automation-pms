@@ -9,36 +9,52 @@
 售前技术支持 API endpoints
 包含：支持工单管理、技术方案管理、方案模板库、投标管理、售前统计
 """
-from typing import Any, List, Optional, Dict
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, func
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
+from app.models.presale import (
+    PresaleSolution,
+    PresaleSolutionCost,
+    PresaleSolutionTemplate,
+    PresaleSupportTicket,
+    PresaleTenderRecord,
+    PresaleTicketDeliverable,
+    PresaleTicketProgress,
+    PresaleWorkload,
+)
 from app.models.project import Project
 from app.models.sales import Opportunity
-from app.models.presale import (
-    PresaleSupportTicket, PresaleTicketDeliverable, PresaleTicketProgress,
-    PresaleSolution, PresaleSolutionCost, PresaleSolutionTemplate,
-    PresaleTenderRecord, PresaleWorkload
-)
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.presale import (
-    TicketCreate, TicketUpdate, TicketResponse, TicketAcceptRequest,
-    TicketProgressUpdate, DeliverableCreate, DeliverableResponse,
-    TicketRatingRequest, TicketBoardResponse,
-    SolutionCreate, SolutionUpdate, SolutionResponse, SolutionReviewRequest,
+    DeliverableCreate,
+    DeliverableResponse,
     SolutionCostResponse,
-    TemplateCreate, TemplateResponse,
-    TenderCreate, TenderResultUpdate, TenderResponse
+    SolutionCreate,
+    SolutionResponse,
+    SolutionReviewRequest,
+    SolutionUpdate,
+    TemplateCreate,
+    TemplateResponse,
+    TenderCreate,
+    TenderResponse,
+    TenderResultUpdate,
+    TicketAcceptRequest,
+    TicketBoardResponse,
+    TicketCreate,
+    TicketProgressUpdate,
+    TicketRatingRequest,
+    TicketResponse,
+    TicketUpdate,
 )
-from app.models.presale import PresaleSolutionTemplate
-from app.schemas.common import ResponseModel, PaginatedResponse
 
 router = APIRouter()
 
@@ -119,7 +135,7 @@ def read_solutions(
     方案列表
     """
     query = db.query(PresaleSolution)
-    
+
     if keyword:
         query = query.filter(
             or_(
@@ -127,23 +143,23 @@ def read_solutions(
                 PresaleSolution.name.like(f"%{keyword}%"),
             )
         )
-    
+
     if status:
         query = query.filter(PresaleSolution.status == status)
-    
+
     if solution_type:
         query = query.filter(PresaleSolution.solution_type == solution_type)
-    
+
     if industry:
         query = query.filter(PresaleSolution.industry == industry)
-    
+
     if ticket_id:
         query = query.filter(PresaleSolution.ticket_id == ticket_id)
-    
+
     total = query.count()
     offset = (page - 1) * page_size
     solutions = query.order_by(desc(PresaleSolution.created_at)).offset(offset).limit(page_size).all()
-    
+
     items = []
     for solution in solutions:
         items.append(SolutionResponse(
@@ -174,7 +190,7 @@ def read_solutions(
             created_at=solution.created_at,
             updated_at=solution.updated_at,
         ))
-    
+
     return PaginatedResponse(
         items=items,
         total=total,
@@ -215,11 +231,11 @@ def create_solution(
         author_id=current_user.id,
         author_name=current_user.real_name or current_user.username
     )
-    
+
     db.add(solution)
     db.commit()
     db.refresh(solution)
-    
+
     return SolutionResponse(
         id=solution.id,
         solution_no=solution.solution_no,
@@ -263,7 +279,7 @@ def read_solution(
     solution = db.query(PresaleSolution).filter(PresaleSolution.id == solution_id).first()
     if not solution:
         raise HTTPException(status_code=404, detail="方案不存在")
-    
+
     return SolutionResponse(
         id=solution.id,
         solution_no=solution.solution_no,
@@ -308,18 +324,18 @@ def update_solution(
     solution = db.query(PresaleSolution).filter(PresaleSolution.id == solution_id).first()
     if not solution:
         raise HTTPException(status_code=404, detail="方案不存在")
-    
+
     if solution.status not in ['DRAFT', 'REJECTED']:
         raise HTTPException(status_code=400, detail="只有草稿或已驳回状态的方案才能修改")
-    
+
     update_data = solution_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(solution, field, value)
-    
+
     db.add(solution)
     db.commit()
     db.refresh(solution)
-    
+
     return read_solution(db=db, solution_id=solution_id, current_user=current_user)
 
 
@@ -336,15 +352,15 @@ def get_solution_cost(
     solution = db.query(PresaleSolution).filter(PresaleSolution.id == solution_id).first()
     if not solution:
         raise HTTPException(status_code=404, detail="方案不存在")
-    
+
     # 获取成本明细
     cost_items = db.query(PresaleSolutionCost).filter(
         PresaleSolutionCost.solution_id == solution_id
     ).order_by(PresaleSolutionCost.sort_order).all()
-    
+
     breakdown = []
     total_cost = 0.0
-    
+
     for item in cost_items:
         amount = float(item.amount) if item.amount else 0.0
         total_cost += amount
@@ -359,11 +375,11 @@ def get_solution_cost(
             'amount': amount,
             'remark': item.remark
         })
-    
+
     # 如果没有明细，使用方案中的预估成本
     if total_cost == 0 and solution.estimated_cost:
         total_cost = float(solution.estimated_cost)
-    
+
     return SolutionCostResponse(
         solution_id=solution_id,
         total_cost=total_cost,
@@ -385,21 +401,21 @@ def review_solution(
     solution = db.query(PresaleSolution).filter(PresaleSolution.id == solution_id).first()
     if not solution:
         raise HTTPException(status_code=404, detail="方案不存在")
-    
+
     solution.review_status = review_request.review_status
     solution.review_comment = review_request.review_comment
     solution.reviewer_id = current_user.id
     solution.review_time = datetime.now()
-    
+
     if review_request.review_status == 'APPROVED':
         solution.status = 'APPROVED'
     elif review_request.review_status == 'REJECTED':
         solution.status = 'REJECTED'
-    
+
     db.add(solution)
     db.commit()
     db.refresh(solution)
-    
+
     return read_solution(db=db, solution_id=solution_id, current_user=current_user)
 
 
@@ -417,10 +433,10 @@ def get_solution_versions(
     solution = db.query(PresaleSolution).filter(PresaleSolution.id == solution_id).first()
     if not solution:
         raise HTTPException(status_code=404, detail="方案不存在")
-    
+
     # 获取所有版本（包括当前版本和子版本）
     versions = []
-    
+
     # 向上查找父版本
     current = solution
     while current.parent_id:
@@ -430,16 +446,16 @@ def get_solution_versions(
             current = parent
         else:
             break
-    
+
     # 添加当前版本
     versions.append(solution)
-    
+
     # 向下查找子版本
     child_versions = db.query(PresaleSolution).filter(
         PresaleSolution.parent_id == solution_id
     ).order_by(PresaleSolution.created_at).all()
     versions.extend(child_versions)
-    
+
     result = []
     for sol in versions:
         result.append(SolutionResponse(
@@ -470,7 +486,7 @@ def get_solution_versions(
             created_at=sol.created_at,
             updated_at=sol.updated_at,
         ))
-    
+
     return result
 
 

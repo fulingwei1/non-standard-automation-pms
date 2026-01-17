@@ -3,21 +3,25 @@
 商务支持模块 - 发货管理 API endpoints
 """
 
-from typing import List, Optional
 from datetime import date, datetime, timedelta
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
 from sqlalchemy import desc, or_
+from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.models.business_support import DeliveryOrder, SalesOrder
 from app.models.user import User
-from app.models.business_support import SalesOrder, DeliveryOrder
 from app.schemas.business_support import (
-    DeliveryOrderCreate, DeliveryOrderUpdate, DeliveryOrderResponse,
-    DeliveryApprovalRequest, DeliveryStatistics
+    DeliveryApprovalRequest,
+    DeliveryOrderCreate,
+    DeliveryOrderResponse,
+    DeliveryOrderUpdate,
+    DeliveryStatistics,
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
+
 from .utils import generate_delivery_no
 
 router = APIRouter()

@@ -5,11 +5,11 @@
 
 from fastapi import APIRouter
 
-from .tickets import router as tickets_router
-from .proposals import router as proposals_router
-from .templates import router as templates_router
 from .bids import router as bids_router
+from .proposals import router as proposals_router
 from .statistics import router as statistics_router
+from .templates import router as templates_router
+from .tickets import router as tickets_router
 
 router = APIRouter()
 

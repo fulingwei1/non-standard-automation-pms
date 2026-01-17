@@ -10,31 +10,40 @@
 核心功能：周工时表、批量填报、审批流程
 """
 
-from typing import Any, List, Optional, Dict
+from calendar import monthrange
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from calendar import monthrange
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from sqlalchemy import and_, case, desc, extract, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, and_, func, case, extract
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User
-from app.models.project import Project
+from app.core.config import settings
 from app.models.organization import Department, Employee
+from app.models.project import Project
 from app.models.rd_project import RdProject
 from app.models.timesheet import (
-    Timesheet, TimesheetBatch, TimesheetSummary,
-    OvertimeApplication, TimesheetApprovalLog, TimesheetRule
+    OvertimeApplication,
+    Timesheet,
+    TimesheetApprovalLog,
+    TimesheetBatch,
+    TimesheetRule,
+    TimesheetSummary,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.timesheet import (
-    TimesheetCreate, TimesheetUpdate, TimesheetResponse, TimesheetListResponse,
-    TimesheetBatchCreate, WeekTimesheetResponse, MonthSummaryResponse,
-    TimesheetStatisticsResponse
+    MonthSummaryResponse,
+    TimesheetBatchCreate,
+    TimesheetCreate,
+    TimesheetListResponse,
+    TimesheetResponse,
+    TimesheetStatisticsResponse,
+    TimesheetUpdate,
+    WeekTimesheetResponse,
 )
 
 router = APIRouter()
@@ -131,61 +140,61 @@ def get_month_summary(
     获取月度汇总
     """
     target_user_id = user_id or current_user.id
-    
+
     if target_user_id != current_user.id:
         if not hasattr(current_user, 'is_superuser') or not current_user.is_superuser:
             raise HTTPException(status_code=403, detail="无权查看其他用户的工时")
-    
+
     # 计算月份的开始和结束日期
     _, last_day = monthrange(year, month)
     month_start = date(year, month, 1)
     month_end = date(year, month, last_day)
-    
+
     # 查询该月的工时记录
     timesheets = db.query(Timesheet).filter(
         Timesheet.user_id == target_user_id,
         Timesheet.work_date >= month_start,
         Timesheet.work_date <= month_end
     ).all()
-    
+
     total_hours = Decimal("0")
     billable_hours = Decimal("0")
     non_billable_hours = Decimal("0")
     by_project = {}
     by_work_type = {}
     by_date = {}
-    
+
     for ts in timesheets:
         hours = ts.hours or Decimal("0")
         total_hours += hours
-        
+
         if True:  # 所有已审批的工时都是可计费的
             billable_hours += hours
         else:
             non_billable_hours += hours
-        
+
         # 按项目统计
         project_name = "未分配项目"
         if ts.project_id:
             project = db.query(Project).filter(Project.id == ts.project_id).first()
             project_name = project.project_name if project else "未知项目"
-        
+
         if project_name not in by_project:
             by_project[project_name] = Decimal("0")
         by_project[project_name] += hours
-        
+
         # 按工作类型统计
         work_type = ts.overtime_type or "NORMAL"
         if work_type not in by_work_type:
             by_work_type[work_type] = Decimal("0")
         by_work_type[work_type] += hours
-        
+
         # 按日期统计
         date_str = ts.work_date.isoformat()
         if date_str not in by_date:
             by_date[date_str] = Decimal("0")
         by_date[date_str] += hours
-    
+
     return MonthSummaryResponse(
         year=year,
         month=month,

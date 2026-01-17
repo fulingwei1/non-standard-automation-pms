@@ -3,23 +3,23 @@
 齐套检查 API endpoints
 包含：工单齐套检查、齐套详情、开工确认、检查历史
 """
-from typing import Any, List, Optional, Dict
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, and_, func
 
 from app.api import deps
 from app.core import security
-from app.models.user import User
-from app.models.project import Project, Machine
 from app.models.material import BomHeader, BomItem, Material
-from app.models.purchase import PurchaseOrderItem
 from app.models.production import WorkOrder, Workshop
+from app.models.project import Machine, Project
+from app.models.purchase import PurchaseOrderItem
 from app.models.shortage import KitCheck
-from app.schemas.common import ResponseModel, PaginatedResponse
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 
 router = APIRouter()
 
@@ -46,11 +46,11 @@ def calculate_work_order_kit_rate(
 ) -> Dict[str, Any]:
     """
     计算工单齐套率
-    
+
     Args:
         db: 数据库会话
         work_order: 工单对象
-    
+
     Returns:
         包含齐套率统计信息的字典
     """
@@ -62,7 +62,7 @@ def calculate_work_order_kit_rate(
             bom_header = db.query(BomHeader).filter(BomHeader.id == machine.bom_id).first()
             if bom_header:
                 bom_items = db.query(BomItem).filter(BomItem.bom_id == bom_header.id).all()
-    
+
     if not bom_items:
         return {
             "total_items": 0,
@@ -74,21 +74,21 @@ def calculate_work_order_kit_rate(
             "is_kit_complete": False,
             "shortage_details": [],
         }
-    
+
     total_items = len(bom_items)
     fulfilled_items = 0
     shortage_items = 0
     in_transit_items = 0
     shortage_details = []
-    
+
     for item in bom_items:
         material = item.material
         if not material:
             continue
-        
+
         # 计算可用数量 = 当前库存
         available_qty = Decimal(material.current_stock or 0)
-        
+
         # 计算在途数量 = 已采购但未到货的数量
         in_transit_qty = Decimal(0)
         po_items = (
@@ -99,13 +99,13 @@ def calculate_work_order_kit_rate(
         )
         for po_item in po_items:
             in_transit_qty += (Decimal(po_item.quantity or 0) - Decimal(po_item.received_qty or 0))
-        
+
         # 总可用数量 = 可用数量 + 在途数量
         total_available = available_qty + in_transit_qty
-        
+
         # 需求数量 = BOM用量 * 工单计划数量
         required_qty = Decimal(item.quantity or 0) * Decimal(work_order.plan_qty or 1)
-        
+
         if total_available >= required_qty:
             fulfilled_items += 1
         elif total_available > 0:
@@ -132,10 +132,10 @@ def calculate_work_order_kit_rate(
                 "shortage_qty": float(required_qty),
                 "status": "shortage",
             })
-    
+
     # 计算齐套率
     kit_rate = (fulfilled_items / total_items * 100) if total_items > 0 else 0.0
-    
+
     # 确定齐套状态
     if fulfilled_items == total_items:
         kit_status = "complete"
@@ -146,7 +146,7 @@ def calculate_work_order_kit_rate(
     else:
         kit_status = "shortage"
         is_kit_complete = False
-    
+
     return {
         "total_items": total_items,
         "fulfilled_items": fulfilled_items,
@@ -177,7 +177,7 @@ def get_work_orders_for_check(
     # 默认查询未来7天的工单
     today = date.today()
     end_date = today + timedelta(days=7)
-    
+
     # 构建查询
     query = db.query(WorkOrder).filter(
         WorkOrder.plan_start_date.isnot(None),
@@ -185,7 +185,7 @@ def get_work_orders_for_check(
         WorkOrder.plan_start_date <= end_date,
         WorkOrder.status.in_(['PENDING', 'ASSIGNED', 'READY']),  # 待开工状态
     )
-    
+
     # 筛选条件
     if workshop_id:
         query = query.filter(WorkOrder.workshop_id == workshop_id)
@@ -193,13 +193,13 @@ def get_work_orders_for_check(
         query = query.filter(WorkOrder.project_id == project_id)
     if plan_date:
         query = query.filter(WorkOrder.plan_start_date == plan_date)
-    
+
     # 总数
     total = query.count()
-    
+
     # 分页
     work_orders = query.order_by(WorkOrder.plan_start_date, WorkOrder.priority).offset((page - 1) * page_size).limit(page_size).all()
-    
+
     # 计算每个工单的齐套率
     work_order_list = []
     summary = {
@@ -208,10 +208,10 @@ def get_work_orders_for_check(
         "partial": 0,
         "shortage": 0,
     }
-    
+
     for wo in work_orders:
         kit_data = calculate_work_order_kit_rate(db, wo)
-        
+
         # 统计汇总
         summary["total"] += 1
         if kit_data["kit_status"] == "complete":
@@ -220,16 +220,16 @@ def get_work_orders_for_check(
             summary["partial"] += 1
         else:
             summary["shortage"] += 1
-        
+
         # 应用状态筛选
         if kit_status and kit_data["kit_status"] != kit_status:
             continue
-        
+
         # 获取关联信息
         project = db.query(Project).filter(Project.id == wo.project_id).first() if wo.project_id else None
         machine = db.query(Machine).filter(Machine.id == wo.machine_id).first() if wo.machine_id else None
         workshop = db.query(Workshop).filter(Workshop.id == wo.workshop_id).first() if wo.workshop_id else None
-        
+
         work_order_list.append({
             "id": wo.id,
             "work_order_no": wo.work_order_no,
@@ -252,7 +252,7 @@ def get_work_orders_for_check(
             "shortage_items": kit_data["shortage_items"],
             "in_transit_items": kit_data["in_transit_items"],
         })
-    
+
     return ResponseModel(
         code=200,
         message="success",
@@ -283,10 +283,10 @@ def get_work_order_kit_detail(
     work_order = db.query(WorkOrder).filter(WorkOrder.id == work_order_id).first()
     if not work_order:
         raise HTTPException(status_code=404, detail="工单不存在")
-    
+
     # 计算齐套率
     kit_data = calculate_work_order_kit_rate(db, work_order)
-    
+
     # 获取BOM明细
     bom_items = []
     if work_order.machine_id:
@@ -299,10 +299,10 @@ def get_work_order_kit_detail(
                     material = item.material
                     if not material:
                         continue
-                    
+
                     # 计算可用数量
                     available_qty = Decimal(material.current_stock or 0)
-                    
+
                     # 计算在途数量
                     in_transit_qty = Decimal(0)
                     po_items = (
@@ -313,11 +313,11 @@ def get_work_order_kit_detail(
                     )
                     for po_item in po_items:
                         in_transit_qty += (Decimal(po_item.quantity or 0) - Decimal(po_item.received_qty or 0))
-                    
+
                     # 需求数量
                     required_qty = Decimal(item.quantity or 0) * Decimal(work_order.plan_qty or 1)
                     total_available = available_qty + in_transit_qty
-                    
+
                     # 确定状态
                     if total_available >= required_qty:
                         status = "fulfilled"
@@ -325,7 +325,7 @@ def get_work_order_kit_detail(
                         status = "partial"
                     else:
                         status = "shortage"
-                    
+
                     bom_items.append({
                         "material_id": material.id,
                         "material_code": material.material_code,
@@ -341,12 +341,12 @@ def get_work_order_kit_detail(
                         "status": status,
                         "is_critical": item.is_critical or False,
                     })
-    
+
     # 获取关联信息
     project = db.query(Project).filter(Project.id == work_order.project_id).first() if work_order.project_id else None
     machine = db.query(Machine).filter(Machine.id == work_order.machine_id).first() if work_order.machine_id else None
     workshop = db.query(Workshop).filter(Workshop.id == work_order.workshop_id).first() if work_order.workshop_id else None
-    
+
     return ResponseModel(
         code=200,
         message="success",
@@ -385,10 +385,10 @@ def check_work_order_kit(
     work_order = db.query(WorkOrder).filter(WorkOrder.id == work_order_id).first()
     if not work_order:
         raise HTTPException(status_code=404, detail="工单不存在")
-    
+
     # 计算齐套率
     kit_data = calculate_work_order_kit_rate(db, work_order)
-    
+
     # 保存检查记录到 mat_kit_check 表
     check_record = KitCheck(
         check_no=generate_check_no(db),
@@ -407,11 +407,11 @@ def check_work_order_kit(
         checked_by=current_user.id,
         can_start=kit_data["is_kit_complete"],
     )
-    
+
     db.add(check_record)
     db.commit()
     db.refresh(check_record)
-    
+
     return ResponseModel(
         code=200,
         message="齐套检查完成",
@@ -443,18 +443,18 @@ def confirm_work_order_start(
     work_order = db.query(WorkOrder).filter(WorkOrder.id == work_order_id).first()
     if not work_order:
         raise HTTPException(status_code=404, detail="工单不存在")
-    
+
     if confirm_type not in ["start_now", "wait", "partial_start"]:
         raise HTTPException(status_code=400, detail="确认类型必须是 start_now、wait 或 partial_start")
-    
+
     # 计算齐套率
     kit_data = calculate_work_order_kit_rate(db, work_order)
-    
+
     # 如果齐套率不足且不是强制开工，需要提示
     if kit_data["kit_rate"] < 100 and confirm_type == "start_now":
         # 允许强制开工，但记录说明
         pass
-    
+
     # 更新工单状态
     if confirm_type == "start_now":
         work_order.status = "READY"  # 或 "IN_PROGRESS"，根据业务需求
@@ -462,7 +462,7 @@ def confirm_work_order_start(
         work_order.status = "PENDING"
     elif confirm_type == "partial_start":
         work_order.status = "READY"
-    
+
     # 查找或创建最新的检查记录
     latest_check = (
         db.query(KitCheck)
@@ -470,7 +470,7 @@ def confirm_work_order_start(
         .order_by(desc(KitCheck.check_time))
         .first()
     )
-    
+
     if not latest_check:
         # 如果没有检查记录，先创建一个
         latest_check = KitCheck(
@@ -490,20 +490,20 @@ def confirm_work_order_start(
             checked_by=current_user.id,
         )
         db.add(latest_check)
-    
+
     # 更新确认信息
     latest_check.start_confirmed = (confirm_type in ["start_now", "partial_start"])
     latest_check.confirm_time = datetime.now()
     latest_check.confirmed_by = current_user.id
     latest_check.confirm_remark = confirm_note
     latest_check.can_start = (confirm_type in ["start_now", "partial_start"])
-    
+
     db.add(work_order)
     db.add(latest_check)
     db.commit()
     db.refresh(work_order)
     db.refresh(latest_check)
-    
+
     return ResponseModel(
         code=200,
         message="开工确认成功",
@@ -535,7 +535,7 @@ def get_kit_check_history(
     获取历史齐套检查记录
     """
     query = db.query(KitCheck)
-    
+
     # 筛选条件
     if work_order_id:
         query = query.filter(KitCheck.work_order_id == work_order_id)
@@ -545,14 +545,14 @@ def get_kit_check_history(
         query = query.filter(func.date(KitCheck.check_time) >= start_date)
     if end_date:
         query = query.filter(func.date(KitCheck.check_time) <= end_date)
-    
+
     # 总数
     total = query.count()
-    
+
     # 分页
     offset = (page - 1) * page_size
     checks = query.order_by(desc(KitCheck.check_time)).offset(offset).limit(page_size).all()
-    
+
     # 构建返回数据
     history = []
     for check in checks:
@@ -561,7 +561,7 @@ def get_kit_check_history(
         project = db.query(Project).filter(Project.id == check.project_id).first() if check.project_id else None
         checker = db.query(User).filter(User.id == check.checked_by).first() if check.checked_by else None
         confirmer = db.query(User).filter(User.id == check.confirmed_by).first() if check.confirmed_by else None
-        
+
         history.append({
             "id": check.id,
             "check_no": check.check_no,
@@ -588,7 +588,7 @@ def get_kit_check_history(
             "confirm_remark": check.confirm_remark,
             "shortage_summary": check.shortage_summary,
         })
-    
+
     return ResponseModel(
         code=200,
         message="success",

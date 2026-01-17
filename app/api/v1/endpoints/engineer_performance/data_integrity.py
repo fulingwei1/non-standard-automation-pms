@@ -3,16 +3,17 @@
 数据完整性保障 API 端点
 """
 
-from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, Query, Body
-from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field
+from typing import List, Optional
 
-from app.api.deps import get_db, get_current_user
-from app.models.user import User
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
+
+from app.api.deps import get_current_user, get_db
 from app.models.performance import PerformancePeriod
-from app.services.data_integrity_service import DataIntegrityService
+from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.data_integrity_service import DataIntegrityService
 
 router = APIRouter(prefix="/data-integrity", tags=["数据完整性"])
 

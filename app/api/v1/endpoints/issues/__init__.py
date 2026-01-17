@@ -17,14 +17,15 @@
 """
 
 from fastapi import APIRouter
+
 from . import (
-    core,
-    statistics,
-    operations,
-    batch,
-    import_export,
     analytics,
+    batch,
+    core,
+    import_export,
+    operations,
     related_lists,
+    statistics,
     templates,
 )
 
@@ -63,9 +64,9 @@ template_router.include_router(templates.router, tags=["issue-templates"])
 
 # 导出工具函数供外部使用
 from .utils import (
-    create_blocking_issue_alert,
     close_blocking_issue_alerts,
-    generate_issue_no
+    create_blocking_issue_alert,
+    generate_issue_no,
 )
 
 __all__ = [

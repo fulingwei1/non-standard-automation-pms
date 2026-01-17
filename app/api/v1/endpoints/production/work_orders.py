@@ -4,28 +4,34 @@
 
 包含：工单CRUD、派工、状态变更、进度查询
 """
-from typing import Any, List, Optional
 from datetime import datetime
+from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from sqlalchemy import desc
+from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User
+from app.core.config import settings
 from app.models.production import (
-    Workshop, Workstation, ProductionPlan, WorkOrder, Worker, ProcessDict
+    ProcessDict,
+    ProductionPlan,
+    Worker,
+    WorkOrder,
+    Workshop,
+    Workstation,
 )
-from app.models.project import Project, Machine
+from app.models.project import Machine, Project
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.production import (
-    WorkOrderCreate,
     WorkOrderAssignRequest,
-    WorkOrderResponse,
+    WorkOrderCreate,
     WorkOrderProgressResponse,
+    WorkOrderResponse,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
+
 from .utils import generate_work_order_no
 
 router = APIRouter()

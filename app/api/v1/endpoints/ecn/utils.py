@@ -5,20 +5,21 @@ ECN模块公共工具函数
 包含编码生成、公共辅助函数等
 """
 
-from typing import Optional
 from decimal import Decimal
+from typing import Optional
+
 from sqlalchemy.orm import Session
 
-from app.models.user import User
-from app.models.project import Project, Machine
 from app.models.ecn import Ecn
-from app.schemas.ecn import EcnResponse, EcnListResponse
+from app.models.project import Machine, Project
+from app.models.user import User
+from app.schemas.ecn import EcnListResponse, EcnResponse
 
 
 def generate_ecn_no(db: Session) -> str:
     """生成ECN编号：ECN-yymmdd-xxx"""
-    from app.utils.number_generator import generate_sequential_no
     from app.models.ecn import Ecn
+    from app.utils.number_generator import generate_sequential_no
 
     return generate_sequential_no(
         db=db,

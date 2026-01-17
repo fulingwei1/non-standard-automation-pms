@@ -4,33 +4,33 @@
 包含：安装调试派工单的CRUD、派工、状态流转等
 """
 
-from typing import Any, List, Optional
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
+from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status, Body
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from sqlalchemy import desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, func
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User
-from app.models.project import Project, Machine, Customer
+from app.core.config import settings
 from app.models.installation_dispatch import InstallationDispatchOrder
+from app.models.project import Customer, Machine, Project
 from app.models.service import ServiceRecord
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.installation_dispatch import (
-    InstallationDispatchOrderCreate,
-    InstallationDispatchOrderUpdate,
     InstallationDispatchOrderAssign,
-    InstallationDispatchOrderStart,
+    InstallationDispatchOrderBatchAssign,
     InstallationDispatchOrderComplete,
+    InstallationDispatchOrderCreate,
     InstallationDispatchOrderProgress,
     InstallationDispatchOrderResponse,
-    InstallationDispatchOrderBatchAssign,
+    InstallationDispatchOrderStart,
+    InstallationDispatchOrderUpdate,
     InstallationDispatchStatistics,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
 
 router = APIRouter()
 
@@ -70,7 +70,7 @@ def get_installation_dispatch_statistics(
     completed = db.query(InstallationDispatchOrder).filter(InstallationDispatchOrder.status == "COMPLETED").count()
     cancelled = db.query(InstallationDispatchOrder).filter(InstallationDispatchOrder.status == "CANCELLED").count()
     urgent = db.query(InstallationDispatchOrder).filter(InstallationDispatchOrder.priority == "URGENT").count()
-    
+
     return InstallationDispatchStatistics(
         total=total,
         pending=pending,
@@ -103,7 +103,7 @@ def read_installation_dispatch_orders(
     获取安装调试派工单列表
     """
     query = db.query(InstallationDispatchOrder)
-    
+
     if status:
         query = query.filter(InstallationDispatchOrder.status == status)
     if priority:
@@ -125,10 +125,10 @@ def read_installation_dispatch_orders(
                 InstallationDispatchOrder.task_title.like(f"%{keyword}%"),
             )
         )
-    
+
     total = query.count()
     items = query.order_by(desc(InstallationDispatchOrder.created_at)).offset((page - 1) * page_size).limit(page_size).all()
-    
+
     # 获取关联信息
     for item in items:
         if item.project_id:
@@ -144,7 +144,7 @@ def read_installation_dispatch_orders(
             customer = db.query(Customer).filter(Customer.id == item.customer_id).first()
             if customer:
                 item.customer_name = customer.customer_name
-    
+
     return {
         "items": items,
         "total": total,
@@ -168,12 +168,12 @@ def create_installation_dispatch_order(
     project = db.query(Project).filter(Project.id == order_in.project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
-    
+
     # 验证客户是否存在
     customer = db.query(Customer).filter(Customer.id == order_in.customer_id).first()
     if not customer:
         raise HTTPException(status_code=404, detail="客户不存在")
-    
+
     # 验证机台是否存在（如果提供）
     if order_in.machine_id:
         machine = db.query(Machine).filter(Machine.id == order_in.machine_id).first()
@@ -181,7 +181,7 @@ def create_installation_dispatch_order(
             raise HTTPException(status_code=404, detail="机台不存在")
         if machine.project_id != order_in.project_id:
             raise HTTPException(status_code=400, detail="机台不属于该项目")
-    
+
     order = InstallationDispatchOrder(
         order_no=generate_order_no(db),
         project_id=order_in.project_id,
@@ -201,11 +201,11 @@ def create_installation_dispatch_order(
         progress=0,
         remark=order_in.remark,
     )
-    
+
     db.add(order)
     db.commit()
     db.refresh(order)
-    
+
     return read_installation_dispatch_order(order.id, db, current_user)
 
 
@@ -221,7 +221,7 @@ def read_installation_dispatch_order(
     order = db.query(InstallationDispatchOrder).filter(InstallationDispatchOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="安装调试派工单不存在")
-    
+
     # 获取关联信息
     if order.project_id:
         project = db.query(Project).filter(Project.id == order.project_id).first()
@@ -236,7 +236,7 @@ def read_installation_dispatch_order(
         customer = db.query(Customer).filter(Customer.id == order.customer_id).first()
         if customer:
             order.customer_name = customer.customer_name
-    
+
     return order
 
 
@@ -254,19 +254,19 @@ def update_installation_dispatch_order(
     order = db.query(InstallationDispatchOrder).filter(InstallationDispatchOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="安装调试派工单不存在")
-    
+
     if order.status in ["COMPLETED", "CANCELLED"]:
         raise HTTPException(status_code=400, detail="已完成或已取消的派工单不能修改")
-    
+
     # 更新字段
     update_data = order_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(order, field, value)
-    
+
     db.add(order)
     db.commit()
     db.refresh(order)
-    
+
     return read_installation_dispatch_order(order.id, db, current_user)
 
 
@@ -284,15 +284,15 @@ def assign_installation_dispatch_order(
     order = db.query(InstallationDispatchOrder).filter(InstallationDispatchOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="安装调试派工单不存在")
-    
+
     if order.status != "PENDING":
         raise HTTPException(status_code=400, detail="只有待派工状态的派工单才能派工")
-    
+
     # 验证派工人员是否存在
     assignee = db.query(User).filter(User.id == assign_in.assigned_to_id).first()
     if not assignee:
         raise HTTPException(status_code=404, detail="派工人员不存在")
-    
+
     order.assigned_to_id = assign_in.assigned_to_id
     order.assigned_to_name = assignee.real_name or assignee.username
     order.assigned_by_id = current_user.id
@@ -301,11 +301,11 @@ def assign_installation_dispatch_order(
     order.status = "ASSIGNED"
     if assign_in.remark:
         order.remark = (order.remark or "") + f"\n派工备注：{assign_in.remark}"
-    
+
     db.add(order)
     db.commit()
     db.refresh(order)
-    
+
     return read_installation_dispatch_order(order.id, db, current_user)
 
 
@@ -323,21 +323,21 @@ def batch_assign_installation_dispatch_orders(
     assignee = db.query(User).filter(User.id == batch_assign_in.assigned_to_id).first()
     if not assignee:
         raise HTTPException(status_code=404, detail="派工人员不存在")
-    
+
     success_count = 0
     failed_orders = []
-    
+
     for order_id in batch_assign_in.order_ids:
         try:
             order = db.query(InstallationDispatchOrder).filter(InstallationDispatchOrder.id == order_id).first()
             if not order:
                 failed_orders.append({"order_id": order_id, "reason": "派工单不存在"})
                 continue
-            
+
             if order.status != "PENDING":
                 failed_orders.append({"order_id": order_id, "reason": f"派工单状态为{order.status}，不能派工"})
                 continue
-            
+
             order.assigned_to_id = batch_assign_in.assigned_to_id
             order.assigned_to_name = assignee.real_name or assignee.username
             order.assigned_by_id = current_user.id
@@ -346,14 +346,14 @@ def batch_assign_installation_dispatch_orders(
             order.status = "ASSIGNED"
             if batch_assign_in.remark:
                 order.remark = (order.remark or "") + f"\n批量派工备注：{batch_assign_in.remark}"
-            
+
             db.add(order)
             success_count += 1
         except Exception as e:
             failed_orders.append({"order_id": order_id, "reason": str(e)})
-    
+
     db.commit()
-    
+
     return ResponseModel(
         code=200,
         message=f"批量派工完成：成功 {success_count} 个，失败 {len(failed_orders)} 个",
@@ -375,21 +375,21 @@ def start_installation_dispatch_order(
     order = db.query(InstallationDispatchOrder).filter(InstallationDispatchOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="安装调试派工单不存在")
-    
+
     if order.status != "ASSIGNED":
         raise HTTPException(status_code=400, detail="只有已派工状态的派工单才能开始")
-    
+
     if order.assigned_to_id != current_user.id:
         raise HTTPException(status_code=403, detail="只能开始分配给自己的任务")
-    
+
     order.status = "IN_PROGRESS"
     order.start_time = start_in.start_time or datetime.now()
     order.progress = 0
-    
+
     db.add(order)
     db.commit()
     db.refresh(order)
-    
+
     return read_installation_dispatch_order(order.id, db, current_user)
 
 
@@ -407,18 +407,18 @@ def update_installation_dispatch_order_progress(
     order = db.query(InstallationDispatchOrder).filter(InstallationDispatchOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="安装调试派工单不存在")
-    
+
     if order.status != "IN_PROGRESS":
         raise HTTPException(status_code=400, detail="只有进行中状态的派工单才能更新进度")
-    
+
     order.progress = progress_in.progress
     if progress_in.execution_notes:
         order.execution_notes = (order.execution_notes or "") + f"\n{datetime.now().strftime('%Y-%m-%d %H:%M')}：{progress_in.execution_notes}"
-    
+
     db.add(order)
     db.commit()
     db.refresh(order)
-    
+
     return read_installation_dispatch_order(order.id, db, current_user)
 
 
@@ -436,15 +436,15 @@ def complete_installation_dispatch_order(
     order = db.query(InstallationDispatchOrder).filter(InstallationDispatchOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="安装调试派工单不存在")
-    
+
     if order.status != "IN_PROGRESS":
         raise HTTPException(status_code=400, detail="只有进行中状态的派工单才能完成")
-    
+
     order.status = "COMPLETED"
     order.end_time = complete_in.end_time or datetime.now()
     order.actual_hours = complete_in.actual_hours
     order.progress = 100
-    
+
     if complete_in.execution_notes:
         order.execution_notes = (order.execution_notes or "") + f"\n完成说明：{complete_in.execution_notes}"
     if complete_in.issues_found:
@@ -453,18 +453,18 @@ def complete_installation_dispatch_order(
         order.solution_provided = complete_in.solution_provided
     if complete_in.photos:
         order.photos = complete_in.photos
-    
+
     # 自动创建现场服务记录
     try:
         from app.api.v1.endpoints.service import generate_record_no
-        
+
         # 获取机台号
         machine_no = None
         if order.machine_id:
             machine = db.query(Machine).filter(Machine.id == order.machine_id).first()
             if machine:
                 machine_no = machine.machine_no
-        
+
         service_record = ServiceRecord(
             record_no=generate_record_no(db),
             service_type="INSTALLATION",
@@ -494,11 +494,11 @@ def complete_installation_dispatch_order(
         # 如果创建服务记录失败，不影响派工单完成
         import logging
         logging.warning(f"自动创建现场服务记录失败：{str(e)}")
-    
+
     db.add(order)
     db.commit()
     db.refresh(order)
-    
+
     return read_installation_dispatch_order(order.id, db, current_user)
 
 
@@ -515,14 +515,14 @@ def cancel_installation_dispatch_order(
     order = db.query(InstallationDispatchOrder).filter(InstallationDispatchOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="安装调试派工单不存在")
-    
+
     if order.status in ["COMPLETED", "CANCELLED"]:
         raise HTTPException(status_code=400, detail="已完成或已取消的派工单不能再次取消")
-    
+
     order.status = "CANCELLED"
-    
+
     db.add(order)
     db.commit()
     db.refresh(order)
-    
+
     return read_installation_dispatch_order(order.id, db, current_user)

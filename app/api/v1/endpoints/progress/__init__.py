@@ -6,7 +6,18 @@
 """
 
 from fastapi import APIRouter
-from . import wbs_templates, tasks, reports, summary, batch, statistics, baselines, forecast, auto_processing
+
+from . import (
+    auto_processing,
+    baselines,
+    batch,
+    forecast,
+    reports,
+    statistics,
+    summary,
+    tasks,
+    wbs_templates,
+)
 
 # 创建主路由
 router = APIRouter()

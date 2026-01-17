@@ -6,7 +6,20 @@
 """
 
 from fastapi import APIRouter
-from . import core, evaluations, approvals, tasks, impacts, execution, types, alerts, integration, analysis, statistics
+
+from . import (
+    alerts,
+    analysis,
+    approvals,
+    core,
+    evaluations,
+    execution,
+    impacts,
+    integration,
+    statistics,
+    tasks,
+    types,
+)
 
 # 创建主路由
 router = APIRouter()

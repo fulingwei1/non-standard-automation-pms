@@ -3,29 +3,34 @@
 线索管理 API endpoints
 """
 
-from typing import Any, List, Optional
-from datetime import datetime
 import json
+from datetime import datetime
+from typing import Any, List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
 from sqlalchemy import desc, or_
+from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User
-from app.models.sales import Lead, LeadFollowUp
+from app.core.config import settings
 from app.models.advantage_product import AdvantageProduct
 from app.models.enums import LeadStatusEnum
-from app.schemas.sales import (
-    LeadCreate, LeadUpdate, LeadResponse,
-    LeadFollowUpResponse, LeadFollowUpCreate
-)
+from app.models.sales import Lead, LeadFollowUp
+from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.schemas.sales import (
+    LeadCreate,
+    LeadFollowUpCreate,
+    LeadFollowUpResponse,
+    LeadResponse,
+    LeadUpdate,
+)
+
 from .utils import (
-    get_entity_creator_id,
     generate_lead_code,
-    validate_g1_lead_to_opportunity
+    get_entity_creator_id,
+    validate_g1_lead_to_opportunity,
 )
 
 router = APIRouter()
@@ -362,11 +367,11 @@ def create_lead_follow_up(
     )
 
     db.add(follow_up)
-    
+
     # 如果设置了下次行动时间，更新线索的next_action_at
     if follow_up_in.next_action_at:
         lead.next_action_at = follow_up_in.next_action_at
-    
+
     db.commit()
     db.refresh(follow_up)
 
@@ -400,9 +405,10 @@ def convert_lead_to_opportunity(
     """
     from app.models.project import Customer
     from app.models.sales import Opportunity, OpportunityRequirement
-    from app.schemas.sales import OpportunityResponse, OpportunityRequirementResponse
+    from app.schemas.sales import OpportunityRequirementResponse, OpportunityResponse
+
     from .utils import generate_opportunity_code
-    
+
     lead = db.query(Lead).filter(Lead.id == lead_id).first()
     if not lead:
         raise HTTPException(status_code=404, detail="线索不存在")
@@ -415,12 +421,12 @@ def convert_lead_to_opportunity(
     requirement = None
     if requirement_data:
         requirement = OpportunityRequirement(**requirement_data)
-    
+
     if not skip_validation:
         is_valid, messages = validate_g1_lead_to_opportunity(lead, requirement, db)
         errors = [msg for msg in messages if not msg.startswith("技术评估") and not msg.startswith("存在")]
         warnings = [msg for msg in messages if msg.startswith("技术评估") or msg.startswith("存在")]
-        
+
         if errors:
             raise HTTPException(
                 status_code=400,
@@ -464,7 +470,7 @@ def convert_lead_to_opportunity(
     }
     if req:
         opp_dict["requirement"] = OpportunityRequirementResponse(**{c.name: getattr(req, c.name) for c in req.__table__.columns})
-    
+
     return OpportunityResponse(**opp_dict)
 
 
@@ -515,7 +521,10 @@ def export_leads(
     """
     Issue 4.2: 导出线索列表（Excel）
     """
-    from app.services.excel_export_service import ExcelExportService, create_excel_response
+    from app.services.excel_export_service import (
+        ExcelExportService,
+        create_excel_response,
+    )
 
     query = db.query(Lead)
     if keyword:

@@ -6,9 +6,9 @@
 from fastapi import APIRouter
 
 from .alerts_crud import router as alerts_router
-from .statistics import router as statistics_router
-from .reports import router as reports_router
 from .arrivals import router as arrivals_router
+from .reports import router as reports_router
+from .statistics import router as statistics_router
 from .substitutions import router as substitutions_router
 from .transfers import router as transfers_router
 

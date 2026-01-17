@@ -5,9 +5,10 @@
 包含：批量分配、批量状态变更、批量关闭
 """
 
-from typing import Any, List, Optional
 from datetime import date
-from fastapi import APIRouter, Depends, HTTPException, Body
+from typing import Any, List, Optional
+
+from fastapi import APIRouter, Body, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -15,8 +16,14 @@ from app.core import security
 from app.models.issue import Issue, IssueFollowUpRecord
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.data_scope_service import DataScopeService
 
 router = APIRouter()
+
+def _get_scoped_issue(db: Session, current_user: User, issue_id: int) -> Optional[Issue]:
+    query = db.query(Issue).filter(Issue.id == issue_id)
+    query = DataScopeService.filter_issues_by_scope(db, query, current_user)
+    return query.first()
 
 
 @router.post("/batch-assign", response_model=ResponseModel)
@@ -38,7 +45,7 @@ def batch_assign_issues(
 
     for issue_id in issue_ids:
         try:
-            issue = db.query(Issue).filter(Issue.id == issue_id).first()
+            issue = _get_scoped_issue(db, current_user, issue_id)
             if not issue:
                 failed_issues.append({"issue_id": issue_id, "reason": "问题不存在"})
                 continue
@@ -88,7 +95,7 @@ def batch_change_issue_status(
 
     for issue_id in issue_ids:
         try:
-            issue = db.query(Issue).filter(Issue.id == issue_id).first()
+            issue = _get_scoped_issue(db, current_user, issue_id)
             if not issue:
                 failed_issues.append({"issue_id": issue_id, "reason": "问题不存在"})
                 continue
@@ -135,7 +142,7 @@ def batch_close_issues(
 
     for issue_id in issue_ids:
         try:
-            issue = db.query(Issue).filter(Issue.id == issue_id).first()
+            issue = _get_scoped_issue(db, current_user, issue_id)
             if not issue:
                 failed_issues.append({"issue_id": issue_id, "reason": "问题不存在"})
                 continue

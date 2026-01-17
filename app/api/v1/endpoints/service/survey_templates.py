@@ -1,76 +1,83 @@
 # -*- coding: utf-8 -*-
 """
-客服survey_templates管理 - 自动生成
-从 service.py 拆分
+满意度调查模板管理 API endpoints
 """
 
-from typing import Any, List, Optional
-from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import desc, or_
+from typing import Any, Optional
 
-from app.api.deps import get_db, get_current_active_user
-from app.core.config import settings
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import desc, or_
+from sqlalchemy.orm import Session
+
+from app.api import deps
 from app.core import security
+from app.core.config import settings
+from app.models.service import SatisfactionSurveyTemplate
 from app.models.user import User
-from app.models.service import ServiceTicket, ServiceRecord
-from app.schemas.service import ServiceTicketResponse, ServiceRecordResponse
-from app.schemas.common import Response
+from app.schemas.common import PaginatedResponse
 
 router = APIRouter()
 
 
-@router.get("/service/survey_templates", response_model=Response[List[ServiceTicketResponse]])
-def get_service_survey_templates(
-    db: Session = Depends(get_db),
-    skip: int = Query(0, ge=0, description="跳过记录数"),
-    limit: int = Query(50, ge=1, le=200, description="返回记录数"),
+@router.get("", response_model=PaginatedResponse, status_code=200)
+def list_satisfaction_templates(
+    db: Session = Depends(deps.get_db),
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    survey_type: Optional[str] = Query(None, description="调查类型筛选"),
+    is_active: Optional[bool] = Query(True, description="是否启用"),
+    keyword: Optional[str] = Query(None, description="关键词搜索"),
     current_user: User = Depends(security.get_current_active_user),
-):
+) -> Any:
     """
-    获取客服survey_templates列表
-    
-    Args:
-        db: 数据库会话
-        skip: 跳过记录数
-        limit: 返回记录数
-        current_user: 当前用户
-    
-    Returns:
-        Response[List[ServiceTicketResponse]]: 客服survey_templates列表
+    获取满意度调查模板列表
     """
-    try:
-        # TODO: 实现survey_templates查询逻辑
-        tickets = db.query(ServiceTicket).offset(skip).limit(limit).all()
-        
-        return Response.success(
-            data=[ServiceTicketResponse.from_orm(ticket) for ticket in tickets],
-            message="客服survey_templates列表获取成功"
+    query = db.query(SatisfactionSurveyTemplate)
+
+    if survey_type:
+        query = query.filter(SatisfactionSurveyTemplate.survey_type == survey_type)
+    if is_active is not None:
+        query = query.filter(SatisfactionSurveyTemplate.is_active == is_active)
+    if keyword:
+        query = query.filter(
+            or_(
+                SatisfactionSurveyTemplate.template_name.like(f"%{keyword}%"),
+                SatisfactionSurveyTemplate.template_code.like(f"%{keyword}%"),
+            )
         )
-    except Exception as e:
-        return Response.error(message=f"获取客服survey_templates失败: {str(e)}")
+
+    total = query.count()
+    items = query.order_by(desc(SatisfactionSurveyTemplate.usage_count), desc(SatisfactionSurveyTemplate.created_at)).offset((page - 1) * page_size).limit(page_size).all()
+
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "pages": (total + page_size - 1) // page_size,
+    }
 
 
-@router.post("/service/survey_templates")
-def create_service_survey_templates(
-    ticket_data: dict,
-    db: Session = Depends(get_db),
+@router.get("/{template_id}", response_model=dict, status_code=200)
+def get_satisfaction_template(
+    *,
+    db: Session = Depends(deps.get_db),
+    template_id: int,
     current_user: User = Depends(security.get_current_active_user),
-):
+) -> Any:
     """
-    创建客服survey_templates
-    
-    Args:
-        ticket_data: 工单数据
-        db: 数据库会话
-        current_user: 当前用户
-    
-    Returns:
-        Response: 创建结果
+    获取满意度调查模板详情
     """
-    try:
-        # TODO: 实现survey_templates创建逻辑
-        return Response.success(message="客服survey_templates创建成功")
-    except Exception as e:
-        return Response.error(message=f"创建客服survey_templates失败: {str(e)}")
+    template = db.query(SatisfactionSurveyTemplate).filter(SatisfactionSurveyTemplate.id == template_id).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="调查模板不存在")
+
+    return {
+        "id": template.id,
+        "template_name": template.template_name,
+        "template_code": template.template_code,
+        "survey_type": template.survey_type,
+        "questions": template.questions or [],
+        "default_send_method": template.default_send_method,
+        "default_deadline_days": template.default_deadline_days,
+    }

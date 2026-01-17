@@ -1,76 +1,242 @@
 # -*- coding: utf-8 -*-
 """
-客服knowledge_features管理 - 自动生成
-从 service.py 拆分
+知识库高级功能 API endpoints
+问题库、方案库、综合搜索
 """
 
-from typing import Any, List, Optional
-from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import desc, or_
+from typing import Any, Optional
 
-from app.api.deps import get_db, get_current_active_user
-from app.core.config import settings
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy import desc, or_
+from sqlalchemy.orm import Session
+
+from app.api import deps
 from app.core import security
+from app.core.config import settings
+from app.models.issue import Issue
+from app.models.service import KnowledgeBase
 from app.models.user import User
-from app.models.service import ServiceTicket, ServiceRecord
-from app.schemas.service import ServiceTicketResponse, ServiceRecordResponse
-from app.schemas.common import Response
+from app.schemas.common import PaginatedResponse
 
 router = APIRouter()
 
 
-@router.get("/service/knowledge_features", response_model=Response[List[ServiceTicketResponse]])
-def get_service_knowledge_features(
-    db: Session = Depends(get_db),
-    skip: int = Query(0, ge=0, description="跳过记录数"),
-    limit: int = Query(50, ge=1, le=200, description="返回记录数"),
+@router.get("/issues", response_model=PaginatedResponse, status_code=200)
+def get_knowledge_issues(
+    *,
+    db: Session = Depends(deps.get_db),
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    category: Optional[str] = Query(None, description="问题分类筛选"),
+    severity: Optional[str] = Query(None, description="严重程度筛选"),
+    keyword: Optional[str] = Query(None, description="关键词搜索"),
     current_user: User = Depends(security.get_current_active_user),
-):
+) -> Any:
     """
-    获取客服knowledge_features列表
-    
-    Args:
-        db: 数据库会话
-        skip: 跳过记录数
-        limit: 返回记录数
-        current_user: 当前用户
-    
-    Returns:
-        Response[List[ServiceTicketResponse]]: 客服knowledge_features列表
+    问题库列表
+    从问题管理模块中提取已解决的问题，形成问题库
     """
-    try:
-        # TODO: 实现knowledge_features查询逻辑
-        tickets = db.query(ServiceTicket).offset(skip).limit(limit).all()
-        
-        return Response.success(
-            data=[ServiceTicketResponse.from_orm(ticket) for ticket in tickets],
-            message="客服knowledge_features列表获取成功"
+    query = db.query(Issue).filter(
+        Issue.status.in_(["RESOLVED", "CLOSED"]),
+        Issue.solution.isnot(None)  # 必须有解决方案
+    )
+
+    if category:
+        query = query.filter(Issue.category == category)
+    if severity:
+        query = query.filter(Issue.severity == severity)
+    if keyword:
+        query = query.filter(
+            or_(
+                Issue.title.like(f"%{keyword}%"),
+                Issue.description.like(f"%{keyword}%"),
+                Issue.solution.like(f"%{keyword}%")
+            )
         )
-    except Exception as e:
-        return Response.error(message=f"获取客服knowledge_features失败: {str(e)}")
+
+    total = query.count()
+    offset = (page - 1) * page_size
+    issues = query.order_by(desc(Issue.resolved_at), desc(Issue.created_at)).offset(offset).limit(page_size).all()
+
+    # 构建问题库列表
+    issue_list = []
+    for issue in issues:
+        issue_list.append({
+            "id": issue.id,
+            "issue_no": issue.issue_no,
+            "title": issue.title,
+            "description": issue.description,
+            "category": issue.category,
+            "severity": issue.severity,
+            "solution": issue.solution,
+            "project_id": issue.project_id,
+            "project_name": issue.project.project_name if issue.project else None,
+            "resolved_at": issue.resolved_at.isoformat() if issue.resolved_at else None,
+            "resolved_by_name": issue.resolved_by_name,
+            "tags": issue.tags
+        })
+
+    return PaginatedResponse(
+        items=issue_list,
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=(total + page_size - 1) // page_size
+    )
 
 
-@router.post("/service/knowledge_features")
-def create_service_knowledge_features(
-    ticket_data: dict,
-    db: Session = Depends(get_db),
+@router.get("/solutions", response_model=PaginatedResponse, status_code=200)
+def get_knowledge_solutions(
+    *,
+    db: Session = Depends(deps.get_db),
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    category: Optional[str] = Query(None, description="分类筛选"),
+    keyword: Optional[str] = Query(None, description="关键词搜索"),
     current_user: User = Depends(security.get_current_active_user),
-):
+) -> Any:
     """
-    创建客服knowledge_features
-    
-    Args:
-        ticket_data: 工单数据
-        db: 数据库会话
-        current_user: 当前用户
-    
-    Returns:
-        Response: 创建结果
+    方案库列表
+    从知识库中提取标记为解决方案的文章，或从问题库中提取解决方案
     """
-    try:
-        # TODO: 实现knowledge_features创建逻辑
-        return Response.success(message="客服knowledge_features创建成功")
-    except Exception as e:
-        return Response.error(message=f"创建客服knowledge_features失败: {str(e)}")
+    # 从知识库中查找方案类文章
+    query = db.query(KnowledgeBase).filter(
+        KnowledgeBase.status == "PUBLISHED",
+        or_(
+            KnowledgeBase.category == "SOLUTION",
+            KnowledgeBase.category == "TROUBLESHOOTING",
+            KnowledgeBase.tags.contains(["解决方案"]) if KnowledgeBase.tags else False
+        )
+    )
+
+    if category:
+        query = query.filter(KnowledgeBase.category == category)
+    if keyword:
+        query = query.filter(
+            or_(
+                KnowledgeBase.title.like(f"%{keyword}%"),
+                KnowledgeBase.content.like(f"%{keyword}%")
+            )
+        )
+
+    total = query.count()
+    offset = (page - 1) * page_size
+    articles = query.order_by(desc(KnowledgeBase.view_count), desc(KnowledgeBase.created_at)).offset(offset).limit(page_size).all()
+
+    # 构建方案库列表
+    solution_list = []
+    for article in articles:
+        solution_list.append({
+            "id": article.id,
+            "article_no": article.article_no,
+            "title": article.title,
+            "content": article.content[:200] if article.content else "",  # 摘要
+            "category": article.category,
+            "tags": article.tags or [],
+            "view_count": article.view_count or 0,
+            "like_count": article.like_count or 0,
+            "author_name": article.author_name,
+            "created_at": article.created_at.isoformat() if article.created_at else None
+        })
+
+    return PaginatedResponse(
+        items=solution_list,
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=(total + page_size - 1) // page_size
+    )
+
+
+@router.get("/search", response_model=PaginatedResponse, status_code=200)
+def search_knowledge(
+    *,
+    db: Session = Depends(deps.get_db),
+    keyword: str = Query(..., description="搜索关键词"),
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    search_type: Optional[str] = Query("all", description="搜索类型：all/issues/solutions/articles"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    搜索知识库
+    综合搜索问题库、方案库和知识库文章
+    """
+    results = []
+
+    if search_type in ["all", "articles"]:
+        # 搜索知识库文章
+        articles = db.query(KnowledgeBase).filter(
+            KnowledgeBase.status == "PUBLISHED",
+            or_(
+                KnowledgeBase.title.like(f"%{keyword}%"),
+                KnowledgeBase.content.like(f"%{keyword}%")
+            )
+        ).limit(20).all()
+
+        for article in articles:
+            results.append({
+                "type": "article",
+                "id": article.id,
+                "title": article.title,
+                "content": article.content[:200] if article.content else "",
+                "category": article.category,
+                "url": f"/knowledge-base/{article.id}"
+            })
+
+    if search_type in ["all", "issues"]:
+        # 搜索问题库
+        issues = db.query(Issue).filter(
+            Issue.status.in_(["RESOLVED", "CLOSED"]),
+            Issue.solution.isnot(None),
+            or_(
+                Issue.title.like(f"%{keyword}%"),
+                Issue.description.like(f"%{keyword}%"),
+                Issue.solution.like(f"%{keyword}%")
+            )
+        ).limit(20).all()
+
+        for issue in issues:
+            results.append({
+                "type": "issue",
+                "id": issue.id,
+                "title": issue.title,
+                "content": issue.solution[:200] if issue.solution else "",
+                "category": issue.category,
+                "url": f"/issues/{issue.id}"
+            })
+
+    if search_type in ["all", "solutions"]:
+        # 搜索方案库（从知识库中）
+        solutions = db.query(KnowledgeBase).filter(
+            KnowledgeBase.status == "PUBLISHED",
+            KnowledgeBase.category.in_(["SOLUTION", "TROUBLESHOOTING"]),
+            or_(
+                KnowledgeBase.title.like(f"%{keyword}%"),
+                KnowledgeBase.content.like(f"%{keyword}%")
+            )
+        ).limit(20).all()
+
+        for solution in solutions:
+            results.append({
+                "type": "solution",
+                "id": solution.id,
+                "title": solution.title,
+                "content": solution.content[:200] if solution.content else "",
+                "category": solution.category,
+                "url": f"/knowledge-base/{solution.id}"
+            })
+
+    # 分页
+    total = len(results)
+    start = (page - 1) * page_size
+    end = start + page_size
+    paginated_results = results[start:end]
+
+    return PaginatedResponse(
+        items=paginated_results,
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=(total + page_size - 1) // page_size
+    )

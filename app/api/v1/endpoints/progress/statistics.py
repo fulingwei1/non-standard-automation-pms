@@ -4,22 +4,24 @@
 包含：任务完成率统计、里程碑达成率统计、延期原因统计
 """
 
-from typing import Any, Optional
 from datetime import date, datetime
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.user import User
 from app.models.organization import Department
-from app.models.project import Project, ProjectMilestone
 from app.models.progress import Task
-from app.schemas.progress import (
-    MilestoneRateResponse, DelayReasonsResponse, DelayReasonItem,
-)
+from app.models.project import Project, ProjectMilestone
+from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.schemas.progress import (
+    DelayReasonItem,
+    DelayReasonsResponse,
+    MilestoneRateResponse,
+)
 
 router = APIRouter()
 

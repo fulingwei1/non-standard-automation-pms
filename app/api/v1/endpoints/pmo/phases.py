@@ -9,38 +9,62 @@
 PMO 项目管理部 API endpoints
 包含：立项管理、项目阶段门管理、风险管理、项目结项管理、PMO驾驶舱
 """
-from typing import Any, List, Optional, Dict
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, func
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
-from app.models.project import Project, Customer
 from app.models.pmo import (
-    PmoProjectInitiation, PmoProjectPhase, PmoProjectRisk,
-    PmoProjectClosure, PmoResourceAllocation, PmoMeeting
+    PmoMeeting,
+    PmoProjectClosure,
+    PmoProjectInitiation,
+    PmoProjectPhase,
+    PmoProjectRisk,
+    PmoResourceAllocation,
 )
+from app.models.project import Customer, Project
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.pmo import (
-    InitiationCreate, InitiationUpdate, InitiationResponse,
-    InitiationApproveRequest, InitiationRejectRequest,
-    PhaseResponse, PhaseEntryCheckRequest, PhaseExitCheckRequest,
-    PhaseReviewRequest, PhaseAdvanceRequest,
-    RiskCreate, RiskAssessRequest, RiskResponseRequest,
-    RiskStatusUpdateRequest, RiskCloseRequest, RiskResponse,
-    ClosureCreate, ClosureReviewRequest, ClosureLessonsRequest, ClosureResponse,
-    DashboardResponse, DashboardSummary, WeeklyReportResponse,
-    ResourceOverviewResponse, RiskWallResponse,
-    MeetingCreate, MeetingUpdate, MeetingMinutesRequest, MeetingResponse
+    ClosureCreate,
+    ClosureLessonsRequest,
+    ClosureResponse,
+    ClosureReviewRequest,
+    DashboardResponse,
+    DashboardSummary,
+    InitiationApproveRequest,
+    InitiationCreate,
+    InitiationRejectRequest,
+    InitiationResponse,
+    InitiationUpdate,
+    MeetingCreate,
+    MeetingMinutesRequest,
+    MeetingResponse,
+    MeetingUpdate,
+    PhaseAdvanceRequest,
+    PhaseEntryCheckRequest,
+    PhaseExitCheckRequest,
+    PhaseResponse,
+    PhaseReviewRequest,
+    ResourceOverviewResponse,
+    RiskAssessRequest,
+    RiskCloseRequest,
+    RiskCreate,
+    RiskResponse,
+    RiskResponseRequest,
+    RiskStatusUpdateRequest,
+    RiskWallResponse,
+    WeeklyReportResponse,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
 
-router = APIRouter()
+# Included without extra prefix; decorators already include `/pmo/...` paths.
+router = APIRouter(tags=["pmo-phases"])
 
 
 def generate_initiation_no(db: Session) -> str:
@@ -74,15 +98,6 @@ def generate_risk_no(db: Session) -> str:
         seq = 1
     return f"RISK-{today}-{seq:03d}"
 
-
-
-from fastapi import APIRouter
-
-router = APIRouter(
-    prefix="/pmo/phases",
-    tags=["phases"]
-)
-
 # 共 5 个路由
 
 # ==================== 项目阶段 ====================
@@ -100,11 +115,11 @@ def read_project_phases(
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
-    
+
     phases = db.query(PmoProjectPhase).filter(
         PmoProjectPhase.project_id == project_id
     ).order_by(PmoProjectPhase.phase_order).all()
-    
+
     result = []
     for phase in phases:
         result.append(PhaseResponse(
@@ -130,7 +145,7 @@ def read_project_phases(
             created_at=phase.created_at,
             updated_at=phase.updated_at,
         ))
-    
+
     return result
 
 
@@ -148,7 +163,7 @@ def phase_entry_check(
     phase = db.query(PmoProjectPhase).filter(PmoProjectPhase.id == phase_id).first()
     if not phase:
         raise HTTPException(status_code=404, detail="阶段不存在")
-    
+
     phase.entry_check_result = check_request.check_result
     if check_request.notes:
         # 可以追加到现有结果中
@@ -156,11 +171,11 @@ def phase_entry_check(
             phase.entry_check_result += f"\n{check_request.notes}"
         else:
             phase.entry_check_result = check_request.notes
-    
+
     db.add(phase)
     db.commit()
     db.refresh(phase)
-    
+
     return PhaseResponse(
         id=phase.id,
         project_id=phase.project_id,
@@ -200,18 +215,18 @@ def phase_exit_check(
     phase = db.query(PmoProjectPhase).filter(PmoProjectPhase.id == phase_id).first()
     if not phase:
         raise HTTPException(status_code=404, detail="阶段不存在")
-    
+
     phase.exit_check_result = check_request.check_result
     if check_request.notes:
         if phase.exit_check_result:
             phase.exit_check_result += f"\n{check_request.notes}"
         else:
             phase.exit_check_result = check_request.notes
-    
+
     db.add(phase)
     db.commit()
     db.refresh(phase)
-    
+
     return PhaseResponse(
         id=phase.id,
         project_id=phase.project_id,
@@ -251,15 +266,15 @@ def phase_review(
     phase = db.query(PmoProjectPhase).filter(PmoProjectPhase.id == phase_id).first()
     if not phase:
         raise HTTPException(status_code=404, detail="阶段不存在")
-    
+
     phase.review_result = review_request.review_result
     phase.review_notes = review_request.review_notes
     phase.review_date = date.today()
-    
+
     db.add(phase)
     db.commit()
     db.refresh(phase)
-    
+
     return PhaseResponse(
         id=phase.id,
         project_id=phase.project_id,
@@ -299,7 +314,7 @@ def phase_advance(
     phase = db.query(PmoProjectPhase).filter(PmoProjectPhase.id == phase_id).first()
     if not phase:
         raise HTTPException(status_code=404, detail="阶段不存在")
-    
+
     if advance_request.actual_start_date:
         phase.actual_start_date = advance_request.actual_start_date
         phase.status = 'IN_PROGRESS'
@@ -334,7 +349,7 @@ def phase_advance(
     db.add(phase)
     db.commit()
     db.refresh(phase)
-    
+
     return PhaseResponse(
         id=phase.id,
         project_id=phase.project_id,
@@ -358,6 +373,5 @@ def phase_advance(
         created_at=phase.created_at,
         updated_at=phase.updated_at,
     )
-
 
 

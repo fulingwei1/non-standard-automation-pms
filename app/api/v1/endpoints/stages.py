@@ -1,14 +1,15 @@
-from typing import Any, List, Optional
 from decimal import Decimal
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
 from sqlalchemy import asc
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.models.project import Project, ProjectStage, ProjectStatus
 from app.models.user import User
-from app.models.project import ProjectStage, ProjectStatus, Project
+from app.schemas.common import ResponseModel
 from app.schemas.project import (
     ProjectStageCreate,
     ProjectStageResponse,
@@ -16,7 +17,6 @@ from app.schemas.project import (
     ProjectStatusCreate,
     ProjectStatusResponse,
 )
-from app.schemas.common import ResponseModel
 
 router = APIRouter()
 
@@ -59,7 +59,7 @@ def get_project_stages(
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
-    
+
     stages = (
         db.query(ProjectStage)
         .filter(ProjectStage.project_id == project_id)
@@ -156,11 +156,11 @@ def update_project_stage_progress(
     更新项目阶段进度
     """
     from datetime import datetime
-    
+
     stage = db.query(ProjectStage).filter(ProjectStage.id == stage_id).first()
     if not stage:
         raise HTTPException(status_code=404, detail="阶段不存在")
-    
+
     if progress_pct is not None:
         stage.progress_pct = progress_pct
     if status:
@@ -175,7 +175,7 @@ def update_project_stage_progress(
             stage.actual_end_date = datetime.strptime(actual_end_date, "%Y-%m-%d").date()
         except ValueError:
             raise HTTPException(status_code=400, detail="日期格式错误，请使用YYYY-MM-DD格式")
-    
+
     db.add(stage)
     db.commit()
     db.refresh(stage)
@@ -215,7 +215,7 @@ def get_stage_statuses(
     stage = db.query(ProjectStage).filter(ProjectStage.id == stage_id).first()
     if not stage:
         raise HTTPException(status_code=404, detail="阶段不存在")
-    
+
     statuses = (
         db.query(ProjectStatus)
         .filter(ProjectStatus.stage_id == stage_id)
@@ -239,10 +239,10 @@ def complete_project_status(
     status = db.query(ProjectStatus).filter(ProjectStatus.id == status_id).first()
     if not status:
         raise HTTPException(status_code=404, detail="状态不存在")
-    
+
     # 这里可以根据实际需求添加完成逻辑
     # 例如：更新状态类型、记录完成时间等
-    
+
     return ResponseModel(
         code=200,
         message="状态已标记为完成",

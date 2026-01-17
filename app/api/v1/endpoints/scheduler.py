@@ -4,25 +4,27 @@
 提供调度器状态查询、任务管理等功能
 """
 
-from typing import Any, List, Optional
 import json
 import logging
+from typing import Any, List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.core.security import get_current_active_user, has_scheduler_admin_access
-from app.models.user import User
 from app.models.scheduler_config import SchedulerTaskConfig
+from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.scheduler_config import (
-    SchedulerTaskConfigResponse,
-    SchedulerTaskConfigUpdate,
     SchedulerTaskConfigListResponse,
+    SchedulerTaskConfigResponse,
     SchedulerTaskConfigSyncRequest,
+    SchedulerTaskConfigUpdate,
 )
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.get("/status", response_model=ResponseModel)
@@ -35,9 +37,9 @@ def get_scheduler_status(
     """
     try:
         from app.utils.scheduler import scheduler
-        
+
         jobs = scheduler.get_jobs()
-        
+
         job_list = []
         for job in jobs:
             job_list.append({
@@ -46,7 +48,7 @@ def get_scheduler_status(
                 "next_run_time": job.next_run_time.isoformat() if job.next_run_time else None,
                 "trigger": str(job.trigger) if job.trigger else None,
             })
-        
+
         return ResponseModel(
             code=200,
             message="success",
@@ -80,9 +82,9 @@ def get_scheduler_jobs(
     """
     try:
         from app.utils.scheduler import scheduler
-        
+
         jobs = scheduler.get_jobs()
-        
+
         job_list = []
         for job in jobs:
             job_list.append({
@@ -92,7 +94,7 @@ def get_scheduler_jobs(
                 "trigger": str(job.trigger) if job.trigger else None,
                 "func": job.func.__name__ if job.func else None,
             })
-        
+
         return ResponseModel(
             code=200,
             message="success",
@@ -124,26 +126,29 @@ def get_scheduler_metrics(
     包含平均值、P50、P95、P99等聚合数据
     """
     try:
-        from app.utils.scheduler_metrics import get_metrics_snapshot, get_metrics_statistics
         from app.utils.scheduler_config import SCHEDULER_TASKS
-        
+        from app.utils.scheduler_metrics import (
+            get_metrics_snapshot,
+            get_metrics_statistics,
+        )
+
         snapshot = get_metrics_snapshot()
         statistics = get_metrics_statistics()
-        
+
         task_metadata = {task["id"]: task for task in SCHEDULER_TASKS}
         job_snapshot = snapshot.get("jobs", {})
         notification_snapshot = snapshot.get("notifications", {})
-        
+
         formatted = []
         for job_id, stats in job_snapshot.items():
             job_stats = statistics.get(job_id, {})
             task_info = task_metadata.get(job_id, {})
-            
+
             total_runs = stats.get("success_count", 0) + stats.get("failure_count", 0)
             avg_duration = None
             if total_runs > 0 and stats.get("total_duration_ms"):
                 avg_duration = stats["total_duration_ms"] / total_runs
-            
+
             formatted.append({
                 "job_id": job_id,
                 "job_name": task_info.get("name", job_id),
@@ -165,7 +170,7 @@ def get_scheduler_metrics(
                 "max_duration_ms": job_stats.get("max_duration_ms"),
                 "sample_count": job_stats.get("sample_count", 0),
             })
-        
+
         notification_channels = []
         for channel, stats in notification_snapshot.items():
             notification_channels.append({
@@ -173,7 +178,7 @@ def get_scheduler_metrics(
                 "success_count": stats.get("success_count", 0),
                 "failure_count": stats.get("failure_count", 0),
             })
-        
+
         return ResponseModel(
             code=200,
             message="success",
@@ -202,15 +207,15 @@ def trigger_job(
 
     try:
         from app.utils.scheduler import scheduler
-        
+
         job = scheduler.get_job(job_id)
         if not job:
             raise HTTPException(status_code=404, detail=f"任务 {job_id} 不存在")
-        
+
         # 手动触发任务
         job.modify(next_run_time=None)
         scheduler.wakeup()
-        
+
         return ResponseModel(
             code=200,
             message="success",
@@ -235,56 +240,61 @@ def get_scheduler_metrics_prometheus(
     返回 Prometheus 文本格式的指标，可用于 Prometheus 抓取
     """
     try:
-        from app.utils.scheduler_metrics import get_metrics_snapshot, get_metrics_statistics
         from app.utils.scheduler_config import SCHEDULER_TASKS
-        
+        from app.utils.scheduler_metrics import (
+            get_metrics_snapshot,
+            get_metrics_statistics,
+        )
+
         snapshot = get_metrics_snapshot()
         statistics = get_metrics_statistics()
         task_metadata = {task["id"]: task for task in SCHEDULER_TASKS}
         job_snapshot = snapshot.get("jobs", {})
         notification_snapshot = snapshot.get("notifications", {})
-        
+
         lines = []
-        
+
         # Counter metrics: success_count, failure_count
         for job_id, stats in job_snapshot.items():
             task_info = task_metadata.get(job_id, {})
             job_name = task_info.get("name", job_id).replace('"', '\\"')
             owner = task_info.get("owner", "unknown").replace('"', '\\"')
             category = task_info.get("category", "unknown").replace('"', '\\"')
-            
+
             labels = f'job_id="{job_id}",job_name="{job_name}",owner="{owner}",category="{category}"'
-            
+
             lines.append(f'scheduler_job_success_total{{{labels}}} {stats.get("success_count", 0)}')
             lines.append(f'scheduler_job_failure_total{{{labels}}} {stats.get("failure_count", 0)}')
-            
+
             # Gauge metrics: last duration, last run timestamp
             last_duration = stats.get("last_duration_ms", 0)
             lines.append(f'scheduler_job_last_duration_ms{{{labels}}} {last_duration}')
-            
+
             # Last run timestamp (Unix timestamp in seconds)
             last_timestamp = stats.get("last_timestamp")
             if last_timestamp:
                 try:
                     from datetime import datetime
-                    dt = datetime.fromisoformat(last_timestamp.replace('Z', '+00:00'))
+                    dt = datetime.fromisoformat(last_timestamp.replace("Z", "+00:00"))
                     timestamp_seconds = int(dt.timestamp())
-                    lines.append(f'scheduler_job_last_run_timestamp{{{labels}}} {timestamp_seconds}')
+                    lines.append(
+                        f'scheduler_job_last_run_timestamp{{{labels}}} {timestamp_seconds}'
+                    )
                 except Exception:
-                    pass
-        
+                    logger.debug("解析调度任务 last_timestamp 失败，已忽略", exc_info=True)
+
         # Histogram-like metrics: avg, p50, p95, p99
         for job_id, stats in statistics.items():
             if stats.get("sample_count", 0) == 0:
                 continue
-                
+
             task_info = task_metadata.get(job_id, {})
             job_name = task_info.get("name", job_id).replace('"', '\\"')
             owner = task_info.get("owner", "unknown").replace('"', '\\"')
             category = task_info.get("category", "unknown").replace('"', '\\"')
-            
+
             labels = f'job_id="{job_id}",job_name="{job_name}",owner="{owner}",category="{category}"'
-            
+
             if stats.get("avg_duration_ms") is not None:
                 lines.append(f'scheduler_job_duration_avg_ms{{{labels}}} {stats["avg_duration_ms"]:.2f}')
             if stats.get("p50_duration_ms") is not None:
@@ -297,13 +307,13 @@ def get_scheduler_metrics_prometheus(
                 lines.append(f'scheduler_job_duration_min_ms{{{labels}}} {stats["min_duration_ms"]:.2f}')
             if stats.get("max_duration_ms") is not None:
                 lines.append(f'scheduler_job_duration_max_ms{{{labels}}} {stats["max_duration_ms"]:.2f}')
-        
+
         # Notification channel counters
         for channel, stats in notification_snapshot.items():
             labels = f'channel="{channel}"'
             lines.append(f'scheduler_notification_success_total{{{labels}}} {stats.get("success_count", 0)}')
             lines.append(f'scheduler_notification_failure_total{{{labels}}} {stats.get("failure_count", 0)}')
-        
+
         # Add a comment header
         prometheus_text = "# HELP scheduler_job_success_total Total number of successful job runs\n"
         prometheus_text += "# TYPE scheduler_job_success_total counter\n"
@@ -326,7 +336,7 @@ def get_scheduler_metrics_prometheus(
         prometheus_text += "# HELP scheduler_notification_failure_total Failed alert notifications per channel\n"
         prometheus_text += "# TYPE scheduler_notification_failure_total counter\n"
         prometheus_text += "\n".join(lines)
-        
+
         return Response(
             content=prometheus_text,
             media_type="text/plain; version=0.0.4; charset=utf-8"
@@ -345,7 +355,7 @@ def list_all_services(
     """
     try:
         from app.utils.scheduler_config import SCHEDULER_TASKS
-        
+
         services = []
         for task in SCHEDULER_TASKS:
             services.append({
@@ -362,7 +372,7 @@ def list_all_services(
                 "risk_level": task.get("risk_level", "UNKNOWN"),
                 "sla": task.get("sla", {}),
             })
-        
+
         return ResponseModel(
             code=200,
             message="success",
@@ -391,16 +401,16 @@ def get_task_configs(
         # 确保数据库会话有效
         if not db:
             raise HTTPException(status_code=500, detail="数据库连接失败")
-        
+
         query = db.query(SchedulerTaskConfig)
-        
+
         if category:
             query = query.filter(SchedulerTaskConfig.category == category)
         if enabled is not None:
             query = query.filter(SchedulerTaskConfig.is_enabled == enabled)
-        
+
         configs = query.order_by(SchedulerTaskConfig.category, SchedulerTaskConfig.task_name).all()
-        
+
         # 安全地处理 JSON 字段
         items = []
         for config in configs:
@@ -414,7 +424,7 @@ def get_task_configs(
                         cron_config = json.loads(cron_config)
                     except (json.JSONDecodeError, TypeError):
                         cron_config = {}
-                
+
                 # 处理 dependencies_tables
                 dependencies_tables = config.dependencies_tables
                 if dependencies_tables is None:
@@ -424,7 +434,7 @@ def get_task_configs(
                         dependencies_tables = json.loads(dependencies_tables)
                     except (json.JSONDecodeError, TypeError):
                         dependencies_tables = []
-                
+
                 # 处理 sla_config
                 sla_config = config.sla_config
                 if sla_config is None:
@@ -434,7 +444,7 @@ def get_task_configs(
                         sla_config = json.loads(sla_config)
                     except (json.JSONDecodeError, TypeError):
                         sla_config = {}
-                
+
                 items.append({
                     "id": config.id,
                     "task_id": config.task_id,
@@ -458,7 +468,7 @@ def get_task_configs(
                 logger = logging.getLogger(__name__)
                 logger.error(f"处理配置项 {config.task_id} 失败: {config_error}", exc_info=True)
                 continue
-        
+
         return ResponseModel(
             code=200,
             message="success",
@@ -488,10 +498,10 @@ def get_task_config(
         config = db.query(SchedulerTaskConfig).filter(
             SchedulerTaskConfig.task_id == task_id
         ).first()
-        
+
         if not config:
             raise HTTPException(status_code=404, detail=f"任务配置 {task_id} 不存在")
-        
+
         return ResponseModel(
             code=200,
             message="success",
@@ -539,19 +549,19 @@ def update_task_config(
         config = db.query(SchedulerTaskConfig).filter(
             SchedulerTaskConfig.task_id == task_id
         ).first()
-        
+
         if not config:
             raise HTTPException(status_code=404, detail=f"任务配置 {task_id} 不存在")
-        
+
         # 更新配置
         if config_update.is_enabled is not None:
             config.is_enabled = config_update.is_enabled
         if config_update.cron_config is not None:
             config.cron_config = config_update.cron_config
         config.updated_by = current_user.id
-        
+
         db.commit()
-        
+
         # 动态更新调度器中的任务
         try:
             from app.utils.scheduler import scheduler
@@ -575,7 +585,7 @@ def update_task_config(
             import logging
             logger = logging.getLogger(__name__)
             logger.warning(f"更新调度器任务失败: {str(scheduler_err)}")
-        
+
         return ResponseModel(
             code=200,
             message="success",
@@ -607,21 +617,21 @@ def sync_task_configs(
 
     try:
         from app.utils.scheduler_config import SCHEDULER_TASKS
-        
+
         synced_count = 0
         created_count = 0
         updated_count = 0
-        
+
         for task in SCHEDULER_TASKS:
             config = db.query(SchedulerTaskConfig).filter(
                 SchedulerTaskConfig.task_id == task["id"]
             ).first()
-            
+
             # 准备配置数据
             cron_config = task.get("cron", {})
             dependencies_tables = task.get("dependencies_tables", [])
             sla_config = task.get("sla", {})
-            
+
             config_data = {
                 "task_id": task["id"],
                 "task_name": task["name"],
@@ -637,7 +647,7 @@ def sync_task_configs(
                 "sla_config": sla_config if sla_config else None,
                 "updated_by": current_user.id,
             }
-            
+
             if config:
                 # 更新现有配置
                 if sync_request.force:
@@ -650,11 +660,11 @@ def sync_task_configs(
                 config = SchedulerTaskConfig(**config_data)
                 db.add(config)
                 created_count += 1
-            
+
             synced_count += 1
-        
+
         db.commit()
-        
+
         return ResponseModel(
             code=200,
             message="success",

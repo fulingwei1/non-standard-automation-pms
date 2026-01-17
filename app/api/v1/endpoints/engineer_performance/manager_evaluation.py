@@ -4,16 +4,17 @@
 """
 
 from decimal import Decimal
-from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, Body
-from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field
+from typing import List, Optional
 
-from app.api.deps import get_db, get_current_user
-from app.models.user import User
+from fastapi import APIRouter, Body, Depends, HTTPException
+from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
+
+from app.api.deps import get_current_user, get_db
 from app.models.performance import PerformancePeriod, PerformanceResult
-from app.services.manager_evaluation_service import ManagerEvaluationService
+from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.manager_evaluation_service import ManagerEvaluationService
 
 router = APIRouter(prefix="/manager-evaluation", tags=["部门经理评价"])
 

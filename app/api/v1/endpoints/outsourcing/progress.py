@@ -11,36 +11,53 @@
 """
 
 import logging
-from typing import Any, List, Optional
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 logger = logging.getLogger(__name__)
+from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import or_, desc
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
-from app.models.project import Project, Machine
 from app.models.outsourcing import (
-    OutsourcingVendor, OutsourcingOrder, OutsourcingOrderItem,
-    OutsourcingDelivery, OutsourcingDeliveryItem,
-    OutsourcingInspection, OutsourcingProgress, OutsourcingEvaluation, OutsourcingPayment
+    OutsourcingDelivery,
+    OutsourcingDeliveryItem,
+    OutsourcingEvaluation,
+    OutsourcingInspection,
+    OutsourcingOrder,
+    OutsourcingOrderItem,
+    OutsourcingPayment,
+    OutsourcingProgress,
+    OutsourcingVendor,
 )
+from app.models.project import Machine, Project
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.outsourcing import (
-    VendorCreate, VendorUpdate, VendorResponse,
-    OutsourcingOrderCreate, OutsourcingOrderUpdate, OutsourcingOrderResponse, OutsourcingOrderListResponse,
-    OutsourcingOrderItemCreate, OutsourcingOrderItemResponse,
-    OutsourcingDeliveryCreate, OutsourcingDeliveryResponse,
-    OutsourcingInspectionCreate, OutsourcingInspectionResponse,
-    OutsourcingProgressCreate, OutsourcingProgressResponse,
-    OutsourcingPaymentCreate, OutsourcingPaymentUpdate, OutsourcingPaymentResponse
+    OutsourcingDeliveryCreate,
+    OutsourcingDeliveryResponse,
+    OutsourcingInspectionCreate,
+    OutsourcingInspectionResponse,
+    OutsourcingOrderCreate,
+    OutsourcingOrderItemCreate,
+    OutsourcingOrderItemResponse,
+    OutsourcingOrderListResponse,
+    OutsourcingOrderResponse,
+    OutsourcingOrderUpdate,
+    OutsourcingPaymentCreate,
+    OutsourcingPaymentResponse,
+    OutsourcingPaymentUpdate,
+    OutsourcingProgressCreate,
+    OutsourcingProgressResponse,
+    VendorCreate,
+    VendorResponse,
+    VendorUpdate,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
 
 router = APIRouter()
 
@@ -93,14 +110,7 @@ def generate_inspection_no(db: Session) -> str:
     return f"IQ-{today}-{seq:03d}"
 
 
-
-from fastapi import APIRouter
-
-router = APIRouter(
-    prefix="/outsourcing/progress",
-    tags=["progress"]
-)
-
+# NOTE: keep flat routes (no extra prefix) to preserve the original API paths.
 # 共 2 个路由
 
 # ==================== 外协进度 ====================
@@ -117,9 +127,9 @@ def read_outsourcing_progress_logs(
     order = db.query(OutsourcingOrder).filter(OutsourcingOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="外协订单不存在")
-    
+
     progress_records = db.query(OutsourcingProgress).filter(OutsourcingProgress.order_id == order_id).order_by(desc(OutsourcingProgress.report_date)).all()
-    
+
     items = []
     for progress in progress_records:
         items.append(OutsourcingProgressResponse(
@@ -135,7 +145,7 @@ def read_outsourcing_progress_logs(
             created_at=progress.created_at,
             updated_at=progress.updated_at
         ))
-    
+
     return items
 
 
@@ -153,10 +163,10 @@ def update_outsourcing_progress(
     order = db.query(OutsourcingOrder).filter(OutsourcingOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="外协订单不存在")
-    
+
     if order.status not in ["APPROVED", "IN_PROGRESS"]:
         raise HTTPException(status_code=400, detail="只能更新已审批或进行中订单的进度")
-    
+
     progress = OutsourcingProgress(
         order_id=order_id,
         order_item_id=progress_in.order_item_id,
@@ -171,11 +181,11 @@ def update_outsourcing_progress(
         attachments=progress_in.attachments,
         reported_by=current_user.id
     )
-    
+
     db.add(progress)
     db.commit()
     db.refresh(progress)
-    
+
     return OutsourcingProgressResponse(
         id=progress.id,
         order_id=progress.order_id,
@@ -189,6 +199,5 @@ def update_outsourcing_progress(
         created_at=progress.created_at,
         updated_at=progress.updated_at
     )
-
 
 

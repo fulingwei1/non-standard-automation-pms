@@ -7,18 +7,18 @@
 import logging
 from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
 
 logger = logging.getLogger(__name__)
-from sqlalchemy.orm import Session
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.user import User
 from app.models.project import Project
-from app.services.project_contribution_service import ProjectContributionService
+from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.project_contribution_service import ProjectContributionService
 
 router = APIRouter()
 
@@ -41,10 +41,10 @@ def get_project_contributions(
     """
     from app.utils.permission_helpers import check_project_access_or_raise
     check_project_access_or_raise(db, current_user, project_id)
-    
+
     service = ProjectContributionService(db)
     contributions = service.get_project_contributions(project_id, period)
-    
+
     return {
         'contributions': [
             {
@@ -85,15 +85,15 @@ def rate_member_contribution(
     """
     from app.utils.permission_helpers import check_project_access_or_raise
     check_project_access_or_raise(db, current_user, project_id)
-    
+
     # 验证当前用户是否为项目经理
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
-    
+
     if project.pm_id != current_user.id and not current_user.is_superuser:
         raise HTTPException(status_code=403, detail="只有项目经理可以评分")
-    
+
     service = ProjectContributionService(db)
     try:
         service.rate_member_contribution(
@@ -120,7 +120,7 @@ def get_contribution_report(
     """
     from app.utils.permission_helpers import check_project_access_or_raise
     check_project_access_or_raise(db, current_user, project_id)
-    
+
     service = ProjectContributionService(db)
     return service.generate_contribution_report(project_id, period)
 
@@ -139,14 +139,14 @@ def get_user_project_contributions(
     # 只能查看自己的贡献，除非是管理员
     if user_id != current_user.id and not current_user.is_superuser:
         raise HTTPException(status_code=403, detail="无权查看他人贡献")
-    
+
     service = ProjectContributionService(db)
     contributions = service.get_user_project_contributions(
         user_id,
         start_period=start_period,
         end_period=end_period
     )
-    
+
     return {
         'contributions': [
             {
@@ -178,17 +178,17 @@ def calculate_contributions(
     """
     from app.utils.permission_helpers import check_project_access_or_raise
     check_project_access_or_raise(db, current_user, project_id)
-    
+
     # 获取项目成员
     from app.models.project import ProjectMember
     members = db.query(ProjectMember).filter(
         ProjectMember.project_id == project_id,
         ProjectMember.is_active == True
     ).all()
-    
+
     service = ProjectContributionService(db)
     calculated_count = 0
-    
+
     for member in members:
         try:
             service.calculate_member_contribution(
@@ -200,7 +200,7 @@ def calculate_contributions(
         except Exception as e:
             # 记录错误但继续处理其他成员
             logger.error(f"Error calculating contribution for user {member.user_id}: {e}")
-    
+
     return ResponseModel(
         code=200,
         message=f"已计算 {calculated_count} 位成员的贡献度"

@@ -1,0 +1,128 @@
+# -*- coding: utf-8 -*-
+"""
+数据导入预览 routes
+"""
+
+import io
+from typing import Any
+
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from sqlalchemy.orm import Session
+
+from app.api import deps
+from app.core import security
+from app.models.user import User
+from app.schemas.data_import_export import ImportPreviewResponse
+
+from .validators import _validate_import_row
+
+router = APIRouter()
+
+
+@router.post(
+    "/preview", response_model=ImportPreviewResponse, status_code=status.HTTP_200_OK
+)
+def preview_import_data(
+    *,
+    db: Session = Depends(deps.get_db),
+    file: UploadFile = File(...),
+    template_type: str = Query(..., description="模板类型"),
+    current_user: User = Depends(
+        security.require_permission("data_import_export:manage")
+    ),
+) -> Any:
+    """
+    预览导入数据（上传预览）
+
+    支持多种数据类型预览：
+    - PROJECT: 项目导入
+    - USER: 用户导入
+    - TIMESHEET: 工时导入
+    - TASK: 任务导入
+    - MATERIAL: 物料导入
+    - BOM: BOM导入
+    """
+    try:
+        import pandas as pd
+    except ImportError:
+        raise HTTPException(status_code=500, detail="Excel处理库未安装，请安装pandas")
+
+    REQUIRED_COLUMNS = {
+        "PROJECT": ["项目编码*", "项目名称*"],
+        "USER": ["姓名"],
+        "TIMESHEET": ["工作日期*", "人员姓名*", "工时(小时)*"],
+        "TASK": ["任务名称*", "项目编码*"],
+        "MATERIAL": ["物料编码*", "物料名称*"],
+        "BOM": ["BOM编码*", "项目编码*", "物料编码*", "用量*"],
+    }
+
+    try:
+        file_content = file.file.read()
+        df = pd.read_excel(io.BytesIO(file_content))
+
+        df = df.dropna(how="all")
+        total_rows = len(df)
+
+        if total_rows == 0:
+            return ImportPreviewResponse(
+                total_rows=0,
+                valid_rows=0,
+                invalid_rows=0,
+                preview_data=[],
+                errors=[{"row": 0, "field": "", "message": "文件中没有数据"}],
+            )
+
+        template_type_upper = template_type.upper()
+
+        required_columns = REQUIRED_COLUMNS.get(template_type_upper, [])
+        missing_columns = []
+
+        for req_col in required_columns:
+            if req_col not in df.columns and req_col.replace("*", "") not in df.columns:
+                missing_columns.append(req_col)
+
+        if missing_columns:
+            return ImportPreviewResponse(
+                total_rows=total_rows,
+                valid_rows=0,
+                invalid_rows=total_rows,
+                preview_data=[],
+                errors=[
+                    {
+                        "row": 0,
+                        "field": "",
+                        "message": f"缺少必需的列：{', '.join(missing_columns)}",
+                    }
+                ],
+            )
+
+        preview_rows = min(10, total_rows)
+        preview_data = df.head(preview_rows).to_dict("records")
+
+        errors = []
+        valid_rows = 0
+
+        for idx, row in df.iterrows():
+            row_num = idx + 2
+            is_valid = _validate_import_row(
+                row, row_num, template_type_upper, errors, pd
+            )
+            if is_valid:
+                valid_rows += 1
+
+        return ImportPreviewResponse(
+            total_rows=total_rows,
+            valid_rows=valid_rows,
+            invalid_rows=total_rows - valid_rows,
+            preview_data=preview_data[:preview_rows],
+            errors=errors[:20],
+        )
+
+    except Exception as e:
+        return ImportPreviewResponse(
+            total_rows=0,
+            valid_rows=0,
+            invalid_rows=0,
+            preview_data=[],
+            errors=[{"row": 0, "field": "", "message": f"文件解析失败: {str(e)}"}],
+        )

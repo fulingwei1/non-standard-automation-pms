@@ -5,11 +5,11 @@
 
 from fastapi import APIRouter
 
+from .bi import router as bi_router
 from .configs import router as configs_router
 from .generate import router as generate_router
-from .templates import router as templates_router
 from .rd_expense import router as rd_expense_router
-from .bi import router as bi_router
+from .templates import router as templates_router
 
 router = APIRouter()
 

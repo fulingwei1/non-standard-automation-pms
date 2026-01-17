@@ -4,15 +4,16 @@
 """
 
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, Body
+
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db, get_current_user
-from app.models.user import User
+from app.api.deps import get_current_user, get_db
 from app.models.performance import PerformancePeriod
-from app.services.collaboration_service import CollaborationService
-from app.schemas.engineer_performance import CollaborationRatingCreate
+from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.schemas.engineer_performance import CollaborationRatingCreate
+from app.services.collaboration_service import CollaborationService
 
 router = APIRouter(prefix="/collaboration", tags=["跨部门协作"])
 
@@ -211,9 +212,9 @@ async def auto_select_collaborators(
 ):
     """自动匿名抽取5个合作人员进行评价"""
     from app.services.collaboration_rating_service import CollaborationRatingService
-    
+
     service = CollaborationRatingService(db)
-    
+
     try:
         collaborators = service.auto_select_collaborators(
             engineer_id, period_id, target_count
@@ -221,7 +222,7 @@ async def auto_select_collaborators(
         invitations = service.create_rating_invitations(
             engineer_id, period_id, collaborators
         )
-        
+
         return ResponseModel(
             code=200,
             message="自动抽取成功",
@@ -249,9 +250,9 @@ async def submit_rating(
 ):
     """提交跨部门协作评价"""
     from app.services.collaboration_rating_service import CollaborationRatingService
-    
+
     service = CollaborationRatingService(db)
-    
+
     try:
         rating = service.submit_rating(
             rating_id=rating_id,
@@ -263,7 +264,7 @@ async def submit_rating(
             comment=comment,
             project_id=project_id
         )
-        
+
         return ResponseModel(
             code=200,
             message="评价提交成功",
@@ -284,21 +285,21 @@ async def get_pending_ratings_new(
 ):
     """获取当前用户待评价的列表"""
     from app.services.collaboration_rating_service import CollaborationRatingService
-    
+
     service = CollaborationRatingService(db)
-    
+
     if not period_id:
         period = db.query(PerformancePeriod).filter(
             PerformancePeriod.is_active == True
         ).first()
         if period:
             period_id = period.id
-    
+
     if not period_id:
         raise HTTPException(status_code=404, detail="未找到考核周期")
-    
+
     pending = service.get_pending_ratings(current_user.id, period_id)
-    
+
     return ResponseModel(
         code=200,
         message="获取待评价列表成功",
@@ -322,9 +323,9 @@ async def get_rating_statistics(
 ):
     """获取指定周期的评价统计信息"""
     from app.services.collaboration_rating_service import CollaborationRatingService
-    
+
     service = CollaborationRatingService(db)
-    
+
     try:
         stats = service.get_rating_statistics(period_id)
         return ResponseModel(
@@ -345,9 +346,9 @@ async def get_collaboration_trend(
 ):
     """获取工程师的跨部门协作趋势"""
     from app.services.collaboration_rating_service import CollaborationRatingService
-    
+
     service = CollaborationRatingService(db)
-    
+
     try:
         trend = service.get_collaboration_trend(engineer_id, periods)
         return ResponseModel(
@@ -367,9 +368,9 @@ async def analyze_rating_quality(
 ):
     """分析指定周期的评价质量"""
     from app.services.collaboration_rating_service import CollaborationRatingService
-    
+
     service = CollaborationRatingService(db)
-    
+
     try:
         analysis = service.analyze_rating_quality(period_id)
         return ResponseModel(
@@ -389,11 +390,12 @@ async def auto_complete_missing_ratings(
     current_user: User = Depends(get_current_user)
 ):
     """自动完成缺失的评价（使用默认值）"""
-    from app.services.collaboration_rating_service import CollaborationRatingService
     from decimal import Decimal
-    
+
+    from app.services.collaboration_rating_service import CollaborationRatingService
+
     service = CollaborationRatingService(db)
-    
+
     try:
         count = service.auto_complete_missing_ratings(
             period_id, Decimal(str(default_score))

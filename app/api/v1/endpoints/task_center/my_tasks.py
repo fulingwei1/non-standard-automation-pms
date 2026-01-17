@@ -10,31 +10,43 @@
 核心功能：多来源任务聚合、智能排序、转办协作
 """
 
-from typing import Any, List, Optional, Dict
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from sqlalchemy import and_, case, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, and_, func, case
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User
-from app.models.project import Project
+from app.core.config import settings
 from app.models.notification import Notification
-from app.services.sales_reminder_service import create_notification
+from app.models.project import Project
 from app.models.task_center import (
-    TaskUnified, TaskComment, TaskOperationLog, TaskReminder, JobDutyTemplate
+    JobDutyTemplate,
+    TaskComment,
+    TaskOperationLog,
+    TaskReminder,
+    TaskUnified,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.task_center import (
-    TaskOverviewResponse, TaskUnifiedCreate, TaskUnifiedUpdate, TaskUnifiedResponse,
-    TaskUnifiedListResponse, TaskProgressUpdate, TaskTransferRequest,
-    TaskCommentCreate, TaskCommentResponse, BatchTaskOperation, BatchOperationResponse,
-    BatchOperationStatistics
+    BatchOperationResponse,
+    BatchOperationStatistics,
+    BatchTaskOperation,
+    TaskCommentCreate,
+    TaskCommentResponse,
+    TaskOverviewResponse,
+    TaskProgressUpdate,
+    TaskTransferRequest,
+    TaskUnifiedCreate,
+    TaskUnifiedListResponse,
+    TaskUnifiedResponse,
+    TaskUnifiedUpdate,
 )
+from app.services.sales_reminder import create_notification
 
 router = APIRouter()
 
@@ -42,7 +54,7 @@ router = APIRouter()
 def generate_task_code(db: Session) -> str:
     """生成任务编号：TASK-yymmdd-xxx"""
     from app.utils.number_generator import generate_sequential_no
-    
+
     return generate_sequential_no(
         db=db,
         model_class=TaskUnified,
@@ -90,7 +102,7 @@ router = APIRouter(
 
 # ==================== 我的任务列表 ====================
 
-@router.get("/my-tasks", response_model=TaskUnifiedListResponse, status_code=status.HTTP_200_OK)
+@router.get("", response_model=TaskUnifiedListResponse, status_code=status.HTTP_200_OK)
 def get_my_tasks(
     *,
     db: Session = Depends(deps.get_db),
@@ -112,23 +124,23 @@ def get_my_tasks(
     """
     user_id = current_user.id
     query = db.query(TaskUnified).filter(TaskUnified.assignee_id == user_id)
-    
+
     # 状态筛选
     if status:
         query = query.filter(TaskUnified.status == status)
-    
+
     # 任务类型筛选
     if task_type:
         query = query.filter(TaskUnified.task_type == task_type)
-    
+
     # 优先级筛选
     if priority:
         query = query.filter(TaskUnified.priority == priority)
-    
+
     # 紧急任务筛选
     if is_urgent is not None:
         query = query.filter(TaskUnified.is_urgent == is_urgent)
-    
+
     # 逾期任务筛选
     if is_overdue is not None:
         today = datetime.now().date()
@@ -147,11 +159,11 @@ def get_my_tasks(
                     ~TaskUnified.status.in_(["PENDING", "ACCEPTED", "IN_PROGRESS"])
                 )
             )
-    
+
     # 项目筛选
     if project_id:
         query = query.filter(TaskUnified.project_id == project_id)
-    
+
     # 关键词搜索
     if keyword:
         query = query.filter(
@@ -160,7 +172,7 @@ def get_my_tasks(
                 TaskUnified.description.like(f"%{keyword}%")
             )
         )
-    
+
     # 排序
     if sort_by == "deadline":
         order_by = TaskUnified.deadline
@@ -175,19 +187,19 @@ def get_my_tasks(
         order_by = priority_order
     else:
         order_by = TaskUnified.created_at
-    
+
     if sort_order == "desc":
         query = query.order_by(desc(order_by))
     else:
         query = query.order_by(order_by)
-    
+
     # 总数
     total = query.count()
-    
+
     # 分页
     offset = (page - 1) * page_size
     tasks = query.offset(offset).limit(page_size).all()
-    
+
     # 构建响应
     items = []
     today = datetime.now().date()
@@ -197,7 +209,7 @@ def get_my_tasks(
             deadline_date = task.deadline.date() if isinstance(task.deadline, datetime) else task.deadline
             if deadline_date < today:
                 is_overdue = True
-        
+
         items.append(TaskUnifiedResponse(
             id=task.id,
             task_code=task.task_code,
@@ -232,7 +244,7 @@ def get_my_tasks(
             created_at=task.created_at,
             updated_at=task.updated_at
         ))
-    
+
     return TaskUnifiedListResponse(
         items=items,
         total=total,

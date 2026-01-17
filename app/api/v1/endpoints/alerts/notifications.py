@@ -4,46 +4,53 @@ NOTIFICATIONS - 自动生成
 从 alerts.py 拆分
 """
 
+from datetime import date, datetime, timedelta
+from decimal import Decimal
 from typing import Any, List, Optional
 
-from datetime import date, datetime, timedelta
-
-from decimal import Decimal
-
-from fastapi import APIRouter, Depends, HTTPException, Query, status, Body
-
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
-
+from sqlalchemy import and_, case, func, or_
 from sqlalchemy.orm import Session, joinedload, selectinload
 
-from sqlalchemy import or_, and_, func, case
-
 from app.api import deps
-
 from app.core import security
-
 from app.core.config import settings
-
-from app.models.user import User
-
-from app.models.project import Project, Machine
-
-from app.models.issue import Issue
-
 from app.models.alert import (
-    AlertRule, AlertRuleTemplate, AlertRecord, AlertNotification,
-    ExceptionEvent, ExceptionAction, ExceptionEscalation,
-    AlertStatistics, ProjectHealthSnapshot, AlertSubscription
+    AlertNotification,
+    AlertRecord,
+    AlertRule,
+    AlertRuleTemplate,
+    AlertStatistics,
+    AlertSubscription,
+    ExceptionAction,
+    ExceptionEscalation,
+    ExceptionEvent,
+    ProjectHealthSnapshot,
 )
+from app.models.issue import Issue
+from app.models.project import Machine, Project
+from app.models.user import User
 from app.schemas.alert import (
-    AlertRuleCreate, AlertRuleUpdate, AlertRuleResponse,
-    AlertRecordHandle, AlertRecordResponse, AlertRecordListResponse,
-    ExceptionEventCreate, ExceptionEventUpdate, ExceptionEventResolve,
-    ExceptionEventVerify, ExceptionEventResponse, ExceptionEventListResponse,
-    ProjectHealthResponse, AlertStatisticsResponse,
-    AlertSubscriptionCreate, AlertSubscriptionUpdate, AlertSubscriptionResponse
+    AlertRecordHandle,
+    AlertRecordListResponse,
+    AlertRecordResponse,
+    AlertRuleCreate,
+    AlertRuleResponse,
+    AlertRuleUpdate,
+    AlertStatisticsResponse,
+    AlertSubscriptionCreate,
+    AlertSubscriptionResponse,
+    AlertSubscriptionUpdate,
+    ExceptionEventCreate,
+    ExceptionEventListResponse,
+    ExceptionEventResolve,
+    ExceptionEventResponse,
+    ExceptionEventUpdate,
+    ExceptionEventVerify,
+    ProjectHealthResponse,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
+from app.schemas.common import PaginatedResponse, ResponseModel
 
 router = APIRouter(tags=["notifications"])
 
@@ -62,7 +69,7 @@ def read_alert_notifications(
     获取预警通知列表（当前用户的）
     """
     from app.services.notification_service import AlertNotificationService
-    
+
     service = AlertNotificationService(db)
     offset = (page - 1) * page_size
     result = service.get_user_notifications(
@@ -71,10 +78,10 @@ def read_alert_notifications(
         limit=page_size,
         offset=offset
     )
-    
+
     if not result.get('success'):
         raise HTTPException(status_code=500, detail=result.get('message', '获取通知列表失败'))
-    
+
     return PaginatedResponse(
         items=result.get('items', []),
         total=result.get('total', 0),
@@ -94,13 +101,13 @@ def mark_notification_read(
     标记通知已读
     """
     from app.services.notification_service import AlertNotificationService
-    
+
     service = AlertNotificationService(db)
     success = service.mark_notification_read(notification_id, current_user.id)
-    
+
     if not success:
         raise HTTPException(status_code=404, detail="通知不存在或无权操作")
-    
+
     return ResponseModel(code=200, message="已标记为已读")
 
 
@@ -113,10 +120,10 @@ def get_unread_notification_count(
     获取未读通知数量
     """
     from app.services.notification_service import AlertNotificationService
-    
+
     service = AlertNotificationService(db)
     count = service.get_unread_count(current_user.id)
-    
+
     return {
         "unread_count": count,
         "user_id": current_user.id
@@ -133,13 +140,13 @@ def batch_mark_notifications_read(
     批量标记通知为已读
     """
     from app.services.notification_service import AlertNotificationService
-    
+
     service = AlertNotificationService(db)
     result = service.batch_mark_read(notification_ids, current_user.id)
-    
+
     if not result.get('success'):
         raise HTTPException(status_code=500, detail=result.get('message', '批量标记失败'))
-    
+
     return ResponseModel(
         code=200,
         message=f"成功标记 {result.get('success_count', 0)} 条通知为已读",
@@ -158,6 +165,6 @@ def generate_exception_no(db: Session) -> str:
         .order_by(ExceptionEvent.event_no.desc())
         .first()
     )
-    
+
     if max_event:
         seq = int(max_event.event_no.split("-")[-1]) + 1

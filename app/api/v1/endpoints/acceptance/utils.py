@@ -8,12 +8,11 @@
 from typing import Optional
 
 from fastapi import HTTPException
-from sqlalchemy.orm import Session
 from sqlalchemy import desc
+from sqlalchemy.orm import Session
 
-from app.models.project import Project, Machine
-from app.models.acceptance import AcceptanceOrder, AcceptanceIssue
-
+from app.models.acceptance import AcceptanceIssue, AcceptanceOrder
+from app.models.project import Machine, Project
 
 # ==================== 验收约束规则验证 ====================
 

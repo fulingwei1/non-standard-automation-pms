@@ -5,14 +5,14 @@
 
 from fastapi import APIRouter
 
-from .rules import router as rules_router
 from .calculation import router as calculation_router
-from .sales_calc import router as sales_calc_router
-from .payment import router as payment_router
-from .team import router as team_router
-from .my_bonus import router as my_bonus_router
-from .statistics import router as statistics_router
 from .details import router as details_router
+from .my_bonus import router as my_bonus_router
+from .payment import router as payment_router
+from .rules import router as rules_router
+from .sales_calc import router as sales_calc_router
+from .statistics import router as statistics_router
+from .team import router as team_router
 
 router = APIRouter()
 

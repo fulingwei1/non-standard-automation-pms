@@ -10,39 +10,53 @@
 核心功能：多来源任务聚合、智能排序、转办协作
 """
 
-from typing import Any, List, Optional, Dict
+import logging
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from sqlalchemy import and_, case, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, and_, func, case
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User
-from app.models.project import Project
+from app.core.config import settings
 from app.models.notification import Notification
-from app.services.sales_reminder_service import create_notification
+from app.models.project import Project
 from app.models.task_center import (
-    TaskUnified, TaskComment, TaskOperationLog, TaskReminder, JobDutyTemplate
+    JobDutyTemplate,
+    TaskComment,
+    TaskOperationLog,
+    TaskReminder,
+    TaskUnified,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.task_center import (
-    TaskOverviewResponse, TaskUnifiedCreate, TaskUnifiedUpdate, TaskUnifiedResponse,
-    TaskUnifiedListResponse, TaskProgressUpdate, TaskTransferRequest,
-    TaskCommentCreate, TaskCommentResponse, BatchTaskOperation, BatchOperationResponse,
-    BatchOperationStatistics
+    BatchOperationResponse,
+    BatchOperationStatistics,
+    BatchTaskOperation,
+    TaskCommentCreate,
+    TaskCommentResponse,
+    TaskOverviewResponse,
+    TaskProgressUpdate,
+    TaskTransferRequest,
+    TaskUnifiedCreate,
+    TaskUnifiedListResponse,
+    TaskUnifiedResponse,
+    TaskUnifiedUpdate,
 )
+from app.services.sales_reminder import create_notification
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 def generate_task_code(db: Session) -> str:
     """生成任务编号：TASK-yymmdd-xxx"""
     from app.utils.number_generator import generate_sequential_no
-    
+
     return generate_sequential_no(
         db=db,
         model_class=TaskUnified,
@@ -104,14 +118,14 @@ def create_task_comment(
     task = db.query(TaskUnified).filter(TaskUnified.id == task_id).first()
     if not task:
         raise HTTPException(status_code=404, detail="任务不存在")
-    
+
     # 验证父评论
     parent_comment = None
     if comment_in.parent_id:
         parent_comment = db.query(TaskComment).filter(TaskComment.id == comment_in.parent_id).first()
         if not parent_comment or parent_comment.task_id != task_id:
             raise HTTPException(status_code=400, detail="父评论不存在或不属于此任务")
-    
+
     comment = TaskComment(
         task_id=task_id,
         content=comment_in.content,
@@ -121,11 +135,11 @@ def create_task_comment(
         commenter_name=current_user.real_name or current_user.username,
         mentioned_users=comment_in.mentioned_users if comment_in.mentioned_users else []
     )
-    
+
     db.add(comment)
     db.commit()
     db.refresh(comment)
-    
+
     # 通知被@的用户
     if comment_in.mentioned_users:
         try:
@@ -146,10 +160,10 @@ def create_task_comment(
                             extra_data={"task_id": task.id, "comment_id": comment.id, "commenter": current_user.real_name or current_user.username}
                         )
             db.commit()
-        except Exception as e:
+        except Exception:
             # 通知发送失败不影响主流程
-            pass
-    
+            logger.warning("任务评论@通知发送失败，不影响主流程", exc_info=True)
+
     return TaskCommentResponse(
         id=comment.id,
         task_id=comment.task_id,
@@ -177,19 +191,19 @@ def get_task_comments(
     task = db.query(TaskUnified).filter(TaskUnified.id == task_id).first()
     if not task:
         raise HTTPException(status_code=404, detail="任务不存在")
-    
+
     comments = db.query(TaskComment).filter(
         TaskComment.task_id == task_id,
         TaskComment.parent_id.is_(None)  # 只获取顶级评论
     ).order_by(TaskComment.created_at).all()
-    
+
     items = []
     for comment in comments:
         # 获取回复
         replies = db.query(TaskComment).filter(
             TaskComment.parent_id == comment.id
         ).order_by(TaskComment.created_at).all()
-        
+
         reply_items = []
         for reply in replies:
             reply_items.append(TaskCommentResponse(
@@ -204,7 +218,7 @@ def get_task_comments(
                 created_at=reply.created_at,
                 replies=None
             ))
-        
+
         items.append(TaskCommentResponse(
             id=comment.id,
             task_id=comment.task_id,
@@ -217,8 +231,7 @@ def get_task_comments(
             created_at=comment.created_at,
             replies=reply_items if reply_items else None
         ))
-    
-    return items
 
+    return items
 
 

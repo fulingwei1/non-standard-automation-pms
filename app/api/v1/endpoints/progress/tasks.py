@@ -4,8 +4,8 @@
 包含：任务CRUD、任务状态变更、任务依赖管理、负责人分配、进度日志
 """
 
-from typing import Any, List, Optional
 from datetime import date, timedelta
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -13,17 +13,28 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
-from app.models.project import Project, Machine, ProjectMilestone
 from app.models.progress import (
-    WbsTemplate, WbsTemplateTask, Task, TaskDependency, ProgressLog
+    ProgressLog,
+    Task,
+    TaskDependency,
+    WbsTemplate,
+    WbsTemplateTask,
 )
+from app.models.project import Machine, Project, ProjectMilestone
+from app.models.user import User
 from app.schemas.progress import (
-    TaskCreate, TaskUpdate, TaskProgressUpdate, TaskResponse, TaskListResponse,
-    InitWbsRequest, InitWbsResponse,
-    TaskDependencyCreate, TaskDependencyResponse,
+    InitWbsRequest,
+    InitWbsResponse,
+    ProgressLogListResponse,
+    ProgressLogResponse,
     TaskAssigneeUpdate,
-    ProgressLogResponse, ProgressLogListResponse,
+    TaskCreate,
+    TaskDependencyCreate,
+    TaskDependencyResponse,
+    TaskListResponse,
+    TaskProgressUpdate,
+    TaskResponse,
+    TaskUpdate,
 )
 
 router = APIRouter()
@@ -359,7 +370,9 @@ def update_task_progress(
                 if all_done and milestone.status != "COMPLETED":
                     # 检查验收和交付物要求
                     try:
-                        from app.services.progress_integration_service import ProgressIntegrationService
+                        from app.services.progress_integration_service import (
+                            ProgressIntegrationService,
+                        )
                         integration_service = ProgressIntegrationService(db)
                         can_complete, missing_items = integration_service.check_milestone_completion_requirements(milestone)
 

@@ -5,26 +5,27 @@
 
 import csv
 import io
-from typing import Any, List, Optional, Dict
 from datetime import date, datetime
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, Query, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.user import User, UserRole, Role
-from app.models.sales import Lead, Opportunity, Contract, Invoice
+from app.models.sales import Contract, Invoice, Lead, Opportunity
+from app.models.user import Role, User, UserRole
 from app.schemas.common import ResponseModel
 from app.schemas.sales import SalesRankingConfigUpdateRequest
-from app.services.sales_team_service import SalesTeamService
 from app.services.sales_ranking_service import SalesRankingService
+from app.services.sales_team_service import SalesTeamService
+
 from .utils import (
-    normalize_date_range,
+    build_department_name_map,
     get_user_role_name,
     get_visible_sales_users,
-    build_department_name_map,
+    normalize_date_range,
 )
 
 router = APIRouter()

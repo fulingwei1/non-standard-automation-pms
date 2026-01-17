@@ -5,14 +5,18 @@
 提供积分查询、充值、扣除等功能
 """
 
-from typing import Optional, List
+from datetime import datetime
+from typing import List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
-from datetime import datetime
 
 from app.api import deps
-from app.services.solution_credit_service import SolutionCreditService, CreditTransactionType
+from app.services.solution_credit_service import (
+    CreditTransactionType,
+    SolutionCreditService,
+)
 
 router = APIRouter()
 

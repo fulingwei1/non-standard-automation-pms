@@ -10,35 +10,45 @@
 核心功能：多角色视角报表、智能生成、导出分享
 """
 
-from typing import Any, List, Optional, Dict
+import os
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from fastapi.responses import FileResponse
+from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
-import os
-from sqlalchemy import desc, func, and_, or_
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User, Role
-from app.models.project import Project, Machine, ProjectPaymentPlan
-from app.models.rd_project import RdProject, RdCost, RdCostType
-from app.models.timesheet import Timesheet
-from app.models.sales import Contract
-from app.models.outsourcing import OutsourcingVendor, OutsourcingOrder
+from app.core.config import settings
+from app.models.outsourcing import OutsourcingOrder, OutsourcingVendor
+from app.models.project import Machine, Project, ProjectPaymentPlan
+from app.models.rd_project import RdCost, RdCostType, RdProject
 from app.models.report_center import (
-    ReportTemplate, ReportDefinition, ReportGeneration,
-    ReportSubscription
+    ReportDefinition,
+    ReportGeneration,
+    ReportSubscription,
+    ReportTemplate,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
+from app.models.sales import Contract
+from app.models.timesheet import Timesheet
+from app.models.user import Role, User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.report_center import (
-    ReportRoleResponse, ReportTypeResponse, RoleReportMatrixResponse,
-    ReportGenerateRequest, ReportGenerateResponse, ReportPreviewResponse,
-    ReportCompareRequest, ReportCompareResponse, ReportExportRequest,
-    ReportTemplateResponse, ReportTemplateListResponse, ApplyTemplateRequest
+    ApplyTemplateRequest,
+    ReportCompareRequest,
+    ReportCompareResponse,
+    ReportExportRequest,
+    ReportGenerateRequest,
+    ReportGenerateResponse,
+    ReportPreviewResponse,
+    ReportRoleResponse,
+    ReportTemplateListResponse,
+    ReportTemplateResponse,
+    ReportTypeResponse,
+    RoleReportMatrixResponse,
 )
 
 router = APIRouter()
@@ -69,14 +79,14 @@ def get_report_templates(
     获取报表模板列表
     """
     query = db.query(ReportTemplate).filter(ReportTemplate.is_active == True)
-    
+
     if report_type:
         query = query.filter(ReportTemplate.report_type == report_type)
-    
+
     total = query.count()
     offset = (page - 1) * page_size
     templates = query.order_by(desc(ReportTemplate.use_count), desc(ReportTemplate.created_at)).offset(offset).limit(page_size).all()
-    
+
     items = []
     for template in templates:
         items.append(ReportTemplateResponse(
@@ -91,7 +101,7 @@ def get_report_templates(
             created_at=template.created_at,
             updated_at=template.updated_at
         ))
-    
+
     return ReportTemplateListResponse(
         items=items,
         total=total,

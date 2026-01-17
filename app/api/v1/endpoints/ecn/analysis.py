@@ -5,20 +5,26 @@ ECN分析相关 API endpoints
 包含：BOM影响分析、呆滞料风险、责任分摊、RCA分析、知识库集成
 """
 
-from typing import Any, List, Optional, Dict
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from sqlalchemy import desc
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
+from app.models.ecn import (
+    Ecn,
+    EcnAffectedMaterial,
+    EcnBomImpact,
+    EcnResponsibility,
+    EcnSolutionTemplate,
+)
 from app.models.user import User
-from app.models.ecn import Ecn, EcnAffectedMaterial, EcnBomImpact, EcnResponsibility, EcnSolutionTemplate
+from app.schemas.common import ResponseModel
 from app.services.ecn_bom_analysis_service import EcnBomAnalysisService
 from app.services.ecn_knowledge_service import EcnKnowledgeService
-from app.schemas.common import ResponseModel
 
 router = APIRouter()
 

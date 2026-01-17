@@ -12,10 +12,10 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.user import User
 from app.models.ecn import Ecn, EcnType
-from app.schemas.ecn import EcnTypeCreate, EcnTypeUpdate, EcnTypeResponse
+from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.schemas.ecn import EcnTypeCreate, EcnTypeResponse, EcnTypeUpdate
 
 router = APIRouter()
 

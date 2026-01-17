@@ -4,54 +4,49 @@
 从 shortage_alerts.py 拆分
 """
 
+import logging
+from datetime import date, datetime
+from decimal import Decimal
 from typing import Any, List, Optional
 
-from datetime import date, datetime
-
-from decimal import Decimal
-
-from fastapi import APIRouter, Depends, HTTPException, Query, Body
-
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from sqlalchemy import desc, func, or_
 from sqlalchemy.orm import Session
 
-from sqlalchemy import desc, or_, func
-
 from app.api import deps
-
-from app.core.config import settings
-
 from app.core import security
-
-from app.models.user import User
-
-from app.models.material import MaterialShortage, Material, BomItem
-
-from app.models.project import Project, Machine
-
+from app.core.config import settings
+from app.models.material import BomItem, Material, MaterialShortage
+from app.models.production import WorkOrder
+from app.models.project import Machine, Project
+from app.models.purchase import PurchaseOrder, PurchaseOrderItem
 from app.models.shortage import (
-    ShortageReport,
-    MaterialArrival,
     ArrivalFollowUp,
+    MaterialArrival,
     MaterialSubstitution,
     MaterialTransfer,
+    ShortageReport,
 )
-from app.models.purchase import PurchaseOrder, PurchaseOrderItem
-from app.models.production import WorkOrder
-from app.schemas.common import ResponseModel, PaginatedResponse
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.shortage import (
-    ShortageReportCreate,
-    ShortageReportResponse,
-    ShortageReportListResponse,
-    MaterialArrivalResponse,
-    MaterialArrivalListResponse,
     ArrivalFollowUpCreate,
+    MaterialArrivalListResponse,
+    MaterialArrivalResponse,
     MaterialSubstitutionCreate,
-    MaterialSubstitutionResponse,
     MaterialSubstitutionListResponse,
+    MaterialSubstitutionResponse,
     MaterialTransferCreate,
-    MaterialTransferResponse,
     MaterialTransferListResponse,
+    MaterialTransferResponse,
+    ShortageReportCreate,
+    ShortageReportListResponse,
+    ShortageReportResponse,
 )
+
+from .utils import generate_transfer_no
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["transfers"])
 
@@ -71,18 +66,18 @@ def read_material_transfers(
     调拨申请列表
     """
     query = db.query(MaterialTransfer)
-    
+
     if from_project_id:
         query = query.filter(MaterialTransfer.from_project_id == from_project_id)
     if to_project_id:
         query = query.filter(MaterialTransfer.to_project_id == to_project_id)
     if status:
         query = query.filter(MaterialTransfer.status == status)
-    
+
     total = query.count()
     offset = (page - 1) * page_size
     transfers = query.order_by(desc(MaterialTransfer.created_at)).offset(offset).limit(page_size).all()
-    
+
     items = []
     for transfer in transfers:
         from_project = None
@@ -93,7 +88,7 @@ def read_material_transfers(
         if transfer.approver_id:
             approver = db.query(User).filter(User.id == transfer.approver_id).first()
             approver_name = approver.real_name or approver.username if approver else None
-        
+
         items.append(MaterialTransferResponse(
             id=transfer.id,
             transfer_no=transfer.transfer_no,
@@ -120,7 +115,7 @@ def read_material_transfers(
             created_at=transfer.created_at,
             updated_at=transfer.updated_at
         ))
-    
+
     return PaginatedResponse(
         items=items,
         total=total,
@@ -143,16 +138,16 @@ def create_material_transfer(
     to_project = db.query(Project).filter(Project.id == transfer_in.to_project_id).first()
     if not to_project:
         raise HTTPException(status_code=404, detail="调入项目不存在")
-    
+
     if transfer_in.from_project_id:
         from_project = db.query(Project).filter(Project.id == transfer_in.from_project_id).first()
         if not from_project:
             raise HTTPException(status_code=404, detail="调出项目不存在")
-    
+
     material = db.query(Material).filter(Material.id == transfer_in.material_id).first()
     if not material:
         raise HTTPException(status_code=404, detail="物料不存在")
-    
+
     # 检查可调拨数量（从调出项目的库存）
     available_qty = Decimal("0")
     if transfer_in.from_project_id:
@@ -165,9 +160,9 @@ def create_material_transfer(
 
     if transfer_in.transfer_qty > available_qty:
         raise HTTPException(status_code=400, detail=f"可调拨数量不足，当前可用：{available_qty}（来源：{stock_info.get('source', '未知')}）")
-    
+
     transfer_no = generate_transfer_no(db)
-    
+
     transfer = MaterialTransfer(
         transfer_no=transfer_no,
         shortage_report_id=transfer_in.shortage_report_id,
@@ -186,11 +181,11 @@ def create_material_transfer(
         created_by=current_user.id,
         remark=transfer_in.remark
     )
-    
+
     db.add(transfer)
     db.commit()
     db.refresh(transfer)
-    
+
     return read_material_transfer(transfer.id, db, current_user)
 
 
@@ -206,7 +201,7 @@ def read_material_transfer(
     transfer = db.query(MaterialTransfer).filter(MaterialTransfer.id == transfer_id).first()
     if not transfer:
         raise HTTPException(status_code=404, detail="物料调拨不存在")
-    
+
     from_project = None
     if transfer.from_project_id:
         from_project = db.query(Project).filter(Project.id == transfer.from_project_id).first()
@@ -215,7 +210,7 @@ def read_material_transfer(
     if transfer.approver_id:
         approver = db.query(User).filter(User.id == transfer.approver_id).first()
         approver_name = approver.real_name or approver.username if approver else None
-    
+
     return MaterialTransferResponse(
         id=transfer.id,
         transfer_no=transfer.transfer_no,
@@ -256,7 +251,11 @@ def approve_material_transfer(
     调拨审批
     """
     from app.services.material_transfer_service import material_transfer_service
-    from app.services.notification_service import notification_service, NotificationType, NotificationPriority
+    from app.services.notification_service import (
+        NotificationPriority,
+        NotificationType,
+        notification_service,
+    )
 
     transfer = db.query(MaterialTransfer).filter(MaterialTransfer.id == transfer_id).first()
     if not transfer:
@@ -291,7 +290,7 @@ def approve_material_transfer(
             link="/shortage-alerts/transfers/{transfer_id}".format(transfer_id=transfer.id),
         )
     except Exception:
-        pass
+        logger.warning("物料调拨审批通知发送失败，不影响主流程", exc_info=True)
 
     # 如果有调出项目，也通知调出项目负责人
     if transfer.from_project_id:
@@ -308,7 +307,7 @@ def approve_material_transfer(
                     link="/shortage-alerts/transfers/{transfer_id}".format(transfer_id=transfer.id)
                 )
         except Exception:
-            pass
+            logger.warning("物料调拨相关通知发送失败，不影响主流程", exc_info=True)
 
     return read_material_transfer(transfer_id, db, current_user)
 
@@ -356,7 +355,11 @@ def execute_material_transfer(
     db.refresh(transfer)
 
     # 发送通知
-    from app.services.notification_service import notification_service, NotificationType, NotificationPriority
+    from app.services.notification_service import (
+        NotificationPriority,
+        NotificationType,
+        notification_service,
+    )
     try:
         # 通知调入项目负责人
         notification_service.send_notification(
@@ -369,7 +372,7 @@ def execute_material_transfer(
             link="/shortage-alerts/transfers/{transfer_id}".format(transfer_id=transfer.id)
         )
     except Exception:
-        pass
+        logger.warning("物料调拨执行完成通知发送失败，不影响主流程", exc_info=True)
 
     result = read_material_transfer(transfer_id, db, current_user)
     # 添加库存更新信息
@@ -474,7 +477,11 @@ def reject_material_transfer(
     """
     驳回调拨申请
     """
-    from app.services.notification_service import notification_service, NotificationType, NotificationPriority
+    from app.services.notification_service import (
+        NotificationPriority,
+        NotificationType,
+        notification_service,
+    )
 
     transfer = db.query(MaterialTransfer).filter(MaterialTransfer.id == transfer_id).first()
     if not transfer:
@@ -504,6 +511,6 @@ def reject_material_transfer(
             link="/shortage-alerts/transfers/{transfer_id}".format(transfer_id=transfer.id)
         )
     except Exception:
-        pass
+        logger.warning("物料调拨驳回通知发送失败，不影响主流程", exc_info=True)
 
     return read_material_transfer(transfer_id, db, current_user)

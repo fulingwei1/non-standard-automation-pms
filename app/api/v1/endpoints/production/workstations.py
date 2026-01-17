@@ -11,10 +11,8 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.models.production import Equipment, Worker, WorkOrder, Workshop, Workstation
 from app.models.user import User
-from app.models.production import (
-    Workshop, Workstation, WorkOrder, Worker, Equipment
-)
 from app.schemas.production import (
     WorkstationCreate,
     WorkstationResponse,

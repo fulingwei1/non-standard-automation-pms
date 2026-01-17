@@ -6,19 +6,19 @@
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
 from sqlalchemy import desc
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.user import User
 from app.models.culture_wall_config import CultureWallConfig
+from app.models.user import User
+from app.schemas.common import PaginatedResponse
 from app.schemas.culture_wall_config import (
     CultureWallConfigCreate,
-    CultureWallConfigUpdate,
     CultureWallConfigResponse,
+    CultureWallConfigUpdate,
 )
-from app.schemas.common import PaginatedResponse
 
 router = APIRouter()
 
@@ -36,15 +36,15 @@ def get_culture_wall_config(
         CultureWallConfig.is_default == True,
         CultureWallConfig.is_enabled == True
     ).first()
-    
+
     if default_config:
         return default_config
-    
+
     # 如果没有默认配置，获取第一个启用的配置
     config = db.query(CultureWallConfig).filter(
         CultureWallConfig.is_enabled == True
     ).order_by(desc(CultureWallConfig.created_at)).first()
-    
+
     if not config:
         # 如果没有配置，返回默认配置结构
         from app.schemas.culture_wall_config import ContentTypeConfig, PlaySettings
@@ -66,7 +66,7 @@ def get_culture_wall_config(
             visible_roles=[],
             play_settings=PlaySettings(),
         )
-    
+
     return config
 
 
@@ -86,14 +86,14 @@ def list_culture_wall_configs(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="无权限访问此功能"
         )
-    
+
     configs = db.query(CultureWallConfig).order_by(desc(CultureWallConfig.created_at)).all()
-    
+
     total = len(configs)
     start = (page - 1) * page_size
     end = start + page_size
     items = configs[start:end]
-    
+
     return PaginatedResponse(
         items=[CultureWallConfigResponse.from_orm(c) for c in items],
         total=total,
@@ -117,11 +117,11 @@ def create_culture_wall_config(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="无权限访问此功能"
         )
-    
+
     # 如果设置为默认配置，需要取消其他默认配置
     if config_data.is_default:
         db.query(CultureWallConfig).update({"is_default": False})
-    
+
     # 检查配置名称是否已存在
     existing = db.query(CultureWallConfig).filter(
         CultureWallConfig.config_name == config_data.config_name
@@ -131,7 +131,7 @@ def create_culture_wall_config(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="配置名称已存在"
         )
-    
+
     config = CultureWallConfig(
         **config_data.dict(),
         created_by=current_user.id
@@ -139,7 +139,7 @@ def create_culture_wall_config(
     db.add(config)
     db.commit()
     db.refresh(config)
-    
+
     return config
 
 
@@ -159,26 +159,26 @@ def update_culture_wall_config(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="无权限访问此功能"
         )
-    
+
     config = db.query(CultureWallConfig).filter(CultureWallConfig.id == config_id).first()
     if not config:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="配置不存在"
         )
-    
+
     # 如果设置为默认配置，需要取消其他默认配置
     if config_data.is_default:
         db.query(CultureWallConfig).filter(CultureWallConfig.id != config_id).update({"is_default": False})
-    
+
     # 更新配置
     update_data = config_data.dict(exclude_unset=True)
     for field, value in update_data.items():
         setattr(config, field, value)
-    
+
     db.commit()
     db.refresh(config)
-    
+
     return config
 
 
@@ -197,22 +197,22 @@ def delete_culture_wall_config(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="无权限访问此功能"
         )
-    
+
     config = db.query(CultureWallConfig).filter(CultureWallConfig.id == config_id).first()
     if not config:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="配置不存在"
         )
-    
+
     # 不能删除默认配置
     if config.is_default:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="不能删除默认配置"
         )
-    
+
     db.delete(config)
     db.commit()
-    
+
     return {"message": "配置已删除"}

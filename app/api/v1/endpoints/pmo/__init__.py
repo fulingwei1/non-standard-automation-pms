@@ -5,12 +5,12 @@ PMO API - 模块化结构
 
 from fastapi import APIRouter
 
-from .initiation import router as initiation_router
-from .phases import router as phases_router
-from .risks import router as risks_router
 from .closure import router as closure_router
 from .cockpit import router as cockpit_router
+from .initiation import router as initiation_router
 from .meetings import router as meetings_router
+from .phases import router as phases_router
+from .risks import router as risks_router
 
 router = APIRouter()
 

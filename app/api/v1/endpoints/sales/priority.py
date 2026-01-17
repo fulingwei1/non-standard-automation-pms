@@ -4,13 +4,14 @@
 """
 
 from typing import Any, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.user import User
 from app.models.sales import Lead, Opportunity
+from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.lead_priority_scoring_service import LeadPriorityScoringService
 
@@ -27,10 +28,10 @@ def calculate_lead_priority(
     计算线索优先级评分
     """
     service = LeadPriorityScoringService(db)
-    
+
     try:
         result = service.calculate_lead_priority(lead_id)
-        
+
         # 更新线索的优先级字段
         lead = db.query(Lead).filter(Lead.id == lead_id).first()
         if lead:
@@ -40,7 +41,7 @@ def calculate_lead_priority(
             lead.importance_level = result['importance_level']
             lead.urgency_level = result['urgency_level']
             db.commit()
-        
+
         return ResponseModel(
             code=200,
             message="计算成功",
@@ -103,10 +104,10 @@ def calculate_opportunity_priority(
     计算商机优先级评分
     """
     service = LeadPriorityScoringService(db)
-    
+
     try:
         result = service.calculate_opportunity_priority(opp_id)
-        
+
         # 更新商机的优先级字段
         opportunity = db.query(Opportunity).filter(Opportunity.id == opp_id).first()
         if opportunity:
@@ -114,7 +115,7 @@ def calculate_opportunity_priority(
             opportunity.is_key_opportunity = result['is_key_opportunity']
             opportunity.priority_level = result['priority_level']
             db.commit()
-        
+
         return ResponseModel(
             code=200,
             message="计算成功",

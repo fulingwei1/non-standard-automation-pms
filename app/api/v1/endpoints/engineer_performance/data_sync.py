@@ -5,17 +5,20 @@
 
 from datetime import date, datetime, timedelta
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field
 
-from app.api.deps import get_db, get_current_user
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
+
+from app.api.deps import get_current_user, get_db
 from app.models.user import User
-from app.services.work_log_auto_generator import WorkLogAutoGenerator
-from app.services.design_review_sync_service import DesignReviewSyncService
-from app.services.debug_issue_sync_service import DebugIssueSyncService
-from app.services.knowledge_auto_identification_service import KnowledgeAutoIdentificationService
 from app.schemas.common import ResponseModel
+from app.services.debug_issue_sync_service import DebugIssueSyncService
+from app.services.design_review_sync_service import DesignReviewSyncService
+from app.services.knowledge_auto_identification_service import (
+    KnowledgeAutoIdentificationService,
+)
+from app.services.work_log_auto_generator import WorkLogAutoGenerator
 
 router = APIRouter(prefix="/data-sync", tags=["绩效数据同步"])
 

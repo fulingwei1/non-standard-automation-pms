@@ -9,38 +9,61 @@ PMO 驾驶舱 - 自动生成
 PMO 项目管理部 API endpoints
 包含：立项管理、项目阶段门管理、风险管理、项目结项管理、PMO驾驶舱
 """
-from typing import Any, List, Optional, Dict
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, func
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
-from app.models.project import Project, Customer
 from app.models.pmo import (
-    PmoProjectInitiation, PmoProjectPhase, PmoProjectRisk,
-    PmoProjectClosure, PmoResourceAllocation, PmoMeeting
+    PmoMeeting,
+    PmoProjectClosure,
+    PmoProjectInitiation,
+    PmoProjectPhase,
+    PmoProjectRisk,
+    PmoResourceAllocation,
 )
+from app.models.project import Customer, Project
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.pmo import (
-    InitiationCreate, InitiationUpdate, InitiationResponse,
-    InitiationApproveRequest, InitiationRejectRequest,
-    PhaseResponse, PhaseEntryCheckRequest, PhaseExitCheckRequest,
-    PhaseReviewRequest, PhaseAdvanceRequest,
-    RiskCreate, RiskAssessRequest, RiskResponseRequest,
-    RiskStatusUpdateRequest, RiskCloseRequest, RiskResponse,
-    ClosureCreate, ClosureReviewRequest, ClosureLessonsRequest, ClosureResponse,
-    DashboardResponse, DashboardSummary, WeeklyReportResponse,
-    ResourceOverviewResponse, RiskWallResponse,
-    MeetingCreate, MeetingUpdate, MeetingMinutesRequest, MeetingResponse
+    ClosureCreate,
+    ClosureLessonsRequest,
+    ClosureResponse,
+    ClosureReviewRequest,
+    DashboardResponse,
+    DashboardSummary,
+    InitiationApproveRequest,
+    InitiationCreate,
+    InitiationRejectRequest,
+    InitiationResponse,
+    InitiationUpdate,
+    MeetingCreate,
+    MeetingMinutesRequest,
+    MeetingResponse,
+    MeetingUpdate,
+    PhaseAdvanceRequest,
+    PhaseEntryCheckRequest,
+    PhaseExitCheckRequest,
+    PhaseResponse,
+    PhaseReviewRequest,
+    ResourceOverviewResponse,
+    RiskAssessRequest,
+    RiskCloseRequest,
+    RiskCreate,
+    RiskResponse,
+    RiskResponseRequest,
+    RiskStatusUpdateRequest,
+    RiskWallResponse,
+    WeeklyReportResponse,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
 
-router = APIRouter()
+router = APIRouter(tags=["pmo-cockpit"])
 
 
 def generate_initiation_no(db: Session) -> str:
@@ -75,14 +98,6 @@ def generate_risk_no(db: Session) -> str:
     return f"RISK-{today}-{seq:03d}"
 
 
-
-from fastapi import APIRouter
-
-router = APIRouter(
-    prefix="/pmo/cockpit",
-    tags=["cockpit"]
-)
-
 # 共 4 个路由
 
 # ==================== PMO 驾驶舱 ====================
@@ -99,7 +114,7 @@ def get_pmo_dashboard(
     total_projects = db.query(func.count(Project.id)).scalar() or 0
     active_projects = db.query(func.count(Project.id)).filter(Project.is_active == True).scalar() or 0
     completed_projects = db.query(func.count(Project.id)).filter(Project.stage == 'S9').scalar() or 0
-    
+
     # 统计延期项目（简化：计划结束日期已过但未完成）
     from datetime import date
     today = date.today()
@@ -109,11 +124,11 @@ def get_pmo_dashboard(
         Project.stage != 'S9',
         Project.is_active == True
     ).scalar() or 0
-    
+
     # 统计预算和成本
     budget_result = db.query(func.sum(Project.budget_amount)).scalar() or 0
     cost_result = db.query(func.sum(Project.actual_cost)).scalar() or 0
-    
+
     # 统计风险
     total_risks = db.query(func.count(PmoProjectRisk.id)).filter(PmoProjectRisk.status != 'CLOSED').scalar() or 0
     high_risks = db.query(func.count(PmoProjectRisk.id)).filter(
@@ -124,24 +139,24 @@ def get_pmo_dashboard(
         PmoProjectRisk.risk_level == 'CRITICAL',
         PmoProjectRisk.status != 'CLOSED'
     ).scalar() or 0
-    
+
     # 按状态统计项目
     projects_by_status = {}
     status_counts = db.query(Project.status, func.count(Project.id)).group_by(Project.status).all()
     for status, count in status_counts:
         projects_by_status[status] = count
-    
+
     # 按阶段统计项目
     projects_by_stage = {}
     stage_counts = db.query(Project.stage, func.count(Project.id)).group_by(Project.stage).all()
     for stage, count in stage_counts:
         projects_by_stage[stage] = count
-    
+
     # 最近的风险
     recent_risks = db.query(PmoProjectRisk).filter(
         PmoProjectRisk.status != 'CLOSED'
     ).order_by(desc(PmoProjectRisk.created_at)).limit(10).all()
-    
+
     risk_list = []
     for risk in recent_risks:
         risk_list.append(RiskResponse(
@@ -169,7 +184,7 @@ def get_pmo_dashboard(
             created_at=risk.created_at,
             updated_at=risk.updated_at,
         ))
-    
+
     return DashboardResponse(
         summary=DashboardSummary(
             total_projects=total_projects,
@@ -198,19 +213,19 @@ def get_risk_wall(
     """
     # 统计风险
     total_risks = db.query(PmoProjectRisk).filter(PmoProjectRisk.status != 'CLOSED').count()
-    
+
     # 严重风险
     critical_risks = db.query(PmoProjectRisk).filter(
         PmoProjectRisk.risk_level == 'CRITICAL',
         PmoProjectRisk.status != 'CLOSED'
     ).order_by(desc(PmoProjectRisk.created_at)).all()
-    
+
     # 高风险
     high_risks = db.query(PmoProjectRisk).filter(
         PmoProjectRisk.risk_level == 'HIGH',
         PmoProjectRisk.status != 'CLOSED'
     ).order_by(desc(PmoProjectRisk.created_at)).limit(20).all()
-    
+
     # 按类别统计
     by_category = {}
     category_counts = db.query(
@@ -219,10 +234,10 @@ def get_risk_wall(
     ).filter(
         PmoProjectRisk.status != 'CLOSED'
     ).group_by(PmoProjectRisk.risk_category).all()
-    
+
     for category, count in category_counts:
         by_category[category] = count
-    
+
     # 按项目统计
     by_project = []
     project_risks = db.query(
@@ -231,7 +246,7 @@ def get_risk_wall(
     ).filter(
         PmoProjectRisk.status != 'CLOSED'
     ).group_by(PmoProjectRisk.project_id).order_by(desc('risk_count')).limit(10).all()
-    
+
     for project_id, risk_count in project_risks:
         project = db.query(Project).filter(Project.id == project_id).first()
         if project:
@@ -241,7 +256,7 @@ def get_risk_wall(
                 'project_name': project.project_name,
                 'risk_count': risk_count
             })
-    
+
     critical_list = []
     for risk in critical_risks:
         critical_list.append(RiskResponse(
@@ -269,7 +284,7 @@ def get_risk_wall(
             created_at=risk.created_at,
             updated_at=risk.updated_at,
         ))
-    
+
     high_list = []
     for risk in high_risks:
         high_list.append(RiskResponse(
@@ -297,7 +312,7 @@ def get_risk_wall(
             created_at=risk.created_at,
             updated_at=risk.updated_at,
         ))
-    
+
     return RiskWallResponse(
         total_risks=total_risks,
         critical_risks=critical_list,
@@ -317,55 +332,55 @@ def get_weekly_report(
     项目状态周报
     """
     from datetime import timedelta
-    
+
     # 默认使用当前周
     today = date.today()
     if not week_start:
         days_since_monday = today.weekday()
         week_start = today - timedelta(days=days_since_monday)
-    
+
     week_end = week_start + timedelta(days=6)
-    
+
     # 统计新项目（本周创建）
     new_projects = db.query(Project).filter(
         Project.created_at >= datetime.combine(week_start, datetime.min.time()),
         Project.created_at <= datetime.combine(week_end, datetime.max.time())
     ).count()
-    
+
     # 统计完成项目（本周完成）
     completed_projects = db.query(Project).filter(
         Project.actual_end_date >= week_start,
         Project.actual_end_date <= week_end,
         Project.stage == 'S9'
     ).count()
-    
+
     # 统计延期项目
     delayed_projects = db.query(Project).filter(
         Project.planned_end_date < today,
         Project.stage != 'S9',
         Project.is_active == True
     ).count()
-    
+
     # 统计新风险
     new_risks = db.query(PmoProjectRisk).filter(
         PmoProjectRisk.created_at >= datetime.combine(week_start, datetime.min.time()),
         PmoProjectRisk.created_at <= datetime.combine(week_end, datetime.max.time())
     ).count()
-    
+
     # 统计解决风险
     resolved_risks = db.query(PmoProjectRisk).filter(
         PmoProjectRisk.closed_date >= week_start,
         PmoProjectRisk.closed_date <= week_end,
         PmoProjectRisk.status == 'CLOSED'
     ).count()
-    
+
     # 项目更新列表（简化：返回本周有更新的项目）
     project_updates = []
     updated_projects = db.query(Project).filter(
         Project.updated_at >= datetime.combine(week_start, datetime.min.time()),
         Project.updated_at <= datetime.combine(week_end, datetime.max.time())
     ).order_by(desc(Project.updated_at)).limit(10).all()
-    
+
     for proj in updated_projects:
         project_updates.append({
             'project_id': proj.id,
@@ -376,7 +391,7 @@ def get_weekly_report(
             'progress': float(proj.progress_pct) if proj.progress_pct else 0.0,
             'updated_at': proj.updated_at
         })
-    
+
     return WeeklyReportResponse(
         report_date=today,
         week_start=week_start,
@@ -400,13 +415,13 @@ def get_resource_overview(
     """
     # 统计资源分配
     total_resources = db.query(User).filter(User.is_active == True).count()
-    
+
     # 统计已分配资源
     allocated_resource_ids = db.query(PmoResourceAllocation.resource_id).filter(
         PmoResourceAllocation.status.in_(['PLANNED', 'ACTIVE'])
     ).distinct().all()
     allocated_resources = len([r[0] for r in allocated_resource_ids])
-    
+
     available_resources = total_resources - allocated_resources
 
     # 统计超负荷资源（使用workload模块的计算逻辑）
@@ -438,20 +453,20 @@ def get_resource_overview(
     from app.models.organization import Department
     by_department = []
     departments = db.query(Department).all()
-    
+
     for dept in departments:
         dept_users = db.query(User).filter(
             User.department == dept.name,
             User.is_active == True
         ).count()
-        
+
         dept_allocated = db.query(PmoResourceAllocation.resource_id).join(
             User, PmoResourceAllocation.resource_id == User.id
         ).filter(
             User.department == dept.name,
             PmoResourceAllocation.status.in_(['PLANNED', 'ACTIVE'])
         ).distinct().count()
-        
+
         by_department.append({
             'department_id': dept.id,
             'department_name': dept.name,
@@ -459,7 +474,7 @@ def get_resource_overview(
             'allocated_resources': dept_allocated,
             'available_resources': dept_users - dept_allocated
         })
-    
+
     return ResourceOverviewResponse(
         total_resources=total_resources,
         allocated_resources=allocated_resources,

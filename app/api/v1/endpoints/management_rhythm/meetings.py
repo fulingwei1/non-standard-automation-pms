@@ -9,46 +9,66 @@
 管理节律 API endpoints
 包含：节律配置、战略会议、行动项、仪表盘、会议地图
 """
-from typing import Any, List, Optional, Dict
 from datetime import date, datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, and_, func
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
+from app.models.enums import (
+    ActionItemStatus,
+    MeetingCycleType,
+    MeetingRhythmLevel,
+    RhythmHealthStatus,
+)
 from app.models.management_rhythm import (
     ManagementRhythmConfig,
-    StrategicMeeting,
     MeetingActionItem,
-    RhythmDashboardSnapshot,
     MeetingReport,
     MeetingReportConfig,
-    ReportMetricDefinition
+    ReportMetricDefinition,
+    RhythmDashboardSnapshot,
+    StrategicMeeting,
 )
-from app.models.enums import (
-    MeetingRhythmLevel,
-    MeetingCycleType,
-    ActionItemStatus,
-    RhythmHealthStatus
-)
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.management_rhythm import (
-    RhythmConfigCreate, RhythmConfigUpdate, RhythmConfigResponse,
-    StrategicMeetingCreate, StrategicMeetingUpdate, StrategicMeetingMinutesRequest,
+    ActionItemCreate,
+    ActionItemResponse,
+    ActionItemUpdate,
+    AvailableMetricsResponse,
+    MeetingCalendarResponse,
+    MeetingMapItem,
+    MeetingMapResponse,
+    MeetingReportConfigCreate,
+    MeetingReportConfigResponse,
+    MeetingReportConfigUpdate,
+    MeetingReportGenerateRequest,
+    MeetingReportResponse,
+    MeetingStatisticsResponse,
+    ReportMetricDefinitionCreate,
+    ReportMetricDefinitionResponse,
+    ReportMetricDefinitionUpdate,
+    RhythmConfigCreate,
+    RhythmConfigResponse,
+    RhythmConfigUpdate,
+    RhythmDashboardResponse,
+    RhythmDashboardSummary,
+    StrategicMeetingCreate,
+    StrategicMeetingMinutesRequest,
     StrategicMeetingResponse,
-    ActionItemCreate, ActionItemUpdate, ActionItemResponse,
-    RhythmDashboardResponse, RhythmDashboardSummary,
-    MeetingMapItem, MeetingMapResponse, MeetingCalendarResponse, MeetingStatisticsResponse,
+    StrategicMeetingUpdate,
     StrategicStructureTemplate,
-    MeetingReportGenerateRequest, MeetingReportResponse,
-    MeetingReportConfigCreate, MeetingReportConfigUpdate, MeetingReportConfigResponse,
-    ReportMetricDefinitionCreate, ReportMetricDefinitionUpdate, ReportMetricDefinitionResponse,
-    AvailableMetricsResponse
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
+
+from .permission_utils import (
+    check_rhythm_level_permission,
+    filter_meetings_by_permission,
+)
 
 router = APIRouter()
 
@@ -81,35 +101,35 @@ def read_strategic_meetings(
     战略会议列表
     """
     query = db.query(StrategicMeeting)
-    
+
     # 权限过滤
     query = filter_meetings_by_permission(db, query, current_user)
-    
+
     # 如果指定了层级，检查权限
     if rhythm_level and not check_rhythm_level_permission(current_user, rhythm_level):
         raise HTTPException(status_code=403, detail="您没有权限访问该层级的会议")
-    
+
     if rhythm_level:
         query = query.filter(StrategicMeeting.rhythm_level == rhythm_level)
-    
+
     if cycle_type:
         query = query.filter(StrategicMeeting.cycle_type == cycle_type)
-    
+
     if project_id:
         query = query.filter(StrategicMeeting.project_id == project_id)
-    
+
     if status:
         query = query.filter(StrategicMeeting.status == status)
-    
+
     if keyword:
         query = query.filter(StrategicMeeting.meeting_name.like(f"%{keyword}%"))
-    
+
     total = query.count()
     offset = (page - 1) * page_size
-    
+
     # 统计行动项数量
     meetings = query.order_by(desc(StrategicMeeting.meeting_date), desc(StrategicMeeting.created_at)).offset(offset).limit(page_size).all()
-    
+
     items = []
     for meeting in meetings:
         # 统计行动项
@@ -120,7 +140,7 @@ def read_strategic_meetings(
                 MeetingActionItem.status == ActionItemStatus.COMPLETED.value
             )
         ).count()
-        
+
         items.append(StrategicMeetingResponse(
             id=meeting.id,
             project_id=meeting.project_id,
@@ -152,7 +172,7 @@ def read_strategic_meetings(
             action_items_count=action_items_count,
             completed_action_items_count=completed_count,
         ))
-    
+
     return PaginatedResponse(
         items=items,
         total=total,
@@ -192,11 +212,11 @@ def create_strategic_meeting(
         resource_allocation=meeting_data.resource_allocation,
         created_by=current_user.id,
     )
-    
+
     db.add(meeting)
     db.commit()
     db.refresh(meeting)
-    
+
     return StrategicMeetingResponse(
         id=meeting.id,
         project_id=meeting.project_id,
@@ -242,11 +262,11 @@ def read_strategic_meeting(
     meeting = db.query(StrategicMeeting).filter(StrategicMeeting.id == meeting_id).first()
     if not meeting:
         raise HTTPException(status_code=404, detail="会议不存在")
-    
+
     # 权限检查
     if not check_rhythm_level_permission(current_user, meeting.rhythm_level):
         raise HTTPException(status_code=403, detail="您没有权限访问该会议")
-    
+
     # 统计行动项
     action_items_count = db.query(MeetingActionItem).filter(MeetingActionItem.meeting_id == meeting.id).count()
     completed_count = db.query(MeetingActionItem).filter(
@@ -255,7 +275,7 @@ def read_strategic_meeting(
             MeetingActionItem.status == ActionItemStatus.COMPLETED.value
         )
     ).count()
-    
+
     return StrategicMeetingResponse(
         id=meeting.id,
         project_id=meeting.project_id,
@@ -302,14 +322,14 @@ def update_strategic_meeting(
     meeting = db.query(StrategicMeeting).filter(StrategicMeeting.id == meeting_id).first()
     if not meeting:
         raise HTTPException(status_code=404, detail="会议不存在")
-    
+
     update_data = meeting_data.dict(exclude_unset=True)
     for field, value in update_data.items():
         setattr(meeting, field, value)
-    
+
     db.commit()
     db.refresh(meeting)
-    
+
     # 统计行动项
     action_items_count = db.query(MeetingActionItem).filter(MeetingActionItem.meeting_id == meeting.id).count()
     completed_count = db.query(MeetingActionItem).filter(
@@ -318,7 +338,7 @@ def update_strategic_meeting(
             MeetingActionItem.status == ActionItemStatus.COMPLETED.value
         )
     ).count()
-    
+
     return StrategicMeetingResponse(
         id=meeting.id,
         project_id=meeting.project_id,
@@ -365,7 +385,7 @@ def update_meeting_minutes(
     meeting = db.query(StrategicMeeting).filter(StrategicMeeting.id == meeting_id).first()
     if not meeting:
         raise HTTPException(status_code=404, detail="会议不存在")
-    
+
     meeting.minutes = minutes_data.minutes
     if minutes_data.decisions:
         meeting.decisions = minutes_data.decisions
@@ -375,10 +395,10 @@ def update_meeting_minutes(
         meeting.key_decisions = minutes_data.key_decisions
     if minutes_data.metrics_snapshot:
         meeting.metrics_snapshot = minutes_data.metrics_snapshot
-    
+
     db.commit()
     db.refresh(meeting)
-    
+
     # 统计行动项
     action_items_count = db.query(MeetingActionItem).filter(MeetingActionItem.meeting_id == meeting.id).count()
     completed_count = db.query(MeetingActionItem).filter(
@@ -387,7 +407,7 @@ def update_meeting_minutes(
             MeetingActionItem.status == ActionItemStatus.COMPLETED.value
         )
     ).count()
-    
+
     return StrategicMeetingResponse(
         id=meeting.id,
         project_id=meeting.project_id,
@@ -419,6 +439,5 @@ def update_meeting_minutes(
         action_items_count=action_items_count,
         completed_action_items_count=completed_count,
     )
-
 
 

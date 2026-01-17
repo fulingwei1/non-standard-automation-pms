@@ -3,21 +3,20 @@
 售前费用管理 API endpoints
 """
 
-from typing import Any, Optional, List
 from datetime import date
 from decimal import Decimal
+from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.user import User
 from app.models.presale_expense import PresaleExpense
+from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.labor_cost_expense_service import LaborCostExpenseService
-from decimal import Decimal
 
 router = APIRouter()
 
@@ -52,7 +51,7 @@ def expense_lost_projects(
         # 获取项目信息
         from app.models.project import Project
         project = db.query(Project).filter(Project.id == expense_data['project_id']).first()
-        
+
         expense = PresaleExpense(
             project_id=expense_data['project_id'],
             project_code=expense_data.get('project_code') or (project.project_code if project else None),
@@ -112,11 +111,11 @@ def get_lost_project_expenses(
         expenses = db.query(PresaleExpense).filter(
             PresaleExpense.project_id == project_id
         ).all()
-        
+
         expense_list = []
         total_amount = Decimal('0')
         total_hours = 0.0
-        
+
         for exp in expenses:
             expense_list.append({
                 'id': exp.id,
@@ -134,7 +133,7 @@ def get_lost_project_expenses(
             })
             total_amount += exp.amount
             total_hours += float(exp.labor_hours or 0)
-        
+
         return ResponseModel(
             code=200,
             message="查询成功",
@@ -150,7 +149,7 @@ def get_lost_project_expenses(
                 }
             }
         )
-    
+
     # 否则使用服务计算
     service = LaborCostExpenseService(db)
     result = service.get_lost_project_expenses(

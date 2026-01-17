@@ -4,8 +4,8 @@
 包含：基线CRUD、基线对比分析、偏差分析、关键路径计算
 """
 
-from typing import Any, Optional
 from collections import deque
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -13,13 +13,15 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
+from app.models.progress import BaselineTask, ScheduleBaseline, Task, TaskDependency
 from app.models.project import Project
-from app.models.progress import Task, TaskDependency, ScheduleBaseline, BaselineTask
-from app.schemas.progress import (
-    BaselineCreate, BaselineResponse, BaselineListResponse,
-)
+from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.schemas.progress import (
+    BaselineCreate,
+    BaselineListResponse,
+    BaselineResponse,
+)
 
 router = APIRouter()
 

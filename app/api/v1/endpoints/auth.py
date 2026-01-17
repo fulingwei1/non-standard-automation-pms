@@ -5,17 +5,17 @@
 from datetime import datetime, timedelta
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
-from app.schemas.auth import Token, UserResponse, PasswordChange
-from app.schemas.common import ResponseModel
 from app.core.rate_limit import limiter
+from app.models.user import User
+from app.schemas.auth import PasswordChange, Token, UserResponse
+from app.schemas.common import ResponseModel
 
 router = APIRouter()
 
@@ -96,7 +96,7 @@ def login(
     access_token = security.create_access_token(
         {"sub": str(user.id)}, expires_delta=access_token_expires
     )
-    
+
     return {
         "access_token": access_token,
         "token_type": "bearer",
@@ -111,12 +111,12 @@ def logout(
 ) -> Any:
     """
     用户登出，使 Token 失效
-    
+
     注意：当前实现使用内存黑名单，生产环境应使用 Redis
     """
     # 将 token 加入黑名单（实际应使用 Redis 等集中存储）
     security.revoke_token(token)
-    
+
     return ResponseModel(
         code=200,
         message="登出成功"
@@ -129,7 +129,7 @@ def refresh_token(
 ) -> Any:
     """
     刷新访问令牌
-    
+
     使用当前有效的 token 获取新的 token
     """
     # 直接使用当前用户生成新token（更简单可靠）
@@ -137,7 +137,7 @@ def refresh_token(
     new_token = security.create_access_token(
         {"sub": str(current_user.id)}, expires_delta=access_token_expires
     )
-    
+
     return {
         "access_token": new_token,
         "token_type": "bearer",
@@ -199,7 +199,7 @@ def get_me(
         "created_at": db_user.created_at,
         "updated_at": db_user.updated_at,
     }
-    
+
     return UserResponse(**user_data)
 
 
@@ -212,7 +212,7 @@ def change_password(
 ) -> Any:
     """
     修改当前用户密码
-    
+
     - **old_password**: 原密码
     - **new_password**: 新密码
     """
@@ -226,7 +226,7 @@ def change_password(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="原密码错误"
         )
-    
+
     # 更新密码
     db_user.password_hash = security.get_password_hash(password_data.new_password)
     db.add(db_user)
@@ -234,7 +234,7 @@ def change_password(
 
     # 密码更新后撤销当前 token，强制重新登录
     security.revoke_token(token)
-    
+
     return ResponseModel(
         code=200,
         message="密码修改成功，请重新登录"

@@ -3,28 +3,34 @@
 商务支持模块 - 开票申请管理 API endpoints
 """
 
-from typing import Optional
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from decimal import Decimal
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
 from sqlalchemy import desc, or_
+from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.models.user import User
-from app.models.project import Customer, Project, ProjectPaymentPlan
 from app.models.business_support import InvoiceRequest
-from app.models.sales import Contract, Invoice
 from app.models.enums import InvoiceStatusEnum
+from app.models.project import Customer, Project, ProjectPaymentPlan
+from app.models.sales import Contract, Invoice
+from app.models.user import User
 from app.schemas.business_support import (
-    InvoiceRequestCreate, InvoiceRequestUpdate, InvoiceRequestResponse,
-    InvoiceRequestApproveRequest, InvoiceRequestRejectRequest
+    InvoiceRequestApproveRequest,
+    InvoiceRequestCreate,
+    InvoiceRequestRejectRequest,
+    InvoiceRequestResponse,
+    InvoiceRequestUpdate,
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
+
 from .utils import (
-    generate_invoice_request_no, generate_invoice_code,
-    _serialize_attachments, _to_invoice_request_response
+    _serialize_attachments,
+    _to_invoice_request_response,
+    generate_invoice_code,
+    generate_invoice_request_no,
 )
 
 router = APIRouter()
@@ -289,10 +295,10 @@ async def approve_invoice_request(
         invoice_request.status = "APPROVED"
         invoice_request.approval_comment = approve_in.approval_comment
         invoice_request.approved_by = current_user.id
-        invoice_request.approved_at = datetime.utcnow()
+        invoice_request.approved_at = datetime.now(timezone.utc)
         invoice_request.invoice_id = invoice.id
         invoice_request.receipt_status = "UNPAID"
-        invoice_request.receipt_updated_at = datetime.utcnow()
+        invoice_request.receipt_updated_at = datetime.now(timezone.utc)
 
         if invoice_request.payment_plan_id:
             payment_plan = db.query(ProjectPaymentPlan).filter(
@@ -341,7 +347,7 @@ async def reject_invoice_request(
         invoice_request.status = "REJECTED"
         invoice_request.approval_comment = reject_in.approval_comment
         invoice_request.approved_by = current_user.id
-        invoice_request.approved_at = datetime.utcnow()
+        invoice_request.approved_at = datetime.now(timezone.utc)
 
         db.add(invoice_request)
         db.commit()

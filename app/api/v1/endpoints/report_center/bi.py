@@ -10,35 +10,45 @@ BI 报表 - 自动生成
 核心功能：多角色视角报表、智能生成、导出分享
 """
 
-from typing import Any, List, Optional, Dict
+import os
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from fastapi.responses import FileResponse
+from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
-import os
-from sqlalchemy import desc, func, and_, or_
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User, Role
-from app.models.project import Project, Machine, ProjectPaymentPlan
-from app.models.rd_project import RdProject, RdCost, RdCostType
-from app.models.timesheet import Timesheet
-from app.models.sales import Contract
-from app.models.outsourcing import OutsourcingVendor, OutsourcingOrder
+from app.core.config import settings
+from app.models.outsourcing import OutsourcingOrder, OutsourcingVendor
+from app.models.project import Machine, Project, ProjectPaymentPlan
+from app.models.rd_project import RdCost, RdCostType, RdProject
 from app.models.report_center import (
-    ReportTemplate, ReportDefinition, ReportGeneration,
-    ReportSubscription
+    ReportDefinition,
+    ReportGeneration,
+    ReportSubscription,
+    ReportTemplate,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
+from app.models.sales import Contract
+from app.models.timesheet import Timesheet
+from app.models.user import Role, User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.report_center import (
-    ReportRoleResponse, ReportTypeResponse, RoleReportMatrixResponse,
-    ReportGenerateRequest, ReportGenerateResponse, ReportPreviewResponse,
-    ReportCompareRequest, ReportCompareResponse, ReportExportRequest,
-    ReportTemplateResponse, ReportTemplateListResponse, ApplyTemplateRequest
+    ApplyTemplateRequest,
+    ReportCompareRequest,
+    ReportCompareResponse,
+    ReportExportRequest,
+    ReportGenerateRequest,
+    ReportGenerateResponse,
+    ReportPreviewResponse,
+    ReportRoleResponse,
+    ReportTemplateListResponse,
+    ReportTemplateResponse,
+    ReportTypeResponse,
+    RoleReportMatrixResponse,
 )
 
 router = APIRouter()
@@ -72,27 +82,27 @@ def get_delivery_rate(
         start_date = date.today() - timedelta(days=90)
     if not end_date:
         end_date = date.today()
-    
+
     # 获取在时间范围内的项目
     projects = db.query(Project).filter(
         Project.planned_end_date >= start_date,
         Project.planned_end_date <= end_date,
         Project.status.in_(["COMPLETED", "EXECUTING"])
     ).all()
-    
+
     total_projects = len(projects)
     on_time_projects = 0
     delayed_projects = 0
-    
+
     for project in projects:
         if project.actual_end_date and project.planned_end_date:
             if project.actual_end_date <= project.planned_end_date:
                 on_time_projects += 1
             else:
                 delayed_projects += 1
-    
+
     on_time_rate = (on_time_projects / total_projects * 100) if total_projects > 0 else 0
-    
+
     return ResponseModel(
         code=200,
         message="success",
@@ -122,7 +132,7 @@ def get_health_distribution(
     ).filter(
         Project.status != "CANCELLED"
     ).group_by(Project.health).all()
-    
+
     distribution = {}
     total = 0
     for stat in health_stats:
@@ -130,12 +140,12 @@ def get_health_distribution(
         count = stat.count or 0
         distribution[health] = count
         total += count
-    
+
     # 计算百分比
     distribution_pct = {}
     for health, count in distribution.items():
         distribution_pct[health] = round(count / total * 100, 2) if total > 0 else 0
-    
+
     return ResponseModel(
         code=200,
         message="success",
@@ -164,20 +174,20 @@ def get_utilization(
         start_date = date.today() - timedelta(days=30)
     if not end_date:
         end_date = date.today()
-    
+
     # 查询工时记录
     query = db.query(Timesheet).filter(
         Timesheet.work_date >= start_date,
         Timesheet.work_date <= end_date,
         Timesheet.status == "APPROVED"
     )
-    
+
     if department_id:
         # 通过用户关联部门
         query = query.join(User).filter(User.department_id == department_id)
-    
+
     timesheets = query.all()
-    
+
     # 按用户统计
     user_hours = {}
     for ts in timesheets:
@@ -185,7 +195,7 @@ def get_utilization(
         if user_id not in user_hours:
             user_hours[user_id] = 0
         user_hours[user_id] += float(ts.hours or 0)
-    
+
     # 计算标准工时（假设每天8小时，工作日）
     work_days = 0
     current = start_date
@@ -193,9 +203,9 @@ def get_utilization(
         if current.weekday() < 5:  # 周一到周五
             work_days += 1
         current += timedelta(days=1)
-    
+
     standard_hours = work_days * 8
-    
+
     utilization_data = []
     for user_id, hours in user_hours.items():
         user = db.query(User).filter(User.id == user_id).first()
@@ -209,12 +219,12 @@ def get_utilization(
                 "standard_hours": standard_hours,
                 "utilization_rate": round(utilization_rate, 2)
             })
-    
+
     # 按利用率排序
     utilization_data.sort(key=lambda x: x["utilization_rate"], reverse=True)
-    
+
     avg_utilization = sum([u["utilization_rate"] for u in utilization_data]) / len(utilization_data) if utilization_data else 0
-    
+
     return ResponseModel(
         code=200,
         message="success",
@@ -243,13 +253,13 @@ def get_supplier_performance(
         start_date = date.today() - timedelta(days=180)
     if not end_date:
         end_date = date.today()
-    
+
     # 查询外协订单
     orders = db.query(OutsourcingOrder).filter(
         OutsourcingOrder.order_date >= start_date,
         OutsourcingOrder.order_date <= end_date
     ).all()
-    
+
     # 按供应商统计
     vendor_stats = {}
     for order in orders:
@@ -266,40 +276,40 @@ def get_supplier_performance(
                 "delayed_deliveries": 0,
                 "quality_pass_rate": 0.0
             }
-        
+
         stats = vendor_stats[vendor_id]
         stats["total_orders"] += 1
         stats["total_amount"] += order.order_amount or Decimal("0")
-        
+
         # 检查交付情况
         from app.models.outsourcing import OutsourcingDelivery
         deliveries = db.query(OutsourcingDelivery).filter(
             OutsourcingDelivery.order_id == order.id
         ).all()
-        
+
         for delivery in deliveries:
             if delivery.delivery_date and order.expected_delivery_date:
                 if delivery.delivery_date <= order.expected_delivery_date:
                     stats["on_time_deliveries"] += 1
                 else:
                     stats["delayed_deliveries"] += 1
-        
+
         # 检查质检情况
         from app.models.outsourcing import OutsourcingInspection
         inspections = db.query(OutsourcingInspection).filter(
             OutsourcingInspection.order_id == order.id
         ).all()
-        
+
         if inspections:
             pass_count = sum([1 for ins in inspections if ins.inspection_result == "PASS"])
             stats["quality_pass_rate"] = (pass_count / len(inspections) * 100) if inspections else 0
-    
+
     # 计算准时率
     performance_list = []
     for vendor_id, stats in vendor_stats.items():
         total_deliveries = stats["on_time_deliveries"] + stats["delayed_deliveries"]
         on_time_rate = (stats["on_time_deliveries"] / total_deliveries * 100) if total_deliveries > 0 else 0
-        
+
         performance_list.append({
             "vendor_id": stats["vendor_id"],
             "vendor_name": stats["vendor_name"],
@@ -310,10 +320,10 @@ def get_supplier_performance(
             "quality_pass_rate": round(stats["quality_pass_rate"], 2),
             "performance_score": round((on_time_rate + stats["quality_pass_rate"]) / 2, 2)
         })
-    
+
     # 按绩效得分排序
     performance_list.sort(key=lambda x: x["performance_score"], reverse=True)
-    
+
     return ResponseModel(
         code=200,
         message="success",
@@ -337,52 +347,52 @@ def get_executive_dashboard(
     """
     today = date.today()
     month_start = date(today.year, today.month, 1)
-    
+
     # 项目统计
     total_projects = db.query(Project).filter(Project.status != "CANCELLED").count()
     active_projects = db.query(Project).filter(Project.status == "EXECUTING").count()
     completed_projects = db.query(Project).filter(Project.status == "COMPLETED").count()
-    
+
     # 健康度分布
     health_dist = db.query(
         Project.health,
         func.count(Project.id).label('count')
     ).filter(Project.status != "CANCELLED").group_by(Project.health).all()
     health_distribution = {stat.health or "H4": stat.count for stat in health_dist}
-    
+
     # 销售统计（本月）
     month_contracts = db.query(Contract).filter(
         func.date(Contract.signed_date) >= month_start,
         Contract.status.in_(["SIGNED", "EXECUTING"])
     ).all()
     month_contract_amount = sum([float(c.contract_amount or 0) for c in month_contracts])
-    
+
     # 成本统计
     total_budget = db.query(func.sum(Project.budget_amount)).scalar() or 0
     total_actual = db.query(func.sum(Project.actual_cost)).scalar() or 0
-    
+
     # 合同统计
     total_contracts = db.query(Contract).filter(Contract.status.in_(["SIGNED", "EXECUTING"])).count()
     total_contract_amount = db.query(func.sum(Contract.contract_amount)).filter(
         Contract.status.in_(["SIGNED", "EXECUTING"])
     ).scalar() or 0
-    
+
     # 回款统计（从项目收款计划）
     from app.models.project import ProjectPaymentPlan
     total_received = db.query(func.sum(ProjectPaymentPlan.actual_amount)).filter(
         ProjectPaymentPlan.status == "PAID"
     ).scalar() or 0
-    
+
     # 人员统计
     total_users = db.query(User).filter(User.is_active == True).count()
-    
+
     # 工时统计（本月）
     month_timesheets = db.query(Timesheet).filter(
         Timesheet.work_date >= month_start,
         Timesheet.status == "APPROVED"
     ).all()
     month_total_hours = sum([float(ts.hours or 0) for ts in month_timesheets])
-    
+
     return ResponseModel(
         code=200,
         message="success",

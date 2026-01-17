@@ -6,9 +6,9 @@ ECN评估管理 API endpoints
 """
 
 import logging
-from typing import Any, List
 from datetime import datetime, timedelta
 from decimal import Decimal
+from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -17,15 +17,16 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.models.ecn import Ecn, EcnApproval, EcnApprovalMatrix, EcnEvaluation, EcnType
 from app.models.user import User
-from app.models.ecn import Ecn, EcnType, EcnEvaluation, EcnApproval, EcnApprovalMatrix
+from app.schemas.ecn import EcnEvaluationCreate, EcnEvaluationResponse
+from app.services.ecn_auto_assign_service import auto_assign_approval
 from app.services.ecn_notification_service import (
+    notify_approval_assigned,
     notify_evaluation_assigned,
     notify_evaluation_completed,
-    notify_approval_assigned,
 )
-from app.services.ecn_auto_assign_service import auto_assign_approval
-from app.schemas.ecn import EcnEvaluationCreate, EcnEvaluationResponse
+
 from .utils import get_user_display_name
 
 router = APIRouter()

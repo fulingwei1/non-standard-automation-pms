@@ -4,19 +4,20 @@
 从 projects/extended.py 拆分
 """
 
-from typing import Any, List, Optional
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import desc, or_
+from typing import Any, List, Optional
 
-from app.api.deps import get_db, get_current_active_user
-from app.core.config import settings
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import desc, or_
+from sqlalchemy.orm import Session, joinedload
+
+from app.api.deps import get_current_active_user, get_db
 from app.core import security
-from app.models.user import User
+from app.core.config import settings
 from app.models.project import Project
-from app.schemas.project import ProjectResponse
+from app.models.user import User
 from app.schemas.common import Response
+from app.schemas.project import ProjectResponse
 
 router = APIRouter()
 
@@ -30,20 +31,20 @@ def get_project_relations(
 ):
     """
     获取项目relations列表
-    
+
     Args:
         db: 数据库会话
         skip: 跳过记录数
         limit: 返回记录数
         current_user: 当前用户
-    
+
     Returns:
         Response[List[ProjectResponse]]: 项目relations列表
     """
     try:
         # TODO: 实现relations查询逻辑
         projects = db.query(Project).offset(skip).limit(limit).all()
-        
+
         return Response.success(
             data=[ProjectResponse.from_orm(project) for project in projects],
             message="项目relations列表获取成功"
@@ -60,12 +61,12 @@ def create_project_relations(
 ):
     """
     创建项目relations
-    
+
     Args:
         project_data: 项目数据
         db: 数据库会话
         current_user: 当前用户
-    
+
     Returns:
         Response: 创建结果
     """

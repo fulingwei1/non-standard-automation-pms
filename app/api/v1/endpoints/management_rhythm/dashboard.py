@@ -9,46 +9,61 @@
 管理节律 API endpoints
 包含：节律配置、战略会议、行动项、仪表盘、会议地图
 """
-from typing import Any, List, Optional, Dict
 from datetime import date, datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, and_, func
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
+from app.models.enums import (
+    ActionItemStatus,
+    MeetingCycleType,
+    MeetingRhythmLevel,
+    RhythmHealthStatus,
+)
 from app.models.management_rhythm import (
     ManagementRhythmConfig,
-    StrategicMeeting,
     MeetingActionItem,
-    RhythmDashboardSnapshot,
     MeetingReport,
     MeetingReportConfig,
-    ReportMetricDefinition
+    ReportMetricDefinition,
+    RhythmDashboardSnapshot,
+    StrategicMeeting,
 )
-from app.models.enums import (
-    MeetingRhythmLevel,
-    MeetingCycleType,
-    ActionItemStatus,
-    RhythmHealthStatus
-)
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.management_rhythm import (
-    RhythmConfigCreate, RhythmConfigUpdate, RhythmConfigResponse,
-    StrategicMeetingCreate, StrategicMeetingUpdate, StrategicMeetingMinutesRequest,
+    ActionItemCreate,
+    ActionItemResponse,
+    ActionItemUpdate,
+    AvailableMetricsResponse,
+    MeetingCalendarResponse,
+    MeetingMapItem,
+    MeetingMapResponse,
+    MeetingReportConfigCreate,
+    MeetingReportConfigResponse,
+    MeetingReportConfigUpdate,
+    MeetingReportGenerateRequest,
+    MeetingReportResponse,
+    MeetingStatisticsResponse,
+    ReportMetricDefinitionCreate,
+    ReportMetricDefinitionResponse,
+    ReportMetricDefinitionUpdate,
+    RhythmConfigCreate,
+    RhythmConfigResponse,
+    RhythmConfigUpdate,
+    RhythmDashboardResponse,
+    RhythmDashboardSummary,
+    StrategicMeetingCreate,
+    StrategicMeetingMinutesRequest,
     StrategicMeetingResponse,
-    ActionItemCreate, ActionItemUpdate, ActionItemResponse,
-    RhythmDashboardResponse, RhythmDashboardSummary,
-    MeetingMapItem, MeetingMapResponse, MeetingCalendarResponse, MeetingStatisticsResponse,
+    StrategicMeetingUpdate,
     StrategicStructureTemplate,
-    MeetingReportGenerateRequest, MeetingReportResponse,
-    MeetingReportConfigCreate, MeetingReportConfigUpdate, MeetingReportConfigResponse,
-    ReportMetricDefinitionCreate, ReportMetricDefinitionUpdate, ReportMetricDefinitionResponse,
-    AvailableMetricsResponse
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
 
 router = APIRouter()
 
@@ -76,15 +91,15 @@ def read_rhythm_dashboard(
     # 获取各层级的最新快照
     levels = [MeetingRhythmLevel.STRATEGIC.value, MeetingRhythmLevel.OPERATIONAL.value,
                MeetingRhythmLevel.OPERATION.value, MeetingRhythmLevel.TASK.value]
-    
+
     result = {}
-    
+
     for level in levels:
         # 获取最新快照
         snapshot = db.query(RhythmDashboardSnapshot).filter(
             RhythmDashboardSnapshot.rhythm_level == level
         ).order_by(desc(RhythmDashboardSnapshot.snapshot_date)).first()
-        
+
         if snapshot:
             result[level.lower()] = RhythmDashboardResponse(
                 rhythm_level=snapshot.rhythm_level,
@@ -106,7 +121,7 @@ def read_rhythm_dashboard(
             # 如果没有快照，实时计算
             dashboard_data = _calculate_dashboard_data(db, level)
             result[level.lower()] = dashboard_data
-    
+
     return RhythmDashboardSummary(
         strategic=result.get("strategic"),
         operational=result.get("operational"),
@@ -119,7 +134,7 @@ def _calculate_dashboard_data(db: Session, rhythm_level: str) -> RhythmDashboard
     """计算仪表盘数据"""
     # 获取当前周期的会议
     today = date.today()
-    
+
     # 根据层级确定周期类型
     cycle_type_map = {
         MeetingRhythmLevel.STRATEGIC.value: MeetingCycleType.QUARTERLY.value,
@@ -127,9 +142,9 @@ def _calculate_dashboard_data(db: Session, rhythm_level: str) -> RhythmDashboard
         MeetingRhythmLevel.OPERATION.value: MeetingCycleType.WEEKLY.value,
         MeetingRhythmLevel.TASK.value: MeetingCycleType.DAILY.value,
     }
-    
+
     cycle_type = cycle_type_map.get(rhythm_level, MeetingCycleType.MONTHLY.value)
-    
+
     # 计算当前周期
     if cycle_type == MeetingCycleType.QUARTERLY.value:
         quarter = (today.month - 1) // 3 + 1
@@ -141,30 +156,30 @@ def _calculate_dashboard_data(db: Session, rhythm_level: str) -> RhythmDashboard
         current_cycle = f"{today.year}-W{week_num:02d}"
     else:
         current_cycle = today.isoformat()
-    
+
     # 查询会议
     meetings = db.query(StrategicMeeting).filter(
         StrategicMeeting.rhythm_level == rhythm_level
     ).all()
-    
+
     meetings_count = len(meetings)
     completed_meetings = [m for m in meetings if m.status == "COMPLETED"]
     completed_meetings_count = len(completed_meetings)
-    
+
     # 查询行动项
     meeting_ids = [m.id for m in meetings]
     if meeting_ids:
         total_action_items = db.query(MeetingActionItem).filter(
             MeetingActionItem.meeting_id.in_(meeting_ids)
         ).count()
-        
+
         completed_action_items = db.query(MeetingActionItem).filter(
             and_(
                 MeetingActionItem.meeting_id.in_(meeting_ids),
                 MeetingActionItem.status == ActionItemStatus.COMPLETED.value
             )
         ).count()
-        
+
         overdue_action_items = db.query(MeetingActionItem).filter(
             and_(
                 MeetingActionItem.meeting_id.in_(meeting_ids),
@@ -175,10 +190,10 @@ def _calculate_dashboard_data(db: Session, rhythm_level: str) -> RhythmDashboard
         total_action_items = 0
         completed_action_items = 0
         overdue_action_items = 0
-    
+
     # 计算完成率
     completion_rate = f"{(completed_action_items / total_action_items * 100):.1f}%" if total_action_items > 0 else "0%"
-    
+
     # 计算健康状态
     if total_action_items > 0:
         completion_ratio = completed_action_items / total_action_items
@@ -190,7 +205,7 @@ def _calculate_dashboard_data(db: Session, rhythm_level: str) -> RhythmDashboard
             health_status = RhythmHealthStatus.RED.value
     else:
         health_status = RhythmHealthStatus.GREEN.value
-    
+
     # 获取最近和下次会议
     last_meeting = db.query(StrategicMeeting).filter(
         and_(
@@ -198,7 +213,7 @@ def _calculate_dashboard_data(db: Session, rhythm_level: str) -> RhythmDashboard
             StrategicMeeting.status == "COMPLETED"
         )
     ).order_by(desc(StrategicMeeting.meeting_date)).first()
-    
+
     next_meeting = db.query(StrategicMeeting).filter(
         and_(
             StrategicMeeting.rhythm_level == rhythm_level,
@@ -206,7 +221,7 @@ def _calculate_dashboard_data(db: Session, rhythm_level: str) -> RhythmDashboard
             StrategicMeeting.meeting_date >= today
         )
     ).order_by(StrategicMeeting.meeting_date).first()
-    
+
     return RhythmDashboardResponse(
         rhythm_level=rhythm_level,
         cycle_type=cycle_type,

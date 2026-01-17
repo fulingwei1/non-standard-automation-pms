@@ -10,42 +10,59 @@
 核心功能：多层级绩效视图、绩效对比、趋势分析、排行榜
 """
 
-from typing import Any, List, Optional, Dict
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import and_, case, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, and_, func, case
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User
-from app.models.project import Project
+from app.core.config import settings
 from app.models.organization import Department, Employee
-from app.models.performance import (
-    PerformancePeriod, PerformanceIndicator, PerformanceResult,
-    PerformanceEvaluation, PerformanceAppeal, ProjectContribution,
+from app.models.performance import (  # New Performance System
+    EvaluationWeightConfig,
+    MonthlyWorkSummary,
+    PerformanceAppeal,
+    PerformanceEvaluation,
+    PerformanceEvaluationRecord,
+    PerformanceIndicator,
+    PerformancePeriod,
     PerformanceRankingSnapshot,
-    # New Performance System
-    MonthlyWorkSummary, PerformanceEvaluationRecord, EvaluationWeightConfig
+    PerformanceResult,
+    ProjectContribution,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
-from app.schemas.performance import (
-    PersonalPerformanceResponse, PerformanceTrendResponse,
-    TeamPerformanceResponse, DepartmentPerformanceResponse, PerformanceRankingResponse,
-    ProjectPerformanceResponse, ProjectProgressReportResponse, PerformanceCompareResponse,
-    # New Performance System
-    MonthlyWorkSummaryCreate, MonthlyWorkSummaryUpdate, MonthlyWorkSummaryResponse,
-    MonthlyWorkSummaryListItem, PerformanceEvaluationRecordCreate,
-    PerformanceEvaluationRecordUpdate, PerformanceEvaluationRecordResponse,
-    EvaluationTaskItem, EvaluationTaskListResponse, EvaluationDetailResponse,
-    MyPerformanceResponse, EvaluationWeightConfigCreate, EvaluationWeightConfigResponse,
-    EvaluationWeightConfigListResponse
+from app.models.project import Project
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
+from app.schemas.performance import (  # New Performance System
+    DepartmentPerformanceResponse,
+    EvaluationDetailResponse,
+    EvaluationTaskItem,
+    EvaluationTaskListResponse,
+    EvaluationWeightConfigCreate,
+    EvaluationWeightConfigListResponse,
+    EvaluationWeightConfigResponse,
+    MonthlyWorkSummaryCreate,
+    MonthlyWorkSummaryListItem,
+    MonthlyWorkSummaryResponse,
+    MonthlyWorkSummaryUpdate,
+    MyPerformanceResponse,
+    PerformanceCompareResponse,
+    PerformanceEvaluationRecordCreate,
+    PerformanceEvaluationRecordResponse,
+    PerformanceEvaluationRecordUpdate,
+    PerformanceRankingResponse,
+    PerformanceTrendResponse,
+    PersonalPerformanceResponse,
+    ProjectPerformanceResponse,
+    ProjectProgressReportResponse,
+    TeamPerformanceResponse,
 )
-from app.services.performance_service import PerformanceService
 from app.services.performance_integration_service import PerformanceIntegrationService
+from app.services.performance_service import PerformanceService
 
 router = APIRouter()
 
@@ -236,7 +253,7 @@ def get_team_performance(
         period = db.query(PerformancePeriod).filter(
             PerformancePeriod.status == "FINALIZED"
         ).order_by(desc(PerformancePeriod.end_date)).first()
-    
+
     # 获取团队成员绩效
     results = db.query(PerformanceResult).filter(
         PerformanceResult.period_id == period.id,
@@ -256,18 +273,18 @@ def get_team_performance(
             level_distribution={},
             members=[]
         )
-    
+
     scores = [float(r.total_score) if r.total_score else 0 for r in results]
     avg_score = Decimal(str(sum(scores) / len(scores))) if scores else Decimal("0")
     max_score = Decimal(str(max(scores))) if scores else Decimal("0")
     min_score = Decimal(str(min(scores))) if scores else Decimal("0")
-    
+
     # 等级分布
     level_distribution = {}
     for r in results:
         level = r.level or "QUALIFIED"
         level_distribution[level] = level_distribution.get(level, 0) + 1
-    
+
     # 成员列表
     members = []
     for r in results:
@@ -278,10 +295,10 @@ def get_team_performance(
             "score": float(r.total_score) if r.total_score else 0,
             "level": r.level or "QUALIFIED"
         })
-    
+
     # 按分数排序
     members.sort(key=lambda x: x["score"], reverse=True)
-    
+
     return TeamPerformanceResponse(
         team_id=team_id,
         team_name=team_name,
@@ -385,18 +402,18 @@ def get_performance_ranking(
         period = db.query(PerformancePeriod).filter(
             PerformancePeriod.status == "FINALIZED"
         ).order_by(desc(PerformancePeriod.end_date)).first()
-    
+
     if not period:
         raise HTTPException(status_code=404, detail="未找到考核周期")
-    
+
     rankings = []
-    
+
     if ranking_type == "COMPANY":
         # 公司排行榜
         results = db.query(PerformanceResult).filter(
             PerformanceResult.period_id == period.id
         ).order_by(desc(PerformanceResult.total_score)).limit(100).all()
-        
+
         for idx, result in enumerate(results, 1):
             user = db.query(User).filter(User.id == result.user_id).first()
             rankings.append({
@@ -407,7 +424,7 @@ def get_performance_ranking(
                 "score": float(result.total_score) if result.total_score else 0,
                 "level": result.level or "QUALIFIED"
             })
-    
+
     elif ranking_type == "TEAM":
         # 团队排行榜：按部门统计平均分
         from app.models.organization import Department
@@ -467,7 +484,7 @@ def get_performance_ranking(
         rankings.sort(key=lambda x: x["score"], reverse=True)
         for idx, r in enumerate(rankings, 1):
             r["rank"] = idx
-    
+
     return PerformanceRankingResponse(
         ranking_type=ranking_type,
         period_id=period.id,

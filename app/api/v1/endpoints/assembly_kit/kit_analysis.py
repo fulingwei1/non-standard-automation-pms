@@ -15,50 +15,74 @@ import json
 import logging
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 logger = logging.getLogger(__name__)
+from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_
 
 from app.api import deps
 from app.core import security
 from app.models import (
-    AssemblyStage, AssemblyTemplate, CategoryStageMapping,
-    BomItemAssemblyAttrs, MaterialReadiness, ShortageDetail,
-    ShortageAlertRule, SchedulingSuggestion,
-    Project, Machine, BomHeader, BomItem, Material, MaterialCategory,
-    User
+    AssemblyStage,
+    AssemblyTemplate,
+    BomHeader,
+    BomItem,
+    BomItemAssemblyAttrs,
+    CategoryStageMapping,
+    Machine,
+    Material,
+    MaterialCategory,
+    MaterialReadiness,
+    Project,
+    SchedulingSuggestion,
+    ShortageAlertRule,
+    ShortageDetail,
+    User,
 )
 from app.models.enums import (
-    AssemblyStageEnum, ImportanceLevelEnum, ShortageAlertLevelEnum,
-    SuggestionTypeEnum, SuggestionStatusEnum
+    AssemblyStageEnum,
+    ImportanceLevelEnum,
+    ShortageAlertLevelEnum,
+    SuggestionStatusEnum,
+    SuggestionTypeEnum,
 )
-from app.schemas.assembly_kit import (
-    # Stage
-    AssemblyStageCreate, AssemblyStageUpdate, AssemblyStageResponse,
-    # Template
-    AssemblyTemplateCreate, AssemblyTemplateUpdate, AssemblyTemplateResponse,
-    # Category Mapping
-    CategoryStageMappingCreate, CategoryStageMappingUpdate, CategoryStageMappingResponse,
-    # BOM Assembly Attrs
-    BomItemAssemblyAttrsCreate, BomItemAssemblyAttrsBatchCreate,
-    BomItemAssemblyAttrsUpdate, BomItemAssemblyAttrsResponse,
-    BomAssemblyAttrsAutoRequest, BomAssemblyAttrsTemplateRequest,
-    # Readiness
-    MaterialReadinessCreate, MaterialReadinessResponse, MaterialReadinessDetailResponse, StageKitRate,
-    # Shortage
-    ShortageDetailResponse, ShortageAlertItem, ShortageAlertListResponse,
-    # Alert Rule
-    ShortageAlertRuleCreate, ShortageAlertRuleUpdate, ShortageAlertRuleResponse,
-    # Suggestion
-    SchedulingSuggestionResponse, SchedulingSuggestionAccept, SchedulingSuggestionReject,
-    # Dashboard
-    AssemblyDashboardResponse, AssemblyDashboardStats, AssemblyDashboardStageStats
+from app.schemas.assembly_kit import (  # Stage; Template; Category Mapping; BOM Assembly Attrs; Readiness; Shortage; Alert Rule; Suggestion; Dashboard
+    AssemblyDashboardResponse,
+    AssemblyDashboardStageStats,
+    AssemblyDashboardStats,
+    AssemblyStageCreate,
+    AssemblyStageResponse,
+    AssemblyStageUpdate,
+    AssemblyTemplateCreate,
+    AssemblyTemplateResponse,
+    AssemblyTemplateUpdate,
+    BomAssemblyAttrsAutoRequest,
+    BomAssemblyAttrsTemplateRequest,
+    BomItemAssemblyAttrsBatchCreate,
+    BomItemAssemblyAttrsCreate,
+    BomItemAssemblyAttrsResponse,
+    BomItemAssemblyAttrsUpdate,
+    CategoryStageMappingCreate,
+    CategoryStageMappingResponse,
+    CategoryStageMappingUpdate,
+    MaterialReadinessCreate,
+    MaterialReadinessDetailResponse,
+    MaterialReadinessResponse,
+    SchedulingSuggestionAccept,
+    SchedulingSuggestionReject,
+    SchedulingSuggestionResponse,
+    ShortageAlertItem,
+    ShortageAlertListResponse,
+    ShortageAlertRuleCreate,
+    ShortageAlertRuleResponse,
+    ShortageAlertRuleUpdate,
+    ShortageDetailResponse,
+    StageKitRate,
 )
-from app.schemas.common import ResponseModel, MessageResponse
+from app.schemas.common import MessageResponse, ResponseModel
 
 router = APIRouter()
 
@@ -90,7 +114,7 @@ def calculate_available_qty(
 
     返回: (库存数量, 已分配数量, 在途数量, 可用数量)
     """
-    from app.models import PurchaseOrderItem, PurchaseOrder
+    from app.models import PurchaseOrder, PurchaseOrderItem
 
     material = db.query(Material).filter(Material.id == material_id).first()
     if not material:
@@ -114,7 +138,7 @@ def calculate_available_qty(
         ).scalar()
         in_transit_qty = Decimal(in_transit or 0)
     except Exception:
-        pass
+        logger.debug("查询在途数量失败，已忽略", exc_info=True)
 
     available = max(Decimal(0), stock_qty - allocated_qty + in_transit_qty)
     return (stock_qty, allocated_qty, in_transit_qty, available)
@@ -127,31 +151,31 @@ def calculate_estimated_ready_date(
 ) -> Optional[date]:
     """
     计算预计完全齐套日期
-    
+
     基于阻塞物料的预计到货日期，取最晚的日期
     """
-    from app.models import PurchaseOrderItem, PurchaseOrder
-    
+    from app.models import PurchaseOrder, PurchaseOrderItem
+
     if not blocking_items:
         return None
-    
+
     latest_date = None
-    
+
     for item in blocking_items:
         material_id = item.get("material_id")
         shortage_qty = item.get("shortage_qty", Decimal(0))
         expected_arrival = item.get("expected_arrival")
-        
+
         # 如果缺料明细中已有预计到货日期，直接使用
         if expected_arrival:
             if latest_date is None or expected_arrival > latest_date:
                 latest_date = expected_arrival
             continue
-        
+
         # 否则从采购订单查找
         if not material_id or shortage_qty <= 0:
             continue
-        
+
         try:
             po_items = db.query(PurchaseOrderItem).join(
                 PurchaseOrder, PurchaseOrderItem.po_id == PurchaseOrder.id
@@ -166,18 +190,19 @@ def calculate_estimated_ready_date(
                 PurchaseOrder.promised_date.desc(),
                 PurchaseOrder.required_date.desc()
             ).all()
-            
-            for po_item in po_items:
-                if po_item.order:
-                    # 优先使用承诺交期，其次使用要求交期
-                    expected_date = po_item.order.promised_date or po_item.order.required_date
-                    if expected_date:
-                        if latest_date is None or expected_date > latest_date:
-                            latest_date = expected_date
-                        break
         except Exception:
-            continue
-    
+            logger.debug("查询采购订单失败，已忽略", exc_info=True)
+            po_items = []
+
+        for po_item in po_items:
+            if po_item.order:
+                # 优先使用承诺交期，其次使用要求交期
+                expected_date = po_item.order.promised_date or po_item.order.required_date
+                if expected_date:
+                    if latest_date is None or expected_date > latest_date:
+                        latest_date = expected_date
+                    break
+
     return latest_date
 
 
@@ -211,17 +236,17 @@ async def execute_kit_analysis(
 ):
     """执行齐套分析"""
     from app.services.assembly_kit_service import (
-        validate_analysis_inputs,
-        initialize_stage_results,
         analyze_bom_item,
-        calculate_stage_kit_rates
+        calculate_stage_kit_rates,
+        initialize_stage_results,
+        validate_analysis_inputs,
     )
-    
+
     # 验证输入参数
     project, bom, machine = validate_analysis_inputs(
         db, request.project_id, request.bom_id, request.machine_id
     )
-    
+
     check_date = request.check_date or date.today()
 
     # 获取BOM物料及装配属性
@@ -255,7 +280,7 @@ async def execute_kit_analysis(
     stage_kit_rates_data, can_proceed, first_blocked_stage, current_workable_stage, overall_stats, all_blocking_items = calculate_stage_kit_rates(
         stages, stage_results, shortage_details
     )
-    
+
     # 转换为 StageKitRate 对象
     stage_kit_rates = [
         StageKitRate(**data) for data in stage_kit_rates_data
@@ -264,7 +289,7 @@ async def execute_kit_analysis(
     # 计算整体齐套率
     overall_kit_rate = Decimal(overall_stats["fulfilled"] / overall_stats["total"] * 100) if overall_stats["total"] > 0 else Decimal(100)
     blocking_kit_rate = Decimal(overall_stats["blocking_fulfilled"] / overall_stats["blocking_total"] * 100) if overall_stats["blocking_total"] > 0 else Decimal(100)
-    
+
     # 计算预计完全齐套日期（基于阻塞物料的预计到货日期）
     estimated_ready_date = calculate_estimated_ready_date(db, all_blocking_items, check_date)
 
@@ -314,7 +339,7 @@ async def execute_kit_analysis(
             required_date=detail.get("required_date")
         )
         db.add(shortage)
-        
+
         # 如果是L1或L2级别，发送企业微信预警
         if detail["alert_level"] in ["L1", "L2"]:
             try:
@@ -366,14 +391,14 @@ async def get_optimization_suggestions(
 ):
     """获取齐套分析优化建议"""
     from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
-    
+
     readiness = db.query(MaterialReadiness).filter(MaterialReadiness.id == readiness_id).first()
     if not readiness:
         raise HTTPException(status_code=404, detail="齐套分析记录不存在")
-    
+
     suggestions = AssemblyKitOptimizer.generate_optimization_suggestions(db, readiness)
     optimized_date = AssemblyKitOptimizer.optimize_estimated_ready_date(db, readiness)
-    
+
     return ResponseModel(
         code=200,
         message="优化建议获取成功",
@@ -434,8 +459,8 @@ async def get_analysis_detail(
         from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
         optimization_suggestions = AssemblyKitOptimizer.generate_optimization_suggestions(db, readiness)
     except Exception:
-        pass
-    
+        logger.debug("生成齐套分析优化建议失败，已忽略", exc_info=True)
+
     response_data = MaterialReadinessDetailResponse(
         id=readiness.id,
         readiness_no=readiness.readiness_no,
@@ -458,7 +483,7 @@ async def get_analysis_detail(
         created_at=readiness.created_at,
         shortage_details=shortage_responses
     )
-    
+
     # 将优化建议添加到响应数据中
     if optimization_suggestions:
         # 使用dict方式返回，包含优化建议
@@ -525,6 +550,3 @@ async def get_project_readiness_list(
         message="success",
         data={"total": total, "items": result, "page": page, "page_size": page_size}
     )
-
-
-

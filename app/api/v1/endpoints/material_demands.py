@@ -4,22 +4,22 @@
 包含：物料需求汇总、需求与库存对比、自动生成采购需求、需求时间表
 """
 
-from typing import Any, List, Optional, Dict
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import and_, case, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import or_, and_, desc, func, case
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
-from app.models.project import Project, Machine
-from app.models.material import Material, BomHeader, BomItem, MaterialShortage
+from app.models.material import BomHeader, BomItem, Material, MaterialShortage
+from app.models.project import Machine, Project
 from app.models.purchase import PurchaseOrder, PurchaseOrderItem
-from app.schemas.common import ResponseModel, PaginatedResponse
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 
 router = APIRouter()
 
@@ -56,32 +56,32 @@ def read_material_demands(
         .join(Machine, BomHeader.machine_id == Machine.id)
         .group_by(BomItem.material_id, BomItem.material_code, BomItem.material_name)
     )
-    
+
     if material_id:
         query = query.filter(BomItem.material_id == material_id)
-    
+
     if material_code:
         query = query.filter(BomItem.material_code.like(f"%{material_code}%"))
-    
+
     if project_id:
         query = query.filter(Machine.project_id == project_id)
-    
+
     if start_date:
         query = query.filter(BomItem.required_date >= start_date)
-    
+
     if end_date:
         query = query.filter(BomItem.required_date <= end_date)
-    
+
     # 获取物料信息
     results = query.all()
-    
+
     items = []
     for result in results:
         material = db.query(Material).filter(Material.id == result.material_id).first()
-        
+
         # 计算可用库存
         available_stock = material.current_stock or Decimal("0")
-        
+
         # 计算在途数量（已采购但未到货）
         in_transit_qty = Decimal("0")
         if result.material_id:
@@ -93,10 +93,10 @@ def read_material_demands(
             )
             for po_item in po_items:
                 in_transit_qty += (po_item.quantity or Decimal("0")) - (po_item.received_qty or Decimal("0"))
-        
+
         total_available = available_stock + in_transit_qty
         shortage_qty = max(Decimal("0"), result.total_demand - total_available)
-        
+
         items.append({
             "material_id": result.material_id,
             "material_code": result.material_code,
@@ -113,14 +113,14 @@ def read_material_demands(
             "demand_count": result.demand_count,
             "is_key_material": material.is_key_material if material else False
         })
-    
+
     # 按短缺数量排序
     items.sort(key=lambda x: x['shortage_qty'], reverse=True)
-    
+
     total = len(items)
     offset = (page - 1) * page_size
     paginated_items = items[offset:offset + page_size]
-    
+
     return PaginatedResponse(
         items=paginated_items,
         total=total,
@@ -144,12 +144,12 @@ def read_material_demands_vs_stock(
     project_id_list = None
     if project_ids:
         project_id_list = [int(p.strip()) for p in project_ids.split(",") if p.strip()]
-    
+
     # 解析物料ID列表
     material_id_list = None
     if material_ids:
         material_id_list = [int(m.strip()) for m in material_ids.split(",") if m.strip()]
-    
+
     # 从BOM明细汇总物料需求
     query = (
         db.query(
@@ -162,27 +162,27 @@ def read_material_demands_vs_stock(
         .join(Machine, BomHeader.machine_id == Machine.id)
         .group_by(BomItem.material_id, BomItem.material_code, BomItem.material_name)
     )
-    
+
     if project_id_list:
         query = query.filter(Machine.project_id.in_(project_id_list))
-    
+
     if material_id_list:
         query = query.filter(BomItem.material_id.in_(material_id_list))
-    
+
     results = query.all()
-    
+
     items = []
     for result in results:
         material = db.query(Material).filter(Material.id == result.material_id).first()
         if not material:
             continue
-        
+
         # 当前库存
         current_stock = material.current_stock or Decimal("0")
-        
+
         # 安全库存
         safety_stock = material.safety_stock or Decimal("0")
-        
+
         # 在途数量
         in_transit_qty = Decimal("0")
         po_items = (
@@ -193,13 +193,13 @@ def read_material_demands_vs_stock(
         )
         for po_item in po_items:
             in_transit_qty += (po_item.quantity or Decimal("0")) - (po_item.received_qty or Decimal("0"))
-        
+
         # 可用库存 = 当前库存 + 在途数量 - 安全库存
         available_stock = current_stock + in_transit_qty - safety_stock
-        
+
         # 短缺数量
         shortage_qty = max(Decimal("0"), result.total_demand - available_stock)
-        
+
         # 库存状态
         stock_status = "SUFFICIENT"
         if shortage_qty > 0:
@@ -207,7 +207,7 @@ def read_material_demands_vs_stock(
                 stock_status = "CRITICAL"
             else:
                 stock_status = "INSUFFICIENT"
-        
+
         items.append({
             "material_id": result.material_id,
             "material_code": result.material_code,
@@ -224,10 +224,10 @@ def read_material_demands_vs_stock(
             "is_key_material": material.is_key_material,
             "lead_time_days": material.lead_time_days or 0
         })
-    
+
     # 按短缺数量排序
     items.sort(key=lambda x: (x['is_key_material'], x['shortage_qty']), reverse=True)
-    
+
     return items
 
 
@@ -247,12 +247,12 @@ def generate_purchase_requisition(
     project_id_list = None
     if project_ids:
         project_id_list = [int(p.strip()) for p in project_ids.split(",") if p.strip()]
-    
+
     # 解析物料ID列表
     material_id_list = None
     if material_ids:
         material_id_list = [int(m.strip()) for m in material_ids.split(",") if m.strip()]
-    
+
     # 获取物料需求与库存对比
     query = (
         db.query(
@@ -266,26 +266,26 @@ def generate_purchase_requisition(
         .join(Machine, BomHeader.machine_id == Machine.id)
         .group_by(BomItem.material_id, BomItem.material_code, BomItem.material_name)
     )
-    
+
     if project_id_list:
         query = query.filter(Machine.project_id.in_(project_id_list))
-    
+
     if material_id_list:
         query = query.filter(BomItem.material_id.in_(material_id_list))
-    
+
     results = query.all()
-    
+
     generated_count = 0
     pr_items = []
-    
+
     for result in results:
         material = db.query(Material).filter(Material.id == result.material_id).first()
         if not material:
             continue
-        
+
         # 计算可用库存
         current_stock = material.current_stock or Decimal("0")
-        
+
         # 计算在途数量
         in_transit_qty = Decimal("0")
         po_items = (
@@ -296,21 +296,21 @@ def generate_purchase_requisition(
         )
         for po_item in po_items:
             in_transit_qty += (po_item.quantity or Decimal("0")) - (po_item.received_qty or Decimal("0"))
-        
+
         total_available = current_stock + in_transit_qty
         shortage_qty = max(Decimal("0"), result.total_demand - total_available)
-        
+
         # 如果有短缺，生成采购需求
         if shortage_qty > 0:
             # 考虑最小订购量
             min_order_qty = material.min_order_qty or Decimal("1")
             purchase_qty = max(shortage_qty, min_order_qty)
-            
+
             # 确定供应商
             target_supplier_id = supplier_id or material.default_supplier_id
             if not target_supplier_id:
                 continue  # 跳过没有供应商的物料
-            
+
             pr_items.append({
                 "material_id": result.material_id,
                 "material_code": result.material_code,
@@ -322,10 +322,10 @@ def generate_purchase_requisition(
                 "supplier_id": target_supplier_id
             })
             generated_count += 1
-    
+
     if generated_count == 0:
         return ResponseModel(message="没有需要生成采购需求的物料")
-    
+
     return ResponseModel(
         message=f"成功生成 {generated_count} 条采购需求",
         data={
@@ -351,13 +351,13 @@ def read_material_demand_schedule(
     project_id_list = None
     if project_ids:
         project_id_list = [int(p.strip()) for p in project_ids.split(",") if p.strip()]
-    
+
     # 默认查询未来30天
     if not start_date:
         start_date = date.today()
     if not end_date:
         end_date = start_date + timedelta(days=30)
-    
+
     # 从BOM明细查询需求
     query = (
         db.query(
@@ -372,20 +372,20 @@ def read_material_demand_schedule(
         .filter(BomItem.required_date >= start_date)
         .filter(BomItem.required_date <= end_date)
     )
-    
+
     if project_id_list:
         query = query.filter(Machine.project_id.in_(project_id_list))
-    
+
     query = query.group_by(BomItem.required_date, BomItem.material_id, BomItem.material_code, BomItem.material_name)
     results = query.all()
-    
+
     # 按日期分组
     schedule = {}
     for result in results:
         demand_date = result.required_date.isoformat() if result.required_date else None
         if not demand_date:
             continue
-        
+
         # 根据分组方式调整日期
         if group_by == "week":
             # 获取该周的周一
@@ -397,17 +397,17 @@ def read_material_demand_schedule(
             # 使用月份的第一天
             demand_date_obj = result.required_date
             demand_date = date(demand_date_obj.year, demand_date_obj.month, 1).isoformat()
-        
+
         if demand_date not in schedule:
             schedule[demand_date] = []
-        
+
         schedule[demand_date].append({
             "material_id": result.material_id,
             "material_code": result.material_code,
             "material_name": result.material_name,
             "demand_qty": float(result.demand_qty)
         })
-    
+
     # 转换为列表格式
     items = []
     for demand_date in sorted(schedule.keys()):
@@ -417,7 +417,7 @@ def read_material_demand_schedule(
             "total_materials": len(schedule[demand_date]),
             "total_demand": sum(m["demand_qty"] for m in schedule[demand_date])
         })
-    
+
     return items
 
 
@@ -434,10 +434,10 @@ def get_material_lead_time_forecast(
     material = db.query(Material).filter(Material.id == material_id).first()
     if not material:
         raise HTTPException(status_code=404, detail="物料不存在")
-    
+
     # 查询历史采购订单的到货时间
     cutoff_date = datetime.now() - timedelta(days=days)
-    
+
     po_items = (
         db.query(PurchaseOrderItem)
         .join(PurchaseOrder, PurchaseOrderItem.purchase_order_id == PurchaseOrder.id)
@@ -446,7 +446,7 @@ def get_material_lead_time_forecast(
         .filter(PurchaseOrder.created_at >= cutoff_date)
         .all()
     )
-    
+
     # 计算平均交期
     lead_times = []
     for po_item in po_items:
@@ -456,7 +456,7 @@ def get_material_lead_time_forecast(
             lead_time = (receive_date - order_date).days
             if lead_time > 0:
                 lead_times.append(lead_time)
-    
+
     if lead_times:
         avg_lead_time = sum(lead_times) / len(lead_times)
         min_lead_time = min(lead_times)
@@ -466,7 +466,7 @@ def get_material_lead_time_forecast(
         avg_lead_time = material.lead_time_days or 7
         min_lead_time = avg_lead_time - 2
         max_lead_time = avg_lead_time + 5
-    
+
     return {
         "material_id": material_id,
         "material_code": material.material_code,

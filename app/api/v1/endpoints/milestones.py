@@ -1,16 +1,17 @@
+from datetime import date, timedelta
+from decimal import Decimal
 from typing import Any, List, Optional
-from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
 from sqlalchemy import desc
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.models.project import Project, ProjectMilestone
 from app.models.user import User
-from app.models.project import ProjectMilestone, Project
-from app.schemas.project import MilestoneCreate, MilestoneUpdate, MilestoneResponse
 from app.schemas.common import ResponseModel
+from app.schemas.project import MilestoneCreate, MilestoneResponse, MilestoneUpdate
 
 router = APIRouter()
 
@@ -28,7 +29,7 @@ def read_milestones(
     Retrieve milestones.
     """
     query = db.query(ProjectMilestone)
-    
+
     # 如果指定了project_id，检查访问权限并过滤
     if project_id:
         from app.utils.permission_helpers import check_project_access_or_raise
@@ -56,13 +57,13 @@ def read_milestones(
                         dept_projects = db.query(Project.id).filter(Project.dept_id == dept.id).all()
                         user_project_ids = user_project_ids | {p[0] for p in dept_projects}
             # ALL和PROJECT权限已经在user_project_ids中处理了
-        
+
         if user_project_ids:
             query = query.filter(ProjectMilestone.project_id.in_(user_project_ids))
         elif not current_user.is_superuser:
             # 没有权限访问任何项目，返回空结果
             query = query.filter(ProjectMilestone.id == -1)
-    
+
     if status:
         query = query.filter(ProjectMilestone.status == status)
 
@@ -89,11 +90,11 @@ def get_project_milestones(
     # 检查项目访问权限
     from app.utils.permission_helpers import check_project_access_or_raise
     check_project_access_or_raise(db, current_user, project_id)
-    
+
     query = db.query(ProjectMilestone).filter(ProjectMilestone.project_id == project_id)
     if status:
         query = query.filter(ProjectMilestone.status == status)
-    
+
     milestones = query.order_by(ProjectMilestone.planned_date).all()
     return milestones
 
@@ -177,20 +178,22 @@ def complete_milestone(
     完成里程碑（自动触发收款计划开票）
     """
     from datetime import datetime
-    from app.models.sales import Invoice, InvoiceStatusEnum, Contract
-    
+
+    from app.models.project import ProjectPaymentPlan
+    from app.models.sales import Contract, Invoice, InvoiceStatusEnum
+
     milestone = (
         db.query(ProjectMilestone).filter(ProjectMilestone.id == milestone_id).first()
     )
     if not milestone:
         raise HTTPException(status_code=404, detail="里程碑不存在")
-    
+
     # 验收联动：检查里程碑完成条件（交付物、验收）
     try:
         from app.services.progress_integration_service import ProgressIntegrationService
         integration_service = ProgressIntegrationService(db)
         can_complete, missing_items = integration_service.check_milestone_completion_requirements(milestone)
-        
+
         if not can_complete:
             raise HTTPException(
                 status_code=400,
@@ -203,10 +206,10 @@ def complete_milestone(
         import logging
         logger = logging.getLogger(__name__)
         logger.error(f"检查里程碑完成条件失败: {str(e)}", exc_info=True)
-    
+
     # 更新状态为已完成
     milestone.status = "COMPLETED"
-    
+
     # 设置实际完成日期
     if actual_date:
         try:
@@ -215,32 +218,33 @@ def complete_milestone(
             raise HTTPException(status_code=400, detail="日期格式错误，请使用YYYY-MM-DD格式")
     elif not milestone.actual_date:
         milestone.actual_date = date.today()
-    
+
     db.add(milestone)
     db.flush()
-    
+
     # 检查是否有绑定的收款计划，自动触发开票
     if auto_trigger_invoice:
         payment_plans = db.query(ProjectPaymentPlan).filter(
             ProjectPaymentPlan.milestone_id == milestone_id,
             ProjectPaymentPlan.status == "PENDING"
         ).all()
-        
+
         for plan in payment_plans:
             # 检查是否已开票
             if plan.invoice_id:
                 continue
-            
+
             # 获取合同信息
             contract = None
             if plan.contract_id:
                 from app.models.sales import Contract
                 contract = db.query(Contract).filter(Contract.id == plan.contract_id).first()
-            
+
             if contract:
                 # 自动创建发票
                 # 生成发票编码
                 from sqlalchemy import desc
+
                 from app.models.sales import Invoice as InvoiceModel
                 today = datetime.now()
                 month_str = today.strftime("%y%m%d")
@@ -259,7 +263,7 @@ def complete_milestone(
                 else:
                     seq = 1
                 invoice_code = f"{prefix}{seq:03d}"
-                
+
                 invoice = Invoice(
                     invoice_code=invoice_code,
                     contract_id=contract.id,
@@ -279,16 +283,16 @@ def complete_milestone(
                 )
                 db.add(invoice)
                 db.flush()
-                
+
                 # 更新收款计划
                 plan.invoice_id = invoice.id
                 plan.invoice_no = invoice_code
                 plan.invoice_date = date.today()
                 plan.invoice_amount = invoice.total_amount
                 plan.status = "INVOICED"
-                
+
                 db.add(plan)
-    
+
     db.commit()
     db.refresh(milestone)
     return milestone
@@ -312,5 +316,5 @@ def delete_milestone(
 
     db.delete(milestone)
     db.commit()
-    
+
     return ResponseModel(code=200, message="里程碑已删除")

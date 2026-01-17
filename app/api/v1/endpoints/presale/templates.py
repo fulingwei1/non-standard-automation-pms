@@ -9,36 +9,52 @@
 售前技术支持 API endpoints
 包含：支持工单管理、技术方案管理、方案模板库、投标管理、售前统计
 """
-from typing import Any, List, Optional, Dict
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, func
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
+from app.models.presale import (
+    PresaleSolution,
+    PresaleSolutionCost,
+    PresaleSolutionTemplate,
+    PresaleSupportTicket,
+    PresaleTenderRecord,
+    PresaleTicketDeliverable,
+    PresaleTicketProgress,
+    PresaleWorkload,
+)
 from app.models.project import Project
 from app.models.sales import Opportunity
-from app.models.presale import (
-    PresaleSupportTicket, PresaleTicketDeliverable, PresaleTicketProgress,
-    PresaleSolution, PresaleSolutionCost, PresaleSolutionTemplate,
-    PresaleTenderRecord, PresaleWorkload
-)
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.presale import (
-    TicketCreate, TicketUpdate, TicketResponse, TicketAcceptRequest,
-    TicketProgressUpdate, DeliverableCreate, DeliverableResponse,
-    TicketRatingRequest, TicketBoardResponse,
-    SolutionCreate, SolutionUpdate, SolutionResponse, SolutionReviewRequest,
+    DeliverableCreate,
+    DeliverableResponse,
     SolutionCostResponse,
-    TemplateCreate, TemplateResponse,
-    TenderCreate, TenderResultUpdate, TenderResponse
+    SolutionCreate,
+    SolutionResponse,
+    SolutionReviewRequest,
+    SolutionUpdate,
+    TemplateCreate,
+    TemplateResponse,
+    TenderCreate,
+    TenderResponse,
+    TenderResultUpdate,
+    TicketAcceptRequest,
+    TicketBoardResponse,
+    TicketCreate,
+    TicketProgressUpdate,
+    TicketRatingRequest,
+    TicketResponse,
+    TicketUpdate,
 )
-from app.models.presale import PresaleSolutionTemplate
-from app.schemas.common import ResponseModel, PaginatedResponse
 
 router = APIRouter()
 
@@ -118,23 +134,23 @@ def read_templates(
     模板列表
     """
     query = db.query(PresaleSolutionTemplate)
-    
+
     if keyword:
         query = query.filter(PresaleSolutionTemplate.name.like(f"%{keyword}%"))
-    
+
     if industry:
         query = query.filter(PresaleSolutionTemplate.industry == industry)
-    
+
     if test_type:
         query = query.filter(PresaleSolutionTemplate.test_type == test_type)
-    
+
     if is_active is not None:
         query = query.filter(PresaleSolutionTemplate.is_active == is_active)
-    
+
     total = query.count()
     offset = (page - 1) * page_size
     templates = query.order_by(desc(PresaleSolutionTemplate.created_at)).offset(offset).limit(page_size).all()
-    
+
     items = []
     for template in templates:
         items.append(TemplateResponse(
@@ -149,7 +165,7 @@ def read_templates(
             created_at=template.created_at,
             updated_at=template.updated_at,
         ))
-    
+
     return PaginatedResponse(
         items=items,
         total=total,
@@ -182,7 +198,7 @@ def create_template(
     else:
         seq = 1
     template_no = f"TMP-{today}-{seq:03d}"
-    
+
     template = PresaleSolutionTemplate(
         template_no=template_no,
         name=template_in.name,
@@ -195,11 +211,11 @@ def create_template(
         is_active=True,
         created_by=current_user.id
     )
-    
+
     db.add(template)
     db.commit()
     db.refresh(template)
-    
+
     return TemplateResponse(
         id=template.id,
         template_no=template.template_no,
@@ -227,7 +243,7 @@ def read_template(
     template = db.query(PresaleSolutionTemplate).filter(PresaleSolutionTemplate.id == template_id).first()
     if not template:
         raise HTTPException(status_code=404, detail="模板不存在")
-    
+
     return TemplateResponse(
         id=template.id,
         template_no=template.template_no,
@@ -258,10 +274,10 @@ def apply_template(
     template = db.query(PresaleSolutionTemplate).filter(PresaleSolutionTemplate.id == template_id).first()
     if not template:
         raise HTTPException(status_code=404, detail="模板不存在")
-    
+
     if not template.is_active:
         raise HTTPException(status_code=400, detail="模板已禁用")
-    
+
     # 创建方案
     solution = PresaleSolution(
         solution_no=generate_solution_no(db),
@@ -279,21 +295,21 @@ def apply_template(
         author_id=current_user.id,
         author_name=current_user.real_name or current_user.username
     )
-    
+
     db.add(solution)
     db.flush()
-    
+
     # 如果模板有成本模板，创建成本明细
     if template.cost_template:
         # TODO: 解析cost_template JSON并创建PresaleSolutionCost记录
         pass
-    
+
     # 更新模板使用次数
     template.use_count = (template.use_count or 0) + 1
     db.add(template)
     db.commit()
     db.refresh(solution)
-    
+
     return SolutionResponse(
         id=solution.id,
         solution_no=solution.solution_no,
@@ -335,7 +351,7 @@ def get_template_stats(
     模板使用统计
     """
     from datetime import timedelta
-    
+
     # 默认使用当前月
     today = date.today()
     if not start_date:
@@ -345,10 +361,10 @@ def get_template_stats(
             end_date = date(today.year + 1, 1, 1) - timedelta(days=1)
         else:
             end_date = date(today.year, today.month + 1, 1) - timedelta(days=1)
-    
+
     # 获取所有模板
     templates = db.query(PresaleSolutionTemplate).all()
-    
+
     template_stats = []
     for template in templates:
         # 统计该模板在此时间段内创建方案的数量
@@ -359,15 +375,15 @@ def get_template_stats(
             # 通过方案名称或内容匹配模板（简化实现，实际可以通过关联字段）
             PresaleSolution.solution_overview.like(f"%{template.name}%")
         ).count()
-        
+
         # 计算复用率（使用次数 / 总方案数）
         total_solutions = db.query(PresaleSolution).filter(
             PresaleSolution.created_at >= datetime.combine(start_date, datetime.min.time()),
             PresaleSolution.created_at <= datetime.combine(end_date, datetime.max.time())
         ).count()
-        
+
         reuse_rate = (solutions_count / total_solutions * 100) if total_solutions > 0 else 0.0
-        
+
         template_stats.append({
             "template_id": template.id,
             "template_no": template.template_no,
@@ -379,10 +395,10 @@ def get_template_stats(
             "reuse_rate": round(reuse_rate, 2),
             "is_active": template.is_active
         })
-    
+
     # 按使用次数排序
     template_stats.sort(key=lambda x: x["period_use_count"], reverse=True)
-    
+
     return ResponseModel(
         code=200,
         message="success",

@@ -5,14 +5,14 @@
 包含：预警创建/关闭、编号生成等
 """
 
-from typing import Optional
 from datetime import datetime
+from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.issue import Issue
-from app.models.alert import AlertRule, AlertRecord
+from app.models.alert import AlertRecord, AlertRule
 from app.models.enums import AlertLevelEnum, AlertRuleTypeEnum, AlertStatusEnum
+from app.models.issue import Issue
 
 
 def create_blocking_issue_alert(db: Session, issue: Issue) -> Optional[AlertRecord]:

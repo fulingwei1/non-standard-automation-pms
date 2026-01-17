@@ -2,22 +2,22 @@
 """
 齐套率与物料保障 API endpoints
 """
-from typing import Any, List, Optional, Dict
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import case, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, func, case
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User
+from app.core.config import settings
 from app.models.material import BomHeader, BomItem, Material, MaterialShortage
-from app.models.purchase import PurchaseOrderItem, GoodsReceiptItem
-from app.models.project import Project, Machine
-from app.schemas.common import ResponseModel, PaginatedResponse
+from app.models.project import Machine, Project
+from app.models.purchase import GoodsReceiptItem, PurchaseOrderItem
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 
 router = APIRouter()
 
@@ -29,11 +29,11 @@ def calculate_kit_rate(
 ) -> Dict[str, Any]:
     """
     计算齐套率
-    
+
     Args:
         bom_items: BOM明细列表
         calculate_by: 计算方式，"quantity"按数量，"amount"按金额
-    
+
     Returns:
         包含齐套率统计信息的字典
     """
@@ -47,7 +47,7 @@ def calculate_kit_rate(
             "kit_rate": 0.0,
             "kit_status": "complete",
         }
-    
+
     fulfilled_items = 0
     shortage_items = 0
     in_transit_items = 0
@@ -55,12 +55,12 @@ def calculate_kit_rate(
     total_amount = Decimal(0)
     fulfilled_quantity = Decimal(0)
     fulfilled_amount = Decimal(0)
-    
+
     for item in bom_items:
         # 计算可用数量 = 当前库存 + 已到货数量
         material = item.material
         available_qty = (material.current_stock or 0) + (item.received_qty or 0)
-        
+
         # 计算在途数量 = 已采购但未到货的数量
         # 查询该物料的采购订单明细
         in_transit_qty = Decimal(0)
@@ -73,17 +73,17 @@ def calculate_kit_rate(
             )
             for po_item in po_items:
                 in_transit_qty += (po_item.quantity or 0) - (po_item.received_qty or 0)
-        
+
         # 总可用数量 = 可用数量 + 在途数量
         total_available = available_qty + in_transit_qty
-        
+
         # 需求数量
         required_qty = item.quantity or 0
-        
+
         # 计算金额
         item_amount = required_qty * (item.unit_price or 0)
         total_amount += item_amount
-        
+
         if calculate_by == "quantity":
             total_quantity += required_qty
             if total_available >= required_qty:
@@ -103,7 +103,7 @@ def calculate_kit_rate(
                 in_transit_items += 1
             else:
                 shortage_items += 1
-    
+
     # 计算齐套率
     if calculate_by == "quantity":
         if total_quantity > 0:
@@ -115,7 +115,7 @@ def calculate_kit_rate(
             kit_rate = float((fulfilled_amount / total_amount) * 100)
         else:
             kit_rate = 0.0
-    
+
     # 确定齐套状态
     if kit_rate >= 100:
         kit_status = "complete"
@@ -123,7 +123,7 @@ def calculate_kit_rate(
         kit_status = "partial"
     else:
         kit_status = "shortage"
-    
+
     return {
         "total_items": total_items,
         "fulfilled_items": fulfilled_items,
@@ -153,16 +153,16 @@ def get_project_kit_rate(
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
-    
+
     if calculate_by not in ["quantity", "amount"]:
         raise HTTPException(status_code=400, detail="calculate_by 必须是 quantity 或 amount")
-    
+
     # 获取项目下所有机台的BOM
     machines = db.query(Machine).filter(Machine.project_id == project_id).all()
-    
+
     all_bom_items = []
     machine_stats = []
-    
+
     for machine in machines:
         # 获取机台的最新BOM
         bom = (
@@ -171,11 +171,11 @@ def get_project_kit_rate(
             .filter(BomHeader.is_latest == True)
             .first()
         )
-        
+
         if bom:
             bom_items = bom.items.all()
             all_bom_items.extend(bom_items)
-            
+
             # 计算机台齐套率
             machine_kit_rate = calculate_kit_rate(db, bom_items, calculate_by)
             machine_stats.append({
@@ -184,10 +184,10 @@ def get_project_kit_rate(
                 "machine_name": machine.machine_name,
                 **machine_kit_rate,
             })
-    
+
     # 计算项目整体齐套率
     project_kit_rate = calculate_kit_rate(db, all_bom_items, calculate_by)
-    
+
     return {
         "project_id": project_id,
         "project_code": project.project_code,
@@ -211,10 +211,10 @@ def get_machine_kit_rate(
     machine = db.query(Machine).filter(Machine.id == machine_id).first()
     if not machine:
         raise HTTPException(status_code=404, detail="机台不存在")
-    
+
     if calculate_by not in ["quantity", "amount"]:
         raise HTTPException(status_code=400, detail="calculate_by 必须是 quantity 或 amount")
-    
+
     # 获取机台的最新BOM
     bom = (
         db.query(BomHeader)
@@ -222,13 +222,13 @@ def get_machine_kit_rate(
         .filter(BomHeader.is_latest == True)
         .first()
     )
-    
+
     if not bom:
         raise HTTPException(status_code=404, detail="机台没有BOM")
-    
+
     bom_items = bom.items.all()
     kit_rate = calculate_kit_rate(db, bom_items, calculate_by)
-    
+
     return {
         "machine_id": machine_id,
         "machine_no": machine.machine_no,
@@ -255,7 +255,7 @@ def get_machine_material_status(
     machine = db.query(Machine).filter(Machine.id == machine_id).first()
     if not machine:
         raise HTTPException(status_code=404, detail="机台不存在")
-    
+
     # 获取机台的最新BOM
     bom = (
         db.query(BomHeader)
@@ -263,26 +263,26 @@ def get_machine_material_status(
         .filter(BomHeader.is_latest == True)
         .first()
     )
-    
+
     if not bom:
         raise HTTPException(status_code=404, detail="机台没有BOM")
-    
+
     bom_items = bom.items.all()
     material_status_list = []
-    
+
     for item in bom_items:
         material = item.material
         required_qty = item.quantity or 0
-        
+
         # 当前库存
         current_stock = material.current_stock or 0 if material else 0
-        
+
         # 已到货数量
         received_qty = item.received_qty or 0
-        
+
         # 可用数量
         available_qty = current_stock + received_qty
-        
+
         # 在途数量
         in_transit_qty = Decimal(0)
         if item.material_id:
@@ -294,13 +294,13 @@ def get_machine_material_status(
             )
             for po_item in po_items:
                 in_transit_qty += (po_item.quantity or 0) - (po_item.received_qty or 0)
-        
+
         # 总可用数量
         total_available = available_qty + in_transit_qty
-        
+
         # 短缺数量
         shortage_qty = max(0, required_qty - total_available)
-        
+
         # 状态
         if total_available >= required_qty:
             status = "fulfilled"
@@ -308,7 +308,7 @@ def get_machine_material_status(
             status = "partial"
         else:
             status = "shortage"
-        
+
         material_status_list.append({
             "bom_item_id": item.id,
             "item_no": item.item_no,
@@ -328,7 +328,7 @@ def get_machine_material_status(
             "is_key_item": item.is_key_item,
             "required_date": item.required_date.isoformat() if item.required_date else None,
         })
-    
+
     return {
         "machine_id": machine_id,
         "machine_no": machine.machine_no,
@@ -352,13 +352,13 @@ def get_project_material_status(
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
-    
+
     # 获取项目下所有机台的物料状态
     machines = db.query(Machine).filter(Machine.project_id == project_id).all()
-    
+
     # 汇总所有物料（按物料编码汇总）
     material_summary = {}
-    
+
     for machine in machines:
         bom = (
             db.query(BomHeader)
@@ -366,7 +366,7 @@ def get_project_material_status(
             .filter(BomHeader.is_latest == True)
             .first()
         )
-        
+
         if bom:
             for item in bom.items.all():
                 material_code = item.material_code
@@ -385,11 +385,11 @@ def get_project_material_status(
                         "is_key_material": item.is_key_item,
                         "machines": [],
                     }
-                
+
                 summary = material_summary[material_code]
                 summary["total_required_qty"] += item.quantity or 0
                 summary["total_received_qty"] += item.received_qty or 0
-                
+
                 # 在途数量
                 if item.material_id:
                     po_items = (
@@ -400,27 +400,27 @@ def get_project_material_status(
                     )
                     for po_item in po_items:
                         summary["total_in_transit_qty"] += (po_item.quantity or 0) - (po_item.received_qty or 0)
-                
+
                 summary["machines"].append({
                     "machine_id": machine.id,
                     "machine_no": machine.machine_no,
                     "required_qty": float(item.quantity or 0),
                 })
-    
+
     # 转换为列表并计算汇总
     material_list = []
     total_required = Decimal(0)
     total_available = Decimal(0)
     total_shortage = Decimal(0)
-    
+
     for material_code, summary in material_summary.items():
         total_available_qty = summary["current_stock"] + float(summary["total_received_qty"]) + float(summary["total_in_transit_qty"])
         shortage_qty = max(0, float(summary["total_required_qty"]) - total_available_qty)
-        
+
         total_required += summary["total_required_qty"]
         total_available += Decimal(total_available_qty)
         total_shortage += Decimal(shortage_qty)
-        
+
         material_list.append({
             **summary,
             "total_required_qty": float(summary["total_required_qty"]),
@@ -430,7 +430,7 @@ def get_project_material_status(
             "shortage_qty": shortage_qty,
             "status": "fulfilled" if shortage_qty == 0 else ("partial" if total_available_qty > 0 else "shortage"),
         })
-    
+
     return {
         "project_id": project_id,
         "project_code": project.project_code,
@@ -458,20 +458,20 @@ def get_project_shortage(
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
-    
+
     # 获取项目物料状态
     material_status = get_project_material_status(
         db=db,
         project_id=project_id,
         current_user=current_user
     )
-    
+
     # 筛选缺料项
     shortage_list = [
         item for item in material_status["materials"]
         if item["shortage_qty"] > 0
     ]
-    
+
     return {
         "project_id": project_id,
         "project_code": project.project_code,
@@ -494,20 +494,20 @@ def get_project_critical_shortage(
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
-    
+
     # 获取项目物料状态
     material_status = get_project_material_status(
         db=db,
         project_id=project_id,
         current_user=current_user
     )
-    
+
     # 筛选关键物料且缺料的项
     critical_shortage_list = [
         item for item in material_status["materials"]
         if item["is_key_material"] and item["shortage_qty"] > 0
     ]
-    
+
     return {
         "project_id": project_id,
         "project_code": project.project_code,
@@ -534,13 +534,13 @@ def get_kit_rate_dashboard(
     else:
         # 查询所有活跃项目
         projects = db.query(Project).filter(Project.is_active == True).all()
-    
+
     dashboard_data = []
     total_projects = 0
     complete_projects = 0
     partial_projects = 0
     shortage_projects = 0
-    
+
     for project in projects:
         kit_rate_data = get_project_kit_rate(
             db=db,
@@ -548,7 +548,7 @@ def get_kit_rate_dashboard(
             calculate_by="quantity",
             current_user=current_user
         )
-        
+
         dashboard_data.append({
             "project_id": project.id,
             "project_code": project.project_code,
@@ -559,7 +559,7 @@ def get_kit_rate_dashboard(
             "fulfilled_items": kit_rate_data["fulfilled_items"],
             "shortage_items": kit_rate_data["shortage_items"],
         })
-        
+
         total_projects += 1
         if kit_rate_data["kit_status"] == "complete":
             complete_projects += 1
@@ -567,7 +567,7 @@ def get_kit_rate_dashboard(
             partial_projects += 1
         else:
             shortage_projects += 1
-    
+
     return {
         "summary": {
             "total_projects": total_projects,
@@ -598,16 +598,16 @@ def get_kit_rate_trend(
         end_date = date.today()
     if start_date is None:
         start_date = end_date - timedelta(days=30)
-    
+
     if group_by not in ["day", "week", "month"]:
         raise HTTPException(status_code=400, detail="group_by 必须是 day、week 或 month")
-    
+
     # 确定要查询的项目
     if project_id:
         projects = db.query(Project).filter(Project.id == project_id).all()
     else:
         projects = db.query(Project).filter(Project.is_active == True).all()
-    
+
     # 生成日期范围
     date_list = []
     current = start_date
@@ -623,17 +623,17 @@ def get_kit_rate_trend(
                 current = date(current.year + 1, 1, current.day)
             else:
                 current = date(current.year, current.month + 1, current.day)
-    
+
     # 查询历史数据（这里简化处理，实际应该从历史记录表查询）
     # 由于没有历史记录表，我们使用当前数据模拟趋势
     trend_data = []
-    
+
     for date_item in date_list:
         # 计算该日期的齐套率（简化：使用当前数据）
         # 实际应该从历史记录表查询该日期的快照数据
         total_kit_rate = 0.0
         project_count = 0
-        
+
         for project in projects:
             try:
                 kit_rate_data = get_project_kit_rate(
@@ -646,15 +646,15 @@ def get_kit_rate_trend(
                 project_count += 1
             except (ValueError, TypeError, KeyError) as e:
                 pass
-        
+
         avg_kit_rate = total_kit_rate / project_count if project_count > 0 else 0.0
-        
+
         trend_data.append({
             "date": date_item.isoformat(),
             "kit_rate": round(avg_kit_rate, 2),
             "project_count": project_count,
         })
-    
+
     return {
         "start_date": start_date.isoformat(),
         "end_date": end_date.isoformat(),

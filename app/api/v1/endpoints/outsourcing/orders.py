@@ -11,36 +11,53 @@
 """
 
 import logging
-from typing import Any, List, Optional
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 logger = logging.getLogger(__name__)
+from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import or_, desc
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
-from app.models.project import Project, Machine
 from app.models.outsourcing import (
-    OutsourcingVendor, OutsourcingOrder, OutsourcingOrderItem,
-    OutsourcingDelivery, OutsourcingDeliveryItem,
-    OutsourcingInspection, OutsourcingProgress, OutsourcingEvaluation, OutsourcingPayment
+    OutsourcingDelivery,
+    OutsourcingDeliveryItem,
+    OutsourcingEvaluation,
+    OutsourcingInspection,
+    OutsourcingOrder,
+    OutsourcingOrderItem,
+    OutsourcingPayment,
+    OutsourcingProgress,
+    OutsourcingVendor,
 )
+from app.models.project import Machine, Project
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.outsourcing import (
-    VendorCreate, VendorUpdate, VendorResponse,
-    OutsourcingOrderCreate, OutsourcingOrderUpdate, OutsourcingOrderResponse, OutsourcingOrderListResponse,
-    OutsourcingOrderItemCreate, OutsourcingOrderItemResponse,
-    OutsourcingDeliveryCreate, OutsourcingDeliveryResponse,
-    OutsourcingInspectionCreate, OutsourcingInspectionResponse,
-    OutsourcingProgressCreate, OutsourcingProgressResponse,
-    OutsourcingPaymentCreate, OutsourcingPaymentUpdate, OutsourcingPaymentResponse
+    OutsourcingDeliveryCreate,
+    OutsourcingDeliveryResponse,
+    OutsourcingInspectionCreate,
+    OutsourcingInspectionResponse,
+    OutsourcingOrderCreate,
+    OutsourcingOrderItemCreate,
+    OutsourcingOrderItemResponse,
+    OutsourcingOrderListResponse,
+    OutsourcingOrderResponse,
+    OutsourcingOrderUpdate,
+    OutsourcingPaymentCreate,
+    OutsourcingPaymentResponse,
+    OutsourcingPaymentUpdate,
+    OutsourcingProgressCreate,
+    OutsourcingProgressResponse,
+    VendorCreate,
+    VendorResponse,
+    VendorUpdate,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
 
 router = APIRouter()
 
@@ -93,14 +110,7 @@ def generate_inspection_no(db: Session) -> str:
     return f"IQ-{today}-{seq:03d}"
 
 
-
-from fastapi import APIRouter
-
-router = APIRouter(
-    prefix="/outsourcing/orders",
-    tags=["orders"]
-)
-
+# NOTE: keep flat routes (no extra prefix) to preserve the original API paths.
 # 共 6 个路由
 
 # ==================== 外协订单 ====================
@@ -121,7 +131,7 @@ def read_outsourcing_orders(
     获取外协订单列表
     """
     query = db.query(OutsourcingOrder)
-    
+
     if keyword:
         query = query.filter(
             or_(
@@ -129,28 +139,28 @@ def read_outsourcing_orders(
                 OutsourcingOrder.order_title.like(f"%{keyword}%"),
             )
         )
-    
+
     if vendor_id:
         query = query.filter(OutsourcingOrder.vendor_id == vendor_id)
-    
+
     if project_id:
         query = query.filter(OutsourcingOrder.project_id == project_id)
-    
+
     if order_type:
         query = query.filter(OutsourcingOrder.order_type == order_type)
-    
+
     if status:
         query = query.filter(OutsourcingOrder.status == status)
-    
+
     total = query.count()
     offset = (page - 1) * page_size
     orders = query.order_by(desc(OutsourcingOrder.created_at)).offset(offset).limit(page_size).all()
-    
+
     items = []
     for order in orders:
         vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == order.vendor_id).first()
         project = db.query(Project).filter(Project.id == order.project_id).first()
-        
+
         items.append(OutsourcingOrderListResponse(
             id=order.id,
             order_no=order.order_no,
@@ -164,7 +174,7 @@ def read_outsourcing_orders(
             payment_status=order.payment_status,
             created_at=order.created_at
         ))
-    
+
     return PaginatedResponse(
         items=items,
         total=total,
@@ -186,13 +196,13 @@ def read_outsourcing_order(
     order = db.query(OutsourcingOrder).filter(OutsourcingOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="外协订单不存在")
-    
+
     vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == order.vendor_id).first()
     project = db.query(Project).filter(Project.id == order.project_id).first()
     machine = None
     if order.machine_id:
         machine = db.query(Machine).filter(Machine.id == order.machine_id).first()
-    
+
     # 获取订单明细
     items_data = []
     order_items = db.query(OutsourcingOrderItem).filter(OutsourcingOrderItem.order_id == order_id).order_by(OutsourcingOrderItem.item_no).all()
@@ -217,7 +227,7 @@ def read_outsourcing_order(
             created_at=item.created_at,
             updated_at=item.updated_at
         ))
-    
+
     return OutsourcingOrderResponse(
         id=order.id,
         order_no=order.order_no,
@@ -259,32 +269,32 @@ def create_outsourcing_order(
     vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == order_in.vendor_id).first()
     if not vendor:
         raise HTTPException(status_code=404, detail="外协商不存在")
-    
+
     # 验证项目
     project = db.query(Project).filter(Project.id == order_in.project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
-    
+
     # 验证机台（如果提供）
     if order_in.machine_id:
         machine = db.query(Machine).filter(Machine.id == order_in.machine_id).first()
         if not machine or machine.project_id != order_in.project_id:
             raise HTTPException(status_code=400, detail="机台不存在或不属于该项目")
-    
+
     if not order_in.items:
         raise HTTPException(status_code=400, detail="订单明细不能为空")
-    
+
     order_no = generate_order_no(db)
-    
+
     # 计算金额
     total_amount = Decimal("0")
     for item in order_in.items:
         item_amount = item.quantity * item.unit_price
         total_amount += item_amount
-    
+
     tax_amount = total_amount * (order_in.tax_rate / 100)
     amount_with_tax = total_amount + tax_amount
-    
+
     order = OutsourcingOrder(
         order_no=order_no,
         vendor_id=order_in.vendor_id,
@@ -303,10 +313,10 @@ def create_outsourcing_order(
         created_by=current_user.id,
         remark=order_in.remark
     )
-    
+
     db.add(order)
     db.flush()  # 获取order.id
-    
+
     # 创建订单明细
     for idx, item_in in enumerate(order_in.items, start=1):
         item_amount = item_in.quantity * item_in.unit_price
@@ -330,10 +340,10 @@ def create_outsourcing_order(
             remark=item_in.remark
         )
         db.add(item)
-    
+
     db.commit()
     db.refresh(order)
-    
+
     return read_outsourcing_order(order.id, db, current_user)
 
 
@@ -351,18 +361,18 @@ def update_outsourcing_order(
     order = db.query(OutsourcingOrder).filter(OutsourcingOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="外协订单不存在")
-    
+
     if order.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只能修改草稿状态的订单")
-    
+
     update_data = order_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(order, field, value)
-    
+
     db.add(order)
     db.commit()
     db.refresh(order)
-    
+
     return read_outsourcing_order(order_id, db, current_user)
 
 
@@ -379,21 +389,21 @@ def approve_outsourcing_order(
     order = db.query(OutsourcingOrder).filter(OutsourcingOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="外协订单不存在")
-    
+
     if order.status not in ["DRAFT", "SUBMITTED"]:
         raise HTTPException(status_code=400, detail="只能审批草稿或已提交状态的订单")
-    
+
     order.status = "APPROVED"
-    
+
     # 更新外协商的最后订单日期
     vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == order.vendor_id).first()
     if vendor:
         vendor.last_order_date = datetime.now().date()
         db.add(vendor)
-    
+
     db.add(order)
     db.commit()
-    
+
     # 审批通过时自动归集成本
     if order.project_id:
         try:
@@ -405,9 +415,9 @@ def approve_outsourcing_order(
         except Exception as e:
             # 成本归集失败不影响审批流程，只记录错误
             logger.error(f"Failed to collect cost from outsourcing order {order_id}: {e}")
-    
+
     db.refresh(order)
-    
+
     return read_outsourcing_order(order_id, db, current_user)
 
 
@@ -423,9 +433,9 @@ def read_outsourcing_order_items(
     order = db.query(OutsourcingOrder).filter(OutsourcingOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="外协订单不存在")
-    
+
     items = db.query(OutsourcingOrderItem).filter(OutsourcingOrderItem.order_id == order_id).order_by(OutsourcingOrderItem.item_no).all()
-    
+
     items_data = []
     for item in items:
         items_data.append(OutsourcingOrderItemResponse(
@@ -448,8 +458,7 @@ def read_outsourcing_order_items(
             created_at=item.created_at,
             updated_at=item.updated_at
         ))
-    
-    return items_data
 
+    return items_data
 
 

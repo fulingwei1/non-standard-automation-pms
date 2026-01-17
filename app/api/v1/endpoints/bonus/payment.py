@@ -9,46 +9,81 @@
 奖金激励模块 API 端点
 """
 
-from typing import Any, List, Optional, Tuple
-from datetime import datetime, date
-from decimal import Decimal
-
-from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File, Form
-from fastapi.responses import FileResponse
-from sqlalchemy.orm import Session
-from sqlalchemy import desc, func
-import os
 import io
+import os
 import uuid
+from datetime import date, datetime
+from decimal import Decimal
 from pathlib import Path
+from typing import Any, List, Optional, Tuple
+
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    UploadFile,
+    status,
+)
+from fastapi.responses import FileResponse
+from sqlalchemy import desc, func
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
 from app.models.bonus import (
-    BonusRule, BonusCalculation, BonusDistribution, TeamBonusAllocation, BonusAllocationSheet
+    BonusAllocationSheet,
+    BonusCalculation,
+    BonusDistribution,
+    BonusRule,
+    TeamBonusAllocation,
 )
-from app.models.performance import PerformanceResult, ProjectContribution, PerformancePeriod
+from app.models.performance import (
+    PerformancePeriod,
+    PerformanceResult,
+    ProjectContribution,
+)
+from app.models.presale import PresaleSupportTicket
 from app.models.project import Project, ProjectMilestone
 from app.models.sales import Contract, Invoice
-from app.models.presale import PresaleSupportTicket
+from app.models.user import User
 from app.schemas.bonus import (
-    BonusRuleCreate, BonusRuleUpdate, BonusRuleResponse, BonusRuleListResponse,
-    BonusCalculationCreate, BonusCalculationResponse, BonusCalculationListResponse,
-    BonusCalculationApprove, BonusCalculationQuery,
-    BonusDistributionCreate, BonusDistributionResponse, BonusDistributionListResponse,
-    BonusDistributionPay, BonusDistributionQuery,
-    TeamBonusAllocationCreate, TeamBonusAllocationResponse, TeamBonusAllocationListResponse,
+    BonusAllocationRow,
+    BonusAllocationSheetConfirm,
+    BonusAllocationSheetResponse,
+    BonusCalculationApprove,
+    BonusCalculationCreate,
+    BonusCalculationListResponse,
+    BonusCalculationQuery,
+    BonusCalculationResponse,
+    BonusDistributionCreate,
+    BonusDistributionListResponse,
+    BonusDistributionPay,
+    BonusDistributionQuery,
+    BonusDistributionResponse,
+    BonusRuleCreate,
+    BonusRuleListResponse,
+    BonusRuleResponse,
+    BonusRuleUpdate,
+    BonusStatisticsResponse,
+    CalculateMilestoneBonusRequest,
+    CalculatePerformanceBonusRequest,
+    CalculatePresaleBonusRequest,
+    CalculateProjectBonusRequest,
+    CalculateSalesBonusRequest,
+    CalculateSalesDirectorBonusRequest,
+    CalculateTeamBonusRequest,
+    MyBonusResponse,
     TeamBonusAllocationApprove,
-    CalculatePerformanceBonusRequest, CalculateProjectBonusRequest,
-    CalculateMilestoneBonusRequest, CalculateTeamBonusRequest,
-    CalculateSalesBonusRequest, CalculateSalesDirectorBonusRequest, CalculatePresaleBonusRequest,
-    MyBonusResponse, BonusStatisticsResponse,
-    BonusAllocationSheetResponse, BonusAllocationSheetConfirm, BonusAllocationRow
+    TeamBonusAllocationCreate,
+    TeamBonusAllocationListResponse,
+    TeamBonusAllocationResponse,
 )
-from app.schemas.common import ResponseModel, PageParams
-from app.services.bonus_calculator import BonusCalculator
+from app.schemas.common import PageParams, ResponseModel
+from app.services.bonus import BonusCalculator
 
 router = APIRouter()
 
@@ -87,13 +122,13 @@ def create_bonus_distribution(
     ).first()
     if not calculation:
         raise HTTPException(status_code=404, detail="计算记录不存在")
-    
+
     if calculation.status != 'APPROVED':
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="计算记录未审批，无法发放"
         )
-    
+
     # 检查是否已发放
     existing = db.query(BonusDistribution).filter(
         BonusDistribution.calculation_id == dist_in.calculation_id,
@@ -104,19 +139,19 @@ def create_bonus_distribution(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="该计算记录已发放"
         )
-    
+
     distribution = BonusDistribution(
         distribution_code=generate_distribution_code(),
         **dist_in.model_dump()
     )
     db.add(distribution)
-    
+
     # 更新计算记录状态
     calculation.status = 'DISTRIBUTED'
-    
+
     db.commit()
     db.refresh(distribution)
-    
+
     return ResponseModel(code=200, message="创建成功", data=distribution)
 
 
@@ -131,7 +166,7 @@ def get_bonus_distributions(
     获取奖金发放记录列表
     """
     query = db.query(BonusDistribution)
-    
+
     if query_params.user_id:
         query = query.filter(BonusDistribution.user_id == query_params.user_id)
     if query_params.status:
@@ -140,12 +175,12 @@ def get_bonus_distributions(
         query = query.filter(BonusDistribution.distribution_date >= query_params.start_date)
     if query_params.end_date:
         query = query.filter(BonusDistribution.distribution_date <= query_params.end_date)
-    
+
     total = query.count()
     distributions = query.order_by(desc(BonusDistribution.distribution_date)).offset(
         (query_params.page - 1) * query_params.page_size
     ).limit(query_params.page_size).all()
-    
+
     return BonusDistributionListResponse(
         items=distributions,
         total=total,
@@ -168,7 +203,7 @@ def get_bonus_distribution(
     distribution = db.query(BonusDistribution).filter(BonusDistribution.id == dist_id).first()
     if not distribution:
         raise HTTPException(status_code=404, detail="发放记录不存在")
-    
+
     return ResponseModel(code=200, data=distribution)
 
 
@@ -186,27 +221,27 @@ def pay_bonus_distribution(
     distribution = db.query(BonusDistribution).filter(BonusDistribution.id == dist_id).first()
     if not distribution:
         raise HTTPException(status_code=404, detail="发放记录不存在")
-    
+
     if distribution.status == 'PAID':
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="该记录已发放"
         )
-    
+
     distribution.status = 'PAID'
     distribution.paid_by = current_user.id
     distribution.paid_at = datetime.now()
-    
+
     if pay_in.voucher_no:
         distribution.voucher_no = pay_in.voucher_no
     if pay_in.payment_account:
         distribution.payment_account = pay_in.payment_account
     if pay_in.payment_remark:
         distribution.payment_remark = pay_in.payment_remark
-    
+
     db.commit()
     db.refresh(distribution)
-    
+
     return ResponseModel(code=200, message="发放成功", data=distribution)
 
 

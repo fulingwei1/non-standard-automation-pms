@@ -1,7 +1,8 @@
 
 # 初始化进度跟踪定时任务调度器（如果启用）
 try:
-    from app.scheduler_progress import start_scheduler as start_progress_scheduler, stop_scheduler as stop_progress_scheduler
+    from app.scheduler_progress import start_scheduler as start_progress_scheduler
+    from app.scheduler_progress import stop_scheduler as stop_progress_scheduler
 except ImportError:
     start_progress_scheduler = None
     stop_progress_scheduler = None
@@ -10,6 +11,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+
 from app.core.config import settings
 from app.core.rate_limit import limiter
 
@@ -31,7 +33,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # 初始化定时任务调度器（如果启用）
 try:
     from app.utils.scheduler import init_scheduler, shutdown_scheduler
-    
+
     @app.on_event("startup")
     async def startup_event():
         """应用启动时初始化所有调度器"""
@@ -44,7 +46,7 @@ try:
                 start_progress_scheduler()
             # 启动其他定时任务
             init_scheduler()
-    
+
     @app.on_event("shutdown")
     async def shutdown_event():
         """应用关闭时关闭所有调度器"""

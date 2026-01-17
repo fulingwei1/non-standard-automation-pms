@@ -3,30 +3,33 @@
 项目评价模块 API 端点
 """
 
-from typing import Any, List, Optional
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
+from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import desc, func
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.user import User
 from app.models.project import Project
-from app.models.project_evaluation import (
-    ProjectEvaluation, ProjectEvaluationDimension
-)
-from app.schemas.project_evaluation import (
-    ProjectEvaluationCreate, ProjectEvaluationUpdate,
-    ProjectEvaluationResponse, ProjectEvaluationListResponse,
-    ProjectEvaluationQuery, AutoEvaluationRequest,
-    ProjectEvaluationDimensionCreate, ProjectEvaluationDimensionUpdate,
-    ProjectEvaluationDimensionResponse, ProjectEvaluationDimensionListResponse,
-    ProjectEvaluationStatisticsResponse
-)
+from app.models.project_evaluation import ProjectEvaluation, ProjectEvaluationDimension
+from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.schemas.project_evaluation import (
+    AutoEvaluationRequest,
+    ProjectEvaluationCreate,
+    ProjectEvaluationDimensionCreate,
+    ProjectEvaluationDimensionListResponse,
+    ProjectEvaluationDimensionResponse,
+    ProjectEvaluationDimensionUpdate,
+    ProjectEvaluationListResponse,
+    ProjectEvaluationQuery,
+    ProjectEvaluationResponse,
+    ProjectEvaluationStatisticsResponse,
+    ProjectEvaluationUpdate,
+)
 from app.services.project_evaluation_service import ProjectEvaluationService
 
 router = APIRouter()
@@ -48,10 +51,10 @@ def create_project_evaluation(
     project = db.query(Project).filter(Project.id == eval_in.project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
-    
+
     # 创建评价服务
     eval_service = ProjectEvaluationService(db)
-    
+
     # 创建评价记录
     evaluation = eval_service.create_evaluation(
         project_id=eval_in.project_id,
@@ -66,11 +69,11 @@ def create_project_evaluation(
         evaluation_detail=eval_in.evaluation_detail,
         evaluation_note=eval_in.evaluation_note
     )
-    
+
     db.add(evaluation)
     db.commit()
     db.refresh(evaluation)
-    
+
     return ResponseModel(code=200, message="创建成功", data=evaluation)
 
 
@@ -87,26 +90,26 @@ def auto_create_project_evaluation(
     project = db.query(Project).filter(Project.id == request.project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
-    
+
     eval_service = ProjectEvaluationService(db)
-    
+
     # 自动计算得分
     novelty_score = None
     amount_score = None
-    
+
     if request.auto_calculate_novelty:
         novelty_score = eval_service.auto_calculate_novelty_score(project)
-    
+
     if request.auto_calculate_amount:
         amount_score = eval_service.auto_calculate_amount_score(project)
-    
+
     # 使用手动评分覆盖自动计算
     if request.manual_scores:
         if 'novelty_score' in request.manual_scores:
             novelty_score = request.manual_scores['novelty_score']
         if 'amount_score' in request.manual_scores:
             amount_score = request.manual_scores['amount_score']
-    
+
     # 检查必需字段
     if novelty_score is None:
         raise HTTPException(
@@ -118,18 +121,18 @@ def auto_create_project_evaluation(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="项目金额得分未提供且无法自动计算"
         )
-    
+
     # 从手动评分中获取其他得分，或使用默认值
     new_tech_score = request.manual_scores.get('new_tech_score') if request.manual_scores else None
     difficulty_score = request.manual_scores.get('difficulty_score') if request.manual_scores else None
     workload_score = request.manual_scores.get('workload_score') if request.manual_scores else None
-    
+
     if not all([new_tech_score, difficulty_score, workload_score]):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="请提供新技术、难度、工作量得分"
         )
-    
+
     # 创建评价
     evaluation = eval_service.create_evaluation(
         project_id=request.project_id,
@@ -141,11 +144,11 @@ def auto_create_project_evaluation(
         evaluator_id=current_user.id,
         evaluator_name=current_user.real_name or current_user.username
     )
-    
+
     db.add(evaluation)
     db.commit()
     db.refresh(evaluation)
-    
+
     return ResponseModel(code=200, message="创建成功", data=evaluation)
 
 
@@ -160,7 +163,7 @@ def get_project_evaluations(
     获取项目评价列表
     """
     query = db.query(ProjectEvaluation)
-    
+
     if query_params.project_id:
         query = query.filter(ProjectEvaluation.project_id == query_params.project_id)
     if query_params.evaluation_level:
@@ -173,12 +176,12 @@ def get_project_evaluations(
         query = query.filter(ProjectEvaluation.evaluation_date <= query_params.end_date)
     if query_params.status:
         query = query.filter(ProjectEvaluation.status == query_params.status)
-    
+
     total = query.count()
     evaluations = query.order_by(desc(ProjectEvaluation.evaluation_date)).offset(
         (query_params.page - 1) * query_params.page_size
     ).limit(query_params.page_size).all()
-    
+
     return ProjectEvaluationListResponse(
         items=evaluations,
         total=total,
@@ -201,7 +204,7 @@ def get_project_evaluation(
     evaluation = db.query(ProjectEvaluation).filter(ProjectEvaluation.id == eval_id).first()
     if not evaluation:
         raise HTTPException(status_code=404, detail="评价记录不存在")
-    
+
     return ResponseModel(code=200, data=evaluation)
 
 
@@ -218,13 +221,13 @@ def get_project_latest_evaluation(
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
-    
+
     eval_service = ProjectEvaluationService(db)
     evaluation = eval_service.get_latest_evaluation(project_id)
-    
+
     if not evaluation:
         raise HTTPException(status_code=404, detail="项目暂无评价记录")
-    
+
     return ResponseModel(code=200, data=evaluation)
 
 
@@ -242,37 +245,37 @@ def update_project_evaluation(
     evaluation = db.query(ProjectEvaluation).filter(ProjectEvaluation.id == eval_id).first()
     if not evaluation:
         raise HTTPException(status_code=404, detail="评价记录不存在")
-    
+
     # 更新字段
     update_data = eval_in.model_dump(exclude_unset=True)
-    
+
     # 如果有得分更新，需要重新计算综合得分
     if any(key in update_data for key in ['novelty_score', 'new_tech_score', 'difficulty_score', 'workload_score', 'amount_score', 'weights']):
         eval_service = ProjectEvaluationService(db)
-        
+
         novelty_score = update_data.get('novelty_score', evaluation.novelty_score)
         new_tech_score = update_data.get('new_tech_score', evaluation.new_tech_score)
         difficulty_score = update_data.get('difficulty_score', evaluation.difficulty_score)
         workload_score = update_data.get('workload_score', evaluation.workload_score)
         amount_score = update_data.get('amount_score', evaluation.amount_score)
         weights = update_data.get('weights', evaluation.weights)
-        
+
         # 重新计算
         total_score = eval_service.calculate_total_score(
             novelty_score, new_tech_score, difficulty_score,
             workload_score, amount_score, weights
         )
         evaluation_level = eval_service.determine_evaluation_level(total_score)
-        
+
         update_data['total_score'] = total_score
         update_data['evaluation_level'] = evaluation_level
-    
+
     for field, value in update_data.items():
         setattr(evaluation, field, value)
-    
+
     db.commit()
     db.refresh(evaluation)
-    
+
     return ResponseModel(code=200, message="更新成功", data=evaluation)
 
 
@@ -289,11 +292,11 @@ def confirm_project_evaluation(
     evaluation = db.query(ProjectEvaluation).filter(ProjectEvaluation.id == eval_id).first()
     if not evaluation:
         raise HTTPException(status_code=404, detail="评价记录不存在")
-    
+
     evaluation.status = 'CONFIRMED'
     db.commit()
     db.refresh(evaluation)
-    
+
     return ResponseModel(code=200, message="确认成功", data=evaluation)
 
 
@@ -312,15 +315,15 @@ def get_evaluation_dimensions(
     获取评价维度配置列表
     """
     query = db.query(ProjectEvaluationDimension)
-    
+
     if is_active is not None:
         query = query.filter(ProjectEvaluationDimension.is_active == is_active)
-    
+
     total = query.count()
     dimensions = query.order_by(ProjectEvaluationDimension.sort_order).offset(
         (page - 1) * page_size
     ).limit(page_size).all()
-    
+
     return ProjectEvaluationDimensionListResponse(
         items=dimensions,
         total=total,
@@ -343,7 +346,7 @@ def get_evaluation_dimension(
     dimension = db.query(ProjectEvaluationDimension).filter(ProjectEvaluationDimension.id == dim_id).first()
     if not dimension:
         raise HTTPException(status_code=404, detail="评价维度配置不存在")
-    
+
     return ResponseModel(code=200, data=dimension)
 
 
@@ -363,12 +366,12 @@ def create_evaluation_dimension(
     ).first()
     if existing:
         raise HTTPException(status_code=400, detail="维度编码已存在")
-    
+
     dimension = ProjectEvaluationDimension(**dim_in.model_dump())
     db.add(dimension)
     db.commit()
     db.refresh(dimension)
-    
+
     return ResponseModel(code=200, message="创建成功", data=dimension)
 
 
@@ -386,7 +389,7 @@ def update_evaluation_dimension(
     dimension = db.query(ProjectEvaluationDimension).filter(ProjectEvaluationDimension.id == dim_id).first()
     if not dimension:
         raise HTTPException(status_code=404, detail="评价维度配置不存在")
-    
+
     # 检查维度编码是否与其他记录冲突
     if dim_in.dimension_code and dim_in.dimension_code != dimension.dimension_code:
         existing = db.query(ProjectEvaluationDimension).filter(
@@ -395,14 +398,16 @@ def update_evaluation_dimension(
         ).first()
         if existing:
             raise HTTPException(status_code=400, detail="维度编码已被其他配置使用")
-    
-    # 更新字段（update_data已在上面定义）
+
+    update_data = dim_in.model_dump(exclude_unset=True)
+
+    # 更新字段
     for field, value in update_data.items():
         setattr(dimension, field, value)
-    
+
     db.commit()
     db.refresh(dimension)
-    
+
     return ResponseModel(code=200, message="更新成功", data=dimension)
 
 
@@ -419,10 +424,10 @@ def delete_evaluation_dimension(
     dimension = db.query(ProjectEvaluationDimension).filter(ProjectEvaluationDimension.id == dim_id).first()
     if not dimension:
         raise HTTPException(status_code=404, detail="评价维度配置不存在")
-    
+
     db.delete(dimension)
     db.commit()
-    
+
     return ResponseModel(code=200, message="删除成功")
 
 
@@ -439,11 +444,11 @@ def toggle_dimension_status(
     dimension = db.query(ProjectEvaluationDimension).filter(ProjectEvaluationDimension.id == dim_id).first()
     if not dimension:
         raise HTTPException(status_code=404, detail="评价维度配置不存在")
-    
+
     dimension.is_active = not dimension.is_active
     db.commit()
     db.refresh(dimension)
-    
+
     return ResponseModel(
         code=200,
         message=f"{'启用' if dimension.is_active else '停用'}成功",
@@ -462,16 +467,16 @@ def get_dimension_weights_summary(
     """
     eval_service = ProjectEvaluationService(db)
     weights = eval_service.get_dimension_weights()
-    
+
     # 转换为百分比格式
     weights_percent = {k: float(v * Decimal('100')) for k, v in weights.items()}
     total = sum(weights_percent.values())
-    
+
     # 获取维度详情
     dimensions = db.query(ProjectEvaluationDimension).filter(
         ProjectEvaluationDimension.is_active == True
     ).order_by(ProjectEvaluationDimension.sort_order).all()
-    
+
     dimension_details = []
     for dim in dimensions:
         dim_type_lower = dim.dimension_type.lower()
@@ -484,7 +489,7 @@ def get_dimension_weights_summary(
                 "weight": float(weights[dim_type_lower] * Decimal('100')),
                 "is_active": dim.is_active
             })
-    
+
     return ResponseModel(
         code=200,
         data={
@@ -512,24 +517,24 @@ def get_evaluation_statistics(
     query = db.query(ProjectEvaluation).filter(
         ProjectEvaluation.status == 'CONFIRMED'
     )
-    
+
     if start_date:
         query = query.filter(ProjectEvaluation.evaluation_date >= start_date)
     if end_date:
         query = query.filter(ProjectEvaluation.evaluation_date <= end_date)
-    
+
     total_evaluations = query.count()
-    
+
     # 按等级统计
     by_level = {}
     level_counts = query.with_entities(
         ProjectEvaluation.evaluation_level,
         func.count(ProjectEvaluation.id)
     ).group_by(ProjectEvaluation.evaluation_level).all()
-    
+
     for level, count in level_counts:
         by_level[level] = count
-    
+
     # 平均得分
     avg_scores = query.with_entities(
         func.avg(ProjectEvaluation.total_score),
@@ -539,7 +544,7 @@ def get_evaluation_statistics(
         func.avg(ProjectEvaluation.workload_score),
         func.avg(ProjectEvaluation.amount_score)
     ).first()
-    
+
     return ResponseModel(
         code=200,
         data=ProjectEvaluationStatisticsResponse(

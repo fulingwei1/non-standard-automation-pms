@@ -9,46 +9,66 @@
 管理节律 API endpoints
 包含：节律配置、战略会议、行动项、仪表盘、会议地图
 """
-from typing import Any, List, Optional, Dict
 from datetime import date, datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, and_, func
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
+from app.models.enums import (
+    ActionItemStatus,
+    MeetingCycleType,
+    MeetingRhythmLevel,
+    RhythmHealthStatus,
+)
 from app.models.management_rhythm import (
     ManagementRhythmConfig,
-    StrategicMeeting,
     MeetingActionItem,
-    RhythmDashboardSnapshot,
     MeetingReport,
     MeetingReportConfig,
-    ReportMetricDefinition
+    ReportMetricDefinition,
+    RhythmDashboardSnapshot,
+    StrategicMeeting,
 )
-from app.models.enums import (
-    MeetingRhythmLevel,
-    MeetingCycleType,
-    ActionItemStatus,
-    RhythmHealthStatus
-)
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.management_rhythm import (
-    RhythmConfigCreate, RhythmConfigUpdate, RhythmConfigResponse,
-    StrategicMeetingCreate, StrategicMeetingUpdate, StrategicMeetingMinutesRequest,
+    ActionItemCreate,
+    ActionItemResponse,
+    ActionItemUpdate,
+    AvailableMetricsResponse,
+    MeetingCalendarResponse,
+    MeetingMapItem,
+    MeetingMapResponse,
+    MeetingReportConfigCreate,
+    MeetingReportConfigResponse,
+    MeetingReportConfigUpdate,
+    MeetingReportGenerateRequest,
+    MeetingReportResponse,
+    MeetingStatisticsResponse,
+    ReportMetricDefinitionCreate,
+    ReportMetricDefinitionResponse,
+    ReportMetricDefinitionUpdate,
+    RhythmConfigCreate,
+    RhythmConfigResponse,
+    RhythmConfigUpdate,
+    RhythmDashboardResponse,
+    RhythmDashboardSummary,
+    StrategicMeetingCreate,
+    StrategicMeetingMinutesRequest,
     StrategicMeetingResponse,
-    ActionItemCreate, ActionItemUpdate, ActionItemResponse,
-    RhythmDashboardResponse, RhythmDashboardSummary,
-    MeetingMapItem, MeetingMapResponse, MeetingCalendarResponse, MeetingStatisticsResponse,
+    StrategicMeetingUpdate,
     StrategicStructureTemplate,
-    MeetingReportGenerateRequest, MeetingReportResponse,
-    MeetingReportConfigCreate, MeetingReportConfigUpdate, MeetingReportConfigResponse,
-    ReportMetricDefinitionCreate, ReportMetricDefinitionUpdate, ReportMetricDefinitionResponse,
-    AvailableMetricsResponse
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
+
+from .permission_utils import (
+    check_rhythm_level_permission,
+    filter_meetings_by_permission,
+)
 
 router = APIRouter()
 
@@ -78,32 +98,32 @@ def read_meeting_map(
     获取会议地图（按周期和层级组织）
     """
     query = db.query(StrategicMeeting)
-    
+
     # 权限过滤
     query = filter_meetings_by_permission(db, query, current_user)
-    
+
     # 如果指定了层级，检查权限
     if rhythm_level and not check_rhythm_level_permission(current_user, rhythm_level):
         raise HTTPException(status_code=403, detail="您没有权限访问该层级的会议")
-    
+
     if rhythm_level:
         query = query.filter(StrategicMeeting.rhythm_level == rhythm_level)
-    
+
     if cycle_type:
         query = query.filter(StrategicMeeting.cycle_type == cycle_type)
-    
+
     if start_date:
         query = query.filter(StrategicMeeting.meeting_date >= start_date)
-    
+
     if end_date:
         query = query.filter(StrategicMeeting.meeting_date <= end_date)
-    
+
     meetings = query.order_by(StrategicMeeting.meeting_date).all()
-    
+
     items = []
     by_level = {}
     by_cycle = {}
-    
+
     for meeting in meetings:
         # 统计行动项
         action_items_count = db.query(MeetingActionItem).filter(MeetingActionItem.meeting_id == meeting.id).count()
@@ -113,7 +133,7 @@ def read_meeting_map(
                 MeetingActionItem.status == ActionItemStatus.COMPLETED.value
             )
         ).count()
-        
+
         item = MeetingMapItem(
             id=meeting.id,
             rhythm_level=meeting.rhythm_level,
@@ -126,19 +146,19 @@ def read_meeting_map(
             action_items_count=action_items_count,
             completed_action_items_count=completed_count,
         )
-        
+
         items.append(item)
-        
+
         # 按层级分组
         if meeting.rhythm_level not in by_level:
             by_level[meeting.rhythm_level] = []
         by_level[meeting.rhythm_level].append(item)
-        
+
         # 按周期分组
         if meeting.cycle_type not in by_cycle:
             by_cycle[meeting.cycle_type] = []
         by_cycle[meeting.cycle_type].append(item)
-    
+
     return MeetingMapResponse(
         items=items,
         by_level=by_level,
@@ -163,20 +183,20 @@ def read_meeting_calendar(
             StrategicMeeting.meeting_date <= end_date
         )
     )
-    
+
     if rhythm_level:
         query = query.filter(StrategicMeeting.rhythm_level == rhythm_level)
-    
+
     meetings = query.order_by(StrategicMeeting.meeting_date).all()
-    
+
     # 按日期分组
     calendar_map = {}
     for meeting in meetings:
         meeting_date = meeting.meeting_date
-        
+
         if meeting_date not in calendar_map:
             calendar_map[meeting_date] = []
-        
+
         # 统计行动项
         action_items_count = db.query(MeetingActionItem).filter(MeetingActionItem.meeting_id == meeting.id).count()
         completed_count = db.query(MeetingActionItem).filter(
@@ -185,7 +205,7 @@ def read_meeting_calendar(
                 MeetingActionItem.status == ActionItemStatus.COMPLETED.value
             )
         ).count()
-        
+
         calendar_map[meeting_date].append(MeetingMapItem(
             id=meeting.id,
             rhythm_level=meeting.rhythm_level,
@@ -198,7 +218,7 @@ def read_meeting_calendar(
             action_items_count=action_items_count,
             completed_action_items_count=completed_count,
         ))
-    
+
     # 转换为列表
     result = []
     current_date = start_date
@@ -209,7 +229,7 @@ def read_meeting_calendar(
                 meetings=calendar_map[current_date],
             ))
         current_date += timedelta(days=1)
-    
+
     return result
 
 
@@ -225,37 +245,37 @@ def read_meeting_statistics(
     获取会议统计（参与率、完成率等）
     """
     query = db.query(StrategicMeeting)
-    
+
     if rhythm_level:
         query = query.filter(StrategicMeeting.rhythm_level == rhythm_level)
-    
+
     if start_date:
         query = query.filter(StrategicMeeting.meeting_date >= start_date)
-    
+
     if end_date:
         query = query.filter(StrategicMeeting.meeting_date <= end_date)
-    
+
     meetings = query.all()
-    
+
     total_meetings = len(meetings)
     completed_meetings = len([m for m in meetings if m.status == "COMPLETED"])
     scheduled_meetings = len([m for m in meetings if m.status == "SCHEDULED"])
     cancelled_meetings = len([m for m in meetings if m.status == "CANCELLED"])
-    
+
     # 统计行动项
     meeting_ids = [m.id for m in meetings]
     if meeting_ids:
         total_action_items = db.query(MeetingActionItem).filter(
             MeetingActionItem.meeting_id.in_(meeting_ids)
         ).count()
-        
+
         completed_action_items = db.query(MeetingActionItem).filter(
             and_(
                 MeetingActionItem.meeting_id.in_(meeting_ids),
                 MeetingActionItem.status == ActionItemStatus.COMPLETED.value
             )
         ).count()
-        
+
         overdue_action_items = db.query(MeetingActionItem).filter(
             and_(
                 MeetingActionItem.meeting_id.in_(meeting_ids),
@@ -266,21 +286,21 @@ def read_meeting_statistics(
         total_action_items = 0
         completed_action_items = 0
         overdue_action_items = 0
-    
+
     completion_rate = (completed_action_items / total_action_items * 100) if total_action_items > 0 else 0.0
-    
+
     # 按层级统计
     by_level = {}
     for meeting in meetings:
         level = meeting.rhythm_level
         by_level[level] = by_level.get(level, 0) + 1
-    
+
     # 按周期统计
     by_cycle = {}
     for meeting in meetings:
         cycle = meeting.cycle_type
         by_cycle[cycle] = by_cycle.get(cycle, 0) + 1
-    
+
     return MeetingStatisticsResponse(
         total_meetings=total_meetings,
         completed_meetings=completed_meetings,
@@ -293,6 +313,5 @@ def read_meeting_statistics(
         by_level=by_level,
         by_cycle=by_cycle,
     )
-
 
 

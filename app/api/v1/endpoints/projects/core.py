@@ -5,36 +5,44 @@
 包含项目列表、创建、详情、更新、删除、看板、统计、克隆等基础操作
 """
 
-from typing import Any, List, Optional, Dict
+import logging
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, Path, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, status
+from sqlalchemy import desc, func, or_
 from sqlalchemy.orm import Session, joinedload, selectinload
-from sqlalchemy import desc, or_, func
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User
+from app.core.config import settings
 from app.models.project import (
-    Project, Customer, ProjectStatusLog, ProjectPaymentPlan,
-    ProjectMilestone, Machine, ProjectStage, ProjectMember
+    Customer,
+    Machine,
+    Project,
+    ProjectMember,
+    ProjectMilestone,
+    ProjectPaymentPlan,
+    ProjectStage,
+    ProjectStatusLog,
 )
-from app.schemas.project import (
-    ProjectCreate,
-    ProjectUpdate,
-    ProjectResponse,
-    ProjectListResponse,
-    ProjectDetailResponse,
-    ProjectCloneRequest,
-    ProjectSummaryResponse,
-    ProjectDashboardResponse,
-    InProductionProjectSummary,
-)
+from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.schemas.project import (
+    InProductionProjectSummary,
+    ProjectCloneRequest,
+    ProjectCreate,
+    ProjectDashboardResponse,
+    ProjectDetailResponse,
+    ProjectListResponse,
+    ProjectResponse,
+    ProjectSummaryResponse,
+    ProjectUpdate,
+)
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.get("/", response_model=PaginatedResponse[ProjectListResponse])
@@ -113,6 +121,7 @@ def read_projects(
         count_result = query.count()
         total = int(count_result) if count_result is not None else 0
     except Exception:
+        logger.debug("项目列表统计总数失败，降级为 0", exc_info=True)
         total = 0
 
     # 使用selectinload优化关联查询
@@ -136,7 +145,7 @@ def read_projects(
             if cached_data:
                 return PaginatedResponse(**cached_data)
         except Exception:
-            pass
+            logger.debug("项目列表缓存读取失败，继续查询数据库", exc_info=True)
 
     # 分页
     offset = (page - 1) * page_size
@@ -173,7 +182,7 @@ def read_projects(
                 **cache_key_params
             )
         except Exception:
-            pass
+            logger.debug("项目列表缓存写入失败，忽略", exc_info=True)
 
     return result
 
@@ -466,7 +475,7 @@ def read_project(
                 expire_seconds=settings.REDIS_CACHE_PROJECT_DETAIL_TTL
             )
         except Exception:
-            pass
+            logger.debug("项目详情缓存写入失败，忽略", exc_info=True)
 
     return project_detail
 
@@ -514,7 +523,7 @@ def update_project(
         cache_service.invalidate_project_detail(project_id)
         cache_service.invalidate_project_list()
     except Exception:
-        pass
+        logger.debug("项目缓存失效失败，忽略", exc_info=True)
 
     db.refresh(project)
     return project
@@ -544,7 +553,7 @@ def delete_project(
         cache_service.invalidate_project_detail(project_id)
         cache_service.invalidate_project_list()
     except Exception:
-        pass
+        logger.debug("项目缓存失效失败，忽略", exc_info=True)
 
     return ResponseModel(
         code=200,

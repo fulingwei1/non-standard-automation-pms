@@ -5,16 +5,16 @@
 
 from fastapi import APIRouter
 
-from .overview import router as overview_router
-from .my_tasks import router as my_tasks_router
-from .detail import router as detail_router
-from .create import router as create_router
-from .update import router as update_router
-from .complete import router as complete_router
-from .transfer import router as transfer_router
-from .reject import router as reject_router
-from .comments import router as comments_router
 from .batch import router as batch_router
+from .comments import router as comments_router
+from .complete import router as complete_router
+from .create import router as create_router
+from .detail import router as detail_router
+from .my_tasks import router as my_tasks_router
+from .overview import router as overview_router
+from .reject import router as reject_router
+from .transfer import router as transfer_router
+from .update import router as update_router
 
 router = APIRouter()
 

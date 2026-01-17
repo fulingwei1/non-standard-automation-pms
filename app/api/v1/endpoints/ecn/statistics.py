@@ -5,20 +5,21 @@ ECN追溯/统计 API endpoints
 包含：日志列表、项目ECN列表、统计分析
 """
 
-from typing import Any, List, Optional
 from datetime import date, datetime
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
 from sqlalchemy import desc
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.user import User
-from app.models.project import Project
 from app.models.ecn import Ecn, EcnLog
+from app.models.project import Project
+from app.models.user import User
 from app.schemas.ecn import EcnListResponse
-from .utils import get_user_display_name, build_ecn_list_response
+
+from .utils import build_ecn_list_response, get_user_display_name
 
 router = APIRouter()
 

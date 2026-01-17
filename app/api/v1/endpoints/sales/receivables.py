@@ -8,18 +8,18 @@
 - 应收账款汇总统计
 """
 
-from typing import Any, Optional
 from datetime import date
 from decimal import Decimal
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core.config import settings
 from app.core import security
-from app.models.user import User
+from app.core.config import settings
 from app.models.sales import Contract, Invoice
+from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 
 router = APIRouter()

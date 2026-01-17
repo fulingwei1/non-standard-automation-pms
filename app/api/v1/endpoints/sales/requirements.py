@@ -8,26 +8,34 @@
 - AI澄清管理
 """
 
-from typing import Any, List, Optional
 from datetime import datetime
+from typing import Any, List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import and_, desc, func
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, and_, func
 
 from app.api import deps
 from app.core import security
-from app.models.user import User
-from app.models.sales import (
-    Lead, Opportunity, LeadRequirementDetail,
-    RequirementFreeze, AIClarification
-)
 from app.models.enums import AssessmentSourceTypeEnum
-from app.schemas.sales import (
-    LeadRequirementDetailCreate, LeadRequirementDetailResponse,
-    RequirementFreezeCreate, RequirementFreezeResponse,
-    AIClarificationCreate, AIClarificationUpdate, AIClarificationResponse
+from app.models.sales import (
+    AIClarification,
+    Lead,
+    LeadRequirementDetail,
+    Opportunity,
+    RequirementFreeze,
 )
+from app.models.user import User
 from app.schemas.common import PaginatedResponse
+from app.schemas.sales import (
+    AIClarificationCreate,
+    AIClarificationResponse,
+    AIClarificationUpdate,
+    LeadRequirementDetailCreate,
+    LeadRequirementDetailResponse,
+    RequirementFreezeCreate,
+    RequirementFreezeResponse,
+)
 
 router = APIRouter()
 

@@ -3,28 +3,30 @@
 技术规格管理 API endpoints
 """
 from typing import Any, List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import and_, desc, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, and_
 
 from app.api import deps
 from app.core import security
-from app.models.technical_spec import TechnicalSpecRequirement, SpecMatchRecord
-from app.models.user import User
-from app.models.project import Project
 from app.models.material import BomItem
+from app.models.project import Project
+from app.models.technical_spec import SpecMatchRecord, TechnicalSpecRequirement
+from app.models.user import User
+from app.schemas.common import ResponseModel
 from app.schemas.technical_spec import (
-    TechnicalSpecRequirementCreate,
-    TechnicalSpecRequirementUpdate,
-    TechnicalSpecRequirementResponse,
-    TechnicalSpecRequirementListResponse,
-    SpecMatchRecordResponse,
-    SpecMatchRecordListResponse,
-    SpecMatchCheckRequest,
-    SpecMatchCheckResponse,
-    SpecMatchResult,
     SpecExtractRequest,
     SpecExtractResponse,
+    SpecMatchCheckRequest,
+    SpecMatchCheckResponse,
+    SpecMatchRecordListResponse,
+    SpecMatchRecordResponse,
+    SpecMatchResult,
+    TechnicalSpecRequirementCreate,
+    TechnicalSpecRequirementListResponse,
+    TechnicalSpecRequirementResponse,
+    TechnicalSpecRequirementUpdate,
 )
 from app.utils.spec_extractor import SpecExtractor
 from app.utils.spec_matcher import SpecMatcher
@@ -47,7 +49,7 @@ def list_requirements(
 ) -> Any:
     """获取技术规格要求列表"""
     query = db.query(TechnicalSpecRequirement)
-    
+
     # 筛选条件
     if project_id:
         query = query.filter(TechnicalSpecRequirement.project_id == project_id)
@@ -63,13 +65,13 @@ def list_requirements(
                 TechnicalSpecRequirement.material_code.like(f'%{keyword}%')
             )
         )
-    
+
     # 总数
     total = query.count()
-    
+
     # 分页
     requirements = query.order_by(desc(TechnicalSpecRequirement.created_at)).offset((page - 1) * page_size).limit(page_size).all()
-    
+
     # 构建响应
     items = []
     for req in requirements:
@@ -91,7 +93,7 @@ def list_requirements(
             updated_at=req.updated_at,
         )
         items.append(item)
-    
+
     return TechnicalSpecRequirementListResponse(
         items=items,
         total=total,
@@ -111,10 +113,10 @@ def get_requirement(
     requirement = db.query(TechnicalSpecRequirement).filter(
         TechnicalSpecRequirement.id == requirement_id
     ).first()
-    
+
     if not requirement:
         raise HTTPException(status_code=404, detail="规格要求不存在")
-    
+
     return TechnicalSpecRequirementResponse(
         id=requirement.id,
         project_id=requirement.project_id,
@@ -145,7 +147,7 @@ def create_requirement(
     project = db.query(Project).filter(Project.id == requirement_in.project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
-    
+
     # 使用提取器创建规格要求
     extractor = SpecExtractor()
     requirement = extractor.create_requirement(
@@ -161,10 +163,10 @@ def create_requirement(
         requirement_level=requirement_in.requirement_level,
         remark=requirement_in.remark
     )
-    
+
     db.commit()
     db.refresh(requirement)
-    
+
     return TechnicalSpecRequirementResponse(
         id=requirement.id,
         project_id=requirement.project_id,
@@ -195,26 +197,26 @@ def update_requirement(
     requirement = db.query(TechnicalSpecRequirement).filter(
         TechnicalSpecRequirement.id == requirement_id
     ).first()
-    
+
     if not requirement:
         raise HTTPException(status_code=404, detail="规格要求不存在")
-    
+
     # 更新字段
     update_data = requirement_in.dict(exclude_unset=True)
-    
+
     # 如果更新了规格，重新提取关键参数
     if 'specification' in update_data:
         extractor = SpecExtractor()
         key_parameters = extractor.extract_key_parameters(update_data['specification'])
         if key_parameters:
             update_data['key_parameters'] = key_parameters
-    
+
     for field, value in update_data.items():
         setattr(requirement, field, value)
-    
+
     db.commit()
     db.refresh(requirement)
-    
+
     return TechnicalSpecRequirementResponse(
         id=requirement.id,
         project_id=requirement.project_id,
@@ -244,15 +246,13 @@ def delete_requirement(
     requirement = db.query(TechnicalSpecRequirement).filter(
         TechnicalSpecRequirement.id == requirement_id
     ).first()
-    
+
     if not requirement:
         raise HTTPException(status_code=404, detail="规格要求不存在")
-    
+
     db.delete(requirement)
     db.commit()
     return ResponseModel(code=200, message="技术规格要求删除成功")
-    
-    return None
 
 
 # ==================== 规格匹配检查 ====================
@@ -266,17 +266,17 @@ def check_spec_match(
     """手动触发规格匹配检查"""
     from app.models.purchase import PurchaseOrderItem
     from app.services.spec_match_service import (
-        get_project_requirements,
-        check_po_item_match,
-        check_bom_item_match,
-        check_all_po_items,
+        calculate_match_statistics,
         check_all_bom_items,
-        calculate_match_statistics
+        check_all_po_items,
+        check_bom_item_match,
+        check_po_item_match,
+        get_project_requirements,
     )
-    
+
     # 获取项目的所有规格要求
     requirements = get_project_requirements(db, check_request.project_id)
-    
+
     if not requirements:
         return SpecMatchCheckResponse(
             total_checked=0,
@@ -285,10 +285,10 @@ def check_spec_match(
             unknown_count=0,
             results=[]
         )
-    
+
     matcher = SpecMatcher()
     results = []
-    
+
     if check_request.match_type == 'PURCHASE_ORDER':
         # 检查采购订单
         if check_request.match_target_id:
@@ -296,10 +296,10 @@ def check_spec_match(
             po_item = db.query(PurchaseOrderItem).filter(
                 PurchaseOrderItem.id == check_request.match_target_id
             ).first()
-            
+
             if not po_item:
                 raise HTTPException(status_code=404, detail="采购订单行不存在")
-            
+
             results = check_po_item_match(
                 db, po_item, requirements, check_request.project_id, matcher
             )
@@ -308,7 +308,7 @@ def check_spec_match(
             results = check_all_po_items(
                 db, check_request.project_id, requirements, matcher
             )
-    
+
     elif check_request.match_type == 'BOM':
         # 检查BOM
         if check_request.match_target_id:
@@ -316,10 +316,10 @@ def check_spec_match(
             bom_item = db.query(BomItem).filter(
                 BomItem.id == check_request.match_target_id
             ).first()
-            
+
             if not bom_item:
                 raise HTTPException(status_code=404, detail="BOM行不存在")
-            
+
             results = check_bom_item_match(
                 db, bom_item, requirements, check_request.project_id, matcher
             )
@@ -328,12 +328,12 @@ def check_spec_match(
             results = check_all_bom_items(
                 db, check_request.project_id, requirements, matcher
             )
-    
+
     db.commit()
-    
+
     # 计算统计
     stats = calculate_match_statistics(results)
-    
+
     return SpecMatchCheckResponse(
         total_checked=stats['total'],
         matched_count=stats['matched'],
@@ -355,17 +355,17 @@ def list_match_records(
 ) -> Any:
     """获取规格匹配记录列表"""
     query = db.query(SpecMatchRecord)
-    
+
     if project_id:
         query = query.filter(SpecMatchRecord.project_id == project_id)
     if match_type:
         query = query.filter(SpecMatchRecord.match_type == match_type)
     if match_status:
         query = query.filter(SpecMatchRecord.match_status == match_status)
-    
+
     total = query.count()
     records = query.order_by(desc(SpecMatchRecord.created_at)).offset((page - 1) * page_size).limit(page_size).all()
-    
+
     items = []
     for record in records:
         items.append(SpecMatchRecordResponse(
@@ -399,7 +399,7 @@ def list_match_records(
             created_at=record.created_at,
             updated_at=record.updated_at,
         ))
-    
+
     return SpecMatchRecordListResponse(
         items=items,
         total=total,
@@ -419,7 +419,7 @@ def extract_requirements(
 ) -> Any:
     """从文档中提取规格要求"""
     extractor = SpecExtractor()
-    
+
     requirements = extractor.extract_from_document(
         db=db,
         document_id=extract_request.document_id,
@@ -427,7 +427,7 @@ def extract_requirements(
         extracted_by=current_user.id,
         auto_extract=extract_request.auto_extract
     )
-    
+
     # 构建响应
     items = []
     for req in requirements:
@@ -448,10 +448,9 @@ def extract_requirements(
             created_at=req.created_at,
             updated_at=req.updated_at,
         ))
-    
+
     return SpecExtractResponse(
         extracted_count=len(requirements),
         requirements=items
     )
-
 

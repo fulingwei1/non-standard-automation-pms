@@ -11,36 +11,53 @@
 """
 
 import logging
-from typing import Any, List, Optional
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 logger = logging.getLogger(__name__)
+from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import or_, desc
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
-from app.models.project import Project, Machine
 from app.models.outsourcing import (
-    OutsourcingVendor, OutsourcingOrder, OutsourcingOrderItem,
-    OutsourcingDelivery, OutsourcingDeliveryItem,
-    OutsourcingInspection, OutsourcingProgress, OutsourcingEvaluation, OutsourcingPayment
+    OutsourcingDelivery,
+    OutsourcingDeliveryItem,
+    OutsourcingEvaluation,
+    OutsourcingInspection,
+    OutsourcingOrder,
+    OutsourcingOrderItem,
+    OutsourcingPayment,
+    OutsourcingProgress,
+    OutsourcingVendor,
 )
+from app.models.project import Machine, Project
+from app.models.user import User
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.outsourcing import (
-    VendorCreate, VendorUpdate, VendorResponse,
-    OutsourcingOrderCreate, OutsourcingOrderUpdate, OutsourcingOrderResponse, OutsourcingOrderListResponse,
-    OutsourcingOrderItemCreate, OutsourcingOrderItemResponse,
-    OutsourcingDeliveryCreate, OutsourcingDeliveryResponse,
-    OutsourcingInspectionCreate, OutsourcingInspectionResponse,
-    OutsourcingProgressCreate, OutsourcingProgressResponse,
-    OutsourcingPaymentCreate, OutsourcingPaymentUpdate, OutsourcingPaymentResponse
+    OutsourcingDeliveryCreate,
+    OutsourcingDeliveryResponse,
+    OutsourcingInspectionCreate,
+    OutsourcingInspectionResponse,
+    OutsourcingOrderCreate,
+    OutsourcingOrderItemCreate,
+    OutsourcingOrderItemResponse,
+    OutsourcingOrderListResponse,
+    OutsourcingOrderResponse,
+    OutsourcingOrderUpdate,
+    OutsourcingPaymentCreate,
+    OutsourcingPaymentResponse,
+    OutsourcingPaymentUpdate,
+    OutsourcingProgressCreate,
+    OutsourcingProgressResponse,
+    VendorCreate,
+    VendorResponse,
+    VendorUpdate,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
 
 router = APIRouter()
 
@@ -93,14 +110,7 @@ def generate_inspection_no(db: Session) -> str:
     return f"IQ-{today}-{seq:03d}"
 
 
-
-from fastapi import APIRouter
-
-router = APIRouter(
-    prefix="/outsourcing/suppliers",
-    tags=["suppliers"]
-)
-
+# NOTE: keep flat routes (no extra prefix) to preserve the original API paths.
 # 共 5 个路由
 
 # ==================== 外协供应商 ====================
@@ -119,7 +129,7 @@ def read_vendors(
     获取外协商列表
     """
     query = db.query(OutsourcingVendor)
-    
+
     if keyword:
         query = query.filter(
             or_(
@@ -127,17 +137,17 @@ def read_vendors(
                 OutsourcingVendor.vendor_name.like(f"%{keyword}%"),
             )
         )
-    
+
     if vendor_type:
         query = query.filter(OutsourcingVendor.vendor_type == vendor_type)
-    
+
     if status:
         query = query.filter(OutsourcingVendor.status == status)
-    
+
     total = query.count()
     offset = (page - 1) * page_size
     vendors = query.order_by(OutsourcingVendor.created_at).offset(offset).limit(page_size).all()
-    
+
     items = []
     for vendor in vendors:
         items.append(VendorResponse(
@@ -158,7 +168,7 @@ def read_vendors(
             created_at=vendor.created_at,
             updated_at=vendor.updated_at
         ))
-    
+
     return PaginatedResponse(
         items=items,
         total=total,
@@ -180,7 +190,7 @@ def read_vendor(
     vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == vendor_id).first()
     if not vendor:
         raise HTTPException(status_code=404, detail="外协商不存在")
-    
+
     return VendorResponse(
         id=vendor.id,
         vendor_code=vendor.vendor_code,
@@ -215,7 +225,7 @@ def create_vendor(
     existing = db.query(OutsourcingVendor).filter(OutsourcingVendor.vendor_code == vendor_in.vendor_code).first()
     if existing:
         raise HTTPException(status_code=400, detail="外协商编码已存在")
-    
+
     vendor = OutsourcingVendor(
         vendor_code=vendor_in.vendor_code,
         vendor_name=vendor_in.vendor_name,
@@ -235,11 +245,11 @@ def create_vendor(
         created_by=current_user.id,
         remark=vendor_in.remark
     )
-    
+
     db.add(vendor)
     db.commit()
     db.refresh(vendor)
-    
+
     return read_vendor(vendor.id, db, current_user)
 
 
@@ -257,15 +267,15 @@ def update_vendor(
     vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == vendor_id).first()
     if not vendor:
         raise HTTPException(status_code=404, detail="外协商不存在")
-    
+
     update_data = vendor_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(vendor, field, value)
-    
+
     db.add(vendor)
     db.commit()
     db.refresh(vendor)
-    
+
     return read_vendor(vendor_id, db, current_user)
 
 
@@ -287,16 +297,16 @@ def create_vendor_evaluation(
     vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == vendor_id).first()
     if not vendor:
         raise HTTPException(status_code=404, detail="外协商不存在")
-    
+
     # 计算综合评分（简单平均）
     overall_rating = (quality_rating + delivery_rating + service_rating) / 3
-    
+
     # 更新外协商评分（取最近评价的平均值或直接更新）
     vendor.quality_rating = quality_rating
     vendor.delivery_rating = delivery_rating
     vendor.service_rating = service_rating
     vendor.overall_rating = overall_rating
-    
+
     # 创建评价记录
     evaluation = OutsourcingEvaluation(
         vendor_id=vendor_id,
@@ -309,12 +319,11 @@ def create_vendor_evaluation(
         evaluated_at=datetime.now(),
         remark=remark
     )
-    
+
     db.add(vendor)
     db.add(evaluation)
     db.commit()
-    
-    return ResponseModel(message="评价成功")
 
+    return ResponseModel(message="评价成功")
 
 

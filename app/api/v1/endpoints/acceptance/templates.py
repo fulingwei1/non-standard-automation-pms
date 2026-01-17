@@ -8,22 +8,25 @@
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
 from sqlalchemy import or_
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
 from app.models.acceptance import (
-    AcceptanceTemplate, TemplateCategory, TemplateCheckItem,
-    AcceptanceOrder
+    AcceptanceOrder,
+    AcceptanceTemplate,
+    TemplateCategory,
+    TemplateCheckItem,
 )
+from app.models.user import User
 from app.schemas.acceptance import (
-    AcceptanceTemplateCreate, AcceptanceTemplateResponse,
-    TemplateCheckItemCreate
+    AcceptanceTemplateCreate,
+    AcceptanceTemplateResponse,
+    TemplateCheckItemCreate,
 )
-from app.schemas.common import ResponseModel, PaginatedResponse
+from app.schemas.common import PaginatedResponse, ResponseModel
 
 router = APIRouter()
 

@@ -3,19 +3,19 @@
 权限审计 API endpoints
 """
 
-from typing import Any, List, Optional
 from datetime import datetime
+from typing import Any, List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import or_, and_
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
 from app.models.user import PermissionAudit, User
-from app.schemas.common import ResponseModel, PaginatedResponse
-from pydantic import BaseModel
-
+from app.schemas.common import PaginatedResponse, ResponseModel
 
 router = APIRouter()
 
@@ -57,7 +57,7 @@ def read_audits(
 ) -> Any:
     """
     获取权限审计日志列表（支持分页和筛选）
-    
+
     - **page**: 页码，从1开始
     - **page_size**: 每页数量，默认20，最大100
     - **operator_id**: 操作人ID筛选
@@ -68,43 +68,43 @@ def read_audits(
     - **end_date**: 结束日期
     """
     query = db.query(PermissionAudit)
-    
+
     # 操作人筛选
     if operator_id:
         query = query.filter(PermissionAudit.operator_id == operator_id)
-    
+
     # 目标类型筛选
     if target_type:
         query = query.filter(PermissionAudit.target_type == target_type)
-    
+
     # 目标ID筛选
     if target_id:
         query = query.filter(PermissionAudit.target_id == target_id)
-    
+
     # 操作类型筛选
     if action:
         query = query.filter(PermissionAudit.action == action)
-    
+
     # 日期范围筛选
     if start_date:
         query = query.filter(PermissionAudit.created_at >= start_date)
     if end_date:
         query = query.filter(PermissionAudit.created_at <= end_date)
-    
+
     # 计算总数
     total = query.count()
-    
+
     # 分页
     offset = (page - 1) * page_size
     audits = query.order_by(PermissionAudit.created_at.desc()).offset(offset).limit(page_size).all()
-    
+
     # 构建响应数据
     items = []
     for audit in audits:
         operator_name = None
         if audit.operator:
             operator_name = audit.operator.real_name or audit.operator.username
-        
+
         items.append(PermissionAuditResponse(
             id=audit.id,
             operator_id=audit.operator_id,
@@ -117,7 +117,7 @@ def read_audits(
             user_agent=audit.user_agent,
             created_at=audit.created_at
         ))
-    
+
     return PermissionAuditListResponse(
         items=items,
         total=total,
@@ -135,17 +135,17 @@ def read_audit(
 ) -> Any:
     """
     获取权限审计日志详情
-    
+
     - **audit_id**: 审计日志ID
     """
     audit = db.query(PermissionAudit).filter(PermissionAudit.id == audit_id).first()
     if not audit:
         raise HTTPException(status_code=404, detail="审计日志不存在")
-    
+
     operator_name = None
     if audit.operator:
         operator_name = audit.operator.real_name or audit.operator.username
-    
+
     return PermissionAuditResponse(
         id=audit.id,
         operator_id=audit.operator_id,

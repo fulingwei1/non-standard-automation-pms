@@ -6,32 +6,37 @@ ECN基础管理 API endpoints
 """
 
 import logging
-from typing import Any, Optional
 from datetime import datetime
 from decimal import Decimal
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 logger = logging.getLogger(__name__)
+from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import or_, desc
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
+from app.models.ecn import Ecn, EcnEvaluation, EcnLog, EcnType
+from app.models.project import Machine, Project
 from app.models.user import User
-from app.models.project import Project, Machine
-from app.models.ecn import Ecn, EcnType, EcnEvaluation, EcnLog
+from app.schemas.common import PaginatedResponse
+from app.schemas.ecn import (
+    EcnCreate,
+    EcnListResponse,
+    EcnResponse,
+    EcnSubmit,
+    EcnUpdate,
+)
+from app.services.ecn_auto_assign_service import auto_assign_evaluation
 from app.services.ecn_notification_service import (
     notify_ecn_submitted,
     notify_evaluation_assigned,
 )
-from app.services.ecn_auto_assign_service import auto_assign_evaluation
-from app.schemas.ecn import (
-    EcnCreate, EcnUpdate, EcnSubmit, EcnResponse, EcnListResponse
-)
-from app.schemas.common import PaginatedResponse
-from .utils import generate_ecn_no, build_ecn_response, build_ecn_list_response
+
+from .utils import build_ecn_list_response, build_ecn_response, generate_ecn_no
 
 router = APIRouter()
 

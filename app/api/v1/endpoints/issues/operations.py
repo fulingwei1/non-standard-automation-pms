@@ -5,25 +5,33 @@
 包含：关闭、取消、关联问题、项目/机台问题列表、删除
 """
 
-from typing import Any, List, Optional
 from datetime import datetime
+from typing import Any, List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
 from sqlalchemy import desc
+from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
 from app.models.issue import Issue, IssueFollowUpRecord
 from app.models.user import User
+from app.schemas.common import ResponseModel
 from app.schemas.issue import (
     IssueCreate,
-    IssueResponse,
     IssueListResponse,
+    IssueResponse,
 )
-from app.schemas.common import ResponseModel
+from app.services.data_scope_service import DataScopeService
+
 from .utils import generate_issue_no
 
 router = APIRouter()
+
+def _get_scoped_issue(db: Session, current_user: User, issue_id: int) -> Optional[Issue]:
+    query = db.query(Issue).filter(Issue.id == issue_id)
+    query = DataScopeService.filter_issues_by_scope(db, query, current_user)
+    return query.first()
 
 
 def _build_issue_response(issue: Issue) -> IssueResponse:
@@ -86,7 +94,7 @@ def close_issue(
     current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """关闭问题（直接关闭，无需验证）"""
-    issue = db.query(Issue).filter(Issue.id == issue_id).first()
+    issue = _get_scoped_issue(db, current_user, issue_id)
     if not issue:
         raise HTTPException(status_code=404, detail="问题不存在")
 
@@ -123,7 +131,7 @@ def cancel_issue(
     current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """取消/撤销问题"""
-    issue = db.query(Issue).filter(Issue.id == issue_id).first()
+    issue = _get_scoped_issue(db, current_user, issue_id)
     if not issue:
         raise HTTPException(status_code=404, detail="问题不存在")
 
@@ -159,7 +167,7 @@ def get_related_issues(
     current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """获取关联的父子问题"""
-    issue = db.query(Issue).filter(Issue.id == issue_id).first()
+    issue = _get_scoped_issue(db, current_user, issue_id)
     if not issue:
         raise HTTPException(status_code=404, detail="问题不存在")
 
@@ -167,12 +175,14 @@ def get_related_issues(
 
     # 获取父问题
     if issue.related_issue_id:
-        parent = db.query(Issue).filter(Issue.id == issue.related_issue_id).first()
+        parent = _get_scoped_issue(db, current_user, issue.related_issue_id)
         if parent:
             related_issues.append(_build_issue_response(parent))
 
     # 获取子问题
-    children = db.query(Issue).filter(Issue.related_issue_id == issue_id).all()
+    children_query = db.query(Issue).filter(Issue.related_issue_id == issue_id)
+    children_query = DataScopeService.filter_issues_by_scope(db, children_query, current_user)
+    children = children_query.all()
     for child in children:
         related_issues.append(_build_issue_response(child))
 
@@ -187,7 +197,7 @@ def create_related_issue(
     current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """创建关联问题（子问题或关联问题）"""
-    parent_issue = db.query(Issue).filter(Issue.id == issue_id).first()
+    parent_issue = _get_scoped_issue(db, current_user, issue_id)
     if not parent_issue:
         raise HTTPException(status_code=404, detail="父问题不存在")
 

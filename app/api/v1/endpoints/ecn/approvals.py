@@ -6,8 +6,8 @@ ECN审批管理 API endpoints
 """
 
 import logging
-from typing import Any, List, Optional
 from datetime import datetime
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
@@ -16,13 +16,14 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.user import User
 from app.models.ecn import Ecn, EcnApproval, EcnApprovalMatrix, EcnLog
+from app.models.user import User
+from app.schemas.ecn import EcnApprovalCreate, EcnApprovalResponse
 from app.services.ecn_notification_service import (
     notify_approval_assigned,
     notify_approval_result,
 )
-from app.schemas.ecn import EcnApprovalCreate, EcnApprovalResponse
+
 from .utils import get_user_display_name
 
 router = APIRouter()
@@ -167,7 +168,9 @@ def approve_ecn(
 
             # ECN联动：如果工期影响 > 阈值，自动调整相关任务计划
             try:
-                from app.services.progress_integration_service import ProgressIntegrationService
+                from app.services.progress_integration_service import (
+                    ProgressIntegrationService,
+                )
                 integration_service = ProgressIntegrationService(db)
                 result = integration_service.handle_ecn_approved(ecn, threshold_days=3)
                 if result['adjusted_tasks'] or result['created_tasks']:
@@ -183,7 +186,9 @@ def approve_ecn(
             # Sprint 2.3: ECN变更影响交期联动
             if ecn.project_id and ecn.schedule_impact_days and ecn.schedule_impact_days > 0:
                 try:
-                    from app.services.status_transition_service import StatusTransitionService
+                    from app.services.status_transition_service import (
+                        StatusTransitionService,
+                    )
                     transition_service = StatusTransitionService(db)
                     transition_service.handle_ecn_schedule_impact(
                         ecn.project_id,
@@ -215,7 +220,9 @@ def approve_ecn(
             # ECN审批通过时自动归集变更成本
             if ecn.cost_impact and ecn.cost_impact > 0 and ecn.project_id:
                 try:
-                    from app.services.cost_collection_service import CostCollectionService
+                    from app.services.cost_collection_service import (
+                        CostCollectionService,
+                    )
                     CostCollectionService.collect_from_ecn(
                         db, ecn.id, created_by=current_user.id
                     )
