@@ -5,14 +5,19 @@
 """
 
 from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
+from sqlalchemy import and_, case, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_, case
 
 from app.models.material import Material, MaterialCategory, MaterialSupplier
-from app.models.purchase import PurchaseOrder, GoodsReceipt, PurchaseOrderItem, GoodsReceiptItem
+from app.models.purchase import (
+    GoodsReceipt,
+    GoodsReceiptItem,
+    PurchaseOrder,
+    PurchaseOrderItem,
+)
 
 
 class InventoryAnalysisService:

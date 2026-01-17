@@ -5,17 +5,17 @@
 """
 
 from datetime import date, datetime, timedelta
-from typing import Any, List, Optional, Dict
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
+from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_
 
-from app.models.project import Project, ProjectMilestone, Machine
-from app.models.timesheet import Timesheet
+from app.models.project import Machine, Project, ProjectMilestone
+from app.models.rd_project import RdCost, RdProject
 from app.models.report_center import ReportTemplate
-from app.models.user import User, Department
-from app.models.rd_project import RdProject, RdCost
+from app.models.timesheet import Timesheet
+from app.models.user import Department, User
 
 
 class TemplateReportService:

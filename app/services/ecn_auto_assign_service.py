@@ -4,13 +4,14 @@ ECN自动分配服务
 功能：根据部门、角色自动分配评估、审批、执行任务
 """
 
-from typing import List, Optional, Dict, Any
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_
+from typing import Any, Dict, List, Optional
 
-from app.models.user import User, Role, UserRole
-from app.models.ecn import Ecn, EcnEvaluation, EcnApproval, EcnTask
+from sqlalchemy import and_, or_
+from sqlalchemy.orm import Session
+
+from app.models.ecn import Ecn, EcnApproval, EcnEvaluation, EcnTask
 from app.models.organization import Department
+from app.models.user import Role, User, UserRole
 
 
 def find_users_by_department(
@@ -43,24 +44,24 @@ def find_users_by_role(
             Role.is_active == True
         )
     ).first()
-    
+
     if not role:
         return []
-    
+
     # 查找拥有该角色的用户
     user_roles = db.query(UserRole).filter(UserRole.role_id == role.id).all()
     user_ids = [ur.user_id for ur in user_roles]
-    
+
     if not user_ids:
         return []
-    
+
     users = db.query(User).filter(
         and_(
             User.id.in_(user_ids),
             User.is_active == True
         )
     ).all()
-    
+
     return users
 
 
@@ -76,18 +77,18 @@ def auto_assign_evaluation(
     dept_name = evaluation.eval_dept
     if not dept_name:
         return None
-    
+
     # 如果ECN关联了项目，优先从项目成员中选择
     if ecn.project_id:
         from app.models.project import ProjectMember
-        
+
         # 查找项目成员中属于该部门的用户
         project_members = db.query(ProjectMember).filter(
             ProjectMember.project_id == ecn.project_id
         ).all()
-        
+
         project_user_ids = [pm.user_id for pm in project_members]
-        
+
         if project_user_ids:
             # 查找项目成员中属于该部门的用户
             project_dept_users = db.query(User).filter(
@@ -95,34 +96,34 @@ def auto_assign_evaluation(
                 User.department == dept_name,
                 User.is_active == True
             ).all()
-            
+
             if project_dept_users:
                 # 优先选择项目成员中的部门负责人
                 for user in project_dept_users:
                     if user.position and "负责人" in user.position:
                         return user.id
-                
+
                 # 如果没有负责人，选择项目成员中的部门经理
                 for user in project_dept_users:
                     if user.position and ("经理" in user.position or "主管" in user.position):
                         return user.id
-    
+
     # 如果项目成员中没有找到，从部门所有用户中选择
     users = find_users_by_department(db, dept_name)
-    
+
     if not users:
         return None
-    
+
     # 优先选择部门负责人
     for user in users:
         if user.position and "负责人" in user.position:
             return user.id
-    
+
     # 如果没有负责人，选择部门经理
     for user in users:
         if user.position and ("经理" in user.position or "主管" in user.position):
             return user.id
-    
+
     # 如果都没有，返回None（不分配给普通活跃用户）
     return None
 
@@ -139,30 +140,30 @@ def auto_assign_approval(
     role_name = approval.approval_role
     if not role_name:
         return None
-    
+
     # 查找拥有该角色的用户
     users = find_users_by_role(db, role_name)
-    
+
     if not users:
         return None
-    
+
     # 如果ECN关联了项目，优先从项目成员中选择
     if ecn.project_id:
         from app.models.project import ProjectMember
-        
+
         # 查找角色
         role = db.query(Role).filter(Role.role_name == role_name).first()
         if not role:
             return None
-        
+
         # 查找项目成员
         project_members = db.query(ProjectMember).filter(
             ProjectMember.project_id == ecn.project_id,
             ProjectMember.is_active == True
         ).all()
-        
+
         project_user_ids = [pm.user_id for pm in project_members]
-        
+
         if project_user_ids:
             # 查找项目成员中拥有该角色的用户
             project_role_users = []
@@ -176,29 +177,29 @@ def auto_assign_approval(
                     user_roles = db.query(UserRole).filter(UserRole.user_id == user_id).all()
                     if any(ur.role_id == role.id for ur in user_roles):
                         project_role_users.append(user)
-            
+
             if project_role_users:
                 # 优先选择项目成员中的负责人
                 for user in project_role_users:
                     if user.position and "负责人" in user.position:
                         return user.id
-                
+
                 # 如果没有负责人，选择项目成员中的经理
                 for user in project_role_users:
                     if user.position and ("经理" in user.position or "主管" in user.position):
                         return user.id
-    
+
     # 如果项目成员中没有找到，从所有拥有该角色的用户中选择
     # 优先选择负责人
     for user in users:
         if user.position and "负责人" in user.position:
             return user.id
-    
+
     # 如果没有负责人，选择经理
     for user in users:
         if user.position and ("经理" in user.position or "主管" in user.position):
             return user.id
-    
+
     # 如果都没有，返回None（不分配给普通活跃用户）
     return None
 
@@ -215,18 +216,18 @@ def auto_assign_task(
     dept_name = task.task_dept
     if not dept_name:
         return None
-    
+
     # 如果ECN关联了项目，优先从项目成员中选择
     if ecn.project_id:
         from app.models.project import ProjectMember
-        
+
         # 查找项目成员中属于该部门的用户
         project_members = db.query(ProjectMember).filter(
             ProjectMember.project_id == ecn.project_id
         ).all()
-        
+
         project_user_ids = [pm.user_id for pm in project_members]
-        
+
         if project_user_ids:
             # 查找项目成员中属于该部门的用户
             project_dept_users = db.query(User).filter(
@@ -234,34 +235,34 @@ def auto_assign_task(
                 User.department == dept_name,
                 User.is_active == True
             ).all()
-            
+
             if project_dept_users:
                 # 优先选择项目成员中的部门负责人
                 for user in project_dept_users:
                     if user.position and "负责人" in user.position:
                         return user.id
-                
+
                 # 如果没有负责人，选择项目成员中的部门经理
                 for user in project_dept_users:
                     if user.position and ("经理" in user.position or "主管" in user.position):
                         return user.id
-    
+
     # 如果项目成员中没有找到，从部门所有用户中选择
     users = find_users_by_department(db, dept_name)
-    
+
     if not users:
         return None
-    
+
     # 优先选择部门负责人
     for user in users:
         if user.position and "负责人" in user.position:
             return user.id
-    
+
     # 如果没有负责人，选择部门经理
     for user in users:
         if user.position and ("经理" in user.position or "主管" in user.position):
             return user.id
-    
+
     # 如果都没有，返回None（不分配给普通活跃用户）
     return None
 
@@ -277,7 +278,7 @@ def auto_assign_pending_evaluations(
     ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
     if not ecn:
         return 0
-    
+
     pending_evals = db.query(EcnEvaluation).filter(
         and_(
             EcnEvaluation.ecn_id == ecn_id,
@@ -285,7 +286,7 @@ def auto_assign_pending_evaluations(
             EcnEvaluation.evaluator_id.is_(None)
         )
     ).all()
-    
+
     assigned_count = 0
     for eval in pending_evals:
         evaluator_id = auto_assign_evaluation(db, ecn, eval)
@@ -294,10 +295,10 @@ def auto_assign_pending_evaluations(
             eval.status = "ASSIGNED"  # 如果状态支持，可以设置为已分配
             db.add(eval)
             assigned_count += 1
-    
+
     if assigned_count > 0:
         db.commit()
-    
+
     return assigned_count
 
 
@@ -312,7 +313,7 @@ def auto_assign_pending_approvals(
     ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
     if not ecn:
         return 0
-    
+
     pending_approvals = db.query(EcnApproval).filter(
         and_(
             EcnApproval.ecn_id == ecn_id,
@@ -320,7 +321,7 @@ def auto_assign_pending_approvals(
             EcnApproval.approver_id.is_(None)
         )
     ).all()
-    
+
     assigned_count = 0
     for approval in pending_approvals:
         approver_id = auto_assign_approval(db, ecn, approval)
@@ -328,10 +329,10 @@ def auto_assign_pending_approvals(
             approval.approver_id = approver_id
             db.add(approval)
             assigned_count += 1
-    
+
     if assigned_count > 0:
         db.commit()
-    
+
     return assigned_count
 
 
@@ -346,7 +347,7 @@ def auto_assign_pending_tasks(
     ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
     if not ecn:
         return 0
-    
+
     pending_tasks = db.query(EcnTask).filter(
         and_(
             EcnTask.ecn_id == ecn_id,
@@ -354,7 +355,7 @@ def auto_assign_pending_tasks(
             EcnTask.assignee_id.is_(None)
         )
     ).all()
-    
+
     assigned_count = 0
     for task in pending_tasks:
         assignee_id = auto_assign_task(db, ecn, task)
@@ -362,9 +363,9 @@ def auto_assign_pending_tasks(
             task.assignee_id = assignee_id
             db.add(task)
             assigned_count += 1
-    
+
     if assigned_count > 0:
         db.commit()
-    
+
     return assigned_count
 

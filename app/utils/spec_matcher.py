@@ -3,9 +3,9 @@
 规格匹配器
 """
 
-from typing import Dict, Any, Optional, Tuple
 from decimal import Decimal
 from difflib import SequenceMatcher
+from typing import Any, Dict, Optional, Tuple
 
 from app.models.technical_spec import TechnicalSpecRequirement
 from app.utils.spec_extractor import SpecExtractor
@@ -40,33 +40,33 @@ class SpecMatcher:
     ) -> SpecMatchResult:
         """
         智能匹配规格要求与实际规格
-        
+
         Args:
             requirement: 规格要求
             actual_spec: 实际规格
             actual_brand: 实际品牌
             actual_model: 实际型号
-        
+
         Returns:
             匹配结果
         """
         differences = {}
         scores = []
-        
+
         # 1. 文本相似度匹配（规格型号）
         spec_similarity = self._text_similarity(
             requirement.specification.lower(),
             actual_spec.lower()
         )
         scores.append(('specification', spec_similarity * 100))
-        
+
         if spec_similarity < 0.8:
             differences['specification'] = {
                 'required': requirement.specification,
                 'actual': actual_spec,
                 'similarity': spec_similarity
             }
-        
+
         # 2. 品牌匹配检查
         if requirement.brand:
             if actual_brand:
@@ -84,7 +84,7 @@ class SpecMatcher:
                     'missing': True
                 }
                 scores.append(('brand', 0))
-        
+
         # 3. 型号匹配检查
         if requirement.model:
             if actual_model:
@@ -102,20 +102,20 @@ class SpecMatcher:
                     'missing': True
                 }
                 scores.append(('model', 0))
-        
+
         # 4. 关键参数提取和对比
         required_params = requirement.key_parameters or {}
         actual_params = self.extractor.extract_key_parameters(actual_spec)
-        
+
         param_differences = self._compare_parameters(required_params, actual_params)
         if param_differences:
             differences['parameters'] = param_differences
-        
+
         # 计算参数匹配度
         if required_params:
             param_score = self._calculate_param_score(required_params, actual_params)
             scores.append(('parameters', param_score))
-        
+
         # 5. 计算总体匹配度（加权平均）
         if scores:
             # 规格型号权重50%，品牌20%，型号20%，参数10%
@@ -125,19 +125,19 @@ class SpecMatcher:
                 'model': 0.2,
                 'parameters': 0.1
             }
-            
+
             total_score = Decimal('0')
             total_weight = Decimal('0')
-            
+
             for key, score in scores:
                 weight = weights.get(key, 0.1)
                 total_score += Decimal(str(score)) * Decimal(str(weight))
                 total_weight += Decimal(str(weight))
-            
+
             match_score = (total_score / total_weight) if total_weight > 0 else Decimal('0')
         else:
             match_score = Decimal('0')
-        
+
         # 6. 确定匹配状态
         if match_score >= self.match_threshold and not differences:
             match_status = 'MATCHED'
@@ -148,7 +148,7 @@ class SpecMatcher:
             match_status = 'UNKNOWN'
         else:
             match_status = 'MISMATCHED'
-        
+
         return SpecMatchResult(
             match_status=match_status,
             match_score=match_score,
@@ -158,11 +158,11 @@ class SpecMatcher:
     def _text_similarity(self, text1: str, text2: str) -> float:
         """
         计算文本相似度（使用SequenceMatcher）
-        
+
         Args:
             text1: 文本1
             text2: 文本2
-        
+
         Returns:
             相似度（0-1）
         """
@@ -175,19 +175,19 @@ class SpecMatcher:
     ) -> Dict[str, Any]:
         """
         对比关键参数，返回差异
-        
+
         Args:
             required: 要求的参数
             actual: 实际的参数
-        
+
         Returns:
             差异字典
         """
         differences = {}
-        
+
         for key, required_value in required.items():
             actual_value = actual.get(key)
-            
+
             if actual_value is None:
                 differences[key] = {
                     'required': required_value,
@@ -199,7 +199,7 @@ class SpecMatcher:
                 try:
                     req_num = float(str(required_value))
                     act_num = float(str(actual_value))
-                    
+
                     if abs(req_num - act_num) > 0.01:  # 允许0.01的误差
                         differences[key] = {
                             'required': required_value,
@@ -213,7 +213,7 @@ class SpecMatcher:
                             'required': required_value,
                             'actual': actual_value
                         }
-        
+
         return differences
 
     def _calculate_param_score(
@@ -223,35 +223,35 @@ class SpecMatcher:
     ) -> float:
         """
         计算参数匹配度
-        
+
         Args:
             required: 要求的参数
             actual: 实际的参数
-        
+
         Returns:
             匹配度（0-100）
         """
         if not required:
             return 100.0
-        
+
         matched_count = 0
         total_count = len(required)
-        
+
         for key, required_value in required.items():
             actual_value = actual.get(key)
-            
+
             if actual_value is not None:
                 try:
                     req_num = float(str(required_value))
                     act_num = float(str(actual_value))
-                    
+
                     # 允许5%的误差
                     if abs(req_num - act_num) / max(abs(req_num), 0.01) <= 0.05:
                         matched_count += 1
                 except (ValueError, TypeError):
                     if str(required_value).lower() == str(actual_value).lower():
                         matched_count += 1
-        
+
         return (matched_count / total_count) * 100 if total_count > 0 else 0.0
 
 

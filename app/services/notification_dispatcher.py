@@ -4,13 +4,18 @@ Notification dispatcher for alert channels (system/WeChat/email).
 Provides simple retry and logging helpers.
 """
 
-import logging
 import json
-from datetime import datetime, timedelta, date
+import logging
+import smtplib
+from datetime import date, datetime, time, timedelta
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from typing import Dict, Optional
 
+import requests
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.models.alert import AlertNotification, AlertRecord
 from app.models.notification import Notification, NotificationSettings
 from app.models.user import User
@@ -18,12 +23,6 @@ from app.utils.scheduler_metrics import (
     record_notification_failure,
     record_notification_success,
 )
-from app.core.config import settings
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-import requests
-from datetime import time
 
 
 class NotificationDispatcher:
@@ -123,7 +122,7 @@ class NotificationDispatcher:
             raise ValueError("Email channel requires recipient email")
         if not all([settings.EMAIL_SMTP_SERVER, settings.EMAIL_USERNAME, settings.EMAIL_PASSWORD]):
             raise ValueError("Email SMTP settings not configured")
-        
+
         # 根据预警级别选择颜色
         from app.models.enums import AlertLevelEnum
         level_colors = {
@@ -133,19 +132,19 @@ class NotificationDispatcher:
             AlertLevelEnum.INFO.value: "#3b82f6",       # 蓝色
         }
         level_color = level_colors.get(alert.alert_level, "#6b7280")
-        
+
         # 构建邮件内容
         title = notification.notify_title or alert.alert_title
         content = notification.notify_content or alert.alert_content
-        
+
         # 构建前端URL
         frontend_url = settings.CORS_ORIGINS[0] if settings.CORS_ORIGINS else "http://localhost:3000"
         alert_url = f"{frontend_url}/alerts/{alert.id}"
-        
+
         # 加载HTML模板
         import os
         from pathlib import Path
-        
+
         template_path = Path(__file__).parent.parent / "templates" / "email" / "alert_notification.html"
         if not template_path.exists():
             # 如果模板不存在，使用简单的HTML格式
@@ -182,7 +181,7 @@ class NotificationDispatcher:
             # 读取模板文件
             with open(template_path, 'r', encoding='utf-8') as f:
                 template_content = f.read()
-            
+
             # 替换模板变量
             html_content = template_content.replace("{{ level_color }}", level_color)
             html_content = html_content.replace("{{ alert_level }}", alert.alert_level)
@@ -198,13 +197,13 @@ class NotificationDispatcher:
             if not alert.project:
                 html_content = html_content.replace("{% if project_name %}", "<!--")
                 html_content = html_content.replace("{% endif %}", "-->")
-        
+
         # 创建邮件
         msg = MIMEMultipart('alternative')
         msg["From"] = settings.EMAIL_FROM or settings.EMAIL_USERNAME
         msg["To"] = recipient
         msg["Subject"] = f"[{alert.alert_level}] {title}"
-        
+
         # 添加纯文本版本（作为备选）
         text_content = f"""
 预警通知
@@ -222,10 +221,10 @@ class NotificationDispatcher:
 查看详情: {alert_url}
 """
         msg.attach(MIMEText(text_content, "plain", "utf-8"))
-        
+
         # 添加HTML版本
         msg.attach(MIMEText(html_content, "html", "utf-8"))
-        
+
         # 发送邮件
         with smtplib.SMTP(settings.EMAIL_SMTP_SERVER, settings.EMAIL_SMTP_PORT) as server:
             server.starttls()
@@ -236,7 +235,7 @@ class NotificationDispatcher:
         """Send enterprise WeChat notification via API."""
         if not settings.WECHAT_ENABLED:
             raise ValueError("WeChat channel disabled")
-        
+
         # 检查企业微信配置
         if not all([settings.WECHAT_CORP_ID, settings.WECHAT_AGENT_ID, settings.WECHAT_SECRET]):
             # 如果API配置不完整，尝试使用webhook（向后兼容）
@@ -255,11 +254,11 @@ class NotificationDispatcher:
                 return
             else:
                 raise ValueError("WeChat API or webhook not configured")
-        
+
         # 使用企业微信API发送
-        from app.utils.wechat_client import WeChatClient
         from app.models.enums import AlertLevelEnum
-        
+        from app.utils.wechat_client import WeChatClient
+
         # 获取用户的企业微信userid
         wechat_userid = None
         if user:
@@ -272,25 +271,25 @@ class NotificationDispatcher:
             except Exception as e:
                 self.logger.warning(f"获取企业微信userid失败: {e}, user_id: {user.id}")
                 pass
-            
+
             # 如果没有，使用username作为fallback（企业微信userid可以是username）
             if not wechat_userid and user.username:
                 wechat_userid = user.username
-        
+
         if not wechat_userid:
             raise ValueError("User WeChat userid not found. Please configure wechat_userid in employee profile or use username as fallback.")
-        
+
         # 构建消息内容
         title = notification.notify_title or alert.alert_title
         content = notification.notify_content or alert.alert_content
-        
+
         # 根据预警级别选择消息模板
         alert_level = alert.alert_level
         if alert_level in [AlertLevelEnum.URGENT.value, AlertLevelEnum.CRITICAL.value]:
             # 紧急/严重级别：使用卡片消息
             project_name = alert.project.project_name if alert.project else "未知项目"
             alert_url = f"{settings.CORS_ORIGINS[0] if settings.CORS_ORIGINS else 'http://localhost:3000'}/alerts/{alert.id}"
-            
+
             template_card = {
                 "card_type": "text_notice",
                 "source": {
@@ -335,7 +334,7 @@ class NotificationDispatcher:
                     "url": alert_url
                 }
             }
-            
+
             client = WeChatClient()
             success = client.send_template_card([wechat_userid], template_card)
             if not success:
@@ -347,55 +346,55 @@ class NotificationDispatcher:
                 message_content += f"\n项目：{alert.project.project_name}"
             if alert.triggered_at:
                 message_content += f"\n触发时间：{alert.triggered_at.strftime('%Y-%m-%d %H:%M:%S')}"
-            
+
             client = WeChatClient()
             success = client.send_text_message([wechat_userid], message_content)
             if not success:
                 raise ValueError("Failed to send WeChat text message")
-    
+
     def _send_sms(self, notification: AlertNotification, alert: AlertRecord, user: Optional[User]) -> None:
         """Send SMS notification (only for URGENT level alerts)."""
         from app.models.enums import AlertLevelEnum
-        
+
         # 仅对URGENT级别预警发送短信
         if alert.alert_level != AlertLevelEnum.URGENT.value:
             raise ValueError("SMS notifications are only sent for URGENT level alerts")
-        
+
         if not settings.SMS_ENABLED:
             raise ValueError("SMS channel disabled")
-        
+
         recipient = notification.notify_target or (user.phone if user else None)
         if not recipient:
             raise ValueError("SMS channel requires recipient phone number")
-        
+
         # 检查成本控制（简单的内存计数，生产环境建议使用Redis）
         if not hasattr(self, '_sms_count'):
             self._sms_count = {"today": {}, "hour": {}}
-        
-        from datetime import datetime, date
+
+        from datetime import date, datetime
         today = date.today().isoformat()
         current_hour = datetime.now().strftime("%Y-%m-%d-%H")
-        
+
         # 检查每日限制
         daily_count = self._sms_count["today"].get(today, 0)
         if daily_count >= settings.SMS_MAX_PER_DAY:
             raise ValueError(f"SMS daily limit reached ({settings.SMS_MAX_PER_DAY})")
-        
+
         # 检查每小时限制
         hourly_count = self._sms_count["hour"].get(current_hour, 0)
         if hourly_count >= settings.SMS_MAX_PER_HOUR:
             raise ValueError(f"SMS hourly limit reached ({settings.SMS_MAX_PER_HOUR})")
-        
+
         # 构建短信内容
         title = notification.notify_title or alert.alert_title
         frontend_url = settings.CORS_ORIGINS[0] if settings.CORS_ORIGINS else "http://localhost:3000"
         alert_url = f"{frontend_url}/alerts/{alert.id}"
-        
+
         # 短信内容简洁（限制70字以内）
         sms_content = f"【预警通知】{title[:30]}{'...' if len(title) > 30 else ''} 详情：{alert_url}"
         if len(sms_content) > 70:
             sms_content = f"【预警】{title[:20]} {alert_url}"
-        
+
         # 根据提供商发送短信
         if settings.SMS_PROVIDER == "aliyun":
             self._send_sms_aliyun(recipient, sms_content)
@@ -403,11 +402,11 @@ class NotificationDispatcher:
             self._send_sms_tencent(recipient, sms_content)
         else:
             raise ValueError(f"Unsupported SMS provider: {settings.SMS_PROVIDER}")
-        
+
         # 更新计数
         self._sms_count["today"][today] = daily_count + 1
         self._sms_count["hour"][current_hour] = hourly_count + 1
-    
+
     def _send_sms_aliyun(self, phone: str, content: str) -> None:
         """Send SMS via Aliyun SMS service."""
         try:
@@ -417,17 +416,17 @@ class NotificationDispatcher:
                 from aliyunsdkcore.request import CommonRequest
             except ImportError:
                 raise ValueError("Aliyun SMS SDK not installed. Install with: pip install aliyun-python-sdk-core aliyun-python-sdk-dysmsapi")
-            
-            if not all([settings.SMS_ALIYUN_ACCESS_KEY_ID, settings.SMS_ALIYUN_ACCESS_KEY_SECRET, 
+
+            if not all([settings.SMS_ALIYUN_ACCESS_KEY_ID, settings.SMS_ALIYUN_ACCESS_KEY_SECRET,
                        settings.SMS_ALIYUN_SIGN_NAME, settings.SMS_ALIYUN_TEMPLATE_CODE]):
                 raise ValueError("Aliyun SMS settings not configured")
-            
+
             client = AcsClient(
                 settings.SMS_ALIYUN_ACCESS_KEY_ID,
                 settings.SMS_ALIYUN_ACCESS_KEY_SECRET,
                 settings.SMS_ALIYUN_REGION
             )
-            
+
             request = CommonRequest()
             request.set_accept_format('json')
             request.set_domain('dysmsapi.aliyuncs.com')
@@ -435,23 +434,23 @@ class NotificationDispatcher:
             request.set_protocol_type('https')
             request.set_version('2017-05-25')
             request.set_action_name('SendSms')
-            
+
             request.add_query_param('RegionId', settings.SMS_ALIYUN_REGION)
             request.add_query_param('PhoneNumbers', phone)
             request.add_query_param('SignName', settings.SMS_ALIYUN_SIGN_NAME)
             request.add_query_param('TemplateCode', settings.SMS_ALIYUN_TEMPLATE_CODE)
             request.add_query_param('TemplateParam', f'{{"content":"{content}"}}')
-            
+
             response = client.do_action_with_exception(request)
             result = json.loads(response)
-            
+
             if result.get('Code') != 'OK':
                 raise ValueError(f"Aliyun SMS failed: {result.get('Message', 'Unknown error')}")
-                
+
         except Exception as e:
             self.logger.error(f"Failed to send SMS via Aliyun: {str(e)}")
             raise
-    
+
     def _send_sms_tencent(self, phone: str, content: str) -> None:
         """Send SMS via Tencent Cloud SMS service."""
         try:
@@ -460,14 +459,14 @@ class NotificationDispatcher:
                 from tencentcloud.common import credential
                 from tencentcloud.common.profile.client_profile import ClientProfile
                 from tencentcloud.common.profile.http_profile import HttpProfile
-                from tencentcloud.sms.v20210111 import sms_client, models
+                from tencentcloud.sms.v20210111 import models, sms_client
             except ImportError:
                 raise ValueError("Tencent Cloud SMS SDK not installed. Install with: pip install tencentcloud-sdk-python")
-            
+
             # 注意：这里需要配置腾讯云的SecretId和SecretKey
             # 由于配置项中没有，这里只是示例实现
             raise ValueError("Tencent Cloud SMS configuration not implemented. Please configure SMS_TENCENT_SECRET_ID and SMS_TENCENT_SECRET_KEY in config.py")
-            
+
         except Exception as e:
             self.logger.error(f"Failed to send SMS via Tencent: {str(e)}")
             raise

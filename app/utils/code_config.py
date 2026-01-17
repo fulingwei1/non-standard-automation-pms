@@ -42,13 +42,13 @@ VALID_MATERIAL_CATEGORY_CODES = set(MATERIAL_CATEGORY_CODES.keys())
 def get_material_category_code(category_code: str) -> str:
     """
     从物料分类编码中提取类别码
-    
+
     Args:
         category_code: 分类编码，如 'ME-01-01', 'EL-02-03'
-    
+
     Returns:
         类别码，如 'ME', 'EL'
-    
+
     Example:
         >>> get_material_category_code('ME-01-01')
         'ME'
@@ -57,15 +57,15 @@ def get_material_category_code(category_code: str) -> str:
     """
     if not category_code:
         return 'OT'  # 默认其他
-    
+
     # 提取第一个部分（类别码）
     parts = category_code.split('-')
     category_code_part = parts[0].upper()
-    
+
     # 验证类别码是否有效
     if category_code_part in VALID_MATERIAL_CATEGORY_CODES:
         return category_code_part
-    
+
     # 如果不在有效列表中，返回默认值
     return 'OT'
 
@@ -73,10 +73,10 @@ def get_material_category_code(category_code: str) -> str:
 def validate_material_category_code(category_code: str) -> bool:
     """
     验证物料类别码是否有效
-    
+
     Args:
         category_code: 类别码，如 'ME', 'EL'
-    
+
     Returns:
         是否有效
     """

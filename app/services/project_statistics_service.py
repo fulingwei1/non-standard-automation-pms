@@ -3,11 +3,12 @@
 项目统计服务
 """
 
-from typing import Dict, Any, List, Optional
 from datetime import date, datetime
-from sqlalchemy.orm import Session
-from sqlalchemy import func, extract
+from typing import Any, Dict, List, Optional
+
+from sqlalchemy import extract, func
 from sqlalchemy.exc import OperationalError, ProgrammingError
+from sqlalchemy.orm import Session
 
 from app.models.project import Project
 
@@ -15,7 +16,7 @@ from app.models.project import Project
 def calculate_status_statistics(query) -> Dict[str, int]:
     """
     按状态统计项目
-    
+
     Returns:
         Dict[str, int]: 状态到数量的映射
     """
@@ -30,7 +31,7 @@ def calculate_status_statistics(query) -> Dict[str, int]:
 def calculate_stage_statistics(query) -> Dict[str, int]:
     """
     按阶段统计项目
-    
+
     Returns:
         Dict[str, int]: 阶段到数量的映射
     """
@@ -45,7 +46,7 @@ def calculate_stage_statistics(query) -> Dict[str, int]:
 def calculate_health_statistics(query) -> Dict[str, int]:
     """
     按健康度统计项目
-    
+
     Returns:
         Dict[str, int]: 健康度到数量的映射
     """
@@ -60,7 +61,7 @@ def calculate_health_statistics(query) -> Dict[str, int]:
 def calculate_pm_statistics(query) -> List[Dict[str, Any]]:
     """
     按项目经理统计项目
-    
+
     Returns:
         List[Dict]: 项目经理统计列表
     """
@@ -72,7 +73,7 @@ def calculate_pm_statistics(query) -> List[Dict[str, Any]]:
         .group_by(Project.pm_id, Project.pm_name)
         .all()
     )
-    
+
     return [
         {
             "pm_id": pm_id,
@@ -86,7 +87,7 @@ def calculate_pm_statistics(query) -> List[Dict[str, Any]]:
 def calculate_customer_statistics(query) -> List[Dict[str, Any]]:
     """
     按客户统计项目
-    
+
     Returns:
         List[Dict]: 客户统计列表
     """
@@ -101,7 +102,7 @@ def calculate_customer_statistics(query) -> List[Dict[str, Any]]:
         .group_by(Project.customer_id, Project.customer_name)
         .all()
     )
-    
+
     return [
         {
             "customer_id": customer_id,
@@ -120,7 +121,7 @@ def calculate_monthly_statistics(
 ) -> List[Dict[str, Any]]:
     """
     按月份统计项目
-    
+
     Returns:
         List[Dict]: 月份统计列表
     """
@@ -128,7 +129,7 @@ def calculate_monthly_statistics(
         Project.created_at >= datetime.combine(start_date, datetime.min.time()),
         Project.created_at <= datetime.combine(end_date, datetime.max.time())
     )
-    
+
     # 尝试使用extract（适用于大多数数据库）
     try:
         month_stats = (
@@ -167,7 +168,7 @@ def calculate_monthly_statistics(
             )
             .all()
         )
-    
+
     return [
         {
             "year": int(year),
@@ -189,14 +190,14 @@ def build_project_statistics(
 ) -> Dict[str, Any]:
     """
     构建项目统计数据
-    
+
     Returns:
         Dict[str, Any]: 统计数据字典
     """
     # 总体统计
     total_projects = query.count()
     avg_progress = query.with_entities(func.avg(Project.progress_pct)).scalar() or 0
-    
+
     stats_data = {
         "total": total_projects,
         "average_progress": float(avg_progress),
@@ -205,11 +206,11 @@ def build_project_statistics(
         "by_health": calculate_health_statistics(query),
         "by_pm": calculate_pm_statistics(query),
     }
-    
+
     # 按客户统计
     if group_by == "customer":
         stats_data["by_customer"] = calculate_customer_statistics(query)
-    
+
     # 按月份统计
     if group_by == "month":
         # 如果没有指定日期范围，默认统计最近12个月
@@ -217,7 +218,7 @@ def build_project_statistics(
             today = date.today()
             end_date = today
             start_date = date(today.year - 1, today.month, 1)
-        
+
         stats_data["by_month"] = calculate_monthly_statistics(query, start_date, end_date)
-    
+
     return stats_data

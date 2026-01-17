@@ -5,20 +5,20 @@
 自动识别未中标项目，将投入工时转为费用，进行成本核算
 """
 
-from typing import Dict, List, Optional, Any
-from datetime import datetime, date
-from decimal import Decimal
-from collections import defaultdict
 import logging
+from collections import defaultdict
+from datetime import date, datetime
+from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
+from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_
 
-from app.models.project import Project
-from app.models.user import User
-from app.models.timesheet import Timesheet
-from app.models.work_log import WorkLog
 from app.models.enums import LeadOutcomeEnum
+from app.models.project import Project
+from app.models.timesheet import Timesheet
+from app.models.user import User
+from app.models.work_log import WorkLog
 from app.services.hourly_rate_service import HourlyRateService
 
 logger = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ class LaborCostExpenseService:
 
     def __init__(self, db: Session):
         self.db = db
-        self.hourly_rate_service = HourlyRateService(db)
+        self.hourly_rate_service = HourlyRateService()
 
     def identify_lost_projects(
         self,
@@ -158,7 +158,7 @@ class LaborCostExpenseService:
                 user_ts = next((ts for ts in timesheets if ts.user_id == user_id), None)
                 department_id = user_ts.department_id if user_ts else None
                 department_name = user_ts.department_name if user_ts else (user.department if user else None)
-                
+
                 expense = {
                     'project_id': project.id,
                     'project_code': project.project_code,
@@ -311,7 +311,7 @@ class LaborCostExpenseService:
                 if not dept_name:
                     ts = self.db.query(Timesheet).filter(Timesheet.department_id == dept_id).first()
                     dept_name = ts.department_name if ts and ts.department_name else f'Dept_{dept_id}'
-                
+
                 result.append({
                     'department_id': dept_id,
                     'department_name': dept_name,

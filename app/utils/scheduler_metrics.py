@@ -14,7 +14,7 @@ class SchedulerMetrics:
     def __init__(self, max_history_size: int = 1000):
         """
         Initialize metrics collector.
-        
+
         Args:
             max_history_size: Maximum number of duration samples to keep per job
         """
@@ -94,10 +94,10 @@ class SchedulerMetrics:
                 "max_duration_ms": None,
                 "sample_count": 0,
             }
-        
+
         sorted_history = sorted(history)
         count = len(sorted_history)
-        
+
         def percentile(data: List[float], p: float) -> float:
             """Calculate percentile value."""
             if not data:
@@ -108,7 +108,7 @@ class SchedulerMetrics:
             if f + 1 < len(data):
                 return data[f] + c * (data[f + 1] - data[f])
             return data[f]
-        
+
         return {
             "avg_duration_ms": sum(sorted_history) / count,
             "p50_duration_ms": percentile(sorted_history, 0.50),
@@ -122,7 +122,7 @@ class SchedulerMetrics:
     def get_statistics(self, job_id: str) -> Dict[str, Optional[float]]:
         """
         Calculate statistics for a job (avg, p50, p95, p99).
-        
+
         Returns:
             Dictionary with avg_duration_ms, p50_duration_ms, p95_duration_ms, p99_duration_ms
         """
@@ -135,11 +135,11 @@ class SchedulerMetrics:
         with self._lock:
             # Copy history data while holding lock
             history_snapshots = {
-                job_id: list(history) 
+                job_id: list(history)
                 for job_id, history in self._duration_history.items()
             }
             job_ids = set(self._data.keys()) | set(self._duration_history.keys())
-        
+
         # Calculate statistics outside lock
         return {
             job_id: self._calculate_statistics(history_snapshots.get(job_id, []))

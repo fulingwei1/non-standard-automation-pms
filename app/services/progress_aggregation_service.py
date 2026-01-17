@@ -6,15 +6,15 @@
 
 import logging
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
+from sqlalchemy import and_, case, func
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, case
 
-from app.models.task_center import TaskUnified
-from app.models.project import Project, ProjectStage
 from app.models.progress import ProgressLog
+from app.models.project import Project, ProjectStage
+from app.models.task_center import TaskUnified
 
 
 def aggregate_task_progress(db: Session, task_id: int) -> dict:
@@ -307,7 +307,7 @@ def get_project_progress_summary(db: Session, project_id: int) -> dict:
 class ProgressAggregationService:
     """
     项目进度聚合服务
-    
+
     提供基于任务数据的聚合能力，用于快速计算项目整体进度。
     前端和自动化测试都依赖该类，请保持接口稳定。
     """

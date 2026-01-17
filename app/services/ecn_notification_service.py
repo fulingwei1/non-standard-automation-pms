@@ -4,15 +4,16 @@ ECN通知服务
 功能：ECN相关通知的创建和发送
 """
 
-from typing import List, Optional, Dict, Any
 from datetime import datetime
-from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from typing import Any, Dict, List, Optional
 
+from sqlalchemy import or_
+from sqlalchemy.orm import Session
+
+from app.models.ecn import Ecn, EcnApproval, EcnEvaluation, EcnTask
 from app.models.notification import Notification
-from app.models.ecn import Ecn, EcnEvaluation, EcnApproval, EcnTask
-from app.models.user import User
 from app.models.organization import Department
+from app.models.user import User
 
 
 def _find_users_by_department(db: Session, department_name: str) -> List[User]:
@@ -229,7 +230,7 @@ def notify_evaluation_completed(
     if ecn.applicant_id:
         title = f"ECN评估完成：{ecn.ecn_no}"
         content = f"ECN {ecn.ecn_no} 的{evaluation.eval_dept}评估已完成。\n\n评估结论：{evaluation.eval_result}\n成本估算：¥{evaluation.cost_estimate or 0}\n工期估算：{evaluation.schedule_estimate or 0}天"
-        
+
         create_ecn_notification(
             db=db,
             user_id=ecn.applicant_id,
@@ -244,24 +245,24 @@ def notify_evaluation_completed(
                 "eval_result": evaluation.eval_result
             }
         )
-    
+
     # 抄送项目相关人员（如果ECN关联了项目）
     if ecn.project_id:
         from app.models.project import ProjectMember
-        
+
         # 查找项目成员（排除申请人，避免重复通知）
         project_members = db.query(ProjectMember).filter(
             ProjectMember.project_id == ecn.project_id,
             ProjectMember.is_active == True,
             ProjectMember.user_id != ecn.applicant_id
         ).all()
-        
+
         project_user_ids = [pm.user_id for pm in project_members]
-        
+
         if project_user_ids:
             title = f"ECN评估完成（抄送）：{ecn.ecn_no}"
             content = f"ECN {ecn.ecn_no} 的{evaluation.eval_dept}评估已完成。\n\n评估结论：{evaluation.eval_result}\n成本估算：¥{evaluation.cost_estimate or 0}\n工期估算：{evaluation.schedule_estimate or 0}天\n\n请关注项目变更影响。"
-            
+
             for user_id in project_user_ids:
                 create_ecn_notification(
                     db=db,
@@ -338,6 +339,8 @@ def notify_approval_assigned(
     if not approver:
         return
 
+    approver_ids = [approver_id]
+
     # 通知审批人员
     title = f"ECN审批任务分配：{ecn.ecn_no}"
     content = f"您有一个新的ECN审批任务：\n\nECN编号：{ecn.ecn_no}\nECN标题：{ecn.ecn_title}\n审批层级：第{approval.approval_level}级\n审批角色：{approval.approval_role}\n截止日期：{approval.due_date.strftime('%Y-%m-%d') if approval.due_date else '未设置'}\n\n请及时完成审批。"
@@ -361,7 +364,7 @@ def notify_approval_assigned(
             "due_date": approval.due_date.isoformat() if approval.due_date else None
         }
     )
-    
+
     # 抄送项目相关人员（如果ECN关联了项目，且审批人员不是项目成员）
     if ecn.project_id:
         from app.models.project import ProjectMember
@@ -419,12 +422,12 @@ def notify_approval_result(
     """
     result_text = "通过" if result == "APPROVED" else "驳回"
     priority = "HIGH" if result == "APPROVED" else "NORMAL"
-    
+
     # 通知申请人
     if ecn.applicant_id:
         title = f"ECN审批结果：{ecn.ecn_no}"
         content = f"ECN {ecn.ecn_no} 的第{approval.approval_level}级审批（{approval.approval_role}）{result_text}。\n\n审批意见：{approval.approval_opinion or '无'}"
-        
+
         create_ecn_notification(
             db=db,
             user_id=ecn.applicant_id,
@@ -440,24 +443,24 @@ def notify_approval_result(
                 "approval_result": result
             }
         )
-    
+
     # 抄送项目相关人员（如果ECN关联了项目）
     if ecn.project_id:
         from app.models.project import ProjectMember
-        
+
         # 查找项目成员（排除申请人，避免重复通知）
         project_members = db.query(ProjectMember).filter(
             ProjectMember.project_id == ecn.project_id,
             ProjectMember.is_active == True,
             ProjectMember.user_id != ecn.applicant_id
         ).all()
-        
+
         project_user_ids = [pm.user_id for pm in project_members]
-        
+
         if project_user_ids:
             title = f"ECN审批结果（抄送）：{ecn.ecn_no}"
             content = f"ECN {ecn.ecn_no} 的第{approval.approval_level}级审批（{approval.approval_role}）{result_text}。\n\n审批意见：{approval.approval_opinion or '无'}\n\n请关注项目变更影响。"
-            
+
             for user_id in project_user_ids:
                 create_ecn_notification(
                     db=db,
@@ -531,6 +534,8 @@ def notify_task_assigned(
     if not assignee:
         return
 
+    assignee_ids = [assignee_id]
+
     # 通知执行人员
     title = f"ECN执行任务分配：{ecn.ecn_no}"
     content = f"您有一个新的ECN执行任务：\n\nECN编号：{ecn.ecn_no}\nECN标题：{ecn.ecn_title}\n任务名称：{task.task_name}\n任务类型：{task.task_type}\n责任部门：{task.task_dept}\n计划完成：{task.planned_end.strftime('%Y-%m-%d') if task.planned_end else '未设置'}\n\n请及时开始执行。"
@@ -557,7 +562,7 @@ def notify_task_assigned(
             "planned_end": task.planned_end.isoformat() if task.planned_end else None
         }
     )
-    
+
     # 抄送项目相关人员（如果ECN关联了项目，且执行人员不是项目成员）
     if ecn.project_id:
         from app.models.project import ProjectMember
@@ -617,7 +622,7 @@ def notify_task_completed(
     if ecn.applicant_id:
         title = f"ECN执行任务完成：{ecn.ecn_no}"
         content = f"ECN {ecn.ecn_no} 的执行任务「{task.task_name}」已完成。\n\n完成说明：{task.completion_note or '无'}"
-        
+
         create_ecn_notification(
             db=db,
             user_id=ecn.applicant_id,
@@ -632,24 +637,24 @@ def notify_task_completed(
                 "task_name": task.task_name
             }
         )
-    
+
     # 抄送项目相关人员（如果ECN关联了项目）
     if ecn.project_id:
         from app.models.project import ProjectMember
-        
+
         # 查找项目成员（排除申请人，避免重复通知）
         project_members = db.query(ProjectMember).filter(
             ProjectMember.project_id == ecn.project_id,
             ProjectMember.is_active == True,
             ProjectMember.user_id != ecn.applicant_id
         ).all()
-        
+
         project_user_ids = [pm.user_id for pm in project_members]
-        
+
         if project_user_ids:
             title = f"ECN执行任务完成（抄送）：{ecn.ecn_no}"
             content = f"ECN {ecn.ecn_no} 的执行任务「{task.task_name}」已完成。\n\n完成说明：{task.completion_note or '无'}\n\n请关注项目变更执行情况。"
-            
+
             for user_id in project_user_ids:
                 create_ecn_notification(
                     db=db,
@@ -666,7 +671,7 @@ def notify_task_completed(
                         "is_cc": True  # 标记为抄送
                     }
                 )
-    
+
     db.commit()
 
 
@@ -682,7 +687,7 @@ def notify_ecn_submitted(
     if ecn.applicant_id:
         title = f"ECN已提交：{ecn.ecn_no}"
         content = f"您的ECN {ecn.ecn_no} 已成功提交，已进入评估流程。"
-        
+
         create_ecn_notification(
             db=db,
             user_id=ecn.applicant_id,
@@ -696,24 +701,24 @@ def notify_ecn_submitted(
                 "ecn_title": ecn.ecn_title
             }
         )
-    
+
     # 抄送项目相关人员（如果ECN关联了项目）
     if ecn.project_id:
         from app.models.project import ProjectMember
-        
+
         # 查找项目成员（排除申请人，避免重复通知）
         project_members = db.query(ProjectMember).filter(
             ProjectMember.project_id == ecn.project_id,
             ProjectMember.is_active == True,
             ProjectMember.user_id != ecn.applicant_id
         ).all()
-        
+
         project_user_ids = [pm.user_id for pm in project_members]
-        
+
         if project_user_ids:
             title = f"ECN已提交（抄送）：{ecn.ecn_no}"
             content = f"项目相关的ECN {ecn.ecn_no} 已提交，已进入评估流程。\n\nECN标题：{ecn.ecn_title}\n变更类型：{ecn.ecn_type}\n变更原因：{ecn.change_reason}\n\n请关注项目变更情况。"
-            
+
             for user_id in project_user_ids:
                 create_ecn_notification(
                     db=db,
@@ -729,7 +734,7 @@ def notify_ecn_submitted(
                         "is_cc": True  # 标记为抄送
                     }
                 )
-    
+
     db.commit()
 
 
@@ -744,9 +749,9 @@ def notify_overdue_alert(
     for user_id in user_ids:
         title = f"ECN超时提醒：{alert.get('ecn_no', '')}"
         content = alert.get('message', '')
-        
+
         priority = "URGENT" if alert.get('overdue_days', 0) > 7 else "HIGH"
-        
+
         create_ecn_notification(
             db=db,
             user_id=user_id,
@@ -761,6 +766,5 @@ def notify_overdue_alert(
                 "ecn_no": alert.get('ecn_no')
             }
         )
-    
-    db.commit()
 
+    db.commit()

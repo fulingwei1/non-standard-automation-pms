@@ -6,13 +6,18 @@
 
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Dict, List, Optional, Any
-from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, desc
+from typing import Any, Dict, List, Optional
 
-from app.models.presale import PresaleSolution, PresaleSupportTicket, PresaleSolutionTemplate
-from app.models.sales import Contract
+from sqlalchemy import and_, desc, func
+from sqlalchemy.orm import Session
+
 from app.models.performance import PerformancePeriod
+from app.models.presale import (
+    PresaleSolution,
+    PresaleSolutionTemplate,
+    PresaleSupportTicket,
+)
+from app.models.sales import Contract
 from app.models.user import User
 
 
@@ -156,8 +161,10 @@ class SolutionEngineerBonusService:
         Returns:
             得分详情
         """
-        from app.services.engineer_performance_service import EngineerPerformanceService
-        
+        from app.services.engineer_performance.engineer_performance_service import (
+            EngineerPerformanceService,
+        )
+
         period = self.db.query(PerformancePeriod).filter(
             PerformancePeriod.id == period_id
         ).first()
@@ -181,7 +188,7 @@ class SolutionEngineerBonusService:
         for solution in solutions:
             if solution.review_status == 'APPROVED':
                 approved_count += 1
-            
+
             if solution.opportunity_id:
                 contract = self.db.query(Contract).filter(
                     Contract.opportunity_id == solution.opportunity_id,
@@ -189,7 +196,7 @@ class SolutionEngineerBonusService:
                 ).first()
                 if contract:
                     won_count += 1
-            
+
             if solution.ticket_id:
                 ticket = self.db.query(PresaleSupportTicket).filter(
                     PresaleSupportTicket.id == solution.ticket_id

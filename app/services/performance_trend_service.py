@@ -6,12 +6,13 @@
 
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Dict, List, Optional, Any, Tuple
-from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_, desc
+from typing import Any, Dict, List, Optional, Tuple
 
-from app.models.performance import PerformancePeriod, PerformanceResult
+from sqlalchemy import and_, desc, func, or_
+from sqlalchemy.orm import Session
+
 from app.models.engineer_performance import EngineerProfile
+from app.models.performance import PerformancePeriod, PerformanceResult
 
 
 class PerformanceTrendService:
@@ -83,7 +84,7 @@ class PerformanceTrendService:
             trend_data['total_scores'].append(float(result.total_score or 0))
             trend_data['ranks'].append(result.company_rank or 0)
             trend_data['levels'].append(result.level or 'D')
-            
+
             # 五维得分（从indicator_scores获取，如果没有则使用默认值）
             if result.indicator_scores:
                 scores = result.indicator_scores
@@ -104,10 +105,10 @@ class PerformanceTrendService:
         if len(trend_data['total_scores']) >= 2:
             recent_scores = trend_data['total_scores'][-3:]  # 最近3个周期
             earlier_scores = trend_data['total_scores'][:3]  # 前3个周期
-            
+
             recent_avg = sum(recent_scores) / len(recent_scores) if recent_scores else 0
             earlier_avg = sum(earlier_scores) / len(earlier_scores) if earlier_scores else 0
-            
+
             trend_data['trend_analysis'] = {
                 'score_trend': 'improving' if recent_avg > earlier_avg else 'declining' if recent_avg < earlier_avg else 'stable',
                 'score_change': round(recent_avg - earlier_avg, 2),
@@ -177,13 +178,13 @@ class PerformanceTrendService:
             部门趋势数据
         """
         # 获取部门所有工程师
-        from app.models.user import User
         from app.models.organization import Employee
-        
+        from app.models.user import User
+
         employees = self.db.query(Employee).filter(
             Employee.department_id == department_id
         ).all()
-        
+
         employee_ids = [e.id for e in employees]
         user_ids = [
             u.id for u in self.db.query(User).filter(
@@ -256,7 +257,7 @@ class PerformanceTrendService:
             'period_id': period_id,
             'departments': []
         }
-        
+
         for dept_id in department_ids:
             dept_trend = self.get_department_trend(dept_id, periods=6)
             if dept_trend.get('has_data'):
@@ -264,17 +265,17 @@ class PerformanceTrendService:
                     'department_id': dept_id,
                     'trend_data': dept_trend
                 })
-        
+
         return comparison
 
     def _calculate_trend(self, scores: List[float]) -> str:
         """计算趋势方向"""
         if len(scores) < 2:
             return 'stable'
-        
+
         recent_avg = sum(scores[-3:]) / min(3, len(scores))
         earlier_avg = sum(scores[:3]) / min(3, len(scores))
-        
+
         if recent_avg > earlier_avg + 2:
             return 'improving'
         elif recent_avg < earlier_avg - 2:

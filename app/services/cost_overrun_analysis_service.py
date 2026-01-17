@@ -5,18 +5,18 @@
 分析成本超支原因、归责和影响
 """
 
-from typing import Dict, List, Optional, Any
-from datetime import datetime, date, timedelta
-from decimal import Decimal
-from collections import defaultdict
 import logging
+from collections import defaultdict
+from datetime import date, datetime, timedelta
+from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
+from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_, desc
 
-from app.models.project import Project, ProjectCost, FinancialProjectCost
-from app.models.user import User
+from app.models.project import FinancialProjectCost, Project, ProjectCost
 from app.models.timesheet import Timesheet
+from app.models.user import User
 from app.services.hourly_rate_service import HourlyRateService
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ class CostOverrunAnalysisService:
 
     def __init__(self, db: Session):
         self.db = db
-        self.hourly_rate_service = HourlyRateService(db)
+        self.hourly_rate_service = HourlyRateService()
 
     def analyze_reasons(
         self,
@@ -250,7 +250,7 @@ class CostOverrunAnalysisService:
         """分析单个项目的成本超支"""
         # 获取项目预算
         budget = project.budget or Decimal('0')
-        
+
         # 计算实际成本
         actual_cost = self._calculate_actual_cost(project.id)
 
@@ -301,13 +301,13 @@ class CostOverrunAnalysisService:
         """计算项目实际成本"""
         # 物料成本
         material_cost = self._calculate_material_cost(project_id)
-        
+
         # 工时成本
         labor_cost = self._calculate_labor_cost(project_id)
-        
+
         # 外协成本
         outsourcing_cost = self._calculate_outsourcing_cost(project_id)
-        
+
         # 其他成本
         other_costs = self.db.query(func.sum(FinancialProjectCost.amount)).filter(
             FinancialProjectCost.project_id == project_id

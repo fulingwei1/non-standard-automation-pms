@@ -4,7 +4,8 @@
 用于生成用户名和密码
 """
 from typing import Optional
-from pypinyin import lazy_pinyin, Style
+
+from pypinyin import Style, lazy_pinyin
 from sqlalchemy.orm import Session
 
 
@@ -95,6 +96,7 @@ def generate_initial_password(username: str = None, id_card: str = None, employe
         16字符的安全随机密码，如 "Xa3b_cD5eF2gH7jK"
     """
     import secrets
+
     # 生成 12 字节的随机数据，base64url 编码后为 16 字符
     return secrets.token_urlsafe(12)
 

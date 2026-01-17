@@ -3,9 +3,10 @@
 项目关联关系服务
 """
 
-from typing import Dict, Any, List, Optional
-from sqlalchemy.orm import Session
+from typing import Any, Dict, List, Optional
+
 from sqlalchemy import func
+from sqlalchemy.orm import Session
 
 from app.models.project import Project
 from app.models.shortage import MaterialTransfer
@@ -18,21 +19,21 @@ def get_material_transfer_relations(
 ) -> List[Dict[str, Any]]:
     """
     获取物料转移关联关系
-    
+
     Returns:
         List[Dict]: 关联关系列表
     """
     relations = []
-    
+
     if relation_type and relation_type != 'MATERIAL_TRANSFER':
         return relations
-    
+
     # 出库转移
     outbound_transfers = db.query(MaterialTransfer).filter(
         MaterialTransfer.from_project_id == project_id,
         MaterialTransfer.status.in_(['APPROVED', 'EXECUTED'])
     ).all()
-    
+
     for transfer in outbound_transfers:
         if transfer.to_project_id:
             to_project = db.query(Project).filter(Project.id == transfer.to_project_id).first()
@@ -50,13 +51,13 @@ def get_material_transfer_relations(
                     },
                     'strength': 'MEDIUM',
                 })
-    
+
     # 入库转移
     inbound_transfers = db.query(MaterialTransfer).filter(
         MaterialTransfer.to_project_id == project_id,
         MaterialTransfer.status.in_(['APPROVED', 'EXECUTED'])
     ).all()
-    
+
     for transfer in inbound_transfers:
         if transfer.from_project_id:
             from_project = db.query(Project).filter(Project.id == transfer.from_project_id).first()
@@ -74,7 +75,7 @@ def get_material_transfer_relations(
                     },
                     'strength': 'MEDIUM',
                 })
-    
+
     return relations
 
 
@@ -85,27 +86,27 @@ def get_shared_resource_relations(
 ) -> List[Dict[str, Any]]:
     """
     获取共享资源关联关系
-    
+
     Returns:
         List[Dict]: 关联关系列表
     """
     relations = []
-    
+
     if relation_type and relation_type != 'SHARED_RESOURCE':
         return relations
-    
+
     try:
         from app.models.pmo import PmoResourceAllocation
-        
+
         project_resources = db.query(PmoResourceAllocation).filter(
             PmoResourceAllocation.project_id == project_id,
             PmoResourceAllocation.status != 'CANCELLED'
         ).all()
-        
+
         resource_ids = [alloc.resource_id for alloc in project_resources]
         if not resource_ids:
             return relations
-        
+
         shared_resource_projects = (
             db.query(PmoResourceAllocation.project_id, func.count(PmoResourceAllocation.id).label('shared_count'))
             .filter(
@@ -116,7 +117,7 @@ def get_shared_resource_relations(
             .group_by(PmoResourceAllocation.project_id)
             .all()
         )
-        
+
         for shared_project_id, shared_count in shared_resource_projects:
             shared_project = db.query(Project).filter(Project.id == shared_project_id).first()
             if shared_project:
@@ -129,7 +130,7 @@ def get_shared_resource_relations(
                     )
                     .all()
                 )
-                
+
                 relations.append({
                     'type': 'SHARED_RESOURCE',
                     'related_project_id': shared_project_id,
@@ -151,7 +152,7 @@ def get_shared_resource_relations(
     except ImportError:
         # 如果模型不存在，跳过
         pass
-    
+
     return relations
 
 
@@ -163,24 +164,24 @@ def get_shared_customer_relations(
 ) -> List[Dict[str, Any]]:
     """
     获取共享客户关联关系
-    
+
     Returns:
         List[Dict]: 关联关系列表
     """
     relations = []
-    
+
     if relation_type and relation_type != 'SHARED_CUSTOMER':
         return relations
-    
+
     if not project.customer_id:
         return relations
-    
+
     customer_projects = db.query(Project).filter(
         Project.customer_id == project.customer_id,
         Project.id != project_id,
         Project.is_active == True
     ).all()
-    
+
     for customer_project in customer_projects:
         relations.append({
             'type': 'SHARED_CUSTOMER',
@@ -193,7 +194,7 @@ def get_shared_customer_relations(
             },
             'strength': 'LOW',
         })
-    
+
     return relations
 
 
@@ -202,7 +203,7 @@ def calculate_relation_statistics(
 ) -> Dict[str, Any]:
     """
     计算关联关系统计信息
-    
+
     Returns:
         Dict[str, Any]: 统计信息
     """
@@ -211,15 +212,15 @@ def calculate_relation_statistics(
         'by_type': {},
         'by_strength': {'HIGH': 0, 'MEDIUM': 0, 'LOW': 0}
     }
-    
+
     for relation in relations:
         rel_type = relation['type']
         strength = relation['strength']
-        
+
         if rel_type not in relation_stats['by_type']:
             relation_stats['by_type'][rel_type] = 0
         relation_stats['by_type'][rel_type] += 1
-        
+
         relation_stats['by_strength'][strength] += 1
-    
+
     return relation_stats

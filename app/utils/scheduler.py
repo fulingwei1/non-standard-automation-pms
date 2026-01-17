@@ -7,13 +7,14 @@
 import json
 import logging
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from importlib import import_module
-from apscheduler.schedulers.background import BackgroundScheduler
+from typing import Any, Callable, Dict, Optional
+
+from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_EXECUTED
 from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.jobstores.memory import MemoryJobStore
-from apscheduler.events import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR
-from typing import Any, Callable, Dict, Optional
+from apscheduler.schedulers.background import BackgroundScheduler
 
 from app.core.config import settings
 from app.utils.scheduler_config import SCHEDULER_TASKS
@@ -54,7 +55,7 @@ def job_listener(event):
         "job_id": event.job_id,
         "jobstore": event.jobstore,
         "scheduled_time": event.scheduled_run_time.isoformat() if event.scheduled_run_time else None,
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
     if event.exception:
         payload["status"] = "failed"
@@ -87,7 +88,7 @@ def _wrap_job_callable(func: Callable[..., Any], task: Dict[str, Any]) -> Callab
                 {
                     **task_context,
                     "event": "job_run_start",
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                 },
                 ensure_ascii=False,
             )
@@ -102,12 +103,12 @@ def _wrap_job_callable(func: Callable[..., Any], task: Dict[str, Any]) -> Callab
                         **task_context,
                         "event": "job_run_success",
                         "duration_ms": duration_ms,
-                        "timestamp": datetime.utcnow().isoformat(),
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
                     },
                     ensure_ascii=False,
                 )
             )
-            record_job_success(task["id"], duration_ms, datetime.utcnow().isoformat())
+            record_job_success(task["id"], duration_ms, datetime.now(timezone.utc).isoformat())
             return result
         except Exception as exc:
             duration_ms = round((time.time() - start_time) * 1000, 2)
@@ -118,13 +119,13 @@ def _wrap_job_callable(func: Callable[..., Any], task: Dict[str, Any]) -> Callab
                         **task_context,
                         "event": "job_run_failed",
                         "duration_ms": duration_ms,
-                        "timestamp": datetime.utcnow().isoformat(),
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
                         "error": str(exc),
                     },
                     ensure_ascii=False,
                 )
             )
-            record_job_failure(task["id"], duration_ms, datetime.utcnow().isoformat())
+            record_job_failure(task["id"], duration_ms, datetime.now(timezone.utc).isoformat())
             raise
 
     return _job_wrapper
@@ -135,13 +136,13 @@ def _load_task_config_from_db(task_id: str) -> Optional[Dict[str, Any]]:
     try:
         from app.models.base import get_db_session
         from app.models.scheduler_config import SchedulerTaskConfig
-        
+
         with get_db_session() as db:
             config = db.query(SchedulerTaskConfig).filter(
                 SchedulerTaskConfig.task_id == task_id,
                 SchedulerTaskConfig.is_enabled == True
             ).first()
-            
+
             if config:
                 # JSONType会自动处理JSON序列化/反序列化
                 cron_config = config.cron_config if config.cron_config else {}
@@ -161,13 +162,13 @@ def init_scheduler():
 
     job_count = 0
     db_config_count = 0
-    
+
     for task in SCHEDULER_TASKS:
         task_id = task["id"]
-        
+
         # 优先从数据库读取配置
         db_config = _load_task_config_from_db(task_id)
-        
+
         if db_config:
             # 使用数据库配置
             if not db_config.get("enabled", True):
@@ -181,7 +182,7 @@ def init_scheduler():
                 logger.info(f"跳过未启用的调度任务（默认配置）：{task_id}")
                 continue
             cron_config = task.get("cron", {})
-        
+
         try:
             base_callable = _resolve_callable(task)
             job_callable = _wrap_job_callable(base_callable, task)

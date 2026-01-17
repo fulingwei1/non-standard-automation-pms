@@ -4,13 +4,13 @@
 包含：逾期问题检查、阻塞问题预警、超时问题升级、问题统计快照
 """
 import logging
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 
-from app.models.base import get_db_session
-from app.models.project import Project
-from app.models.issue import Issue, IssueStatisticsSnapshot
 from app.models.alert import AlertRecord, AlertRule
-from app.models.enums import AlertLevelEnum, AlertStatusEnum, AlertRuleTypeEnum
+from app.models.base import get_db_session
+from app.models.enums import AlertLevelEnum, AlertRuleTypeEnum, AlertStatusEnum
+from app.models.issue import Issue, IssueStatisticsSnapshot
+from app.models.project import Project
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ def check_overdue_issues():
     """
     try:
         with get_db_session() as db:
-            from app.services.sales_reminder_service import create_notification
+            from app.services.sales_reminder import create_notification
 
             today = date.today()
 
@@ -260,17 +260,17 @@ def daily_issue_statistics_snapshot():
     每天凌晨3点执行，生成问题统计快照并保存到数据库
     """
     from app.services.issue_statistics_service import (
+        build_distribution_data,
+        calculate_avg_resolve_time,
         check_existing_snapshot,
-        count_issues_by_status,
-        count_issues_by_severity,
-        count_issues_by_priority,
-        count_issues_by_type,
         count_blocking_and_overdue_issues,
         count_issues_by_category,
+        count_issues_by_priority,
+        count_issues_by_severity,
+        count_issues_by_status,
+        count_issues_by_type,
         count_today_issues,
-        calculate_avg_resolve_time,
-        build_distribution_data,
-        create_snapshot_record
+        create_snapshot_record,
     )
 
     try:

@@ -5,18 +5,21 @@
 """
 
 from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
+from sqlalchemy import and_, case, extract, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_, case, extract
 
-from app.models.purchase import (
-    PurchaseOrder, PurchaseOrderItem, GoodsReceipt,
-    GoodsReceiptItem, PurchaseRequest
-)
-from app.models.material import Material, MaterialSupplier, Supplier, MaterialCategory
+from app.models.material import Material, MaterialCategory, MaterialSupplier, Supplier
 from app.models.project import Project
+from app.models.purchase import (
+    GoodsReceipt,
+    GoodsReceiptItem,
+    PurchaseOrder,
+    PurchaseOrderItem,
+    PurchaseRequest,
+)
 
 
 class ProcurementAnalysisService:

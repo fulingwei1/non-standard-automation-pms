@@ -6,15 +6,14 @@
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional, Any
-from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_, desc
+from typing import Any, Dict, List, Optional
 
-from app.models.performance import (
-    PerformanceResult, PerformanceAdjustmentHistory
-)
-from app.models.user import User
+from sqlalchemy import and_, desc, func, or_
+from sqlalchemy.orm import Session
+
 from app.models.organization import Department
+from app.models.performance import PerformanceAdjustmentHistory, PerformanceResult
+from app.models.user import User
 
 
 class ManagerEvaluationService:
@@ -93,7 +92,7 @@ class ManagerEvaluationService:
         # 调整理由必填验证（至少10个字符）
         if not adjustment_reason or not adjustment_reason.strip():
             raise ValueError("调整理由不能为空，请详细说明调整原因")
-        
+
         if len(adjustment_reason.strip()) < 10:
             raise ValueError("调整理由至少需要10个字符，请详细说明调整原因")
 
@@ -195,12 +194,12 @@ class ManagerEvaluationService:
         histories = self.db.query(PerformanceAdjustmentHistory).filter(
             PerformanceAdjustmentHistory.result_id == result_id
         ).order_by(desc(PerformanceAdjustmentHistory.adjusted_at)).all()
-        
+
         result = []
         for history in histories:
             # 获取调整人信息
             adjuster = self.db.query(User).filter(User.id == history.adjusted_by).first()
-            
+
             result.append({
                 'id': history.id,
                 'result_id': history.result_id,
@@ -222,7 +221,7 @@ class ManagerEvaluationService:
                     'company': (history.adjusted_company_rank - history.original_company_rank) if history.adjusted_company_rank and history.original_company_rank else 0
                 }
             })
-        
+
         return result
 
     def get_engineers_for_evaluation(
@@ -241,7 +240,7 @@ class ManagerEvaluationService:
             可评价的工程师列表
         """
         results = self.get_manager_evaluation_tasks(manager_id, period_id)
-        
+
         engineers = []
         for result in results:
             engineer = self.db.query(User).filter(User.id == result.user_id).first()
@@ -258,7 +257,7 @@ class ManagerEvaluationService:
                     'is_adjusted': result.is_adjusted,
                     'adjustment_reason': result.adjustment_reason
                 })
-        
+
         return engineers
 
     def get_manager_evaluation_tasks(

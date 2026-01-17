@@ -4,8 +4,9 @@
 记录权限相关的操作日志
 """
 
-from typing import Optional, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, Optional
+
 from sqlalchemy.orm import Session
 
 from app.models.user import PermissionAudit, User
@@ -22,7 +23,7 @@ class PermissionAuditService:
     ACTION_USER_DEACTIVATED = "USER_DEACTIVATED"
     ACTION_USER_ROLE_ASSIGNED = "USER_ROLE_ASSIGNED"
     ACTION_USER_ROLE_REVOKED = "USER_ROLE_REVOKED"
-    
+
     ACTION_ROLE_CREATED = "ROLE_CREATED"
     ACTION_ROLE_UPDATED = "ROLE_UPDATED"
     ACTION_ROLE_DELETED = "ROLE_DELETED"
@@ -30,7 +31,7 @@ class PermissionAuditService:
     ACTION_ROLE_DEACTIVATED = "ROLE_DEACTIVATED"
     ACTION_ROLE_PERMISSION_ASSIGNED = "ROLE_PERMISSION_ASSIGNED"
     ACTION_ROLE_PERMISSION_REVOKED = "ROLE_PERMISSION_REVOKED"
-    
+
     ACTION_PERMISSION_CREATED = "PERMISSION_CREATED"
     ACTION_PERMISSION_UPDATED = "PERMISSION_UPDATED"
     ACTION_PERMISSION_DELETED = "PERMISSION_DELETED"
@@ -48,7 +49,7 @@ class PermissionAuditService:
     ) -> PermissionAudit:
         """
         记录审计日志
-        
+
         Args:
             db: 数据库会话
             operator_id: 操作人ID
@@ -58,12 +59,12 @@ class PermissionAuditService:
             detail: 详细信息（字典，会被序列化为JSON）
             ip_address: 操作IP地址
             user_agent: 用户代理
-        
+
         Returns:
             创建的审计记录
         """
         import json
-        
+
         audit = PermissionAudit(
             operator_id=operator_id,
             action=action,
@@ -73,11 +74,11 @@ class PermissionAuditService:
             ip_address=ip_address,
             user_agent=user_agent
         )
-        
+
         db.add(audit)
         db.commit()
         db.refresh(audit)
-        
+
         return audit
 
     @staticmethod

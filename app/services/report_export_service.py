@@ -4,27 +4,35 @@
 支持 Excel、PDF、CSV 格式导出
 """
 
-import os
+import csv
 import json
-from datetime import datetime, date
-from typing import Any, Dict, List, Optional
+import logging
+import os
+from datetime import date, datetime
 from decimal import Decimal
 from io import BytesIO
+from typing import Any, Dict, List, Optional
 
 from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
+from openpyxl.chart import BarChart, LineChart, PieChart, Reference
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
-from openpyxl.chart import BarChart, PieChart, LineChart, Reference
-
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import mm, cm
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import cm, mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.platypus import (
+    Image,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+    Table,
+    TableStyle,
+)
 
-import csv
+logger = logging.getLogger(__name__)
 
 
 class ReportExportService:
@@ -49,14 +57,15 @@ class ReportExportService:
         for font_path in font_paths:
             if os.path.exists(font_path):
                 try:
-                    pdfmetrics.registerFont(TTFont('ChineseFont', font_path))
-                    self.chinese_font = 'ChineseFont'
-                    return
+                    pdfmetrics.registerFont(TTFont("ChineseFont", font_path))
                 except Exception:
                     # Font registration may fail due to IOError, TTFError, etc.
-                    continue
+                    logger.debug("注册中文字体失败: %s", font_path, exc_info=True)
+                else:
+                    self.chinese_font = "ChineseFont"
+                    return
 
-        self.chinese_font = 'Helvetica'
+        self.chinese_font = "Helvetica"
 
     def export_to_excel(
         self,

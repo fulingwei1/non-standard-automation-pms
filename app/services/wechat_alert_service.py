@@ -10,17 +10,22 @@ from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 from datetime import datetime, timedelta
+
 from sqlalchemy.orm import Session
 
 from app.models import (
-    ShortageDetail, MaterialReadiness, Project, Machine,
-    ShortageAlertRule, User
+    Machine,
+    MaterialReadiness,
+    Project,
+    ShortageAlertRule,
+    ShortageDetail,
+    User,
 )
 
 
 class WeChatAlertService:
     """企业微信预警消息服务"""
-    
+
     @classmethod
     def send_shortage_alert(
         cls,
@@ -30,7 +35,7 @@ class WeChatAlertService:
     ) -> bool:
         """
         发送缺料预警消息到企业微信
-        
+
         Args:
             db: 数据库会话
             shortage_detail: 缺料明细
@@ -40,43 +45,44 @@ class WeChatAlertService:
         readiness = db.query(MaterialReadiness).filter(
             MaterialReadiness.id == shortage_detail.readiness_id
         ).first()
-        
+
         if not readiness:
             return False
-        
+
         project = db.query(Project).filter(Project.id == readiness.project_id).first()
         if not project:
             return False
-        
+
         machine = None
         if readiness.machine_id:
             machine = db.query(Machine).filter(Machine.id == readiness.machine_id).first()
-        
+
         # 获取预警规则
         rule = db.query(ShortageAlertRule).filter(
             ShortageAlertRule.alert_level == alert_level,
             ShortageAlertRule.is_active == True
         ).first()
-        
+
         # 构建消息
         message = cls._build_alert_message(
-            shortage_detail, readiness, project, machine, alert_level, rule
+            db, shortage_detail, readiness, project, machine, alert_level, rule
         )
-        
+
         # 获取通知人员
         notify_users = cls._get_notify_users(db, rule, project)
-        
+
         # 发送消息
         success_count = 0
         for user in notify_users:
             if cls._send_wechat_message(user, message):
                 success_count += 1
-        
+
         return success_count > 0
-    
+
     @classmethod
     def _build_alert_message(
         cls,
+        db: Session,
         shortage: ShortageDetail,
         readiness: MaterialReadiness,
         project: Project,
@@ -86,7 +92,7 @@ class WeChatAlertService:
     ) -> Dict:
         """
         构建企业微信卡片消息
-        
+
         根据设计文档7.4.1的企业微信消息模板
         """
         # 预警级别配置
@@ -112,18 +118,18 @@ class WeChatAlertService:
                 'icon': 'ℹ️'
             }
         }
-        
+
         config = level_config.get(alert_level, level_config['L4'])
-        
+
         # 计算预计延误天数
         delay_days = 0
         if shortage.expected_arrival and project.planned_start_date:
             delay_days = (shortage.expected_arrival - project.planned_start_date).days
-        
+
         # 获取当前可做到的阶段
         stage_rates = readiness.stage_kit_rates or {}
         current_stage = readiness.current_workable_stage or '未开始'
-        
+
         # 构建卡片消息
         message = {
             "msgtype": "template_card",
@@ -176,7 +182,7 @@ class WeChatAlertService:
                 }
             }
         }
-        
+
         # 如果是L1级别，添加更多信息
         if alert_level == 'L1':
             # 获取所有阻塞物料
@@ -186,16 +192,16 @@ class WeChatAlertService:
                 SD.is_blocking == True,
                 SD.shortage_qty > 0
             ).limit(5).all()
-            
+
             if len(all_blocking) > 1:
                 blocking_list = "\n".join([
                     f"• {item.material_name} 缺{float(item.shortage_qty)}个"
                     for item in all_blocking[:3]
                 ])
                 message["template_card"]["emphasis_content"]["desc"] = blocking_list
-        
+
         return message
-    
+
     @classmethod
     def _get_notify_users(
         cls,
@@ -205,11 +211,11 @@ class WeChatAlertService:
     ) -> List[User]:
         """
         获取需要通知的用户列表
-        
+
         根据预警规则配置的通知角色获取用户
         """
-        from app.models import User, Role, UserRole
-        
+        from app.models import Role, User, UserRole
+
         if not rule or not rule.notify_roles:
             # 默认通知项目负责人和PMC负责人
             users = []
@@ -218,16 +224,16 @@ class WeChatAlertService:
                 if pm:
                     users.append(pm)
             return users
-        
+
         # 解析通知角色（JSON格式）
         try:
             notify_roles = json.loads(rule.notify_roles) if isinstance(rule.notify_roles, str) else rule.notify_roles
         except (json.JSONDecodeError, TypeError):
             notify_roles = []
-        
+
         if not notify_roles:
             return []
-        
+
         # 根据角色获取用户
         users = []
         for role_code in notify_roles:
@@ -238,24 +244,24 @@ class WeChatAlertService:
                     user = db.query(User).filter(User.id == ur.user_id).first()
                     if user and user not in users:
                         users.append(user)
-        
+
         return users
-    
+
     @classmethod
     def _send_wechat_message(cls, user: User, message: Dict) -> bool:
         """
         发送企业微信消息
-        
+
         使用WeChatClient发送消息
         """
-        from app.utils.wechat_client import WeChatClient
         from app.core.config import settings
-        
+        from app.utils.wechat_client import WeChatClient
+
         # 检查企业微信是否启用
         if not settings.WECHAT_ENABLED:
             logger.debug("企业微信功能未启用，跳过发送")
             return False
-        
+
         # 获取用户的企业微信ID
         wechat_userid = getattr(user, 'wechat_userid', None)
         if not wechat_userid:
@@ -264,24 +270,24 @@ class WeChatAlertService:
             if not wechat_userid:
                 logger.debug(f"用户 {user.id} 未绑定企业微信ID，跳过发送")
                 return False
-        
+
         try:
             # 创建企业微信客户端
             client = WeChatClient()
-            
+
             # 发送消息
             if message.get("msgtype") == "template_card":
                 success = client.send_template_card([wechat_userid], message["template_card"])
             else:
                 success = client.send_message([wechat_userid], message)
-            
+
             if success:
                 logger.info(f"企业微信消息发送成功: {user.username} (wechat_userid: {wechat_userid})")
             else:
                 logger.warning(f"企业微信消息发送失败: {user.username}")
-            
+
             return success
-            
+
         except ValueError as e:
             # 配置不完整
             logger.warning(f"企业微信配置不完整: {e}")
@@ -289,7 +295,7 @@ class WeChatAlertService:
         except Exception as e:
             logger.error(f"企业微信发送消息失败: {user.username}, 错误: {e}")
             return False
-    
+
     @classmethod
     def batch_send_alerts(
         cls,
@@ -298,22 +304,22 @@ class WeChatAlertService:
     ) -> Dict:
         """
         批量发送缺料预警
-        
+
         返回发送统计
         """
         query = db.query(ShortageDetail).filter(
             ShortageDetail.shortage_qty > 0,
             ShortageDetail.alert_level.isnot(None)
         )
-        
+
         if alert_level:
             query = query.filter(ShortageDetail.alert_level == alert_level)
-        
+
         shortages = query.all()
-        
+
         success_count = 0
         fail_count = 0
-        
+
         for shortage in shortages:
             try:
                 if cls.send_shortage_alert(db, shortage, shortage.alert_level):
@@ -323,7 +329,7 @@ class WeChatAlertService:
             except Exception as e:
                 logger.error(f"企业微信发送预警失败: {e}")
                 fail_count += 1
-        
+
         return {
             "total": len(shortages),
             "success": success_count,

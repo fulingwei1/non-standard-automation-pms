@@ -3,14 +3,18 @@
 齐套分析服务
 """
 
-from typing import List, Dict, Any, Optional, Tuple
+import logging
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any, Dict, List, Optional, Tuple
+
 from sqlalchemy.orm import Session
 
-from app.models.project import Project, Machine
-from app.models.material import BomHeader, BomItem, Material
 from app.models.assembly_kit import AssemblyStage, BomItemAssemblyAttrs
+from app.models.material import BomHeader, BomItem, Material
+from app.models.project import Machine, Project
+
+logger = logging.getLogger(__name__)
 
 
 def validate_analysis_inputs(
@@ -21,7 +25,7 @@ def validate_analysis_inputs(
 ) -> Tuple[Project, BomHeader, Optional[Machine]]:
     """
     验证齐套分析输入参数
-    
+
     Returns:
         Tuple[Project, BomHeader, Optional[Machine]]: 验证后的项目、BOM和机台对象
     """
@@ -44,7 +48,7 @@ def validate_analysis_inputs(
         if not machine:
             from fastapi import HTTPException
             raise HTTPException(status_code=404, detail="机台不存在")
-    
+
     return project, bom, machine
 
 
@@ -53,7 +57,7 @@ def initialize_stage_results(
 ) -> Dict[str, Dict[str, Any]]:
     """
     初始化阶段统计结果
-    
+
     Returns:
         dict: 阶段代码到统计数据的映射
     """
@@ -79,7 +83,7 @@ def analyze_bom_item(
 ) -> Optional[Dict[str, Any]]:
     """
     分析单个BOM物料项
-    
+
     Returns:
         Optional[Dict]: 缺料明细（如果有缺料），否则返回None
     """
@@ -129,14 +133,14 @@ def analyze_bom_item(
         days_to_required = 7  # 默认7天
         if bom_item.required_date:
             days_to_required = (bom_item.required_date - check_date).days
-        
+
         # 导入 determine_alert_level 函数
         from app.api.v1.endpoints.assembly_kit import determine_alert_level
         alert_level = determine_alert_level(db, is_blocking, shortage_rate, days_to_required)
-        
+
         # 获取预计到货日期（从采购订单）
         expected_arrival = get_expected_arrival_date(db, material.id)
-        
+
         return {
             "bom_item_id": bom_item.id,
             "material_id": material.id,
@@ -155,7 +159,7 @@ def analyze_bom_item(
             "expected_arrival": expected_arrival,
             "required_date": bom_item.required_date
         }
-    
+
     return None
 
 
@@ -165,12 +169,12 @@ def get_expected_arrival_date(
 ) -> Optional[date]:
     """
     获取物料的预计到货日期（从采购订单）
-    
+
     Returns:
         Optional[date]: 预计到货日期
     """
     try:
-        from app.models import PurchaseOrderItem, PurchaseOrder
+        from app.models import PurchaseOrder, PurchaseOrderItem
         po_item = db.query(PurchaseOrderItem).join(
             PurchaseOrder, PurchaseOrderItem.po_id == PurchaseOrder.id
         ).filter(
@@ -178,12 +182,12 @@ def get_expected_arrival_date(
             PurchaseOrder.status.in_(['approved', 'partial_received']),
             PurchaseOrder.promised_date.isnot(None)
         ).order_by(PurchaseOrder.promised_date.asc()).first()
-        
+
         if po_item and po_item.order and po_item.order.promised_date:
             return po_item.order.promised_date
     except Exception:
-        pass
-    
+        logger.debug("获取物料预计到货日期失败，已忽略", exc_info=True)
+
     return None
 
 
@@ -194,7 +198,7 @@ def calculate_stage_kit_rates(
 ) -> Tuple[List[Dict[str, Any]], bool, Optional[str], Optional[str], Dict[str, int], List[Dict[str, Any]]]:
     """
     计算各阶段齐套率和是否可开始
-    
+
     Returns:
         Tuple: (阶段齐套率列表, 是否可开始, 第一个阻塞阶段, 当前可工作阶段, 整体统计, 所有阻塞物料)
     """
@@ -210,9 +214,9 @@ def calculate_stage_kit_rates(
 
     for stage in stages:
         stats = stage_results.get(stage.stage_code, {
-            "total": 0, 
-            "fulfilled": 0, 
-            "blocking_total": 0, 
+            "total": 0,
+            "fulfilled": 0,
+            "blocking_total": 0,
             "blocking_fulfilled": 0
         })
 

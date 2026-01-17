@@ -5,15 +5,16 @@
 """
 
 from datetime import date, datetime, timedelta
-from typing import List, Dict, Any, Optional
 from decimal import Decimal
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, func
+from typing import Any, Dict, List, Optional
 
-from app.models.timesheet import Timesheet
-from app.models.work_log import WorkLog
+from sqlalchemy import and_, func
+from sqlalchemy.orm import Session
+
 from app.models.project import Project
+from app.models.timesheet import Timesheet
 from app.models.user import User
+from app.models.work_log import WorkLog
 
 
 class WorkLogAutoGenerator:

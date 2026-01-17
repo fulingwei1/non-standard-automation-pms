@@ -3,22 +3,23 @@
 商务支持工作台统计服务
 """
 
-from typing import Dict, Any, List, Optional
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from sqlalchemy.orm import Session
-from sqlalchemy import text, or_, and_
+from typing import Any, Dict, List, Optional
 
-from app.models.sales import Contract, Invoice
-from app.models.business_support import BiddingProject
+from sqlalchemy import and_, or_, text
+from sqlalchemy.orm import Session
+
 from app.models.acceptance import AcceptanceOrder
+from app.models.business_support import BiddingProject
+from app.models.sales import Contract, Invoice
 from app.models.task_center import TaskUnified
 
 
 def count_active_contracts(db: Session) -> int:
     """
     统计进行中合同数
-    
+
     Returns:
         int: 合同数量
     """
@@ -32,49 +33,49 @@ def count_active_contracts(db: Session) -> int:
 def calculate_pending_amount(db: Session, today: date) -> Decimal:
     """
     计算待回款金额
-    
+
     Returns:
         Decimal: 待回款金额
     """
     today_str = today.strftime("%Y-%m-%d")
-    
+
     pending_result = db.execute(text("""
         SELECT COALESCE(SUM(planned_amount - actual_amount), 0) as pending
         FROM project_payment_plans
         WHERE status IN ('PENDING', 'PARTIAL', 'INVOICED')
     """)).fetchone()
-    
+
     return Decimal(str(pending_result[0])) if pending_result else Decimal("0")
 
 
 def calculate_overdue_amount(db: Session, today: date) -> Decimal:
     """
     计算逾期款项
-    
+
     Returns:
         Decimal: 逾期金额
     """
     today_str = today.strftime("%Y-%m-%d")
-    
+
     overdue_result = db.execute(text("""
         SELECT COALESCE(SUM(planned_amount - actual_amount), 0) as overdue
         FROM project_payment_plans
         WHERE status IN ('PENDING', 'PARTIAL', 'INVOICED')
         AND planned_date < :today
     """), {"today": today_str}).fetchone()
-    
+
     return Decimal(str(overdue_result[0])) if overdue_result else Decimal("0")
 
 
 def calculate_invoice_rate(db: Session, today: date) -> Decimal:
     """
     计算本月开票率
-    
+
     Returns:
         Decimal: 开票率
     """
     month_start = date(today.year, today.month, 1)
-    
+
     month_invoices = (
         db.query(Invoice)
         .filter(
@@ -84,16 +85,16 @@ def calculate_invoice_rate(db: Session, today: date) -> Decimal:
         )
         .count()
     )
-    
+
     total_invoices = db.query(Invoice).count()
-    
+
     return Decimal("0") if total_invoices == 0 else Decimal(month_invoices) / Decimal(total_invoices) * 100
 
 
 def count_active_bidding(db: Session) -> int:
     """
     统计进行中投标数
-    
+
     Returns:
         int: 投标数量
     """
@@ -132,12 +133,12 @@ def calculate_acceptance_rate(db: Session) -> Decimal:
 def get_urgent_tasks(db: Session, current_user_id: int, today: date) -> List[Dict[str, Any]]:
     """
     获取紧急任务列表
-    
+
     Returns:
         List[Dict]: 紧急任务列表
     """
     today_start = datetime.combine(today, datetime.min.time())
-    
+
     urgent_tasks_query = (
         db.query(TaskUnified)
         .filter(
@@ -151,9 +152,9 @@ def get_urgent_tasks(db: Session, current_user_id: int, today: date) -> List[Dic
         .order_by(TaskUnified.deadline.asc())
         .limit(10)
     )
-    
+
     urgent_tasks_list = urgent_tasks_query.all()
-    
+
     return [
         {
             "id": task.id,
@@ -172,12 +173,12 @@ def get_urgent_tasks(db: Session, current_user_id: int, today: date) -> List[Dic
 def get_today_todos(db: Session, current_user_id: int, today: date) -> List[Dict[str, Any]]:
     """
     获取今日待办列表
-    
+
     Returns:
         List[Dict]: 今日待办列表
     """
     today_start = datetime.combine(today, datetime.min.time())
-    
+
     today_todos_query = (
         db.query(TaskUnified)
         .filter(
@@ -194,9 +195,9 @@ def get_today_todos(db: Session, current_user_id: int, today: date) -> List[Dict
         .order_by(TaskUnified.priority.desc(), TaskUnified.deadline.asc())
         .limit(20)
     )
-    
+
     today_todos_list = today_todos_query.all()
-    
+
     return [
         {
             "id": task.id,

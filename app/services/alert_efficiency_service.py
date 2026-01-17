@@ -3,8 +3,9 @@
 预警处理效率分析服务
 """
 
-from typing import List, Dict, Any, Optional
 from datetime import date, datetime
+from typing import Any, Dict, List, Optional
+
 from sqlalchemy.orm import Session
 
 from app.models.alert import AlertRecord
@@ -19,12 +20,12 @@ def calculate_basic_metrics(
 ) -> Dict[str, float]:
     """
     计算基础效率指标
-    
+
     Returns:
         dict: 包含处理率、及时处理率、升级率、重复预警率的字典
     """
     total_count = len(all_alerts)
-    
+
     if total_count == 0:
         return {
             'processing_rate': 0,
@@ -32,14 +33,14 @@ def calculate_basic_metrics(
             'escalation_rate': 0,
             'duplicate_rate': 0
         }
-    
+
     # 已处理预警（状态为 RESOLVED 或 CLOSED）
     processed_alerts = [a for a in all_alerts if a.status in ['RESOLVED', 'CLOSED']]
     processed_count = len(processed_alerts)
-    
+
     # 处理率
     processing_rate = processed_count / total_count if total_count > 0 else 0
-    
+
     # 及时处理率（在响应时限内处理）
     timely_processed = 0
     for alert in processed_alerts:
@@ -48,13 +49,13 @@ def calculate_basic_metrics(
             timeout_hours = engine.RESPONSE_TIMEOUT.get(alert.alert_level, 8)
             if response_time <= timeout_hours:
                 timely_processed += 1
-    
+
     timely_processing_rate = timely_processed / total_count if total_count > 0 else 0
-    
+
     # 升级率
     escalated_alerts = [a for a in all_alerts if a.is_escalated]
     escalation_rate = len(escalated_alerts) / total_count if total_count > 0 else 0
-    
+
     # 重复预警率（相同规则、相同目标、在短时间内重复触发）
     duplicate_count = 0
     seen_combinations = {}
@@ -69,9 +70,9 @@ def calculate_basic_metrics(
                     duplicate_count += 1
         else:
             seen_combinations[key] = alert
-    
+
     duplicate_rate = duplicate_count / total_count if total_count > 0 else 0
-    
+
     return {
         'processing_rate': processing_rate,
         'timely_processing_rate': timely_processing_rate,
@@ -87,7 +88,7 @@ def calculate_project_metrics(
 ) -> Dict[str, Dict[str, Any]]:
     """
     按项目统计处理效率
-    
+
     Returns:
         dict: 项目名称到效率指标的映射
     """
@@ -105,7 +106,7 @@ def calculate_project_metrics(
                     'escalated': 0,
                     'duplicate': 0,
                 }
-            
+
             data = efficiency_by_project[project_name]
             data['total'] += 1
             if alert.status in ['RESOLVED', 'CLOSED']:
@@ -118,7 +119,7 @@ def calculate_project_metrics(
                         data['timely_processed'] += 1
             if alert.is_escalated:
                 data['escalated'] += 1
-    
+
     # 计算项目效率指标
     project_metrics = {}
     for project_name, data in efficiency_by_project.items():
@@ -134,7 +135,7 @@ def calculate_project_metrics(
                 (1 - data['escalated'] / data['total'] if data['total'] > 0 else 0) * 0.2
             ) * 100,  # 效率得分（0-100）
         }
-    
+
     return project_metrics
 
 
@@ -145,7 +146,7 @@ def calculate_handler_metrics(
 ) -> Dict[str, Dict[str, Any]]:
     """
     按责任人统计处理效率
-    
+
     Returns:
         dict: 责任人名称到效率指标的映射
     """
@@ -163,7 +164,7 @@ def calculate_handler_metrics(
                     'timely_processed': 0,
                     'escalated': 0,
                 }
-            
+
             data = efficiency_by_handler[handler_name]
             data['total'] += 1
             if alert.status in ['RESOLVED', 'CLOSED']:
@@ -176,7 +177,7 @@ def calculate_handler_metrics(
                         data['timely_processed'] += 1
             if alert.is_escalated:
                 data['escalated'] += 1
-    
+
     # 计算责任人效率指标
     handler_metrics = {}
     for handler_name, data in efficiency_by_handler.items():
@@ -192,7 +193,7 @@ def calculate_handler_metrics(
                 (1 - data['escalated'] / data['total'] if data['total'] > 0 else 0) * 0.2
             ) * 100,  # 效率得分（0-100）
         }
-    
+
     return handler_metrics
 
 
@@ -202,7 +203,7 @@ def calculate_type_metrics(
 ) -> Dict[str, Dict[str, Any]]:
     """
     按类型统计处理效率
-    
+
     Returns:
         dict: 类型名称到效率指标的映射
     """
@@ -217,7 +218,7 @@ def calculate_type_metrics(
                 'timely_processed': 0,
                 'escalated': 0,
             }
-        
+
         data = efficiency_by_type[rule_type]
         data['total'] += 1
         if alert.status in ['RESOLVED', 'CLOSED']:
@@ -230,7 +231,7 @@ def calculate_type_metrics(
                     data['timely_processed'] += 1
         if alert.is_escalated:
             data['escalated'] += 1
-    
+
     # 计算类型效率指标
     type_metrics = {}
     for rule_type, data in efficiency_by_type.items():
@@ -245,7 +246,7 @@ def calculate_type_metrics(
                 (1 - data['escalated'] / data['total'] if data['total'] > 0 else 0) * 0.2
             ) * 100,  # 效率得分（0-100）
         }
-    
+
     return type_metrics
 
 
@@ -255,7 +256,7 @@ def generate_rankings(
 ) -> Dict[str, List[Dict[str, Any]]]:
     """
     生成效率排行榜
-    
+
     Returns:
         dict: 包含最佳/最差项目和责任人的排行榜
     """
@@ -265,26 +266,26 @@ def generate_rankings(
         key=lambda x: x[1]['efficiency_score'],
         reverse=True
     )[:5]
-    
+
     # 效率最低的项目（效率得分最低，至少5个预警）
     worst_projects = sorted(
         [(name, data) for name, data in project_metrics.items() if data['total'] >= 5],
         key=lambda x: x[1]['efficiency_score']
     )[:5]
-    
+
     # 效率最高的责任人（效率得分最高，至少5个预警）
     best_handlers = sorted(
         [(name, data) for name, data in handler_metrics.items() if data['total'] >= 5],
         key=lambda x: x[1]['efficiency_score'],
         reverse=True
     )[:5]
-    
+
     # 效率最低的责任人（效率得分最低，至少5个预警）
     worst_handlers = sorted(
         [(name, data) for name, data in handler_metrics.items() if data['total'] >= 5],
         key=lambda x: x[1]['efficiency_score']
     )[:5]
-    
+
     return {
         'best_projects': [
             {

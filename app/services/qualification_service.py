@@ -4,19 +4,24 @@
 包含认证、评估、晋升检查等核心业务逻辑
 """
 
-from typing import List, Optional, Dict, Any
 from datetime import date, datetime
 from decimal import Decimal
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, desc
+from typing import Any, Dict, List, Optional
 
-from app.models.qualification import (
-    QualificationLevel, PositionCompetencyModel,
-    EmployeeQualification, QualificationAssessment,
-    PositionTypeEnum, AssessmentTypeEnum, AssessmentResultEnum,
-    QualificationStatusEnum
-)
+from sqlalchemy import and_, desc, or_
+from sqlalchemy.orm import Session
+
 from app.models.organization import Employee
+from app.models.qualification import (
+    AssessmentResultEnum,
+    AssessmentTypeEnum,
+    EmployeeQualification,
+    PositionCompetencyModel,
+    PositionTypeEnum,
+    QualificationAssessment,
+    QualificationLevel,
+    QualificationStatusEnum,
+)
 from app.models.user import User
 
 
@@ -31,12 +36,12 @@ class QualificationService:
     ) -> List[QualificationLevel]:
         """获取任职资格等级列表"""
         query = db.query(QualificationLevel)
-        
+
         if role_type:
             query = query.filter(QualificationLevel.role_type == role_type)
         if is_active is not None:
             query = query.filter(QualificationLevel.is_active == is_active)
-        
+
         return query.order_by(QualificationLevel.level_order).all()
 
     @staticmethod
@@ -52,10 +57,10 @@ class QualificationService:
             PositionCompetencyModel.level_id == level_id,
             PositionCompetencyModel.is_active == True
         )
-        
+
         if position_subtype:
             query = query.filter(PositionCompetencyModel.position_subtype == position_subtype)
-        
+
         return query.first()
 
     @staticmethod
@@ -68,10 +73,10 @@ class QualificationService:
         query = db.query(EmployeeQualification).filter(
             EmployeeQualification.employee_id == employee_id
         )
-        
+
         if position_type:
             query = query.filter(EmployeeQualification.position_type == position_type)
-        
+
         return query.order_by(desc(EmployeeQualification.created_at)).first()
 
     @staticmethod
@@ -143,7 +148,7 @@ class QualificationService:
         """评估员工任职资格"""
         # 计算综合得分
         total_score = QualificationService._calculate_total_score(scores)
-        
+
         # 判断评估结果
         result = QualificationService._determine_result(total_score)
 
@@ -159,11 +164,11 @@ class QualificationService:
             comments=comments,
             assessed_at=datetime.now()
         )
-        
+
         db.add(assessment)
         db.commit()
         db.refresh(assessment)
-        
+
         return assessment
 
     @staticmethod
@@ -242,13 +247,13 @@ class QualificationService:
         # 这里简化处理，假设各维度权重相等
         if not scores:
             return Decimal('0.00')
-        
+
         total = sum(float(v) if isinstance(v, (int, float)) else 0 for v in scores.values())
         count = len(scores)
-        
+
         if count == 0:
             return Decimal('0.00')
-        
+
         return Decimal(str(total / count)).quantize(Decimal('0.01'))
 
     @staticmethod
@@ -272,10 +277,10 @@ class QualificationService:
         query = db.query(QualificationAssessment).filter(
             QualificationAssessment.employee_id == employee_id
         )
-        
+
         if qualification_id:
             query = query.filter(QualificationAssessment.qualification_id == qualification_id)
-        
+
         return query.order_by(desc(QualificationAssessment.assessed_at)).all()
 
     @staticmethod
@@ -289,10 +294,10 @@ class QualificationService:
             PositionCompetencyModel.position_type == position_type,
             PositionCompetencyModel.is_active == True
         )
-        
+
         if position_subtype:
             query = query.filter(PositionCompetencyModel.position_subtype == position_subtype)
-        
+
         return query.join(QualificationLevel).order_by(
             QualificationLevel.level_order
         ).all()

@@ -5,14 +5,15 @@
 """
 
 from datetime import date, datetime
-from typing import Optional, Dict, Any, List
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
+
 from sqlalchemy.orm import Session
 
-from app.models.issue import Issue
 from app.models.engineer_performance import MechanicalDebugIssue, TestBugRecord
-from app.models.user import User
+from app.models.issue import Issue
 from app.models.project import Project
+from app.models.user import User
 
 
 class DebugIssueSyncService:

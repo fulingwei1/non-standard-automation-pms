@@ -3,19 +3,23 @@
 用户同步服务
 负责从员工档案同步创建用户账号
 """
-from typing import Dict, List, Optional, Tuple
+import logging
 from datetime import datetime
-from sqlalchemy.orm import Session
-from sqlalchemy import text
+from typing import Dict, List, Optional, Tuple
 
-from app.models.organization import Employee
-from app.models.user import User, UserRole, Role
+from sqlalchemy import text
+from sqlalchemy.orm import Session
+
 from app.core.security import get_password_hash
+from app.models.organization import Employee
+from app.models.user import Role, User, UserRole
 from app.utils.pinyin_utils import (
-    name_to_pinyin,
-    generate_unique_username,
     generate_initial_password,
+    generate_unique_username,
+    name_to_pinyin,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class UserSyncService:
@@ -103,7 +107,7 @@ class UserSyncService:
                 if role:
                     return role
         except Exception:
-            pass
+            logger.debug("岗位-角色映射查询失败，使用默认映射", exc_info=True)
 
         # 2. 使用默认映射
         for keyword, role_code in UserSyncService.DEFAULT_POSITION_ROLE_MAPPING.items():

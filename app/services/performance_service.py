@@ -4,22 +4,23 @@
 包含角色判断、权限过滤、分数计算等核心业务逻辑
 """
 
-from typing import List, Tuple, Optional, Dict, Any
 from datetime import date, datetime
-from dateutil.relativedelta import relativedelta
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_
+from typing import Any, Dict, List, Optional, Tuple
 
-from app.models.user import User
-from app.models.project import ProjectMember, Project
+from dateutil.relativedelta import relativedelta
+from sqlalchemy import and_, or_
+from sqlalchemy.orm import Session
+
 from app.models.organization import Department, Employee
 from app.models.performance import (
-    MonthlyWorkSummary,
-    PerformanceEvaluationRecord,
+    EvaluationStatusEnum,
     EvaluationWeightConfig,
     EvaluatorTypeEnum,
-    EvaluationStatusEnum
+    MonthlyWorkSummary,
+    PerformanceEvaluationRecord,
 )
+from app.models.project import Project, ProjectMember
+from app.models.user import User
 
 
 class PerformanceService:

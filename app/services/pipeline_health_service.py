@@ -5,16 +5,16 @@
 计算线索、商机、报价、合同、回款各环节的健康度
 """
 
-from typing import Dict, List, Optional, Any
-from datetime import datetime, date, timedelta
-from decimal import Decimal
 import logging
+from datetime import date, datetime, timedelta
+from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
+from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_, desc
 
-from app.models.sales import Lead, Opportunity, Quote, Contract, Invoice
 from app.models.project import Project, ProjectMilestone
+from app.models.sales import Contract, Invoice, Lead, Opportunity, Quote
 from app.models.user import User
 
 logger = logging.getLogger(__name__)

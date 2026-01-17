@@ -39,74 +39,53 @@ warnings.warn(
 )
 
 # 从新模块结构重导出所有内容
-from app.utils.scheduled_tasks import (
-    # 配置
+from app.utils.scheduled_tasks import (  # 配置; 工具函数; 基础函数; 项目管理; 问题管理; 销售; 里程碑; 工时; 生产; 预警通知; HR
     SCHEDULED_TASKS,
     TASK_GROUPS,
-
-    # 工具函数
+    calculate_monthly_labor_cost_task,
+    calculate_progress_summary,
+    calculate_project_health,
+    calculate_response_metrics,
+    check_alert_escalation,
+    check_blocking_issues,
+    check_contract_expiry_reminder,
+    check_employee_confirmation_reminder,
+    check_issue_assignment_timeout,
+    check_issue_resolution_timeout,
+    check_milestone_alerts,
+    check_milestone_risk_alerts,
+    check_milestone_status_and_adjust_payments,
+    check_opportunity_stage_timeout,
+    check_overdue_issues,
+    check_overdue_receivable_alerts,
+    check_payment_reminder,
+    check_production_plan_alerts,
+    check_project_cost_overrun,
+    check_project_deadline_alerts,
+    check_timeout_issues,
+    check_work_report_timeout,
+    daily_health_snapshot,
+    daily_issue_statistics_snapshot,
+    daily_spec_match_check,
+    daily_timesheet_aggregation_task,
+    daily_timesheet_reminder_task,
+    execute_task,
+    generate_production_daily_reports,
     get_task,
     get_tasks_by_group,
     list_all_tasks,
-    execute_task,
-
-    # 基础函数
-    send_notification_for_alert,
     log_task_result,
+    monthly_timesheet_aggregation_task,
+    retry_failed_notifications,
     safe_task_execution,
-
-    # 项目管理
-    daily_spec_match_check,
-    calculate_project_health,
-    daily_health_snapshot,
-    calculate_progress_summary,
-    check_project_deadline_alerts,
-    check_project_cost_overrun,
-
-    # 问题管理
-    check_overdue_issues,
-    check_blocking_issues,
-    check_timeout_issues,
-    daily_issue_statistics_snapshot,
-    check_issue_assignment_timeout,
-    check_issue_resolution_timeout,
-
-    # 销售
     sales_reminder_scan,
-    check_payment_reminder,
-    check_overdue_receivable_alerts,
-    check_opportunity_stage_timeout,
-
-    # 里程碑
-    check_milestone_alerts,
-    check_milestone_status_and_adjust_payments,
-    check_milestone_risk_alerts,
-
-    # 工时
-    daily_timesheet_reminder_task,
-    weekly_timesheet_reminder_task,
+    send_alert_notifications,
+    send_notification_for_alert,
     timesheet_anomaly_alert_task,
     timesheet_approval_timeout_reminder_task,
     timesheet_sync_failure_alert_task,
-    daily_timesheet_aggregation_task,
     weekly_timesheet_aggregation_task,
-    monthly_timesheet_aggregation_task,
-    calculate_monthly_labor_cost_task,
-
-    # 生产
-    check_production_plan_alerts,
-    check_work_report_timeout,
-    generate_production_daily_reports,
-
-    # 预警通知
-    check_alert_escalation,
-    retry_failed_notifications,
-    send_alert_notifications,
-    calculate_response_metrics,
-
-    # HR
-    check_contract_expiry_reminder,
-    check_employee_confirmation_reminder,
+    weekly_timesheet_reminder_task,
 )
 
 # 保持 __all__ 与新模块一致

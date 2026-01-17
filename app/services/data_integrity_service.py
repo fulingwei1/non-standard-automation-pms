@@ -6,18 +6,21 @@
 
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from typing import Dict, List, Optional, Any, Tuple
-from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_, desc
+from typing import Any, Dict, List, Optional, Tuple
 
-from app.models.engineer_performance import EngineerProfile
+from sqlalchemy import and_, desc, func, or_
+from sqlalchemy.orm import Session
+
+from app.models.engineer_performance import (
+    CollaborationRating,
+    DesignReview,
+    EngineerProfile,
+    KnowledgeContribution,
+)
 from app.models.performance import PerformancePeriod, PerformanceResult
 from app.models.project import Project, ProjectMember
 from app.models.project_evaluation import ProjectEvaluation
 from app.models.work_log import WorkLog
-from app.models.engineer_performance import (
-    DesignReview, CollaborationRating, KnowledgeContribution
-)
 
 
 class DataIntegrityService:
@@ -177,8 +180,8 @@ class DataIntegrityService:
         # 获取工程师列表
         query = self.db.query(EngineerProfile)
         if department_id:
-            from app.models.user import User
             from app.models.organization import Employee
+            from app.models.user import User
             employees = self.db.query(Employee).filter(
                 Employee.department_id == department_id
             ).all()
@@ -388,22 +391,24 @@ class DataIntegrityService:
         """
         fixes_applied = []
         fixes_failed = []
-        
+
         suggestions = self.suggest_auto_fixes(engineer_id, period_id)
-        
+
         for suggestion in suggestions:
             if not suggestion.get('can_auto_fix', False):
                 continue
-            
+
             if fix_types and suggestion['type'] not in fix_types:
                 continue
-            
+
             try:
                 if suggestion['type'] == 'auto_select_collaborators':
                     # 自动抽取合作人员
-                    from app.services.collaboration_rating_service import CollaborationRatingService
+                    from app.services.collaboration_rating_service import (
+                        CollaborationRatingService,
+                    )
                     collab_service = CollaborationRatingService(self.db)
-                    
+
                     collaborators = collab_service.auto_select_collaborators(
                         engineer_id, period_id, target_count=5
                     )
@@ -426,7 +431,7 @@ class DataIntegrityService:
                     'type': suggestion['type'],
                     'reason': str(e)
                 })
-        
+
         return {
             'engineer_id': engineer_id,
             'period_id': period_id,
@@ -452,13 +457,13 @@ class DataIntegrityService:
             提醒发送结果
         """
         reminders = self.get_missing_data_reminders(period_id)
-        
+
         if reminder_types:
             reminders = [r for r in reminders if r['type'] in reminder_types]
-        
+
         sent_count = 0
         failed_count = 0
-        
+
         # 这里应该集成通知系统（邮件/系统消息）
         # 目前只返回提醒列表，实际发送需要集成通知服务
         for reminder in reminders:
@@ -468,7 +473,7 @@ class DataIntegrityService:
                 sent_count += 1
             except Exception:
                 failed_count += 1
-        
+
         return {
             'period_id': period_id,
             'total_reminders': len(reminders),
@@ -495,7 +500,7 @@ class DataIntegrityService:
             报告数据（格式根据format参数）
         """
         report = self.generate_data_quality_report(period_id, department_id)
-        
+
         if format == 'json':
             return report
         elif format == 'excel':

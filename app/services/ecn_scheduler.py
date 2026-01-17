@@ -6,14 +6,14 @@ ECN定时任务服务
 
 import logging
 from datetime import datetime, timedelta
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
-from sqlalchemy.orm import Session
 from sqlalchemy import and_
+from sqlalchemy.orm import Session
 
-from app.models.ecn import Ecn, EcnEvaluation, EcnApproval, EcnTask
 from app.models.base import get_db_session
+from app.models.ecn import Ecn, EcnApproval, EcnEvaluation, EcnTask
 from app.models.user import User
 
 
@@ -24,14 +24,14 @@ def check_evaluation_overdue(db: Session) -> List[Dict[str, Any]]:
     """
     now = datetime.now()
     timeout_threshold = now - timedelta(days=3)  # 3天超时
-    
+
     overdue_evals = db.query(EcnEvaluation).filter(
         and_(
             EcnEvaluation.status == "PENDING",
             EcnEvaluation.created_at < timeout_threshold
         )
     ).all()
-    
+
     alerts = []
     for eval in overdue_evals:
         ecn = db.query(Ecn).filter(Ecn.id == eval.ecn_id).first()
@@ -47,7 +47,7 @@ def check_evaluation_overdue(db: Session) -> List[Dict[str, Any]]:
                 "overdue_days": overdue_days,
                 "message": f"ECN {ecn.ecn_no} 的{eval.eval_dept}评估已超时{overdue_days}天"
             })
-    
+
     return alerts
 
 
@@ -57,14 +57,14 @@ def check_approval_overdue(db: Session) -> List[Dict[str, Any]]:
     返回超时的审批列表
     """
     now = datetime.now()
-    
+
     overdue_approvals = db.query(EcnApproval).filter(
         and_(
             EcnApproval.status == "PENDING",
             EcnApproval.due_date < now
         )
     ).all()
-    
+
     alerts = []
     for approval in overdue_approvals:
         ecn = db.query(Ecn).filter(Ecn.id == approval.ecn_id).first()
@@ -84,7 +84,7 @@ def check_approval_overdue(db: Session) -> List[Dict[str, Any]]:
             # 更新超时标识
             approval.is_overdue = True
             db.add(approval)
-    
+
     db.commit()
     return alerts
 
@@ -95,14 +95,14 @@ def check_task_overdue(db: Session) -> List[Dict[str, Any]]:
     返回超时的任务列表
     """
     now = datetime.now()
-    
+
     overdue_tasks = db.query(EcnTask).filter(
         and_(
             EcnTask.status.in_(["PENDING", "IN_PROGRESS"]),
             EcnTask.planned_end < now.date()
         )
     ).all()
-    
+
     alerts = []
     for task in overdue_tasks:
         ecn = db.query(Ecn).filter(Ecn.id == task.ecn_id).first()
@@ -118,7 +118,7 @@ def check_task_overdue(db: Session) -> List[Dict[str, Any]]:
                 "overdue_days": overdue_days,
                 "message": f"ECN {ecn.ecn_no} 的任务「{task.task_name}」已超时{overdue_days}天"
             })
-    
+
     return alerts
 
 
@@ -140,19 +140,19 @@ def send_overdue_notifications(alerts: List[Dict[str, Any]]) -> None:
     发送超时提醒通知
     """
     from app.models.base import get_db_session
-    from app.services.ecn_notification_service import notify_overdue_alert
-    from app.models.ecn import Ecn, EcnEvaluation, EcnApproval, EcnTask
+    from app.models.ecn import Ecn, EcnApproval, EcnEvaluation, EcnTask
     from app.models.user import User
-    
+    from app.services.ecn_notification_service import notify_overdue_alert
+
     if not alerts:
         return
-    
+
     with get_db_session() as db:
         for alert in alerts:
             try:
                 # 根据提醒类型确定通知对象
                 user_ids = []
-                
+
                 if alert['type'] == 'EVALUATION_OVERDUE':
                     # 评估超时：通知评估部门负责人
                     eval_id = alert.get('eval_id')
@@ -165,7 +165,7 @@ def send_overdue_notifications(alerts: List[Dict[str, Any]]) -> None:
                             ecn = db.query(Ecn).filter(Ecn.id == alert.get('ecn_id')).first()
                             if ecn and ecn.applicant_id:
                                 user_ids.append(ecn.applicant_id)
-                
+
                 elif alert['type'] == 'APPROVAL_OVERDUE':
                     # 审批超时：通知审批人
                     approval_id = alert.get('approval_id')
@@ -173,7 +173,7 @@ def send_overdue_notifications(alerts: List[Dict[str, Any]]) -> None:
                         approval = db.query(EcnApproval).filter(EcnApproval.id == approval_id).first()
                         if approval and approval.approver_id:
                             user_ids.append(approval.approver_id)
-                
+
                 elif alert['type'] == 'TASK_OVERDUE':
                     # 任务超时：通知任务负责人
                     task_id = alert.get('task_id')
@@ -181,7 +181,7 @@ def send_overdue_notifications(alerts: List[Dict[str, Any]]) -> None:
                         task = db.query(EcnTask).filter(EcnTask.id == task_id).first()
                         if task and task.assignee_id:
                             user_ids.append(task.assignee_id)
-                
+
                 # 发送通知
                 if user_ids:
                     notify_overdue_alert(db, alert, user_ids)

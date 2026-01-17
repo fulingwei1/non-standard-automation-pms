@@ -5,13 +5,12 @@
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional, List, Dict, Any, Tuple
-from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, desc
+from typing import Any, Dict, List, Optional, Tuple
 
-from app.models.engineer_performance import (
-    EngineerProfile, CollaborationRating
-)
+from sqlalchemy import and_, desc, func
+from sqlalchemy.orm import Session
+
+from app.models.engineer_performance import CollaborationRating, EngineerProfile
 from app.models.performance import PerformancePeriod
 from app.models.user import User
 from app.schemas.engineer_performance import CollaborationRatingCreate

@@ -4,25 +4,35 @@
 从各个系统自动提取绩效评价所需的数据
 """
 
+import logging
 import re
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Dict, List, Optional, Any, Tuple
-from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_, desc
+from typing import Any, Dict, List, Optional, Tuple
 
-from app.models.work_log import WorkLog
-from app.models.project import Project, ProjectMember
-from app.models.progress import Task
+from sqlalchemy import and_, desc, func, or_
+from sqlalchemy.orm import Session
+
 from app.models.ecn import Ecn
-from app.models.material import BomHeader, BomItem
 from app.models.engineer_performance import (
-    DesignReview, MechanicalDebugIssue, TestBugRecord,
-    CodeReviewRecord, ElectricalDrawingVersion, PlcProgramVersion,
-    KnowledgeContribution, CodeModule, PlcModuleLibrary
+    CodeModule,
+    CodeReviewRecord,
+    DesignReview,
+    ElectricalDrawingVersion,
+    KnowledgeContribution,
+    MechanicalDebugIssue,
+    PlcModuleLibrary,
+    PlcProgramVersion,
+    TestBugRecord,
 )
 from app.models.issue import Issue
+from app.models.material import BomHeader, BomItem
+from app.models.progress import Task
+from app.models.project import Project, ProjectMember
 from app.models.project_evaluation import ProjectEvaluation
+from app.models.work_log import WorkLog
+
+logger = logging.getLogger(__name__)
 
 
 class PerformanceDataCollector:
@@ -189,32 +199,32 @@ class PerformanceDataCollector:
             for log in work_logs:
                 if not log.content:
                     continue
-                    
+
                 content = log.content.lower()
-                
+
                 # 统计积极词汇
                 for keyword in self.POSITIVE_KEYWORDS:
                     positive_count += len(re.findall(keyword, content))
-                
+
                 # 统计消极词汇
                 for keyword in self.NEGATIVE_KEYWORDS:
                     negative_count += len(re.findall(keyword, content))
-                
+
                 # 统计技术相关提及
                 for keyword in self.TECH_KEYWORDS:
                     tech_mentions += len(re.findall(keyword, content))
-                
+
                 # 统计协作相关提及
                 for keyword in self.COLLABORATION_KEYWORDS:
                     collaboration_mentions += len(re.findall(keyword, content))
-                
+
                 # 上下文分析：问题解决场景
                 for pattern in self.PROBLEM_SOLVING_PATTERNS:
                     if re.search(pattern, content):
                         problem_solving_count += 1
                         positive_count += 2  # 问题解决是积极行为
                         break
-                
+
                 # 上下文分析：知识分享场景
                 for pattern in self.KNOWLEDGE_SHARING_PATTERNS:
                     if re.search(pattern, content):
@@ -222,7 +232,7 @@ class PerformanceDataCollector:
                         positive_count += 2  # 知识分享是积极行为
                         collaboration_mentions += 1
                         break
-                
+
                 # 上下文分析：技术突破场景
                 for pattern in self.TECH_BREAKTHROUGH_PATTERNS:
                     if re.search(pattern, content):
@@ -240,7 +250,7 @@ class PerformanceDataCollector:
                 base_score = 75.0 + (positive_ratio - 0.5) * 50
             else:
                 base_score = 75.0
-            
+
             # 场景加分：问题解决、知识分享、技术突破
             scenario_bonus = 0
             if problem_solving_count > 0:
@@ -249,7 +259,7 @@ class PerformanceDataCollector:
                 scenario_bonus += min(knowledge_sharing_count * 1.5, 8)  # 最多加8分
             if tech_breakthrough_count > 0:
                 scenario_bonus += min(tech_breakthrough_count * 3, 12)  # 最多加12分
-            
+
             self_evaluation_score = base_score + scenario_bonus
             self_evaluation_score = max(0, min(100, self_evaluation_score))
 
@@ -358,13 +368,15 @@ class PerformanceDataCollector:
                         ProjectEvaluation.project_id == project.id,
                         ProjectEvaluation.status == 'CONFIRMED'
                     ).first()
-                    if evaluation:
-                        project_evaluations[project.id] = {
-                            'difficulty_score': float(evaluation.difficulty_score) if evaluation.difficulty_score else None,
-                            'workload_score': float(evaluation.workload_score) if evaluation.workload_score else None
-                        }
                 except Exception:
-                    continue
+                    logger.debug("查询项目评估数据失败，已忽略", exc_info=True)
+                    evaluation = None
+
+                if evaluation:
+                    project_evaluations[project.id] = {
+                        'difficulty_score': float(evaluation.difficulty_score) if evaluation.difficulty_score else None,
+                        'workload_score': float(evaluation.workload_score) if evaluation.workload_score else None
+                    }
 
             return {
                 'total_projects': len(projects),
@@ -664,9 +676,9 @@ class PerformanceDataCollector:
             'missing_data_sources': [],
             'errors': []
         }
-        
+
         data = {}
-        
+
         # 采集各个数据源
         data_sources = {
             'self_evaluation': lambda: self.extract_self_evaluation_from_work_logs(
@@ -694,13 +706,13 @@ class PerformanceDataCollector:
                 engineer_id, start_date, end_date
             )
         }
-        
+
         for source_name, collect_func in data_sources.items():
             try:
                 result = collect_func()
                 data[source_name] = result
                 collection_stats['success_count'] += 1
-                
+
                 # 检查数据是否为空或缺失
                 if not result or (isinstance(result, dict) and not any(result.values())):
                     collection_stats['missing_data_sources'].append(source_name)
@@ -712,13 +724,13 @@ class PerformanceDataCollector:
                 })
                 # 提供默认值
                 data[source_name] = {}
-        
+
         collection_stats['end_time'] = datetime.now().isoformat()
         collection_stats['total_sources'] = len(data_sources)
         collection_stats['success_rate'] = round(
             (collection_stats['success_count'] / len(data_sources) * 100), 2
         ) if data_sources else 0.0
-        
+
         return {
             'data': data,
             'statistics': collection_stats,
@@ -742,11 +754,11 @@ class PerformanceDataCollector:
         collection_result = self.collect_all_data(engineer_id, start_date, end_date)
         stats = collection_result.get('statistics', {})
         data = collection_result.get('data', {})
-        
+
         # 分析缺失数据原因
         missing_analysis = []
         suggestions = []
-        
+
         # 检查工作日志
         self_eval = data.get('self_evaluation', {})
         if self_eval.get('total_logs', 0) == 0:
@@ -756,7 +768,7 @@ class PerformanceDataCollector:
                 'impact': '无法提取自我评价数据'
             })
             suggestions.append('建议工程师及时填写工作日志')
-        
+
         # 检查项目参与
         project_data = data.get('project_participation', {})
         if project_data.get('total_projects', 0) == 0:
@@ -766,7 +778,7 @@ class PerformanceDataCollector:
                 'impact': '无法计算项目执行相关指标'
             })
             suggestions.append('检查项目成员分配是否正确')
-        
+
         # 检查任务完成情况
         task_data = data.get('task_completion', {})
         if task_data.get('total_tasks', 0) == 0:
@@ -776,7 +788,7 @@ class PerformanceDataCollector:
                 'impact': '无法计算任务完成率'
             })
             suggestions.append('检查任务分配和记录是否完整')
-        
+
         # 检查设计评审（针对机械工程师）
         design_review = data.get('design_review', {})
         if design_review.get('total_reviews', 0) == 0:
@@ -786,12 +798,12 @@ class PerformanceDataCollector:
                 'impact': '无法计算设计一次通过率'
             })
             suggestions.append('确保设计评审流程完整执行')
-        
+
         # 计算数据完整性得分
         total_sources = len(data)
         available_sources = sum(1 for d in data.values() if d)
         completeness_score = round((available_sources / total_sources * 100), 2) if total_sources > 0 else 0.0
-        
+
         return {
             'engineer_id': engineer_id,
             'period': {

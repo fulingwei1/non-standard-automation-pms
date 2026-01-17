@@ -5,19 +5,19 @@
 支持按环节、按人员、按部门归责，计算责任成本
 """
 
-from typing import Dict, List, Optional, Any
-from datetime import datetime, date, timedelta
-from decimal import Decimal
-from collections import defaultdict
 import logging
+from collections import defaultdict
+from datetime import date, datetime, timedelta
+from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
+from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_, desc
 
-from app.models.sales import Lead, Opportunity, Quote, Contract, Invoice
 from app.models.project import Project
-from app.models.user import User
+from app.models.sales import Contract, Invoice, Lead, Opportunity, Quote
 from app.models.timesheet import Timesheet
+from app.models.user import User
 from app.services.hourly_rate_service import HourlyRateService
 
 logger = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ class PipelineAccountabilityService:
 
     def __init__(self, db: Session):
         self.db = db
-        self.hourly_rate_service = HourlyRateService(db)
+        self.hourly_rate_service = HourlyRateService()
 
     def analyze_by_stage(
         self,
@@ -36,7 +36,9 @@ class PipelineAccountabilityService:
         end_date: Optional[date] = None
     ) -> Dict[str, Any]:
         """按环节归责分析"""
-        from app.services.pipeline_break_analysis_service import PipelineBreakAnalysisService
+        from app.services.pipeline_break_analysis_service import (
+            PipelineBreakAnalysisService,
+        )
         break_service = PipelineBreakAnalysisService(self.db)
         breaks_analysis = break_service.analyze_pipeline_breaks(start_date, end_date)
 
@@ -44,7 +46,7 @@ class PipelineAccountabilityService:
 
         for stage, break_data in breaks_analysis['breaks'].items():
             break_records = break_data.get('break_records', [])
-            
+
             # 统计责任人
             person_stats = defaultdict(lambda: {'count': 0, 'cost_impact': Decimal('0')})
             department_stats = defaultdict(lambda: {'count': 0, 'cost_impact': Decimal('0')})
@@ -107,7 +109,9 @@ class PipelineAccountabilityService:
         end_date: Optional[date] = None
     ) -> Dict[str, Any]:
         """按人员归责分析"""
-        from app.services.pipeline_break_analysis_service import PipelineBreakAnalysisService
+        from app.services.pipeline_break_analysis_service import (
+            PipelineBreakAnalysisService,
+        )
         break_service = PipelineBreakAnalysisService(self.db)
         breaks_analysis = break_service.analyze_pipeline_breaks(start_date, end_date)
 
@@ -126,7 +130,7 @@ class PipelineAccountabilityService:
                 if person_id:
                     person_stats[person_id]['total_breaks'] += 1
                     person_stats[person_id]['stages'][stage] += 1
-                    
+
                     cost_impact = self._calculate_break_cost_impact(stage, record)
                     person_stats[person_id]['cost_impact'] += cost_impact
 
@@ -217,7 +221,9 @@ class PipelineAccountabilityService:
         end_date: Optional[date] = None
     ) -> Dict[str, Any]:
         """责任成本分析"""
-        from app.services.pipeline_break_analysis_service import PipelineBreakAnalysisService
+        from app.services.pipeline_break_analysis_service import (
+            PipelineBreakAnalysisService,
+        )
         break_service = PipelineBreakAnalysisService(self.db)
         breaks_analysis = break_service.analyze_pipeline_breaks(start_date, end_date)
 

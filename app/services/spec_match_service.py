@@ -3,12 +3,13 @@
 规格匹配检查服务
 """
 
-from typing import List, Dict, Any, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
+
 from sqlalchemy.orm import Session
 
-from app.models.technical_spec import TechnicalSpecRequirement, SpecMatchRecord
-from app.models.purchase import PurchaseOrderItem
 from app.models.material import BomItem
+from app.models.purchase import PurchaseOrderItem
+from app.models.technical_spec import SpecMatchRecord, TechnicalSpecRequirement
 from app.schemas.technical_spec import SpecMatchResult
 from app.utils.spec_matcher import SpecMatcher
 
@@ -19,7 +20,7 @@ def get_project_requirements(
 ) -> List[TechnicalSpecRequirement]:
     """
     获取项目的所有规格要求
-    
+
     Returns:
         List[TechnicalSpecRequirement]: 规格要求列表
     """
@@ -37,24 +38,24 @@ def check_po_item_match(
 ) -> List[SpecMatchResult]:
     """
     检查单个采购订单项的匹配
-    
+
     Returns:
         List[SpecMatchResult]: 匹配结果列表
     """
     results = []
-    
+
     for req in requirements:
         # 如果规格要求有物料编码，需要匹配
         if req.material_code and req.material_code != po_item.material_code:
             continue
-        
+
         match_result = matcher.match_specification(
             requirement=req,
             actual_spec=po_item.specification or '',
             actual_brand=None,  # 采购订单可能没有品牌字段
             actual_model=None
         )
-        
+
         # 保存匹配记录
         match_record = SpecMatchRecord(
             project_id=project_id,
@@ -66,7 +67,7 @@ def check_po_item_match(
             differences=match_result.differences
         )
         db.add(match_record)
-        
+
         results.append(SpecMatchResult(
             spec_requirement_id=req.id,
             material_name=req.material_name,
@@ -74,7 +75,7 @@ def check_po_item_match(
             match_score=match_result.match_score,
             differences=match_result.differences
         ))
-    
+
     return results
 
 
@@ -87,24 +88,24 @@ def check_bom_item_match(
 ) -> List[SpecMatchResult]:
     """
     检查单个BOM项的匹配
-    
+
     Returns:
         List[SpecMatchResult]: 匹配结果列表
     """
     results = []
-    
+
     for req in requirements:
         # 如果规格要求有物料编码，需要匹配
         if req.material_code and req.material_code != bom_item.material.material_code:
             continue
-        
+
         match_result = matcher.match_specification(
             requirement=req,
             actual_spec=bom_item.specification or '',
             actual_brand=bom_item.material.brand if bom_item.material else None,
             actual_model=None
         )
-        
+
         match_record = SpecMatchRecord(
             project_id=project_id,
             spec_requirement_id=req.id,
@@ -115,7 +116,7 @@ def check_bom_item_match(
             differences=match_result.differences
         )
         db.add(match_record)
-        
+
         results.append(SpecMatchResult(
             spec_requirement_id=req.id,
             material_name=req.material_name,
@@ -123,7 +124,7 @@ def check_bom_item_match(
             match_score=match_result.match_score,
             differences=match_result.differences
         ))
-    
+
     return results
 
 
@@ -135,7 +136,7 @@ def check_all_po_items(
 ) -> List[SpecMatchResult]:
     """
     检查所有采购订单项
-    
+
     Returns:
         List[SpecMatchResult]: 匹配结果列表
     """
@@ -144,12 +145,12 @@ def check_all_po_items(
     ).filter(
         PurchaseOrderItem.order.has(project_id=project_id)
     ).all()
-    
+
     all_results = []
     for po_item in po_items:
         results = check_po_item_match(db, po_item, requirements, project_id, matcher)
         all_results.extend(results)
-    
+
     return all_results
 
 
@@ -161,7 +162,7 @@ def check_all_bom_items(
 ) -> List[SpecMatchResult]:
     """
     检查所有BOM项
-    
+
     Returns:
         List[SpecMatchResult]: 匹配结果列表
     """
@@ -170,26 +171,26 @@ def check_all_bom_items(
     ).filter(
         BomItem.header.has(project_id=project_id)
     ).all()
-    
+
     all_results = []
     for bom_item in bom_items:
         results = check_bom_item_match(db, bom_item, requirements, project_id, matcher)
         all_results.extend(results)
-    
+
     return all_results
 
 
 def calculate_match_statistics(results: List[SpecMatchResult]) -> Dict[str, int]:
     """
     计算匹配统计
-    
+
     Returns:
         dict: 包含总数、匹配数、不匹配数、未知数的字典
     """
     matched_count = sum(1 for r in results if r.match_status == 'MATCHED')
     mismatched_count = sum(1 for r in results if r.match_status == 'MISMATCHED')
     unknown_count = sum(1 for r in results if r.match_status == 'UNKNOWN')
-    
+
     return {
         'total': len(results),
         'matched': matched_count,

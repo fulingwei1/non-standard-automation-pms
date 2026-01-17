@@ -4,14 +4,15 @@ ITR流程效率分析服务
 包含：问题解决时间分析、客户满意度趋势、流程瓶颈识别、SLA达成率分析
 """
 
-from typing import Dict, List, Any, Optional
 from datetime import datetime, timedelta
 from decimal import Decimal
-from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_, desc
+from typing import Any, Dict, List, Optional
 
-from app.models.service import ServiceTicket, CustomerSatisfaction
+from sqlalchemy import and_, desc, func, or_
+from sqlalchemy.orm import Session
+
 from app.models.issue import Issue
+from app.models.service import CustomerSatisfaction, ServiceTicket
 from app.models.sla import SLAMonitor
 
 
@@ -29,16 +30,16 @@ def analyze_resolution_time(
         ServiceTicket.status == "CLOSED",
         ServiceTicket.resolved_time.isnot(None)
     )
-    
+
     if start_date:
         ticket_query = ticket_query.filter(ServiceTicket.resolved_time >= start_date)
     if end_date:
         ticket_query = ticket_query.filter(ServiceTicket.resolved_time <= end_date)
     if project_id:
         ticket_query = ticket_query.filter(ServiceTicket.project_id == project_id)
-    
+
     tickets = ticket_query.all()
-    
+
     resolution_times = []
     for ticket in tickets:
         if ticket.reported_time and ticket.resolved_time:
@@ -51,7 +52,7 @@ def analyze_resolution_time(
                 "resolution_hours": time_diff,
                 "resolution_days": time_diff / 24,
             })
-    
+
     if not resolution_times:
         return {
             "total_tickets": 0,
@@ -62,7 +63,7 @@ def analyze_resolution_time(
             "by_problem_type": [],
             "by_urgency": [],
         }
-    
+
     # 计算统计值
     hours_list = [t["resolution_hours"] for t in resolution_times]
     avg_hours = sum(hours_list) / len(hours_list)
@@ -70,7 +71,7 @@ def analyze_resolution_time(
     median_hours = sorted_hours[len(sorted_hours) // 2] if sorted_hours else 0
     min_hours = min(hours_list)
     max_hours = max(hours_list)
-    
+
     # 按问题类型统计
     by_problem_type = {}
     for item in resolution_times:
@@ -78,7 +79,7 @@ def analyze_resolution_time(
         if ptype not in by_problem_type:
             by_problem_type[ptype] = []
         by_problem_type[ptype].append(item["resolution_hours"])
-    
+
     by_problem_type_stats = []
     for ptype, hours in by_problem_type.items():
         by_problem_type_stats.append({
@@ -88,7 +89,7 @@ def analyze_resolution_time(
             "min_hours": min(hours),
             "max_hours": max(hours),
         })
-    
+
     # 按紧急程度统计
     by_urgency = {}
     for item in resolution_times:
@@ -96,7 +97,7 @@ def analyze_resolution_time(
         if urgency not in by_urgency:
             by_urgency[urgency] = []
         by_urgency[urgency].append(item["resolution_hours"])
-    
+
     by_urgency_stats = []
     for urgency, hours in by_urgency.items():
         by_urgency_stats.append({
@@ -106,7 +107,7 @@ def analyze_resolution_time(
             "min_hours": min(hours),
             "max_hours": max(hours),
         })
-    
+
     return {
         "total_tickets": len(resolution_times),
         "avg_resolution_hours": avg_hours,
@@ -132,16 +133,16 @@ def analyze_satisfaction_trend(
         CustomerSatisfaction.status == "COMPLETED",
         CustomerSatisfaction.overall_score.isnot(None)
     )
-    
+
     if start_date:
         query = query.filter(CustomerSatisfaction.survey_date >= start_date)
     if end_date:
         query = query.filter(CustomerSatisfaction.survey_date <= end_date)
     if project_id:
         query = query.filter(CustomerSatisfaction.project_code.like(f"%{project_id}%"))
-    
+
     satisfactions = query.order_by(CustomerSatisfaction.survey_date).all()
-    
+
     if not satisfactions:
         return {
             "total_surveys": 0,
@@ -149,11 +150,11 @@ def analyze_satisfaction_trend(
             "trend_by_month": [],
             "trend_by_type": [],
         }
-    
+
     # 计算平均分
     scores = [s.overall_score for s in satisfactions if s.overall_score]
     avg_score = sum(scores) / len(scores) if scores else 0
-    
+
     # 按月统计趋势
     trend_by_month = {}
     for sat in satisfactions:
@@ -164,7 +165,7 @@ def analyze_satisfaction_trend(
             trend_by_month[month_key]["count"] += 1
             if sat.overall_score:
                 trend_by_month[month_key]["total_score"] += float(sat.overall_score)
-    
+
     trend_by_month_list = []
     for month, data in sorted(trend_by_month.items()):
         trend_by_month_list.append({
@@ -172,7 +173,7 @@ def analyze_satisfaction_trend(
             "count": data["count"],
             "avg_score": data["total_score"] / data["count"] if data["count"] > 0 else 0,
         })
-    
+
     # 按调查类型统计
     trend_by_type = {}
     for sat in satisfactions:
@@ -182,7 +183,7 @@ def analyze_satisfaction_trend(
         trend_by_type[stype]["count"] += 1
         if sat.overall_score:
             trend_by_type[stype]["total_score"] += float(sat.overall_score)
-    
+
     trend_by_type_list = []
     for stype, data in trend_by_type.items():
         trend_by_type_list.append({
@@ -190,7 +191,7 @@ def analyze_satisfaction_trend(
             "count": data["count"],
             "avg_score": data["total_score"] / data["count"] if data["count"] > 0 else 0,
         })
-    
+
     return {
         "total_surveys": len(satisfactions),
         "avg_score": avg_score,
@@ -211,16 +212,16 @@ def identify_bottlenecks(
     ticket_query = db.query(ServiceTicket).filter(
         ServiceTicket.status.in_(["IN_PROGRESS", "RESOLVED", "CLOSED"])
     )
-    
+
     if start_date:
         ticket_query = ticket_query.filter(ServiceTicket.created_at >= start_date)
     if end_date:
         ticket_query = ticket_query.filter(ServiceTicket.created_at <= end_date)
-    
+
     tickets = ticket_query.all()
-    
+
     bottlenecks = []
-    
+
     # 分析PENDING到IN_PROGRESS的时间（响应时间）
     pending_to_progress = []
     for ticket in tickets:
@@ -231,7 +232,7 @@ def identify_bottlenecks(
                 "hours": time_diff,
                 "problem_type": ticket.problem_type,
             })
-    
+
     if pending_to_progress:
         avg_pending_time = sum(t["hours"] for t in pending_to_progress) / len(pending_to_progress)
         bottlenecks.append({
@@ -242,7 +243,7 @@ def identify_bottlenecks(
             "count": len(pending_to_progress),
             "severity": "HIGH" if avg_pending_time > 24 else "MEDIUM" if avg_pending_time > 8 else "LOW",
         })
-    
+
     # 分析IN_PROGRESS到RESOLVED的时间（解决时间）
     progress_to_resolved = []
     for ticket in tickets:
@@ -253,7 +254,7 @@ def identify_bottlenecks(
                 "hours": time_diff,
                 "problem_type": ticket.problem_type,
             })
-    
+
     if progress_to_resolved:
         avg_resolve_time = sum(t["hours"] for t in progress_to_resolved) / len(progress_to_resolved)
         bottlenecks.append({
@@ -264,7 +265,7 @@ def identify_bottlenecks(
             "count": len(progress_to_resolved),
             "severity": "HIGH" if avg_resolve_time > 72 else "MEDIUM" if avg_resolve_time > 24 else "LOW",
         })
-    
+
     # 分析RESOLVED到CLOSED的时间（关闭时间）
     resolved_to_closed = []
     for ticket in tickets:
@@ -283,7 +284,7 @@ def identify_bottlenecks(
                             break
                         except (ValueError, TypeError):
                             pass
-    
+
     if resolved_to_closed:
         avg_close_time = sum(t["hours"] for t in resolved_to_closed) / len(resolved_to_closed)
         bottlenecks.append({
@@ -294,11 +295,11 @@ def identify_bottlenecks(
             "count": len(resolved_to_closed),
             "severity": "HIGH" if avg_close_time > 48 else "MEDIUM" if avg_close_time > 24 else "LOW",
         })
-    
+
     # 按严重程度排序
     severity_order = {"HIGH": 3, "MEDIUM": 2, "LOW": 1}
     bottlenecks.sort(key=lambda x: severity_order.get(x["severity"], 0), reverse=True)
-    
+
     return {
         "bottlenecks": bottlenecks,
         "total_analyzed": len(tickets),
@@ -316,16 +317,16 @@ def analyze_sla_performance(
     分析SLA达成率
     """
     query = db.query(SLAMonitor)
-    
+
     if start_date:
         query = query.filter(SLAMonitor.created_at >= start_date)
     if end_date:
         query = query.filter(SLAMonitor.created_at <= end_date)
     if policy_id:
         query = query.filter(SLAMonitor.policy_id == policy_id)
-    
+
     monitors = query.all()
-    
+
     if not monitors:
         return {
             "total_monitors": 0,
@@ -333,21 +334,21 @@ def analyze_sla_performance(
             "resolve_rate": 0,
             "by_policy": [],
         }
-    
+
     # 响应达成率
     response_on_time = len([m for m in monitors if m.response_status == "ON_TIME"])
     response_rate = (response_on_time / len(monitors) * 100) if monitors else 0
-    
+
     # 解决达成率
     resolve_on_time = len([m for m in monitors if m.resolve_status == "ON_TIME"])
     resolve_rate = (resolve_on_time / len(monitors) * 100) if monitors else 0
-    
+
     # 按策略统计
     by_policy = {}
     for monitor in monitors:
         policy_id_key = monitor.policy_id
         policy_name = monitor.policy.policy_name if monitor.policy else f"Policy {policy_id_key}"
-        
+
         if policy_id_key not in by_policy:
             by_policy[policy_id_key] = {
                 "policy_id": policy_id_key,
@@ -358,7 +359,7 @@ def analyze_sla_performance(
                 "resolve_on_time": 0,
                 "resolve_overdue": 0,
             }
-        
+
         stats = by_policy[policy_id_key]
         stats["total"] += 1
         if monitor.response_status == "ON_TIME":
@@ -369,13 +370,13 @@ def analyze_sla_performance(
             stats["resolve_on_time"] += 1
         elif monitor.resolve_status == "OVERDUE":
             stats["resolve_overdue"] += 1
-    
+
     by_policy_list = []
     for stats in by_policy.values():
         stats["response_rate"] = (stats["response_on_time"] / stats["total"] * 100) if stats["total"] > 0 else 0
         stats["resolve_rate"] = (stats["resolve_on_time"] / stats["total"] * 100) if stats["total"] > 0 else 0
         by_policy_list.append(stats)
-    
+
     return {
         "total_monitors": len(monitors),
         "response_rate": response_rate,

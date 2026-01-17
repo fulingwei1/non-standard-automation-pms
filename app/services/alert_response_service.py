@@ -3,7 +3,8 @@
 预警响应时效分析服务
 """
 
-from typing import List, Dict, Any
+from typing import Any, Dict, List
+
 from sqlalchemy.orm import Session
 
 from app.models.alert import AlertRecord
@@ -16,7 +17,7 @@ def calculate_response_times(
 ) -> List[Dict[str, Any]]:
     """
     计算响应时间（确认时间 - 触发时间）
-    
+
     Returns:
         List[Dict]: 包含 alert、minutes、hours 的列表
     """
@@ -38,7 +39,7 @@ def calculate_resolve_times(
 ) -> List[Dict[str, Any]]:
     """
     计算解决时间（处理完成时间 - 确认时间）
-    
+
     Returns:
         List[Dict]: 包含 alert、minutes、hours 的列表
     """
@@ -60,7 +61,7 @@ def calculate_response_distribution(
 ) -> Dict[str, int]:
     """
     计算响应时效分布
-    
+
     Returns:
         dict: 包含 <1小时、1-4小时、4-8小时、>8小时 的分布
     """
@@ -88,7 +89,7 @@ def calculate_level_metrics(
 ) -> Dict[str, Dict[str, float]]:
     """
     按级别统计响应时效
-    
+
     Returns:
         dict: 级别名称到统计指标的映射
     """
@@ -98,7 +99,7 @@ def calculate_level_metrics(
         if level not in response_by_level:
             response_by_level[level] = []
         response_by_level[level].append(rt['hours'])
-    
+
     level_metrics = {}
     for level, times in response_by_level.items():
         level_metrics[level] = {
@@ -115,7 +116,7 @@ def calculate_type_metrics(
 ) -> Dict[str, Dict[str, float]]:
     """
     按类型统计响应时效
-    
+
     Returns:
         dict: 类型名称到统计指标的映射
     """
@@ -126,7 +127,7 @@ def calculate_type_metrics(
         if rule_type not in response_by_type:
             response_by_type[rule_type] = []
         response_by_type[rule_type].append(rt['hours'])
-    
+
     type_metrics = {}
     for rule_type, times in response_by_type.items():
         type_metrics[rule_type] = {
@@ -144,7 +145,7 @@ def calculate_project_metrics(
 ) -> Dict[str, Dict[str, Any]]:
     """
     按项目统计响应时效
-    
+
     Returns:
         dict: 项目名称到统计指标的映射
     """
@@ -160,7 +161,7 @@ def calculate_project_metrics(
                     'times': [],
                 }
             response_by_project[project_name]['times'].append(rt['hours'])
-    
+
     project_metrics = {}
     for project_name, data in response_by_project.items():
         times = data['times']
@@ -180,7 +181,7 @@ def calculate_handler_metrics(
 ) -> Dict[str, Dict[str, Any]]:
     """
     按责任人统计响应时效
-    
+
     Returns:
         dict: 责任人名称到统计指标的映射
     """
@@ -197,7 +198,7 @@ def calculate_handler_metrics(
                     'times': [],
                 }
             response_by_handler[handler_name]['times'].append(rt['hours'])
-    
+
     handler_metrics = {}
     for handler_name, data in response_by_handler.items():
         times = data['times']
@@ -217,7 +218,7 @@ def generate_response_rankings(
 ) -> Dict[str, List[Dict[str, Any]]]:
     """
     生成响应时效排行榜
-    
+
     Returns:
         dict: 包含最快/最慢项目和责任人的排行榜
     """
@@ -226,27 +227,27 @@ def generate_response_rankings(
         [(name, data) for name, data in project_metrics.items()],
         key=lambda x: x[1]['avg_hours']
     )[:5]
-    
+
     # 最慢的项目（平均响应时间最长）
     slowest_projects = sorted(
         [(name, data) for name, data in project_metrics.items()],
         key=lambda x: x[1]['avg_hours'],
         reverse=True
     )[:5]
-    
+
     # 最快的责任人（平均响应时间最短）
     fastest_handlers = sorted(
         [(name, data) for name, data in handler_metrics.items()],
         key=lambda x: x[1]['avg_hours']
     )[:5]
-    
+
     # 最慢的责任人（平均响应时间最长）
     slowest_handlers = sorted(
         [(name, data) for name, data in handler_metrics.items()],
         key=lambda x: x[1]['avg_hours'],
         reverse=True
     )[:5]
-    
+
     return {
         'fastest_projects': [
             {

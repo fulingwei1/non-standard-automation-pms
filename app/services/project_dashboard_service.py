@@ -3,19 +3,20 @@
 项目仪表盘数据聚合服务
 """
 
-from typing import Dict, Any, Optional, List
 from datetime import date
-from sqlalchemy.orm import Session
-from sqlalchemy import desc, func
+from typing import Any, Dict, List, Optional
 
-from app.models.project import Project, ProjectCost, ProjectMilestone, ProjectStatusLog
+from sqlalchemy import desc, func
+from sqlalchemy.orm import Session
+
 from app.models.progress import Task
+from app.models.project import Project, ProjectCost, ProjectMilestone, ProjectStatusLog
 
 
 def build_basic_info(project: Project) -> Dict[str, Any]:
     """
     构建项目基本信息
-    
+
     Returns:
         dict: 项目基本信息
     """
@@ -40,7 +41,7 @@ def build_basic_info(project: Project) -> Dict[str, Any]:
 def calculate_progress_stats(project: Project, today: date) -> Dict[str, Any]:
     """
     计算进度统计
-    
+
     Returns:
         dict: 进度统计数据
     """
@@ -51,15 +52,15 @@ def calculate_progress_stats(project: Project, today: date) -> Dict[str, Any]:
         if total_days > 0:
             elapsed_days = (today - project.planned_start_date).days
             plan_progress = min(100, max(0, (elapsed_days / total_days) * 100))
-    
+
     # 计算进度偏差
     progress_deviation = float(project.progress_pct or 0) - plan_progress
-    
+
     # 计算时间偏差
     time_deviation_days = 0
     if project.planned_end_date:
         time_deviation_days = (today - project.planned_end_date).days
-    
+
     return {
         "actual_progress": float(project.progress_pct or 0),
         "plan_progress": plan_progress,
@@ -332,17 +333,17 @@ def calculate_resource_usage(db: Session, project_id: int) -> Optional[Dict[str,
 def get_recent_activities(db: Session, project_id: int) -> List[Dict[str, Any]]:
     """
     获取最近活动
-    
+
     Returns:
         List[Dict]: 最近活动列表
     """
     recent_activities = []
-    
+
     # 最近的状态变更
     recent_status_logs = db.query(ProjectStatusLog).filter(
         ProjectStatusLog.project_id == project_id
     ).order_by(desc(ProjectStatusLog.changed_at)).limit(5).all()
-    
+
     for log in recent_status_logs:
         activity = {
             "type": "STATUS_CHANGE",
@@ -351,13 +352,13 @@ def get_recent_activities(db: Session, project_id: int) -> List[Dict[str, Any]]:
             "description": log.change_reason,
         }
         recent_activities.append(activity)
-    
+
     # 最近的里程碑完成
     recent_milestones = db.query(ProjectMilestone).filter(
         ProjectMilestone.project_id == project_id,
         ProjectMilestone.status == "COMPLETED"
     ).order_by(desc(ProjectMilestone.actual_date)).limit(3).all()
-    
+
     for milestone in recent_milestones:
         activity = {
             "type": "MILESTONE",
@@ -366,7 +367,7 @@ def get_recent_activities(db: Session, project_id: int) -> List[Dict[str, Any]]:
             "description": None,
         }
         recent_activities.append(activity)
-    
+
     # 按时间排序
     recent_activities.sort(key=lambda x: x.get("time") or "", reverse=True)
     return recent_activities[:10]
@@ -381,7 +382,7 @@ def calculate_key_metrics(
 ) -> Dict[str, float]:
     """
     计算关键指标
-    
+
     Returns:
         dict: 关键指标数据
     """
@@ -392,7 +393,7 @@ def calculate_key_metrics(
         "cost_score": 100 - abs(cost_variance_rate) if abs(cost_variance_rate) <= 10 else max(0, 100 - abs(cost_variance_rate) * 2),
         "quality_score": (task_completed / task_total * 100) if task_total > 0 else 100,
     }
-    
+
     # 计算综合得分
     key_metrics["overall_score"] = (
         key_metrics["health_score"] * 0.3 +
@@ -401,5 +402,5 @@ def calculate_key_metrics(
         key_metrics["cost_score"] * 0.15 +
         key_metrics["quality_score"] * 0.1
     )
-    
+
     return key_metrics

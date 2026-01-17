@@ -4,18 +4,21 @@
 将任职资格体系与绩效评价系统融合
 """
 
-from typing import Optional, Dict, Any
 from datetime import date
 from decimal import Decimal
-from sqlalchemy.orm import Session
-from sqlalchemy import and_
+from typing import Any, Dict, Optional
 
-from app.models.user import User
+from sqlalchemy import and_
+from sqlalchemy.orm import Session
+
 from app.models.performance import (
-    PerformanceEvaluationRecord, MonthlyWorkSummary,
-    PerformanceResult, PerformancePeriod
+    MonthlyWorkSummary,
+    PerformanceEvaluationRecord,
+    PerformancePeriod,
+    PerformanceResult,
 )
 from app.models.qualification import EmployeeQualification
+from app.models.user import User
 from app.services.qualification_service import QualificationService
 
 
@@ -34,12 +37,12 @@ class PerformanceIntegrationService:
     ) -> Optional[Dict[str, Any]]:
         """
         计算融合后的绩效得分
-        
+
         Args:
             db: 数据库会话
             user_id: 用户ID
             period: 考核周期 (格式: YYYY-MM)
-        
+
         Returns:
             {
                 'base_score': float,           # 基础绩效得分
@@ -55,7 +58,7 @@ class PerformanceIntegrationService:
         base_score = PerformanceIntegrationService._get_base_performance_score(
             db, user_id, period
         )
-        
+
         if base_score is None:
             return None
 
@@ -124,10 +127,10 @@ class PerformanceIntegrationService:
         # 计算加权平均分（使用评价权重配置）
         from app.services.performance_service import PerformanceService
         final_score_data = PerformanceService.calculate_final_score(db, summary.id, period)
-        
+
         if final_score_data:
             return Decimal(str(final_score_data.get('final_score', 0)))
-        
+
         # 如果没有配置权重，使用简单平均
         total_score = sum(e.score for e in evaluations)
         return Decimal(str(total_score / len(evaluations)))

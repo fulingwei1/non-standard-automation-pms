@@ -4,11 +4,12 @@
 根据项目自动获取相关人员，支持多项目合并
 """
 
-from typing import List, Dict, Any, Optional
-from sqlalchemy.orm import Session
-from sqlalchemy import and_
+from typing import Any, Dict, List, Optional
 
-from app.models.project import ProjectMember, Project
+from sqlalchemy import and_
+from sqlalchemy.orm import Session
+
+from app.models.project import Project, ProjectMember
 from app.models.user import User
 
 
@@ -20,16 +21,16 @@ def get_project_members_for_ticket(
 ) -> List[Dict[str, Any]]:
     """
     获取项目相关人员（去重）
-    
+
     根据项目ID列表获取所有相关人员，按用户ID去重，
     合并该用户在多个项目中的角色信息。
-    
+
     Args:
         db: 数据库会话
         project_ids: 项目ID列表
         include_roles: 包含的角色（可选，如：['PM', 'ME', 'EE']）
         exclude_user_id: 排除的用户ID（如当前用户）
-    
+
     Returns:
         去重后的人员列表，每个人员包含：
         - user_id: 用户ID
@@ -42,30 +43,30 @@ def get_project_members_for_ticket(
     """
     if not project_ids:
         return []
-    
+
     # 查询项目成员
     query = db.query(ProjectMember).filter(
         ProjectMember.project_id.in_(project_ids),
         ProjectMember.is_active == True
     )
-    
+
     if include_roles:
         query = query.filter(ProjectMember.role_code.in_(include_roles))
-    
+
     if exclude_user_id:
         query = query.filter(ProjectMember.user_id != exclude_user_id)
-    
+
     members = query.all()
-    
+
     if not members:
         return []
-    
+
     # 按用户ID去重，合并项目列表
     user_members = {}
     for member in members:
         user_id = member.user_id
         user = member.user
-        
+
         if user_id not in user_members:
             user_members[user_id] = {
                 "user_id": user_id,
@@ -81,7 +82,7 @@ def get_project_members_for_ticket(
                 "is_lead": member.is_lead,
                 "allocation_pct": float(member.allocation_pct or 100)
             }
-        
+
         # 添加项目信息
         project = member.project
         project_info = {
@@ -91,17 +92,17 @@ def get_project_members_for_ticket(
             "role_code": member.role_code,
             "is_lead": member.is_lead
         }
-        
+
         # 避免重复添加同一项目
         if not any(p["project_id"] == member.project_id for p in user_members[user_id]["projects"]):
             user_members[user_id]["projects"].append(project_info)
-    
+
     # 按角色优先级和姓名排序
     role_priority = {
         "PM": 1, "PMC": 2, "ME": 3, "EE": 4,
         "SW": 5, "DEBUG": 6, "QA": 7, "SALES": 8
     }
-    
+
     sorted_members = sorted(
         user_members.values(),
         key=lambda x: (
@@ -109,7 +110,7 @@ def get_project_members_for_ticket(
             x["real_name"]
         )
     )
-    
+
     return sorted_members
 
 
@@ -119,23 +120,23 @@ def get_ticket_related_projects(
 ) -> Dict[str, Any]:
     """
     获取工单关联的所有项目
-    
+
     Args:
         db: 数据库会话
         ticket_id: 工单ID
-    
+
     Returns:
         包含主项目和关联项目的字典
     """
     from app.models.service import ServiceTicket, ServiceTicketProject
-    
+
     ticket = db.query(ServiceTicket).filter(ServiceTicket.id == ticket_id).first()
     if not ticket:
         return {
             "primary_project": None,
             "related_projects": []
         }
-    
+
     # 获取主项目
     primary_project = None
     if ticket.project_id:
@@ -146,12 +147,12 @@ def get_ticket_related_projects(
                 "project_code": project.project_code,
                 "project_name": project.project_name
             }
-    
+
     # 获取关联项目
     ticket_projects = db.query(ServiceTicketProject).filter(
         ServiceTicketProject.ticket_id == ticket_id
     ).all()
-    
+
     related_projects = []
     for tp in ticket_projects:
         if tp.project_id != ticket.project_id:  # 排除主项目
@@ -163,7 +164,7 @@ def get_ticket_related_projects(
                     "project_name": project.project_name,
                     "is_primary": tp.is_primary
                 })
-    
+
     return {
         "primary_project": primary_project,
         "related_projects": related_projects

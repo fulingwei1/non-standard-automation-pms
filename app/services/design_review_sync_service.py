@@ -5,13 +5,14 @@
 """
 
 from datetime import date, datetime
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
 from sqlalchemy.orm import Session
 
-from app.models.technical_review import TechnicalReview
 from app.models.engineer_performance import DesignReview
-from app.models.user import User
 from app.models.project import Project
+from app.models.technical_review import TechnicalReview
+from app.models.user import User
 
 
 class DesignReviewSyncService:

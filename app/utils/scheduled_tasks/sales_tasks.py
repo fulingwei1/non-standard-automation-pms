@@ -4,12 +4,12 @@
 包含：销售提醒、收款提醒、逾期应收预警、商机阶段超时等
 """
 import logging
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
 
-from app.models.base import get_db_session
 from app.models.alert import AlertRecord, AlertRule
-from app.models.enums import AlertLevelEnum, AlertStatusEnum, AlertRuleTypeEnum
+from app.models.base import get_db_session
+from app.models.enums import AlertLevelEnum, AlertRuleTypeEnum, AlertStatusEnum
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ def sales_reminder_scan():
     销售模块提醒扫描任务
     扫描里程碑、收款计划等需要提醒的事项
     """
-    from app.services.sales_reminder_service import scan_and_notify_all
+    from app.services.sales_reminder import scan_and_notify_all
 
     with get_db_session() as db:
         try:
@@ -38,7 +38,7 @@ def check_payment_reminder():
     """
     try:
         with get_db_session() as db:
-            from app.services.sales_reminder_service import notify_payment_plan_upcoming
+            from app.services.sales_reminder import notify_payment_plan_upcoming
 
             # 提醒7天内到期的收款计划
             count = notify_payment_plan_upcoming(db, days_before=7)
@@ -63,7 +63,7 @@ def check_overdue_receivable_alerts():
     """
     try:
         with get_db_session() as db:
-            from app.models.sales import Invoice, Contract
+            from app.models.sales import Contract, Invoice
 
             today = date.today()
 
@@ -183,8 +183,8 @@ def check_opportunity_stage_timeout():
     """
     try:
         with get_db_session() as db:
-            from app.models.sales import Opportunity
             from app.models.notification import Notification
+            from app.models.sales import Opportunity
 
             today = date.today()
 
@@ -223,7 +223,7 @@ def check_opportunity_stage_timeout():
                     ).first()
 
                     if not existing:
-                        from app.services.sales_reminder_service import create_notification
+                        from app.services.sales_reminder import create_notification
 
                         create_notification(
                             db=db,

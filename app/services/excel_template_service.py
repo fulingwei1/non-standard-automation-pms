@@ -5,12 +5,12 @@ Excel模板生成服务
 提供统一的Excel模板生成功能，消除重复代码
 """
 
-from typing import Dict, List, Optional
-from datetime import datetime
 import io
+from datetime import datetime
+from typing import Dict, List, Optional
 
 from fastapi.responses import StreamingResponse
-from openpyxl.styles import Font, PatternFill, Alignment
+from openpyxl.styles import Alignment, Font, PatternFill
 
 
 def create_template_excel(
@@ -22,36 +22,36 @@ def create_template_excel(
 ) -> StreamingResponse:
     """
     创建标准化的Excel导入模板
-    
+
     Args:
         template_data: 模板数据字典，键为列名，值为示例数据列表
         sheet_name: 工作表名称
         column_widths: 列宽配置，如 {'A': 18, 'B': 30}
         instructions: 说明文字
         filename_prefix: 文件名前缀
-    
+
     Returns:
         StreamingResponse: Excel文件流
     """
     import pandas as pd
-    
+
     # 创建DataFrame
     df = pd.DataFrame(template_data)
-    
+
     # 创建Excel文件
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, sheet_name=sheet_name, index=False)
-        
+
         # 获取工作表
         worksheet = writer.sheets[sheet_name]
-        
+
         # 应用标准样式
         apply_template_styles(worksheet, column_widths, instructions)
-    
+
     output.seek(0)
     filename = f"{filename_prefix}_{datetime.now().strftime('%Y%m%d')}.xlsx"
-    
+
     return StreamingResponse(
         io.BytesIO(output.read()),
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -68,7 +68,7 @@ def apply_template_styles(
 ) -> None:
     """
     应用Excel模板的标准样式
-    
+
     Args:
         worksheet: openpyxl工作表对象
         column_widths: 列宽配置
@@ -77,17 +77,17 @@ def apply_template_styles(
     # 表头样式
     header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
     header_font = Font(bold=True, color="FFFFFF")
-    
+
     # 应用表头样式（第2行，因为第1行是说明）
     for cell in worksheet[2]:
         cell.fill = header_fill
         cell.font = header_font
         cell.alignment = Alignment(horizontal="center", vertical="center")
-    
+
     # 设置列宽
     for col, width in column_widths.items():
         worksheet.column_dimensions[col].width = width
-    
+
     # 添加说明行
     if instructions:
         worksheet.insert_rows(1)
@@ -210,10 +210,10 @@ TEMPLATE_CONFIGS = {
 def get_template_config(template_type: str) -> Optional[Dict]:
     """
     获取模板配置
-    
+
     Args:
         template_type: 模板类型（PROJECT/TASK/USER等）
-    
+
     Returns:
         模板配置字典，如果类型不存在则返回None
     """

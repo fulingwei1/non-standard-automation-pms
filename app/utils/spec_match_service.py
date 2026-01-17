@@ -4,15 +4,16 @@
 用于在采购订单创建和BOM审批时自动检查规格匹配
 """
 
-from typing import List, Optional
-from sqlalchemy.orm import Session
-from decimal import Decimal
-
-from app.models.technical_spec import TechnicalSpecRequirement, SpecMatchRecord
-from app.models.alert import AlertRecord, AlertRule
-from app.models.enums import AlertRuleTypeEnum, AlertLevelEnum, AlertStatusEnum
-from app.utils.spec_matcher import SpecMatcher
 from datetime import datetime
+from decimal import Decimal
+from typing import List, Optional
+
+from sqlalchemy.orm import Session
+
+from app.models.alert import AlertRecord, AlertRule
+from app.models.enums import AlertLevelEnum, AlertRuleTypeEnum, AlertStatusEnum
+from app.models.technical_spec import SpecMatchRecord, TechnicalSpecRequirement
+from app.utils.spec_matcher import SpecMatcher
 
 
 class SpecMatchService:
@@ -33,7 +34,7 @@ class SpecMatchService:
     ) -> Optional[SpecMatchRecord]:
         """
         检查采购订单行的规格匹配
-        
+
         Args:
             db: 数据库会话
             project_id: 项目ID
@@ -42,7 +43,7 @@ class SpecMatchService:
             specification: 规格型号
             brand: 品牌
             model: 型号
-        
+
         Returns:
             匹配记录（如果不匹配则返回记录，匹配则返回None）
         """
@@ -53,23 +54,23 @@ class SpecMatchService:
             (TechnicalSpecRequirement.material_code == material_code) |
             (TechnicalSpecRequirement.material_code.is_(None))
         ).all()
-        
+
         if not requirements:
             return None
-        
+
         # 对每个规格要求进行匹配
         for req in requirements:
             # 如果规格要求有物料编码，必须匹配
             if req.material_code and req.material_code != material_code:
                 continue
-            
+
             match_result = self.matcher.match_specification(
                 requirement=req,
                 actual_spec=specification or '',
                 actual_brand=brand,
                 actual_model=model
             )
-            
+
             # 创建匹配记录
             match_record = SpecMatchRecord(
                 project_id=project_id,
@@ -82,7 +83,7 @@ class SpecMatchService:
             )
             db.add(match_record)
             db.flush()
-            
+
             # 如果不匹配，生成预警
             if match_result.match_status == 'MISMATCHED':
                 self._create_alert(
@@ -92,9 +93,9 @@ class SpecMatchService:
                     requirement=req,
                     match_result=match_result
                 )
-            
+
             return match_record
-        
+
         return None
 
     def check_bom_item_spec_match(
@@ -109,7 +110,7 @@ class SpecMatchService:
     ) -> Optional[SpecMatchRecord]:
         """
         检查BOM行的规格匹配
-        
+
         Args:
             db: 数据库会话
             project_id: 项目ID
@@ -118,7 +119,7 @@ class SpecMatchService:
             specification: 规格型号
             brand: 品牌
             model: 型号
-        
+
         Returns:
             匹配记录（如果不匹配则返回记录，匹配则返回None）
         """
@@ -129,23 +130,23 @@ class SpecMatchService:
             (TechnicalSpecRequirement.material_code == material_code) |
             (TechnicalSpecRequirement.material_code.is_(None))
         ).all()
-        
+
         if not requirements:
             return None
-        
+
         # 对每个规格要求进行匹配
         for req in requirements:
             # 如果规格要求有物料编码，必须匹配
             if req.material_code and req.material_code != material_code:
                 continue
-            
+
             match_result = self.matcher.match_specification(
                 requirement=req,
                 actual_spec=specification or '',
                 actual_brand=brand,
                 actual_model=model
             )
-            
+
             # 创建匹配记录
             match_record = SpecMatchRecord(
                 project_id=project_id,
@@ -158,7 +159,7 @@ class SpecMatchService:
             )
             db.add(match_record)
             db.flush()
-            
+
             # 如果不匹配，生成预警
             if match_result.match_status == 'MISMATCHED':
                 self._create_alert(
@@ -168,9 +169,9 @@ class SpecMatchService:
                     requirement=req,
                     match_result=match_result
                 )
-            
+
             return match_record
-        
+
         return None
 
     def _create_alert(
@@ -183,7 +184,7 @@ class SpecMatchService:
     ):
         """
         创建规格不匹配预警
-        
+
         Args:
             db: 数据库会话
             project_id: 项目ID
@@ -196,7 +197,7 @@ class SpecMatchService:
             AlertRule.rule_type == AlertRuleTypeEnum.SPECIFICATION_MISMATCH.value,
             AlertRule.is_enabled == True
         ).first()
-        
+
         if not rule:
             # 创建默认预警规则
             rule = AlertRule(
@@ -214,14 +215,14 @@ class SpecMatchService:
             )
             db.add(rule)
             db.flush()
-        
+
         # 生成预警编号
         today = datetime.now().strftime('%Y%m%d')
         count = db.query(AlertRecord).filter(
             AlertRecord.alert_no.like(f'AL{today}%')
         ).count()
         alert_no = f'AL{today}{str(count + 1).zfill(4)}'
-        
+
         # 创建预警记录
         alert = AlertRecord(
             alert_no=alert_no,
@@ -246,7 +247,7 @@ class SpecMatchService:
         )
         db.add(alert)
         db.flush()
-        
+
         # 更新匹配记录的预警ID
         match_record = db.query(SpecMatchRecord).filter(
             SpecMatchRecord.id == match_record_id

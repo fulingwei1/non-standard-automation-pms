@@ -6,19 +6,19 @@
 识别高浪费销售人员和失败模式
 """
 
-from typing import Dict, List, Optional, Any, Tuple
-from datetime import datetime, date, timedelta
-from decimal import Decimal
-from collections import defaultdict
 import logging
+from collections import defaultdict
+from datetime import date, datetime, timedelta
+from decimal import Decimal
+from typing import Any, Dict, List, Optional, Tuple
 
+from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_, desc
 
-from app.models.project import Project, Customer
+from app.models.enums import LeadOutcomeEnum, LossReasonEnum
+from app.models.project import Customer, Project
 from app.models.user import User
 from app.models.work_log import WorkLog
-from app.models.enums import LeadOutcomeEnum, LossReasonEnum
 
 logger = logging.getLogger(__name__)
 

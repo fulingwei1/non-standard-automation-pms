@@ -3,10 +3,11 @@
 从BOM创建采购订单服务
 """
 
-from typing import Dict, Any, List, Optional, Tuple
-from decimal import Decimal
-from datetime import date
 from collections import defaultdict
+from datetime import date
+from decimal import Decimal
+from typing import Any, Dict, List, Optional, Tuple
+
 from sqlalchemy.orm import Session
 
 from app.models.material import BomHeader, BomItem, Material, Supplier
@@ -19,14 +20,14 @@ def get_purchase_items_from_bom(
 ) -> List[BomItem]:
     """
     获取BOM中需要采购的物料
-    
+
     Returns:
         List[BomItem]: 需要采购的BOM物料项列表
     """
     bom_items = bom.items.filter(
         BomItem.source_type == "PURCHASE"
     ).all()
-    
+
     return bom_items
 
 
@@ -37,24 +38,24 @@ def determine_supplier_for_item(
 ) -> Optional[int]:
     """
     确定物料的供应商
-    
+
     Returns:
         Optional[int]: 供应商ID，如果无法确定则返回None
     """
     # 优先使用提供的默认供应商
     if default_supplier_id:
         return default_supplier_id
-    
+
     # 其次使用BOM项中的供应商
     if item.supplier_id:
         return item.supplier_id
-    
+
     # 最后尝试从物料获取默认供应商
     if item.material_id:
         material = db.query(Material).filter(Material.id == item.material_id).first()
         if material and material.default_supplier_id:
             return material.default_supplier_id
-    
+
     return None
 
 
@@ -65,19 +66,19 @@ def group_items_by_supplier(
 ) -> Dict[int, List[BomItem]]:
     """
     按供应商分组物料
-    
+
     Returns:
         Dict[int, List[BomItem]]: 供应商ID到物料列表的映射
     """
     supplier_items = defaultdict(list)
-    
+
     for item in bom_items:
         supplier_id = determine_supplier_for_item(db, item, default_supplier_id)
-        
+
         # 如果没有供应商，使用0表示未指定
         supplier_id = supplier_id or 0
         supplier_items[supplier_id].append(item)
-    
+
     return dict(supplier_items)
 
 
@@ -88,7 +89,7 @@ def calculate_order_item(
 ) -> Dict[str, Any]:
     """
     计算订单明细项
-    
+
     Returns:
         Dict[str, Any]: 订单明细项数据
     """
@@ -97,7 +98,7 @@ def calculate_order_item(
     amount = remaining_qty * unit_price
     tax_amount = amount * tax_rate / 100
     amount_with_tax = amount + tax_amount
-    
+
     return {
         "item_no": item_no,
         "material_id": item.material_id,
@@ -121,29 +122,29 @@ def build_order_items(
 ) -> Tuple[List[Dict[str, Any]], Decimal, Decimal, Decimal]:
     """
     构建订单明细列表
-    
+
     Returns:
-        Tuple[List[Dict[str, Any]], Decimal, Decimal, Decimal]: 
+        Tuple[List[Dict[str, Any]], Decimal, Decimal, Decimal]:
         (订单明细列表, 总金额, 总税额, 含税总金额)
     """
     order_items = []
     total_amount = Decimal(0)
     total_tax_amount = Decimal(0)
     total_amount_with_tax = Decimal(0)
-    
+
     for idx, item in enumerate(items, start=1):
         # 计算未采购数量
         remaining_qty = item.quantity - (item.purchased_qty or 0)
         if remaining_qty <= 0:
             continue  # 跳过已完全采购的物料
-        
+
         item_data = calculate_order_item(item, idx, remaining_qty)
         order_items.append(item_data)
-        
+
         total_amount += item_data["amount"]
         total_tax_amount += item_data["tax_amount"]
         total_amount_with_tax += item_data["amount_with_tax"]
-    
+
     return order_items, total_amount, total_tax_amount, total_amount_with_tax
 
 
@@ -159,7 +160,7 @@ def create_order_preview(
 ) -> Dict[str, Any]:
     """
     生成订单预览
-    
+
     Returns:
         Dict[str, Any]: 订单预览数据
     """
@@ -187,13 +188,13 @@ def create_purchase_order_from_preview(
 ) -> Tuple[PurchaseOrder, List[PurchaseOrderItem]]:
     """
     根据预览创建实际的采购订单
-    
+
     Returns:
         Tuple[PurchaseOrder, List[PurchaseOrderItem]]: (订单对象, 订单明细列表)
     """
     # 生成订单编号
     order_no = generate_order_no_func(db)
-    
+
     # 创建订单
     order = PurchaseOrder(
         order_no=order_no,
@@ -211,7 +212,7 @@ def create_purchase_order_from_preview(
     )
     db.add(order)
     db.flush()
-    
+
     # 创建订单明细
     order_items = []
     for item_data in order_preview["items"]:
@@ -235,7 +236,7 @@ def create_purchase_order_from_preview(
         )
         db.add(order_item)
         order_items.append(order_item)
-    
+
     return order, order_items
 
 
@@ -244,7 +245,7 @@ def calculate_summary(
 ) -> Dict[str, Any]:
     """
     计算汇总统计
-    
+
     Returns:
         Dict[str, Any]: 汇总统计数据
     """

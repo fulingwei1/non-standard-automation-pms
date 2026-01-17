@@ -4,7 +4,7 @@
 包含：健康度计算、每日健康度快照
 """
 import logging
-from datetime import datetime, date
+from datetime import date, datetime
 
 from app.models.base import get_db_session
 from app.models.project import Project
@@ -43,8 +43,8 @@ def daily_health_snapshot():
     每天凌晨2点执行，生成所有项目的健康度快照
     """
     try:
-        from app.services.health_calculator import HealthCalculator
         from app.models.alert import ProjectHealthSnapshot
+        from app.services.health_calculator import HealthCalculator
 
         with get_db_session() as db:
             calculator = HealthCalculator(db)

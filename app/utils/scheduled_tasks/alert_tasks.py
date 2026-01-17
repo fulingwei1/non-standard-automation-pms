@@ -5,18 +5,19 @@
 """
 import logging
 from datetime import datetime
+
 from sqlalchemy import or_
 
+from app.models.alert import AlertNotification, AlertRecord
 from app.models.base import get_db_session
-from app.models.alert import AlertRecord, AlertNotification
 from app.services.notification_dispatcher import (
     NotificationDispatcher,
-    resolve_channels,
-    resolve_recipients,
-    resolve_channel_target,
     channel_allowed,
     is_quiet_hours,
     next_quiet_resume,
+    resolve_channel_target,
+    resolve_channels,
+    resolve_recipients,
 )
 from app.services.notification_queue import enqueue_notification
 
@@ -56,8 +57,8 @@ def retry_failed_notifications():
     """
     try:
         with get_db_session() as db:
-            from app.models.user import User
             from app.models.notification import NotificationSettings
+            from app.models.user import User
 
             current_time = datetime.now()
             max_retries = 3
@@ -154,8 +155,8 @@ def send_alert_notifications():
     try:
         with get_db_session() as db:
             dispatcher = NotificationDispatcher(db)
-            from app.models.user import User
             from app.models.notification import NotificationSettings
+            from app.models.user import User
 
             # 1) 生成通知队列
             pending_alerts = db.query(AlertRecord).filter(

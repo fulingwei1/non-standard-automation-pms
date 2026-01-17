@@ -5,7 +5,7 @@ Redis-backed notification queue for async dispatch.
 
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 from app.utils.redis_client import get_redis_client
@@ -32,7 +32,7 @@ def enqueue_notification(payload: Dict[str, Any]) -> bool:
         return False
     try:
         if "enqueue_at" not in payload:
-            payload["enqueue_at"] = datetime.utcnow().isoformat()
+            payload["enqueue_at"] = datetime.now(timezone.utc).isoformat()
         redis_client.rpush(QUEUE_KEY, json.dumps(payload, ensure_ascii=False))
         return True
     except Exception as exc:

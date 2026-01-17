@@ -4,13 +4,16 @@
 """
 
 from datetime import date, datetime, timedelta
+
 from sqlalchemy.orm import Session
 
 from app.models.base import get_db_session
-from app.services.work_log_auto_generator import WorkLogAutoGenerator
-from app.services.design_review_sync_service import DesignReviewSyncService
 from app.services.debug_issue_sync_service import DebugIssueSyncService
-from app.services.knowledge_auto_identification_service import KnowledgeAutoIdentificationService
+from app.services.design_review_sync_service import DesignReviewSyncService
+from app.services.knowledge_auto_identification_service import (
+    KnowledgeAutoIdentificationService,
+)
+from app.services.work_log_auto_generator import WorkLogAutoGenerator
 
 
 def daily_work_log_generation_task():

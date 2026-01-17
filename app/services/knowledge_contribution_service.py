@@ -5,17 +5,22 @@
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional, List, Dict, Any, Tuple
+from typing import Any, Dict, List, Optional, Tuple
+
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
-from sqlalchemy import func, desc
 
 from app.models.engineer_performance import (
-    KnowledgeContribution, KnowledgeReuseLog,
-    CodeModule, PlcModuleLibrary
+    CodeModule,
+    KnowledgeContribution,
+    KnowledgeReuseLog,
+    PlcModuleLibrary,
 )
 from app.models.user import User
 from app.schemas.engineer_performance import (
-    KnowledgeContributionCreate, KnowledgeContributionUpdate, KnowledgeReuseCreate
+    KnowledgeContributionCreate,
+    KnowledgeContributionUpdate,
+    KnowledgeReuseCreate,
 )
 
 

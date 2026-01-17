@@ -5,11 +5,16 @@
 """
 
 from datetime import date, datetime
-from typing import Optional, Dict, Any, List
+from typing import Any, Dict, List, Optional
+
 from sqlalchemy.orm import Session
 
-from app.models.service import ServiceTicket, KnowledgeBase
-from app.models.engineer_performance import KnowledgeContribution, CodeModule, PlcModuleLibrary
+from app.models.engineer_performance import (
+    CodeModule,
+    KnowledgeContribution,
+    PlcModuleLibrary,
+)
+from app.models.service import KnowledgeBase, ServiceTicket
 from app.models.user import User
 from app.services.knowledge_extraction_service import auto_extract_knowledge_from_ticket
 

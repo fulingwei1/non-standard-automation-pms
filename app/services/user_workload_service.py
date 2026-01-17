@@ -3,21 +3,25 @@
 用户负荷统计服务
 """
 
-from typing import Dict, Any, List, Optional
 from datetime import date, timedelta
+from typing import Any, Dict, List, Optional
+
 from sqlalchemy.orm import Session
 
-from app.models.progress import Task
 from app.models.pmo import PmoResourceAllocation
+from app.models.progress import Task
 from app.schemas.workload import (
-    UserWorkloadSummary, ProjectWorkloadItem, DailyWorkloadItem, TaskWorkloadItem
+    DailyWorkloadItem,
+    ProjectWorkloadItem,
+    TaskWorkloadItem,
+    UserWorkloadSummary,
 )
 
 
 def calculate_workdays(start_date: date, end_date: date) -> int:
     """
     计算工作日数量（简单实现，不考虑节假日）
-    
+
     Returns:
         int: 工作日数量
     """
@@ -35,7 +39,7 @@ def get_user_tasks(
 ) -> List[Task]:
     """
     获取用户的任务列表
-    
+
     Returns:
         List[Task]: 任务列表
     """
@@ -55,7 +59,7 @@ def get_user_allocations(
 ) -> List[PmoResourceAllocation]:
     """
     获取用户的资源分配列表
-    
+
     Returns:
         List[PmoResourceAllocation]: 资源分配列表
     """
@@ -70,7 +74,7 @@ def get_user_allocations(
 def calculate_task_hours(task: Task) -> float:
     """
     计算任务的分配工时
-    
+
     Returns:
         float: 工时数
     """
@@ -86,26 +90,26 @@ def calculate_total_assigned_hours(
 ) -> float:
     """
     计算总分配工时
-    
+
     Returns:
         float: 总分配工时
     """
     total = 0.0
-    
+
     for task in tasks:
         total += calculate_task_hours(task)
-    
+
     for alloc in allocations:
         if alloc.planned_hours:
             total += float(alloc.planned_hours)
-    
+
     return total
 
 
 def calculate_total_actual_hours(allocations: List[PmoResourceAllocation]) -> float:
     """
     计算总实际工时
-    
+
     Returns:
         float: 总实际工时
     """
@@ -115,16 +119,16 @@ def calculate_total_actual_hours(allocations: List[PmoResourceAllocation]) -> fl
 def build_project_workload(tasks: List[Task]) -> List[ProjectWorkloadItem]:
     """
     构建项目负荷列表
-    
+
     Returns:
         List[ProjectWorkloadItem]: 项目负荷列表
     """
     project_dict = {}
-    
+
     for task in tasks:
         if not task.project_id:
             continue
-        
+
         project = task.project
         if project.id not in project_dict:
             project_dict[project.id] = {
@@ -135,18 +139,18 @@ def build_project_workload(tasks: List[Task]) -> List[ProjectWorkloadItem]:
                 'actual_hours': 0.0,
                 'task_count': 0
             }
-        
+
         hours = calculate_task_hours(task)
         project_dict[project.id]['assigned_hours'] += hours
         project_dict[project.id]['task_count'] += 1
-    
+
     return [ProjectWorkloadItem(**p) for p in project_dict.values()]
 
 
 def build_task_list(tasks: List[Task]) -> List[TaskWorkloadItem]:
     """
     构建任务列表
-    
+
     Returns:
         List[TaskWorkloadItem]: 任务列表
     """
@@ -171,17 +175,17 @@ def build_daily_load(
 ) -> List[DailyWorkloadItem]:
     """
     构建每日负荷列表
-    
+
     Returns:
         List[DailyWorkloadItem]: 每日负荷列表
     """
     daily_load = []
     current = start_date
-    
+
     while current <= end_date:
         day_assigned = 0.0
         day_actual = 0.0
-        
+
         for task in tasks:
             if task.plan_start <= current <= task.plan_end:
                 if task.estimated_hours:
@@ -189,12 +193,12 @@ def build_daily_load(
                     day_assigned += float(task.estimated_hours) / max(days, 1)
                 else:
                     day_assigned += 8.0
-        
+
         daily_load.append(DailyWorkloadItem(
             date=current,
             assigned=round(day_assigned, 2),
             actual=round(day_actual, 2)
         ))
         current += timedelta(days=1)
-    
+
     return daily_load

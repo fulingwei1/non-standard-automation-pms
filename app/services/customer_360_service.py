@@ -5,15 +5,15 @@
 
 from __future__ import annotations
 
-from typing import Dict, Any, List, Tuple
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
+from typing import Any, Dict, List, Tuple
 
-from sqlalchemy.orm import Session
 from sqlalchemy import func
+from sqlalchemy.orm import Session
 
 from app.models.project import Customer, Project, ProjectPaymentPlan
-from app.models.sales import Opportunity, Quote, Contract, Invoice, QuoteVersion
+from app.models.sales import Contract, Invoice, Opportunity, Quote, QuoteVersion
 from app.models.service import CustomerCommunication
 
 

@@ -6,11 +6,12 @@
 """
 
 from datetime import datetime
-from typing import Optional, Tuple, List, Dict, Any
-from sqlalchemy.orm import Session
-from sqlalchemy import desc
+from typing import Any, Dict, List, Optional, Tuple
 
-from app.models.user import User, SolutionCreditTransaction, SolutionCreditConfig
+from sqlalchemy import desc
+from sqlalchemy.orm import Session
+
+from app.models.user import SolutionCreditConfig, SolutionCreditTransaction, User
 
 
 class CreditTransactionType:

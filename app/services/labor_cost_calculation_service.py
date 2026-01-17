@@ -3,13 +3,14 @@
 人工成本计算辅助服务
 """
 
-from typing import Dict, List, Optional
 from datetime import date
 from decimal import Decimal
+from typing import Dict, List, Optional
+
 from sqlalchemy.orm import Session
 
+from app.models.project import Project, ProjectCost
 from app.models.timesheet import Timesheet
-from app.models.project import ProjectCost, Project
 from app.services.labor_cost_service import LaborCostService
 
 
@@ -21,7 +22,7 @@ def query_approved_timesheets(
 ) -> List[Timesheet]:
     """
     查询已审批的工时记录
-    
+
     Returns:
         List[Timesheet]: 工时记录列表
     """
@@ -29,12 +30,12 @@ def query_approved_timesheets(
         Timesheet.project_id == project_id,
         Timesheet.status == "APPROVED"
     )
-    
+
     if start_date:
         query = query.filter(Timesheet.work_date >= start_date)
     if end_date:
         query = query.filter(Timesheet.work_date <= end_date)
-    
+
     return query.all()
 
 
@@ -51,7 +52,7 @@ def delete_existing_costs(
         ProjectCost.source_module == "TIMESHEET",
         ProjectCost.source_type == "LABOR_COST"
     ).all()
-    
+
     for cost in existing_costs:
         # 更新项目实际成本
         project.actual_cost = max(0, (project.actual_cost or 0) - float(cost.amount))
@@ -61,12 +62,12 @@ def delete_existing_costs(
 def group_timesheets_by_user(timesheets: List[Timesheet]) -> Dict[int, Dict]:
     """
     按用户分组工时记录
-    
+
     Returns:
         Dict[int, Dict]: 用户ID到用户数据的映射
     """
     user_costs: Dict[int, Dict] = {}
-    
+
     for ts in timesheets:
         user_id = ts.user_id
         if user_id not in user_costs:
@@ -78,15 +79,15 @@ def group_timesheets_by_user(timesheets: List[Timesheet]) -> Dict[int, Dict]:
                 "cost_amount": Decimal("0"),
                 "work_date": ts.work_date
             }
-        
+
         hours = Decimal(str(ts.hours or 0))
         user_costs[user_id]["total_hours"] += hours
         user_costs[user_id]["timesheet_ids"].append(ts.id)
-        
+
         # 更新工作日期（使用最新的日期）
         if ts.work_date:
             user_costs[user_id]["work_date"] = ts.work_date
-    
+
     return user_costs
 
 
@@ -97,7 +98,7 @@ def find_existing_cost(
 ) -> Optional[ProjectCost]:
     """
     查找现有的成本记录
-    
+
     Returns:
         Optional[ProjectCost]: 现有成本记录
     """
@@ -124,10 +125,10 @@ def update_existing_cost(
     existing_cost.amount = cost_amount
     existing_cost.cost_date = end_date or date.today()
     existing_cost.description = f"人工成本：{user_data['user_name']}，工时：{user_data['total_hours']}小时"
-    
+
     # 更新项目实际成本
     project.actual_cost = (project.actual_cost or 0) - float(old_amount) + float(cost_amount)
-    
+
     db.add(existing_cost)
 
 
@@ -142,7 +143,7 @@ def create_new_cost(
 ) -> ProjectCost:
     """
     创建新的成本记录
-    
+
     Returns:
         ProjectCost: 新创建的成本记录
     """
@@ -161,10 +162,10 @@ def create_new_cost(
         created_by=None
     )
     db.add(cost)
-    
+
     # 更新项目实际成本
     project.actual_cost = (project.actual_cost or 0) + float(cost_amount)
-    
+
     return cost
 
 
@@ -196,41 +197,41 @@ def process_user_costs(
 ) -> tuple[List[ProjectCost], Decimal]:
     """
     处理用户成本
-    
+
     Returns:
         Tuple[List[ProjectCost], Decimal]: (创建的成本记录列表, 总成本)
     """
     created_costs = []
     total_cost = Decimal("0")
-    
+
     for user_id, user_data in user_costs.items():
         # 获取用户时薪
         work_date = user_data.get("work_date") or end_date or date.today()
         hourly_rate = LaborCostService.get_user_hourly_rate(db, user_id, work_date)
-        
+
         # 计算成本金额
         cost_amount = user_data["total_hours"] * hourly_rate
-        
+
         # 检查是否已存在该用户的成本记录
         existing_cost = None
         if not recalculate:
             existing_cost = find_existing_cost(db, project_id, user_id)
-        
+
         if existing_cost:
             # 更新现有成本记录
             update_existing_cost(db, project, existing_cost, cost_amount, user_data, end_date)
             created_costs.append(existing_cost)
-            
+
             # 检查预算预警
             check_budget_alert(db, project_id, user_id)
         else:
             # 创建新的成本记录
             cost = create_new_cost(db, project, project_id, user_id, cost_amount, user_data, end_date)
             created_costs.append(cost)
-            
+
             # 检查预算预警
             check_budget_alert(db, project_id, user_id)
-        
+
         total_cost += cost_amount
-    
+
     return created_costs, total_cost

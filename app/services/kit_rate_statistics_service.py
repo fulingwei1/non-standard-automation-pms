@@ -3,29 +3,30 @@
 齐套率统计服务
 """
 
-from typing import Dict, Any, List, Optional, Tuple
 from datetime import date, timedelta
+from typing import Any, Dict, List, Optional, Tuple
+
 from sqlalchemy.orm import Session
 
-from app.models.project import Project
 from app.models.machine import Machine
 from app.models.material import BomHeader, BomItem
+from app.models.project import Project
 
 
 def calculate_date_range(today: date) -> Tuple[date, date]:
     """
     计算默认日期范围（当前月）
-    
+
     Returns:
         Tuple[date, date]: (开始日期, 结束日期)
     """
     start_date = date(today.year, today.month, 1)
-    
+
     if today.month == 12:
         end_date = date(today.year + 1, 1, 1) - timedelta(days=1)
     else:
         end_date = date(today.year, today.month + 1, 1) - timedelta(days=1)
-    
+
     return start_date, end_date
 
 
@@ -35,13 +36,13 @@ def get_project_bom_items(
 ) -> List[BomItem]:
     """
     获取项目的所有BOM物料项
-    
+
     Returns:
         List[BomItem]: BOM物料项列表
     """
     machines = db.query(Machine).filter(Machine.project_id == project_id).all()
     all_bom_items = []
-    
+
     for machine in machines:
         bom = (
             db.query(BomHeader)
@@ -52,7 +53,7 @@ def get_project_bom_items(
         if bom:
             bom_items = db.query(BomItem).filter(BomItem.bom_id == bom.id).all()
             all_bom_items.extend(bom_items)
-    
+
     return all_bom_items
 
 
@@ -62,18 +63,18 @@ def calculate_project_kit_statistics(
 ) -> Optional[Dict[str, Any]]:
     """
     计算单个项目的齐套率统计
-    
+
     Returns:
         Optional[Dict[str, Any]]: 统计结果字典，如果计算失败返回None
     """
     try:
         from app.api.v1.endpoints.kit_rate import calculate_kit_rate
-        
+
         all_bom_items = get_project_bom_items(db, project.id)
-        
+
         # 计算齐套率
         kit_data = calculate_kit_rate(db, all_bom_items, "quantity")
-        
+
         return {
             "project_id": project.id,
             "project_name": project.project_name,
@@ -99,35 +100,35 @@ def calculate_workshop_kit_statistics(
 ) -> List[Dict[str, Any]]:
     """
     按车间统计齐套率
-    
+
     Returns:
         List[Dict[str, Any]]: 车间统计列表
     """
-    from app.models.production import Workshop
     from app.api.v1.endpoints.kit_rate import calculate_kit_rate
-    
+    from app.models.production import Workshop
+
     workshops = db.query(Workshop).all()
     if workshop_id:
         workshops = [w for w in workshops if w.id == workshop_id]
-    
+
     statistics = []
-    
+
     for workshop in workshops:
         # 获取该车间的所有项目（简化处理，实际应该关联车间）
         workshop_projects = [p for p in projects if p.id]
-        
+
         total_kit_rate = 0.0
         project_count = 0
         total_items = 0
         fulfilled_items = 0
         shortage_items = 0
         in_transit_items = 0
-        
+
         for project in workshop_projects:
             try:
                 all_bom_items = get_project_bom_items(db, project.id)
                 kit_data = calculate_kit_rate(db, all_bom_items, "quantity")
-                
+
                 total_kit_rate += kit_data.get("kit_rate", 0.0)
                 project_count += 1
                 total_items += kit_data.get("total_items", 0)
@@ -136,9 +137,9 @@ def calculate_workshop_kit_statistics(
                 in_transit_items += kit_data.get("in_transit_items", 0)
             except (ValueError, TypeError, KeyError, AttributeError) as e:
                 continue
-        
+
         avg_kit_rate = total_kit_rate / project_count if project_count > 0 else 0.0
-        
+
         statistics.append({
             "workshop_id": workshop.id,
             "workshop_name": workshop.workshop_name,
@@ -149,7 +150,7 @@ def calculate_workshop_kit_statistics(
             "shortage_items": shortage_items,
             "in_transit_items": in_transit_items,
         })
-    
+
     return statistics
 
 
@@ -161,20 +162,20 @@ def calculate_daily_kit_statistics(
 ) -> List[Dict[str, Any]]:
     """
     按日期统计齐套率
-    
+
     Returns:
         List[Dict[str, Any]]: 日期统计列表
     """
     from app.api.v1.endpoints.kit_rate import calculate_kit_rate
-    
+
     statistics = []
     current = start_date
-    
+
     while current <= end_date:
         # 简化处理：使用当前数据，实际应该从历史记录表查询
         total_kit_rate = 0.0
         project_count = 0
-        
+
         for project in projects:
             try:
                 all_bom_items = get_project_bom_items(db, project.id)
@@ -184,17 +185,17 @@ def calculate_daily_kit_statistics(
                 project_count += 1
             except (ValueError, TypeError, KeyError, AttributeError) as e:
                 continue
-        
+
         avg_kit_rate = total_kit_rate / project_count if project_count > 0 else 0.0
-        
+
         statistics.append({
             "date": current.isoformat(),
             "kit_rate": round(avg_kit_rate, 2),
             "project_count": project_count,
         })
-        
+
         current += timedelta(days=1)
-    
+
     return statistics
 
 
@@ -204,7 +205,7 @@ def calculate_summary_statistics(
 ) -> Dict[str, Any]:
     """
     计算汇总统计
-    
+
     Returns:
         Dict[str, Any]: 汇总统计字典
     """
@@ -215,7 +216,7 @@ def calculate_summary_statistics(
             "min_kit_rate": 0.0,
             "total_count": 0,
         }
-    
+
     if group_by in ["project", "workshop"]:
         avg_kit_rate = sum(s["kit_rate"] for s in statistics) / len(statistics)
         max_kit_rate = max(s["kit_rate"] for s in statistics)
@@ -224,7 +225,7 @@ def calculate_summary_statistics(
         avg_kit_rate = sum(s["kit_rate"] for s in statistics) / len(statistics)
         max_kit_rate = max(s["kit_rate"] for s in statistics)
         min_kit_rate = min(s["kit_rate"] for s in statistics)
-    
+
     return {
         "avg_kit_rate": round(avg_kit_rate, 2),
         "max_kit_rate": round(max_kit_rate, 2),

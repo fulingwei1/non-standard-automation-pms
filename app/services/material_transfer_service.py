@@ -4,16 +4,19 @@
 处理项目间物料调拨、库存查询、库存更新
 """
 
+import logging
 from datetime import datetime
-from typing import Optional, List, Dict, Any
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
+from app.models.inventory import InventoryStock, InventoryTransaction
 from app.models.material import Material, ProjectMaterial
 from app.models.project import Project
 from app.models.shortage import MaterialTransfer
-from app.models.inventory import InventoryStock, InventoryTransaction
+
+logger = logging.getLogger(__name__)
 
 
 class MaterialTransferService:
@@ -316,7 +319,7 @@ class MaterialTransferService:
             db.add(transaction)
         except Exception:
             # 交易日志记录失败不影响主流程
-            pass
+            logger.warning("库存交易日志记录失败，不影响主流程", exc_info=True)
 
     @staticmethod
     def suggest_transfer_sources(

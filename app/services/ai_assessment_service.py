@@ -6,10 +6,11 @@ AI分析服务（可选）
 如果未配置API密钥，服务将跳过AI分析
 """
 
-import os
 import json
 import logging
-from typing import Optional, Dict, Any
+import os
+from typing import Any, Dict, Optional
+
 import httpx
 
 from app.core.config import settings
@@ -24,30 +25,30 @@ BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
 
 class AIAssessmentService:
     """AI分析服务"""
-    
+
     def __init__(self):
         self.api_key = ALIBABA_API_KEY
         self.model = ALIBABA_MODEL
         self.enabled = bool(self.api_key)
-    
+
     def is_available(self) -> bool:
         """检查AI服务是否可用"""
         return self.enabled
-    
+
     async def analyze_requirement(self, requirement_data: Dict[str, Any]) -> Optional[str]:
         """
         分析需求并生成AI分析报告
-        
+
         Args:
             requirement_data: 需求数据字典
-            
+
         Returns:
             Optional[str]: AI分析报告文本，如果服务不可用则返回None
         """
         if not self.is_available():
             logger.info("AI分析服务未配置，跳过AI分析")
             return None
-        
+
         try:
             prompt = self._build_analysis_prompt(requirement_data)
             analysis = await self._call_qwen(prompt)
@@ -55,7 +56,7 @@ class AIAssessmentService:
         except Exception as e:
             logger.error(f"AI分析失败: {e}", exc_info=True)
             return None
-    
+
     def _build_analysis_prompt(self, requirement_data: Dict[str, Any]) -> str:
         """构建分析提示词"""
         project_name = requirement_data.get('project_name') or requirement_data.get('projectName', '未填写')
@@ -66,7 +67,7 @@ class AIAssessmentService:
         tech_requirements = requirement_data.get('tech_requirements') or requirement_data.get('techRequirements', '未填写')
         delivery_months = requirement_data.get('delivery_months') or requirement_data.get('deliveryMonths')
         requirement_maturity = requirement_data.get('requirement_maturity') or requirement_data.get('requirementMaturity')
-        
+
         prompt = f"""
 作为一个专业的售前技术顾问和项目经理，请对以下项目进行深度分析并给出评估建议：
 
@@ -113,17 +114,17 @@ class AIAssessmentService:
 请用中文回复，并给出具体、可操作的建议。
 """
         return prompt
-    
+
     async def _call_qwen(self, prompt: str) -> str:
         """调用通义千问API"""
         if not self.api_key:
             raise ValueError("未配置 ALIBABA_API_KEY")
-        
+
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.api_key}",
         }
-        
+
         payload = {
             "model": self.model,
             "messages": [
@@ -138,32 +139,32 @@ class AIAssessmentService:
             ],
             "temperature": 0.7,
         }
-        
+
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(BASE_URL, headers=headers, json=payload)
             response.raise_for_status()
             data = response.json()
-            
+
             if "choices" in data and len(data["choices"]) > 0:
                 return data["choices"][0]["message"]["content"]
             else:
                 raise ValueError(f"API返回格式异常: {data}")
-    
+
     async def analyze_case_similarity(self, current_project: Dict[str, Any],
                                      historical_cases: list) -> Optional[str]:
         """
         分析案例相似度
-        
+
         Args:
             current_project: 当前项目数据
             historical_cases: 历史案例列表
-            
+
         Returns:
             Optional[str]: 相似度分析报告
         """
         if not self.is_available():
             return None
-        
+
         try:
             prompt = self._build_similarity_prompt(current_project, historical_cases)
             analysis = await self._call_qwen(prompt)
@@ -171,7 +172,7 @@ class AIAssessmentService:
         except Exception as e:
             logger.error(f"案例相似度分析失败: {e}", exc_info=True)
             return None
-    
+
     def _build_similarity_prompt(self, current_project: Dict[str, Any],
                                 historical_cases: list) -> str:
         """构建相似度分析提示词"""
@@ -181,12 +182,12 @@ class AIAssessmentService:
 产品类型：{current_project.get('product_type', '未填写')}
 预算：{current_project.get('budget_value', '未填写')}
 """
-        
+
         cases_text = "\n".join([
             f"{i+1}. {case.get('project_name', '')} - {case.get('core_failure_reason', '')}"
             for i, case in enumerate(historical_cases[:5])
         ])
-        
+
         prompt = f"""
 请分析以下当前项目与历史案例的相似度，并给出参考建议：
 

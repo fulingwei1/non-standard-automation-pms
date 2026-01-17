@@ -4,11 +4,12 @@
 包含：生产计划预警、报工超时提醒、生产日报生成
 """
 import logging
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 
-from app.models.base import get_db_session
 from app.models.alert import AlertRecord, AlertRule
-from app.models.enums import AlertLevelEnum, AlertStatusEnum, AlertRuleTypeEnum
+from app.models.base import get_db_session
+from app.models.enums import AlertLevelEnum, AlertRuleTypeEnum, AlertStatusEnum
+
 from .base import send_notification_for_alert
 
 logger = logging.getLogger(__name__)

@@ -5,17 +5,15 @@
 提供基于组织架构的数据权限过滤功能
 """
 
-from typing import List, Optional, Set, Any, TypeVar
 import logging
+from typing import Any, List, Optional, Set, TypeVar
 
-from sqlalchemy.orm import Session, Query
-from sqlalchemy import or_, and_, text
+from sqlalchemy import and_, or_, text
+from sqlalchemy.orm import Query, Session
 
-from app.models.user import User
-from app.models.organization_v2 import (
-    OrganizationUnit, EmployeeOrgAssignment
-)
+from app.models.organization_v2 import EmployeeOrgAssignment, OrganizationUnit
 from app.models.permission_v2 import DataScopeRule, RoleDataScope, ScopeType
+from app.models.user import User
 from app.services.permission_service import PermissionService
 
 logger = logging.getLogger(__name__)

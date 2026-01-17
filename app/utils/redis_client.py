@@ -5,8 +5,9 @@ Redis客户端工具
 
 import logging
 from typing import Optional
+
 import redis
-from redis.exceptions import RedisError, ConnectionError
+from redis.exceptions import ConnectionError, RedisError
 
 from app.core.config import settings
 
@@ -19,19 +20,19 @@ _redis_client: Optional[redis.Redis] = None
 def get_redis_client() -> Optional[redis.Redis]:
     """
     获取Redis客户端实例
-    
+
     Returns:
         Redis客户端实例，如果Redis未配置或连接失败则返回None
     """
     global _redis_client
-    
+
     if _redis_client is not None:
         return _redis_client
-    
+
     if not settings.REDIS_URL:
         logger.warning("Redis未配置，Token黑名单将使用内存存储（重启后失效）")
         return None
-    
+
     try:
         _redis_client = redis.from_url(
             settings.REDIS_URL,

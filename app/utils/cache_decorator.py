@@ -6,8 +6,8 @@
 
 import functools
 import logging
-from typing import Callable, Optional, Any, Dict
 from datetime import datetime
+from typing import Any, Callable, Dict, Optional
 
 from app.services.cache_service import CacheService
 
@@ -49,10 +49,10 @@ def cache_response(
             if key_func:
                 cache_key = key_func(*args, **kwargs)
             else:
-                import json
                 import hashlib
+                import json
                 params_str = json.dumps(kwargs, sort_keys=True, default=str)
-                params_hash = hashlib.md5(params_str.encode()).hexdigest()[:8]
+                params_hash = hashlib.sha256(params_str.encode()).hexdigest()[:8]
                 cache_key = f"{prefix}:{params_hash}"
 
             # 尝试从缓存获取
@@ -115,7 +115,7 @@ def cache_project_detail(func: Callable):
 
         return result
 
-    wrapper.invalidate = lambda project_id: cache_service.invalidate_project_detail(project_id)
+    wrapper.invalidate = lambda project_id: get_cache_service().invalidate_project_detail(project_id)
     return wrapper
 
 
@@ -150,7 +150,7 @@ def cache_project_list(func: Callable):
 
         return result
 
-    wrapper.invalidate = lambda: cache_service.invalidate_project_list()
+    wrapper.invalidate = lambda: get_cache_service().invalidate_project_list()
     return wrapper
 
 

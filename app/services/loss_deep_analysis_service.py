@@ -5,20 +5,20 @@
 分析投入了详细设计但未中标的原因，识别投入阶段、未中标原因、投入产出和模式
 """
 
-from typing import Dict, List, Optional, Any
-from datetime import datetime, date, timedelta
-from decimal import Decimal
-from collections import defaultdict
 import logging
+from collections import defaultdict
+from datetime import date, datetime, timedelta
+from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
+from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_, desc
 
-from app.models.project import Project
-from app.models.user import User
-from app.models.timesheet import Timesheet
-from app.models.work_log import WorkLog
 from app.models.enums import LeadOutcomeEnum, LossReasonEnum
+from app.models.project import Project
+from app.models.timesheet import Timesheet
+from app.models.user import User
+from app.models.work_log import WorkLog
 from app.services.hourly_rate_service import HourlyRateService
 
 logger = logging.getLogger(__name__)
@@ -31,10 +31,10 @@ class LossDeepAnalysisService:
     STAGE_REQUIREMENT = 'S1'  # 需求进入
     STAGE_DESIGN = 'S2'  # 方案设计
     STAGE_DETAILED_DESIGN = 'S4'  # 加工制造（通常详细设计在S4之前完成）
-    
+
     def __init__(self, db: Session):
         self.db = db
-        self.hourly_rate_service = HourlyRateService(db)
+        self.hourly_rate_service = HourlyRateService()
 
     def analyze_lost_projects(
         self,
@@ -275,7 +275,7 @@ class LossDeepAnalysisService:
             if not dept_name:
                 ts = self.db.query(Timesheet).filter(Timesheet.department_id == dept_id).first()
                 dept_name = ts.department_name if ts and ts.department_name else f'Dept_{dept_id}'
-            
+
             department_details.append({
                 'department_id': dept_id,
                 'department_name': dept_name,
@@ -378,7 +378,7 @@ class LossDeepAnalysisService:
     def _calculate_project_cost(self, project_id: int) -> Decimal:
         """计算项目成本"""
         hours = self._get_project_hours(project_id)
-        
+
         # 获取项目相关人员的工时记录，按角色计算成本
         timesheets = self.db.query(Timesheet).filter(
             Timesheet.project_id == project_id

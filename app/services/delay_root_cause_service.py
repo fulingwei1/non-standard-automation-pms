@@ -5,18 +5,18 @@
 进行延期根因分析、影响分析和趋势分析
 """
 
-from typing import Dict, List, Optional, Any
-from datetime import datetime, date, timedelta
-from decimal import Decimal
-from collections import defaultdict
 import logging
+from collections import defaultdict
+from datetime import date, datetime, timedelta
+from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
+from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_, desc
 
-from app.models.project import Project, ProjectMilestone, ProjectStage
-from app.models.progress import Task
 from app.models.issue import Issue
+from app.models.progress import Task
+from app.models.project import Project, ProjectMilestone, ProjectStage
 from app.models.user import User
 
 logger = logging.getLogger(__name__)
@@ -113,7 +113,7 @@ class DelayRootCauseService:
             # 检查项目是否有延期
             if self._is_project_delayed(project):
                 delay_days = self._calculate_project_delay_days(project)
-                
+
                 # 计算成本影响（简化：延期导致的额外成本）
                 # 这里可以基于项目预算和延期天数估算
                 if project.contract_amount:

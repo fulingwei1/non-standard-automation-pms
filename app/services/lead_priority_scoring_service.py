@@ -5,16 +5,16 @@
 建立关键/非关键、重要/紧急的科学排序机制
 """
 
-from typing import Dict, List, Optional, Any
-from datetime import datetime, date
-from decimal import Decimal
 import logging
+from datetime import date, datetime
+from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
+from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_, desc
 
+from app.models.project import Customer, Project
 from app.models.sales import Lead, Opportunity
-from app.models.project import Project, Customer
 from app.models.user import User
 
 logger = logging.getLogger(__name__)

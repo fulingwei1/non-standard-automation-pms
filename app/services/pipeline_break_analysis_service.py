@@ -5,17 +5,17 @@
 检测各环节的断链情况，统计断链率，识别断链模式
 """
 
-from typing import Dict, List, Optional, Any
-from datetime import datetime, date, timedelta
-from decimal import Decimal
-from collections import defaultdict
 import logging
+from collections import defaultdict
+from datetime import date, datetime, timedelta
+from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
+from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_, desc
 
-from app.models.sales import Lead, Opportunity, Quote, Contract, Invoice
 from app.models.project import Project
+from app.models.sales import Contract, Invoice, Lead, Opportunity, Quote
 from app.models.user import User
 
 logger = logging.getLogger(__name__)

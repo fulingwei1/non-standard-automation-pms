@@ -4,20 +4,19 @@
 实现自动匿名抽取5个合作人员进行评价
 """
 
-import random
+import secrets
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Dict, List, Optional, Set, Tuple
-from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_, desc
+from typing import Any, Dict, List, Optional, Set, Tuple
 
-from app.models.engineer_performance import (
-    EngineerProfile, CollaborationRating
-)
+from sqlalchemy import and_, desc, func, or_
+from sqlalchemy.orm import Session
+
+from app.models.engineer_performance import CollaborationRating, EngineerProfile
+from app.models.organization import Department
 from app.models.performance import PerformancePeriod
 from app.models.project import Project, ProjectMember
 from app.models.user import User
-from app.models.organization import Department
 
 
 class CollaborationRatingService:
@@ -97,7 +96,7 @@ class CollaborationRatingService:
         if len(unique_collaborators) <= target_count:
             selected = unique_collaborators
         else:
-            selected = random.sample(unique_collaborators, target_count)
+            selected = secrets.SystemRandom().sample(unique_collaborators, target_count)
 
         return selected
 

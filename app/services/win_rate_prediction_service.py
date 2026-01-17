@@ -5,17 +5,21 @@
 基于历史数据和规则模型预测销售线索的中标概率
 """
 
-from typing import Dict, List, Optional, Tuple, Any
-from datetime import datetime, date, timedelta
-from decimal import Decimal
 import logging
+from datetime import date, datetime, timedelta
+from decimal import Decimal
+from typing import Any, Dict, List, Optional, Tuple
 
+from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_
 
-from app.models.project import Project, Customer
+from app.models.enums import (
+    LeadOutcomeEnum,
+    ProductMatchTypeEnum,
+    WinProbabilityLevelEnum,
+)
+from app.models.project import Customer, Project
 from app.models.user import User
-from app.models.enums import LeadOutcomeEnum, WinProbabilityLevelEnum, ProductMatchTypeEnum
 from app.schemas.presales import DimensionScore
 
 logger = logging.getLogger(__name__)

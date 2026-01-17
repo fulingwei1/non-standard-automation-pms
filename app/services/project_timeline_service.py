@@ -3,12 +3,19 @@
 项目时间线服务
 """
 
-from typing import Dict, Any, List, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 from sqlalchemy.orm import Session
 
-from app.models.project import Project, ProjectStatusLog, ProjectMilestone, ProjectCost, ProjectDocument
 from app.models.progress import Task
+from app.models.project import (
+    Project,
+    ProjectCost,
+    ProjectDocument,
+    ProjectMilestone,
+    ProjectStatusLog,
+)
 from app.schemas.project import TimelineEvent
 
 
@@ -18,16 +25,16 @@ def collect_status_change_events(
 ) -> List[TimelineEvent]:
     """
     收集状态变更事件
-    
+
     Returns:
         List[TimelineEvent]: 事件列表
     """
     events = []
-    
+
     status_logs = db.query(ProjectStatusLog).filter(
         ProjectStatusLog.project_id == project_id
     ).all()
-    
+
     for log in status_logs:
         event = TimelineEvent(
             event_type=log.change_type or "STATUS_CHANGE",
@@ -39,7 +46,7 @@ def collect_status_change_events(
             related_type="status_log",
         )
         events.append(event)
-    
+
     return events
 
 
@@ -49,16 +56,16 @@ def collect_milestone_events(
 ) -> List[TimelineEvent]:
     """
     收集里程碑事件
-    
+
     Returns:
         List[TimelineEvent]: 事件列表
     """
     events = []
-    
+
     milestones = db.query(ProjectMilestone).filter(
         ProjectMilestone.project_id == project_id
     ).all()
-    
+
     for milestone in milestones:
         # 里程碑创建
         if milestone.created_at:
@@ -71,7 +78,7 @@ def collect_milestone_events(
                 related_type="milestone",
             )
             events.append(event)
-        
+
         # 里程碑完成
         if milestone.status == "COMPLETED" and milestone.actual_date:
             event = TimelineEvent(
@@ -83,7 +90,7 @@ def collect_milestone_events(
                 related_type="milestone",
             )
             events.append(event)
-    
+
     return events
 
 
@@ -93,14 +100,14 @@ def collect_task_events(
 ) -> List[TimelineEvent]:
     """
     收集任务事件
-    
+
     Returns:
         List[TimelineEvent]: 事件列表
     """
     events = []
-    
+
     tasks = db.query(Task).filter(Task.project_id == project_id).all()
-    
+
     for task in tasks:
         # 任务创建
         if task.created_at:
@@ -113,7 +120,7 @@ def collect_task_events(
                 related_type="task",
             )
             events.append(event)
-        
+
         # 任务完成
         if task.status == "COMPLETED" and task.actual_end:
             event = TimelineEvent(
@@ -125,7 +132,7 @@ def collect_task_events(
                 related_type="task",
             )
             events.append(event)
-    
+
     return events
 
 
@@ -135,14 +142,14 @@ def collect_cost_events(
 ) -> List[TimelineEvent]:
     """
     收集成本记录事件
-    
+
     Returns:
         List[TimelineEvent]: 事件列表
     """
     events = []
-    
+
     costs = db.query(ProjectCost).filter(ProjectCost.project_id == project_id).all()
-    
+
     for cost in costs:
         if cost.created_at:
             event = TimelineEvent(
@@ -154,7 +161,7 @@ def collect_cost_events(
                 related_type="cost",
             )
             events.append(event)
-    
+
     return events
 
 
@@ -164,14 +171,14 @@ def collect_document_events(
 ) -> List[TimelineEvent]:
     """
     收集文档上传事件
-    
+
     Returns:
         List[TimelineEvent]: 事件列表
     """
     events = []
-    
+
     documents = db.query(ProjectDocument).filter(ProjectDocument.project_id == project_id).all()
-    
+
     for doc in documents:
         if doc.created_at:
             event = TimelineEvent(
@@ -183,14 +190,14 @@ def collect_document_events(
                 related_type="document",
             )
             events.append(event)
-    
+
     return events
 
 
 def add_project_created_event(project: Project) -> TimelineEvent:
     """
     添加项目创建事件
-    
+
     Returns:
         TimelineEvent: 项目创建事件
     """

@@ -5,19 +5,25 @@
 """
 
 from datetime import date, datetime, timedelta
-from typing import Any, List, Optional, Dict
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
+from sqlalchemy import and_, case, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_, case
 
-from app.models.project import Project, Machine, ProjectMilestone, ProjectStage, ProjectMember
-from app.models.rd_project import RdProject, RdCost
-from app.models.timesheet import Timesheet
-from app.models.sales import Contract, Opportunity
-from app.models.outsourcing import OutsourcingOrder
-from app.models.user import User, Role
 from app.models.organization import Department
+from app.models.outsourcing import OutsourcingOrder
+from app.models.project import (
+    Machine,
+    Project,
+    ProjectMember,
+    ProjectMilestone,
+    ProjectStage,
+)
+from app.models.rd_project import RdCost, RdProject
+from app.models.sales import Contract, Opportunity
+from app.models.timesheet import Timesheet
+from app.models.user import Role, User
 
 
 class ReportDataGenerationService:

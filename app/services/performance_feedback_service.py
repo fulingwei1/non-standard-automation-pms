@@ -6,12 +6,13 @@
 
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Dict, List, Optional, Any
-from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_, desc
+from typing import Any, Dict, List, Optional
 
-from app.models.performance import PerformancePeriod, PerformanceResult
+from sqlalchemy import and_, desc, func, or_
+from sqlalchemy.orm import Session
+
 from app.models.engineer_performance import EngineerProfile
+from app.models.performance import PerformancePeriod, PerformanceResult
 from app.schemas.engineer_performance import EngineerDimensionScore
 
 
@@ -61,13 +62,15 @@ class PerformanceFeedbackService:
         ).order_by(desc(PerformancePeriod.end_date)).first()
 
         # 获取五维得分（从indicator_scores或重新计算）
-        from app.services.engineer_performance_service import EngineerPerformanceService
         from app.models.engineer_performance import EngineerProfile
-        
+        from app.services.engineer_performance.engineer_performance_service import (
+            EngineerPerformanceService,
+        )
+
         profile = self.db.query(EngineerProfile).filter(
             EngineerProfile.user_id == engineer_id
         ).first()
-        
+
         dimension_scores = {}
         if result.indicator_scores:
             # 从JSON字段获取
@@ -138,7 +141,7 @@ class PerformanceFeedbackService:
             score_change = float((result.total_score or 0) - (previous_result.total_score or 0))
             rank_change = (result.company_rank or 0) - (previous_result.company_rank or 0)
             dept_rank_change = (result.dept_rank or 0) - (previous_result.dept_rank or 0)
-            
+
             # 分析排名变化原因（各维度得分变化）
             previous_dim_scores = {}
             if previous_result.indicator_scores:
@@ -150,7 +153,7 @@ class PerformanceFeedbackService:
                     'knowledge': float(prev_scores.get('knowledge_score', 0)),
                     'collaboration': float(prev_scores.get('collaboration_score', 0))
                 }
-            
+
             dimension_changes = {}
             for dim in dimension_scores:
                 prev_score = previous_dim_scores.get(dim, 75.0)
@@ -161,7 +164,7 @@ class PerformanceFeedbackService:
                     'current': round(curr_score, 2),
                     'trend': 'improving' if curr_score > prev_score else 'declining' if curr_score < prev_score else 'stable'
                 }
-            
+
             # 识别排名变化的主要原因
             rank_change_reasons = []
             if rank_change < 0:  # 排名上升
@@ -176,7 +179,7 @@ class PerformanceFeedbackService:
                 if declining_dims:
                     top_declining = min(declining_dims, key=lambda d: dimension_changes[d]['change'])
                     rank_change_reasons.append(f"{self._get_dimension_name(top_declining)}需要改进")
-            
+
             feedback['comparison'] = {
                 'score_change': score_change,
                 'rank_change': rank_change,
@@ -230,12 +233,12 @@ class PerformanceFeedbackService:
         if comparison:
             score_change = comparison.get('score_change', 0)
             rank_change = comparison.get('rank_change', 0)
-            
+
             if score_change > 0:
                 message += f"📈 得分提升 {score_change:.1f}分\n"
             elif score_change < 0:
                 message += f"📉 得分下降 {abs(score_change):.1f}分\n"
-            
+
             if rank_change < 0:
                 message += f"⬆️ 排名上升 {abs(rank_change)}名\n"
             elif rank_change > 0:
@@ -248,7 +251,7 @@ class PerformanceFeedbackService:
         message += f"成本/质量：{dim_scores.get('cost_quality', 0):.1f}分\n"
         message += f"知识沉淀：{dim_scores.get('knowledge', 0):.1f}分\n"
         message += f"团队协作：{dim_scores.get('collaboration', 0):.1f}分\n"
-        
+
         # 如果是方案工程师，添加方案成功率得分
         if 'solution_success' in dim_scores:
             message += f"方案成功率：{dim_scores['solution_success']:.1f}分\n"
@@ -314,7 +317,7 @@ class PerformanceFeedbackService:
         profile = self.db.query(EngineerProfile).filter(
             EngineerProfile.user_id == engineer_id
         ).first()
-        
+
         for result in results:
             # 从indicator_scores获取五维得分，如果没有则使用默认值
             if result.indicator_scores:
@@ -331,7 +334,7 @@ class PerformanceFeedbackService:
                 trends['cost_quality'].append(75.0)
                 trends['knowledge'].append(75.0)
                 trends['collaboration'].append(75.0)
-            
+
             trends['periods'].append(
                 result.period.period_name if result.period else ''
             )
@@ -375,9 +378,9 @@ class PerformanceFeedbackService:
             if len(scores) >= 2:
                 recent_avg = sum(scores[-3:]) / min(3, len(scores))  # 最近3个周期
                 earlier_avg = sum(scores[:3]) / min(3, len(scores))  # 前3个周期
-                
+
                 change = recent_avg - earlier_avg
-                
+
                 if abs(change) > 5:  # 变化超过5分才记录
                     changes.append({
                         'dimension': dim,
@@ -406,16 +409,16 @@ class PerformanceFeedbackService:
             个性化反馈信息
         """
         from app.models.engineer_performance import EngineerProfile
-        
+
         profile = self.db.query(EngineerProfile).filter(
             EngineerProfile.user_id == engineer_id
         ).first()
-        
+
         feedback = self.get_engineer_feedback(engineer_id, period_id)
-        
+
         if not feedback.get('has_data'):
             return feedback
-        
+
         # 根据岗位类型生成个性化建议
         job_type_suggestions = {
             'mechanical': [
@@ -439,13 +442,13 @@ class PerformanceFeedbackService:
                 '加强方案模板复用'
             ]
         }
-        
+
         suggestions = job_type_suggestions.get(profile.job_type if profile else 'mechanical', [])
-        
+
         # 根据得分情况生成具体建议
         dim_scores = feedback['current_performance']['dimension_scores']
         specific_suggestions = []
-        
+
         if dim_scores.get('technical', 75) < 70:
             specific_suggestions.append('技术能力需要提升，建议加强技术学习和实践')
         if dim_scores.get('execution', 75) < 70:
@@ -456,7 +459,7 @@ class PerformanceFeedbackService:
             specific_suggestions.append('知识沉淀不足，建议多分享技术文档和模板')
         if dim_scores.get('collaboration', 75) < 70:
             specific_suggestions.append('团队协作需要改进，建议加强跨部门沟通')
-        
+
         feedback['personalized_suggestions'] = suggestions + specific_suggestions
-        
+
         return feedback

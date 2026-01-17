@@ -5,14 +5,15 @@
 """
 
 from datetime import date, datetime, timedelta
-from typing import List, Optional, Dict, Any, Tuple
 from decimal import Decimal
+from typing import Any, Dict, List, Optional, Tuple
+
 from sqlalchemy.orm import Session
 
-from app.models.material import Material, Supplier, BomItem
-from app.models.sales import Quote, QuoteItem, QuoteVersion
-from app.models.project import Project
 from app.core.config import settings
+from app.models.material import BomItem, Material, Supplier
+from app.models.project import Project
+from app.models.sales import Quote, QuoteItem, QuoteVersion
 
 
 class DeliveryValidationService:
@@ -65,7 +66,7 @@ class DeliveryValidationService:
             material = db.query(Material).filter(Material.id == material_id).first()
             if material and material.lead_time_days:
                 return material.lead_time_days, f"来自物料档案: {material.material_name}"
-        
+
         # 其次通过编码查询
         if material_code:
             material = db.query(Material).filter(
@@ -73,7 +74,7 @@ class DeliveryValidationService:
             ).first()
             if material and material.lead_time_days:
                 return material.lead_time_days, f"来自物料档案: {material.material_name}"
-        
+
         # 最后使用物料类型默认值
         if material_type:
             default_days = DeliveryValidationService.DEFAULT_MATERIAL_LEAD_TIME.get(

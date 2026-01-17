@@ -4,12 +4,12 @@ PDF 样式工具函数
 """
 
 from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 
 # 检查 reportlab 是否可用
 try:
     from reportlab.lib import colors
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
     REPORTLAB_AVAILABLE = True
 except ImportError:
     REPORTLAB_AVAILABLE = False
@@ -18,15 +18,15 @@ except ImportError:
 def get_pdf_styles():
     """
     获取 PDF 样式配置
-    
+
     Returns:
         dict: 包含各种样式的字典
     """
     if not REPORTLAB_AVAILABLE:
         return {}
-    
+
     styles = getSampleStyleSheet()
-    
+
     # 创建自定义样式
     title_style = ParagraphStyle(
         'CustomTitle',
@@ -37,7 +37,7 @@ def get_pdf_styles():
         alignment=1,  # 居中
         fontName='Helvetica-Bold'
     )
-    
+
     heading_style = ParagraphStyle(
         'CustomHeading',
         parent=styles['Heading2'],
@@ -47,11 +47,11 @@ def get_pdf_styles():
         spaceBefore=12,
         fontName='Helvetica-Bold'
     )
-    
+
     normal_style = styles['Normal']
     normal_style.fontSize = 10
     normal_style.leading = 14
-    
+
     footer_style = ParagraphStyle(
         'Footer',
         parent=normal_style,
@@ -59,7 +59,7 @@ def get_pdf_styles():
         textColor=colors.grey,
         alignment=2  # 右对齐
     )
-    
+
     return {
         'title': title_style,
         'heading': heading_style,
@@ -71,15 +71,15 @@ def get_pdf_styles():
 def get_table_style_base():
     """
     获取基础表格样式
-    
+
     Returns:
         TableStyle: 基础表格样式
     """
     if not REPORTLAB_AVAILABLE:
         return None
-    
+
     from reportlab.platypus import TableStyle
-    
+
     return TableStyle([
         ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
@@ -94,15 +94,15 @@ def get_table_style_base():
 def get_info_table_style():
     """
     获取基本信息表格样式
-    
+
     Returns:
         TableStyle: 信息表格样式
     """
     if not REPORTLAB_AVAILABLE:
         return None
-    
+
     from reportlab.platypus import TableStyle
-    
+
     base_style = get_table_style_base()
     base_style.add('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f3f4f6'))
     return base_style
@@ -111,15 +111,15 @@ def get_info_table_style():
 def get_stats_table_style():
     """
     获取统计表格样式
-    
+
     Returns:
         TableStyle: 统计表格样式
     """
     if not REPORTLAB_AVAILABLE:
         return None
-    
+
     from reportlab.platypus import TableStyle
-    
+
     return TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e40af')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
@@ -138,15 +138,15 @@ def get_stats_table_style():
 def get_issue_table_style():
     """
     获取问题表格样式
-    
+
     Returns:
         TableStyle: 问题表格样式
     """
     if not REPORTLAB_AVAILABLE:
         return None
-    
+
     from reportlab.platypus import TableStyle
-    
+
     return TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e40af')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
@@ -163,15 +163,15 @@ def get_issue_table_style():
 def get_signature_table_style():
     """
     获取签字表格样式
-    
+
     Returns:
         TableStyle: 签字表格样式
     """
     if not REPORTLAB_AVAILABLE:
         return None
-    
+
     from reportlab.platypus import TableStyle
-    
+
     return TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e40af')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),

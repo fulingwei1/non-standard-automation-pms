@@ -5,12 +5,13 @@
 提取研发费用报表的数据查询和构建逻辑
 """
 
-from typing import Dict, List, Any, Optional
 from datetime import date
-from sqlalchemy.orm import Session
-from sqlalchemy import func
+from typing import Any, Dict, List, Optional
 
-from app.models.rd_project import RdProject, RdCost, RdCostType
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
+from app.models.rd_project import RdCost, RdCostType, RdProject
 from app.models.timesheet import Timesheet
 from app.models.user import User
 
@@ -22,12 +23,12 @@ def build_auxiliary_ledger_data(
 ) -> Dict[str, Any]:
     """
     构建研发费用辅助账数据
-    
+
     Args:
         db: 数据库会话
         year: 年度
         project_id: 研发项目ID（可选）
-    
+
     Returns:
         报表数据字典
     """
@@ -66,12 +67,12 @@ def build_deduction_detail_data(
 ) -> Dict[str, Any]:
     """
     构建研发费用加计扣除明细数据
-    
+
     Args:
         db: 数据库会话
         year: 年度
         project_id: 研发项目ID（可选）
-    
+
     Returns:
         报表数据字典
     """
@@ -111,11 +112,11 @@ def build_high_tech_data(
 ) -> Dict[str, Any]:
     """
     构建高新企业研发费用表数据
-    
+
     Args:
         db: 数据库会话
         year: 年度
-    
+
     Returns:
         报表数据字典
     """
@@ -149,11 +150,11 @@ def build_intensity_data(
 ) -> Dict[str, Any]:
     """
     构建研发投入强度报表数据
-    
+
     Args:
         db: 数据库会话
         year: 年度
-    
+
     Returns:
         报表数据字典
     """
@@ -180,11 +181,11 @@ def build_personnel_data(
 ) -> Dict[str, Any]:
     """
     构建研发人员统计数据
-    
+
     Args:
         db: 数据库会话
         year: 年度
-    
+
     Returns:
         报表数据字典
     """
@@ -235,13 +236,13 @@ def get_rd_report_data(
 ) -> Dict[str, Any]:
     """
     获取研发费用报表数据
-    
+
     Args:
         db: 数据库会话
         report_type: 报表类型
         year: 年度
         project_id: 研发项目ID（可选）
-    
+
     Returns:
         报表数据字典，包含 data 和 title 字段
     """

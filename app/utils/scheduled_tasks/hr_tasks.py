@@ -4,7 +4,7 @@
 包含：合同到期提醒、员工转正提醒
 """
 import logging
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 
 from app.models.base import get_db_session
 
@@ -20,7 +20,7 @@ def check_contract_expiry_reminder():
     logger.info(f"[{datetime.now()}] 开始执行合同到期提醒检查...")
 
     try:
-        from app.models.organization import EmployeeContract, ContractReminder, Employee
+        from app.models.organization import ContractReminder, Employee, EmployeeContract
 
         with get_db_session() as db:
             today = date.today()
@@ -117,8 +117,8 @@ def check_employee_confirmation_reminder():
     logger.info(f"[{datetime.now()}] 开始执行员工转正提醒检查...")
 
     try:
-        from app.models.organization import Employee, EmployeeHrProfile, HrTransaction
         from app.models.notification import Notification
+        from app.models.organization import Employee, EmployeeHrProfile, HrTransaction
 
         with get_db_session() as db:
             today = date.today()

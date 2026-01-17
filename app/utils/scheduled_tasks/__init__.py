@@ -20,59 +20,42 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# ==================== 基础模块 ====================
-from .base import (
-    send_notification_for_alert,
-    log_task_result,
-    safe_task_execution,
+# ==================== 预警与通知任务 ====================
+from .alert_tasks import (
+    calculate_response_metrics,
+    check_alert_escalation,
+    retry_failed_notifications,
+    send_alert_notifications,
 )
 
-# ==================== 项目管理任务 ====================
-from .project_scheduled_tasks import (
-    daily_spec_match_check,
-    calculate_project_health,
-    daily_health_snapshot,
-    calculate_progress_summary,
-    check_project_deadline_alerts,
-    check_project_cost_overrun,
+# ==================== 基础模块 ====================
+from .base import (
+    log_task_result,
+    safe_task_execution,
+    send_notification_for_alert,
+)
+
+# ==================== HR任务 ====================
+from .hr_tasks import (
+    check_contract_expiry_reminder,
+    check_employee_confirmation_reminder,
 )
 
 # ==================== 问题管理任务 ====================
 from .issue_scheduled_tasks import (
-    check_overdue_issues,
     check_blocking_issues,
-    check_timeout_issues,
-    daily_issue_statistics_snapshot,
     check_issue_assignment_timeout,
     check_issue_resolution_timeout,
-)
-
-# ==================== 销售任务 ====================
-from .sales_tasks import (
-    sales_reminder_scan,
-    check_payment_reminder,
-    check_overdue_receivable_alerts,
-    check_opportunity_stage_timeout,
+    check_overdue_issues,
+    check_timeout_issues,
+    daily_issue_statistics_snapshot,
 )
 
 # ==================== 里程碑任务 ====================
 from .milestone_tasks import (
     check_milestone_alerts,
-    check_milestone_status_and_adjust_payments,
     check_milestone_risk_alerts,
-)
-
-# ==================== 工时任务 ====================
-from .timesheet_tasks import (
-    daily_timesheet_reminder_task,
-    weekly_timesheet_reminder_task,
-    timesheet_anomaly_alert_task,
-    timesheet_approval_timeout_reminder_task,
-    timesheet_sync_failure_alert_task,
-    daily_timesheet_aggregation_task,
-    weekly_timesheet_aggregation_task,
-    monthly_timesheet_aggregation_task,
-    calculate_monthly_labor_cost_task,
+    check_milestone_status_and_adjust_payments,
 )
 
 # ==================== 生产任务 ====================
@@ -82,18 +65,35 @@ from .production_tasks import (
     generate_production_daily_reports,
 )
 
-# ==================== 预警与通知任务 ====================
-from .alert_tasks import (
-    check_alert_escalation,
-    retry_failed_notifications,
-    send_alert_notifications,
-    calculate_response_metrics,
+# ==================== 项目管理任务 ====================
+from .project_scheduled_tasks import (
+    calculate_progress_summary,
+    calculate_project_health,
+    check_project_cost_overrun,
+    check_project_deadline_alerts,
+    daily_health_snapshot,
+    daily_spec_match_check,
 )
 
-# ==================== HR任务 ====================
-from .hr_tasks import (
-    check_contract_expiry_reminder,
-    check_employee_confirmation_reminder,
+# ==================== 销售任务 ====================
+from .sales_tasks import (
+    check_opportunity_stage_timeout,
+    check_overdue_receivable_alerts,
+    check_payment_reminder,
+    sales_reminder_scan,
+)
+
+# ==================== 工时任务 ====================
+from .timesheet_tasks import (
+    calculate_monthly_labor_cost_task,
+    daily_timesheet_aggregation_task,
+    daily_timesheet_reminder_task,
+    monthly_timesheet_aggregation_task,
+    timesheet_anomaly_alert_task,
+    timesheet_approval_timeout_reminder_task,
+    timesheet_sync_failure_alert_task,
+    weekly_timesheet_aggregation_task,
+    weekly_timesheet_reminder_task,
 )
 
 # ==================== 任务注册表 ====================

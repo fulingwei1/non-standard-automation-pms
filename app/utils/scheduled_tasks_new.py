@@ -9,10 +9,10 @@ import logging
 from .scheduled_tasks import (
     SCHEDULED_TASKS,
     TASK_GROUPS,
+    execute_task,
     get_task,
     get_tasks_by_group,
     list_all_tasks,
-    execute_task,
 )
 
 # 模块级 logger
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 # 为了向后兼容，导出所有任务函数
 __all__ = list(SCHEDULED_TASKS.keys()) + [
     'SCHEDULED_TASKS',
-    'TASK_GROUPS', 
+    'TASK_GROUPS',
     'get_task',
     'get_tasks_by_group',
     'list_all_tasks',

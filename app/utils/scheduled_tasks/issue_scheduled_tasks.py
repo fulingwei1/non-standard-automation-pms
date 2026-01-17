@@ -5,6 +5,8 @@
 """
 import logging
 from datetime import datetime, timedelta
+
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.base import get_db_session
@@ -22,7 +24,7 @@ def check_overdue_issues():
     try:
         with get_db_session() as db:
             from app.models.alert import AlertRecord
-            
+
             # 查询逾期的问题
             now = datetime.now()
             overdue_issues = db.query(Issue).filter(
@@ -30,9 +32,9 @@ def check_overdue_issues():
                 Issue.due_date < now,
                 Issue.is_active == True
             ).all()
-            
+
             alert_count = 0
-            
+
             for issue in overdue_issues:
                 # 检查是否已存在相同预警
                 existing_alert = db.query(AlertRecord).filter(
@@ -41,16 +43,16 @@ def check_overdue_issues():
                     AlertRecord.alert_type == 'overdue_warning',
                     AlertRecord.status == 'active'
                 ).first()
-                
+
                 if existing_alert:
                     continue
-                
+
                 # 计算逾期天数
                 overdue_days = (now - issue.due_date).days
-                
+
                 # 创建逾期预警
                 urgency = 'critical' if overdue_days >= 7 else 'high' if overdue_days >= 3 else 'medium'
-                
+
                 alert = AlertRecord(
                     source_type='issue',
                     source_id=issue.id,
@@ -62,20 +64,20 @@ def check_overdue_issues():
                     created_time=now,
                     project_id=issue.project_id
                 )
-                
+
                 db.add(alert)
                 alert_count += 1
-            
+
             db.commit()
-            
+
             logger.info(f"问题逾期检查完成: 发现 {len(overdue_issues)} 个逾期问题, 生成 {alert_count} 个预警")
-            
+
             return {
                 'overdue_issues': len(overdue_issues),
                 'alerts_created': alert_count,
                 'timestamp': now.isoformat()
             }
-            
+
     except Exception as e:
         logger.error(f"问题逾期检查失败: {str(e)}")
         import traceback
@@ -91,16 +93,16 @@ def check_blocking_issues():
     try:
         with get_db_session() as db:
             from app.models.alert import AlertRecord
-            
+
             # 查询阻塞级别的问题
             blocking_issues = db.query(Issue).filter(
                 Issue.priority == 'URGENT',
                 Issue.status.in_(['pending', 'in_progress']),
                 Issue.is_active == True
             ).all()
-            
+
             alert_count = 0
-            
+
             for issue in blocking_issues:
                 # 检查是否已存在相同预警
                 existing_alert = db.query(AlertRecord).filter(
@@ -109,13 +111,13 @@ def check_blocking_issues():
                     AlertRecord.alert_type == 'blocking_warning',
                     AlertRecord.status == 'active'
                 ).first()
-                
+
                 if existing_alert:
                     continue
-                
+
                 # 计算问题存在时间
                 days_open = (datetime.now() - issue.created_time).days
-                
+
                 # 创建阻塞预警
                 alert = AlertRecord(
                     source_type='issue',
@@ -128,20 +130,20 @@ def check_blocking_issues():
                     created_time=datetime.now(),
                     project_id=issue.project_id
                 )
-                
+
                 db.add(alert)
                 alert_count += 1
-            
+
             db.commit()
-            
+
             logger.info(f"阻塞问题检查完成: 发现 {len(blocking_issues)} 个阻塞问题, 生成 {alert_count} 个预警")
-            
+
             return {
                 'blocking_issues': len(blocking_issues),
                 'alerts_created': alert_count,
                 'timestamp': datetime.now().isoformat()
             }
-            
+
     except Exception as e:
         logger.error(f"阻塞问题检查失败: {str(e)}")
         import traceback
@@ -156,7 +158,7 @@ def check_timeout_issues():
     """
     try:
         with get_db_session() as db:
-            
+
             # 查询超时未处理的问题（超过7天未更新）
             timeout_threshold = datetime.now() - timedelta(days=7)
             timeout_issues = db.query(Issue).filter(
@@ -164,9 +166,9 @@ def check_timeout_issues():
                 Issue.last_updated < timeout_threshold,
                 Issue.is_active == True
             ).all()
-            
+
             upgraded_count = 0
-            
+
             for issue in timeout_issues:
                 # 自动升级优先级
                 if issue.priority == 'LOW':
@@ -178,7 +180,7 @@ def check_timeout_issues():
                 elif issue.priority == 'HIGH':
                     issue.priority = 'URGENT'
                     upgraded_count += 1
-                
+
                 # 记录跟进
                 from app.models.issue import IssueFollowUpRecord
                 follow_up = IssueFollowUpRecord(
@@ -192,17 +194,17 @@ def check_timeout_issues():
                 )
                 db.add(follow_up)
                 db.add(issue)
-            
+
             db.commit()
-            
+
             logger.info(f"问题超时检查完成: 发现 {len(timeout_issues)} 个超时问题, 升级 {upgraded_count} 个问题优先级")
-            
+
             return {
                 'timeout_count': len(timeout_issues),
                 'upgraded_count': upgraded_count,
                 'timestamp': datetime.now().isoformat()
             }
-            
+
     except Exception as e:
         logger.error(f"问题超时检查失败: {str(e)}")
         import traceback
@@ -217,7 +219,7 @@ def daily_issue_statistics_snapshot():
     """
     try:
         with get_db_session() as db:
-            
+
             # 计算统计数据
             total_issues = db.query(Issue).filter(Issue.is_active == True).count()
             pending_issues = db.query(Issue).filter(
@@ -232,7 +234,7 @@ def daily_issue_statistics_snapshot():
                 Issue.status == 'resolved',
                 Issue.is_active == True
             ).count()
-            
+
             # 按优先级统计
             urgent_issues = db.query(Issue).filter(
                 Issue.priority == 'URGENT',
@@ -250,7 +252,7 @@ def daily_issue_statistics_snapshot():
                 Issue.priority == 'LOW',
                 Issue.is_active == True
             ).count()
-            
+
             # 按项目统计
             project_stats = db.query(
                 Issue.project_id,
@@ -259,7 +261,7 @@ def daily_issue_statistics_snapshot():
                 Issue.project_id.isnot(None),
                 Issue.is_active == True
             ).group_by(Issue.project_id).all()
-            
+
             # 创建统计快照
             snapshot = IssueStatisticsSnapshot(
                 snapshot_date=datetime.now().date(),
@@ -273,12 +275,12 @@ def daily_issue_statistics_snapshot():
                 low_issues=low_issues,
                 project_distribution={str(p.project_id): p.issue_count for p in project_stats}
             )
-            
+
             db.add(snapshot)
             db.commit()
-            
+
             logger.info(f"问题统计快照生成完成: 总问题数 {total_issues}, 待处理 {pending_issues}, 进行中 {in_progress_issues}, 已解决 {resolved_issues}")
-            
+
             return {
                 'total_issues': total_issues,
                 'pending_issues': pending_issues,
@@ -286,7 +288,7 @@ def daily_issue_statistics_snapshot():
                 'resolved_issues': resolved_issues,
                 'timestamp': datetime.now().isoformat()
             }
-            
+
     except Exception as e:
         logger.error(f"问题统计快照生成失败: {str(e)}")
         import traceback
@@ -302,7 +304,7 @@ def check_issue_assignment_timeout():
     try:
         with get_db_session() as db:
             from app.models.alert import AlertRecord
-            
+
             # 查询24小时内未分配的问题
             assignment_timeout = datetime.now() - timedelta(hours=24)
             unassigned_issues = db.query(Issue).filter(
@@ -311,9 +313,9 @@ def check_issue_assignment_timeout():
                 Issue.created_time < assignment_timeout,
                 Issue.is_active == True
             ).all()
-            
+
             alert_count = 0
-            
+
             for issue in unassigned_issues:
                 # 检查是否已存在相同预警
                 existing_alert = db.query(AlertRecord).filter(
@@ -322,10 +324,10 @@ def check_issue_assignment_timeout():
                     AlertRecord.alert_type == 'assignment_timeout',
                     AlertRecord.status == 'active'
                 ).first()
-                
+
                 if existing_alert:
                     continue
-                
+
                 # 创建分配超时预警
                 alert = AlertRecord(
                     source_type='issue',
@@ -338,20 +340,20 @@ def check_issue_assignment_timeout():
                     created_time=datetime.now(),
                     project_id=issue.project_id
                 )
-                
+
                 db.add(alert)
                 alert_count += 1
-            
+
             db.commit()
-            
+
             logger.info(f"问题分配超时检查完成: 发现 {len(unassigned_issues)} 个未分配问题, 生成 {alert_count} 个预警")
-            
+
             return {
                 'unassigned_issues': len(unassigned_issues),
                 'alerts_created': alert_count,
                 'timestamp': datetime.now().isoformat()
             }
-            
+
     except Exception as e:
         logger.error(f"问题分配超时检查失败: {str(e)}")
         import traceback
@@ -367,7 +369,7 @@ def check_issue_resolution_timeout():
     try:
         with get_db_session() as db:
             from app.models.alert import AlertRecord
-            
+
             # 查询超过预期解决时间的问题
             now = datetime.now()
             overdue_resolution_issues = db.query(Issue).filter(
@@ -375,9 +377,9 @@ def check_issue_resolution_timeout():
                 Issue.expected_resolution_date < now,
                 Issue.is_active == True
             ).all()
-            
+
             alert_count = 0
-            
+
             for issue in overdue_resolution_issues:
                 # 检查是否已存在相同预警
                 existing_alert = db.query(AlertRecord).filter(
@@ -386,16 +388,16 @@ def check_issue_resolution_timeout():
                     AlertRecord.alert_type == 'resolution_timeout',
                     AlertRecord.status == 'active'
                 ).first()
-                
+
                 if existing_alert:
                     continue
-                
+
                 # 计算超时天数
                 overdue_days = (now - issue.expected_resolution_date).days
-                
+
                 # 创建解决超时预警
                 urgency = 'high' if overdue_days >= 3 else 'medium'
-                
+
                 alert = AlertRecord(
                     source_type='issue',
                     source_id=issue.id,
@@ -407,20 +409,20 @@ def check_issue_resolution_timeout():
                     created_time=now,
                     project_id=issue.project_id
                 )
-                
+
                 db.add(alert)
                 alert_count += 1
-            
+
             db.commit()
-            
+
             logger.info(f"问题解决超时检查完成: 发现 {len(overdue_resolution_issues)} 个超时问题, 生成 {alert_count} 个预警")
-            
+
             return {
                 'overdue_resolution_issues': len(overdue_resolution_issues),
                 'alerts_created': alert_count,
                 'timestamp': now.isoformat()
             }
-            
+
     except Exception as e:
         logger.error(f"问题解决超时检查失败: {str(e)}")
         import traceback
@@ -431,7 +433,7 @@ def check_issue_resolution_timeout():
 # 导出所有任务函数
 __all__ = [
     'check_overdue_issues',
-    'check_blocking_issues', 
+    'check_blocking_issues',
     'check_timeout_issues',
     'daily_issue_statistics_snapshot',
     'check_issue_assignment_timeout',

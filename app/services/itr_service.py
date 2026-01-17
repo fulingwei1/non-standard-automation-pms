@@ -4,14 +4,15 @@ ITR流程服务
 整合工单、问题、验收数据，提供端到端流程视图
 """
 
-from typing import Dict, List, Any, Optional
 from datetime import datetime
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, desc
+from typing import Any, Dict, List, Optional
 
-from app.models.service import ServiceTicket
-from app.models.issue import Issue
+from sqlalchemy import and_, desc, or_
+from sqlalchemy.orm import Session
+
 from app.models.acceptance import AcceptanceOrder
+from app.models.issue import Issue
+from app.models.service import ServiceTicket
 from app.models.sla import SLAMonitor
 
 
@@ -26,9 +27,9 @@ def get_ticket_timeline(
     ticket = db.query(ServiceTicket).filter(ServiceTicket.id == ticket_id).first()
     if not ticket:
         return None
-    
+
     timeline = []
-    
+
     # 1. 工单时间线（从timeline字段）
     if ticket.timeline:
         for item in ticket.timeline:
@@ -40,7 +41,7 @@ def get_ticket_timeline(
                 "description": item.get("description"),
                 "source": "service_ticket"
             })
-    
+
     # 2. 关联问题
     issues = db.query(Issue).filter(
         or_(
@@ -48,7 +49,7 @@ def get_ticket_timeline(
             Issue.description.like(f"%{ticket.ticket_no}%")
         )
     ).order_by(Issue.report_date).all()
-    
+
     for issue in issues:
         timeline.append({
             "type": "ISSUE",
@@ -60,7 +61,7 @@ def get_ticket_timeline(
             "issue_id": issue.id,
             "source": "issue"
         })
-        
+
         if issue.resolved_at:
             timeline.append({
                 "type": "ISSUE",
@@ -72,12 +73,12 @@ def get_ticket_timeline(
                 "issue_id": issue.id,
                 "source": "issue"
             })
-    
+
     # 3. 关联验收单
     acceptance_orders = db.query(AcceptanceOrder).filter(
         AcceptanceOrder.project_id == ticket.project_id
     ).order_by(AcceptanceOrder.created_at).all()
-    
+
     for order in acceptance_orders:
         timeline.append({
             "type": "ACCEPTANCE",
@@ -89,7 +90,7 @@ def get_ticket_timeline(
             "order_id": order.id,
             "source": "acceptance"
         })
-        
+
         if order.customer_signed_at:
             timeline.append({
                 "type": "ACCEPTANCE",
@@ -101,7 +102,7 @@ def get_ticket_timeline(
                 "order_id": order.id,
                 "source": "acceptance"
             })
-    
+
     # 4. SLA监控记录
     sla_monitor = db.query(SLAMonitor).filter(SLAMonitor.ticket_id == ticket_id).first()
     if sla_monitor:
@@ -114,7 +115,7 @@ def get_ticket_timeline(
             "policy_name": sla_monitor.policy.policy_name if sla_monitor.policy else None,
             "source": "sla"
         })
-        
+
         if sla_monitor.actual_response_time:
             timeline.append({
                 "type": "SLA",
@@ -125,7 +126,7 @@ def get_ticket_timeline(
                 "status": sla_monitor.response_status,
                 "source": "sla"
             })
-        
+
         if sla_monitor.actual_resolve_time:
             timeline.append({
                 "type": "SLA",
@@ -136,10 +137,10 @@ def get_ticket_timeline(
                 "status": sla_monitor.resolve_status,
                 "source": "sla"
             })
-    
+
     # 按时间排序
     timeline.sort(key=lambda x: x.get("timestamp") or "", reverse=False)
-    
+
     return {
         "ticket_id": ticket.id,
         "ticket_no": ticket.ticket_no,
@@ -158,7 +159,7 @@ def get_issue_related_data(
     issue = db.query(Issue).filter(Issue.id == issue_id).first()
     if not issue:
         return None
-    
+
     related_data = {
         "issue": {
             "id": issue.id,
@@ -171,13 +172,13 @@ def get_issue_related_data(
         "related_acceptance": [],
         "related_issues": []
     }
-    
+
     # 关联工单（通过项目ID）
     if issue.project_id:
         tickets = db.query(ServiceTicket).filter(
             ServiceTicket.project_id == issue.project_id
         ).order_by(desc(ServiceTicket.created_at)).limit(10).all()
-        
+
         for ticket in tickets:
             related_data["related_tickets"].append({
                 "id": ticket.id,
@@ -187,7 +188,7 @@ def get_issue_related_data(
                 "status": ticket.status,
                 "reported_time": ticket.reported_time.isoformat() if ticket.reported_time else None,
             })
-    
+
     # 关联验收单（通过项目ID或验收单ID）
     if issue.acceptance_order_id:
         order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == issue.acceptance_order_id).first()
@@ -203,7 +204,7 @@ def get_issue_related_data(
         orders = db.query(AcceptanceOrder).filter(
             AcceptanceOrder.project_id == issue.project_id
         ).order_by(desc(AcceptanceOrder.created_at)).limit(5).all()
-        
+
         for order in orders:
             related_data["related_acceptance"].append({
                 "id": order.id,
@@ -212,7 +213,7 @@ def get_issue_related_data(
                 "status": order.status,
                 "overall_result": order.overall_result,
             })
-    
+
     # 关联问题（父子问题、同项目问题）
     if issue.related_issue_id:
         related_issue = db.query(Issue).filter(Issue.id == issue.related_issue_id).first()
@@ -224,7 +225,7 @@ def get_issue_related_data(
                 "status": related_issue.status,
                 "relation": "parent"
             })
-    
+
     # 查找子问题
     child_issues = db.query(Issue).filter(Issue.related_issue_id == issue_id).all()
     for child in child_issues:
@@ -235,7 +236,7 @@ def get_issue_related_data(
             "status": child.status,
             "relation": "child"
         })
-    
+
     return related_data
 
 
@@ -256,13 +257,13 @@ def get_itr_dashboard_data(
         ticket_query = ticket_query.filter(ServiceTicket.created_at >= start_date)
     if end_date:
         ticket_query = ticket_query.filter(ServiceTicket.created_at <= end_date)
-    
+
     total_tickets = ticket_query.count()
     pending_tickets = ticket_query.filter(ServiceTicket.status == "PENDING").count()
     in_progress_tickets = ticket_query.filter(ServiceTicket.status == "IN_PROGRESS").count()
     resolved_tickets = ticket_query.filter(ServiceTicket.status == "RESOLVED").count()
     closed_tickets = ticket_query.filter(ServiceTicket.status == "CLOSED").count()
-    
+
     # 问题统计
     issue_query = db.query(Issue).filter(Issue.category == "CUSTOMER")
     if project_id:
@@ -271,13 +272,13 @@ def get_itr_dashboard_data(
         issue_query = issue_query.filter(Issue.report_date >= start_date)
     if end_date:
         issue_query = issue_query.filter(Issue.report_date <= end_date)
-    
+
     total_issues = issue_query.count()
     open_issues = issue_query.filter(Issue.status == "OPEN").count()
     processing_issues = issue_query.filter(Issue.status == "PROCESSING").count()
     resolved_issues = issue_query.filter(Issue.status == "RESOLVED").count()
     closed_issues = issue_query.filter(Issue.status == "CLOSED").count()
-    
+
     # 验收统计
     acceptance_query = db.query(AcceptanceOrder)
     if project_id:
@@ -286,11 +287,11 @@ def get_itr_dashboard_data(
         acceptance_query = acceptance_query.filter(AcceptanceOrder.created_at >= start_date)
     if end_date:
         acceptance_query = acceptance_query.filter(AcceptanceOrder.created_at <= end_date)
-    
+
     total_acceptance = acceptance_query.count()
     passed_acceptance = acceptance_query.filter(AcceptanceOrder.overall_result == "PASSED").count()
     failed_acceptance = acceptance_query.filter(AcceptanceOrder.overall_result == "FAILED").count()
-    
+
     # SLA统计
     sla_query = db.query(SLAMonitor).join(ServiceTicket)
     if project_id:
@@ -299,13 +300,13 @@ def get_itr_dashboard_data(
         sla_query = sla_query.filter(SLAMonitor.created_at >= start_date)
     if end_date:
         sla_query = sla_query.filter(SLAMonitor.created_at <= end_date)
-    
+
     total_sla_monitors = sla_query.count()
     response_on_time = sla_query.filter(SLAMonitor.response_status == "ON_TIME").count()
     response_overdue = sla_query.filter(SLAMonitor.response_status == "OVERDUE").count()
     resolve_on_time = sla_query.filter(SLAMonitor.resolve_status == "ON_TIME").count()
     resolve_overdue = sla_query.filter(SLAMonitor.resolve_status == "OVERDUE").count()
-    
+
     return {
         "tickets": {
             "total": total_tickets,

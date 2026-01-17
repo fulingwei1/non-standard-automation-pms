@@ -7,11 +7,13 @@
 
 from __future__ import annotations
 
-from datetime import date as date_type, datetime, timedelta
+import logging
+from datetime import date as date_type
+from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
 
-from sqlalchemy import and_, func, case
+from sqlalchemy import and_, case, func
 from sqlalchemy.orm import Session
 
 from app.models.sales import (
@@ -22,6 +24,8 @@ from app.models.sales import (
     Opportunity,
     SalesTarget,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class SalesTeamService:
@@ -457,6 +461,6 @@ class SalesTeamService:
                 return start_date, end_date
 
         except Exception:
-            pass
+            logger.debug("解析销售目标周期失败", exc_info=True)
 
         return None, None

@@ -6,24 +6,28 @@
 从 scheduled_tasks.py 拆分而来
 """
 import logging
+from datetime import date, datetime, timedelta
 from typing import List, Optional
-from sqlalchemy import or_, func
-from sqlalchemy.orm import Session
-from datetime import datetime, date, timedelta
 
+from sqlalchemy import func, or_
+from sqlalchemy.orm import Session
+
+from app.models.alert import AlertNotification, AlertRecord, AlertRule, AlertStatistics
 from app.models.base import get_db_session
-from app.models.project import Project, ProjectMilestone, ProjectCost
+from app.models.enums import AlertLevelEnum, AlertRuleTypeEnum, AlertStatusEnum
 from app.models.issue import Issue, IssueStatisticsSnapshot
-from app.models.alert import AlertRecord, AlertRule, AlertNotification, AlertStatistics
-from app.models.enums import AlertLevelEnum, AlertStatusEnum, AlertRuleTypeEnum
+from app.models.project import Project, ProjectCost, ProjectMilestone
 from app.services.notification_dispatcher import (
     NotificationDispatcher,
+    channel_allowed,
     resolve_channels,
     resolve_recipients,
-    channel_allowed,
 )
 from app.services.notification_queue import enqueue_notification
-from app.services.notification_service import AlertNotificationService, send_alert_notification
+from app.services.notification_service import (
+    AlertNotificationService,
+    send_alert_notification,
+)
 
 logger = logging.getLogger(__name__)
 

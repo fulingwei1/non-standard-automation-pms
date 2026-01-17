@@ -1,0 +1,92 @@
+# -*- coding: utf-8 -*-
+"""
+问题管理任务配置
+"""
+
+ISSUE_MANAGEMENT_TASKS = [
+    {
+        "id": "check_overdue_issues",
+        "name": "问题逾期预警",
+        "module": "app.utils.scheduled_tasks",
+        "callable": "check_overdue_issues",
+        "cron": {"minute": 0},
+        "owner": "Issue Squad",
+        "category": "Issue Management",
+        "description": "整点扫描逾期问题并生成预警。",
+        "enabled": True,
+        "dependencies_tables": ["issues", "alert_records"],
+        "risk_level": "HIGH",
+        "sla": {
+            "max_execution_time_seconds": 180,
+            "retry_on_failure": True,
+        },
+    },
+    {
+        "id": "check_blocking_issues",
+        "name": "阻塞问题预警",
+        "module": "app.utils.scheduled_tasks",
+        "callable": "check_blocking_issues",
+        "cron": {"minute": 5},
+        "owner": "Issue Squad",
+        "category": "Issue Management",
+        "description": "在逾期检测后 5 分钟执行阻塞问题检查。",
+        "enabled": True,
+        "dependencies_tables": ["issues", "alert_records"],
+        "risk_level": "HIGH",
+        "sla": {
+            "max_execution_time_seconds": 180,
+            "retry_on_failure": True,
+        },
+    },
+    {
+        "id": "check_timeout_issues",
+        "name": "问题超时升级",
+        "module": "app.utils.scheduled_tasks",
+        "callable": "check_timeout_issues",
+        "cron": {"hour": 1, "minute": 0},
+        "owner": "Issue Squad",
+        "category": "Issue Management",
+        "description": "凌晨 1 点执行问题超时升级策略。",
+        "enabled": True,
+        "dependencies_tables": ["issues", "alert_records"],
+        "risk_level": "MEDIUM",
+        "sla": {
+            "max_execution_time_seconds": 300,
+            "retry_on_failure": False,
+        },
+    },
+    {
+        "id": "daily_issue_statistics_snapshot",
+        "name": "每日问题统计快照",
+        "module": "app.utils.scheduled_tasks",
+        "callable": "daily_issue_statistics_snapshot",
+        "cron": {"hour": 3, "minute": 0},
+        "owner": "Issue Squad",
+        "category": "Issue Management",
+        "description": "生成问题统计快照供仪表盘使用。",
+        "enabled": True,
+        "dependencies_tables": ["issues", "alert_statistics"],
+        "risk_level": "LOW",
+        "sla": {
+            "max_execution_time_seconds": 600,
+            "retry_on_failure": False,
+        },
+    },
+    {
+        "id": "check_issue_timeout_escalation",
+        "name": "问题超时升级服务",
+        "module": "app.utils.scheduled_tasks",
+        "callable": "check_issue_timeout_escalation",
+        "cron": {"hour": 1, "minute": 30},
+        "owner": "Issue Squad",
+        "category": "Issue Management",
+        "description": "凌晨 1:30 针对问题执行二次升级。",
+        "enabled": True,
+        "dependencies_tables": ["issues", "alert_records"],
+        "risk_level": "MEDIUM",
+        "sla": {
+            "max_execution_time_seconds": 300,
+            "retry_on_failure": False,
+        },
+    },
+]

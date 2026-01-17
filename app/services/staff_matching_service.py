@@ -7,17 +7,24 @@ AI驱动人员智能匹配服务
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from typing import List, Dict, Optional, Tuple
-from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_
+from typing import Dict, List, Optional, Tuple
 
-from app.models.staff_matching import (
-    HrTagDict, HrEmployeeTagEvaluation, HrEmployeeProfile,
-    HrProjectPerformance, MesProjectStaffingNeed, HrAIMatchingLog,
-    TagTypeEnum, StaffingPriorityEnum, RecommendationTypeEnum
-)
+from sqlalchemy import and_, func, or_
+from sqlalchemy.orm import Session
+
 from app.models.organization import Employee
 from app.models.project import Project, ProjectMember
+from app.models.staff_matching import (
+    HrAIMatchingLog,
+    HrEmployeeProfile,
+    HrEmployeeTagEvaluation,
+    HrProjectPerformance,
+    HrTagDict,
+    MesProjectStaffingNeed,
+    RecommendationTypeEnum,
+    StaffingPriorityEnum,
+    TagTypeEnum,
+)
 from app.models.user import User
 
 

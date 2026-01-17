@@ -5,20 +5,26 @@
 提供统一的权限检查接口，替代分散的硬编码角色检查函数
 """
 
-from typing import List, Optional, Dict, Any, Set
-from functools import lru_cache
 import logging
+from functools import lru_cache
+from typing import Any, Dict, List, Optional, Set
 
-from sqlalchemy.orm import Session
 from sqlalchemy import text
+from sqlalchemy.orm import Session
 
-from app.models.user import User, Role, Permission, UserRole, RolePermission
 from app.models.organization_v2 import (
-    OrganizationUnit, Position, EmployeeOrgAssignment, PositionRole
+    EmployeeOrgAssignment,
+    OrganizationUnit,
+    Position,
+    PositionRole,
 )
 from app.models.permission_v2 import (
-    DataScopeRule, RoleDataScope, MenuPermission, RoleMenu
+    DataScopeRule,
+    MenuPermission,
+    RoleDataScope,
+    RoleMenu,
 )
+from app.models.user import Permission, Role, RolePermission, User, UserRole
 
 logger = logging.getLogger(__name__)
 

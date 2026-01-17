@@ -4,12 +4,13 @@
 通用辅助函数和共享依赖
 """
 import logging
-from typing import Optional
-from sqlalchemy.orm import Session
 from datetime import datetime
+from typing import Optional
 
-from app.models.base import get_db_session
+from sqlalchemy.orm import Session
+
 from app.models.alert import AlertRecord
+from app.models.base import get_db_session
 
 # 模块级 logger
 logger = logging.getLogger(__name__)
@@ -36,10 +37,10 @@ def send_notification_for_alert(db: Session, alert: AlertRecord, logger_instance
         from app.models.alert import AlertNotification
         from app.services.notification_dispatcher import (
             NotificationDispatcher,
+            channel_allowed,
+            resolve_channel_target,
             resolve_channels,
             resolve_recipients,
-            resolve_channel_target,
-            channel_allowed,
         )
 
         dispatcher = NotificationDispatcher(db)

@@ -5,17 +5,17 @@
 分析信息缺失、影响和质量评分
 """
 
-from typing import Dict, List, Optional, Any
-from datetime import datetime, date
-from decimal import Decimal
-from collections import defaultdict
 import logging
+from collections import defaultdict
+from datetime import date, datetime
+from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
+from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_
 
-from app.models.sales import Lead, Opportunity, Quote
 from app.models.project import Project
+from app.models.sales import Lead, Opportunity, Quote
 
 logger = logging.getLogger(__name__)
 
@@ -131,7 +131,7 @@ class InformationGapAnalysisService:
     ) -> Dict[str, Any]:
         """获取信息质量评分"""
         missing_analysis = self.analyze_missing(entity_type, entity_id)
-        
+
         return {
             'entity_type': entity_type,
             'entity_id': entity_id,
@@ -262,7 +262,7 @@ class InformationGapAnalysisService:
     def _get_recommendations(self, missing_fields: List[str]) -> List[str]:
         """获取改进建议"""
         recommendations = []
-        
+
         field_recommendations = {
             'customer_name': '请填写客户名称',
             'contact_name': '请填写联系人姓名',

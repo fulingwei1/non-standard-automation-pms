@@ -3,12 +3,13 @@
 项目工作空间服务
 """
 
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+
 from sqlalchemy.orm import Session, joinedload
 
+from app.models.issue import Issue
 from app.models.project import Project, ProjectDocument, ProjectMember
 from app.models.task_center import TaskUnified
-from app.models.issue import Issue
 from app.services.project_bonus_service import ProjectBonusService
 from app.services.project_meeting_service import ProjectMeetingService
 from app.services.project_solution_service import ProjectSolutionService
@@ -17,7 +18,7 @@ from app.services.project_solution_service import ProjectSolutionService
 def build_project_basic_info(project: Project) -> Dict[str, Any]:
     """
     构建项目基本信息
-    
+
     Returns:
         Dict[str, Any]: 项目基本信息字典
     """
@@ -40,7 +41,7 @@ def build_team_info(
 ) -> List[Dict[str, Any]]:
     """
     构建团队信息
-    
+
     Returns:
         List[Dict[str, Any]]: 团队成员信息列表
     """
@@ -53,7 +54,7 @@ def build_team_info(
         )
         .all()
     )
-    
+
     return [
         {
             'user_id': m.user_id,
@@ -74,14 +75,14 @@ def build_task_info(
 ) -> List[Dict[str, Any]]:
     """
     构建任务信息
-    
+
     Returns:
         List[Dict[str, Any]]: 任务信息列表
     """
     tasks = db.query(TaskUnified).filter(
         TaskUnified.project_id == project_id
     ).limit(limit).all()
-    
+
     return [
         {
             'id': t.id,
@@ -101,7 +102,7 @@ def build_bonus_info(
 ) -> Dict[str, Any]:
     """
     构建奖金信息（带错误处理）
-    
+
     Returns:
         Dict[str, Any]: 奖金信息字典
     """
@@ -112,7 +113,7 @@ def build_bonus_info(
         bonus_distributions = bonus_service.get_project_bonus_distributions(project_id) or []
         bonus_statistics = bonus_service.get_project_bonus_statistics(project_id) or {}
         bonus_member_summary = bonus_service.get_project_member_bonus_summary(project_id) or []
-        
+
         return {
             'rules': [
                 {
@@ -165,7 +166,7 @@ def build_meeting_info(
 ) -> Dict[str, Any]:
     """
     构建会议信息（带错误处理）
-    
+
     Returns:
         Dict[str, Any]: 会议信息字典
     """
@@ -173,7 +174,7 @@ def build_meeting_info(
         meeting_service = ProjectMeetingService(db)
         meetings = meeting_service.get_project_meetings(project_id) or []
         meeting_statistics = meeting_service.get_project_meeting_statistics(project_id) or {}
-        
+
         return {
             'meetings': [
                 {
@@ -206,14 +207,14 @@ def build_issue_info(
 ) -> Dict[str, Any]:
     """
     构建问题信息
-    
+
     Returns:
         Dict[str, Any]: 问题信息字典
     """
     issues = db.query(Issue).filter(
         Issue.project_id == project_id
     ).order_by(Issue.report_date.desc()).limit(limit).all()
-    
+
     return {
         'issues': [
             {
@@ -238,7 +239,7 @@ def build_solution_info(
 ) -> Dict[str, Any]:
     """
     构建解决方案信息（带错误处理）
-    
+
     Returns:
         Dict[str, Any]: 解决方案信息字典
     """
@@ -246,7 +247,7 @@ def build_solution_info(
         solution_service = ProjectSolutionService(db)
         solutions = solution_service.get_project_solutions(project_id) or []
         solution_statistics = solution_service.get_project_solution_statistics(project_id) or {}
-        
+
         return {
             'solutions': solutions[:20] if isinstance(solutions, list) else [],
             'statistics': solution_statistics,
@@ -267,14 +268,14 @@ def build_document_info(
 ) -> List[Dict[str, Any]]:
     """
     构建文档信息
-    
+
     Returns:
         List[Dict[str, Any]]: 文档信息列表
     """
     documents = db.query(ProjectDocument).filter(
         ProjectDocument.project_id == project_id
     ).order_by(ProjectDocument.created_at.desc()).limit(limit).all()
-    
+
     return [
         {
             'id': d.id,

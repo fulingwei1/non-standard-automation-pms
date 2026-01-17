@@ -9,18 +9,18 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Tuple
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
 
-from sqlalchemy.orm import Session
 from sqlalchemy import func
+from sqlalchemy.orm import Session
 
+from app.models.enums import InvoiceStatusEnum
 from app.models.sales import (
-    SalesRankingConfig,
     Contract,
     Invoice,
+    SalesRankingConfig,
 )
-from app.models.enums import InvoiceStatusEnum
 from app.models.user import User
 from app.services.sales_team_service import SalesTeamService
 

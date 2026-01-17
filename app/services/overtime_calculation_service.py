@@ -4,29 +4,30 @@
 负责计算加班工资和加班统计
 """
 
-from decimal import Decimal
 from datetime import date, datetime, timedelta
-from typing import Optional, Dict, List, Any
-from sqlalchemy.orm import Session
-from sqlalchemy import func, and_
+from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
+from sqlalchemy import and_, func
+from sqlalchemy.orm import Session
+
+from app.models.organization import Department
 from app.models.timesheet import Timesheet
 from app.models.user import User
-from app.models.organization import Department
 from app.services.hourly_rate_service import HourlyRateService
 
 
 class OvertimeCalculationService:
     """加班工资计算服务"""
-    
+
     # 加班工资倍数（可根据公司政策调整）
     OVERTIME_MULTIPLIER = Decimal("1.5")  # 工作日加班：1.5倍
     WEEKEND_MULTIPLIER = Decimal("2.0")  # 周末加班：2倍
     HOLIDAY_MULTIPLIER = Decimal("3.0")  # 节假日加班：3倍
-    
+
     def __init__(self, db: Session):
         self.db = db
-    
+
     def calculate_overtime_pay(
         self,
         user_id: int,
@@ -36,19 +37,19 @@ class OvertimeCalculationService:
     ) -> Decimal:
         """
         计算单个工时记录的加班工资
-        
+
         Args:
             user_id: 用户ID
             work_date: 工作日期
             hours: 工时数
             overtime_type: 加班类型（NORMAL/OVERTIME/WEEKEND/HOLIDAY）
-            
+
         Returns:
             加班工资金额
         """
         # 获取用户时薪
         hourly_rate = HourlyRateService.get_user_hourly_rate(self.db, user_id, work_date)
-        
+
         # 根据加班类型计算工资
         if overtime_type == 'NORMAL':
             # 正常工时，不计算加班工资
@@ -64,7 +65,7 @@ class OvertimeCalculationService:
             return hours * hourly_rate * (self.HOLIDAY_MULTIPLIER - Decimal("1"))
         else:
             return Decimal("0")
-    
+
     def calculate_user_monthly_overtime_pay(
         self,
         user_id: int,
@@ -73,12 +74,12 @@ class OvertimeCalculationService:
     ) -> Dict[str, Any]:
         """
         计算用户月度加班工资
-        
+
         Args:
             user_id: 用户ID
             year: 年份
             month: 月份
-            
+
         Returns:
             月度加班工资统计
         """
@@ -87,7 +88,7 @@ class OvertimeCalculationService:
             end_date = date(year + 1, 1, 1) - timedelta(days=1)
         else:
             end_date = date(year, month + 1, 1) - timedelta(days=1)
-        
+
         # 查询已审批的工时记录
         timesheets = self.db.query(Timesheet).filter(
             Timesheet.user_id == user_id,
@@ -95,29 +96,29 @@ class OvertimeCalculationService:
             Timesheet.work_date >= start_date,
             Timesheet.work_date <= end_date
         ).all()
-        
+
         user = self.db.query(User).filter(User.id == user_id).first()
         if not user:
             return {'error': '用户不存在'}
-        
+
         # 统计各类工时和工资
         total_hours = Decimal("0")
         normal_hours = Decimal("0")
         overtime_hours = Decimal("0")
         weekend_hours = Decimal("0")
         holiday_hours = Decimal("0")
-        
+
         total_overtime_pay = Decimal("0")
         overtime_pay = Decimal("0")
         weekend_pay = Decimal("0")
         holiday_pay = Decimal("0")
-        
+
         daily_records = []
-        
+
         for ts in timesheets:
             hours = Decimal(str(ts.hours or 0))
             total_hours += hours
-            
+
             if ts.overtime_type == 'NORMAL':
                 normal_hours += hours
             elif ts.overtime_type == 'OVERTIME':
@@ -135,7 +136,7 @@ class OvertimeCalculationService:
                 pay = self.calculate_overtime_pay(user_id, ts.work_date, hours, 'HOLIDAY')
                 holiday_pay += pay
                 total_overtime_pay += pay
-            
+
             daily_records.append({
                 'date': str(ts.work_date),
                 'hours': float(hours),
@@ -143,10 +144,10 @@ class OvertimeCalculationService:
                 'overtime_pay': float(self.calculate_overtime_pay(user_id, ts.work_date, hours, ts.overtime_type)),
                 'work_content': ts.work_content
             })
-        
+
         # 获取用户时薪（用于显示）
         hourly_rate = HourlyRateService.get_user_hourly_rate(self.db, user_id, start_date)
-        
+
         # 获取部门信息（从Timesheet记录中获取，因为Timesheet已经有department_id和department_name）
         department_id = None
         department_name = None
@@ -154,7 +155,7 @@ class OvertimeCalculationService:
             first_ts = timesheets[0]
             department_id = first_ts.department_id
             department_name = first_ts.department_name
-        
+
         return {
             'user_id': user_id,
             'user_name': user.real_name or user.username,
@@ -174,7 +175,7 @@ class OvertimeCalculationService:
             'holiday_pay': float(holiday_pay),
             'daily_records': daily_records
         }
-    
+
     def get_overtime_statistics(
         self,
         year: int,
@@ -183,12 +184,12 @@ class OvertimeCalculationService:
     ) -> Dict[str, Any]:
         """
         获取加班统计
-        
+
         Args:
             year: 年份
             month: 月份
             department_id: 部门ID（可选）
-            
+
         Returns:
             加班统计数据
         """
@@ -197,23 +198,23 @@ class OvertimeCalculationService:
             end_date = date(year + 1, 1, 1) - timedelta(days=1)
         else:
             end_date = date(year, month + 1, 1) - timedelta(days=1)
-        
+
         query = self.db.query(Timesheet).filter(
             Timesheet.status == 'APPROVED',
             Timesheet.work_date >= start_date,
             Timesheet.work_date <= end_date
         )
-        
+
         if department_id:
             query = query.filter(Timesheet.department_id == department_id)
-        
+
         timesheets = query.all()
-        
+
         # 统计
         total_users = len(set(ts.user_id for ts in timesheets))
         total_overtime_hours = sum(float(ts.hours or 0) for ts in timesheets if ts.overtime_type != 'NORMAL')
         total_overtime_pay = Decimal("0")
-        
+
         user_overtime_stats = {}
         for ts in timesheets:
             if ts.overtime_type != 'NORMAL':
@@ -228,7 +229,7 @@ class OvertimeCalculationService:
                 pay = self.calculate_overtime_pay(ts.user_id, ts.work_date, Decimal(str(ts.hours or 0)), ts.overtime_type)
                 user_overtime_stats[ts.user_id]['overtime_pay'] += pay
                 total_overtime_pay += pay
-        
+
         # 转换为列表并排序
         user_stats_list = []
         for user_id, stats in user_overtime_stats.items():
@@ -238,10 +239,10 @@ class OvertimeCalculationService:
                 'overtime_hours': stats['overtime_hours'],
                 'overtime_pay': float(stats['overtime_pay'])
             })
-        
+
         # 按加班工资降序排序
         user_stats_list.sort(key=lambda x: x['overtime_pay'], reverse=True)
-        
+
         return {
             'year': year,
             'month': month,

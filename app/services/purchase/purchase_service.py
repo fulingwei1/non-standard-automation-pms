@@ -5,53 +5,58 @@
 从 purchase.py 拆分出来的业务逻辑
 """
 
-from typing import List, Optional, Dict, Any
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
-from sqlalchemy.orm import Session
+from typing import Any, Dict, List, Optional
 
+from sqlalchemy.orm import Session, joinedload, selectinload
+
+from app.models.material import BomHeader, BomItem, Material, Supplier
+from app.models.project import Machine, Project
 from app.models.purchase import (
-    PurchaseOrder, PurchaseOrderItem, GoodsReceipt, GoodsReceiptItem,
-    PurchaseRequest, PurchaseRequestItem
+    GoodsReceipt,
+    GoodsReceiptItem,
+    PurchaseOrder,
+    PurchaseOrderItem,
+    PurchaseRequest,
+    PurchaseRequestItem,
 )
-from app.models.material import Material, Supplier, BomHeader, BomItem
-from app.models.project import Project, Machine
 
 
 class PurchaseService:
     """采购管理服务"""
-    
+
     def __init__(self, db: Session):
         self.db = db
-    
+
     def get_purchase_orders(self, skip: int = 0, limit: int = 50,
                           project_id: Optional[int] = None,
                           supplier_id: Optional[int] = None,
                           status: Optional[str] = None) -> List[PurchaseOrder]:
         """获取采购订单列表"""
+        # Note: items关系使用lazy='dynamic'，不支持selectinload
         query = self.db.query(PurchaseOrder).options(
-            selectinload(PurchaseOrder.items),
             joinedload(PurchaseOrder.supplier),
             joinedload(PurchaseOrder.project)
         )
-        
+
         if project_id:
             query = query.filter(PurchaseOrder.project_id == project_id)
         if supplier_id:
             query = query.filter(PurchaseOrder.supplier_id == supplier_id)
         if status:
             query = query.filter(PurchaseOrder.status == status)
-        
+
         return query.order_by(PurchaseOrder.created_at.desc()).offset(skip).limit(limit).all()
-    
+
     def get_purchase_order_by_id(self, order_id: int) -> Optional[PurchaseOrder]:
         """根据ID获取采购订单"""
+        # Note: items关系使用lazy='dynamic'，不支持selectinload
         return self.db.query(PurchaseOrder).options(
-            selectinload(PurchaseOrder.items),
             joinedload(PurchaseOrder.supplier),
             joinedload(PurchaseOrder.project)
         ).filter(PurchaseOrder.id == order_id).first()
-    
+
     def create_purchase_order(self, order_data: Dict[str, Any]) -> PurchaseOrder:
         """创建采购订单"""
         # TODO: 实现采购订单创建逻辑
@@ -64,10 +69,10 @@ class PurchaseService:
             expected_date=order_data.get('expected_date'),
             status='DRAFT'
         )
-        
+
         self.db.add(purchase_order)
         self.db.flush()
-        
+
         # 创建订单项
         items = order_data.get('items', [])
         for item_data in items:
@@ -79,42 +84,42 @@ class PurchaseService:
                 total_amount=item_data.get('total_amount')
             )
             self.db.add(item)
-        
+
         return purchase_order
-    
+
     def update_purchase_order(self, order_id: int, update_data: Dict[str, Any]) -> Optional[PurchaseOrder]:
         """更新采购订单"""
         order = self.get_purchase_order_by_id(order_id)
         if not order:
             return None
-        
+
         for key, value in update_data.items():
             if hasattr(order, key):
                 setattr(order, key, value)
-        
+
         return order
-    
+
     def submit_purchase_order(self, order_id: int) -> bool:
         """提交采购订单"""
         order = self.get_purchase_order_by_id(order_id)
         if not order:
             return False
-        
+
         order.status = 'SUBMITTED'
         order.submitted_at = datetime.now()
         return True
-    
+
     def approve_purchase_order(self, order_id: int, approver_id: int) -> bool:
         """审批采购订单"""
         order = self.get_purchase_order_by_id(order_id)
         if not order:
             return False
-        
+
         order.status = 'APPROVED'
         order.approved_at = datetime.now()
         order.approver_id = approver_id
         return True
-    
+
     def get_goods_receipts(self, skip: int = 0, limit: int = 50,
                          order_id: Optional[int] = None,
                          status: Optional[str] = None) -> List[GoodsReceipt]:
@@ -124,14 +129,14 @@ class PurchaseService:
             joinedload(GoodsReceipt.purchase_order),
             joinedload(GoodsReceipt.supplier)
         )
-        
+
         if order_id:
             query = query.filter(GoodsReceipt.order_id == order_id)
         if status:
             query = query.filter(GoodsReceipt.status == status)
-        
+
         return query.order_by(GoodsReceipt.receipt_date.desc()).offset(skip).limit(limit).all()
-    
+
     def create_goods_receipt(self, receipt_data: Dict[str, Any]) -> GoodsReceipt:
         """创建收货记录"""
         receipt = GoodsReceipt(
@@ -140,10 +145,10 @@ class PurchaseService:
             receiver_name=receipt_data.get('receiver_name'),
             status='COMPLETED'
         )
-        
+
         self.db.add(receipt)
         self.db.flush()
-        
+
         # 创建收货项
         items = receipt_data.get('items', [])
         for item_data in items:
@@ -155,9 +160,9 @@ class PurchaseService:
                 remark=item_data.get('remark')
             )
             self.db.add(item)
-        
+
         return receipt
-    
+
     def get_purchase_requests(self, skip: int = 0, limit: int = 50,
                            project_id: Optional[int] = None,
                            status: Optional[str] = None) -> List[PurchaseRequest]:
@@ -167,14 +172,14 @@ class PurchaseService:
             joinedload(PurchaseRequest.project),
             joinedload(PurchaseRequest.requester)
         )
-        
+
         if project_id:
             query = query.filter(PurchaseRequest.project_id == project_id)
         if status:
             query = query.filter(PurchaseRequest.status == status)
-        
+
         return query.order_by(PurchaseRequest.created_at.desc()).offset(skip).limit(limit).all()
-    
+
     def create_purchase_request(self, request_data: Dict[str, Any]) -> PurchaseRequest:
         """创建采购申请"""
         request = PurchaseRequest(
@@ -187,10 +192,10 @@ class PurchaseService:
             expected_date=request_data.get('expected_date'),
             status='DRAFT'
         )
-        
+
         self.db.add(request)
         self.db.flush()
-        
+
         # 创建申请项
         items = request_data.get('items', [])
         for item_data in items:
@@ -202,15 +207,15 @@ class PurchaseService:
                 total_amount=item_data.get('total_amount')
             )
             self.db.add(item)
-        
+
         return request
-    
+
     def generate_orders_from_request(self, request_id: int, supplier_id: int) -> bool:
         """从采购申请生成订单"""
         request = self.db.query(PurchaseRequest).filter(PurchaseRequest.id == request_id).first()
         if not request:
             return False
-        
+
         # 创建采购订单
         order = PurchaseOrder(
             order_code=f'PO-{datetime.now().strftime("%Y%m%d")}-{request.id:04d}',
@@ -220,10 +225,10 @@ class PurchaseService:
             request_id=request_id,
             status='DRAFT'
         )
-        
+
         self.db.add(order)
         self.db.flush()
-        
+
         # 复制申请项到订单项
         for request_item in request.items:
             order_item = PurchaseOrderItem(
@@ -235,6 +240,6 @@ class PurchaseService:
                 request_item_id=request_item.id
             )
             self.db.add(order_item)
-        
+
         request.status = 'ORDER_GENERATED'
         return True

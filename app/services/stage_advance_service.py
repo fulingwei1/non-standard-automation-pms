@@ -3,13 +3,14 @@
 项目阶段推进服务
 """
 
-from typing import Dict, Any, Optional, Tuple
+import logging
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from sqlalchemy.orm import Session
-import logging
+from typing import Any, Dict, Optional, Tuple
 
-from app.models.project import Project, ProjectStatusLog, Machine
+from sqlalchemy.orm import Session
+
+from app.models.project import Machine, Project, ProjectStatusLog
 
 logger = logging.getLogger(__name__)
 
@@ -17,12 +18,12 @@ logger = logging.getLogger(__name__)
 def validate_target_stage(target_stage: str) -> None:
     """
     验证目标阶段编码
-    
+
     Raises:
         HTTPException: 如果阶段编码无效
     """
     from fastapi import HTTPException
-    
+
     valid_stages = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9']
     if target_stage not in valid_stages:
         raise HTTPException(
@@ -37,15 +38,15 @@ def validate_stage_advancement(
 ) -> None:
     """
     检查阶段是否向前推进
-    
+
     Raises:
         HTTPException: 如果目标阶段不向前推进
     """
     from fastapi import HTTPException
-    
+
     current_stage_num = int(current_stage[1]) if len(current_stage) > 1 else 1
     target_stage_num = int(target_stage[1]) if len(target_stage) > 1 else 1
-    
+
     if target_stage_num <= current_stage_num:
         raise HTTPException(
             status_code=400,
@@ -62,12 +63,12 @@ def perform_gate_check(
 ) -> Tuple[bool, list, Optional[Dict[str, Any]]]:
     """
     执行阶段门校验
-    
+
     Returns:
         Tuple[bool, list, Optional[Dict]]: (是否通过, 缺失项列表, 详细校验结果)
     """
     from fastapi import HTTPException
-    
+
     if skip_gate_check:
         if not current_user_is_superuser:
             raise HTTPException(
@@ -75,25 +76,25 @@ def perform_gate_check(
                 detail="只有管理员可以跳过阶段门校验"
             )
         return True, [], None
-    
+
     if current_user_is_superuser:
         return True, [], None
-    
+
     from app.api.v1.endpoints.projects import check_gate, check_gate_detailed
-    
+
     gate_passed, missing_items = check_gate(db, project, target_stage)
-    
+
     if not gate_passed:
         gate_check_result = check_gate_detailed(db, project, target_stage)
         return False, missing_items, gate_check_result
-    
+
     return True, [], None
 
 
 def get_stage_status_mapping() -> Dict[str, str]:
     """
     获取阶段到状态的映射
-    
+
     Returns:
         Dict[str, str]: 阶段到状态的映射字典
     """
@@ -119,20 +120,20 @@ def update_project_stage_and_status(
 ) -> str:
     """
     更新项目阶段和状态
-    
+
     Returns:
         str: 新状态
     """
     project.stage = target_stage
-    
+
     stage_status_map = get_stage_status_mapping()
     new_status = stage_status_map.get(target_stage, old_status)
-    
+
     if new_status != old_status:
         project.status = new_status
-    
+
     db.add(project)
-    
+
     return new_status
 
 
@@ -177,14 +178,14 @@ def create_installation_dispatch_orders(
     """
     if target_stage != "S8" or old_stage == "S8":
         return
-    
+
     try:
-        from app.models.installation_dispatch import InstallationDispatchOrder
         from app.api.v1.endpoints.installation_dispatch import generate_order_no
-        
+        from app.models.installation_dispatch import InstallationDispatchOrder
+
         # 获取项目的所有机台
         machines = db.query(Machine).filter(Machine.project_id == project.id).all()
-        
+
         # 为每个机台创建安装调试派工单
         for machine in machines:
             # 检查是否已存在该机台的安装调试派工单
@@ -193,7 +194,7 @@ def create_installation_dispatch_orders(
                 InstallationDispatchOrder.machine_id == machine.id,
                 InstallationDispatchOrder.status != "CANCELLED"
             ).first()
-            
+
             if not existing_order:
                 dispatch_order = InstallationDispatchOrder(
                     order_no=generate_order_no(db),
@@ -227,17 +228,17 @@ def generate_cost_review_report(
     """
     if target_stage != "S9" and new_status != "ST30":
         return
-    
+
     try:
-        from app.services.cost_review_service import CostReviewService
         from app.models.project import ProjectReview
-        
+        from app.services.cost_review_service import CostReviewService
+
         # 自动生成成本复盘报告（如果不存在）
         existing_review = db.query(ProjectReview).filter(
             ProjectReview.project_id == project_id,
             ProjectReview.review_type == "POST_MORTEM"
         ).first()
-        
+
         if not existing_review:
             CostReviewService.generate_cost_review_report(
                 db, project_id, current_user_id

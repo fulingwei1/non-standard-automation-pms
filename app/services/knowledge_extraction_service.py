@@ -4,12 +4,13 @@
 从已解决工单自动提取知识，生成知识库文章和解决方案模板
 """
 
-from typing import Optional
 from datetime import datetime
+from typing import Optional
+
 from sqlalchemy.orm import Session
 
-from app.models.service import ServiceTicket, KnowledgeBase
 from app.models.issue import SolutionTemplate
+from app.models.service import KnowledgeBase, ServiceTicket
 from app.utils.number_generator import generate_sequential_no
 
 
@@ -20,26 +21,26 @@ def auto_extract_knowledge_from_ticket(
 ) -> Optional[KnowledgeBase]:
     """
     从工单自动提取知识
-    
+
     Args:
         db: 数据库会话
         ticket: 服务工单
         auto_publish: 是否自动发布
-    
+
     Returns:
         创建的知识库文章，如果提取失败则返回None
     """
     # 检查工单是否已关闭且有解决方案
     if ticket.status != "CLOSED" or not ticket.solution:
         return None
-    
+
     # 检查是否已经提取过知识（通过标题或内容匹配）
     existing = db.query(KnowledgeBase).filter(
         KnowledgeBase.title.like(f"%{ticket.ticket_no}%")
     ).first()
     if existing:
         return existing
-    
+
     # 生成文章编号
     article_no = generate_sequential_no(
         db=db,
@@ -50,22 +51,22 @@ def auto_extract_knowledge_from_ticket(
         separator='-',
         seq_length=3
     )
-    
+
     # 构建知识库文章
     title = f"问题解决方案：{ticket.problem_type} - {ticket.ticket_no}"
-    
+
     content_parts = []
     content_parts.append(f"## 问题描述\n\n{ticket.problem_desc}\n\n")
-    
+
     if ticket.root_cause:
         content_parts.append(f"## 根本原因\n\n{ticket.root_cause}\n\n")
-    
+
     if ticket.solution:
         content_parts.append(f"## 解决方案\n\n{ticket.solution}\n\n")
-    
+
     if ticket.preventive_action:
         content_parts.append(f"## 预防措施\n\n{ticket.preventive_action}\n\n")
-    
+
     content_parts.append(f"## 相关信息\n\n")
     content_parts.append(f"- 工单号：{ticket.ticket_no}\n")
     content_parts.append(f"- 问题类型：{ticket.problem_type}\n")
@@ -74,9 +75,9 @@ def auto_extract_knowledge_from_ticket(
         content_parts.append(f"- 项目：{ticket.project.project_name}\n")
     if ticket.resolved_time:
         content_parts.append(f"- 解决时间：{ticket.resolved_time.strftime('%Y-%m-%d %H:%M')}\n")
-    
+
     content = "".join(content_parts)
-    
+
     # 确定分类
     category_map = {
         "SOFTWARE": "软件问题",
@@ -86,12 +87,12 @@ def auto_extract_knowledge_from_ticket(
         "OTHER": "其他问题"
     }
     category = category_map.get(ticket.problem_type, "其他问题")
-    
+
     # 构建标签（JSON格式）
     tags = [ticket.problem_type, ticket.urgency]
     if ticket.project:
         tags.append(f"项目:{ticket.project.project_code}")
-    
+
     # 创建知识库文章
     article = KnowledgeBase(
         article_no=article_no,
@@ -105,14 +106,14 @@ def auto_extract_knowledge_from_ticket(
         author_id=ticket.assigned_to_id or 1,  # 使用处理人ID，如果没有则使用默认值
         author_name=ticket.assigned_to_name or "系统",
     )
-    
+
     db.add(article)
     db.commit()
     db.refresh(article)
-    
+
     # 同时创建解决方案模板
     create_solution_template_from_ticket(db, ticket, article)
-    
+
     return article
 
 
@@ -126,17 +127,17 @@ def create_solution_template_from_ticket(
     """
     if not ticket.solution:
         return None
-    
+
     # 检查是否已存在模板
     existing = db.query(SolutionTemplate).filter(
         SolutionTemplate.template_code.like(f"%{ticket.ticket_no}%")
     ).first()
     if existing:
         return existing
-    
+
     # 生成模板编码
     template_code = f"SOL-{ticket.ticket_no}"
-    
+
     # 构建解决方案步骤（简单拆分）
     solution_steps = []
     solution_lines = ticket.solution.split('\n')
@@ -150,7 +151,7 @@ def create_solution_template_from_ticket(
                 "expected_result": "问题解决"
             })
             step_num += 1
-    
+
     # 创建解决方案模板
     template = SolutionTemplate(
         template_name=f"解决方案模板：{ticket.problem_type}",
@@ -171,11 +172,11 @@ def create_solution_template_from_ticket(
         is_active=True,
         is_public=True,
     )
-    
+
     db.add(template)
     db.commit()
     db.refresh(template)
-    
+
     return template
 
 
@@ -191,19 +192,19 @@ def recommend_knowledge_for_ticket(
     recommendations = db.query(KnowledgeBase).filter(
         KnowledgeBase.status == "PUBLISHED"
     )
-    
+
     # 优先匹配问题类型
     if ticket.problem_type:
         recommendations = recommendations.filter(
             KnowledgeBase.tags.contains([ticket.problem_type])
         )
-    
+
     # 限制数量并排序
     recommendations = recommendations.order_by(
         KnowledgeBase.view_count.desc(),
         KnowledgeBase.created_at.desc()
     ).limit(limit).all()
-    
+
     result = []
     for article in recommendations:
         result.append({
@@ -214,5 +215,5 @@ def recommend_knowledge_for_ticket(
             "view_count": article.view_count,
             "like_count": article.like_count,
         })
-    
+
     return result

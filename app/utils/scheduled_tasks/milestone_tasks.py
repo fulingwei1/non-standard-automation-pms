@@ -4,12 +4,12 @@
 包含：里程碑预警、里程碑状态监控与收款计划调整、里程碑风险预警
 """
 import logging
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 
-from app.models.base import get_db_session
-from app.models.project import ProjectMilestone
 from app.models.alert import AlertRecord, AlertRule
-from app.models.enums import AlertLevelEnum, AlertStatusEnum, AlertRuleTypeEnum
+from app.models.base import get_db_session
+from app.models.enums import AlertLevelEnum, AlertRuleTypeEnum, AlertStatusEnum
+from app.models.project import ProjectMilestone
 
 logger = logging.getLogger(__name__)
 
@@ -17,16 +17,16 @@ logger = logging.getLogger(__name__)
 def check_milestone_alerts():
     """
     里程碑预警服务
-    
+
     使用重构后的MilestoneAlertService，将原来133行的复杂函数拆分为多个小函数
     """
     try:
         with get_db_session() as db:
             from app.services.alert.milestone_alert_service import MilestoneAlertService
-            
+
             alert_service = MilestoneAlertService(db)
             alert_count = alert_service.check_milestone_alerts()
-            
+
             db.commit()
 
             logger.info(

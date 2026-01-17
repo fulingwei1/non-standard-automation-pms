@@ -1,18 +1,20 @@
-from sqlalchemy.orm import Session
-from sqlalchemy import desc
 from datetime import datetime
-from app.models.project import ProjectStage, ProjectStatus, Project
+
+from sqlalchemy import desc
+from sqlalchemy.orm import Session
+
+from app.models.project import Project, ProjectStage, ProjectStatus
 
 
 def generate_project_code(db: Session) -> str:
     """
     生成项目编码：PJyymmddxxx
-    
+
     格式：PJ + 年月日(6位) + 序号(3位)
     示例：PJ250901001
     """
     from app.utils.number_generator import generate_sequential_no
-    
+
     return generate_sequential_no(
         db=db,
         model_class=Project,
