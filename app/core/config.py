@@ -6,13 +6,26 @@
 import os
 import secrets
 import warnings
+from pathlib import Path
 from typing import List, Optional
+
 from pydantic import field_validator, model_validator
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     """应用配置类"""
+    # Load env vars from common local files.
+    # Important for dev: without a stable SECRET_KEY, JWTs become invalid after
+    # every backend restart (leading to persistent 401s in the frontend).
+    _PROJECT_ROOT = Path(__file__).resolve().parents[2]
+    model_config = SettingsConfigDict(
+        env_file=(
+            str(_PROJECT_ROOT / ".env"),        # generic (gitignored)
+            str(_PROJECT_ROOT / ".env.local"),  # local dev (gitignored)
+        ),
+        case_sensitive=True,
+    )
 
     # 应用信息
     APP_NAME: str = "非标自动化项目管理系统"
@@ -70,13 +83,36 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5174",
     ]  # 开发环境默认值，生产环境从环境变量读取
 
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def _parse_cors_origins(cls, v):
+        """
+        Support both JSON array and comma-separated strings in env vars.
+
+        Examples:
+        - CORS_ORIGINS='["http://a.com","http://b.com"]'
+        - CORS_ORIGINS='http://a.com,http://b.com'
+        """
+        if v is None:
+            return v
+        if isinstance(v, str):
+            value = v.strip()
+            if not value:
+                return []
+            if value.startswith("["):
+                import json
+
+                return json.loads(value)
+            return [item.strip() for item in value.split(",") if item.strip()]
+        return v
+
     # 文件上传配置
     UPLOAD_DIR: str = "uploads"
     MAX_UPLOAD_SIZE: int = 10 * 1024 * 1024  # 10MB
 
     # 分页配置
     DEFAULT_PAGE_SIZE: int = 20
-    MAX_PAGE_SIZE: int = 100
+    MAX_PAGE_SIZE: int = 1000
 
     # Notification channels
     EMAIL_ENABLED: bool = False
@@ -121,10 +157,6 @@ class Settings(BaseSettings):
         7,
     ]  # 合同到期提醒时间点（天）
     SALES_APPROVAL_TIMEOUT_HOURS: int = 24  # 审批超时提醒阈值（小时），默认24小时
-
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
 
 
 # 创建全局配置实例
