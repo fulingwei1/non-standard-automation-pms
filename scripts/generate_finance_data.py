@@ -8,21 +8,24 @@
     python3 scripts/generate_finance_data.py
 """
 
-import sys
 import os
-from datetime import datetime, date, timedelta
-from decimal import Decimal
 import random
+import sys
+from datetime import date, datetime, timedelta
+from decimal import Decimal
 
 # 添加项目根目录到路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.models.base import get_db_session
-from app.models.user import User
 from app.models.finance import (
-    FundingRound, Investor, FundingRecord, EquityStructure, FundingUsage
+    EquityStructure,
+    FundingRecord,
+    FundingRound,
+    FundingUsage,
+    Investor,
 )
-
+from app.models.user import User
 
 # 投资方数据模板
 INVESTOR_TEMPLATES = [
@@ -229,14 +232,14 @@ def generate_investors(db):
     """生成投资方数据"""
     print("生成投资方数据...")
     investors = []
-    
+
     for template in INVESTOR_TEMPLATES:
         # 检查是否已存在
         existing = db.query(Investor).filter(Investor.investor_code == template["code"]).first()
         if existing:
             investors.append(existing)
             continue
-        
+
         investor = Investor(
             investor_code=template["code"],
             investor_name=template["name"],
@@ -257,7 +260,7 @@ def generate_investors(db):
         )
         db.add(investor)
         investors.append(investor)
-    
+
     db.commit()
     print(f"✓ 已生成 {len(investors)} 个投资方")
     return investors
@@ -267,12 +270,12 @@ def generate_funding_rounds(db, investors, users):
     """生成融资轮次数据"""
     print("生成融资轮次数据...")
     funding_rounds = []
-    
+
     # 获取财务或高管用户作为负责人
     finance_users = [u for u in users if u.real_name and ("财务" in u.real_name or "总" in u.real_name or "CEO" in u.real_name)]
     if not finance_users:
         finance_users = users[:3]
-    
+
     for i, config in enumerate(FUNDING_ROUNDS_CONFIG):
         # 检查是否已存在
         existing = db.query(FundingRound).filter(FundingRound.round_code == config["code"]).first()
@@ -290,9 +293,9 @@ def generate_funding_rounds(db, investors, users):
             lead_investor = next((inv for inv in investors if inv.investor_type == "PE"), investors[5])
         else:
             lead_investor = next((inv for inv in investors if inv.investor_type == "PE" and "高瓴" in inv.investor_name), investors[5])
-        
+
         responsible_person = finance_users[i % len(finance_users)]
-        
+
         funding_round = FundingRound(
             round_code=config["code"],
             round_name=config["name"],
@@ -315,7 +318,7 @@ def generate_funding_rounds(db, investors, users):
         )
         db.add(funding_round)
         funding_rounds.append(funding_round)
-    
+
     db.commit()
     print(f"✓ 已生成 {len(funding_rounds)} 个融资轮次")
     return funding_rounds
@@ -326,37 +329,37 @@ def generate_funding_records(db, funding_rounds, investors):
     print("生成融资记录数据...")
     records = []
     record_counter = 1
-    
+
     for round_obj in funding_rounds:
         # 每个轮次有3-6个投资方
         num_investors = random.randint(3, 6)
-        
+
         # 选择投资方（包括领投方）
         selected_investors = [round_obj.lead_investor]
         available_investors = [inv for inv in investors if inv.id != round_obj.lead_investor_id]
         selected_investors.extend(random.sample(available_investors, min(num_investors - 1, len(available_investors))))
-        
+
         # 计算总金额和分配
         total_amount = float(round_obj.actual_amount)
         lead_amount = total_amount * 0.5  # 领投方占50%
         other_amount = total_amount * 0.5 / (len(selected_investors) - 1)  # 其他投资方平分剩余50%
-        
+
         for idx, investor in enumerate(selected_investors):
             if idx == 0:  # 领投方
                 amount = Decimal(str(lead_amount))
             else:
                 amount = Decimal(str(other_amount))
-            
+
             # 计算持股比例（简化计算）
             if round_obj.valuation_post > 0:
                 share_percentage = Decimal(str((float(amount) / float(round_obj.valuation_post)) * 100))
             else:
                 share_percentage = Decimal("0")
-            
+
             # 生成记录编码
             record_code = f"FR{record_counter:06d}"
             record_counter += 1
-            
+
             # 付款日期
             if round_obj.closing_date:
                 payment_date = round_obj.closing_date + timedelta(days=random.randint(0, 30))
@@ -364,7 +367,7 @@ def generate_funding_records(db, funding_rounds, investors):
             else:
                 payment_date = None
                 actual_payment_date = None
-            
+
             record = FundingRecord(
                 record_code=record_code,
                 funding_round_id=round_obj.id,
@@ -388,7 +391,7 @@ def generate_funding_records(db, funding_rounds, investors):
             )
             db.add(record)
             records.append(record)
-    
+
     db.commit()
     print(f"✓ 已生成 {len(records)} 条融资记录")
     return records
@@ -398,7 +401,7 @@ def generate_equity_structures(db, funding_rounds, investors):
     """生成股权结构数据"""
     print("生成股权结构数据...")
     structures = []
-    
+
     # 创始人股权（初始）
     founder_shares = {
         "创始人A": 40.0,
@@ -406,24 +409,24 @@ def generate_equity_structures(db, funding_rounds, investors):
         "创始人C": 20.0,
         "员工期权池": 10.0,
     }
-    
+
     for round_obj in funding_rounds:
         # 获取该轮次的所有投资方记录
         round_records = db.query(FundingRecord).filter(
             FundingRecord.funding_round_id == round_obj.id
         ).all()
-        
+
         # 计算投资方总持股比例
         investor_total_percentage = sum(float(record.share_percentage or 0) for record in round_records)
-        
+
         # 创始人剩余股权（按比例稀释）
         remaining_founder_share = 100.0 - investor_total_percentage
-        
+
         # 生成创始人股权结构
         for founder_name, original_share in founder_shares.items():
             # 按比例稀释
             diluted_share = (original_share / 100.0) * remaining_founder_share
-            
+
             structure = EquityStructure(
                 funding_round_id=round_obj.id,
                 investor_id=None,
@@ -437,7 +440,7 @@ def generate_equity_structures(db, funding_rounds, investors):
             )
             db.add(structure)
             structures.append(structure)
-        
+
         # 生成投资方股权结构
         for record in round_records:
             investor = db.query(Investor).filter(Investor.id == record.investor_id).first()
@@ -455,7 +458,7 @@ def generate_equity_structures(db, funding_rounds, investors):
                 )
                 db.add(structure)
                 structures.append(structure)
-    
+
     db.commit()
     print(f"✓ 已生成 {len(structures)} 条股权结构记录")
     return structures
@@ -465,14 +468,14 @@ def generate_funding_usages(db, funding_rounds, users):
     """生成融资用途数据"""
     print("生成融资用途数据...")
     usages = []
-    
+
     # 获取各部门负责人
     dept_users = users[:10]  # 使用前10个用户作为各部门负责人
-    
+
     for round_obj in funding_rounds:
         total_planned = 0
         usage_items = []
-        
+
         # 根据轮次类型调整用途分配
         if round_obj.round_type == "SEED":
             # 种子轮主要用于研发
@@ -483,14 +486,14 @@ def generate_funding_usages(db, funding_rounds, users):
         else:
             # B轮及以上：全部分类
             categories = USAGE_CATEGORIES
-        
+
         for category_config in categories:
             for item_config in category_config["items"]:
                 # 计算计划金额
                 percentage = item_config["percentage"] / 100.0
                 planned_amount = float(round_obj.actual_amount) * percentage
                 total_planned += planned_amount
-                
+
                 # 实际金额（已完成轮次有实际数据）
                 if round_obj.status == "CLOSED":
                     actual_amount = planned_amount * random.uniform(0.8, 1.1)
@@ -498,12 +501,12 @@ def generate_funding_usages(db, funding_rounds, users):
                 else:
                     actual_amount = planned_amount * random.uniform(0.1, 0.5)
                     status = "IN_PROGRESS"
-                
+
                 # 时间安排
                 if round_obj.closing_date:
                     planned_start_date = round_obj.closing_date + timedelta(days=random.randint(0, 30))
                     planned_end_date = planned_start_date + timedelta(days=random.randint(90, 365))
-                    
+
                     if status == "COMPLETED":
                         actual_start_date = planned_start_date + timedelta(days=random.randint(0, 15))
                         actual_end_date = actual_start_date + timedelta(days=random.randint(60, 300))
@@ -515,9 +518,9 @@ def generate_funding_usages(db, funding_rounds, users):
                     planned_end_date = None
                     actual_start_date = None
                     actual_end_date = None
-                
+
                 responsible_person = dept_users[len(usages) % len(dept_users)]
-                
+
                 usage = FundingUsage(
                     funding_round_id=round_obj.id,
                     usage_category=category_config["category"],
@@ -536,7 +539,7 @@ def generate_funding_usages(db, funding_rounds, users):
                 )
                 db.add(usage)
                 usages.append(usage)
-    
+
     db.commit()
     print(f"✓ 已生成 {len(usages)} 条融资用途记录")
     return usages
@@ -547,31 +550,31 @@ def main():
     print("=" * 60)
     print("开始生成融资数据")
     print("=" * 60)
-    
+
     with get_db_session() as db:
         # 获取现有用户
         users = db.query(User).limit(20).all()
         if not users:
             print("❌ 错误：数据库中暂无用户数据，请先运行用户初始化脚本")
             return
-        
+
         print(f"✓ 找到 {len(users)} 个用户")
-        
+
         # 1. 生成投资方
         investors = generate_investors(db)
-        
+
         # 2. 生成融资轮次
         funding_rounds = generate_funding_rounds(db, investors, users)
-        
+
         # 3. 生成融资记录
         funding_records = generate_funding_records(db, funding_rounds, investors)
-        
+
         # 4. 生成股权结构
         equity_structures = generate_equity_structures(db, funding_rounds, investors)
-        
+
         # 5. 生成融资用途
         funding_usages = generate_funding_usages(db, funding_rounds, users)
-        
+
         print("=" * 60)
         print("融资数据生成完成！")
         print("=" * 60)

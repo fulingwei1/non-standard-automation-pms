@@ -8,37 +8,59 @@
     python3 scripts/generate_comprehensive_realistic_data.py
 """
 
-import sys
-import os
 import json
-from datetime import datetime, date, timedelta
-from decimal import Decimal
+import os
 import random
+import sys
+from datetime import date, datetime, timedelta
+from decimal import Decimal
 
 # 添加项目根目录到路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.models.base import get_db_session
-from app.models.user import User, Role, UserRole
-from app.models.organization import Department, Employee
-from app.models.project import Customer, Project, Machine, ProjectMilestone, ProjectPaymentPlan
-from app.models.sales import (
-    Lead, LeadFollowUp, Opportunity, OpportunityRequirement,
-    Quote, QuoteVersion, QuoteItem,
-    Contract, Invoice,
-    TechnicalAssessment, FailureCase, LeadRequirementDetail,
-    OpenItem, RequirementFreeze
-)
-from app.models.production import (
-    Workshop, Workstation, Worker, WorkerSkill, ProcessDict,
-    Equipment, EquipmentMaintenance,
-    ProductionPlan, WorkOrder, WorkReport, ProductionException
-)
 # 注意：WorkOrder.material_id外键引用错误，需要修复模型定义
 # 临时解决方案：不设置material_id字段
-from app.models.alert import AlertRule, AlertRecord, ExceptionEvent
-from app.models.material import MaterialCategory, Material, Supplier
-
+from app.models.alert import AlertRecord, AlertRule, ExceptionEvent
+from app.models.base import get_db_session
+from app.models.material import Material, MaterialCategory, Supplier
+from app.models.organization import Department, Employee
+from app.models.production import (
+    Equipment,
+    EquipmentMaintenance,
+    ProcessDict,
+    ProductionException,
+    ProductionPlan,
+    Worker,
+    WorkerSkill,
+    WorkOrder,
+    WorkReport,
+    Workshop,
+    Workstation,
+)
+from app.models.project import (
+    Customer,
+    Machine,
+    Project,
+    ProjectMilestone,
+    ProjectPaymentPlan,
+)
+from app.models.sales import (
+    Contract,
+    FailureCase,
+    Invoice,
+    Lead,
+    LeadFollowUp,
+    LeadRequirementDetail,
+    OpenItem,
+    Opportunity,
+    OpportunityRequirement,
+    Quote,
+    QuoteItem,
+    QuoteVersion,
+    RequirementFreeze,
+    TechnicalAssessment,
+)
+from app.models.user import Role, User, UserRole
 
 # ==================== 数据模板 ====================
 
@@ -120,7 +142,7 @@ def generate_customers(db, count=10):
     """生成客户数据"""
     print(f"\n生成 {count} 个客户...")
     customers = []
-    
+
     # 扩展客户模板
     extended_templates = CUSTOMER_TEMPLATES + [
         {
@@ -189,7 +211,7 @@ def generate_customers(db, count=10):
             "credit_limit": 25000000
         }
     ]
-    
+
     for i, template in enumerate(extended_templates[:count]):
         customer_code = f"CUST2025{i+1:03d}"
         # 检查是否已存在
@@ -198,7 +220,7 @@ def generate_customers(db, count=10):
             print(f"  ⊙ 客户已存在: {existing.customer_name} ({customer_code})")
             customers.append(existing)
             continue
-        
+
         customer = Customer(
             customer_code=customer_code,
             customer_name=template["name"],
@@ -223,14 +245,14 @@ def generate_customers(db, count=10):
         db.flush()
         customers.append(customer)
         print(f"  ✓ {customer.customer_name} ({customer.customer_code})")
-    
+
     return customers
 
 
 def generate_failure_cases(db, users):
     """生成失败案例数据"""
     print("\n生成失败案例数据...")
-    
+
     failure_cases_data = [
         {
             "case_code": "FC2024-001",
@@ -306,7 +328,7 @@ def generate_failure_cases(db, users):
             "keywords": json.dumps(["检测精度", "现场环境", "光源干扰", "视觉检测", "调试周期"])
         }
     ]
-    
+
     failure_cases = []
     for case_data in failure_cases_data:
         # 检查是否已存在
@@ -315,7 +337,7 @@ def generate_failure_cases(db, users):
             print(f"  ⊙ 失败案例已存在: {existing.case_code}")
             failure_cases.append(existing)
             continue
-        
+
         case = FailureCase(
             case_code=case_data["case_code"],
             project_name=case_data["project_name"],
@@ -341,14 +363,14 @@ def generate_failure_cases(db, users):
         db.flush()
         failure_cases.append(case)
         print(f"  ✓ {case.case_code} - {case.project_name}")
-    
+
     return failure_cases
 
 
 def generate_leads_with_assessments(db, customers, users):
     """生成销售线索和技术评估数据"""
     print("\n生成销售线索和技术评估数据...")
-    
+
     # 扩展线索数据
     leads_data = [
         {
@@ -412,10 +434,10 @@ def generate_leads_with_assessments(db, customers, users):
             "completeness": 85
         }
     ]
-    
+
     leads = []
     assessments = []
-    
+
     for lead_data in leads_data:
         # 检查是否已存在
         existing = db.query(Lead).filter(Lead.lead_code == lead_data["lead_code"]).first()
@@ -423,7 +445,7 @@ def generate_leads_with_assessments(db, customers, users):
             print(f"  ⊙ 线索已存在: {existing.lead_code}")
             leads.append(existing)
             continue
-        
+
         # 创建线索
         lead = Lead(
             lead_code=lead_data["lead_code"],
@@ -442,7 +464,7 @@ def generate_leads_with_assessments(db, customers, users):
         )
         db.add(lead)
         db.flush()
-        
+
         # 创建需求详情
         req_detail = LeadRequirementDetail(
             lead_id=lead.id,
@@ -474,9 +496,9 @@ def generate_leads_with_assessments(db, customers, users):
         )
         db.add(req_detail)
         db.flush()
-        
+
         lead.requirement_detail_id = req_detail.id
-        
+
         # 如果评估状态为进行中，创建技术评估
         if lead_data["assessment_status"] == "IN_PROGRESS":
             assessment = TechnicalAssessment(
@@ -503,13 +525,13 @@ def generate_leads_with_assessments(db, customers, users):
             )
             db.add(assessment)
             db.flush()
-            
+
             lead.assessment_id = assessment.id
             assessments.append(assessment)
-        
+
         leads.append(lead)
         print(f"  ✓ {lead.lead_code} - {lead.customer_name} (完整度: {lead.completeness}%)")
-    
+
     db.flush()
     return leads, assessments
 
@@ -517,16 +539,16 @@ def generate_leads_with_assessments(db, customers, users):
 def generate_opportunities_and_projects(db, customers, leads, users):
     """生成商机和项目数据"""
     print("\n生成商机和项目数据...")
-    
+
     opportunities = []
     projects = []
-    
+
     # 从线索转换为商机（至少80%的线索转为商机）
     leads_to_convert = leads[:int(len(leads) * 0.8)] if len(leads) > 3 else leads
     for i, lead in enumerate(leads_to_convert):
         customer = customers[i % len(customers)]
         opp_code = f"OPP202501{i+1:03d}"
-        
+
         # 检查商机是否已存在
         existing_opp = db.query(Opportunity).filter(Opportunity.opp_code == opp_code).first()
         if existing_opp:
@@ -537,7 +559,7 @@ def generate_opportunities_and_projects(db, customers, leads, users):
             if existing_project:
                 projects.append(existing_project)
             continue
-        
+
         # 创建商机
         opp = Opportunity(
             opp_code=opp_code,
@@ -563,7 +585,7 @@ def generate_opportunities_and_projects(db, customers, leads, users):
         db.add(opp)
         db.flush()
         opportunities.append(opp)
-        
+
         # 为商机创建报价（70%概率）
         if random.random() > 0.3:
                 quote = Quote(
@@ -577,7 +599,7 @@ def generate_opportunities_and_projects(db, customers, leads, users):
                 )
                 db.add(quote)
                 db.flush()
-                
+
                 # 创建报价版本
                 quote_version = QuoteVersion(
                     quote_id=quote.id,
@@ -591,7 +613,7 @@ def generate_opportunities_and_projects(db, customers, leads, users):
                 )
                 db.add(quote_version)
                 db.flush()
-                
+
                 # 创建报价明细
                 quote_items = [
                     {"name": "测试设备主机", "type": "EQUIPMENT", "qty": 1, "price": opp.est_amount * Decimal("0.6")},
@@ -599,7 +621,7 @@ def generate_opportunities_and_projects(db, customers, leads, users):
                     {"name": "软件系统", "type": "SOFTWARE", "qty": 1, "price": opp.est_amount * Decimal("0.15")},
                     {"name": "安装调试", "type": "SERVICE", "qty": 1, "price": opp.est_amount * Decimal("0.05")}
                 ]
-                
+
                 for item_data in quote_items:
                     item = QuoteItem(
                         quote_version_id=quote_version.id,
@@ -612,20 +634,20 @@ def generate_opportunities_and_projects(db, customers, leads, users):
                     db.add(item)
                 db.flush()
                 quote.current_version_id = quote_version.id
-        
+
         # 创建项目（如果商机已签单）
         if random.random() > 0.2:  # 80%概率签单
             stage = random.choice(["S2", "S3", "S4", "S5", "S6"])
             health = random.choice(["H1", "H2", "H3"])
             project_code = f"PJ2501{i+1:03d}"
-            
+
             # 检查项目是否已存在
             existing_project = db.query(Project).filter(Project.project_code == project_code).first()
             if existing_project:
                 print(f"  ⊙ 项目已存在: {existing_project.project_code}")
                 projects.append(existing_project)
                 continue
-            
+
             project = Project(
                 project_code=project_code,
                 project_name=opp.opp_name,
@@ -661,7 +683,7 @@ def generate_opportunities_and_projects(db, customers, leads, users):
             db.add(project)
             db.flush()
             projects.append(project)
-            
+
             # 创建设备
             machine = Machine(
                 project_id=project.id,
@@ -678,7 +700,7 @@ def generate_opportunities_and_projects(db, customers, leads, users):
             )
             db.add(machine)
             db.flush()
-            
+
             # 创建项目里程碑
             milestone_templates = [
                 {"name": "需求确认", "type": "REQUIREMENT_CONFIRMED", "days_offset": 5, "status": "COMPLETED"},
@@ -691,7 +713,7 @@ def generate_opportunities_and_projects(db, customers, leads, users):
                 {"name": "FAT验收通过", "type": "FAT_PASS", "days_offset": 180, "status": "PENDING"},
                 {"name": "发货", "type": "SHIPPED", "days_offset": 200, "status": "PENDING"}
             ]
-            
+
             for ms_template in milestone_templates:
                 planned_date = project.planned_start_date + timedelta(days=ms_template["days_offset"])
                 milestone = ProjectMilestone(
@@ -706,14 +728,14 @@ def generate_opportunities_and_projects(db, customers, leads, users):
                 )
                 db.add(milestone)
             db.flush()
-            
+
             # 创建收款计划
             payment_plans = [
                 {"name": "预付款", "type": "ADVANCE", "ratio": Decimal("0.30"), "days": 0},
                 {"name": "发货前付款", "type": "BEFORE_SHIPMENT", "ratio": Decimal("0.60"), "days": 180},
                 {"name": "验收后尾款", "type": "ACCEPTANCE", "ratio": Decimal("0.10"), "days": 210}
             ]
-            
+
             for pp_data in payment_plans:
                 payment_plan = ProjectPaymentPlan(
                     project_id=project.id,
@@ -727,11 +749,11 @@ def generate_opportunities_and_projects(db, customers, leads, users):
                 )
                 db.add(payment_plan)
             db.flush()
-            
+
             print(f"  ✓ 商机: {opp.opp_code} → 项目: {project.project_code} (阶段: {stage}, 健康度: {health})")
         else:
             print(f"  ✓ 商机: {opp.opp_code} (未签单)")
-    
+
     db.flush()
     return opportunities, projects
 
@@ -739,14 +761,14 @@ def generate_opportunities_and_projects(db, customers, leads, users):
 def generate_production_data(db, projects, users):
     """生成生产数据"""
     print("\n生成生产数据...")
-    
+
     # 创建车间
     workshops_data = [
         {"code": "WS001", "name": "机加车间", "type": "MACHINING"},
         {"code": "WS002", "name": "装配车间", "type": "ASSEMBLY"},
         {"code": "WS003", "name": "调试车间", "type": "DEBUGGING"}
     ]
-    
+
     workshops = []
     for ws_data in workshops_data:
         # 检查是否已存在
@@ -754,7 +776,7 @@ def generate_production_data(db, projects, users):
         if existing:
             workshops.append(existing)
             continue
-        
+
         workshop = Workshop(
             workshop_code=ws_data["code"],
             workshop_name=ws_data["name"],
@@ -767,7 +789,7 @@ def generate_production_data(db, projects, users):
         db.add(workshop)
         db.flush()
         workshops.append(workshop)
-    
+
     # 创建工序字典
     processes_data = [
         {"code": "PROC001", "name": "铣削加工", "type": "MACHINING", "hours": Decimal("2.5")},
@@ -775,7 +797,7 @@ def generate_production_data(db, projects, users):
         {"code": "PROC003", "name": "装配", "type": "ASSEMBLY", "hours": Decimal("4.0")},
         {"code": "PROC004", "name": "调试", "type": "DEBUGGING", "hours": Decimal("8.0")}
     ]
-    
+
     processes = []
     for proc_data in processes_data:
         # 检查是否已存在
@@ -783,7 +805,7 @@ def generate_production_data(db, projects, users):
         if existing:
             processes.append(existing)
             continue
-        
+
         process = ProcessDict(
             process_code=proc_data["code"],
             process_name=proc_data["name"],
@@ -794,7 +816,7 @@ def generate_production_data(db, projects, users):
         db.add(process)
         db.flush()
         processes.append(process)
-    
+
     # 创建工人
     workers = []
     for i in range(5):
@@ -804,7 +826,7 @@ def generate_production_data(db, projects, users):
         if existing:
             workers.append(existing)
             continue
-        
+
         worker = Worker(
             worker_no=worker_no,
             worker_name=f"工人{i+1}",
@@ -820,7 +842,7 @@ def generate_production_data(db, projects, users):
         db.add(worker)
         db.flush()
         workers.append(worker)
-    
+
     # 为项目创建生产计划和工单
     work_orders = []
     for project in projects:
@@ -841,7 +863,7 @@ def generate_production_data(db, projects, users):
             )
             db.add(plan)
             db.flush()
-            
+
             # 创建工单（根据项目阶段创建不同数量的工单）
             proc_count = 2 if project.stage in ["S3", "S4"] else 3 if project.stage == "S5" else 1
             for j, proc in enumerate(processes[:proc_count]):  # 每个项目多个工单
@@ -874,7 +896,7 @@ def generate_production_data(db, projects, users):
                 db.add(wo)
                 db.flush()
                 work_orders.append(wo)
-                
+
                 # 为工单创建报工记录
                 if wo.status in ["STARTED", "COMPLETED"]:
                     # 开工报工
@@ -889,7 +911,7 @@ def generate_production_data(db, projects, users):
                         status="APPROVED"
                     )
                     db.add(start_report)
-                    
+
                     # 如果已完成，添加完工报工
                     if wo.status == "COMPLETED":
                         complete_report = WorkReport(
@@ -906,10 +928,10 @@ def generate_production_data(db, projects, users):
                             status="APPROVED"
                         )
                         db.add(complete_report)
-    
+
     db.flush()
     print(f"  ✓ 创建 {len(workshops)} 个车间, {len(processes)} 个工序, {len(workers)} 个工人, {len(work_orders)} 个工单")
-    
+
     db.flush()
     return workshops, processes, workers, work_orders
 
@@ -917,7 +939,7 @@ def generate_production_data(db, projects, users):
 def generate_alert_and_exception_data(db, projects, users):
     """生成预警和异常数据"""
     print("\n生成预警和异常数据...")
-    
+
     # 创建预警规则
     alert_rules = []
     rule_templates = [
@@ -946,14 +968,14 @@ def generate_alert_and_exception_data(db, projects, users):
             "threshold_value": "H3"
         }
     ]
-    
+
     for rule_data in rule_templates:
         # 检查是否已存在
         existing = db.query(AlertRule).filter(AlertRule.rule_code == rule_data["rule_code"]).first()
         if existing:
             alert_rules.append(existing)
             continue
-        
+
         rule = AlertRule(
             rule_code=rule_data["rule_code"],
             rule_name=rule_data["rule_name"],
@@ -970,7 +992,7 @@ def generate_alert_and_exception_data(db, projects, users):
         db.add(rule)
         db.flush()
         alert_rules.append(rule)
-    
+
     # 为项目创建预警记录
     alert_records = []
     for project in projects:
@@ -996,7 +1018,7 @@ def generate_alert_and_exception_data(db, projects, users):
             db.add(alert)
             db.flush()
             alert_records.append(alert)
-    
+
     # 创建异常事件
     exceptions = []
     for project in projects:
@@ -1027,9 +1049,9 @@ def generate_alert_and_exception_data(db, projects, users):
             db.add(exception)
             db.flush()
             exceptions.append(exception)
-    
+
     print(f"  ✓ 创建 {len(alert_rules)} 个预警规则, {len(alert_records)} 个预警记录, {len(exceptions)} 个异常事件")
-    
+
     db.flush()
     return alert_rules, alert_records, exceptions
 
@@ -1037,7 +1059,7 @@ def generate_alert_and_exception_data(db, projects, users):
 def generate_users_if_needed(db):
     """生成用户数据（如果不存在）"""
     print("\n检查用户数据...")
-    
+
     users = {}
     user_templates = [
         {"username": "sales_zhang", "real_name": "张销售", "role": "销售", "dept": "销售部"},
@@ -1046,9 +1068,9 @@ def generate_users_if_needed(db):
         {"username": "mech_wang", "real_name": "王机械工程师", "role": "机械工程师", "dept": "技术部"},
         {"username": "elec_zhao", "real_name": "赵电气工程师", "role": "电气工程师", "dept": "技术部"}
     ]
-    
+
     from app.core.security import get_password_hash
-    
+
     for user_template in user_templates:
         user = db.query(User).filter(User.username == user_template["username"]).first()
         if not user:
@@ -1064,7 +1086,7 @@ def generate_users_if_needed(db):
                 )
                 db.add(emp)
                 db.flush()
-            
+
             user = User(
                 employee_id=emp.id,
                 username=user_template["username"],
@@ -1075,7 +1097,7 @@ def generate_users_if_needed(db):
             )
             db.add(user)
             db.flush()
-        
+
         # 统一使用英文key
         role_key_map = {
             "销售": "sales",
@@ -1087,7 +1109,7 @@ def generate_users_if_needed(db):
         key = role_key_map.get(user_template["role"], user_template["role"].lower())
         users[key] = user
         print(f"  ✓ {user.real_name} ({user.username})")
-    
+
     db.flush()
     return users
 
@@ -1097,32 +1119,32 @@ def main():
     print("=" * 80)
     print("生成全面、真实度高的测试数据")
     print("=" * 80)
-    
+
     with get_db_session() as db:
         try:
             # 1. 生成用户
             users = generate_users_if_needed(db)
-            
+
             # 2. 生成客户
             customers = generate_customers(db, count=5)
-            
+
             # 3. 生成失败案例
             failure_cases = generate_failure_cases(db, users)
-            
+
             # 4. 生成销售线索和技术评估
             leads, assessments = generate_leads_with_assessments(db, customers, users)
-            
+
             # 5. 生成商机和项目
             opportunities, projects = generate_opportunities_and_projects(db, customers, leads, users)
-            
+
             # 6. 生成生产数据
             workshops, processes, workers, work_orders = generate_production_data(db, projects, users)
-            
+
             # 7. 生成预警和异常数据
             alert_rules, alert_records, exceptions = generate_alert_and_exception_data(db, projects, users)
-            
+
             db.commit()
-            
+
             print("\n" + "=" * 80)
             print("数据生成完成！")
             print("=" * 80)
@@ -1141,7 +1163,7 @@ def main():
             print(f"  - 预警记录: {len(alert_records)} 个")
             print(f"  - 异常事件: {len(exceptions)} 个")
             print(f"\n数据已保存到数据库！")
-            
+
         except Exception as e:
             db.rollback()
             print(f"\n错误: {e}")

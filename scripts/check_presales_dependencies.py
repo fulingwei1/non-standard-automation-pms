@@ -32,13 +32,13 @@ for script, info in dependencies.items():
     file_path = project_root / info["file"]
     exists = file_path.exists()
     status = "✅" if exists else "⚠️"
-    
+
     print(f"\n{status} {script}")
     print(f"   引用文件: {info['file']}")
     print(f"   是否必需: {'否（可选）' if not info['required'] else '是'}")
     print(f"   文件存在: {'是' if exists else '否'}")
     print(f"   说明: {info['description']}")
-    
+
     if info["required"] and not exists:
         all_optional = False
 

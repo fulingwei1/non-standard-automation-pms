@@ -4,11 +4,12 @@
 测试项目API端点是否正常
 """
 
-import sys
-import os
-import requests
 import json
-from typing import Dict, Any
+import os
+import sys
+from typing import Any, Dict
+
+import requests
 
 # 添加项目根目录到路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -16,25 +17,23 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # API基础URL
 BASE_URL = "http://127.0.0.1:8000/api/v1"
 
+
 def test_login() -> str:
     """测试登录获取token"""
     print("\n" + "=" * 60)
     print("1. 测试登录...")
     print("=" * 60)
-    
+
     login_url = f"{BASE_URL}/auth/login"
-    login_data = {
-        "username": "admin",
-        "password": "admin123"
-    }
-    
+    login_data = {"username": "admin", "password": "admin123"}
+
     try:
         response = requests.post(login_url, data=login_data)
         if response.status_code == 200:
             data = response.json()
             token = data.get("access_token")
             print(f"✅ 登录成功")
-            print(f"   Token: {token[:50]}...")
+            print(f"   Token长度: {len(token) if token else 0}")
             return token
         else:
             print(f"❌ 登录失败: {response.status_code}")
@@ -50,13 +49,13 @@ def test_project_list(token: str, keyword: str = None) -> Dict[str, Any]:
     print("\n" + "=" * 60)
     print(f"2. 测试项目列表API" + (f" (关键词: {keyword})" if keyword else ""))
     print("=" * 60)
-    
+
     headers = {"Authorization": f"Bearer {token}"}
     url = f"{BASE_URL}/projects/"
     params = {"page": 1, "page_size": 20}
     if keyword:
         params["keyword"] = keyword
-    
+
     try:
         response = requests.get(url, headers=headers, params=params)
         if response.status_code == 200:
@@ -81,10 +80,10 @@ def test_project_detail(token: str, project_id: int) -> Dict[str, Any]:
     print("\n" + "=" * 60)
     print(f"3. 测试项目详情API (项目ID: {project_id})")
     print("=" * 60)
-    
+
     headers = {"Authorization": f"Bearer {token}"}
     url = f"{BASE_URL}/projects/{project_id}"
-    
+
     try:
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
@@ -116,7 +115,7 @@ def test_project_by_code(token: str, project_code: str) -> Dict[str, Any]:
     print("\n" + "=" * 60)
     print(f"4. 通过项目编码搜索: {project_code}")
     print("=" * 60)
-    
+
     list_data = test_project_list(token, keyword=project_code)
     if list_data and list_data.get("items"):
         items = list_data.get("items", [])
@@ -128,7 +127,7 @@ def test_project_by_code(token: str, project_code: str) -> Dict[str, Any]:
                 print(f"   - 健康度: {item.get('health')}")
                 print(f"   - 进度: {item.get('progress_pct')}%")
                 return item
-        
+
         print(f"⚠️  搜索到 {len(items)} 个项目，但编码不完全匹配")
         return items[0] if items else None
     else:
@@ -141,15 +140,15 @@ def test_all_projects(token: str, project_codes: list):
     print("\n" + "=" * 60)
     print("5. 逐个测试项目")
     print("=" * 60)
-    
+
     results = {}
-    
+
     for code in project_codes:
         print(f"\n--- 测试项目: {code} ---")
-        
+
         # 通过编码搜索
         project = test_project_by_code(token, code)
-        
+
         if project:
             project_id = project.get("id")
             # 测试详情API
@@ -158,23 +157,27 @@ def test_all_projects(token: str, project_codes: list):
                 "found": True,
                 "project_id": project_id,
                 "list_api": project is not None,
-                "detail_api": detail is not None
+                "detail_api": detail is not None,
             }
         else:
             results[code] = {
                 "found": False,
                 "project_id": None,
                 "list_api": False,
-                "detail_api": False
+                "detail_api": False,
             }
-    
+
     # 汇总结果
     print("\n" + "=" * 60)
     print("测试结果汇总")
     print("=" * 60)
-    
+
     for code, result in results.items():
-        status = "✅" if result["found"] and result["list_api"] and result["detail_api"] else "❌"
+        status = (
+            "✅"
+            if result["found"] and result["list_api"] and result["detail_api"]
+            else "❌"
+        )
         print(f"{status} {code}:")
         print(f"   - 列表API: {'✅' if result['list_api'] else '❌'}")
         print(f"   - 详情API: {'✅' if result['detail_api'] else '❌'}")
@@ -188,20 +191,20 @@ def main():
     print("\n" + "=" * 60)
     print("项目API测试")
     print("=" * 60)
-    
+
     # 1. 登录
     token = test_login()
     if not token:
         print("\n❌ 无法获取token，测试终止")
         return
-    
+
     # 2. 测试项目列表
     test_project_list(token)
-    
+
     # 3. 测试指定项目
     project_codes = ["PJ250111", "PJ250110", "PJ250109"]
     test_all_projects(token, project_codes)
-    
+
     print("\n" + "=" * 60)
     print("测试完成")
     print("=" * 60)

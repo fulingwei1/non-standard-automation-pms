@@ -4,20 +4,22 @@
 生成3个项目的演示数据，包括多个部门的任务
 """
 
-import sys
 import os
+import sys
 from datetime import datetime, timedelta
+
 from sqlalchemy.orm import Session
 
 # Add the app directory to the Python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+from app.core.security import get_password_hash
 from app.models.base import get_db_session
-from app.models.user import User
+from app.models.organization import Employee
 from app.models.project import Project, ProjectMember
 from app.models.task_center import TaskUnified
-from app.models.organization import Employee
-from app.core.security import get_password_hash
+from app.models.user import User
+
 
 def create_demo_employees(db: Session):
     """先创建员工记录（Employee表）"""

@@ -8,8 +8,8 @@
 """
 
 import re
-from pathlib import Path
 from collections import defaultdict
+from pathlib import Path
 from typing import Dict, List, Set
 
 frontend_pages_dir = Path(__file__).parent.parent / "frontend" / "src" / "pages"
@@ -19,7 +19,7 @@ def analyze_page_integration(file_path: Path) -> Dict:
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
         lines = content.split('\n')
-    
+
     result = {
         "file": file_path.name,
         "has_api_import": False,
@@ -29,7 +29,7 @@ def analyze_page_integration(file_path: Path) -> Dict:
         "api_calls": [],
         "mock_patterns": [],
     }
-    
+
     # 检查API导入
     api_import_patterns = [
         r"from ['\"]\.\./services/api['\"]",
@@ -40,7 +40,7 @@ def analyze_page_integration(file_path: Path) -> Dict:
         if re.search(pattern, content):
             result["has_api_import"] = True
             break
-    
+
     # 检查API调用
     api_call_patterns = [
         r"api\.(get|post|put|delete|patch)\(",
@@ -52,7 +52,7 @@ def analyze_page_integration(file_path: Path) -> Dict:
         if matches:
             result["has_api_call"] = True
             result["api_calls"].extend(matches)
-    
+
     # 检查Mock数据
     mock_patterns = [
         r"mock\w+\s*=",
@@ -65,7 +65,7 @@ def analyze_page_integration(file_path: Path) -> Dict:
         if re.search(pattern, content, re.IGNORECASE):
             result["has_mock_data"] = True
             result["mock_patterns"].append(pattern)
-    
+
     # 检查fallback逻辑
     fallback_patterns = [
         r"catch.*mock",
@@ -79,7 +79,7 @@ def analyze_page_integration(file_path: Path) -> Dict:
         if re.search(pattern, content, re.IGNORECASE):
             result["has_fallback"] = True
             break
-    
+
     return result
 
 def analyze_all_pages():
@@ -90,28 +90,28 @@ def analyze_all_pages():
         "not_integrated": [],  # 无API调用，有Mock数据
         "unknown": [],  # 无API调用，无Mock数据（可能是简单页面）
     }
-    
+
     stats = {
         "total": 0,
         "has_api": 0,
         "has_mock": 0,
         "has_fallback": 0,
     }
-    
+
     for file_path in sorted(frontend_pages_dir.rglob("*.jsx")):
         if file_path.name.startswith("_"):
             continue
-        
+
         result = analyze_page_integration(file_path)
         stats["total"] += 1
-        
+
         if result["has_api_call"]:
             stats["has_api"] += 1
         if result["has_mock_data"]:
             stats["has_mock"] += 1
         if result["has_fallback"]:
             stats["has_fallback"] += 1
-        
+
         # 分类
         if result["has_api_call"] and not result["has_mock_data"] and not result["has_fallback"]:
             results["fully_integrated"].append(result)
@@ -121,7 +121,7 @@ def analyze_all_pages():
             results["not_integrated"].append(result)
         else:
             results["unknown"].append(result)
-    
+
     return results, stats
 
 def print_report(results: Dict, stats: Dict):
@@ -130,14 +130,14 @@ def print_report(results: Dict, stats: Dict):
     print("前端API集成情况检查报告")
     print("=" * 80)
     print()
-    
+
     print(f"📊 总体统计:")
     print(f"  总页面数: {stats['total']}")
     print(f"  有API调用: {stats['has_api']} ({stats['has_api']/stats['total']*100:.1f}%)")
     print(f"  有Mock数据: {stats['has_mock']} ({stats['has_mock']/stats['total']*100:.1f}%)")
     print(f"  有Fallback逻辑: {stats['has_fallback']} ({stats['has_fallback']/stats['total']*100:.1f}%)")
     print()
-    
+
     print(f"✅ 完全集成（有API，无Mock，无Fallback）:")
     print(f"  数量: {len(results['fully_integrated'])} ({len(results['fully_integrated'])/stats['total']*100:.1f}%)")
     if results['fully_integrated']:
@@ -146,7 +146,7 @@ def print_report(results: Dict, stats: Dict):
         if len(results['fully_integrated']) > 10:
             print(f"    ... 还有 {len(results['fully_integrated']) - 10} 个")
     print()
-    
+
     print(f"⚠️  部分集成（有API，但有Mock或Fallback）:")
     print(f"  数量: {len(results['partially_integrated'])} ({len(results['partially_integrated'])/stats['total']*100:.1f}%)")
     if results['partially_integrated']:
@@ -160,7 +160,7 @@ def print_report(results: Dict, stats: Dict):
         if len(results['partially_integrated']) > 20:
             print(f"    ... 还有 {len(results['partially_integrated']) - 20} 个")
     print()
-    
+
     print(f"❌ 未集成（无API调用，有Mock数据）:")
     print(f"  数量: {len(results['not_integrated'])} ({len(results['not_integrated'])/stats['total']*100:.1f}%)")
     if results['not_integrated']:
@@ -169,7 +169,7 @@ def print_report(results: Dict, stats: Dict):
         if len(results['not_integrated']) > 20:
             print(f"    ... 还有 {len(results['not_integrated']) - 20} 个")
     print()
-    
+
     print(f"❓ 未知状态（无API，无Mock，可能是简单页面）:")
     print(f"  数量: {len(results['unknown'])} ({len(results['unknown'])/stats['total']*100:.1f}%)")
     if results['unknown']:
@@ -178,11 +178,11 @@ def print_report(results: Dict, stats: Dict):
         if len(results['unknown']) > 10:
             print(f"    ... 还有 {len(results['unknown']) - 10} 个")
     print()
-    
+
     # 集成度计算
     fully_integrated_count = len(results['fully_integrated'])
     integration_rate = fully_integrated_count / stats['total'] * 100
-    
+
     print("=" * 80)
     print("💡 总结:")
     print("=" * 80)

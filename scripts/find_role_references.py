@@ -4,12 +4,13 @@
 查找所有引用 roles 表的表
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from sqlalchemy import text, inspect
+from sqlalchemy import inspect, text
+
 from app.models.base import get_db_session, get_engine
 
 # 获取引擎
@@ -33,7 +34,7 @@ with get_db_session() as session:
                     print(f"  外键: {fk['name']}")
                     print(f"  列: {fk['constrained_columns']}")
                     print(f"  引用: {fk['referred_table']}.{fk['referred_columns']}")
-                    
+
                     # 检查是否有数据
                     if fk['constrained_columns']:
                         col = fk['constrained_columns'][0]

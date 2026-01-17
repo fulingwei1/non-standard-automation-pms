@@ -71,6 +71,14 @@ htmlcov/
 *.temp
 output.txt
 
+# Exports / reports
+*.xlsx
+*.xls
+user_discrepancy_analysis.json
+USER_ROLE_ANALYSIS_REPORT.md
+frontend/test_*.mjs
+frontend/test_*.sh
+
 # Node modules (if frontend exists)
 node_modules/
 .next/
@@ -96,7 +104,14 @@ monitoring/grafana/data/
 ehthumbs.db
 Thumbs.db
 
+# Local tooling
+.claude/settings.local.json
 
+# Backup artifacts
+*.bak
+*.backup
+*.old
+*.orig
 
 
 

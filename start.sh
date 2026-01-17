@@ -61,17 +61,26 @@ mkdir -p logs
 # 启动后端
 echo -e "\n${YELLOW}[3/4] 启动后端服务...${NC}"
 echo -e "${BLUE}后端日志将输出到: logs/backend.log${NC}"
-nohup python3 -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 > logs/backend.log 2>&1 &
+#
+# 注意：在部分受限环境中（例如无法调用 `nice()` 或无法建立文件监听）`uvicorn --reload`
+# 会直接报 `[Errno 1] Operation not permitted`，导致后端无法启动。
+# 为了保证“一键启动”可用，这里默认关闭 `--reload`。
+#
+# 如需热重载，可在本机环境手动运行：
+#   python3 -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+BACKEND_HOST=${BACKEND_HOST:-127.0.0.1}
+BACKEND_PORT=${BACKEND_PORT:-8000}
+nohup python3 -m uvicorn app.main:app --host "$BACKEND_HOST" --port "$BACKEND_PORT" > logs/backend.log 2>&1 &
 BACKEND_PID=$!
 echo $BACKEND_PID > logs/backend.pid
 echo -e "${GREEN}✓ 后端服务已启动 (PID: $BACKEND_PID)${NC}"
-echo -e "${GREEN}  API地址: http://localhost:8000${NC}"
-echo -e "${GREEN}  API文档: http://localhost:8000/docs${NC}"
+echo -e "${GREEN}  API地址: http://$BACKEND_HOST:$BACKEND_PORT${NC}"
+echo -e "${GREEN}  API文档: http://$BACKEND_HOST:$BACKEND_PORT/docs${NC}"
 
 # 等待后端启动
 echo -e "${YELLOW}等待后端服务就绪...${NC}"
 for i in {1..10}; do
-    if curl -s http://localhost:8000/health > /dev/null 2>&1; then
+    if curl -s "http://$BACKEND_HOST:$BACKEND_PORT/health" > /dev/null 2>&1; then
         echo -e "${GREEN}✓ 后端服务已就绪${NC}"
         break
     fi
@@ -87,7 +96,7 @@ done
 echo -e "\n${YELLOW}[4/4] 启动前端服务...${NC}"
 echo -e "${BLUE}前端日志将输出到: logs/frontend.log${NC}"
 cd frontend
-nohup pnpm dev > ../logs/frontend.log 2>&1 &
+VITE_BACKEND_URL="http://$BACKEND_HOST:$BACKEND_PORT" nohup pnpm dev > ../logs/frontend.log 2>&1 &
 FRONTEND_PID=$!
 cd ..
 echo $FRONTEND_PID > logs/frontend.pid
@@ -110,8 +119,8 @@ echo -e "${GREEN}  ✓ 系统启动成功！${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo -e "\n${BLUE}访问地址：${NC}"
 echo -e "  ${GREEN}前端页面: http://localhost:5173${NC}"
-echo -e "  ${GREEN}后端API:  http://localhost:8000${NC}"
-echo -e "  ${GREEN}API文档:  http://localhost:8000/docs${NC}"
+echo -e "  ${GREEN}后端API:  http://$BACKEND_HOST:$BACKEND_PORT${NC}"
+echo -e "  ${GREEN}API文档:  http://$BACKEND_HOST:$BACKEND_PORT/docs${NC}"
 echo -e "\n${BLUE}进程信息：${NC}"
 echo -e "  后端PID: $BACKEND_PID"
 echo -e "  前端PID: $FRONTEND_PID"

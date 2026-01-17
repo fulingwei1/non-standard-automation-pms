@@ -1,6 +1,6 @@
-import sqlite3
-import os
 import glob
+import os
+import sqlite3
 
 db_path = "data/app.diagnostic.db"
 if os.path.exists(db_path):

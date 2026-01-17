@@ -54,23 +54,23 @@ def configure_glm():
     print("=" * 60)
     print("Cursor GLM-4.7 模型配置工具")
     print("=" * 60)
-    
+
     # 备份
     if not backup_settings():
         print("⚠️  未找到现有设置文件，将创建新文件")
-    
+
     # 加载设置
     settings = load_settings()
-    
+
     # 添加 GLM 配置
     # 注意：Cursor 的自定义模型配置可能不在这里，但我们可以尝试添加
     settings["cursor.glm.apiKey"] = GLM_CONFIG["apiKey"]
     settings["cursor.glm.baseUrl"] = GLM_CONFIG["baseUrl"]
     settings["cursor.glm.modelName"] = GLM_CONFIG["modelName"]
-    
+
     # 保存
     save_settings(settings)
-    
+
     print("\n" + "=" * 60)
     print("配置完成！")
     print("=" * 60)

@@ -3,9 +3,10 @@
 修复单个文件的Mock数据使用
 """
 
-import sys
 import re
+import sys
 from pathlib import Path
+
 
 def fix_file(file_path: Path) -> bool:
     """修复单个文件"""

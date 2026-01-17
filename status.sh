@@ -16,16 +16,19 @@ echo -e "${BLUE}========================================${NC}"
 # 切换到项目根目录
 cd "$(dirname "$0")"
 
+BACKEND_HOST=${BACKEND_HOST:-127.0.0.1}
+BACKEND_PORT=${BACKEND_PORT:-8000}
+
 # 检查后端状态
 echo -e "\n${YELLOW}后端服务状态：${NC}"
 if [ -f "logs/backend.pid" ]; then
     BACKEND_PID=$(cat logs/backend.pid)
     if ps -p $BACKEND_PID > /dev/null 2>&1; then
         echo -e "  ${GREEN}✓ 运行中${NC} (PID: $BACKEND_PID)"
-        if curl -s http://localhost:8000/health > /dev/null 2>&1; then
+        if curl -s "http://$BACKEND_HOST:$BACKEND_PORT/health" > /dev/null 2>&1; then
             echo -e "  ${GREEN}✓ 健康检查通过${NC}"
-            echo -e "  ${BLUE}  API地址: http://localhost:8000${NC}"
-            echo -e "  ${BLUE}  API文档: http://localhost:8000/docs${NC}"
+            echo -e "  ${BLUE}  API地址: http://$BACKEND_HOST:$BACKEND_PORT${NC}"
+            echo -e "  ${BLUE}  API文档: http://$BACKEND_HOST:$BACKEND_PORT/docs${NC}"
         else
             echo -e "  ${RED}✗ 健康检查失败${NC}"
         fi

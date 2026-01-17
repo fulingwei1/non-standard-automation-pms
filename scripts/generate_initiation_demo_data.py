@@ -4,8 +4,8 @@
 生成立项管理演示数据
 """
 
-import sys
 import os
+import sys
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from random import choice, randint
@@ -14,8 +14,8 @@ from random import choice, randint
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from app.models.base import get_db_session
-from app.models.user import User
 from app.models.pmo import PmoProjectInitiation
+from app.models.user import User
 
 # 项目类型
 PROJECT_TYPES = ['NEW', 'UPGRADE', 'MAINTAIN']
@@ -72,12 +72,12 @@ def generate_initiations(db, count=10):
     if not users:
         print("❌ 错误：数据库中没有活跃用户，请先初始化用户数据")
         return []
-    
+
     print(f"✓ 找到 {len(users)} 个用户")
-    
+
     today = datetime.now()
     today_str = today.strftime("%y%m%d")
-    
+
     # 先查询今天已有的记录，确定起始序号
     existing_today = (
         db.query(PmoProjectInitiation)
@@ -89,14 +89,14 @@ def generate_initiations(db, count=10):
         start_seq = int(existing_today.application_no.split("-")[-1]) + 1
     else:
         start_seq = 1
-    
+
     initiations = []
-    
+
     for i in range(count):
         # 随机选择申请人和状态
         applicant = choice(users)
         status = choice(STATUSES)
-        
+
         # 根据状态设置时间
         if status == 'DRAFT':
             apply_time = today - timedelta(days=randint(1, 30))
@@ -108,23 +108,23 @@ def generate_initiations(db, count=10):
             apply_time = today - timedelta(days=randint(10, 30))
         else:
             apply_time = today - timedelta(days=randint(1, 30))
-        
+
         # 随机选择客户和项目名称
         customer_name = choice(CUSTOMER_NAMES)
         project_name_template = choice(PROJECT_NAME_TEMPLATES)
         project_name = project_name_template.format(customer=customer_name)
-        
+
         # 生成合同金额（10万到500万之间）
         contract_amount = Decimal(randint(100000, 5000000))
-        
+
         # 生成日期
         required_start_date = date.today() + timedelta(days=randint(30, 90))
         required_end_date = required_start_date + timedelta(days=randint(90, 180))
-        
+
         # 生成立项申请编号
         seq = start_seq + i
         application_no = f"INIT-{today_str}-{seq:03d}"
-        
+
         initiation = PmoProjectInitiation(
             application_no=application_no,
             project_name=project_name,
@@ -145,7 +145,7 @@ def generate_initiations(db, count=10):
             apply_time=apply_time,
             status=status,
         )
-        
+
         # 如果是已审批状态，设置审批信息
         if status == 'APPROVED':
             approver = choice(users)
@@ -158,12 +158,12 @@ def generate_initiations(db, count=10):
             initiation.approved_by = approver.id
             initiation.approved_at = apply_time + timedelta(days=randint(1, 7))
             initiation.review_result = "项目风险较高，资源需求超出当前能力，暂不批准。"
-        
+
         db.add(initiation)
         initiations.append(initiation)
-        
+
         print(f"  ✓ 创建立项申请: {application_no} - {project_name} (状态: {status})")
-    
+
     return initiations
 
 
@@ -172,7 +172,7 @@ def main():
     print("=" * 60)
     print("生成立项管理演示数据")
     print("=" * 60)
-    
+
     with get_db_session() as db:
         try:
             # 检查是否已有数据
@@ -183,19 +183,19 @@ def main():
                 if response.lower() != 'y':
                     print("已取消")
                     return
-            
+
             # 生成数据
             print("\n开始生成立项申请数据...")
             initiations = generate_initiations(db, count=15)
-            
+
             db.commit()
-            
+
             print("\n" + "=" * 60)
             print("数据生成完成！")
             print("=" * 60)
             print(f"\n生成的数据概览：")
             print(f"  - 立项申请: {len(initiations)} 个")
-            
+
             # 按状态统计
             status_stats = {}
             for init in initiations:
@@ -203,7 +203,7 @@ def main():
                 if status not in status_stats:
                     status_stats[status] = 0
                 status_stats[status] += 1
-            
+
             print(f"\n各状态数量：")
             for status, count in status_stats.items():
                 status_name = {
@@ -214,9 +214,9 @@ def main():
                     'REJECTED': '已驳回',
                 }.get(status, status)
                 print(f"  - {status_name}: {count} 个")
-            
+
             print(f"\n数据已保存到数据库！")
-            
+
         except Exception as e:
             db.rollback()
             print(f"\n❌ 错误：{e}")

@@ -15,7 +15,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Iterable
 
-
 CODE_EXTS = {".py", ".js", ".jsx", ".ts", ".tsx"}
 PAGE_EXTS = {".jsx", ".tsx"}
 

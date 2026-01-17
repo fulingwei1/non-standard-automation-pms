@@ -8,29 +8,36 @@
     python3 scripts/generate_multi_stage_projects.py
 """
 
-import sys
 import os
-from datetime import datetime, date, timedelta
-from decimal import Decimal
 import random
+import sys
+from datetime import date, datetime, timedelta
+from decimal import Decimal
 
 # 添加项目根目录到路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.models.base import get_db_session
-from app.models.user import User
-from app.models.project import Customer, Project, Machine, ProjectMilestone, ProjectPaymentPlan
-from app.models.sales import (
-    Lead, Opportunity, Quote, QuoteVersion, QuoteItem, Contract
-)
 from app.models.material import (
-    MaterialCategory, Material, Supplier, MaterialSupplier,
-    BomHeader, BomItem
+    BomHeader,
+    BomItem,
+    Material,
+    MaterialCategory,
+    MaterialSupplier,
+    Supplier,
+)
+from app.models.organization import Department, Employee
+from app.models.progress import Task
+from app.models.project import (
+    Customer,
+    Machine,
+    Project,
+    ProjectMilestone,
+    ProjectPaymentPlan,
 )
 from app.models.purchase import PurchaseOrder, PurchaseOrderItem
-from app.models.progress import Task
-from app.models.organization import Department, Employee
-
+from app.models.sales import Contract, Lead, Opportunity, Quote, QuoteItem, QuoteVersion
+from app.models.user import User
 
 # 项目阶段配置：S1-S9，每个阶段生成1-2个项目
 STAGE_CONFIGS = [
@@ -141,7 +148,7 @@ CUSTOMER_NAMES = [
 def get_or_create_users(db):
     """获取或创建用户"""
     users = {}
-    
+
     # 获取现有用户或创建
     user_configs = [
         {"username": "sales_zhang", "name": "张销售", "dept": "销售部", "role": "销售经理"},
@@ -150,11 +157,12 @@ def get_or_create_users(db):
         {"username": "elec_zhao", "name": "赵电气工程师", "dept": "技术部", "role": "电气工程师"},
         {"username": "soft_chen", "name": "陈软件工程师", "dept": "技术部", "role": "软件工程师"},
     ]
-    
+
     for config in user_configs:
         user = db.query(User).filter(User.username == config["username"]).first()
         if not user:
             from app.core.security import get_password_hash
+
             # 创建员工
             emp = db.query(Employee).filter(Employee.employee_code == config["username"].upper().replace("_", "")).first()
             if not emp:
@@ -166,7 +174,7 @@ def get_or_create_users(db):
                 )
                 db.add(emp)
                 db.flush()
-            
+
             user = User(
                 employee_id=emp.id,
                 username=config["username"],
@@ -177,9 +185,9 @@ def get_or_create_users(db):
             )
             db.add(user)
             db.flush()
-        
+
         users[config["username"].split("_")[0]] = user
-    
+
     return users
 
 
@@ -187,12 +195,12 @@ def create_customer(db, index):
     """创建客户"""
     customer_name = CUSTOMER_NAMES[index % len(CUSTOMER_NAMES)]
     customer_code = f"CUST{250100 + index:03d}"
-    
+
     # 检查是否已存在
     existing = db.query(Customer).filter(Customer.customer_code == customer_code).first()
     if existing:
         return existing
-    
+
     customer = Customer(
         customer_code=customer_code,
         customer_name=customer_name,
@@ -231,7 +239,7 @@ def create_sales_flow(db, customer, users, project_index):
     )
     db.add(lead)
     db.flush()
-    
+
     # 创建商机
     opp_code = f"OPP{250100 + project_index:03d}"
     opportunity = Opportunity(
@@ -248,7 +256,7 @@ def create_sales_flow(db, customer, users, project_index):
     )
     db.add(opportunity)
     db.flush()
-    
+
     # 创建报价（简化）
     quote_code = f"QT{250100 + project_index:03d}"
     quote = Quote(
@@ -260,7 +268,7 @@ def create_sales_flow(db, customer, users, project_index):
     )
     db.add(quote)
     db.flush()
-    
+
     # 创建报价版本
     quote_version = QuoteVersion(
         quote_id=quote.id,
@@ -274,10 +282,10 @@ def create_sales_flow(db, customer, users, project_index):
     )
     db.add(quote_version)
     db.flush()
-    
+
     quote.current_version_id = quote_version.id
     db.flush()
-    
+
     # 创建合同
     contract_code = f"CT{250100 + project_index:03d}"
     contract = Contract(
@@ -293,7 +301,7 @@ def create_sales_flow(db, customer, users, project_index):
     )
     db.add(contract)
     db.flush()
-    
+
     return contract
 
 
@@ -301,20 +309,20 @@ def create_project(db, customer, contract, users, stage_config, project_index):
     """创建项目"""
     base_date = date.today() - timedelta(days=180 - project_index * 10)
     equipment_type = EQUIPMENT_TYPES[project_index % len(EQUIPMENT_TYPES)]
-    
+
     project_code = f"PJ{250100 + project_index:03d}"
     project_name = f"{customer.short_name}{equipment_type}测试设备项目"
-    
+
     # 根据阶段计算进度和日期
     days_elapsed = {
         "S1": 5, "S2": 20, "S3": 45, "S4": 75, "S5": 105,
         "S6": 130, "S7": 145, "S8": 160, "S9": 180
     }.get(stage_config["stage"], 0)
-    
+
     planned_start = base_date
     planned_end = base_date + timedelta(days=120)
     actual_start = planned_start
-    
+
     project = Project(
         project_code=project_code,
         project_name=project_name,
@@ -347,19 +355,19 @@ def create_project(db, customer, contract, users, stage_config, project_index):
     )
     db.add(project)
     db.flush()
-    
+
     # 创建里程碑
     create_milestones(db, project, stage_config, base_date)
-    
+
     # 创建收款计划
     create_payment_plans(db, project, contract, base_date)
-    
+
     # 创建设备
     machine = create_machine(db, project, equipment_type, stage_config)
-    
+
     # 创建任务
     create_tasks(db, project, machine, users, stage_config, base_date)
-    
+
     return project
 
 
@@ -406,13 +414,13 @@ def create_milestones(db, project, stage_config, base_date):
             {"name": "终验收通过", "type": "FINAL_ACCEPTANCE", "date_offset": 180, "status": "COMPLETED"}
         ]
     }
-    
+
     milestones_data = milestones_config.get(stage_config["stage"], [])
-    
+
     for ms_data in milestones_data:
         planned_date = base_date + timedelta(days=ms_data["date_offset"])
         actual_date = planned_date if ms_data["status"] == "COMPLETED" else None
-        
+
         milestone = ProjectMilestone(
             project_id=project.id,
             milestone_code=f"MS-{project.project_code}-{ms_data['type']}",
@@ -452,11 +460,11 @@ def create_payment_plans(db, project, contract, base_date):
             "status": "PENDING"
         }
     ]
-    
+
     for idx, plan_data in enumerate(plans, 1):
         planned_date = base_date + timedelta(days=plan_data["date_offset"])
         actual_date = planned_date if plan_data["status"] == "PAID" else None
-        
+
         payment_plan = ProjectPaymentPlan(
             project_id=project.id,
             contract_id=contract.id,
@@ -533,15 +541,15 @@ def create_tasks(db, project, machine, users, stage_config, base_date):
             {"name": "项目结项", "assignee": "pm", "days": 1, "status": "DONE"}
         ]
     }
-    
+
     tasks_data = tasks_config.get(stage_config["stage"], [])
     user_map = {"pm": users["pm"], "mech": users["mech"], "elec": users["elec"], "soft": users["soft"]}
-    
+
     for task_data in tasks_data:
         plan_start = base_date
         plan_end = base_date + timedelta(days=task_data["days"])
         actual_end = plan_end if task_data["status"] == "DONE" else None
-        
+
         task = Task(
             project_id=project.id,
             machine_id=machine.id,
@@ -564,45 +572,45 @@ def main():
     print("=" * 60)
     print("生成多阶段项目完整测试数据")
     print("=" * 60)
-    
+
     with get_db_session() as db:
         try:
             # 1. 获取或创建用户
             print("\n1. 准备用户数据...")
             users = get_or_create_users(db)
             print(f"   ✓ 已准备 {len(users)} 个用户")
-            
+
             # 2. 生成各个阶段的项目
             project_index = 0
             all_projects = []
-            
+
             for stage_config in STAGE_CONFIGS:
                 print(f"\n2. 生成 {stage_config['stage']} 阶段项目 ({stage_config['name_prefix']})...")
-                
+
                 for i in range(stage_config["count"]):
                     project_index += 1
-                    
+
                     # 创建客户
                     customer = create_customer(db, project_index)
-                    
+
                     # 创建销售流程
                     contract = create_sales_flow(db, customer, users, project_index)
-                    
+
                     # 创建项目
                     project = create_project(db, customer, contract, users, stage_config, project_index)
                     all_projects.append(project)
-                    
+
                     print(f"   ✓ 创建项目: {project.project_code} - {project.project_name} "
                           f"(阶段: {project.stage}, 进度: {project.progress_pct}%)")
-            
+
             db.commit()
-            
+
             print("\n" + "=" * 60)
             print("数据生成完成！")
             print("=" * 60)
             print(f"\n生成的项目概览：")
             print(f"  总计: {len(all_projects)} 个项目")
-            
+
             # 按阶段统计
             stage_stats = {}
             for project in all_projects:
@@ -610,15 +618,15 @@ def main():
                 if stage not in stage_stats:
                     stage_stats[stage] = 0
                 stage_stats[stage] += 1
-            
+
             print(f"\n各阶段项目数量：")
             for stage in ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9"]:
                 count = stage_stats.get(stage, 0)
                 print(f"  {stage}: {count} 个项目")
-            
+
             print(f"\n数据已保存到数据库！")
             print(f"现在可以在项目看板查看完整的数据展示。")
-            
+
         except Exception as e:
             db.rollback()
             print(f"\n错误: {e}")

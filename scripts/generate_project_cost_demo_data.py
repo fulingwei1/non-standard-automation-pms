@@ -4,16 +4,18 @@
 为项目生成演示成本数据
 """
 
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.models.base import get_db_session
-from app.models.project import Project, ProjectCost, Machine
-from app.models.user import User
+import random
 from datetime import date, timedelta
 from decimal import Decimal
-import random
+
+from app.models.base import get_db_session
+from app.models.project import Machine, Project, ProjectCost
+from app.models.user import User
 
 # 成本类型和分类配置
 COST_TYPES = {
@@ -37,48 +39,48 @@ def generate_demo_costs(project_id: int = 14):
         if not project:
             print(f'❌ 项目ID {project_id} 不存在')
             return
-        
+
         print(f'✓ 项目: {project.project_name} ({project.project_code})')
-        
+
         # 获取管理员用户作为创建人
         admin = db.query(User).filter(User.username == 'admin').first()
         if not admin:
             print('❌ 未找到管理员用户')
             return
-        
+
         # 获取项目的机台（如果有）
         machines = db.query(Machine).filter(Machine.project_id == project_id).all()
         machine_ids = [m.id for m in machines] if machines else [None]
-        
+
         # 检查现有成本记录数
         existing_count = db.query(ProjectCost).filter(ProjectCost.project_id == project_id).count()
         print(f'  现有成本记录: {existing_count} 条')
-        
+
         # 项目时间范围
         start_date = project.planned_start_date or date(2024, 1, 15)
         end_date = project.planned_end_date or date(2024, 12, 20)
         project_duration = (end_date - start_date).days
-        
+
         # 生成成本数据（补充到30条左右）
         new_costs = []
         target_count = 30
         to_add = max(0, target_count - existing_count)
-        
+
         if to_add == 0:
             print(f'  ✓ 成本记录已足够（{existing_count}条），无需添加')
             return
-        
+
         print(f'  将添加 {to_add} 条新的成本记录...')
-        
+
         for i in range(to_add):
             # 随机选择成本类型和分类
             cost_type = random.choice(list(COST_TYPES.keys()))
             cost_category = random.choice(COST_TYPES[cost_type])
-            
+
             # 随机日期（在项目时间范围内）
             days_offset = random.randint(0, project_duration)
             cost_date = start_date + timedelta(days=days_offset)
-            
+
             # 根据成本类型生成合理的金额
             if cost_type == 'MATERIAL':
                 amount = Decimal(random.randint(5000, 150000))
@@ -92,13 +94,13 @@ def generate_demo_costs(project_id: int = 14):
                 amount = Decimal(random.randint(500, 5000))
             else:
                 amount = Decimal(random.randint(1000, 20000))
-            
+
             # 税额（约6%）
             tax_amount = Decimal(amount * Decimal('0.06')).quantize(Decimal('0.01'))
-            
+
             # 随机选择机台（30%概率关联机台）
             machine_id = random.choice(machine_ids) if random.random() < 0.3 and machine_ids else None
-            
+
             # 生成描述
             descriptions = {
                 'MATERIAL': [
@@ -133,7 +135,7 @@ def generate_demo_costs(project_id: int = 14):
                 ],
             }
             description = random.choice(descriptions.get(cost_type, ['项目成本']))
-            
+
             # 创建成本记录
             cost = ProjectCost(
                 project_id=project_id,
@@ -147,30 +149,30 @@ def generate_demo_costs(project_id: int = 14):
                 created_by=admin.id,
             )
             new_costs.append(cost)
-        
+
         # 批量添加
         db.add_all(new_costs)
-        
+
         # 更新项目实际成本
         total_new_cost = sum(c.amount for c in new_costs)
         project.actual_cost = (project.actual_cost or Decimal('0')) + total_new_cost
-        
+
         db.commit()
-        
+
         print(f'  ✓ 成功添加 {len(new_costs)} 条成本记录')
         print(f'  ✓ 新增成本总额: ¥{total_new_cost:,.2f}')
         print(f'  ✓ 项目累计实际成本: ¥{project.actual_cost:,.2f}')
-        
+
         # 统计信息
         all_costs = db.query(ProjectCost).filter(ProjectCost.project_id == project_id).all()
         print(f'\n📊 成本统计:')
         print(f'  总记录数: {len(all_costs)} 条')
-        
+
         # 按类型统计
         type_stats = {}
         for cost in all_costs:
             type_stats[cost.cost_type] = type_stats.get(cost.cost_type, Decimal('0')) + cost.amount
-        
+
         print(f'  按类型统计:')
         for cost_type, total in sorted(type_stats.items(), key=lambda x: x[1], reverse=True):
             print(f'    {cost_type}: ¥{total:,.2f} ({len([c for c in all_costs if c.cost_type == cost_type])}条)')

@@ -12,14 +12,21 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from app.utils.redis_client import get_redis_client
-from app.services.notification_queue import dequeue_notification
-from app.services.notification_dispatcher import NotificationDispatcher, is_quiet_hours, next_quiet_resume
-from app.utils.scheduler_metrics import record_notification_failure, record_notification_success
-from app.models.base import get_db_session
 from app.models.alert import AlertNotification
-from app.models.user import User
+from app.models.base import get_db_session
 from app.models.notification import NotificationSettings
+from app.models.user import User
+from app.services.notification_dispatcher import (
+    NotificationDispatcher,
+    is_quiet_hours,
+    next_quiet_resume,
+)
+from app.services.notification_queue import dequeue_notification
+from app.utils.redis_client import get_redis_client
+from app.utils.scheduler_metrics import (
+    record_notification_failure,
+    record_notification_success,
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("notification_worker")

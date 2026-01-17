@@ -24,12 +24,12 @@ if str(REPO_ROOT) not in sys.path:
 from app.models.base import get_db_session
 from app.models.project import Customer
 from app.models.sales import (
-    Opportunity,
-    Quote,
-    QuoteVersion,
-    QuoteItem,
     Contract,
     ContractDeliverable,
+    Opportunity,
+    Quote,
+    QuoteItem,
+    QuoteVersion,
 )
 from app.models.user import User
 
@@ -616,7 +616,9 @@ SALES_BUNDLES = [
 
 
 def ensure_customer(db, owner: User, payload: Dict) -> Tuple[Customer, bool]:
-    customer = db.query(Customer).filter_by(customer_code=payload["customer_code"]).first()
+    customer = (
+        db.query(Customer).filter_by(customer_code=payload["customer_code"]).first()
+    )
     if customer:
         print(f"✓ 客户已存在: {customer.customer_code}")
         return customer, False
@@ -628,7 +630,9 @@ def ensure_customer(db, owner: User, payload: Dict) -> Tuple[Customer, bool]:
     return customer, True
 
 
-def upsert_opportunity(db, owner: User, customer: Customer, payload: Dict) -> Opportunity:
+def upsert_opportunity(
+    db, owner: User, customer: Customer, payload: Dict
+) -> Opportunity:
     opportunity = db.query(Opportunity).filter_by(opp_code=payload["opp_code"]).first()
     fields = {
         "customer_id": customer.id,
@@ -693,7 +697,10 @@ def upsert_quote_bundle(db, owner: User, bundle: Dict, customer: Customer):
     version_payload = bundle["version"]
     version = (
         db.query(QuoteVersion)
-        .filter(QuoteVersion.quote_id == quote.id, QuoteVersion.version_no == version_payload["version_no"])
+        .filter(
+            QuoteVersion.quote_id == quote.id,
+            QuoteVersion.version_no == version_payload["version_no"],
+        )
         .first()
     )
     delivery_date = TODAY + timedelta(days=version_payload["delivery_offset_days"])
@@ -751,7 +758,11 @@ def upsert_quote_bundle(db, owner: User, bundle: Dict, customer: Customer):
         print(f"    ＋ 添加明细: {item.item_name}")
 
     contract_payload = bundle["contract"]
-    contract = db.query(Contract).filter_by(contract_code=contract_payload["contract_code"]).first()
+    contract = (
+        db.query(Contract)
+        .filter_by(contract_code=contract_payload["contract_code"])
+        .first()
+    )
     signed_date = (
         TODAY + timedelta(days=contract_payload["signed_offset_days"])
         if isinstance(contract_payload.get("signed_offset_days"), (int, float))
@@ -815,7 +826,7 @@ def main():
             customer = customer_map[bundle["customer_code"]]
             upsert_quote_bundle(db, owner, bundle, customer)
 
-        print("\n✅ 销售演示数据准备完成，可使用 zhang_sales / Password123! 登录查看。")
+        print("\n✅ 销售演示数据准备完成。")
 
 
 if __name__ == "__main__":

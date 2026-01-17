@@ -4,14 +4,17 @@
 测试权限API端点，诊断500错误
 """
 
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sqlalchemy import text
+
 from app.models.base import get_db_session
-from app.schemas.auth import PermissionResponse
 from app.models.user import User
+from app.schemas.auth import PermissionResponse
+
 
 def test_sql_query():
     """测试SQL查询"""
@@ -21,7 +24,7 @@ def test_sql_query():
     try:
         with get_db_session() as db:
             sql = """
-                SELECT 
+                SELECT
                     id,
                     perm_code as permission_code,
                     perm_name as permission_name,
@@ -55,7 +58,7 @@ def test_serialization():
     try:
         with get_db_session() as db:
             sql = """
-                SELECT 
+                SELECT
                     id,
                     perm_code as permission_code,
                     perm_name as permission_name,
@@ -73,7 +76,7 @@ def test_serialization():
             """
             result = db.execute(text(sql))
             rows = result.fetchall()
-            
+
             permissions = []
             for row in rows:
                 perm_dict = {
@@ -90,7 +93,7 @@ def test_serialization():
                 }
                 perm_response = PermissionResponse(**perm_dict)
                 permissions.append(perm_response)
-            
+
             print(f"✅ 序列化成功，{len(permissions)} 条权限")
             return True
     except Exception as e:
@@ -144,20 +147,20 @@ def main():
     print("\n" + "=" * 60)
     print("权限API端点诊断测试")
     print("=" * 60)
-    
+
     results = []
     results.append(("SQL查询", test_sql_query()))
     results.append(("数据序列化", test_serialization()))
     results.append(("User模型", test_user_model()))
     results.append(("Permission模型ORM", test_permission_model()))
-    
+
     print("\n" + "=" * 60)
     print("测试总结")
     print("=" * 60)
     for name, result in results:
         status = "✅ 通过" if result else "❌ 失败"
         print(f"  {name:20} {status}")
-    
+
     # 诊断建议
     print("\n" + "=" * 60)
     print("诊断建议")

@@ -4,11 +4,13 @@
 测试所有API端点的基本功能
 """
 
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from fastapi.testclient import TestClient
+
 from app.main import app
 
 client = TestClient(app)
@@ -80,7 +82,7 @@ if __name__ == "__main__":
     print("=" * 60)
     print("装配齐套分析系统API测试")
     print("=" * 60)
-    
+
     try:
         test_api_routes()
         test_assembly_stages()
@@ -88,7 +90,7 @@ if __name__ == "__main__":
         test_category_mappings()
         test_alert_rules()
         test_wechat_config()
-        
+
         print("\n" + "=" * 60)
         print("✓ 所有测试完成")
         print("=" * 60)

@@ -8,33 +8,42 @@
     python3 scripts/generate_complete_test_data.py
 """
 
-import sys
-import os
-from datetime import datetime, date, timedelta
-from decimal import Decimal
-import random
 import json
+import os
+import random
+import sys
+from datetime import date, datetime, timedelta
+from decimal import Decimal
 
 # 添加项目根目录到路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.models.base import get_db_session
-from app.models.user import User
-from app.models.project import (
-    Customer, Project, Machine, ProjectMilestone, ProjectPaymentPlan,
-    ProjectMember, ProjectDocument, ProjectCost
-)
-from app.models.sales import (
-    Lead, Opportunity, Quote, QuoteVersion, QuoteItem, Contract, Invoice
-)
-from app.models.material import (
-    MaterialCategory, Material, Supplier, MaterialSupplier
-)
-from app.models.purchase import PurchaseOrder, PurchaseOrderItem, GoodsReceipt
 from app.models.acceptance import AcceptanceOrder, AcceptanceOrderItem
-from app.models.progress import Task
+from app.models.base import get_db_session
+from app.models.material import Material, MaterialCategory, MaterialSupplier, Supplier
 from app.models.organization import Department, Employee
-
+from app.models.progress import Task
+from app.models.project import (
+    Customer,
+    Machine,
+    Project,
+    ProjectCost,
+    ProjectDocument,
+    ProjectMember,
+    ProjectMilestone,
+    ProjectPaymentPlan,
+)
+from app.models.purchase import GoodsReceipt, PurchaseOrder, PurchaseOrderItem
+from app.models.sales import (
+    Contract,
+    Invoice,
+    Lead,
+    Opportunity,
+    Quote,
+    QuoteItem,
+    QuoteVersion,
+)
+from app.models.user import User
 
 # 物料分类数据
 MATERIAL_CATEGORIES = [
@@ -137,7 +146,7 @@ def get_or_create_users(db):
         {"username": "purchase_zhou", "name": "周采购", "dept": "采购部", "role": "采购专员"},
         {"username": "finance_qian", "name": "钱财务", "dept": "财务部", "role": "财务专员"},
     ]
-    
+
     for config in user_configs:
         user = db.query(User).filter(User.username == config["username"]).first()
         if not user:
@@ -152,7 +161,7 @@ def get_or_create_users(db):
                 )
                 db.add(emp)
                 db.flush()
-            
+
             user = User(
                 employee_id=emp.id,
                 username=config["username"],
@@ -163,9 +172,9 @@ def get_or_create_users(db):
             )
             db.add(user)
             db.flush()
-        
+
         users[config["username"].split("_")[0]] = user
-    
+
     return users
 
 
@@ -173,7 +182,7 @@ def create_material_categories(db):
     """创建物料分类"""
     print("\n创建物料分类...")
     categories = {}
-    
+
     for cat_data in MATERIAL_CATEGORIES:
         # 检查是否已存在
         parent = db.query(MaterialCategory).filter(MaterialCategory.category_code == cat_data["code"]).first()
@@ -188,7 +197,7 @@ def create_material_categories(db):
             db.add(parent)
             db.flush()
         categories[cat_data["code"]] = parent
-        
+
         for child_data in cat_data.get("children", []):
             # 检查是否已存在
             child = db.query(MaterialCategory).filter(MaterialCategory.category_code == child_data["code"]).first()
@@ -204,7 +213,7 @@ def create_material_categories(db):
                 db.add(child)
                 db.flush()
             categories[child_data["code"]] = child
-    
+
     print(f"  ✓ 已准备 {len(categories)} 个物料分类")
     return categories
 
@@ -213,7 +222,7 @@ def create_suppliers(db):
     """创建供应商"""
     print("\n创建供应商...")
     suppliers = []
-    
+
     for idx, sup_data in enumerate(SUPPLIERS, 1):
         supplier_code = f"SUP{idx:03d}"
         # 检查是否已存在
@@ -221,7 +230,7 @@ def create_suppliers(db):
         if supplier:
             suppliers.append(supplier)
             continue
-        
+
         # 只使用数据库表中存在的字段
         supplier = Supplier(
             supplier_code=f"SUP{idx:03d}",
@@ -244,7 +253,7 @@ def create_suppliers(db):
         db.add(supplier)
         db.flush()
         suppliers.append(supplier)
-    
+
     print(f"  ✓ 创建了 {len(suppliers)} 个供应商")
     return suppliers
 
@@ -254,7 +263,7 @@ def create_materials(db, categories, suppliers):
     print("\n创建物料...")
     materials = []
     material_idx = 1
-    
+
     for cat_code, category in categories.items():
         if cat_code in MATERIAL_TEMPLATES:
             for mat_data in MATERIAL_TEMPLATES[cat_code]:
@@ -265,7 +274,7 @@ def create_materials(db, categories, suppliers):
                     materials.append(existing)
                     material_idx += 1
                     continue
-                
+
                 material = Material(
                     material_code=material_code,
                     material_name=mat_data["name"],
@@ -286,7 +295,7 @@ def create_materials(db, categories, suppliers):
                 db.flush()
                 materials.append(material)
                 material_idx += 1
-    
+
     print(f"  ✓ 创建了 {len(materials)} 个物料")
     return materials
 
@@ -295,11 +304,11 @@ def create_customer(db, index):
     """创建客户"""
     customer_name = CUSTOMER_NAMES[index % len(CUSTOMER_NAMES)]
     customer_code = f"CUST{250100 + index:03d}"
-    
+
     existing = db.query(Customer).filter(Customer.customer_code == customer_code).first()
     if existing:
         return existing
-    
+
     customer = Customer(
         customer_code=customer_code,
         customer_name=customer_name,
@@ -331,7 +340,7 @@ def create_sales_flow(db, customer, users, project_index):
         existing_contract = db.query(Contract).filter(Contract.opportunity_id == existing_lead.id).first()
         if existing_contract:
             return existing_contract
-    
+
     lead = Lead(
         lead_code=lead_code,
         source="展会" if project_index % 2 == 0 else "网络",
@@ -345,7 +354,7 @@ def create_sales_flow(db, customer, users, project_index):
     )
     db.add(lead)
     db.flush()
-    
+
     opp_code = f"OPP{250100 + project_index:03d}"
     existing_opp = db.query(Opportunity).filter(Opportunity.opp_code == opp_code).first()
     if existing_opp:
@@ -365,7 +374,7 @@ def create_sales_flow(db, customer, users, project_index):
         )
         db.add(opportunity)
         db.flush()
-    
+
     quote_code = f"QT{250100 + project_index:03d}"
     existing_quote = db.query(Quote).filter(Quote.quote_code == quote_code).first()
     if existing_quote:
@@ -380,7 +389,7 @@ def create_sales_flow(db, customer, users, project_index):
         )
         db.add(quote)
         db.flush()
-    
+
     if not existing_quote:
         quote_version = QuoteVersion(
         quote_id=quote.id,
@@ -398,12 +407,12 @@ def create_sales_flow(db, customer, users, project_index):
         db.flush()
     else:
         quote_version = quote.current_version
-    
+
     contract_code = f"CT{250100 + project_index:03d}"
     existing_contract = db.query(Contract).filter(Contract.contract_code == contract_code).first()
     if existing_contract:
         return existing_contract
-    
+
     contract = Contract(
         contract_code=contract_code,
         opportunity_id=opportunity.id,
@@ -417,37 +426,38 @@ def create_sales_flow(db, customer, users, project_index):
     )
     db.add(contract)
     db.flush()
-    
+
     return contract
 
 
 def create_bom(db, project, machine, materials, suppliers):
     """创建BOM（使用bom_versions表）"""
     from sqlalchemy import text
-    
+
     bom_name = f"{project.short_name}BOM"
     version_no = "V1.0"
-    
+
     # 计算总金额和物料数量（确保有足够的物料）
     if len(materials) < 5:
         return None, []
     selected_materials = random.sample(materials, min(random.randint(5, 15), len(materials)))
     total_amount = Decimal("0.00")
     total_items = len(selected_materials)
-    
+
     for material in selected_materials:
         qty = Decimal(str(random.randint(1, 10)))
         unit_price = material.standard_price or Decimal("100.00")
         total_amount += qty * unit_price
-    
+
     # 创建BOM版本（使用原始SQL，因为模型可能不匹配）
     from sqlalchemy import text
     bom_version_sql = text("""
         INSERT INTO bom_versions (project_id, machine_id, version_no, version_name, status, is_current, total_items, total_amount, created_at, updated_at)
         VALUES (:project_id, :machine_id, :version_no, :version_name, :status, :is_current, :total_items, :total_amount, :created_at, :updated_at)
     """)
-    
+
     from sqlalchemy import text
+
     # 使用数据库会话的连接
     try:
         from app.models.base import get_engine
@@ -463,19 +473,19 @@ def create_bom(db, project, machine, materials, suppliers):
             }
         )
         bom_version_id = result.lastrowid
-        
+
         # 创建BOM明细
         bom_item_sql = text("""
             INSERT INTO bom_items (bom_version_id, material_id, item_no, material_code, material_name, specification, unit, quantity, unit_price, amount, source_type, supplier_id, required_date, level, created_at, updated_at)
             VALUES (:bom_version_id, :material_id, :item_no, :material_code, :material_name, :specification, :unit, :quantity, :unit_price, :amount, :source_type, :supplier_id, :required_date, :level, :created_at, :updated_at)
         """)
-        
+
         item_no = 1
         for material in selected_materials:
             qty = Decimal(str(random.randint(1, 10)))
             unit_price = material.standard_price or Decimal("100.00")
             amount = qty * unit_price
-            
+
             conn.execute(
                 bom_item_sql,
                 {
@@ -489,7 +499,7 @@ def create_bom(db, project, machine, materials, suppliers):
                 }
             )
             item_no += 1
-        
+
         conn.commit()
         conn.close()
     except Exception as e:
@@ -498,16 +508,16 @@ def create_bom(db, project, machine, materials, suppliers):
         traceback.print_exc()
         bom_version_id = None
         # 不抛出异常，返回None让上层处理
-    
+
     # 返回一个简单的对象用于后续使用
     class BomVersionObj:
         def __init__(self, id):
             self.id = id
-    
+
     if bom_version_id is None:
         # 如果BOM创建失败，返回None和空列表
         return None, []
-    
+
     return BomVersionObj(bom_version_id), selected_materials
 
 
@@ -515,7 +525,7 @@ def create_purchase_orders(db, project, bom_materials, suppliers, users):
     """创建采购订单"""
     if not bom_materials:
         return []
-    
+
     # 按供应商分组物料
     supplier_items = {}
     for material in bom_materials:
@@ -523,16 +533,16 @@ def create_purchase_orders(db, project, bom_materials, suppliers, users):
             if material.default_supplier_id not in supplier_items:
                 supplier_items[material.default_supplier_id] = []
             supplier_items[material.default_supplier_id].append(material)
-    
+
     if not supplier_items:
         return []
-    
+
     purchase_orders = []
     for supplier_id, items in supplier_items.items():
         supplier = db.query(Supplier).filter(Supplier.id == supplier_id).first()
         if not supplier:
             continue
-        
+
         order_no = f"PO{project.project_code}{len(purchase_orders)+1:02d}"
         # 计算总金额
         total_amount = Decimal("0.00")
@@ -540,7 +550,7 @@ def create_purchase_orders(db, project, bom_materials, suppliers, users):
             qty = Decimal(str(random.randint(1, 10)))
             unit_price = material.standard_price or Decimal("100.00")
             total_amount += qty * unit_price
-        
+
         po = PurchaseOrder(
             order_no=order_no,
             supplier_id=supplier_id,
@@ -559,13 +569,13 @@ def create_purchase_orders(db, project, bom_materials, suppliers, users):
         )
         db.add(po)
         db.flush()
-        
+
         # 创建采购订单明细
         for idx, material in enumerate(items, 1):
             qty = Decimal(str(random.randint(1, 10)))
             unit_price = material.standard_price or Decimal("100.00")
             amount = qty * unit_price
-            
+
             poi = PurchaseOrderItem(
                 order_id=po.id,
                 item_no=idx,
@@ -584,9 +594,9 @@ def create_purchase_orders(db, project, bom_materials, suppliers, users):
                 status="PENDING" if project.stage == "S3" else "RECEIVED"
             )
             db.add(poi)
-        
+
         purchase_orders.append(po)
-    
+
     db.flush()
     return purchase_orders
 
@@ -595,10 +605,10 @@ def create_acceptance_orders(db, project, machine, users, stage_config):
     """创建验收单"""
     if project.stage not in ["S6", "S7", "S8", "S9"]:
         return None
-    
+
     acceptance_type = "FAT" if project.stage == "S6" else "SAT"
     order_no = f"ACC-{project.project_code}-{acceptance_type}"
-    
+
     acceptance = AcceptanceOrder(
         order_no=order_no,
         project_id=project.id,
@@ -612,14 +622,14 @@ def create_acceptance_orders(db, project, machine, users, stage_config):
     )
     db.add(acceptance)
     db.flush()
-    
+
     # 创建验收项
     items = [
         {"name": "功能测试", "result": "PASSED" if project.stage in ["S7", "S8", "S9"] else None},
         {"name": "性能测试", "result": "PASSED" if project.stage in ["S7", "S8", "S9"] else None},
         {"name": "外观检查", "result": "PASSED" if project.stage in ["S7", "S8", "S9"] else None},
     ]
-    
+
     for idx, item_data in enumerate(items, 1):
         item = AcceptanceOrderItem(
             order_id=acceptance.id,
@@ -631,7 +641,7 @@ def create_acceptance_orders(db, project, machine, users, stage_config):
             result_status=item_data["result"] if item_data["result"] else "PENDING"
         )
         db.add(item)
-    
+
     db.flush()
     return acceptance
 
@@ -640,7 +650,7 @@ def create_invoices(db, project, contract, payment_plans, users):
     """创建发票"""
     if project.stage not in ["S7", "S8", "S9"]:
         return []
-    
+
     invoices = []
     for plan in payment_plans:
         if plan.status == "PAID" or project.stage in ["S7", "S8", "S9"]:
@@ -658,7 +668,7 @@ def create_invoices(db, project, contract, payment_plans, users):
             )
             db.add(invoice)
             invoices.append(invoice)
-    
+
     db.flush()
     return invoices
 
@@ -672,7 +682,7 @@ def create_project_members(db, project, users):
         {"user": "elec", "role_code": "ELEC", "is_lead": False},
         {"user": "soft", "role_code": "SOFT", "is_lead": False},
     ]
-    
+
     for role_data in roles:
         if role_data["user"] in users:
             # 检查是否已存在
@@ -684,7 +694,7 @@ def create_project_members(db, project, users):
             if existing_member:
                 members.append(existing_member)
                 continue
-            
+
             member = ProjectMember(
                 project_id=project.id,
                 user_id=users[role_data["user"]].id,
@@ -696,7 +706,7 @@ def create_project_members(db, project, users):
             )
             db.add(member)
             members.append(member)
-    
+
     db.flush()
     return members
 
@@ -705,13 +715,13 @@ def create_project_documents(db, project, stage_config):
     """创建项目文档"""
     docs = []
     doc_types = ["需求文档", "设计方案", "BOM清单", "测试报告"]
-    
+
     for idx, doc_type in enumerate(doc_types, 1):
         if (stage_config["stage"] == "S1" and doc_type == "需求文档") or \
            (stage_config["stage"] == "S2" and doc_type == "设计方案") or \
            (stage_config["stage"] == "S3" and doc_type == "BOM清单") or \
            (stage_config["stage"] in ["S6", "S7", "S8", "S9"] and doc_type == "测试报告"):
-            
+
             doc = ProjectDocument(
                 project_id=project.id,
                 doc_name=f"{project.short_name}-{doc_type}",
@@ -723,7 +733,7 @@ def create_project_documents(db, project, stage_config):
             )
             db.add(doc)
             docs.append(doc)
-    
+
     db.flush()
     return docs
 
@@ -737,12 +747,12 @@ def create_project_costs(db, project, stage_config):
         {"type": "OUTSOURCE", "category": "外协成本", "ratio": 0.20},
         {"type": "OTHER", "category": "其他成本", "ratio": 0.10},
     ]
-    
+
     budget_total = project.budget_amount or Decimal("1000000.00")
-    
+
     for cost_data in cost_configs:
         amount = budget_total * Decimal(str(cost_data["ratio"])) * Decimal(str(stage_config["progress"] / 100))
-        
+
         cost = ProjectCost(
             project_id=project.id,
             cost_type=cost_data["type"],
@@ -752,7 +762,7 @@ def create_project_costs(db, project, stage_config):
         )
         db.add(cost)
         costs.append(cost)
-    
+
     db.flush()
     return costs
 
@@ -768,60 +778,61 @@ def create_project(db, customer, contract, users, stage_config, project_index, m
         if machine:
             try:
                 # 检查并创建BOM（如果不存在）
-                from app.models.base import get_engine
                 from sqlalchemy import text
+
+                from app.models.base import get_engine
                 engine = get_engine()
                 conn = engine.connect()
                 bom_check = text("SELECT COUNT(*) FROM bom_versions WHERE project_id = :pid")
                 bom_count = conn.execute(bom_check, {"pid": existing_project.id}).scalar()
                 conn.close()
-                
+
                 if bom_count == 0 and existing_project.stage in ["S3", "S4", "S5", "S6", "S7", "S8", "S9"]:
                     bom, bom_materials = create_bom(db, existing_project, machine, materials, suppliers)
                     if bom_materials:
                         create_purchase_orders(db, existing_project, bom_materials, suppliers, users)
-                
+
                 # 检查并创建其他关联数据
                 member_count = db.query(ProjectMember).filter(ProjectMember.project_id == existing_project.id).count()
                 if member_count == 0:
                     create_project_members(db, existing_project, users)
-                
+
                 doc_count = db.query(ProjectDocument).filter(ProjectDocument.project_id == existing_project.id).count()
                 if doc_count == 0:
                     create_project_documents(db, existing_project, stage_config)
-                
+
                 cost_count = db.query(ProjectCost).filter(ProjectCost.project_id == existing_project.id).count()
                 if cost_count == 0:
                     create_project_costs(db, existing_project, stage_config)
-                
+
                 # 验收单和发票（根据阶段）
                 if existing_project.stage in ["S6", "S7", "S8", "S9"]:
                     acc_count = db.query(AcceptanceOrder).filter(AcceptanceOrder.project_id == existing_project.id).count()
                     if acc_count == 0:
                         create_acceptance_orders(db, existing_project, machine, users, stage_config)
-                    
+
                     if existing_project.stage in ["S7", "S8", "S9"]:
                         payment_plans = db.query(ProjectPaymentPlan).filter(ProjectPaymentPlan.project_id == existing_project.id).all()
                         inv_count = db.query(Invoice).filter(Invoice.project_id == existing_project.id).count()
                         if inv_count == 0 and payment_plans:
                             create_invoices(db, existing_project, contract, payment_plans, users)
-                
+
                 db.commit()
             except Exception as e2:
                 db.rollback()
                 print(f"    警告: 补充项目 {existing_project.project_code} 关联数据失败: {e2}")
-        
+
         return existing_project
-    
+
     base_date = date.today() - timedelta(days=180 - project_index * 10)
     equipment_type = EQUIPMENT_TYPES[project_index % len(EQUIPMENT_TYPES)]
-    
+
     project_name = f"{customer.short_name}{equipment_type}测试设备项目"
-    
+
     planned_start = base_date
     planned_end = base_date + timedelta(days=120)
     actual_start = planned_start
-    
+
     project = Project(
         project_code=project_code,
         project_name=project_name,
@@ -854,7 +865,7 @@ def create_project(db, customer, contract, users, stage_config, project_index, m
     )
     db.add(project)
     db.flush()
-    
+
     # 创建里程碑
     milestones_config = {
         "S1": [{"name": "需求确认", "type": "REQUIREMENT_CONFIRMED", "date_offset": 5, "status": "COMPLETED"}],
@@ -892,12 +903,12 @@ def create_project(db, customer, contract, users, stage_config, project_index, m
             {"name": "终验收通过", "type": "FINAL_ACCEPTANCE", "date_offset": 180, "status": "COMPLETED"}
         ]
     }
-    
+
     milestones_data = milestones_config.get(stage_config["stage"], [])
     for ms_data in milestones_data:
         planned_date = base_date + timedelta(days=ms_data["date_offset"])
         actual_date = planned_date if ms_data["status"] == "COMPLETED" else None
-        
+
         milestone = ProjectMilestone(
             project_id=project.id,
             milestone_code=f"MS-{project.project_code}-{ms_data['type']}",
@@ -910,7 +921,7 @@ def create_project(db, customer, contract, users, stage_config, project_index, m
             is_key=(ms_data["type"] in ["FAT_PASS", "SAT_PASS", "FINAL_ACCEPTANCE"])
         )
         db.add(milestone)
-    
+
     # 创建收款计划
     payment_plans = []
     plans = [
@@ -918,11 +929,11 @@ def create_project(db, customer, contract, users, stage_config, project_index, m
         {"payment_name": "发货前付款", "payment_type": "BEFORE_SHIPMENT", "amount": contract.contract_amount * Decimal("0.60"), "date_offset": 145, "status": "PENDING"},
         {"payment_name": "验收后尾款", "payment_type": "ACCEPTANCE", "amount": contract.contract_amount * Decimal("0.10"), "date_offset": 180, "status": "PENDING"}
     ]
-    
+
     for idx, plan_data in enumerate(plans, 1):
         planned_date = base_date + timedelta(days=plan_data["date_offset"])
         actual_date = planned_date if plan_data["status"] == "PAID" else None
-        
+
         payment_plan = ProjectPaymentPlan(
             project_id=project.id,
             contract_id=contract.id,
@@ -936,7 +947,7 @@ def create_project(db, customer, contract, users, stage_config, project_index, m
         )
         db.add(payment_plan)
         payment_plans.append(payment_plan)
-    
+
     # 创建设备
     machine = Machine(
         project_id=project.id,
@@ -953,7 +964,7 @@ def create_project(db, customer, contract, users, stage_config, project_index, m
     )
     db.add(machine)
     db.flush()
-    
+
     # 创建BOM（只在S3及以后阶段创建）
     bom = None
     bom_materials = []
@@ -967,7 +978,7 @@ def create_project(db, customer, contract, users, stage_config, project_index, m
             print(f"    警告: 项目 {project.project_code} BOM创建失败: {e}")
             traceback.print_exc()
             bom_materials = []
-    
+
     # 创建采购订单（只在S3及以后阶段创建，使用BOM物料）
     purchase_orders = []
     if project.stage in ["S3", "S4", "S5", "S6", "S7", "S8", "S9"]:
@@ -981,7 +992,7 @@ def create_project(db, customer, contract, users, stage_config, project_index, m
             import traceback
             print(f"    警告: 项目 {project.project_code} 采购订单创建失败: {e}")
             traceback.print_exc()
-    
+
     # 创建验收单
     try:
         acceptance = create_acceptance_orders(db, project, machine, users, stage_config)
@@ -990,7 +1001,7 @@ def create_project(db, customer, contract, users, stage_config, project_index, m
         print(f"    警告: 项目 {project.project_code} 验收单创建失败: {e}")
         traceback.print_exc()
         acceptance = None
-    
+
     # 创建发票
     try:
         invoices = create_invoices(db, project, contract, payment_plans, users)
@@ -999,7 +1010,7 @@ def create_project(db, customer, contract, users, stage_config, project_index, m
         print(f"    警告: 项目 {project.project_code} 发票创建失败: {e}")
         traceback.print_exc()
         invoices = []
-    
+
     # 创建项目成员
     try:
         members = create_project_members(db, project, users)
@@ -1008,7 +1019,7 @@ def create_project(db, customer, contract, users, stage_config, project_index, m
         print(f"    警告: 项目 {project.project_code} 项目成员创建失败: {e}")
         traceback.print_exc()
         members = []
-    
+
     # 创建项目文档
     try:
         docs = create_project_documents(db, project, stage_config)
@@ -1017,7 +1028,7 @@ def create_project(db, customer, contract, users, stage_config, project_index, m
         print(f"    警告: 项目 {project.project_code} 项目文档创建失败: {e}")
         traceback.print_exc()
         docs = []
-    
+
     # 创建项目成本
     try:
         costs = create_project_costs(db, project, stage_config)
@@ -1026,7 +1037,7 @@ def create_project(db, customer, contract, users, stage_config, project_index, m
         print(f"    警告: 项目 {project.project_code} 项目成本创建失败: {e}")
         traceback.print_exc()
         costs = []
-    
+
     # 创建任务
     tasks_config = {
         "S1": [{"name": "需求调研", "assignee": "pm", "days": 3, "status": "DONE"}],
@@ -1064,17 +1075,17 @@ def create_project(db, customer, contract, users, stage_config, project_index, m
             {"name": "项目结项", "assignee": "pm", "days": 1, "status": "DONE"}
         ]
     }
-    
+
     tasks_data = tasks_config.get(stage_config["stage"], [])
     user_map = {"pm": users["pm"], "mech": users["mech"], "elec": users["elec"], "soft": users["soft"], "purchase": users["purchase"]}
-    
+
     for task_data in tasks_data:
         if task_data["assignee"] not in user_map:
             continue
         plan_start = base_date
         plan_end = base_date + timedelta(days=task_data["days"])
         actual_end = plan_end if task_data["status"] == "DONE" else None
-        
+
         task = Task(
             project_id=project.id,
             machine_id=machine.id,
@@ -1090,9 +1101,9 @@ def create_project(db, customer, contract, users, stage_config, project_index, m
             progress_percent=100 if task_data["status"] == "DONE" else 50
         )
         db.add(task)
-    
+
     db.flush()
-    
+
     return project
 
 
@@ -1101,48 +1112,48 @@ def main():
     print("=" * 60)
     print("生成完整测试数据")
     print("=" * 60)
-    
+
     with get_db_session() as db:
         try:
             # 1. 准备用户
             print("\n1. 准备用户数据...")
             users = get_or_create_users(db)
             print(f"   ✓ 已准备 {len(users)} 个用户")
-            
+
             # 2. 创建物料分类
             categories = create_material_categories(db)
-            
+
             # 3. 创建供应商
             suppliers = create_suppliers(db)
-            
+
             # 4. 创建物料
             materials = create_materials(db, categories, suppliers)
-            
+
             # 5. 生成各个阶段的项目
             project_index = 0
             all_projects = []
-            
+
             for stage_config in STAGE_CONFIGS:
                 print(f"\n生成 {stage_config['stage']} 阶段项目...")
-                
+
                 for i in range(stage_config["count"]):
                     project_index += 1
-                    
+
                     # 创建客户
                     customer = create_customer(db, project_index)
-                    
+
                     # 创建销售流程
                     contract = create_sales_flow(db, customer, users, project_index)
-                    
+
                     # 创建项目（包含所有关联数据）
                     project = create_project(db, customer, contract, users, stage_config, project_index, materials, suppliers)
                     all_projects.append(project)
-                    
+
                     print(f"   ✓ 创建项目: {project.project_code} - {project.project_name} "
                           f"(阶段: {project.stage}, 进度: {project.progress_pct}%)")
-            
+
             db.commit()
-            
+
             print("\n" + "=" * 60)
             print("数据生成完成！")
             print("=" * 60)
@@ -1151,7 +1162,7 @@ def main():
             print(f"  供应商: {len(suppliers)} 个")
             print(f"  物料: {len(materials)} 个")
             print(f"  项目: {len(all_projects)} 个")
-            
+
             # 按阶段统计
             stage_stats = {}
             for project in all_projects:
@@ -1159,15 +1170,15 @@ def main():
                 if stage not in stage_stats:
                     stage_stats[stage] = 0
                 stage_stats[stage] += 1
-            
+
             print(f"\n各阶段项目数量：")
             for stage in ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9"]:
                 count = stage_stats.get(stage, 0)
                 print(f"  {stage}: {count} 个项目")
-            
+
             print(f"\n数据已保存到数据库！")
             print(f"现在可以在项目看板查看完整的数据展示。")
-            
+
         except Exception as e:
             db.rollback()
             print(f"\n错误: {e}")

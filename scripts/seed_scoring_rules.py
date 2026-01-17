@@ -20,14 +20,14 @@ from app.models.user import User
 def seed_scoring_rules():
     """初始化评分规则"""
     db = get_session()
-    
+
     try:
         # 检查是否已有规则
         existing = db.query(ScoringRule).filter(ScoringRule.version == "2.0").first()
         if existing:
             print("评分规则 v2.0 已存在，跳过初始化")
             return
-        
+
         # 读取评分规则JSON文件（优先使用项目内的文件）
         # 1. 优先使用项目内的文件
         rules_file = project_root / "data" / "scoring_rules" / "scoring_rules_v2.0.json"
@@ -66,11 +66,11 @@ def seed_scoring_rules():
             with open(rules_file, 'r', encoding='utf-8') as f:
                 rules_data = json.load(f)
                 rules_json = json.dumps(rules_data, ensure_ascii=False)
-        
+
         # 获取admin用户
         admin = db.query(User).filter(User.username == "admin").first()
         created_by = admin.id if admin else None
-        
+
         # 创建评分规则
         rule = ScoringRule(
             version="2.0",
@@ -79,14 +79,14 @@ def seed_scoring_rules():
             description="技术评估评分规则 v2.0",
             created_by=created_by
         )
-        
+
         db.add(rule)
         db.commit()
-        
+
         print("✅ 评分规则初始化成功")
         print(f"   版本: 2.0")
         print(f"   状态: 已激活")
-        
+
     except Exception as e:
         print(f"❌ 初始化失败: {e}")
         import traceback

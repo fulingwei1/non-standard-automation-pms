@@ -4,14 +4,15 @@
 检查数据库中的角色数据
 """
 
-import sys
 import os
+import sys
 from collections import defaultdict
 
 # 添加项目根目录到路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sqlalchemy import text
+
 from app.models.base import get_db_session
 
 
@@ -20,7 +21,7 @@ def check_roles():
     with get_db_session() as session:
         # 查询所有角色
         result = session.execute(text("""
-            SELECT 
+            SELECT
                 id,
                 role_code,
                 role_name,
@@ -32,11 +33,11 @@ def check_roles():
             FROM roles
             ORDER BY role_code, created_at
         """))
-        
+
         roles = []
         roles_by_code = defaultdict(list)
         roles_by_name = defaultdict(list)
-        
+
         for row in result:
             role = {
                 'id': row.id,
@@ -51,13 +52,13 @@ def check_roles():
             roles.append(role)
             roles_by_code[row.role_code].append(role)
             roles_by_name[row.role_name].append(role)
-        
+
         print("=" * 80)
         print("角色数据检查报告")
         print("=" * 80)
         print(f"总角色数: {len(roles)}")
         print()
-        
+
         # 检查 role_code 重复
         code_duplicates = {code: roles for code, roles in roles_by_code.items() if len(roles) > 1}
         if code_duplicates:
@@ -70,9 +71,9 @@ def check_roles():
                           f"创建: {role['created_at']})")
         else:
             print("✓ role_code 无重复")
-        
+
         print()
-        
+
         # 检查 role_name 重复
         name_duplicates = {name: roles for name, roles in roles_by_name.items() if len(roles) > 1}
         if name_duplicates:
@@ -85,7 +86,7 @@ def check_roles():
                           f"创建: {role['created_at']})")
         else:
             print("✓ role_name 无重复")
-        
+
         print()
         print("=" * 80)
         print("所有角色列表:")

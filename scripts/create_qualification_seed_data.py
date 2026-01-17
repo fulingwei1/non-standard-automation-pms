@@ -12,9 +12,7 @@ project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
 from app.models.base import get_session, init_db
-from app.models.qualification import (
-    QualificationLevel, PositionCompetencyModel
-)
+from app.models.qualification import PositionCompetencyModel, QualificationLevel
 
 
 def create_qualification_levels(db):
@@ -61,7 +59,7 @@ def create_qualification_levels(db):
         existing = db.query(QualificationLevel).filter(
             QualificationLevel.level_code == level_data['level_code']
         ).first()
-        
+
         if not existing:
             level = QualificationLevel(**level_data)
             db.add(level)
@@ -76,9 +74,9 @@ def create_engineer_competency_models(db):
     """创建工程师岗位能力模型"""
     # 获取等级
     levels = {level.level_code: level for level in db.query(QualificationLevel).all()}
-    
+
     engineer_subtypes = ['ME', 'EE', 'SW', 'TE']
-    
+
     for subtype in engineer_subtypes:
         for level_code, level in levels.items():
             # 根据等级设置不同的能力要求
@@ -292,7 +290,7 @@ def create_engineer_competency_models(db):
 def create_sales_competency_models(db):
     """创建销售岗位能力模型"""
     levels = {level.level_code: level for level in db.query(QualificationLevel).all()}
-    
+
     for level_code, level in levels.items():
         competency_dimensions = {
             "business_skills": {
@@ -356,7 +354,7 @@ def create_sales_competency_models(db):
 def create_customer_service_competency_models(db):
     """创建客服岗位能力模型"""
     levels = {level.level_code: level for level in db.query(QualificationLevel).all()}
-    
+
     for level_code, level in levels.items():
         competency_dimensions = {
             "customer_service_skills": {
@@ -421,7 +419,7 @@ def create_customer_service_competency_models(db):
 def create_worker_competency_models(db):
     """创建生产工人岗位能力模型"""
     levels = {level.level_code: level for level in db.query(QualificationLevel).all()}
-    
+
     for level_code, level in levels.items():
         if level_code == 'ASSISTANT':
             competency_dimensions = {
@@ -566,35 +564,35 @@ def create_worker_competency_models(db):
 def main():
     """主函数"""
     print("开始创建任职资格体系种子数据...")
-    
+
     # 初始化数据库
     init_db()
-    
+
     # 获取数据库会话
     with get_session() as db:
         try:
             # 创建等级
             print("\n1. 创建任职资格等级...")
             create_qualification_levels(db)
-            
+
             # 创建工程师能力模型
             print("\n2. 创建工程师岗位能力模型...")
             create_engineer_competency_models(db)
-            
+
             # 创建销售能力模型
             print("\n3. 创建销售岗位能力模型...")
             create_sales_competency_models(db)
-            
+
             # 创建客服能力模型
             print("\n4. 创建客服岗位能力模型...")
             create_customer_service_competency_models(db)
-            
+
             # 创建生产工人能力模型
             print("\n5. 创建生产工人岗位能力模型...")
             create_worker_competency_models(db)
-            
+
             print("\n任职资格体系种子数据创建完成！")
-            
+
         except Exception as e:
             db.rollback()
             print(f"错误: {e}")

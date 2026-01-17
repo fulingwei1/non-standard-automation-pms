@@ -12,12 +12,16 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from app.models.base import get_session
+from app.models.enums import AssessmentSourceTypeEnum, AssessmentStatusEnum
 from app.models.sales import (
-    Lead, TechnicalAssessment, ScoringRule, FailureCase, OpenItem
+    FailureCase,
+    Lead,
+    OpenItem,
+    ScoringRule,
+    TechnicalAssessment,
 )
 from app.models.user import User
 from app.services.technical_assessment_service import TechnicalAssessmentService
-from app.models.enums import AssessmentSourceTypeEnum, AssessmentStatusEnum
 
 
 def test_scoring_rule():
@@ -46,9 +50,9 @@ def test_assessment_service():
         if not lead:
             print("   ⚠️  没有可用的线索，跳过测试")
             return False
-        
+
         print(f"   ℹ️  使用线索: {lead.lead_code} (ID: {lead.id})")
-        
+
         # 创建评估申请
         assessment = TechnicalAssessment(
             source_type=AssessmentSourceTypeEnum.LEAD.value,
@@ -59,7 +63,7 @@ def test_assessment_service():
         db.add(assessment)
         db.flush()
         print(f"   ✅ 创建评估申请: ID={assessment.id}")
-        
+
         # 执行评估
         service = TechnicalAssessmentService(db)
         requirement_data = {
@@ -73,7 +77,7 @@ def test_assessment_service():
             "techMaturity": "成熟",
             "deliveryFeasibility": "合理"
         }
-        
+
         try:
             result = service.evaluate(
                 assessment.source_type,
@@ -85,12 +89,12 @@ def test_assessment_service():
             print(f"      总分: {result.total_score}")
             print(f"      决策: {result.decision}")
             print(f"      一票否决: {result.veto_triggered}")
-            
+
             if result.dimension_scores:
                 import json
                 dims = json.loads(result.dimension_scores)
                 print(f"      维度分数: {dims}")
-            
+
             return True
         except Exception as e:
             print(f"   ❌ 评估失败: {e}")
@@ -130,7 +134,7 @@ def test_failure_case_matching():
             db.add(case)
             db.commit()
             print(f"   ✅ 创建测试失败案例: {case.case_code}")
-        
+
         # 测试匹配
         service = TechnicalAssessmentService(db)
         requirement_data = {
@@ -138,12 +142,12 @@ def test_failure_case_matching():
             "productTypes": '["电池测试"]',
             "targetTakt": 30
         }
-        
+
         similar_cases = service._match_similar_cases(requirement_data)
         print(f"   ✅ 找到 {len(similar_cases)} 个相似案例")
         for case_info in similar_cases:
             print(f"      - {case_info.get('project_name')} (相似度: {case_info.get('similarity_score', 0):.2%})")
-        
+
         return True
     except Exception as e:
         print(f"   ❌ 测试失败: {e}")
@@ -163,9 +167,9 @@ def test_open_items():
         if not lead:
             print("   ⚠️  没有可用的线索，跳过测试")
             return False
-        
-        from datetime import datetime
+
         import time
+        from datetime import datetime
         item_code = f"TEST-{datetime.now().strftime('%y%m%d')}-{int(time.time()) % 10000:04d}"
         # 检查是否已存在
         existing = db.query(OpenItem).filter(OpenItem.item_code == item_code).first()
@@ -185,7 +189,7 @@ def test_open_items():
             db.add(open_item)
             db.commit()
             print(f"   ✅ 创建未决事项: {open_item.item_code}")
-        
+
         # 检查阻塞报价的事项
         blocking = db.query(OpenItem).filter(
             OpenItem.source_type == AssessmentSourceTypeEnum.LEAD.value,
@@ -194,7 +198,7 @@ def test_open_items():
             OpenItem.status != 'CLOSED'
         ).count()
         print(f"   ✅ 阻塞报价的未决事项数量: {blocking}")
-        
+
         return True
     except Exception as e:
         print(f"   ❌ 测试失败: {e}")
@@ -210,21 +214,21 @@ def main():
     print("="*60)
     print("技术评估系统快速测试（数据库层）")
     print("="*60)
-    
+
     results = []
-    
+
     # 测试评分规则
     results.append(("评分规则", test_scoring_rule()))
-    
+
     # 测试评估服务
     results.append(("评估服务", test_assessment_service()))
-    
+
     # 测试失败案例匹配
     results.append(("失败案例匹配", test_failure_case_matching()))
-    
+
     # 测试未决事项
     results.append(("未决事项", test_open_items()))
-    
+
     # 汇总结果
     print("\n" + "="*60)
     print("测试结果汇总")
@@ -232,7 +236,7 @@ def main():
     for name, result in results:
         status = "✅ 通过" if result else "❌ 失败"
         print(f"{name}: {status}")
-    
+
     passed = sum(1 for _, r in results if r)
     total = len(results)
     print(f"\n总计: {passed}/{total} 通过")

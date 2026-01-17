@@ -7,29 +7,30 @@
 import os
 import re
 
+
 def fix_file_imports(file_path):
     """修复单个文件的导入问题"""
     if not os.path.exists(file_path):
         return False
-    
+
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
-        
+
         # 修复 common 问题
         content = content.replace('from app.schemas.response import Response', 'from app.schemas.common import Response')
-        
+
         # 修复 deps 导入问题
         content = re.sub(r'from app\.api import deps', 'from app.api.deps import get_db, get_current_active_user', content)
         content = re.sub(r'Depends\(deps\.get_db\)', 'Depends(get_db)', content)
         content = re.sub(r'Depends\(deps\.get_current_active_user\)', 'Depends(get_current_active_user)', content)
-        
+
         # 写回文件
         with open(file_path, 'w', encoding='utf-8') as f:
             f.write(content)
-        
+
         return True
-        
+
     except Exception as e:
         print(f"修复 {file_path} 时出错: {e}")
         return False
@@ -37,7 +38,7 @@ def fix_file_imports(file_path):
 # 需要修复的文件列表
 files_to_fix = [
     "/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/sales/quote_approvals_multi.py",
-    "/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/sales/quote_approvals_simple.py", 
+    "/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/sales/quote_approvals_simple.py",
     "/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/sales/quote_cost_analysis.py",
     "/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/sales/quote_cost_approvals.py",
     "/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/sales/quote_cost_breakdown.py",

@@ -4,8 +4,8 @@
 检查指定项目编码是否存在
 """
 
-import sys
 import os
+import sys
 
 # 添加项目根目录到路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -13,15 +13,16 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.models.base import get_db_session
 from app.models.project import Project
 
+
 def check_projects(project_codes):
     """检查项目是否存在"""
     print(f"\n检查项目: {', '.join(project_codes)}\n")
     print("=" * 60)
-    
+
     with get_db_session() as db:
         for code in project_codes:
             project = db.query(Project).filter(Project.project_code == code).first()
-            
+
             if project:
                 print(f"✅ {code}: 存在")
                 print(f"   - 项目名称: {project.project_name}")
@@ -34,9 +35,9 @@ def check_projects(project_codes):
             else:
                 print(f"❌ {code}: 不存在")
                 print()
-    
+
     print("=" * 60)
-    
+
     # 统计所有项目
     total = db.query(Project).count()
     active = db.query(Project).filter(Project.is_active == True).count()

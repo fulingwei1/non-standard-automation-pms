@@ -4,52 +4,64 @@
 测试权限API端点（包含认证）
 """
 
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from sqlalchemy import text
-from app.models.base import get_db_session
-from app.core.security import create_access_token, get_current_user, get_current_active_user
-from app.models.user import User
 from fastapi import Depends
+from sqlalchemy import text
+
 from app.api.deps import get_db
+from app.core.security import (
+    create_access_token,
+    get_current_active_user,
+    get_current_user,
+)
+from app.models.base import get_db_session
+from app.models.user import User
+
 
 def test_auth_flow():
     """测试认证流程"""
     print("=" * 60)
     print("测试认证流程")
     print("=" * 60)
-    
+
     try:
         # 1. 获取一个用户
         with get_db_session() as db:
-            result = db.execute(text("SELECT id, username, is_active FROM users LIMIT 1"))
+            result = db.execute(
+                text("SELECT id, username, is_active FROM users LIMIT 1")
+            )
             user_row = result.fetchone()
             if not user_row:
                 print("❌ 未找到用户")
                 return False
-            
+
             user_id, username, is_active = user_row
-            print(f"✅ 找到用户: ID={user_id}, username={username}, is_active={is_active}")
-            
+            print(
+                f"✅ 找到用户: ID={user_id}, username={username}, is_active={is_active}"
+            )
+
             # 2. 创建token（sub必须是字符串）
             token_data = {"sub": str(user_id)}
             token = create_access_token(token_data)
-            print(f"✅ Token创建成功: {token[:50]}...")
-            
+            print(f"✅ Token创建成功 (长度: {len(token)})")
+
             # 3. 测试get_current_user（需要模拟FastAPI的Depends）
             # 这里我们直接测试核心逻辑
             from jose import jwt
+
             from app.core.config import settings
-            
+
             try:
                 payload = jwt.decode(
                     token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
                 )
                 decoded_user_id = payload.get("sub")
                 print(f"✅ Token解码成功: user_id={decoded_user_id}")
-                
+
                 # 4. 查询用户（可能失败因为ORM关系错误）
                 try:
                     user = db.query(User).filter(User.id == decoded_user_id).first()
@@ -61,8 +73,10 @@ def test_auth_flow():
                     print(f"⚠️  ORM查询用户失败（预期）: {e}")
                     # 使用SQL查询
                     result = db.execute(
-                        text("SELECT id, username, is_active FROM users WHERE id = :user_id"),
-                        {"user_id": decoded_user_id}
+                        text(
+                            "SELECT id, username, is_active FROM users WHERE id = :user_id"
+                        ),
+                        {"user_id": decoded_user_id},
                     )
                     sql_user = result.fetchone()
                     if sql_user:
@@ -70,26 +84,28 @@ def test_auth_flow():
                     else:
                         print("❌ SQL查询用户也失败")
                         return False
-                
+
                 return True
             except Exception as e:
                 print(f"❌ Token解码失败: {e}")
                 return False
-                
+
     except Exception as e:
         print(f"❌ 测试失败: {e}")
         import traceback
+
         traceback.print_exc()
         return False
+
 
 def main():
     """主函数"""
     print("\n" + "=" * 60)
     print("权限API端点认证测试")
     print("=" * 60)
-    
+
     success = test_auth_flow()
-    
+
     print("\n" + "=" * 60)
     if success:
         print("✅ 认证流程测试通过")
@@ -100,6 +116,7 @@ def main():
     else:
         print("❌ 认证流程测试失败")
         print("需要进一步排查认证问题")
+
 
 if __name__ == "__main__":
     main()

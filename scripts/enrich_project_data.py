@@ -5,25 +5,32 @@
 为"北京智能装备ICT测试设备项目"（PJ250114）添加完整的历史数据
 """
 
-import sys
+import json
 import os
+import sys
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-import json
 
 # 添加项目根目录到路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.models.base import get_db_session
-from app.models.project import (
-    Project, ProjectStage, ProjectMilestone, ProjectMember, 
-    ProjectCost, ProjectDocument, ProjectStatusLog, Machine
-)
-from app.models.progress import Task
-from app.models.pmo import PmoProjectRisk
 from app.models.issue import Issue
-from app.models.user import User
 from app.models.organization import Department
+from app.models.pmo import PmoProjectRisk
+from app.models.progress import Task
+from app.models.project import (
+    Machine,
+    Project,
+    ProjectCost,
+    ProjectDocument,
+    ProjectMember,
+    ProjectMilestone,
+    ProjectStage,
+    ProjectStatusLog,
+)
+from app.models.user import User
+
 # 暂时不导入这些，先添加基础数据
 
 
@@ -35,25 +42,25 @@ def enrich_project_data():
         if not project:
             print("❌ 项目未找到")
             return
-        
+
         print(f"✓ 找到项目: {project.project_name} (ID: {project.id})")
-        
+
         # 获取一些用户作为团队成员
         users = db.query(User).filter(User.is_active == True).limit(10).all()
         if not users:
             print("❌ 未找到可用用户")
             return
-        
+
         pm = db.query(User).filter(User.id == project.pm_id).first()
         if not pm:
             pm = users[0]
-        
+
         print(f"✓ 项目经理: {pm.real_name or pm.username}")
-        
+
         # 计算项目时间线（从2024年1月开始，到2024年12月结束）
         project_start = date(2024, 1, 15)
         project_end = date(2024, 12, 20)
-        
+
         # 1. 添加项目阶段数据（S1-S9）
         print("\n📋 添加项目阶段数据...")
         stage_configs = [
@@ -67,13 +74,13 @@ def enrich_project_data():
             ("S8", "现场安装", 8, date(2024, 10, 26), date(2024, 11, 30)),
             ("S9", "质保结项", 9, date(2024, 12, 1), project_end),
         ]
-        
+
         for stage_code, stage_name, order, start_date, end_date in stage_configs:
             existing = db.query(ProjectStage).filter(
                 ProjectStage.project_id == project.id,
                 ProjectStage.stage_code == stage_code
             ).first()
-            
+
             if not existing:
                 stage = ProjectStage(
                     project_id=project.id,
@@ -91,7 +98,7 @@ def enrich_project_data():
                 )
                 db.add(stage)
                 print(f"  ✓ 添加阶段: {stage_code} - {stage_name}")
-        
+
         # 2. 添加项目成员（使用原始SQL避免外键约束问题）
         print("\n👥 添加项目成员...")
         member_roles = [
@@ -103,21 +110,21 @@ def enrich_project_data():
             ("采购专员", 30, date(2024, 3, 1), date(2024, 6, 30)),
             ("质量工程师", 40, date(2024, 7, 1), date(2024, 11, 30)),
         ]
-        
+
         from sqlalchemy import text
-        
+
         for i, (role_name, allocation, start_date, end_date) in enumerate(member_roles):
             if i >= len(users):
                 break
-            
+
             user = users[i] if i > 0 else pm  # 第一个是项目经理
-            
+
             # 检查是否已存在
             existing = db.query(ProjectMember).filter(
                 ProjectMember.project_id == project.id,
                 ProjectMember.user_id == user.id
             ).first()
-            
+
             if not existing:
                 # 检查角色是否存在，如果不存在则创建
                 role_result = db.execute(text("SELECT id FROM roles WHERE role_code = :role_code"), {"role_code": role_name}).first()
@@ -128,11 +135,11 @@ def enrich_project_data():
                         VALUES (:role_code, :role_name, 'PROJECT', 0, CURRENT_TIMESTAMP)
                     """), {"role_code": role_name, "role_name": role_name})
                     db.flush()
-                
+
                 # 使用原始SQL插入，设置role_code为NULL避免外键约束
                 try:
                     db.execute(text("""
-                        INSERT INTO project_members 
+                        INSERT INTO project_members
                         (project_id, user_id, role_code, allocation_pct, start_date, end_date, is_active, remark, created_by, created_at, updated_at)
                         VALUES (:project_id, :user_id, :role_code, :allocation_pct, :start_date, :end_date, 1, :remark, :created_by, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
                     """), {
@@ -148,7 +155,7 @@ def enrich_project_data():
                     print(f"  ✓ 添加成员: {user.real_name or user.username} - {role_name}")
                 except Exception as e:
                     print(f"  ⚠️ 跳过成员 {user.real_name or user.username}: {str(e)}")
-        
+
         # 3. 添加里程碑
         print("\n🎯 添加里程碑...")
         milestone_data = [
@@ -165,13 +172,13 @@ def enrich_project_data():
             ("M011", "尾款到账", "PAYMENT", date(2024, 12, 15), date(2024, 12, 18), "COMPLETED", True),
             ("M012", "项目结项", "CUSTOM", date(2024, 12, 20), date(2024, 12, 20), "COMPLETED", True),
         ]
-        
+
         for code, name, mtype, planned, actual, status, is_key in milestone_data:
             existing = db.query(ProjectMilestone).filter(
                 ProjectMilestone.project_id == project.id,
                 ProjectMilestone.milestone_code == code
             ).first()
-            
+
             if not existing:
                 milestone = ProjectMilestone(
                     project_id=project.id,
@@ -187,7 +194,7 @@ def enrich_project_data():
                 )
                 db.add(milestone)
                 print(f"  ✓ 添加里程碑: {code} - {name}")
-        
+
         # 4. 添加成本数据
         print("\n💰 添加成本数据...")
         cost_data = [
@@ -200,7 +207,7 @@ def enrich_project_data():
             ("测试费用", "TESTING", 35000.00, date(2024, 9, 20), "测试验证费用"),
             ("包装运输", "LOGISTICS", 15000.00, date(2024, 10, 20), "包装运输费用"),
         ]
-        
+
         total_cost = Decimal('0')
         for cost_type, category, amount, cost_date, remark in cost_data:
             cost = ProjectCost(
@@ -215,11 +222,11 @@ def enrich_project_data():
             db.add(cost)
             total_cost += Decimal(str(amount))
             print(f"  ✓ 添加成本: {cost_type} - ¥{amount:,.2f}")
-        
+
         # 更新项目实际成本
         project.actual_cost = total_cost
         print(f"  ✓ 项目总成本: ¥{total_cost:,.2f}")
-        
+
         # 5. 添加文档
         print("\n📄 添加项目文档...")
         doc_data = [
@@ -235,13 +242,13 @@ def enrich_project_data():
             ("用户操作手册", "MANUAL", "1.0", "APPROVED", date(2024, 11, 20)),
             ("项目总结报告", "REPORT", "1.0", "APPROVED", date(2024, 12, 18)),
         ]
-        
+
         for doc_name, doc_type, version, status, doc_date in doc_data:
             existing = db.query(ProjectDocument).filter(
                 ProjectDocument.project_id == project.id,
                 ProjectDocument.doc_name == doc_name
             ).first()
-            
+
             if not existing:
                 doc = ProjectDocument(
                     project_id=project.id,
@@ -256,7 +263,7 @@ def enrich_project_data():
                 doc.created_at = datetime.combine(doc_date, datetime.min.time())
                 db.add(doc)
                 print(f"  ✓ 添加文档: {doc_name} v{version}")
-        
+
         # 6. 添加任务
         print("\n✅ 添加项目任务...")
         task_data = [
@@ -275,13 +282,13 @@ def enrich_project_data():
             ("培训交付", "用户培训与交付", "COMPLETED", date(2024, 12, 1), date(2024, 12, 10), pm.id),
             ("项目结项", "项目总结与结项", "COMPLETED", date(2024, 12, 11), date(2024, 12, 20), pm.id),
         ]
-        
+
         for task_name, description, status, start_date, end_date, assignee_id in task_data:
             existing = db.query(Task).filter(
                 Task.project_id == project.id,
                 Task.task_name == task_name
             ).first()
-            
+
             if not existing:
                 task = Task(
                     project_id=project.id,
@@ -299,7 +306,7 @@ def enrich_project_data():
                     task.block_reason = description
                 db.add(task)
                 print(f"  ✓ 添加任务: {task_name}")
-        
+
         # 7. 添加状态变更日志
         print("\n📝 添加状态变更日志...")
         status_logs = [
@@ -316,7 +323,7 @@ def enrich_project_data():
             ("HEALTH_CHANGE", "H1", "H2", date(2024, 8, 20), "软件调试遇到技术难点"),
             ("HEALTH_CHANGE", "H2", "H1", date(2024, 9, 5), "技术问题已解决"),
         ]
-        
+
         for change_type, old_value, new_value, change_date, remark in status_logs:
             log = ProjectStatusLog(
                 project_id=project.id,
@@ -336,9 +343,9 @@ def enrich_project_data():
                 log.old_health = old_value
                 log.new_health = new_value
             db.add(log)
-        
+
         print(f"  ✓ 添加 {len(status_logs)} 条状态日志")
-        
+
         # 8. 添加风险记录（暂时跳过，因为外键定义有问题）
         print("\n⚠️ 添加项目风险...")
         print("  ⚠️ 跳过风险数据（外键定义问题）")
@@ -347,7 +354,7 @@ def enrich_project_data():
         #     ("软件调试难点", "HIGH", "OPEN", date(2024, 8, 15), "软件调试过程中发现技术难点", "组织技术攻关，寻求外部技术支持", "RESOLVED", date(2024, 9, 5)),
         #     ("现场安装环境", "LOW", "OPEN", date(2024, 10, 20), "现场安装环境与预期有差异", "提前到现场勘察，调整安装方案", "RESOLVED", date(2024, 11, 5)),
         # ]
-        
+
         # 9. 添加问题记录
         print("\n🐛 添加项目问题...")
         issue_data = [
@@ -356,7 +363,7 @@ def enrich_project_data():
             ("软件功能异常", "测试发现软件功能异常", "RESOLVED", date(2024, 9, 5), "修复软件bug", users[3].id if len(users) > 3 else pm.id),
             ("测试设备故障", "测试过程中设备出现故障", "RESOLVED", date(2024, 9, 25), "更换测试设备", users[4].id if len(users) > 4 else pm.id),
         ]
-        
+
         for i, (issue_title, description, status, create_date, solution, assignee_id) in enumerate(issue_data):
             issue_no = f"I{project.id:03d}{i+1:03d}"
             # 检查是否已存在
@@ -364,7 +371,7 @@ def enrich_project_data():
             if existing:
                 print(f"  ⚠️ 问题已存在: {issue_title}")
                 continue
-            
+
             issue = Issue(
                 project_id=project.id,
                 issue_no=issue_no,
@@ -384,11 +391,11 @@ def enrich_project_data():
             )
             db.add(issue)
             print(f"  ✓ 添加问题: {issue_title}")
-        
+
         # 提交所有更改
         db.commit()
         print("\n✅ 所有数据添加完成！")
-        
+
         # 打印统计信息
         print("\n📊 数据统计:")
         print(f"  阶段: {db.query(ProjectStage).filter(ProjectStage.project_id == project.id).count()}")

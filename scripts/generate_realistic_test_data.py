@@ -9,36 +9,44 @@
     python3 scripts/generate_realistic_test_data.py
 """
 
-import sys
 import os
-from datetime import datetime, date, timedelta
-from decimal import Decimal
 import random
+import sys
+from datetime import date, datetime, timedelta
+from decimal import Decimal
 
 # 添加项目根目录到路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.models.base import get_db_session
-from app.models.user import User, Role, UserRole
-from app.models.project import Customer, Project, Machine, ProjectMilestone, ProjectPaymentPlan
-from app.models.sales import (
-    Lead, Opportunity, Quote, QuoteItem, Contract, Invoice
-)
-from app.models.material import (
-    MaterialCategory, Material, Supplier, MaterialSupplier,
-    BomHeader, BomItem
-)
-from app.models.purchase import PurchaseOrder, PurchaseOrderItem, GoodsReceipt
 from app.models.acceptance import AcceptanceOrder, AcceptanceOrderItem
+from app.models.base import get_db_session
 from app.models.business_support import InvoiceRequest
-from app.models.progress import Task
+from app.models.material import (
+    BomHeader,
+    BomItem,
+    Material,
+    MaterialCategory,
+    MaterialSupplier,
+    Supplier,
+)
 from app.models.organization import Department, Employee
+from app.models.progress import Task
+from app.models.project import (
+    Customer,
+    Machine,
+    Project,
+    ProjectMilestone,
+    ProjectPaymentPlan,
+)
+from app.models.purchase import GoodsReceipt, PurchaseOrder, PurchaseOrderItem
+from app.models.sales import Contract, Invoice, Lead, Opportunity, Quote, QuoteItem
+from app.models.user import Role, User, UserRole
 
 
 def generate_customer_data(db):
     """生成客户数据"""
     print("生成客户数据...")
-    
+
     customer = Customer(
         customer_code="CUST202501001",
         customer_name="深圳智行新能源汽车电子有限公司",
@@ -61,7 +69,7 @@ def generate_customer_data(db):
     )
     db.add(customer)
     db.flush()
-    
+
     print(f"  ✓ 创建客户: {customer.customer_name} (ID: {customer.id})")
     return customer
 
@@ -69,13 +77,14 @@ def generate_customer_data(db):
 def generate_users_data(db):
     """生成用户数据（如果不存在）"""
     print("检查用户数据...")
-    
+
     # 检查或创建员工记录（User需要employee_id）
-    
+
     # 销售
     sales_user = db.query(User).filter(User.username == "sales_zhang").first()
     if not sales_user:
         from app.core.security import get_password_hash
+
         # 先创建员工记录
         sales_emp = db.query(Employee).filter(Employee.employee_code == "EMP001").first()
         if not sales_emp:
@@ -87,7 +96,7 @@ def generate_users_data(db):
             )
             db.add(sales_emp)
             db.flush()
-        
+
         sales_user = User(
             employee_id=sales_emp.id,
             username="sales_zhang",
@@ -98,7 +107,7 @@ def generate_users_data(db):
         )
         db.add(sales_user)
         db.flush()
-    
+
     # 项目经理
     pm_user = db.query(User).filter(User.username == "pm_li").first()
     if not pm_user:
@@ -113,7 +122,7 @@ def generate_users_data(db):
             )
             db.add(pm_emp)
             db.flush()
-        
+
         pm_user = User(
             employee_id=pm_emp.id,
             username="pm_li",
@@ -124,7 +133,7 @@ def generate_users_data(db):
         )
         db.add(pm_user)
         db.flush()
-    
+
     # 机械工程师
     mech_user = db.query(User).filter(User.username == "mech_wang").first()
     if not mech_user:
@@ -139,7 +148,7 @@ def generate_users_data(db):
             )
             db.add(mech_emp)
             db.flush()
-        
+
         mech_user = User(
             employee_id=mech_emp.id,
             username="mech_wang",
@@ -150,7 +159,7 @@ def generate_users_data(db):
         )
         db.add(mech_user)
         db.flush()
-    
+
     # 电气工程师
     elec_user = db.query(User).filter(User.username == "elec_zhao").first()
     if not elec_user:
@@ -165,7 +174,7 @@ def generate_users_data(db):
             )
             db.add(elec_emp)
             db.flush()
-        
+
         elec_user = User(
             employee_id=elec_emp.id,
             username="elec_zhao",
@@ -176,7 +185,7 @@ def generate_users_data(db):
         )
         db.add(elec_user)
         db.flush()
-    
+
     # 软件工程师
     soft_user = db.query(User).filter(User.username == "soft_chen").first()
     if not soft_user:
@@ -191,7 +200,7 @@ def generate_users_data(db):
             )
             db.add(soft_emp)
             db.flush()
-        
+
         soft_user = User(
             employee_id=soft_emp.id,
             username="soft_chen",
@@ -202,13 +211,13 @@ def generate_users_data(db):
         )
         db.add(soft_user)
         db.flush()
-    
+
     print(f"  ✓ 销售: {sales_user.real_name} (ID: {sales_user.id})")
     print(f"  ✓ 项目经理: {pm_user.real_name} (ID: {pm_user.id})")
     print(f"  ✓ 机械工程师: {mech_user.real_name} (ID: {mech_user.id})")
     print(f"  ✓ 电气工程师: {elec_user.real_name} (ID: {elec_user.id})")
     print(f"  ✓ 软件工程师: {soft_user.real_name} (ID: {soft_user.id})")
-    
+
     return {
         "sales": sales_user,
         "pm": pm_user,
@@ -221,7 +230,7 @@ def generate_users_data(db):
 def generate_sales_flow(db, customer, users):
     """生成销售流程数据：线索 → 商机 → 报价 → 合同"""
     print("\n生成销售流程数据...")
-    
+
     # 1. 线索
     lead = Lead(
         lead_code="LD202501001",
@@ -243,7 +252,7 @@ def generate_sales_flow(db, customer, users):
     db.add(lead)
     db.flush()
     print(f"  ✓ 创建线索: {lead.lead_code}")
-    
+
     # 2. 商机
     opportunity = Opportunity(
         opp_code="OPP202501001",
@@ -269,7 +278,7 @@ def generate_sales_flow(db, customer, users):
     db.add(opportunity)
     db.flush()
     print(f"  ✓ 创建商机: {opportunity.opp_code}")
-    
+
     # 3. 报价
     quote = Quote(
         quote_code="QT202501001",
@@ -289,7 +298,7 @@ def generate_sales_flow(db, customer, users):
     )
     db.add(quote)
     db.flush()
-    
+
     # 报价明细
     quote_items = [
         {
@@ -333,7 +342,7 @@ def generate_sales_flow(db, customer, users):
             "amount": Decimal("200000.00")
         }
     ]
-    
+
     for item_data in quote_items:
         item = QuoteItem(
             quote_id=quote.id,
@@ -347,7 +356,7 @@ def generate_sales_flow(db, customer, users):
         db.add(item)
     db.flush()
     print(f"  ✓ 创建报价: {quote.quote_code} (含{len(quote_items)}项明细)")
-    
+
     # 4. 合同
     contract = Contract(
         contract_code="CT202501001",
@@ -371,7 +380,7 @@ def generate_sales_flow(db, customer, users):
     )
     db.add(contract)
     db.flush()
-    
+
     # 合同明细（合同模型可能不包含明细表，使用备注记录）
     contract_items_summary = "\n".join([
         f"{i+1}. {item['item_name']} - {item['specification']} - 数量:{item['quantity']} - 金额:¥{item['amount']:,.2f}"
@@ -379,7 +388,7 @@ def generate_sales_flow(db, customer, users):
     ])
     contract.remark = f"合同明细：\n{contract_items_summary}"
     print(f"  ✓ 创建合同: {contract.contract_code}")
-    
+
     return {
         "lead": lead,
         "opportunity": opportunity,
@@ -391,7 +400,7 @@ def generate_sales_flow(db, customer, users):
 def generate_project_data(db, customer, contract, users):
     """生成项目数据"""
     print("\n生成项目数据...")
-    
+
     project = Project(
         project_code="PJ250120001",
         project_name="智行新能源BMS FCT测试设备项目",
@@ -433,7 +442,7 @@ def generate_project_data(db, customer, contract, users):
     db.add(project)
     db.flush()
     print(f"  ✓ 创建项目: {project.project_code}")
-    
+
     # 项目里程碑
     milestones_data = [
         {
@@ -500,7 +509,7 @@ def generate_project_data(db, customer, contract, users):
             "status": "PENDING"
         }
     ]
-    
+
     milestones = []
     for ms_data in milestones_data:
         milestone = ProjectMilestone(
@@ -515,7 +524,7 @@ def generate_project_data(db, customer, contract, users):
         milestones.append(milestone)
     db.flush()
     print(f"  ✓ 创建{len(milestones)}个里程碑")
-    
+
     # 收款计划
     payment_plans_data = [
         {
@@ -543,7 +552,7 @@ def generate_project_data(db, customer, contract, users):
             "status": "PENDING"
         }
     ]
-    
+
     for pp_data in payment_plans_data:
         payment_plan = ProjectPaymentPlan(
             project_id=project.id,
@@ -558,14 +567,14 @@ def generate_project_data(db, customer, contract, users):
         db.add(payment_plan)
     db.flush()
     print(f"  ✓ 创建{len(payment_plans_data)}个收款计划")
-    
+
     return project
 
 
 def generate_machine_data(db, project):
     """生成设备数据"""
     print("\n生成设备数据...")
-    
+
     machine = Machine(
         project_id=project.id,
         machine_code="PN001",
@@ -584,14 +593,14 @@ def generate_machine_data(db, project):
     db.add(machine)
     db.flush()
     print(f"  ✓ 创建设备: {machine.machine_code}")
-    
+
     return machine
 
 
 def generate_material_data(db):
     """生成物料数据"""
     print("\n生成物料数据...")
-    
+
     # 物料分类
     categories = {}
     category_data = [
@@ -602,7 +611,7 @@ def generate_material_data(db):
         {"code": "CAT005", "name": "机加工件", "parent": "CAT001"},
         {"code": "CAT006", "name": "钣金件", "parent": "CAT001"},
     ]
-    
+
     for cat_data in category_data:
         category = MaterialCategory(
             category_code=cat_data["code"],
@@ -614,7 +623,7 @@ def generate_material_data(db):
         db.add(category)
         db.flush()
         categories[cat_data["code"]] = category.id
-    
+
     # 供应商
     suppliers = {}
     supplier_data = [
@@ -640,7 +649,7 @@ def generate_material_data(db):
             "phone": "021-11223344"
         }
     ]
-    
+
     for sup_data in supplier_data:
         supplier = Supplier(
             supplier_code=sup_data["code"],
@@ -653,7 +662,7 @@ def generate_material_data(db):
         db.add(supplier)
         db.flush()
         suppliers[sup_data["code"]] = supplier
-    
+
     # 物料
     materials = {}
     material_data = [
@@ -771,7 +780,7 @@ def generate_material_data(db):
             "supplier": "SUP003"
         }
     ]
-    
+
     for mat_data in material_data:
         material = Material(
             material_code=mat_data["code"],
@@ -788,7 +797,7 @@ def generate_material_data(db):
         db.add(material)
         db.flush()
         materials[mat_data["code"]] = material
-        
+
         # 物料供应商关联
         mat_supplier = MaterialSupplier(
             material_id=material.id,
@@ -798,17 +807,17 @@ def generate_material_data(db):
             lead_time_days=15
         )
         db.add(mat_supplier)
-    
+
     db.flush()
     print(f"  ✓ 创建{len(materials)}个物料")
-    
+
     return materials, suppliers
 
 
 def generate_bom_data(db, project, machine, materials):
     """生成BOM数据"""
     print("\n生成BOM数据...")
-    
+
     bom_header = BomHeader(
         project_id=project.id,
         machine_id=machine.id,
@@ -820,7 +829,7 @@ def generate_bom_data(db, project, machine, materials):
     )
     db.add(bom_header)
     db.flush()
-    
+
     # BOM明细
     bom_items_data = [
         {"material": "MAT001", "qty": 1, "level": 1, "remark": "设备底座"},
@@ -835,7 +844,7 @@ def generate_bom_data(db, project, machine, materials):
         {"material": "MAT010", "qty": 1, "level": 1, "remark": "伺服电机"},
         {"material": "MAT011", "qty": 4, "level": 1, "remark": "气缸"}
     ]
-    
+
     for item_data in bom_items_data:
         material = materials[item_data["material"]]
         bom_item = BomItem(
@@ -852,17 +861,17 @@ def generate_bom_data(db, project, machine, materials):
             remark=item_data["remark"]
         )
         db.add(bom_item)
-    
+
     db.flush()
     print(f"  ✓ 创建BOM: {bom_header.bom_code} (含{len(bom_items_data)}项)")
-    
+
     return bom_header
 
 
 def generate_purchase_orders(db, bom_header, suppliers):
     """生成采购订单"""
     print("\n生成采购订单...")
-    
+
     # 按供应商分组物料
     supplier_items = {}
     for item in bom_header.items:
@@ -871,11 +880,11 @@ def generate_purchase_orders(db, bom_header, suppliers):
         if supplier_id not in supplier_items:
             supplier_items[supplier_id] = []
         supplier_items[supplier_id].append(item)
-    
+
     purchase_orders = []
     for supplier_id, items in supplier_items.items():
         supplier = next(s for s in suppliers.values() if s.id == supplier_id)
-        
+
         po = PurchaseOrder(
             po_code=f"PO202502{len(purchase_orders)+1:03d}",
             supplier_id=supplier_id,
@@ -890,7 +899,7 @@ def generate_purchase_orders(db, bom_header, suppliers):
         )
         db.add(po)
         db.flush()
-        
+
         for item in items:
             po_item = PurchaseOrderItem(
                 purchase_order_id=po.id,
@@ -904,10 +913,10 @@ def generate_purchase_orders(db, bom_header, suppliers):
                 total_price=item.total_price
             )
             db.add(po_item)
-        
+
         purchase_orders.append(po)
         print(f"  ✓ 创建采购订单: {po.po_code} (供应商: {supplier.supplier_name})")
-    
+
     db.flush()
     return purchase_orders
 
@@ -915,7 +924,7 @@ def generate_purchase_orders(db, bom_header, suppliers):
 def generate_tasks(db, project, machine, users):
     """生成工程师任务"""
     print("\n生成工程师任务...")
-    
+
     tasks_data = [
         {
             "title": "设备底座和测试平台机械设计",
@@ -990,7 +999,7 @@ def generate_tasks(db, project, machine, users):
             "status": "PENDING"
         }
     ]
-    
+
     tasks = []
     for task_data in tasks_data:
         task = Task(
@@ -1009,10 +1018,10 @@ def generate_tasks(db, project, machine, users):
         )
         db.add(task)
         tasks.append(task)
-    
+
     db.flush()
     print(f"  ✓ 创建{len(tasks)}个工程师任务")
-    
+
     return tasks
 
 
@@ -1021,38 +1030,38 @@ def main():
     print("=" * 60)
     print("生成真实度高的测试数据")
     print("=" * 60)
-    
+
     with get_db_session() as db:
         try:
             # 1. 生成用户
             users = generate_users_data(db)
-            
+
             # 2. 生成客户
             customer = generate_customer_data(db)
-            
+
             # 3. 生成销售流程
             sales_data = generate_sales_flow(db, customer, users)
-            
+
             # 4. 生成项目
             project = generate_project_data(db, customer, sales_data["contract"], users)
-            
+
             # 5. 生成设备
             machine = generate_machine_data(db, project)
-            
+
             # 6. 生成物料
             materials, suppliers = generate_material_data(db)
-            
+
             # 7. 生成BOM
             bom_header = generate_bom_data(db, project, machine, materials)
-            
+
             # 8. 生成采购订单
             purchase_orders = generate_purchase_orders(db, bom_header, suppliers)
-            
+
             # 9. 生成工程师任务
             tasks = generate_tasks(db, project, machine, users)
-            
+
             db.commit()
-            
+
             print("\n" + "=" * 60)
             print("数据生成完成！")
             print("=" * 60)
@@ -1065,7 +1074,7 @@ def main():
             print(f"  - 采购订单: {len(purchase_orders)}个")
             print(f"  - 工程师任务: {len(tasks)}个")
             print(f"\n数据已保存到数据库！")
-            
+
         except Exception as e:
             db.rollback()
             print(f"\n错误: {e}")

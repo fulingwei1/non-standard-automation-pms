@@ -4,6 +4,7 @@
 """
 
 import re
+import sys
 from pathlib import Path
 
 FILES_TO_FIX = [

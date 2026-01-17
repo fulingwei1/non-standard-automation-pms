@@ -4,12 +4,14 @@
 测试权限API端点
 """
 
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.models.base import get_db_session
 from app.models.user import Permission
+
 
 def test_permission_query():
     """测试权限查询"""
@@ -18,7 +20,7 @@ def test_permission_query():
             # 直接查询
             perms = db.query(Permission).limit(5).all()
             print(f'✅ 查询成功，找到 {len(perms)} 条权限')
-            
+
             if perms:
                 p = perms[0]
                 print(f'\n第一条权限信息:')
@@ -29,16 +31,16 @@ def test_permission_query():
                     print(f'  ❌ 无法访问permission_code: {e}')
                     # 尝试直接访问数据库字段
                     print(f'  尝试访问perm_code: {getattr(p, "perm_code", "不存在")}')
-                
+
                 try:
                     print(f'  权限名称: {p.permission_name}')
                 except AttributeError as e:
                     print(f'  ❌ 无法访问permission_name: {e}')
                     print(f'  尝试访问perm_name: {getattr(p, "perm_name", "不存在")}')
-                
+
                 print(f'  模块: {p.module}')
                 print(f'  操作: {p.action}')
-                
+
                 # 检查所有属性
                 print(f'\n所有属性:')
                 attrs = [attr for attr in dir(p) if not attr.startswith('_')]

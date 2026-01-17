@@ -6,8 +6,8 @@
 测试基本的性能优化效果
 """
 
-import time
 import json
+import time
 from datetime import datetime
 
 print("🚀 开始性能优化测试")
@@ -39,13 +39,13 @@ for i in range(iterations):
     result1 = complex_function_simulation()
     complex_time = time.time() - start
     complex_times.append(complex_time)
-    
+
     # 测试简化函数
     start = time.time()
     result2 = simple_function_simulation()
     simple_time = time.time() - start
     simple_times.append(simple_time)
-    
+
     print(f"  第{i+1}次: 复杂函数 {complex_time:.4f}s, 简化函数 {simple_time:.4f}s")
 
 # 计算平均时间
@@ -81,13 +81,13 @@ for i in range(5):
     result1 = simulate_database_query()
     db_time = time.time() - start
     db_times.append(db_time)
-    
+
     # 缓存查询
     start = time.time()
     result2 = simulate_cache_lookup()
     cache_time = time.time() - start
     cache_times.append(cache_time)
-    
+
     print(f"  第{i+1}次: 数据库 {db_time:.4f}s, 缓存 {cache_time:.4f}s")
 
 avg_db = sum(db_times) / len(db_times)

@@ -4,14 +4,15 @@
 非标自动化项目管理系统 - 完整85页PPT生成器
 """
 
-from pptx import Presentation
-from pptx.util import Inches, Pt
-from pptx.dml.color import RgbColor
-from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
-from pptx.enum.shapes import MSO_SHAPE
-from pptx.oxml.ns import nsmap
-from pptx.oxml import parse_xml
 import os
+
+from pptx import Presentation
+from pptx.dml.color import RgbColor
+from pptx.enum.shapes import MSO_SHAPE
+from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
+from pptx.oxml import parse_xml
+from pptx.oxml.ns import nsmap
+from pptx.util import Inches, Pt
 
 # 颜色定义
 DARK_BLUE = RgbColor(10, 22, 40)  # #0A1628
@@ -421,7 +422,7 @@ def create_full_presentation():
         ], page_num=5)
 
     # 第6页 - 痛点引入
-    add_content_slide(prs, "非标项目的"复杂性困局"", [
+    add_content_slide(prs, '非标项目的"复杂性困局"', [
         {"text": "核心矛盾", "size": 22, "bold": True, "color": ORANGE},
         "高度定制化需求 × 紧迫交付周期 × 多专业协同 = 管理复杂度指数级上升",
         "",
@@ -438,7 +439,7 @@ def create_full_presentation():
         {"text": "现状描述", "size": 20, "bold": True, "color": TECH_BLUE},
         "• 客户在项目周期内平均发起 15-30 次需求变更",
         "• 变更信息散落在微信、邮件、会议纪要中",
-        "• 工程师经常"按旧图纸加工"导致返工",
+        '• 工程师经常"按旧图纸加工"导致返工',
         "• 版本号混乱:Rev.A/Rev.B/Final/Final_V2...",
         "",
         {"text": "业务影响", "size": 20, "bold": True, "color": ORANGE},
@@ -453,12 +454,12 @@ def create_full_presentation():
         "• 机械工程师修改了安装位,电气工程师不知道",
         "• 软件开发完成,才发现硬件接口变了",
         "• 采购提前下单,设计变更后物料报废",
-        "• 项目经理每天花 3 小时"对齐信息"",
+        '• 项目经理每天花 3 小时"对齐信息"',
         "",
         {"text": "典型对话", "size": 20, "bold": True, "color": SILVER},
-        "机械组:"我们改了治具尺寸,群里说过了"",
-        "电气组:"没看到啊,线束都做好了"",
-        "项目经理:"..."",
+        '机械组:"我们改了治具尺寸,群里说过了"',
+        '电气组:"没看到啊,线束都做好了"',
+        '项目经理:"..."',
         "",
         {"text": "业务影响", "size": 20, "bold": True, "color": ORANGE},
         "⚠️ 70% 的返工源于信息不同步",
@@ -468,13 +469,13 @@ def create_full_presentation():
     add_content_slide(prs, "痛点③ 进度不透明,风险后知后觉", [
         {"text": "现状描述", "size": 20, "bold": True, "color": TECH_BLUE},
         "• 项目状态依赖周会汇报,信息滞后 3-5 天",
-        "• "完成 80%"可能持续两周不动",
+        '• "完成 80%"可能持续两周不动',
         "• 关键路径任务延误未被及时发现",
         "• 客户突然来访,项目经理手忙脚乱准备资料",
         "",
         {"text": "典型场景", "size": 20, "bold": True, "color": SILVER},
-        "周一汇报:"一切正常"",
-        "周五发现:"视觉算法验证卡住两周了"",
+        '周一汇报:"一切正常"',
+        '周五发现:"视觉算法验证卡住两周了"',
         "",
         {"text": "业务影响", "size": 20, "bold": True, "color": ORANGE},
         "⚠️ 项目延期率高达 40-60%",
@@ -491,8 +492,8 @@ def create_full_presentation():
         "• 客户要求提供完整追溯报告,临时拼凑",
         "",
         {"text": "典型场景", "size": 20, "bold": True, "color": SILVER},
-        "客户:"这个测试工位为什么漏检?"",
-        "工程师:"让我查查...上周的邮件...还是上上周的..."",
+        '客户:"这个测试工位为什么漏检?"',
+        '工程师:"让我查查...上周的邮件...还是上上周的..."',
         "",
         {"text": "业务影响", "size": 20, "bold": True, "color": ORANGE},
         "⚠️ 验收周期延长 2-4 周",
@@ -506,21 +507,21 @@ def create_full_presentation():
     add_section_slide(prs, "第二部分", "解决方案总览")
 
     # 第12页 - 转折
-    add_content_slide(prs, "从"救火"走向"掌控"", [
+    add_content_slide(prs, '从"救火"走向"掌控"', [
         {"text": "我们深耕非标自动化行业 15+ 年,深刻理解这些痛点。", "size": 22},
         {"text": "基于 1000+ 项目经验,我们打造了这套 AI 驱动的项目管理系统。", "size": 22},
         "",
         {"text": "设计理念", "size": 24, "bold": True, "color": TECH_BLUE},
         "• 不是通用工具的简单移植",
-        "• 而是为非标自动化"量身定制"",
+        '• 而是为非标自动化"量身定制"',
         "• 融入行业 Know-How 与 AI 智能",
     ], page_num=12)
 
     # 第13页 - 系统定位
     add_content_slide(prs, "产品定位", [
         {"text": "一句话定义", "size": 22, "bold": True, "color": TECH_BLUE},
-        ""专为非标自动化测试设备打造的 AI 增强型项目协同平台,",
-        "覆盖从 RFQ 到售后的全生命周期管理"",
+        "专为非标自动化测试设备打造的 AI 增强型项目协同平台",
+        "覆盖从 RFQ 到售后的全生命周期管理",
         "",
         {"text": "核心价值主张", "size": 22, "bold": True, "color": TECH_BLUE},
         "🎯 精准:每个任务、每个变更、每个问题可追溯",
@@ -914,7 +915,7 @@ def create_full_presentation():
         "",
         "        ┌─────────────────┐",
         "        │   项目任务       │",
-        "        │ "测试工位机构设计" │",
+        '        │ "测试工位机构设计" │',
         "        └────────┬────────┘",
         "     ┌───────────┼───────────┐",
         "  机械组       电气组       软件组",
@@ -940,7 +941,7 @@ def create_full_presentation():
         "• 计划变更",
         "",
         {"text": "管理价值", "size": 22, "bold": True, "color": GREEN},
-        "变更有据可查 | 影响范围可评估 | 避免"私自变更"",
+        '变更有据可查 | 影响范围可评估 | 避免"私自变更"',
     ], page_num=39)
 
     # 第40页 - 文档版本管理
@@ -1117,8 +1118,8 @@ def create_full_presentation():
         "✅ 验收签批在线完成",
         "",
         {"text": "客户体验升级", "size": 22, "bold": True, "color": GREEN},
-        "从"天天追问"到"自助查询"",
-        "从"被动等待"到"主动推送"",
+        '从"天天追问"到"自助查询"',
+        '从"被动等待"到"主动推送"',
     ], page_num=52)
 
     # 第53页 - 项目看板
@@ -1316,21 +1317,21 @@ def create_full_presentation():
     add_content_slide(prs, "AI 智能助手", [
         {"text": "问答示例", "size": 22, "bold": True, "color": TECH_BLUE},
         "",
-        {"text": "用户:"PJ250101项目当前状态如何?"", "size": 18, "color": SILVER},
+        {"text": '用户:"PJ250101项目当前状态如何?"', "size": 18, "color": SILVER},
         "",
         {"text": "AI回答:", "size": 18, "bold": True},
-        ""PJ250101项目当前处于S5装配调试阶段,",
+        "PJ250101项目当前处于S5装配调试阶段,",
         "整体进度75%,健康度评分82分（有风险）。",
         "主要风险:视觉算法调试进度落后3天。",
-        "建议:增加调试人员或申请延期。"",
+        "建议:增加调试人员或申请延期。",
         "",
-        {"text": "用户:"下周有哪些里程碑需要关注?"", "size": 18, "color": SILVER},
+        {"text": '用户:"下周有哪些里程碑需要关注?"', "size": 18, "color": SILVER},
         "",
         {"text": "AI回答:", "size": 18, "bold": True},
-        ""下周有3个里程碑需要关注:",
+        "下周有3个里程碑需要关注:",
         "1. PJ002机械组装完成（周二）",
         "2. PJ005 FAT验收（周四）",
-        "3. PJ001发货（周五）"",
+        "3. PJ001发货（周五）",
     ], page_num=66)
 
     # 第67页 - 系统集成能力
@@ -1495,7 +1496,7 @@ def create_full_presentation():
         "• 变更成本:降低35%",
         "• 客户满意度:从75 → 90",
         "",
-        {"text": ""这套系统真正理解我们非标行业的痛点"", "size": 18, "color": SILVER},
+        {"text": "这套系统真正理解我们非标行业的痛点", "size": 18, "color": SILVER},
     ], page_num=77)
 
     # 第78页 - 客户案例2
@@ -1513,7 +1514,7 @@ def create_full_presentation():
         "• 客户投诉:降低60%",
         "• 回款周期:缩短20天",
         "",
-        {"text": ""客户Portal让我们的专业度提升了一个台阶"", "size": 18, "color": SILVER},
+        {"text": "客户Portal让我们的专业度提升了一个台阶", "size": 18, "color": SILVER},
     ], page_num=78)
 
     # 第79页 - 客户案例3
@@ -1531,7 +1532,7 @@ def create_full_presentation():
         "• 新人上手周期:从3个月 → 1个月",
         "• 知识复用率:从10% → 60%",
         "",
-        {"text": ""终于不怕老员工离职了,经验都沉淀在系统里"", "size": 18, "color": SILVER},
+        {"text": "终于不怕老员工离职了,经验都沉淀在系统里", "size": 18, "color": SILVER},
     ], page_num=79)
 
     # 第80页 - 实施路径
@@ -1607,7 +1608,7 @@ def create_full_presentation():
     # 第85页 - 尾页
     slide = add_title_slide(prs,
         "让您的下一个非标项目",
-        "从"救火"走向"掌控""
+        '从"救火"走向"掌控"'
     )
 
     # 联系方式

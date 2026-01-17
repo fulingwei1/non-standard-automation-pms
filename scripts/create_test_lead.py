@@ -5,16 +5,16 @@
 """
 
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from app.models.base import get_session
+from app.models.enums import LeadStatusEnum
 from app.models.sales import Lead
 from app.models.user import User
-from app.models.enums import LeadStatusEnum
 
 
 def create_test_lead():
@@ -26,13 +26,13 @@ def create_test_lead():
         if existing:
             print(f"测试线索已存在: ID={existing.id}")
             return existing.id
-        
+
         # 获取admin用户
         admin = db.query(User).filter(User.username == "admin").first()
         if not admin:
             print("❌ 未找到admin用户")
             return None
-        
+
         # 创建测试线索
         lead = Lead(
             lead_code="LD-TEST-001",
@@ -45,11 +45,11 @@ def create_test_lead():
             owner_id=admin.id,
             status=LeadStatusEnum.NEW.value
         )
-        
+
         db.add(lead)
         db.commit()
         db.refresh(lead)
-        
+
         print(f"✅ 创建测试线索成功: ID={lead.id}, Code={lead.lead_code}")
         return lead.id
     except Exception as e:

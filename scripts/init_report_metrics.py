@@ -13,7 +13,6 @@ sys.path.insert(0, str(project_root))
 from app.models.base import get_db_session
 from app.models.management_rhythm import ReportMetricDefinition
 
-
 # 预置指标定义
 PREDEFINED_METRICS = [
     # ==================== 项目管理模块 ====================
@@ -513,7 +512,7 @@ def init_report_metrics():
         if existing_count > 0:
             print(f"已存在 {existing_count} 个指标定义，跳过初始化")
             return
-        
+
         # 创建预置指标
         created_count = 0
         for metric_data in PREDEFINED_METRICS:
@@ -521,12 +520,12 @@ def init_report_metrics():
             existing = db.query(ReportMetricDefinition).filter(
                 ReportMetricDefinition.metric_code == metric_data["metric_code"]
             ).first()
-            
+
             if not existing:
                 metric = ReportMetricDefinition(**metric_data)
                 db.add(metric)
                 created_count += 1
-        
+
         db.commit()
         print(f"成功创建 {created_count} 个预置指标定义")
 

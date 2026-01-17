@@ -6,15 +6,18 @@
 """
 
 import sys
-sys.path.insert(0, '/Users/flw/non-standard-automation-pm')
 
-from datetime import datetime, date, timedelta
+sys.path.insert(0, "/Users/flw/non-standard-automation-pm")
+
+from datetime import date, datetime, timedelta
+
+from app.core.security import get_password_hash
 from app.models.base import get_db_session
-from app.models.user import User, Role
+from app.models.organization import Department
 from app.models.project import Project, ProjectMember
 from app.models.task_center import TaskUnified
-from app.models.organization import Department
-from app.core.security import get_password_hash
+from app.models.user import Role, User
+
 
 def create_test_users(db):
     """创建测试用户"""
@@ -23,7 +26,7 @@ def create_test_users(db):
     print("=" * 70)
 
     # 检查用户是否已存在
-    existing = db.query(User).filter(User.username.like('test_%')).all()
+    existing = db.query(User).filter(User.username.like("test_%")).all()
     if existing:
         print(f"⚠️  发现 {len(existing)} 个测试用户已存在，跳过创建")
         return {user.username: user for user in existing}
@@ -33,32 +36,32 @@ def create_test_users(db):
             "username": "test_engineer_mech",
             "real_name": "张工（测试）",
             "department": "机械部",
-            "email": "test.mech@example.com"
+            "email": "test.mech@example.com",
         },
         {
             "username": "test_engineer_elec",
             "real_name": "李工（测试）",
             "department": "电气部",
-            "email": "test.elec@example.com"
+            "email": "test.elec@example.com",
         },
         {
             "username": "test_engineer_test",
             "real_name": "王工（测试）",
             "department": "测试部",
-            "email": "test.test@example.com"
+            "email": "test.test@example.com",
         },
         {
             "username": "test_pm",
             "real_name": "张经理（测试）",
             "department": "PMO",
-            "email": "test.pm@example.com"
+            "email": "test.pm@example.com",
         },
         {
             "username": "test_manager",
             "real_name": "赵部长（测试）",
             "department": "机械部",
-            "email": "test.manager@example.com"
-        }
+            "email": "test.manager@example.com",
+        },
     ]
 
     users = {}
@@ -73,7 +76,7 @@ def create_test_users(db):
             email=user_data.get("email"),
             is_active=True,
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         db.add(user)
         users[user_data["username"]] = user
@@ -91,7 +94,7 @@ def create_test_project(db, pm_user):
     print("=" * 70)
 
     # 检查项目是否已存在
-    existing = db.query(Project).filter(Project.project_code == 'TEST-PJ001').first()
+    existing = db.query(Project).filter(Project.project_code == "TEST-PJ001").first()
     if existing:
         print(f"⚠️  测试项目已存在: {existing.project_code}")
         return existing
@@ -114,7 +117,7 @@ def create_test_project(db, pm_user):
         contract_amount=550000,
         is_active=True,
         created_at=datetime.now(),
-        updated_at=datetime.now()
+        updated_at=datetime.now(),
     )
 
     db.add(project)
@@ -138,18 +141,18 @@ def create_project_members(db, project, users):
         {
             "user": users["test_engineer_mech"],
             "roles": ["机械工程师"],
-            "allocation_pct": 100
+            "allocation_pct": 100,
         },
         {
             "user": users["test_engineer_elec"],
             "roles": ["电气工程师"],
-            "allocation_pct": 100
+            "allocation_pct": 100,
         },
         {
             "user": users["test_engineer_test"],
             "roles": ["测试工程师"],
-            "allocation_pct": 80
-        }
+            "allocation_pct": 80,
+        },
     ]
 
     for member_data in members_data:
@@ -159,10 +162,12 @@ def create_project_members(db, project, users):
             roles=member_data["roles"],
             allocation_pct=member_data["allocation_pct"],
             is_active=True,
-            joined_at=datetime.now()
+            joined_at=datetime.now(),
         )
         db.add(member)
-        print(f"✅ 添加成员: {member_data['user'].real_name} - {', '.join(member_data['roles'])}")
+        print(
+            f"✅ 添加成员: {member_data['user'].real_name} - {', '.join(member_data['roles'])}"
+        )
 
     print(f"\n共添加 {len(members_data)} 个项目成员")
 
@@ -183,7 +188,7 @@ def create_test_tasks(db, project, users):
             "priority": "HIGH",
             "estimated_hours": 40,
             "actual_hours": 38,
-            "stage": "S2"
+            "stage": "S2",
         },
         {
             "title": "设计夹具固定方案",
@@ -193,7 +198,7 @@ def create_test_tasks(db, project, users):
             "priority": "HIGH",
             "estimated_hours": 24,
             "actual_hours": 15,
-            "stage": "S4"
+            "stage": "S4",
         },
         {
             "title": "机械零件加工",
@@ -203,7 +208,7 @@ def create_test_tasks(db, project, users):
             "priority": "MEDIUM",
             "estimated_hours": 60,
             "actual_hours": 20,
-            "stage": "S4"
+            "stage": "S4",
         },
         {
             "title": "装配工艺文件编写",
@@ -212,7 +217,7 @@ def create_test_tasks(db, project, users):
             "progress": 0,
             "priority": "MEDIUM",
             "estimated_hours": 16,
-            "stage": "S4"
+            "stage": "S4",
         },
         {
             "title": "机械部件验收",
@@ -221,9 +226,8 @@ def create_test_tasks(db, project, users):
             "progress": 0,
             "priority": "LOW",
             "estimated_hours": 8,
-            "stage": "S6"
+            "stage": "S6",
         },
-
         # 电气部任务
         {
             "title": "电气原理图设计",
@@ -233,7 +237,7 @@ def create_test_tasks(db, project, users):
             "priority": "HIGH",
             "estimated_hours": 48,
             "actual_hours": 50,
-            "stage": "S2"
+            "stage": "S2",
         },
         {
             "title": "PLC程序开发",
@@ -243,7 +247,7 @@ def create_test_tasks(db, project, users):
             "priority": "HIGH",
             "estimated_hours": 80,
             "actual_hours": 56,
-            "stage": "S4"
+            "stage": "S4",
         },
         {
             "title": "电气柜装配",
@@ -258,7 +262,7 @@ def create_test_tasks(db, project, users):
             "delay_reason": "元器件到货延迟3天",
             "delay_responsibility": "供应商",
             "delay_impact_scope": "PROJECT",
-            "new_completion_date": date.today() + timedelta(days=5)
+            "new_completion_date": date.today() + timedelta(days=5),
         },
         {
             "title": "人机界面设计",
@@ -267,9 +271,8 @@ def create_test_tasks(db, project, users):
             "progress": 0,
             "priority": "MEDIUM",
             "estimated_hours": 24,
-            "stage": "S4"
+            "stage": "S4",
         },
-
         # 测试部任务
         {
             "title": "编写测试用例",
@@ -279,7 +282,7 @@ def create_test_tasks(db, project, users):
             "priority": "HIGH",
             "estimated_hours": 24,
             "actual_hours": 22,
-            "stage": "S5"
+            "stage": "S5",
         },
         {
             "title": "功能测试执行",
@@ -289,7 +292,7 @@ def create_test_tasks(db, project, users):
             "priority": "HIGH",
             "estimated_hours": 40,
             "actual_hours": 20,
-            "stage": "S5"
+            "stage": "S5",
         },
         {
             "title": "性能测试",
@@ -298,7 +301,7 @@ def create_test_tasks(db, project, users):
             "progress": 0,
             "priority": "MEDIUM",
             "estimated_hours": 32,
-            "stage": "S5"
+            "stage": "S5",
         },
         {
             "title": "编写测试报告",
@@ -307,8 +310,8 @@ def create_test_tasks(db, project, users):
             "progress": 0,
             "priority": "MEDIUM",
             "estimated_hours": 16,
-            "stage": "S6"
-        }
+            "stage": "S6",
+        },
     ]
 
     task_code_counter = 1
@@ -336,7 +339,7 @@ def create_test_tasks(db, project, users):
             plan_end_date=date.today() + timedelta(days=10),
             deadline=datetime.now() + timedelta(days=10),
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
 
         # 如果任务已完成，设置完成时间
@@ -354,19 +357,23 @@ def create_test_tasks(db, project, users):
             "COMPLETED": "✅",
             "IN_PROGRESS": "🔄",
             "ACCEPTED": "📝",
-            "PENDING": "⏳"
+            "PENDING": "⏳",
         }.get(task.status, "❓")
 
         delay_flag = " ⚠️ 延期" if task.is_delayed else ""
 
         print(f"{status_emoji} {task.task_code}: {task.title}")
-        print(f"   负责人: {task_data['assignee'].real_name} | "
-              f"进度: {task.progress}% | "
-              f"优先级: {task.priority}{delay_flag}")
+        print(
+            f"   负责人: {task_data['assignee'].real_name} | "
+            f"进度: {task.progress}% | "
+            f"优先级: {task.priority}{delay_flag}"
+        )
 
     print(f"\n共创建 {len(created_tasks)} 个测试任务")
     print(f"   ✅ 已完成: {len([t for t in created_tasks if t.status == 'COMPLETED'])}")
-    print(f"   🔄 进行中: {len([t for t in created_tasks if t.status == 'IN_PROGRESS'])}")
+    print(
+        f"   🔄 进行中: {len([t for t in created_tasks if t.status == 'IN_PROGRESS'])}"
+    )
     print(f"   📝 已接收: {len([t for t in created_tasks if t.status == 'ACCEPTED'])}")
     print(f"   ⏳ 待接收: {len([t for t in created_tasks if t.status == 'PENDING'])}")
     print(f"   ⚠️  延期: {len([t for t in created_tasks if t.is_delayed])}")
@@ -430,7 +437,7 @@ def main():
             print("测试账号信息:")
             print("-" * 70)
             for username, user in users.items():
-                print(f"用户名: {username:<25} 密码: test123")
+                print(f"用户名: {username:<25} 密码: ********")
                 print(f"姓名:   {user.real_name:<25} 部门: {user.department}")
                 print()
 
@@ -454,6 +461,7 @@ def main():
     except Exception as e:
         print(f"\n❌ 错误: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 

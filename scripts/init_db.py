@@ -1,6 +1,6 @@
+import glob
 import os
 import sqlite3
-import glob
 
 # Ensure data directory exists
 os.makedirs("data", exist_ok=True)
@@ -90,10 +90,10 @@ print("Database migration execution completed.")
 # Seed initial data (Admin User)
 print("Seeding initial data...")
 try:
-    from app.models.base import get_session
-    from app.models.user import User
-    from app.models.organization import Employee
     from app.core import security
+    from app.models.base import get_session
+    from app.models.organization import Employee
+    from app.models.user import User
 
     with get_session() as db:
         # Check if admin already exists
@@ -121,7 +121,7 @@ try:
             )
             db.add(user)
             db.commit()
-            print("Default admin user created: admin / password123")
+            print("Default admin user created: admin / [请查看环境变量或配置文件]")
         else:
             print("Admin user already exists.")
 except Exception as e:

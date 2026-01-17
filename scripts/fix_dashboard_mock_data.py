@@ -3,8 +3,8 @@
 修复仪表板页面的Mock数据
 """
 
-import sys
 import re
+import sys
 from pathlib import Path
 
 FILES_TO_FIX = [
