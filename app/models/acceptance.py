@@ -4,8 +4,17 @@
 """
 
 from sqlalchemy import (
-    Column, Integer, String, Boolean, DateTime, Date, Text,
-    ForeignKey, Numeric, Index, JSON
+    JSON,
+    Boolean,
+    Column,
+    Date,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
 )
 from sqlalchemy.orm import relationship
 
@@ -129,7 +138,7 @@ class AcceptanceOrder(Base, TimestampMixin):
     # 附件
     report_file_path = Column(String(500), comment='验收报告文件路径')
     customer_signed_file_path = Column(String(500), comment='客户签署的验收单文件路径')
-    
+
     # 正式完成标记
     is_officially_completed = Column(Boolean, default=False, comment='是否正式完成（已上传客户签署文件）')
     officially_completed_at = Column(DateTime, comment='正式完成时间')

@@ -3,114 +3,216 @@
 Pydantic Schema 模块
 """
 
-from .common import (
-    ResponseModel, PaginatedResponse, PageParams,
-    IdResponse, MessageResponse, StatusUpdate
-)
-from .auth import Token, TokenData, LoginRequest, UserCreate, UserUpdate, UserResponse, UserRoleAssign
-from .project import (
-    ProjectCreate, ProjectUpdate, ProjectResponse, ProjectListResponse,
-    MachineCreate, MachineUpdate, MachineResponse,
-    MilestoneCreate, MilestoneUpdate, MilestoneResponse
-)
-from .material import (
-    MaterialCreate, MaterialUpdate, MaterialResponse,
-    SupplierCreate, SupplierUpdate, SupplierResponse,
-    BomCreate, BomItemCreate, BomResponse
-)
-from .purchase import (
-    PurchaseOrderCreate, PurchaseOrderUpdate, PurchaseOrderResponse,
-    PurchaseOrderItemCreate, GoodsReceiptCreate
-)
-from .ecn import (
-    EcnCreate, EcnUpdate, EcnResponse,
-    EcnEvaluationCreate, EcnApprovalCreate, EcnTaskCreate
-)
 from .acceptance import (
-    AcceptanceOrderCreate, AcceptanceOrderUpdate, AcceptanceOrderResponse,
-    CheckItemResultUpdate, AcceptanceIssueCreate
-)
-from .outsourcing import (
-    VendorCreate, VendorUpdate, VendorResponse,
-    OutsourcingOrderCreate, OutsourcingOrderUpdate, OutsourcingOrderResponse
+    AcceptanceIssueCreate,
+    AcceptanceOrderCreate,
+    AcceptanceOrderResponse,
+    AcceptanceOrderUpdate,
+    CheckItemResultUpdate,
 )
 from .alert import (
-    AlertRuleCreate, AlertRuleUpdate, AlertRuleResponse,
-    AlertRecordResponse, ExceptionEventCreate, ExceptionEventResponse
+    AlertRecordResponse,
+    AlertRuleCreate,
+    AlertRuleResponse,
+    AlertRuleUpdate,
+    ExceptionEventCreate,
+    ExceptionEventResponse,
 )
-from .technical_spec import (
-    TechnicalSpecRequirementCreate, TechnicalSpecRequirementUpdate, TechnicalSpecRequirementResponse,
-    TechnicalSpecRequirementListResponse, SpecMatchRecordResponse, SpecMatchRecordListResponse,
-    SpecMatchCheckRequest, SpecMatchCheckResponse, SpecMatchResult,
-    SpecExtractRequest, SpecExtractResponse
+from .assembly_kit import (  # Assembly Stage; Assembly Template; Category Stage Mapping; BOM Assembly Attrs; Material Readiness; Shortage Detail; Shortage Alert Rule; Scheduling Suggestion; Dashboard
+    AssemblyDashboardResponse,
+    AssemblyDashboardStageStats,
+    AssemblyDashboardStats,
+    AssemblyKitListResponse,
+    AssemblyStageCreate,
+    AssemblyStageResponse,
+    AssemblyStageUpdate,
+    AssemblyTemplateCreate,
+    AssemblyTemplateResponse,
+    AssemblyTemplateUpdate,
+    BomAssemblyAttrsAutoRequest,
+    BomAssemblyAttrsTemplateRequest,
+    BomItemAssemblyAttrsBatchCreate,
+    BomItemAssemblyAttrsCreate,
+    BomItemAssemblyAttrsResponse,
+    BomItemAssemblyAttrsUpdate,
+    CategoryStageMappingCreate,
+    CategoryStageMappingResponse,
+    CategoryStageMappingUpdate,
+    MaterialReadinessCreate,
+    MaterialReadinessDetailResponse,
+    MaterialReadinessResponse,
+    SchedulingSuggestionAccept,
+    SchedulingSuggestionReject,
+    SchedulingSuggestionResponse,
+    ShortageAlertItem,
+    ShortageAlertListResponse,
+    ShortageAlertRuleCreate,
+    ShortageAlertRuleResponse,
+    ShortageAlertRuleUpdate,
+    ShortageDetailResponse,
+    StageKitRate,
 )
-from .sales import (
-    LeadCreate, LeadUpdate, LeadResponse,
-    OpportunityCreate, OpportunityUpdate, OpportunityResponse, OpportunityRequirementResponse,
-    GateSubmitRequest,
-    QuoteCreate, QuoteUpdate, QuoteResponse, QuoteVersionCreate, QuoteVersionResponse,
-    QuoteItemResponse, QuoteApproveRequest,
-    QuoteCostTemplateCreate, QuoteCostTemplateUpdate, QuoteCostTemplateResponse,
-    QuoteCostApprovalCreate, QuoteCostApprovalResponse, QuoteCostApprovalAction,
-    CostBreakdownResponse, CostCheckResponse, CostComparisonResponse,
-    ContractCreate, ContractUpdate, ContractResponse, ContractDeliverableResponse,
-    ContractSignRequest, ContractProjectCreateRequest,
-    InvoiceCreate, InvoiceUpdate, InvoiceResponse, InvoiceIssueRequest,
-    ReceivableDisputeCreate, ReceivableDisputeUpdate, ReceivableDisputeResponse,
-    QuoteApprovalResponse, QuoteApprovalCreate,
-    ContractApprovalResponse, ContractApprovalCreate,
-    InvoiceApprovalResponse, InvoiceApprovalCreate,
-    # Technical Assessment
-    TechnicalAssessmentApplyRequest, TechnicalAssessmentEvaluateRequest, TechnicalAssessmentResponse,
-    ScoringRuleCreate, ScoringRuleResponse,
-    FailureCaseCreate, FailureCaseResponse,
-    OpenItemCreate, OpenItemResponse,
-    LeadRequirementDetailCreate, LeadRequirementDetailResponse,
-    RequirementFreezeCreate, RequirementFreezeResponse,
-    AIClarificationCreate, AIClarificationUpdate, AIClarificationResponse
+from .auth import (
+    LoginRequest,
+    Token,
+    TokenData,
+    UserCreate,
+    UserResponse,
+    UserRoleAssign,
+    UserUpdate,
+)
+from .common import (
+    IdResponse,
+    MessageResponse,
+    PageParams,
+    PaginatedResponse,
+    ResponseModel,
+    StatusUpdate,
+)
+from .ecn import (
+    EcnApprovalCreate,
+    EcnCreate,
+    EcnEvaluationCreate,
+    EcnResponse,
+    EcnTaskCreate,
+    EcnUpdate,
+)
+from .material import (
+    BomCreate,
+    BomItemCreate,
+    BomResponse,
+    MaterialCreate,
+    MaterialResponse,
+    MaterialUpdate,
+    SupplierCreate,
+    SupplierResponse,
+    SupplierUpdate,
+)
+from .outsourcing import (
+    OutsourcingOrderCreate,
+    OutsourcingOrderResponse,
+    OutsourcingOrderUpdate,
+    VendorCreate,
+    VendorResponse,
+    VendorUpdate,
+)
+from .project import (
+    MachineCreate,
+    MachineResponse,
+    MachineUpdate,
+    MilestoneCreate,
+    MilestoneResponse,
+    MilestoneUpdate,
+    ProjectCreate,
+    ProjectListResponse,
+    ProjectResponse,
+    ProjectUpdate,
 )
 from .project_review import (
-    ProjectReviewCreate, ProjectReviewUpdate, ProjectReviewResponse,
-    ProjectLessonCreate, ProjectLessonUpdate, ProjectLessonResponse,
-    ProjectBestPracticeCreate, ProjectBestPracticeUpdate, ProjectBestPracticeResponse,
-    LessonStatisticsResponse, BestPracticeRecommendationRequest, BestPracticeRecommendationResponse
-)
-from .technical_review import (
-    TechnicalReviewCreate, TechnicalReviewUpdate, TechnicalReviewResponse, TechnicalReviewDetailResponse,
-    ReviewParticipantCreate, ReviewParticipantUpdate, ReviewParticipantResponse,
-    ReviewMaterialCreate, ReviewMaterialResponse,
-    ReviewChecklistRecordCreate, ReviewChecklistRecordUpdate, ReviewChecklistRecordResponse,
-    ReviewIssueCreate, ReviewIssueUpdate, ReviewIssueResponse
+    BestPracticeRecommendationRequest,
+    BestPracticeRecommendationResponse,
+    LessonStatisticsResponse,
+    ProjectBestPracticeCreate,
+    ProjectBestPracticeResponse,
+    ProjectBestPracticeUpdate,
+    ProjectLessonCreate,
+    ProjectLessonResponse,
+    ProjectLessonUpdate,
+    ProjectReviewCreate,
+    ProjectReviewResponse,
+    ProjectReviewUpdate,
 )
 from .project_role import (
-    ProjectRoleTypeBase, ProjectRoleTypeCreate, ProjectRoleTypeUpdate, ProjectRoleTypeResponse, ProjectRoleTypeListResponse,
-    ProjectRoleConfigBase, ProjectRoleConfigCreate, ProjectRoleConfigUpdate, ProjectRoleConfigBatchUpdate,
-    ProjectRoleConfigResponse, ProjectRoleConfigListResponse,
-    ProjectLeadCreate, ProjectLeadUpdate, ProjectLeadResponse, ProjectLeadListResponse,
-    TeamMemberCreate, TeamMemberResponse, TeamMemberListResponse,
-    ProjectLeadWithTeamResponse, ProjectRoleOverviewResponse, UserBrief
+    ProjectLeadCreate,
+    ProjectLeadListResponse,
+    ProjectLeadResponse,
+    ProjectLeadUpdate,
+    ProjectLeadWithTeamResponse,
+    ProjectRoleConfigBase,
+    ProjectRoleConfigBatchUpdate,
+    ProjectRoleConfigCreate,
+    ProjectRoleConfigListResponse,
+    ProjectRoleConfigResponse,
+    ProjectRoleConfigUpdate,
+    ProjectRoleOverviewResponse,
+    ProjectRoleTypeBase,
+    ProjectRoleTypeCreate,
+    ProjectRoleTypeListResponse,
+    ProjectRoleTypeResponse,
+    ProjectRoleTypeUpdate,
+    TeamMemberCreate,
+    TeamMemberListResponse,
+    TeamMemberResponse,
+    UserBrief,
 )
-from .assembly_kit import (
-    # Assembly Stage
-    AssemblyStageCreate, AssemblyStageUpdate, AssemblyStageResponse,
-    # Assembly Template
-    AssemblyTemplateCreate, AssemblyTemplateUpdate, AssemblyTemplateResponse,
-    # Category Stage Mapping
-    CategoryStageMappingCreate, CategoryStageMappingUpdate, CategoryStageMappingResponse,
-    # BOM Assembly Attrs
-    BomItemAssemblyAttrsCreate, BomItemAssemblyAttrsBatchCreate, BomItemAssemblyAttrsUpdate, BomItemAssemblyAttrsResponse,
-    BomAssemblyAttrsAutoRequest, BomAssemblyAttrsTemplateRequest,
-    # Material Readiness
-    MaterialReadinessCreate, MaterialReadinessResponse, MaterialReadinessDetailResponse, StageKitRate,
-    # Shortage Detail
-    ShortageDetailResponse, ShortageAlertItem, ShortageAlertListResponse,
-    # Shortage Alert Rule
-    ShortageAlertRuleCreate, ShortageAlertRuleUpdate, ShortageAlertRuleResponse,
-    # Scheduling Suggestion
-    SchedulingSuggestionResponse, SchedulingSuggestionAccept, SchedulingSuggestionReject,
-    # Dashboard
-    AssemblyDashboardResponse, AssemblyDashboardStats, AssemblyDashboardStageStats,
-    AssemblyKitListResponse
+from .purchase import (
+    GoodsReceiptCreate,
+    PurchaseOrderCreate,
+    PurchaseOrderItemCreate,
+    PurchaseOrderResponse,
+    PurchaseOrderUpdate,
+)
+from .sales import (
+    ContractAmendmentCreate,
+    ContractAmendmentResponse,
+    ContractCreate,
+    ContractDeliverableCreate,
+    ContractDeliverableResponse,
+    ContractProjectCreateRequest,
+    ContractResponse,
+    ContractSignRequest,
+    ContractUpdate,
+    GateSubmitRequest,
+    LeadCreate,
+    LeadFollowUpCreate,
+    LeadFollowUpResponse,
+    LeadResponse,
+    LeadUpdate,
+    OpportunityCreate,
+    OpportunityRequirementCreate,
+    OpportunityRequirementResponse,
+    OpportunityResponse,
+    OpportunityUpdate,
+    QuoteApproveRequest,
+    QuoteCreate,
+    QuoteItemBatchUpdate,
+    QuoteItemCreate,
+    QuoteItemResponse,
+    QuoteItemUpdate,
+    QuoteResponse,
+    QuoteUpdate,
+    QuoteVersionCreate,
+    QuoteVersionResponse,
+)
+from .technical_review import (
+    ReviewChecklistRecordCreate,
+    ReviewChecklistRecordResponse,
+    ReviewChecklistRecordUpdate,
+    ReviewIssueCreate,
+    ReviewIssueResponse,
+    ReviewIssueUpdate,
+    ReviewMaterialCreate,
+    ReviewMaterialResponse,
+    ReviewParticipantCreate,
+    ReviewParticipantResponse,
+    ReviewParticipantUpdate,
+    TechnicalReviewCreate,
+    TechnicalReviewDetailResponse,
+    TechnicalReviewResponse,
+    TechnicalReviewUpdate,
+)
+from .technical_spec import (
+    SpecExtractRequest,
+    SpecExtractResponse,
+    SpecMatchCheckRequest,
+    SpecMatchCheckResponse,
+    SpecMatchRecordListResponse,
+    SpecMatchRecordResponse,
+    SpecMatchResult,
+    TechnicalSpecRequirementCreate,
+    TechnicalSpecRequirementListResponse,
+    TechnicalSpecRequirementResponse,
+    TechnicalSpecRequirementUpdate,
 )
 
 __all__ = [
@@ -149,28 +251,16 @@ __all__ = [
     'SpecExtractRequest', 'SpecExtractResponse',
     # Sales
     'LeadCreate', 'LeadUpdate', 'LeadResponse',
-    'OpportunityCreate', 'OpportunityUpdate', 'OpportunityResponse', 'OpportunityRequirementResponse',
-    'GateSubmitRequest',
+    'LeadFollowUpCreate', 'LeadFollowUpResponse',
+    'OpportunityCreate', 'OpportunityUpdate', 'OpportunityResponse',
+    'OpportunityRequirementCreate', 'OpportunityRequirementResponse',
+    'GateSubmitRequest', 'QuoteApproveRequest',
     'QuoteCreate', 'QuoteUpdate', 'QuoteResponse', 'QuoteVersionCreate', 'QuoteVersionResponse',
-    'QuoteItemResponse', 'QuoteApproveRequest',
-    'QuoteCostTemplateCreate', 'QuoteCostTemplateUpdate', 'QuoteCostTemplateResponse',
-    'QuoteCostApprovalCreate', 'QuoteCostApprovalResponse', 'QuoteCostApprovalAction',
-    'CostBreakdownResponse', 'CostCheckResponse', 'CostComparisonResponse',
-    'ContractCreate', 'ContractUpdate', 'ContractResponse', 'ContractDeliverableResponse',
+    'QuoteItemCreate', 'QuoteItemUpdate', 'QuoteItemResponse', 'QuoteItemBatchUpdate',
+    'ContractCreate', 'ContractUpdate', 'ContractResponse',
+    'ContractDeliverableCreate', 'ContractDeliverableResponse',
+    'ContractAmendmentCreate', 'ContractAmendmentResponse',
     'ContractSignRequest', 'ContractProjectCreateRequest',
-    'InvoiceCreate', 'InvoiceUpdate', 'InvoiceResponse', 'InvoiceIssueRequest',
-    'ReceivableDisputeCreate', 'ReceivableDisputeUpdate', 'ReceivableDisputeResponse',
-    'QuoteApprovalResponse', 'QuoteApprovalCreate',
-    'ContractApprovalResponse', 'ContractApprovalCreate',
-    'InvoiceApprovalResponse', 'InvoiceApprovalCreate',
-    # Technical Assessment
-    'TechnicalAssessmentApplyRequest', 'TechnicalAssessmentEvaluateRequest', 'TechnicalAssessmentResponse',
-    'ScoringRuleCreate', 'ScoringRuleResponse',
-    'FailureCaseCreate', 'FailureCaseResponse',
-    'OpenItemCreate', 'OpenItemResponse',
-    'LeadRequirementDetailCreate', 'LeadRequirementDetailResponse',
-    'RequirementFreezeCreate', 'RequirementFreezeResponse',
-    'AIClarificationCreate', 'AIClarificationUpdate', 'AIClarificationResponse',
     # Project Review
     'ProjectReviewCreate', 'ProjectReviewUpdate', 'ProjectReviewResponse',
     'ProjectLessonCreate', 'ProjectLessonUpdate', 'ProjectLessonResponse',

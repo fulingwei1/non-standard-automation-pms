@@ -3,7 +3,16 @@
 用户与权限模型
 """
 
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey, JSON
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+)
 from sqlalchemy.orm import relationship
 
 from .base import Base, TimestampMixin
@@ -33,6 +42,9 @@ class User(Base, TimestampMixin):
     last_login_at = Column(DateTime, comment="最后登录时间")
     last_login_ip = Column(String(50), comment="最后登录IP")
 
+    # 汇报关系：直接上级
+    reporting_to = Column(Integer, ForeignKey("users.id"), comment="直接上级用户ID")
+
     # 方案生成积分系统
     solution_credits = Column(Integer, default=100, nullable=False, comment="方案生成积分余额")
     credits_updated_at = Column(DateTime, comment="积分最后变动时间")
@@ -45,6 +57,8 @@ class User(Base, TimestampMixin):
     managed_projects = relationship(
         "Project", back_populates="manager", foreign_keys="Project.pm_id"
     )
+    # 上下级关系
+    manager = relationship("User", remote_side=[id], foreign_keys=[reporting_to], backref="subordinates")
 
     def __repr__(self):
         return f"<User {self.username}>"

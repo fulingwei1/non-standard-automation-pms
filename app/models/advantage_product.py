@@ -8,24 +8,24 @@
 3. AI秒出方案的产品匹配
 """
 
-from sqlalchemy import (
-    Column,
-    Integer,
-    String,
-    Boolean,
-    DateTime,
-    Text,
-    Numeric,
-    ForeignKey,
-    Index,
-    Table,
-    JSON,
-)
-from sqlalchemy.orm import relationship
 from datetime import datetime
 
-from .base import Base, TimestampMixin
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Table,
+    Text,
+)
+from sqlalchemy.orm import relationship
 
+from .base import Base, TimestampMixin
 
 # ==================== 行业分类 ====================
 

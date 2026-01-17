@@ -3,7 +3,17 @@
 组织架构模型 (员工、部门、人事档案、人事事务)
 """
 
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Text, Date, Numeric, DateTime
+from sqlalchemy import (
+    Boolean,
+    Column,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    Text,
+)
 from sqlalchemy.orm import relationship
 
 from .base import Base, TimestampMixin

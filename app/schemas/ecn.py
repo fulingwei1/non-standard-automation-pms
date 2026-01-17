@@ -3,13 +3,13 @@
 变更管理(ECN) Schema
 """
 
-from typing import Optional, List, Any, Dict
-from pydantic import BaseModel, Field
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
 
 from .common import BaseSchema, TimestampSchema
-
 
 # ==================== ECN ====================
 
@@ -52,7 +52,7 @@ class EcnSubmit(BaseModel):
     remark: Optional[str] = None
     # 手动指定评估人员（可选，如果提供则优先使用，否则自动分配）
     preferred_evaluators: Optional[Dict[str, int]] = Field(
-        default=None, 
+        default=None,
         description="手动指定评估人员，格式：{'部门名': 用户ID}"
     )
 

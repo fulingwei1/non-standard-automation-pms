@@ -3,13 +3,13 @@
 工时管理 Schema
 """
 
-from typing import Optional, List, Any, Dict
-from pydantic import BaseModel, Field
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
-from .common import BaseSchema, TimestampSchema, PaginatedResponse
+from pydantic import BaseModel, Field
 
+from .common import BaseSchema, PaginatedResponse, TimestampSchema
 
 # ==================== 工时记录 ====================
 

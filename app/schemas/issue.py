@@ -1,12 +1,13 @@
 """
 问题管理中心模块 - Pydantic Schemas
 """
-from typing import Optional, List
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
-from pydantic import BaseModel, Field
-from app.schemas.common import PaginatedResponse
+from typing import List, Optional
 
+from pydantic import BaseModel, Field, field_validator
+
+from app.schemas.common import PaginatedResponse
 
 # ==================== 问题相关 Schema ====================
 
@@ -18,27 +19,27 @@ class IssueBase(BaseModel):
     task_id: Optional[int] = Field(None, description="关联任务ID")
     acceptance_order_id: Optional[int] = Field(None, description="关联验收单ID")
     related_issue_id: Optional[int] = Field(None, description="关联问题ID")
-    
+
     issue_type: str = Field(..., description="问题类型")
     severity: str = Field(..., description="严重程度")
     priority: str = Field(default="MEDIUM", description="优先级")
     title: str = Field(..., max_length=200, description="问题标题")
     description: str = Field(..., description="问题描述")
-    
+
     assignee_id: Optional[int] = Field(None, description="处理负责人ID")
     due_date: Optional[date] = Field(None, description="要求完成日期")
-    
+
     impact_scope: Optional[str] = Field(None, description="影响范围")
     impact_level: Optional[str] = Field(None, description="影响级别")
     is_blocking: bool = Field(default=False, description="是否阻塞")
-    
+
     # 问题原因和责任工程师
     root_cause: Optional[str] = Field(None, description="问题原因：DESIGN_ERROR/MATERIAL_DEFECT/PROCESS_ERROR/EXTERNAL_FACTOR/OTHER")
     responsible_engineer_id: Optional[int] = Field(None, description="责任工程师ID")
     responsible_engineer_name: Optional[str] = Field(None, description="责任工程师姓名")
     estimated_inventory_loss: Optional[Decimal] = Field(None, description="预估库存损失金额")
     estimated_extra_hours: Optional[Decimal] = Field(None, description="预估额外工时(小时)")
-    
+
     attachments: Optional[List[str]] = Field(default=[], description="附件列表")
     tags: Optional[List[str]] = Field(default=[], description="标签列表")
 
@@ -92,13 +93,13 @@ class IssueResponse(IssueBase):
     last_follow_up_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
-    
+
     # 关联信息
     project_code: Optional[str] = None
     project_name: Optional[str] = None
     machine_code: Optional[str] = None
     machine_name: Optional[str] = None
-    
+
     class Config:
         from_attributes = True
 
@@ -126,7 +127,7 @@ class IssueFollowUpResponse(IssueFollowUpBase):
     operator_id: int
     operator_name: Optional[str] = None
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -196,6 +197,12 @@ class IssueStatistics(BaseModel):
     by_category: dict = {}
     by_type: dict = {}
 
+    @field_validator('total', 'open', 'processing', 'resolved', 'closed', 'overdue', 'blocking', mode='before')
+    @classmethod
+    def convert_none_to_zero(cls, v):
+        """Convert None to 0 for integer fields"""
+        return v if v is not None else 0
+
 
 class EngineerIssueStatistics(BaseModel):
     """工程师问题统计"""
@@ -259,7 +266,7 @@ class IssueTemplateResponse(IssueTemplateBase):
     last_used_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -325,7 +332,7 @@ class IssueStatisticsSnapshotResponse(BaseModel):
     closed_today: int = 0
     created_at: datetime
     updated_at: datetime
-    
+
     class Config:
         from_attributes = True
 

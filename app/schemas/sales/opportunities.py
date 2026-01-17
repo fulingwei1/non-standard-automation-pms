@@ -3,10 +3,11 @@
 销售机会管理 Schema
 """
 
-from typing import Optional, List
-from pydantic import BaseModel, Field, ConfigDict
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
+from typing import Any, List, Optional
+
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
 
 from ..common import BaseSchema, TimestampSchema
 
@@ -16,7 +17,7 @@ class OpportunityRequirementCreate(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    opportunity_id: int = Field(description="机会ID")
+    opportunity_id: Optional[int] = Field(default=None, description="机会ID")
     requirement_type: str = Field(description="需求类型")
     requirement_desc: str = Field(description="需求描述")
     specification: Optional[str] = Field(default=None, description="规格要求")
@@ -27,17 +28,21 @@ class OpportunityRequirementCreate(BaseModel):
 
 
 class OpportunityRequirementResponse(TimestampSchema):
-    """机会需求响应"""
+    """机会需求响应 - 与数据库模型字段匹配"""
+
+    model_config = ConfigDict(populate_by_name=True, from_attributes=True)
 
     id: int = Field(description="需求ID")
     opportunity_id: int = Field(description="机会ID")
-    requirement_type: str = Field(description="需求类型")
-    requirement_desc: str = Field(description="需求描述")
-    specification: Optional[str] = Field(default=None, description="规格要求")
-    quantity: Optional[int] = Field(default=None, description="数量")
-    priority: Optional[str] = Field(default="MEDIUM", description="优先级")
-    expected_delivery_date: Optional[date] = Field(default=None, description="期望交付日期")
-    budget: Optional[Decimal] = Field(default=None, description="预算")
+    # 兼容模型字段名
+    product_object: Optional[str] = Field(default=None, description="产品对象")
+    ct_seconds: Optional[int] = Field(default=None, description="节拍(秒)")
+    interface_desc: Optional[str] = Field(default=None, description="接口/通信协议")
+    site_constraints: Optional[str] = Field(default=None, description="现场约束")
+    acceptance_criteria: Optional[str] = Field(default=None, description="验收依据")
+    safety_requirement: Optional[str] = Field(default=None, description="安全要求")
+    attachments: Optional[str] = Field(default=None, description="需求附件")
+    extra_json: Optional[str] = Field(default=None, description="其他补充(JSON)")
 
 
 class OpportunityCreate(BaseModel):
@@ -45,60 +50,106 @@ class OpportunityCreate(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    opportunity_code: Optional[str] = Field(default=None, max_length=20, description="机会编码")
+    opp_code: Optional[str] = Field(
+        default=None,
+        max_length=20,
+        description="机会编码",
+        validation_alias=AliasChoices("opp_code", "opportunity_code"),
+    )
     lead_id: Optional[int] = Field(default=None, description="线索ID")
-    customer_name: str = Field(max_length=100, description="客户名称")
-    opportunity_name: str = Field(max_length=200, description="机会名称")
-    opportunity_type: Optional[str] = Field(default=None, description="机会类型")
-    industry: Optional[str] = Field(default=None, description="行业")
-    product_category: Optional[str] = Field(default=None, description="产品类别")
-    estimated_amount: Optional[Decimal] = Field(default=None, description="预估金额")
-    probability: Optional[int] = Field(default=None, ge=0, le=100, description="成交概率(%)")
+    customer_id: int = Field(description="客户ID")
+    opp_name: str = Field(
+        max_length=200,
+        description="机会名称",
+        validation_alias=AliasChoices("opp_name", "opportunity_name"),
+    )
+    stage: Optional[str] = Field(default=None, description="阶段")
+    probability: Optional[int] = Field(default=None, ge=0, le=100, description="成交概率(0-100)")
+    project_type: Optional[str] = Field(default=None, description="项目类型")
+    equipment_type: Optional[str] = Field(default=None, description="设备类型")
+    est_amount: Optional[Decimal] = Field(
+        default=None,
+        description="预估金额",
+        validation_alias=AliasChoices("est_amount", "expected_amount"),
+    )
+    est_margin: Optional[Decimal] = Field(default=None, description="预估毛利率")
     expected_close_date: Optional[date] = Field(default=None, description="预计成交日期")
-    description: Optional[str] = Field(default=None, description="描述")
+    budget_range: Optional[str] = Field(default=None, description="预算范围")
+    decision_chain: Optional[str] = Field(default=None, description="决策链")
+    delivery_window: Optional[str] = Field(default=None, description="交付窗口")
+    acceptance_basis: Optional[str] = Field(default=None, description="验收依据")
     owner_id: Optional[int] = Field(default=None, description="负责人ID")
-    status: Optional[str] = Field(default="NEW", description="状态")
-    source: Optional[str] = Field(default=None, description="来源")
-    requirements: Optional[List[OpportunityRequirementCreate]] = Field(default=None, description="需求列表")
+    requirement: Optional["OpportunityRequirementCreate"] = Field(default=None, description="需求详情")
 
 
 class OpportunityUpdate(BaseModel):
     """更新销售机会"""
 
-    opportunity_code: Optional[str] = None
-    customer_name: Optional[str] = None
-    opportunity_name: Optional[str] = None
-    opportunity_type: Optional[str] = None
-    industry: Optional[str] = None
-    product_category: Optional[str] = None
-    estimated_amount: Optional[Decimal] = None
-    probability: Optional[int] = None
-    expected_close_date: Optional[date] = None
-    description: Optional[str] = None
-    owner_id: Optional[int] = None
-    status: Optional[str] = None
-    source: Optional[str] = None
-    requirements: Optional[List[OpportunityRequirementCreate]] = None
+    model_config = ConfigDict(populate_by_name=True)
+
+    opp_name: Optional[str] = Field(default=None, description="机会名称")
+    project_type: Optional[str] = Field(default=None, description="项目类型")
+    equipment_type: Optional[str] = Field(default=None, description="设备类型")
+    stage: Optional[str] = Field(default=None, description="阶段")
+    probability: Optional[int] = Field(default=None, ge=0, le=100, description="成交概率(0-100)")
+    est_amount: Optional[Decimal] = Field(default=None, description="预估金额")
+    est_margin: Optional[Decimal] = Field(default=None, description="预估毛利率")
+    expected_close_date: Optional[date] = Field(default=None, description="预计成交日期")
+    budget_range: Optional[str] = Field(default=None, description="预算范围")
+    decision_chain: Optional[str] = Field(default=None, description="决策链")
+    delivery_window: Optional[str] = Field(default=None, description="交付窗口")
+    acceptance_basis: Optional[str] = Field(default=None, description="验收依据")
+    score: Optional[int] = Field(default=None, description="评分")
+    risk_level: Optional[str] = Field(default=None, description="风险等级")
+    owner_id: Optional[int] = Field(default=None, description="负责人ID")
+    requirement_maturity: Optional[int] = Field(default=None, description="需求成熟度(1-5)")
 
 
 class OpportunityResponse(TimestampSchema):
-    """销售机会响应"""
+    """销售机会响应 - 字段与数据库模型对齐"""
+
+    model_config = ConfigDict(populate_by_name=True, from_attributes=True)
 
     id: int = Field(description="机会ID")
-    opportunity_code: str = Field(description="机会编码")
+    # 使用 validation_alias 接受 opp_code 或 opportunity_code
+    opp_code: str = Field(description="机会编码", validation_alias=AliasChoices("opp_code", "opportunity_code"))
     lead_id: Optional[int] = Field(default=None, description="线索ID")
-    customer_name: str = Field(description="客户名称")
-    opportunity_name: str = Field(description="机会名称")
-    opportunity_type: Optional[str] = Field(default=None, description="机会类型")
-    industry: Optional[str] = Field(default=None, description="行业")
-    product_category: Optional[str] = Field(default=None, description="产品类别")
-    estimated_amount: Optional[Decimal] = Field(default=None, description="预估金额")
-    probability: Optional[int] = Field(default=None, description="成交概率(%)")
+    customer_id: Optional[int] = Field(default=None, description="客户ID")
+    # 使用 validation_alias 接受 opp_name 或 opportunity_name
+    opp_name: str = Field(description="机会名称", validation_alias=AliasChoices("opp_name", "opportunity_name"))
+    project_type: Optional[str] = Field(default=None, description="项目类型")
+    equipment_type: Optional[str] = Field(default=None, description="设备类型")
+    # 使用 validation_alias 接受 stage 或 status
+    stage: Optional[str] = Field(default=None, description="阶段", validation_alias=AliasChoices("stage", "status"))
+    probability: Optional[int] = Field(default=None, description="成交概率(0-100)")
+    est_amount: Optional[Decimal] = Field(default=None, description="预估金额")
+    est_margin: Optional[Decimal] = Field(default=None, description="预估毛利率")
     expected_close_date: Optional[date] = Field(default=None, description="预计成交日期")
-    description: Optional[str] = Field(default=None, description="描述")
+    budget_range: Optional[str] = Field(default=None, description="预算范围")
+    decision_chain: Optional[str] = Field(default=None, description="决策链")
+    delivery_window: Optional[str] = Field(default=None, description="交付窗口")
+    acceptance_basis: Optional[str] = Field(default=None, description="验收依据")
+    score: Optional[int] = Field(default=None, description="评分")
+    risk_level: Optional[str] = Field(default=None, description="风险等级")
     owner_id: Optional[int] = Field(default=None, description="负责人ID")
-    status: str = Field(description="状态")
-    source: Optional[str] = Field(default=None, description="来源")
+    gate_status: Optional[str] = Field(default=None, description="阶段门状态")
+    gate_passed_at: Optional[datetime] = Field(default=None, description="阶段门通过时间")
+    assessment_id: Optional[int] = Field(default=None, description="技术评估ID")
+    requirement_maturity: Optional[int] = Field(default=None, description="需求成熟度(1-5)")
+    assessment_status: Optional[str] = Field(default=None, description="技术评估状态")
+    priority_score: Optional[int] = Field(default=0, description="优先级得分")
+
+    # 关联数据 (从 endpoint 手动添加)
+    customer_name: Optional[str] = Field(default=None, description="客户名称")
     owner_name: Optional[str] = Field(default=None, description="负责人姓名")
-    requirements_count: Optional[int] = Field(default=None, description="需求数量")
-    lead_code: Optional[str] = Field(default=None, description="线索编码")
+    requirement: Optional[OpportunityRequirementResponse] = Field(default=None, description="需求详情")
+
+
+class GateSubmitRequest(BaseModel):
+    """阶段门提交请求"""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    gate_type: str = Field(default="G2", description="阶段门类型")
+    comments: Optional[str] = Field(default=None, description="提交说明")
+    attachments: Optional[List[str]] = Field(default=None, description="附件列表")

@@ -3,9 +3,10 @@
 通用 Schema 定义
 """
 
-from typing import Generic, TypeVar, Optional, List, Any
-from pydantic import BaseModel, Field
 from datetime import datetime
+from typing import Any, Generic, List, Optional, TypeVar
+
+from pydantic import BaseModel, Field
 
 T = TypeVar('T')
 

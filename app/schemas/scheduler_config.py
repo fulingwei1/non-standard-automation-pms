@@ -3,9 +3,10 @@
 定时服务配置管理 Schema
 """
 
-from typing import Optional, Dict, Any
-from pydantic import BaseModel, Field, validator
 from datetime import datetime
+from typing import Any, Dict, Optional
+
+from pydantic import BaseModel, Field, validator
 
 
 class SchedulerTaskConfigBase(BaseModel):
@@ -33,19 +34,19 @@ class SchedulerTaskConfigUpdate(BaseModel):
     """更新定时任务配置"""
     is_enabled: Optional[bool] = Field(None, description="是否启用")
     cron_config: Optional[Dict[str, Any]] = Field(None, description="Cron配置")
-    
+
     @validator('cron_config')
     def validate_cron_config(cls, v):
         """验证Cron配置格式"""
         if v is None:
             return v
-        
+
         # 验证Cron配置字段
         valid_fields = {'year', 'month', 'day', 'week', 'day_of_week', 'hour', 'minute', 'second'}
         for key in v.keys():
             if key not in valid_fields:
                 raise ValueError(f"无效的Cron字段: {key}")
-        
+
         return v
 
 
@@ -55,7 +56,7 @@ class SchedulerTaskConfigResponse(SchedulerTaskConfigBase):
     updated_by: Optional[int] = None
     created_at: datetime
     updated_at: datetime
-    
+
     class Config:
         from_attributes = True
 

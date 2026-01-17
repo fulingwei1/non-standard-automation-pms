@@ -4,8 +4,16 @@
 """
 
 from sqlalchemy import (
-    Column, Integer, String, Boolean, DateTime, Date, Text,
-    ForeignKey, Numeric, Index
+    Boolean,
+    Column,
+    Date,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
 )
 from sqlalchemy.orm import relationship
 

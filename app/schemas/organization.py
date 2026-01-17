@@ -3,11 +3,11 @@
 组织架构 Schema
 """
 
-from typing import Optional
 from datetime import date
 from decimal import Decimal
-from pydantic import BaseModel, Field
+from typing import Optional
 
+from pydantic import BaseModel, Field
 
 from .common import TimestampSchema
 

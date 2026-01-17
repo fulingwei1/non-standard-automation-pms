@@ -3,13 +3,14 @@
 数据库基础配置和基类模型
 """
 
+import logging
 import os
+from contextlib import contextmanager
 from datetime import datetime
 from typing import Optional
-from contextlib import contextmanager
 
-from sqlalchemy import create_engine, Column, Integer, DateTime, event, inspect, text
-from sqlalchemy.orm import sessionmaker, declarative_base, Session
+from sqlalchemy import Column, DateTime, Integer, create_engine, event, inspect, text
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 # 创建基类
@@ -19,6 +20,8 @@ Base = declarative_base()
 _engine = None
 _SessionLocal = None
 
+logger = logging.getLogger(__name__)
+
 
 def _ensure_sqlite_schema(engine):
     """
@@ -27,6 +30,40 @@ def _ensure_sqlite_schema(engine):
     """
     inspector = inspect(engine)
     tables = inspector.get_table_names()
+
+    # Many models use TimestampMixin (created_at/updated_at). Historical SQLite
+    # databases or hand-written migration scripts may omit these columns for
+    # some tables, which can cause runtime 500s when ORM queries select/order
+    # by them. We patch missing timestamp columns opportunistically.
+    for table_name in tables:
+        columns = None
+        try:
+            columns = {col["name"] for col in inspector.get_columns(table_name)}
+        except Exception:
+            logger.debug("无法读取 SQLite 表字段信息，已跳过", exc_info=True)
+        if columns is None:
+            continue
+
+        statements = []
+        if "created_at" not in columns:
+            statements.append(
+                f"ALTER TABLE {table_name} "
+                "ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP"
+            )
+        if "updated_at" not in columns:
+            statements.append(
+                f"ALTER TABLE {table_name} "
+                "ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP"
+            )
+
+        if statements:
+            with engine.begin() as conn:
+                for ddl in statements:
+                    try:
+                        conn.execute(text(ddl))
+                    except Exception:
+                        # Best-effort patching; some tables/views may not be alterable.
+                        logger.debug("SQLite DDL 补丁执行失败，已忽略", exc_info=True)
 
     if "project_statuses" in tables:
         columns = [col["name"] for col in inspector.get_columns("project_statuses")]

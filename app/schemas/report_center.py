@@ -3,12 +3,12 @@
 报表中心 Schema
 """
 
-from typing import Optional, List, Any, Dict
-from pydantic import BaseModel, Field
 from datetime import date, datetime
+from typing import Any, Dict, List, Optional
 
-from .common import BaseSchema, TimestampSchema, PaginatedResponse
+from pydantic import BaseModel, Field
 
+from .common import BaseSchema, PaginatedResponse, TimestampSchema
 
 # ==================== 报表配置 ====================
 

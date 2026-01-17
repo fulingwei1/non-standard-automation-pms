@@ -3,13 +3,13 @@
 工作日志模块 Schema
 """
 
-from typing import Optional, List
-from pydantic import BaseModel, Field, field_validator
 from datetime import date, datetime
 from decimal import Decimal
+from typing import List, Optional
 
-from .common import TimestampSchema, PaginatedResponse
+from pydantic import BaseModel, Field, field_validator
 
+from .common import PaginatedResponse, TimestampSchema
 
 # ==================== 工作日志 ====================
 
@@ -21,14 +21,14 @@ class WorkLogCreate(BaseModel):
     mentioned_machines: Optional[List[int]] = Field(default=[], description="提及的设备ID列表")
     mentioned_users: Optional[List[int]] = Field(default=[], description="提及的人员ID列表")
     status: Optional[str] = Field(default="SUBMITTED", description="状态：DRAFT/SUBMITTED")
-    
+
     # 工时相关字段（可选，如果提供则自动创建工时记录）
     work_hours: Optional[Decimal] = Field(default=None, description="工时数（小时）")
     work_type: Optional[str] = Field(default="NORMAL", description="工作类型：NORMAL/OVERTIME/WEEKEND/HOLIDAY")
     project_id: Optional[int] = Field(default=None, description="关联的项目ID（非标项目）")
     rd_project_id: Optional[int] = Field(default=None, description="关联的研发项目ID")
     task_id: Optional[int] = Field(default=None, description="关联的任务ID")
-    
+
     @field_validator('content')
     @classmethod
     def validate_content_length(cls, v):
@@ -46,14 +46,14 @@ class WorkLogUpdate(BaseModel):
     mentioned_machines: Optional[List[int]] = Field(default=None, description="提及的设备ID列表")
     mentioned_users: Optional[List[int]] = Field(default=None, description="提及的人员ID列表")
     status: Optional[str] = Field(default=None, description="状态：DRAFT/SUBMITTED")
-    
+
     # 工时相关字段（可选）
     work_hours: Optional[Decimal] = Field(default=None, description="工时数（小时）")
     work_type: Optional[str] = Field(default=None, description="工作类型：NORMAL/OVERTIME/WEEKEND/HOLIDAY")
     project_id: Optional[int] = Field(default=None, description="关联的项目ID（非标项目）")
     rd_project_id: Optional[int] = Field(default=None, description="关联的研发项目ID")
     task_id: Optional[int] = Field(default=None, description="关联的任务ID")
-    
+
     @field_validator('content')
     @classmethod
     def validate_content_length(cls, v):

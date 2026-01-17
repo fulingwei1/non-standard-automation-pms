@@ -3,9 +3,10 @@
 项目预算管理模块 Schema
 """
 
-from typing import Optional, List
-from decimal import Decimal
 from datetime import date, datetime
+from decimal import Decimal
+from typing import List, Optional
+
 from pydantic import BaseModel, Field
 
 from app.schemas.common import TimestampSchema
@@ -43,7 +44,7 @@ class ProjectBudgetItemResponse(TimestampSchema):
     budget_amount: Decimal
     machine_id: Optional[int] = None
     remark: Optional[str] = None
-    
+
     class Config:
         from_attributes = True
 
@@ -93,14 +94,14 @@ class ProjectBudgetResponse(TimestampSchema):
     is_active: bool
     remark: Optional[str] = None
     created_by: Optional[int] = None
-    
+
     # 关联信息
     project_code: Optional[str] = None
     project_name: Optional[str] = None
     submitter_name: Optional[str] = None
     approver_name: Optional[str] = None
     items: List[ProjectBudgetItemResponse] = []
-    
+
     class Config:
         from_attributes = True
 
@@ -157,7 +158,7 @@ class ProjectCostAllocationRuleResponse(TimestampSchema):
     expiry_date: Optional[date] = None
     remark: Optional[str] = None
     created_by: Optional[int] = None
-    
+
     class Config:
         from_attributes = True
 

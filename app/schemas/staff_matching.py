@@ -4,11 +4,11 @@ AI驱动人员智能匹配系统 Pydantic Schemas
 包含：标签字典、员工标签评估、员工扩展档案、项目绩效历史、项目人员需求、AI匹配
 """
 
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
-from typing import Optional, List, Any
-from pydantic import BaseModel, Field
+from typing import Any, List, Optional
 
+from pydantic import BaseModel, Field
 
 # ==================== 标签字典 Schemas ====================
 

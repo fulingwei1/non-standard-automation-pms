@@ -3,10 +3,11 @@
 合同管理 Schema
 """
 
-from typing import Optional, List
-from pydantic import BaseModel, Field, ConfigDict
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
+from typing import List, Optional
+
+from pydantic import BaseModel, ConfigDict, Field
 
 from ..common import BaseSchema, TimestampSchema
 
@@ -43,89 +44,67 @@ class ContractDeliverableResponse(TimestampSchema):
 
 
 class ContractCreate(BaseModel):
-    """创建合同"""
+    """创建合同（与 Contract ORM 字段对齐）"""
 
     model_config = ConfigDict(populate_by_name=True)
 
     contract_code: Optional[str] = Field(default=None, max_length=20, description="合同编码")
-    quote_id: Optional[int] = Field(default=None, description="报价ID")
-    customer_name: str = Field(max_length=100, description="客户名称")
-    contract_name: str = Field(max_length=200, description="合同名称")
-    contract_type: Optional[str] = Field(default=None, description="合同类型")
-    currency: Optional[str] = Field(default="CNY", description="货币")
-    exchange_rate: Optional[Decimal] = Field(default=1.0, description="汇率")
+    opportunity_id: int = Field(description="商机ID")
+    quote_version_id: Optional[int] = Field(default=None, description="报价版本ID")
+    customer_id: int = Field(description="客户ID")
+    project_id: Optional[int] = Field(default=None, description="项目ID")
     contract_amount: Optional[Decimal] = Field(default=None, description="合同金额")
-    tax_rate: Optional[Decimal] = Field(default=None, description="税率")
-    tax_amount: Optional[Decimal] = Field(default=None, description="税额")
-    total_amount: Optional[Decimal] = Field(default=None, description="总金额")
     signed_date: Optional[date] = Field(default=None, description="签订日期")
-    start_date: Optional[date] = Field(default=None, description="生效日期")
-    end_date: Optional[date] = Field(default=None, description="截止日期")
-    delivery_terms: Optional[str] = Field(default=None, description="交货条款")
-    payment_terms: Optional[str] = Field(default=None, description="付款条款")
-    quality_terms: Optional[str] = Field(default=None, description="质量条款")
-    warranty_terms: Optional[str] = Field(default=None, description="质保条款")
-    other_terms: Optional[str] = Field(default=None, description="其他条款")
-    remark: Optional[str] = Field(default=None, description="备注")
-    deliverables: Optional[List[ContractDeliverableCreate]] = Field(default=None, description="交付物列表")
+    status: Optional[str] = Field(default=None, description="状态")
+    payment_terms_summary: Optional[str] = Field(default=None, description="付款条款摘要")
+    acceptance_summary: Optional[str] = Field(default=None, description="验收摘要")
     owner_id: Optional[int] = Field(default=None, description="负责人ID")
+    deliverables: Optional[List[ContractDeliverableCreate]] = Field(
+        default=None, description="交付物列表"
+    )
 
 
 class ContractUpdate(BaseModel):
-    """更新合同"""
+    """更新合同（与 Contract ORM 字段对齐）"""
 
     contract_code: Optional[str] = None
-    customer_name: Optional[str] = None
-    contract_name: Optional[str] = None
-    contract_type: Optional[str] = None
-    currency: Optional[str] = None
-    exchange_rate: Optional[Decimal] = None
+    opportunity_id: Optional[int] = None
+    quote_version_id: Optional[int] = None
+    customer_id: Optional[int] = None
+    project_id: Optional[int] = None
     contract_amount: Optional[Decimal] = None
-    tax_rate: Optional[Decimal] = None
-    tax_amount: Optional[Decimal] = None
-    total_amount: Optional[Decimal] = None
     signed_date: Optional[date] = None
-    start_date: Optional[date] = None
-    end_date: Optional[date] = None
-    delivery_terms: Optional[str] = None
-    payment_terms: Optional[str] = None
-    quality_terms: Optional[str] = None
-    warranty_terms: Optional[str] = None
-    other_terms: Optional[str] = None
-    remark: Optional[str] = None
-    deliverables: Optional[List[ContractDeliverableCreate]] = None
+    status: Optional[str] = None
+    payment_terms_summary: Optional[str] = None
+    acceptance_summary: Optional[str] = None
     owner_id: Optional[int] = None
+    deliverables: Optional[List[ContractDeliverableCreate]] = None
 
 
 class ContractResponse(TimestampSchema):
-    """合同响应"""
+    """合同响应（与 endpoint 返回字段对齐）"""
 
     id: int = Field(description="合同ID")
     contract_code: str = Field(description="合同编码")
-    quote_id: Optional[int] = Field(default=None, description="报价ID")
-    customer_name: str = Field(description="客户名称")
-    contract_name: str = Field(description="合同名称")
-    contract_type: Optional[str] = Field(default=None, description="合同类型")
-    currency: Optional[str] = Field(default="CNY", description="货币")
-    exchange_rate: Optional[Decimal] = Field(default=1.0, description="汇率")
+    opportunity_id: int = Field(description="商机ID")
+    quote_version_id: Optional[int] = Field(default=None, description="报价版本ID")
+    customer_id: int = Field(description="客户ID")
+    project_id: Optional[int] = Field(default=None, description="项目ID")
     contract_amount: Optional[Decimal] = Field(default=None, description="合同金额")
-    tax_rate: Optional[Decimal] = Field(default=None, description="税率")
-    tax_amount: Optional[Decimal] = Field(default=None, description="税额")
-    total_amount: Optional[Decimal] = Field(default=None, description="总金额")
     signed_date: Optional[date] = Field(default=None, description="签订日期")
-    start_date: Optional[date] = Field(default=None, description="生效日期")
-    end_date: Optional[date] = Field(default=None, description="截止日期")
-    delivery_terms: Optional[str] = Field(default=None, description="交货条款")
-    payment_terms: Optional[str] = Field(default=None, description="付款条款")
-    quality_terms: Optional[str] = Field(default=None, description="质量条款")
-    warranty_terms: Optional[str] = Field(default=None, description="质保条款")
-    other_terms: Optional[str] = Field(default=None, description="其他条款")
-    remark: Optional[str] = Field(default=None, description="备注")
-    owner_id: Optional[int] = Field(default=None, description="负责人ID")
-    owner_name: Optional[str] = Field(default=None, description="负责人姓名")
-    deliverables_count: Optional[int] = Field(default=None, description="交付物数量")
-    quote_code: Optional[str] = Field(default=None, description="报价编码")
     status: Optional[str] = Field(default=None, description="状态")
+    payment_terms_summary: Optional[str] = Field(default=None, description="付款条款摘要")
+    acceptance_summary: Optional[str] = Field(default=None, description="验收摘要")
+    owner_id: Optional[int] = Field(default=None, description="负责人ID")
+
+    # 扩展字段
+    opportunity_code: Optional[str] = Field(default=None, description="商机编码")
+    customer_name: Optional[str] = Field(default=None, description="客户名称")
+    project_code: Optional[str] = Field(default=None, description="项目编码")
+    owner_name: Optional[str] = Field(default=None, description="负责人姓名")
+    deliverables: Optional[List[ContractDeliverableResponse]] = Field(
+        default=None, description="交付物列表"
+    )
 
 
 class ContractAmendmentCreate(BaseModel):
@@ -177,3 +156,61 @@ class ContractProjectCreateRequest(BaseModel):
     allocation_amount: Optional[Decimal] = Field(default=None, description="分配金额")
     allocation_ratio: Optional[Decimal] = Field(default=None, description="分配比例")
     remark: Optional[str] = Field(default=None, description="备注")
+
+
+# ==================== 审批工作流 Schema ====================
+
+
+class ApprovalStartRequest(BaseModel):
+    """启动审批请求"""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    workflow_id: Optional[int] = Field(default=None, description="工作流ID")
+    comment: Optional[str] = Field(default=None, description="备注")
+
+
+class ApprovalActionRequest(BaseModel):
+    """审批动作请求"""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    action: str = Field(description="审批动作: APPROVE, REJECT, RETURN")
+    comment: Optional[str] = Field(default=None, description="审批意见")
+
+
+class ApprovalRecordResponse(TimestampSchema):
+    """审批记录响应"""
+
+    id: int = Field(description="审批记录ID")
+    step_name: Optional[str] = Field(default=None, description="步骤名称")
+    approver_id: Optional[int] = Field(default=None, description="审批人ID")
+    approver_name: Optional[str] = Field(default=None, description="审批人姓名")
+    status: Optional[str] = Field(default=None, description="状态")
+    action: Optional[str] = Field(default=None, description="审批动作")
+    comment: Optional[str] = Field(default=None, description="审批意见")
+    approved_at: Optional[datetime] = Field(default=None, description="审批时间")
+
+
+class ApprovalStatusResponse(BaseModel):
+    """审批状态响应"""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    entity_id: int = Field(description="实体ID")
+    entity_type: str = Field(description="实体类型")
+    workflow_name: Optional[str] = Field(default=None, description="工作流名称")
+    current_step: Optional[str] = Field(default=None, description="当前步骤")
+    current_approver: Optional[str] = Field(default=None, description="当前审批人")
+    status: Optional[str] = Field(default=None, description="审批状态")
+    progress: Optional[int] = Field(default=0, description="审批进度百分比")
+
+
+class ApprovalHistoryResponse(BaseModel):
+    """审批历史响应"""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    entity_id: int = Field(description="实体ID")
+    entity_type: str = Field(description="实体类型")
+    records: List[ApprovalRecordResponse] = Field(default=[], description="审批记录列表")

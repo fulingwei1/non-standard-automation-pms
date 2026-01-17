@@ -4,19 +4,27 @@ AI驱动人员智能匹配系统 ORM 模型
 包含：标签字典、员工标签评估、员工扩展档案、项目绩效历史、项目人员需求、AI匹配日志
 """
 
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
+from enum import Enum
 from typing import Optional
 
 from sqlalchemy import (
-    Column, Integer, String, Text, Boolean, Date, DateTime,
-    Numeric, ForeignKey, Index, JSON
+    JSON,
+    Boolean,
+    Column,
+    Date,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
 )
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base, TimestampMixin
-from enum import Enum
-
 
 # ==================== 枚举定义 ====================
 

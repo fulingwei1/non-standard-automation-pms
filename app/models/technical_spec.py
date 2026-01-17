@@ -4,8 +4,15 @@
 """
 
 from sqlalchemy import (
-    Column, Integer, BigInteger, String, Text,
-    ForeignKey, Numeric, Index, JSON
+    JSON,
+    BigInteger,
+    Column,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
 )
 from sqlalchemy.orm import relationship
 

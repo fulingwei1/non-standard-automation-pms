@@ -3,13 +3,13 @@
 进度跟踪模块 Schema
 """
 
-from typing import Optional, List
-from pydantic import BaseModel, Field
 from datetime import date, datetime
 from decimal import Decimal
+from typing import List, Optional
 
-from .common import BaseSchema, TimestampSchema, PaginatedResponse
+from pydantic import BaseModel, Field
 
+from .common import BaseSchema, PaginatedResponse, TimestampSchema
 
 # ==================== WBS 模板 ====================
 

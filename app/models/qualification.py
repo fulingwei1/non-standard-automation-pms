@@ -4,19 +4,27 @@
 包含：任职资格等级、岗位能力模型、员工任职资格、评估记录
 """
 
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
+from enum import Enum
 from typing import Optional
 
 from sqlalchemy import (
-    Column, Integer, String, Text, Boolean, Date, DateTime,
-    Numeric, ForeignKey, Index, JSON
+    JSON,
+    Boolean,
+    Column,
+    Date,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
 )
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base, TimestampMixin
-from enum import Enum
-
 
 # ==================== 枚举定义 ====================
 
@@ -54,7 +62,7 @@ class AssessmentTypeEnum(str, Enum):
 
 class AssessmentResultEnum(str, Enum):
     """评估结果"""
-    PASS = 'PASS'              # 通过
+    PASS = 'PASS'              # 通过  # nosec B105
     FAIL = 'FAIL'              # 不通过
     PARTIAL = 'PARTIAL'        # 部分通过
 
@@ -98,7 +106,7 @@ class PositionCompetencyModel(Base, TimestampMixin):
     position_type = Column(String(50), nullable=False, comment='岗位类型')
     position_subtype = Column(String(50), comment='岗位子类型 (ME/EE/SW/TE等)')
     level_id = Column(Integer, ForeignKey('qualification_level.id'), nullable=False, comment='等级ID')
-    
+
     # 能力维度要求 (JSON格式)
     # 结构示例:
     # {
@@ -117,7 +125,7 @@ class PositionCompetencyModel(Base, TimestampMixin):
     #   "customer_service_skills": {...}    # 适用于销售和客服
     # }
     competency_dimensions = Column(JSON, nullable=False, comment='能力维度要求 (JSON)')
-    
+
     is_active = Column(Boolean, default=True, comment='是否启用')
 
     # 关系
@@ -144,12 +152,12 @@ class EmployeeQualification(Base, TimestampMixin):
     employee_id = Column(Integer, ForeignKey('employees.id'), nullable=False, comment='员工ID')
     position_type = Column(String(50), nullable=False, comment='岗位类型')
     current_level_id = Column(Integer, ForeignKey('qualification_level.id'), nullable=False, comment='当前等级ID')
-    
+
     # 认证信息
     certified_date = Column(Date, comment='认证日期')
     certifier_id = Column(Integer, ForeignKey('users.id'), comment='认证人ID')
     status = Column(String(20), default='PENDING', comment='认证状态')
-    
+
     # 评估详情 (JSON格式)
     # 结构示例:
     # {
@@ -158,7 +166,7 @@ class EmployeeQualification(Base, TimestampMixin):
     #   ...
     # }
     assessment_details = Column(JSON, comment='能力评估详情 (JSON)')
-    
+
     # 有效期
     valid_until = Column(Date, comment='有效期至')
 
@@ -189,11 +197,11 @@ class QualificationAssessment(Base, TimestampMixin):
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
     employee_id = Column(Integer, ForeignKey('employees.id'), nullable=False, comment='员工ID')
     qualification_id = Column(Integer, ForeignKey('employee_qualification.id'), comment='任职资格ID')
-    
+
     # 评估信息
     assessment_period = Column(String(20), comment='评估周期 (如: 2024-Q1)')
     assessment_type = Column(String(20), nullable=False, comment='评估类型')
-    
+
     # 各维度得分 (JSON格式)
     # 结构示例:
     # {
@@ -204,10 +212,10 @@ class QualificationAssessment(Base, TimestampMixin):
     #   "project_management_skills": 70
     # }
     scores = Column(JSON, comment='各维度得分 (JSON)')
-    
+
     total_score = Column(Numeric(5, 2), comment='综合得分')
     result = Column(String(20), comment='评估结果')
-    
+
     # 评估人信息
     assessor_id = Column(Integer, ForeignKey('users.id'), comment='评估人ID')
     comments = Column(Text, comment='评估意见')
@@ -228,4 +236,3 @@ class QualificationAssessment(Base, TimestampMixin):
 
     def __repr__(self):
         return f"<QualificationAssessment Employee {self.employee_id} Type {self.assessment_type}>"
-

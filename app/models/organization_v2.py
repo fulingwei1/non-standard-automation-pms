@@ -4,17 +4,29 @@
 支持公司/事业部/部门/团队的树形结构，以及岗位、职级体系
 """
 
-from datetime import datetime, date
-from typing import Optional, List
+from datetime import date, datetime
 from enum import Enum
+from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy import (
-    Column, Integer, String, Text, Boolean, DateTime, Date,
-    ForeignKey, Index, UniqueConstraint, JSON
+    JSON,
+    Boolean,
+    Column,
+    Date,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base, TimestampMixin
+
+if TYPE_CHECKING:
+    from app.models.user import Role
 
 
 class OrganizationUnitType(str, Enum):

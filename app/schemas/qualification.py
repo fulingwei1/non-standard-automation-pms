@@ -3,13 +3,13 @@
 任职资格体系 Schema
 """
 
-from typing import Optional, List, Any, Dict
-from pydantic import BaseModel, Field
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
-from .common import ResponseModel, PaginatedResponse, PageParams
+from pydantic import BaseModel, Field
 
+from .common import PageParams, PaginatedResponse, ResponseModel
 
 # ==================== 任职资格等级 ====================
 

@@ -3,9 +3,10 @@
 销售线索管理 Schema
 """
 
-from typing import Optional, List
-from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
+from typing import List, Optional
+
+from pydantic import BaseModel, ConfigDict, Field
 
 from ..common import BaseSchema, TimestampSchema
 

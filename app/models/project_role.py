@@ -5,12 +5,20 @@
 支持后台灵活配置项目负责人角色类型
 """
 
+from datetime import datetime
+
 from sqlalchemy import (
-    Column, Integer, String, Text, Boolean, ForeignKey, DateTime, Index,
-    UniqueConstraint
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
-from datetime import datetime
 
 from .base import Base, TimestampMixin
 

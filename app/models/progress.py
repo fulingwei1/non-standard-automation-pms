@@ -9,8 +9,16 @@ from decimal import Decimal
 from typing import Optional
 
 from sqlalchemy import (
-    Column, Integer, String, Text, Boolean, Date, DateTime,
-    Numeric, ForeignKey, Index
+    Boolean,
+    Column,
+    Date,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
 )
 from sqlalchemy.orm import relationship
 
@@ -214,22 +222,22 @@ class ProgressReport(Base, TimestampMixin):
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
     report_type = Column(String(20), nullable=False, comment="报告类型：daily/weekly")
     report_date = Column(Date, nullable=False, comment="报告日期")
-    
+
     # 关联信息（三选一或组合）
     project_id = Column(Integer, ForeignKey("projects.id"), comment="项目ID")
     machine_id = Column(Integer, ForeignKey("machines.id"), comment="机台ID")
     task_id = Column(Integer, ForeignKey("tasks.id"), comment="任务ID")
-    
+
     # 报告内容
     content = Column(Text, nullable=False, comment="报告内容")
     completed_work = Column(Text, comment="已完成工作")
     planned_work = Column(Text, comment="计划工作")
     issues = Column(Text, comment="问题与阻塞")
     next_plan = Column(Text, comment="下一步计划")
-    
+
     # 创建人
     created_by = Column(Integer, ForeignKey("users.id"), nullable=False, comment="创建人ID")
-    
+
     # 关系
     project = relationship("Project", backref="progress_reports")
     machine = relationship("Machine", backref="progress_reports")

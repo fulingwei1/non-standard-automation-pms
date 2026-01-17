@@ -3,9 +3,10 @@
 时薪配置管理模块 Schema
 """
 
-from typing import Optional
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
+from typing import Optional
+
 from pydantic import BaseModel, Field
 
 from app.schemas.common import TimestampSchema
@@ -45,12 +46,12 @@ class HourlyRateConfigResponse(TimestampSchema):
     is_active: bool
     remark: Optional[str] = None
     created_by: Optional[int] = None
-    
+
     # 关联信息
     user_name: Optional[str] = None
     role_name: Optional[str] = None
     dept_name: Optional[str] = None
-    
+
     class Config:
         from_attributes = True
 

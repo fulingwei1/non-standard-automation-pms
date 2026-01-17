@@ -3,12 +3,12 @@
 技术规格管理 Schema
 """
 
-from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
-from .common import BaseSchema, TimestampSchema, PaginatedResponse
+from pydantic import BaseModel, Field
 
+from .common import BaseSchema, PaginatedResponse, TimestampSchema
 
 # ==================== 技术规格要求 ====================
 
@@ -73,7 +73,7 @@ class SpecMatchRecordResponse(TimestampSchema):
     match_score: Optional[Decimal] = None
     differences: Optional[Dict[str, Any]] = None
     alert_id: Optional[int] = None
-    
+
     # 关联信息
     spec_requirement: Optional[TechnicalSpecRequirementResponse] = None
     match_target_name: Optional[str] = None

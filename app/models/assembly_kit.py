@@ -4,15 +4,24 @@
 基于装配工艺路径的智能齐套分析系统
 """
 
-from sqlalchemy import (
-    Column, Integer, String, Boolean, DateTime, Date, Text,
-    ForeignKey, Numeric, Index, UniqueConstraint
-)
-from sqlalchemy.orm import relationship
 from datetime import datetime
 
-from .base import Base, TimestampMixin
+from sqlalchemy import (
+    Boolean,
+    Column,
+    Date,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    UniqueConstraint,
+)
+from sqlalchemy.orm import relationship
 
+from .base import Base, TimestampMixin
 
 # ==================== 装配阶段定义 ====================
 

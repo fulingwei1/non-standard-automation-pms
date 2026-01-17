@@ -2,13 +2,13 @@
 """
 生产管理模块 Schema
 """
-from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
-from .common import BaseSchema, TimestampSchema, PaginatedResponse
+from pydantic import BaseModel, Field
 
+from .common import BaseSchema, PaginatedResponse, TimestampSchema
 
 # ==================== 车间管理 ====================
 
@@ -532,33 +532,33 @@ class ProductionDashboardResponse(BaseModel):
     total_workstations: int = 0
     total_workers: int = 0
     active_workers: int = 0
-    
+
     # 工单统计
     total_work_orders: int = 0
     pending_orders: int = 0
     in_progress_orders: int = 0
     completed_orders: int = 0
-    
+
     # 今日统计
     today_plan_qty: int = 0
     today_completed_qty: int = 0
     today_completion_rate: float = 0.0
     today_actual_hours: float = 0.0
-    
+
     # 质量统计
     today_qualified_qty: int = 0
     today_pass_rate: float = 0.0
-    
+
     # 异常统计
     open_exceptions: int = 0
     critical_exceptions: int = 0
-    
+
     # 设备统计
     total_equipment: int = 0
     running_equipment: int = 0
     maintenance_equipment: int = 0
     fault_equipment: int = 0
-    
+
     # 车间统计
     workshop_stats: List[Dict[str, Any]] = []
 

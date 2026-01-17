@@ -3,13 +3,13 @@
 外协管理 Schema
 """
 
-from typing import Optional, List, Any
-from pydantic import BaseModel, Field
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any, List, Optional
+
+from pydantic import BaseModel, Field
 
 from .common import BaseSchema, TimestampSchema
-
 
 # ==================== 外协商 ====================
 
