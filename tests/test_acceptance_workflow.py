@@ -18,26 +18,26 @@ from __future__ import annotations
 
 import json
 import os
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 from typing import Dict, Optional
 
 from fastapi.testclient import TestClient
 
+from app.core.config import settings
 from app.main import app
-from app.models.base import get_session
-from app.models.project import Project, Machine, ProjectStage, ProjectStatus
 from app.models.acceptance import (
-    AcceptanceTemplate,
-    TemplateCategory,
-    TemplateCheckItem,
+    AcceptanceIssue,
     AcceptanceOrder,
     AcceptanceOrderItem,
-    AcceptanceIssue,
-    IssueFollowUp,
-    AcceptanceSignature,
     AcceptanceReport,
+    AcceptanceSignature,
+    AcceptanceTemplate,
+    IssueFollowUp,
+    TemplateCategory,
+    TemplateCheckItem,
 )
-from app.core.config import settings
+from app.models.base import get_session
+from app.models.project import Machine, Project, ProjectStage, ProjectStatus
 
 
 class Colors:

@@ -5,10 +5,16 @@
 测试所有服务相关API：工单、记录、沟通、满意度、知识库
 """
 
-import requests
 import json
 import sys
 from typing import Optional
+
+import requests
+
+if "pytest" in sys.modules:
+    import pytest
+
+    pytest.skip("Manual API script; run with `python3 tests/test_all_service_apis.py`", allow_module_level=True)
 
 BASE_URL = "http://127.0.0.1:8000/api/v1"
 USERNAME = "admin"
@@ -49,14 +55,14 @@ def test_api(method: str, endpoint: str, token: str, data: Optional[dict] = None
     """测试API"""
     url = f"{BASE_URL}{endpoint}"
     headers = {"Authorization": f"Bearer {token}"}
-    
+
     print()
     print("=" * 60)
     print_info(f"测试: {description}")
     print(f"请求: {method} {url}")
     if data:
         print(f"数据: {json.dumps(data, ensure_ascii=False, indent=2)}")
-    
+
     try:
         if method == "GET":
             response = requests.get(url, headers=headers, timeout=10)
@@ -71,7 +77,7 @@ def test_api(method: str, endpoint: str, token: str, data: Optional[dict] = None
         else:
             print_error(f"不支持的HTTP方法: {method}")
             return None
-        
+
         if response.status_code >= 200 and response.status_code < 300:
             print_success(f"成功 (HTTP {response.status_code})")
             try:
@@ -98,47 +104,47 @@ def main():
     print("=" * 60)
     print_info("完整服务API测试")
     print("=" * 60)
-    
+
     # 获取Token
     token = get_token()
     if not token:
         print_error("无法获取Token，请检查服务器和登录信息")
         sys.exit(1)
     print_success("登录成功")
-    
+
     # ==================== 服务工单API ====================
     print()
     print("=" * 60)
     print_info("1. 服务工单API测试")
     print("=" * 60)
-    
+
     test_api("GET", "/service/service-tickets?page=1&page_size=5", token,
              description="获取服务工单列表")
     test_api("GET", "/service/service-tickets/statistics", token,
              description="获取服务工单统计")
-    
+
     # ==================== 现场服务记录API ====================
     print()
     print("=" * 60)
     print_info("2. 现场服务记录API测试")
     print("=" * 60)
-    
+
     test_api("GET", "/service/service-records?page=1&page_size=5", token,
              description="获取服务记录列表")
     test_api("GET", "/service/service-records/statistics", token,
              description="获取服务记录统计")
-    
+
     # ==================== 客户沟通API ====================
     print()
     print("=" * 60)
     print_info("3. 客户沟通API测试")
     print("=" * 60)
-    
+
     test_api("GET", "/service/customer-communications?page=1&page_size=5", token,
              description="获取客户沟通记录列表")
     test_api("GET", "/service/customer-communications/statistics", token,
              description="获取客户沟通统计")
-    
+
     # 创建沟通记录
     comm_data = {
         "communication_type": "PHONE",
@@ -152,24 +158,24 @@ def main():
     }
     comm_result = test_api("POST", "/service/customer-communications", token, comm_data,
                           description="创建客户沟通记录")
-    
+
     comm_id = None
     if comm_result and isinstance(comm_result, dict) and "id" in comm_result:
         comm_id = comm_result["id"]
         test_api("GET", f"/service/customer-communications/{comm_id}", token,
                 description="获取客户沟通记录详情")
-    
+
     # ==================== 满意度调查API ====================
     print()
     print("=" * 60)
     print_info("4. 满意度调查API测试")
     print("=" * 60)
-    
+
     test_api("GET", "/service/customer-satisfactions?page=1&page_size=5", token,
              description="获取满意度调查列表")
     test_api("GET", "/service/customer-satisfactions/statistics", token,
              description="获取满意度调查统计")
-    
+
     # 创建满意度调查
     survey_data = {
         "survey_type": "PROJECT",
@@ -180,28 +186,28 @@ def main():
     }
     survey_result = test_api("POST", "/service/customer-satisfactions", token, survey_data,
                             description="创建满意度调查")
-    
+
     survey_id = None
     if survey_result and isinstance(survey_result, dict) and "id" in survey_result:
         survey_id = survey_result["id"]
         test_api("GET", f"/service/customer-satisfactions/{survey_id}", token,
                 description="获取满意度调查详情")
-        
+
         # 发送调查
         test_api("POST", f"/service/customer-satisfactions/{survey_id}/send", token,
                 description="发送满意度调查")
-    
+
     # ==================== 知识库API ====================
     print()
     print("=" * 60)
     print_info("5. 知识库API测试")
     print("=" * 60)
-    
+
     test_api("GET", "/service/knowledge-base?page=1&page_size=5", token,
              description="获取知识库文章列表")
     test_api("GET", "/service/knowledge-base/statistics", token,
              description="获取知识库统计")
-    
+
     # 创建知识库文章
     article_data = {
         "title": "测试文章标题",
@@ -213,21 +219,21 @@ def main():
     }
     article_result = test_api("POST", "/service/knowledge-base", token, article_data,
                             description="创建知识库文章")
-    
+
     article_id = None
     if article_result and isinstance(article_result, dict) and "id" in article_result:
         article_id = article_result["id"]
         test_api("GET", f"/service/knowledge-base/{article_id}", token,
                 description="获取知识库文章详情（会增加浏览量）")
-        
+
         # 点赞
         test_api("POST", f"/service/knowledge-base/{article_id}/like", token,
                 description="点赞知识库文章")
-        
+
         # 标记有用
         test_api("POST", f"/service/knowledge-base/{article_id}/helpful", token,
                 description="标记知识库文章为有用")
-    
+
     print()
     print("=" * 60)
     print_success("所有API测试完成！")
@@ -240,6 +246,5 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
 

@@ -6,9 +6,10 @@
     pytest tests/unit/test_aggregation_logic.py -v --no-cov
 """
 
-import pytest
-from unittest.mock import Mock, MagicMock
 from datetime import datetime
+from unittest.mock import MagicMock, Mock
+
+import pytest
 
 # 不导入完整models，使用Mock对象模拟
 

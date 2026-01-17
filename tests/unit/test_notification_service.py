@@ -3,10 +3,11 @@
 """
 
 import pytest
+
 from app.services.notification_service import (
-    NotificationService,
     NotificationChannel,
     NotificationPriority,
+    NotificationService,
     NotificationType,
 )
 

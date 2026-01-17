@@ -6,9 +6,11 @@
 """
 
 import uuid
-import pytest
 from datetime import date
+
+import pytest
 from fastapi.testclient import TestClient
+
 from app.core.config import settings
 
 

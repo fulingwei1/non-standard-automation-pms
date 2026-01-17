@@ -5,10 +5,16 @@
 测试服务工单、现场服务记录等API
 """
 
-import requests
 import json
 import sys
 from typing import Optional
+
+import requests
+
+if "pytest" in sys.modules:
+    import pytest
+
+    pytest.skip("Manual API script; run with `python3 tests/test_service_apis.py`", allow_module_level=True)
 
 BASE_URL = "http://127.0.0.1:8000/api/v1"
 USERNAME = "admin"
@@ -52,14 +58,14 @@ def test_api(method: str, endpoint: str, token: Optional[str] = None,
     headers = {}
     if token:
         headers["Authorization"] = f"Bearer {token}"
-    
+
     print()
     print("=" * 60)
     print_info(f"测试: {description}")
     print(f"请求: {method} {url}")
     if data:
         print(f"数据: {json.dumps(data, ensure_ascii=False, indent=2)}")
-    
+
     try:
         if method == "GET":
             response = requests.get(url, headers=headers, timeout=10)
@@ -74,7 +80,7 @@ def test_api(method: str, endpoint: str, token: Optional[str] = None,
         else:
             print_error(f"不支持的HTTP方法: {method}")
             return None
-        
+
         if response.status_code >= 200 and response.status_code < 300:
             print_success(f"成功 (HTTP {response.status_code})")
             try:
@@ -98,7 +104,7 @@ def test_login(username: str = USERNAME, password: str = PASSWORD):
     print()
     print("=" * 60)
     print_info("测试登录")
-    
+
     try:
         response = requests.post(
             f"{BASE_URL}/auth/login",
@@ -106,7 +112,7 @@ def test_login(username: str = USERNAME, password: str = PASSWORD):
             headers={"Content-Type": "application/x-www-form-urlencoded"},
             timeout=10
         )
-        
+
         if response.status_code == 200:
             result = response.json()
             token = result.get("access_token")
@@ -130,31 +136,31 @@ def main():
     print("=" * 60)
     print_info("服务工单API测试")
     print("=" * 60)
-    
+
     # 检查服务器
     if not check_server():
         sys.exit(1)
-    
+
     # 登录获取Token
     token = test_login()
     if not token:
         print_error("无法获取Token，测试终止")
         sys.exit(1)
-    
+
     # 测试服务工单API
     print()
     print("=" * 60)
     print_info("开始测试服务工单API")
     print("=" * 60)
-    
+
     # 1. 获取服务工单列表
     test_api("GET", "/service/service-tickets?page=1&page_size=10", token,
              description="获取服务工单列表")
-    
+
     # 2. 获取服务工单统计
     test_api("GET", "/service/service-tickets/statistics", token,
              description="获取服务工单统计")
-    
+
     # 3. 创建服务工单
     ticket_data = {
         "project_id": 1,
@@ -167,17 +173,17 @@ def main():
     }
     ticket_result = test_api("POST", "/service/service-tickets", token, ticket_data,
                             description="创建服务工单")
-    
+
     ticket_id = None
     if ticket_result and isinstance(ticket_result, dict) and "id" in ticket_result:
         ticket_id = ticket_result["id"]
         print_success(f"创建的服务工单ID: {ticket_id}")
-    
+
     # 4. 获取服务工单详情
     if ticket_id:
         test_api("GET", f"/service/service-tickets/{ticket_id}", token,
                 description="获取服务工单详情")
-    
+
     # 5. 分配服务工单
     if ticket_id:
         assign_data = {
@@ -185,7 +191,7 @@ def main():
         }
         test_api("PUT", f"/service/service-tickets/{ticket_id}/assign", token, assign_data,
                 description="分配服务工单")
-    
+
     # 6. 关闭服务工单
     if ticket_id:
         close_data = {
@@ -197,21 +203,21 @@ def main():
         }
         test_api("PUT", f"/service/service-tickets/{ticket_id}/close", token, close_data,
                 description="关闭服务工单")
-    
+
     # 测试现场服务记录API
     print()
     print("=" * 60)
     print_info("开始测试现场服务记录API")
     print("=" * 60)
-    
+
     # 1. 获取服务记录列表
     test_api("GET", "/service/service-records?page=1&page_size=10", token,
              description="获取服务记录列表")
-    
+
     # 2. 获取服务记录统计
     test_api("GET", "/service/service-records/statistics", token,
              description="获取服务记录统计")
-    
+
     # 3. 创建服务记录
     record_data = {
         "service_type": "INSTALLATION",
@@ -232,17 +238,17 @@ def main():
     }
     record_result = test_api("POST", "/service/service-records", token, record_data,
                             description="创建服务记录")
-    
+
     record_id = None
     if record_result and isinstance(record_result, dict) and "id" in record_result:
         record_id = record_result["id"]
         print_success(f"创建的服务记录ID: {record_id}")
-    
+
     # 4. 获取服务记录详情
     if record_id:
         test_api("GET", f"/service/service-records/{record_id}", token,
                 description="获取服务记录详情")
-    
+
     print()
     print("=" * 60)
     print_success("测试完成！")
@@ -255,6 +261,5 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
 

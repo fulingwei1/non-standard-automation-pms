@@ -10,8 +10,9 @@
 - 安全边界测试
 """
 
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
@@ -300,6 +301,7 @@ class TestPasswordChange:
     def test_change_password_success(self, client: TestClient, db_session: Session):
         """测试成功修改密码"""
         import uuid
+
         from app.models.organization import Employee
 
         # 使用唯一编码避免冲突

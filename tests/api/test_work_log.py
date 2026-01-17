@@ -4,8 +4,9 @@
 测试工作日志 CRUD、配置管理、AI 分析等功能
 """
 
-import pytest
 from datetime import date
+
+import pytest
 from fastapi.testclient import TestClient
 
 from app.core.config import settings

@@ -1,6 +1,8 @@
 import pytest
 from fastapi.testclient import TestClient
+
 from app.core.config import settings
+
 
 def test_login(client: TestClient, admin_token: str):
     """测试登录 - 如果 admin_token fixture 成功获取则通过"""
@@ -13,7 +15,7 @@ def test_login(client: TestClient, admin_token: str):
 def test_get_current_user(client: TestClient, admin_token: str):
     if not admin_token:
         pytest.skip("Admin token not available")
-    
+
     headers = {"Authorization": f"Bearer {admin_token}"}
     response = client.get(f"{settings.API_V1_PREFIX}/auth/me", headers=headers)
     assert response.status_code == 200

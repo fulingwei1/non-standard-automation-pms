@@ -7,7 +7,7 @@
 
 import sys
 import traceback
-from datetime import datetime, date
+from datetime import date, datetime
 from importlib import import_module
 
 from app.utils.scheduler_config import SCHEDULER_TASKS
@@ -27,7 +27,7 @@ def test_imports():
     print("=" * 60)
     print("测试服务导入...")
     print("=" * 60)
-    
+
     missing = []
     for module_path, attr in SERVICE_IMPORTS:
         try:
@@ -50,10 +50,10 @@ def test_scheduler_config():
     print("\n" + "=" * 60)
     print("测试调度器配置...")
     print("=" * 60)
-    
+
     try:
-        from app.utils.scheduler import scheduler, init_scheduler
-        
+        from app.utils.scheduler import init_scheduler, scheduler
+
         # 检查调度器是否已初始化
         if not scheduler.running:
             print("⚠️  调度器未运行，尝试初始化...")
@@ -65,7 +65,7 @@ def test_scheduler_config():
                 return False
         else:
             print("✅ 调度器正在运行")
-        
+
         # 检查已注册的任务
         jobs = scheduler.get_jobs()
         actual_ids = {job.id for job in jobs}
@@ -73,7 +73,7 @@ def test_scheduler_config():
         missing = expected_ids - actual_ids
         extra = actual_ids - expected_ids
         print(f"✅ 已注册任务数: {len(jobs)}（期望 {len(EXPECTED_JOBS)}）")
-        
+
         if missing:
             print("⚠️ 缺失的任务:")
             for job_id in sorted(missing):
@@ -82,12 +82,12 @@ def test_scheduler_config():
             print("⚠️ 未在期望列表的任务:")
             for job_id in sorted(extra):
                 print(f"  - {job_id}")
-        
+
         print("\n已注册的任务列表:")
         for job in sorted(jobs, key=lambda j: j.id):
             next_run = job.next_run_time.strftime('%Y-%m-%d %H:%M:%S') if job.next_run_time else "未计划"
             print(f"  - {job.id}: {job.name} (下次执行: {next_run})")
-        
+
         return not missing
     except ImportError as e:
         if 'apscheduler' in str(e):
@@ -109,11 +109,11 @@ def test_service_functions():
     print("\n" + "=" * 60)
     print("测试服务函数...")
     print("=" * 60)
-    
+
     success_count = 0
     fail_count = 0
     visited = set()
-    
+
     for task in SCHEDULER_TASKS:
         key = (task["module"], task["callable"])
         if key in visited:
@@ -132,7 +132,7 @@ def test_service_functions():
         except Exception as exc:
             print(f"❌ {attr}: 导入失败 ({module_path}) -> {exc}")
             fail_count += 1
-    
+
     print(f"\n测试结果: {success_count} 个成功, {fail_count} 个失败")
     return fail_count == 0
 
@@ -142,10 +142,10 @@ def test_database_connection():
     print("\n" + "=" * 60)
     print("测试数据库连接...")
     print("=" * 60)
-    
+
     try:
         from app.models.base import get_db_session
-        
+
         with get_db_session() as db:
             # 简单查询测试
             from app.models.project import Project
@@ -164,39 +164,39 @@ def main():
     print("定时服务验证脚本")
     print(f"执行时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 60)
-    
+
     results = []
-    
+
     # 测试导入
     results.append(("服务导入", test_imports()))
-    
+
     # 测试数据库连接
     results.append(("数据库连接", test_database_connection()))
-    
+
     # 测试服务函数
     results.append(("服务函数", test_service_functions()))
-    
+
     # 测试调度器配置
     results.append(("调度器配置", test_scheduler_config()))
-    
+
     # 汇总结果
     print("\n" + "=" * 60)
     print("测试结果汇总")
     print("=" * 60)
-    
+
     for name, result in results:
         status = "✅ 通过" if result else "❌ 失败"
         print(f"{name}: {status}")
-    
+
     all_passed = all(result for _, result in results)
-    
+
     print("\n" + "=" * 60)
     if all_passed:
         print("✅ 所有测试通过！")
     else:
         print("❌ 部分测试失败，请检查上述错误信息")
     print("=" * 60)
-    
+
     return 0 if all_passed else 1
 
 

@@ -7,13 +7,23 @@
 import sys
 from pathlib import Path
 
+if "pytest" in sys.modules:
+    import pytest
+
+    pytest.skip("Manual verification script; run with `python3 tests/test_missing_apis.py`", allow_module_level=True)
+
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
 from app.models.base import get_session
-from app.models.sales import LeadRequirementDetail, RequirementFreeze, AIClarification, Lead
-from app.models.user import User
 from app.models.enums import AssessmentSourceTypeEnum, FreezeTypeEnum
+from app.models.sales import (
+    AIClarification,
+    Lead,
+    LeadRequirementDetail,
+    RequirementFreeze,
+)
+from app.models.user import User
 
 
 def test_requirement_detail_api():
@@ -26,12 +36,12 @@ def test_requirement_detail_api():
         if not lead:
             print("   ⚠️  没有可用的线索，跳过测试")
             return False
-        
+
         # 检查需求详情是否存在
         requirement_detail = db.query(LeadRequirementDetail).filter(
             LeadRequirementDetail.lead_id == lead.id
         ).first()
-        
+
         if requirement_detail:
             print(f"   ✅ 需求详情已存在: ID={requirement_detail.id}")
             print(f"      线索ID: {requirement_detail.lead_id}")
@@ -61,17 +71,17 @@ def test_requirement_freeze_api():
         if not lead:
             print("   ⚠️  没有可用的线索，跳过测试")
             return False
-        
+
         # 检查冻结记录
         freezes = db.query(RequirementFreeze).filter(
             RequirementFreeze.source_type == AssessmentSourceTypeEnum.LEAD.value,
             RequirementFreeze.source_id == lead.id
         ).all()
-        
+
         print(f"   ✅ 找到 {len(freezes)} 条冻结记录")
         for freeze in freezes:
             print(f"      - 类型: {freeze.freeze_type}, 版本: {freeze.version_number}, 时间: {freeze.freeze_time}")
-        
+
         print("   ✅ API端点已实现，可以创建冻结记录")
         return True
     except Exception as e:
@@ -93,17 +103,17 @@ def test_ai_clarification_api():
         if not lead:
             print("   ⚠️  没有可用的线索，跳过测试")
             return False
-        
+
         # 检查澄清记录
         clarifications = db.query(AIClarification).filter(
             AIClarification.source_type == AssessmentSourceTypeEnum.LEAD.value,
             AIClarification.source_id == lead.id
         ).all()
-        
+
         print(f"   ✅ 找到 {len(clarifications)} 条澄清记录")
         for clarification in clarifications:
             print(f"      - 轮次: {clarification.round}, 问题数: {len(clarification.questions) if clarification.questions else 0}")
-        
+
         print("   ✅ API端点已实现，可以创建澄清记录")
         return True
     except Exception as e:
@@ -120,19 +130,19 @@ def main():
     print("="*60)
     print("缺失API端点测试")
     print("="*60)
-    
+
     results = []
     results.append(("需求详情API", test_requirement_detail_api()))
     results.append(("需求冻结API", test_requirement_freeze_api()))
     results.append(("AI澄清API", test_ai_clarification_api()))
-    
+
     print("\n" + "="*60)
     print("测试结果汇总")
     print("="*60)
     for name, result in results:
         status = "✅ 通过" if result else "❌ 失败"
         print(f"{name}: {status}")
-    
+
     passed = sum(1 for _, r in results if r)
     total = len(results)
     print(f"\n总计: {passed}/{total} 通过")
@@ -140,7 +150,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
 
 

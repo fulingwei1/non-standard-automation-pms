@@ -176,7 +176,7 @@ def _create_invoice(client: TestClient, token: str) -> dict:
 
 class TestLeadManagement:
     """线索管理测试"""
-    
+
     def test_create_lead_success(self, client: TestClient, admin_token: str):
         """测试正常创建线索"""
         if not admin_token:
@@ -185,12 +185,12 @@ class TestLeadManagement:
         assert lead["customer_name"].startswith("测试客户-")
         assert lead["status"] == "NEW"
         assert lead["source"] == "展会"
-    
+
     def test_create_lead_missing_required_fields(self, client: TestClient, admin_token: str):
         """测试最小必填字段"""
         if not admin_token:
             pytest.skip("Admin token not available")
-        
+
         headers = _auth_headers(admin_token)
         response = client.post(
             f"{settings.API_V1_PREFIX}/sales/leads",
@@ -201,69 +201,69 @@ class TestLeadManagement:
         data = response.json()
         assert data["status"] == "NEW"
         assert data["source"] == "市场活动"
-    
+
     def test_get_lead_list(self, client: TestClient, admin_token: str):
         """测试获取线索列表"""
         if not admin_token:
             pytest.skip("Admin token not available")
-        
+
         headers = _auth_headers(admin_token)
-        
+
         response = client.get(
             f"{settings.API_V1_PREFIX}/sales/leads?page=1&page_size=10",
             headers=headers
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "items" in data
         assert "total" in data
         assert isinstance(data["items"], list)
-    
+
     def test_get_lead_detail(self, client: TestClient, admin_token: str, lead_id: int = None):
         """测试获取线索详情"""
         if not admin_token:
             pytest.skip("Admin token not available")
-        
+
         lead = _create_lead(client, admin_token)
         headers = _auth_headers(admin_token)
         response = client.get(
             f"{settings.API_V1_PREFIX}/sales/leads/{lead['id']}",
             headers=headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["id"] == lead["id"]
-    
+
     def test_update_lead(self, client: TestClient, admin_token: str, lead_id: int = None):
         """测试更新线索"""
         if not admin_token:
             pytest.skip("Admin token not available")
-        
+
         lead = _create_lead(client, admin_token)
         headers = _auth_headers(admin_token)
         update_data = {
             "status": "CONTACTED",
             "contact_name": "李四",
         }
-        
+
         response = client.put(
             f"{settings.API_V1_PREFIX}/sales/leads/{lead['id']}",
             json=update_data,
             headers=headers
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "CONTACTED"
         assert data["contact_name"] == "李四"
-    
+
     def test_convert_lead_to_opportunity(self, client: TestClient, admin_token: str, lead_id: int = None):
         """测试线索转商机"""
         if not admin_token:
             pytest.skip("Admin token not available")
-        
+
         lead = _create_lead(client, admin_token)
         customer_id = _create_customer(client, admin_token)
         headers = _auth_headers(admin_token)
@@ -273,7 +273,7 @@ class TestLeadManagement:
             json={},
             headers=headers,
         )
-        
+
         assert response.status_code == 201
         data = response.json()
         assert data["lead_id"] == lead["id"]
@@ -286,61 +286,61 @@ class TestLeadManagement:
 
 class TestOpportunityManagement:
     """商机管理测试"""
-    
+
     def test_create_opportunity_success(self, client: TestClient, admin_token: str):
         """测试正常创建商机"""
         if not admin_token:
             pytest.skip("Admin token not available")
-        
+
         opportunity = _create_opportunity(client, admin_token)
         assert opportunity["stage"] == "QUALIFICATION"
         assert opportunity["customer_id"] > 0
-    
+
     def test_get_opportunity_list(self, client: TestClient, admin_token: str):
         """测试获取商机列表"""
         if not admin_token:
             pytest.skip("Admin token not available")
-        
+
         headers = _auth_headers(admin_token)
-        
+
         response = client.get(
             f"{settings.API_V1_PREFIX}/sales/opportunities?page=1&page_size=10",
             headers=headers
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "items" in data
         assert "total" in data
-    
+
     def test_update_opportunity(self, client: TestClient, admin_token: str, opportunity_id: int = None):
         """测试更新商机"""
         if not admin_token:
             pytest.skip("Admin token not available")
-        
+
         opportunity = _create_opportunity(client, admin_token)
         headers = _auth_headers(admin_token)
         update_data = {
             "stage": "PROPOSAL",
             "probability": 50,
         }
-        
+
         response = client.put(
             f"{settings.API_V1_PREFIX}/sales/opportunities/{opportunity['id']}",
             json=update_data,
             headers=headers
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["stage"] == "PROPOSAL"
         assert data["probability"] == 50
-    
+
     def test_submit_gate_validation(self, client: TestClient, admin_token: str, opportunity_id: int = None):
         """测试提交阶段门控验证"""
         if not admin_token:
             pytest.skip("Admin token not available")
-        
+
         opportunity = _create_opportunity(client, admin_token)
         headers = _auth_headers(admin_token)
         response = client.post(
@@ -354,72 +354,72 @@ class TestOpportunityManagement:
 
 class TestQuoteManagement:
     """报价管理测试"""
-    
+
     def test_create_quote_success(self, client: TestClient, admin_token: str):
         """测试正常创建报价"""
         if not admin_token:
             pytest.skip("Admin token not available")
-        
+
         quote = _create_quote(client, admin_token)
         assert quote["opportunity_id"] is not None
         assert "quote_code" in quote
-    
+
     def test_create_quote_version(self, client: TestClient, admin_token: str, quote_id: int = None):
         """测试创建报价版本"""
         if not admin_token:
             pytest.skip("Admin token not available")
-        
+
         if not quote_id:
             quote = _create_quote(client, admin_token)
             quote_id = quote["id"]
-        
+
         headers = _auth_headers(admin_token)
         version_data = {"version_no": "V2", "total_price": 160000.0}
-        
+
         response = client.post(
             f"{settings.API_V1_PREFIX}/sales/quotes/{quote_id}/versions",
             json=version_data,
             headers=headers
         )
-        
+
         assert response.status_code == 201
         data = response.json()
         assert data["version_no"] == "V2"
-    
+
     def test_approve_quote(self, client: TestClient, admin_token: str, quote_id: int = None):
         """测试审批报价"""
         if not admin_token:
             pytest.skip("Admin token not available")
-        
+
         if not quote_id:
             quote = _create_quote(client, admin_token)
             quote_id = quote["id"]
-        
+
         headers = _auth_headers(admin_token)
         approve_data = {"approved": True, "remark": "同意报价"}
-        
+
         response = client.post(
             f"{settings.API_V1_PREFIX}/sales/quotes/{quote_id}/approve",
             json=approve_data,
             headers=headers
         )
-        
+
         # 根据权限和审批流程，可能成功或失败
         assert response.status_code in [200, 403, 400]
 
 
 class TestContractManagement:
     """合同管理测试"""
-    
+
     def test_create_contract_success(self, client: TestClient, admin_token: str):
         """测试正常创建合同"""
         if not admin_token:
             pytest.skip("Admin token not available")
-        
+
         contract = _create_contract(client, admin_token)
         assert "contract_code" in contract
         assert contract["opportunity_id"] is not None
-    
+
     def test_sign_contract(self, client: TestClient, admin_token: str, contract_id: int = None):
         """测试合同签订"""
         if not admin_token:
@@ -458,7 +458,7 @@ class TestContractManagement:
         except Exception as e:
             if "UNIQUE constraint" in str(e) or "PendingRollbackError" in str(e):
                 pytest.skip("Database constraint error: project code conflict")
-    
+
     def test_generate_project_from_contract(self, client: TestClient, admin_token: str, contract_id: int = None):
         """测试从合同生成项目"""
         if not admin_token:
@@ -496,48 +496,48 @@ class TestContractManagement:
 
 class TestInvoiceManagement:
     """发票管理测试"""
-    
+
     def test_create_invoice_success(self, client: TestClient, admin_token: str):
         """测试正常创建发票"""
         if not admin_token:
             pytest.skip("Admin token not available")
-        
+
         invoice = _create_invoice(client, admin_token)
         assert "invoice_code" in invoice
         assert invoice["contract_id"] is not None
-    
+
     def test_issue_invoice(self, client: TestClient, admin_token: str, invoice_id: int = None):
         """测试开票"""
         if not admin_token:
             pytest.skip("Admin token not available")
-        
+
         if not invoice_id:
             invoice = _create_invoice(client, admin_token)
             invoice_id = invoice["id"]
-        
+
         headers = _auth_headers(admin_token)
         issue_data = {
             "issue_date": date.today().isoformat(),
         }
-        
+
         response = client.post(
             f"{settings.API_V1_PREFIX}/sales/invoices/{invoice_id}/issue",
             json=issue_data,
             headers=headers
         )
-        
+
         # 根据权限和状态，可能成功或失败
         assert response.status_code in [200, 403, 400]
 
 
 class TestGateValidation:
     """阶段门验证测试"""
-    
+
     def test_g1_validation_success(self, client: TestClient, admin_token: str):
         """测试G1验证成功场景"""
         if not admin_token:
             pytest.skip("Admin token not available")
-        
+
         lead = _create_lead(client, admin_token)
         customer_id = _create_customer(client, admin_token)
         headers = _auth_headers(admin_token)
@@ -555,12 +555,12 @@ class TestGateValidation:
             headers=headers,
         )
         assert response.status_code == 201
-    
+
     def test_g1_validation_failure(self, client: TestClient, admin_token: str):
         """测试G1验证失败场景"""
         if not admin_token:
             pytest.skip("Admin token not available")
-        
+
         lead = _create_lead(client, admin_token)
         customer_id = _create_customer(client, admin_token)
         headers = _auth_headers(admin_token)
@@ -575,39 +575,39 @@ class TestGateValidation:
 
 class TestPermissionControl:
     """权限控制测试"""
-    
+
     def test_lead_permission_filtering(self, client: TestClient, sales_user_token: str):
         """测试线索数据权限过滤"""
         if not sales_user_token:
             pytest.skip("Sales user token not available")
-        
+
         headers = _auth_headers(sales_user_token)
-        
+
         response = client.get(
             f"{settings.API_V1_PREFIX}/sales/leads?page=1&page_size=10",
             headers=headers
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         # 销售用户应该只能看到自己的线索或团队线索
         # 这里需要根据实际权限逻辑验证
-    
+
     def test_edit_permission_check(self, client: TestClient, normal_user_token: str):
         """测试编辑权限检查"""
         if not normal_user_token:
             pytest.skip("Normal user token not available")
-        
+
         headers = _auth_headers(normal_user_token)
-        
+
         # 尝试更新不属于自己的线索
         update_data = {"status": "CONTACTED"}
-        
+
         response = client.put(
             f"{settings.API_V1_PREFIX}/sales/leads/1",
             json=update_data,
             headers=headers
         )
-        
+
         # 应该返回403 Forbidden
         assert response.status_code in [403, 404]

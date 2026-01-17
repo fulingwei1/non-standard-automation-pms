@@ -5,10 +5,20 @@
 先检查数据库中是否有项目、客户和用户数据，如果没有则提示
 """
 
-import requests
-import json
 import sys
+
+if "pytest" in sys.modules:
+    import pytest
+
+    pytest.skip(
+        "Manual live-HTTP script (not a pytest test module)",
+        allow_module_level=True,
+    )
+
+import json
 from typing import Optional
+
+import requests
 
 BASE_URL = "http://127.0.0.1:8000/api/v1"
 USERNAME = "admin"
@@ -54,9 +64,9 @@ def check_data(token: str):
     print("=" * 60)
     print_info("检查数据库数据")
     print("=" * 60)
-    
+
     headers = {"Authorization": f"Bearer {token}"}
-    
+
     # 检查项目
     try:
         response = requests.get(f"{BASE_URL}/projects?page=1&page_size=1", headers=headers, timeout=10)
@@ -72,7 +82,7 @@ def check_data(token: str):
             print_warning("无法获取项目列表")
     except Exception as e:
         print_warning(f"检查项目时出错: {e}")
-    
+
     # 检查客户
     try:
         response = requests.get(f"{BASE_URL}/customers?page=1&page_size=1", headers=headers, timeout=10)
@@ -88,7 +98,7 @@ def check_data(token: str):
             print_warning("无法获取客户列表")
     except Exception as e:
         print_warning(f"检查客户时出错: {e}")
-    
+
     # 检查用户
     try:
         response = requests.get(f"{BASE_URL}/users?page=1&page_size=1", headers=headers, timeout=10)
@@ -104,21 +114,21 @@ def check_data(token: str):
             print_warning("无法获取用户列表")
     except Exception as e:
         print_warning(f"检查用户时出错: {e}")
-    
+
     return None, None, None
 
 def test_api(method: str, endpoint: str, token: str, data: Optional[dict] = None, description: str = ""):
     """测试API"""
     url = f"{BASE_URL}{endpoint}"
     headers = {"Authorization": f"Bearer {token}"}
-    
+
     print()
     print("=" * 60)
     print_info(f"测试: {description}")
     print(f"请求: {method} {url}")
     if data:
         print(f"数据: {json.dumps(data, ensure_ascii=False, indent=2)}")
-    
+
     try:
         if method == "GET":
             response = requests.get(url, headers=headers, timeout=10)
@@ -131,7 +141,7 @@ def test_api(method: str, endpoint: str, token: str, data: Optional[dict] = None
         else:
             print_error(f"不支持的HTTP方法: {method}")
             return None
-        
+
         if response.status_code >= 200 and response.status_code < 300:
             print_success(f"成功 (HTTP {response.status_code})")
             try:
@@ -155,17 +165,17 @@ def main():
     print("=" * 60)
     print_info("服务工单API测试（带数据检查）")
     print("=" * 60)
-    
+
     # 获取Token
     token = get_token()
     if not token:
         print_error("无法获取Token，请检查服务器和登录信息")
         sys.exit(1)
     print_success("登录成功")
-    
+
     # 检查数据
     project_id, customer_id, user_id = check_data(token)
-    
+
     # 如果数据不存在，提示用户
     if not project_id or not customer_id or not user_id:
         print()
@@ -176,36 +186,36 @@ def main():
         print("3. 确保有用户数据")
         print()
         print_info("继续测试基础API（不创建数据）...")
-    
+
     # 测试基础API（不需要数据）
     print()
     print("=" * 60)
     print_info("测试基础API")
     print("=" * 60)
-    
+
     # 获取服务工单列表
     test_api("GET", "/service/service-tickets?page=1&page_size=10", token,
              description="获取服务工单列表")
-    
+
     # 获取服务工单统计
     test_api("GET", "/service/service-tickets/statistics", token,
              description="获取服务工单统计")
-    
+
     # 获取服务记录列表
     test_api("GET", "/service/service-records?page=1&page_size=10", token,
              description="获取服务记录列表")
-    
+
     # 获取服务记录统计
     test_api("GET", "/service/service-records/statistics", token,
              description="获取服务记录统计")
-    
+
     # 如果有数据，测试创建功能
     if project_id and customer_id and user_id:
         print()
         print("=" * 60)
         print_info("测试创建功能（使用找到的数据）")
         print("=" * 60)
-        
+
         # 创建服务工单
         ticket_data = {
             "project_id": project_id,
@@ -218,16 +228,16 @@ def main():
         }
         ticket_result = test_api("POST", "/service/service-tickets", token, ticket_data,
                                 description="创建服务工单")
-        
+
         ticket_id = None
         if ticket_result and isinstance(ticket_result, dict) and "id" in ticket_result:
             ticket_id = ticket_result["id"]
             print_success(f"创建的服务工单ID: {ticket_id}")
-            
+
             # 获取详情
             test_api("GET", f"/service/service-tickets/{ticket_id}", token,
                     description="获取服务工单详情")
-        
+
         # 创建服务记录
         record_data = {
             "service_type": "INSTALLATION",
@@ -239,16 +249,16 @@ def main():
         }
         record_result = test_api("POST", "/service/service-records", token, record_data,
                                description="创建服务记录")
-        
+
         record_id = None
         if record_result and isinstance(record_result, dict) and "id" in record_result:
             record_id = record_result["id"]
             print_success(f"创建的服务记录ID: {record_id}")
-            
+
             # 获取详情
             test_api("GET", f"/service/service-records/{record_id}", token,
                     description="获取服务记录详情")
-    
+
     print()
     print("=" * 60)
     print_success("测试完成！")
@@ -256,6 +266,5 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
 

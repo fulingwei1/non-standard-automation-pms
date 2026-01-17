@@ -4,10 +4,11 @@
 测试所有角色的所有功能，记录故障
 """
 
-import requests
 import json
 from datetime import datetime
-from typing import Dict, List, Any
+from typing import Any, Dict, List
+
+import requests
 
 BASE_URL = "http://localhost:8000/api/v1"
 FRONTEND_URL = "http://localhost:5173"

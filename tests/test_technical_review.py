@@ -6,18 +6,22 @@
 """
 
 import sys
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
+
 from sqlalchemy.orm import Session
 
 # 添加项目路径
 sys.path.insert(0, '.')
 
 from app.models.base import get_db_session
-from app.models.technical_review import (
-    TechnicalReview, ReviewParticipant, ReviewMaterial,
-    ReviewChecklistRecord, ReviewIssue
-)
 from app.models.project import Project
+from app.models.technical_review import (
+    ReviewChecklistRecord,
+    ReviewIssue,
+    ReviewMaterial,
+    ReviewParticipant,
+    TechnicalReview,
+)
 from app.models.user import User
 
 
@@ -61,7 +65,7 @@ def main():
     print("=" * 70)
     print("技术评审模块功能测试")
     print("=" * 70)
-    
+
     with get_db_session() as db:
         # 1. 获取测试数据
         print("\n[步骤1] 获取测试数据...")
@@ -69,23 +73,23 @@ def main():
         if not project:
             print("❌ 未找到测试项目，请先创建项目")
             return
-        
+
         users = db.query(User).limit(5).all()
         if len(users) < 3:
             print("❌ 用户数据不足，至少需要3个用户")
             return
-        
+
         host = users[0]
         presenter = users[1]
         recorder = users[2]
         expert1 = users[3] if len(users) > 3 else users[0]
         expert2 = users[4] if len(users) > 4 else users[1]
-        
+
         print(f"✓ 项目: {project.project_code} - {project.project_name}")
         print(f"✓ 主持人: {host.real_name or host.username}")
         print(f"✓ 汇报人: {presenter.real_name or presenter.username}")
         print(f"✓ 记录人: {recorder.real_name or recorder.username}")
-        
+
         # 2. 创建技术评审
         print("\n[步骤2] 创建技术评审...")
         review_no = generate_review_no(db, "PDR")
@@ -112,7 +116,7 @@ def main():
         print(f"  - 名称: {review.review_name}")
         print(f"  - 状态: {review.status}")
         print(f"  - 计划时间: {review.scheduled_date}")
-        
+
         # 3. 添加参与人
         print("\n[步骤3] 添加评审参与人...")
         participants_data = [
@@ -122,7 +126,7 @@ def main():
             {"user": expert1, "role": "EXPERT", "required": True},
             {"user": expert2, "role": "EXPERT", "required": False},
         ]
-        
+
         participants = []
         for p_data in participants_data:
             participant = ReviewParticipant(
@@ -135,10 +139,10 @@ def main():
             db.add(participant)
             participants.append(participant)
             print(f"✓ 添加参与人: {p_data['user'].real_name or p_data['user'].username} ({p_data['role']})")
-        
+
         db.commit()
         print(f"✓ 共添加 {len(participants)} 位参与人")
-        
+
         # 4. 上传评审材料
         print("\n[步骤4] 上传评审材料...")
         materials_data = [
@@ -171,7 +175,7 @@ def main():
                 "required": False,
             },
         ]
-        
+
         materials = []
         for m_data in materials_data:
             material = ReviewMaterial(
@@ -187,10 +191,10 @@ def main():
             materials.append(material)
             required_str = "必需" if m_data["required"] else "可选"
             print(f"✓ 上传材料: {m_data['name']} ({m_data['type']}, {required_str})")
-        
+
         db.commit()
         print(f"✓ 共上传 {len(materials)} 份材料")
-        
+
         # 5. 创建检查项记录
         print("\n[步骤5] 创建评审检查项记录...")
         checklist_data = [
@@ -229,7 +233,7 @@ def main():
                 "issue_desc": "部分进口物料成本偏高，建议寻找替代方案",
             },
         ]
-        
+
         checklist_records = []
         for c_data in checklist_data:
             record = ReviewChecklistRecord(
@@ -244,7 +248,7 @@ def main():
             )
             db.add(record)
             db.flush()  # 获取ID
-            
+
             # 如果不通过，自动创建问题
             if c_data["result"] == "FAIL" and c_data.get("issue_level") and c_data.get("issue_desc"):
                 issue_no = generate_issue_no(db)
@@ -265,12 +269,12 @@ def main():
                 print(f"  → 结果: {c_data['result']} (自动创建问题: {issue_no})")
             else:
                 print(f"✓ 检查项: {c_data['category']} - {c_data['item']} ({c_data['result']})")
-            
+
             checklist_records.append(record)
-        
+
         db.commit()
         print(f"✓ 共创建 {len(checklist_records)} 条检查项记录")
-        
+
         # 6. 手动创建问题
         print("\n[步骤6] 手动创建评审问题...")
         manual_issue = ReviewIssue(
@@ -292,7 +296,7 @@ def main():
         print(f"  - 描述: {manual_issue.description}")
         print(f"  - 责任人: {presenter.real_name or presenter.username}")
         print(f"  - 期限: {manual_issue.deadline}")
-        
+
         # 7. 更新问题统计
         print("\n[步骤7] 更新问题统计...")
         issues = db.query(ReviewIssue).filter(ReviewIssue.review_id == review.id).all()
@@ -306,7 +310,7 @@ def main():
         print(f"  - B类: {review.issue_count_b} 个")
         print(f"  - C类: {review.issue_count_c} 个")
         print(f"  - D类: {review.issue_count_d} 个")
-        
+
         # 8. 模拟问题处理流程
         print("\n[步骤8] 模拟问题处理流程...")
         # 处理B类问题
@@ -318,7 +322,7 @@ def main():
             db.commit()
             print(f"✓ 问题 {issue.issue_no} 状态更新为: 处理中")
             print(f"  - 解决方案: {issue.solution}")
-            
+
             # 验证问题
             issue.status = "RESOLVED"
             issue.verify_result = "PASS"
@@ -326,7 +330,7 @@ def main():
             issue.verify_time = datetime.now()
             db.commit()
             print(f"✓ 问题 {issue.issue_no} 已验证通过")
-        
+
         # 9. 完成评审
         print("\n[步骤9] 完成评审...")
         review.status = "IN_PROGRESS"
@@ -339,7 +343,7 @@ def main():
         print(f"✓ 评审结论: {review.conclusion}")
         print(f"✓ 结论说明: {review.conclusion_summary}")
         print(f"✓ 整改期限: {review.condition_deadline}")
-        
+
         # 10. 汇总信息
         print("\n" + "=" * 70)
         print("测试完成 - 数据汇总")
@@ -349,7 +353,7 @@ def main():
         print(f"  - 评审名称: {review.review_name}")
         print(f"  - 评审状态: {review.status}")
         print(f"  - 评审结论: {review.conclusion}")
-        
+
         print(f"\n参与人: {len(participants)} 位")
         print(f"材料: {len(materials)} 份")
         print(f"检查项: {len(checklist_records)} 条")
@@ -358,7 +362,7 @@ def main():
         print(f"  - B类: {review.issue_count_b}")
         print(f"  - C类: {review.issue_count_c}")
         print(f"  - D类: {review.issue_count_d}")
-        
+
         print("\n" + "=" * 70)
         print("✓ 所有功能测试完成！")
         print("=" * 70)

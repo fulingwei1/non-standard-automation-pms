@@ -18,15 +18,19 @@
     pytest --cov=app --cov-report=html
 """
 
+from datetime import datetime
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
-from datetime import datetime
 
-from app.models.task_center import TaskUnified, TaskApprovalWorkflow, TaskCompletionProof
-from app.models.enums import TaskImportance, TaskStatus, TaskPriority, ApprovalDecision
+from app.models.enums import ApprovalDecision, TaskImportance, TaskPriority, TaskStatus
+from app.models.task_center import (
+    TaskApprovalWorkflow,
+    TaskCompletionProof,
+    TaskUnified,
+)
 from app.services.progress_aggregation_service import ProgressAggregationService
-
 
 # ==================== 模块1: 工程师端 - 项目查询 ====================
 

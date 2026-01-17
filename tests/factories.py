@@ -20,23 +20,29 @@
     project = ProjectFactory(customer=CustomerFactory())
 """
 
-import factory
-from factory.alchemy import SQLAlchemyModelFactory
-from datetime import date, datetime, timedelta
-from decimal import Decimal
 import random
 import string
+from datetime import date, datetime, timedelta
+from decimal import Decimal
 
-from app.models.base import get_session
-from app.models.organization import Employee, Department
-from app.models.user import User, Role, Permission
-from app.models.project import Project, Customer, Machine, ProjectStage, ProjectMilestone
-from app.models.material import Material, MaterialCategory, Supplier, BomHeader, BomItem
-from app.models.purchase import PurchaseOrder, PurchaseOrderItem, PurchaseRequest
-from app.models.sales import Lead, Opportunity, Quote, Contract
-from app.models.budget import ProjectBudget, ProjectBudgetItem
+import factory
+from factory.alchemy import SQLAlchemyModelFactory
+
 from app.core.security import get_password_hash
-
+from app.models.base import get_session
+from app.models.budget import ProjectBudget, ProjectBudgetItem
+from app.models.material import BomHeader, BomItem, Material, MaterialCategory, Supplier
+from app.models.organization import Department, Employee
+from app.models.project import (
+    Customer,
+    Machine,
+    Project,
+    ProjectMilestone,
+    ProjectStage,
+)
+from app.models.purchase import PurchaseOrder, PurchaseOrderItem, PurchaseRequest
+from app.models.sales import Contract, Lead, Opportunity, Quote
+from app.models.user import Permission, Role, User
 
 # ============== 基础配置 ==============
 

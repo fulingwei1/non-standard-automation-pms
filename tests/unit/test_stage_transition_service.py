@@ -11,25 +11,26 @@
 - 阶段流转执行
 """
 
-import pytest
-from decimal import Decimal
 from datetime import date
-from unittest.mock import Mock, MagicMock, patch
+from decimal import Decimal
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 from sqlalchemy.orm import Session
 
+from app.models.acceptance import AcceptanceOrder
+from app.models.material import BomHeader
+from app.models.project import Project, ProjectPaymentPlan
+from app.models.sales import Contract
 from app.services.stage_transition_checks import (
     check_s3_to_s4_transition,
     check_s4_to_s5_transition,
     check_s5_to_s6_transition,
     check_s7_to_s8_transition,
     check_s8_to_s9_transition,
+    execute_stage_transition,
     get_stage_status_mapping,
-    execute_stage_transition
 )
-from app.models.project import Project, ProjectPaymentPlan
-from app.models.sales import Contract
-from app.models.material import BomHeader
-from app.models.acceptance import AcceptanceOrder
 
 
 class TestStageStatusMapping:

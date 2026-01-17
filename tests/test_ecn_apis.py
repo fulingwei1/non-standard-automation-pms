@@ -5,11 +5,17 @@ ECN变更管理模块API测试脚本
 测试ECN基础管理、评估、审批、执行、受影响物料/订单、类型配置等API
 """
 
-import requests
 import json
 import sys
-from typing import Optional, Dict, Any
 from datetime import datetime, timedelta
+from typing import Any, Dict, Optional
+
+import requests
+
+if "pytest" in sys.modules:
+    import pytest
+
+    pytest.skip("Manual API script; run with `python3 tests/test_ecn_apis.py`", allow_module_level=True)
 
 BASE_URL = "http://127.0.0.1:8000/api/v1"
 USERNAME = "admin"
@@ -53,14 +59,14 @@ def test_api(method: str, endpoint: str, token: Optional[str] = None,
     headers = {}
     if token:
         headers["Authorization"] = f"Bearer {token}"
-    
+
     print()
     print("=" * 60)
     print_info(f"测试: {description}")
     print(f"请求: {method} {url}")
     if data:
         print(f"数据: {json.dumps(data, ensure_ascii=False, indent=2)}")
-    
+
     try:
         if method == "GET":
             response = requests.get(url, headers=headers, timeout=10)
@@ -75,7 +81,7 @@ def test_api(method: str, endpoint: str, token: Optional[str] = None,
         else:
             print_error(f"不支持的HTTP方法: {method}")
             return None
-        
+
         if response.status_code >= 200 and response.status_code < 300:
             print_success(f"成功 (HTTP {response.status_code})")
             try:
@@ -116,7 +122,7 @@ def test_ecn_basic_operations(token: str):
     print_info("=" * 80)
     print_info("测试ECN基础管理功能")
     print_info("=" * 80)
-    
+
     # 1. 获取项目列表（用于创建ECN）
     print()
     projects_result = test_api("GET", "/projects?page_size=10", token=token, description="获取项目列表")
@@ -127,7 +133,7 @@ def test_ecn_basic_operations(token: str):
     else:
         print_warning("未找到项目，将使用project_id=1")
         project_id = 1
-    
+
     # 2. 创建ECN
     print()
     ecn_data = {
@@ -148,11 +154,11 @@ def test_ecn_basic_operations(token: str):
     ecn_id = ecn_result["id"]
     ecn_no = ecn_result.get("ecn_no", "")
     print_success(f"ECN创建成功: ID={ecn_id}, NO={ecn_no}")
-    
+
     # 3. 获取ECN详情
     print()
     test_api("GET", f"/ecns/{ecn_id}", token=token, description="获取ECN详情")
-    
+
     # 4. 更新ECN（草稿状态）
     print()
     update_data = {
@@ -160,11 +166,11 @@ def test_ecn_basic_operations(token: str):
         "change_description": "更新后的变更描述"
     }
     test_api("PUT", f"/ecns/{ecn_id}", token=token, data=update_data, description="更新ECN")
-    
+
     # 5. 获取ECN列表
     print()
     test_api("GET", "/ecns?page=1&page_size=10", token=token, description="获取ECN列表")
-    
+
     return ecn_id, ecn_no
 
 def test_affected_materials(token: str, ecn_id: int):
@@ -174,7 +180,7 @@ def test_affected_materials(token: str, ecn_id: int):
     print_info("=" * 80)
     print_info("测试受影响物料管理功能")
     print_info("=" * 80)
-    
+
     # 1. 获取物料列表（用于选择物料）
     print()
     materials_result = test_api("GET", "/materials/?page_size=5", token=token, description="获取物料列表")
@@ -186,7 +192,7 @@ def test_affected_materials(token: str, ecn_id: int):
         material_code = materials_result["items"][0].get("material_code", material_code)
         material_name = materials_result["items"][0].get("material_name", material_name)
         print_success(f"使用物料ID: {material_id}, 编码: {material_code}")
-    
+
     # 2. 添加受影响物料
     print()
     material_data = {
@@ -202,18 +208,18 @@ def test_affected_materials(token: str, ecn_id: int):
         "cost_impact": 1000.00,
         "remark": "测试备注"
     }
-    mat_result = test_api("POST", f"/ecns/{ecn_id}/affected-materials", token=token, 
+    mat_result = test_api("POST", f"/ecns/{ecn_id}/affected-materials", token=token,
                          data=material_data, description="添加受影响物料")
     if not mat_result or "id" not in mat_result:
         print_error("添加受影响物料失败")
         return None
     mat_id = mat_result["id"]
     print_success(f"受影响物料添加成功: ID={mat_id}")
-    
+
     # 3. 获取受影响物料列表
     print()
     test_api("GET", f"/ecns/{ecn_id}/affected-materials", token=token, description="获取受影响物料列表")
-    
+
     # 4. 更新受影响物料
     print()
     update_mat_data = {
@@ -222,12 +228,12 @@ def test_affected_materials(token: str, ecn_id: int):
     }
     test_api("PUT", f"/ecns/{ecn_id}/affected-materials/{mat_id}", token=token,
              data=update_mat_data, description="更新受影响物料")
-    
+
     # 5. 删除受影响物料
     print()
     test_api("DELETE", f"/ecns/{ecn_id}/affected-materials/{mat_id}", token=token,
              description="删除受影响物料")
-    
+
     return mat_id
 
 def test_affected_orders(token: str, ecn_id: int):
@@ -237,7 +243,7 @@ def test_affected_orders(token: str, ecn_id: int):
     print_info("=" * 80)
     print_info("测试受影响订单管理功能")
     print_info("=" * 80)
-    
+
     # 1. 获取采购订单列表（用于选择订单）
     print()
     orders_result = test_api("GET", "/purchase-orders?page_size=5", token=token, description="获取采购订单列表")
@@ -247,7 +253,7 @@ def test_affected_orders(token: str, ecn_id: int):
         order_id = orders_result["items"][0]["id"]
         order_no = orders_result["items"][0].get("po_no", order_no)
         print_success(f"使用订单ID: {order_id}, 订单号: {order_no}")
-    
+
     # 2. 添加受影响订单
     print()
     order_data = {
@@ -265,11 +271,11 @@ def test_affected_orders(token: str, ecn_id: int):
         return None
     affected_order_id = order_result["id"]
     print_success(f"受影响订单添加成功: ID={affected_order_id}")
-    
+
     # 3. 获取受影响订单列表
     print()
     test_api("GET", f"/ecns/{ecn_id}/affected-orders", token=token, description="获取受影响订单列表")
-    
+
     # 4. 更新受影响订单
     print()
     update_order_data = {
@@ -278,12 +284,12 @@ def test_affected_orders(token: str, ecn_id: int):
     }
     test_api("PUT", f"/ecns/{ecn_id}/affected-orders/{affected_order_id}", token=token,
              data=update_order_data, description="更新受影响订单")
-    
+
     # 5. 删除受影响订单
     print()
     test_api("DELETE", f"/ecns/{ecn_id}/affected-orders/{affected_order_id}", token=token,
              description="删除受影响订单")
-    
+
     return affected_order_id
 
 def test_ecn_types(token: str):
@@ -293,11 +299,11 @@ def test_ecn_types(token: str):
     print_info("=" * 80)
     print_info("测试ECN类型配置管理功能")
     print_info("=" * 80)
-    
+
     # 1. 获取ECN类型列表
     print()
     test_api("GET", "/ecn-types", token=token, description="获取ECN类型列表")
-    
+
     # 2. 创建ECN类型
     print()
     type_data = {
@@ -318,11 +324,11 @@ def test_ecn_types(token: str):
         return None
     type_id = type_result["id"]
     print_success(f"ECN类型创建成功: ID={type_id}")
-    
+
     # 3. 获取ECN类型详情
     print()
     test_api("GET", f"/ecn-types/{type_id}", token=token, description="获取ECN类型详情")
-    
+
     # 4. 更新ECN类型
     print()
     update_type_data = {
@@ -330,11 +336,11 @@ def test_ecn_types(token: str):
         "required_depts": ["机械部", "电气部", "采购部"]
     }
     test_api("PUT", f"/ecn-types/{type_id}", token=token, data=update_type_data, description="更新ECN类型")
-    
+
     # 5. 删除ECN类型
     print()
     test_api("DELETE", f"/ecn-types/{type_id}", token=token, description="删除ECN类型")
-    
+
     return type_id
 
 def test_ecn_evaluation(token: str, ecn_id: int):
@@ -344,11 +350,11 @@ def test_ecn_evaluation(token: str, ecn_id: int):
     print_info("=" * 80)
     print_info("测试ECN评估功能")
     print_info("=" * 80)
-    
+
     # 1. 提交ECN（进入评估阶段）
     print()
     test_api("PUT", f"/ecns/{ecn_id}/submit", token=token, data={}, description="提交ECN")
-    
+
     # 2. 创建评估
     print()
     eval_data = {
@@ -369,23 +375,23 @@ def test_ecn_evaluation(token: str, ecn_id: int):
         return None
     eval_id = eval_result["id"]
     print_success(f"评估创建成功: ID={eval_id}")
-    
+
     # 3. 获取评估列表
     print()
     test_api("GET", f"/ecns/{ecn_id}/evaluations", token=token, description="获取评估列表")
-    
+
     # 4. 获取评估详情
     print()
     test_api("GET", f"/ecn-evaluations/{eval_id}", token=token, description="获取评估详情")
-    
+
     # 5. 提交评估
     print()
     test_api("PUT", f"/ecn-evaluations/{eval_id}/submit", token=token, description="提交评估")
-    
+
     # 6. 获取评估汇总
     print()
     test_api("GET", f"/ecns/{ecn_id}/evaluation-summary", token=token, description="获取评估汇总")
-    
+
     return eval_id
 
 def test_ecn_approval(token: str, ecn_id: int):
@@ -395,7 +401,7 @@ def test_ecn_approval(token: str, ecn_id: int):
     print_info("=" * 80)
     print_info("测试ECN审批功能")
     print_info("=" * 80)
-    
+
     # 1. 创建审批记录
     print()
     approval_data = {
@@ -410,20 +416,20 @@ def test_ecn_approval(token: str, ecn_id: int):
         return None
     approval_id = approval_result["id"]
     print_success(f"审批记录创建成功: ID={approval_id}")
-    
+
     # 2. 获取审批列表
     print()
     test_api("GET", f"/ecns/{ecn_id}/approvals", token=token, description="获取审批列表")
-    
+
     # 3. 获取审批详情
     print()
     test_api("GET", f"/ecn-approvals/{approval_id}", token=token, description="获取审批详情")
-    
+
     # 4. 审批通过
     print()
     test_api("PUT", f"/ecn-approvals/{approval_id}/approve?approval_comment=同意", token=token,
              description="审批通过")
-    
+
     return approval_id
 
 def test_ecn_tasks(token: str, ecn_id: int):
@@ -433,7 +439,7 @@ def test_ecn_tasks(token: str, ecn_id: int):
     print_info("=" * 80)
     print_info("测试ECN执行任务功能")
     print_info("=" * 80)
-    
+
     # 1. 创建执行任务
     print()
     task_data = {
@@ -452,15 +458,15 @@ def test_ecn_tasks(token: str, ecn_id: int):
         return None
     task_id = task_result["id"]
     print_success(f"执行任务创建成功: ID={task_id}")
-    
+
     # 2. 获取任务列表
     print()
     test_api("GET", f"/ecns/{ecn_id}/tasks", token=token, description="获取任务列表")
-    
+
     # 3. 获取任务详情
     print()
     test_api("GET", f"/ecn-tasks/{task_id}", token=token, description="获取任务详情")
-    
+
     # 4. 更新任务进度
     print()
     progress_data = {
@@ -469,7 +475,7 @@ def test_ecn_tasks(token: str, ecn_id: int):
     }
     test_api("PUT", f"/ecn-tasks/{task_id}/progress", token=token,
              data=progress_data, description="更新任务进度")
-    
+
     # 5. 完成任务
     print()
     complete_data = {
@@ -477,7 +483,7 @@ def test_ecn_tasks(token: str, ecn_id: int):
     }
     test_api("PUT", f"/ecn-tasks/{task_id}/complete", token=token,
              data=complete_data, description="完成任务")
-    
+
     return task_id
 
 def test_ecn_logs(token: str, ecn_id: int):
@@ -487,7 +493,7 @@ def test_ecn_logs(token: str, ecn_id: int):
     print_info("=" * 80)
     print_info("测试ECN日志功能")
     print_info("=" * 80)
-    
+
     # 获取ECN日志
     print()
     test_api("GET", f"/ecns/{ecn_id}/logs", token=token, description="获取ECN日志")
@@ -499,7 +505,7 @@ def test_ecn_statistics(token: str):
     print_info("=" * 80)
     print_info("测试ECN统计功能")
     print_info("=" * 80)
-    
+
     # 获取ECN统计
     print()
     test_api("GET", "/ecns/statistics", token=token, description="获取ECN统计")
@@ -511,7 +517,7 @@ def test_overdue_alerts(token: str):
     print_info("=" * 80)
     print_info("测试超时提醒功能")
     print_info("=" * 80)
-    
+
     # 获取超时提醒
     print()
     test_api("GET", "/ecns/overdue-alerts", token=token, description="获取超时提醒")
@@ -522,22 +528,22 @@ def main():
     print("=" * 80)
     print_info("ECN变更管理模块API测试")
     print_info("=" * 80)
-    
+
     # 检查服务器
     if not check_server():
         sys.exit(1)
-    
+
     # 登录
     token = test_login()
     if not token:
         print_error("登录失败，无法继续测试")
         sys.exit(1)
-    
+
     print()
     print_success("=" * 80)
     print_success("开始测试ECN模块功能")
     print_success("=" * 80)
-    
+
     try:
         # 1. ECN基础操作
         result = test_ecn_basic_operations(token)
@@ -545,34 +551,34 @@ def main():
             print_error("ECN基础操作测试失败")
             return
         ecn_id, ecn_no = result
-        
+
         # 2. 受影响物料管理
         test_affected_materials(token, ecn_id)
-        
+
         # 3. 受影响订单管理
         test_affected_orders(token, ecn_id)
-        
+
         # 4. ECN类型配置管理
         test_ecn_types(token)
-        
+
         # 5. ECN评估功能
         test_ecn_evaluation(token, ecn_id)
-        
+
         # 6. ECN审批功能
         test_ecn_approval(token, ecn_id)
-        
+
         # 7. ECN执行任务功能
         test_ecn_tasks(token, ecn_id)
-        
+
         # 8. ECN日志功能
         test_ecn_logs(token, ecn_id)
-        
+
         # 9. ECN统计功能
         test_ecn_statistics(token)
-        
+
         # 10. 超时提醒功能
         test_overdue_alerts(token)
-        
+
         print()
         print_success("=" * 80)
         print_success("所有测试完成！")
@@ -581,7 +587,7 @@ def main():
         print_info(f"测试ECN编号: {ecn_no}")
         print_info(f"测试ECN ID: {ecn_id}")
         print()
-        
+
     except Exception as e:
         print_error(f"测试过程中发生异常: {str(e)}")
         import traceback
@@ -590,7 +596,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
 
 

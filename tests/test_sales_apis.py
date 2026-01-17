@@ -5,10 +5,19 @@
 使用方法: python3 test_sales_apis.py
 """
 
-import requests
+import sys
+
+# NOTE: This file is a manual script (uses live HTTP requests), not a pytest suite.
+if "pytest" in sys.modules:
+    import pytest
+
+    pytest.skip("Manual API script; run with `python3 tests/test_sales_apis.py`", allow_module_level=True)
+
 import json
-from typing import Optional
 from datetime import date, datetime
+from typing import Optional
+
+import requests
 
 BASE_URL = "http://127.0.0.1:8000/api/v1"
 
@@ -402,6 +411,5 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
 

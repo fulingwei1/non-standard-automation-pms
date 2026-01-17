@@ -5,10 +5,21 @@
 使用方法: python3 test_technical_assessment.py
 """
 
-import requests
+import sys
+
+if "pytest" in sys.modules:
+    import pytest
+
+    pytest.skip(
+        "Manual live-HTTP script (not a pytest test module)",
+        allow_module_level=True,
+    )
+
 import json
-from typing import Optional
 from datetime import datetime
+from typing import Optional
+
+import requests
 
 BASE_URL = "http://127.0.0.1:8000/api/v1"
 
@@ -149,7 +160,7 @@ def main():
 
     # 获取评分规则列表
     rules = test_api("GET", "/sales/scoring-rules", token, description="获取评分规则列表")
-    
+
     # 如果没有规则，创建一个示例规则
     if not rules or len(rules) == 0:
         print_info("创建示例评分规则...")
@@ -192,7 +203,7 @@ def main():
     print("="*60)
 
     test_api("GET", "/sales/failure-cases", token, {"page": 1, "page_size": 10}, "获取失败案例列表")
-    
+
     # 创建示例失败案例
     sample_case = {
         "case_code": "FC-20260117-001",
@@ -217,7 +228,7 @@ def main():
     if leads and "items" in leads and len(leads["items"]) > 0:
         lead_id = leads["items"][0].get("id")
         print_info(f"使用线索 ID: {lead_id}")
-        
+
         # 申请技术评估
         assessment_result = test_api(
             "POST",
@@ -226,15 +237,15 @@ def main():
             {},
             "申请技术评估（线索）"
         )
-        
+
         if assessment_result:
             assessment_id = assessment_result.get("data", {}).get("assessment_id")
             if assessment_id:
                 print_info(f"评估ID: {assessment_id}")
-                
+
                 # 获取评估列表
                 test_api("GET", f"/sales/leads/{lead_id}/assessments", token, None, "获取线索的评估列表")
-                
+
                 # 执行评估（需要需求数据）
                 requirement_data = {
                     "industry": "新能源",
@@ -253,7 +264,7 @@ def main():
                     },
                     "执行技术评估"
                 )
-                
+
                 # 获取评估详情
                 test_api("GET", f"/sales/assessments/{assessment_id}", token, None, "获取评估详情")
     else:
@@ -280,7 +291,7 @@ def main():
             open_item,
             "创建未决事项（线索）"
         )
-        
+
         # 获取未决事项列表
         test_api(
             "GET",
@@ -318,4 +329,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

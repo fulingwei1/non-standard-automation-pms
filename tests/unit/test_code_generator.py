@@ -5,24 +5,25 @@
 测试员工、客户、物料编码的自动生成功能
 """
 
-import pytest
 import re
+
+import pytest
 from sqlalchemy.orm import Session
 
-from app.utils.number_generator import (
-    generate_employee_code,
-    generate_customer_code,
-    generate_material_code,
-)
+from app.models.material import Material, MaterialCategory
+from app.models.organization import Employee
+from app.models.project import Customer
 from app.utils.code_config import (
     CODE_PREFIX,
     SEQ_LENGTH,
     get_material_category_code,
     validate_material_category_code,
 )
-from app.models.organization import Employee
-from app.models.project import Customer
-from app.models.material import Material, MaterialCategory
+from app.utils.number_generator import (
+    generate_customer_code,
+    generate_employee_code,
+    generate_material_code,
+)
 
 
 class TestCodeGenerator:

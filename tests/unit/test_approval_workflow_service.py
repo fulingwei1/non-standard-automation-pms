@@ -10,16 +10,20 @@
 - 审批历史查询
 """
 
-import pytest
 from datetime import datetime
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 from sqlalchemy.orm import Session
 
-from app.services.approval_workflow_service import ApprovalWorkflowService
+from app.models.enums import ApprovalActionEnum, ApprovalRecordStatusEnum
 from app.models.sales import (
-    ApprovalWorkflow, ApprovalWorkflowStep, ApprovalRecord, ApprovalHistory
+    ApprovalHistory,
+    ApprovalRecord,
+    ApprovalWorkflow,
+    ApprovalWorkflowStep,
 )
-from app.models.enums import ApprovalRecordStatusEnum, ApprovalActionEnum
+from app.services.approval_workflow_service import ApprovalWorkflowService
 
 
 class TestApprovalWorkflowServiceInit:
