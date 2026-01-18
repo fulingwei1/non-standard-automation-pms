@@ -9,10 +9,12 @@
 4. 级别动态提升
 """
 
+import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
+from simpleeval import EvalWithCompoundTypes, NameNotDefined
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
@@ -276,7 +278,13 @@ class AlertRuleEngine:
         context: Optional[Dict[str, Any]] = None
     ) -> bool:
         """
-        自定义表达式匹配（简单实现，实际可以使用更复杂的表达式引擎）
+        自定义表达式匹配，使用 simpleeval 安全地评估表达式
+
+        支持的表达式示例：
+        - "progress < 50 and days_delay > 5"
+        - "cost_actual > cost_budget * 1.1"
+        - "status == 'DELAYED'"
+        - "health_level in ['H2', 'H3']"
 
         Args:
             rule: 预警规则
@@ -289,8 +297,6 @@ class AlertRuleEngine:
         if not rule.condition_expr:
             return False
 
-        # 简单的表达式评估（实际应该使用安全的表达式引擎）
-        # 这里仅做示例，实际使用时需要更安全的实现
         try:
             # 构建评估上下文
             eval_context = {}
@@ -298,10 +304,42 @@ class AlertRuleEngine:
             if context:
                 eval_context.update(context)
 
-            # TODO: 实现安全的表达式引擎（如 simpleeval）替代 eval
-            # 暂时返回 False，需要实现安全的表达式引擎
+            # 使用 simpleeval 安全地评估表达式
+            # EvalWithCompoundTypes 支持列表、字典等复合类型
+            evaluator = EvalWithCompoundTypes(names=eval_context)
+
+            # 添加一些安全的内置函数
+            evaluator.functions.update({
+                'abs': abs,
+                'len': len,
+                'min': min,
+                'max': max,
+                'sum': sum,
+                'round': round,
+                'str': str,
+                'int': int,
+                'float': float,
+                'bool': bool,
+            })
+
+            result = evaluator.eval(rule.condition_expr)
+
+            # 确保返回布尔值
+            return bool(result)
+
+        except NameNotDefined as e:
+            # 表达式中引用了不存在的变量
+            logging.getLogger(__name__).warning(
+                f"表达式评估失败 - 未定义的变量: {e}, "
+                f"规则: {rule.rule_code}, 表达式: {rule.condition_expr}"
+            )
             return False
-        except Exception:
+        except Exception as e:
+            # 其他评估错误（语法错误、类型错误等）
+            logging.getLogger(__name__).error(
+                f"表达式评估错误: {e}, "
+                f"规则: {rule.rule_code}, 表达式: {rule.condition_expr}"
+            )
             return False
 
     def get_field_value(
@@ -470,7 +508,6 @@ class AlertRuleEngine:
                 )
         except Exception as e:
             # 通知发送失败不影响升级操作
-            import logging
             logging.getLogger(__name__).error(f"升级通知发送失败: {e}")
 
         return alert
@@ -542,7 +579,6 @@ class AlertRuleEngine:
                 self.notification_service.send_alert_notification(alert=alert)
         except Exception as e:
             # 通知发送失败不影响预警创建
-            import logging
             logging.getLogger(__name__).error(f"预警通知发送失败: {e}")
 
         return alert

@@ -3,6 +3,13 @@
 枚举定义模块 - 按业务域聚合
 """
 
+# 预警相关
+from .alert import (
+    AlertLevelEnum,
+    AlertRuleTypeEnum,
+    AlertStatusEnum,
+)
+
 # 验收和质量
 from .acceptance import (
     AcceptanceOrderStatusEnum,
@@ -118,6 +125,10 @@ from .workflow import (
 )
 
 __all__ = [
+    # 预警相关
+    "AlertLevelEnum",
+    "AlertRuleTypeEnum",
+    "AlertStatusEnum",
     # 项目相关
     "ProjectStageEnum",
     "ProjectHealthEnum",
