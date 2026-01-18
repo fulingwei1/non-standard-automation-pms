@@ -14,7 +14,7 @@ from app.core import security
 from app.models.staff_matching import HrAIMatchingLog
 from app.models.user import User
 from app.schemas import staff_matching as schemas
-from app.services.staff_matching_service import StaffMatchingService
+from app.services.staff_matching import StaffMatchingService
 
 router = APIRouter()
 

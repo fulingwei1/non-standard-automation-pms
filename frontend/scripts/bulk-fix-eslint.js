@@ -48,17 +48,17 @@ function computeLibUtilsImportSource(filePath) {
   const libUtilsPath = path.resolve("src/lib/utils.js");
   const rel = path.relative(fileDir, libUtilsPath);
   const normalized = toPosixPath(rel).replace(/\.js$/, "");
-  if (normalized.startsWith(".")) return normalized;
+  if (normalized.startsWith(".")) {return normalized;}
   return `./${normalized}`;
 }
 
 function ensureNamedImport(programPath, sourceValue, names) {
   const uniqueNames = [...new Set(names)].filter(Boolean);
-  if (uniqueNames.length === 0) return;
+  if (uniqueNames.length === 0) {return;}
 
   let importDeclPath = null;
   for (const bodyPath of programPath.get("body")) {
-    if (!bodyPath.isImportDeclaration()) continue;
+    if (!bodyPath.isImportDeclaration()) {continue;}
     if (bodyPath.node.source.value === sourceValue) {
       importDeclPath = bodyPath;
       break;
@@ -82,11 +82,11 @@ function ensureNamedImport(programPath, sourceValue, names) {
 
   const existing = new Set();
   for (const spec of importDeclPath.node.specifiers) {
-    if (t.isImportSpecifier(spec)) existing.add(spec.imported.name);
+    if (t.isImportSpecifier(spec)) {existing.add(spec.imported.name);}
   }
 
   for (const name of uniqueNames) {
-    if (existing.has(name)) continue;
+    if (existing.has(name)) {continue;}
     importDeclPath.node.specifiers.push(
       t.importSpecifier(t.identifier(name), t.identifier(name)),
     );
@@ -94,24 +94,24 @@ function ensureNamedImport(programPath, sourceValue, names) {
 }
 
 function ensureLucideIcons(programPath, iconNames) {
-  if (!iconNames.length) return;
+  if (!iconNames.length) {return;}
   let lucideImportPath = null;
   for (const bodyPath of programPath.get("body")) {
-    if (!bodyPath.isImportDeclaration()) continue;
+    if (!bodyPath.isImportDeclaration()) {continue;}
     if (bodyPath.node.source.value === "lucide-react") {
       lucideImportPath = bodyPath;
       break;
     }
   }
-  if (!lucideImportPath) return;
+  if (!lucideImportPath) {return;}
 
   const existing = new Set();
   for (const spec of lucideImportPath.node.specifiers) {
-    if (t.isImportSpecifier(spec)) existing.add(spec.imported.name);
+    if (t.isImportSpecifier(spec)) {existing.add(spec.imported.name);}
   }
 
   for (const icon of iconNames) {
-    if (existing.has(icon)) continue;
+    if (existing.has(icon)) {continue;}
     lucideImportPath.node.specifiers.push(
       t.importSpecifier(t.identifier(icon), t.identifier(icon)),
     );
@@ -139,8 +139,8 @@ function findFirstComponentBodyPath(programPath) {
         for (const d of decl.get("declarations")) {
           const id = d.get("id");
           const init = d.get("init");
-          if (!id.isIdentifier()) continue;
-          if (!/^[A-Z]/.test(id.node.name)) continue;
+          if (!id.isIdentifier()) {continue;}
+          if (!/^[A-Z]/.test(id.node.name)) {continue;}
           if (
             init.isArrowFunctionExpression() &&
             init.get("body").isBlockStatement()
@@ -162,8 +162,8 @@ function findFirstComponentBodyPath(programPath) {
       for (const d of bodyPath.get("declarations")) {
         const id = d.get("id");
         const init = d.get("init");
-        if (!id.isIdentifier()) continue;
-        if (!/^[A-Z]/.test(id.node.name)) continue;
+        if (!id.isIdentifier()) {continue;}
+        if (!/^[A-Z]/.test(id.node.name)) {continue;}
         if (init.isArrowFunctionExpression() && init.get("body").isBlockStatement()) {
           return init.get("body");
         }
@@ -216,9 +216,9 @@ function run() {
   for (const fileResult of report) {
     const filePath = fileResult.filePath;
     const messages = (fileResult.messages || []).filter((m) => m.severity === 2);
-    if (messages.length === 0) continue;
-    if (!filePath.includes(`${path.sep}src${path.sep}`)) continue;
-    if (!fs.existsSync(filePath)) continue;
+    if (messages.length === 0) {continue;}
+    if (!filePath.includes(`${path.sep}src${path.sep}`)) {continue;}
+    if (!fs.existsSync(filePath)) {continue;}
 
     touchedFiles += 1;
 
@@ -248,11 +248,11 @@ function run() {
     for (const msg of messages) {
       if (msg.ruleId === "no-unused-vars") {
         const name = parseUnusedName(msg.message);
-        if (!name || shouldSkipUnusedRename(name)) continue;
+        if (!name || shouldSkipUnusedRename(name)) {continue;}
         unusedLocs.set(locKey(msg.line, msg.column), name);
       } else if (msg.ruleId === "no-undef") {
         const name = parseUndefName(msg.message);
-        if (name) undefNames.add(name);
+        if (name) {undefNames.add(name);}
       }
     }
 
@@ -285,7 +285,7 @@ function run() {
 
     // Pair `setX` + `x` into state declarations.
     for (const name of undefNames) {
-      if (!name.startsWith("set") || name.length <= 3) continue;
+      if (!name.startsWith("set") || name.length <= 3) {continue;}
       const base = name.slice(3);
       const baseName = base.charAt(0).toLowerCase() + base.slice(1);
       if (undefNames.has(baseName)) {
@@ -299,11 +299,11 @@ function run() {
 
     // Singles: only add for names that are not likely imports.
     for (const name of undefNames) {
-      if (reactHookNames.has(name)) continue;
-      if (name === "toast") continue;
-      if (name === "cn" || name === "formatCurrency") continue;
-      if (name.startsWith("set")) continue;
-      if (/^[A-Z]/.test(name)) continue;
+      if (reactHookNames.has(name)) {continue;}
+      if (name === "toast") {continue;}
+      if (name === "cn" || name === "formatCurrency") {continue;}
+      if (name.startsWith("set")) {continue;}
+      if (/^[A-Z]/.test(name)) {continue;}
       placeholderSingles.push(name);
     }
 
@@ -312,8 +312,8 @@ function run() {
     traverse(ast, {
       Program(programPath) {
         // Fix imports for no-undef.
-        if (neededReact.size) ensureNamedImport(programPath, "react", [...neededReact]);
-        if (neededSonner.size) ensureNamedImport(programPath, "sonner", [...neededSonner]);
+        if (neededReact.size) {ensureNamedImport(programPath, "react", [...neededReact]);}
+        if (neededSonner.size) {ensureNamedImport(programPath, "sonner", [...neededSonner]);}
 
         if (neededUtils.size) {
           const utilsSource = computeLibUtilsImportSource(filePath);
@@ -321,7 +321,7 @@ function run() {
           // Prefer existing utils import if any.
           let foundSource = null;
           for (const bodyPath of programPath.get("body")) {
-            if (!bodyPath.isImportDeclaration()) continue;
+            if (!bodyPath.isImportDeclaration()) {continue;}
             const v = bodyPath.node.source.value;
             if (v.endsWith("/lib/utils") || v.endsWith("/lib/utils.js") || v === utilsSource) {
               foundSource = v;
@@ -341,8 +341,8 @@ function run() {
           const insertions = [];
 
           for (const { valueName, setterName } of placeholderPairs) {
-            if (componentBodyPath.scope.hasBinding(valueName)) continue;
-            if (componentBodyPath.scope.hasBinding(setterName)) continue;
+            if (componentBodyPath.scope.hasBinding(valueName)) {continue;}
+            if (componentBodyPath.scope.hasBinding(setterName)) {continue;}
 
             const uniqueValue = pickUniqueName(componentBodyPath, valueName);
             const uniqueSetter = pickUniqueName(componentBodyPath, setterName);
@@ -359,7 +359,7 @@ function run() {
           }
 
           for (const name of placeholderSingles) {
-            if (componentBodyPath.scope.hasBinding(name)) continue;
+            if (componentBodyPath.scope.hasBinding(name)) {continue;}
             const unique = pickUniqueName(componentBodyPath, name);
             insertions.push(
               t.variableDeclaration("const", [
@@ -377,11 +377,11 @@ function run() {
 
       Identifier(idPath) {
         const node = idPath.node;
-        if (!node.loc) return;
+        if (!node.loc) {return;}
         const key = locKey(node.loc.start.line, node.loc.start.column + 1);
         const originalName = unusedLocs.get(key);
-        if (!originalName) return;
-        if (idPath.node.name !== originalName) return;
+        if (!originalName) {return;}
+        if (idPath.node.name !== originalName) {return;}
 
         const baseNewName = `_${originalName}`;
         const newName = pickUniqueName(idPath.scope.path, baseNewName);
@@ -389,14 +389,14 @@ function run() {
         // Only rewrite the binding identifier itself. For `no-unused-vars` there
         // should be no real references, so a full-scope rename isn't necessary
         // (and requires Babel hub plumbing).
-        if (!idPath.isBindingIdentifier()) return;
+        if (!idPath.isBindingIdentifier()) {return;}
         idPath.node.name = newName;
         unusedLocs.delete(key);
         changed = true;
       },
     });
 
-    if (!changed) continue;
+    if (!changed) {continue;}
 
     const output = generate(
       ast,

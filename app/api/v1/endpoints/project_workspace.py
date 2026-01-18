@@ -144,6 +144,8 @@ def get_project_meetings(
                 'organizer_name': m.organizer_name,
                 'minutes': m.minutes,
                 'decisions': m.decisions,
+                'has_minutes': bool(m.minutes),
+                'has_decisions': bool(m.decisions),
             }
             for m in meetings
         ],
@@ -209,7 +211,9 @@ def get_project_issues(
                 'severity': i.severity,
                 'priority': i.priority,
                 'solution': i.solution,
+                'has_solution': bool(i.solution),
                 'assignee_name': i.assignee_name,
+                'report_date': i.report_date.isoformat() if i.report_date else None,
             }
             for i in issues
         ],

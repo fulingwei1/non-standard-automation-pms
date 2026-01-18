@@ -21,7 +21,7 @@ from app.models.ecn import Ecn, EcnTask
 from app.models.user import User
 from app.schemas.ecn import EcnTaskCreate, EcnTaskResponse
 from app.services.ecn_auto_assign_service import auto_assign_task
-from app.services.ecn_notification_service import (
+from app.services.ecn_notification import (
     notify_task_assigned,
     notify_task_completed,
 )

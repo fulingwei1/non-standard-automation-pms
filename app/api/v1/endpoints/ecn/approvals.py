@@ -19,7 +19,7 @@ from app.core import security
 from app.models.ecn import Ecn, EcnApproval, EcnApprovalMatrix, EcnLog
 from app.models.user import User
 from app.schemas.ecn import EcnApprovalCreate, EcnApprovalResponse
-from app.services.ecn_notification_service import (
+from app.services.ecn_notification import (
     notify_approval_assigned,
     notify_approval_result,
 )

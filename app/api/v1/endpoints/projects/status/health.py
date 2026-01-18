@@ -83,11 +83,11 @@ def get_project_health_details(
     获取项目健康度详情
     """
     from app.utils.permission_helpers import check_project_access_or_raise
-    check_project_access_or_raise(db, current_user, project_id)
+    project = check_project_access_or_raise(db, current_user, project_id)
 
     from app.services.health_calculator import HealthCalculator
     calculator = HealthCalculator(db)
-    details = calculator.get_health_details(project_id)
+    details = calculator.get_health_details(project)
 
     return ResponseModel(
         code=200,

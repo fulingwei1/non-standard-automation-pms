@@ -142,7 +142,7 @@ def send_overdue_notifications(alerts: List[Dict[str, Any]]) -> None:
     from app.models.base import get_db_session
     from app.models.ecn import Ecn, EcnApproval, EcnEvaluation, EcnTask
     from app.models.user import User
-    from app.services.ecn_notification_service import notify_overdue_alert
+    from app.services.ecn_notification import notify_overdue_alert
 
     if not alerts:
         return

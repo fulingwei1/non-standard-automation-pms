@@ -1,0 +1,6329 @@
+{
+  "summary": {
+    "backend_total": 1460,
+    "frontend_calls_detected": 1376,
+    "matched": 718,
+    "unmatched": 742,
+    "coverage_pct": 49.18,
+    "unmatched_by_prefix": [
+      [
+        "engineer-performance",
+        80
+      ],
+      [
+        "projects",
+        48
+      ],
+      [
+        "progress",
+        47
+      ],
+      [
+        "business-support",
+        44
+      ],
+      [
+        "shortage-alerts",
+        35
+      ],
+      [
+        "bonus",
+        34
+      ],
+      [
+        "shortage",
+        33
+      ],
+      [
+        "assembly-kit",
+        32
+      ],
+      [
+        "management-rhythm",
+        32
+      ],
+      [
+        "presale",
+        30
+      ],
+      [
+        "timesheet",
+        23
+      ],
+      [
+        "report-center",
+        23
+      ],
+      [
+        "sales",
+        20
+      ],
+      [
+        "task-center",
+        20
+      ],
+      [
+        "performance",
+        20
+      ],
+      [
+        "budgets",
+        16
+      ],
+      [
+        "project-evaluation",
+        15
+      ],
+      [
+        "costs",
+        14
+      ],
+      [
+        "engineers",
+        14
+      ],
+      [
+        "solution-credits",
+        13
+      ],
+      [
+        "tickets",
+        9
+      ],
+      [
+        "sla",
+        8
+      ],
+      [
+        "documents",
+        7
+      ],
+      [
+        "acceptance-orders",
+        7
+      ],
+      [
+        "members",
+        6
+      ],
+      [
+        "stages",
+        6
+      ],
+      [
+        "org",
+        6
+      ],
+      [
+        "acceptance-issues",
+        6
+      ],
+      [
+        "surveys",
+        6
+      ],
+      [
+        "issues",
+        5
+      ],
+      [
+        "kit-check",
+        5
+      ],
+      [
+        "records",
+        5
+      ],
+      [
+        "communications",
+        5
+      ],
+      [
+        "culture-wall",
+        5
+      ],
+      [
+        "materials",
+        4
+      ],
+      [
+        "alert-notifications",
+        4
+      ],
+      [
+        "exceptions",
+        4
+      ],
+      [
+        "machines",
+        3
+      ],
+      [
+        "purchase-orders",
+        3
+      ],
+      [
+        "workshops",
+        3
+      ],
+      [
+        "work-reports",
+        3
+      ],
+      [
+        "acceptance-templates",
+        3
+      ],
+      [
+        "workload",
+        3
+      ],
+      [
+        "skills",
+        3
+      ],
+      [
+        "knowledge-features",
+        3
+      ],
+      [
+        "technical-spec",
+        2
+      ],
+      [
+        "production-plans",
+        2
+      ],
+      [
+        "work-orders",
+        2
+      ],
+      [
+        "outsourcing-inspections",
+        2
+      ],
+      [
+        "outsourcing-orders",
+        2
+      ]
+    ],
+    "matched_by_prefix": [
+      [
+        "sales",
+        76
+      ],
+      [
+        "ecns",
+        48
+      ],
+      [
+        "pmo",
+        32
+      ],
+      [
+        "projects",
+        26
+      ],
+      [
+        "staff-matching",
+        26
+      ],
+      [
+        "issues",
+        25
+      ],
+      [
+        "alerts",
+        18
+      ],
+      [
+        "qualifications",
+        16
+      ],
+      [
+        "project-roles",
+        16
+      ],
+      [
+        "purchase-orders",
+        15
+      ],
+      [
+        "bom",
+        15
+      ],
+      [
+        "rd-projects",
+        15
+      ],
+      [
+        "technical-reviews",
+        15
+      ],
+      [
+        "business-support",
+        14
+      ],
+      [
+        "hr",
+        14
+      ],
+      [
+        "machines",
+        13
+      ],
+      [
+        "org",
+        12
+      ],
+      [
+        "users",
+        12
+      ],
+      [
+        "work-logs",
+        12
+      ],
+      [
+        "acceptance-orders",
+        11
+      ],
+      [
+        "installation-dispatch",
+        11
+      ],
+      [
+        "knowledge-base",
+        11
+      ],
+      [
+        "advantage-products",
+        11
+      ],
+      [
+        "roles",
+        10
+      ],
+      [
+        "import",
+        10
+      ],
+      [
+        "scheduler",
+        10
+      ],
+      [
+        "work-orders",
+        9
+      ],
+      [
+        "timesheets",
+        9
+      ],
+      [
+        "notifications",
+        8
+      ],
+      [
+        "hourly-rates",
+        8
+      ],
+      [
+        "customers",
+        7
+      ],
+      [
+        "costs",
+        7
+      ],
+      [
+        "materials",
+        7
+      ],
+      [
+        "progress",
+        7
+      ],
+      [
+        "outsourcing-orders",
+        7
+      ],
+      [
+        "itr",
+        7
+      ],
+      [
+        "presales",
+        7
+      ],
+      [
+        "suppliers",
+        6
+      ],
+      [
+        "milestones",
+        6
+      ],
+      [
+        "issue-templates",
+        6
+      ],
+      [
+        "technical-spec",
+        6
+      ],
+      [
+        "alert-rules",
+        6
+      ],
+      [
+        "auth",
+        5
+      ],
+      [
+        "production-plans",
+        5
+      ],
+      [
+        "ecn-types",
+        5
+      ],
+      [
+        "outsourcing-vendors",
+        5
+      ],
+      [
+        "acceptance-templates",
+        5
+      ],
+      [
+        "workload",
+        5
+      ],
+      [
+        "rd-costs",
+        5
+      ],
+      [
+        "procurement-analysis",
+        5
+      ]
+    ]
+  },
+  "unmatched": [
+    {
+      "method": "GET",
+      "path": "/projects/templates",
+      "skeleton": "/projects/templates"
+    },
+    {
+      "method": "POST",
+      "path": "/projects/templates",
+      "skeleton": "/projects/templates"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/templates/{template_id}",
+      "skeleton": "/projects/templates/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/projects/templates/{template_id}",
+      "skeleton": "/projects/templates/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/templates/{template_id}/versions",
+      "skeleton": "/projects/templates/{}/versions"
+    },
+    {
+      "method": "POST",
+      "path": "/projects/templates/{template_id}/versions",
+      "skeleton": "/projects/templates/{}/versions"
+    },
+    {
+      "method": "PUT",
+      "path": "/projects/templates/{template_id}/versions/{version_id}/publish",
+      "skeleton": "/projects/templates/{}/versions/{}/publish"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/templates/{template_id}/versions/compare",
+      "skeleton": "/projects/templates/{}/versions/compare"
+    },
+    {
+      "method": "POST",
+      "path": "/projects/templates/{template_id}/versions/{version_id}/rollback",
+      "skeleton": "/projects/templates/{}/versions/{}/rollback"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/templates/{template_id}/usage-statistics",
+      "skeleton": "/projects/templates/{}/usage-statistics"
+    },
+    {
+      "method": "PUT",
+      "path": "/projects/{project_id}/archive",
+      "skeleton": "/projects/{}/archive"
+    },
+    {
+      "method": "PUT",
+      "path": "/projects/{project_id}/unarchive",
+      "skeleton": "/projects/{}/unarchive"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/archived",
+      "skeleton": "/projects/archived"
+    },
+    {
+      "method": "POST",
+      "path": "/projects/batch/archive",
+      "skeleton": "/projects/batch/archive"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/overview",
+      "skeleton": "/projects/overview"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/dashboard",
+      "skeleton": "/projects/dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/in-production-summary",
+      "skeleton": "/projects/in-production-summary"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{project_id}/timeline",
+      "skeleton": "/projects/{}/timeline"
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{project_id}/sync-from-contract",
+      "skeleton": "/projects/{}/sync-from-contract"
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{project_id}/sync-to-contract",
+      "skeleton": "/projects/{}/sync-to-contract"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{project_id}/sync-status",
+      "skeleton": "/projects/{}/sync-status"
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{project_id}/sync-to-erp",
+      "skeleton": "/projects/{}/sync-to-erp"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{project_id}/erp-status",
+      "skeleton": "/projects/{}/erp-status"
+    },
+    {
+      "method": "PUT",
+      "path": "/projects/{project_id}/erp-status",
+      "skeleton": "/projects/{}/erp-status"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/board",
+      "skeleton": "/projects/board"
+    },
+    {
+      "method": "DELETE",
+      "path": "/projects/{project_id}",
+      "skeleton": "/projects/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{project_id}/clone",
+      "skeleton": "/projects/{}/clone"
+    },
+    {
+      "method": "PUT",
+      "path": "/projects/{project_id}/stage",
+      "skeleton": "/projects/{}/stage"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{project_id}/status",
+      "skeleton": "/projects/{}/status"
+    },
+    {
+      "method": "PUT",
+      "path": "/projects/{project_id}/status",
+      "skeleton": "/projects/{}/status"
+    },
+    {
+      "method": "PUT",
+      "path": "/projects/{project_id}/health",
+      "skeleton": "/projects/{}/health"
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{project_id}/health/calculate",
+      "skeleton": "/projects/{}/health/calculate"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{project_id}/health/details",
+      "skeleton": "/projects/{}/health/details"
+    },
+    {
+      "method": "POST",
+      "path": "/projects/health/batch-calculate",
+      "skeleton": "/projects/health/batch-calculate"
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{project_id}/stages/init",
+      "skeleton": "/projects/{}/stages/init"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{project_id}/status-history",
+      "skeleton": "/projects/{}/status-history"
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{project_id}/stage-advance",
+      "skeleton": "/projects/{}/stage-advance"
+    },
+    {
+      "method": "POST",
+      "path": "/projects/batch/update-status",
+      "skeleton": "/projects/batch/update-status"
+    },
+    {
+      "method": "POST",
+      "path": "/projects/batch/update-stage",
+      "skeleton": "/projects/batch/update-stage"
+    },
+    {
+      "method": "POST",
+      "path": "/projects/batch/assign-pm",
+      "skeleton": "/projects/batch/assign-pm"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{project_id}/payment-plans",
+      "skeleton": "/projects/{}/payment-plans"
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{project_id}/payment-plans",
+      "skeleton": "/projects/{}/payment-plans"
+    },
+    {
+      "method": "PUT",
+      "path": "/projects/payment-plans/{plan_id}",
+      "skeleton": "/projects/payment-plans/{}"
+    },
+    {
+      "method": "DELETE",
+      "path": "/projects/payment-plans/{plan_id}",
+      "skeleton": "/projects/payment-plans/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/statistics",
+      "skeleton": "/projects/statistics"
+    },
+    {
+      "method": "GET",
+      "path": "/machines/projects/{project_id}/machines",
+      "skeleton": "/machines/projects/{}/machines"
+    },
+    {
+      "method": "POST",
+      "path": "/machines/projects/{project_id}/machines",
+      "skeleton": "/machines/projects/{}/machines"
+    },
+    {
+      "method": "PUT",
+      "path": "/machines/{machine_id}/progress",
+      "skeleton": "/machines/{}/progress"
+    },
+    {
+      "method": "DELETE",
+      "path": "/milestones/{milestone_id}",
+      "skeleton": "/milestones/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/members/projects/{project_id}/members",
+      "skeleton": "/members/projects/{}/members"
+    },
+    {
+      "method": "PUT",
+      "path": "/members/project-members/{member_id}",
+      "skeleton": "/members/project-members/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/members/projects/{project_id}/members/conflicts",
+      "skeleton": "/members/projects/{}/members/conflicts"
+    },
+    {
+      "method": "POST",
+      "path": "/members/projects/{project_id}/members/batch",
+      "skeleton": "/members/projects/{}/members/batch"
+    },
+    {
+      "method": "POST",
+      "path": "/members/projects/{project_id}/members/{member_id}/notify-dept-manager",
+      "skeleton": "/members/projects/{}/members/{}/notify-dept-manager"
+    },
+    {
+      "method": "GET",
+      "path": "/members/projects/{project_id}/members/from-dept/{dept_id}",
+      "skeleton": "/members/projects/{}/members/from-dept/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/stages",
+      "skeleton": "/stages"
+    },
+    {
+      "method": "PUT",
+      "path": "/stages/{stage_id}",
+      "skeleton": "/stages/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/stages/project-stages/{stage_id}",
+      "skeleton": "/stages/project-stages/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/stages/project-stages/{stage_id}/statuses",
+      "skeleton": "/stages/project-stages/{}/statuses"
+    },
+    {
+      "method": "PUT",
+      "path": "/stages/project-statuses/{status_id}/complete",
+      "skeleton": "/stages/project-statuses/{}/complete"
+    },
+    {
+      "method": "POST",
+      "path": "/stages/statuses",
+      "skeleton": "/stages/statuses"
+    },
+    {
+      "method": "POST",
+      "path": "/org/employees",
+      "skeleton": "/org/employees"
+    },
+    {
+      "method": "GET",
+      "path": "/org/employees/{emp_id}",
+      "skeleton": "/org/employees/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/org/employees/{emp_id}",
+      "skeleton": "/org/employees/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/org/employees/import/template",
+      "skeleton": "/org/employees/import/template"
+    },
+    {
+      "method": "POST",
+      "path": "/org/hr-profiles/import",
+      "skeleton": "/org/hr-profiles/import"
+    },
+    {
+      "method": "GET",
+      "path": "/org/hr-profiles/statistics/overview",
+      "skeleton": "/org/hr-profiles/statistics/overview"
+    },
+    {
+      "method": "POST",
+      "path": "/costs/projects/{project_id}/costs",
+      "skeleton": "/costs/projects/{}/costs"
+    },
+    {
+      "method": "GET",
+      "path": "/costs/projects/{project_id}/cost-analysis",
+      "skeleton": "/costs/projects/{}/cost-analysis"
+    },
+    {
+      "method": "GET",
+      "path": "/costs/projects/{project_id}/revenue-detail",
+      "skeleton": "/costs/projects/{}/revenue-detail"
+    },
+    {
+      "method": "GET",
+      "path": "/costs/projects/{project_id}/profit-analysis",
+      "skeleton": "/costs/projects/{}/profit-analysis"
+    },
+    {
+      "method": "GET",
+      "path": "/costs/cost-trends",
+      "skeleton": "/costs/cost-trends"
+    },
+    {
+      "method": "POST",
+      "path": "/costs/labor/projects/{project_id}/calculate-labor-cost",
+      "skeleton": "/costs/labor/projects/{}/calculate-labor-cost"
+    },
+    {
+      "method": "POST",
+      "path": "/costs/labor/calculate-all-labor-costs",
+      "skeleton": "/costs/labor/calculate-all-labor-costs"
+    },
+    {
+      "method": "POST",
+      "path": "/costs/labor/calculate-monthly-labor-cost",
+      "skeleton": "/costs/labor/calculate-monthly-labor-cost"
+    },
+    {
+      "method": "POST",
+      "path": "/costs/allocation/{cost_id}/allocate",
+      "skeleton": "/costs/allocation/{}/allocate"
+    },
+    {
+      "method": "GET",
+      "path": "/costs/budget/projects/{project_id}/execution",
+      "skeleton": "/costs/budget/projects/{}/execution"
+    },
+    {
+      "method": "GET",
+      "path": "/costs/budget/projects/{project_id}/trend",
+      "skeleton": "/costs/budget/projects/{}/trend"
+    },
+    {
+      "method": "POST",
+      "path": "/costs/review/projects/{project_id}/generate-cost-review",
+      "skeleton": "/costs/review/projects/{}/generate-cost-review"
+    },
+    {
+      "method": "POST",
+      "path": "/costs/alert/projects/{project_id}/check-budget-alert",
+      "skeleton": "/costs/alert/projects/{}/check-budget-alert"
+    },
+    {
+      "method": "POST",
+      "path": "/costs/alert/check-all-projects-budget",
+      "skeleton": "/costs/alert/check-all-projects-budget"
+    },
+    {
+      "method": "GET",
+      "path": "/budgets/allocation-rules",
+      "skeleton": "/budgets/allocation-rules"
+    },
+    {
+      "method": "POST",
+      "path": "/budgets/allocation-rules",
+      "skeleton": "/budgets/allocation-rules"
+    },
+    {
+      "method": "GET",
+      "path": "/budgets/allocation-rules/{rule_id}",
+      "skeleton": "/budgets/allocation-rules/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/budgets/allocation-rules/{rule_id}",
+      "skeleton": "/budgets/allocation-rules/{}"
+    },
+    {
+      "method": "DELETE",
+      "path": "/budgets/allocation-rules/{rule_id}",
+      "skeleton": "/budgets/allocation-rules/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/budgets/projects/{project_id}/budgets",
+      "skeleton": "/budgets/projects/{}/budgets"
+    },
+    {
+      "method": "POST",
+      "path": "/budgets",
+      "skeleton": "/budgets"
+    },
+    {
+      "method": "GET",
+      "path": "/budgets/{budget_id}",
+      "skeleton": "/budgets/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/budgets/{budget_id}",
+      "skeleton": "/budgets/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/budgets/{budget_id}/submit",
+      "skeleton": "/budgets/{}/submit"
+    },
+    {
+      "method": "POST",
+      "path": "/budgets/{budget_id}/approve",
+      "skeleton": "/budgets/{}/approve"
+    },
+    {
+      "method": "DELETE",
+      "path": "/budgets/{budget_id}",
+      "skeleton": "/budgets/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/budgets/{budget_id}/items",
+      "skeleton": "/budgets/{}/items"
+    },
+    {
+      "method": "POST",
+      "path": "/budgets/{budget_id}/items",
+      "skeleton": "/budgets/{}/items"
+    },
+    {
+      "method": "PUT",
+      "path": "/budgets/items/{item_id}",
+      "skeleton": "/budgets/items/{}"
+    },
+    {
+      "method": "DELETE",
+      "path": "/budgets/items/{item_id}",
+      "skeleton": "/budgets/items/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/documents/projects/{project_id}/documents",
+      "skeleton": "/documents/projects/{}/documents"
+    },
+    {
+      "method": "GET",
+      "path": "/documents/{doc_id}",
+      "skeleton": "/documents/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/documents/projects/{project_id}/documents",
+      "skeleton": "/documents/projects/{}/documents"
+    },
+    {
+      "method": "PUT",
+      "path": "/documents/{doc_id}",
+      "skeleton": "/documents/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/documents/{doc_id}/download",
+      "skeleton": "/documents/{}/download"
+    },
+    {
+      "method": "GET",
+      "path": "/documents/{doc_id}/versions",
+      "skeleton": "/documents/{}/versions"
+    },
+    {
+      "method": "DELETE",
+      "path": "/documents/{doc_id}",
+      "skeleton": "/documents/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/users/{user_id}/time-allocation",
+      "skeleton": "/users/{}/time-allocation"
+    },
+    {
+      "method": "GET",
+      "path": "/issues/statistics/engineer-design-issues",
+      "skeleton": "/issues/statistics/engineer-design-issues"
+    },
+    {
+      "method": "GET",
+      "path": "/issues/projects/{project_id}/issues",
+      "skeleton": "/issues/projects/{}/issues"
+    },
+    {
+      "method": "GET",
+      "path": "/issues/machines/{machine_id}/issues",
+      "skeleton": "/issues/machines/{}/issues"
+    },
+    {
+      "method": "GET",
+      "path": "/issues/tasks/{task_id}/issues",
+      "skeleton": "/issues/tasks/{}/issues"
+    },
+    {
+      "method": "GET",
+      "path": "/issues/acceptance-orders/{order_id}/issues",
+      "skeleton": "/issues/acceptance-orders/{}/issues"
+    },
+    {
+      "method": "POST",
+      "path": "/technical-spec/requirements/extract",
+      "skeleton": "/technical-spec/requirements/extract"
+    },
+    {
+      "method": "GET",
+      "path": "/technical-spec/requirements/{requirement_id}",
+      "skeleton": "/technical-spec/requirements/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/materials/suppliers",
+      "skeleton": "/materials/suppliers"
+    },
+    {
+      "method": "GET",
+      "path": "/materials/{material_id}/suppliers",
+      "skeleton": "/materials/{}/suppliers"
+    },
+    {
+      "method": "GET",
+      "path": "/materials/{material_id}/alternatives",
+      "skeleton": "/materials/{}/alternatives"
+    },
+    {
+      "method": "GET",
+      "path": "/purchase-orders/goods-receipts",
+      "skeleton": "/purchase-orders/goods-receipts"
+    },
+    {
+      "method": "POST",
+      "path": "/purchase-orders/goods-receipts",
+      "skeleton": "/purchase-orders/goods-receipts"
+    },
+    {
+      "method": "PUT",
+      "path": "/purchase-orders/goods-receipts/{receipt_id}/items/{item_id}/inspect",
+      "skeleton": "/purchase-orders/goods-receipts/{}/items/{}/inspect"
+    },
+    {
+      "method": "GET",
+      "path": "/bom/template/download",
+      "skeleton": "/bom/template/download"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{project_id}/shortage",
+      "skeleton": "/projects/{}/shortage"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{project_id}/critical-shortage",
+      "skeleton": "/projects/{}/critical-shortage"
+    },
+    {
+      "method": "GET",
+      "path": "/kit-check/work-orders",
+      "skeleton": "/kit-check/work-orders"
+    },
+    {
+      "method": "GET",
+      "path": "/kit-check/work-orders/{work_order_id}",
+      "skeleton": "/kit-check/work-orders/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/kit-check/work-orders/{work_order_id}/check",
+      "skeleton": "/kit-check/work-orders/{}/check"
+    },
+    {
+      "method": "POST",
+      "path": "/kit-check/work-orders/{work_order_id}/confirm",
+      "skeleton": "/kit-check/work-orders/{}/confirm"
+    },
+    {
+      "method": "GET",
+      "path": "/kit-check/history",
+      "skeleton": "/kit-check/history"
+    },
+    {
+      "method": "GET",
+      "path": "/progress/wbs-templates",
+      "skeleton": "/progress/wbs-templates"
+    },
+    {
+      "method": "GET",
+      "path": "/progress/wbs-templates/{template_id}",
+      "skeleton": "/progress/wbs-templates/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/progress/wbs-templates",
+      "skeleton": "/progress/wbs-templates"
+    },
+    {
+      "method": "PUT",
+      "path": "/progress/wbs-templates/{template_id}",
+      "skeleton": "/progress/wbs-templates/{}"
+    },
+    {
+      "method": "DELETE",
+      "path": "/progress/wbs-templates/{template_id}",
+      "skeleton": "/progress/wbs-templates/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/progress/wbs-templates/{template_id}/copy",
+      "skeleton": "/progress/wbs-templates/{}/copy"
+    },
+    {
+      "method": "GET",
+      "path": "/progress/wbs-templates/{template_id}/tasks",
+      "skeleton": "/progress/wbs-templates/{}/tasks"
+    },
+    {
+      "method": "POST",
+      "path": "/progress/wbs-templates/{template_id}/tasks",
+      "skeleton": "/progress/wbs-templates/{}/tasks"
+    },
+    {
+      "method": "PUT",
+      "path": "/progress/wbs-template-tasks/{task_id}",
+      "skeleton": "/progress/wbs-template-tasks/{}"
+    },
+    {
+      "method": "DELETE",
+      "path": "/progress/wbs-template-tasks/{task_id}",
+      "skeleton": "/progress/wbs-template-tasks/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/progress/projects/{project_id}/init-wbs",
+      "skeleton": "/progress/projects/{}/init-wbs"
+    },
+    {
+      "method": "GET",
+      "path": "/progress/projects/{project_id}/tasks",
+      "skeleton": "/progress/projects/{}/tasks"
+    },
+    {
+      "method": "POST",
+      "path": "/progress/projects/{project_id}/tasks",
+      "skeleton": "/progress/projects/{}/tasks"
+    },
+    {
+      "method": "GET",
+      "path": "/progress/tasks/{task_id}",
+      "skeleton": "/progress/tasks/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/progress/tasks/{task_id}",
+      "skeleton": "/progress/tasks/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/progress/tasks/{task_id}/progress",
+      "skeleton": "/progress/tasks/{}/progress"
+    },
+    {
+      "method": "PUT",
+      "path": "/progress/tasks/{task_id}/complete",
+      "skeleton": "/progress/tasks/{}/complete"
+    },
+    {
+      "method": "PUT",
+      "path": "/progress/tasks/{task_id}/block",
+      "skeleton": "/progress/tasks/{}/block"
+    },
+    {
+      "method": "PUT",
+      "path": "/progress/tasks/{task_id}/unblock",
+      "skeleton": "/progress/tasks/{}/unblock"
+    },
+    {
+      "method": "PUT",
+      "path": "/progress/tasks/{task_id}/cancel",
+      "skeleton": "/progress/tasks/{}/cancel"
+    },
+    {
+      "method": "DELETE",
+      "path": "/progress/tasks/{task_id}",
+      "skeleton": "/progress/tasks/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/progress/tasks/{task_id}/logs",
+      "skeleton": "/progress/tasks/{}/logs"
+    },
+    {
+      "method": "GET",
+      "path": "/progress/tasks/{task_id}/dependencies",
+      "skeleton": "/progress/tasks/{}/dependencies"
+    },
+    {
+      "method": "POST",
+      "path": "/progress/tasks/{task_id}/dependencies",
+      "skeleton": "/progress/tasks/{}/dependencies"
+    },
+    {
+      "method": "DELETE",
+      "path": "/progress/task-dependencies/{dependency_id}",
+      "skeleton": "/progress/task-dependencies/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/progress/tasks/{task_id}/assignee",
+      "skeleton": "/progress/tasks/{}/assignee"
+    },
+    {
+      "method": "POST",
+      "path": "/progress/progress-reports",
+      "skeleton": "/progress/progress-reports"
+    },
+    {
+      "method": "GET",
+      "path": "/progress/progress-reports",
+      "skeleton": "/progress/progress-reports"
+    },
+    {
+      "method": "GET",
+      "path": "/progress/progress-reports/statistics",
+      "skeleton": "/progress/progress-reports/statistics"
+    },
+    {
+      "method": "GET",
+      "path": "/progress/progress-reports/{report_id}",
+      "skeleton": "/progress/progress-reports/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/progress/progress-reports/{report_id}",
+      "skeleton": "/progress/progress-reports/{}"
+    },
+    {
+      "method": "DELETE",
+      "path": "/progress/progress-reports/{report_id}",
+      "skeleton": "/progress/progress-reports/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/progress/projects/{project_id}/progress-summary",
+      "skeleton": "/progress/projects/{}/progress-summary"
+    },
+    {
+      "method": "GET",
+      "path": "/progress/machines/{machine_id}/progress-summary",
+      "skeleton": "/progress/machines/{}/progress-summary"
+    },
+    {
+      "method": "GET",
+      "path": "/progress/projects/{project_id}/gantt",
+      "skeleton": "/progress/projects/{}/gantt"
+    },
+    {
+      "method": "GET",
+      "path": "/progress/projects/{project_id}/progress-board",
+      "skeleton": "/progress/projects/{}/progress-board"
+    },
+    {
+      "method": "POST",
+      "path": "/progress/tasks/batch/progress",
+      "skeleton": "/progress/tasks/batch/progress"
+    },
+    {
+      "method": "POST",
+      "path": "/progress/tasks/batch/assignee",
+      "skeleton": "/progress/tasks/batch/assignee"
+    },
+    {
+      "method": "GET",
+      "path": "/progress/reports/task-completion-rate",
+      "skeleton": "/progress/reports/task-completion-rate"
+    },
+    {
+      "method": "GET",
+      "path": "/progress/reports/milestone-rate",
+      "skeleton": "/progress/reports/milestone-rate"
+    },
+    {
+      "method": "GET",
+      "path": "/progress/reports/delay-reasons",
+      "skeleton": "/progress/reports/delay-reasons"
+    },
+    {
+      "method": "GET",
+      "path": "/progress/projects/{project_id}/baselines",
+      "skeleton": "/progress/projects/{}/baselines"
+    },
+    {
+      "method": "POST",
+      "path": "/progress/projects/{project_id}/baselines",
+      "skeleton": "/progress/projects/{}/baselines"
+    },
+    {
+      "method": "GET",
+      "path": "/progress/baselines/{baseline_id}",
+      "skeleton": "/progress/baselines/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/progress/baselines/{baseline_id}/compare",
+      "skeleton": "/progress/baselines/{}/compare"
+    },
+    {
+      "method": "GET",
+      "path": "/progress/projects/{project_id}/deviation-analysis",
+      "skeleton": "/progress/projects/{}/deviation-analysis"
+    },
+    {
+      "method": "GET",
+      "path": "/progress/projects/{project_id}/critical-path",
+      "skeleton": "/progress/projects/{}/critical-path"
+    },
+    {
+      "method": "PATCH",
+      "path": "/shortage-alerts/{alert_id}",
+      "skeleton": "/shortage-alerts/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/shortage-alerts/{alert_id}/follow-ups",
+      "skeleton": "/shortage-alerts/{}/follow-ups"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage-alerts/{alert_id}/follow-ups",
+      "skeleton": "/shortage-alerts/{}/follow-ups"
+    },
+    {
+      "method": "POST",
+      "path": "/shortage-alerts/{alert_id}/resolve",
+      "skeleton": "/shortage-alerts/{}/resolve"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage-alerts/statistics/overview",
+      "skeleton": "/shortage-alerts/statistics/overview"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage-alerts/dashboard",
+      "skeleton": "/shortage-alerts/dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage-alerts/supplier-delivery",
+      "skeleton": "/shortage-alerts/supplier-delivery"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage-alerts/daily-report",
+      "skeleton": "/shortage-alerts/daily-report"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage-alerts/cause-analysis",
+      "skeleton": "/shortage-alerts/cause-analysis"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage-alerts/reports",
+      "skeleton": "/shortage-alerts/reports"
+    },
+    {
+      "method": "POST",
+      "path": "/shortage-alerts/reports",
+      "skeleton": "/shortage-alerts/reports"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage-alerts/reports/{report_id}",
+      "skeleton": "/shortage-alerts/reports/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/shortage-alerts/reports/{report_id}/confirm",
+      "skeleton": "/shortage-alerts/reports/{}/confirm"
+    },
+    {
+      "method": "PUT",
+      "path": "/shortage-alerts/reports/{report_id}/handle",
+      "skeleton": "/shortage-alerts/reports/{}/handle"
+    },
+    {
+      "method": "PUT",
+      "path": "/shortage-alerts/reports/{report_id}/resolve",
+      "skeleton": "/shortage-alerts/reports/{}/resolve"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage-alerts/arrivals",
+      "skeleton": "/shortage-alerts/arrivals"
+    },
+    {
+      "method": "POST",
+      "path": "/shortage-alerts/arrivals",
+      "skeleton": "/shortage-alerts/arrivals"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage-alerts/arrivals/{arrival_id}",
+      "skeleton": "/shortage-alerts/arrivals/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/shortage-alerts/arrivals/{arrival_id}/status",
+      "skeleton": "/shortage-alerts/arrivals/{}/status"
+    },
+    {
+      "method": "POST",
+      "path": "/shortage-alerts/arrivals/{arrival_id}/follow-up",
+      "skeleton": "/shortage-alerts/arrivals/{}/follow-up"
+    },
+    {
+      "method": "POST",
+      "path": "/shortage-alerts/arrivals/{arrival_id}/receive",
+      "skeleton": "/shortage-alerts/arrivals/{}/receive"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage-alerts/substitutions",
+      "skeleton": "/shortage-alerts/substitutions"
+    },
+    {
+      "method": "POST",
+      "path": "/shortage-alerts/substitutions",
+      "skeleton": "/shortage-alerts/substitutions"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage-alerts/substitutions/{sub_id}",
+      "skeleton": "/shortage-alerts/substitutions/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/shortage-alerts/substitutions/{sub_id}/tech-approve",
+      "skeleton": "/shortage-alerts/substitutions/{}/tech-approve"
+    },
+    {
+      "method": "PUT",
+      "path": "/shortage-alerts/substitutions/{sub_id}/prod-approve",
+      "skeleton": "/shortage-alerts/substitutions/{}/prod-approve"
+    },
+    {
+      "method": "PUT",
+      "path": "/shortage-alerts/substitutions/{sub_id}/execute",
+      "skeleton": "/shortage-alerts/substitutions/{}/execute"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage-alerts/transfers",
+      "skeleton": "/shortage-alerts/transfers"
+    },
+    {
+      "method": "POST",
+      "path": "/shortage-alerts/transfers",
+      "skeleton": "/shortage-alerts/transfers"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage-alerts/transfers/{transfer_id}",
+      "skeleton": "/shortage-alerts/transfers/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/shortage-alerts/transfers/{transfer_id}/approve",
+      "skeleton": "/shortage-alerts/transfers/{}/approve"
+    },
+    {
+      "method": "PUT",
+      "path": "/shortage-alerts/transfers/{transfer_id}/execute",
+      "skeleton": "/shortage-alerts/transfers/{}/execute"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage-alerts/transfers/suggest-sources",
+      "skeleton": "/shortage-alerts/transfers/suggest-sources"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage-alerts/transfers/{transfer_id}/stock-check",
+      "skeleton": "/shortage-alerts/transfers/{}/stock-check"
+    },
+    {
+      "method": "PUT",
+      "path": "/shortage-alerts/transfers/{transfer_id}/reject",
+      "skeleton": "/shortage-alerts/transfers/{}/reject"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage/shortage/reports/shortage/reports",
+      "skeleton": "/shortage/shortage/reports/shortage/reports"
+    },
+    {
+      "method": "POST",
+      "path": "/shortage/shortage/reports/shortage/reports",
+      "skeleton": "/shortage/shortage/reports/shortage/reports"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage/shortage/reports/shortage/reports/{report_id}",
+      "skeleton": "/shortage/shortage/reports/shortage/reports/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/shortage/shortage/reports/shortage/reports/{report_id}/confirm",
+      "skeleton": "/shortage/shortage/reports/shortage/reports/{}/confirm"
+    },
+    {
+      "method": "PUT",
+      "path": "/shortage/shortage/reports/shortage/reports/{report_id}/handle",
+      "skeleton": "/shortage/shortage/reports/shortage/reports/{}/handle"
+    },
+    {
+      "method": "PUT",
+      "path": "/shortage/shortage/reports/shortage/reports/{report_id}/resolve",
+      "skeleton": "/shortage/shortage/reports/shortage/reports/{}/resolve"
+    },
+    {
+      "method": "PUT",
+      "path": "/shortage/shortage/reports/shortage/reports/{report_id}/reject",
+      "skeleton": "/shortage/shortage/reports/shortage/reports/{}/reject"
+    },
+    {
+      "method": "POST",
+      "path": "/shortage/shortage/arrivals/shortage/arrivals",
+      "skeleton": "/shortage/shortage/arrivals/shortage/arrivals"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage/shortage/arrivals/shortage/arrivals",
+      "skeleton": "/shortage/shortage/arrivals/shortage/arrivals"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage/shortage/arrivals/shortage/arrivals/{arrival_id}",
+      "skeleton": "/shortage/shortage/arrivals/shortage/arrivals/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/shortage/shortage/arrivals/shortage/arrivals/{arrival_id}/status",
+      "skeleton": "/shortage/shortage/arrivals/shortage/arrivals/{}/status"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage/shortage/arrivals/shortage/arrivals/{arrival_id}/follow-ups",
+      "skeleton": "/shortage/shortage/arrivals/shortage/arrivals/{}/follow-ups"
+    },
+    {
+      "method": "POST",
+      "path": "/shortage/shortage/arrivals/shortage/arrivals/{arrival_id}/follow-up",
+      "skeleton": "/shortage/shortage/arrivals/shortage/arrivals/{}/follow-up"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage/shortage/arrivals/shortage/arrivals/delayed",
+      "skeleton": "/shortage/shortage/arrivals/shortage/arrivals/delayed"
+    },
+    {
+      "method": "POST",
+      "path": "/shortage/shortage/arrivals/shortage/arrivals/{arrival_id}/receive",
+      "skeleton": "/shortage/shortage/arrivals/shortage/arrivals/{}/receive"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage/shortage/substitutions/shortage/substitutions",
+      "skeleton": "/shortage/shortage/substitutions/shortage/substitutions"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage/shortage/substitutions/shortage/substitutions/{substitution_id}",
+      "skeleton": "/shortage/shortage/substitutions/shortage/substitutions/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/shortage/shortage/substitutions/shortage/substitutions",
+      "skeleton": "/shortage/shortage/substitutions/shortage/substitutions"
+    },
+    {
+      "method": "PUT",
+      "path": "/shortage/shortage/substitutions/shortage/substitutions/{substitution_id}/tech-approve",
+      "skeleton": "/shortage/shortage/substitutions/shortage/substitutions/{}/tech-approve"
+    },
+    {
+      "method": "PUT",
+      "path": "/shortage/shortage/substitutions/shortage/substitutions/{substitution_id}/prod-approve",
+      "skeleton": "/shortage/shortage/substitutions/shortage/substitutions/{}/prod-approve"
+    },
+    {
+      "method": "PUT",
+      "path": "/shortage/shortage/substitutions/shortage/substitutions/{substitution_id}/execute",
+      "skeleton": "/shortage/shortage/substitutions/shortage/substitutions/{}/execute"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage/shortage/transfers/shortage/transfers",
+      "skeleton": "/shortage/shortage/transfers/shortage/transfers"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage/shortage/transfers/shortage/transfers/{transfer_id}",
+      "skeleton": "/shortage/shortage/transfers/shortage/transfers/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/shortage/shortage/transfers/shortage/transfers",
+      "skeleton": "/shortage/shortage/transfers/shortage/transfers"
+    },
+    {
+      "method": "PUT",
+      "path": "/shortage/shortage/transfers/shortage/transfers/{transfer_id}/approve",
+      "skeleton": "/shortage/shortage/transfers/shortage/transfers/{}/approve"
+    },
+    {
+      "method": "PUT",
+      "path": "/shortage/shortage/transfers/shortage/transfers/{transfer_id}/execute",
+      "skeleton": "/shortage/shortage/transfers/shortage/transfers/{}/execute"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage/shortage/shortage/dashboard",
+      "skeleton": "/shortage/shortage/shortage/dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage/shortage/shortage/supplier-delivery",
+      "skeleton": "/shortage/shortage/shortage/supplier-delivery"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage/shortage/shortage/daily-report",
+      "skeleton": "/shortage/shortage/shortage/daily-report"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage/shortage/shortage/daily-report/latest",
+      "skeleton": "/shortage/shortage/shortage/daily-report/latest"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage/shortage/shortage/daily-report/by-date",
+      "skeleton": "/shortage/shortage/shortage/daily-report/by-date"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage/shortage/shortage/cause-analysis",
+      "skeleton": "/shortage/shortage/shortage/cause-analysis"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage/shortage/shortage/statistics/kit-rate",
+      "skeleton": "/shortage/shortage/shortage/statistics/kit-rate"
+    },
+    {
+      "method": "DELETE",
+      "path": "/sales/leads/{lead_id}",
+      "skeleton": "/sales/leads/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/sales/leads/{lead_id}/invalid",
+      "skeleton": "/sales/leads/{}/invalid"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/leads/export",
+      "skeleton": "/sales/leads/export"
+    },
+    {
+      "method": "PUT",
+      "path": "/sales/opportunities/{opp_id}/stage",
+      "skeleton": "/sales/opportunities/{}/stage"
+    },
+    {
+      "method": "PUT",
+      "path": "/sales/opportunities/{opp_id}/score",
+      "skeleton": "/sales/opportunities/{}/score"
+    },
+    {
+      "method": "PUT",
+      "path": "/sales/opportunities/{opp_id}/win",
+      "skeleton": "/sales/opportunities/{}/win"
+    },
+    {
+      "method": "PUT",
+      "path": "/sales/opportunities/{opp_id}/lose",
+      "skeleton": "/sales/opportunities/{}/lose"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/opportunities/funnel",
+      "skeleton": "/sales/opportunities/funnel"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/opportunities/export",
+      "skeleton": "/sales/opportunities/export"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/contracts/{contract_id}/amendments",
+      "skeleton": "/sales/contracts/{}/amendments"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/contracts/{contract_id}/amendments",
+      "skeleton": "/sales/contracts/{}/amendments"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/contracts/{contract_id}/payment-plans",
+      "skeleton": "/sales/contracts/{}/payment-plans"
+    },
+    {
+      "method": "PUT",
+      "path": "/sales/contracts/{contract_id}/approve",
+      "skeleton": "/sales/contracts/{}/approve"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/contracts/export",
+      "skeleton": "/sales/contracts/export"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/contracts/{contract_id}/pdf",
+      "skeleton": "/sales/contracts/{}/pdf"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/payment-plans/{plan_id}/adjust",
+      "skeleton": "/sales/payment-plans/{}/adjust"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/payment-plans/{plan_id}/adjustment-history",
+      "skeleton": "/sales/payment-plans/{}/adjustment-history"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/payments/export",
+      "skeleton": "/sales/payments/export"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/reports/sales-funnel",
+      "skeleton": "/sales/reports/sales-funnel"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/reports/win-loss",
+      "skeleton": "/sales/reports/win-loss"
+    },
+    {
+      "method": "GET",
+      "path": "/workshops/{workshop_id}/capacity",
+      "skeleton": "/workshops/{}/capacity"
+    },
+    {
+      "method": "GET",
+      "path": "/workshops/{workshop_id}/workstations",
+      "skeleton": "/workshops/{}/workstations"
+    },
+    {
+      "method": "POST",
+      "path": "/workshops/{workshop_id}/workstations",
+      "skeleton": "/workshops/{}/workstations"
+    },
+    {
+      "method": "PUT",
+      "path": "/production-plans/{plan_id}/submit",
+      "skeleton": "/production-plans/{}/submit"
+    },
+    {
+      "method": "PUT",
+      "path": "/production-plans/{plan_id}/approve",
+      "skeleton": "/production-plans/{}/approve"
+    },
+    {
+      "method": "POST",
+      "path": "/work-orders/batch-assign",
+      "skeleton": "/work-orders/batch-assign"
+    },
+    {
+      "method": "PUT",
+      "path": "/work-orders/{order_id}/cancel",
+      "skeleton": "/work-orders/{}/cancel"
+    },
+    {
+      "method": "POST",
+      "path": "/work-reports/start",
+      "skeleton": "/work-reports/start"
+    },
+    {
+      "method": "POST",
+      "path": "/work-reports/progress",
+      "skeleton": "/work-reports/progress"
+    },
+    {
+      "method": "POST",
+      "path": "/work-reports/complete",
+      "skeleton": "/work-reports/complete"
+    },
+    {
+      "method": "GET",
+      "path": "/alert-notifications",
+      "skeleton": "/alert-notifications"
+    },
+    {
+      "method": "PUT",
+      "path": "/alert-notifications/{notification_id}/read",
+      "skeleton": "/alert-notifications/{}/read"
+    },
+    {
+      "method": "GET",
+      "path": "/alert-notifications/unread-count",
+      "skeleton": "/alert-notifications/unread-count"
+    },
+    {
+      "method": "POST",
+      "path": "/alert-notifications/batch-read",
+      "skeleton": "/alert-notifications/batch-read"
+    },
+    {
+      "method": "PUT",
+      "path": "/exceptions/{event_id}/status",
+      "skeleton": "/exceptions/{}/status"
+    },
+    {
+      "method": "POST",
+      "path": "/exceptions/{event_id}/actions",
+      "skeleton": "/exceptions/{}/actions"
+    },
+    {
+      "method": "POST",
+      "path": "/exceptions/{event_id}/escalate",
+      "skeleton": "/exceptions/{}/escalate"
+    },
+    {
+      "method": "POST",
+      "path": "/exceptions/from-issue",
+      "skeleton": "/exceptions/from-issue"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{project_id}/ecns",
+      "skeleton": "/projects/{}/ecns"
+    },
+    {
+      "method": "GET",
+      "path": "/ecn-approval-matrix",
+      "skeleton": "/ecn-approval-matrix"
+    },
+    {
+      "method": "POST",
+      "path": "/outsourcing-deliveries",
+      "skeleton": "/outsourcing-deliveries"
+    },
+    {
+      "method": "POST",
+      "path": "/outsourcing-inspections",
+      "skeleton": "/outsourcing-inspections"
+    },
+    {
+      "method": "PUT",
+      "path": "/outsourcing-inspections/{inspection_id}",
+      "skeleton": "/outsourcing-inspections/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/outsourcing-orders/{order_id}/progress",
+      "skeleton": "/outsourcing-orders/{}/progress"
+    },
+    {
+      "method": "GET",
+      "path": "/outsourcing-payments",
+      "skeleton": "/outsourcing-payments"
+    },
+    {
+      "method": "POST",
+      "path": "/outsourcing-payments",
+      "skeleton": "/outsourcing-payments"
+    },
+    {
+      "method": "GET",
+      "path": "/outsourcing-orders/{order_id}/print",
+      "skeleton": "/outsourcing-orders/{}/print"
+    },
+    {
+      "method": "GET",
+      "path": "/outsourcing-vendors/{vendor_id}/statement",
+      "skeleton": "/outsourcing-vendors/{}/statement"
+    },
+    {
+      "method": "PUT",
+      "path": "/acceptance-templates/{template_id}",
+      "skeleton": "/acceptance-templates/{}"
+    },
+    {
+      "method": "DELETE",
+      "path": "/acceptance-templates/{template_id}",
+      "skeleton": "/acceptance-templates/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/acceptance-templates/{template_id}/copy",
+      "skeleton": "/acceptance-templates/{}/copy"
+    },
+    {
+      "method": "PUT",
+      "path": "/acceptance-orders/{order_id}",
+      "skeleton": "/acceptance-orders/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/acceptance-orders/{order_id}/submit",
+      "skeleton": "/acceptance-orders/{}/submit"
+    },
+    {
+      "method": "DELETE",
+      "path": "/acceptance-orders/{order_id}",
+      "skeleton": "/acceptance-orders/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/acceptance-issues/{issue_id}",
+      "skeleton": "/acceptance-issues/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/acceptance-issues/{issue_id}/assign",
+      "skeleton": "/acceptance-issues/{}/assign"
+    },
+    {
+      "method": "POST",
+      "path": "/acceptance-issues/{issue_id}/resolve",
+      "skeleton": "/acceptance-issues/{}/resolve"
+    },
+    {
+      "method": "POST",
+      "path": "/acceptance-issues/{issue_id}/verify",
+      "skeleton": "/acceptance-issues/{}/verify"
+    },
+    {
+      "method": "POST",
+      "path": "/acceptance-issues/{issue_id}/defer",
+      "skeleton": "/acceptance-issues/{}/defer"
+    },
+    {
+      "method": "GET",
+      "path": "/acceptance-issues/{issue_id}/follow-ups",
+      "skeleton": "/acceptance-issues/{}/follow-ups"
+    },
+    {
+      "method": "GET",
+      "path": "/acceptance-orders/{order_id}/report",
+      "skeleton": "/acceptance-orders/{}/report"
+    },
+    {
+      "method": "POST",
+      "path": "/acceptance-orders/{order_id}/upload-signed-document",
+      "skeleton": "/acceptance-orders/{}/upload-signed-document"
+    },
+    {
+      "method": "GET",
+      "path": "/acceptance-orders/{order_id}/download-signed-document",
+      "skeleton": "/acceptance-orders/{}/download-signed-document"
+    },
+    {
+      "method": "POST",
+      "path": "/acceptance-orders/{order_id}/trigger-bonus-calculation",
+      "skeleton": "/acceptance-orders/{}/trigger-bonus-calculation"
+    },
+    {
+      "method": "GET",
+      "path": "/materials/{material_id}/lead-time-forecast",
+      "skeleton": "/materials/{}/lead-time-forecast"
+    },
+    {
+      "method": "GET",
+      "path": "/task-center/overview/overview",
+      "skeleton": "/task-center/overview/overview"
+    },
+    {
+      "method": "GET",
+      "path": "/task-center/detail/tasks/{task_id}",
+      "skeleton": "/task-center/detail/tasks/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/task-center/create/tasks",
+      "skeleton": "/task-center/create/tasks"
+    },
+    {
+      "method": "PUT",
+      "path": "/task-center/update/tasks/{task_id}/progress",
+      "skeleton": "/task-center/update/tasks/{}/progress"
+    },
+    {
+      "method": "PUT",
+      "path": "/task-center/complete/tasks/{task_id}/complete",
+      "skeleton": "/task-center/complete/tasks/{}/complete"
+    },
+    {
+      "method": "POST",
+      "path": "/task-center/transfer/tasks/{task_id}/transfer",
+      "skeleton": "/task-center/transfer/tasks/{}/transfer"
+    },
+    {
+      "method": "PUT",
+      "path": "/task-center/reject/tasks/{task_id}/accept",
+      "skeleton": "/task-center/reject/tasks/{}/accept"
+    },
+    {
+      "method": "PUT",
+      "path": "/task-center/reject/tasks/{task_id}/reject",
+      "skeleton": "/task-center/reject/tasks/{}/reject"
+    },
+    {
+      "method": "POST",
+      "path": "/task-center/comments/tasks/{task_id}/comments",
+      "skeleton": "/task-center/comments/tasks/{}/comments"
+    },
+    {
+      "method": "GET",
+      "path": "/task-center/comments/tasks/{task_id}/comments",
+      "skeleton": "/task-center/comments/tasks/{}/comments"
+    },
+    {
+      "method": "POST",
+      "path": "/task-center/batch/batch/complete",
+      "skeleton": "/task-center/batch/batch/complete"
+    },
+    {
+      "method": "POST",
+      "path": "/task-center/batch/batch/transfer",
+      "skeleton": "/task-center/batch/batch/transfer"
+    },
+    {
+      "method": "POST",
+      "path": "/task-center/batch/batch/priority",
+      "skeleton": "/task-center/batch/batch/priority"
+    },
+    {
+      "method": "POST",
+      "path": "/task-center/batch/batch/progress",
+      "skeleton": "/task-center/batch/batch/progress"
+    },
+    {
+      "method": "POST",
+      "path": "/task-center/batch/batch/delete",
+      "skeleton": "/task-center/batch/batch/delete"
+    },
+    {
+      "method": "POST",
+      "path": "/task-center/batch/batch/start",
+      "skeleton": "/task-center/batch/batch/start"
+    },
+    {
+      "method": "POST",
+      "path": "/task-center/batch/batch/pause",
+      "skeleton": "/task-center/batch/batch/pause"
+    },
+    {
+      "method": "POST",
+      "path": "/task-center/batch/batch/tag",
+      "skeleton": "/task-center/batch/batch/tag"
+    },
+    {
+      "method": "POST",
+      "path": "/task-center/batch/batch/urge",
+      "skeleton": "/task-center/batch/batch/urge"
+    },
+    {
+      "method": "GET",
+      "path": "/task-center/batch/batch/statistics",
+      "skeleton": "/task-center/batch/batch/statistics"
+    },
+    {
+      "method": "GET",
+      "path": "/workload/available",
+      "skeleton": "/workload/available"
+    },
+    {
+      "method": "GET",
+      "path": "/skills",
+      "skeleton": "/skills"
+    },
+    {
+      "method": "GET",
+      "path": "/skills/processes",
+      "skeleton": "/skills/processes"
+    },
+    {
+      "method": "GET",
+      "path": "/skills/matching",
+      "skeleton": "/skills/matching"
+    },
+    {
+      "method": "GET",
+      "path": "/workload/skills/processes",
+      "skeleton": "/workload/skills/processes"
+    },
+    {
+      "method": "GET",
+      "path": "/workload/skills/matching",
+      "skeleton": "/workload/skills/matching"
+    },
+    {
+      "method": "GET",
+      "path": "/timesheet/records",
+      "skeleton": "/timesheet/records"
+    },
+    {
+      "method": "POST",
+      "path": "/timesheet/records",
+      "skeleton": "/timesheet/records"
+    },
+    {
+      "method": "POST",
+      "path": "/timesheet/records/batch",
+      "skeleton": "/timesheet/records/batch"
+    },
+    {
+      "method": "GET",
+      "path": "/timesheet/records/{timesheet_id}",
+      "skeleton": "/timesheet/records/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/timesheet/records/{timesheet_id}",
+      "skeleton": "/timesheet/records/{}"
+    },
+    {
+      "method": "DELETE",
+      "path": "/timesheet/records/{timesheet_id}",
+      "skeleton": "/timesheet/records/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/timesheet/approval/submit",
+      "skeleton": "/timesheet/approval/submit"
+    },
+    {
+      "method": "PUT",
+      "path": "/timesheet/approval/{timesheet_id}/approve",
+      "skeleton": "/timesheet/approval/{}/approve"
+    },
+    {
+      "method": "POST",
+      "path": "/timesheet/approval/approve",
+      "skeleton": "/timesheet/approval/approve"
+    },
+    {
+      "method": "PUT",
+      "path": "/timesheet/approval/batch-approve",
+      "skeleton": "/timesheet/approval/batch-approve"
+    },
+    {
+      "method": "POST",
+      "path": "/timesheet/approval/reject",
+      "skeleton": "/timesheet/approval/reject"
+    },
+    {
+      "method": "GET",
+      "path": "/timesheet/monthly/month-summary",
+      "skeleton": "/timesheet/monthly/month-summary"
+    },
+    {
+      "method": "GET",
+      "path": "/timesheet/pending/pending-approval",
+      "skeleton": "/timesheet/pending/pending-approval"
+    },
+    {
+      "method": "GET",
+      "path": "/timesheet/statistics/statistics",
+      "skeleton": "/timesheet/statistics/statistics"
+    },
+    {
+      "method": "GET",
+      "path": "/timesheet/statistics/my-summary",
+      "skeleton": "/timesheet/statistics/my-summary"
+    },
+    {
+      "method": "GET",
+      "path": "/timesheet/statistics/departments/{dept_id}/timesheet-summary",
+      "skeleton": "/timesheet/statistics/departments/{}/timesheet-summary"
+    },
+    {
+      "method": "POST",
+      "path": "/timesheet/reports/aggregate",
+      "skeleton": "/timesheet/reports/aggregate"
+    },
+    {
+      "method": "GET",
+      "path": "/timesheet/reports/reports/hr",
+      "skeleton": "/timesheet/reports/reports/hr"
+    },
+    {
+      "method": "GET",
+      "path": "/timesheet/reports/reports/finance",
+      "skeleton": "/timesheet/reports/reports/finance"
+    },
+    {
+      "method": "GET",
+      "path": "/timesheet/reports/reports/rd",
+      "skeleton": "/timesheet/reports/reports/rd"
+    },
+    {
+      "method": "GET",
+      "path": "/timesheet/reports/reports/project",
+      "skeleton": "/timesheet/reports/reports/project"
+    },
+    {
+      "method": "POST",
+      "path": "/timesheet/reports/sync",
+      "skeleton": "/timesheet/reports/sync"
+    },
+    {
+      "method": "GET",
+      "path": "/timesheet/reports/sync-status/{timesheet_id}",
+      "skeleton": "/timesheet/reports/sync-status/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/pmo/closures/{closure_id}/archive",
+      "skeleton": "/pmo/closures/{}/archive"
+    },
+    {
+      "method": "GET",
+      "path": "/presale/tickets/presale/tickets",
+      "skeleton": "/presale/tickets/presale/tickets"
+    },
+    {
+      "method": "POST",
+      "path": "/presale/tickets/presale/tickets",
+      "skeleton": "/presale/tickets/presale/tickets"
+    },
+    {
+      "method": "GET",
+      "path": "/presale/tickets/presale/tickets/{ticket_id}",
+      "skeleton": "/presale/tickets/presale/tickets/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/presale/tickets/presale/tickets/{ticket_id}/accept",
+      "skeleton": "/presale/tickets/presale/tickets/{}/accept"
+    },
+    {
+      "method": "PUT",
+      "path": "/presale/tickets/presale/tickets/{ticket_id}/progress",
+      "skeleton": "/presale/tickets/presale/tickets/{}/progress"
+    },
+    {
+      "method": "POST",
+      "path": "/presale/tickets/presale/tickets/{ticket_id}/deliverables",
+      "skeleton": "/presale/tickets/presale/tickets/{}/deliverables"
+    },
+    {
+      "method": "PUT",
+      "path": "/presale/tickets/presale/tickets/{ticket_id}/complete",
+      "skeleton": "/presale/tickets/presale/tickets/{}/complete"
+    },
+    {
+      "method": "PUT",
+      "path": "/presale/tickets/presale/tickets/{ticket_id}/rating",
+      "skeleton": "/presale/tickets/presale/tickets/{}/rating"
+    },
+    {
+      "method": "GET",
+      "path": "/presale/tickets/presale/tickets/board",
+      "skeleton": "/presale/tickets/presale/tickets/board"
+    },
+    {
+      "method": "GET",
+      "path": "/presale/proposals/presale/solutions",
+      "skeleton": "/presale/proposals/presale/solutions"
+    },
+    {
+      "method": "POST",
+      "path": "/presale/proposals/presale/solutions",
+      "skeleton": "/presale/proposals/presale/solutions"
+    },
+    {
+      "method": "GET",
+      "path": "/presale/proposals/presale/solutions/{solution_id}",
+      "skeleton": "/presale/proposals/presale/solutions/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/presale/proposals/presale/solutions/{solution_id}",
+      "skeleton": "/presale/proposals/presale/solutions/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/presale/proposals/presale/solutions/{solution_id}/cost",
+      "skeleton": "/presale/proposals/presale/solutions/{}/cost"
+    },
+    {
+      "method": "PUT",
+      "path": "/presale/proposals/presale/solutions/{solution_id}/review",
+      "skeleton": "/presale/proposals/presale/solutions/{}/review"
+    },
+    {
+      "method": "GET",
+      "path": "/presale/proposals/presale/solutions/{solution_id}/versions",
+      "skeleton": "/presale/proposals/presale/solutions/{}/versions"
+    },
+    {
+      "method": "GET",
+      "path": "/presale/templates/presale/templates",
+      "skeleton": "/presale/templates/presale/templates"
+    },
+    {
+      "method": "POST",
+      "path": "/presale/templates/presale/templates",
+      "skeleton": "/presale/templates/presale/templates"
+    },
+    {
+      "method": "GET",
+      "path": "/presale/templates/presale/templates/{template_id}",
+      "skeleton": "/presale/templates/presale/templates/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/presale/templates/presale/templates/{template_id}/apply",
+      "skeleton": "/presale/templates/presale/templates/{}/apply"
+    },
+    {
+      "method": "GET",
+      "path": "/presale/templates/presale/templates/stats",
+      "skeleton": "/presale/templates/presale/templates/stats"
+    },
+    {
+      "method": "GET",
+      "path": "/presale/bids/presale/tenders",
+      "skeleton": "/presale/bids/presale/tenders"
+    },
+    {
+      "method": "POST",
+      "path": "/presale/bids/presale/tenders",
+      "skeleton": "/presale/bids/presale/tenders"
+    },
+    {
+      "method": "GET",
+      "path": "/presale/bids/presale/tenders/{tender_id}",
+      "skeleton": "/presale/bids/presale/tenders/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/presale/bids/presale/tenders/{tender_id}/result",
+      "skeleton": "/presale/bids/presale/tenders/{}/result"
+    },
+    {
+      "method": "GET",
+      "path": "/presale/bids/presale/tenders/analysis",
+      "skeleton": "/presale/bids/presale/tenders/analysis"
+    },
+    {
+      "method": "GET",
+      "path": "/presale/statistics/presale/stats/workload",
+      "skeleton": "/presale/statistics/presale/stats/workload"
+    },
+    {
+      "method": "GET",
+      "path": "/presale/statistics/presale/stats/response-time",
+      "skeleton": "/presale/statistics/presale/stats/response-time"
+    },
+    {
+      "method": "GET",
+      "path": "/presale/statistics/presale/stats/conversion",
+      "skeleton": "/presale/statistics/presale/stats/conversion"
+    },
+    {
+      "method": "GET",
+      "path": "/presale/statistics/presale/stats/performance",
+      "skeleton": "/presale/statistics/presale/stats/performance"
+    },
+    {
+      "method": "GET",
+      "path": "/performance/individual/my",
+      "skeleton": "/performance/individual/my"
+    },
+    {
+      "method": "GET",
+      "path": "/performance/individual/user/{user_id}",
+      "skeleton": "/performance/individual/user/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/performance/individual/trends/{user_id}",
+      "skeleton": "/performance/individual/trends/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/performance/team/team/{team_id}",
+      "skeleton": "/performance/team/team/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/performance/team/department/{dept_id}",
+      "skeleton": "/performance/team/department/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/performance/team/ranking",
+      "skeleton": "/performance/team/ranking"
+    },
+    {
+      "method": "GET",
+      "path": "/performance/project/project/{project_id}",
+      "skeleton": "/performance/project/project/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/performance/project/project/{project_id}/progress",
+      "skeleton": "/performance/project/project/{}/progress"
+    },
+    {
+      "method": "GET",
+      "path": "/performance/project/compare",
+      "skeleton": "/performance/project/compare"
+    },
+    {
+      "method": "POST",
+      "path": "/performance/new/employee/monthly-summary",
+      "skeleton": "/performance/new/employee/monthly-summary"
+    },
+    {
+      "method": "PUT",
+      "path": "/performance/new/employee/monthly-summary/draft",
+      "skeleton": "/performance/new/employee/monthly-summary/draft"
+    },
+    {
+      "method": "GET",
+      "path": "/performance/new/employee/monthly-summary/history",
+      "skeleton": "/performance/new/employee/monthly-summary/history"
+    },
+    {
+      "method": "GET",
+      "path": "/performance/new/employee/my-performance",
+      "skeleton": "/performance/new/employee/my-performance"
+    },
+    {
+      "method": "GET",
+      "path": "/performance/new/manager/evaluation-tasks",
+      "skeleton": "/performance/new/manager/evaluation-tasks"
+    },
+    {
+      "method": "GET",
+      "path": "/performance/new/manager/evaluation/{task_id}",
+      "skeleton": "/performance/new/manager/evaluation/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/performance/new/manager/evaluation/{task_id}",
+      "skeleton": "/performance/new/manager/evaluation/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/performance/new/hr/weight-config",
+      "skeleton": "/performance/new/hr/weight-config"
+    },
+    {
+      "method": "PUT",
+      "path": "/performance/new/hr/weight-config",
+      "skeleton": "/performance/new/hr/weight-config"
+    },
+    {
+      "method": "GET",
+      "path": "/performance/integration/integrated/{user_id}",
+      "skeleton": "/performance/integration/integrated/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/performance/integration/calculate-integrated",
+      "skeleton": "/performance/integration/calculate-integrated"
+    },
+    {
+      "method": "GET",
+      "path": "/report-center/configs/roles",
+      "skeleton": "/report-center/configs/roles"
+    },
+    {
+      "method": "GET",
+      "path": "/report-center/configs/types",
+      "skeleton": "/report-center/configs/types"
+    },
+    {
+      "method": "GET",
+      "path": "/report-center/configs/role-report-matrix",
+      "skeleton": "/report-center/configs/role-report-matrix"
+    },
+    {
+      "method": "POST",
+      "path": "/report-center/generate/generate",
+      "skeleton": "/report-center/generate/generate"
+    },
+    {
+      "method": "GET",
+      "path": "/report-center/generate/preview/{report_type}",
+      "skeleton": "/report-center/generate/preview/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/report-center/generate/compare-roles",
+      "skeleton": "/report-center/generate/compare-roles"
+    },
+    {
+      "method": "POST",
+      "path": "/report-center/generate/export",
+      "skeleton": "/report-center/generate/export"
+    },
+    {
+      "method": "GET",
+      "path": "/report-center/generate/download/{report_id}",
+      "skeleton": "/report-center/generate/download/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/report-center/generate/download-file",
+      "skeleton": "/report-center/generate/download-file"
+    },
+    {
+      "method": "POST",
+      "path": "/report-center/generate/export-direct",
+      "skeleton": "/report-center/generate/export-direct"
+    },
+    {
+      "method": "GET",
+      "path": "/report-center/templates/templates",
+      "skeleton": "/report-center/templates/templates"
+    },
+    {
+      "method": "POST",
+      "path": "/report-center/templates/templates/apply",
+      "skeleton": "/report-center/templates/templates/apply"
+    },
+    {
+      "method": "GET",
+      "path": "/report-center/rd-expense/rd-auxiliary-ledger",
+      "skeleton": "/report-center/rd-expense/rd-auxiliary-ledger"
+    },
+    {
+      "method": "GET",
+      "path": "/report-center/rd-expense/rd-deduction-detail",
+      "skeleton": "/report-center/rd-expense/rd-deduction-detail"
+    },
+    {
+      "method": "GET",
+      "path": "/report-center/rd-expense/rd-high-tech",
+      "skeleton": "/report-center/rd-expense/rd-high-tech"
+    },
+    {
+      "method": "GET",
+      "path": "/report-center/rd-expense/rd-intensity",
+      "skeleton": "/report-center/rd-expense/rd-intensity"
+    },
+    {
+      "method": "GET",
+      "path": "/report-center/rd-expense/rd-personnel",
+      "skeleton": "/report-center/rd-expense/rd-personnel"
+    },
+    {
+      "method": "GET",
+      "path": "/report-center/rd-expense/rd-export",
+      "skeleton": "/report-center/rd-expense/rd-export"
+    },
+    {
+      "method": "GET",
+      "path": "/report-center/bi/delivery-rate",
+      "skeleton": "/report-center/bi/delivery-rate"
+    },
+    {
+      "method": "GET",
+      "path": "/report-center/bi/health-distribution",
+      "skeleton": "/report-center/bi/health-distribution"
+    },
+    {
+      "method": "GET",
+      "path": "/report-center/bi/utilization",
+      "skeleton": "/report-center/bi/utilization"
+    },
+    {
+      "method": "GET",
+      "path": "/report-center/bi/supplier-performance",
+      "skeleton": "/report-center/bi/supplier-performance"
+    },
+    {
+      "method": "GET",
+      "path": "/report-center/bi/dashboard/executive",
+      "skeleton": "/report-center/bi/dashboard/executive"
+    },
+    {
+      "method": "GET",
+      "path": "/business-support/dashboard/performance",
+      "skeleton": "/business-support/dashboard/performance"
+    },
+    {
+      "method": "POST",
+      "path": "/business-support/contracts/{contract_id}/review",
+      "skeleton": "/business-support/contracts/{}/review"
+    },
+    {
+      "method": "PUT",
+      "path": "/business-support/contracts/{contract_id}/review/{review_id}",
+      "skeleton": "/business-support/contracts/{}/review/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/business-support/contracts/{contract_id}/seal",
+      "skeleton": "/business-support/contracts/{}/seal"
+    },
+    {
+      "method": "PUT",
+      "path": "/business-support/contracts/{contract_id}/seal/{seal_id}",
+      "skeleton": "/business-support/contracts/{}/seal/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/business-support/payment-reminders",
+      "skeleton": "/business-support/payment-reminders"
+    },
+    {
+      "method": "GET",
+      "path": "/business-support/payment-reminders",
+      "skeleton": "/business-support/payment-reminders"
+    },
+    {
+      "method": "POST",
+      "path": "/business-support/archives",
+      "skeleton": "/business-support/archives"
+    },
+    {
+      "method": "GET",
+      "path": "/business-support/archives",
+      "skeleton": "/business-support/archives"
+    },
+    {
+      "method": "POST",
+      "path": "/business-support/sales-orders",
+      "skeleton": "/business-support/sales-orders"
+    },
+    {
+      "method": "PUT",
+      "path": "/business-support/sales-orders/{order_id}",
+      "skeleton": "/business-support/sales-orders/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/business-support/sales-orders/{order_id}/assign-project",
+      "skeleton": "/business-support/sales-orders/{}/assign-project"
+    },
+    {
+      "method": "POST",
+      "path": "/business-support/sales-orders/{order_id}/send-notice",
+      "skeleton": "/business-support/sales-orders/{}/send-notice"
+    },
+    {
+      "method": "GET",
+      "path": "/business-support/delivery-orders/pending-approval",
+      "skeleton": "/business-support/delivery-orders/pending-approval"
+    },
+    {
+      "method": "POST",
+      "path": "/business-support/delivery-orders/{delivery_id}/approve",
+      "skeleton": "/business-support/delivery-orders/{}/approve"
+    },
+    {
+      "method": "GET",
+      "path": "/business-support/acceptance-tracking",
+      "skeleton": "/business-support/acceptance-tracking"
+    },
+    {
+      "method": "POST",
+      "path": "/business-support/acceptance-tracking",
+      "skeleton": "/business-support/acceptance-tracking"
+    },
+    {
+      "method": "GET",
+      "path": "/business-support/acceptance-tracking/{tracking_id}",
+      "skeleton": "/business-support/acceptance-tracking/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/business-support/acceptance-tracking/{tracking_id}/check-condition",
+      "skeleton": "/business-support/acceptance-tracking/{}/check-condition"
+    },
+    {
+      "method": "POST",
+      "path": "/business-support/acceptance-tracking/{tracking_id}/remind",
+      "skeleton": "/business-support/acceptance-tracking/{}/remind"
+    },
+    {
+      "method": "PUT",
+      "path": "/business-support/acceptance-tracking/{tracking_id}",
+      "skeleton": "/business-support/acceptance-tracking/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/business-support/reconciliations",
+      "skeleton": "/business-support/reconciliations"
+    },
+    {
+      "method": "GET",
+      "path": "/business-support/reconciliations",
+      "skeleton": "/business-support/reconciliations"
+    },
+    {
+      "method": "GET",
+      "path": "/business-support/reconciliations/{reconciliation_id}",
+      "skeleton": "/business-support/reconciliations/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/business-support/reconciliations/{reconciliation_id}",
+      "skeleton": "/business-support/reconciliations/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/business-support/reconciliations/{reconciliation_id}/send",
+      "skeleton": "/business-support/reconciliations/{}/send"
+    },
+    {
+      "method": "GET",
+      "path": "/business-support/invoice-requests",
+      "skeleton": "/business-support/invoice-requests"
+    },
+    {
+      "method": "POST",
+      "path": "/business-support/invoice-requests",
+      "skeleton": "/business-support/invoice-requests"
+    },
+    {
+      "method": "GET",
+      "path": "/business-support/invoice-requests/{request_id}",
+      "skeleton": "/business-support/invoice-requests/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/business-support/invoice-requests/{request_id}",
+      "skeleton": "/business-support/invoice-requests/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/business-support/invoice-requests/{request_id}/approve",
+      "skeleton": "/business-support/invoice-requests/{}/approve"
+    },
+    {
+      "method": "POST",
+      "path": "/business-support/invoice-requests/{request_id}/reject",
+      "skeleton": "/business-support/invoice-requests/{}/reject"
+    },
+    {
+      "method": "GET",
+      "path": "/business-support/customer-registrations",
+      "skeleton": "/business-support/customer-registrations"
+    },
+    {
+      "method": "POST",
+      "path": "/business-support/customer-registrations",
+      "skeleton": "/business-support/customer-registrations"
+    },
+    {
+      "method": "GET",
+      "path": "/business-support/customer-registrations/{registration_id}",
+      "skeleton": "/business-support/customer-registrations/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/business-support/customer-registrations/{registration_id}",
+      "skeleton": "/business-support/customer-registrations/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/business-support/customer-registrations/{registration_id}/approve",
+      "skeleton": "/business-support/customer-registrations/{}/approve"
+    },
+    {
+      "method": "POST",
+      "path": "/business-support/customer-registrations/{registration_id}/reject",
+      "skeleton": "/business-support/customer-registrations/{}/reject"
+    },
+    {
+      "method": "GET",
+      "path": "/business-support/reports/sales-daily",
+      "skeleton": "/business-support/reports/sales-daily"
+    },
+    {
+      "method": "GET",
+      "path": "/business-support/reports/sales-weekly",
+      "skeleton": "/business-support/reports/sales-weekly"
+    },
+    {
+      "method": "GET",
+      "path": "/business-support/reports/sales-monthly",
+      "skeleton": "/business-support/reports/sales-monthly"
+    },
+    {
+      "method": "GET",
+      "path": "/business-support/reports/payment",
+      "skeleton": "/business-support/reports/payment"
+    },
+    {
+      "method": "GET",
+      "path": "/business-support/reports/contract",
+      "skeleton": "/business-support/reports/contract"
+    },
+    {
+      "method": "GET",
+      "path": "/business-support/reports/invoice",
+      "skeleton": "/business-support/reports/invoice"
+    },
+    {
+      "method": "GET",
+      "path": "/tickets/project-members",
+      "skeleton": "/tickets/project-members"
+    },
+    {
+      "method": "GET",
+      "path": "/tickets/{ticket_id}/projects",
+      "skeleton": "/tickets/{}/projects"
+    },
+    {
+      "method": "GET",
+      "path": "/tickets/statistics",
+      "skeleton": "/tickets/statistics"
+    },
+    {
+      "method": "GET",
+      "path": "/tickets",
+      "skeleton": "/tickets"
+    },
+    {
+      "method": "POST",
+      "path": "/tickets",
+      "skeleton": "/tickets"
+    },
+    {
+      "method": "GET",
+      "path": "/tickets/{ticket_id}",
+      "skeleton": "/tickets/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/tickets/{ticket_id}/assign",
+      "skeleton": "/tickets/{}/assign"
+    },
+    {
+      "method": "PUT",
+      "path": "/tickets/{ticket_id}/status",
+      "skeleton": "/tickets/{}/status"
+    },
+    {
+      "method": "PUT",
+      "path": "/tickets/{ticket_id}/close",
+      "skeleton": "/tickets/{}/close"
+    },
+    {
+      "method": "GET",
+      "path": "/records/statistics",
+      "skeleton": "/records/statistics"
+    },
+    {
+      "method": "GET",
+      "path": "/records",
+      "skeleton": "/records"
+    },
+    {
+      "method": "POST",
+      "path": "/records",
+      "skeleton": "/records"
+    },
+    {
+      "method": "POST",
+      "path": "/records/{record_id}/photos",
+      "skeleton": "/records/{}/photos"
+    },
+    {
+      "method": "DELETE",
+      "path": "/records/{record_id}/photos/{photo_index}",
+      "skeleton": "/records/{}/photos/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/communications/statistics",
+      "skeleton": "/communications/statistics"
+    },
+    {
+      "method": "GET",
+      "path": "/communications",
+      "skeleton": "/communications"
+    },
+    {
+      "method": "POST",
+      "path": "/communications",
+      "skeleton": "/communications"
+    },
+    {
+      "method": "GET",
+      "path": "/communications/{comm_id}",
+      "skeleton": "/communications/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/communications/{comm_id}",
+      "skeleton": "/communications/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/surveys/statistics",
+      "skeleton": "/surveys/statistics"
+    },
+    {
+      "method": "GET",
+      "path": "/surveys",
+      "skeleton": "/surveys"
+    },
+    {
+      "method": "POST",
+      "path": "/surveys",
+      "skeleton": "/surveys"
+    },
+    {
+      "method": "GET",
+      "path": "/surveys/{survey_id}",
+      "skeleton": "/surveys/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/surveys/{survey_id}",
+      "skeleton": "/surveys/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/surveys/{survey_id}/send",
+      "skeleton": "/surveys/{}/send"
+    },
+    {
+      "method": "GET",
+      "path": "/survey-templates",
+      "skeleton": "/survey-templates"
+    },
+    {
+      "method": "GET",
+      "path": "/survey-templates/{template_id}",
+      "skeleton": "/survey-templates/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/knowledge-base/{article_id}/download",
+      "skeleton": "/knowledge-base/{}/download"
+    },
+    {
+      "method": "POST",
+      "path": "/knowledge-base/{article_id}/helpful",
+      "skeleton": "/knowledge-base/{}/helpful"
+    },
+    {
+      "method": "GET",
+      "path": "/knowledge-features/issues",
+      "skeleton": "/knowledge-features/issues"
+    },
+    {
+      "method": "GET",
+      "path": "/knowledge-features/solutions",
+      "skeleton": "/knowledge-features/solutions"
+    },
+    {
+      "method": "GET",
+      "path": "/knowledge-features/search",
+      "skeleton": "/knowledge-features/search"
+    },
+    {
+      "method": "GET",
+      "path": "/statistics/dashboard-statistics",
+      "skeleton": "/statistics/dashboard-statistics"
+    },
+    {
+      "method": "GET",
+      "path": "/sla/policies",
+      "skeleton": "/sla/policies"
+    },
+    {
+      "method": "GET",
+      "path": "/sla/policies/{policy_id}",
+      "skeleton": "/sla/policies/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/sla/policies",
+      "skeleton": "/sla/policies"
+    },
+    {
+      "method": "PUT",
+      "path": "/sla/policies/{policy_id}",
+      "skeleton": "/sla/policies/{}"
+    },
+    {
+      "method": "DELETE",
+      "path": "/sla/policies/{policy_id}",
+      "skeleton": "/sla/policies/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/sla/monitors",
+      "skeleton": "/sla/monitors"
+    },
+    {
+      "method": "GET",
+      "path": "/sla/monitors/{monitor_id}",
+      "skeleton": "/sla/monitors/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/sla/statistics",
+      "skeleton": "/sla/statistics"
+    },
+    {
+      "method": "GET",
+      "path": "/engineers/my-projects",
+      "skeleton": "/engineers/my-projects"
+    },
+    {
+      "method": "POST",
+      "path": "/engineers/tasks",
+      "skeleton": "/engineers/tasks"
+    },
+    {
+      "method": "GET",
+      "path": "/engineers/tasks",
+      "skeleton": "/engineers/tasks"
+    },
+    {
+      "method": "GET",
+      "path": "/engineers/tasks/{task_id}",
+      "skeleton": "/engineers/tasks/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/engineers/tasks/{task_id}/progress",
+      "skeleton": "/engineers/tasks/{}/progress"
+    },
+    {
+      "method": "PUT",
+      "path": "/engineers/tasks/{task_id}/complete",
+      "skeleton": "/engineers/tasks/{}/complete"
+    },
+    {
+      "method": "POST",
+      "path": "/engineers/tasks/{task_id}/completion-proofs/upload",
+      "skeleton": "/engineers/tasks/{}/completion-proofs/upload"
+    },
+    {
+      "method": "GET",
+      "path": "/engineers/tasks/{task_id}/completion-proofs",
+      "skeleton": "/engineers/tasks/{}/completion-proofs"
+    },
+    {
+      "method": "DELETE",
+      "path": "/engineers/tasks/{task_id}/completion-proofs/{proof_id}",
+      "skeleton": "/engineers/tasks/{}/completion-proofs/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/engineers/tasks/{task_id}/report-delay",
+      "skeleton": "/engineers/tasks/{}/report-delay"
+    },
+    {
+      "method": "GET",
+      "path": "/engineers/tasks/pending-approval",
+      "skeleton": "/engineers/tasks/pending-approval"
+    },
+    {
+      "method": "PUT",
+      "path": "/engineers/tasks/{task_id}/approve",
+      "skeleton": "/engineers/tasks/{}/approve"
+    },
+    {
+      "method": "PUT",
+      "path": "/engineers/tasks/{task_id}/reject",
+      "skeleton": "/engineers/tasks/{}/reject"
+    },
+    {
+      "method": "GET",
+      "path": "/engineers/tasks/{task_id}/approval-history",
+      "skeleton": "/engineers/tasks/{}/approval-history"
+    },
+    {
+      "method": "POST",
+      "path": "/bonus/rules/rules",
+      "skeleton": "/bonus/rules/rules"
+    },
+    {
+      "method": "GET",
+      "path": "/bonus/rules/rules",
+      "skeleton": "/bonus/rules/rules"
+    },
+    {
+      "method": "GET",
+      "path": "/bonus/rules/rules/{rule_id}",
+      "skeleton": "/bonus/rules/rules/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/bonus/rules/rules/{rule_id}",
+      "skeleton": "/bonus/rules/rules/{}"
+    },
+    {
+      "method": "DELETE",
+      "path": "/bonus/rules/rules/{rule_id}",
+      "skeleton": "/bonus/rules/rules/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/bonus/rules/rules/{rule_id}/activate",
+      "skeleton": "/bonus/rules/rules/{}/activate"
+    },
+    {
+      "method": "POST",
+      "path": "/bonus/rules/rules/{rule_id}/deactivate",
+      "skeleton": "/bonus/rules/rules/{}/deactivate"
+    },
+    {
+      "method": "POST",
+      "path": "/bonus/calculation/calculate/performance",
+      "skeleton": "/bonus/calculation/calculate/performance"
+    },
+    {
+      "method": "POST",
+      "path": "/bonus/calculation/calculate/project",
+      "skeleton": "/bonus/calculation/calculate/project"
+    },
+    {
+      "method": "POST",
+      "path": "/bonus/calculation/calculate/milestone",
+      "skeleton": "/bonus/calculation/calculate/milestone"
+    },
+    {
+      "method": "POST",
+      "path": "/bonus/calculation/calculate/team",
+      "skeleton": "/bonus/calculation/calculate/team"
+    },
+    {
+      "method": "POST",
+      "path": "/bonus/sales-calc/calculate/sales",
+      "skeleton": "/bonus/sales-calc/calculate/sales"
+    },
+    {
+      "method": "POST",
+      "path": "/bonus/sales-calc/calculate/sales-director",
+      "skeleton": "/bonus/sales-calc/calculate/sales-director"
+    },
+    {
+      "method": "POST",
+      "path": "/bonus/sales-calc/calculate/presale",
+      "skeleton": "/bonus/sales-calc/calculate/presale"
+    },
+    {
+      "method": "GET",
+      "path": "/bonus/sales-calc/calculations",
+      "skeleton": "/bonus/sales-calc/calculations"
+    },
+    {
+      "method": "GET",
+      "path": "/bonus/sales-calc/calculations/{calc_id}",
+      "skeleton": "/bonus/sales-calc/calculations/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/bonus/sales-calc/calculations/{calc_id}/approve",
+      "skeleton": "/bonus/sales-calc/calculations/{}/approve"
+    },
+    {
+      "method": "POST",
+      "path": "/bonus/payment/distribute",
+      "skeleton": "/bonus/payment/distribute"
+    },
+    {
+      "method": "GET",
+      "path": "/bonus/payment/distributions",
+      "skeleton": "/bonus/payment/distributions"
+    },
+    {
+      "method": "GET",
+      "path": "/bonus/payment/distributions/{dist_id}",
+      "skeleton": "/bonus/payment/distributions/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/bonus/payment/distributions/{dist_id}/pay",
+      "skeleton": "/bonus/payment/distributions/{}/pay"
+    },
+    {
+      "method": "GET",
+      "path": "/bonus/team/team-allocations",
+      "skeleton": "/bonus/team/team-allocations"
+    },
+    {
+      "method": "GET",
+      "path": "/bonus/team/team-allocations/{allocation_id}",
+      "skeleton": "/bonus/team/team-allocations/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/bonus/team/team-allocations/{allocation_id}/approve",
+      "skeleton": "/bonus/team/team-allocations/{}/approve"
+    },
+    {
+      "method": "GET",
+      "path": "/bonus/my/my",
+      "skeleton": "/bonus/my/my"
+    },
+    {
+      "method": "GET",
+      "path": "/bonus/statistics/statistics",
+      "skeleton": "/bonus/statistics/statistics"
+    },
+    {
+      "method": "GET",
+      "path": "/bonus/details/allocation-sheets/template",
+      "skeleton": "/bonus/details/allocation-sheets/template"
+    },
+    {
+      "method": "POST",
+      "path": "/bonus/details/allocation-sheets/upload",
+      "skeleton": "/bonus/details/allocation-sheets/upload"
+    },
+    {
+      "method": "POST",
+      "path": "/bonus/details/allocation-sheets/{sheet_id}/confirm",
+      "skeleton": "/bonus/details/allocation-sheets/{}/confirm"
+    },
+    {
+      "method": "POST",
+      "path": "/bonus/details/allocation-sheets/{sheet_id}/distribute",
+      "skeleton": "/bonus/details/allocation-sheets/{}/distribute"
+    },
+    {
+      "method": "GET",
+      "path": "/bonus/details/allocation-sheets",
+      "skeleton": "/bonus/details/allocation-sheets"
+    },
+    {
+      "method": "GET",
+      "path": "/bonus/details/allocation-sheets/{sheet_id}",
+      "skeleton": "/bonus/details/allocation-sheets/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/bonus/details/allocation-sheets/{sheet_id}/download",
+      "skeleton": "/bonus/details/allocation-sheets/{}/download"
+    },
+    {
+      "method": "GET",
+      "path": "/bonus/details/allocation-sheets/{sheet_id}/rows",
+      "skeleton": "/bonus/details/allocation-sheets/{}/rows"
+    },
+    {
+      "method": "GET",
+      "path": "/project-evaluation/evaluations/statistics",
+      "skeleton": "/project-evaluation/evaluations/statistics"
+    },
+    {
+      "method": "POST",
+      "path": "/project-evaluation/evaluations",
+      "skeleton": "/project-evaluation/evaluations"
+    },
+    {
+      "method": "POST",
+      "path": "/project-evaluation/evaluations/auto",
+      "skeleton": "/project-evaluation/evaluations/auto"
+    },
+    {
+      "method": "GET",
+      "path": "/project-evaluation/evaluations",
+      "skeleton": "/project-evaluation/evaluations"
+    },
+    {
+      "method": "GET",
+      "path": "/project-evaluation/evaluations/{eval_id}",
+      "skeleton": "/project-evaluation/evaluations/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/project-evaluation/projects/{project_id}/evaluation",
+      "skeleton": "/project-evaluation/projects/{}/evaluation"
+    },
+    {
+      "method": "PUT",
+      "path": "/project-evaluation/evaluations/{eval_id}",
+      "skeleton": "/project-evaluation/evaluations/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/project-evaluation/evaluations/{eval_id}/confirm",
+      "skeleton": "/project-evaluation/evaluations/{}/confirm"
+    },
+    {
+      "method": "GET",
+      "path": "/project-evaluation/dimensions/weights/summary",
+      "skeleton": "/project-evaluation/dimensions/weights/summary"
+    },
+    {
+      "method": "GET",
+      "path": "/project-evaluation/dimensions",
+      "skeleton": "/project-evaluation/dimensions"
+    },
+    {
+      "method": "GET",
+      "path": "/project-evaluation/dimensions/{dim_id}",
+      "skeleton": "/project-evaluation/dimensions/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/project-evaluation/dimensions",
+      "skeleton": "/project-evaluation/dimensions"
+    },
+    {
+      "method": "PUT",
+      "path": "/project-evaluation/dimensions/{dim_id}",
+      "skeleton": "/project-evaluation/dimensions/{}"
+    },
+    {
+      "method": "DELETE",
+      "path": "/project-evaluation/dimensions/{dim_id}",
+      "skeleton": "/project-evaluation/dimensions/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/project-evaluation/dimensions/{dim_id}/toggle",
+      "skeleton": "/project-evaluation/dimensions/{}/toggle"
+    },
+    {
+      "method": "GET",
+      "path": "/assembly-kit/stages/stages",
+      "skeleton": "/assembly-kit/stages/stages"
+    },
+    {
+      "method": "PUT",
+      "path": "/assembly-kit/stages/stages/{stage_code}",
+      "skeleton": "/assembly-kit/stages/stages/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/assembly-kit/material-mapping/category-mappings",
+      "skeleton": "/assembly-kit/material-mapping/category-mappings"
+    },
+    {
+      "method": "POST",
+      "path": "/assembly-kit/material-mapping/category-mappings",
+      "skeleton": "/assembly-kit/material-mapping/category-mappings"
+    },
+    {
+      "method": "PUT",
+      "path": "/assembly-kit/material-mapping/category-mappings/{mapping_id}",
+      "skeleton": "/assembly-kit/material-mapping/category-mappings/{}"
+    },
+    {
+      "method": "DELETE",
+      "path": "/assembly-kit/material-mapping/category-mappings/{mapping_id}",
+      "skeleton": "/assembly-kit/material-mapping/category-mappings/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/assembly-kit/bom-attributes/bom/{bom_id}/assembly-attrs",
+      "skeleton": "/assembly-kit/bom-attributes/bom/{}/assembly-attrs"
+    },
+    {
+      "method": "POST",
+      "path": "/assembly-kit/bom-attributes/bom/{bom_id}/assembly-attrs/batch",
+      "skeleton": "/assembly-kit/bom-attributes/bom/{}/assembly-attrs/batch"
+    },
+    {
+      "method": "PUT",
+      "path": "/assembly-kit/bom-attributes/bom/assembly-attrs/{attr_id}",
+      "skeleton": "/assembly-kit/bom-attributes/bom/assembly-attrs/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/assembly-kit/bom-attributes/bom/{bom_id}/assembly-attrs/auto",
+      "skeleton": "/assembly-kit/bom-attributes/bom/{}/assembly-attrs/auto"
+    },
+    {
+      "method": "GET",
+      "path": "/assembly-kit/bom-attributes/bom/{bom_id}/assembly-attrs/recommendations",
+      "skeleton": "/assembly-kit/bom-attributes/bom/{}/assembly-attrs/recommendations"
+    },
+    {
+      "method": "POST",
+      "path": "/assembly-kit/bom-attributes/bom/{bom_id}/assembly-attrs/smart-recommend",
+      "skeleton": "/assembly-kit/bom-attributes/bom/{}/assembly-attrs/smart-recommend"
+    },
+    {
+      "method": "POST",
+      "path": "/assembly-kit/bom-attributes/bom/{bom_id}/assembly-attrs/template",
+      "skeleton": "/assembly-kit/bom-attributes/bom/{}/assembly-attrs/template"
+    },
+    {
+      "method": "POST",
+      "path": "/assembly-kit/kit-analysis/analysis",
+      "skeleton": "/assembly-kit/kit-analysis/analysis"
+    },
+    {
+      "method": "GET",
+      "path": "/assembly-kit/kit-analysis/analysis/{readiness_id}/optimize",
+      "skeleton": "/assembly-kit/kit-analysis/analysis/{}/optimize"
+    },
+    {
+      "method": "GET",
+      "path": "/assembly-kit/kit-analysis/analysis/{readiness_id}",
+      "skeleton": "/assembly-kit/kit-analysis/analysis/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/assembly-kit/kit-analysis/projects/{project_id}/assembly-readiness",
+      "skeleton": "/assembly-kit/kit-analysis/projects/{}/assembly-readiness"
+    },
+    {
+      "method": "GET",
+      "path": "/assembly-kit/shortage-alerts/shortage-alerts",
+      "skeleton": "/assembly-kit/shortage-alerts/shortage-alerts"
+    },
+    {
+      "method": "GET",
+      "path": "/assembly-kit/alert-rules/alert-rules",
+      "skeleton": "/assembly-kit/alert-rules/alert-rules"
+    },
+    {
+      "method": "POST",
+      "path": "/assembly-kit/alert-rules/alert-rules",
+      "skeleton": "/assembly-kit/alert-rules/alert-rules"
+    },
+    {
+      "method": "PUT",
+      "path": "/assembly-kit/alert-rules/alert-rules/{rule_id}",
+      "skeleton": "/assembly-kit/alert-rules/alert-rules/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/assembly-kit/wechat-config/wechat/config",
+      "skeleton": "/assembly-kit/wechat-config/wechat/config"
+    },
+    {
+      "method": "POST",
+      "path": "/assembly-kit/wechat-config/wechat/test",
+      "skeleton": "/assembly-kit/wechat-config/wechat/test"
+    },
+    {
+      "method": "POST",
+      "path": "/assembly-kit/scheduling/suggestions/generate",
+      "skeleton": "/assembly-kit/scheduling/suggestions/generate"
+    },
+    {
+      "method": "GET",
+      "path": "/assembly-kit/scheduling/suggestions",
+      "skeleton": "/assembly-kit/scheduling/suggestions"
+    },
+    {
+      "method": "POST",
+      "path": "/assembly-kit/scheduling/suggestions/{suggestion_id}/accept",
+      "skeleton": "/assembly-kit/scheduling/suggestions/{}/accept"
+    },
+    {
+      "method": "POST",
+      "path": "/assembly-kit/scheduling/suggestions/{suggestion_id}/reject",
+      "skeleton": "/assembly-kit/scheduling/suggestions/{}/reject"
+    },
+    {
+      "method": "GET",
+      "path": "/assembly-kit/dashboard/dashboard",
+      "skeleton": "/assembly-kit/dashboard/dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/assembly-kit/templates/templates",
+      "skeleton": "/assembly-kit/templates/templates"
+    },
+    {
+      "method": "POST",
+      "path": "/assembly-kit/templates/templates",
+      "skeleton": "/assembly-kit/templates/templates"
+    },
+    {
+      "method": "PUT",
+      "path": "/assembly-kit/templates/templates/{template_id}",
+      "skeleton": "/assembly-kit/templates/templates/{}"
+    },
+    {
+      "method": "DELETE",
+      "path": "/assembly-kit/templates/templates/{template_id}",
+      "skeleton": "/assembly-kit/templates/templates/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/staff-matching",
+      "skeleton": "/staff-matching"
+    },
+    {
+      "method": "GET",
+      "path": "/management-rhythm/configs/management-rhythm/configs",
+      "skeleton": "/management-rhythm/configs/management-rhythm/configs"
+    },
+    {
+      "method": "POST",
+      "path": "/management-rhythm/configs/management-rhythm/configs",
+      "skeleton": "/management-rhythm/configs/management-rhythm/configs"
+    },
+    {
+      "method": "GET",
+      "path": "/management-rhythm/configs/management-rhythm/configs/{config_id}",
+      "skeleton": "/management-rhythm/configs/management-rhythm/configs/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/management-rhythm/configs/management-rhythm/configs/{config_id}",
+      "skeleton": "/management-rhythm/configs/management-rhythm/configs/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/management-rhythm/configs/management-rhythm/strategic-structure-template",
+      "skeleton": "/management-rhythm/configs/management-rhythm/strategic-structure-template"
+    },
+    {
+      "method": "GET",
+      "path": "/management-rhythm/meetings/strategic-meetings",
+      "skeleton": "/management-rhythm/meetings/strategic-meetings"
+    },
+    {
+      "method": "POST",
+      "path": "/management-rhythm/meetings/strategic-meetings",
+      "skeleton": "/management-rhythm/meetings/strategic-meetings"
+    },
+    {
+      "method": "GET",
+      "path": "/management-rhythm/meetings/strategic-meetings/{meeting_id}",
+      "skeleton": "/management-rhythm/meetings/strategic-meetings/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/management-rhythm/meetings/strategic-meetings/{meeting_id}",
+      "skeleton": "/management-rhythm/meetings/strategic-meetings/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/management-rhythm/meetings/strategic-meetings/{meeting_id}/minutes",
+      "skeleton": "/management-rhythm/meetings/strategic-meetings/{}/minutes"
+    },
+    {
+      "method": "GET",
+      "path": "/management-rhythm/action-items/strategic-meetings/{meeting_id}/action-items",
+      "skeleton": "/management-rhythm/action-items/strategic-meetings/{}/action-items"
+    },
+    {
+      "method": "POST",
+      "path": "/management-rhythm/action-items/strategic-meetings/{meeting_id}/action-items",
+      "skeleton": "/management-rhythm/action-items/strategic-meetings/{}/action-items"
+    },
+    {
+      "method": "PUT",
+      "path": "/management-rhythm/action-items/strategic-meetings/{meeting_id}/action-items/{item_id}",
+      "skeleton": "/management-rhythm/action-items/strategic-meetings/{}/action-items/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/management-rhythm/dashboard/management-rhythm/dashboard",
+      "skeleton": "/management-rhythm/dashboard/management-rhythm/dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/management-rhythm/meeting-map/meeting-map",
+      "skeleton": "/management-rhythm/meeting-map/meeting-map"
+    },
+    {
+      "method": "GET",
+      "path": "/management-rhythm/meeting-map/meeting-map/calendar",
+      "skeleton": "/management-rhythm/meeting-map/meeting-map/calendar"
+    },
+    {
+      "method": "GET",
+      "path": "/management-rhythm/meeting-map/meeting-map/statistics",
+      "skeleton": "/management-rhythm/meeting-map/meeting-map/statistics"
+    },
+    {
+      "method": "GET",
+      "path": "/management-rhythm/integrations/rhythm-integration/financial-metrics",
+      "skeleton": "/management-rhythm/integrations/rhythm-integration/financial-metrics"
+    },
+    {
+      "method": "GET",
+      "path": "/management-rhythm/integrations/rhythm-integration/project-metrics",
+      "skeleton": "/management-rhythm/integrations/rhythm-integration/project-metrics"
+    },
+    {
+      "method": "GET",
+      "path": "/management-rhythm/integrations/rhythm-integration/task-metrics",
+      "skeleton": "/management-rhythm/integrations/rhythm-integration/task-metrics"
+    },
+    {
+      "method": "GET",
+      "path": "/management-rhythm/report-configs/meeting-reports/configs",
+      "skeleton": "/management-rhythm/report-configs/meeting-reports/configs"
+    },
+    {
+      "method": "POST",
+      "path": "/management-rhythm/report-configs/meeting-reports/configs",
+      "skeleton": "/management-rhythm/report-configs/meeting-reports/configs"
+    },
+    {
+      "method": "GET",
+      "path": "/management-rhythm/report-configs/meeting-reports/configs/{config_id}",
+      "skeleton": "/management-rhythm/report-configs/meeting-reports/configs/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/management-rhythm/report-configs/meeting-reports/configs/{config_id}",
+      "skeleton": "/management-rhythm/report-configs/meeting-reports/configs/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/management-rhythm/report-configs/meeting-reports/configs/default/{report_type}",
+      "skeleton": "/management-rhythm/report-configs/meeting-reports/configs/default/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/management-rhythm/metrics/meeting-reports/metrics/available",
+      "skeleton": "/management-rhythm/metrics/meeting-reports/metrics/available"
+    },
+    {
+      "method": "POST",
+      "path": "/management-rhythm/metrics/meeting-reports/metrics",
+      "skeleton": "/management-rhythm/metrics/meeting-reports/metrics"
+    },
+    {
+      "method": "PUT",
+      "path": "/management-rhythm/metrics/meeting-reports/metrics/{metric_id}",
+      "skeleton": "/management-rhythm/metrics/meeting-reports/metrics/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/management-rhythm/reports/meeting-reports/generate",
+      "skeleton": "/management-rhythm/reports/meeting-reports/generate"
+    },
+    {
+      "method": "GET",
+      "path": "/management-rhythm/reports/meeting-reports",
+      "skeleton": "/management-rhythm/reports/meeting-reports"
+    },
+    {
+      "method": "GET",
+      "path": "/management-rhythm/reports/meeting-reports/{report_id}",
+      "skeleton": "/management-rhythm/reports/meeting-reports/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/management-rhythm/reports/meeting-reports/{report_id}/export-docx",
+      "skeleton": "/management-rhythm/reports/meeting-reports/{}/export-docx"
+    },
+    {
+      "method": "GET",
+      "path": "/culture-wall/config",
+      "skeleton": "/culture-wall/config"
+    },
+    {
+      "method": "GET",
+      "path": "/culture-wall/config/list",
+      "skeleton": "/culture-wall/config/list"
+    },
+    {
+      "method": "POST",
+      "path": "/culture-wall/config",
+      "skeleton": "/culture-wall/config"
+    },
+    {
+      "method": "PUT",
+      "path": "/culture-wall/config/{config_id}",
+      "skeleton": "/culture-wall/config/{}"
+    },
+    {
+      "method": "DELETE",
+      "path": "/culture-wall/config/{config_id}",
+      "skeleton": "/culture-wall/config/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/procurement-analysis/overview",
+      "skeleton": "/procurement-analysis/overview"
+    },
+    {
+      "method": "GET",
+      "path": "/inventory-analysis/overview",
+      "skeleton": "/inventory-analysis/overview"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/summary/company",
+      "skeleton": "/engineer-performance/summary/company"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/summary/by-job-type/{job_type}",
+      "skeleton": "/engineer-performance/summary/by-job-type/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/ranking",
+      "skeleton": "/engineer-performance/ranking"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/ranking/by-department",
+      "skeleton": "/engineer-performance/ranking/by-department"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/ranking/by-job-type",
+      "skeleton": "/engineer-performance/ranking/by-job-type"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/ranking/top",
+      "skeleton": "/engineer-performance/ranking/top"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/engineer/profile",
+      "skeleton": "/engineer-performance/engineer/profile"
+    },
+    {
+      "method": "POST",
+      "path": "/engineer-performance/engineer/profile",
+      "skeleton": "/engineer-performance/engineer/profile"
+    },
+    {
+      "method": "PUT",
+      "path": "/engineer-performance/engineer/profile/{user_id}",
+      "skeleton": "/engineer-performance/engineer/profile/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/engineer/{user_id}",
+      "skeleton": "/engineer-performance/engineer/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/engineer/{user_id}/trend",
+      "skeleton": "/engineer-performance/engineer/{}/trend"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/engineer/{user_id}/comparison",
+      "skeleton": "/engineer-performance/engineer/{}/comparison"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/engineer",
+      "skeleton": "/engineer-performance/engineer"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/collaboration/matrix",
+      "skeleton": "/engineer-performance/collaboration/matrix"
+    },
+    {
+      "method": "POST",
+      "path": "/engineer-performance/collaboration",
+      "skeleton": "/engineer-performance/collaboration"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/collaboration/received/{user_id}",
+      "skeleton": "/engineer-performance/collaboration/received/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/collaboration/given/{user_id}",
+      "skeleton": "/engineer-performance/collaboration/given/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/collaboration/pending",
+      "skeleton": "/engineer-performance/collaboration/pending"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/collaboration/stats/{user_id}",
+      "skeleton": "/engineer-performance/collaboration/stats/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/engineer-performance/collaboration/auto-select/{engineer_id}",
+      "skeleton": "/engineer-performance/collaboration/auto-select/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/engineer-performance/collaboration/submit-rating",
+      "skeleton": "/engineer-performance/collaboration/submit-rating"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/collaboration/pending-ratings",
+      "skeleton": "/engineer-performance/collaboration/pending-ratings"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/collaboration/statistics/{period_id}",
+      "skeleton": "/engineer-performance/collaboration/statistics/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/collaboration/trend/{engineer_id}",
+      "skeleton": "/engineer-performance/collaboration/trend/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/collaboration/quality-analysis/{period_id}",
+      "skeleton": "/engineer-performance/collaboration/quality-analysis/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/engineer-performance/collaboration/auto-complete/{period_id}",
+      "skeleton": "/engineer-performance/collaboration/auto-complete/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/knowledge",
+      "skeleton": "/engineer-performance/knowledge"
+    },
+    {
+      "method": "POST",
+      "path": "/engineer-performance/knowledge",
+      "skeleton": "/engineer-performance/knowledge"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/knowledge/{contribution_id}",
+      "skeleton": "/engineer-performance/knowledge/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/engineer-performance/knowledge/{contribution_id}",
+      "skeleton": "/engineer-performance/knowledge/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/engineer-performance/knowledge/{contribution_id}/submit",
+      "skeleton": "/engineer-performance/knowledge/{}/submit"
+    },
+    {
+      "method": "POST",
+      "path": "/engineer-performance/knowledge/{contribution_id}/approve",
+      "skeleton": "/engineer-performance/knowledge/{}/approve"
+    },
+    {
+      "method": "POST",
+      "path": "/engineer-performance/knowledge/{contribution_id}/reject",
+      "skeleton": "/engineer-performance/knowledge/{}/reject"
+    },
+    {
+      "method": "POST",
+      "path": "/engineer-performance/knowledge/{contribution_id}/reuse",
+      "skeleton": "/engineer-performance/knowledge/{}/reuse"
+    },
+    {
+      "method": "DELETE",
+      "path": "/engineer-performance/knowledge/{contribution_id}",
+      "skeleton": "/engineer-performance/knowledge/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/knowledge/ranking",
+      "skeleton": "/engineer-performance/knowledge/ranking"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/knowledge/stats/me",
+      "skeleton": "/engineer-performance/knowledge/stats/me"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/config/weights",
+      "skeleton": "/engineer-performance/config/weights"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/config/weights/{job_type}",
+      "skeleton": "/engineer-performance/config/weights/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/engineer-performance/config/weights",
+      "skeleton": "/engineer-performance/config/weights"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/config/grades",
+      "skeleton": "/engineer-performance/config/grades"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/config/job-types",
+      "skeleton": "/engineer-performance/config/job-types"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/config/job-levels",
+      "skeleton": "/engineer-performance/config/job-levels"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/config/department-configs",
+      "skeleton": "/engineer-performance/config/department-configs"
+    },
+    {
+      "method": "POST",
+      "path": "/engineer-performance/config/department-configs",
+      "skeleton": "/engineer-performance/config/department-configs"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/config/pending-approvals",
+      "skeleton": "/engineer-performance/config/pending-approvals"
+    },
+    {
+      "method": "POST",
+      "path": "/engineer-performance/config/approve/{config_id}",
+      "skeleton": "/engineer-performance/config/approve/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/data-collection/{engineer_id}",
+      "skeleton": "/engineer-performance/data-collection/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/data-collection/self-evaluation/{engineer_id}",
+      "skeleton": "/engineer-performance/data-collection/self-evaluation/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/engineer-performance/data-collection/collect-all/{engineer_id}",
+      "skeleton": "/engineer-performance/data-collection/collect-all/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/data-collection/report/{engineer_id}",
+      "skeleton": "/engineer-performance/data-collection/report/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/engineer-performance/manager-evaluation/adjust",
+      "skeleton": "/engineer-performance/manager-evaluation/adjust"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/manager-evaluation/adjustment-history/{result_id}",
+      "skeleton": "/engineer-performance/manager-evaluation/adjustment-history/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/manager-evaluation/evaluation-tasks",
+      "skeleton": "/engineer-performance/manager-evaluation/evaluation-tasks"
+    },
+    {
+      "method": "POST",
+      "path": "/engineer-performance/manager-evaluation/submit-evaluation",
+      "skeleton": "/engineer-performance/manager-evaluation/submit-evaluation"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/manager-evaluation/engineers",
+      "skeleton": "/engineer-performance/manager-evaluation/engineers"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/data-integrity/check/{engineer_id}",
+      "skeleton": "/engineer-performance/data-integrity/check/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/data-integrity/report",
+      "skeleton": "/engineer-performance/data-integrity/report"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/data-integrity/reminders",
+      "skeleton": "/engineer-performance/data-integrity/reminders"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/data-integrity/suggest-fixes/{engineer_id}",
+      "skeleton": "/engineer-performance/data-integrity/suggest-fixes/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/engineer-performance/data-integrity/auto-fix",
+      "skeleton": "/engineer-performance/data-integrity/auto-fix"
+    },
+    {
+      "method": "POST",
+      "path": "/engineer-performance/data-integrity/send-reminders",
+      "skeleton": "/engineer-performance/data-integrity/send-reminders"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/data-integrity/export-report",
+      "skeleton": "/engineer-performance/data-integrity/export-report"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/feedback/{engineer_id}",
+      "skeleton": "/engineer-performance/feedback/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/feedback/message/{engineer_id}",
+      "skeleton": "/engineer-performance/feedback/message/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/feedback/trend/{engineer_id}",
+      "skeleton": "/engineer-performance/feedback/trend/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/feedback/ability-changes/{engineer_id}",
+      "skeleton": "/engineer-performance/feedback/ability-changes/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/trend/engineer/{engineer_id}",
+      "skeleton": "/engineer-performance/trend/engineer/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/trend/ability-changes/{engineer_id}",
+      "skeleton": "/engineer-performance/trend/ability-changes/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/trend/department/{department_id}",
+      "skeleton": "/engineer-performance/trend/department/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/engineer-performance/trend/compare-departments",
+      "skeleton": "/engineer-performance/trend/compare-departments"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/solution/{engineer_id}/score",
+      "skeleton": "/engineer-performance/solution/{}/score"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/solution/{engineer_id}/bonus",
+      "skeleton": "/engineer-performance/solution/{}/bonus"
+    },
+    {
+      "method": "POST",
+      "path": "/engineer-performance/solution/calculate-bonus",
+      "skeleton": "/engineer-performance/solution/calculate-bonus"
+    },
+    {
+      "method": "POST",
+      "path": "/engineer-performance/data-sync/work-log/generate",
+      "skeleton": "/engineer-performance/data-sync/work-log/generate"
+    },
+    {
+      "method": "POST",
+      "path": "/engineer-performance/data-sync/design-review/sync",
+      "skeleton": "/engineer-performance/data-sync/design-review/sync"
+    },
+    {
+      "method": "POST",
+      "path": "/engineer-performance/data-sync/debug-issue/sync",
+      "skeleton": "/engineer-performance/data-sync/debug-issue/sync"
+    },
+    {
+      "method": "POST",
+      "path": "/engineer-performance/data-sync/knowledge/identify",
+      "skeleton": "/engineer-performance/data-sync/knowledge/identify"
+    },
+    {
+      "method": "POST",
+      "path": "/engineer-performance/data-sync/all",
+      "skeleton": "/engineer-performance/data-sync/all"
+    },
+    {
+      "method": "GET",
+      "path": "/engineer-performance/data-sync/status",
+      "skeleton": "/engineer-performance/data-sync/status"
+    },
+    {
+      "method": "GET",
+      "path": "/solution-credits/my-credits",
+      "skeleton": "/solution-credits/my-credits"
+    },
+    {
+      "method": "GET",
+      "path": "/solution-credits/my-transactions",
+      "skeleton": "/solution-credits/my-transactions"
+    },
+    {
+      "method": "POST",
+      "path": "/solution-credits/check-can-generate",
+      "skeleton": "/solution-credits/check-can-generate"
+    },
+    {
+      "method": "GET",
+      "path": "/solution-credits/admin/users",
+      "skeleton": "/solution-credits/admin/users"
+    },
+    {
+      "method": "GET",
+      "path": "/solution-credits/admin/user/{user_id}",
+      "skeleton": "/solution-credits/admin/user/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/solution-credits/admin/user/{user_id}/transactions",
+      "skeleton": "/solution-credits/admin/user/{}/transactions"
+    },
+    {
+      "method": "POST",
+      "path": "/solution-credits/admin/add-credits",
+      "skeleton": "/solution-credits/admin/add-credits"
+    },
+    {
+      "method": "POST",
+      "path": "/solution-credits/admin/batch-add-credits",
+      "skeleton": "/solution-credits/admin/batch-add-credits"
+    },
+    {
+      "method": "POST",
+      "path": "/solution-credits/admin/deduct-credits",
+      "skeleton": "/solution-credits/admin/deduct-credits"
+    },
+    {
+      "method": "GET",
+      "path": "/solution-credits/admin/configs",
+      "skeleton": "/solution-credits/admin/configs"
+    },
+    {
+      "method": "PUT",
+      "path": "/solution-credits/admin/configs",
+      "skeleton": "/solution-credits/admin/configs"
+    },
+    {
+      "method": "POST",
+      "path": "/solution-credits/internal/deduct-for-generation",
+      "skeleton": "/solution-credits/internal/deduct-for-generation"
+    },
+    {
+      "method": "POST",
+      "path": "/solution-credits/internal/refund",
+      "skeleton": "/solution-credits/internal/refund"
+    }
+  ],
+  "matched_sample": [
+    {
+      "method": "POST",
+      "path": "/projects/templates/{template_id}/create-project",
+      "skeleton": "/projects/templates/{}/create-project"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/templates/recommend",
+      "skeleton": "/projects/templates/recommend"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/cache/stats",
+      "skeleton": "/projects/cache/stats"
+    },
+    {
+      "method": "POST",
+      "path": "/projects/cache/clear",
+      "skeleton": "/projects/cache/clear"
+    },
+    {
+      "method": "POST",
+      "path": "/projects/cache/reset-stats",
+      "skeleton": "/projects/cache/reset-stats"
+    },
+    {
+      "method": "GET",
+      "path": "/projects",
+      "skeleton": "/projects"
+    },
+    {
+      "method": "POST",
+      "path": "/projects",
+      "skeleton": "/projects"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/stats",
+      "skeleton": "/projects/stats"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{project_id}",
+      "skeleton": "/projects/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/projects/{project_id}",
+      "skeleton": "/projects/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/projects/{project_id}/check-auto-transition",
+      "skeleton": "/projects/{}/check-auto-transition"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{project_id}/gate-check/{target_stage}",
+      "skeleton": "/projects/{}/gate-check/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/projects",
+      "skeleton": "/projects"
+    },
+    {
+      "method": "POST",
+      "path": "/projects",
+      "skeleton": "/projects"
+    },
+    {
+      "method": "GET",
+      "path": "/customers",
+      "skeleton": "/customers"
+    },
+    {
+      "method": "POST",
+      "path": "/customers",
+      "skeleton": "/customers"
+    },
+    {
+      "method": "GET",
+      "path": "/customers/{customer_id}",
+      "skeleton": "/customers/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/customers/{customer_id}",
+      "skeleton": "/customers/{}"
+    },
+    {
+      "method": "DELETE",
+      "path": "/customers/{customer_id}",
+      "skeleton": "/customers/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/customers/{customer_id}/projects",
+      "skeleton": "/customers/{}/projects"
+    },
+    {
+      "method": "GET",
+      "path": "/customers/{customer_id}/360",
+      "skeleton": "/customers/{}/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/suppliers",
+      "skeleton": "/suppliers"
+    },
+    {
+      "method": "GET",
+      "path": "/suppliers/{supplier_id}",
+      "skeleton": "/suppliers/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/suppliers",
+      "skeleton": "/suppliers"
+    },
+    {
+      "method": "PUT",
+      "path": "/suppliers/{supplier_id}",
+      "skeleton": "/suppliers/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/suppliers/{supplier_id}/rating",
+      "skeleton": "/suppliers/{}/rating"
+    },
+    {
+      "method": "GET",
+      "path": "/suppliers/{supplier_id}/materials",
+      "skeleton": "/suppliers/{}/materials"
+    },
+    {
+      "method": "GET",
+      "path": "/machines",
+      "skeleton": "/machines"
+    },
+    {
+      "method": "POST",
+      "path": "/machines",
+      "skeleton": "/machines"
+    },
+    {
+      "method": "GET",
+      "path": "/machines/{machine_id}",
+      "skeleton": "/machines/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/machines/{machine_id}",
+      "skeleton": "/machines/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/machines/{machine_id}/bom",
+      "skeleton": "/machines/{}/bom"
+    },
+    {
+      "method": "DELETE",
+      "path": "/machines/{machine_id}",
+      "skeleton": "/machines/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/machines/{machine_id}/service-history",
+      "skeleton": "/machines/{}/service-history"
+    },
+    {
+      "method": "POST",
+      "path": "/machines/{machine_id}/documents/upload",
+      "skeleton": "/machines/{}/documents/upload"
+    },
+    {
+      "method": "GET",
+      "path": "/machines/{machine_id}/documents",
+      "skeleton": "/machines/{}/documents"
+    },
+    {
+      "method": "GET",
+      "path": "/machines/{machine_id}/documents/{doc_id}/download",
+      "skeleton": "/machines/{}/documents/{}/download"
+    },
+    {
+      "method": "GET",
+      "path": "/machines/{machine_id}/documents/{doc_id}/versions",
+      "skeleton": "/machines/{}/documents/{}/versions"
+    },
+    {
+      "method": "GET",
+      "path": "/milestones",
+      "skeleton": "/milestones"
+    },
+    {
+      "method": "GET",
+      "path": "/milestones/projects/{project_id}/milestones",
+      "skeleton": "/milestones/projects/{}/milestones"
+    },
+    {
+      "method": "POST",
+      "path": "/milestones",
+      "skeleton": "/milestones"
+    },
+    {
+      "method": "GET",
+      "path": "/milestones/{milestone_id}",
+      "skeleton": "/milestones/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/milestones/{milestone_id}",
+      "skeleton": "/milestones/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/milestones/{milestone_id}/complete",
+      "skeleton": "/milestones/{}/complete"
+    },
+    {
+      "method": "GET",
+      "path": "/members",
+      "skeleton": "/members"
+    },
+    {
+      "method": "GET",
+      "path": "/members/projects/{project_id}/members",
+      "skeleton": "/members/projects/{}/members"
+    },
+    {
+      "method": "POST",
+      "path": "/members",
+      "skeleton": "/members"
+    },
+    {
+      "method": "DELETE",
+      "path": "/members/{member_id}",
+      "skeleton": "/members/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/stages",
+      "skeleton": "/stages"
+    },
+    {
+      "method": "GET",
+      "path": "/stages/projects/{project_id}/stages",
+      "skeleton": "/stages/projects/{}/stages"
+    },
+    {
+      "method": "GET",
+      "path": "/stages/{stage_id}",
+      "skeleton": "/stages/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/stages/statuses",
+      "skeleton": "/stages/statuses"
+    },
+    {
+      "method": "GET",
+      "path": "/org/departments",
+      "skeleton": "/org/departments"
+    },
+    {
+      "method": "GET",
+      "path": "/org/departments/tree",
+      "skeleton": "/org/departments/tree"
+    },
+    {
+      "method": "GET",
+      "path": "/org/departments/statistics",
+      "skeleton": "/org/departments/statistics"
+    },
+    {
+      "method": "POST",
+      "path": "/org/departments",
+      "skeleton": "/org/departments"
+    },
+    {
+      "method": "GET",
+      "path": "/org/departments/{dept_id}",
+      "skeleton": "/org/departments/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/org/departments/{dept_id}",
+      "skeleton": "/org/departments/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/org/departments/{dept_id}/users",
+      "skeleton": "/org/departments/{}/users"
+    },
+    {
+      "method": "GET",
+      "path": "/org/employees",
+      "skeleton": "/org/employees"
+    },
+    {
+      "method": "POST",
+      "path": "/org/employees/import",
+      "skeleton": "/org/employees/import"
+    },
+    {
+      "method": "GET",
+      "path": "/org/hr-profiles",
+      "skeleton": "/org/hr-profiles"
+    },
+    {
+      "method": "GET",
+      "path": "/org/hr-profiles/{emp_id}",
+      "skeleton": "/org/hr-profiles/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/org/hr-profiles/{emp_id}",
+      "skeleton": "/org/hr-profiles/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "skeleton": "/auth/login"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/logout",
+      "skeleton": "/auth/logout"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/refresh",
+      "skeleton": "/auth/refresh"
+    },
+    {
+      "method": "GET",
+      "path": "/auth/me",
+      "skeleton": "/auth/me"
+    },
+    {
+      "method": "PUT",
+      "path": "/auth/password",
+      "skeleton": "/auth/password"
+    },
+    {
+      "method": "GET",
+      "path": "/costs",
+      "skeleton": "/costs"
+    },
+    {
+      "method": "GET",
+      "path": "/costs/projects/{project_id}/costs",
+      "skeleton": "/costs/projects/{}/costs"
+    },
+    {
+      "method": "POST",
+      "path": "/costs",
+      "skeleton": "/costs"
+    },
+    {
+      "method": "GET",
+      "path": "/costs/{cost_id}",
+      "skeleton": "/costs/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/costs/{cost_id}",
+      "skeleton": "/costs/{}"
+    },
+    {
+      "method": "DELETE",
+      "path": "/costs/{cost_id}",
+      "skeleton": "/costs/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/costs/projects/{project_id}/costs/summary",
+      "skeleton": "/costs/projects/{}/costs/summary"
+    },
+    {
+      "method": "GET",
+      "path": "/budgets",
+      "skeleton": "/budgets"
+    },
+    {
+      "method": "GET",
+      "path": "/documents",
+      "skeleton": "/documents"
+    },
+    {
+      "method": "POST",
+      "path": "/documents",
+      "skeleton": "/documents"
+    },
+    {
+      "method": "GET",
+      "path": "/users",
+      "skeleton": "/users"
+    },
+    {
+      "method": "POST",
+      "path": "/users",
+      "skeleton": "/users"
+    },
+    {
+      "method": "GET",
+      "path": "/users/{user_id}",
+      "skeleton": "/users/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/users/{user_id}",
+      "skeleton": "/users/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/users/{user_id}/roles",
+      "skeleton": "/users/{}/roles"
+    },
+    {
+      "method": "DELETE",
+      "path": "/users/{user_id}",
+      "skeleton": "/users/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/users/sync-from-employees",
+      "skeleton": "/users/sync-from-employees"
+    },
+    {
+      "method": "POST",
+      "path": "/users/create-from-employee/{employee_id}",
+      "skeleton": "/users/create-from-employee/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/users/{user_id}/toggle-active",
+      "skeleton": "/users/{}/toggle-active"
+    },
+    {
+      "method": "PUT",
+      "path": "/users/{user_id}/reset-password",
+      "skeleton": "/users/{}/reset-password"
+    },
+    {
+      "method": "POST",
+      "path": "/users/batch-toggle-active",
+      "skeleton": "/users/batch-toggle-active"
+    },
+    {
+      "method": "GET",
+      "path": "/roles",
+      "skeleton": "/roles"
+    },
+    {
+      "method": "GET",
+      "path": "/roles/permissions",
+      "skeleton": "/roles/permissions"
+    },
+    {
+      "method": "GET",
+      "path": "/roles/{role_id}",
+      "skeleton": "/roles/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/roles",
+      "skeleton": "/roles"
+    },
+    {
+      "method": "PUT",
+      "path": "/roles/{role_id}",
+      "skeleton": "/roles/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/roles/{role_id}/permissions",
+      "skeleton": "/roles/{}/permissions"
+    },
+    {
+      "method": "GET",
+      "path": "/roles/config/all",
+      "skeleton": "/roles/config/all"
+    },
+    {
+      "method": "PUT",
+      "path": "/roles/{role_id}/nav-groups",
+      "skeleton": "/roles/{}/nav-groups"
+    },
+    {
+      "method": "GET",
+      "path": "/roles/my/nav-groups",
+      "skeleton": "/roles/my/nav-groups"
+    },
+    {
+      "method": "GET",
+      "path": "/roles/{role_id}/nav-groups",
+      "skeleton": "/roles/{}/nav-groups"
+    },
+    {
+      "method": "GET",
+      "path": "/audits",
+      "skeleton": "/audits"
+    },
+    {
+      "method": "GET",
+      "path": "/audits/{audit_id}",
+      "skeleton": "/audits/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/issues/statistics/overview",
+      "skeleton": "/issues/statistics/overview"
+    },
+    {
+      "method": "GET",
+      "path": "/issues/statistics/cause-analysis",
+      "skeleton": "/issues/statistics/cause-analysis"
+    },
+    {
+      "method": "GET",
+      "path": "/issues/statistics/snapshots",
+      "skeleton": "/issues/statistics/snapshots"
+    },
+    {
+      "method": "GET",
+      "path": "/issues/board",
+      "skeleton": "/issues/board"
+    },
+    {
+      "method": "GET",
+      "path": "/issues/statistics/trend",
+      "skeleton": "/issues/statistics/trend"
+    },
+    {
+      "method": "POST",
+      "path": "/issues/batch-assign",
+      "skeleton": "/issues/batch-assign"
+    },
+    {
+      "method": "POST",
+      "path": "/issues/batch-status",
+      "skeleton": "/issues/batch-status"
+    },
+    {
+      "method": "POST",
+      "path": "/issues/batch-close",
+      "skeleton": "/issues/batch-close"
+    },
+    {
+      "method": "GET",
+      "path": "/issues/export",
+      "skeleton": "/issues/export"
+    },
+    {
+      "method": "POST",
+      "path": "/issues/import",
+      "skeleton": "/issues/import"
+    },
+    {
+      "method": "GET",
+      "path": "/issues",
+      "skeleton": "/issues"
+    },
+    {
+      "method": "GET",
+      "path": "/issues/{issue_id}",
+      "skeleton": "/issues/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/issues",
+      "skeleton": "/issues"
+    },
+    {
+      "method": "PUT",
+      "path": "/issues/{issue_id}",
+      "skeleton": "/issues/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/issues/{issue_id}/assign",
+      "skeleton": "/issues/{}/assign"
+    },
+    {
+      "method": "POST",
+      "path": "/issues/{issue_id}/resolve",
+      "skeleton": "/issues/{}/resolve"
+    },
+    {
+      "method": "POST",
+      "path": "/issues/{issue_id}/verify",
+      "skeleton": "/issues/{}/verify"
+    },
+    {
+      "method": "POST",
+      "path": "/issues/{issue_id}/status",
+      "skeleton": "/issues/{}/status"
+    },
+    {
+      "method": "GET",
+      "path": "/issues/{issue_id}/follow-ups",
+      "skeleton": "/issues/{}/follow-ups"
+    },
+    {
+      "method": "POST",
+      "path": "/issues/{issue_id}/follow-ups",
+      "skeleton": "/issues/{}/follow-ups"
+    },
+    {
+      "method": "POST",
+      "path": "/issues/{issue_id}/close",
+      "skeleton": "/issues/{}/close"
+    },
+    {
+      "method": "POST",
+      "path": "/issues/{issue_id}/cancel",
+      "skeleton": "/issues/{}/cancel"
+    },
+    {
+      "method": "GET",
+      "path": "/issues/{issue_id}/related",
+      "skeleton": "/issues/{}/related"
+    },
+    {
+      "method": "POST",
+      "path": "/issues/{issue_id}/related",
+      "skeleton": "/issues/{}/related"
+    },
+    {
+      "method": "DELETE",
+      "path": "/issues/{issue_id}",
+      "skeleton": "/issues/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/issue-templates",
+      "skeleton": "/issue-templates"
+    },
+    {
+      "method": "GET",
+      "path": "/issue-templates/{template_id}",
+      "skeleton": "/issue-templates/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/issue-templates",
+      "skeleton": "/issue-templates"
+    },
+    {
+      "method": "PUT",
+      "path": "/issue-templates/{template_id}",
+      "skeleton": "/issue-templates/{}"
+    },
+    {
+      "method": "DELETE",
+      "path": "/issue-templates/{template_id}",
+      "skeleton": "/issue-templates/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/issue-templates/{template_id}/create-issue",
+      "skeleton": "/issue-templates/{}/create-issue"
+    },
+    {
+      "method": "GET",
+      "path": "/technical-spec/requirements",
+      "skeleton": "/technical-spec/requirements"
+    },
+    {
+      "method": "POST",
+      "path": "/technical-spec/requirements",
+      "skeleton": "/technical-spec/requirements"
+    },
+    {
+      "method": "PUT",
+      "path": "/technical-spec/requirements/{requirement_id}",
+      "skeleton": "/technical-spec/requirements/{}"
+    },
+    {
+      "method": "DELETE",
+      "path": "/technical-spec/requirements/{requirement_id}",
+      "skeleton": "/technical-spec/requirements/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/technical-spec/match/check",
+      "skeleton": "/technical-spec/match/check"
+    },
+    {
+      "method": "GET",
+      "path": "/technical-spec/match/records",
+      "skeleton": "/technical-spec/match/records"
+    },
+    {
+      "method": "GET",
+      "path": "/materials",
+      "skeleton": "/materials"
+    },
+    {
+      "method": "GET",
+      "path": "/materials/{material_id}",
+      "skeleton": "/materials/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/materials",
+      "skeleton": "/materials"
+    },
+    {
+      "method": "PUT",
+      "path": "/materials/{material_id}",
+      "skeleton": "/materials/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/materials/categories",
+      "skeleton": "/materials/categories"
+    },
+    {
+      "method": "GET",
+      "path": "/materials/warehouse/statistics",
+      "skeleton": "/materials/warehouse/statistics"
+    },
+    {
+      "method": "GET",
+      "path": "/materials/search",
+      "skeleton": "/materials/search"
+    },
+    {
+      "method": "GET",
+      "path": "/purchase-orders",
+      "skeleton": "/purchase-orders"
+    },
+    {
+      "method": "POST",
+      "path": "/purchase-orders",
+      "skeleton": "/purchase-orders"
+    },
+    {
+      "method": "POST",
+      "path": "/purchase-orders/from-bom",
+      "skeleton": "/purchase-orders/from-bom"
+    },
+    {
+      "method": "GET",
+      "path": "/purchase-orders/{order_id}",
+      "skeleton": "/purchase-orders/{}"
+    },
+    {
+      "method": "GET",
+      "path": "/purchase-orders/{order_id}/items",
+      "skeleton": "/purchase-orders/{}/items"
+    },
+    {
+      "method": "PUT",
+      "path": "/purchase-orders/{order_id}",
+      "skeleton": "/purchase-orders/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/purchase-orders/{order_id}/submit",
+      "skeleton": "/purchase-orders/{}/submit"
+    },
+    {
+      "method": "PUT",
+      "path": "/purchase-orders/{order_id}/approve",
+      "skeleton": "/purchase-orders/{}/approve"
+    },
+    {
+      "method": "GET",
+      "path": "/purchase-orders/requests",
+      "skeleton": "/purchase-orders/requests"
+    },
+    {
+      "method": "POST",
+      "path": "/purchase-orders/requests",
+      "skeleton": "/purchase-orders/requests"
+    },
+    {
+      "method": "GET",
+      "path": "/purchase-orders/requests/{request_id}",
+      "skeleton": "/purchase-orders/requests/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/purchase-orders/requests/{request_id}/submit",
+      "skeleton": "/purchase-orders/requests/{}/submit"
+    },
+    {
+      "method": "PUT",
+      "path": "/purchase-orders/requests/{request_id}/approve",
+      "skeleton": "/purchase-orders/requests/{}/approve"
+    },
+    {
+      "method": "DELETE",
+      "path": "/purchase-orders/requests/{request_id}",
+      "skeleton": "/purchase-orders/requests/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/purchase-orders/requests/{request_id}/generate-orders",
+      "skeleton": "/purchase-orders/requests/{}/generate-orders"
+    },
+    {
+      "method": "GET",
+      "path": "/bom",
+      "skeleton": "/bom"
+    },
+    {
+      "method": "GET",
+      "path": "/bom/machines/{machine_id}/bom",
+      "skeleton": "/bom/machines/{}/bom"
+    },
+    {
+      "method": "POST",
+      "path": "/bom/machines/{machine_id}/bom",
+      "skeleton": "/bom/machines/{}/bom"
+    },
+    {
+      "method": "GET",
+      "path": "/bom/{bom_id}",
+      "skeleton": "/bom/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/bom/{bom_id}",
+      "skeleton": "/bom/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/bom/{bom_id}/items",
+      "skeleton": "/bom/{}/items"
+    },
+    {
+      "method": "GET",
+      "path": "/bom/{bom_id}/items",
+      "skeleton": "/bom/{}/items"
+    },
+    {
+      "method": "PUT",
+      "path": "/bom/items/{item_id}",
+      "skeleton": "/bom/items/{}"
+    },
+    {
+      "method": "DELETE",
+      "path": "/bom/items/{item_id}",
+      "skeleton": "/bom/items/{}"
+    },
+    {
+      "method": "POST",
+      "path": "/bom/{bom_id}/release",
+      "skeleton": "/bom/{}/release"
+    },
+    {
+      "method": "GET",
+      "path": "/bom/{bom_id}/versions",
+      "skeleton": "/bom/{}/versions"
+    },
+    {
+      "method": "GET",
+      "path": "/bom/{bom_id}/versions/compare",
+      "skeleton": "/bom/{}/versions/compare"
+    },
+    {
+      "method": "POST",
+      "path": "/bom/{bom_id}/import",
+      "skeleton": "/bom/{}/import"
+    },
+    {
+      "method": "GET",
+      "path": "/bom/{bom_id}/export",
+      "skeleton": "/bom/{}/export"
+    },
+    {
+      "method": "POST",
+      "path": "/bom/{bom_id}/generate-pr",
+      "skeleton": "/bom/{}/generate-pr"
+    },
+    {
+      "method": "GET",
+      "path": "/machines/{machine_id}/kit-rate",
+      "skeleton": "/machines/{}/kit-rate"
+    },
+    {
+      "method": "GET",
+      "path": "/machines/{machine_id}/material-status",
+      "skeleton": "/machines/{}/material-status"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{project_id}/kit-rate",
+      "skeleton": "/projects/{}/kit-rate"
+    },
+    {
+      "method": "GET",
+      "path": "/projects/{project_id}/material-status",
+      "skeleton": "/projects/{}/material-status"
+    },
+    {
+      "method": "GET",
+      "path": "/kit-rate/dashboard",
+      "skeleton": "/kit-rate/dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/kit-rate/trend",
+      "skeleton": "/kit-rate/trend"
+    },
+    {
+      "method": "GET",
+      "path": "/progress/projects/{project_id}/progress-forecast",
+      "skeleton": "/progress/projects/{}/progress-forecast"
+    },
+    {
+      "method": "GET",
+      "path": "/progress/projects/{project_id}/dependency-check",
+      "skeleton": "/progress/projects/{}/dependency-check"
+    },
+    {
+      "method": "POST",
+      "path": "/progress/projects/{project_id}/auto-apply-forecast",
+      "skeleton": "/progress/projects/{}/auto-apply-forecast"
+    },
+    {
+      "method": "POST",
+      "path": "/progress/projects/{project_id}/auto-fix-dependencies",
+      "skeleton": "/progress/projects/{}/auto-fix-dependencies"
+    },
+    {
+      "method": "POST",
+      "path": "/progress/projects/{project_id}/auto-process-complete",
+      "skeleton": "/progress/projects/{}/auto-process-complete"
+    },
+    {
+      "method": "GET",
+      "path": "/progress/projects/{project_id}/auto-preview",
+      "skeleton": "/progress/projects/{}/auto-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/progress/projects/batch/auto-process",
+      "skeleton": "/progress/projects/batch/auto-process"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage-alerts",
+      "skeleton": "/shortage-alerts"
+    },
+    {
+      "method": "GET",
+      "path": "/shortage-alerts/{alert_id}",
+      "skeleton": "/shortage-alerts/{}"
+    },
+    {
+      "method": "PUT",
+      "path": "/shortage-alerts/{alert_id}/acknowledge",
+      "skeleton": "/shortage-alerts/{}/acknowledge"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/leads/{lead_id}/calculate-priority",
+      "skeleton": "/sales/leads/{}/calculate-priority"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/leads/priority-ranking",
+      "skeleton": "/sales/leads/priority-ranking"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/leads/key-leads",
+      "skeleton": "/sales/leads/key-leads"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/opportunities/{opp_id}/calculate-priority",
+      "skeleton": "/sales/opportunities/{}/calculate-priority"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/opportunities/priority-ranking",
+      "skeleton": "/sales/opportunities/priority-ranking"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/opportunities/key-opportunities",
+      "skeleton": "/sales/opportunities/key-opportunities"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/leads",
+      "skeleton": "/sales/leads"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/leads",
+      "skeleton": "/sales/leads"
+    }
+  ],
+  "frontend_calls_sample": [
+    {
+      "method": "GET",
+      "path": "/admin/stats",
+      "skeleton": "/admin/stats",
+      "file": "frontend/src/pages/AdminDashboard.jsx"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/stats",
+      "skeleton": "/admin/stats",
+      "file": "frontend/src/pages/AdminDashboard.jsx"
+    },
+    {
+      "method": "GET",
+      "path": "/inventory-analysis/turnover-rate",
+      "skeleton": "/inventory-analysis/turnover-rate",
+      "file": "frontend/src/pages/InventoryAnalysis.jsx"
+    },
+    {
+      "method": "GET",
+      "path": "/inventory-analysis/stale-materials",
+      "skeleton": "/inventory-analysis/stale-materials",
+      "file": "frontend/src/pages/InventoryAnalysis.jsx"
+    },
+    {
+      "method": "GET",
+      "path": "/inventory-analysis/safety-stock-compliance",
+      "skeleton": "/inventory-analysis/safety-stock-compliance",
+      "file": "frontend/src/pages/InventoryAnalysis.jsx"
+    },
+    {
+      "method": "GET",
+      "path": "/inventory-analysis/abc-analysis",
+      "skeleton": "/inventory-analysis/abc-analysis",
+      "file": "frontend/src/pages/InventoryAnalysis.jsx"
+    },
+    {
+      "method": "GET",
+      "path": "/inventory-analysis/cost-occupancy",
+      "skeleton": "/inventory-analysis/cost-occupancy",
+      "file": "frontend/src/pages/InventoryAnalysis.jsx"
+    },
+    {
+      "method": "GET",
+      "path": "/technical-spec/match/records",
+      "skeleton": "/technical-spec/match/records",
+      "file": "frontend/src/pages/SpecMatchCheck.jsx"
+    },
+    {
+      "method": "POST",
+      "path": "/technical-spec/match/check",
+      "skeleton": "/technical-spec/match/check",
+      "file": "frontend/src/pages/SpecMatchCheck.jsx"
+    },
+    {
+      "method": "GET",
+      "path": "/technical-spec/requirements",
+      "skeleton": "/technical-spec/requirements",
+      "file": "frontend/src/pages/TechnicalSpecManagement.jsx"
+    },
+    {
+      "method": "POST",
+      "path": "/technical-spec/requirements",
+      "skeleton": "/technical-spec/requirements",
+      "file": "frontend/src/pages/TechnicalSpecManagement.jsx"
+    },
+    {
+      "method": "PUT",
+      "path": "/technical-spec/requirements/{}",
+      "skeleton": "/technical-spec/requirements/{}",
+      "file": "frontend/src/pages/TechnicalSpecManagement.jsx"
+    },
+    {
+      "method": "DELETE",
+      "path": "/technical-spec/requirements/{}",
+      "skeleton": "/technical-spec/requirements/{}",
+      "file": "frontend/src/pages/TechnicalSpecManagement.jsx"
+    },
+    {
+      "method": "GET",
+      "path": "/acceptance-templates",
+      "skeleton": "/acceptance-templates",
+      "file": "frontend/src/services/api/acceptance.js"
+    },
+    {
+      "method": "GET",
+      "path": "/acceptance-templates/{}",
+      "skeleton": "/acceptance-templates/{}",
+      "file": "frontend/src/services/api/acceptance.js"
+    },
+    {
+      "method": "POST",
+      "path": "/acceptance-templates",
+      "skeleton": "/acceptance-templates",
+      "file": "frontend/src/services/api/acceptance.js"
+    },
+    {
+      "method": "GET",
+      "path": "/acceptance-templates/{}/items",
+      "skeleton": "/acceptance-templates/{}/items",
+      "file": "frontend/src/services/api/acceptance.js"
+    },
+    {
+      "method": "POST",
+      "path": "/acceptance-templates/{}/items",
+      "skeleton": "/acceptance-templates/{}/items",
+      "file": "frontend/src/services/api/acceptance.js"
+    },
+    {
+      "method": "GET",
+      "path": "/acceptance-orders",
+      "skeleton": "/acceptance-orders",
+      "file": "frontend/src/services/api/acceptance.js"
+    },
+    {
+      "method": "GET",
+      "path": "/acceptance-orders/{}",
+      "skeleton": "/acceptance-orders/{}",
+      "file": "frontend/src/services/api/acceptance.js"
+    },
+    {
+      "method": "POST",
+      "path": "/acceptance-orders",
+      "skeleton": "/acceptance-orders",
+      "file": "frontend/src/services/api/acceptance.js"
+    },
+    {
+      "method": "PUT",
+      "path": "/acceptance-orders/{}/start",
+      "skeleton": "/acceptance-orders/{}/start",
+      "file": "frontend/src/services/api/acceptance.js"
+    },
+    {
+      "method": "PUT",
+      "path": "/acceptance-orders/{}/complete",
+      "skeleton": "/acceptance-orders/{}/complete",
+      "file": "frontend/src/services/api/acceptance.js"
+    },
+    {
+      "method": "GET",
+      "path": "/acceptance-orders/{}/items",
+      "skeleton": "/acceptance-orders/{}/items",
+      "file": "frontend/src/services/api/acceptance.js"
+    },
+    {
+      "method": "PUT",
+      "path": "/acceptance-items/{}",
+      "skeleton": "/acceptance-items/{}",
+      "file": "frontend/src/services/api/acceptance.js"
+    },
+    {
+      "method": "GET",
+      "path": "/acceptance-orders/{}/issues",
+      "skeleton": "/acceptance-orders/{}/issues",
+      "file": "frontend/src/services/api/acceptance.js"
+    },
+    {
+      "method": "POST",
+      "path": "/acceptance-orders/{}/issues",
+      "skeleton": "/acceptance-orders/{}/issues",
+      "file": "frontend/src/services/api/acceptance.js"
+    },
+    {
+      "method": "PUT",
+      "path": "/acceptance-issues/{}",
+      "skeleton": "/acceptance-issues/{}",
+      "file": "frontend/src/services/api/acceptance.js"
+    },
+    {
+      "method": "PUT",
+      "path": "/acceptance-issues/{}/close",
+      "skeleton": "/acceptance-issues/{}/close",
+      "file": "frontend/src/services/api/acceptance.js"
+    },
+    {
+      "method": "POST",
+      "path": "/acceptance-issues/{}/follow-ups",
+      "skeleton": "/acceptance-issues/{}/follow-ups",
+      "file": "frontend/src/services/api/acceptance.js"
+    },
+    {
+      "method": "GET",
+      "path": "/acceptance-orders/{}/signatures",
+      "skeleton": "/acceptance-orders/{}/signatures",
+      "file": "frontend/src/services/api/acceptance.js"
+    },
+    {
+      "method": "POST",
+      "path": "/acceptance-orders/{}/signatures",
+      "skeleton": "/acceptance-orders/{}/signatures",
+      "file": "frontend/src/services/api/acceptance.js"
+    },
+    {
+      "method": "POST",
+      "path": "/acceptance-orders/{}/report",
+      "skeleton": "/acceptance-orders/{}/report",
+      "file": "frontend/src/services/api/acceptance.js"
+    },
+    {
+      "method": "GET",
+      "path": "/acceptance-reports/{}/download",
+      "skeleton": "/acceptance-reports/{}/download",
+      "file": "frontend/src/services/api/acceptance.js"
+    },
+    {
+      "method": "GET",
+      "path": "/customers",
+      "skeleton": "/customers",
+      "file": "frontend/src/services/api/crm.js"
+    },
+    {
+      "method": "GET",
+      "path": "/customers",
+      "skeleton": "/customers",
+      "file": "frontend/src/services/api/crm.js"
+    },
+    {
+      "method": "GET",
+      "path": "/customers/{}",
+      "skeleton": "/customers/{}",
+      "file": "frontend/src/services/api/crm.js"
+    },
+    {
+      "method": "POST",
+      "path": "/customers",
+      "skeleton": "/customers",
+      "file": "frontend/src/services/api/crm.js"
+    },
+    {
+      "method": "PUT",
+      "path": "/customers/{}",
+      "skeleton": "/customers/{}",
+      "file": "frontend/src/services/api/crm.js"
+    },
+    {
+      "method": "DELETE",
+      "path": "/customers/{}",
+      "skeleton": "/customers/{}",
+      "file": "frontend/src/services/api/crm.js"
+    },
+    {
+      "method": "GET",
+      "path": "/customers/{}/projects",
+      "skeleton": "/customers/{}/projects",
+      "file": "frontend/src/services/api/crm.js"
+    },
+    {
+      "method": "GET",
+      "path": "/customers/{}/{}",
+      "skeleton": "/customers/{}/{}",
+      "file": "frontend/src/services/api/crm.js"
+    },
+    {
+      "method": "GET",
+      "path": "/suppliers",
+      "skeleton": "/suppliers",
+      "file": "frontend/src/services/api/crm.js"
+    },
+    {
+      "method": "GET",
+      "path": "/suppliers/{}",
+      "skeleton": "/suppliers/{}",
+      "file": "frontend/src/services/api/crm.js"
+    },
+    {
+      "method": "POST",
+      "path": "/suppliers",
+      "skeleton": "/suppliers",
+      "file": "frontend/src/services/api/crm.js"
+    },
+    {
+      "method": "PUT",
+      "path": "/suppliers/{}",
+      "skeleton": "/suppliers/{}",
+      "file": "frontend/src/services/api/crm.js"
+    },
+    {
+      "method": "PUT",
+      "path": "/suppliers/{}/rating",
+      "skeleton": "/suppliers/{}/rating",
+      "file": "frontend/src/services/api/crm.js"
+    },
+    {
+      "method": "GET",
+      "path": "/suppliers/{}/materials",
+      "skeleton": "/suppliers/{}/materials",
+      "file": "frontend/src/services/api/crm.js"
+    },
+    {
+      "method": "GET",
+      "path": "/budgets",
+      "skeleton": "/budgets",
+      "file": "frontend/src/services/api/budget.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/leads",
+      "skeleton": "/sales/leads",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/leads/{}",
+      "skeleton": "/sales/leads/{}",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/leads",
+      "skeleton": "/sales/leads",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "PUT",
+      "path": "/sales/leads/{}",
+      "skeleton": "/sales/leads/{}",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/leads/{}/follow-ups",
+      "skeleton": "/sales/leads/{}/follow-ups",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/leads/{}/follow-ups",
+      "skeleton": "/sales/leads/{}/follow-ups",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/leads/{}/convert",
+      "skeleton": "/sales/leads/{}/convert",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/opportunities/{}/win-probability",
+      "skeleton": "/sales/opportunities/{}/win-probability",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/opportunities",
+      "skeleton": "/sales/opportunities",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/opportunities",
+      "skeleton": "/sales/opportunities",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/opportunities/{}",
+      "skeleton": "/sales/opportunities/{}",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/opportunities",
+      "skeleton": "/sales/opportunities",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "PUT",
+      "path": "/sales/opportunities/{}",
+      "skeleton": "/sales/opportunities/{}",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/opportunities/{}/gate",
+      "skeleton": "/sales/opportunities/{}/gate",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/quotes",
+      "skeleton": "/sales/quotes",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/quotes",
+      "skeleton": "/sales/quotes",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/statistics/quote-stats",
+      "skeleton": "/sales/statistics/quote-stats",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/quotes/{}",
+      "skeleton": "/sales/quotes/{}",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/quotes",
+      "skeleton": "/sales/quotes",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "PUT",
+      "path": "/sales/quotes/{}",
+      "skeleton": "/sales/quotes/{}",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/quotes/{}/versions",
+      "skeleton": "/sales/quotes/{}/versions",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/quotes/{}/versions",
+      "skeleton": "/sales/quotes/{}/versions",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/quotes/{}/approve",
+      "skeleton": "/sales/quotes/{}/approve",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/quotes/{}/approval/start",
+      "skeleton": "/sales/quotes/{}/approval/start",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/quotes/{}/approval-status",
+      "skeleton": "/sales/quotes/{}/approval-status",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/quotes/{}/approval/action",
+      "skeleton": "/sales/quotes/{}/approval/action",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/quotes/{}/approval-history",
+      "skeleton": "/sales/quotes/{}/approval-history",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/quotes/{}/items",
+      "skeleton": "/sales/quotes/{}/items",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/quotes/{}/items",
+      "skeleton": "/sales/quotes/{}/items",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "PUT",
+      "path": "/sales/quotes/{}/items/{}",
+      "skeleton": "/sales/quotes/{}/items/{}",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "DELETE",
+      "path": "/sales/quotes/{}/items/{}",
+      "skeleton": "/sales/quotes/{}/items/{}",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "PUT",
+      "path": "/sales/quotes/{}/items/batch",
+      "skeleton": "/sales/quotes/{}/items/batch",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/quotes/{}/cost-breakdown",
+      "skeleton": "/sales/quotes/{}/cost-breakdown",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/quotes/{}/apply-template",
+      "skeleton": "/sales/quotes/{}/apply-template",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/quotes/{}/calculate-cost",
+      "skeleton": "/sales/quotes/{}/calculate-cost",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/quotes/{}/cost-check",
+      "skeleton": "/sales/quotes/{}/cost-check",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/quotes/{}/cost-approval/submit",
+      "skeleton": "/sales/quotes/{}/cost-approval/submit",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/quotes/{}/cost-approval/{}/approve",
+      "skeleton": "/sales/quotes/{}/cost-approval/{}/approve",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/quotes/{}/cost-approval/{}/reject",
+      "skeleton": "/sales/quotes/{}/cost-approval/{}/reject",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/quotes/{}/cost-approval/history",
+      "skeleton": "/sales/quotes/{}/cost-approval/history",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/quotes/{}/cost-comparison",
+      "skeleton": "/sales/quotes/{}/cost-comparison",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/quotes/{}/cost-trend",
+      "skeleton": "/sales/quotes/{}/cost-trend",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/quotes/{}/cost-structure",
+      "skeleton": "/sales/quotes/{}/cost-structure",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/quotes/{}/items/auto-match-cost-suggestions",
+      "skeleton": "/sales/quotes/{}/items/auto-match-cost-suggestions",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/quotes/{}/items/apply-cost-suggestions",
+      "skeleton": "/sales/quotes/{}/items/apply-cost-suggestions",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/quote-templates",
+      "skeleton": "/sales/quote-templates",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/quote-templates",
+      "skeleton": "/sales/quote-templates",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "PUT",
+      "path": "/sales/quote-templates/{}",
+      "skeleton": "/sales/quote-templates/{}",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/quote-templates/{}/versions",
+      "skeleton": "/sales/quote-templates/{}/versions",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/quote-templates/{}/versions/{}/publish",
+      "skeleton": "/sales/quote-templates/{}/versions/{}/publish",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/quote-templates/{}/apply",
+      "skeleton": "/sales/quote-templates/{}/apply",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/contract-templates",
+      "skeleton": "/sales/contract-templates",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/contract-templates",
+      "skeleton": "/sales/contract-templates",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "PUT",
+      "path": "/sales/contract-templates/{}",
+      "skeleton": "/sales/contract-templates/{}",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/contract-templates/{}/versions",
+      "skeleton": "/sales/contract-templates/{}/versions",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/contract-templates/{}/versions/{}/publish",
+      "skeleton": "/sales/contract-templates/{}/versions/{}/publish",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/contract-templates/{}/apply",
+      "skeleton": "/sales/contract-templates/{}/apply",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/cpq/rule-sets",
+      "skeleton": "/sales/cpq/rule-sets",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/cpq/rule-sets",
+      "skeleton": "/sales/cpq/rule-sets",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "PUT",
+      "path": "/sales/cpq/rule-sets/{}",
+      "skeleton": "/sales/cpq/rule-sets/{}",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/cpq/price-preview",
+      "skeleton": "/sales/cpq/price-preview",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/cost-templates",
+      "skeleton": "/sales/cost-templates",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/cost-templates/{}",
+      "skeleton": "/sales/cost-templates/{}",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/cost-templates",
+      "skeleton": "/sales/cost-templates",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "PUT",
+      "path": "/sales/cost-templates/{}",
+      "skeleton": "/sales/cost-templates/{}",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "DELETE",
+      "path": "/sales/cost-templates/{}",
+      "skeleton": "/sales/cost-templates/{}",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/purchase-material-costs",
+      "skeleton": "/sales/purchase-material-costs",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/purchase-material-costs/{}",
+      "skeleton": "/sales/purchase-material-costs/{}",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/purchase-material-costs",
+      "skeleton": "/sales/purchase-material-costs",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "PUT",
+      "path": "/sales/purchase-material-costs/{}",
+      "skeleton": "/sales/purchase-material-costs/{}",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "DELETE",
+      "path": "/sales/purchase-material-costs/{}",
+      "skeleton": "/sales/purchase-material-costs/{}",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/purchase-material-costs/match",
+      "skeleton": "/sales/purchase-material-costs/match",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/purchase-material-costs/reminder",
+      "skeleton": "/sales/purchase-material-costs/reminder",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "PUT",
+      "path": "/sales/purchase-material-costs/reminder",
+      "skeleton": "/sales/purchase-material-costs/reminder",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/purchase-material-costs/reminder/acknowledge",
+      "skeleton": "/sales/purchase-material-costs/reminder/acknowledge",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/contracts",
+      "skeleton": "/sales/contracts",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/contracts/{}",
+      "skeleton": "/sales/contracts/{}",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/contracts",
+      "skeleton": "/sales/contracts",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "PUT",
+      "path": "/sales/contracts/{}",
+      "skeleton": "/sales/contracts/{}",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/contracts/{}/sign",
+      "skeleton": "/sales/contracts/{}/sign",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/contracts/{}/project",
+      "skeleton": "/sales/contracts/{}/project",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/contracts/{}/deliverables",
+      "skeleton": "/sales/contracts/{}/deliverables",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/contracts/{}/approval/start",
+      "skeleton": "/sales/contracts/{}/approval/start",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/contracts/{}/approval-status",
+      "skeleton": "/sales/contracts/{}/approval-status",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/contracts/{}/approval/action",
+      "skeleton": "/sales/contracts/{}/approval/action",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/contracts/{}/approval-history",
+      "skeleton": "/sales/contracts/{}/approval-history",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/invoices",
+      "skeleton": "/sales/invoices",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/invoices/{}",
+      "skeleton": "/sales/invoices/{}",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/invoices",
+      "skeleton": "/sales/invoices",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "PUT",
+      "path": "/sales/invoices/{}",
+      "skeleton": "/sales/invoices/{}",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/invoices/{}/issue",
+      "skeleton": "/sales/invoices/{}/issue",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/invoices/{}/receive-payment",
+      "skeleton": "/sales/invoices/{}/receive-payment",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "PUT",
+      "path": "/sales/invoices/{}/approve",
+      "skeleton": "/sales/invoices/{}/approve",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/invoices/{}/approvals",
+      "skeleton": "/sales/invoices/{}/approvals",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "PUT",
+      "path": "/sales/invoice-approvals/{}/approve",
+      "skeleton": "/sales/invoice-approvals/{}/approve",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "PUT",
+      "path": "/sales/invoice-approvals/{}/reject",
+      "skeleton": "/sales/invoice-approvals/{}/reject",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/invoices/{}/approval/start",
+      "skeleton": "/sales/invoices/{}/approval/start",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/invoices/{}/approval-status",
+      "skeleton": "/sales/invoices/{}/approval-status",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/invoices/{}/approval/action",
+      "skeleton": "/sales/invoices/{}/approval/action",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/invoices/{}/approval-history",
+      "skeleton": "/sales/invoices/{}/approval-history",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/payments",
+      "skeleton": "/sales/payments",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/payments/{}",
+      "skeleton": "/sales/payments/{}",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/payments",
+      "skeleton": "/sales/payments",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "PUT",
+      "path": "/sales/payments/{}/match-invoice",
+      "skeleton": "/sales/payments/{}/match-invoice",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/payments/reminders",
+      "skeleton": "/sales/payments/reminders",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/payments/statistics",
+      "skeleton": "/sales/payments/statistics",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/payments/invoices/export",
+      "skeleton": "/sales/payments/invoices/export",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/receivables/overdue",
+      "skeleton": "/sales/receivables/overdue",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/receivables/aging",
+      "skeleton": "/sales/receivables/aging",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/receivables/summary",
+      "skeleton": "/sales/receivables/summary",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/payment-plans",
+      "skeleton": "/sales/payment-plans",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/disputes",
+      "skeleton": "/sales/disputes",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/disputes/{}",
+      "skeleton": "/sales/disputes/{}",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/disputes",
+      "skeleton": "/sales/disputes",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "PUT",
+      "path": "/sales/disputes/{}",
+      "skeleton": "/sales/disputes/{}",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/team",
+      "skeleton": "/sales/team",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/team/ranking",
+      "skeleton": "/sales/team/ranking",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/team/export",
+      "skeleton": "/sales/team/export",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/team/ranking/config",
+      "skeleton": "/sales/team/ranking/config",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "PUT",
+      "path": "/sales/team/ranking/config",
+      "skeleton": "/sales/team/ranking/config",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/targets",
+      "skeleton": "/sales/targets",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/targets/{}",
+      "skeleton": "/sales/targets/{}",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/targets",
+      "skeleton": "/sales/targets",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "PUT",
+      "path": "/sales/targets/{}",
+      "skeleton": "/sales/targets/{}",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "DELETE",
+      "path": "/sales/targets/{}",
+      "skeleton": "/sales/targets/{}",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/statistics/funnel",
+      "skeleton": "/sales/statistics/funnel",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/statistics/opportunities-by-stage",
+      "skeleton": "/sales/statistics/opportunities-by-stage",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/statistics/revenue-forecast",
+      "skeleton": "/sales/statistics/revenue-forecast",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/statistics/summary",
+      "skeleton": "/sales/statistics/summary",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/statistics/prediction",
+      "skeleton": "/sales/statistics/prediction",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/statistics/prediction/accuracy",
+      "skeleton": "/sales/statistics/prediction/accuracy",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/reports/sales-performance",
+      "skeleton": "/sales/reports/sales-performance",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/statistics/funnel",
+      "skeleton": "/sales/statistics/funnel",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/contracts",
+      "skeleton": "/sales/contracts",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/reports/customer-contribution",
+      "skeleton": "/sales/reports/customer-contribution",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/payment-plans",
+      "skeleton": "/sales/payment-plans",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/reports/customer-contribution",
+      "skeleton": "/sales/reports/customer-contribution",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/reports/o2c-pipeline",
+      "skeleton": "/sales/reports/o2c-pipeline",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/analysis/loss-deep-analysis",
+      "skeleton": "/sales/analysis/loss-deep-analysis",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/analysis/loss-by-stage",
+      "skeleton": "/sales/analysis/loss-by-stage",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/analysis/loss-patterns",
+      "skeleton": "/sales/analysis/loss-patterns",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/analysis/loss-by-person",
+      "skeleton": "/sales/analysis/loss-by-person",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/expenses/expense-lost-projects",
+      "skeleton": "/sales/expenses/expense-lost-projects",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/expenses/lost-project-expenses",
+      "skeleton": "/sales/expenses/lost-project-expenses",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/expenses/expense-statistics",
+      "skeleton": "/sales/expenses/expense-statistics",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/leads/{}/calculate-priority",
+      "skeleton": "/sales/leads/{}/calculate-priority",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/leads/priority-ranking",
+      "skeleton": "/sales/leads/priority-ranking",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/leads/key-leads",
+      "skeleton": "/sales/leads/key-leads",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "POST",
+      "path": "/sales/opportunities/{}/calculate-priority",
+      "skeleton": "/sales/opportunities/{}/calculate-priority",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/opportunities/priority-ranking",
+      "skeleton": "/sales/opportunities/priority-ranking",
+      "file": "frontend/src/services/api/sales.js"
+    },
+    {
+      "method": "GET",
+      "path": "/sales/opportunities/key-opportunities",
+      "skeleton": "/sales/opportunities/key-opportunities",
+      "file": "frontend/src/services/api/sales.js"
+    }
+  ]
+}

@@ -68,7 +68,7 @@ if (roleDashboardMapMatch) {
 // 查找每个角色的第一个工作台路径
 function findFirstDashboardPath(roleCode) {
   const role = roles[roleCode];
-  if (!role) return null;
+  if (!role) {return null;}
   
   // 查找包含 dashboard, workstation, tasks, support 的路径（优先）
   const dashboardKeywords = ['dashboard', 'workstation', 'tasks', 'support'];

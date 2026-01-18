@@ -31,7 +31,7 @@ from app.schemas.ecn import (
     EcnUpdate,
 )
 from app.services.ecn_auto_assign_service import auto_assign_evaluation
-from app.services.ecn_notification_service import (
+from app.services.ecn_notification import (
     notify_ecn_submitted,
     notify_evaluation_assigned,
 )

@@ -24,7 +24,7 @@ from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.ecn import EcnTaskCreate
 from app.services.ecn_auto_assign_service import auto_assign_task
-from app.services.ecn_notification_service import notify_task_assigned
+from app.services.ecn_notification import notify_task_assigned
 
 router = APIRouter()
 

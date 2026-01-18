@@ -13,7 +13,7 @@ from app.api.deps import get_current_user, get_db
 from app.models.performance import PerformancePeriod
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.services.performance_data_collector import PerformanceDataCollector
+from app.services.performance_collector import PerformanceDataCollector
 
 router = APIRouter(prefix="/data-collection", tags=["数据采集"])
 

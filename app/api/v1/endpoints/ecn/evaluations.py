@@ -21,7 +21,7 @@ from app.models.ecn import Ecn, EcnApproval, EcnApprovalMatrix, EcnEvaluation, E
 from app.models.user import User
 from app.schemas.ecn import EcnEvaluationCreate, EcnEvaluationResponse
 from app.services.ecn_auto_assign_service import auto_assign_approval
-from app.services.ecn_notification_service import (
+from app.services.ecn_notification import (
     notify_approval_assigned,
     notify_evaluation_assigned,
     notify_evaluation_completed,

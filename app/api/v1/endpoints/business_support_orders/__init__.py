@@ -9,11 +9,14 @@ from fastapi import APIRouter
 
 from . import (
     acceptance_tracking,
+    contract_reports,
     customer_registrations,
     delivery_orders,
+    invoice_reports,
     invoice_requests,
+    payment_reports,
     reconciliations,
-    reports,
+    sales_reports,
     sales_orders,
 )
 
@@ -27,4 +30,8 @@ router.include_router(acceptance_tracking.router, tags=["business-support-accept
 router.include_router(reconciliations.router, tags=["business-support-reconciliations"])
 router.include_router(invoice_requests.router, tags=["business-support-invoices"])
 router.include_router(customer_registrations.router, tags=["business-support-registrations"])
-router.include_router(reports.router, tags=["business-support-reports"])
+# 报表路由（已拆分为多个模块）
+router.include_router(sales_reports.router, tags=["business-support-reports"])
+router.include_router(payment_reports.router, tags=["business-support-reports"])
+router.include_router(contract_reports.router, tags=["business-support-reports"])
+router.include_router(invoice_reports.router, tags=["business-support-reports"])

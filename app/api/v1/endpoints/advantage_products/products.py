@@ -25,7 +25,7 @@ from app.schemas.advantage_product import (
 router = APIRouter()
 
 
-@router.get("", response_model=List[AdvantageProductResponse])
+@router.get("/", response_model=List[AdvantageProductResponse])
 def get_products(
     category_id: Optional[int] = Query(None, description="按类别筛选"),
     search: Optional[str] = Query(None, description="搜索产品名称或编码"),
@@ -164,7 +164,7 @@ def get_products_simple(
     ]
 
 
-@router.post("", response_model=AdvantageProductResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=AdvantageProductResponse, status_code=status.HTTP_201_CREATED)
 def create_product(
     product_in: AdvantageProductCreate,
     db: Session = Depends(deps.get_db),

@@ -183,3 +183,44 @@ class RhythmHealthStatus(str, Enum):
     HEALTHY = "HEALTHY"
     AT_RISK = "AT_RISK"
     UNHEALTHY = "UNHEALTHY"
+
+
+class DataScopeEnum(str, Enum):
+    """
+    数据权限范围枚举
+
+    用于角色的 data_scope 字段与 DataScopeService 的过滤逻辑：
+    ALL > DEPT > SUBORDINATE > PROJECT > OWN
+    """
+
+    ALL = "ALL"
+    DEPT = "DEPT"
+    SUBORDINATE = "SUBORDINATE"
+    PROJECT = "PROJECT"
+    OWN = "OWN"
+
+
+class AlertLevelEnum(str, Enum):
+    INFO = "INFO"
+    WARNING = "WARNING"
+    CRITICAL = "CRITICAL"
+    URGENT = "URGENT"
+
+
+class AlertStatusEnum(str, Enum):
+    OPEN = "OPEN"
+    PENDING = "PENDING"
+    ACKNOWLEDGED = "ACKNOWLEDGED"
+    PROCESSING = "PROCESSING"
+    RESOLVED = "RESOLVED"
+    CLOSED = "CLOSED"
+    IGNORED = "IGNORED"
+
+
+class AlertRuleTypeEnum(str, Enum):
+    QUALITY_ISSUE = "QUALITY_ISSUE"
+    MILESTONE_DUE = "MILESTONE_DUE"
+    COST_OVERRUN = "COST_OVERRUN"
+    SCHEDULE_DELAY = "SCHEDULE_DELAY"
+    FINANCIAL = "FINANCIAL"
+    SPECIFICATION_MISMATCH = "SPECIFICATION_MISMATCH"

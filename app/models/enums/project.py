@@ -54,9 +54,11 @@ class ProjectNoveltyLevelEnum(str, Enum):
 
 
 class ProjectEvaluationLevelEnum(str, Enum):
-    HIGH = "HIGH"
-    MEDIUM = "MEDIUM"
-    LOW = "LOW"
+    S = "S"
+    A = "A"
+    B = "B"
+    C = "C"
+    D = "D"
 
 
 class ProjectEvaluationStatusEnum(str, Enum):

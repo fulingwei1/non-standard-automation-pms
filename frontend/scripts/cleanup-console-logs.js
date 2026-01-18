@@ -11,13 +11,6 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const srcDir = path.join(__dirname, '../src')
 
-// 需要清理的 console 类型
-const CONSOLE_PATTERNS = [
-  // 调试用的 console.log
-  { pattern: /console\.log\([^)]*\)/g, type: 'debug' },
-  // 保留 console.error 和 console.warn，但可以格式化
-];
-
 // 统计
 let totalFiles = 0;
 let totalRemoved = 0;

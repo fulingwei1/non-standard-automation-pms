@@ -16,7 +16,7 @@ from app.core import security
 from app.models.ecn import Ecn, EcnApproval, EcnEvaluation, EcnTask
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.services.ecn_notification_service import notify_overdue_alert
+from app.services.ecn_notification import notify_overdue_alert
 
 router = APIRouter()
 

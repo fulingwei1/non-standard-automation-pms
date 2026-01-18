@@ -47,7 +47,7 @@ def upload_and_import_data(
     except ImportError:
         raise HTTPException(status_code=500, detail="Excel处理库未安装，请安装pandas")
 
-    from app.services.unified_import_service import unified_import_service
+    from app.services.unified_import import unified_import_service
 
     try:
         file_content = file.file.read()

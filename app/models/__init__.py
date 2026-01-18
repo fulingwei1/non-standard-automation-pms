@@ -3,6 +3,15 @@
 数据模型包
 
 导出所有ORM模型供外部使用
+
+注意：此文件包含所有模型的导出（762行）。
+如需按业务域分组导入，可以使用可选的分组导出模块（app/models/exports/）：
+    from app.models.exports.project_models import Project, Task
+    from app.models.exports.material_models import Material, BomHeader
+    # 等等...
+
+但原有的导入方式仍然有效（推荐）：
+    from app.models import Project, Material, User
 """
 
 from .acceptance import (
