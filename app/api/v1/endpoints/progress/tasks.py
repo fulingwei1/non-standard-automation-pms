@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import User
+from app.models.user import User, Role, UserRole
 from app.models.project import Project, Machine, ProjectMilestone
 from app.models.progress import (
     WbsTemplate, WbsTemplateTask, Task, TaskDependency, ProgressLog
@@ -90,10 +90,24 @@ def init_wbs_from_template(
             status="TODO"
         )
 
-        # 如果启用自动分配负责人，根据角色分配（这里简化处理，实际需要根据角色查找用户）
+        # 如果启用自动分配负责人，根据角色查找用户并分配
         if init_request.assign_owners and template_task.default_owner_role:
-            # TODO: 根据角色查找用户并分配
-            pass
+            # 根据角色编码查找角色
+            role = db.query(Role).filter(
+                Role.role_code == template_task.default_owner_role,
+                Role.is_active == True
+            ).first()
+
+            if role:
+                # 查找拥有该角色的活跃用户（取第一个）
+                user_role = db.query(UserRole).filter(
+                    UserRole.role_id == role.id
+                ).join(User).filter(
+                    User.is_active == True
+                ).first()
+
+                if user_role:
+                    task.owner_id = user_role.user_id
 
         db.add(task)
         db.flush()  # 获取task.id
