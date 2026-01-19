@@ -290,111 +290,99 @@ class SchedulingSuggestionService:
             
             # 3. 计算优先级评分
             score_result = cls.calculate_priority_score(db, project, readiness)
-            
-            # 4. 判断是否可以排产
+
+            # 4. 构建排产建议
             if readiness.can_start:
-                # 可以开工
-                workable_stage = readiness.current_workable_stage or 'FRAME'
-                next_stage = cls._get_next_stage(workable_stage)
-                
-                # 计算建议开始和结束日期
-                suggested_start_date = project.planned_start_date or date.today()
-                # 估算工期（根据阶段，简化处理）
-                stage_durations = {
-                    'FRAME': 7,
-                    'MECH': 14,
-                    'ELECTRIC': 10,
-                    'WIRING': 5,
-                    'DEBUG': 7,
-                    'COSMETIC': 3
-                }
-                duration_days = stage_durations.get(workable_stage, 7)
-                suggested_end_date = suggested_start_date + timedelta(days=duration_days)
-                
-                # 检查资源可用性
-                machine = None
-                if readiness.machine_id:
-                    machine = db.query(Machine).filter(Machine.id == readiness.machine_id).first()
-                
-                resource_allocation = ResourceAllocationService.allocate_resources(
-                    db,
-                    project.id,
-                    readiness.machine_id,
-                    suggested_start_date,
-                    suggested_end_date
-                )
-                
-                if next_stage:
-                    # 检查下一阶段是否可以开始
-                    stage_rates = readiness.stage_kit_rates or {}
-                    next_stage_info = stage_rates.get(next_stage, {})
-                    
-                    if next_stage_info.get('can_start', False):
-                        suggested_stage = next_stage
-                        status = 'READY'
-                        blocking_items = []
-                    else:
-                        suggested_stage = workable_stage
-                        status = 'WAITING'
-                        # 获取下一阶段的阻塞物料
-                        blocking_items = cls._get_blocking_items(db, readiness, next_stage)
-                else:
-                    suggested_stage = workable_stage
-                    status = 'READY'
-                    blocking_items = []
-                
-                # 如果资源不可用，调整状态
-                if not resource_allocation['can_allocate']:
-                    if status == 'READY':
-                        status = 'WAIT_RESOURCE'
-                
-                suggestion = {
-                    'project_id': project.id,
-                    'project_no': project.project_code or project.project_name,
-                    'project_name': project.project_name,
-                    'status': status,
-                    'suggested_stage': suggested_stage,
-                    'suggested_start_date': suggested_start_date.isoformat(),
-                    'suggested_end_date': suggested_end_date.isoformat(),
-                    'priority_score': score_result['total_score'],
-                    'score_factors': score_result['factors'],
-                    'current_kit_rate': float(readiness.blocking_kit_rate or 0),
-                    'blocking_items': blocking_items,
-                    'resource_allocation': {
-                        'can_allocate': resource_allocation['can_allocate'],
-                        'available_workstations': len(resource_allocation['workstations']),
-                        'available_workers': len(resource_allocation['workers']),
-                        'conflicts': resource_allocation.get('conflicts', []),
-                        'reason': resource_allocation.get('reason')
-                    },
-                    'suggestion_type': 'CAN_START' if status == 'READY' else ('WAIT_RESOURCE' if status == 'WAIT_RESOURCE' else 'WAIT_MATERIAL')
-                }
+                suggestion = cls._build_can_start_suggestion(db, project, readiness, score_result)
             else:
-                # 不能排产
-                blocking_stage = readiness.first_blocked_stage or 'FRAME'
-                blocking_items = cls._get_blocking_items(db, readiness, blocking_stage)
-                
-                suggestion = {
-                    'project_id': project.id,
-                    'project_no': project.project_code or project.project_name,
-                    'project_name': project.project_name,
-                    'status': 'BLOCKED',
-                    'blocking_stage': blocking_stage,
-                    'priority_score': score_result['total_score'],
-                    'score_factors': score_result['factors'],
-                    'current_kit_rate': float(readiness.blocking_kit_rate or 0),
-                    'blocking_items': blocking_items,
-                    'estimated_ready_date': readiness.estimated_ready_date.isoformat() if readiness.estimated_ready_date else None,
-                    'suggestion_type': 'BLOCKED'
-                }
-            
+                suggestion = cls._build_blocked_suggestion(db, project, readiness, score_result)
+
             suggestions.append(suggestion)
         
         # 5. 按优先级排序
         suggestions.sort(key=lambda x: x.get('priority_score', 0), reverse=True)
         
         return suggestions
-    
+
+    # 阶段工期配置
+    STAGE_DURATIONS = {'FRAME': 7, 'MECH': 14, 'ELECTRIC': 10, 'WIRING': 5, 'DEBUG': 7, 'COSMETIC': 3}
+
+    @classmethod
+    def _build_can_start_suggestion(cls, db, project, readiness, score_result) -> Dict:
+        """构建可开始项目的建议"""
+        workable_stage = readiness.current_workable_stage or 'FRAME'
+        next_stage = cls._get_next_stage(workable_stage)
+
+        suggested_start_date = project.planned_start_date or date.today()
+        duration_days = cls.STAGE_DURATIONS.get(workable_stage, 7)
+        suggested_end_date = suggested_start_date + timedelta(days=duration_days)
+
+        # 检查资源可用性
+        resource_allocation = ResourceAllocationService.allocate_resources(
+            db, project.id, readiness.machine_id, suggested_start_date, suggested_end_date
+        )
+
+        # 确定建议阶段和状态
+        status, suggested_stage, blocking_items = cls._determine_stage_status(
+            db, readiness, workable_stage, next_stage
+        )
+        if not resource_allocation['can_allocate'] and status == 'READY':
+            status = 'WAIT_RESOURCE'
+
+        return {
+            'project_id': project.id,
+            'project_no': project.project_code or project.project_name,
+            'project_name': project.project_name,
+            'status': status,
+            'suggested_stage': suggested_stage,
+            'suggested_start_date': suggested_start_date.isoformat(),
+            'suggested_end_date': suggested_end_date.isoformat(),
+            'priority_score': score_result['total_score'],
+            'score_factors': score_result['factors'],
+            'current_kit_rate': float(readiness.blocking_kit_rate or 0),
+            'blocking_items': blocking_items,
+            'resource_allocation': {
+                'can_allocate': resource_allocation['can_allocate'],
+                'available_workstations': len(resource_allocation['workstations']),
+                'available_workers': len(resource_allocation['workers']),
+                'conflicts': resource_allocation.get('conflicts', []),
+                'reason': resource_allocation.get('reason')
+            },
+            'suggestion_type': 'CAN_START' if status == 'READY' else ('WAIT_RESOURCE' if status == 'WAIT_RESOURCE' else 'WAIT_MATERIAL')
+        }
+
+    @classmethod
+    def _determine_stage_status(cls, db, readiness, workable_stage, next_stage) -> Tuple[str, str, List]:
+        """确定阶段状态"""
+        if next_stage:
+            stage_rates = readiness.stage_kit_rates or {}
+            next_stage_info = stage_rates.get(next_stage, {})
+            if next_stage_info.get('can_start', False):
+                return 'READY', next_stage, []
+            else:
+                return 'WAITING', workable_stage, cls._get_blocking_items(db, readiness, next_stage)
+        return 'READY', workable_stage, []
+
+    @classmethod
+    def _build_blocked_suggestion(cls, db, project, readiness, score_result) -> Dict:
+        """构建阻塞项目的建议"""
+        blocking_stage = readiness.first_blocked_stage or 'FRAME'
+        blocking_items = cls._get_blocking_items(db, readiness, blocking_stage)
+
+        return {
+            'project_id': project.id,
+            'project_no': project.project_code or project.project_name,
+            'project_name': project.project_name,
+            'status': 'BLOCKED',
+            'blocking_stage': blocking_stage,
+            'priority_score': score_result['total_score'],
+            'score_factors': score_result['factors'],
+            'current_kit_rate': float(readiness.blocking_kit_rate or 0),
+            'blocking_items': blocking_items,
+            'estimated_ready_date': readiness.estimated_ready_date.isoformat() if readiness.estimated_ready_date else None,
+            'suggestion_type': 'BLOCKED'
+        }
+
     @classmethod
     def _get_next_stage(cls, current_stage: str) -> Optional[str]:
         """获取下一阶段"""

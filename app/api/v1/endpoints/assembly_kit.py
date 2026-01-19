@@ -722,72 +722,13 @@ def determine_alert_level(
     return "L4"  # 默认常规预警
 
 
-@router.post("/analysis", response_model=ResponseModel)
-async def execute_kit_analysis(
-    request: MaterialReadinessCreate,
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("assembly_kit:create"))
-):
-    """执行齐套分析"""
-    from app.services.assembly_kit_service import (
-        validate_analysis_inputs,
-        initialize_stage_results,
-        analyze_bom_item,
-        calculate_stage_kit_rates
-    )
-    
-    # 验证输入参数
-    project, bom, machine = validate_analysis_inputs(
-        db, request.project_id, request.bom_id, request.machine_id
-    )
-    
-    check_date = request.check_date or date.today()
+# ==================== 齐套分析辅助函数 ====================
 
-    # 获取BOM物料及装配属性
-    bom_items = db.query(BomItem).filter(BomItem.bom_header_id == request.bom_id).all()
-
-    if not bom_items:
-        raise HTTPException(status_code=400, detail="BOM无物料明细")
-
-    # 获取装配阶段
-    stages = db.query(AssemblyStage).filter(
-        AssemblyStage.is_active == True
-    ).order_by(AssemblyStage.stage_order).all()
-
-    stage_map = {s.stage_code: s for s in stages}
-
-    # 初始化阶段统计
-    stage_results = initialize_stage_results(stages)
-
-    # 缺料明细
-    shortage_details = []
-
-    # 遍历BOM物料进行分析
-    for bom_item in bom_items:
-        detail = analyze_bom_item(
-            db, bom_item, check_date, stage_map, stage_results, calculate_available_qty
-        )
-        if detail:
-            shortage_details.append(detail)
-
-    # 计算各阶段齐套率和是否可开始
-    stage_kit_rates_data, can_proceed, first_blocked_stage, current_workable_stage, overall_stats, all_blocking_items = calculate_stage_kit_rates(
-        stages, stage_results, shortage_details
-    )
-    
-    # 转换为 StageKitRate 对象
-    stage_kit_rates = [
-        StageKitRate(**data) for data in stage_kit_rates_data
-    ]
-
-    # 计算整体齐套率
-    overall_kit_rate = Decimal(overall_stats["fulfilled"] / overall_stats["total"] * 100) if overall_stats["total"] > 0 else Decimal(100)
-    blocking_kit_rate = Decimal(overall_stats["blocking_fulfilled"] / overall_stats["blocking_total"] * 100) if overall_stats["blocking_total"] > 0 else Decimal(100)
-    
-    # 计算预计完全齐套日期（基于阻塞物料的预计到货日期）
-    estimated_ready_date = calculate_estimated_ready_date(db, all_blocking_items, check_date)
-
-    # 创建齐套分析记录
+def _create_readiness_record(db: Session, request, project, overall_kit_rate, blocking_kit_rate,
+                              stage_kit_rates, overall_stats, first_blocked_stage,
+                              current_workable_stage, estimated_ready_date, shortage_count,
+                              current_user_id: int) -> MaterialReadiness:
+    """创建齐套分析记录"""
     readiness = MaterialReadiness(
         readiness_no=generate_readiness_no(),
         project_id=request.project_id,
@@ -796,10 +737,13 @@ async def execute_kit_analysis(
         planned_start_date=request.planned_start_date or project.planned_start_date,
         overall_kit_rate=round(overall_kit_rate, 2),
         blocking_kit_rate=round(blocking_kit_rate, 2),
-        stage_kit_rates=json.dumps({s.stage_code: {"kit_rate": float(s.kit_rate), "blocking_rate": float(s.blocking_rate), "can_start": s.can_start} for s in stage_kit_rates}),
+        stage_kit_rates=json.dumps({
+            s.stage_code: {"kit_rate": float(s.kit_rate), "blocking_rate": float(s.blocking_rate), "can_start": s.can_start}
+            for s in stage_kit_rates
+        }),
         total_items=overall_stats["total"],
         fulfilled_items=overall_stats["fulfilled"],
-        shortage_items=len(shortage_details),
+        shortage_items=shortage_count,
         blocking_total=overall_stats["blocking_total"],
         blocking_fulfilled=overall_stats["blocking_fulfilled"],
         can_start=first_blocked_stage is None,
@@ -807,15 +751,18 @@ async def execute_kit_analysis(
         first_blocked_stage=first_blocked_stage,
         estimated_ready_date=estimated_ready_date,
         analysis_time=datetime.now(),
-        analyzed_by=current_user.id
+        analyzed_by=current_user_id
     )
     db.add(readiness)
     db.flush()
+    return readiness
 
-    # 创建缺料明细
+
+def _create_shortage_details(db: Session, readiness_id: int, shortage_details: list):
+    """创建缺料明细并发送预警"""
     for detail in shortage_details:
         shortage = ShortageDetail(
-            readiness_id=readiness.id,
+            readiness_id=readiness_id,
             bom_item_id=detail["bom_item_id"],
             material_id=detail["material_id"],
             material_code=detail["material_code"],
@@ -833,23 +780,19 @@ async def execute_kit_analysis(
             required_date=detail.get("required_date")
         )
         db.add(shortage)
-        
+
         # 如果是L1或L2级别，发送企业微信预警
         if detail["alert_level"] in ["L1", "L2"]:
             try:
                 from app.services.wechat_alert_service import WeChatAlertService
-                WeChatAlertService.send_shortage_alert(
-                    db, shortage, detail["alert_level"]
-                )
+                WeChatAlertService.send_shortage_alert(db, shortage, detail["alert_level"])
             except Exception as e:
-                # 预警发送失败不影响分析结果
                 print(f"发送企业微信预警失败: {e}")
 
-    db.commit()
-    db.refresh(readiness)
 
-    # 构建响应
-    response_data = MaterialReadinessResponse(
+def _build_analysis_response(readiness, project, machine, bom, check_date, stage_kit_rates) -> MaterialReadinessResponse:
+    """构建齐套分析响应"""
+    return MaterialReadinessResponse(
         id=readiness.id,
         readiness_no=readiness.readiness_no,
         project_id=readiness.project_id,
@@ -871,11 +814,66 @@ async def execute_kit_analysis(
         created_at=readiness.created_at
     )
 
-    return ResponseModel(
-        code=200,
-        message="齐套分析完成",
-        data=response_data
+
+@router.post("/analysis", response_model=ResponseModel)
+async def execute_kit_analysis(
+    request: MaterialReadinessCreate,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("assembly_kit:create"))
+):
+    """执行齐套分析"""
+    from app.services.assembly_kit_service import (
+        validate_analysis_inputs, initialize_stage_results,
+        analyze_bom_item, calculate_stage_kit_rates
     )
+
+    # 验证输入参数
+    project, bom, machine = validate_analysis_inputs(
+        db, request.project_id, request.bom_id, request.machine_id
+    )
+    check_date = request.check_date or date.today()
+
+    # 获取BOM物料及装配属性
+    bom_items = db.query(BomItem).filter(BomItem.bom_header_id == request.bom_id).all()
+    if not bom_items:
+        raise HTTPException(status_code=400, detail="BOM无物料明细")
+
+    # 获取装配阶段
+    stages = db.query(AssemblyStage).filter(AssemblyStage.is_active == True).order_by(AssemblyStage.stage_order).all()
+    stage_map = {s.stage_code: s for s in stages}
+
+    # 初始化阶段统计并遍历BOM物料进行分析
+    stage_results = initialize_stage_results(stages)
+    shortage_details = []
+    for bom_item in bom_items:
+        detail = analyze_bom_item(db, bom_item, check_date, stage_map, stage_results, calculate_available_qty)
+        if detail:
+            shortage_details.append(detail)
+
+    # 计算各阶段齐套率
+    stage_kit_rates_data, _, first_blocked_stage, current_workable_stage, overall_stats, all_blocking_items = calculate_stage_kit_rates(
+        stages, stage_results, shortage_details
+    )
+    stage_kit_rates = [StageKitRate(**data) for data in stage_kit_rates_data]
+
+    # 计算整体齐套率
+    overall_kit_rate = Decimal(overall_stats["fulfilled"] / overall_stats["total"] * 100) if overall_stats["total"] > 0 else Decimal(100)
+    blocking_kit_rate = Decimal(overall_stats["blocking_fulfilled"] / overall_stats["blocking_total"] * 100) if overall_stats["blocking_total"] > 0 else Decimal(100)
+    estimated_ready_date = calculate_estimated_ready_date(db, all_blocking_items, check_date)
+
+    # 创建记录和明细
+    readiness = _create_readiness_record(
+        db, request, project, overall_kit_rate, blocking_kit_rate, stage_kit_rates,
+        overall_stats, first_blocked_stage, current_workable_stage,
+        estimated_ready_date, len(shortage_details), current_user.id
+    )
+    _create_shortage_details(db, readiness.id, shortage_details)
+
+    db.commit()
+    db.refresh(readiness)
+
+    response_data = _build_analysis_response(readiness, project, machine, bom, check_date, stage_kit_rates)
+    return ResponseModel(code=200, message="齐套分析完成", data=response_data)
 
 
 @router.get("/analysis/{readiness_id}/optimize", response_model=ResponseModel)

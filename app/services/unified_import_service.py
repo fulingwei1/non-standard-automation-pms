@@ -498,6 +498,61 @@ class UnifiedImportService:
 
         return imported_count, updated_count, failed_rows
 
+    # ==================== BOM导入辅助函数 ====================
+
+    @staticmethod
+    def _parse_bom_quantity(row, index) -> Tuple[Optional[Decimal], Optional[Dict]]:
+        """解析并验证BOM用量"""
+        quantity_val = row.get('用量*') or row.get('用量')
+        if pd.isna(quantity_val):
+            return None, {"row_index": index + 2, "error": "用量为必填项"}
+        try:
+            quantity = Decimal(str(quantity_val))
+            if quantity <= 0:
+                return None, {"row_index": index + 2, "error": "用量必须大于0"}
+            return quantity, None
+        except:
+            return None, {"row_index": index + 2, "error": "用量格式错误"}
+
+    @staticmethod
+    def _find_project_material(db, project_code, material_code, index) -> Tuple[Optional[Project], Optional[Material], Optional[Dict]]:
+        """查找项目和物料"""
+        project = db.query(Project).filter(Project.project_code == project_code).first()
+        if not project:
+            return None, None, {"row_index": index + 2, "error": f"未找到项目: {project_code}"}
+        material = db.query(Material).filter(Material.material_code == material_code).first()
+        if not material:
+            return None, None, {"row_index": index + 2, "error": f"未找到物料: {material_code}"}
+        return project, material, None
+
+    @staticmethod
+    def _get_or_create_bom_header(db, bom_code, project, current_user_id, bom_cache) -> BomHeader:
+        """获取或创建BOM头"""
+        bom_key = (bom_code, project.id)
+        if bom_key not in bom_cache:
+            bom_header = db.query(BomHeader).filter(BomHeader.bom_no == bom_code).first()
+            if not bom_header:
+                bom_header = BomHeader(
+                    bom_no=bom_code, bom_name=f"{project.project_name}-BOM",
+                    project_id=project.id, version='1.0', status='DRAFT', created_by=current_user_id
+                )
+                db.add(bom_header)
+                db.flush()
+            bom_cache[bom_key] = bom_header
+        return bom_cache[bom_key]
+
+    @staticmethod
+    def _create_bom_item(db, bom_header, material, material_code, quantity, unit, remark):
+        """创建BOM明细"""
+        max_item_no = db.query(BomItem).filter(BomItem.bom_id == bom_header.id).count()
+        bom_item = BomItem(
+            bom_id=bom_header.id, item_no=max_item_no + 1,
+            material_id=material.id, material_code=material_code, material_name=material.material_name,
+            specification=material.specification, unit=unit, quantity=quantity,
+            source_type=material.source_type or 'PURCHASE', remark=remark
+        )
+        db.add(bom_item)
+
     @staticmethod
     def import_bom_data(
         db: Session,
@@ -505,25 +560,15 @@ class UnifiedImportService:
         current_user_id: int,
         update_existing: bool = False
     ) -> Tuple[int, int, List[Dict[str, Any]]]:
-        """
-        导入BOM数据
-        """
+        """导入BOM数据"""
         required_columns = ['BOM编码*', '项目编码*', '物料编码*', '用量*']
-        missing_columns = []
-        for col in required_columns:
-            if col not in df.columns and col.replace('*', '') not in df.columns:
-                missing_columns.append(col)
-
+        missing_columns = [col for col in required_columns
+                          if col not in df.columns and col.replace('*', '') not in df.columns]
         if missing_columns:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Excel文件缺少必需的列：{', '.join(missing_columns)}"
-            )
+            raise HTTPException(status_code=400, detail=f"Excel文件缺少必需的列：{', '.join(missing_columns)}")
 
-        imported_count = 0
-        updated_count = 0
-        failed_rows = []
-        bom_cache = {}  # 缓存BOM头
+        imported_count, updated_count, failed_rows = 0, 0, []
+        bom_cache = {}
 
         for index, row in df.iterrows():
             try:
@@ -533,119 +578,41 @@ class UnifiedImportService:
                 material_code = str(row.get('物料编码*', '') or row.get('物料编码', '')).strip()
 
                 # 解析用量
-                quantity_val = row.get('用量*') or row.get('用量')
-                if pd.isna(quantity_val):
-                    failed_rows.append({
-                        "row_index": index + 2,
-                        "error": "用量为必填项"
-                    })
+                quantity, error = UnifiedImportService._parse_bom_quantity(row, index)
+                if error:
+                    failed_rows.append(error)
                     continue
 
-                try:
-                    quantity = Decimal(str(quantity_val))
-                    if quantity <= 0:
-                        failed_rows.append({
-                            "row_index": index + 2,
-                            "error": "用量必须大于0"
-                        })
-                        continue
-                except:
-                    failed_rows.append({
-                        "row_index": index + 2,
-                        "error": "用量格式错误"
-                    })
-                    continue
-
-                # 查找项目
-                project = db.query(Project).filter(Project.project_code == project_code).first()
-                if not project:
-                    failed_rows.append({
-                        "row_index": index + 2,
-                        "error": f"未找到项目: {project_code}"
-                    })
-                    continue
-
-                # 查找物料
-                material = db.query(Material).filter(Material.material_code == material_code).first()
-                if not material:
-                    failed_rows.append({
-                        "row_index": index + 2,
-                        "error": f"未找到物料: {material_code}"
-                    })
+                # 查找项目和物料
+                project, material, error = UnifiedImportService._find_project_material(db, project_code, material_code, index)
+                if error:
+                    failed_rows.append(error)
                     continue
 
                 # 解析可选字段
-                machine_code = str(row.get('机台编号', '') or '').strip()
                 unit = str(row.get('单位', '件') or '件').strip()
                 remark = str(row.get('备注', '') or '').strip()
 
                 # 获取或创建BOM头
-                bom_key = (bom_code, project.id)
-                if bom_key not in bom_cache:
-                    bom_header = db.query(BomHeader).filter(
-                        BomHeader.bom_no == bom_code
-                    ).first()
-                    if not bom_header:
-                        bom_header = BomHeader(
-                            bom_no=bom_code,
-                            bom_name=f"{project.project_name}-BOM",
-                            project_id=project.id,
-                            version='1.0',
-                            status='DRAFT',
-                            created_by=current_user_id
-                        )
-                        db.add(bom_header)
-                        db.flush()
-                    bom_cache[bom_key] = bom_header
-                else:
-                    bom_header = bom_cache[bom_key]
+                bom_header = UnifiedImportService._get_or_create_bom_header(db, bom_code, project, current_user_id, bom_cache)
 
                 # 检查BOM明细是否已存在
                 existing = db.query(BomItem).filter(
-                    BomItem.bom_id == bom_header.id,
-                    BomItem.material_id == material.id
+                    BomItem.bom_id == bom_header.id, BomItem.material_id == material.id
                 ).first()
 
                 if existing:
                     if update_existing:
-                        existing.quantity = quantity
-                        existing.unit = unit
-                        existing.remark = remark
+                        existing.quantity, existing.unit, existing.remark = quantity, unit, remark
                         updated_count += 1
                     else:
-                        failed_rows.append({
-                            "row_index": index + 2,
-                            "error": "该BOM明细已存在"
-                        })
-                        continue
+                        failed_rows.append({"row_index": index + 2, "error": "该BOM明细已存在"})
                 else:
-                    # 获取下一行号
-                    max_item_no = db.query(BomItem).filter(
-                        BomItem.bom_id == bom_header.id
-                    ).count()
-                    item_no = max_item_no + 1
-
-                    # 创建BOM明细
-                    bom_item = BomItem(
-                        bom_id=bom_header.id,
-                        item_no=item_no,
-                        material_id=material.id,
-                        material_code=material_code,
-                        material_name=material.material_name,
-                        specification=material.specification,
-                        unit=unit,
-                        quantity=quantity,
-                        source_type=material.source_type or 'PURCHASE',
-                        remark=remark
-                    )
-                    db.add(bom_item)
+                    UnifiedImportService._create_bom_item(db, bom_header, material, material_code, quantity, unit, remark)
                     imported_count += 1
 
             except Exception as e:
-                failed_rows.append({
-                    "row_index": index + 2,
-                    "error": str(e)
-                })
+                failed_rows.append({"row_index": index + 2, "error": str(e)})
 
         return imported_count, updated_count, failed_rows
 
