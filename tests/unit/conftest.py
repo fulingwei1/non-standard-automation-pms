@@ -17,15 +17,39 @@ from sqlalchemy.pool import StaticPool
 def db_engine():
     """
     为单元测试提供隔离的 SQLite 引擎：
-    - 以 data/app.db 为模板复制一个临时数据库文件，保留完整 schema
+    - 优先使用 data/test_app.db（由主 conftest 创建）
+    - 如果不存在则使用 data/app.db 作为模板
     - 清空测试涉及的表，保证数据干净
     - 每个测试函数独享数据库文件，互不影响
     """
-    template_path = Path(os.getenv("UNIT_TEST_DB_TEMPLATE", "data/app.db"))
-    if not template_path.exists():
-        raise FileNotFoundError(f"无法找到基准数据库文件：{template_path}")
+    # 优先使用 test_app.db（由主 conftest 创建），其次使用 app.db
+    test_db_path = Path("data/test_app.db")
+    app_db_path = Path("data/app.db")
+    env_template = os.getenv("UNIT_TEST_DB_TEMPLATE", "")
+    template_path = Path(env_template) if env_template else None
 
-    tmp_db = tempfile.NamedTemporaryFile(suffix=".db")
+    if template_path and template_path.exists() and template_path.is_file():
+        pass  # 使用环境变量指定的模板
+    elif test_db_path.exists() and test_db_path.is_file():
+        template_path = test_db_path
+    elif app_db_path.exists() and app_db_path.is_file():
+        template_path = app_db_path
+    else:
+        # 如果都不存在，创建一个内存数据库并初始化表结构
+        engine = create_engine(
+            "sqlite:///:memory:",
+            connect_args={"check_same_thread": False},
+            poolclass=StaticPool,
+        )
+        # 导入所有模型以确保表结构被注册
+        import app.models  # noqa: F401
+        from app.models.base import Base
+        Base.metadata.create_all(bind=engine)
+        yield engine
+        engine.dispose()
+        return
+
+    tmp_db = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
     shutil.copyfile(template_path, tmp_db.name)
 
     engine = create_engine(
@@ -75,6 +99,10 @@ def db_engine():
 
     engine.dispose()
     tmp_db.close()
+    try:
+        os.unlink(tmp_db.name)
+    except Exception:
+        pass
 
 
 @pytest.fixture(scope="function")
