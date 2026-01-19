@@ -13,6 +13,7 @@ from sqlalchemy import func, or_
 from app.models.project import Project
 from app.models.project_evaluation import ProjectEvaluation, ProjectEvaluationDimension
 from app.models.enums import ProjectEvaluationLevelEnum
+from app.models.timesheet import Timesheet
 
 
 class ProjectEvaluationService:
@@ -245,26 +246,46 @@ class ProjectEvaluationService:
     def auto_calculate_workload_score(self, project: Project) -> Optional[Decimal]:
         """
         自动计算项目工作量得分
-        
+
         规则：
         - 基于预估工时或实际工时
         - >1000人天：1-3分
         - 500-1000人天：4-6分
         - 200-500人天：7-8分
         - <200人天：9-10分
-        
+
         Args:
             project: 项目对象
-        
+
         Returns:
             Optional[Decimal]: 得分（如果无法计算则返回None）
         """
-        # 尝试从项目成员工时统计中获取
-        # 或者从进度跟踪模块获取
-        # 这里先返回None，需要手动评价
-        
-        # TODO: 集成工时统计模块
-        return None
+        # 从工时记录表统计项目总工时
+        total_hours = self.db.query(func.sum(Timesheet.hours)).filter(
+            Timesheet.project_id == project.id,
+            Timesheet.status.in_(['APPROVED', 'SUBMITTED'])  # 只统计已提交或已审批的工时
+        ).scalar()
+
+        if total_hours is None or total_hours == 0:
+            # 如果没有工时记录，尝试使用项目的预估工时
+            if hasattr(project, 'estimated_hours') and project.estimated_hours:
+                total_hours = project.estimated_hours
+            else:
+                # 无法计算，返回None需要手动评价
+                return None
+
+        # 转换为人天（1人天 = 8小时）
+        man_days = Decimal(str(total_hours)) / Decimal('8')
+
+        # 根据人天数计算得分
+        if man_days > Decimal('1000'):
+            return Decimal('2.0')   # 1-3分（超大工作量）
+        elif man_days > Decimal('500'):
+            return Decimal('5.0')   # 4-6分（大工作量）
+        elif man_days > Decimal('200'):
+            return Decimal('7.5')   # 7-8分（中等工作量）
+        else:
+            return Decimal('9.5')   # 9-10分（小工作量）
     
     def generate_evaluation_code(self) -> str:
         """生成评价编号"""
