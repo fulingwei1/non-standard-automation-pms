@@ -3180,9 +3180,9 @@ def check_equipment_maintenance_reminder():
     
     try:
         with get_db_session() as db:
-            from app.models.production import Equipment
+            from app.models.production import Equipment, Workshop
             from app.models.notification import Notification
-            from app.models.user import User
+            from app.models.user import User, Role, UserRole
             
             today = date.today()
             
@@ -3224,13 +3224,51 @@ def check_equipment_maintenance_reminder():
                 else:
                     priority = "NORMAL"
                 
-                # 获取设备所属车间的负责人（这里简化处理，可以后续优化）
-                # 暂时发送给系统管理员或设备管理员
-                # TODO: 根据实际业务逻辑确定接收人
-                recipients = db.query(User).filter(
-                    User.is_active == True,
-                    # 可以添加角色筛选，例如：设备管理员
-                ).limit(5).all()
+                # 根据业务逻辑确定通知接收人
+                recipients = []
+
+                # 1. 优先获取设备所属车间的主管
+                if equipment.workshop_id:
+                    workshop = db.query(Workshop).filter(Workshop.id == equipment.workshop_id).first()
+                    if workshop and workshop.manager_id:
+                        manager = db.query(User).filter(
+                            User.id == workshop.manager_id,
+                            User.is_active == True
+                        ).first()
+                        if manager:
+                            recipients.append(manager)
+
+                # 2. 查找设备管理员角色的用户
+                equipment_admin_role = db.query(Role).filter(
+                    Role.role_code.in_(['EQUIPMENT_ADMIN', 'EQUIPMENT_MANAGER', 'PRODUCTION_MANAGER']),
+                    Role.is_active == True
+                ).first()
+
+                if equipment_admin_role:
+                    admin_user_roles = db.query(UserRole).filter(
+                        UserRole.role_id == equipment_admin_role.id
+                    ).join(User).filter(User.is_active == True).limit(3).all()
+
+                    for ur in admin_user_roles:
+                        if ur.user_id not in [r.id for r in recipients]:
+                            user = db.query(User).filter(User.id == ur.user_id).first()
+                            if user:
+                                recipients.append(user)
+
+                # 3. 如果仍然没有接收人，获取系统管理员
+                if not recipients:
+                    sys_admin_role = db.query(Role).filter(
+                        Role.role_code == 'ADMIN',
+                        Role.is_active == True
+                    ).first()
+                    if sys_admin_role:
+                        admin_user_roles = db.query(UserRole).filter(
+                            UserRole.role_id == sys_admin_role.id
+                        ).join(User).filter(User.is_active == True).limit(2).all()
+                        for ur in admin_user_roles:
+                            user = db.query(User).filter(User.id == ur.user_id).first()
+                            if user:
+                                recipients.append(user)
                 
                 if not recipients:
                     # 如果没有找到接收人，跳过
