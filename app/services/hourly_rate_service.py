@@ -1,17 +1,24 @@
 # -*- coding: utf-8 -*-
 """
 时薪配置服务
-负责从配置中获取用户时薪（按优先级：用户 > 角色 > 部门 > 默认）
+负责从配置中获取用户时薪
+
+优先级说明：
+1. 用户个人配置 - 最高优先级，每个人可以有不同的时薪
+2. 角色配置 - 按角色统一配置（如高级工程师、初级工程师等）
+3. 默认配置 - 系统默认时薪
+
+注意：不支持部门级时薪配置，因为同一部门内人员薪资差异较大，
+      部门平均时薪没有实际意义，应该按个人或角色配置。
 """
 
 from decimal import Decimal
 from datetime import date
-from typing import Optional
+from typing import Optional, List, Dict
 from sqlalchemy.orm import Session
 
 from app.models.hourly_rate import HourlyRateConfig
 from app.models.user import User, UserRole
-from app.models.organization import Department
 
 
 class HourlyRateService:
@@ -23,13 +30,13 @@ class HourlyRateService:
     @staticmethod
     def get_user_hourly_rate(db: Session, user_id: int, work_date: Optional[date] = None) -> Decimal:
         """
-        获取用户时薪（按优先级：用户配置 > 角色配置 > 部门配置 > 默认配置）
-        
+        获取用户时薪（按优先级：用户个人配置 > 角色配置 > 默认配置）
+
         Args:
             db: 数据库会话
             user_id: 用户ID
             work_date: 工作日期（用于判断配置是否在有效期内，默认今天）
-        
+
         Returns:
             时薪（元/小时）
         """
@@ -66,14 +73,8 @@ class HourlyRateService:
             if role_config:
                 return role_config.hourly_rate
         
-        # 3. 查找部门配置（通过Employee表获取部门信息）
-        # 注意：由于User和Employee的关系，以及部门信息可能存储在多个地方，
-        # 这里简化处理：如果有部门配置需求，可以通过Timesheet记录中的department_id获取
-        # 或者通过Employee的hr_profile获取部门信息
-        # 暂时跳过部门配置查找，直接使用默认配置
-        # TODO: 如果需要部门级别的时薪配置，需要建立User/Employee到Department的关联
-        
-        # 4. 查找默认配置
+        # 3. 查找默认配置
+        # 注意：不支持部门级时薪，因为同部门人员薪资差异大，应按个人或角色配置
         default_config = db.query(HourlyRateConfig).filter(
             HourlyRateConfig.config_type == "DEFAULT",
             HourlyRateConfig.is_active == True,
@@ -84,7 +85,7 @@ class HourlyRateService:
         if default_config:
             return default_config.hourly_rate
         
-        # 5. 使用默认值
+        # 4. 使用硬编码默认值（兜底方案）
         return HourlyRateService.DEFAULT_HOURLY_RATE
     
     @staticmethod

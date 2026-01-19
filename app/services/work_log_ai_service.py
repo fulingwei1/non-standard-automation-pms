@@ -18,6 +18,7 @@ from app.models.user import User
 from app.models.project import Project, ProjectMember
 from app.models.timesheet import Timesheet
 from app.models.work_log import WorkLog
+from app.models.holiday import HolidayService
 
 logger = logging.getLogger(__name__)
 
@@ -499,11 +500,8 @@ class WorkLogAIService:
         if not matched_project and user_projects:
             matched_project = user_projects[0]  # 使用最常用的项目
         
-        # 4. 判断工作类型
-        work_type = "NORMAL"
-        if work_date.weekday() >= 5:  # 周六、周日
-            work_type = "WEEKEND"
-        # TODO: 检查是否是节假日（需要节假日表）
+        # 4. 判断工作类型（使用节假日服务）
+        work_type = HolidayService.get_work_type(self.db, work_date)
         
         # 5. 构建工作项
         if extracted_hours:
