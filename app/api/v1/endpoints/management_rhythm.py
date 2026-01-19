@@ -1183,25 +1183,61 @@ def get_financial_metrics(
     """
     获取财务指标（用于经营分析会）
     """
-    from app.models.cost import ProjectCost
-    from app.models.budget import Budget
+    from app.models.project import Project, ProjectCost
+    from app.models.budget import ProjectBudget
     from sqlalchemy import func
-    
-    # 获取收入、成本、利润等财务数据
-    # 这里需要根据实际的数据模型进行调整
+
+    # 构建日期过滤条件
+    cost_date_filter = []
+    if start_date:
+        cost_date_filter.append(ProjectCost.cost_date >= start_date)
+    if end_date:
+        cost_date_filter.append(ProjectCost.cost_date <= end_date)
+
+    # 1. 查询总成本（从ProjectCost表）
+    cost_query = db.query(func.sum(ProjectCost.amount))
+    if cost_date_filter:
+        cost_query = cost_query.filter(*cost_date_filter)
+    total_cost = cost_query.scalar() or 0
+
+    # 2. 查询总收入（从Project表的contract_amount，只计算进行中和已完成的项目）
+    revenue_query = db.query(func.sum(Project.contract_amount)).filter(
+        Project.health.in_(['H1', 'H2', 'H3', 'H4'])  # 进行中和已完结的项目
+    )
+    total_revenue = revenue_query.scalar() or 0
+
+    # 3. 查询总预算（从ProjectBudget表，只计算已审批的预算）
+    budget_query = db.query(func.sum(ProjectBudget.total_amount)).filter(
+        ProjectBudget.status == 'APPROVED',
+        ProjectBudget.is_active == True
+    )
+    total_budget = budget_query.scalar() or 0
+
+    # 4. 计算利润和利润率
+    total_revenue = float(total_revenue)
+    total_cost = float(total_cost)
+    profit = total_revenue - total_cost
+
+    gross_margin_rate = 0.0
+    if total_revenue > 0:
+        gross_margin_rate = round((profit / total_revenue) * 100, 2)
+
+    # 5. 计算预算执行率
+    budget_execution_rate = 0.0
+    if total_budget and float(total_budget) > 0:
+        budget_execution_rate = round((total_cost / float(total_budget)) * 100, 2)
+
     metrics = {
-        "revenue": 0.0,
-        "cost": 0.0,
-        "profit": 0.0,
-        "cash_flow": 0.0,
-        "gross_margin_rate": 0.0,
-        "net_profit_rate": 0.0,
+        "revenue": total_revenue,
+        "cost": total_cost,
+        "profit": profit,
+        "budget": float(total_budget) if total_budget else 0.0,
+        "budget_execution_rate": budget_execution_rate,
+        "gross_margin_rate": gross_margin_rate,
+        "net_profit_rate": gross_margin_rate,  # 简化处理，净利率=毛利率
+        "cash_flow": profit,  # 简化处理，现金流=利润
     }
-    
-    # TODO: 集成实际的财务数据查询逻辑
-    # 示例：从ProjectCost表查询成本数据
-    # 示例：从Budget表查询预算数据
-    
+
     return metrics
 
 
