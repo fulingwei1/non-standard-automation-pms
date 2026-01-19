@@ -73,14 +73,46 @@ class ProjectEvaluationService:
     def get_level_thresholds(self) -> Dict[ProjectEvaluationLevelEnum, Decimal]:
         """
         从数据库获取评价等级阈值配置
-        
-        注意：目前等级阈值存储在评价维度配置的JSON中，或使用默认值
-        
+
+        优先从评价维度配置表中查找dimension_code='LEVEL_CONFIG'的配置，
+        如果找到则解析其scoring_rules JSON获取阈值，否则返回默认值。
+
+        scoring_rules JSON格式示例：
+        {
+            "thresholds": {
+                "S": 90,
+                "A": 80,
+                "B": 70,
+                "C": 60,
+                "D": 0
+            }
+        }
+
         Returns:
             Dict[ProjectEvaluationLevelEnum, Decimal]: 等级阈值字典
         """
-        # TODO: 可以添加专门的评价等级配置表
-        # 目前使用默认值
+        # 查找等级阈值配置
+        level_config = self.db.query(ProjectEvaluationDimension).filter(
+            ProjectEvaluationDimension.dimension_code == 'LEVEL_CONFIG',
+            ProjectEvaluationDimension.is_active == True
+        ).first()
+
+        if level_config and level_config.scoring_rules:
+            scoring_rules = level_config.scoring_rules
+            if isinstance(scoring_rules, dict) and 'thresholds' in scoring_rules:
+                thresholds = scoring_rules['thresholds']
+                try:
+                    return {
+                        ProjectEvaluationLevelEnum.S: Decimal(str(thresholds.get('S', 90))),
+                        ProjectEvaluationLevelEnum.A: Decimal(str(thresholds.get('A', 80))),
+                        ProjectEvaluationLevelEnum.B: Decimal(str(thresholds.get('B', 70))),
+                        ProjectEvaluationLevelEnum.C: Decimal(str(thresholds.get('C', 60))),
+                        ProjectEvaluationLevelEnum.D: Decimal(str(thresholds.get('D', 0))),
+                    }
+                except (ValueError, TypeError):
+                    # 如果解析失败，使用默认值
+                    pass
+
         return self.DEFAULT_LEVEL_THRESHOLDS
     
     def calculate_total_score(
