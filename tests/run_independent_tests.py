@@ -33,6 +33,19 @@ from tests.unit.test_pinyin_utils import (
     TestNameToPinyin,
     TestNameToPinyinInitials,
 )
+from tests.unit.test_logger import (
+    TestGetLogLevel,
+    TestGetLogger,
+    TestLogErrorWithContext,
+    TestLogWarningWithContext,
+    TestLogInfoWithContext,
+    TestLogConstants,
+)
+from tests.unit.test_rate_limit import (
+    TestRateLimitImport,
+    TestRateLimitModuleStructure,
+    TestLimiterConfiguration,
+)
 
 
 def run_test_class(test_class):
@@ -89,6 +102,15 @@ def main():
         ("Pinyin Utils - NameToPinyinInitials", TestNameToPinyinInitials),
         ("Pinyin Utils - GenerateInitialPassword", TestGenerateInitialPassword),
         ("Pinyin Utils - BatchGenerate", TestBatchGeneratePinyinForEmployees),
+        ("Logger - GetLogLevel", TestGetLogLevel),
+        ("Logger - GetLogger", TestGetLogger),
+        ("Logger - LogError", TestLogErrorWithContext),
+        ("Logger - LogWarning", TestLogWarningWithContext),
+        ("Logger - LogInfo", TestLogInfoWithContext),
+        ("Logger - Constants", TestLogConstants),
+        ("Rate Limit - Import", TestRateLimitImport),
+        ("Rate Limit - Structure", TestRateLimitModuleStructure),
+        ("Rate Limit - Config", TestLimiterConfiguration),
     ]
 
     total_passed = 0
@@ -107,9 +129,9 @@ def main():
     print("\n" + "=" * 60)
     print("测试汇总")
     print("=" * 60)
-    print(f"  Passed:  {total_passed}")
-    print(f"  Failed:  {total_failed}")
-    print(f"  Errors:  {total_errors}")
+    print(f"  Passed: {total_passed}")
+    print(f"  Failed: {total_failed}")
+    print(f"  Errors: {total_errors}")
     print(f"  Total:   {total_passed + total_failed + total_errors}")
     print("=" * 60)
 
