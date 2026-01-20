@@ -298,6 +298,7 @@ from .report_center import (
     ReportTemplate,
 )
 from .stage_instance import (
+    NodeTask,
     ProjectNodeInstance,
     ProjectStageInstance,
 )
@@ -602,6 +603,7 @@ __all__ = [
     "NodeDefinition",
     "ProjectStageInstance",
     "ProjectNodeInstance",
+    "NodeTask",
     # Technical Spec
     "TechnicalSpecRequirement",
     "SpecMatchRecord",

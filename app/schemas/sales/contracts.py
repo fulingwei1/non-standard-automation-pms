@@ -49,7 +49,10 @@ class ContractCreate(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     contract_code: Optional[str] = Field(
-        default=None, max_length=20, description="合同编码"
+        default=None, max_length=20, description="合同编码（内部）"
+    )
+    customer_contract_no: Optional[str] = Field(
+        default=None, max_length=100, description="客户合同编号（外部）"
     )
     opportunity_id: int = Field(description="商机ID")
     quote_version_id: Optional[int] = Field(default=None, description="报价版本ID")
@@ -72,6 +75,7 @@ class ContractUpdate(BaseModel):
     """更新合同（与 Contract ORM 字段对齐）"""
 
     contract_code: Optional[str] = None
+    customer_contract_no: Optional[str] = None
     opportunity_id: Optional[int] = None
     quote_version_id: Optional[int] = None
     customer_id: Optional[int] = None
@@ -89,7 +93,8 @@ class ContractResponse(TimestampSchema):
     """合同响应（与 endpoint 返回字段对齐）"""
 
     id: int = Field(description="合同ID")
-    contract_code: str = Field(description="合同编码")
+    contract_code: str = Field(description="合同编码（内部）")
+    customer_contract_no: Optional[str] = Field(default=None, description="客户合同编号（外部）")
     opportunity_id: int = Field(description="商机ID")
     quote_version_id: Optional[int] = Field(default=None, description="报价版本ID")
     customer_id: int = Field(description="客户ID")

@@ -106,6 +106,22 @@ from .quotes import (
     QuoteVersionCreate,
     QuoteVersionResponse,
 )
+from .team import (
+    SalesTeamCreate,
+    SalesTeamUpdate,
+    SalesTeamResponse,
+    SalesTeamListResponse,
+    SalesTeamMemberInfo,
+    TeamMemberAddRequest,
+    TeamMemberUpdateRequest,
+    TeamMemberBatchAddRequest,
+    TeamPerformanceSnapshotResponse,
+    TeamPKCreateRequest,
+    TeamPKUpdateRequest,
+    TeamPKResponse,
+    TeamRankingItem,
+    TeamRankingResponse,
+)
 
 __all__ = [
     # AI澄清相关
@@ -204,4 +220,19 @@ __all__ = [
     "FailureCaseResponse",
     "OpenItemCreate",
     "OpenItemResponse",
+    # 团队管理相关
+    "SalesTeamCreate",
+    "SalesTeamUpdate",
+    "SalesTeamResponse",
+    "SalesTeamListResponse",
+    "SalesTeamMemberInfo",
+    "TeamMemberAddRequest",
+    "TeamMemberUpdateRequest",
+    "TeamMemberBatchAddRequest",
+    "TeamPerformanceSnapshotResponse",
+    "TeamPKCreateRequest",
+    "TeamPKUpdateRequest",
+    "TeamPKResponse",
+    "TeamRankingItem",
+    "TeamRankingResponse",
 ]

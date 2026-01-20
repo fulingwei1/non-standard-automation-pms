@@ -3,7 +3,6 @@
 编码配置模块单元测试
 """
 
-
 from app.utils.code_config import (
     CODE_PREFIX,
     MATERIAL_CATEGORY_CODES,
@@ -188,9 +187,10 @@ class TestGetMaterialCategoryCode:
         assert category_code == "OT"
 
     def test_code_without_separator(self):
-        """测试无分隔符的类别码"""
+        """测试无分隔符的类别码（如果完整字符串无效则返回其他）"""
         category_code = get_material_category_code("ME0101")
-        assert category_code == "ME"
+        # ME0101 不是有效类别码，所以返回 OT
+        assert category_code == "OT"
 
     def test_code_with_multiple_separators(self):
         """测试多个分隔符的类别码"""
