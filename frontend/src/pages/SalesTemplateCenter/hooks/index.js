@@ -1,0 +1,1 @@
+export { useSalesTemplateCenter } from './useSalesTemplateCenter';

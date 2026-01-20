@@ -1,0 +1,1 @@
+export { useSupplierManagementPage } from './useSupplierManagementPage';

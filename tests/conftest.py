@@ -16,6 +16,9 @@ import os
 # clean, predictable SQLite database.
 # Use in-memory SQLite database for tests to avoid readonly file permission issues.
 os.environ["SQLITE_DB_PATH"] = ":memory:"
+# Disable Redis during tests to avoid token blacklist issues with MagicMock.
+# MagicMock.exists() returns MagicMock which is truthy, causing all tokens to be "revoked".
+os.environ["REDIS_URL"] = ""
 # Disable schedulers during tests to avoid background writes.
 os.environ.setdefault("ENABLE_SCHEDULER", "false")
 

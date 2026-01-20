@@ -1,0 +1,1 @@
+export { useTechnicalAssessment } from './useTechnicalAssessment';
