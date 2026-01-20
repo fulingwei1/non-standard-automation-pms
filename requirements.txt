@@ -5,8 +5,8 @@ uvicorn[standard]==0.32.0
 # 数据库ORM
 sqlalchemy==2.0.36
 
-# 安全表达式评估
-simpleeval==1.0.2
+# 安全表达式评估 (用于预警规则引擎的条件表达式)
+simpleeval==1.0.3  # 需要 1.0.3+ 支持 Python 3.12+
 
 # 配置和验证
 pydantic==2.9.2

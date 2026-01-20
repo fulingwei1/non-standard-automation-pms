@@ -350,7 +350,9 @@ useEffect(() => {
 **典型 TODO**:
 ```python
 # app/services/alert_rule_engine.py:304
-# TODO: 实现安全的表达式引擎（如 simpleeval）替代 eval
+# ✅ 已解决: 使用 simpleeval 库实现安全表达式引擎
+#    - 代码位置: app/services/alert_rule_engine/condition_evaluator.py
+#    - 依赖: simpleeval==1.0.2 (已添加到 requirements.txt)
 
 # app/services/hourly_rate_service.py:74
 # TODO: 部门级别的时薪配置需要关联表

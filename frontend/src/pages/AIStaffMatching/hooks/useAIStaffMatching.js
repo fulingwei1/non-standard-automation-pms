@@ -53,7 +53,14 @@ export function useAIStaffMatching() {
         }
     }, []);
 
-    useEffect(() => { loadProjects(); loadStaff(); }, [loadProjects, loadStaff]);
+    useEffect(() => {
+        const init = async () => {
+            setLoading(true);
+            await Promise.all([loadProjects(), loadStaff()]);
+            setLoading(false);
+        };
+        init();
+    }, [loadProjects, loadStaff]);
 
     return { projects, staff, matchResults, loading, error, selectedProject, setSelectedProject, runMatching, assignStaff };
 }
