@@ -6,26 +6,109 @@ Coverage Target: 8% -> 60%+
 """
 
 import pytest
+
 from datetime import date
-from decimal import Decimal
-from unittest.mock import MagicMock, patch
-from sqlalchemy.orm import Session
+from unittest.mock import MagicMock
 
 
-class TestNumberGenerator:
-    """编号生成器测试"""
 
-    @pytest.fixture
-    def generator(self, db_session: Session):
-        """创建生成器实例"""
-        from app.utils.number_generator import NumberGenerator
-        return NumberGenerator(db_session)
+class TestGenerateSequentialNo:
+    """测试 generate_sequential_no 函数"""
 
-    def test_generate_sequential_no_first_record(self, generator, db_session: Session):
+    def test_basic_sequential_no_with_date(self):
+        """测试带日期的基本顺序编号"""
+        db = MagicMock()
+        db.query.return_value.order_by.return_value.first.return_value = None
+
+        result = generate_sequential_no(
+            db,
+            MagicMock,
+            "ecn_no",
+            "ECN",
+            date_format="%y%m%d",
+            separator="-",
+            seq_length=3,
+            use_date=True,
+        )
+
+        assert result == "ECN-250120-001"
+
+    def test_basic_sequential_no_without_date(self):
+        """测试不带日期的顺序编号"""
+        db = MagicMock()
+        db.query.return_value.order_by.return_value.first.return_value = None
+
+        result = generate_sequential_no(
+            db, MagicMock, "code", "PJ", use_date=False, separator="", seq_length=3
+        )
+
+        assert result == "PJ001"
+
+    def test_sequential_no_with_existing_records(self):
+        """测试存在记录时递增序号"""
+        mock_record = MagicMock()
+        mock_record.serial_no = "ECN-250120-010"
+
+        db = MagicMock()
+        db.query.return_value.filter.return_value.all.return_value = [mock_record]
+        db.query.return_value.order_by.return_value.first.return_value = mock_record
+
+        result = generate_sequential_no(
+            db,
+            MagicMock,
+            "ecn_no",
+            "ECN",
+            date_format="%y%m%d",
+            separator="-",
+            seq_length=3,
+            use_date=True,
+        )
+
+        assert result == "ECN-250120-011"
+
+    def test_sequential_no_invalid_format_handling(self):
+        """测试无效格式时的处理"""
+        db = MagicMock()
+        db.query.return_value.order_by.return_value.first.return_value = MagicMock()
+        db.query.return_value.order_by.return_value.first.return_value.serial_no = (
+            "ECN-invalid"
+        )
+
+        db.query.return_value.order_by.return_value.first.return_value = MagicMock()
+
+        # 模拟无效格式
+        invalid_record = MagicMock()
+        invalid_record.serial_no.split.side_effect = ValueError("Invalid format")
+
+        result = generate_sequential_no(
+            db,
+            MagicMock,
+            "ecn_no",
+            "ECN",
+            date_format="%y%m%d",
+            separator="-",
+            seq_length=3,
+            use_date=True,
+        )
+
+        assert result == "ECN-250120-001"
+
+    def test_sequential_no_without_separator(self):
+        """测试不带分隔符的编号"""
+        db = MagicMock()
+        db.query.return_value.order_by.return_value.first.return_value = None
+
+        result = generate_sequential_no(
+            db, MagicMock, "code", "PJ", use_date=False, separator="", seq_length=3
+        )
+
+        assert result == "PJ001"
         """测试第一个记录的编号生成"""
         db_session.query.return_value.filter.return_value.first.return_value = None
 
-        result = generator.generate_sequential_no("PJ", date(2025, 1, 20), separator="-")
+        result = generator.generate_sequential_no(
+            "PJ", date(2025, 1, 20), separator="-"
+        )
 
         assert result == "PJ-20250120-001"
         db_session.add.assert_called()
@@ -35,13 +118,19 @@ class TestNumberGenerator:
         mock_existing = MagicMock()
         mock_existing.serial_no = 5
 
-        db_session.query.return_value.filter.return_value.first.return_value = mock_existing
+        db_session.query.return_value.filter.return_value.first.return_value = (
+            mock_existing
+        )
 
-        result = generator.generate_sequential_no("PJ", date(2025, 1, 20), separator="-")
+        result = generator.generate_sequential_no(
+            "PJ", date(2025, 1, 20), separator="-"
+        )
 
         assert result == "PJ-20250120-006"
 
-    def test_generate_sequential_no_without_separator(self, generator, db_session: Session):
+    def test_generate_sequential_no_without_separator(
+        self, generator, db_session: Session
+    ):
         """测试不带分隔符的编号生成"""
         db_session.query.return_value.filter.return_value.first.return_value = None
 
@@ -70,7 +159,9 @@ class TestNumberGenerator:
         mock_existing = MagicMock()
         mock_existing.monthly_no = 15
 
-        db_session.query.return_value.filter.return_value.first.return_value = mock_existing
+        db_session.query.return_value.filter.return_value.first.return_value = (
+            mock_existing
+        )
 
         result = generator.generate_monthly_no("PO", 2025, 1, prefix="PO")
 
@@ -90,7 +181,9 @@ class TestNumberGenerator:
         mock_existing = MagicMock()
         mock_existing.employee_code = "EMP000050"
 
-        db_session.query.return_value.filter.return_value.first.return_value = mock_existing
+        db_session.query.return_value.filter.return_value.first.return_value = (
+            mock_existing
+        )
 
         result = generator.generate_employee_code()
 
@@ -112,7 +205,9 @@ class TestNumberGenerator:
 
         assert result.startswith("ME")
 
-    def test_generate_material_code_default_category(self, generator, db_session: Session):
+    def test_generate_material_code_default_category(
+        self, generator, db_session: Session
+    ):
         """测试物料编号默认类别"""
         db_session.query.return_value.filter.return_value.first.return_value = None
 
@@ -133,7 +228,9 @@ class TestNumberGenerator:
         mock_existing = MagicMock()
         mock_existing.machine_code = "PN099"
 
-        db_session.query.return_value.filter.return_value.first.return_value = mock_existing
+        db_session.query.return_value.filter.return_value.first.return_value = (
+            mock_existing
+        )
 
         result = generator.generate_machine_code()
 
@@ -154,13 +251,16 @@ class TestNumberGeneratorPadding:
     @pytest.fixture
     def generator(self, db_session: Session):
         from app.utils.number_generator import NumberGenerator
+
         return NumberGenerator(db_session)
 
     def test_padding_zeros(self, generator, db_session: Session):
         """测试零填充"""
         db_session.query.return_value.filter.return_value.first.return_value = None
 
-        result = generator.generate_sequential_no("TEST", None, separator="-", padding=4)
+        result = generator.generate_sequential_no(
+            "TEST", None, separator="-", padding=4
+        )
 
         assert result == "TEST--0001"
 
@@ -168,7 +268,9 @@ class TestNumberGeneratorPadding:
         """测试填充长度"""
         db_session.query.return_value.filter.return_value.first.return_value = None
 
-        result = generator.generate_sequential_no("TEST", None, separator="-", padding=6)
+        result = generator.generate_sequential_no(
+            "TEST", None, separator="-", padding=6
+        )
 
         assert "-000001" in result
 
@@ -179,6 +281,7 @@ class TestNumberGeneratorCustomPrefix:
     @pytest.fixture
     def generator(self, db_session: Session):
         from app.utils.number_generator import NumberGenerator
+
         return NumberGenerator(db_session)
 
     def test_custom_prefix(self, generator, db_session: Session):
@@ -186,8 +289,7 @@ class TestNumberGeneratorCustomPrefix:
         db_session.query.return_value.filter.return_value.first.return_value = None
 
         result = generator.generate_sequential_no(
-            "CUSTOM", date(2025, 1, 20),
-            prefix="PRE", separator="-"
+            "CUSTOM", date(2025, 1, 20), prefix="PRE", separator="-"
         )
 
         assert result.startswith("PRE-20250120")
@@ -197,8 +299,7 @@ class TestNumberGeneratorCustomPrefix:
         db_session.query.return_value.filter.return_value.first.return_value = None
 
         result = generator.generate_sequential_no(
-            "CUSTOM", None,
-            prefix="PRE", separator="-"
+            "CUSTOM", None, prefix="PRE", separator="-"
         )
 
         assert result.startswith("PRE-")

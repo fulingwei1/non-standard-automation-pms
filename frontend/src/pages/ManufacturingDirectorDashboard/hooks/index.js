@@ -1,1 +1,1 @@
-export { useManufacturingDashboard } from './useManufacturingDashboard';
+export * from './useManufacturingDirectorDashboard';

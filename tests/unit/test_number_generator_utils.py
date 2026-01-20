@@ -28,11 +28,17 @@ class TestGenerateSequentialNo:
         from app.utils.number_generator import generate_sequential_no
         
         db = MagicMock()
+        # 创建模拟模型类，需要支持 getattr
+        class MockModel:
+            pass
+        
         # 模拟没有现有记录
-        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        mock_query = MagicMock()
+        mock_query.filter.return_value.order_by.return_value.first.return_value = None
+        db.query.return_value = mock_query
 
         result = generate_sequential_no(
-            db, MagicMock, "no_field", "TEST", separator="-"
+            db, MockModel, "no_field", "TEST", separator="-"
         )
 
         assert result.startswith("TEST-")
@@ -44,10 +50,15 @@ class TestGenerateSequentialNo:
         from app.utils.number_generator import generate_sequential_no
         
         db = MagicMock()
-        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        class MockModel:
+            pass
+        
+        mock_query = MagicMock()
+        mock_query.filter.return_value.order_by.return_value.first.return_value = None
+        db.query.return_value = mock_query
 
         result = generate_sequential_no(
-            db, MagicMock, "no_field", "TEST", separator="", use_date=True
+            db, MockModel, "no_field", "TEST", separator="", use_date=True
         )
 
         assert result.startswith("TEST")
@@ -59,12 +70,17 @@ class TestGenerateSequentialNo:
         from app.utils.number_generator import generate_sequential_no
         
         db = MagicMock()
+        class MockModel:
+            pass
+        
         # 模拟已有记录
         mock_model.no_field = "TEST-250115-005"
-        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_model
+        mock_query = MagicMock()
+        mock_query.filter.return_value.order_by.return_value.first.return_value = mock_model
+        db.query.return_value = mock_query
 
         result = generate_sequential_no(
-            db, MagicMock, "no_field", "TEST", separator="-"
+            db, MockModel, "no_field", "TEST", separator="-"
         )
 
         assert result.endswith("-006")
@@ -74,10 +90,15 @@ class TestGenerateSequentialNo:
         from app.utils.number_generator import generate_sequential_no
         
         db = MagicMock()
-        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        class MockModel:
+            pass
+        
+        mock_query = MagicMock()
+        mock_query.filter.return_value.order_by.return_value.first.return_value = None
+        db.query.return_value = mock_query
 
         result = generate_sequential_no(
-            db, MagicMock, "no_field", "TEST", use_date=False, separator="-"
+            db, MockModel, "no_field", "TEST", use_date=False, separator="-"
         )
 
         assert result.startswith("TEST-")
@@ -90,11 +111,16 @@ class TestGenerateSequentialNo:
         from app.utils.number_generator import generate_sequential_no
         
         db = MagicMock()
-        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        class MockModel:
+            pass
+        
+        mock_query = MagicMock()
+        mock_query.filter.return_value.order_by.return_value.first.return_value = None
+        db.query.return_value = mock_query
 
         result = generate_sequential_no(
             db,
-            MagicMock,
+            MockModel,
             "no_field",
             "TEST",
             date_format="%Y%m%d",
@@ -109,10 +135,15 @@ class TestGenerateSequentialNo:
         from app.utils.number_generator import generate_sequential_no
         
         db = MagicMock()
-        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        class MockModel:
+            pass
+        
+        mock_query = MagicMock()
+        mock_query.filter.return_value.order_by.return_value.first.return_value = None
+        db.query.return_value = mock_query
 
         result = generate_sequential_no(
-            db, MagicMock, "no_field", "TEST", seq_length=5, separator="-"
+            db, MockModel, "no_field", "TEST", seq_length=5, separator="-"
         )
 
         # 序号应该是5位
@@ -129,9 +160,14 @@ class TestGenerateMonthlyNo:
         from app.utils.number_generator import generate_monthly_no
         
         db = MagicMock()
-        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        class MockModel:
+            pass
+        
+        mock_query = MagicMock()
+        mock_query.filter.return_value.order_by.return_value.first.return_value = None
+        db.query.return_value = mock_query
 
-        result = generate_monthly_no(db, MagicMock, "no_field", "L")
+        result = generate_monthly_no(db, MockModel, "no_field", "L")
 
         assert result.startswith("L")
         assert "-" in result
@@ -144,11 +180,16 @@ class TestGenerateMonthlyNo:
         from app.utils.number_generator import generate_monthly_no
         
         db = MagicMock()
+        class MockModel:
+            pass
+        
         mock_model = MagicMock()
         mock_model.no_field = "L2507-010"
-        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_model
+        mock_query = MagicMock()
+        mock_query.filter.return_value.order_by.return_value.first.return_value = mock_model
+        db.query.return_value = mock_query
 
-        result = generate_monthly_no(db, MagicMock, "no_field", "L")
+        result = generate_monthly_no(db, MockModel, "no_field", "L")
 
         assert result.endswith("-011")
 
@@ -187,70 +228,70 @@ class TestGenerateEmployeeCode:
 class TestGenerateCustomerCode:
     """测试 generate_customer_code 函数"""
 
-    @patch("app.utils.number_generator.Customer")
-    def test_first_customer_code(self, mock_customer):
+    @patch("app.models.project.Customer")
+    def test_first_customer_code(self, mock_customer_class):
         """测试第一个客户编号"""
         from app.utils.number_generator import generate_customer_code
         
         db = MagicMock()
-        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
-
+        mock_query = MagicMock()
+        mock_query.filter.return_value.order_by.return_value.first.return_value = None
+        db.query.return_value = mock_query
+        
         result = generate_customer_code(db)
-
         assert result.startswith("CUST-")
         assert result.endswith("00001")
 
-    @patch("app.utils.number_generator.Customer")
-    def test_increment_customer_code(self, mock_customer):
+    @patch("app.models.project.Customer")
+    def test_increment_customer_code(self, mock_customer_class):
         """测试客户编号递增"""
         from app.utils.number_generator import generate_customer_code
         
         db = MagicMock()
         mock_cust = MagicMock()
         mock_cust.customer_code = "CUST-00010"
-        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_cust
-
+        mock_query = MagicMock()
+        mock_query.filter.return_value.order_by.return_value.first.return_value = mock_cust
+        db.query.return_value = mock_query
+        
         result = generate_customer_code(db)
-
         assert result == "CUST-00011"
 
 
 class TestGenerateMaterialCode:
     """测试 generate_material_code 函数"""
 
-    @patch("app.utils.number_generator.Material")
+    @patch("app.models.material.Material")
     @patch("app.utils.number_generator.get_material_category_code")
-    def test_material_code_with_category(
-        self, mock_get_code, mock_material
-    ):
+    def test_material_code_with_category(self, mock_get_code, mock_material_class):
         """测试带分类的物料编号"""
         from app.utils.number_generator import generate_material_code
         
         db = MagicMock()
         mock_get_code.return_value = "ELEC"
-        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
-
+        mock_query = MagicMock()
+        mock_query.filter.return_value.order_by.return_value.first.return_value = None
+        db.query.return_value = mock_query
+        
         result = generate_material_code(db, "ELECTRICAL")
-
         assert result.startswith("MAT-")
         assert "ELEC" in result
         assert "-" in result
 
-    @patch("app.utils.number_generator.Material")
+    @patch("app.models.material.Material")
     @patch("app.utils.number_generator.get_material_category_code")
-    def test_material_code_invalid_category(
-        self, mock_get_code, mock_material
-    ):
+    def test_material_code_invalid_category(self, mock_get_code, mock_material_class):
         """测试无效分类使用默认值"""
         from app.utils.number_generator import generate_material_code
         
         db = MagicMock()
         mock_get_code.return_value = None
-        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
-
+        mock_query = MagicMock()
+        mock_query.filter.return_value.order_by.return_value.first.return_value = None
+        db.query.return_value = mock_query
+        
         # 无效分类应该使用默认值"OT"
         result = generate_material_code(db, "INVALID_CATEGORY")
-        
         assert result.startswith("MAT-")
         assert "OT" in result
 
@@ -258,29 +299,31 @@ class TestGenerateMaterialCode:
 class TestGenerateMachineCode:
     """测试 generate_machine_code 函数"""
 
-    @patch("app.utils.number_generator.Machine")
-    def test_first_machine_code(self, mock_machine):
+    @patch("app.models.project.Machine")
+    def test_first_machine_code(self, mock_machine_class):
         """测试第一个机台编号"""
         from app.utils.number_generator import generate_machine_code
         
         db = MagicMock()
-        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
-
+        mock_query = MagicMock()
+        mock_query.filter.return_value.order_by.return_value.first.return_value = None
+        db.query.return_value = mock_query
+        
         result = generate_machine_code(db, project_code="PJ250708001")
-
         assert "PN" in result
         assert len(result) > 2
 
-    @patch("app.utils.number_generator.Machine")
-    def test_machine_code_increment(self, mock_machine):
+    @patch("app.models.project.Machine")
+    def test_machine_code_increment(self, mock_machine_class):
         """测试机台编号递增"""
         from app.utils.number_generator import generate_machine_code
         
         db = MagicMock()
         mock_m = MagicMock()
         mock_m.machine_code = "PJ250708001-PN003"
-        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_m
-
+        mock_query = MagicMock()
+        mock_query.filter.return_value.order_by.return_value.first.return_value = mock_m
+        db.query.return_value = mock_query
+        
         result = generate_machine_code(db, project_code="PJ250708001")
-
         assert result == "PJ250708001-PN004"

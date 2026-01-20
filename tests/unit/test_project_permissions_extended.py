@@ -14,7 +14,7 @@ from fastapi import HTTPException
 class TestCheckProjectAccess:
     """测试 check_project_access 函数"""
 
-    @patch("app.core.permissions.project.DataScopeService.check_project_access")
+    @patch("app.services.data_scope_service.DataScopeService.check_project_access")
     def test_delegates_to_service(self, mock_check):
         """测试委托给 DataScopeService"""
         from app.core.permissions.project import check_project_access
@@ -29,7 +29,7 @@ class TestCheckProjectAccess:
         assert result is True
         mock_check.assert_called_once_with(db, user, 1)
 
-    @patch("app.core.permissions.project.DataScopeService.check_project_access")
+    @patch("app.services.data_scope_service.DataScopeService.check_project_access")
     def test_returns_false_when_no_access(self, mock_check):
         """测试无权限时返回False"""
         from app.core.permissions.project import check_project_access
