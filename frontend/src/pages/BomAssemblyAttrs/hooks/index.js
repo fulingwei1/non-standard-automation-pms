@@ -1,0 +1,1 @@
+export { useBomAssemblyAttrs } from './useBomAssemblyAttrs';

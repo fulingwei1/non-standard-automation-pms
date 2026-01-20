@@ -1,0 +1,1 @@
+export { useInventoryAnalysis } from './useInventoryAnalysis';
