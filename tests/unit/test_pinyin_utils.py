@@ -9,6 +9,7 @@ from unittest.mock import MagicMock
 from app.utils.pinyin_utils import (
     batch_generate_pinyin_for_employees,
     generate_initial_password,
+    generate_unique_username,
     name_to_pinyin,
     name_to_pinyin_initials,
 )
@@ -189,3 +190,76 @@ class TestBatchGeneratePinyinForEmployees:
 
         result = batch_generate_pinyin_for_employees(mock_db)
         assert result == 0
+
+
+class TestGenerateUniqueUsername:
+    """测试 generate_unique_username 函数"""
+
+    def test_generate_unique_username_first_available(self):
+        """测试生成唯一用户名，第一次就可用"""
+        from unittest.mock import Mock
+        
+        mock_db = Mock()
+        mock_query = Mock()
+        mock_db.query.return_value = mock_query
+        mock_query.filter.return_value = mock_query
+        mock_query.first.return_value = None  # 用户名不存在
+        
+        result = generate_unique_username("张三", mock_db)
+        assert result == "zhangsan"
+
+    def test_generate_unique_username_with_existing(self):
+        """测试生成唯一用户名，需要添加数字后缀"""
+        from unittest.mock import Mock
+        
+        mock_db = Mock()
+        mock_query = Mock()
+        mock_db.query.return_value = mock_query
+        mock_query.filter.return_value = mock_query
+        
+        # 第一次查询返回已存在的用户，第二次返回 None
+        mock_query.first.side_effect = [Mock(), None]
+        
+        result = generate_unique_username("张三", mock_db)
+        assert result == "zhangsan2"
+
+    def test_generate_unique_username_with_existing_set(self):
+        """测试使用 existing_usernames 集合避免重复查询"""
+        from unittest.mock import Mock
+        
+        mock_db = Mock()
+        existing = {"zhangsan", "zhangsan2"}
+        
+        # 使用 existing_usernames，应该直接返回 zhangsan3
+        result = generate_unique_username("张三", mock_db, existing_usernames=existing)
+        assert result == "zhangsan3"
+        # 不应该查询数据库
+        mock_db.query.assert_not_called()
+
+    def test_generate_unique_username_empty_name(self):
+        """测试空名称时使用默认用户名"""
+        from unittest.mock import Mock
+        
+        mock_db = Mock()
+        mock_query = Mock()
+        mock_db.query.return_value = mock_query
+        mock_query.filter.return_value = mock_query
+        mock_query.first.return_value = None
+        
+        result = generate_unique_username("", mock_db)
+        assert result == "user"
+
+    def test_generate_unique_username_multiple_conflicts(self):
+        """测试多个冲突时递增数字"""
+        from unittest.mock import Mock
+        
+        mock_db = Mock()
+        mock_query = Mock()
+        mock_db.query.return_value = mock_query
+        mock_query.filter.return_value = mock_query
+        
+        # 前两次返回已存在，第三次返回 None
+        mock_query.first.side_effect = [Mock(), Mock(), None]
+        
+        result = generate_unique_username("张三", mock_db)
+        assert result == "zhangsan3"

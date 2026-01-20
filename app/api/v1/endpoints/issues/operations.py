@@ -10,7 +10,7 @@ from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import desc
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
 from app.core import security
@@ -29,7 +29,9 @@ from .utils import generate_issue_no
 router = APIRouter()
 
 def _get_scoped_issue(db: Session, current_user: User, issue_id: int) -> Optional[Issue]:
-    query = db.query(Issue).filter(Issue.id == issue_id)
+    query = db.query(Issue).options(
+        joinedload(Issue.service_ticket)
+    ).filter(Issue.id == issue_id)
     query = DataScopeService.filter_issues_by_scope(db, query, current_user)
     return query.first()
 
@@ -84,6 +86,8 @@ def _build_issue_response(issue: Issue) -> IssueResponse:
         project_name=issue.project.project_name if issue.project else None,
         machine_code=issue.machine.machine_code if issue.machine else None,
         machine_name=issue.machine.machine_name if issue.machine else None,
+        service_ticket_id=issue.service_ticket_id,
+        service_ticket_no=issue.service_ticket.ticket_no if issue.service_ticket else None,
     )
 
 
@@ -180,7 +184,9 @@ def get_related_issues(
             related_issues.append(_build_issue_response(parent))
 
     # 获取子问题
-    children_query = db.query(Issue).filter(Issue.related_issue_id == issue_id)
+    children_query = db.query(Issue).options(
+        joinedload(Issue.service_ticket)
+    ).filter(Issue.related_issue_id == issue_id)
     children_query = DataScopeService.filter_issues_by_scope(db, children_query, current_user)
     children = children_query.all()
     for child in children:

@@ -31,7 +31,7 @@ from app.schemas.stage_template import (
     TemplateExportData,
     TemplateImportRequest,
 )
-from app.services.stage_template_service import StageTemplateService
+from app.services.stage_template import StageTemplateService
 
 router = APIRouter()
 

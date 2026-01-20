@@ -49,6 +49,7 @@ class Issue(Base, TimestampMixin):
     task_id = Column(Integer, comment='关联任务ID')
     acceptance_order_id = Column(Integer, ForeignKey('acceptance_orders.id'), comment='关联验收单ID')
     related_issue_id = Column(Integer, ForeignKey('issues.id'), comment='关联问题ID（父子问题）')
+    service_ticket_id = Column(Integer, ForeignKey('service_tickets.id'), comment='关联服务工单ID')
 
     # 问题基本信息
     issue_type = Column(String(20), nullable=False, comment='问题类型')
@@ -112,6 +113,7 @@ class Issue(Base, TimestampMixin):
     responsible_engineer = relationship('User', foreign_keys=[responsible_engineer_id])
     acceptance_order = relationship('AcceptanceOrder', foreign_keys=[acceptance_order_id])
     related_issue = relationship('Issue', remote_side=[id], foreign_keys=[related_issue_id])
+    service_ticket = relationship('ServiceTicket', foreign_keys=[service_ticket_id])
     follow_ups = relationship('IssueFollowUpRecord', back_populates='issue', lazy='dynamic', cascade='all, delete-orphan')
 
     __table_args__ = (

@@ -36,8 +36,12 @@ from app.models.project import (
     Customer,
     Machine,
     Project,
+    ProjectMember,
     ProjectMilestone,
+    ProjectPaymentPlan,
     ProjectStage,
+    ProjectTemplate,
+    ProjectTemplateVersion,
 )
 from app.models.purchase import PurchaseOrder, PurchaseRequest
 from app.models.sales import (
@@ -257,6 +261,67 @@ class ProjectMilestoneFactory(BaseFactory):
     milestone_name = factory.Sequence(lambda n: f"里程碑{n}")
     planned_date = factory.LazyFunction(lambda: date.today() + timedelta(days=30))
     status = "PENDING"
+
+
+class ProjectTemplateFactory(BaseFactory):
+    """项目模板工厂"""
+
+    class Meta:
+        model = ProjectTemplate
+
+    template_code = factory.Sequence(lambda n: f"TPL{n:05d}")
+    template_name = factory.Sequence(lambda n: f"测试模板{n}")
+    project_type = "NEW"
+    product_category = "ICT"
+    industry = "电子"
+    default_stage = "S1"
+    default_status = "ST01"
+    default_health = "H1"
+    is_active = True
+    usage_count = 0
+
+
+class ProjectTemplateVersionFactory(BaseFactory):
+    """项目模板版本工厂"""
+
+    class Meta:
+        model = ProjectTemplateVersion
+
+    version_no = factory.Sequence(lambda n: f"V{n}")
+    status = "DRAFT"
+    template_config = "{}"
+    release_notes = factory.Sequence(lambda n: f"版本说明{n}")
+
+
+class ProjectPaymentPlanFactory(BaseFactory):
+    """项目付款计划工厂"""
+
+    class Meta:
+        model = ProjectPaymentPlan
+
+    payment_no = factory.Sequence(lambda n: n)
+    payment_name = factory.Sequence(lambda n: f"第{n}期款项")
+    payment_type = "ADVANCE"
+    payment_ratio = Decimal("30.00")
+    planned_amount = factory.LazyFunction(lambda: Decimal(str(random.uniform(10000, 100000))))
+    actual_amount = Decimal("0.00")
+    planned_date = factory.LazyFunction(lambda: date.today() + timedelta(days=30))
+    status = "PENDING"
+
+
+class ProjectMemberFactory(BaseFactory):
+    """项目成员工厂"""
+
+    class Meta:
+        model = ProjectMember
+
+    role_code = "ENGINEER"
+    allocation_pct = Decimal("100.00")
+    start_date = factory.LazyFunction(lambda: date.today())
+    end_date = factory.LazyFunction(lambda: date.today() + timedelta(days=90))
+    commitment_level = "FULL"
+    reporting_to_pm = True
+    is_active = True
 
 
 # ============== 物料与BOM ==============

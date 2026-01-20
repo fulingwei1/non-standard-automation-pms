@@ -23,7 +23,7 @@ from app.models.sales import Contract, Invoice
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.sales import InvoiceCreate, InvoiceResponse
-from app.services.approval_workflow_service import ApprovalWorkflowService
+from app.services.approval_engine import ApprovalEngineService as ApprovalWorkflowService
 
 from ..utils import generate_invoice_code
 

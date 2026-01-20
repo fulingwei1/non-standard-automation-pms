@@ -19,6 +19,7 @@ class IssueBase(BaseModel):
     task_id: Optional[int] = Field(None, description="关联任务ID")
     acceptance_order_id: Optional[int] = Field(None, description="关联验收单ID")
     related_issue_id: Optional[int] = Field(None, description="关联问题ID")
+    service_ticket_id: Optional[int] = Field(None, description="关联服务工单ID")
 
     issue_type: str = Field(..., description="问题类型")
     severity: str = Field(..., description="严重程度")
@@ -70,6 +71,7 @@ class IssueUpdate(BaseModel):
     estimated_extra_hours: Optional[Decimal] = None
     attachments: Optional[List[str]] = None
     tags: Optional[List[str]] = None
+    service_ticket_id: Optional[int] = None
 
 
 class IssueResponse(IssueBase):
@@ -99,6 +101,8 @@ class IssueResponse(IssueBase):
     project_name: Optional[str] = None
     machine_code: Optional[str] = None
     machine_name: Optional[str] = None
+    service_ticket_id: Optional[int] = None
+    service_ticket_no: Optional[str] = None
 
     class Config:
         from_attributes = True

@@ -174,7 +174,7 @@ class ApprovalNodeDefinition(Base, TimestampMixin):
 
     # 关系
     flow = relationship("ApprovalFlowDefinition", back_populates="nodes")
-    tasks = relationship("ApprovalTask", back_populates="node")
+    tasks = relationship("ApprovalTask", foreign_keys="[ApprovalTask.node_id]", back_populates="node")
 
     __table_args__ = (
         Index("idx_approval_node_flow", "flow_id"),

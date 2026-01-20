@@ -1,0 +1,38 @@
+[
+  {
+    "timestamp": "2026-01-20T21:45:59.045857",
+    "stats": {
+      "overall_percent": 39.300557255682804,
+      "overall_statements": 74831,
+      "services_coverage": 9.090909090909092,
+      "zero_coverage_count": 120
+    }
+  },
+  {
+    "timestamp": "2026-01-20T21:48:04.109443",
+    "stats": {
+      "overall_percent": 39.300557255682804,
+      "overall_statements": 74831,
+      "services_coverage": 9.090909090909092,
+      "zero_coverage_count": 120
+    }
+  },
+  {
+    "timestamp": "2026-01-20T21:49:52.386723",
+    "stats": {
+      "overall_percent": 39.300557255682804,
+      "overall_statements": 74831,
+      "services_coverage": 9.090909090909092,
+      "zero_coverage_count": 120
+    }
+  },
+  {
+    "timestamp": "2026-01-20T21:58:59.669565",
+    "stats": {
+      "overall_percent": 39.300557255682804,
+      "overall_statements": 74831,
+      "services_coverage": 9.090909090909092,
+      "zero_coverage_count": 120
+    }
+  }
+]

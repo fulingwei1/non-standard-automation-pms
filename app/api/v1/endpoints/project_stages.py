@@ -25,7 +25,7 @@ from app.schemas.stage_template import (
     ProjectStageInstanceResponse,
     ProjectStageInstanceUpdate,
 )
-from app.services.stage_instance_service import StageInstanceService
+from app.services.stage_instance import StageInstanceService
 
 router = APIRouter()
 

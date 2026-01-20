@@ -14,7 +14,7 @@ from app.api import deps
 from app.core import security
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.services.work_log_ai_service import WorkLogAIService
+from app.services.work_log_ai import WorkLogAIService
 
 logger = logging.getLogger(__name__)
 
