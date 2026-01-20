@@ -8,11 +8,9 @@ File Size: 187 lines
 """
 
 import pytest
-from unittest.mock import MagicMock, patch
-from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 
-from app/services/hr_profile_import_service import HrProfileImportService
+from app.services.hr_profile_import_service import HrProfileImportService
 
 
 @pytest.fixture

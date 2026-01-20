@@ -8,11 +8,9 @@ File Size: 191 lines
 """
 
 import pytest
-from unittest.mock import MagicMock, patch
-from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 
-from app/services/pipeline_health_service import PipelineHealthService
+from app.services.pipeline_health_service import PipelineHealthService
 
 
 @pytest.fixture

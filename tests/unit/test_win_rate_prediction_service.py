@@ -8,11 +8,9 @@ File Size: 200 lines
 """
 
 import pytest
-from unittest.mock import MagicMock, patch
-from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 
-from app/services/win_rate_prediction_service import WinRatePredictionService
+from app.services.win_rate_prediction_service import WinRatePredictionService
 
 
 @pytest.fixture
