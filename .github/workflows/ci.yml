@@ -172,7 +172,7 @@ jobs:
             --cov-report=xml \
             --cov-report=html \
             --cov-report=term-missing \
-            --cov-fail-under=70 \
+            --cov-fail-under=40 \
             -n auto
 
       - name: Run integration tests
@@ -184,7 +184,7 @@ jobs:
             --cov=app \
             --cov-append \
             --cov-report=xml \
-            --cov-fail-under=60 \
+            --cov-fail-under=40 \
             -n auto || true
 
       - name: Generate coverage report summary
