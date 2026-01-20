@@ -1,0 +1,1 @@
+export { useTechnicalReviewDetail } from './useTechnicalReviewDetail';
