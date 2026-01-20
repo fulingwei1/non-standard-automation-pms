@@ -1,0 +1,1 @@
+export { useArrivalDetail } from './useArrivalDetail';

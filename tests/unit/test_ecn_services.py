@@ -22,7 +22,7 @@ from app.models.ecn import (
     EcnEvaluation,
     EcnTask,
 )
-from app.models.project import Project
+from app.models import Project
 from app.services.ecn_auto_assign_service import (
     auto_assign_approval,
     auto_assign_pending_evaluations,
@@ -212,7 +212,7 @@ class TestEcnBomAnalysisService:
         db_session.add(project)
         db_session.flush()
 
-        from app.models.project import Machine
+        from app.models import Machine
 
         machine = Machine(
             project_id=project.id,

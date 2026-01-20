@@ -93,7 +93,7 @@ def db_session(db_engine) -> Session:
 @pytest.fixture
 def mock_project(db_session: Session):
     """创建测试项目"""
-    from app.models.project import Project, Customer
+    from app.models import Project, Customer
 
     # 创建测试客户
     customer = Customer(
@@ -124,7 +124,7 @@ def mock_project(db_session: Session):
 @pytest.fixture
 def mock_machine(db_session: Session, mock_project):
     """创建测试机台"""
-    from app.models.project import Machine
+    from app.models import Machine
 
     machine = Machine(
         project_id=mock_project.id,

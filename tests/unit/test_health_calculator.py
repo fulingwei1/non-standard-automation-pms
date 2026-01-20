@@ -12,10 +12,10 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 
 from app.models.alert import AlertRecord
-from app.models.enums import ProjectHealthEnum
+from app.models import ProjectHealthEnum
 from app.models.issue import Issue
 from app.models.progress import Task
-from app.models.project import Project, ProjectMilestone
+from app.models import Project, ProjectMilestone
 from app.services.health_calculator import HealthCalculator
 
 

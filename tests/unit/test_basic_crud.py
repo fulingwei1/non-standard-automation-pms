@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 
 from app.models.user import User
-from app.models.project import Project
+from app.models import Project
 from app.core.auth import get_password_hash
 
 

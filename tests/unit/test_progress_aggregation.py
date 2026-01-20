@@ -7,14 +7,12 @@
     pytest tests/unit/test_progress_aggregation.py -v -m aggregation
 """
 
-from datetime import date, datetime
 
 import pytest
 from sqlalchemy.orm import Session
 
-from app.models.project import Project, ProjectStage
+from app.models import Project
 from app.models.task_center import TaskUnified
-from app.models.user import User
 from app.services.progress_aggregation_service import (
     _check_and_update_health,
     aggregate_task_progress,

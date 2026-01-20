@@ -58,7 +58,7 @@ class TestDataScopeService:
 
     def test_get_user_data_scope_all_scope(self, db_session_mock):
         """Test data scope when user has ALL permission"""
-        from app.models.enums import DataScopeEnum
+        from app.models import DataScopeEnum
 
         user = Mock()
         user.is_superuser = False
@@ -193,7 +193,7 @@ class TestProjectEvaluationService:
 
     def test_auto_calculate_novelty_score_no_similar(self, db_session_mock):
         """Test auto calculating novelty score with no similar projects"""
-        from app.models.project import Project
+        from app.models import Project
 
         project = Mock(spec=Project)
         project.id = 1
@@ -210,7 +210,7 @@ class TestProjectEvaluationService:
 
     def test_auto_calculate_amount_score_large(self, db_session_mock):
         """Test auto calculating amount score for large project"""
-        from app.models.project import Project
+        from app.models import Project
 
         project = Mock(spec=Project)
         project.contract_amount = Decimal("6000000")
@@ -222,7 +222,7 @@ class TestProjectEvaluationService:
 
     def test_auto_calculate_amount_score_medium(self, db_session_mock):
         """Test auto calculating amount score for medium project"""
-        from app.models.project import Project
+        from app.models import Project
 
         project = Mock(spec=Project)
         project.contract_amount = Decimal("300000")
@@ -234,7 +234,7 @@ class TestProjectEvaluationService:
 
     def test_get_bonus_coefficient_s(self, db_session_mock):
         """Test getting bonus coefficient for S level"""
-        from app.models.project import Project
+        from app.models import Project
         from app.models.project_evaluation import ProjectEvaluation
 
         project = Mock(spec=Project)
@@ -252,7 +252,7 @@ class TestProjectEvaluationService:
 
     def test_get_bonus_coefficient_no_evaluation(self, db_session_mock):
         """Test getting bonus coefficient when no evaluation exists"""
-        from app.models.project import Project
+        from app.models import Project
 
         project = Mock(spec=Project)
         project.id = 1
@@ -403,7 +403,7 @@ class TestLeadPriorityScoringService:
 
     def test_get_customer_score_a(self):
         """Test getting customer score for A level"""
-        from app.models.project import Customer
+        from app.models import Customer
 
         customer = Mock(spec=Customer)
         customer.credit_level = "A"
@@ -871,7 +871,7 @@ class TestProjectImportService:
 
     def test_find_or_create_customer_exists(self, db_session_mock):
         """Test finding existing customer"""
-        from app.models.project import Customer
+        from app.models import Customer
 
         customer = Mock(spec=Customer)
         db_session_mock.query.return_value.filter.return_value.first.return_value = (

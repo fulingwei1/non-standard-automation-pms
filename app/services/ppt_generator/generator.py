@@ -44,7 +44,6 @@ class PresentationGenerator:
     def create_toc_slide(self):
         """创建目录 - 第2页"""
         self.content_builder.add_content_slide(
-            self.prs,
             "内容导览",
             [
                 {"text": "一、行业洞察与挑战", "size": 24, "bold": True},

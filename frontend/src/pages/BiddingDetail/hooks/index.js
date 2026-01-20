@@ -1,0 +1,1 @@
+export { useBiddingDetail } from './useBiddingDetail';

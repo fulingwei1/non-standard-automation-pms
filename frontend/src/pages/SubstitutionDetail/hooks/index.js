@@ -1,0 +1,1 @@
+export { useSubstitutionDetail } from './useSubstitutionDetail';

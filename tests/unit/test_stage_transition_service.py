@@ -20,7 +20,7 @@ from sqlalchemy.orm import Session
 
 from app.models.acceptance import AcceptanceOrder
 from app.models.material import BomHeader
-from app.models.project import Project, ProjectPaymentPlan
+from app.models import Project, ProjectPaymentPlan
 from app.models.sales import Contract
 from app.services.stage_transition_checks import (
     check_s3_to_s4_transition,

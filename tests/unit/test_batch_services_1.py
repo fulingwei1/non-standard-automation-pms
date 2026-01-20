@@ -114,7 +114,7 @@ def test_acceptance_report_save_report_file_fallback():
 def test_approval_workflow_start_approval_basic():
     """Test starting approval workflow"""
     from app.services.approval_workflow_service import ApprovalWorkflowService
-    from app.models.enums import ApprovalRecordStatusEnum
+    from app.models import ApprovalRecordStatusEnum
 
     mock_db = Mock(spec=Session)
 
@@ -163,7 +163,7 @@ def test_approval_workflow_select_workflow_by_routing():
 def test_approval_workflow_approve_step():
     """Test approving a step"""
     from app.services.approval_workflow_service import ApprovalWorkflowService
-    from app.models.enums import ApprovalRecordStatusEnum
+    from app.models import ApprovalRecordStatusEnum
 
     mock_db = Mock(spec=Session)
 
@@ -203,7 +203,7 @@ def test_approval_workflow_approve_step():
 def test_approval_workflow_reject_step():
     """Test rejecting a step"""
     from app.services.approval_workflow_service import ApprovalWorkflowService
-    from app.models.enums import ApprovalRecordStatusEnum
+    from app.models import ApprovalRecordStatusEnum
 
     mock_db = Mock(spec=Session)
 
@@ -227,7 +227,7 @@ def test_approval_workflow_reject_step():
 def test_approval_workflow_withdraw_approval():
     """Test withdrawing approval"""
     from app.services.approval_workflow_service import ApprovalWorkflowService
-    from app.models.enums import ApprovalRecordStatusEnum
+    from app.models import ApprovalRecordStatusEnum
 
     mock_db = Mock(spec=Session)
 

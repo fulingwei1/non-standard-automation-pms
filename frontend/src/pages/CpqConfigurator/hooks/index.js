@@ -1,0 +1,1 @@
+export { useCpqConfigurator } from './useCpqConfigurator';

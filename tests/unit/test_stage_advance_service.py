@@ -289,7 +289,7 @@ class TestUpdateProjectStageAndStatus:
         self, db_session: Session
     ):
         """测试状态发生变更时的更新"""
-        from app.models.project import Project
+        from app.models import Project
 
         # 创建测试项目
         project = Project(
@@ -318,7 +318,7 @@ class TestUpdateProjectStageAndStatus:
         self, db_session: Session
     ):
         """测试状态不发生变更时的更新（保持旧状态）"""
-        from app.models.project import Project
+        from app.models import Project
 
         # 创建测试项目
         project = Project(
@@ -350,7 +350,7 @@ class TestUpdateProjectStageAndStatus:
 
     def test_update_project_stage_and_status_adds_to_session(self, db_session: Session):
         """测试将项目添加到数据库会话"""
-        from app.models.project import Project
+        from app.models import Project
 
         # 创建测试项目
         project = Project(
@@ -380,7 +380,7 @@ class TestPerformGateCheck:
 
     def test_perform_gate_check_skip_as_superuser(self, db_session: Session):
         """测试超级用户跳过阶段门校验"""
-        from app.models.project import Project
+        from app.models import Project
 
         project = Mock(spec=Project)
         project.id = 1
@@ -399,7 +399,7 @@ class TestPerformGateCheck:
 
     def test_perform_gate_check_skip_as_non_superuser(self, db_session: Session):
         """测试非超级用户尝试跳过阶段门校验"""
-        from app.models.project import Project
+        from app.models import Project
 
         project = Mock(spec=Project)
         project.id = 1
@@ -418,7 +418,7 @@ class TestPerformGateCheck:
 
     def test_perform_gate_check_superuser_auto_pass(self, db_session: Session):
         """测试超级用户自动通过阶段门校验（不跳过）"""
-        from app.models.project import Project
+        from app.models import Project
 
         project = Mock(spec=Project)
         project.id = 1
@@ -441,7 +441,7 @@ class TestPerformGateCheck:
         self, mock_check_gate_detailed, mock_check_gate, db_session: Session
     ):
         """测试普通用户通过阶段门校验"""
-        from app.models.project import Project
+        from app.models import Project
 
         project = Mock(spec=Project)
         project.id = 1
@@ -469,7 +469,7 @@ class TestPerformGateCheck:
         self, mock_check_gate_detailed, mock_check_gate, db_session: Session
     ):
         """测试普通用户未通过阶段门校验"""
-        from app.models.project import Project
+        from app.models import Project
 
         project = Mock(spec=Project)
         project.id = 1
@@ -531,7 +531,7 @@ class TestIntegrationScenarios:
         self, mock_check_gate_detailed, mock_check_gate, db_session: Session
     ):
         """测试带阶段门校验的完整阶段推进流程（跳过校验作为超级用户）"""
-        from app.models.project import Project
+        from app.models import Project
 
         # 创建测试项目
         project = Project(

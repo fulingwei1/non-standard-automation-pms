@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.models.material import Material, MaterialCategory
 from app.models.organization import Employee
-from app.models.project import Customer
+from app.models import Customer
 from app.utils.code_config import (
     CODE_PREFIX,
     SEQ_LENGTH,

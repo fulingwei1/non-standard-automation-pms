@@ -11,7 +11,7 @@
 import pytest
 from sqlalchemy.orm import Session
 
-from app.models.project import Project, ProjectStatusLog
+from app.models import Project, ProjectStatusLog
 from datetime import datetime
 
 
