@@ -257,3 +257,13 @@ api_router.include_router(
 api_router.include_router(
     solution_credits.router, prefix="/solution-credits", tags=["solution-credits"]
 )
+
+# 阶段模板管理模块
+from app.api.v1.endpoints import stage_templates, project_stages
+
+api_router.include_router(
+    stage_templates.router, prefix="/stage-templates", tags=["stage-templates"]
+)
+api_router.include_router(
+    project_stages.router, prefix="/projects", tags=["project-stages"]
+)
