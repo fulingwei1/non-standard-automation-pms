@@ -8,17 +8,14 @@ import json
 import logging
 import os
 import re
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
 
 from app.models.project import Project, ProjectMember
 from app.models.timesheet import Timesheet
-from app.models.user import User
-from app.models.work_log import WorkLog
 
 logger = logging.getLogger(__name__)
 
@@ -500,11 +497,8 @@ class WorkLogAIService:
         if not matched_project and user_projects:
             matched_project = user_projects[0]  # 使用最常用的项目
 
-        # 4. 判断工作类型
-        work_type = "NORMAL"
-        if work_date.weekday() >= 5:  # 周六、周日
-            work_type = "WEEKEND"
-        # TODO: 检查是否是节假日（需要节假日表）
+        # 4. 判断工作类型（使用节假日工具）
+        work_type = get_work_type(work_date)
 
         # 5. 构建工作项
         if extracted_hours:

@@ -56,7 +56,6 @@ class PurchaseService:
 
     def create_purchase_order(self, order_data: Dict[str, Any]) -> PurchaseOrder:
         """创建采购订单"""
-        # TODO: 实现采购订单创建逻辑
         purchase_order = PurchaseOrder(
             order_code=order_data.get('order_code'),
             supplier_id=order_data.get('supplier_id'),

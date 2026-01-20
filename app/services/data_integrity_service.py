@@ -4,11 +4,10 @@
 提供数据缺失提醒、数据质量报告、自动修复建议
 """
 
-from datetime import date, datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+import logging
+from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, desc, func, or_
+from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.models.engineer_performance import (
@@ -17,10 +16,12 @@ from app.models.engineer_performance import (
     EngineerProfile,
     KnowledgeContribution,
 )
-from app.models.performance import PerformancePeriod, PerformanceResult
+from app.models.performance import PerformancePeriod
 from app.models.project import Project, ProjectMember
 from app.models.project_evaluation import ProjectEvaluation
 from app.models.work_log import WorkLog
+
+logger = logging.getLogger(__name__)
 
 
 class DataIntegrityService:
@@ -464,14 +465,33 @@ class DataIntegrityService:
         sent_count = 0
         failed_count = 0
 
-        # 这里应该集成通知系统（邮件/系统消息）
-        # 目前只返回提醒列表，实际发送需要集成通知服务
+        # 使用通知服务发送提醒
+        notification_service = NotificationService()
         for reminder in reminders:
             try:
-                # TODO: 集成通知服务发送提醒
-                # notification_service.send_reminder(reminder)
-                sent_count += 1
-            except Exception:
+                # 确定通知优先级
+                priority = NotificationPriority.NORMAL
+                if reminder.get('severity') == 'high':
+                    priority = NotificationPriority.HIGH
+                elif reminder.get('severity') == 'urgent':
+                    priority = NotificationPriority.URGENT
+
+                # 发送通知
+                success = notification_service.send_notification(
+                    db=self.db,
+                    recipient_id=reminder.get('engineer_id'),
+                    notification_type=NotificationType.DEADLINE_REMINDER,
+                    title=f"数据填报提醒: {reminder.get('type', '未知类型')}",
+                    content=reminder.get('message', '请及时完成数据填报'),
+                    priority=priority,
+                    data={'reminder': reminder}
+                )
+                if success:
+                    sent_count += 1
+                else:
+                    failed_count += 1
+            except Exception as e:
+                logger.error(f"发送提醒失败: {e}")
                 failed_count += 1
 
         return {
@@ -504,18 +524,10 @@ class DataIntegrityService:
         if format == 'json':
             return report
         elif format == 'excel':
-            # TODO: 使用openpyxl或pandas生成Excel
-            return {
-                'format': 'excel',
-                'message': 'Excel导出功能待实现',
-                'data': report
-            }
+            # 使用pandas生成Excel
+            return self._export_to_excel(report)
         elif format == 'pdf':
-            # TODO: 使用reportlab或weasyprint生成PDF
-            return {
-                'format': 'pdf',
-                'message': 'PDF导出功能待实现',
-                'data': report
-            }
+            # 使用reportlab生成PDF
+            return self._export_to_pdf(report)
         else:
             return report

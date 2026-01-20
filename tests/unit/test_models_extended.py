@@ -2218,8 +2218,9 @@ class TestAlertRuleModel:
             "rule_name": "测试预警规则",
             "rule_type": "PROJECT_HEALTH",
             "target_type": "PROJECT",
+            "condition_type": "THRESHOLD",  # Required field
             "alert_level": "WARNING",
-            "is_active": True,
+            "is_enabled": True,
             "created_by": test_user.id,
         }
 
@@ -2229,8 +2230,9 @@ class TestAlertRuleModel:
             rule_name=test_alert_rule_data["rule_name"],
             rule_type=test_alert_rule_data["rule_type"],
             target_type=test_alert_rule_data["target_type"],
+            condition_type=test_alert_rule_data["condition_type"],
             alert_level=test_alert_rule_data["alert_level"],
-            is_active=test_alert_rule_data["is_active"],
+            is_enabled=test_alert_rule_data["is_enabled"],
             created_by=test_alert_rule_data["created_by"],
         )
         db_session.add(rule)
@@ -2250,6 +2252,7 @@ class TestAlertRuleModel:
             rule_name="必填测试",
             rule_type="PROJECT_HEALTH",
             target_type="PROJECT",
+            condition_type="THRESHOLD",
             alert_level="WARNING",
         )
         db_session.add(rule)
@@ -2267,17 +2270,18 @@ class TestAlertRuleModel:
             rule_name="条件测试",
             rule_type="PROJECT_HEALTH",
             target_type="PROJECT",
+            condition_type="THRESHOLD",
             alert_level="WARNING",
-            condition_field="progress_pct",
+            target_field="progress_pct",
             condition_operator="<=",
-            condition_value="75",
+            threshold_value="75",
         )
         db_session.add(rule)
         db_session.commit()
 
-        assert rule.condition_field == "progress_pct"
+        assert rule.target_field == "progress_pct"
         assert rule.condition_operator == "<="
-        assert rule.condition_value == "75"
+        assert rule.threshold_value == "75"
 
     def test_alert_rule_level(self, db_session: Session):
         """测试预警规则级别"""
@@ -2287,14 +2291,15 @@ class TestAlertRuleModel:
             rule_name="级别测试",
             rule_type="PROJECT_HEALTH",
             target_type="PROJECT",
+            condition_type="THRESHOLD",
             alert_level="SEVERE",
-            is_active=True,
+            is_enabled=True,
         )
         db_session.add(rule)
         db_session.commit()
 
         assert rule.alert_level == "SEVERE"
-        assert rule.is_active is True
+        assert rule.is_enabled is True
 
     def test_alert_rule_notification(self, db_session: Session):
         """测试预警规则通知"""
@@ -2304,15 +2309,14 @@ class TestAlertRuleModel:
             rule_name="通知测试",
             rule_type="PROJECT_HEALTH",
             target_type="PROJECT",
+            condition_type="THRESHOLD",
             alert_level="WARNING",
-            notification_enabled=True,
-            notification_channels="EMAIL,SMS",
+            notify_channels=["EMAIL", "SMS"],
         )
         db_session.add(rule)
         db_session.commit()
 
-        assert rule.notification_enabled is True
-        assert rule.notification_channels == "EMAIL,SMS"
+        assert rule.notify_channels == ["EMAIL", "SMS"]
 
     def test_alert_rule_frequency(self, db_session: Session):
         """测试预警规则频率"""
@@ -2322,19 +2326,24 @@ class TestAlertRuleModel:
             rule_name="频率测试",
             rule_type="PROJECT_HEALTH",
             target_type="PROJECT",
+            condition_type="THRESHOLD",
             alert_level="WARNING",
-            alert_frequency="HOURLY",
-            check_interval=60,
+            check_frequency="HOURLY",
         )
         db_session.add(rule)
         db_session.commit()
 
-        assert rule.alert_frequency == "HOURLY"
-        assert rule.check_interval == 60
+        assert rule.check_frequency == "HOURLY"
 
     def test_alert_rule_repr(self, db_session: Session):
         """测试预警规则字符串表示"""
-        rule = AlertRule(rule_code="RULREP001", rule_name="repr测试")
+        rule = AlertRule(
+            rule_code="RULREP001",
+            rule_name="repr测试",
+            rule_type="PROJECT_HEALTH",
+            target_type="PROJECT",
+            condition_type="THRESHOLD",
+        )
         db_session.add(rule)
         db_session.commit()
 
@@ -2354,8 +2363,9 @@ class TestAlertRecordModel:
             rule_name="测试规则",
             rule_type="PROJECT_HEALTH",
             target_type="PROJECT",
+            condition_type="THRESHOLD",
             alert_level="WARNING",
-            is_active=True,
+            is_enabled=True,
             created_by=test_user.id,
         )
         db_session = (
