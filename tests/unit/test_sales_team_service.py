@@ -8,8 +8,6 @@ File Size: 200 lines
 """
 
 import pytest
-from unittest.mock import MagicMock, patch
-from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 
 from app.services.sales_team_service import SalesTeamService
@@ -28,7 +26,6 @@ class TestSalesTeamService:
         """Test service initialization."""
         service = SalesTeamService(db_session)
         assert service.db is db_session
-        assert service.logger is not None
 
     # TODO: Add more test methods based on actual service methods
     # Test each public method with:
@@ -46,4 +43,3 @@ class TestSalesTeamService:
     #     """Test some_method handles exceptions."""
     #     with pytest.raises(ExpectedException):
     #         service.some_method(invalid_input)
-

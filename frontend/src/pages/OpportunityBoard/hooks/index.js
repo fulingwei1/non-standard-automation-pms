@@ -1,0 +1,1 @@
+export { useOpportunityBoard } from './useOpportunityBoard';

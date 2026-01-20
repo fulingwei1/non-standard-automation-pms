@@ -8,8 +8,6 @@ File Size: 219 lines
 """
 
 import pytest
-from unittest.mock import MagicMock, patch
-from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 
 from app.services.status_transition_service import StatusTransitionService
@@ -28,7 +26,11 @@ class TestStatusTransitionService:
         """Test service initialization."""
         service = StatusTransitionService(db_session)
         assert service.db is db_session
-        assert service.logger is not None
+        # 验证 handler 已初始化
+        assert service.contract_handler is not None
+        assert service.material_handler is not None
+        assert service.acceptance_handler is not None
+        assert service.ecn_handler is not None
 
     # TODO: Add more test methods based on actual service methods
     # Test each public method with:
@@ -46,4 +48,3 @@ class TestStatusTransitionService:
     #     """Test some_method handles exceptions."""
     #     with pytest.raises(ExpectedException):
     #         service.some_method(invalid_input)
-

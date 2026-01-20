@@ -7,17 +7,15 @@ File Size: 219 lines
 """
 
 import pytest
-from datetime import datetime, date, timedelta
+from datetime import date, timedelta
 from decimal import Decimal
-from typing import Optional
-from unittest.mock import MagicMock, patch, Mock
+from unittest.mock import MagicMock, patch
 
 from sqlalchemy.orm import Session
 
 from app.models.project import Project, ProjectStatusLog, Machine
 from app.models.sales import Contract
 from app.models.acceptance import AcceptanceOrder
-from app.models.ecn import Ecn
 from app.services.status_transition_service import StatusTransitionService
 
 
@@ -35,7 +33,7 @@ def mock_contract(db_session: Session):
         contract_amount=Decimal("1000000"),
         signed_date=date.today(),
         customer_id=1,
-        project_id=None
+        project_id=None,
     )
     db_session.add(contract)
     db_session.commit()
@@ -52,7 +50,7 @@ def mock_project(db_session: Session):
         status="ST01",
         start_date=date.today(),
         planned_end_date=date.today() + timedelta(days=90),
-        health="H1"
+        health="H1",
     )
     db_session.add(project)
     db_session.commit()
@@ -67,7 +65,7 @@ def mock_acceptance_order(db_session: Session):
         order_type="FAT",
         acceptance_date=date.today(),
         project_id=1,
-        status="COMPLETED"
+        status="COMPLETED",
     )
     db_session.add(order)
     db_session.commit()
@@ -89,12 +87,11 @@ class TestStatusTransitionService:
         self,
         status_transition_service: StatusTransitionService,
         db_session: Session,
-        mock_contract: Contract
+        mock_contract: Contract,
     ):
         """Test contract signed with auto project creation."""
         result = status_transition_service.handle_contract_signed(
-            mock_contract.id,
-            auto_create_project=True
+            mock_contract.id, auto_create_project=True
         )
 
         assert result is not None
@@ -104,9 +101,11 @@ class TestStatusTransitionService:
         assert result.contract_date == mock_contract.signed_date
 
         # Verify status log was created
-        status_log = db_session.query(ProjectStatusLog).filter(
-            ProjectStatusLog.project_id == result.id
-        ).first()
+        status_log = (
+            db_session.query(ProjectStatusLog)
+            .filter(ProjectStatusLog.project_id == result.id)
+            .first()
+        )
         assert status_log is not None
         assert status_log.new_stage == "S3"
         assert status_log.new_status == "ST08"
@@ -117,14 +116,13 @@ class TestStatusTransitionService:
         status_transition_service: StatusTransitionService,
         db_session: Session,
         mock_contract: Contract,
-        mock_project: Project
+        mock_project: Project,
     ):
         """Test contract signed with existing project."""
         mock_contract.project_id = mock_project.id
 
         result = status_transition_service.handle_contract_signed(
-            mock_contract.id,
-            auto_create_project=False
+            mock_contract.id, auto_create_project=False
         )
 
         assert result is not None
@@ -140,8 +138,7 @@ class TestStatusTransitionService:
     ):
         """Test contract signed without auto create."""
         result = status_transition_service.handle_contract_signed(
-            mock_contract.id,
-            auto_create_project=False
+            mock_contract.id, auto_create_project=False
         )
 
         assert result is None
@@ -150,11 +147,11 @@ class TestStatusTransitionService:
         self,
         status_transition_service: StatusTransitionService,
         db_session: Session,
-        ):
+    ):
         """Test contract signed when contract doesn't exist."""
         result = status_transition_service.handle_contract_signed(
             99999,  # Non-existent contract ID
-            auto_create_project=True
+            auto_create_project=True,
         )
 
         assert result is None
@@ -173,8 +170,7 @@ class TestStatusTransitionService:
         mock_contract.delivery_deadline = planned_end
 
         result = status_transition_service.handle_contract_signed(
-            mock_contract.id,
-            auto_create_project=False
+            mock_contract.id, auto_create_project=False
         )
 
         assert result is not None
@@ -193,8 +189,7 @@ class TestStatusTransitionService:
         mock_project.contract_amount = Decimal("300000")
 
         result = status_transition_service.handle_contract_signed(
-            mock_contract.id,
-            auto_create_project=False
+            mock_contract.id, auto_create_project=False
         )
 
         assert result is not None
@@ -207,21 +202,22 @@ class TestStatusTransitionService:
         status_transition_service: StatusTransitionService,
         db_session: Session,
         mock_project: Project,
-        ):
+    ):
         """Test acceptance passed transitions to S6."""
         mock_project.stage = "S5"
-        result = status_transition_service.handle_acceptance_passed(
-            mock_project.id
-        )
+        result = status_transition_service.handle_acceptance_passed(mock_project.id)
 
         assert result is not None
         assert result.stage == "S6"
         assert result.status == "ST12"
 
         # Verify status log
-        status_logs = db_session.query(ProjectStatusLog).filter(
-            ProjectStatusLog.project_id == mock_project.id
-        ).order_by(ProjectStatusLog.created_at.desc()).all()
+        status_logs = (
+            db_session.query(ProjectStatusLog)
+            .filter(ProjectStatusLog.project_id == mock_project.id)
+            .order_by(ProjectStatusLog.created_at.desc())
+            .all()
+        )
         assert len(status_logs) >= 2  # At least 2 logs
 
     def test_handle_acceptance_passed_from_s5_to_s6(
@@ -229,14 +225,12 @@ class TestStatusTransitionService:
         status_transition_service: StatusTransitionService,
         db_session: Session,
         mock_project: Project,
-        ):
+    ):
         """Test acceptance passed from S5 to S6."""
         mock_project.stage = "S5"
         mock_project.status = "ST11"
 
-        result = status_transition_service.handle_acceptance_passed(
-            mock_project.id
-        )
+        result = status_transition_service.handle_acceptance_passed(mock_project.id)
 
         assert result is not None
         assert result.stage == "S6"
@@ -247,14 +241,12 @@ class TestStatusTransitionService:
         status_transition_service: StatusTransitionService,
         db_session: Session,
         mock_project: Project,
-        ):
+    ):
         """Test acceptance passed from FAT to S6."""
         mock_project.stage = "S6"
         mock_project.status = "ST13"
 
-        result = status_transition_service.handle_acceptance_passed(
-            mock_project.id
-        )
+        result = status_transition_service.handle_acceptance_passed(mock_project.id)
 
         assert result is not None
         assert result.stage == "S6"
@@ -266,9 +258,7 @@ class TestStatusTransitionService:
         db_session: Session,
     ):
         """Test acceptance passed when project doesn't exist."""
-        result = status_transition_service.handle_acceptance_passed(
-            99999
-        )
+        result = status_transition_service.handle_acceptance_passed(99999)
 
         assert result is None
 
@@ -279,12 +269,11 @@ class TestStatusTransitionService:
         status_transition_service: StatusTransitionService,
         db_session: Session,
         mock_project: Project,
-        ):
+    ):
         """Test acceptance failed transitions to H3."""
         mock_project.stage = "S6"
         result = status_transition_service.handle_acceptance_failed(
-            mock_project.id,
-            failure_reason="测试失败"
+            mock_project.id, failure_reason="测试失败"
         )
 
         assert result is not None
@@ -292,9 +281,12 @@ class TestStatusTransitionService:
         assert result.status == "ST14"
 
         # Verify status log
-        status_log = db_session.query(ProjectStatusLog).filter(
-            ProjectStatusLog.project_id == mock_project.id
-        ).order_by(ProjectStatusLog.created_at.desc()).first()
+        status_log = (
+            db_session.query(ProjectStatusLog)
+            .filter(ProjectStatusLog.project_id == mock_project.id)
+            .order_by(ProjectStatusLog.created_at.desc())
+            .first()
+        )
         assert status_log is not None
         assert status_log.new_health == "H3"
 
@@ -303,14 +295,13 @@ class TestStatusTransitionService:
         status_transition_service: StatusTransitionService,
         db_session: Session,
         mock_project: Project,
-        ):
+    ):
         """Test acceptance failed from S6 to S5."""
         mock_project.stage = "S6"
         mock_project.status = "ST13"
 
         result = status_transition_service.handle_acceptance_failed(
-            mock_project.id,
-            failure_reason="验收不通过"
+            mock_project.id, failure_reason="验收不通过"
         )
 
         assert result is not None
@@ -321,14 +312,13 @@ class TestStatusTransitionService:
         status_transition_service: StatusTransitionService,
         db_session: Session,
         mock_project: Project,
-        ):
+    ):
         """Test acceptance failed from FAT to S5."""
         mock_project.stage = "S6"
         mock_project.status = "ST13"
 
         result = status_transition_service.handle_acceptance_failed(
-            mock_project.id,
-            failure_reason="FAT未通过"
+            mock_project.id, failure_reason="FAT未通过"
         )
 
         assert result is not None
@@ -341,8 +331,7 @@ class TestStatusTransitionService:
     ):
         """Test acceptance failed when project doesn't exist."""
         result = status_transition_service.handle_acceptance_failed(
-            99999,
-            failure_reason="测试失败"
+            99999, failure_reason="测试失败"
         )
 
         assert result is None
@@ -357,8 +346,7 @@ class TestStatusTransitionService:
         mock_project.health = "H3"
 
         result = status_transition_service.handle_acceptance_failed(
-            mock_project.id,
-            failure_reason="再次失败"
+            mock_project.id, failure_reason="再次失败"
         )
 
         assert result is not None
@@ -376,8 +364,7 @@ class TestStatusTransitionService:
         mock_project.health = "H3"
 
         result = status_transition_service.handle_acceptance_failed(
-            mock_project.id,
-            failure_reason="验收失败"
+            mock_project.id, failure_reason="验收失败"
         )
 
         assert result is not None
@@ -400,12 +387,14 @@ class TestStatusTransitionService:
             old_status="ST01",
             new_status="ST02",
             change_type="MANUAL_UPDATE",
-            change_reason="测试更新"
+            change_reason="测试更新",
         )
 
-        status_logs = db_session.query(ProjectStatusLog).filter(
-            ProjectStatusLog.project_id == mock_project.id
-        ).all()
+        status_logs = (
+            db_session.query(ProjectStatusLog)
+            .filter(ProjectStatusLog.project_id == mock_project.id)
+            .all()
+        )
 
         assert len(status_logs) == 1
         assert status_logs[0].old_stage == "S1"
@@ -422,11 +411,11 @@ class TestStatusTransitionService:
         result = status_transition_service._log_status_change(
             mock_project.id,
             old_stage="S1",
-            old_status="ST01"
+            old_status="ST01",
             new_stage="S2",
             new_status="ST02",
-            change_type="MANUAL_UPDATE"
-            change_reason="测试更新"
+            change_type="MANUAL_UPDATE",
+            change_reason="测试更新",
         )
 
         # Should still work with None values
@@ -446,9 +435,11 @@ class TestStatusTransitionService:
         assert result is not None
 
         # Verify all stages were created
-        machines = db_session.query(Machine).filter(
-            Machine.project_id == mock_project.id
-        ).all()
+        machines = (
+            db_session.query(Machine)
+            .filter(Machine.project_id == mock_project.id)
+            .all()
+        )
         assert len(machines) == 9  # M1-M9
 
     def test_init_project_stages_project_not_found(
@@ -469,18 +460,15 @@ class TestStatusTransitionService:
         db_session: Session,
         mock_contract: Contract,
         mock_project: Project,
-        ):
+    ):
         """Test contract signed then acceptance passed."""
         # Contract signed
         status_transition_service.handle_contract_signed(
-            mock_contract.id,
-            auto_create_project=True
+            mock_contract.id, auto_create_project=True
         )
 
         # Then acceptance passed
-        result = status_transition_service.handle_acceptance_passed(
-            mock_project.id
-        )
+        result = status_transition_service.handle_acceptance_passed(mock_project.id)
 
         assert result is not None
         assert result.stage == "S6"
@@ -490,23 +478,19 @@ class TestStatusTransitionService:
         self,
         status_transition_service: StatusTransitionService,
         db_session: Session,
-        db_session: Session,
         mock_project: Project,
     ):
         """Test acceptance failed then passed."""
         # First failure
         status_transition_service.handle_acceptance_failed(
-            mock_project.id,
-            failure_reason="第一次失败"
+            mock_project.id, failure_reason="第一次失败"
         )
 
         mock_project.health = "H3"
         db_session.refresh(mock_project)
 
         # Then pass
-        result = status_transition_service.handle_acceptance_passed(
-            mock_project.id
-        )
+        result = status_transition_service.handle_acceptance_passed(mock_project.id)
 
         assert result is not None
         assert result.health != "H3"  # Health should recalculate
@@ -527,8 +511,7 @@ class TestStatusTransitionServiceEdgeCases:
         mock_contract.project_id = mock_project.id
 
         result = status_transition_service.handle_contract_signed(
-            mock_contract.id,
-            auto_create_project=False
+            mock_contract.id, auto_create_project=False
         )
 
         assert result is not None
@@ -545,8 +528,7 @@ class TestStatusTransitionServiceEdgeCases:
         mock_contract.project_id = mock_project.id
 
         result = status_transition_service.handle_contract_signed(
-            mock_contract.id,
-            auto_create_project=False
+            mock_contract.id, auto_create_project=False
         )
 
         # Should handle gracefully or raise validation error
@@ -562,9 +544,7 @@ class TestStatusTransitionServiceEdgeCases:
         """Test acceptance passed from invalid stage."""
         mock_project.stage = "S99"  # Invalid stage
 
-        result = status_transition_service.handle_acceptance_passed(
-            mock_project.id
-        )
+        result = status_transition_service.handle_acceptance_passed(mock_project.id)
 
         # Should handle gracefully
         assert result is None
@@ -580,15 +560,14 @@ class TestStatusTransitionServiceEdgeCases:
         mock_project.stage = "S6"
 
         result = status_transition_service.handle_acceptance_failed(
-            mock_project.id,
-            failure_reason="测试失败"
+            mock_project.id, failure_reason="测试失败"
         )
 
         # Should not change status if already blocked
         assert result is not None
         assert result.status == "ST14"  # Remains blocked
 
-    @patch('app.services.status_transition_service.HealthCalculator')
+    @patch("app.services.status_transition_service.HealthCalculator")
     def test_health_calculation_on_acceptance(
         self,
         mock_health_calc: MagicMock,
@@ -604,9 +583,7 @@ class TestStatusTransitionServiceEdgeCases:
         # Mock health calculation to return H2
         mock_health_calculator.return_value = MagicMock(health="H2")
 
-        result = status_transition_service.handle_acceptance_passed(
-            mock_project.id
-        )
+        result = status_transition_service.handle_acceptance_passed(mock_project.id)
 
         # Verify health calculator was called
         mock_health_calculator.calculate_and_update.assert_called_once()

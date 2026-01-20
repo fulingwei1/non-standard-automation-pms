@@ -1,11 +1,10 @@
 """
 Unit tests fixtures - 不依赖完整应用程序
+使用独立的测试数据库引擎，避免与 tests/conftest.py 的 fixture 冲突
 """
 
 import os
-import shutil
 import tempfile
-from pathlib import Path
 
 import pytest
 from sqlalchemy import create_engine, text
@@ -17,40 +16,12 @@ from sqlalchemy.pool import StaticPool
 def db_engine():
     """
     为单元测试提供隔离的 SQLite 引擎：
-    - 优先使用 data/test_app.db（由主 conftest 创建）
-    - 如果不存在则使用 data/app.db 作为模板
-    - 清空测试涉及的表，保证数据干净
-    - 每个测试函数独享数据库文件，互不影响
+    - 创建内存数据库或临时文件数据库
+    - 导入所有模型以确保表结构被注册
+    - 每个测试函数独享数据库，互不影响
     """
-    # 优先使用 test_app.db（由主 conftest 创建），其次使用 app.db
-    test_db_path = Path("data/test_app.db")
-    app_db_path = Path("data/app.db")
-    env_template = os.getenv("UNIT_TEST_DB_TEMPLATE", "")
-    template_path = Path(env_template) if env_template else None
-
-    if template_path and template_path.exists() and template_path.is_file():
-        pass  # 使用环境变量指定的模板
-    elif test_db_path.exists() and test_db_path.is_file():
-        template_path = test_db_path
-    elif app_db_path.exists() and app_db_path.is_file():
-        template_path = app_db_path
-    else:
-        # 如果都不存在，创建一个内存数据库并初始化表结构
-        engine = create_engine(
-            "sqlite:///:memory:",
-            connect_args={"check_same_thread": False},
-            poolclass=StaticPool,
-        )
-        # 导入所有模型以确保表结构被注册
-        import app.models  # noqa: F401
-        from app.models.base import Base
-        Base.metadata.create_all(bind=engine)
-        yield engine
-        engine.dispose()
-        return
-
+    # 创建临时数据库文件
     tmp_db = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
-    shutil.copyfile(template_path, tmp_db.name)
 
     engine = create_engine(
         f"sqlite:///{tmp_db.name}",
@@ -58,41 +29,35 @@ def db_engine():
         poolclass=StaticPool,
     )
 
+    # 导入所有模型以确保表结构被注册
+    import app.models  # noqa: F401
+    from app.models.base import Base
+
+    Base.metadata.create_all(bind=engine)
+
+    # 清理测试数据
     with engine.begin() as conn:
         conn.execute(text("PRAGMA foreign_keys=OFF"))
-        # Clean up test tables
         try:
             conn.execute(text("DELETE FROM task_unified"))
-        except Exception:
-            pass  # Table may not exist
-        try:
-            conn.execute(text("DELETE FROM projects"))
         except Exception:
             pass
         try:
             conn.execute(text("DELETE FROM project_stages"))
         except Exception:
             pass
-        # 清理员工表中的非标准格式编码（用于编号生成测试）
         try:
-            conn.execute(text("DELETE FROM employees WHERE employee_code LIKE 'EMP-%'"))
+            conn.execute(text("DELETE FROM projects"))
         except Exception:
             pass
-        # 清理客户表中的测试数据
         try:
-            conn.execute(text("DELETE FROM customers WHERE customer_code LIKE 'CUS-%'"))
+            conn.execute(text("DELETE FROM employees"))
         except Exception:
             pass
-        # Reset auto-increment counters if sqlite_sequence table exists
         try:
-            conn.execute(
-                text(
-                    "DELETE FROM sqlite_sequence "
-                    "WHERE name IN ('task_unified', 'projects', 'project_stages')"
-                )
-            )
+            conn.execute(text("DELETE FROM customers"))
         except Exception:
-            pass  # sqlite_sequence may not exist if no AUTOINCREMENT columns were used
+            pass
         conn.execute(text("PRAGMA foreign_keys=ON"))
 
     yield engine
@@ -108,7 +73,9 @@ def db_engine():
 @pytest.fixture(scope="function")
 def db_session(db_engine) -> Session:
     """创建测试数据库会话"""
-    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)
+    TestingSessionLocal = sessionmaker(
+        autocommit=False, autoflush=False, bind=db_engine
+    )
     session = TestingSessionLocal()
     try:
         yield session
@@ -118,3 +85,55 @@ def db_session(db_engine) -> Session:
         raise
     finally:
         session.close()
+
+
+# ==================== 常用测试 Fixture ====================
+
+
+@pytest.fixture
+def mock_project(db_session: Session):
+    """创建测试项目"""
+    from app.models.project import Project, Customer
+
+    # 创建测试客户
+    customer = Customer(
+        customer_code="CUST-TEST-001",
+        customer_name="测试客户",
+        contact_person="测试联系人",
+        contact_phone="13800000000",
+        status="ACTIVE",
+    )
+    db_session.add(customer)
+    db_session.flush()
+
+    project = Project(
+        project_code="PJ-TEST-001",
+        project_name="测试项目",
+        customer_id=customer.id,
+        customer_name=customer.customer_name,
+        stage="S1",
+        status="ST01",
+        health="H1",
+    )
+    db_session.add(project)
+    db_session.commit()
+    db_session.refresh(project)
+    return project
+
+
+@pytest.fixture
+def mock_machine(db_session: Session, mock_project):
+    """创建测试机台"""
+    from app.models.project import Machine
+
+    machine = Machine(
+        project_id=mock_project.id,
+        machine_code="M-TEST-001",
+        machine_name="测试设备",
+        machine_type="TEST",
+        status="DESIGN",
+    )
+    db_session.add(machine)
+    db_session.commit()
+    db_session.refresh(machine)
+    return machine

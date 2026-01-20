@@ -8,11 +8,9 @@ File Size: 193 lines
 """
 
 import pytest
-from unittest.mock import MagicMock, patch
-from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 
-from app/services/resource_waste_analysis_service import ResourceWasteAnalysisService
+from app.services.resource_waste_analysis_service import ResourceWasteAnalysisService
 
 
 @pytest.fixture
@@ -46,4 +44,3 @@ class TestResourceWasteAnalysisService:
     #     """Test some_method handles exceptions."""
     #     with pytest.raises(ExpectedException):
     #         service.some_method(invalid_input)
-
