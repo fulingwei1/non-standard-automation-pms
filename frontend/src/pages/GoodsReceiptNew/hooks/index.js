@@ -1,0 +1,1 @@
+export { useGoodsReceiptNew } from './useGoodsReceiptNew';

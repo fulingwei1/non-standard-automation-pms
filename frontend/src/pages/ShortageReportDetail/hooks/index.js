@@ -1,0 +1,1 @@
+export { useShortageReportDetail } from './useShortageReportDetail';

@@ -1,0 +1,1 @@
+export { useAlertSubscriptionSettings } from './useAlertSubscriptionSettings';

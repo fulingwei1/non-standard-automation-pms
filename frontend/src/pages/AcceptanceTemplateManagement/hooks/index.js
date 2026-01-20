@@ -1,0 +1,1 @@
+export { useAcceptanceTemplateManagement } from './useAcceptanceTemplateManagement';

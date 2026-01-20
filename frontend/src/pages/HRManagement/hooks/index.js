@@ -1,0 +1,1 @@
+export { useHRManagement } from './useHRManagement';
