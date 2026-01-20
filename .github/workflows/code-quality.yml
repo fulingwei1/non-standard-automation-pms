@@ -1,0 +1,181 @@
+name: Code Quality Check
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  # Python 代码质量检查
+  python-quality:
+    name: Python Code Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pylint flake8 black isort radon
+      
+      - name: Check Python file sizes
+        run: |
+          echo "检查Python文件大小..."
+          python scripts/check_file_size.py
+      
+      - name: Run Black (format check)
+        run: |
+          black --check --diff app/ tests/ scripts/
+        continue-on-error: true
+      
+      - name: Run isort (import check)
+        run: |
+          isort --check-only --diff app/ tests/ scripts/
+        continue-on-error: true
+      
+      - name: Run Flake8 (lint)
+        run: |
+          flake8 app/ --max-line-length=120 --ignore=E501,W503
+        continue-on-error: true
+      
+      - name: Run Pylint
+        run: |
+          pylint app/ --max-line-length=120 --disable=C0114,C0115,C0116,R0903 --fail-under=7.0
+        continue-on-error: true
+      
+      - name: Check code complexity (Radon)
+        run: |
+          echo "检查代码复杂度..."
+          radon cc app/ -a -s --total-average
+          radon mi app/ -s
+        continue-on-error: true
+
+  # JavaScript/React 代码质量检查
+  frontend-quality:
+    name: Frontend Code Quality
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: frontend
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Check JavaScript file sizes
+        run: |
+          echo "检查JavaScript文件大小..."
+          node ../scripts/check_js_file_size.js
+        continue-on-error: true
+      
+      - name: Run ESLint
+        run: npm run lint
+        continue-on-error: true
+      
+      - name: Run Prettier (format check)
+        run: npx prettier --check "src/**/*.{js,jsx,ts,tsx,css}"
+        continue-on-error: true
+      
+      - name: Build check
+        run: npm run build
+        continue-on-error: true
+
+  # 文件大小检查 (阻断性)
+  file-size-check:
+    name: File Size Limits
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Check all file sizes
+        run: |
+          python scripts/check_file_size.py --strict
+      
+      - name: Report large files
+        if: failure()
+        run: |
+          echo "❌ 发现超过行数限制的文件！"
+          echo "请参考 docs/CODE_STANDARDS.md 进行重构"
+
+  # 测试覆盖率
+  test-coverage:
+    name: Test Coverage
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+      
+      - name: Run tests with coverage
+        run: |
+          pytest tests/ --cov=app --cov-report=xml --cov-report=html --cov-fail-under=40
+        continue-on-error: true
+      
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: htmlcov/
+
+  # 安全检查
+  security-check:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install security tools
+        run: |
+          pip install bandit safety
+      
+      - name: Run Bandit (Python security)
+        run: |
+          bandit -r app/ -ll -ii
+        continue-on-error: true
+      
+      - name: Check dependencies (Safety)
+        run: |
+          safety check -r requirements.txt
+        continue-on-error: true

@@ -1,103 +1,114 @@
-import { useState, useCallback } from "react";
-import { getErrorMessage, handleApiError } from "../utils/errorHandler";
-import { toast } from "../components/ui/toast";
+import { useState, useCallback, useEffect } from 'react';
 
 /**
- * Custom hook for API calls with automatic error handling and loading states
- * @param {Function} apiCall - The API function to call
- * @param {Object} options - Configuration options
- * @param {boolean} options.showErrorToast - Show error toast on failure (default: true)
- * @param {boolean} options.showSuccessToast - Show success toast on success (default: false)
- * @param {string} options.successMessage - Success message for toast
- * @param {Function} options.onSuccess - Callback on success
- * @param {Function} options.onError - Callback on error
- * @param {Function} options.onAuthError - Custom auth error handler
- * @returns {Object} - { execute, loading, error, data, reset }
+ * 通用API请求Hook
+ * 
+ * @param {Function} apiFunction - API函数
+ * @param {Object} options - 配置选项
+ * @param {boolean} options.immediate - 是否立即执行
+ * @param {any} options.initialData - 初始数据
+ * @param {Function} options.onSuccess - 成功回调
+ * @param {Function} options.onError - 错误回调
+ * 
+ * @example
+ * const { data, loading, error, execute } = useApi(
+ *   () => userApi.list({ page: 1 }),
+ *   { immediate: true }
+ * );
  */
-export function useApi(apiCall, options = {}) {
+export function useApi(apiFunction, options = {}) {
   const {
-    showErrorToast = true,
-    showSuccessToast = false,
-    successMessage,
+    immediate = false,
+    initialData = null,
     onSuccess,
     onError,
-    onAuthError,
   } = options;
 
-  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState(initialData);
+  const [loading, setLoading] = useState(immediate);
   const [error, setError] = useState(null);
-  const [data, setData] = useState(null);
 
-  const execute = useCallback(
-    async (...args) => {
-      try {
-        setLoading(true);
-        setError(null);
-        const result = await apiCall(...args);
-        setData(result);
+  const execute = useCallback(async (...args) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await apiFunction(...args);
+      const result = response.data || response;
+      setData(result);
+      onSuccess?.(result);
+      return { success: true, data: result };
+    } catch (err) {
+      const errorMessage = err.response?.data?.detail || err.message || '请求失败';
+      setError(errorMessage);
+      onError?.(err);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  }, [apiFunction, onSuccess, onError]);
 
-        if (showSuccessToast && successMessage) {
-          toast.success(successMessage);
-        }
+  // 立即执行
+  useEffect(() => {
+    if (immediate) {
+      execute();
+    }
+  }, [immediate, execute]);
 
-        if (onSuccess) {
-          onSuccess(result);
-        }
-
-        return result;
-      } catch (err) {
-        setError(err);
-
-        // Handle error
-        handleApiError(err, {
-          onAuthError:
-            onAuthError ||
-            (() => {
-              // Default auth error handling is done by interceptor
-            }),
-          onOtherError: (error) => {
-            if (showErrorToast) {
-              toast.error(getErrorMessage(error));
-            }
-            if (onError) {
-              onError(error);
-            } else {
-              console.error("API call failed:", error);
-            }
-          },
-        });
-
-        throw err;
-      } finally {
-        setLoading(false);
-      }
+  return {
+    data,
+    loading,
+    error,
+    execute,
+    setData,
+    reset: () => {
+      setData(initialData);
+      setError(null);
     },
-    [
-      apiCall,
-      showErrorToast,
-      showSuccessToast,
-      successMessage,
-      onSuccess,
-      onError,
-      onAuthError,
-    ],
-  );
-
-  const reset = useCallback(() => {
-    setError(null);
-    setData(null);
-  }, []);
-
-  return { execute, loading, error, data, reset };
+  };
 }
 
 /**
- * Hook for API calls that should show success toast by default
+ * API Mutation Hook (用于创建、更新、删除等操作)
+ * 
+ * @param {Function} apiFunction - API函数
+ * @param {Object} options - 配置选项
+ * 
+ * @example
+ * const { mutate, loading, error } = useApiMutation(
+ *   (data) => userApi.create(data),
+ *   { onSuccess: () => toast.success('创建成功') }
+ * );
+ * 
+ * await mutate({ name: 'John' });
  */
-export function useApiWithToast(apiCall, successMessage, options = {}) {
-  return useApi(apiCall, {
-    ...options,
-    showSuccessToast: true,
-    successMessage,
-  });
+export function useApiMutation(apiFunction, options = {}) {
+  const { onSuccess, onError } = options;
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const mutate = useCallback(async (...args) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await apiFunction(...args);
+      const result = response.data || response;
+      onSuccess?.(result);
+      return { success: true, data: result };
+    } catch (err) {
+      const errorMessage = err.response?.data?.detail || err.message || '操作失败';
+      setError(errorMessage);
+      onError?.(err);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  }, [apiFunction, onSuccess, onError]);
+
+  return {
+    mutate,
+    loading,
+    error,
+    reset: () => setError(null),
+  };
 }

@@ -1,128 +1,168 @@
-import { useState, useCallback } from "react";
-import { getValidationErrors } from "../utils/errorHandler";
+import { useState, useCallback } from 'react';
 
 /**
- * Custom hook for form management with validation
- * @param {Object} initialValues - Initial form values
- * @param {Function} validate - Validation function
- * @param {Function} onSubmit - Submit handler
- * @returns {Object} - Form state and handlers
+ * 表单管理 Hook
+ * 
+ * @param {Object} initialValues - 初始表单值
+ * @param {Object} options - 配置选项
+ * @param {Function} options.validate - 验证函数
+ * @param {Function} options.onSubmit - 提交回调
+ * 
+ * @example
+ * const form = useForm({
+ *   name: '',
+ *   email: '',
+ * }, {
+ *   validate: (values) => {
+ *     const errors = {};
+ *     if (!values.name) errors.name = '请输入姓名';
+ *     return errors;
+ *   },
+ *   onSubmit: async (values) => {
+ *     await api.create(values);
+ *   },
+ * });
+ * 
+ * <input
+ *   name="name"
+ *   value={form.values.name}
+ *   onChange={form.handleChange}
+ * />
+ * {form.errors.name && <span>{form.errors.name}</span>}
+ * 
+ * <button onClick={form.handleSubmit} disabled={form.submitting}>
+ *   提交
+ * </button>
  */
-export function useForm(initialValues = {}, validate, onSubmit) {
+export function useForm(initialValues = {}, options = {}) {
+  const { validate, onSubmit } = options;
+
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleChange = useCallback(
-    (name, value) => {
-      setValues((prev) => ({ ...prev, [name]: value }));
+  // 设置单个字段值
+  const setValue = useCallback((name, value) => {
+    setValues(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+    // 清除该字段的错误
+    if (errors[name]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+  }, [errors]);
 
-      // Clear error when user starts typing
-      if (errors[name]) {
-        setErrors((prev) => {
-          const newErrors = { ...prev };
-          delete newErrors[name];
-          return newErrors;
-        });
-      }
+  // 处理onChange事件
+  const handleChange = useCallback((e) => {
+    const { name, value, type, checked } = e.target;
+    setValue(name, type === 'checkbox' ? checked : value);
+  }, [setValue]);
 
-      // Mark field as touched
-      setTouched((prev) => ({ ...prev, [name]: true }));
-    },
-    [errors],
-  );
-
-  const handleBlur = useCallback(
-    (name) => {
-      setTouched((prev) => ({ ...prev, [name]: true }));
-
-      // Validate on blur if validation function provided
-      if (validate) {
-        const fieldErrors = validate({ [name]: values[name] });
-        if (fieldErrors[name]) {
-          setErrors((prev) => ({ ...prev, [name]: fieldErrors[name] }));
-        }
-      }
-    },
-    [values, validate],
-  );
-
-  const setFieldValue = useCallback(
-    (name, value) => {
-      handleChange(name, value);
-    },
-    [handleChange],
-  );
-
-  const setFieldError = useCallback((name, error) => {
-    setErrors((prev) => ({ ...prev, [name]: error }));
+  // 处理onBlur事件
+  const handleBlur = useCallback((e) => {
+    const { name } = e.target;
+    setTouched(prev => ({
+      ...prev,
+      [name]: true,
+    }));
   }, []);
 
-  const setErrorsFromApi = useCallback((apiErrors) => {
-    const validationErrors = getValidationErrors(apiErrors);
-    setErrors(validationErrors);
-  }, []);
+  // 验证表单
+  const validateForm = useCallback(() => {
+    if (!validate) return {};
+    const validationErrors = validate(values);
+    setErrors(validationErrors || {});
+    return validationErrors || {};
+  }, [validate, values]);
 
+  // 提交表单
+  const handleSubmit = useCallback(async (e) => {
+    e?.preventDefault();
+
+    // 标记所有字段为已触摸
+    const allTouched = {};
+    Object.keys(values).forEach(key => {
+      allTouched[key] = true;
+    });
+    setTouched(allTouched);
+
+    // 验证
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) {
+      return { success: false, errors: validationErrors };
+    }
+
+    // 提交
+    if (onSubmit) {
+      try {
+        setSubmitting(true);
+        setErrors({});
+        const result = await onSubmit(values);
+        return { success: true, data: result };
+      } catch (error) {
+        const errorMessage = error.response?.data?.detail || error.message;
+        setErrors({ _form: errorMessage });
+        return { success: false, error: errorMessage };
+      } finally {
+        setSubmitting(false);
+      }
+    }
+
+    return { success: true };
+  }, [values, validateForm, onSubmit]);
+
+  // 重置表单
   const reset = useCallback(() => {
     setValues(initialValues);
     setErrors({});
     setTouched({});
-    setIsSubmitting(false);
+    setSubmitting(false);
   }, [initialValues]);
 
-  const handleSubmit = useCallback(
-    async (e) => {
-      if (e) {
-        e.preventDefault();
-      }
+  // 设置多个值
+  const setMultiple = useCallback((updates) => {
+    setValues(prev => ({
+      ...prev,
+      ...updates,
+    }));
+  }, []);
 
-      // Validate all fields
-      if (validate) {
-        const validationErrors = validate(values);
-        if (Object.keys(validationErrors).length > 0) {
-          setErrors(validationErrors);
-          // Mark all fields as touched
-          const allTouched = Object.keys(values).reduce((acc, key) => {
-            acc[key] = true;
-            return acc;
-          }, {});
-          setTouched(allTouched);
-          return;
-        }
-      }
+  // 检查字段是否有错误
+  const hasError = useCallback((name) => {
+    return touched[name] && errors[name];
+  }, [touched, errors]);
 
-      setIsSubmitting(true);
-      setErrors({});
-
-      try {
-        await onSubmit(values);
-      } catch (error) {
-        // Handle validation errors from API
-        if (error.response?.status === 400 || error.response?.status === 422) {
-          setErrorsFromApi(error);
-        } else {
-          // Other errors are handled by error handler
-          throw error;
-        }
-      } finally {
-        setIsSubmitting(false);
-      }
-    },
-    [values, validate, onSubmit, setErrorsFromApi],
-  );
+  // 获取字段的错误信息
+  const getError = useCallback((name) => {
+    return touched[name] ? errors[name] : undefined;
+  }, [touched, errors]);
 
   return {
+    // 状态
     values,
     errors,
     touched,
-    isSubmitting,
+    submitting,
+    isValid: Object.keys(errors).length === 0,
+    isDirty: JSON.stringify(values) !== JSON.stringify(initialValues),
+
+    // 操作
+    setValue,
+    setMultiple,
+    setValues,
+    setErrors,
     handleChange,
     handleBlur,
     handleSubmit,
-    setFieldValue,
-    setFieldError,
-    setErrorsFromApi,
+    validateForm,
     reset,
+    hasError,
+    getError,
   };
 }
