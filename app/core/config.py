@@ -15,13 +15,14 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     """应用配置类"""
+
     # Load env vars from common local files.
     # Important for dev: without a stable SECRET_KEY, JWTs become invalid after
     # every backend restart (leading to persistent 401s in the frontend).
     _PROJECT_ROOT = Path(__file__).resolve().parents[2]
     model_config = SettingsConfigDict(
         env_file=(
-            str(_PROJECT_ROOT / ".env"),        # generic (gitignored)
+            str(_PROJECT_ROOT / ".env"),  # generic (gitignored)
             str(_PROJECT_ROOT / ".env.local"),  # local dev (gitignored)
         ),
         case_sensitive=True,
@@ -30,7 +31,7 @@ class Settings(BaseSettings):
     # 应用信息
     APP_NAME: str = "非标自动化项目管理系统"
     APP_VERSION: str = "1.0.0"
-    DEBUG: bool = True
+    DEBUG: bool = False  # 生产环境默认为 False，开发环境可通过环境变量设置 DEBUG=true
 
     # API配置
     API_V1_PREFIX: str = "/api/v1"
@@ -162,6 +163,8 @@ class Settings(BaseSettings):
 # 创建全局配置实例
 settings = Settings()
 
-# 确保必要的目录存在
-os.makedirs(os.path.dirname(settings.SQLITE_DB_PATH), exist_ok=True)
+# 确保必要的目录存在（跳过 in-memory 数据库）
+db_dir = os.path.dirname(settings.SQLITE_DB_PATH)
+if db_dir:  # Skip for in-memory databases like ":memory:"
+    os.makedirs(db_dir, exist_ok=True)
 os.makedirs(settings.UPLOAD_DIR, exist_ok=True)

@@ -2,6 +2,7 @@
 """
 认证相关 API endpoints
 """
+
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -24,7 +25,8 @@ router = APIRouter()
 @limiter.limit("5/minute")  # 每分钟最多5次登录尝试，防止暴力破解
 def login(
     request: Request,  # slowapi 需要 Request 参数
-    db: Session = Depends(deps.get_db), form_data: OAuth2PasswordRequestForm = Depends()
+    db: Session = Depends(deps.get_db),
+    form_data: OAuth2PasswordRequestForm = Depends(),
 ) -> Any:
     """
     用户登录，返回 JWT Token
@@ -46,7 +48,7 @@ def login(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={
                 "error_code": "USER_NOT_FOUND",
-                "message": "该员工尚未开通系统账号，请联系管理员"
+                "message": "该员工尚未开通系统账号，请联系管理员",
             },
             headers={"WWW-Authenticate": "Bearer"},
         )
@@ -57,7 +59,7 @@ def login(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={
                 "error_code": "WRONG_PASSWORD",
-                "message": "密码错误，忘记密码请联系管理员重置"
+                "message": "密码错误，忘记密码请联系管理员重置",
             },
             headers={"WWW-Authenticate": "Bearer"},
         )
@@ -66,16 +68,17 @@ def login(
     if not user.is_active:
         # 检查关联的员工状态来区分是未激活还是离职
         from app.models.organization import Employee
+
         employee = db.query(Employee).filter(Employee.id == user.employee_id).first()
 
-        if employee and employee.employment_status != 'active':
+        if employee and employee.employment_status != "active":
             # 员工已离职
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail={
                     "error_code": "USER_DISABLED",
-                    "message": "账号已被禁用，如有疑问请联系管理员"
-                }
+                    "message": "账号已被禁用，如有疑问请联系管理员",
+                },
             )
         else:
             # 账号未激活
@@ -83,8 +86,8 @@ def login(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail={
                     "error_code": "USER_INACTIVE",
-                    "message": "账号待激活，请联系管理员开通系统访问权限"
-                }
+                    "message": "账号待激活，请联系管理员开通系统访问权限",
+                },
             )
 
     # 更新最后登录时间
@@ -117,10 +120,7 @@ def logout(
     # 将 token 加入黑名单（实际应使用 Redis 等集中存储）
     security.revoke_token(token)
 
-    return ResponseModel(
-        code=200,
-        message="登出成功"
-    )
+    return ResponseModel(code=200, message="登出成功")
 
 
 @router.post("/refresh", response_model=Token, status_code=status.HTTP_200_OK)
@@ -204,7 +204,9 @@ def get_me(
 
 
 @router.put("/password", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@limiter.limit("5/hour")  # 每小时最多5次密码修改尝试，防止暴力破解
 def change_password(
+    request: Request,
     password_data: PasswordChange,
     current_user: User = Depends(security.get_current_active_user),
     db: Session = Depends(deps.get_db),
@@ -223,8 +225,7 @@ def change_password(
     # 验证原密码
     if not security.verify_password(password_data.old_password, db_user.password_hash):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="原密码错误"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="原密码错误"
         )
 
     # 更新密码
@@ -235,7 +236,4 @@ def change_password(
     # 密码更新后撤销当前 token，强制重新登录
     security.revoke_token(token)
 
-    return ResponseModel(
-        code=200,
-        message="密码修改成功，请重新登录"
-    )
+    return ResponseModel(code=200, message="密码修改成功，请重新登录")

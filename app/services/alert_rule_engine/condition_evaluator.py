@@ -7,6 +7,13 @@
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
+try:
+    from simpleeval import simple_eval, InvalidExpression
+except ImportError:
+    # 如果 simpleeval 未安装，保留旧的（不安全）实现
+    simple_eval = None
+    InvalidExpression = Exception
+
 from app.models.alert import AlertRule
 
 from .base import AlertRuleEngineBase
@@ -19,7 +26,7 @@ class ConditionEvaluator(AlertRuleEngineBase):
         self,
         rule: AlertRule,
         target_data: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None
+        context: Optional[Dict[str, Any]] = None,
     ) -> bool:
         """
         检查规则条件是否满足
@@ -34,13 +41,13 @@ class ConditionEvaluator(AlertRuleEngineBase):
         """
         rule_type = rule.rule_type
 
-        if rule_type == 'THRESHOLD':
+        if rule_type == "THRESHOLD":
             return self.match_threshold(rule, target_data, context)
-        elif rule_type == 'DEVIATION':
+        elif rule_type == "DEVIATION":
             return self.match_deviation(rule, target_data, context)
-        elif rule_type == 'OVERDUE':
+        elif rule_type == "OVERDUE":
             return self.match_overdue(rule, target_data, context)
-        elif rule_type == 'CUSTOM':
+        elif rule_type == "CUSTOM":
             return self.match_custom_expr(rule, target_data, context)
         else:
             return False
@@ -49,7 +56,7 @@ class ConditionEvaluator(AlertRuleEngineBase):
         self,
         rule: AlertRule,
         target_data: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None
+        context: Optional[Dict[str, Any]] = None,
     ) -> bool:
         """
         阈值匹配
@@ -62,7 +69,7 @@ class ConditionEvaluator(AlertRuleEngineBase):
         Returns:
             bool: 是否匹配
         """
-        field_name = rule.target_field or 'value'
+        field_name = rule.target_field or "value"
         value = self.get_field_value(field_name, target_data, context)
 
         if value is None:
@@ -71,17 +78,17 @@ class ConditionEvaluator(AlertRuleEngineBase):
         try:
             value = float(value)
             threshold = float(rule.threshold_value) if rule.threshold_value else 0
-            operator = rule.condition_operator or 'GT'
+            operator = rule.condition_operator or "GT"
 
-            if operator == 'GT':
+            if operator == "GT":
                 return value > threshold
-            elif operator == 'GTE':
+            elif operator == "GTE":
                 return value >= threshold
-            elif operator == 'LT':
+            elif operator == "LT":
                 return value < threshold
-            elif operator == 'LTE':
+            elif operator == "LTE":
                 return value <= threshold
-            elif operator == 'EQ':
+            elif operator == "EQ":
                 return value == threshold
             else:
                 return False
@@ -92,7 +99,7 @@ class ConditionEvaluator(AlertRuleEngineBase):
         self,
         rule: AlertRule,
         target_data: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None
+        context: Optional[Dict[str, Any]] = None,
     ) -> bool:
         """
         偏差匹配
@@ -105,8 +112,12 @@ class ConditionEvaluator(AlertRuleEngineBase):
         Returns:
             bool: 是否匹配
         """
-        actual_field = rule.target_field or 'actual_value'
-        planned_field = rule.target_field.replace('actual', 'planned') if rule.target_field else 'planned_value'
+        actual_field = rule.target_field or "actual_value"
+        planned_field = (
+            rule.target_field.replace("actual", "planned")
+            if rule.target_field
+            else "planned_value"
+        )
 
         actual_value = self.get_field_value(actual_field, target_data, context)
         planned_value = self.get_field_value(planned_field, target_data, context)
@@ -120,15 +131,15 @@ class ConditionEvaluator(AlertRuleEngineBase):
             deviation = actual_value - planned_value
 
             threshold = float(rule.threshold_value) if rule.threshold_value else 0
-            operator = rule.condition_operator or 'GT'
+            operator = rule.condition_operator or "GT"
 
-            if operator == 'GT':
+            if operator == "GT":
                 return deviation > threshold
-            elif operator == 'GTE':
+            elif operator == "GTE":
                 return deviation >= threshold
-            elif operator == 'LT':
+            elif operator == "LT":
                 return deviation < threshold
-            elif operator == 'LTE':
+            elif operator == "LTE":
                 return deviation <= threshold
             else:
                 return False
@@ -139,7 +150,7 @@ class ConditionEvaluator(AlertRuleEngineBase):
         self,
         rule: AlertRule,
         target_data: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None
+        context: Optional[Dict[str, Any]] = None,
     ) -> bool:
         """
         逾期匹配
@@ -153,7 +164,7 @@ class ConditionEvaluator(AlertRuleEngineBase):
             bool: 是否匹配
         """
         # 需要截止日期字段
-        due_date_field = rule.target_field or 'due_date'
+        due_date_field = rule.target_field or "due_date"
         due_date = self.get_field_value(due_date_field, target_data, context)
 
         if not due_date:
@@ -161,7 +172,7 @@ class ConditionEvaluator(AlertRuleEngineBase):
 
         if isinstance(due_date, str):
             try:
-                due_date = datetime.fromisoformat(due_date.replace('Z', '+00:00'))
+                due_date = datetime.fromisoformat(due_date.replace("Z", "+00:00"))
             except (ValueError, AttributeError):
                 return False
 
@@ -181,7 +192,7 @@ class ConditionEvaluator(AlertRuleEngineBase):
         self,
         rule: AlertRule,
         target_data: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None
+        context: Optional[Dict[str, Any]] = None,
     ) -> bool:
         """
         自定义表达式匹配（简单实现，实际可以使用更复杂的表达式引擎）
@@ -197,17 +208,24 @@ class ConditionEvaluator(AlertRuleEngineBase):
         if not rule.condition_expr:
             return False
 
-        # 简单的表达式评估（实际应该使用安全的表达式引擎）
-        # 这里仅做示例，实际使用时需要更安全的实现
         try:
-            # 构建评估上下文
+            # 构建安全的评估上下文
             eval_context = {}
             eval_context.update(target_data)
             if context:
                 eval_context.update(context)
 
-            # TODO: 实现安全的表达式引擎（如 simpleeval）替代 eval
-            # 暂时返回 False，需要实现安全的表达式引擎
-            return False
-        except Exception:
+            # 使用 simpleeval 进行安全的表达式评估（如果可用）
+            if simple_eval is not None:
+                result = simple_eval(
+                    rule.condition_expr,
+                    names=eval_context,
+                    safe=True,  # 禁用所有未授权的功能
+                )
+                return bool(result)
+            else:
+                # 后备方案：simpleeval 未安装时返回 False
+                # 建议安装: pip install simpleeval==1.0.2
+                return False
+        except (InvalidExpression, Exception):
             return False
