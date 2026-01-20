@@ -3,12 +3,70 @@
 销售工作流和目标管理 Schema
 """
 
+from datetime import datetime
 from decimal import Decimal
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
 from app.schemas.common import TimestampSchema
+
+
+# ==================== 审批工作流 ====================
+
+
+class ApprovalWorkflowStepBase(BaseModel):
+    """审批工作流步骤基础模型"""
+    step_order: int = Field(..., description="步骤顺序")
+    step_name: str = Field(..., description="步骤名称")
+    approver_type: str = Field(..., description="审批人类型：ROLE/USER/DEPARTMENT")
+    approver_id: Optional[int] = Field(None, description="审批人ID")
+    approver_role: Optional[str] = Field(None, description="审批角色")
+
+
+class ApprovalWorkflowStepCreate(ApprovalWorkflowStepBase):
+    """创建审批工作流步骤"""
+    pass
+
+
+class ApprovalWorkflowStepResponse(ApprovalWorkflowStepBase):
+    """审批工作流步骤响应"""
+    id: int
+    workflow_id: int
+    created_at: Optional[datetime] = None
+
+    model_config = {"from_attributes": True}
+
+
+class ApprovalWorkflowBase(BaseModel):
+    """审批工作流基础模型"""
+    workflow_name: str = Field(..., description="工作流名称")
+    workflow_type: str = Field(..., description="工作流类型：QUOTE/CONTRACT/LEAD")
+    description: Optional[str] = Field(None, description="工作流描述")
+    is_active: bool = Field(True, description="是否启用")
+
+
+class ApprovalWorkflowCreate(ApprovalWorkflowBase):
+    """创建审批工作流"""
+    steps: Optional[List[ApprovalWorkflowStepCreate]] = Field(None, description="工作流步骤")
+
+
+class ApprovalWorkflowUpdate(BaseModel):
+    """更新审批工作流"""
+    workflow_name: Optional[str] = None
+    description: Optional[str] = None
+    is_active: Optional[bool] = None
+    steps: Optional[List[ApprovalWorkflowStepCreate]] = None
+
+
+class ApprovalWorkflowResponse(ApprovalWorkflowBase):
+    """审批工作流响应"""
+    id: int
+    steps: Optional[List[ApprovalWorkflowStepResponse]] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    model_config = {"from_attributes": True}
 
 
 # ==================== 销售目标管理 ====================

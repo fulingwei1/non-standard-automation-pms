@@ -10,7 +10,6 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.models.sales import Contract, Invoice, Lead, Opportunity, Quote
-from app.models.user import User
 from app.services.pipeline_health_service import PipelineHealthService
 
 
@@ -21,16 +20,18 @@ def pipeline_health_service(db_session: Session):
 
 @pytest.fixture
 def test_sales_user(db_session: Session):
-    user = User(
+    from tests.conftest import _get_or_create_user
+
+    user = _get_or_create_user(
+        db_session,
         username="pipeline_test_user",
-        password_hash="hash",
+        password="test123",
         real_name="管道测试用户",
         department="销售部",
-        is_active=True,
+        employee_role="SALES",
     )
-    db_session.add(user)
-    db_session.commit()
-    db_session.refresh(user)
+
+    db_session.flush()
     return user
 
 

@@ -1,15 +1,15 @@
 /**
  * 角色管理页面（重构版本）
- * 
+ *
  * 原文件: 1055行
  * 目录结构:
  * RoleManagement/
  * ├── index.jsx         - 主组件
  * ├── hooks/
  * │   └── useRoleData.js - 角色数据管理
- * └── components/       - 待拆分的组件
- * 
- * TODO: 进一步拆分组件
+ * └── components/       - 子组件（可选优化）
+ *
+ * 可选优化（低优先级）:
  * - RoleTable.jsx       - 角色列表表格
  * - RoleDialog.jsx      - 创建/编辑对话框
  * - PermissionDialog.jsx - 权限分配对话框

@@ -3,6 +3,21 @@
 销售管理 Schema 模块
 """
 
+from .ai_clarifications import (
+    AIClarificationCreate,
+    AIClarificationResponse,
+    AIClarificationUpdate,
+)
+from .requirement_details import (
+    LeadRequirementDetailCreate,
+    LeadRequirementDetailResponse,
+    LeadRequirementDetailUpdate,
+)
+from .requirement_freezes import (
+    RequirementFreezeCreate,
+    RequirementFreezeResponse,
+    RequirementFreezeUpdate,
+)
 from .assessments import (
     FailureCaseCreate,
     FailureCaseResponse,
@@ -60,6 +75,10 @@ from .leads import (
     LeadUpdate,
 )
 from .workflow import (
+    ApprovalWorkflowCreate,
+    ApprovalWorkflowResponse,
+    ApprovalWorkflowStepResponse,
+    ApprovalWorkflowUpdate,
     RankingMetric,
     SalesRankingConfigResponse,
     SalesRankingConfigUpdateRequest,
@@ -89,6 +108,18 @@ from .quotes import (
 )
 
 __all__ = [
+    # AI澄清相关
+    "AIClarificationCreate",
+    "AIClarificationUpdate",
+    "AIClarificationResponse",
+    # 需求明细相关
+    "LeadRequirementDetailCreate",
+    "LeadRequirementDetailUpdate",
+    "LeadRequirementDetailResponse",
+    # 需求冻结相关
+    "RequirementFreezeCreate",
+    "RequirementFreezeUpdate",
+    "RequirementFreezeResponse",
     # 线索相关
     "LeadCreate",
     "LeadUpdate",
@@ -158,6 +189,11 @@ __all__ = [
     "RankingMetric",
     "SalesRankingConfigUpdateRequest",
     "SalesRankingConfigResponse",
+    # 审批工作流相关
+    "ApprovalWorkflowCreate",
+    "ApprovalWorkflowUpdate",
+    "ApprovalWorkflowResponse",
+    "ApprovalWorkflowStepResponse",
     # 技术评估相关
     "TechnicalAssessmentApplyRequest",
     "TechnicalAssessmentEvaluateRequest",

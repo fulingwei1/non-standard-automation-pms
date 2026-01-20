@@ -1,50 +1,115 @@
-# Skip: Service API mismatch
-import pytest
-pytestmark = pytest.mark.skip(reason="Service API mismatch - needs rewrite")
-
 # -*- coding: utf-8 -*-
 """
-Tests for report_data_generation_service service
+Tests for report_data_generation_service
 Covers: app/services/report_data_generation_service.py
-Coverage Target: 0% → 60%+
-Current Coverage: 0%
-File Size: 193 lines
+注意：此服务使用静态方法，不需要实例化
 """
 
-import pytest
+from unittest.mock import MagicMock, patch
+
 from sqlalchemy.orm import Session
 
 from app.services.report_data_generation_service import ReportDataGenerationService
 
 
-@pytest.fixture
-def report_data_generation_service(db_session: Session):
-    """Create report_data_generation_service instance."""
-    return ReportDataGenerationService(db_session)
-
-
 class TestReportDataGenerationService:
-    """Test suite for ReportDataGenerationService."""
+    """Test suite for ReportDataGenerationService (静态方法服务)."""
 
-    def test_init(self, db_session: Session):
-        """Test service initialization."""
-        service = ReportDataGenerationService(db_session)
-        assert service.db is db_session
-        assert service.logger is not None
+    def test_role_report_matrix_structure(self):
+        """验证角色-报表权限矩阵结构。"""
+        matrix = ReportDataGenerationService.ROLE_REPORT_MATRIX
 
-    # TODO: Add more test methods based on actual service methods
-    # Test each public method with:
-    # - Happy path (normal operation)
-    # - Edge cases (boundary conditions)
-    # - Error cases (invalid inputs, exceptions)
+        # 验证必要的角色存在
+        assert "PROJECT_MANAGER" in matrix
+        assert "DEPARTMENT_MANAGER" in matrix
+        assert "FINANCE_MANAGER" in matrix
+        assert "HR_MANAGER" in matrix
+        assert "SALES_MANAGER" in matrix
 
-    # Example pattern:
-    # def test_some_method_success(self, service):
-    #     """Test some_method with valid input."""
-    #     result = service.some_method(valid_input)
-    #     assert result is not None
+        # 验证每个角色都有报表权限列表
+        for role, reports in matrix.items():
+            assert isinstance(reports, list)
+            assert len(reports) > 0
 
-    # def test_some_method_with_exception(self, service):
-    #     """Test some_method handles exceptions."""
-    #     with pytest.raises(ExpectedException):
-    #         service.some_method(invalid_input)
+    def test_project_manager_permissions(self):
+        """验证项目经理的报表权限。"""
+        pm_reports = ReportDataGenerationService.ROLE_REPORT_MATRIX["PROJECT_MANAGER"]
+
+        assert "PROJECT_WEEKLY" in pm_reports
+        assert "PROJECT_MONTHLY" in pm_reports
+        assert "COST_ANALYSIS" in pm_reports
+        assert "RISK_REPORT" in pm_reports
+
+    def test_finance_manager_permissions(self):
+        """验证财务经理的报表权限。"""
+        fm_reports = ReportDataGenerationService.ROLE_REPORT_MATRIX["FINANCE_MANAGER"]
+
+        assert "COST_ANALYSIS" in fm_reports
+        assert "COMPANY_MONTHLY" in fm_reports
+
+    def test_check_permission_superuser(self, db_session: Session):
+        """超级管理员应有所有权限。"""
+        mock_user = MagicMock()
+        mock_user.is_superuser = True
+
+        result = ReportDataGenerationService.check_permission(
+            db=db_session,
+            user=mock_user,
+            report_type="ANY_REPORT"
+        )
+
+        assert result is True
+
+    def test_check_permission_no_roles(self, db_session: Session):
+        """没有角色的用户应无权限。"""
+        mock_user = MagicMock()
+        mock_user.is_superuser = False
+        mock_user.id = 1
+
+        mock_user_result = MagicMock()
+        mock_user_result.user_roles = []
+
+        with patch.object(db_session, 'query') as mock_query:
+            mock_query.return_value.filter.return_value.first.return_value = mock_user_result
+
+            result = ReportDataGenerationService.check_permission(
+                db=db_session,
+                user=mock_user,
+                report_type="PROJECT_WEEKLY"
+            )
+
+            assert result is False
+
+    def test_check_permission_with_valid_role(self, db_session: Session):
+        """有正确角色的用户应有对应权限。"""
+        mock_user = MagicMock()
+        mock_user.is_superuser = False
+        mock_user.id = 1
+
+        mock_role = MagicMock()
+        mock_role.role_code = "PROJECT_MANAGER"
+        mock_role.is_active = True
+
+        mock_user_role = MagicMock()
+        mock_user_role.role = mock_role
+
+        mock_user_result = MagicMock()
+        mock_user_result.user_roles = [mock_user_role]
+
+        with patch.object(db_session, 'query') as mock_query:
+            mock_query.return_value.filter.return_value.first.return_value = mock_user_result
+
+            result = ReportDataGenerationService.check_permission(
+                db=db_session,
+                user=mock_user,
+                report_type="PROJECT_WEEKLY"
+            )
+
+            assert result is True
+
+    def test_custom_role_only_custom_reports(self):
+        """CUSTOM 角色只能访问自定义报表。"""
+        custom_reports = ReportDataGenerationService.ROLE_REPORT_MATRIX.get("CUSTOM", [])
+
+        assert "CUSTOM" in custom_reports
+        assert len(custom_reports) == 1  # 只有 CUSTOM

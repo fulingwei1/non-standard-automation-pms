@@ -1,50 +1,94 @@
-# Skip: Service API mismatch
-import pytest
-pytestmark = pytest.mark.skip(reason="Service API mismatch - needs rewrite")
-
 # -*- coding: utf-8 -*-
 """
-Tests for report_export_service service
+Tests for report_export_service
 Covers: app/services/report_export_service.py
-Coverage Target: 0% → 60%+
-Current Coverage: 0%
-File Size: 193 lines
 """
 
-import pytest
-from sqlalchemy.orm import Session
+import os
+import tempfile
+
 
 from app.services.report_export_service import ReportExportService
-
-
-@pytest.fixture
-def report_export_service(db_session: Session):
-    """Create report_export_service instance."""
-    return ReportExportService(db_session)
 
 
 class TestReportExportService:
     """Test suite for ReportExportService."""
 
-    def test_init(self, db_session: Session):
-        """Test service initialization."""
-        service = ReportExportService(db_session)
-        assert service.db is db_session
-        assert service.logger is not None
+    def test_init_creates_export_dir(self):
+        """服务初始化应创建导出目录。"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            export_dir = os.path.join(tmpdir, "test_exports")
+            service = ReportExportService(export_dir=export_dir)
 
-    # TODO: Add more test methods based on actual service methods
-    # Test each public method with:
-    # - Happy path (normal operation)
-    # - Edge cases (boundary conditions)
-    # - Error cases (invalid inputs, exceptions)
+            assert os.path.exists(export_dir)
+            assert service.export_dir == export_dir
 
-    # Example pattern:
-    # def test_some_method_success(self, service):
-    #     """Test some_method with valid input."""
-    #     result = service.some_method(valid_input)
-    #     assert result is not None
+    def test_init_default_dir(self):
+        """使用默认目录初始化。"""
+        service = ReportExportService()
+        assert service.export_dir == "exports"
 
-    # def test_some_method_with_exception(self, service):
-    #     """Test some_method handles exceptions."""
-    #     with pytest.raises(ExpectedException):
-    #         service.some_method(invalid_input)
+    def test_export_to_excel_basic(self):
+        """测试基本的 Excel 导出。"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            service = ReportExportService(export_dir=tmpdir)
+
+            # 准备测试数据
+            data = [
+                {"name": "项目A", "progress": 50, "status": "进行中"},
+                {"name": "项目B", "progress": 100, "status": "已完成"},
+            ]
+            columns = ["name", "progress", "status"]
+            headers = ["项目名称", "进度", "状态"]
+
+            # 调用导出方法
+            result = service.export_to_excel(
+                data=data,
+                columns=columns,
+                headers=headers,
+                filename="test_report.xlsx",
+                sheet_name="项目报表"
+            )
+
+            # 验证文件生成
+            assert result is not None
+            assert os.path.exists(result)
+            assert result.endswith(".xlsx")
+
+    def test_export_to_csv_basic(self):
+        """测试基本的 CSV 导出。"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            service = ReportExportService(export_dir=tmpdir)
+
+            data = [
+                {"name": "测试1", "value": 100},
+                {"name": "测试2", "value": 200},
+            ]
+            columns = ["name", "value"]
+            headers = ["名称", "数值"]
+
+            result = service.export_to_csv(
+                data=data,
+                columns=columns,
+                headers=headers,
+                filename="test_report.csv"
+            )
+
+            assert result is not None
+            assert os.path.exists(result)
+            assert result.endswith(".csv")
+
+    def test_export_empty_data(self):
+        """空数据应能正常导出。"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            service = ReportExportService(export_dir=tmpdir)
+
+            result = service.export_to_excel(
+                data=[],
+                columns=["name"],
+                headers=["名称"],
+                filename="empty_report.xlsx"
+            )
+
+            assert result is not None
+            assert os.path.exists(result)

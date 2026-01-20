@@ -11,9 +11,10 @@ from fastapi import APIRouter
 from . import (
     assessments,
     contracts,
-    disputes,  # 回款争议管理
+    cost_management,
+    disputes,
     expenses,
-    invoices,  # 发票管理
+    invoices,
     leads,
     loss_analysis,
     opportunities,
@@ -21,8 +22,18 @@ from . import (
     priority,
     quotes,
     statistics,
-    team,  # 销售团队管理与业绩排名
-    targets,  # 销售目标管理
+    team,
+    targets,
+    requirements,
+    pipeline_analysis,
+    accountability,
+    health,
+    delay_analysis,
+    cost_overrun,
+    information_gap,
+    cross_analysis,
+    workflows,
+    receivables,
 )
 
 # from . import templates  # 模板管理模块 - 已拆分为templates包 - 暂时禁用，存在导入问题
@@ -50,7 +61,19 @@ router.include_router(team.router, tags=["sales-team"])
 
 # 以下模块暂时禁用（缺少 schema 定义）
 # from . import cost_management
-# from . import receivables, workflows
-# from . import requirements
+# from . import receivables, workflows, requirements
 # from . import pipeline_analysis, accountability, health
 # from . import delay_analysis, cost_overrun, information_gap, cross_analysis
+
+# 已启用的模块（包含 schema 定义）
+router.include_router(cost_management.router, tags=["sales-cost-management"])
+router.include_router(receivables.router, tags=["sales-receivables"])
+router.include_router(workflows.router, tags=["sales-workflows"])
+router.include_router(requirements.router, tags=["sales-requirements"])
+router.include_router(pipeline_analysis.router, tags=["sales-pipeline-analysis"])
+# router.include_router(accountability.router, tags=["sales-accountability"])
+# router.include_router(health.router, tags=["sales-health"])
+# router.include_router(delay_analysis.router, tags=["sales-delay-analysis"])
+# router.include_router(cost_overrun.router, tags=["sales-cost-overrun"])
+# router.include_router(information_gap.router, tags=["sales-information-gap"])
+# router.include_router(cross_analysis.router, tags=["sales-cross-analysis"])

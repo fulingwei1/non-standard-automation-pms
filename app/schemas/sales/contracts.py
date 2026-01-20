@@ -9,7 +9,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ..common import BaseSchema, TimestampSchema
+from ..common import TimestampSchema
 
 
 class ContractDeliverableCreate(BaseModel):
@@ -48,7 +48,9 @@ class ContractCreate(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    contract_code: Optional[str] = Field(default=None, max_length=20, description="合同编码")
+    contract_code: Optional[str] = Field(
+        default=None, max_length=20, description="合同编码"
+    )
     opportunity_id: int = Field(description="商机ID")
     quote_version_id: Optional[int] = Field(default=None, description="报价版本ID")
     customer_id: int = Field(description="客户ID")
@@ -56,7 +58,9 @@ class ContractCreate(BaseModel):
     contract_amount: Optional[Decimal] = Field(default=None, description="合同金额")
     signed_date: Optional[date] = Field(default=None, description="签订日期")
     status: Optional[str] = Field(default=None, description="状态")
-    payment_terms_summary: Optional[str] = Field(default=None, description="付款条款摘要")
+    payment_terms_summary: Optional[str] = Field(
+        default=None, description="付款条款摘要"
+    )
     acceptance_summary: Optional[str] = Field(default=None, description="验收摘要")
     owner_id: Optional[int] = Field(default=None, description="负责人ID")
     deliverables: Optional[List[ContractDeliverableCreate]] = Field(
@@ -93,7 +97,9 @@ class ContractResponse(TimestampSchema):
     contract_amount: Optional[Decimal] = Field(default=None, description="合同金额")
     signed_date: Optional[date] = Field(default=None, description="签订日期")
     status: Optional[str] = Field(default=None, description="状态")
-    payment_terms_summary: Optional[str] = Field(default=None, description="付款条款摘要")
+    payment_terms_summary: Optional[str] = Field(
+        default=None, description="付款条款摘要"
+    )
     acceptance_summary: Optional[str] = Field(default=None, description="验收摘要")
     owner_id: Optional[int] = Field(default=None, description="负责人ID")
 
@@ -161,6 +167,64 @@ class ContractProjectCreateRequest(BaseModel):
 # ==================== 审批工作流 Schema ====================
 
 
+class ApprovalWorkflowStepResponse(BaseModel):
+    """审批工作流步骤响应"""
+
+    model_config = {"populate_by_name": True}
+    id: int = Field(description="步骤ID")
+    workflow_id: int = Field(description="工作流ID")
+    step_name: str = Field(description="步骤名称")
+    step_order: int = Field(description="步骤顺序")
+    step_role: str = Field(description="审批角色")
+    approver_id: Optional[int] = Field(default=None, description="审批人ID")
+    approver_name: Optional[str] = Field(default=None, description="审批人姓名")
+    is_required: bool = Field(default=True, description="是否必需")
+    timeout_hours: Optional[int] = Field(default=None, description="超时小时数")
+
+
+class ApprovalWorkflowCreate(BaseModel):
+    """创建审批工作流"""
+
+    model_config = {"populate_by_name": True}
+    workflow_type: str = Field(description="工作流类型")
+    workflow_name: str = Field(description="工作流名称")
+    entity_type: str = Field(description="实体类型")
+    description: Optional[str] = Field(default=None, description="描述")
+    steps: List[ApprovalWorkflowStepResponse] = Field(description="审批步骤列表")
+    is_active: bool = Field(default=True, description="是否启用")
+
+
+class ApprovalWorkflowUpdate(BaseModel):
+    """更新审批工作流"""
+
+    model_config = {"populate_by_name": True}
+    workflow_name: Optional[str] = Field(default=None, description="工作流名称")
+    description: Optional[str] = Field(default=None, description="描述")
+    steps: Optional[List[ApprovalWorkflowStepResponse]] = Field(
+        default=None, description="审批步骤列表"
+    )
+    is_active: Optional[bool] = Field(default=None, description="是否启用")
+
+
+class ApprovalWorkflowResponse(TimestampSchema):
+    """审批工作流响应"""
+
+    model_config = {"populate_by_name": True}
+    id: int = Field(description="工作流ID")
+    workflow_type: str = Field(description="工作流类型")
+    workflow_name: str = Field(description="工作流名称")
+    entity_type: str = Field(description="实体类型")
+    description: Optional[str] = Field(default=None, description="描述")
+    steps: List[ApprovalWorkflowStepResponse] = Field(
+        default=[], description="审批步骤列表"
+    )
+    is_active: bool = Field(description="是否启用")
+    created_by: Optional[int] = Field(default=None, description="创建人ID")
+    created_by_name: Optional[str] = Field(default=None, description="创建人姓名")
+    updated_by: Optional[int] = Field(default=None, description="更新人ID")
+    updated_by_name: Optional[str] = Field(default=None, description="更新人姓名")
+
+
 class ApprovalStartRequest(BaseModel):
     """启动审批请求"""
 
@@ -175,7 +239,7 @@ class ApprovalActionRequest(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    action: str = Field(description="审批动作: APPROVE, REJECT, RETURN")
+    action: str = Field(description="审批动作：APPROVE, REJECT, RETURN")
     comment: Optional[str] = Field(default=None, description="审批意见")
 
 
@@ -213,4 +277,41 @@ class ApprovalHistoryResponse(BaseModel):
 
     entity_id: int = Field(description="实体ID")
     entity_type: str = Field(description="实体类型")
-    records: List[ApprovalRecordResponse] = Field(default=[], description="审批记录列表")
+    records: List[ApprovalRecordResponse] = Field(
+        default=[], description="审批记录列表"
+    )
+
+    # 审批相关
+    ("ApprovalWorkflowStepResponse",)
+    ("ApprovalWorkflowCreate",)
+    ("ApprovalWorkflowUpdate",)
+    ("ApprovalWorkflowResponse",)
+    ("ApprovalStartRequest",)
+    ("ApprovalActionRequest",)
+    ("ApprovalRecordResponse",)
+    ("ApprovalStatusResponse",)
+    ("ApprovalHistoryResponse",)
+
+
+__all__ = [
+    # 合同相关
+    "ContractDeliverableCreate",
+    "ContractDeliverableResponse",
+    "ContractCreate",
+    "ContractUpdate",
+    "ContractResponse",
+    "ContractAmendmentCreate",
+    "ContractAmendmentResponse",
+    "ContractSignRequest",
+    "ContractProjectCreateRequest",
+    # 审批相关
+    "ApprovalWorkflowStepResponse",
+    "ApprovalWorkflowCreate",
+    "ApprovalWorkflowUpdate",
+    "ApprovalWorkflowResponse",
+    "ApprovalStartRequest",
+    "ApprovalActionRequest",
+    "ApprovalRecordResponse",
+    "ApprovalStatusResponse",
+    "ApprovalHistoryResponse",
+]

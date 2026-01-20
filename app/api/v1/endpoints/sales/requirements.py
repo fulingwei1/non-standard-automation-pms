@@ -10,11 +10,14 @@
 
 from fastapi import APIRouter
 
-from . import ai_clarifications, requirement_details, requirement_freezes
+from . import (
+    requirement_details,
+    requirement_freezes,
+)
 
 router = APIRouter()
 
 # 聚合所有子路由
 router.include_router(requirement_details.router)
 router.include_router(requirement_freezes.router)
-router.include_router(ai_clarifications.router)
+# router.include_router(ai_clarifications.router)  # TODO: Uncomment when ai_clarifications module exists
