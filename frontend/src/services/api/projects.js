@@ -88,9 +88,13 @@ export const machineApi = {
   create: (data) => api.post("/machines/", data),
   update: (id, data) => api.put(`/machines/${id}`, data),
   delete: (id) => api.delete(`/machines/${id}`),
+  updateProgress: (id, progress) => api.put(`/machines/${id}/progress?progress_pct=${progress}`),
   getBom: (id) => api.get(`/machines/${id}/bom`),
   getServiceHistory: (id, params) =>
     api.get(`/machines/${id}/service-history`, { params }),
+  // 汇总视图
+  getSummary: (projectId) => api.get(`/machines/projects/${projectId}/summary`),
+  recalculate: (projectId) => api.post(`/machines/projects/${projectId}/recalculate`),
   // 文档管理
   uploadDocument: (machineId, formData) =>
     api.post(`/machines/${machineId}/documents/upload`, formData, {

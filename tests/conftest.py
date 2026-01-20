@@ -71,9 +71,8 @@ def _ensure_login_user(
         employee_role=employee_role,
     )
     if user.is_superuser != is_superuser:
-        user.is_superuser = is_superuser
+        db.query(User).filter(User.id == user.id).update({'is_superuser': is_superuser})
         db.commit()
-        db.refresh(user)
     return user
 
 
@@ -456,6 +455,16 @@ def _get_or_create_employee(
     )
     db.add(employee)
     db.flush()
+    return employee
+    db.flush()
+    
+    # Update employee fields using query instead of direct assignment
+    db.query(Employee).filter(Employee.id == employee.id).update({
+        'is_active': True,
+        'employment_status': 'active',
+        'department': department,
+        'role': role
+    })
     return employee
 
 

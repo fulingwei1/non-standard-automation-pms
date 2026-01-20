@@ -393,6 +393,23 @@ from .timesheet import (
 from .user import Permission, PermissionAudit, Role, RolePermission, User, UserRole
 from .work_log import WorkLog, WorkLogConfig, WorkLogMention
 
+# Unified Approval System - 统一审批系统
+from .approval import (
+    ApprovalActionLog,
+    ApprovalCarbonCopy,
+    ApprovalComment,
+    ApprovalCountersignResult,
+    ApprovalDelegate,
+    ApprovalDelegateLog,
+    ApprovalFlowDefinition,
+    ApprovalInstance,
+    ApprovalNodeDefinition,
+    ApprovalRoutingRule,
+    ApprovalTask,
+    ApprovalTemplate,
+    ApprovalTemplateVersion,
+)
+
 __all__ = [
     # Base
     "Base",
@@ -768,4 +785,18 @@ __all__ = [
     "MenuType",
     "PermissionType",
     "ResourceType",
+    # Unified Approval System - 统一审批系统
+    "ApprovalTemplate",
+    "ApprovalTemplateVersion",
+    "ApprovalFlowDefinition",
+    "ApprovalNodeDefinition",
+    "ApprovalRoutingRule",
+    "ApprovalInstance",
+    "ApprovalTask",
+    "ApprovalCarbonCopy",
+    "ApprovalCountersignResult",
+    "ApprovalActionLog",
+    "ApprovalComment",
+    "ApprovalDelegate",
+    "ApprovalDelegateLog",
 ]
