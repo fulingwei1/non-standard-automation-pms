@@ -10,6 +10,7 @@ import {
   hasFinanceAccess,
   hasProductionAccess,
   hasProjectReviewAccess,
+  hasStrategyAccess,
 } from "../../lib/roleConfig";
 import {
   hasPermission,
@@ -276,6 +277,43 @@ export function ProjectReviewProtectedRoute({ children }) {
     <ProtectedRoute
       checkPermission={checkPermission}
       permissionName="项目复盘模块"
+    >
+      {children}
+    </ProtectedRoute>
+  );
+}
+
+/**
+ * Strategy-specific protected route
+ * Wrapper for ProtectedRoute with strategy module permission check
+ *
+ * 战略管理模块访问控制：
+ * - 高管层：完整访问（战略全景、目标分解、执行追踪等）
+ * - 部门经理：部门访问（查看部门目标和KPI）
+ * - 普通员工：暂不开放（后续可开放个人KPI查看）
+ */
+export function StrategyProtectedRoute({ children }) {
+  const userStr = localStorage.getItem("user");
+  let isSuperuser = false;
+  let permissions = [];
+
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr);
+      isSuperuser = user.is_superuser === true || user.isSuperuser === true;
+      permissions = user.permissions || [];
+    } catch {
+      // ignore
+    }
+  }
+
+  // 使用权限代码检查（动态从数据库获取）
+  const checkPermission = (userRole) => hasStrategyAccess(userRole, isSuperuser, permissions);
+
+  return (
+    <ProtectedRoute
+      checkPermission={checkPermission}
+      permissionName="战略管理模块"
     >
       {children}
     </ProtectedRoute>

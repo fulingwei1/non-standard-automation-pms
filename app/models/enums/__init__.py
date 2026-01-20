@@ -108,8 +108,25 @@ from .sales import (
 from .stage import (
     CompletionMethodEnum,
     NodeTypeEnum,
+    ReviewResultEnum,
+    StageCategoryEnum,
     StageStatusEnum,
     TemplateProjectTypeEnum,
+)
+
+# 战略管理相关
+from .strategy import (
+    BSCDimensionEnum,
+    CSFDerivationMethodEnum,
+    DataSourceTypeEnum,
+    HealthLevelEnum,
+    IPOOCTypeEnum,
+    ObjectiveLevelEnum,
+    ReviewTypeEnum as StrategyReviewTypeEnum,
+    StrategyEventTypeEnum,
+    StrategyStatusEnum,
+    VOCSourceEnum,
+    WorkStatusEnum,
 )
 
 # 审批和工作流
@@ -238,5 +255,19 @@ __all__ = [
     "NodeTypeEnum",
     "CompletionMethodEnum",
     "StageStatusEnum",
+    "StageCategoryEnum",
+    "ReviewResultEnum",
     "TemplateProjectTypeEnum",
+    # 战略管理相关
+    "StrategyStatusEnum",
+    "BSCDimensionEnum",
+    "IPOOCTypeEnum",
+    "VOCSourceEnum",
+    "CSFDerivationMethodEnum",
+    "WorkStatusEnum",
+    "StrategyEventTypeEnum",
+    "DataSourceTypeEnum",
+    "HealthLevelEnum",
+    "ObjectiveLevelEnum",
+    "StrategyReviewTypeEnum",
 ]

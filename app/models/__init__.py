@@ -420,6 +420,22 @@ from .approval import (
     ApprovalTemplateVersion,
 )
 
+# Strategy Management - BEM 战略管理
+from .strategy import (
+    AnnualKeyWork,
+    AnnualKeyWorkProjectLink,
+    CSF,
+    DepartmentObjective,
+    KPI,
+    KPIDataSource,
+    KPIHistory,
+    PersonalKPI,
+    Strategy,
+    StrategyCalendarEvent,
+    StrategyComparison,
+    StrategyReview,
+)
+
 __all__ = [
     # Base
     "Base",
@@ -816,4 +832,17 @@ __all__ = [
     "ApprovalComment",
     "ApprovalDelegate",
     "ApprovalDelegateLog",
+    # Strategy Management - BEM 战略管理
+    "Strategy",
+    "CSF",
+    "KPI",
+    "KPIHistory",
+    "KPIDataSource",
+    "AnnualKeyWork",
+    "AnnualKeyWorkProjectLink",
+    "DepartmentObjective",
+    "PersonalKPI",
+    "StrategyReview",
+    "StrategyCalendarEvent",
+    "StrategyComparison",
 ]

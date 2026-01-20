@@ -270,3 +270,13 @@ api_router.include_router(
 api_router.include_router(
     node_tasks.router, prefix="/node-tasks", tags=["node-tasks"]
 )
+
+# 统一审批系统
+from app.api.v1.endpoints.approvals import router as approvals_router
+
+api_router.include_router(approvals_router, tags=["approvals"])
+
+# 战略管理模块
+from app.api.v1.endpoints.strategy import router as strategy_router
+
+api_router.include_router(strategy_router, prefix="/strategy", tags=["strategy"])
