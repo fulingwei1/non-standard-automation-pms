@@ -8,6 +8,8 @@ TODO实现功能的单元测试
 3. 项目评价等级阈值配置
 4. 工时统计模块集成
 5. 财务数据查询
+6. 节假日服务
+7. 时薪配置服务
 
 运行测试：
     pytest tests/unit/test_todo_implementations.py -v
@@ -15,7 +17,7 @@ TODO实现功能的单元测试
 
 import pytest
 from decimal import Decimal
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from unittest.mock import MagicMock, patch
 from sqlalchemy.orm import Session
 
@@ -25,6 +27,8 @@ from app.models.production import Equipment, Workshop
 from app.models.timesheet import Timesheet
 from app.models.project_evaluation import ProjectEvaluationDimension
 from app.models.enums import ProjectEvaluationLevelEnum
+from app.models.holiday import Holiday, HolidayService
+from app.models.hourly_rate import HourlyRateConfig
 
 
 @pytest.mark.unit
@@ -366,3 +370,349 @@ class TestFinancialMetricsCalculation:
 
         # 零收入时毛利率应为0，避免除零错误
         assert gross_margin_rate == 0.0
+
+
+@pytest.mark.unit
+class TestHolidayService:
+    """测试节假日服务"""
+
+    def test_is_holiday(self, db_session: Session):
+        """测试节假日判断"""
+        # 创建节假日
+        holiday = Holiday(
+            holiday_date=date(2025, 1, 1),
+            year=2025,
+            holiday_type="HOLIDAY",
+            name="元旦",
+            is_active=True
+        )
+        db_session.add(holiday)
+        db_session.commit()
+
+        # 测试节假日判断
+        result = HolidayService.is_holiday(db_session, date(2025, 1, 1))
+        assert result is True
+
+        # 测试非节假日
+        result = HolidayService.is_holiday(db_session, date(2025, 1, 2))
+        assert result is False
+
+    def test_is_workday_override(self, db_session: Session):
+        """测试调休工作日（周末需要上班）"""
+        # 创建调休工作日（假设2025-01-25是周六，但需要调休上班）
+        workday = Holiday(
+            holiday_date=date(2025, 1, 25),
+            year=2025,
+            holiday_type="WORKDAY",
+            name="春节调休",
+            is_active=True
+        )
+        db_session.add(workday)
+        db_session.commit()
+
+        # 测试调休工作日判断
+        result = HolidayService.is_workday(db_session, date(2025, 1, 25))
+        assert result is True
+
+        # 测试普通日期不是调休
+        result = HolidayService.is_workday(db_session, date(2025, 1, 20))
+        assert result is False
+
+    def test_get_work_type_holiday(self, db_session: Session):
+        """测试获取工作类型 - 节假日"""
+        holiday = Holiday(
+            holiday_date=date(2025, 10, 1),
+            year=2025,
+            holiday_type="HOLIDAY",
+            name="国庆节",
+            is_active=True
+        )
+        db_session.add(holiday)
+        db_session.commit()
+
+        work_type = HolidayService.get_work_type(db_session, date(2025, 10, 1))
+        assert work_type == "HOLIDAY"
+
+    def test_get_work_type_workday_override(self, db_session: Session):
+        """测试获取工作类型 - 调休工作日（周末变工作日）"""
+        # 2025-01-26是周日，但配置为调休工作日
+        workday = Holiday(
+            holiday_date=date(2025, 1, 26),
+            year=2025,
+            holiday_type="WORKDAY",
+            name="春节调休上班",
+            is_active=True
+        )
+        db_session.add(workday)
+        db_session.commit()
+
+        work_type = HolidayService.get_work_type(db_session, date(2025, 1, 26))
+        assert work_type == "NORMAL"
+
+    def test_get_work_type_weekend(self, db_session: Session):
+        """测试获取工作类型 - 普通周末"""
+        # 2025-01-18是周六，没有特殊配置
+        work_type = HolidayService.get_work_type(db_session, date(2025, 1, 18))
+        assert work_type == "WEEKEND"
+
+    def test_get_work_type_normal(self, db_session: Session):
+        """测试获取工作类型 - 普通工作日"""
+        # 2025-01-20是周一
+        work_type = HolidayService.get_work_type(db_session, date(2025, 1, 20))
+        assert work_type == "NORMAL"
+
+    def test_get_holiday_name(self, db_session: Session):
+        """测试获取节假日名称"""
+        holiday = Holiday(
+            holiday_date=date(2025, 5, 1),
+            year=2025,
+            holiday_type="HOLIDAY",
+            name="劳动节",
+            is_active=True
+        )
+        db_session.add(holiday)
+        db_session.commit()
+
+        name = HolidayService.get_holiday_name(db_session, date(2025, 5, 1))
+        assert name == "劳动节"
+
+        # 非节假日返回None
+        name = HolidayService.get_holiday_name(db_session, date(2025, 5, 2))
+        assert name is None
+
+
+@pytest.mark.unit
+class TestHourlyRateService:
+    """测试时薪配置服务"""
+
+    def test_get_user_personal_rate(self, db_session: Session):
+        """测试获取用户个人时薪配置"""
+        from app.services.hourly_rate_service import HourlyRateService
+
+        # 创建用户
+        user = User(
+            username="test_user_rate",
+            hashed_password="test",
+            is_active=True
+        )
+        db_session.add(user)
+        db_session.flush()
+
+        # 创建用户个人时薪配置
+        config = HourlyRateConfig(
+            config_type="USER",
+            user_id=user.id,
+            hourly_rate=Decimal("150"),
+            is_active=True
+        )
+        db_session.add(config)
+        db_session.commit()
+
+        # 获取时薪
+        rate = HourlyRateService.get_user_hourly_rate(db_session, user.id)
+        assert rate == Decimal("150")
+
+    def test_get_role_based_rate(self, db_session: Session):
+        """测试获取角色级别时薪配置"""
+        from app.services.hourly_rate_service import HourlyRateService
+
+        # 创建角色
+        role = Role(
+            role_code="SENIOR_ENGINEER",
+            role_name="高级工程师",
+            is_active=True
+        )
+        db_session.add(role)
+        db_session.flush()
+
+        # 创建用户
+        user = User(
+            username="test_senior_eng",
+            hashed_password="test",
+            is_active=True
+        )
+        db_session.add(user)
+        db_session.flush()
+
+        # 创建用户角色关联
+        user_role = UserRole(
+            user_id=user.id,
+            role_id=role.id
+        )
+        db_session.add(user_role)
+
+        # 创建角色时薪配置
+        config = HourlyRateConfig(
+            config_type="ROLE",
+            role_id=role.id,
+            hourly_rate=Decimal("120"),
+            is_active=True
+        )
+        db_session.add(config)
+        db_session.commit()
+
+        # 获取时薪（用户没有个人配置，应该使用角色配置）
+        rate = HourlyRateService.get_user_hourly_rate(db_session, user.id)
+        assert rate == Decimal("120")
+
+    def test_user_rate_priority_over_role(self, db_session: Session):
+        """测试用户个人配置优先于角色配置"""
+        from app.services.hourly_rate_service import HourlyRateService
+
+        # 创建角色
+        role = Role(
+            role_code="DEVELOPER",
+            role_name="开发工程师",
+            is_active=True
+        )
+        db_session.add(role)
+        db_session.flush()
+
+        # 创建用户
+        user = User(
+            username="test_dev",
+            hashed_password="test",
+            is_active=True
+        )
+        db_session.add(user)
+        db_session.flush()
+
+        # 创建用户角色关联
+        user_role = UserRole(
+            user_id=user.id,
+            role_id=role.id
+        )
+        db_session.add(user_role)
+
+        # 创建角色时薪配置（100元）
+        role_config = HourlyRateConfig(
+            config_type="ROLE",
+            role_id=role.id,
+            hourly_rate=Decimal("100"),
+            is_active=True
+        )
+        db_session.add(role_config)
+
+        # 创建用户个人时薪配置（180元）
+        user_config = HourlyRateConfig(
+            config_type="USER",
+            user_id=user.id,
+            hourly_rate=Decimal("180"),
+            is_active=True
+        )
+        db_session.add(user_config)
+        db_session.commit()
+
+        # 获取时薪 - 应该返回用户个人配置的180元
+        rate = HourlyRateService.get_user_hourly_rate(db_session, user.id)
+        assert rate == Decimal("180")
+
+    def test_default_rate_fallback(self, db_session: Session):
+        """测试默认时薪配置兜底"""
+        from app.services.hourly_rate_service import HourlyRateService
+
+        # 创建用户（没有任何时薪配置）
+        user = User(
+            username="test_no_config",
+            hashed_password="test",
+            is_active=True
+        )
+        db_session.add(user)
+        db_session.flush()
+
+        # 创建默认时薪配置
+        default_config = HourlyRateConfig(
+            config_type="DEFAULT",
+            hourly_rate=Decimal("80"),
+            is_active=True
+        )
+        db_session.add(default_config)
+        db_session.commit()
+
+        # 获取时薪 - 应该返回默认配置的80元
+        rate = HourlyRateService.get_user_hourly_rate(db_session, user.id)
+        assert rate == Decimal("80")
+
+    def test_hardcoded_default_fallback(self, db_session: Session):
+        """测试硬编码默认值兜底（无任何配置）"""
+        from app.services.hourly_rate_service import HourlyRateService
+
+        # 创建用户（没有任何时薪配置，数据库也没有默认配置）
+        user = User(
+            username="test_hardcoded",
+            hashed_password="test",
+            is_active=True
+        )
+        db_session.add(user)
+        db_session.commit()
+
+        # 获取时薪 - 应该返回硬编码默认值100元
+        rate = HourlyRateService.get_user_hourly_rate(db_session, user.id)
+        assert rate == HourlyRateService.DEFAULT_HOURLY_RATE
+        assert rate == Decimal("100")
+
+    def test_batch_get_users_hourly_rates(self, db_session: Session):
+        """测试批量获取多个用户时薪"""
+        from app.services.hourly_rate_service import HourlyRateService
+
+        # 创建两个用户
+        user1 = User(username="batch_user1", hashed_password="test", is_active=True)
+        user2 = User(username="batch_user2", hashed_password="test", is_active=True)
+        db_session.add_all([user1, user2])
+        db_session.flush()
+
+        # 用户1有个人配置
+        config1 = HourlyRateConfig(
+            config_type="USER",
+            user_id=user1.id,
+            hourly_rate=Decimal("200"),
+            is_active=True
+        )
+        db_session.add(config1)
+        db_session.commit()
+
+        # 批量获取
+        rates = HourlyRateService.get_users_hourly_rates(
+            db_session, [user1.id, user2.id]
+        )
+
+        assert rates[user1.id] == Decimal("200")
+        assert rates[user2.id] == Decimal("100")  # 默认值
+
+    def test_rate_effective_date(self, db_session: Session):
+        """测试时薪配置的生效日期"""
+        from app.services.hourly_rate_service import HourlyRateService
+
+        # 创建用户
+        user = User(
+            username="test_date_user",
+            hashed_password="test",
+            is_active=True
+        )
+        db_session.add(user)
+        db_session.flush()
+
+        # 创建未来生效的时薪配置
+        future_config = HourlyRateConfig(
+            config_type="USER",
+            user_id=user.id,
+            hourly_rate=Decimal("250"),
+            effective_date=date.today() + timedelta(days=30),
+            is_active=True
+        )
+        db_session.add(future_config)
+
+        # 创建当前有效的时薪配置
+        current_config = HourlyRateConfig(
+            config_type="USER",
+            user_id=user.id,
+            hourly_rate=Decimal("150"),
+            effective_date=date.today() - timedelta(days=30),
+            is_active=True
+        )
+        db_session.add(current_config)
+        db_session.commit()
+
+        # 查询今天的时薪 - 应该返回当前有效的150元
+        rate = HourlyRateService.get_user_hourly_rate(db_session, user.id, date.today())
+        assert rate == Decimal("150")
