@@ -92,11 +92,11 @@ export default function ArrivalTrackingList() {
       setLoading(true);
       const params = {};
       if (filterSupplier && filterSupplier !== "all")
-        params.supplier_id = filterSupplier;
-      if (filterStatus && filterStatus !== "all") params.status = filterStatus;
+        {params.supplier_id = filterSupplier;}
+      if (filterStatus && filterStatus !== "all") {params.status = filterStatus;}
       if (filterDelayed && filterDelayed !== "all")
-        params.is_delayed = filterDelayed === "true";
-      if (searchKeyword) params.keyword = searchKeyword;
+        {params.is_delayed = filterDelayed === "true";}
+      if (searchKeyword) {params.keyword = searchKeyword;}
       const res = await shortageApi.arrivals.list(params);
       // Handle different response formats
       const data = res.data?.data || res.data || res;
@@ -161,7 +161,7 @@ export default function ArrivalTrackingList() {
                     const supplierId =
                       supplier.id?.toString() ||
                       supplier.supplier_id?.toString();
-                    if (!supplierId || supplierId === "") return null;
+                    if (!supplierId || supplierId === "") {return null;}
                     return (
                       <SelectItem
                         key={supplier.id || supplier.supplier_id}

@@ -111,10 +111,10 @@ export const LeadCard = ({
   // 计算健康度指示器
   const healthIndicator = useMemo(() => {
     const score = lead.assessmentScore || 0;
-    if (score >= 80) return { color: 'bg-green-500', label: '优秀' };
-    if (score >= 60) return { color: 'bg-blue-500', label: '良好' };
-    if (score >= 40) return { color: 'bg-amber-500', label: '一般' };
-    if (score >= 20) return { color: 'bg-orange-500', label: '较差' };
+    if (score >= 80) {return { color: 'bg-green-500', label: '优秀' };}
+    if (score >= 60) {return { color: 'bg-blue-500', label: '良好' };}
+    if (score >= 40) {return { color: 'bg-amber-500', label: '一般' };}
+    if (score >= 20) {return { color: 'bg-orange-500', label: '较差' };}
     return { color: 'bg-red-500', label: '很差' };
   }, [lead.assessmentScore]);
 
@@ -136,7 +136,7 @@ export const LeadCard = ({
   // 生成联系人头像
   const generateAvatar = useMemo(() => {
     const name = contactInfo.name;
-    if (!name || name === '未填写') return 'C';
+    if (!name || name === '未填写') {return 'C';}
 
     const words = name.split(' ').filter((word) => word.length > 0);
     if (words.length === 1) {
@@ -200,7 +200,7 @@ export const LeadCard = ({
   <div className="flex items-center gap-2">
       <div className={`w-3 h-3 rounded-full ${healthIndicator.color}`} />
       <span className="text-sm text-slate-600">健康度: {healthIndicator.label}</span>
-    </div>;
+  </div>;
 
 
   return (
@@ -245,13 +245,13 @@ export const LeadCard = ({
                     <span className="text-sm text-slate-600 truncate">
                       {companyNameDisplay}
                     </span>
-                  </div>
+                </div>
                 }
 
                 {contactInfo.title &&
                 <div className="text-xs text-slate-500 mb-2">
                     {contactInfo.title}
-                  </div>
+                </div>
                 }
 
                 <div className="flex flex-wrap gap-2">
@@ -270,7 +270,7 @@ export const LeadCard = ({
                     style={{ borderColor: priorityConfig.color, color: priorityConfig.color }}>
 
                       {priorityConfig.label}
-                    </Badge>
+                  </Badge>
                   }
                 </div>
               </div>
@@ -320,7 +320,7 @@ export const LeadCard = ({
                     删除线索
                   </DropdownMenuItem>
                 </DropdownMenuContent>
-              </DropdownMenu>
+            </DropdownMenu>
             }
           </div>
         </CardHeader>
@@ -353,7 +353,7 @@ export const LeadCard = ({
               <div className="text-sm text-slate-900 truncate">
                 {lead.projectName}
               </div>
-            </div>
+          </div>
           }
 
           {/* 线索详情 */}
@@ -415,7 +415,7 @@ export const LeadCard = ({
               <div className="text-sm text-slate-600 line-clamp-2">
                 {lead.description}
               </div>
-            </div>
+          </div>
           }
         </CardContent>
       </Card>

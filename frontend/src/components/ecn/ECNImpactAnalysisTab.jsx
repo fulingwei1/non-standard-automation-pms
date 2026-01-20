@@ -18,7 +18,7 @@ const fadeIn = {
  * BOM影响分析结果卡片
  */
 const BomImpactCard = ({ summary }) => {
-  if (!summary || !summary.has_impact) return null;
+  if (!summary || !summary.has_impact) {return null;}
 
   return (
     <Card className="border-blue-200 bg-blue-50/30">
@@ -58,9 +58,9 @@ const BomImpactCard = ({ summary }) => {
                 BOM #{impact.bom_id}: {impact.affected_item_count}项受影响, 
                 成本影响¥{impact.cost_impact?.toLocaleString()}, 
                 交期影响{impact.schedule_impact_days}天
-              </div>
-          )}
           </div>
+          )}
+        </div>
         }
       </CardContent>
     </Card>);
@@ -108,7 +108,7 @@ const ObsoleteAlertCard = ({ alert }) => {
  * RCA分析卡片
  */
 const RcaAnalysisCard = ({ rcaAnalysis }) => {
-  if (!rcaAnalysis) return null;
+  if (!rcaAnalysis) {return null;}
 
   const categoryConfig = {
     DESIGN: { label: '设计问题', color: 'bg-blue-500' },
@@ -143,7 +143,7 @@ const RcaAnalysisCard = ({ rcaAnalysis }) => {
         {rcaAnalysis.created_at &&
         <div className="text-xs text-slate-500">
             分析时间: {new Date(rcaAnalysis.created_at).toLocaleString()}
-          </div>
+        </div>
         }
       </CardContent>
     </Card>);
@@ -243,7 +243,7 @@ export const ECNImpactAnalysisTab = ({
             )}
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* RCA分析 */}
@@ -259,7 +259,7 @@ export const ECNImpactAnalysisTab = ({
               点击上方按钮执行影响分析操作
             </p>
           </CardContent>
-        </Card>
+      </Card>
       }
     </motion.div>);
 

@@ -312,9 +312,9 @@ export default function BomAssemblyAttrs() {
   // 过滤显示的数据
   const filteredAttrs = assemblyAttrs.filter((attr) => {
     if (filterStage !== "all" && attr.assembly_stage !== filterStage)
-    return false;
-    if (filterBlocking === "blocking" && !attr.is_blocking) return false;
-    if (filterBlocking === "postpone" && attr.is_blocking) return false;
+    {return false;}
+    if (filterBlocking === "blocking" && !attr.is_blocking) {return false;}
+    if (filterBlocking === "postpone" && attr.is_blocking) {return false;}
     if (searchText) {
       const search = searchText.toLowerCase();
       if (
@@ -355,7 +355,7 @@ export default function BomAssemblyAttrs() {
             className="bg-yellow-50 text-yellow-700 border-yellow-300">
 
               有未保存的更改
-            </Badge>
+          </Badge>
           }
           <Button
             variant="outline"
@@ -409,7 +409,7 @@ export default function BomAssemblyAttrs() {
                   {projects.map((proj) =>
                   <SelectItem key={proj.id} value={proj.id.toString()}>
                       {proj.name || proj.project_name}
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -428,7 +428,7 @@ export default function BomAssemblyAttrs() {
                   {boms.map((bom) =>
                   <SelectItem key={bom.id} value={bom.id.toString()}>
                       {bom.bom_no} - {bom.name || bom.description}
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -444,7 +444,7 @@ export default function BomAssemblyAttrs() {
                   {stageOptions.map((stage) =>
                   <SelectItem key={stage.value} value={stage.value}>
                       {stage.label}
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -514,10 +514,10 @@ export default function BomAssemblyAttrs() {
                     <span className="text-red-600">{stage.blocking} 阻塞</span>
                   </div>
                 </CardContent>
-              </Card>);
+            </Card>);
 
         })}
-        </div>
+      </div>
       }
 
       {/* Main Table */}
@@ -604,7 +604,7 @@ export default function BomAssemblyAttrs() {
 
                                       {stage.label}
                                     </div>
-                                  </SelectItem>);
+                              </SelectItem>);
 
                           })}
                             </SelectContent>
@@ -630,7 +630,7 @@ export default function BomAssemblyAttrs() {
                                   <Badge className={imp.color}>
                                     {imp.label}
                                   </Badge>
-                                </SelectItem>
+                          </SelectItem>
                           )}
                             </SelectContent>
                           </Select>
@@ -686,20 +686,20 @@ export default function BomAssemblyAttrs() {
                         min={0} />
 
                         </TableCell>
-                      </TableRow>);
+                  </TableRow>);
 
               })}
                 </TableBody>
-              </Table> :
+          </Table> :
 
           <div className="text-center py-8 text-slate-400">
                 {assemblyAttrs.length === 0 ?
             '暂无装配属性配置，请使用"自动分配"或"套用模板"初始化' :
             "没有匹配的记录"}
-              </div>
+          </div>
           }
           </CardContent>
-        </Card> :
+      </Card> :
 
       <Card>
           <CardContent className="py-12">
@@ -708,7 +708,7 @@ export default function BomAssemblyAttrs() {
               <p>请先选择项目和BOM</p>
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* Auto Assign Dialog */}
@@ -787,15 +787,15 @@ export default function BomAssemblyAttrs() {
                         {tpl.equipment_type &&
                       <span className="text-slate-500 ml-2">
                             ({tpl.equipment_type})
-                          </span>
+                      </span>
                       }
                         {tpl.is_default &&
                       <Badge variant="outline" className="ml-2">
                             默认
-                          </Badge>
+                      </Badge>
                       }
                       </div>
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>

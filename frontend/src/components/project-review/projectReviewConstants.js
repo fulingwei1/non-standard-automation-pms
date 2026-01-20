@@ -543,7 +543,7 @@ export function getPracticeCategory(category) {
  * 计算评审完成度
  */
 export function calculateReviewProgress(review) {
-  if (!review) return 0;
+  if (!review) {return 0;}
   
   const sections = ['overview', 'lessons', 'practices'];
   const completedSections = sections.filter(section => {
@@ -564,7 +564,7 @@ export function calculateReviewProgress(review) {
  * 计算评审评分
  */
 export function calculateReviewScore(review) {
-  if (!review || !review.evaluations) return 0;
+  if (!review || !review.evaluations) {return 0;}
   
   const totalScore = review.evaluations.reduce(
     (sum, evaluation) => {

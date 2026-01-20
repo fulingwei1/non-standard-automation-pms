@@ -90,7 +90,7 @@ export default function ManagementRhythmDashboard() {
   };
 
   const formatDate = (dateStr) => {
-    if (!dateStr) return "-";
+    if (!dateStr) {return "-";}
     const date = new Date(dateStr);
     return date.toLocaleDateString("zh-CN", {
       year: "numeric",
@@ -100,7 +100,7 @@ export default function ManagementRhythmDashboard() {
   };
 
   const calculateDaysUntil = (dateStr) => {
-    if (!dateStr) return null;
+    if (!dateStr) {return null;}
     const targetDate = new Date(dateStr);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -112,7 +112,7 @@ export default function ManagementRhythmDashboard() {
 
   const renderLevelCard = (level, data) => {
     const config = rhythmLevelConfig[level];
-    if (!config) return null;
+    if (!config) {return null;}
 
     const Icon = config.icon;
     const healthConfig = data ? healthStatusConfig[data.health_status] : null;

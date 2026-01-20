@@ -85,7 +85,7 @@ const CustomerCommunicationOverview = ({
   ).length;
 
   const overdueCommunications = communications.filter((comm) => {
-    if (comm.status === COMMUNICATION_STATUS.COMPLETED) return false;
+    if (comm.status === COMMUNICATION_STATUS.COMPLETED) {return false;}
     const communicationDate = new Date(comm.communication_date);
     const now = new Date();
     const daysDiff = Math.floor((now - communicationDate) / (1000 * 60 * 60 * 24));
@@ -120,10 +120,10 @@ const CustomerCommunicationOverview = ({
   };
 
   const getSatisfactionLevel = () => {
-    if (stats.averageSatisfaction >= 4.5) return { level: '非常满意', color: 'text-green-600' };
-    if (stats.averageSatisfaction >= 3.5) return { level: '满意', color: 'text-green-500' };
-    if (stats.averageSatisfaction >= 2.5) return { level: '一般', color: 'text-yellow-500' };
-    if (stats.averageSatisfaction >= 1.5) return { level: '不满意', color: 'text-orange-500' };
+    if (stats.averageSatisfaction >= 4.5) {return { level: '非常满意', color: 'text-green-600' };}
+    if (stats.averageSatisfaction >= 3.5) {return { level: '满意', color: 'text-green-500' };}
+    if (stats.averageSatisfaction >= 2.5) {return { level: '一般', color: 'text-yellow-500' };}
+    if (stats.averageSatisfaction >= 1.5) {return { level: '不满意', color: 'text-orange-500' };}
     return { level: '非常不满意', color: 'text-red-500' };
   };
 

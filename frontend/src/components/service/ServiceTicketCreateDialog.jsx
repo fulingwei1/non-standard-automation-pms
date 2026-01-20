@@ -84,7 +84,7 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
   }, []);
 
   const handleSubmit = async () => {
-    if (submitting) return;
+    if (submitting) {return;}
 
     // 验证必填字段
     if (!formData.project_id || !formData.project_ids || formData.project_ids.length === 0) {
@@ -147,7 +147,7 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
   };
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
+    <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-2xl bg-slate-900 border-slate-700 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -176,7 +176,7 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
                   {customers.map((customer) =>
                   <SelectItem key={customer.id} value={customer.id.toString()}>
                       {customer.customer_name} ({customer.customer_code})
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -202,7 +202,7 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
                     {projects.map((project) =>
                     <SelectItem key={project.id} value={project.id.toString()}>
                         {project.project_code} - {project.project_name}
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -224,12 +224,12 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
                         className="hover:text-blue-100">
 
                               <X className="w-3 h-3" />
-                            </button>
+                      </button>
                       }
-                        </div> :
+                    </div> :
                     null;
                   })}
-                  </div>
+                </div>
                 }
               </div>
             </div>
@@ -249,7 +249,7 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
                   {Object.entries(problemTypeConfigs).map(([key, config]) =>
                   <option key={key} value={key}>
                       {config.icon} {config.label}
-                    </option>
+                  </option>
                   )}
                 </select>
               </div>
@@ -265,7 +265,7 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
                   {Object.entries(urgencyConfigs).map(([key, config]) =>
                   <option key={key} value={key}>
                       {config.label}
-                    </option>
+                  </option>
                   )}
                 </select>
               </div>
@@ -327,7 +327,7 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
                   {users.map((user) =>
                   <SelectItem key={user.id} value={user.id.toString()}>
                       {user.real_name || user.username} ({user.position || '工程师'})
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>

@@ -10,7 +10,7 @@ export function CostStructureChart({ data, size = 300, showLegend = true }) {
   // data格式: [{ category: '硬件成本', amount: 80000, percentage: 50 }, ...]
 
   const total = useMemo(() => {
-    if (!data || !Array.isArray(data)) return 0;
+    if (!data || !Array.isArray(data)) {return 0;}
     return data.reduce((sum, item) => sum + (item.amount || 0), 0);
   }, [data]);
 

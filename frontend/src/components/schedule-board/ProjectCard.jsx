@@ -1,11 +1,8 @@
-/**
- * 项目卡片组件
- */
-
-
-
-
-
+import { motion } from "framer-motion";
+import { Calendar, Clock, AlertTriangle, ExternalLink } from "lucide-react";
+import { Badge } from "../../components/ui/badge";
+import { Progress } from "../../components/ui/progress";
+import { Button } from "../../components/ui/button";
 import { cn } from "../../lib/utils";
 import { stageColors, healthColors, milestoneStatusColors } from "./scheduleConfig";
 

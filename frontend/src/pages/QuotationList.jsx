@@ -163,7 +163,7 @@ export default function QuotationList() {
               <Plus className="w-4 h-4" />
               新建报价
             </Button>
-          </motion.div>
+        </motion.div>
         } />
 
 
@@ -244,7 +244,7 @@ export default function QuotationList() {
             {Object.entries(statusConfig).map(([key, val]) =>
             <option key={key} value={key}>
                 {val.label}
-              </option>
+            </option>
             )}
           </select>
         </div>
@@ -352,7 +352,7 @@ export default function QuotationList() {
                           {quote.discountPercent > 0 &&
                         <div className="text-xs text-slate-500 line-through">
                               ¥{(quote.totalAmount / 10000).toFixed(0)}万
-                            </div>
+                        </div>
                         }
                         </td>
                         <td className="p-4 text-center">
@@ -362,7 +362,7 @@ export default function QuotationList() {
                           className="text-xs bg-red-500/20 text-red-400">
 
                               -{quote.discountPercent}%
-                            </Badge> :
+                        </Badge> :
 
                         <span className="text-slate-500">-</span>
                         }
@@ -417,17 +417,17 @@ export default function QuotationList() {
                             className="h-8 w-8">
 
                                 <Send className="w-4 h-4 text-blue-400" />
-                              </Button>
+                          </Button>
                           }
                           </div>
                         </td>
-                      </tr>);
+                    </tr>);
 
                 })}
                 </tbody>
               </table>
             </CardContent>
-          </Card> :
+        </Card> :
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredQuotations.map((quote) => {
@@ -491,7 +491,7 @@ export default function QuotationList() {
                         {quote.discountPercent > 0 &&
                       <div className="text-xs text-red-400">
                             -{quote.discountPercent}%折扣
-                          </div>
+                      </div>
                       }
                       </div>
                       <div className="text-right">
@@ -506,10 +506,10 @@ export default function QuotationList() {
                       </div>
                     </div>
                   </CardContent>
-                </Card>);
+              </Card>);
 
           })}
-          </div>
+        </div>
         }
 
         {filteredQuotations.length === 0 &&
@@ -521,7 +521,7 @@ export default function QuotationList() {
               <Plus className="w-4 h-4 mr-2" />
               新建报价
             </Button>
-          </div>
+        </div>
         }
       </motion.div>
 
@@ -644,14 +644,14 @@ function QuotationDetailPanel({ quotation, onClose }) {
               {quotation.discountPercent > 0 &&
               <div className="text-sm text-slate-500 line-through">
                   原价: ¥{(quotation.totalAmount / 10000).toFixed(2)}万
-                </div>
+              </div>
               }
             </div>
             <div className="text-right">
               {quotation.discountPercent > 0 &&
               <Badge className="bg-red-500/20 text-red-400 mb-2">
                   -{quotation.discountPercent}%折扣
-                </Badge>
+              </Badge>
               }
               <div className="text-sm text-slate-400">利润率</div>
               <div
@@ -729,7 +729,7 @@ function QuotationDetailPanel({ quotation, onClose }) {
                     <td className="p-3 text-right text-white">
                       ¥{(item.unitPrice * item.qty / 10000).toFixed(1)}万
                     </td>
-                  </tr>
+                </tr>
                 )}
               </tbody>
               <tfoot>
@@ -753,7 +753,7 @@ function QuotationDetailPanel({ quotation, onClose }) {
               <AlertTriangle className="w-4 h-4" />
               {quotation.approvalNote}
             </div>
-          </div>
+        </div>
         }
 
         {/* Reject Reason */}
@@ -763,7 +763,7 @@ function QuotationDetailPanel({ quotation, onClose }) {
               <XCircle className="w-4 h-4" />
               拒绝原因: {quotation.rejectReason}
             </div>
-          </div>
+        </div>
         }
 
         {/* Actions */}
@@ -786,7 +786,7 @@ function QuotationDetailPanel({ quotation, onClose }) {
             <Button variant="outline" size="sm" className="justify-start">
                 <Send className="w-4 h-4 mr-2 text-amber-400" />
                 发送客户
-              </Button>
+            </Button>
             }
           </div>
         </div>
@@ -801,7 +801,7 @@ function QuotationDetailPanel({ quotation, onClose }) {
         <Button className="flex-1">
             <Edit className="w-4 h-4 mr-2" />
             编辑
-          </Button>
+        </Button>
         }
       </div>
     </motion.div>);

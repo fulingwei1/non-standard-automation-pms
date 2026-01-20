@@ -50,9 +50,9 @@ export default function LossAnalysis() {
     setLoading(true);
     try {
       const params = {};
-      if (startDate) params.start_date = startDate;
-      if (endDate) params.end_date = endDate;
-      if (salespersonId) params.salesperson_id = parseInt(salespersonId);
+      if (startDate) {params.start_date = startDate;}
+      if (endDate) {params.end_date = endDate;}
+      if (salespersonId) {params.salesperson_id = parseInt(salespersonId);}
 
       const response = await lossAnalysisApi.deepAnalysis(params);
       if (response.data && response.data.data) {
@@ -71,7 +71,7 @@ export default function LossAnalysis() {
   }, []);
 
   const formatHours = (hours) => {
-    if (!hours) return "0h";
+    if (!hours) {return "0h";}
     return `${hours.toFixed(1)}h`;
   };
 
@@ -264,13 +264,13 @@ export default function LossAnalysis() {
                                 <TableCell>
                                   <Badge variant="outline">{detail.loss_reason}</Badge>
                                 </TableCell>
-                              </TableRow>
+                    </TableRow>
                     )}
                         </TableBody>
                       </Table>
-                    </div>
+              </div>
               }
-                </div>
+            </div>
             }
             </CardContent>
           </Card>
@@ -298,10 +298,10 @@ export default function LossAnalysis() {
                           <p>总工时: {formatHours(reason.total_hours)}</p>
                           <p>总成本: {formatAmount(reason.total_cost)}</p>
                         </div>
-                      </div>
+                </div>
                 )}
                   </div>
-                </div>
+            </div>
             }
             </CardContent>
           </Card>
@@ -374,13 +374,13 @@ export default function LossAnalysis() {
                               <TableCell>{person.project_count}</TableCell>
                               <TableCell>{formatHours(person.hours)}</TableCell>
                               <TableCell>{formatAmount(person.cost)}</TableCell>
-                            </TableRow>
+                    </TableRow>
                     )}
                         </TableBody>
                       </Table>
-                    </div>
+              </div>
               }
-                </div>
+            </div>
             }
             </CardContent>
           </Card>
@@ -412,11 +412,11 @@ export default function LossAnalysis() {
                               <p className="text-sm text-slate-600">
                                 占比: {pattern.percentage}%
                               </p>
-                            </div>
+                    </div>
 
                   )}
                       </div>
-                    </div>
+              </div>
               }
 
                   {analysisData.pattern_analysis.salesperson_patterns.length > 0 &&
@@ -440,17 +440,17 @@ export default function LossAnalysis() {
                               <TableCell>{sp.lost_count}</TableCell>
                               <TableCell>{formatHours(sp.total_hours)}</TableCell>
                               <TableCell>{formatAmount(sp.total_cost)}</TableCell>
-                            </TableRow>
+                    </TableRow>
                     )}
                         </TableBody>
                       </Table>
-                    </div>
+              </div>
               }
                 </div>
               </CardContent>
-            </Card>
+        </Card>
         }
-        </motion.div>
+      </motion.div>
       }
     </div>);
 

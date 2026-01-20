@@ -102,7 +102,7 @@ export default function CultureWall() {
   };
 
   const getAllItems = () => {
-    if (!data) return [];
+    if (!data) {return [];}
     const items = [];
 
     // 添加各类内容
@@ -132,7 +132,7 @@ export default function CultureWall() {
   };
 
   const formatDate = (dateStr) => {
-    if (!dateStr) return "";
+    if (!dateStr) {return "";}
     const date = new Date(dateStr);
     return date.toLocaleDateString("zh-CN", {
       year: "numeric",
@@ -143,7 +143,7 @@ export default function CultureWall() {
 
   const renderContentItem = (item) => {
     const config = contentTypeConfig[item.content_type || item.category];
-    if (!config) return null;
+    if (!config) {return null;}
 
     const Icon = config.icon;
 
@@ -338,7 +338,7 @@ export default function CultureWall() {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
           <p className="text-gray-600">加载中...</p>
         </div>
       </div>

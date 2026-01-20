@@ -172,7 +172,7 @@ export default function SalesTemplateCenter() {
   };
 
   const handlePublishQuoteVersion = async (template) => {
-    if (!template.versions?.length) return;
+    if (!template.versions?.length) {return;}
     const latest = template.versions[0];
     try {
       await salesTemplateApi.publishQuoteVersion(template.id, latest.id);
@@ -208,7 +208,7 @@ export default function SalesTemplateCenter() {
       {quoteTemplates.length === 0 && !loading &&
     <div className="text-center text-muted-foreground py-8 border rounded-md">
           暂无模板，点击「新增模板」开始配置。
-        </div>
+    </div>
     }
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {quoteTemplates.map((template) =>
@@ -255,18 +255,18 @@ export default function SalesTemplateCenter() {
                       </div>
                     </div>
                     <Badge variant="secondary">{version.status}</Badge>
-                  </div>
+            </div>
             )}
               </div>
             </CardContent>
-          </Card>
+      </Card>
       )}
       </div>
-    </div>;
+  </div>;
 
 
   const handlePublishContractVersion = async (template) => {
-    if (!template.versions?.length) return;
+    if (!template.versions?.length) {return;}
     const latest = template.versions[0];
     try {
       await salesTemplateApi.publishContractVersion(template.id, latest.id);
@@ -292,7 +292,7 @@ export default function SalesTemplateCenter() {
       {contractTemplates.length === 0 && !loading &&
     <div className="text-center text-muted-foreground py-8 border rounded-md">
           尚未配置合同模板。
-        </div>
+    </div>
     }
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {contractTemplates.map((template) =>
@@ -336,14 +336,14 @@ export default function SalesTemplateCenter() {
                       </div>
                     </div>
                     <Badge variant="secondary">{version.status}</Badge>
-                  </div>
+            </div>
             )}
               </div>
             </CardContent>
-          </Card>
+      </Card>
       )}
       </div>
-    </div>;
+  </div>;
 
 
   const renderCpqTab = () =>
@@ -360,7 +360,7 @@ export default function SalesTemplateCenter() {
       {ruleSets.length === 0 && !loading &&
     <div className="text-center text-muted-foreground py-8 border rounded-md">
           规则集为空，先创建一个基础规则集。
-        </div>
+    </div>
     }
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {ruleSets.map((rule) =>
@@ -379,10 +379,10 @@ export default function SalesTemplateCenter() {
                 审批阈值: {JSON.stringify(rule.approval_threshold || {})}
               </div>
             </CardContent>
-          </Card>
+      </Card>
       )}
       </div>
-    </div>;
+  </div>;
 
 
   return (
@@ -415,13 +415,13 @@ export default function SalesTemplateCenter() {
       {loading ?
       <div className="py-20 text-center text-muted-foreground">
           数据加载中...
-        </div> :
+      </div> :
 
       <>
           {activeTab === "quote" && renderQuoteTab()}
           {activeTab === "contract" && renderContractTab()}
           {activeTab === "cpq" && renderCpqTab()}
-        </>
+      </>
       }
 
       {/* Quote Template Dialog */}
@@ -765,22 +765,22 @@ export default function SalesTemplateCenter() {
 
                           {adj.value}
                         </div>
-                      </div>
+                  </div>
 
                 )}
                   {(previewPayload.cpq_preview?.adjustments || []).length ===
                 0 &&
                 <div className="text-muted-foreground text-sm">
                       暂无调价轨迹
-                    </div>
+                </div>
                 }
                 </CardContent>
               </Card>
-            </div> :
+          </div> :
 
           <div className="py-10 text-center text-muted-foreground">
               暂无预览数据
-            </div>
+          </div>
           }
           <DialogFooter>
             <Button onClick={() => setShowPreviewDialog(false)}>关闭</Button>

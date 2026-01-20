@@ -186,7 +186,7 @@ export function MaterialStatsOverview({
   useEffect(() => {
     const interval = setInterval(() => {
       setLastRefreshTime(new Date());
-      if (onRefresh) onRefresh();
+      if (onRefresh) {onRefresh();}
     }, refreshInterval);
 
     return () => clearInterval(interval);
@@ -224,14 +224,14 @@ export function MaterialStatsOverview({
           )}>
                 {trendValue}%
               </span>
-            </div>
+        </div>
         }
           {description &&
         <p className="text-xs text-slate-500 mt-2">{description}</p>
         }
         </div>
       </div>
-    </motion.div>;
+  </motion.div>;
 
 
   if (loading) {
@@ -239,8 +239,8 @@ export function MaterialStatsOverview({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, i) =>
         <div key={i} className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 animate-pulse">
-            <div className="h-20 bg-slate-700/50 rounded-lg"></div>
-          </div>
+            <div className="h-20 bg-slate-700/50 rounded-lg" />
+        </div>
         )}
       </div>);
 
@@ -320,7 +320,7 @@ export function MaterialStatsOverview({
                   <span className="text-sm text-slate-300">
                     {item.name}: {item.value}
                   </span>
-                </div>
+              </div>
               )}
             </div>
           </CardContent>
@@ -379,7 +379,7 @@ export function MaterialStatsOverview({
                     className="w-16 h-2 mt-1" />
 
                   </div>
-                </div>
+              </div>
               )}
             </div>
           </CardContent>

@@ -19,7 +19,7 @@ const PUBLIC_ENDPOINTS = [
 
 // 判断是否为公开 API
 const isPublicEndpoint = (url) => {
-  if (!url) return false;
+  if (!url) {return false;}
   return PUBLIC_ENDPOINTS.some((endpoint) => url.includes(endpoint));
 };
 

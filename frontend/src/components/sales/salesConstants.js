@@ -338,7 +338,7 @@ export const formatPerformanceMetric = (value, format) => {
 
 // 计算销售完成率
 export const calculateSalesCompletionRate = (achieved, target) => {
-  if (!target || target === 0) return 0;
+  if (!target || target === 0) {return 0;}
   return ((achieved || 0) / target * 100).toFixed(1);
 };
 
@@ -362,15 +362,15 @@ export const calculateComprehensiveScore = (metrics, weights) => {
 
 // 获取绩效等级
 export const getPerformanceLevel = (rate) => {
-  if (rate >= 120) return 'excellent';
-  if (rate >= 100) return 'good';
-  if (rate >= 80) return 'average';
+  if (rate >= 120) {return 'excellent';}
+  if (rate >= 100) {return 'good';}
+  if (rate >= 80) {return 'average';}
   return 'poor';
 };
 
 // 格式化自动刷新时间
 export const formatAutoRefreshTime = (value) => {
-  if (!value) return "";
+  if (!value) {return "";}
   return value.toLocaleTimeString("zh-CN", {
     hour: "2-digit",
     minute: "2-digit", 

@@ -1,13 +1,23 @@
-
-
+import React from "react";
+import {
+  Button,
+  Input,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  Label,
+  Textarea,
+} from "../../components/ui";
 
 export default function FollowUpDialog({
   open,
   onOpenChange,
-  followUpData,
-  onDataChange,
-  onSubmit,
-  loading = false,
+  data,
+  setData,
+  onSave,
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -20,10 +30,10 @@ export default function FollowUpDialog({
           <div>
             <Label>跟进类型 *</Label>
             <select
-              value={followUpData.follow_up_type}
+              value={data.follow_up_type}
               onChange={(e) =>
-                onDataChange({
-                  ...followUpData,
+                setData({
+                  ...data,
                   follow_up_type: e.target.value,
                 })
               }
@@ -39,9 +49,9 @@ export default function FollowUpDialog({
           <div>
             <Label>跟进内容 *</Label>
             <Textarea
-              value={followUpData.content}
+              value={data.content}
               onChange={(e) =>
-                onDataChange({ ...followUpData, content: e.target.value })
+                setData({ ...data, content: e.target.value })
               }
               placeholder="请输入跟进内容"
               rows={4}
@@ -50,10 +60,10 @@ export default function FollowUpDialog({
           <div>
             <Label>下次行动</Label>
             <Input
-              value={followUpData.next_action}
+              value={data.next_action}
               onChange={(e) =>
-                onDataChange({
-                  ...followUpData,
+                setData({
+                  ...data,
                   next_action: e.target.value,
                 })
               }
@@ -64,10 +74,10 @@ export default function FollowUpDialog({
             <Label>行动时间</Label>
             <Input
               type="date"
-              value={followUpData.next_action_at}
+              value={data.next_action_at}
               onChange={(e) =>
-                onDataChange({
-                  ...followUpData,
+                setData({
+                  ...data,
                   next_action_at: e.target.value,
                 })
               }
@@ -78,9 +88,7 @@ export default function FollowUpDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             取消
           </Button>
-          <Button onClick={onSubmit} disabled={loading}>
-            提交
-          </Button>
+          <Button onClick={onSave}>保存</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

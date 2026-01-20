@@ -207,7 +207,7 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
                 <p className="text-xs text-text-secondary">
                   {stage.probability}% 成功率
                 </p>
-              </motion.div>
+            </motion.div>
             )}
           </div>
         </CardContent>
@@ -242,14 +242,14 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
                         {opp.score}分
                       </Badge>
                     </div>
-                  </div>
+              </div>
               )}
-              </div> :
+            </div> :
 
             <div className="text-center py-8">
                 <Flame className="h-12 w-12 text-slate-400 mx-auto mb-2" />
                 <p className="text-text-secondary">暂无热门机会</p>
-              </div>
+            </div>
             }
           </CardContent>
         </Card>
@@ -282,14 +282,14 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
                         {OpportunityUtils.formatDate(opp.expectedCloseDate)}
                       </p>
                     </div>
-                  </div>
+              </div>
               )}
-              </div> :
+            </div> :
 
             <div className="text-center py-8">
                 <CheckCircle2 className="h-12 w-12 text-emerald-400 mx-auto mb-2" />
                 <p className="text-text-secondary">暂无超期机会</p>
-              </div>
+            </div>
             }
           </CardContent>
         </Card>
@@ -322,14 +322,14 @@ export default function OpportunityBoardOverview({ opportunities = [] }) {
                         {OpportunityUtils.formatDate(opp.expectedCloseDate)}
                       </Badge>
                     </div>
-                  </div>
+              </div>
               )}
-              </div> :
+            </div> :
 
             <div className="text-center py-8">
                 <Calendar className="h-12 w-12 text-blue-400 mx-auto mb-2" />
                 <p className="text-text-secondary">7天内无到期机会</p>
-              </div>
+            </div>
             }
           </CardContent>
         </Card>

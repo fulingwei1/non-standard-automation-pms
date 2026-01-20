@@ -109,10 +109,10 @@ export default function AcceptanceOrderList() {
     try {
       setLoading(true);
       const params = {};
-      if (filterProject) params.project_id = filterProject;
-      if (filterType) params.acceptance_type = filterType;
-      if (filterStatus) params.status = filterStatus;
-      if (searchKeyword) params.keyword = searchKeyword;
+      if (filterProject) {params.project_id = filterProject;}
+      if (filterType) {params.acceptance_type = filterType;}
+      if (filterStatus) {params.status = filterStatus;}
+      if (searchKeyword) {params.keyword = searchKeyword;}
       const res = await acceptanceApi.orders.list(params);
       const orderList = res.data?.items || res.data || [];
       setOrders(orderList);
@@ -156,7 +156,7 @@ export default function AcceptanceOrderList() {
     }
   };
   const handleStart = async (orderId) => {
-    if (!confirm("确认开始验收？")) return;
+    if (!confirm("确认开始验收？")) {return;}
     try {
       await acceptanceApi.orders.start(orderId, { location: "" });
       fetchOrders();

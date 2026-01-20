@@ -50,9 +50,9 @@ export function PurchaseHistory({
           <div className="space-y-4">
             {[...Array(3)].map((_, i) =>
             <div key={i} className="animate-pulse">
-                <div className="h-4 bg-slate-700 rounded mb-2 w-1/4"></div>
-                <div className="h-3 bg-slate-700 rounded mb-2"></div>
-                <div className="h-8 bg-slate-700 rounded w-1/3"></div>
+                <div className="h-4 bg-slate-700 rounded mb-2 w-1/4" />
+                <div className="h-3 bg-slate-700 rounded mb-2" />
+                <div className="h-8 bg-slate-700 rounded w-1/3" />
             </div>
             )}
           </div>
@@ -64,12 +64,12 @@ export function PurchaseHistory({
   // 过滤采购记录
   const filteredPurchases = purchases.
   filter((purchase) => {
-    if (filterStatus !== "all" && purchase.status !== filterStatus) return false;
+    if (filterStatus !== "all" && purchase.status !== filterStatus) {return false;}
     if (filterYear !== "all") {
       const purchaseYear = new Date(purchase.contract_date || purchase.created_at).getFullYear().toString();
-      if (purchaseYear !== filterYear) return false;
+      if (purchaseYear !== filterYear) {return false;}
     }
-    if (searchTerm && !purchase.project_name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+    if (searchTerm && !purchase.project_name.toLowerCase().includes(searchTerm.toLowerCase())) {return false;}
     return true;
   }).
   sort((a, b) => new Date(b.contract_date || b.created_at) - new Date(a.contract_date || a.created_at));
@@ -375,7 +375,7 @@ export function PurchaseHistory({
  * @param {Object} purchase - 采购记录详情
  */
 export function PurchaseDetail({ purchase }) {
-  if (!purchase) return null;
+  if (!purchase) {return null;}
 
   const statusConfig = getContractStatusConfig(purchase.status || 'DRAFT');
 

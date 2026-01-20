@@ -30,7 +30,7 @@ export default function CostTrendTab({ data }) {
           color={config.color} />
 
         )}
-        </div>
+      </div>
       }
 
       {/* 成本趋势图表 */}
@@ -58,11 +58,11 @@ export default function CostTrendTab({ data }) {
                         </div>
                       </div>
                       <div className="text-xs text-slate-400 mt-2">{item.period}</div>
-                    </div>);
+                  </div>);
 
               })}
               </div>
-            </div> :
+          </div> :
 
           <div className="text-center py-12 text-slate-400">暂无数据</div>
           }
@@ -99,16 +99,16 @@ export default function CostTrendTab({ data }) {
                     <span className={`flex items-center justify-end gap-1 ${item.mom_rate >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                             {item.mom_rate >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                             {item.mom_rate}%
-                          </span> :
+                    </span> :
                     '-'}
                       </td>
-                    </tr>
+                </tr>
                 )}
                 </tbody>
               </table>
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
     </div>);
 

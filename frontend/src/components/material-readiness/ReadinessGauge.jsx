@@ -157,12 +157,12 @@ export function ReadinessGauge({
               {title &&
             <h3 className="text-sm font-semibold text-gray-700">
                   {title}
-                </h3>
+            </h3>
             }
               {description &&
             <p className="text-xs text-gray-500">
                   {description}
-                </p>
+            </p>
             }
               <Badge
               className={cn(
@@ -172,7 +172,7 @@ export function ReadinessGauge({
 
                 {statusConfig.label}
               </Badge>
-            </div>
+          </div>
           }
         </div>
       </CardContent>
@@ -256,14 +256,14 @@ export function ReadinessDashboard({
           {title &&
         <h2 className="text-2xl font-bold text-gray-900">
               {title}
-            </h2>
+        </h2>
         }
           {subtitle &&
         <p className="text-gray-600">
               {subtitle}
-            </p>
+        </p>
         }
-        </div>
+      </div>
       }
 
       {/* 过滤器 */}
@@ -281,7 +281,7 @@ export function ReadinessDashboard({
           <button className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-full hover:bg-red-200">
             延期 ({stats.delayed})
           </button>
-        </div>
+      </div>
       }
 
       {/* 统计卡片 */}
@@ -311,10 +311,10 @@ export function ReadinessDashboard({
               {stat.title === "已就绪" && stats.total > 0 &&
             <p className="text-xs text-gray-500 mt-2">
                   完成率 {stats.completionRate}%
-                </p>
+            </p>
             }
             </CardContent>
-          </Card>
+        </Card>
         )}
       </div>
 
@@ -370,7 +370,7 @@ export function ReadinessDashboard({
             <div className="space-y-1">
               <div className="flex justify-between text-sm">
                 <span className="flex items-center">
-                  <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                  <span className="w-3 h-3 bg-green-500 rounded-full mr-2" />
                   已就绪
                 </span>
                 <span>{stats.ready} ({stats.completionRate}%)</span>
@@ -382,7 +382,7 @@ export function ReadinessDashboard({
             <div className="space-y-1">
               <div className="flex justify-between text-sm">
                 <span className="flex items-center">
-                  <span className="w-3 h-3 bg-orange-500 rounded-full mr-2"></span>
+                  <span className="w-3 h-3 bg-orange-500 rounded-full mr-2" />
                   进行中
                 </span>
                 <span>{stats.inProgress} ({Math.round(stats.inProgress / stats.total * 100)}%)</span>
@@ -397,7 +397,7 @@ export function ReadinessDashboard({
             <div className="space-y-1">
               <div className="flex justify-between text-sm">
                 <span className="flex items-center">
-                  <span className="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
+                  <span className="w-3 h-3 bg-red-500 rounded-full mr-2" />
                   延期
                 </span>
                 <span>{stats.delayed} ({Math.round(stats.delayed / stats.total * 100)}%)</span>

@@ -126,24 +126,6 @@ export default function MobileShortageReport() {
       setLoading(true);
       setError("");
 
-      // Upload photos to server (convert to base64 for now)
-      // TODO: Replace with actual file upload API when available
-      const _photoUrls = await Promise.all(
-        photos.map(async (photo) => {
-          if (photo.url.startsWith("data:")) {
-            // Already base64, return as is
-            return photo.url;
-          }
-          // Convert file to base64 if needed
-          return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = (e) => resolve(e.target.result);
-            reader.onerror = () => resolve(photo.url); // Fallback to original URL
-            reader.readAsDataURL(photo.file);
-          });
-        })
-      );
-
       await shortageApi.reports.create({
         project_id: parseInt(formData.project_id),
         machine_id: formData.machine_id ? parseInt(formData.machine_id) : null,
@@ -153,7 +135,9 @@ export default function MobileShortageReport() {
         shortage_qty: formData.shortage_qty,
         urgent_level: formData.urgent_level,
         report_location: formData.report_location,
-        remark: formData.remark
+        remark:
+          formData.remark +
+          (photos.length ? `\n[移动端] 已选择${photos.length}张照片（当前接口不支持上传）` : "")
       });
 
       setSuccess(true);
@@ -217,7 +201,7 @@ export default function MobileShortageReport() {
                 </div>
               </div>
             </CardContent>
-          </Card>
+        </Card>
         }
 
         {/* 错误提示 */}
@@ -227,7 +211,7 @@ export default function MobileShortageReport() {
             <div className="flex-1">
               <div className="text-sm font-medium text-red-800">{error}</div>
             </div>
-          </div>
+        </div>
         }
 
         {/* 成功提示 */}
@@ -239,7 +223,7 @@ export default function MobileShortageReport() {
                 缺料上报成功！
               </div>
             </div>
-          </div>
+        </div>
         }
 
         {/* 表单 */}
@@ -262,7 +246,7 @@ export default function MobileShortageReport() {
                     {materials.map((material) =>
                     <SelectItem key={material.id} value={String(material.id)}>
                         {material.material_code} - {material.material_name}
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -280,7 +264,7 @@ export default function MobileShortageReport() {
                     <div className="text-sm">
                       {selectedMaterial.unit || "个"}
                     </div>
-                  </div>
+                </div>
                 }
               </div>
 
@@ -342,7 +326,7 @@ export default function MobileShortageReport() {
                     {urgentLevels.map((level) =>
                     <SelectItem key={level.value} value={level.value}>
                         {level.label}
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -427,9 +411,9 @@ export default function MobileShortageReport() {
 
                             <X className="w-3 h-3" />
                           </button>
-                        </div>
-                    )}
                     </div>
+                    )}
+                  </div>
                   }
                 </div>
               </div>

@@ -1,12 +1,8 @@
-/**
- * 排产日历视图组件
- */
-
 import { useState, useEffect, useMemo } from "react";
-
-
-
-
+import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import { Badge } from "../../components/ui/badge";
 import { cn } from "../../lib/utils";
 import { productionApi } from "../../services/api";
 
@@ -184,36 +180,49 @@ export default function ScheduleCalendarView({ projects: _projects, onProjectCli
                       "min-h-[120px] border border-border/30 p-2 transition-colors",
                       !day.isCurrentMonth && "bg-surface-2/30",
                       isToday && "bg-primary/10 border-primary/30",
-                      isWeekend && "bg-slate-800/20"
+                      isWeekend && day.isCurrentMonth && "bg-slate-800/30"
                     )}
                   >
-                    <div
-                      className={cn(
-                        "text-sm font-medium mb-1",
-                        !day.isCurrentMonth && "text-slate-600",
-                        isToday && "text-primary font-bold",
-                        day.isCurrentMonth && !isToday && "text-white"
+                    <div className="flex items-center justify-between mb-1">
+                      <span
+                        className={cn(
+                          "text-sm font-medium px-1.5 py-0.5 rounded",
+                          isToday && "bg-primary text-white",
+                          !day.isCurrentMonth && "text-slate-600",
+                          day.isCurrentMonth && !isToday && "text-slate-300"
+                        )}
+                      >
+                        {day.date.getDate()}
+                      </span>
+                      {events.length > 0 && (
+                        <Badge variant="outline" className="text-[10px]">
+                          {events.length}
+                        </Badge>
                       )}
-                    >
-                      {day.date.getDate()}
                     </div>
+
                     <div className="space-y-1">
-                      {events.slice(0, 3).map((event, index) => (
+                      {events.slice(0, 3).map((event, idx) => (
                         <div
-                          key={index}
-                          onClick={() => onProjectClick && onProjectClick(event)}
+                          key={idx}
+                          onClick={() =>
+                            onProjectClick && onProjectClick(event)
+                          }
                           className={cn(
-                            "text-xs px-1.5 py-0.5 rounded cursor-pointer truncate",
+                            "px-1.5 py-0.5 rounded text-xs truncate cursor-pointer transition-all",
                             event.type === "plan"
-                              ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
-                              : "bg-purple-500/20 text-purple-300 border border-purple-500/30"
+                              ? "bg-blue-500/20 text-blue-400 border-l-2 border-l-blue-400"
+                              : "bg-purple-500/20 text-purple-400 border-l-2 border-l-purple-400"
                           )}
+                          title={
+                            event.plan_name || event.task_name || event.order_no
+                          }
                         >
-                          {event.name || event.plan_name || event.work_order_no}
+                          {event.plan_name || event.task_name || event.order_no}
                         </div>
                       ))}
                       {events.length > 3 && (
-                        <div className="text-xs text-slate-500 px-1.5">
+                        <div className="text-[10px] text-slate-500 text-center">
                           +{events.length - 3} 更多
                         </div>
                       )}

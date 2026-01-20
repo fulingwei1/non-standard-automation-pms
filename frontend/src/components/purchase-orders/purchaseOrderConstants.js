@@ -107,7 +107,7 @@ export function getOrderUrgency(urgency) {
  * 格式化金额
  */
 export function formatAmount(amount) {
-  if (!amount) return '¥0';
+  if (!amount) {return '¥0';}
   return `¥${parseFloat(amount).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
@@ -115,7 +115,7 @@ export function formatAmount(amount) {
  * 计算到货进度百分比
  */
 export function calculateProgress(received, total) {
-  if (!total || total === 0) return 0;
+  if (!total || total === 0) {return 0;}
   return Math.round((received / total) * 100);
 }
 
@@ -123,6 +123,6 @@ export function calculateProgress(received, total) {
  * 格式化日期
  */
 export function formatDate(dateStr) {
-  if (!dateStr) return '-';
+  if (!dateStr) {return '-';}
   return new Date(dateStr).toLocaleDateString('zh-CN');
 }

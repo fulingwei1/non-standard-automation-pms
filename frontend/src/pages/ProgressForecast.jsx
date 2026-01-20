@@ -265,14 +265,14 @@ export default function ProgressForecast({ projectId }) {
         <div className="mb-4 rounded-md bg-red-50 border border-red-200 text-red-700 px-4 py-3 flex items-start">
             <AlertCircle className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0" />
             <div>{errorMessage}</div>
-          </div>
+        </div>
         }
         
         {successMessage &&
         <div className="mb-4 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 flex items-start">
             <CheckCircle2 className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0" />
             <div>{successMessage}</div>
-          </div>
+        </div>
         }
         
         {/* 自动处理选项 */}
@@ -432,7 +432,7 @@ export default function ProgressForecast({ projectId }) {
           <div className="text-center py-8 text-slate-500">
               <CheckCircle2 className="w-12 h-12 mx-auto mb-3 text-emerald-500" />
               <div>没有延迟任务，项目进展顺利！</div>
-            </div> :
+          </div> :
 
           <div className="space-y-3">
               {delayedTasks.slice(0, 10).map((task) =>
@@ -474,7 +474,7 @@ export default function ProgressForecast({ projectId }) {
                       {task.weight}
                     </div>
                   </div>
-                </div>
+            </div>
             )}
               
               {delayedTasks.length > 10 &&
@@ -482,9 +482,9 @@ export default function ProgressForecast({ projectId }) {
                   <div className="text-sm text-slate-500">
                     还有 {delayedTasks.length - 10} 个延迟任务...
                   </div>
-                </div>
-            }
             </div>
+            }
+          </div>
           }
         </CardContent>
       </Card>
@@ -514,10 +514,10 @@ export default function ProgressForecast({ projectId }) {
                           {previewData.preview_actions.will_block.map((action, idx) =>
                       <li key={idx} className="text-red-800">
                               {action.task_name}: {action.reason}
-                            </li>
+                      </li>
                       )}
                         </ul>
-                      </div>
+                  </div>
                   }
                     
                     {previewData.preview_actions?.will_fix_timing > 0 &&
@@ -525,7 +525,7 @@ export default function ProgressForecast({ projectId }) {
                         <div className="font-medium text-amber-900 mb-2">
                           将修复 {previewData.preview_actions.will_fix_timing} 个时序冲突
                         </div>
-                      </div>
+                  </div>
                   }
                     
                     {previewData.preview_actions?.will_remove_missing > 0 &&
@@ -533,7 +533,7 @@ export default function ProgressForecast({ projectId }) {
                         <div className="font-medium text-blue-900 mb-2">
                           将移除 {previewData.preview_actions.will_remove_missing} 个缺失依赖
                         </div>
-                      </div>
+                  </div>
                   }
                     
                     {previewData.preview_actions?.will_send_notifications &&
@@ -541,11 +541,11 @@ export default function ProgressForecast({ projectId }) {
                         <div className="font-medium text-emerald-900 mb-2">
                           将发送通知给相关人员
                         </div>
-                      </div>
+                  </div>
                   }
                   </div>
                 </div>
-              </div> :
+            </div> :
 
             <div className="text-center py-8 text-slate-500">加载预览数据中...</div>
             }

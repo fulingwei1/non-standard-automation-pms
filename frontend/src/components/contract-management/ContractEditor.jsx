@@ -106,13 +106,13 @@ const ContractEditor = ({ contract, onSave, onCancel }) => {
           </Col>
 
           <Col xs={24} md={12}>
-            <Form.Item label="签署日期（字符串占位）" name="signingDate">
+            <Form.Item label="签署日期" name="signingDate">
               <Input placeholder="YYYY-MM-DD" allowClear />
             </Form.Item>
           </Col>
 
           <Col xs={24} md={12}>
-            <Form.Item label="到期日期（字符串占位）" name="expiryDate">
+            <Form.Item label="到期日期" name="expiryDate">
               <Input placeholder="YYYY-MM-DD" allowClear />
             </Form.Item>
           </Col>

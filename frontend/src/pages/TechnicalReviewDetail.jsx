@@ -223,7 +223,7 @@ export default function TechnicalReviewDetail() {
               <Save className="w-4 h-4 mr-2" />
               {saving ? "保存中..." : "保存"}
             </Button>
-          </div>
+        </div>
         } />
 
 
@@ -304,7 +304,7 @@ export default function TechnicalReviewDetail() {
                       {projects.map((p) =>
                       <option key={p.id} value={p.id}>
                           {p.project_code} - {p.project_name}
-                        </option>
+                      </option>
                       )}
                     </Select>
                   </div>
@@ -368,7 +368,7 @@ export default function TechnicalReviewDetail() {
                       {users.map((u) =>
                       <option key={u.id} value={u.id}>
                           {u.real_name || u.username}
-                        </option>
+                      </option>
                       )}
                     </Select>
                   </div>
@@ -387,7 +387,7 @@ export default function TechnicalReviewDetail() {
                       {users.map((u) =>
                       <option key={u.id} value={u.id}>
                           {u.real_name || u.username}
-                        </option>
+                      </option>
                       )}
                     </Select>
                   </div>
@@ -406,7 +406,7 @@ export default function TechnicalReviewDetail() {
                       {users.map((u) =>
                       <option key={u.id} value={u.id}>
                           {u.real_name || u.username}
-                        </option>
+                      </option>
                       )}
                     </Select>
                   </div>
@@ -437,17 +437,17 @@ export default function TechnicalReviewDetail() {
                     {review.conclusion_summary &&
                   <p className="text-sm text-slate-300">
                         {review.conclusion_summary}
-                      </p>
+                  </p>
                   }
                     {review.condition_deadline &&
                   <p className="text-sm text-slate-400">
                         整改期限:{" "}
                         {formatDate(review.condition_deadline, "YYYY-MM-DD")}
-                      </p>
+                  </p>
                   }
                   </div>
                 </CardContent>
-              </Card>
+            </Card>
             }
           </TabsContent>
 
@@ -464,7 +464,7 @@ export default function TechnicalReviewDetail() {
 
                     <Plus className="w-4 h-4 mr-2" />
                     添加参与人
-                  </Button>
+                </Button>
                 }
               </CardHeader>
               <CardContent>
@@ -502,9 +502,9 @@ export default function TechnicalReviewDetail() {
                           {p.attendance === "DELEGATED" && "已委派"}
                           {!p.attendance && "待确认"}
                         </Badge>
-                      </div>
-                  )}
                   </div>
+                  )}
+                </div>
                 }
               </CardContent>
             </Card>
@@ -523,7 +523,7 @@ export default function TechnicalReviewDetail() {
 
                     <Upload className="w-4 h-4 mr-2" />
                     上传材料
-                  </Button>
+                </Button>
                 }
               </CardHeader>
               <CardContent>
@@ -564,11 +564,11 @@ export default function TechnicalReviewDetail() {
                       className="text-red-400 hover:text-red-300">
 
                             <Trash2 className="w-4 h-4" />
-                          </Button>
+                    </Button>
                     }
-                      </div>
-                  )}
                   </div>
+                  )}
+                </div>
                 }
               </CardContent>
             </Card>
@@ -587,14 +587,14 @@ export default function TechnicalReviewDetail() {
 
                     <Plus className="w-4 h-4 mr-2" />
                     添加检查项
-                  </Button>
+                </Button>
                 }
               </CardHeader>
               <CardContent>
                 {checklistRecords.length === 0 ?
                 <p className="text-center text-slate-400 py-8">
                     暂无检查项记录
-                  </p> :
+                </p> :
 
                 <div className="space-y-2">
                     {checklistRecords.map((c) =>
@@ -626,11 +626,11 @@ export default function TechnicalReviewDetail() {
                         {c.issue_desc &&
                     <p className="text-sm text-amber-400">
                             问题: {c.issue_desc} (等级: {c.issue_level})
-                          </p>
+                    </p>
                     }
-                      </div>
-                  )}
                   </div>
+                  )}
+                </div>
                 }
               </CardContent>
             </Card>
@@ -649,7 +649,7 @@ export default function TechnicalReviewDetail() {
 
                     <Plus className="w-4 h-4 mr-2" />
                     创建问题
-                  </Button>
+                </Button>
                 }
               </CardHeader>
               <CardContent>
@@ -707,11 +707,11 @@ export default function TechnicalReviewDetail() {
                         {i.solution &&
                     <p className="text-sm text-slate-300">
                             解决方案: {i.solution}
-                          </p>
+                    </p>
                     }
-                      </div>
-                  )}
                   </div>
+                  )}
+                </div>
                 }
               </CardContent>
             </Card>

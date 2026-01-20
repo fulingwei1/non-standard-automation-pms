@@ -14,7 +14,7 @@ const PurchaseOrderList = ({
   const currentOrders = orders.slice(0, currentPage * pageSize);
 
   const loadMore = async () => {
-    if (isLoading || !hasMore) return;
+    if (isLoading || !hasMore) {return;}
 
     setIsLoading(true);
     try {
@@ -59,7 +59,7 @@ const PurchaseOrderList = ({
 
       {isLoading && (
         <div className="flex justify-center py-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
         </div>
       )}
 

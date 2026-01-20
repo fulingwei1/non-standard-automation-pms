@@ -26,7 +26,7 @@ const ContractOverview = ({ data, loading, onNavigate }) => {
   const [_selectedPeriod, _setSelectedPeriod] = useState('month');
 
   const overviewStats = useMemo(() => {
-    if (!data?.contracts) return {};
+    if (!data?.contracts) {return {};}
 
     const totalContracts = data.contracts.length;
     const activeContracts = data.contracts.filter((c) =>
@@ -51,7 +51,7 @@ const ContractOverview = ({ data, loading, onNavigate }) => {
   }, [data]);
 
   const statusDistribution = useMemo(() => {
-    if (!data?.contracts) return {};
+    if (!data?.contracts) {return {};}
 
     const distribution = {};
     Object.keys(CONTRACT_STATUS).forEach((key) => {
@@ -68,7 +68,7 @@ const ContractOverview = ({ data, loading, onNavigate }) => {
   }, [data]);
 
   const upcomingDeadlines = useMemo(() => {
-    if (!data?.contracts) return [];
+    if (!data?.contracts) {return [];}
 
     return data.contracts.
     filter((c) => {

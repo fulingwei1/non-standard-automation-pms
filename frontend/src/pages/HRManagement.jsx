@@ -276,7 +276,7 @@ export default function HRManagement() {
               </div>
             </CardContent>
           </Card>
-        </div>
+      </div>
       }
 
       <Tabs defaultValue="transactions" className="space-y-4">
@@ -300,7 +300,7 @@ export default function HRManagement() {
               {error &&
               <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded mb-4">
                   {error}
-                </div>
+              </div>
               }
               {loading ?
               <div className="text-center py-8">加载中...</div> :
@@ -359,14 +359,14 @@ export default function HRManagement() {
                           onClick={() => handleApproveTransaction(t.id)}>
 
                                 审批
-                              </Button>
+                        </Button>
                         }
                           </td>
-                        </tr>
+                    </tr>
                     )}
                     </tbody>
                   </table>
-                </div>
+              </div>
               }
             </CardContent>
           </Card>
@@ -431,14 +431,14 @@ export default function HRManagement() {
                           }>
 
                                   {c.days_until_expiry} 天
-                                </span>
+                        </span>
                         }
                           </td>
-                        </tr>
+                    </tr>
                     )}
                     </tbody>
                   </table>
-                </div>
+              </div>
               }
             </CardContent>
           </Card>
@@ -466,9 +466,9 @@ export default function HRManagement() {
                           <div className="text-sm text-gray-600">
                             {c.contract_no} - 还有 {c.days_until_expiry} 天到期
                           </div>
-                        </div>
+                  </div>
                   )}
-                    </div>
+                </div>
                 }
                 </CardContent>
               </Card>
@@ -491,13 +491,13 @@ export default function HRManagement() {
                           <div className="text-sm text-gray-600">
                             {c.contract_no} - 还有 {c.days_until_expiry} 天到期
                           </div>
-                        </div>
+                  </div>
                   )}
-                    </div>
+                </div>
                 }
                 </CardContent>
               </Card>
-            </div>
+          </div>
           }
         </TabsContent>
       </Tabs>

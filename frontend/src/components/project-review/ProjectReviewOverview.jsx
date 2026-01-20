@@ -71,7 +71,7 @@ export function ProjectReviewOverview({
 
   // 评估指标详情
   const evaluationDetails = useMemo(() => {
-    if (!review.evaluations) return [];
+    if (!review.evaluations) {return [];}
 
     return review.evaluations.map((evaluation) => {
       const metric = getEvaluationMetric(evaluation.metric);
@@ -90,10 +90,10 @@ export function ProjectReviewOverview({
 
   // 评分等级
   const getScoreLevel = (score) => {
-    if (score >= 90) return { level: 'excellent', label: '优秀', color: 'text-green-400', icon: Award };
-    if (score >= 80) return { level: 'good', label: '良好', color: 'text-blue-400', icon: TrendingUp };
-    if (score >= 70) return { level: 'satisfactory', label: '合格', color: 'text-amber-400', icon: CheckCircle2 };
-    if (score >= 60) return { level: 'needs_improvement', label: '需改进', color: 'text-orange-400', icon: AlertCircle };
+    if (score >= 90) {return { level: 'excellent', label: '优秀', color: 'text-green-400', icon: Award };}
+    if (score >= 80) {return { level: 'good', label: '良好', color: 'text-blue-400', icon: TrendingUp };}
+    if (score >= 70) {return { level: 'satisfactory', label: '合格', color: 'text-amber-400', icon: CheckCircle2 };}
+    if (score >= 60) {return { level: 'needs_improvement', label: '需改进', color: 'text-orange-400', icon: AlertCircle };}
     return { level: 'poor', label: '不合格', color: 'text-red-400', icon: AlertCircle };
   };
 
@@ -134,10 +134,10 @@ export function ProjectReviewOverview({
         )}>
               {Math.abs(trend)}%
             </span>
-          </div>
+      </div>
       }
       </div>
-    </motion.div>;
+  </motion.div>;
 
 
   return (
@@ -274,7 +274,7 @@ export function ProjectReviewOverview({
                 max={evaluation.maxWeightedScore}
                 className="h-2" />
 
-              </div>
+            </div>
             )}
           </div>
         </CardContent>
@@ -309,7 +309,7 @@ export function ProjectReviewOverview({
               <p className="text-slate-300 leading-relaxed">
                 {review.challenges_faced}
               </p>
-            </div>
+          </div>
           }
         </CardContent>
       </Card>
@@ -338,17 +338,17 @@ export function ProjectReviewOverview({
               <ul className="text-slate-400 text-sm space-y-1">
                       {recommendation.actions.map((action, actionIndex) =>
                 <li key={actionIndex} className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
                           {action}
-                        </li>
+                </li>
                 )}
-                    </ul>
+              </ul>
               }
-                </div>
+            </div>
             )}
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* 操作按钮 */}
@@ -364,15 +364,15 @@ export function ProjectReviewOverview({
                 <CheckCircle2 className="w-4 h-4 mr-2" />
                 发布
               </Button>
-            </>
+        </>
         }
           {review.status === 'PUBLISHED' &&
         <Button variant="outline" onClick={onArchive}>
               <Clock className="w-4 h-4 mr-2" />
               归档
-            </Button>
+        </Button>
         }
-        </div>
+      </div>
       }
     </div>);
 

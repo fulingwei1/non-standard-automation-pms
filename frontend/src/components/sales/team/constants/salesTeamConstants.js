@@ -98,17 +98,17 @@ export const formatFollowUpType = (value) =>
  * 格式化相对时间（如"3分钟前"）
  */
 export const formatTimeAgo = (value) => {
-  if (!value) return "";
+  if (!value) {return "";}
   const target = new Date(value);
-  if (Number.isNaN(target.getTime())) return value;
+  if (Number.isNaN(target.getTime())) {return value;}
   const diff = Date.now() - target.getTime();
   const minute = 60 * 1000;
   const hour = 60 * minute;
   const day = 24 * hour;
-  if (diff < minute) return "刚刚";
-  if (diff < hour) return `${Math.max(1, Math.floor(diff / minute))}分钟前`;
-  if (diff < day) return `${Math.floor(diff / hour)}小时前`;
-  if (diff < 30 * day) return `${Math.floor(diff / day)}天前`;
+  if (diff < minute) {return "刚刚";}
+  if (diff < hour) {return `${Math.max(1, Math.floor(diff / minute))}分钟前`;}
+  if (diff < day) {return `${Math.floor(diff / hour)}小时前`;}
+  if (diff < 30 * day) {return `${Math.floor(diff / day)}天前`;}
   return target.toLocaleDateString("zh-CN");
 };
 
@@ -116,9 +116,9 @@ export const formatTimeAgo = (value) => {
  * 格式化日期时间
  */
 export const formatDateTime = (value) => {
-  if (!value) return "";
+  if (!value) {return "";}
   const target = new Date(value);
-  if (Number.isNaN(target.getTime())) return value;
+  if (Number.isNaN(target.getTime())) {return value;}
   return target.toLocaleString("zh-CN", { hour12: false });
 };
 
@@ -126,7 +126,7 @@ export const formatDateTime = (value) => {
  * 格式化自动刷新时间
  */
 export const formatAutoRefreshTime = (value) => {
-  if (!value) return "";
+  if (!value) {return "";}
   return value.toLocaleTimeString("zh-CN", {
     hour: "2-digit",
     minute: "2-digit",
@@ -226,9 +226,9 @@ export const statusConfig = {
  * 获取业绩状态
  */
 export const getAchievementStatus = (rate) => {
-  if (rate >= 100) return "excellent";
-  if (rate >= 80) return "good";
-  if (rate >= 60) return "warning";
+  if (rate >= 100) {return "excellent";}
+  if (rate >= 80) {return "good";}
+  if (rate >= 60) {return "warning";}
   return "poor";
 };
 
@@ -281,7 +281,7 @@ export const buildMetricDetailMap = (metricDetails = []) =>
  * 格式化指标值显示
  */
 export const formatMetricValueDisplay = (metricDetail, metricDefinition) => {
-  if (!metricDetail) return "--";
+  if (!metricDetail) {return "--";}
   const key = metricDefinition?.data_source || metricDefinition?.key || "";
   const numericValue = Number(metricDetail.value ?? 0);
   if (isAmountMetric(key)) {
@@ -290,7 +290,7 @@ export const formatMetricValueDisplay = (metricDetail, metricDefinition) => {
   if (isPercentageMetric(key)) {
     return `${numericValue.toFixed(1)}%`;
   }
-  if (!Number.isFinite(numericValue)) return "--";
+  if (!Number.isFinite(numericValue)) {return "--";}
   return Number.isInteger(numericValue)
     ? `${numericValue}`
     : numericValue.toFixed(2);
@@ -300,6 +300,6 @@ export const formatMetricValueDisplay = (metricDetail, metricDefinition) => {
  * 格式化指标得分显示
  */
 export const formatMetricScoreDisplay = (metricDetail) => {
-  if (!metricDetail) return "--";
+  if (!metricDetail) {return "--";}
   return `${Number(metricDetail.score ?? 0).toFixed(1)} 分`;
 };

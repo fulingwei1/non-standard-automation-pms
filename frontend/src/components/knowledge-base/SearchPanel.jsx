@@ -191,7 +191,7 @@ export default function SearchPanel({
               onClick={clearSearch}>
 
                 <X className="w-3 h-3" />
-              </Button>
+            </Button>
             }
           </div>
 
@@ -224,10 +224,10 @@ export default function SearchPanel({
               }}>
 
                   {term}
-                </div>
+            </div>
             )}
             </div>
-          </div>
+        </div>
         }
       </div>
 
@@ -254,7 +254,7 @@ export default function SearchPanel({
                   {searchConfigs.FILTER_OPTIONS.category.map((option) =>
                 <option key={option.value} value={option.value}>
                       {option.label}
-                    </option>
+                </option>
                 )}
                 </select>
               </div>
@@ -270,7 +270,7 @@ export default function SearchPanel({
                   {searchConfigs.FILTER_OPTIONS.status.map((option) =>
                 <option key={option.value} value={option.value}>
                       {option.label}
-                    </option>
+                </option>
                 )}
                 </select>
               </div>
@@ -286,7 +286,7 @@ export default function SearchPanel({
                   {searchConfigs.FILTER_OPTIONS.priority.map((option) =>
                 <option key={option.value} value={option.value}>
                       {option.label}
-                    </option>
+                </option>
                 )}
                 </select>
               </div>
@@ -302,7 +302,7 @@ export default function SearchPanel({
                   {searchConfigs.FILTER_OPTIONS.type.map((option) =>
                 <option key={option.value} value={option.value}>
                       {option.label}
-                    </option>
+                </option>
                 )}
                 </select>
               </div>
@@ -364,7 +364,7 @@ export default function SearchPanel({
                 }}>
 
                     {tag}
-                  </Badge>
+              </Badge>
               )}
               </div>
               <Input
@@ -388,7 +388,7 @@ export default function SearchPanel({
                 </Button>
               </div>
             </div>
-          </motion.div>
+        </motion.div>
         }
       </AnimatePresence>
 
@@ -400,43 +400,43 @@ export default function SearchPanel({
           {localFilters.category !== "all" &&
         <Badge variant="secondary" className="text-xs">
               分类: {searchConfigs.FILTER_OPTIONS.category.find((c) => c.value === localFilters.category)?.label}
-            </Badge>
+        </Badge>
         }
 
           {localFilters.status !== "all" &&
         <Badge variant="secondary" className="text-xs">
               状态: {searchConfigs.FILTER_OPTIONS.status.find((s) => s.value === localFilters.status)?.label}
-            </Badge>
+        </Badge>
         }
 
           {localFilters.priority !== "all" &&
         <Badge variant="secondary" className="text-xs">
               优先级: {searchConfigs.FILTER_OPTIONS.priority.find((p) => p.value === localFilters.priority)?.label}
-            </Badge>
+        </Badge>
         }
 
           {localFilters.type !== "all" &&
         <Badge variant="secondary" className="text-xs">
               类型: {searchConfigs.FILTER_OPTIONS.type.find((t) => t.value === localFilters.type)?.label}
-            </Badge>
+        </Badge>
         }
 
           {localFilters.author &&
         <Badge variant="secondary" className="text-xs">
               作者: {localFilters.author}
-            </Badge>
+        </Badge>
         }
 
           {localFilters.dateRange &&
         <Badge variant="secondary" className="text-xs">
               日期: {localFilters.dateRange.startDate} ~ {localFilters.dateRange.endDate}
-            </Badge>
+        </Badge>
         }
 
           {localFilters.tags.length > 0 &&
         <Badge variant="secondary" className="text-xs">
               标签: {localFilters.tags.join(', ')}
-            </Badge>
+        </Badge>
         }
 
           <Button
@@ -448,7 +448,7 @@ export default function SearchPanel({
             <X className="w-3 h-3 mr-1" />
             清除全部
           </Button>
-        </div>
+      </div>
       }
 
       {/* Sort and View Controls */}
@@ -467,7 +467,7 @@ export default function SearchPanel({
               onClick={() => applySort(option.value)}>
 
                   {option.label}
-                </Button>
+            </Button>
             )}
               <Button
               variant="ghost"
@@ -478,7 +478,7 @@ export default function SearchPanel({
                 {sortOrder === 'asc' ? <SortAsc className="w-3 h-3" /> : <SortDesc className="w-3 h-3" />}
               </Button>
             </div>
-          </div>
+        </div>
         }
 
         {/* View Controls */}
@@ -496,10 +496,10 @@ export default function SearchPanel({
               title={view.label}>
 
                   {view.icon}
-                </Button>
+            </Button>
             )}
             </div>
-          </div>
+        </div>
         }
       </div>
     </div>);
@@ -513,7 +513,7 @@ export function SearchSuggestions({
   onSelect,
   maxResults = 5
 }) {
-  if (!searchTerm) return null;
+  if (!searchTerm) {return null;}
 
   const filteredSuggestions = suggestions.
   filter((suggestion) =>
@@ -522,7 +522,7 @@ export function SearchSuggestions({
   ).
   slice(0, maxResults);
 
-  if (filteredSuggestions.length === 0) return null;
+  if (filteredSuggestions.length === 0) {return null;}
 
   return (
     <div className="absolute top-full left-0 right-0 mt-1 bg-surface-100 border border-white/10 rounded-lg shadow-lg z-50">
@@ -538,7 +538,7 @@ export function SearchSuggestions({
           <div className="text-xs text-slate-400">
             {highlightText(suggestion.summary || suggestion.content.substring(0, 100) + '...', searchTerm)}
           </div>
-        </div>
+      </div>
       )}
     </div>);
 
@@ -569,7 +569,7 @@ export function SearchResultsSummary({
 
 // Highlight matching text helper
 function highlightText(text, searchTerm) {
-  if (!searchTerm) return text;
+  if (!searchTerm) {return text;}
 
   const regex = new RegExp(`(${searchTerm})`, 'gi');
   const parts = text.split(regex);

@@ -67,7 +67,7 @@ export function ServiceTicketAssignDialog({ ticketId, onClose, onSubmit, submitt
       return;
     }
 
-    if (submitting) return;
+    if (submitting) {return;}
 
     try {
       await onSubmit({
@@ -81,7 +81,7 @@ export function ServiceTicketAssignDialog({ ticketId, onClose, onSubmit, submitt
   };
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
+    <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-md bg-slate-900 border-slate-700">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">

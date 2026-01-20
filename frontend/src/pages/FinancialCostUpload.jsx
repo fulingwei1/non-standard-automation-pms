@@ -95,11 +95,11 @@ export default function FinancialCostUpload() {
     setLoading(true);
     try {
       const params = {};
-      if (projectId) params.project_id = projectId;
-      if (startDate) params.start_date = startDate;
-      if (endDate) params.end_date = endDate;
-      if (typeFilter !== "all") params.cost_type = typeFilter;
-      if (categoryFilter !== "all") params.cost_category = categoryFilter;
+      if (projectId) {params.project_id = projectId;}
+      if (startDate) {params.start_date = startDate;}
+      if (endDate) {params.end_date = endDate;}
+      if (typeFilter !== "all") {params.cost_type = typeFilter;}
+      if (categoryFilter !== "all") {params.cost_category = categoryFilter;}
 
       const res = await financialCostApi.listCosts({
         page: 1,
@@ -206,7 +206,7 @@ export default function FinancialCostUpload() {
   const costCategories = useMemo(() => {
     const categories = new Set();
     costs.forEach((c) => {
-      if (c.cost_category) categories.add(c.cost_category);
+      if (c.cost_category) {categories.add(c.cost_category);}
     });
     return Array.from(categories);
   }, [costs]);
@@ -246,7 +246,7 @@ export default function FinancialCostUpload() {
             onChange={handleFileSelect}
             style={{ display: "none" }} />
 
-          </div>
+        </div>
         } />
 
 
@@ -300,7 +300,7 @@ export default function FinancialCostUpload() {
                 {costTypes.map((type) =>
                 <SelectItem key={type} value={type}>
                     {costTypeLabels[type]}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -313,7 +313,7 @@ export default function FinancialCostUpload() {
                 {costCategories.map((cat) =>
                 <SelectItem key={cat} value={cat}>
                     {cat}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -402,7 +402,7 @@ export default function FinancialCostUpload() {
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </TableCell>
-                </TableRow>
+              </TableRow>
               )}
             </TableBody>
           </Table>
@@ -410,7 +410,7 @@ export default function FinancialCostUpload() {
           {filteredCosts.length === 0 && !loading &&
           <div className="text-center py-12 text-slate-400">
               暂无成本记录，点击"上传Excel"上传第一条记录
-            </div>
+          </div>
           }
         </CardContent>
       </Card>
@@ -430,13 +430,13 @@ export default function FinancialCostUpload() {
               <div className="flex items-center gap-2 text-green-400">
                     <CheckCircle2 className="h-5 w-5" />
                     <span>成功: {uploadResult.success_count} 条</span>
-                  </div>
+              </div>
               }
                 {uploadResult.error_count > 0 &&
               <div className="flex items-center gap-2 text-red-400">
                     <XCircle className="h-5 w-5" />
                     <span>失败: {uploadResult.error_count} 条</span>
-                  </div>
+              </div>
               }
               </div>
 
@@ -450,15 +450,15 @@ export default function FinancialCostUpload() {
                 <li key={idx}>• {error}</li>
                 )}
                   </ul>
-                </div>
+            </div>
             }
 
               {uploadResult.upload_batch_no &&
             <div className="text-sm text-slate-400">
                   上传批次号: {uploadResult.upload_batch_no}
-                </div>
-            }
             </div>
+            }
+          </div>
           }
 
           <DialogFooter>

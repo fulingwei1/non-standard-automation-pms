@@ -96,7 +96,7 @@ const getReviewTypeColor = (type) => {
 };
 
 const getConclusionBadge = (conclusion) => {
-  if (!conclusion) return null;
+  if (!conclusion) {return null;}
   const badges = {
     PASS: { label: "通过", color: "bg-emerald-500/20 text-emerald-400" },
     PASS_WITH_CONDITION: {
@@ -155,10 +155,10 @@ export default function TechnicalReviewList() {
         page,
         page_size: pageSize,
       };
-      if (searchKeyword) params.keyword = searchKeyword;
-      if (projectId) params.project_id = projectId;
-      if (status) params.status = status;
-      if (reviewType) params.review_type = reviewType;
+      if (searchKeyword) {params.keyword = searchKeyword;}
+      if (projectId) {params.project_id = projectId;}
+      if (status) {params.status = status;}
+      if (reviewType) {params.review_type = reviewType;}
 
       const response = await technicalReviewApi.list(params);
       const data = response.data || response;
@@ -174,7 +174,7 @@ export default function TechnicalReviewList() {
   };
 
   const handleDelete = async () => {
-    if (!deleteDialog.review) return;
+    if (!deleteDialog.review) {return;}
     try {
       await technicalReviewApi.delete(deleteDialog.review.id);
       setDeleteDialog({ open: false, review: null });

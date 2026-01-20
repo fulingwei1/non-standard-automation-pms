@@ -282,7 +282,7 @@ export default function CompetencyModelForm() {
                 <p className="text-sm text-red-500 flex items-center gap-1">
                     <AlertCircle className="h-4 w-4" />
                     {errors.position_type.message}
-                  </p>
+                </p>
                 }
               </div>
 
@@ -307,7 +307,7 @@ export default function CompetencyModelForm() {
                       <SelectItem value="TE">测试工程师</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
+              </div>
               }
 
               {/* 等级 */}
@@ -328,7 +328,7 @@ export default function CompetencyModelForm() {
                     {levels.map((level) =>
                     <SelectItem key={level.id} value={level.id.toString()}>
                         {level.level_code} - {level.level_name}
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -336,7 +336,7 @@ export default function CompetencyModelForm() {
                 <p className="text-sm text-red-500 flex items-center gap-1">
                     <AlertCircle className="h-4 w-4" />
                     {errors.level_id.message}
-                  </p>
+                </p>
                 }
               </div>
             </div>
@@ -432,7 +432,7 @@ export default function CompetencyModelForm() {
 
                               <Trash2 className="h-4 w-4 text-red-500" />
                             </Button>
-                          </div>
+                      </div>
                       )}
 
                         <Button
@@ -445,7 +445,7 @@ export default function CompetencyModelForm() {
                           添加能力项
                         </Button>
                       </CardContent>
-                    </Card>);
+                  </Card>);
 
               })}
 
@@ -462,10 +462,10 @@ export default function CompetencyModelForm() {
                   {Math.abs(totalWeight - 100) >= 0.01 &&
                 <p className="text-xs text-red-500 mt-1">
                       各维度权重总和必须为 100%
-                    </p>
+                </p>
                 }
                 </div>
-              </div>
+            </div>
             }
 
             {/* 操作按钮 */}

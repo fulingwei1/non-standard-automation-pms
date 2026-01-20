@@ -63,7 +63,7 @@ export default function GateCheckPanel({ projectId, currentStage, onAdvance }) {
   }, [currentStage, projectId]);
 
   const loadGateCheckResult = async (stage) => {
-    if (!projectId || !stage) return;
+    if (!projectId || !stage) {return;}
 
     setLoading(true);
     try {
@@ -84,7 +84,7 @@ export default function GateCheckPanel({ projectId, currentStage, onAdvance }) {
   };
 
   const handleAdvance = async () => {
-    if (!targetStage) return;
+    if (!targetStage) {return;}
 
     try {
       const response = await projectApi.advanceStage(projectId, {

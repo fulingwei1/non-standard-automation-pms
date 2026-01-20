@@ -20,7 +20,7 @@ export default function ReportHistory({ reports, loading }) {
       <Card className="bg-slate-800/50 border-slate-700/50">
         <CardContent className="p-12">
           <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
           </div>
         </CardContent>
       </Card>);
@@ -90,15 +90,15 @@ export default function ReportHistory({ reports, loading }) {
                     <div>
                           <span className="text-slate-500">次品数量: </span>
                           <span className="text-red-400 font-medium">{report.defect_qty}</span>
-                        </div>
+                    </div>
                     }
                       {report.work_hours > 0 &&
                     <div>
                           <span className="text-slate-500">工时: </span>
                           <span className="text-white font-medium">{report.work_hours}h</span>
-                        </div>
+                    </div>
                     }
-                    </>
+                  </>
                   }
                   {report.report_type === 'PROGRESS' &&
                   <>
@@ -110,9 +110,9 @@ export default function ReportHistory({ reports, loading }) {
                     <div className="col-span-3">
                           <span className="text-slate-500">问题: </span>
                           <span className="text-amber-400">{report.current_issues}</span>
-                        </div>
+                    </div>
                     }
-                    </>
+                  </>
                   }
                   {report.report_type === 'START' &&
                   <>
@@ -120,7 +120,7 @@ export default function ReportHistory({ reports, loading }) {
                     <div className="col-span-2">
                           <span className="text-slate-500">备注: </span>
                           <span className="text-white">{report.start_note}</span>
-                        </div>
+                    </div>
                     }
                       <div className="col-span-2 text-right">
                         <span className="text-emerald-400 flex items-center gap-1">
@@ -128,7 +128,7 @@ export default function ReportHistory({ reports, loading }) {
                           设备和物料已检查
                         </span>
                       </div>
-                    </>
+                  </>
                   }
                 </div>
 
@@ -136,7 +136,7 @@ export default function ReportHistory({ reports, loading }) {
                 {report.report_note &&
                 <div className="mt-2 pt-2 border-t border-slate-700/50 text-sm text-slate-400">
                     备注: {report.report_note}
-                  </div>
+                </div>
                 }
               </div>);
 

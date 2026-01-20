@@ -132,7 +132,7 @@ export function RoleAssignment({
 
   // 保存角色分配
   const handleSave = async () => {
-    if (isSaving) return;
+    if (isSaving) {return;}
 
     setIsSaving(true);
     try {
@@ -206,11 +206,11 @@ export function RoleAssignment({
                 className="mt-1" />
 
               </div>
-            </div>);
+          </div>);
 
       })}
       </div>
-    </div>;
+  </div>;
 
 
   // 渲染权限选择
@@ -270,10 +270,10 @@ export function RoleAssignment({
                     }
                       </Button>
                     </div>
-                  </div>
+              </div>
               )}
               </div>
-            </div>
+          </div>
           )}
         </div>
       </div>);
@@ -328,7 +328,7 @@ export function RoleAssignment({
           数据权限控制用户能查看和操作的数据范围。超级管理员拥有全部数据权限。
         </AlertDescription>
       </Alert>
-    </div>;
+  </div>;
 
 
   // 渲染权限冲突提示
@@ -365,9 +365,9 @@ export function RoleAssignment({
             <AlertDescription className="text-xs">
               {conflict.message}
             </AlertDescription>
-          </Alert>
+      </Alert>
       )}
-      </div> :
+    </div> :
     null;
   };
 
@@ -427,12 +427,12 @@ export function RoleAssignment({
               <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                   保存中...
-                </> :
+              </> :
 
               <>
                   <Save className="mr-2 h-4 w-4" />
                   保存分配
-                </>
+              </>
               }
             </Button>
           </div>

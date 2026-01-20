@@ -34,7 +34,8 @@ import {
   CardTitle,
   Button,
   Badge,
-  Progress } from
+  Progress,
+  toast } from
 '../ui';
 import { cn } from '../../lib/utils';
 import { fadeIn } from '../../lib/animations';
@@ -216,7 +217,7 @@ const HRRelationsTab = ({
                   <Heart className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p>暂无员工关系问题</p>
                   <p className="text-xs text-slate-500 mt-1">良好的员工关系是企业发展的基石</p>
-                </div> :
+              </div> :
 
               issues.map((issue, index) => {
                 const typeConfig = issueTypes[issue.type] || issueTypes.other;
@@ -252,14 +253,14 @@ const HRRelationsTab = ({
                             {(issue.priority === 'high' || issue.priority === 'urgent') &&
                           <Badge className={cn("text-xs", priorityCfg.bg, priorityCfg.color)}>
                                 {priorityCfg.label}
-                              </Badge>
+                          </Badge>
                           }
                           </div>
                           
                           {issue.description &&
                         <p className="text-sm text-slate-300 mb-2 line-clamp-2">
                               {issue.description}
-                            </p>
+                        </p>
                         }
                           
                           <div className="flex items-center gap-4 text-xs text-slate-400">
@@ -274,7 +275,7 @@ const HRRelationsTab = ({
                             {issue.handler &&
                           <span className="flex items-center gap-1">
                                 处理人: {issue.handler}
-                              </span>
+                          </span>
                           }
                           </div>
                         </div>
@@ -289,9 +290,9 @@ const HRRelationsTab = ({
                             <span className="text-blue-400 font-medium">{issue.progress}%</span>
                           </div>
                           <Progress value={issue.progress} className="h-1.5" />
-                        </div>
+                    </div>
                     }
-                    </div>);
+                  </div>);
 
               })
               }
@@ -322,7 +323,7 @@ const HRRelationsTab = ({
               <Button
                 variant="outline"
                 className="justify-start gap-2 h-auto py-3 hover:bg-purple-500/10 hover:border-purple-500/30"
-                onClick={() => {/* TODO: 查看报告 */}}>
+                onClick={() => toast.info("关系报告功能待接入")}>
 
                 <FileText className="w-4 h-4 text-purple-400" />
                 <span>关系报告</span>
@@ -330,7 +331,7 @@ const HRRelationsTab = ({
               <Button
                 variant="outline"
                 className="justify-start gap-2 h-auto py-3 hover:bg-amber-500/10 hover:border-amber-500/30"
-                onClick={() => {/* TODO: 统计分析 */}}>
+                onClick={() => toast.info("统计分析功能待接入")}>
 
                 <BarChart3 className="w-4 h-4 text-amber-400" />
                 <span>统计分析</span>

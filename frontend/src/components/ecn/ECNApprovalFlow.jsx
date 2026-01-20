@@ -113,11 +113,11 @@ export function ECNApprovalFlow({
           <CardContent className="py-8 text-center text-slate-400">
             暂无审批记录
           </CardContent>
-        </Card> :
+      </Card> :
 
       <div className="relative">
           {/* 时间线背景线 */}
-          <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-slate-600"></div>
+          <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-slate-600" />
           
           <div className="space-y-6">
             {approvals.map((approval, _index) =>
@@ -177,7 +177,7 @@ export function ECNApprovalFlow({
                             <div className="text-white bg-slate-800/50 p-3 rounded-lg text-sm">
                               {approval.comment}
                             </div>
-                          </div>
+                    </div>
                     }
 
                         {approval.conditions && approval.conditions.length > 0 &&
@@ -186,12 +186,12 @@ export function ECNApprovalFlow({
                             <ul className="text-white text-sm space-y-1">
                               {approval.conditions.map((condition, idx) =>
                         <li key={idx} className="flex items-center gap-2">
-                                  <span className="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
+                                  <span className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
                                   {condition}
-                                </li>
+                        </li>
                         )}
                             </ul>
-                          </div>
+                    </div>
                     }
 
                         {approval.attachments && approval.attachments.length > 0 &&
@@ -201,16 +201,16 @@ export function ECNApprovalFlow({
                               {approval.attachments.map((attachment, idx) =>
                         <Badge key={idx} variant="outline" className="text-xs">
                                   {attachment.name}
-                                </Badge>
+                        </Badge>
                         )}
                             </div>
-                          </div>
+                    </div>
                     }
                       </div>
                     </CardContent>
                   </Card>
                 </div>
-              </div>
+          </div>
           )}
 
             {/* 当前待审批状态 */}
@@ -258,10 +258,10 @@ export function ECNApprovalFlow({
                     </CardContent>
                   </Card>
                 </div>
-              </div>
+          </div>
           }
           </div>
-        </div>
+      </div>
       }
 
       {/* 审批对话框 */}

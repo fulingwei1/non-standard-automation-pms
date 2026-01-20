@@ -97,32 +97,28 @@ export default function MobileExceptionReport() {
     try {
       setLoading(true);
       setError("");
+      const levelMap = {
+        LOW: "MINOR",
+        MEDIUM: "MINOR",
+        HIGH: "MAJOR",
+        URGENT: "CRITICAL",
+      };
 
-      // Upload photos to server (convert to base64 for now)
-      // TODO: Replace with actual file upload API when available
-      const photoUrls = await Promise.all(
-        photos.map(async (photo) => {
-          if (photo.url.startsWith("data:")) {
-            // Already base64, return as is
-            return photo.url;
-          }
-          // Convert file to base64 if needed
-          return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = (e) => resolve(e.target.result);
-            reader.onerror = () => resolve(photo.url); // Fallback to original URL
-            reader.readAsDataURL(photo.file);
-          });
-        })
-      );
+      const exceptionLabel =
+        exceptionTypes.find((t) => t.value === formData.exception_type)?.label ||
+        formData.exception_type;
+
+      const title = `${workOrder?.work_order_no ? `${workOrder.work_order_no} - ` : ""}${exceptionLabel}`;
 
       await productionApi.exceptions.create({
         work_order_id: workOrderId ? parseInt(workOrderId) : null,
         exception_type: formData.exception_type,
-        urgent_level: formData.urgent_level,
+        exception_level: levelMap[formData.urgent_level] || "MINOR",
+        title,
         description: formData.description,
-        location: formData.location,
-        photos: photoUrls
+        remark:
+          (formData.location ? `位置：${formData.location}\n` : "") +
+          (photos.length ? `已选择${photos.length}张照片（当前接口不支持上传）` : ""),
       });
 
       setSuccess(true);
@@ -178,7 +174,7 @@ export default function MobileExceptionReport() {
                 </div>
               </div>
             </CardContent>
-          </Card>
+        </Card>
         }
 
         {/* 错误提示 */}
@@ -188,7 +184,7 @@ export default function MobileExceptionReport() {
             <div className="flex-1">
               <div className="text-sm font-medium text-red-800">{error}</div>
             </div>
-          </div>
+        </div>
         }
 
         {/* 成功提示 */}
@@ -200,7 +196,7 @@ export default function MobileExceptionReport() {
                 异常上报成功！
               </div>
             </div>
-          </div>
+        </div>
         }
 
         {/* 表单 */}
@@ -225,7 +221,7 @@ export default function MobileExceptionReport() {
                     {exceptionTypes.map((type) =>
                     <SelectItem key={type.value} value={type.value}>
                         {type.label}
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -249,7 +245,7 @@ export default function MobileExceptionReport() {
                     {urgentLevels.map((level) =>
                     <SelectItem key={level.value} value={level.value}>
                         {level.label}
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -331,9 +327,9 @@ export default function MobileExceptionReport() {
 
                             <X className="w-3 h-3" />
                           </button>
-                        </div>
-                    )}
                     </div>
+                    )}
+                  </div>
                   }
                 </div>
               </div>

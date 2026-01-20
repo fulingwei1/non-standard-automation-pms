@@ -348,7 +348,7 @@ export const QUALITY_STANDARDS = {
  * 计算进度百分比
  */
 export const calculateProgress = (completed, planned) => {
-  if (!planned || planned === 0) return 0;
+  if (!planned || planned === 0) {return 0;}
   return Math.round((completed / planned) * 100);
 };
 
@@ -454,7 +454,7 @@ export const calculatePerformanceScore = (metrics) => {
  * 获取质量等级
  */
 export const getQualityLevel = (qualifiedQty, completedQty) => {
-  if (!completedQty || completedQty === 0) return null;
+  if (!completedQty || completedQty === 0) {return null;}
   
   const qualityRate = qualifiedQty / completedQty;
   
@@ -472,12 +472,12 @@ export const getQualityLevel = (qualifiedQty, completedQty) => {
  */
 export const getRecommendedSkillLevel = (workOrderType, complexity) => {
   const typeConfig = WORK_ORDER_TYPES[workOrderType];
-  if (!typeConfig) return "INTERMEDIATE";
+  if (!typeConfig) {return "INTERMEDIATE";}
   
   // 根据复杂度推荐技能等级
-  if (complexity >= 4) return "EXPERT";
-  if (complexity >= 3) return "SENIOR";
-  if (complexity >= 2) return "INTERMEDIATE";
+  if (complexity >= 4) {return "EXPERT";}
+  if (complexity >= 3) {return "SENIOR";}
+  if (complexity >= 2) {return "INTERMEDIATE";}
   return "BEGINNER";
 };
 
@@ -515,7 +515,7 @@ export const generateWorkSuggestions = (workOrder, workerLevel, recentPerformanc
  * 格式化工时显示
  */
 export const formatWorkHours = (hours) => {
-  if (!hours || hours === 0) return "0小时";
+  if (!hours || hours === 0) {return "0小时";}
   
   const wholeHours = Math.floor(hours);
   const minutes = Math.round((hours - wholeHours) * 60);
@@ -556,7 +556,7 @@ export const getNextAvailableActions = (workOrder) => {
  */
 export const calculateEstimatedCompletion = (workOrder, workerEfficiency = 1.0) => {
   const typeConfig = WORK_ORDER_TYPES[workOrder.type];
-  if (!typeConfig) return null;
+  if (!typeConfig) {return null;}
   
   const estimatedHours = typeConfig.estimatedHours / workerEfficiency;
   const startTime = new Date(workOrder.assigned_time || workOrder.created_time);

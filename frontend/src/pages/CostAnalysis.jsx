@@ -373,7 +373,7 @@ export default function CostAnalysis() {
                           style={{ width: `${item.percentage}%` }} />
 
                         </div>
-                      </div>
+                    </div>
                     )}
                   </div>
                 </CardContent>
@@ -429,7 +429,7 @@ export default function CostAnalysis() {
                               均价 {formatCurrency(item.avgPrice)}
                             </p>
                           </div>
-                        </div>
+                    </div>
                     )}
                   </div>
                 </CardContent>
@@ -469,7 +469,7 @@ export default function CostAnalysis() {
                           {item.percentage.toFixed(1)}%
                         </span>
                       </div>
-                    </div>
+                  </div>
                   )}
                 </div>
               </CardContent>
@@ -529,7 +529,7 @@ export default function CostAnalysis() {
                             %
                           </span>
                         </div>
-                      </div>
+                  </div>
                   )}
                 </div>
               </CardContent>
@@ -561,13 +561,13 @@ export default function CostAnalysis() {
                         <div className="flex items-center gap-2 text-xs text-slate-400">
                           <span>{item.orders} 个订单</span>
                         </div>
-                      </div>
+                  </div>
                   )}
-                  </div> :
+                </div> :
 
                 <div className="text-center py-8 text-slate-400">
                     暂无趋势数据
-                  </div>
+                </div>
                 }
               </CardContent>
             </Card>

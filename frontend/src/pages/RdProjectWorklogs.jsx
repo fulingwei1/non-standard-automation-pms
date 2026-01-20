@@ -242,13 +242,13 @@ export default function RdProjectWorklogs() {
                               {log.work_type === "OVERTIME" ?
                           "加班" :
                           log.work_type}
-                            </Badge>
+                        </Badge>
                         }
                         </div>
                         {log.description &&
                       <p className="text-sm text-slate-500 mt-2 line-clamp-2">
                             {log.description}
-                          </p>
+                      </p>
                       }
                       </div>
                     </div>
@@ -261,13 +261,13 @@ export default function RdProjectWorklogs() {
                           <Button variant="ghost" size="icon">
                             <Trash2 className="h-4 w-4" />
                           </Button>
-                        </>
+                    </>
                     }
                     </div>
-                  </div>);
+                </div>);
 
             })}
-            </div> :
+          </div> :
 
           <div className="text-center py-12 text-slate-500">
               <FileText className="h-12 w-12 mx-auto mb-4 text-slate-600" />
@@ -280,7 +280,7 @@ export default function RdProjectWorklogs() {
                 <Plus className="h-4 w-4 mr-2" />
                 记录第一条工作日志
               </Button>
-            </div>
+          </div>
           }
 
           {/* Pagination */}
@@ -310,7 +310,7 @@ export default function RdProjectWorklogs() {
 
                 下一页
               </Button>
-            </div>
+          </div>
           }
         </CardContent>
       </Card>

@@ -346,7 +346,7 @@ export const RatingChart = ({
                 size="sm"
                 onClick={() => {
                   setChartData(generateChartData());
-                  if (onTypeChange) onTypeChange();
+                  if (onTypeChange) {onTypeChange();}
                 }}
                 disabled={loading}>
 

@@ -136,7 +136,7 @@ export function EmployeeManager({
                 {Object.entries(employeeStatusConfigs).map(([key, config]) =>
                 <SelectItem key={key} value={key}>
                     {config.icon} {config.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -149,7 +149,7 @@ export function EmployeeManager({
                 {Object.entries(departmentConfigs).map(([key, config]) =>
                 <SelectItem key={key} value={key}>
                     {config.icon} {config.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -164,19 +164,19 @@ export function EmployeeManager({
           <div className="p-6 space-y-3">
               {[...Array(5)].map((_, i) =>
             <div key={i} className="animate-pulse flex items-center gap-4 p-3 bg-slate-800 rounded">
-                  <div className="w-10 h-10 bg-slate-700 rounded-full"></div>
+                  <div className="w-10 h-10 bg-slate-700 rounded-full" />
                   <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-slate-700 rounded w-1/4"></div>
-                    <div className="h-3 bg-slate-700 rounded w-1/6"></div>
+                    <div className="h-4 bg-slate-700 rounded w-1/4" />
+                    <div className="h-3 bg-slate-700 rounded w-1/6" />
                   </div>
-                </div>
+            </div>
             )}
-            </div> :
+          </div> :
           filteredEmployees.length === 0 ?
           <div className="p-12 text-center text-slate-400">
               <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p>暂无员工数据</p>
-            </div> :
+          </div> :
 
           <div className="overflow-x-auto">
               <table className="w-full">
@@ -268,12 +268,12 @@ export function EmployeeManager({
                             </Button>
                           </div>
                         </td>
-                      </tr>);
+                    </tr>);
 
                 })}
                 </tbody>
               </table>
-            </div>
+          </div>
           }
         </CardContent>
       </Card>
@@ -349,7 +349,7 @@ export function EmployeeManager({
               </Button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
+      </Dialog>
       }
     </>);
 

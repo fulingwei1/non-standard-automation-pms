@@ -157,7 +157,7 @@ export default function RequirementFreezeManagement() {
                         {freeze.description &&
                     <div className="text-sm mb-2">
                             {freeze.description}
-                          </div>
+                    </div>
                     }
                         <div className="flex items-center gap-4 text-xs text-gray-400">
                           <span>
@@ -170,9 +170,9 @@ export default function RequirementFreezeManagement() {
                         </div>
                       </div>
                     </div>
-                  </div>
-              )}
               </div>
+              )}
+            </div>
             }
           </CardContent>
         </Card>
@@ -200,7 +200,7 @@ export default function RequirementFreezeManagement() {
                   {Object.entries(freezeTypeConfig).map(([key, label]) =>
                   <SelectItem key={key} value={key}>
                       {label}
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>

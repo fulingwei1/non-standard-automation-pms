@@ -142,7 +142,7 @@ export const getStatusColor = (status, type = 'plan') => {
   };
 
   const config = statusMap[type];
-  if (!config) return 'bg-slate-500';
+  if (!config) {return 'bg-slate-500';}
 
   return config[status.toUpperCase()]?.color || 'bg-slate-500';
 };
@@ -157,7 +157,7 @@ export const getStatusLabel = (status, type = 'plan') => {
   };
 
   const config = statusMap[type];
-  if (!config) return status;
+  if (!config) {return status;}
 
   return config[status.toUpperCase()]?.label || status;
 };
@@ -194,13 +194,13 @@ export const getAlertStatusConfig = (status) => {
 
 // 工具函数：计算完成率
 export const calculateCompletionRate = (completed, total) => {
-  if (total === 0) return 0;
+  if (total === 0) {return 0;}
   return Math.round(completed / total * 100);
 };
 
 // 工具函数：计算合格率
 export const calculateQualityRate = (qualified, total) => {
-  if (total === 0) return 0;
+  if (total === 0) {return 0;}
   return Math.round(qualified / total * 100);
 };
 
@@ -225,11 +225,11 @@ export const formatProductionData = (data) => {
 export const validateProductionData = (data) => {
   const errors = [];
 
-  if (!data.planCode) errors.push('计划编号不能为空');
-  if (!data.projectName) errors.push('项目名称不能为空');
-  if (!data.plannedQty || data.plannedQty <= 0) errors.push('计划数量必须大于0');
-  if (!data.startDate) errors.push('开始日期不能为空');
-  if (!data.endDate) errors.push('结束日期不能为空');
+  if (!data.planCode) {errors.push('计划编号不能为空');}
+  if (!data.projectName) {errors.push('项目名称不能为空');}
+  if (!data.plannedQty || data.plannedQty <= 0) {errors.push('计划数量必须大于0');}
+  if (!data.startDate) {errors.push('开始日期不能为空');}
+  if (!data.endDate) {errors.push('结束日期不能为空');}
   if (new Date(data.startDate) >= new Date(data.endDate)) {
     errors.push('开始日期必须早于结束日期');
   }

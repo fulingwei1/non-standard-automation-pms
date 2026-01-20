@@ -24,7 +24,7 @@ export default function OrderDetailDialog({
   order,
   onSubmitApproval,
 }) {
-  if (!order) return null;
+  if (!order) {return null;}
 
   const statusConfig = ORDER_STATUS_CONFIGS[order.status] || ORDER_STATUS_CONFIGS.draft;
 

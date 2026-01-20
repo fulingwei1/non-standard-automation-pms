@@ -37,7 +37,7 @@ export const HistoryList = ({ showHistory, onToggle, isLoading, history }) => {
             <div className="p-6 space-y-4">
               {isLoading ? (
                 <div className="text-center py-8 text-slate-400">
-                  <div className="animate-spin h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                  <div className="animate-spin h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-2" />
                   <p>加载中...</p>
                 </div>
               ) : history.length === 0 ? (

@@ -33,10 +33,10 @@ export const useSalesTeamRanking = (filters, showRanking, dateError) => {
         ranking_type: rankingType,
         limit: 20
       };
-      if (filters.departmentId) params.department_id = filters.departmentId;
-      if (filters.region) params.region = filters.region.trim();
-      if (filters.startDate) params.start_date = filters.startDate;
-      if (filters.endDate) params.end_date = filters.endDate;
+      if (filters.departmentId) {params.department_id = filters.departmentId;}
+      if (filters.region) {params.region = filters.region.trim();}
+      if (filters.startDate) {params.start_date = filters.startDate;}
+      if (filters.endDate) {params.end_date = filters.endDate;}
       const res = await salesTeamApi.getRanking(params);
       const payload = res.data?.data || res.data || res;
       setRankingData(payload.rankings || []);
@@ -84,7 +84,7 @@ export const useSalesTeamRanking = (filters, showRanking, dateError) => {
     const seenValues = new Set(["score"]);
     metricConfigList.forEach((metric) => {
       const value = metric.data_source || metric.key;
-      if (!value || seenValues.has(value)) return;
+      if (!value || seenValues.has(value)) {return;}
       seenValues.add(value);
       options.push({
         value,
@@ -94,7 +94,7 @@ export const useSalesTeamRanking = (filters, showRanking, dateError) => {
     // 如果没有指标配置，使用备选字段
     if (options.length === 1) {
       FALLBACK_RANKING_FIELDS.forEach((field) => {
-        if (seenValues.has(field.value)) return;
+        if (seenValues.has(field.value)) {return;}
         seenValues.add(field.value);
         options.push(field);
       });

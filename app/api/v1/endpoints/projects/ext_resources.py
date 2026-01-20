@@ -16,13 +16,13 @@ from app.core import security
 from app.core.config import settings
 from app.models.project import Project
 from app.models.user import User
-from app.schemas.common import Response
+from app.schemas.common import ResponseModel
 from app.schemas.project import ProjectResponse
 
 router = APIRouter()
 
 
-@router.get("/projects/resources", response_model=Response[List[ProjectResponse]])
+@router.get("/projects/resources", response_model=ResponseModel[List[ProjectResponse]])
 def get_project_resources(
     db: Session = Depends(get_db),
     skip: int = Query(0, ge=0, description="跳过记录数"),
@@ -45,12 +45,13 @@ def get_project_resources(
         # TODO: 实现resources查询逻辑
         projects = db.query(Project).offset(skip).limit(limit).all()
 
-        return Response.success(
-            data=[ProjectResponse.from_orm(project) for project in projects],
-            message="项目resources列表获取成功"
+        return ResponseModel(
+            code=200,
+            message="项目resources列表获取成功",
+            data=[ProjectResponse.model_validate(project) for project in projects]
         )
     except Exception as e:
-        return Response.error(message=f"获取项目resources失败: {str(e)}")
+        return ResponseModel(code=500, message=f"获取项目resources失败: {str(e)}")
 
 
 @router.post("/projects/resources")
@@ -72,6 +73,6 @@ def create_project_resources(
     """
     try:
         # TODO: 实现resources创建逻辑
-        return Response.success(message="项目resources创建成功")
+        return ResponseModel(code=200, message="项目resources创建成功")
     except Exception as e:
-        return Response.error(message=f"创建项目resources失败: {str(e)}")
+        return ResponseModel(code=500, message=f"创建项目resources失败: {str(e)}")

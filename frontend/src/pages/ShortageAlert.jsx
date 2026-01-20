@@ -103,11 +103,11 @@ export default function ShortageAlert() {
       setLoading(true);
       const params = {};
       if (filterProject && filterProject !== "all")
-        params.project_id = filterProject;
-      if (filterStatus && filterStatus !== "all") params.status = filterStatus;
+        {params.project_id = filterProject;}
+      if (filterStatus && filterStatus !== "all") {params.status = filterStatus;}
       if (filterLevel && filterLevel !== "all")
-        params.alert_level = filterLevel;
-      if (searchKeyword) params.search = searchKeyword;
+        {params.alert_level = filterLevel;}
+      if (searchKeyword) {params.search = searchKeyword;}
       const res = await shortageAlertApi.list(params);
       const alertList = res.data?.items || res.data || [];
       setAlerts(alertList);
@@ -142,7 +142,7 @@ export default function ShortageAlert() {
     }
   };
   const handleAcknowledge = async (alertId) => {
-    if (!confirm("确认已收到此缺料预警？")) return;
+    if (!confirm("确认已收到此缺料预警？")) {return;}
     try {
       await shortageAlertApi.acknowledge(alertId);
       fetchAlerts();
@@ -155,7 +155,7 @@ export default function ShortageAlert() {
     }
   };
   const handleResolve = async () => {
-    if (!selectedAlert) return;
+    if (!selectedAlert) {return;}
     try {
       await shortageAlertApi.resolve(selectedAlert.id, handleData);
       setShowHandleDialog(false);
@@ -190,7 +190,7 @@ export default function ShortageAlert() {
     });
   }, [alerts, searchKeyword]);
   const isUrgent = (alert) => {
-    if (!alert.required_date) return false;
+    if (!alert.required_date) {return false;}
     const daysUntilRequired = Math.ceil(
       (new Date(alert.required_date) - new Date()) / (1000 * 60 * 60 * 24),
     );
@@ -283,7 +283,7 @@ export default function ShortageAlert() {
                   <SelectItem value="all">全部项目</SelectItem>
                   {projects.map((proj) => {
                     const projId = proj.id?.toString();
-                    if (!projId || projId === "") return null;
+                    if (!projId || projId === "") {return null;}
                     return (
                       <SelectItem key={proj.id} value={projId}>
                         {proj.project_name}

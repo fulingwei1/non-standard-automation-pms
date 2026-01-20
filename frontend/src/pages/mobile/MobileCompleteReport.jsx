@@ -60,7 +60,7 @@ export default function MobileCompleteReport() {
   };
 
   const calculateWorkHours = (startTime) => {
-    if (!startTime) return 0;
+    if (!startTime) {return 0;}
     const start = new Date(startTime);
     const now = new Date();
     const diffMs = now - start;
@@ -70,7 +70,7 @@ export default function MobileCompleteReport() {
 
   const handlePhotoUpload = (e) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {return;}
 
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -81,7 +81,7 @@ export default function MobileCompleteReport() {
   };
 
   const handleQuickQuantity = (type, value) => {
-    if (!workOrder) return;
+    if (!workOrder) {return;}
     const planQty = workOrder.plan_qty || 0;
 
     if (type === "completed") {
@@ -201,7 +201,7 @@ export default function MobileCompleteReport() {
             <div className="flex-1">
               <div className="text-sm font-medium text-red-800">{error}</div>
             </div>
-          </div>
+        </div>
         }
 
         {/* 成功提示 */}
@@ -213,7 +213,7 @@ export default function MobileCompleteReport() {
                 完工报工成功！
               </div>
             </div>
-          </div>
+        </div>
         }
 
         {/* 表单 */}
@@ -310,7 +310,7 @@ export default function MobileCompleteReport() {
                     {formData.completed_qty - formData.qualified_qty}
                     （自动计算）
                   </div>
-                </div>
+              </div>
               }
 
               {/* 拍照 */}
@@ -357,9 +357,9 @@ export default function MobileCompleteReport() {
 
                             <X className="w-3 h-3" />
                           </button>
-                        </div>
-                    )}
                     </div>
+                    )}
+                  </div>
                   }
                 </div>
               </div>
@@ -371,7 +371,7 @@ export default function MobileCompleteReport() {
                   {workOrder.actual_start_time &&
                   <span className="text-xs text-slate-500 ml-2">
                       已用: {calculateWorkHours(workOrder.actual_start_time)}h
-                    </span>
+                  </span>
                   }
                 </label>
                 <Input

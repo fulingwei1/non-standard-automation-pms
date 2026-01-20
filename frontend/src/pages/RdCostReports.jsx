@@ -251,7 +251,7 @@ export default function RdCostReports() {
                   {report.name}
                 </h3>
                 <p className="text-xs text-slate-500">{report.description}</p>
-              </button>
+            </button>
             )}
           </div>
         </CardContent>
@@ -333,9 +333,9 @@ export default function RdCostReports() {
                   value :
                   formatCurrency(value)}
                       </p>
-                    </div>
+              </div>
               )}
-                </div>
+            </div>
             }
 
               {/* Table Data */}
@@ -350,7 +350,7 @@ export default function RdCostReports() {
                       className="px-4 py-3 text-left text-sm font-medium text-slate-400">
 
                             {key}
-                          </th>
+                    </th>
                     )}
                       </tr>
                     </thead>
@@ -370,13 +370,13 @@ export default function RdCostReports() {
                       cell :
                       cell.toFixed(2) :
                       cell}
-                            </td>
+                    </td>
                     )}
-                        </tr>
+                  </tr>
                   )}
                     </tbody>
                   </table>
-                </div>
+            </div>
             }
 
               {/* Chart Data */}
@@ -386,7 +386,7 @@ export default function RdCostReports() {
                   <pre className="text-xs text-slate-300 overflow-x-auto">
                     {JSON.stringify(reportData.chart, null, 2)}
                   </pre>
-                </div>
+            </div>
             }
 
               {/* No Data */}
@@ -396,9 +396,9 @@ export default function RdCostReports() {
                     <FileText className="h-12 w-12 mx-auto mb-4 text-slate-600" />
                     <p>暂无报表数据</p>
                     <p className="text-xs mt-2">请调整筛选条件后重试</p>
-                  </div>
+            </div>
             }
-            </div> :
+          </div> :
 
           <div className="text-center py-12 text-slate-500">
               <FileText className="h-12 w-12 mx-auto mb-4 text-slate-600" />
@@ -410,7 +410,7 @@ export default function RdCostReports() {
 
                 重试
               </Button>
-            </div>
+          </div>
           }
         </CardContent>
       </Card>

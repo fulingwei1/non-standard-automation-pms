@@ -250,8 +250,8 @@ export default function OrganizationManagement() {
     setLoading(true);
     try {
       const params = {};
-      if (searchKeyword) params.keyword = searchKeyword;
-      if (filterType !== "all") params.unit_type = filterType;
+      if (searchKeyword) {params.keyword = searchKeyword;}
+      if (filterType !== "all") {params.unit_type = filterType;}
 
       const response = await organizationApi.listOrgUnits(params);
       setOrgList(response.data?.items || response.data || []);
@@ -569,7 +569,7 @@ export default function OrganizationManagement() {
       </motion.div>
 
       {/* 创建对话框 */}
-      <Dialog open={showCreateDialog} onOpenChange={(open) => { setShowCreateDialog(open); if (!open) resetForm(); }}>
+      <Dialog open={showCreateDialog} onOpenChange={(open) => { setShowCreateDialog(open); if (!open) {resetForm();} }}>
         <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
             <DialogTitle>

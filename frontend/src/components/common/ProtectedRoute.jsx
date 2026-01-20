@@ -251,22 +251,30 @@ export function ProductionProtectedRoute({ children }) {
 /**
  * Project Review-specific protected route
  * Wrapper for ProtectedRoute with project review permission check
+ *
+ * 使用动态权限检查：优先检查用户的 permissions 数组中是否包含项目复盘相关权限
  */
 export function ProjectReviewProtectedRoute({ children }) {
   const userStr = localStorage.getItem("user");
   let isSuperuser = false;
+  let permissions = [];
+
   if (userStr) {
     try {
       const user = JSON.parse(userStr);
       isSuperuser = user.is_superuser === true || user.isSuperuser === true;
+      permissions = user.permissions || [];
     } catch {
       // ignore
     }
   }
 
+  // 使用权限代码检查（动态从数据库获取）
+  const checkPermission = (userRole) => hasProjectReviewAccess(userRole, isSuperuser, permissions);
+
   return (
     <ProtectedRoute
-      checkPermission={(role) => hasProjectReviewAccess(role, isSuperuser)}
+      checkPermission={checkPermission}
       permissionName="项目复盘模块"
     >
       {children}

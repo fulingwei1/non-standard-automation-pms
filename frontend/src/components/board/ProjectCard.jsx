@@ -27,7 +27,7 @@ const ProjectCard = memo(function ProjectCard({
 
   // 计算逾期天数
   const getOverdueDays = () => {
-    if (!project.planned_end_date) return 0;
+    if (!project.planned_end_date) {return 0;}
     const today = new Date();
     const endDate = new Date(project.planned_end_date);
     const diff = Math.floor((today - endDate) / (1000 * 60 * 60 * 24));

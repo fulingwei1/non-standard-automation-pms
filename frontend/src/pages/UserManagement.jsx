@@ -196,7 +196,7 @@ export default function UserManagement() {
   };
 
   const handleDeleteUser = async (userId) => {
-    if (!confirm("确定要删除这个用户吗？")) return;
+    if (!confirm("确定要删除这个用户吗？")) {return;}
 
     try {
       await userApi.delete(userId);
@@ -242,7 +242,7 @@ export default function UserManagement() {
 
   const getStatusBadge = (status) => {
     const config = statusConfig[status];
-    if (!config) return <Badge variant="secondary">{status}</Badge>;
+    if (!config) {return <Badge variant="secondary">{status}</Badge>;}
 
     return (
       <Badge
@@ -261,7 +261,7 @@ export default function UserManagement() {
 
   const getRoleBadge = (role) => {
     const config = roleConfig[role];
-    if (!config) return <Badge variant="secondary">{role}</Badge>;
+    if (!config) {return <Badge variant="secondary">{role}</Badge>;}
 
     return (
       <Badge
@@ -314,7 +314,7 @@ export default function UserManagement() {
               <Plus className="mr-2 h-4 w-4" />
               新建用户
             </Button>
-          </div>
+        </div>
         } />
 
 
@@ -350,7 +350,7 @@ export default function UserManagement() {
                 {USER_STATUS_FILTER_OPTIONS.map((option) =>
                 <SelectItem key={option.value} value={option.value}>
                     {option.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -363,7 +363,7 @@ export default function UserManagement() {
                 {ROLE_FILTER_OPTIONS.map((option) =>
                 <SelectItem key={option.value} value={option.value}>
                     {option.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -376,7 +376,7 @@ export default function UserManagement() {
                 {DEPARTMENT_FILTER_OPTIONS.map((option) =>
                 <SelectItem key={option.value} value={option.value}>
                     {option.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -413,13 +413,13 @@ export default function UserManagement() {
                     <td colSpan={6} className="px-4 py-8 text-center">
                       加载中...
                     </td>
-                  </tr> :
+                </tr> :
                 users.length === 0 ?
                 <tr>
                     <td colSpan={6} className="px-4 py-8 text-center">
                       暂无用户
                     </td>
-                  </tr> :
+                </tr> :
 
                 users.map((user) =>
                 <motion.tr
@@ -486,7 +486,7 @@ export default function UserManagement() {
                           </Button>
                         </div>
                       </td>
-                    </motion.tr>
+                </motion.tr>
                 )
                 }
               </tbody>
@@ -576,7 +576,7 @@ export default function UserManagement() {
                         {Object.entries(USER_ROLE).map(([_key, value]) =>
                       <SelectItem key={value} value={value}>
                             {USER_ROLE_LABELS[value]}
-                          </SelectItem>
+                      </SelectItem>
                       )}
                       </SelectContent>
                     </Select>
@@ -596,7 +596,7 @@ export default function UserManagement() {
                         {Object.entries(USER_DEPARTMENT).map(([_key, value]) =>
                       <SelectItem key={value} value={value}>
                             {USER_DEPARTMENT_LABELS[value]}
-                          </SelectItem>
+                      </SelectItem>
                       )}
                       </SelectContent>
                     </Select>
@@ -616,7 +616,7 @@ export default function UserManagement() {
                         {Object.entries(USER_STATUS).map(([_key, value]) =>
                       <SelectItem key={value} value={value}>
                             {USER_STATUS_LABELS[value]}
-                          </SelectItem>
+                      </SelectItem>
                       )}
                       </SelectContent>
                     </Select>
@@ -630,7 +630,7 @@ export default function UserManagement() {
                 </DialogFooter>
               </DialogContent>
             </motion.div>
-          </Dialog>
+        </Dialog>
         }
       </AnimatePresence>
 
@@ -704,7 +704,7 @@ export default function UserManagement() {
                         {Object.entries(USER_ROLE).map(([_key, value]) =>
                       <SelectItem key={value} value={value}>
                             {USER_ROLE_LABELS[value]}
-                          </SelectItem>
+                      </SelectItem>
                       )}
                       </SelectContent>
                     </Select>
@@ -724,7 +724,7 @@ export default function UserManagement() {
                         {Object.entries(USER_DEPARTMENT).map(([_key, value]) =>
                       <SelectItem key={value} value={value}>
                             {USER_DEPARTMENT_LABELS[value]}
-                          </SelectItem>
+                      </SelectItem>
                       )}
                       </SelectContent>
                     </Select>
@@ -744,7 +744,7 @@ export default function UserManagement() {
                         {Object.entries(USER_STATUS).map(([_key, value]) =>
                       <SelectItem key={value} value={value}>
                             {USER_STATUS_LABELS[value]}
-                          </SelectItem>
+                      </SelectItem>
                       )}
                       </SelectContent>
                     </Select>
@@ -758,7 +758,7 @@ export default function UserManagement() {
                 </DialogFooter>
               </DialogContent>
             </motion.div>
-          </Dialog>
+        </Dialog>
         }
       </AnimatePresence>
     </motion.div>);

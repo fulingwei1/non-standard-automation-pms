@@ -53,7 +53,7 @@ export default function InformationGapAnalysis() {
     setLoading(true);
     try {
       const params = { entity_type: entityType };
-      if (entityId) params.entity_id = parseInt(entityId);
+      if (entityId) {params.entity_id = parseInt(entityId);}
 
       const response = await informationGapApi.getMissing(params);
       if (response.data?.data) {
@@ -70,8 +70,8 @@ export default function InformationGapAnalysis() {
     setLoading(true);
     try {
       const params = {};
-      if (startDate) params.start_date = startDate;
-      if (endDate) params.end_date = endDate;
+      if (startDate) {params.start_date = startDate;}
+      if (endDate) {params.end_date = endDate;}
 
       const response = await informationGapApi.getImpact(params);
       if (response.data?.data) {
@@ -85,7 +85,7 @@ export default function InformationGapAnalysis() {
   };
 
   const loadQualityScore = async () => {
-    if (!entityId) return;
+    if (!entityId) {return;}
     setLoading(true);
     try {
       const response = await informationGapApi.getQualityScore({
@@ -103,15 +103,15 @@ export default function InformationGapAnalysis() {
   };
 
   useEffect(() => {
-    if (activeTab === "missing") loadMissing();
-    if (activeTab === "impact") loadImpact();
+    if (activeTab === "missing") {loadMissing();}
+    if (activeTab === "impact") {loadImpact();}
   }, [activeTab]);
 
   const getQualityBadge = (score) => {
     if (score >= 80)
-    return <Badge variant="success">高质量</Badge>;
+    {return <Badge variant="success">高质量</Badge>;}
     if (score >= 60)
-    return <Badge variant="warning">中等质量</Badge>;
+    {return <Badge variant="warning">中等质量</Badge>;}
     return <Badge variant="destructive">低质量</Badge>;
   };
 
@@ -208,14 +208,14 @@ export default function InformationGapAnalysis() {
                           {missingData.missing_fields.map((field, idx) =>
                     <Badge key={idx} variant="destructive">
                               {field}
-                            </Badge>
+                    </Badge>
                     )}
                         </div>
-                      </div>
+                </div>
                 }
                 </CardContent>
               </Card>
-            </div>
+          </div>
           }
         </TabsContent>
 
@@ -267,7 +267,7 @@ export default function InformationGapAnalysis() {
                   </div>
                 </CardContent>
               </Card>
-            </div>
+          </div>
           }
         </TabsContent>
 
@@ -299,10 +299,10 @@ export default function InformationGapAnalysis() {
                         {qualityScore.missing_fields.map((field, idx) =>
                   <Badge key={idx} variant="destructive">
                             {field}
-                          </Badge>
+                  </Badge>
                   )}
                       </div>
-                    </div>
+              </div>
               }
                 {qualityScore.recommendations &&
               qualityScore.recommendations.length > 0 &&
@@ -314,13 +314,13 @@ export default function InformationGapAnalysis() {
                         {qualityScore.recommendations.map((rec, idx) =>
                   <li key={idx} className="text-sm">
                             {rec}
-                          </li>
+                  </li>
                   )}
                       </ul>
-                    </div>
+              </div>
               }
               </CardContent>
-            </Card>
+          </Card>
           }
         </TabsContent>
       </Tabs>

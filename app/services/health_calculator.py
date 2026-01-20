@@ -160,7 +160,7 @@ class HealthCalculator:
         blocking_issues = self.db.query(Issue).filter(
             Issue.project_id == project.id,
             Issue.issue_type == IssueTypeEnum.BLOCKER,
-            Issue.status.in_([IssueStatusEnum.OPEN.value, IssueStatusEnum.PROCESSING.value])
+            Issue.status.in_([IssueStatusEnum.OPEN.value, IssueStatusEnum.IN_PROGRESS.value])
         ).count()
 
         return blocking_issues > 0
@@ -256,7 +256,7 @@ class HealthCalculator:
         high_priority_issues = self.db.query(Issue).filter(
             Issue.project_id == project.id,
             Issue.priority.in_(['HIGH', 'URGENT']),
-            Issue.status.in_([IssueStatusEnum.OPEN.value, IssueStatusEnum.PROCESSING.value])
+            Issue.status.in_([IssueStatusEnum.OPEN.value, IssueStatusEnum.IN_PROGRESS.value])
         ).count()
 
         return high_priority_issues > 0
@@ -431,7 +431,7 @@ class HealthCalculator:
                 'blocking_issues': self.db.query(Issue).filter(
                     Issue.project_id == project.id,
                     Issue.issue_type == IssueTypeEnum.BLOCKER,
-                    Issue.status.in_([IssueStatusEnum.OPEN.value, IssueStatusEnum.PROCESSING.value])
+                    Issue.status.in_([IssueStatusEnum.OPEN.value, IssueStatusEnum.IN_PROGRESS.value])
                 ).count(),
                 'overdue_milestones': self.db.query(ProjectMilestone).filter(
                     ProjectMilestone.project_id == project.id,

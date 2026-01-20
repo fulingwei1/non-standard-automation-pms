@@ -20,7 +20,7 @@ export default function DeleteConfirmDialog({
   order,
   onConfirm,
 }) {
-  if (!order) return null;
+  if (!order) {return null;}
 
   const handleConfirm = () => {
     onConfirm?.(order);

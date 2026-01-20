@@ -458,7 +458,7 @@ export const getAlertTypeConfig = (type) => {
  * 计算告警响应时间达标率
  */
 export const calculateSLACompliance = (alerts) => {
-  if (!alerts || alerts.length === 0) return 0;
+  if (!alerts || alerts.length === 0) {return 0;}
 
   const compliantAlerts = alerts.filter((alert) => {
     const levelConfig = getAlertLevelConfig(alert.alert_level);
@@ -473,10 +473,10 @@ export const calculateSLACompliance = (alerts) => {
  * 计算平均响应时间
  */
 export const calculateAverageResponseTime = (alerts) => {
-  if (!alerts || alerts.length === 0) return 0;
+  if (!alerts || alerts.length === 0) {return 0;}
 
   const alertsWithResponse = alerts.filter((alert) => alert.response_time);
-  if (alertsWithResponse.length === 0) return 0;
+  if (alertsWithResponse.length === 0) {return 0;}
 
   const totalTime = alertsWithResponse.reduce((sum, alert) =>
   sum + (alert.response_time || 0), 0
@@ -489,7 +489,7 @@ export const calculateAverageResponseTime = (alerts) => {
  * 计算单个告警的响应时间
  */
 export const calculateResponseTime = (alert) => {
-  if (!alert.created_at || !alert.first_action_time) return 0;
+  if (!alert.created_at || !alert.first_action_time) {return 0;}
 
   const created = new Date(alert.created_at);
   const action = new Date(alert.first_action_time);
@@ -502,7 +502,7 @@ export const calculateResponseTime = (alert) => {
  */
 export const formatStatValue = (value, metric) => {
   const metricConfig = STAT_METRICS[metric];
-  if (!metricConfig) return value;
+  if (!metricConfig) {return value;}
 
   switch (metricConfig.format) {
     case 'percentage':
@@ -520,11 +520,11 @@ export const formatStatValue = (value, metric) => {
  * 获取趋势方向
  */
 export const getTrendDirection = (current, previous) => {
-  if (!previous) return 'stable';
+  if (!previous) {return 'stable';}
   const change = (current - previous) / previous * 100;
 
-  if (change > 5) return 'up';
-  if (change < -5) return 'down';
+  if (change > 5) {return 'up';}
+  if (change < -5) {return 'down';}
   return 'stable';
 };
 

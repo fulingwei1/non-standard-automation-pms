@@ -78,14 +78,14 @@ export default function PipelineHealthMonitoring() {
   };
 
   const getHealthIcon = (status) => {
-    if (status === "H1") return <CheckCircle2 className="h-5 w-5 text-green-600" />;
-    if (status === "H2") return <AlertTriangle className="h-5 w-5 text-amber-600" />;
-    if (status === "H3") return <XCircle className="h-5 w-5 text-red-600" />;
+    if (status === "H1") {return <CheckCircle2 className="h-5 w-5 text-green-600" />;}
+    if (status === "H2") {return <AlertTriangle className="h-5 w-5 text-amber-600" />;}
+    if (status === "H3") {return <XCircle className="h-5 w-5 text-red-600" />;}
     return <CheckCircle2 className="h-5 w-5 text-slate-600" />;
   };
 
   const calculateHealth = async (type, id) => {
-    if (!id) return;
+    if (!id) {return;}
     setLoading(true);
     try {
       let response;
@@ -148,11 +148,11 @@ export default function PipelineHealthMonitoring() {
                     </div>
                   </div>
                   {getHealthBadge(warning.health_status)}
-                </div>
+            </div>
             )}
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* 健康度计算工具 */}

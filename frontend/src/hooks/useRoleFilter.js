@@ -8,7 +8,7 @@ import { PROJECT_STAGES } from "../lib/constants";
 export function useRoleFilter(user, projects = []) {
   // 获取与当前用户角色相关的阶段
   const relevantStages = useMemo(() => {
-    if (!user?.role) return PROJECT_STAGES;
+    if (!user?.role) {return PROJECT_STAGES;}
 
     // 管理员和PMC可以看所有阶段
     if (["admin", "gm", "pmc", "pm", "dept_manager"].includes(user.role)) {
@@ -17,24 +17,24 @@ export function useRoleFilter(user, projects = []) {
 
     // 如果阶段配置中有 roles 字段，则按角色筛选
     return PROJECT_STAGES.filter((stage) => {
-      if (!stage.roles) return true; // 没有 roles 字段则显示所有阶段
+      if (!stage.roles) {return true;} // 没有 roles 字段则显示所有阶段
       return stage.roles.includes(user.role);
     });
   }, [user.role]);
 
   // 获取与当前用户相关的项目
   const myProjects = useMemo(() => {
-    if (!user?.id) return projects;
+    if (!user?.id) {return projects;}
 
     return projects.filter((project) => {
       // 项目经理
-      if (project.pm_id === user.id) return true;
+      if (project.pm_id === user.id) {return true;}
       // 技术负责人
-      if (project.te_id === user.id) return true;
+      if (project.te_id === user.id) {return true;}
       // 项目成员
-      if (project.members?.some((m) => m.user_id === user.id)) return true;
+      if (project.members?.some((m) => m.user_id === user.id)) {return true;}
       // 客户负责人 (销售)
-      if (project.sales_id === user.id) return true;
+      if (project.sales_id === user.id) {return true;}
       return false;
     });
   }, [projects, user.id]);
@@ -58,21 +58,21 @@ export function useRoleFilter(user, projects = []) {
 
   // 根据筛选模式过滤项目
   const filterProjects = (allProjects, mode = "my") => {
-    if (mode === "all") return allProjects;
+    if (mode === "all") {return allProjects;}
 
     // "我相关的" 模式
     return allProjects.filter((project) => {
       // 项目经理
-      if (project.pm_id === user?.id) return true;
+      if (project.pm_id === user?.id) {return true;}
       // 技术负责人
-      if (project.te_id === user?.id) return true;
+      if (project.te_id === user?.id) {return true;}
       // 项目成员
-      if (project.members?.some((m) => m.user_id === user?.id)) return true;
+      if (project.members?.some((m) => m.user_id === user?.id)) {return true;}
       // 销售负责人
-      if (project.sales_id === user?.id) return true;
+      if (project.sales_id === user?.id) {return true;}
       // 按角色相关阶段筛选
       const projectStage = project.stage || project.current_stage;
-      if (projectStage && isStageRelevant(projectStage)) return true;
+      if (projectStage && isStageRelevant(projectStage)) {return true;}
       return false;
     });
   };

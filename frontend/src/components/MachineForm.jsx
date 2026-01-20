@@ -38,7 +38,7 @@ const MachineForm = ({
     onSubmit({ ...formData, project_id: projectId });
   };
 
-  if (!isOpen) return null;
+  if (!isOpen) {return null;}
 
   return (
     <div className="modal-overlay">

@@ -56,7 +56,7 @@ export default function PurchaseOrderStats({ stats = {}, loading = false }) {
         {[1, 2, 3, 4].map((i) => (
           <Card key={i} className="bg-slate-800/50 border border-slate-700/50 animate-pulse">
             <CardContent className="p-4">
-              <div className="h-16 bg-slate-700/50 rounded"></div>
+              <div className="h-16 bg-slate-700/50 rounded" />
             </CardContent>
           </Card>
         ))}
@@ -77,7 +77,7 @@ export default function PurchaseOrderStats({ stats = {}, loading = false }) {
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <p className="text-sm text-slate-400 mb-1">{stat.title}</p>
-                  <p className={`text-2xl font-bold text-white`}>
+                  <p className="text-2xl font-bold text-white">
                     {stat.value}
                   </p>
                 </div>

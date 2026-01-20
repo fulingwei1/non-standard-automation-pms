@@ -26,7 +26,7 @@ import {
 const { Title, Text, Paragraph } = Typography;
 
 const CustomerBasicInfo = ({ customer, loading }) => {
-  if (!customer) return null;
+  if (!customer) {return null;}
 
   const customerTypeConfig = CUSTOMER_TYPES[customer.type?.toUpperCase()];
   const customerStatusConfig = CUSTOMER_STATUS[customer.status?.toUpperCase()];

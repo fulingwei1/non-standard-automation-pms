@@ -686,7 +686,7 @@ export function assessMaterialRisk(material) {
  * 格式化测试结果
  */
 export function formatTestResult(result) {
-  if (!result) return { status: 'pending', value: '-' };
+  if (!result) {return { status: 'pending', value: '-' };}
   
   return {
     status: result.passed ? 'pass' : 'fail',
@@ -724,7 +724,7 @@ export function validateCompliance(material, requiredStandards = []) {
  * 检查证书是否过期
  */
 export function isExpired(expiryDate) {
-  if (!expiryDate) return true;
+  if (!expiryDate) {return true;}
   return new Date(expiryDate) < new Date();
 }
 

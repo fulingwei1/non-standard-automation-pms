@@ -96,11 +96,11 @@ export default function ArrivalNew() {
 
     // 验证
     const newErrors = {};
-    if (!formData.material_id) newErrors.material_id = "请选择物料";
+    if (!formData.material_id) {newErrors.material_id = "请选择物料";}
     if (!formData.expected_qty || parseFloat(formData.expected_qty) <= 0) {
       newErrors.expected_qty = "请输入有效的预期数量";
     }
-    if (!formData.expected_date) newErrors.expected_date = "请选择预期到货日期";
+    if (!formData.expected_date) {newErrors.expected_date = "请选择预期到货日期";}
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -260,14 +260,14 @@ export default function ArrivalNew() {
                     {filteredMaterials.map((material) =>
                     <SelectItem key={material.id} value={String(material.id)}>
                         {material.material_code} - {material.material_name}
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
                 {errors.material_id &&
                 <div className="text-sm text-red-400 mt-1">
                     {errors.material_id}
-                  </div>
+                </div>
                 }
               </div>
             </div>
@@ -290,7 +290,7 @@ export default function ArrivalNew() {
                 {errors.expected_qty &&
                 <div className="text-sm text-red-400 mt-1">
                     {errors.expected_qty}
-                  </div>
+                </div>
                 }
               </div>
 
@@ -310,7 +310,7 @@ export default function ArrivalNew() {
                 {errors.expected_date &&
                 <div className="text-sm text-red-400 mt-1">
                     {errors.expected_date}
-                  </div>
+                </div>
                 }
               </div>
             </div>
@@ -329,7 +329,7 @@ export default function ArrivalNew() {
                     {suppliers.map((supplier) =>
                     <SelectItem key={supplier.id} value={String(supplier.id)}>
                         {supplier.supplier_name} ({supplier.supplier_code})
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>

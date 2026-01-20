@@ -14,8 +14,3 @@ export { default as CustomerCard } from "./CustomerCard";
 export { default as OpportunityCard } from "./OpportunityCard";
 export { default as PaymentTimeline, PaymentStats } from "./PaymentTimeline";
 export { default as AdvantageProducts } from "./AdvantageProducts";
-
-// TODO: 添加其他组件的导出
-// export { CustomerManager } from "./CustomerManager";
-// export { OpportunityManager } from "./OpportunityManager";
-// export { SalesAnalytics } from "./SalesAnalytics";

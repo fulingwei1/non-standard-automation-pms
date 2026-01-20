@@ -215,7 +215,7 @@ export const FeedbackList = ({
 
   // 渲染操作按钮
   const renderActions = (feedback) => {
-    if (!showActions) return null;
+    if (!showActions) {return null;}
 
     return (
       <Popover>
@@ -348,11 +348,11 @@ export const FeedbackList = ({
                   className="p-4 bg-slate-50 rounded-lg border border-slate-200">
 
                       <div className="animate-pulse">
-                        <div className="h-4 bg-slate-200 rounded w-3/4 mb-2"></div>
-                        <div className="h-3 bg-slate-200 rounded w-1/2 mb-3"></div>
+                        <div className="h-4 bg-slate-200 rounded w-3/4 mb-2" />
+                        <div className="h-3 bg-slate-200 rounded w-1/2 mb-3" />
                         <div className="flex gap-2">
-                          <div className="h-6 bg-slate-200 rounded w-20"></div>
-                          <div className="h-6 bg-slate-200 rounded w-20"></div>
+                          <div className="h-6 bg-slate-200 rounded w-20" />
+                          <div className="h-6 bg-slate-200 rounded w-20" />
                         </div>
                       </div>
                 </motion.div>

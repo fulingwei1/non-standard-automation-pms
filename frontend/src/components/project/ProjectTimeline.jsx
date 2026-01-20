@@ -186,7 +186,7 @@ export default function ProjectTimeline({
               onClick={() => setFilterType(key)}>
 
                 {config.label}
-              </Button>
+            </Button>
             )}
           </div>
         </div>
@@ -234,7 +234,7 @@ export default function ProjectTimeline({
                             {event.description &&
                           <div className="text-sm text-slate-400">
                                 {event.description}
-                              </div>
+                          </div>
                           }
                           </div>
                           <Badge variant="secondary">{eventConfig.label}</Badge>
@@ -249,16 +249,16 @@ export default function ProjectTimeline({
                         <div className="flex items-center gap-1">
                               <User className="h-3 w-3" />
                               <span>{event.user}</span>
-                            </div>
+                        </div>
                         }
                         </div>
                       </div>
                     </div>
-                  </motion.div>);
+                </motion.div>);
 
             })}
             </div>
-          </div> :
+        </div> :
 
         <div className="text-center py-12 text-slate-400">
             {searchQuery || filterType !== "all" ?
@@ -274,11 +274,11 @@ export default function ProjectTimeline({
 
                   清除筛选
                 </Button>
-              </div> :
+          </div> :
 
           <p>暂无事件记录</p>
           }
-          </div>
+        </div>
         }
       </CardContent>
     </Card>);

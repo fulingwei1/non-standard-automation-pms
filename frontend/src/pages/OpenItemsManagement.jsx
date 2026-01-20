@@ -124,7 +124,7 @@ export default function OpenItemsManagement() {
   };
 
   const handleClose = async (itemId) => {
-    if (!confirm("确定要关闭此未决事项吗？")) return;
+    if (!confirm("确定要关闭此未决事项吗？")) {return;}
 
     try {
       await technicalAssessmentApi.closeOpenItem(itemId);
@@ -202,7 +202,7 @@ export default function OpenItemsManagement() {
                       <span>
                               截止日期:{" "}
                               {new Date(item.due_date).toLocaleDateString()}
-                            </span>
+                      </span>
                       }
                         </div>
                       </div>
@@ -214,13 +214,13 @@ export default function OpenItemsManagement() {
                       onClick={() => handleClose(item.id)}>
 
                             <CheckCircle2 className="w-4 h-4" />
-                          </Button>
+                    </Button>
                     }
                       </div>
                     </div>
-                  </div>
-              )}
               </div>
+              )}
+            </div>
             }
           </CardContent>
         </Card>
@@ -248,7 +248,7 @@ export default function OpenItemsManagement() {
                   {Object.entries(itemTypeConfig).map(([key, label]) =>
                   <SelectItem key={key} value={key}>
                       {label}
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>

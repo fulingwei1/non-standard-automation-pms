@@ -48,7 +48,7 @@ export default function WorkshopTaskBoard() {
   const fetchBoardData = async () => {
     try {
       setLoading(true);
-      if (!workshopId) return;
+      if (!workshopId) {return;}
       const res = await productionApi.taskBoard(workshopId);
       setBoardData(res.data || res);
     } catch (error) {

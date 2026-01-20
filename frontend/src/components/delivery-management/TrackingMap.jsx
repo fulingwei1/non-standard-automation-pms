@@ -157,7 +157,7 @@ const MapComponent = ({ deliveries, selectedDelivery, onLocationSelect }) => {
                   <div className="text-xs text-slate-500">
                     {marker.type === 'delivery' && formatStatus(marker.status)}
                   </div>
-                </div>
+              </div>
               }
             </motion.div>);
 
@@ -181,7 +181,7 @@ const MapComponent = ({ deliveries, selectedDelivery, onLocationSelect }) => {
             repeatCount="indefinite" />
 
           </path>
-        </svg>
+      </svg>
       }
     </div>);
 
@@ -191,7 +191,7 @@ const MapComponent = ({ deliveries, selectedDelivery, onLocationSelect }) => {
  * 车辆信息面板
  */
 const VehicleInfo = ({ vehicle }) => {
-  if (!vehicle) return null;
+  if (!vehicle) {return null;}
 
   return (
     <Card className="border-blue-200 bg-blue-50/30">
@@ -273,7 +273,7 @@ export const TrackingMap = ({
             {inTransitDeliveries.length > 0 &&
             <Badge className="ml-2 bg-orange-500">
                 {inTransitDeliveries.length}
-              </Badge>
+            </Badge>
             }
           </Button>
           <Button
@@ -284,7 +284,7 @@ export const TrackingMap = ({
             {deliveries.length > 0 &&
             <Badge className="ml-2 bg-blue-500">
                 {deliveries.length}
-              </Badge>
+            </Badge>
             }
           </Button>
         </div>
@@ -296,7 +296,7 @@ export const TrackingMap = ({
 
             <Phone className="w-4 h-4 mr-2" />
             联系司机
-          </Button>
+        </Button>
         }
       </div>
 
@@ -332,7 +332,7 @@ export const TrackingMap = ({
               选择"全部配送"查看所有配送任务
             </p>
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {deliveries.length === 0 &&
@@ -344,7 +344,7 @@ export const TrackingMap = ({
               请先创建配送任务
             </p>
           </CardContent>
-        </Card>
+      </Card>
       }
     </motion.div>);
 

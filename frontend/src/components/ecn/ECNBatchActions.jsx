@@ -65,7 +65,7 @@ export function ECNBatchActions({
 
     setBatchOperation(operation);
     const operationInfo = getOperationInfo(operation);
-    if (!operationInfo) return;
+    if (!operationInfo) {return;}
 
     // 导出操作不需要确认
     if (operation === "batch_export") {
@@ -86,7 +86,7 @@ export function ECNBatchActions({
 
   // 确认批量操作
   const confirmBatchOperation = async () => {
-    if (!batchOperation) return;
+    if (!batchOperation) {return;}
 
     setProcessing(true);
     try {

@@ -93,7 +93,7 @@ export default function ProgressReport() {
     }
   };
   const handleUpdateTaskProgress = async () => {
-    if (!selectedTask) return;
+    if (!selectedTask) {return;}
     try {
       await progressApi.tasks.updateProgress(selectedTask.id, {
         progress: progressValue,
@@ -245,7 +245,7 @@ export default function ProgressReport() {
                         <div className="flex items-center gap-1">
                               <Clock className="w-4 h-4" />
                               {task.assignee_name}
-                            </div>
+                        </div>
                         }
                         </div>
                       </div>
@@ -265,10 +265,10 @@ export default function ProgressReport() {
                       </Button>
                     </div>
                     <Progress value={progress} className="h-2" />
-                  </div>);
+                </div>);
 
             })}
-            </div>
+          </div>
           }
         </CardContent>
       </Card>
@@ -346,7 +346,7 @@ export default function ProgressReport() {
                   placeholder="填写进度说明..." />
 
                 </div>
-              </div>
+            </div>
             }
           </DialogBody>
           <DialogFooter>

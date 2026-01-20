@@ -94,12 +94,12 @@ function PurchaseRequestCard({
             {request.request_type === "URGENT" &&
             <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-xs">
                 紧急
-              </Badge>
+            </Badge>
             }
             {request.auto_po_created &&
             <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-xs">
                 已生成采购订单
-              </Badge>
+            </Badge>
             }
           </div>
           <p className="text-xs text-slate-400">
@@ -109,7 +109,7 @@ function PurchaseRequestCard({
           {request.supplier_name &&
           <p className="text-xs text-slate-500 mt-1">
               供应商：{request.supplier_name}
-            </p>
+          </p>
           }
         </div>
       </div>
@@ -126,12 +126,12 @@ function PurchaseRequestCard({
         <div className="flex items-center gap-2 text-xs text-slate-400">
             <Calendar className="w-3.5 h-3.5" />
             <span>需求日期：{request.required_date}</span>
-          </div>
+        </div>
         }
         {request.request_reason &&
         <p className="text-xs text-slate-400 line-clamp-2">
             {request.request_reason}
-          </p>
+        </p>
         }
       </div>
 
@@ -159,7 +159,7 @@ function PurchaseRequestCard({
             title="编辑">
 
               <Edit3 className="w-3.5 h-3.5" />
-            </Button>
+          </Button>
           }
           {request.status === "DRAFT" && onDelete &&
           <Button
@@ -170,7 +170,7 @@ function PurchaseRequestCard({
             title="删除">
 
               <Trash2 className="w-3.5 h-3.5" />
-            </Button>
+          </Button>
           }
           {request.status === "DRAFT" && onSubmit &&
           <Button
@@ -181,7 +181,7 @@ function PurchaseRequestCard({
             title="提交">
 
               <Send className="w-3.5 h-3.5" />
-            </Button>
+          </Button>
           }
           {request.status === "SUBMITTED" && onApprove &&
           <Button
@@ -196,7 +196,7 @@ function PurchaseRequestCard({
             title="审批通过">
 
               <CheckCircle2 className="w-3.5 h-3.5" />
-            </Button>
+          </Button>
           }
         </div>
       </div>
@@ -280,7 +280,7 @@ export default function PurchaseRequestList() {
 
   // Filter requests
   const filteredRequests = useMemo(() => {
-    if (!Array.isArray(requests)) return [];
+    if (!Array.isArray(requests)) {return [];}
     return requests.filter((req) => {
       if (
       searchQuery &&
@@ -304,7 +304,7 @@ export default function PurchaseRequestList() {
   // Stats
   const stats = useMemo(() => {
     if (!Array.isArray(requests))
-    return { total: 0, draft: 0, submitted: 0, approved: 0, rejected: 0 };
+    {return { total: 0, draft: 0, submitted: 0, approved: 0, rejected: 0 };}
     return {
       total: requests.length,
       draft: requests.filter((r) => r.status === "DRAFT").length,
@@ -386,7 +386,7 @@ export default function PurchaseRequestList() {
 
               <Plus className="w-4 h-4 mr-2" />
               新建申请
-            </Button>
+          </Button>
           } />
 
 
@@ -468,7 +468,7 @@ export default function PurchaseRequestList() {
                   {projects.map((project) =>
                   <SelectItem key={project.id} value={String(project.id)}>
                       {project.project_name}
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -515,9 +515,9 @@ export default function PurchaseRequestList() {
 
               )}
                 </AnimatePresence>
-              </motion.div>
+          </motion.div>
           }
-          </>
+        </>
         }
 
         {/* Approve Dialog */}
@@ -579,7 +579,7 @@ export default function PurchaseRequestList() {
                 </Button>
               </DialogFooter>
             </DialogContent>
-          </Dialog>
+        </Dialog>
         }
       </div>
     </div>);

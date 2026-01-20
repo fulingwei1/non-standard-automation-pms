@@ -99,7 +99,7 @@ export default function ProjectRoles() {
   };
 
   const loadRoleOverview = async () => {
-    if (!projectId) return;
+    if (!projectId) {return;}
     try {
       setLoading(true);
       const response = await projectRolesApi.getRoleOverview(projectId);
@@ -130,7 +130,7 @@ export default function ProjectRoles() {
   };
 
   const loadRoleConfigs = async () => {
-    if (!projectId) return;
+    if (!projectId) {return;}
     try {
       const response = await projectRolesApi.roleConfigs.list(projectId);
       const data = response.data?.data || response.data || response;
@@ -141,7 +141,7 @@ export default function ProjectRoles() {
   };
 
   const loadLeads = async () => {
-    if (!projectId) return;
+    if (!projectId) {return;}
     try {
       const response = await projectRolesApi.leads.list(projectId, false);
       const data = response.data?.data || response.data || response;
@@ -152,7 +152,7 @@ export default function ProjectRoles() {
   };
 
   const handleInitConfigs = async () => {
-    if (!projectId) return;
+    if (!projectId) {return;}
     try {
       setLoading(true);
       await projectRolesApi.roleConfigs.init(projectId);
@@ -177,7 +177,7 @@ export default function ProjectRoles() {
   };
 
   const handleSaveLead = async () => {
-    if (!projectId) return;
+    if (!projectId) {return;}
     try {
       setLoading(true);
       setError(null);
@@ -203,7 +203,7 @@ export default function ProjectRoles() {
   };
 
   const handleSaveTeamMember = async () => {
-    if (!projectId || !selectedLead) return;
+    if (!projectId || !selectedLead) {return;}
     try {
       setLoading(true);
       setError(null);
@@ -224,7 +224,7 @@ export default function ProjectRoles() {
   };
 
   const handleRemoveLead = async (memberId) => {
-    if (!projectId) return;
+    if (!projectId) {return;}
     if (!window.confirm("确定要移除这个负责人吗？")) {
       return;
     }
@@ -274,7 +274,7 @@ export default function ProjectRoles() {
       {error &&
       <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded">
           {error}
-        </div>
+      </div>
       }
 
       <Tabs defaultValue="overview" className="space-y-4">
@@ -293,7 +293,7 @@ export default function ProjectRoles() {
               <Button onClick={handleInitConfigs} disabled={loading}>
                   <Settings className="h-4 w-4 mr-2" />
                   初始化角色配置
-                </Button>
+              </Button>
               }
             </CardHeader>
             <CardContent>
@@ -302,7 +302,7 @@ export default function ProjectRoles() {
               roleOverview.length === 0 ?
               <div className="text-center py-8 text-gray-500">
                   暂无角色配置
-                </div> :
+              </div> :
 
               <div className="space-y-4">
                   {roleOverview.map((overview) =>
@@ -340,9 +340,9 @@ export default function ProjectRoles() {
                                 {overview.lead.team_count > 0 &&
                           <div className="text-sm text-gray-600 mt-1">
                                     团队成员: {overview.lead.team_count} 人
-                                  </div>
+                          </div>
                           }
-                              </div>
+                        </div>
                         }
 
                             {!overview.has_lead && overview.is_required &&
@@ -359,7 +359,7 @@ export default function ProjectRoles() {
                                   <UserPlus className="h-4 w-4 mr-2" />
                                   指定负责人
                                 </Button>
-                              </div>
+                        </div>
                         }
 
                             {!overview.has_lead &&
@@ -376,14 +376,14 @@ export default function ProjectRoles() {
                                     <UserPlus className="h-4 w-4 mr-2" />
                                     指定负责人
                                   </Button>
-                                </div>
+                        </div>
                         }
                           </div>
                         </div>
                       </CardContent>
-                    </Card>
+                </Card>
                 )}
-                </div>
+              </div>
               }
             </CardContent>
           </Card>
@@ -403,7 +403,7 @@ export default function ProjectRoles() {
                     <Settings className="h-4 w-4 mr-2" />
                     初始化角色配置
                   </Button>
-                </div> :
+              </div> :
 
               <div className="overflow-x-auto">
                   <table className="w-full">
@@ -445,11 +445,11 @@ export default function ProjectRoles() {
                           <td className="p-2 text-sm text-gray-600">
                             {config.remark || "-"}
                           </td>
-                        </tr>
+                    </tr>
                     )}
                     </tbody>
                   </table>
-                </div>
+              </div>
               }
             </CardContent>
           </Card>
@@ -473,7 +473,7 @@ export default function ProjectRoles() {
 
                   <Plus className="h-4 w-4 mr-2" />
                   添加负责人
-                </Button>
+              </Button>
               }
             </CardHeader>
             <CardContent>
@@ -501,7 +501,7 @@ export default function ProjectRoles() {
                             {lead.team_count > 0 &&
                         <div className="text-sm text-gray-600 mb-2">
                                 团队成员: {lead.team_count} 人
-                              </div>
+                        </div>
                         }
                             {lead.role_type?.can_have_team &&
                         <Button
@@ -512,7 +512,7 @@ export default function ProjectRoles() {
 
                                 <UserPlus className="h-4 w-4 mr-2" />
                                 添加团队成员
-                              </Button>
+                        </Button>
                         }
                           </div>
                           <div className="flex gap-2">
@@ -526,9 +526,9 @@ export default function ProjectRoles() {
                           </div>
                         </div>
                       </CardContent>
-                    </Card>
+                </Card>
                 )}
-                </div>
+              </div>
               }
             </CardContent>
           </Card>
@@ -546,7 +546,7 @@ export default function ProjectRoles() {
             <div>
                 <Label>角色类型</Label>
                 <Input value={selectedRoleType.role_name} disabled />
-              </div>
+            </div>
             }
             <div>
               <Label>选择用户 *</Label>
@@ -564,7 +564,7 @@ export default function ProjectRoles() {
                   <SelectItem key={user.id} value={user.id.toString()}>
                       {user.real_name || user.username} (
                       {user.department || "未分配部门"})
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -636,7 +636,7 @@ export default function ProjectRoles() {
                   <SelectItem key={user.id} value={user.id.toString()}>
                         {user.real_name || user.username} (
                         {user.department || "未分配部门"})
-                      </SelectItem>
+                  </SelectItem>
                   )}
                   </SelectContent>
                 </Select>
@@ -656,7 +656,7 @@ export default function ProjectRoles() {
                 } />
 
               </div>
-            </div>
+          </div>
           }
           <DialogFooter>
             <Button

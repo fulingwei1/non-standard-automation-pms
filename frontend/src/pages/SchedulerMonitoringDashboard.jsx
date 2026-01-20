@@ -105,7 +105,7 @@ export default function SchedulerMonitoringDashboard() {
 
   // Auto refresh
   useEffect(() => {
-    if (!autoRefresh) return;
+    if (!autoRefresh) {return;}
 
     const interval = setInterval(() => {
       fetchData();
@@ -386,7 +386,7 @@ export default function SchedulerMonitoringDashboard() {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+      </motion.div>
       }
 
       {/* Notification Chain Metrics */}
@@ -439,11 +439,11 @@ export default function SchedulerMonitoringDashboard() {
                     最后执行时间:{" "}
                     {formatDate(notificationMetrics.last_timestamp)}
                   </p>
-                </div>
+            </div>
             }
             </CardContent>
           </Card>
-        </motion.div>
+      </motion.div>
       }
 
       {/* Tabs */}
@@ -478,7 +478,7 @@ export default function SchedulerMonitoringDashboard() {
                     {categories.map((cat) =>
                     <option key={cat} value={cat}>
                         {cat}
-                      </option>
+                    </option>
                     )}
                   </select>
                 </div>
@@ -579,12 +579,12 @@ export default function SchedulerMonitoringDashboard() {
                               "失败"}
                               </Badge>
                             </TableCell>
-                          </TableRow>);
+                        </TableRow>);
 
                     })}
                     </TableBody>
                   </Table>
-                </div>
+              </div>
               }
             </CardContent>
           </Card>
@@ -650,14 +650,14 @@ export default function SchedulerMonitoringDashboard() {
                                 <span className="text-red-600">
                                   ({job.failure_count} 次失败)
                                 </span>
-                              </div>
+                        </div>
                         )}
-                          </div>
+                      </div>
                       }
-                      </div>);
+                    </div>);
 
                 })}
-                </div>
+              </div>
               }
             </CardContent>
           </Card>

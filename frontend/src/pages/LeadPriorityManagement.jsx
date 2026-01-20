@@ -168,9 +168,9 @@ export default function LeadPriorityManagement() {
   };
 
   const getScoreColor = (score) => {
-    if (score >= 80) return "text-green-600";
-    if (score >= 70) return "text-blue-600";
-    if (score >= 60) return "text-yellow-600";
+    if (score >= 80) {return "text-green-600";}
+    if (score >= 70) {return "text-blue-600";}
+    if (score >= 60) {return "text-yellow-600";}
     return "text-slate-600";
   };
 
@@ -304,15 +304,15 @@ export default function LeadPriorityManagement() {
                       <Badge className="bg-yellow-500/10 text-yellow-600">
                               <Star className="h-3 w-3 mr-1 fill-yellow-500" />
                               关键
-                            </Badge> :
+                      </Badge> :
 
                       <span className="text-slate-400">-</span>
                       }
                         </TableCell>
-                      </TableRow>
+                  </TableRow>
                   )}
                   </TableBody>
-                </Table>
+              </Table>
               }
             </TabsContent>
 
@@ -387,15 +387,15 @@ export default function LeadPriorityManagement() {
                       <Badge className="bg-yellow-500/10 text-yellow-600">
                               <Star className="h-3 w-3 mr-1 fill-yellow-500" />
                               关键
-                            </Badge> :
+                      </Badge> :
 
                       <span className="text-slate-400">-</span>
                       }
                         </TableCell>
-                      </TableRow>
+                  </TableRow>
                   )}
                   </TableBody>
-                </Table>
+              </Table>
               }
             </TabsContent>
           </Tabs>

@@ -366,8 +366,8 @@ export const calculateTicketStats = (tickets) => {
     }
 
     // 紧急程度统计
-    if (ticket.urgency === "URGENT") stats.urgent++;
-    if (ticket.urgency === "HIGH") stats.high++;
+    if (ticket.urgency === "URGENT") {stats.urgent++;}
+    if (ticket.urgency === "HIGH") {stats.high++;}
 
     // 解决时间计算
     if (ticket.resolved_time && ticket.reported_time) {

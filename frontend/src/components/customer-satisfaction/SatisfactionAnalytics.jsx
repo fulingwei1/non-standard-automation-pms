@@ -19,7 +19,7 @@ const SatisfactionAnalytics = ({ surveys = [], responses = [], loading = false }
     Object.keys(SATISFACTION_LEVELS).forEach((k) => (dist[k] = 0));
     responses.forEach((r) => {
       const hit = Object.entries(SATISFACTION_LEVELS).find(([_, cfg]) => cfg.value === r.satisfactionLevel);
-      if (hit) dist[hit[0]] += 1;
+      if (hit) {dist[hit[0]] += 1;}
     });
 
     return { surveyCount, responseCount, avgScore, dist };
@@ -51,7 +51,7 @@ const SatisfactionAnalytics = ({ surveys = [], responses = [], loading = false }
         </Col>
       </Row>
 
-      <Card title="满意度分布（占位）" loading={loading}>
+      <Card title="满意度分布" loading={loading}>
         {Object.entries(stats.dist).map(([key, count]) => {
           const cfg = SATISFACTION_LEVELS[key];
           const percent = stats.responseCount > 0 ? (count / stats.responseCount) * 100 : 0;

@@ -266,14 +266,14 @@ export default function DependencyCheck({ projectId }) {
         <div className="mb-4 rounded-md bg-red-50 border border-red-200 text-red-700 px-4 py-3 flex items-start">
             <AlertCircle className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0" />
             <div>{errorMessage}</div>
-          </div>
+        </div>
         }
         
         {successMessage &&
         <div className="mb-4 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 flex items-start">
             <CheckCircle2 className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0" />
             <div>{successMessage}</div>
-          </div>
+        </div>
         }
         
         {/* 自动修复选项 */}
@@ -417,17 +417,17 @@ export default function DependencyCheck({ projectId }) {
                         {taskIdx < cycle.length - 1 &&
                   <span className="text-red-400">→</span>
                   }
-                      </React.Fragment>
+                </React.Fragment>
                 )}
                   </div>
-                </div>
+            </div>
             )}
             </div>
             <div className="mt-4 rounded-md bg-amber-50 border border-amber-200 p-3 text-sm">
               <strong className="text-amber-900">⚠️ 循环依赖无法自动修复，需要手动调整依赖关系或拆分任务。</strong>
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
       
       {/* 时序冲突详情 */}
@@ -454,18 +454,18 @@ export default function DependencyCheck({ projectId }) {
                     {autoFixTiming ?
                 <Badge variant="secondary" className="text-emerald-700 bg-emerald-50">
                         将自动修复
-                      </Badge> :
+                </Badge> :
 
                 <Badge variant="secondary">
                         需手动调整
-                      </Badge>
+                </Badge>
                 }
                   </div>
-                </div>
+            </div>
             )}
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
       
       {/* 缺失依赖详情 */}
@@ -492,18 +492,18 @@ export default function DependencyCheck({ projectId }) {
                     {autoFixMissing ?
                 <Badge variant="secondary" className="text-emerald-700 bg-emerald-50">
                         将自动移除
-                      </Badge> :
+                </Badge> :
 
                 <Badge variant="secondary">
                         需手动删除
-                      </Badge>
+                </Badge>
                 }
                   </div>
-                </div>
+            </div>
             )}
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
       
       {/* 其他问题详情 */}
@@ -534,11 +534,11 @@ export default function DependencyCheck({ projectId }) {
                   <div className="text-sm text-slate-700">
                     {issue.detail}
                   </div>
-                </div>
+            </div>
             )}
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
       
       {/* 无问题状态 */}
@@ -554,7 +554,7 @@ export default function DependencyCheck({ projectId }) {
               项目的依赖关系配置良好，可以正常执行。
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
       
       {/* 预览对话框 */}
@@ -579,13 +579,13 @@ export default function DependencyCheck({ projectId }) {
                           <div className="text-sm text-red-800">
                             循环 {idx + 1}: {cycle.join(" → ")}
                           </div>
-                        </div>
+                  </div>
                   )}
                     </div>
                     <div className="rounded-md bg-amber-50 border border-amber-200 p-3 text-sm mt-2">
                       <strong className="text-amber-900">⚠️ 循环依赖无法自动修复，请在修复其他问题后手动调整。</strong>
                     </div>
-                  </div>
+              </div>
               }
                 
                 {/* 修复操作预览 */}
@@ -600,7 +600,7 @@ export default function DependencyCheck({ projectId }) {
                         <div className="text-xs text-amber-700">
                           自动调整任务计划时间以解决时序冲突
                         </div>
-                      </div>
+                  </div>
                   }
                     
                     {previewData.preview_actions?.will_remove_missing > 0 &&
@@ -611,7 +611,7 @@ export default function DependencyCheck({ projectId }) {
                         <div className="text-xs text-blue-700">
                           删除指向不存在任务的依赖关系
                         </div>
-                      </div>
+                  </div>
                   }
                     
                     {previewData.preview_actions?.will_skip_cycles > 0 &&
@@ -622,11 +622,11 @@ export default function DependencyCheck({ projectId }) {
                         <div className="text-xs text-slate-700">
                           循环依赖需手动处理
                         </div>
-                      </div>
+                  </div>
                   }
                   </div>
                 </div>
-              </div> :
+            </div> :
 
             <div className="text-center py-8 text-slate-500">加载预览数据中...</div>
             }
@@ -665,14 +665,14 @@ export default function DependencyCheck({ projectId }) {
                 <div className="flex items-center gap-2">
                     <Network className="w-4 h-4 text-amber-500" />
                     <span>自动修复 {timingIssues.length} 个时序冲突</span>
-                  </div>
+                </div>
                 }
                 
                 {autoFixMissing && missingIssues.length > 0 &&
                 <div className="flex items-center gap-2">
                     <Link2 className="w-4 h-4 text-blue-500" />
                     <span>自动移除 {missingIssues.length} 个缺失依赖</span>
-                  </div>
+                </div>
                 }
                 
                 <div className="flex items-center gap-2">
@@ -685,7 +685,7 @@ export default function DependencyCheck({ projectId }) {
               <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm">
                   <strong className="text-red-900">⚠️ 注意：</strong>
                   循环依赖无法自动修复，需要手动处理。
-                </div>
+              </div>
               }
             </div>
           </DialogBody>

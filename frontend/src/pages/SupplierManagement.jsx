@@ -289,12 +289,12 @@ const SupplierCard = ({ supplier, onView }) => {
               <li key={idx} className="flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
                       {issue.issue}
-                    </li>
+              </li>
               )}
                 </ul>
-              </div>
-          }
           </div>
+          }
+        </div>
         }
 
         {/* Action Bar */}
@@ -478,7 +478,7 @@ export default function SupplierManagement() {
                 className={cn(filterLevel === key && cfg.color)}>
 
                   {cfg.label}
-                </Button>
+              </Button>
               )}
             </div>
           </div>
@@ -511,7 +511,7 @@ export default function SupplierManagement() {
 
               <Building2 className="w-12 h-12 text-slate-500 mx-auto mb-3" />
               <p className="text-slate-400">没有符合条件的供应商</p>
-            </motion.div>
+          </motion.div>
           }
         </AnimatePresence>
       </motion.div>
@@ -545,11 +545,11 @@ export default function SupplierManagement() {
                   "存在多项问题需要关注"}
                       </p>
                     </div>
-                  </div>
+            </div>
             )}
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* Create Supplier Dialog */}
@@ -619,7 +619,7 @@ function CreateSupplierDialog({ onClose, onSuccess }) {
   };
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
+    <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700">
         <DialogHeader>
           <DialogTitle>新建供应商</DialogTitle>
@@ -641,7 +641,7 @@ function CreateSupplierDialog({ onClose, onSuccess }) {
               {errors.supplier_code &&
               <div className="text-sm text-red-400 mt-1">
                   {errors.supplier_code}
-                </div>
+              </div>
               }
             </div>
             <div>
@@ -659,7 +659,7 @@ function CreateSupplierDialog({ onClose, onSuccess }) {
               {errors.supplier_name &&
               <div className="text-sm text-red-400 mt-1">
                   {errors.supplier_name}
-                </div>
+              </div>
               }
             </div>
             <div>

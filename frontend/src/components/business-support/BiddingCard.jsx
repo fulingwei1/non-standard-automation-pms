@@ -60,9 +60,9 @@ const documentStatusConfig = {
 };
 
 const getDaysColor = (daysLeft) => {
-  if (daysLeft === 0) return "text-red-400";
-  if (daysLeft <= 3) return "text-orange-400";
-  if (daysLeft <= 7) return "text-amber-400";
+  if (daysLeft === 0) {return "text-red-400";}
+  if (daysLeft <= 3) {return "text-orange-400";}
+  if (daysLeft <= 7) {return "text-amber-400";}
   return "text-cyan-400";
 };
 

@@ -105,7 +105,7 @@ const PipelineColumn = ({
           {stageStats.total > 0 &&
           <div className="text-xs text-gray-500">
               {formatCurrency(stageStats.totalAmount)}
-            </div>
+          </div>
           }
         </div>
 
@@ -114,7 +114,7 @@ const PipelineColumn = ({
         <div className="flex items-center gap-2 text-xs text-gray-500">
             <BarChart3 className="h-3 w-3" />
             <span>{stageStats.highValue} 个高价值商机</span>
-          </div>
+        </div>
         }
       </CardHeader>
 
@@ -132,7 +132,7 @@ const PipelineColumn = ({
         <div className="flex flex-col items-center justify-center h-64 text-gray-400">
             <Target className="h-12 w-12 mb-2" />
             <p className="text-sm">暂无商机</p>
-          </div> :
+        </div> :
 
         stageOpportunities.map((opportunity) =>
         <OpportunityCard
@@ -343,7 +343,7 @@ export const OpportunityPipeline = ({
 
                       取消选择
                     </Button>
-                  </div>
+                </div>
                 }
               </div>
             </div>
@@ -367,10 +367,10 @@ export const OpportunityPipeline = ({
                     onSelect={handleSelectOpportunity}
                     isSelected={isOpportunitySelected} />
 
-                    </div>
+                </div>
                 )}
                 </div>
-              </div>
+            </div>
             }
 
             {/* 列表视图 */}
@@ -387,11 +387,11 @@ export const OpportunityPipeline = ({
                   onView={onView}
                   onSelect={handleSelectOpportunity}
                   isSelected={isOpportunitySelected(opportunity.id)}
-                  compact={true} />
+                  compact />
 
                 )}
                 </div>
-              </div>
+            </div>
             }
 
             {/* 统计视图 */}
@@ -426,7 +426,7 @@ export const OpportunityPipeline = ({
                                 style={{ width: `${percentage}%` }} />
 
                               </div>
-                            </div>);
+                          </div>);
 
                       })}
                       </div>
@@ -496,14 +496,14 @@ export const OpportunityPipeline = ({
                                 <div className="flex-1 bg-gray-200 rounded h-2" />
                                 <div className="flex-1 bg-green-500 rounded h-2" style={{ width: `${conversionRate}%` }} />
                               </div>
-                            </div>);
+                          </div>);
 
                       })}
                       </div>
                     </CardContent>
                   </Card>
                 </div>
-              </div>
+            </div>
             }
           </div>
         </div>

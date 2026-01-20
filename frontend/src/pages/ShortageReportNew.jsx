@@ -116,8 +116,8 @@ export default function ShortageReportNew() {
 
     // 验证
     const newErrors = {};
-    if (!formData.project_id) newErrors.project_id = "请选择项目";
-    if (!formData.material_id) newErrors.material_id = "请选择物料";
+    if (!formData.project_id) {newErrors.project_id = "请选择项目";}
+    if (!formData.material_id) {newErrors.material_id = "请选择物料";}
     if (!formData.required_qty || parseFloat(formData.required_qty) <= 0) {
       newErrors.required_qty = "请输入有效的需求数量";
     }

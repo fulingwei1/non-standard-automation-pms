@@ -12,7 +12,7 @@ const { Text } = Typography;
 
 const getConfigByValue = (configs, value, fallbackLabel = "-") => {
   const match = Object.values(configs).find((item) => item.value === value);
-  if (match) return match;
+  if (match) {return match;}
   return { label: fallbackLabel, color: "#8c8c8c", icon: "📝" };
 };
 

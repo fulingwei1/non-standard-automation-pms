@@ -73,10 +73,10 @@ export const useSalesTeamData = (filters, defaultRange, triggerAutoRefreshToast)
     try {
       const requestParams = {};
       if (filters.departmentId && filters.departmentId !== "all")
-      requestParams.department_id = filters.departmentId;
-      if (filters.region) requestParams.region = filters.region.trim();
-      if (filters.startDate) requestParams.start_date = filters.startDate;
-      if (filters.endDate) requestParams.end_date = filters.endDate;
+      {requestParams.department_id = filters.departmentId;}
+      if (filters.region) {requestParams.region = filters.region.trim();}
+      if (filters.startDate) {requestParams.start_date = filters.startDate;}
+      if (filters.endDate) {requestParams.end_date = filters.endDate;}
 
       const startDateValue = filters.startDate ?
       new Date(filters.startDate) :
@@ -171,7 +171,7 @@ export const useSalesTeamData = (filters, defaultRange, triggerAutoRefreshToast)
         const newCustomersInRange = Array.isArray(list) ?
         list.filter((customer) => {
           const createdAt = customer.created_at || customer.createdAt;
-          if (!createdAt) return false;
+          if (!createdAt) {return false;}
           const createdDate = new Date(createdAt);
           return (
             createdDate >= startDateValue && createdDate <= endDateValue);

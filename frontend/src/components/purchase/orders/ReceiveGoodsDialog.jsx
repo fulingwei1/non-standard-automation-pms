@@ -36,7 +36,7 @@ export default function ReceiveGoodsDialog({
     }
   }, [open]);
 
-  if (!order) return null;
+  if (!order) {return null;}
 
   const handleConfirm = () => {
     onConfirm?.(order, receiveData);
@@ -85,7 +85,7 @@ export default function ReceiveGoodsDialog({
                   style={{ width: `${Math.min(progress, 100)}%` }} />
 
                 </div>
-              </div>
+            </div>
             }
           </div>
 
@@ -108,10 +108,10 @@ export default function ReceiveGoodsDialog({
                         </p>
                       </div>
                       <CheckCircle2 className="w-5 h-5 text-amber-400" />
-                    </div>
+              </div>
               )}
               </div>
-            </div>
+          </div>
           }
 
           {/* 收货日期 */}

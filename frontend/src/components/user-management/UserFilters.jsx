@@ -324,7 +324,7 @@ export function UserFilters({
                       <span className={cn("w-2 h-2 rounded-full", config.color)} />
                       {config.label}
                     </div>
-                  </SelectItem>
+              </SelectItem>
               )}
               </SelectContent>
             </Select>
@@ -345,7 +345,7 @@ export function UserFilters({
                       <span>{config.icon}</span>
                       {config.label}
                     </div>
-                  </SelectItem>
+              </SelectItem>
               )}
               </SelectContent>
             </Select>
@@ -366,7 +366,7 @@ export function UserFilters({
                       <span>{config.icon}</span>
                       {config.label}
                     </div>
-                  </SelectItem>
+              </SelectItem>
               )}
               </SelectContent>
             </Select>
@@ -387,7 +387,7 @@ export function UserFilters({
                       <span>{config.icon}</span>
                       {config.label}
                     </div>
-                  </SelectItem>
+              </SelectItem>
               )}
               </SelectContent>
             </Select>
@@ -433,7 +433,7 @@ export function UserFilters({
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>;
+  </Dialog>;
 
 
   // 渲染批量操作
@@ -476,7 +476,7 @@ export function UserFilters({
           </Button>
         </div>
       </DialogContent>
-    </Dialog>;
+  </Dialog>;
 
 
   // 检查是否有活跃筛选
@@ -510,13 +510,13 @@ export function UserFilters({
                 <Download className="mr-2 h-4 w-4" />
                 导出
               </Button>
-            </>
+          </>
           }
           {hasActiveFilters &&
           <Button variant="outline" size="sm" onClick={handleClearFilters}>
               <RotateCcw className="mr-2 h-4 w-4" />
               清除
-            </Button>
+          </Button>
           }
         </div>
       </div>
@@ -533,9 +533,9 @@ export function UserFilters({
 
               {tag.label}
               <X className="ml-1 h-3 w-3" />
-            </Badge>
+        </Badge>
         )}
-        </div>
+      </div>
       }
 
       {/* 快速筛选 */}
@@ -601,7 +601,7 @@ export function UserFilters({
             {userSortConfigs.map((config) =>
             <SelectItem key={config.value} value={config.value}>
                 {config.label}
-              </SelectItem>
+            </SelectItem>
             )}
           </SelectContent>
         </Select>

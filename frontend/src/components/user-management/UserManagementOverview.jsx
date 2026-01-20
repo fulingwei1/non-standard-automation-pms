@@ -268,7 +268,7 @@ const UserManagementOverview = ({
                     <Badge variant="secondary">{roleData.count}</Badge>
                     <span className="text-xs text-muted-foreground">{roleData.percentage}%</span>
                   </div>
-                </div>
+              </div>
               )}
             </div>
           </CardContent>
@@ -290,7 +290,7 @@ const UserManagementOverview = ({
                     <Badge variant="secondary">{deptData.count}</Badge>
                     <span className="text-xs text-muted-foreground">{deptData.percentage}%</span>
                   </div>
-                </div>
+              </div>
               )}
             </div>
           </CardContent>

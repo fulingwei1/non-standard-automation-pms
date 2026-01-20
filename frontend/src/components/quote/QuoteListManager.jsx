@@ -84,7 +84,7 @@ export const QuoteListManager = ({
         quote.id?.toLowerCase().includes(searchLower) ||
         quote.customer_name?.toLowerCase().includes(searchLower) ||
         quote.opportunity_title?.toLowerCase().includes(searchLower);
-        if (!matchesSearch) return false;
+        if (!matchesSearch) {return false;}
       }
 
       // 状态过滤
@@ -159,14 +159,14 @@ export const QuoteListManager = ({
         });
       case 'valid_until_asc':
         return sorted.sort((a, b) => {
-          if (!a.valid_until) return 1;
-          if (!b.valid_until) return -1;
+          if (!a.valid_until) {return 1;}
+          if (!b.valid_until) {return -1;}
           return new Date(a.valid_until) - new Date(b.valid_until);
         });
       case 'valid_until_desc':
         return sorted.sort((a, b) => {
-          if (!a.valid_until) return -1;
-          if (!b.valid_until) return 1;
+          if (!a.valid_until) {return -1;}
+          if (!b.valid_until) {return 1;}
           return new Date(b.valid_until) - new Date(a.valid_until);
         });
       case 'title_asc':
@@ -180,7 +180,7 @@ export const QuoteListManager = ({
 
   // 处理选择
   const handleSelectionChange = useCallback((quoteId, selected) => {
-    if (!onSelectionChange) return;
+    if (!onSelectionChange) {return;}
 
     let newSelection;
     if (selected) {
@@ -193,7 +193,7 @@ export const QuoteListManager = ({
 
   // 处理全选
   const handleSelectAll = useCallback((selected) => {
-    if (!onSelectionChange) return;
+    if (!onSelectionChange) {return;}
     onSelectionChange(selected ? sortedQuotes.map((quote) => quote.id) : []);
   }, [sortedQuotes, onSelectionChange]);
 
@@ -586,7 +586,7 @@ export const QuoteListManager = ({
                   {QUOTE_SORT_OPTIONS.map((option) =>
                   <SelectItem key={option.value} value={option.value}>
                       {option.label}
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -598,19 +598,19 @@ export const QuoteListManager = ({
               <Button variant="outline" size="sm" onClick={onImport}>
                   <Upload className="w-4 h-4 mr-2" />
                   导入
-                </Button>
+              </Button>
               }
               {onExport &&
               <Button variant="outline" size="sm" onClick={onExport}>
                   <Download className="w-4 h-4 mr-2" />
                   导出
-                </Button>
+              </Button>
               }
               {onQuoteCreate &&
               <Button onClick={onQuoteCreate} className="bg-blue-600 hover:bg-blue-700">
                   <Plus className="w-4 h-4 mr-2" />
                   新建报价
-                </Button>
+              </Button>
               }
             </div>
           </div>
@@ -654,10 +654,10 @@ export const QuoteListManager = ({
                     {sortedQuotes.map((quote, index) => renderTableRow(quote, index))}
                   </tbody>
                 </table>
-              </div>
+          </div>
           }
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* 卡片视图 */}
@@ -670,7 +670,7 @@ export const QuoteListManager = ({
 
         sortedQuotes.map((quote, index) => renderQuoteCard(quote, index))
         }
-        </div>
+      </div>
       }
     </div>);
 

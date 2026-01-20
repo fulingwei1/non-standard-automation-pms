@@ -127,9 +127,9 @@ const WinRatePredictionCard = ({
   // 获取预测图标
   const getPredictionIcon = () => {
     if (winRatePercent >= 60)
-      return <TrendingUp className="h-5 w-5 text-green-600" />;
+      {return <TrendingUp className="h-5 w-5 text-green-600" />;}
     if (winRatePercent >= 40)
-      return <AlertTriangle className="h-5 w-5 text-yellow-600" />;
+      {return <AlertTriangle className="h-5 w-5 text-yellow-600" />;}
     return <TrendingDown className="h-5 w-5 text-red-600" />;
   };
 

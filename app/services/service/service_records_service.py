@@ -183,7 +183,7 @@ class ServiceRecordsService:
             total=total,
             page=page,
             page_size=page_size,
-            items=[ServiceRecordResponse.from_orm(item) for item in items]
+            items=[ServiceRecordResponse.model_validate(item) for item in items]
         )
 
     def create_service_record(

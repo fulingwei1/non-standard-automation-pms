@@ -54,16 +54,16 @@ export function ECNChangeLog({
 
       switch (filterDateRange) {
         case "today":
-          if (logDate.toDateString() !== now.toDateString()) return false;
+          if (logDate.toDateString() !== now.toDateString()) {return false;}
           break;
         case "week": {
           const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          if (logDate < weekAgo) return false;
+          if (logDate < weekAgo) {return false;}
           break;
         }
         case "month": {
           const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-          if (logDate < monthAgo) return false;
+          if (logDate < monthAgo) {return false;}
           break;
         }
         default:
@@ -143,7 +143,7 @@ export function ECNChangeLog({
                 {Object.entries(logTypeConfigs).map(([key, config]) =>
                 <SelectItem key={key} value={key}>
                     {config.icon} {config.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -169,14 +169,14 @@ export function ECNChangeLog({
       {/* 变更日志列表 */}
       <div className="relative">
         {/* 时间线背景线 */}
-        <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-slate-600"></div>
+        <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-slate-600" />
         
         {filteredLogs.length === 0 ?
         <Card>
             <CardContent className="py-8 text-center text-slate-400">
               {logs.length === 0 ? "暂无变更记录" : "没有符合条件的日志"}
             </CardContent>
-          </Card> :
+        </Card> :
 
         <div className="space-y-4">
             {filteredLogs.map((log, index) => {
@@ -218,7 +218,7 @@ export function ECNChangeLog({
                           {log.description &&
                         <div className="text-white">
                               {log.description}
-                            </div>
+                        </div>
                         }
 
                           {log.details &&
@@ -226,7 +226,7 @@ export function ECNChangeLog({
                               <pre className="whitespace-pre-wrap font-sans">
                                 {log.details}
                               </pre>
-                            </div>
+                        </div>
                         }
 
                           {/* 特殊字段展示 */}
@@ -236,7 +236,7 @@ export function ECNChangeLog({
                               <div>部门: {log.evaluation_data.department}</div>
                               <div>风险等级: {log.evaluation_data.risk_level}</div>
                               <div>建议: {log.evaluation_data.recommendation}</div>
-                            </div>
+                        </div>
                         }
 
                           {log.log_type === "APPROVED" && log.approval_data &&
@@ -244,7 +244,7 @@ export function ECNChangeLog({
                               <div className="font-medium mb-1">审批信息:</div>
                               <div>审批人: {log.approval_data.approver}</div>
                               <div>审批意见: {log.approval_data.comment}</div>
-                            </div>
+                        </div>
                         }
 
                           {log.attachments && log.attachments.length > 0 &&
@@ -254,19 +254,19 @@ export function ECNChangeLog({
                                 {log.attachments.map((attachment, idx) =>
                             <Badge key={idx} variant="outline" className="text-xs">
                                     {attachment.name}
-                                  </Badge>
+                            </Badge>
                             )}
                               </div>
-                            </div>
+                        </div>
                         }
                         </div>
                       </CardContent>
                     </Card>
                   </div>
-                </div>);
+              </div>);
 
           })}
-          </div>
+        </div>
         }
       </div>
     </div>);

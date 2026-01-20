@@ -116,7 +116,7 @@ function BiddingCard({ bidding, onClick }) {
             <Badge className="text-xs bg-amber-500">
                 <Timer className="w-3 h-3 mr-1" />
                 紧急
-              </Badge>
+            </Badge>
             }
           </div>
           <h4 className="text-sm font-medium text-white group-hover:text-primary transition-colors line-clamp-2">
@@ -169,7 +169,7 @@ function BiddingCard({ bidding, onClick }) {
             <span className="text-white">{bidding.progress}%</span>
           </div>
           <Progress value={bidding.progress} className="h-1.5" />
-        </div>
+      </div>
       }
 
       {bidding.competitors.length > 0 &&
@@ -178,7 +178,7 @@ function BiddingCard({ bidding, onClick }) {
           <span className="text-xs text-slate-500">
             {bidding.competitors.length} 个竞争对手
           </span>
-        </div>
+      </div>
       }
 
       <div className="flex items-center justify-between text-xs pt-3 border-t border-white/5">
@@ -195,19 +195,19 @@ function BiddingCard({ bidding, onClick }) {
 
             <Timer className="w-3 h-3" />
             剩余 {bidding.daysLeft} 天
-          </span>
+        </span>
         }
         {bidding.stage === "won" &&
         <span className="flex items-center gap-1 text-emerald-400">
             <Award className="w-3 h-3" />
             已中标
-          </span>
+        </span>
         }
         {bidding.stage === "lost" &&
         <span className="flex items-center gap-1 text-red-400">
             <ThumbsDown className="w-3 h-3" />
             未中标
-          </span>
+        </span>
         }
       </div>
     </motion.div>);
@@ -216,7 +216,7 @@ function BiddingCard({ bidding, onClick }) {
 
 // 投标详情面板
 function BiddingDetailPanel({ bidding, onClose }) {
-  if (!bidding) return null;
+  if (!bidding) {return null;}
 
   return (
     <AnimatePresence>
@@ -305,7 +305,7 @@ function BiddingDetailPanel({ bidding, onClose }) {
                   </p>
                 </div>
               </div>
-            </div>
+          </div>
           }
 
           {/* 技术要求 */}
@@ -331,7 +331,7 @@ function BiddingDetailPanel({ bidding, onClose }) {
                   <Eye className="w-4 h-4" />
                 </Button>
               </div>
-            </div>
+          </div>
           }
 
           {/* 成本支持 */}
@@ -364,14 +364,14 @@ function BiddingDetailPanel({ bidding, onClose }) {
 
                   <MessageSquare className="w-4 h-4 mr-2" />
                   申请成本支持
-                </Button>
+              </Button>
               }
             </div>
 
             {bidding.costSupport?.status === "none" &&
             <div className="p-3 bg-slate-500/10 border border-slate-500/20 rounded-lg">
                 <p className="text-xs text-slate-400">尚未申请成本支持</p>
-              </div>
+            </div>
             }
 
             {bidding.costSupport?.status === "requested" &&
@@ -387,7 +387,7 @@ function BiddingDetailPanel({ bidding, onClose }) {
                 <p className="text-xs text-slate-500 mt-1">
                   售前技术工程师正在处理中...
                 </p>
-              </div>
+            </div>
             }
 
             {bidding.costSupport?.status === "in_progress" &&
@@ -399,7 +399,7 @@ function BiddingDetailPanel({ bidding, onClose }) {
                 <p className="text-xs text-slate-400">
                   售前技术工程师正在核算成本...
                 </p>
-              </div>
+            </div>
             }
 
             {bidding.costSupport?.status === "submitted" &&
@@ -497,7 +497,7 @@ function BiddingDetailPanel({ bidding, onClose }) {
                       </div>
                     </div>
                   </div>
-                </div>
+            </div>
             }
           </div>
 
@@ -534,7 +534,7 @@ function BiddingDetailPanel({ bidding, onClose }) {
                   {doc.status === "pending" &&
                 <AlertTriangle className="w-4 h-4 text-slate-500" />
                 }
-                </div>
+              </div>
               )}
             </div>
           </div>
@@ -570,10 +570,10 @@ function BiddingDetailPanel({ bidding, onClose }) {
                     <span className="text-xs text-slate-400">
                       {competitor.price}
                     </span>
-                  </div>
+              </div>
               )}
               </div>
-            </div>
+          </div>
           }
 
           {/* 时间线 */}
@@ -619,7 +619,7 @@ function BiddingDetailPanel({ bidding, onClose }) {
                     <p className="text-sm text-white">{item.event}</p>
                     <p className="text-xs text-slate-500">{item.date}</p>
                   </div>
-                </div>
+              </div>
               )}
             </div>
           </div>
@@ -631,7 +631,7 @@ function BiddingDetailPanel({ bidding, onClose }) {
               <p className="text-sm text-white bg-surface-50 p-3 rounded-lg">
                 {bidding.notes}
               </p>
-            </div>
+          </div>
           }
         </div>
 
@@ -645,7 +645,7 @@ function BiddingDetailPanel({ bidding, onClose }) {
           <Button className="flex-1">
               <Send className="w-4 h-4 mr-2" />
               提交投标
-            </Button>
+          </Button>
           }
         </div>
       </motion.div>
@@ -789,7 +789,7 @@ export default function BiddingCenter() {
               <Plus className="w-4 h-4" />
               新建投标
             </Button>
-          </motion.div>
+        </motion.div>
         } />
 
 
@@ -883,14 +883,14 @@ export default function BiddingCenter() {
       <div className="text-center py-16 text-slate-400">
           <Target className="w-12 h-12 mx-auto mb-4 text-slate-600 animate-pulse" />
           <p className="text-lg font-medium">加载中...</p>
-        </div>
+      </div>
       }
 
       {/* 错误提示 */}
       {error && !loading &&
       <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400 text-sm">
           {error}
-        </div>
+      </div>
       }
 
       {/* 看板视图 */}
@@ -928,13 +928,13 @@ export default function BiddingCenter() {
               <div className="text-center py-8 text-slate-400">
                       <Target className="w-8 h-8 mx-auto mb-2 text-slate-600" />
                       <p className="text-sm">暂无项目</p>
-                    </div>
+              </div>
               }
                 </CardContent>
               </Card>
-            </div>
+        </div>
         )}
-        </motion.div>
+      </motion.div>
       }
 
       {/* 投标详情面板 */}

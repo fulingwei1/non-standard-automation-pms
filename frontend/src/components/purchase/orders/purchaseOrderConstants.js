@@ -134,7 +134,7 @@ export const getOrderUrgency = (urgency) => {
  * 格式化订单金额
  */
 export const formatOrderAmount = (amount) => {
-  if (!amount && amount !== 0) return "¥0.00";
+  if (!amount && amount !== 0) {return "¥0.00";}
   const numAmount = Number(amount);
   if (numAmount >= 10000) {
     return `¥${(numAmount / 10000).toFixed(2)}万`;
@@ -146,7 +146,7 @@ export const formatOrderAmount = (amount) => {
  * 格式化订单日期
  */
 export const formatOrderDate = (dateStr) => {
-  if (!dateStr) return "--";
+  if (!dateStr) {return "--";}
   const date = new Date(dateStr);
   return date.toLocaleDateString("zh-CN");
 };
@@ -155,7 +155,7 @@ export const formatOrderDate = (dateStr) => {
  * 格式化订单日期时间
  */
 export const formatOrderDateTime = (dateStr) => {
-  if (!dateStr) return "--";
+  if (!dateStr) {return "--";}
   const date = new Date(dateStr);
   return date.toLocaleString("zh-CN");
 };
@@ -164,7 +164,7 @@ export const formatOrderDateTime = (dateStr) => {
  * 计算到货进度百分比
  */
 export const calculateProgress = (receivedCount, itemCount) => {
-  if (!itemCount || itemCount === 0) return 0;
+  if (!itemCount || itemCount === 0) {return 0;}
   return Math.min(100, Math.round((receivedCount / itemCount) * 100));
 };
 
@@ -221,10 +221,10 @@ export const canReceiveOrder = (status) => {
  * 获取进度条颜色
  */
 export const getProgressColor = (status, progress) => {
-  if (status === "completed") return "bg-emerald-500";
-  if (status === "delayed") return "bg-red-500";
-  if (progress >= 80) return "bg-emerald-500";
-  if (progress >= 50) return "bg-blue-500";
+  if (status === "completed") {return "bg-emerald-500";}
+  if (status === "delayed") {return "bg-red-500";}
+  if (progress >= 80) {return "bg-emerald-500";}
+  if (progress >= 50) {return "bg-blue-500";}
   return "bg-amber-500";
 };
 
@@ -232,7 +232,7 @@ export const getProgressColor = (status, progress) => {
  * 计算延期天数
  */
 export const calculateDelayDays = (expectedDate) => {
-  if (!expectedDate) return 0;
+  if (!expectedDate) {return 0;}
   const expected = new Date(expectedDate);
   const now = new Date();
   const diffTime = now - expected;
@@ -243,7 +243,7 @@ export const calculateDelayDays = (expectedDate) => {
  * 判断是否延期
  */
 export const isDelayed = (expectedDate, status) => {
-  if (["completed", "cancelled"].includes(status)) return false;
-  if (!expectedDate) return false;
+  if (["completed", "cancelled"].includes(status)) {return false;}
+  if (!expectedDate) {return false;}
   return calculateDelayDays(expectedDate) > 0;
 };

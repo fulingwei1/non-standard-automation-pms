@@ -195,7 +195,7 @@ export default function HRManagerDashboard() {
             <div className="text-lg font-medium mb-2">{`${tab} 功能开发中...`}</div>
             <div className="text-sm">此模块正在开发中，敬请期待</div>
           </CardContent>
-        </Card>
+      </Card>
 
     }));
   };
@@ -299,7 +299,7 @@ export default function HRManagerDashboard() {
 
                 <span>{tab.icon}</span>
                 <span className="hidden lg:inline">{tab.label}</span>
-              </TabsTrigger>
+            </TabsTrigger>
             )}
           </TabsList>
 

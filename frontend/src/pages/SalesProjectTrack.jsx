@@ -211,7 +211,7 @@ export default function SalesProjectTrack() {
       length,
       nearDelivery: projects.filter((p) => {
         const deliveryDate = p.expectedDelivery || p.expected_delivery || p.plan_delivery_date;
-        if (!deliveryDate) return false;
+        if (!deliveryDate) {return false;}
         const delivery = new Date(deliveryDate);
         const now = new Date();
         const diff = (delivery - now) / (1000 * 60 * 60 * 24);
@@ -319,7 +319,7 @@ export default function SalesProjectTrack() {
             {Object.entries(stageConfig).map(([key, val]) =>
             <option key={key} value={key}>
                 {val.label}
-              </option>
+            </option>
             )}
           </select>
           <select
@@ -331,7 +331,7 @@ export default function SalesProjectTrack() {
             {Object.entries(healthConfig).map(([key, val]) =>
             <option key={key} value={key}>
                 {val.label}
-              </option>
+            </option>
             )}
           </select>
         </div>
@@ -498,7 +498,7 @@ export default function SalesProjectTrack() {
             <FolderKanban className="w-12 h-12 mx-auto text-slate-600 mb-4" />
             <h3 className="text-lg font-medium text-white mb-2">暂无项目</h3>
             <p className="text-slate-400">没有找到符合条件的项目</p>
-          </div>
+        </div>
         }
       </motion.div>
 
@@ -677,7 +677,7 @@ function ProjectDetailPanel({ project, onClose }) {
                       {isDelayed &&
                       <Badge variant="destructive" className="text-xs">
                           延期
-                        </Badge>
+                      </Badge>
                       }
                     </div>
                     <span className="text-xs text-slate-400">
@@ -704,9 +704,9 @@ function ProjectDetailPanel({ project, onClose }) {
                   <AlertTriangle className="w-4 h-4" />
                   {issue.content || issue.description || '-'}
                 </div>
-              </div>
-          )}
           </div>
+          )}
+        </div>
         }
 
         {/* Quick Actions */}

@@ -52,7 +52,6 @@ import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { contractApi } from "../services/api";
 
-// Mock approval data
 const formatCurrency = (value) => {
   if (value >= 10000) {
     return `¥${(value / 10000).toFixed(1)}万`;
@@ -96,6 +95,8 @@ export default function ContractApproval() {
   const [selectedApproval, setSelectedApproval] = useState(null);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [approvalComments, setApprovalComments] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState(null);
   const [activeTab, setActiveTab] = useState("pending");
   const [_loading, setLoading] = useState(false);
   const [_error, setError] = useState(null);
@@ -130,32 +131,95 @@ export default function ContractApproval() {
   const filteredApprovals = useMemo(() => {
     const approvals =
     activeTab === "pending" ? pendingApprovals : approvalHistory;
-    if (!searchTerm) return approvals;
+    if (!searchTerm) {return approvals;}
     return approvals.filter(
       (item) =>
       item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.submitter.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [searchTerm, activeTab]);
+  }, [searchTerm, activeTab, pendingApprovals, approvalHistory]);
 
   const handleViewDetail = (approval) => {
     setSelectedApproval(approval);
+    setActionError(null);
     setShowDetailDialog(true);
   };
 
-  const handleApprove = () => {
-    // TODO: Implement approval logic
-    // TODO: Call API to approve
-    setShowDetailDialog(false);
-    setApprovalComments("");
+  const moveSelectedToHistory = (status) => {
+    if (!selectedApproval) return;
+
+    const now = new Date();
+    const historyItem = {
+      ...selectedApproval,
+      status,
+      approveTime: now.toLocaleString("zh-CN"),
+      comments: approvalComments || selectedApproval.comments,
+      approver: selectedApproval.approver || "当前用户",
+      amount:
+        selectedApproval.amount ??
+        selectedApproval.totalAmount ??
+        selectedApproval.contract_amount ??
+        selectedApproval.contractAmount ??
+        0,
+      customerName:
+        selectedApproval.customerName ||
+        selectedApproval.customer_name ||
+        selectedApproval.customerShort ||
+        "",
+      title:
+        selectedApproval.title ||
+        selectedApproval.contract_code ||
+        selectedApproval.contractCode ||
+        "合同审批",
+    };
+
+    setPendingApprovals((prev) => prev.filter((a) => a.id !== selectedApproval.id));
+    setApprovalHistory((prev) => [historyItem, ...prev]);
   };
 
-  const handleReject = () => {
-    // TODO: Implement rejection logic
-    // TODO: Call API to reject
-    setShowDetailDialog(false);
-    setApprovalComments("");
+  const handleApprove = async () => {
+    if (!selectedApproval?.id || actionLoading) return;
+
+    setActionLoading(true);
+    setActionError(null);
+    try {
+      await contractApi.approvalAction(selectedApproval.id, {
+        action: "APPROVE",
+        comment: approvalComments || undefined,
+      });
+      moveSelectedToHistory("approved");
+      setShowDetailDialog(false);
+      setApprovalComments("");
+    } catch (err) {
+      console.error("Failed to approve contract:", err);
+      setError("审批通过失败");
+      setActionError("审批通过失败，请稍后重试");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!selectedApproval?.id || actionLoading) return;
+
+    setActionLoading(true);
+    setActionError(null);
+    try {
+      await contractApi.approvalAction(selectedApproval.id, {
+        action: "REJECT",
+        comment: approvalComments || "审批驳回",
+      });
+      moveSelectedToHistory("rejected");
+      setShowDetailDialog(false);
+      setApprovalComments("");
+    } catch (err) {
+      console.error("Failed to reject contract:", err);
+      setError("审批驳回失败");
+      setActionError("审批驳回失败，请稍后重试");
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   return (
@@ -179,7 +243,7 @@ export default function ContractApproval() {
               <History className="w-4 h-4" />
               审批历史
             </Button>
-          </motion.div>
+        </motion.div>
         } />
 
 
@@ -368,7 +432,7 @@ export default function ContractApproval() {
                           {approval.originalAmount &&
                           <div className="text-xs text-slate-400 line-through">
                               {formatCurrency(approval.originalAmount)}
-                            </div>
+                          </div>
                           }
                         </div>
                       </div>
@@ -444,7 +508,7 @@ export default function ContractApproval() {
                             {approval.comments &&
                             <p className="text-xs text-slate-500 mt-2">
                                 {approval.comments}
-                              </p>
+                            </p>
                             }
                           </div>
                         </div>
@@ -472,6 +536,11 @@ export default function ContractApproval() {
           </DialogHeader>
           {selectedApproval &&
           <div className="space-y-4">
+              {actionError &&
+              <div className="p-3 rounded border border-red-500/30 bg-red-500/10 text-sm text-red-200">
+                  {actionError}
+              </div>
+              }
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-slate-400">类型</p>
@@ -523,7 +592,7 @@ export default function ContractApproval() {
                   {selectedApproval.originalAmount &&
                 <p className="text-sm text-slate-400 line-through">
                       原价: {formatCurrency(selectedApproval.originalAmount)}
-                    </p>
+                </p>
                 }
                 </div>
               </div>
@@ -532,7 +601,7 @@ export default function ContractApproval() {
             <div>
                   <p className="text-sm text-slate-400 mb-2">描述</p>
                   <p className="text-white">{selectedApproval.description}</p>
-                </div>
+            </div>
             }
 
               {selectedApproval.paymentTerms &&
@@ -562,10 +631,10 @@ export default function ContractApproval() {
                         <p className="text-xs text-slate-400 mt-1">
                           到期日: {term.dueDate}
                         </p>
-                      </div>
+                </div>
                 )}
                   </div>
-                </div>
+            </div>
             }
 
               {selectedApproval.attachments &&
@@ -583,17 +652,17 @@ export default function ContractApproval() {
                           <FileText className="w-4 h-4" />
                           {file}
                           <Download className="w-3 h-3" />
-                        </Button>
+                </Button>
                 )}
                     </div>
-                  </div>
+            </div>
             }
 
               {selectedApproval.notes &&
             <div>
                   <p className="text-sm text-slate-400 mb-2">备注</p>
                   <p className="text-white">{selectedApproval.notes}</p>
-                </div>
+            </div>
             }
 
               <div>
@@ -605,7 +674,7 @@ export default function ContractApproval() {
                 rows={4} />
 
               </div>
-            </div>
+          </div>
           }
           <DialogFooter>
             <Button
@@ -617,14 +686,23 @@ export default function ContractApproval() {
             <Button
               variant="destructive"
               onClick={handleReject}
+              disabled={actionLoading}
               className="flex items-center gap-2">
 
-              <XCircle className="w-4 h-4" />
-              拒绝
+              {actionLoading ?
+              <Loader2 className="w-4 h-4 animate-spin" /> :
+              <XCircle className="w-4 h-4" />}
+              {actionLoading ? "处理中..." : "拒绝"}
             </Button>
-            <Button onClick={handleApprove} className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4" />
-              批准
+            <Button
+              onClick={handleApprove}
+              disabled={actionLoading}
+              className="flex items-center gap-2">
+
+              {actionLoading ?
+              <Loader2 className="w-4 h-4 animate-spin" /> :
+              <CheckCircle2 className="w-4 h-4" />}
+              {actionLoading ? "处理中..." : "批准"}
             </Button>
           </DialogFooter>
         </DialogContent>

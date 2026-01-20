@@ -202,15 +202,15 @@ export default function EmployeeProfileList() {
   };
 
   const getWorkloadColor = (pct) => {
-    if (pct >= 90) return "text-red-400";
-    if (pct >= 70) return "text-yellow-400";
+    if (pct >= 90) {return "text-red-400";}
+    if (pct >= 70) {return "text-yellow-400";}
     return "text-green-400";
   };
 
   // 处理文件上传
   const handleFileUpload = async (event) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file) {return;}
 
     // 验证文件类型
     if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {

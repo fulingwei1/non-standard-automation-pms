@@ -42,11 +42,11 @@ export default function ProcurementAnalysis() {
 
   // Tab切换时加载对应数据
   useEffect(() => {
-    if (activeTab === 'cost-trend') loadCostTrend();else
-    if (activeTab === 'price-fluctuation') loadPriceFluctuation();else
-    if (activeTab === 'delivery-performance') loadDeliveryPerformance();else
-    if (activeTab === 'request-efficiency') loadRequestEfficiency();else
-    if (activeTab === 'quality-rate') loadQualityRate();
+    if (activeTab === 'cost-trend') {loadCostTrend();}else
+    if (activeTab === 'price-fluctuation') {loadPriceFluctuation();}else
+    if (activeTab === 'delivery-performance') {loadDeliveryPerformance();}else
+    if (activeTab === 'request-efficiency') {loadRequestEfficiency();}else
+    if (activeTab === 'quality-rate') {loadQualityRate();}
   }, [activeTab, loadCostTrend, loadPriceFluctuation, loadDeliveryPerformance, loadRequestEfficiency, loadQualityRate]);
 
   // 导出报表

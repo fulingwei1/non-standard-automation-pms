@@ -4,70 +4,23 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Search,
-  Filter,
-  Plus,
-  LayoutGrid,
-  List,
-  Calendar,
-  Building2,
-  User,
-  Phone,
-  Mail,
-  MapPin,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  AlertTriangle,
-  Edit,
-  Eye,
-  ArrowRight,
-  X,
-  Star,
-} from "lucide-react";
+import { motion } from "framer-motion";
+import { Plus } from "lucide-react";
 import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  Label,
-  Textarea,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../components/ui";
-import { cn } from "../lib/utils";
-import { fadeIn, staggerContainer } from "../lib/animations";
+import { Button } from "../components/ui";
+import { staggerContainer } from "../lib/animations";
 import { leadApi, customerApi } from "../services/api";
-
-// 线索状态配置
-const statusConfig = {
-  NEW: { label: "待跟进", color: "bg-blue-500", textColor: "text-blue-400" },
-  QUALIFYING: {
-    label: "资格评估中",
-    color: "bg-amber-500",
-    textColor: "text-amber-400",
-  },
-  INVALID: { label: "无效", color: "bg-red-500", textColor: "text-red-400" },
-  CONVERTED: {
-    label: "已转商机",
-    color: "bg-emerald-500",
-    textColor: "text-emerald-400",
-  },
-};
+import {
+  LeadStatsCards,
+  LeadFilters,
+  LeadList,
+  CreateLeadDialog,
+  EditLeadDialog,
+  ConvertLeadDialog,
+  LeadDetailDialog,
+  FollowUpDialog,
+  statusConfig,
+} from "../components/lead-management";
 
 export default function LeadManagement() {
   const [leads, setLeads] = useState([]);
@@ -188,7 +141,7 @@ export default function LeadManagement() {
         statusFilter === "all" || lead.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
-  }, [leads, searchTerm, statusFilter]);
+  }, [processedLeads, searchTerm, statusFilter]);
 
   // 统计数据
   const stats = useMemo(() => {
@@ -307,6 +260,11 @@ export default function LeadManagement() {
     }
   };
 
+  const handleOpenConvertDialog = (lead) => {
+    setSelectedLead(lead);
+    setShowConvertDialog(true);
+  };
+
   return (
     <motion.div
       variants={staggerContainer}
@@ -326,333 +284,33 @@ export default function LeadManagement() {
       />
 
       {/* 统计卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-400">总线索数</p>
-                <p className="text-2xl font-bold text-white">{stats.total}</p>
-              </div>
-              <Building2 className="h-8 w-8 text-blue-400" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-400">待跟进</p>
-                <p className="text-2xl font-bold text-white">{stats.new}</p>
-              </div>
-              <Clock className="h-8 w-8 text-blue-400" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-400">评估中</p>
-                <p className="text-2xl font-bold text-white">
-                  {stats.qualifying}
-                </p>
-              </div>
-              <AlertTriangle className="h-8 w-8 text-amber-400" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-400">已转化</p>
-                <p className="text-2xl font-bold text-white">
-                  {stats.converted}
-                </p>
-              </div>
-              <CheckCircle2 className="h-8 w-8 text-emerald-400" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <LeadStatsCards stats={stats} />
 
       {/* 筛选栏 */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4 items-center">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <Input
-                placeholder="搜索线索编码、客户名称、联系人..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">
-                  <Filter className="mr-2 h-4 w-4" />
-                  状态:{" "}
-                  {statusFilter === "all"
-                    ? "全部"
-                    : statusConfig[statusFilter]?.label}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setStatusFilter("all")}>
-                  全部
-                </DropdownMenuItem>
-                {Object.entries(statusConfig).map(([key, config]) => (
-                  <DropdownMenuItem
-                    key={key}
-                    onClick={() => setStatusFilter(key)}
-                  >
-                    {config.label}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <div className="flex gap-2">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-3 py-1 border rounded text-sm bg-slate-900 text-slate-300"
-              >
-                <option value="priority">按优先级</option>
-                <option value="created_at">按创建时间</option>
-                <option value="status">按状态</option>
-              </select>
-              <Button
-                variant={showKeyLeadsOnly ? "default" : "outline"}
-                size="sm"
-                onClick={() => setShowKeyLeadsOnly(!showKeyLeadsOnly)}
-              >
-                <Star className="h-4 w-4 mr-1" />
-                关键
-              </Button>
-              <Button
-                variant={viewMode === "grid" ? "default" : "outline"}
-                size="icon"
-                onClick={() => setViewMode("grid")}
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === "list" ? "default" : "outline"}
-                size="icon"
-                onClick={() => setViewMode("list")}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <LeadFilters
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        showKeyLeadsOnly={showKeyLeadsOnly}
+        setShowKeyLeadsOnly={setShowKeyLeadsOnly}
+        viewMode={viewMode}
+        setViewMode={setViewMode}
+        statusConfig={statusConfig}
+      />
 
       {/* 线索列表 */}
-      {loading ? (
-        <div className="text-center py-12 text-slate-400">加载中...</div>
-      ) : filteredLeads.length === 0 ? (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <p className="text-slate-400">暂无线索数据</p>
-          </CardContent>
-        </Card>
-      ) : viewMode === "grid" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredLeads.map((lead) => (
-            <motion.div
-              key={lead.id}
-              variants={fadeIn}
-              whileHover={{ y: -4 }}
-              className="cursor-pointer"
-            >
-              <Card className="h-full hover:border-blue-500 transition-colors">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg">
-                        {lead.lead_code}
-                      </CardTitle>
-                      <p className="text-sm text-slate-400 mt-1">
-                        {lead.customer_name}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {lead.is_key_lead && (
-                        <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                      )}
-                      <Badge className={cn(statusConfig[lead.status]?.color)}>
-                        {statusConfig[lead.status]?.label}
-                      </Badge>
-                      {lead.priority_score !== null && lead.priority_score !== undefined && (
-                        <Badge variant="outline" className="text-xs">
-                          {lead.priority_score}分
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 text-sm">
-                    {lead.contact_name && (
-                      <div className="flex items-center gap-2 text-slate-300">
-                        <User className="h-4 w-4 text-slate-400" />
-                        {lead.contact_name}
-                      </div>
-                    )}
-                    {lead.contact_phone && (
-                      <div className="flex items-center gap-2 text-slate-300">
-                        <Phone className="h-4 w-4 text-slate-400" />
-                        {lead.contact_phone}
-                      </div>
-                    )}
-                    {lead.source && (
-                      <div className="flex items-center gap-2 text-slate-300">
-                        <MapPin className="h-4 w-4 text-slate-400" />
-                        来源: {lead.source}
-                      </div>
-                    )}
-                    {lead.demand_summary && (
-                      <p className="text-slate-400 line-clamp-2 mt-2">
-                        {lead.demand_summary}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex gap-2 mt-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleViewDetail(lead)}
-                      className="flex-1"
-                    >
-                      <Eye className="mr-2 h-4 w-4" />
-                      详情
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(lead)}
-                      className="flex-1"
-                    >
-                      <Edit className="mr-2 h-4 w-4" />
-                      编辑
-                    </Button>
-                    {lead.status !== "CONVERTED" && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedLead(lead);
-                          setShowConvertDialog(true);
-                        }}
-                        className="flex-1"
-                      >
-                        <ArrowRight className="mr-2 h-4 w-4" />
-                        转商机
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-      ) : (
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-slate-800">
-                    <th className="text-left p-4 text-slate-400">线索编码</th>
-                    <th className="text-left p-4 text-slate-400">客户名称</th>
-                    <th className="text-left p-4 text-slate-400">联系人</th>
-                    <th className="text-left p-4 text-slate-400">联系电话</th>
-                    <th className="text-left p-4 text-slate-400">来源</th>
-                    <th className="text-left p-4 text-slate-400">优先级</th>
-                    <th className="text-left p-4 text-slate-400">状态</th>
-                    <th className="text-left p-4 text-slate-400">操作</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredLeads.map((lead) => (
-                    <tr
-                      key={lead.id}
-                      className="border-b border-slate-800 hover:bg-slate-800/50"
-                    >
-                      <td className="p-4 text-white">{lead.lead_code}</td>
-                      <td className="p-4 text-slate-300">
-                        {lead.customer_name}
-                      </td>
-                      <td className="p-4 text-slate-300">
-                        {lead.contact_name || "-"}
-                      </td>
-                      <td className="p-4 text-slate-300">
-                        {lead.contact_phone || "-"}
-                      </td>
-                      <td className="p-4 text-slate-300">
-                        {lead.source || "-"}
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          {lead.is_key_lead && (
-                            <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                          )}
-                          {lead.priority_score !== null && lead.priority_score !== undefined ? (
-                            <Badge variant="outline" className="text-xs">
-                              {lead.priority_score}分
-                            </Badge>
-                          ) : (
-                            <span className="text-slate-400 text-xs">-</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <Badge className={cn(statusConfig[lead.status]?.color)}>
-                          {statusConfig[lead.status]?.label}
-                        </Badge>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleViewDetail(lead)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(lead)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          {lead.status !== "CONVERTED" && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedLead(lead);
-                                setShowConvertDialog(true);
-                              }}
-                            >
-                              <ArrowRight className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <LeadList
+        loading={loading}
+        leads={filteredLeads}
+        viewMode={viewMode}
+        statusConfig={statusConfig}
+        handleViewDetail={handleViewDetail}
+        handleEdit={handleEdit}
+        handleConvert={handleOpenConvertDialog}
+      />
 
       {/* 分页 */}
       {total > pageSize && (
@@ -678,461 +336,51 @@ export default function LeadManagement() {
       )}
 
       {/* 创建线索对话框 */}
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>新建线索</DialogTitle>
-            <DialogDescription>创建新的销售线索</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>客户名称 *</Label>
-                <Input
-                  value={formData.customer_name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, customer_name: e.target.value })
-                  }
-                  placeholder="请输入客户名称"
-                />
-              </div>
-              <div>
-                <Label>来源</Label>
-                <Input
-                  value={formData.source}
-                  onChange={(e) =>
-                    setFormData({ ...formData, source: e.target.value })
-                  }
-                  placeholder="展会/转介绍/网络等"
-                />
-              </div>
-              <div>
-                <Label>行业</Label>
-                <Input
-                  value={formData.industry}
-                  onChange={(e) =>
-                    setFormData({ ...formData, industry: e.target.value })
-                  }
-                  placeholder="请输入行业"
-                />
-              </div>
-              <div>
-                <Label>联系人</Label>
-                <Input
-                  value={formData.contact_name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, contact_name: e.target.value })
-                  }
-                  placeholder="请输入联系人"
-                />
-              </div>
-              <div>
-                <Label>联系电话</Label>
-                <Input
-                  value={formData.contact_phone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, contact_phone: e.target.value })
-                  }
-                  placeholder="请输入联系电话"
-                />
-              </div>
-              <div>
-                <Label>状态</Label>
-                <select
-                  value={formData.status}
-                  onChange={(e) =>
-                    setFormData({ ...formData, status: e.target.value })
-                  }
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
-                >
-                  {Object.entries(statusConfig).map(([key, config]) => (
-                    <option key={key} value={key}>
-                      {config.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div>
-              <Label>需求摘要</Label>
-              <Textarea
-                value={formData.demand_summary}
-                onChange={(e) =>
-                  setFormData({ ...formData, demand_summary: e.target.value })
-                }
-                placeholder="请输入需求摘要"
-                rows={4}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowCreateDialog(false)}
-            >
-              取消
-            </Button>
-            <Button onClick={handleCreate}>创建</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CreateLeadDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        formData={formData}
+        setFormData={setFormData}
+        statusConfig={statusConfig}
+        onCreate={handleCreate}
+      />
 
       {/* 编辑线索对话框 */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>编辑线索</DialogTitle>
-            <DialogDescription>更新线索信息</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>客户名称 *</Label>
-                <Input
-                  value={formData.customer_name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, customer_name: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <Label>来源</Label>
-                <Input
-                  value={formData.source}
-                  onChange={(e) =>
-                    setFormData({ ...formData, source: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <Label>行业</Label>
-                <Input
-                  value={formData.industry}
-                  onChange={(e) =>
-                    setFormData({ ...formData, industry: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <Label>联系人</Label>
-                <Input
-                  value={formData.contact_name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, contact_name: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <Label>联系电话</Label>
-                <Input
-                  value={formData.contact_phone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, contact_phone: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <Label>状态</Label>
-                <select
-                  value={formData.status}
-                  onChange={(e) =>
-                    setFormData({ ...formData, status: e.target.value })
-                  }
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
-                >
-                  {Object.entries(statusConfig).map(([key, config]) => (
-                    <option key={key} value={key}>
-                      {config.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div>
-              <Label>需求摘要</Label>
-              <Textarea
-                value={formData.demand_summary}
-                onChange={(e) =>
-                  setFormData({ ...formData, demand_summary: e.target.value })
-                }
-                rows={4}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
-              取消
-            </Button>
-            <Button onClick={handleUpdate}>保存</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EditLeadDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        formData={formData}
+        setFormData={setFormData}
+        statusConfig={statusConfig}
+        onUpdate={handleUpdate}
+      />
 
       {/* 转商机对话框 */}
-      <Dialog open={showConvertDialog} onOpenChange={setShowConvertDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>线索转商机</DialogTitle>
-            <DialogDescription>选择客户后，将线索转为商机</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>选择客户 *</Label>
-              <select
-                id="customer-select"
-                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
-                onChange={(e) => {
-                  const customerId = parseInt(e.target.value);
-                  if (customerId) {
-                    handleConvert(customerId);
-                  }
-                }}
-              >
-                <option value="">请选择客户</option>
-                {customers.map((customer) => (
-                  <option key={customer.id} value={customer.id}>
-                    {customer.customer_name} ({customer.customer_code})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowConvertDialog(false)}
-            >
-              取消
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConvertLeadDialog
+        open={showConvertDialog}
+        onOpenChange={setShowConvertDialog}
+        customers={customers}
+        onConvert={handleConvert}
+      />
 
       {/* 详情对话框 */}
-      <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>线索详情</DialogTitle>
-            <DialogDescription>查看线索详细信息和跟进记录</DialogDescription>
-          </DialogHeader>
-          {selectedLead && (
-            <div className="space-y-6">
-              {/* 基本信息 */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4">基本信息</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-slate-400">线索编码</Label>
-                    <p className="text-white">{selectedLead.lead_code}</p>
-                  </div>
-                  <div>
-                    <Label className="text-slate-400">状态</Label>
-                    <Badge
-                      className={cn(
-                        statusConfig[selectedLead.status]?.color,
-                        "mt-1",
-                      )}
-                    >
-                      {statusConfig[selectedLead.status]?.label}
-                    </Badge>
-                  </div>
-                  <div>
-                    <Label className="text-slate-400">客户名称</Label>
-                    <p className="text-white">{selectedLead.customer_name}</p>
-                  </div>
-                  <div>
-                    <Label className="text-slate-400">来源</Label>
-                    <p className="text-white">{selectedLead.source || "-"}</p>
-                  </div>
-                  <div>
-                    <Label className="text-slate-400">行业</Label>
-                    <p className="text-white">{selectedLead.industry || "-"}</p>
-                  </div>
-                  <div>
-                    <Label className="text-slate-400">联系人</Label>
-                    <p className="text-white">
-                      {selectedLead.contact_name || "-"}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-slate-400">联系电话</Label>
-                    <p className="text-white">
-                      {selectedLead.contact_phone || "-"}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-slate-400">创建时间</Label>
-                    <p className="text-white">
-                      {selectedLead.created_at
-                        ? new Date(selectedLead.created_at).toLocaleString(
-                            "zh-CN",
-                          )
-                        : "-"}
-                    </p>
-                  </div>
-                  <div className="col-span-2">
-                    <Label className="text-slate-400">需求摘要</Label>
-                    <p className="text-white mt-1">
-                      {selectedLead.demand_summary || "-"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* 跟进记录 */}
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold">跟进记录</h3>
-                  {selectedLead.status !== "CONVERTED" && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowFollowUpDialog(true)}
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      添加跟进
-                    </Button>
-                  )}
-                </div>
-                {followUps.length === 0 ? (
-                  <p className="text-center text-slate-400 py-8">
-                    暂无跟进记录
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {followUps.map((followUp) => (
-                      <Card key={followUp.id}>
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <Badge variant="outline">
-                                  {followUp.follow_up_type}
-                                </Badge>
-                                <span className="text-sm text-slate-400">
-                                  {followUp.creator_name || "未知"}
-                                </span>
-                                <span className="text-sm text-slate-500">
-                                  {followUp.created_at
-                                    ? new Date(
-                                        followUp.created_at,
-                                      ).toLocaleString("zh-CN")
-                                    : ""}
-                                </span>
-                              </div>
-                              <p className="text-white mb-2">
-                                {followUp.content}
-                              </p>
-                              {followUp.next_action && (
-                                <p className="text-sm text-slate-400">
-                                  下次行动: {followUp.next_action}
-                                </p>
-                              )}
-                              {followUp.next_action_at && (
-                                <p className="text-sm text-slate-400">
-                                  行动时间:{" "}
-                                  {new Date(
-                                    followUp.next_action_at,
-                                  ).toLocaleDateString("zh-CN")}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowDetailDialog(false)}
-            >
-              关闭
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <LeadDetailDialog
+        open={showDetailDialog}
+        onOpenChange={setShowDetailDialog}
+        lead={selectedLead}
+        followUps={followUps}
+        statusConfig={statusConfig}
+        onOpenFollowUp={() => setShowFollowUpDialog(true)}
+      />
 
       {/* 添加跟进记录对话框 */}
-      <Dialog open={showFollowUpDialog} onOpenChange={setShowFollowUpDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>添加跟进记录</DialogTitle>
-            <DialogDescription>记录线索跟进情况</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>跟进类型 *</Label>
-              <select
-                value={followUpData.follow_up_type}
-                onChange={(e) =>
-                  setFollowUpData({
-                    ...followUpData,
-                    follow_up_type: e.target.value,
-                  })
-                }
-                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
-              >
-                <option value="CALL">电话</option>
-                <option value="EMAIL">邮件</option>
-                <option value="VISIT">拜访</option>
-                <option value="MEETING">会议</option>
-                <option value="OTHER">其他</option>
-              </select>
-            </div>
-            <div>
-              <Label>跟进内容 *</Label>
-              <Textarea
-                value={followUpData.content}
-                onChange={(e) =>
-                  setFollowUpData({ ...followUpData, content: e.target.value })
-                }
-                placeholder="请输入跟进内容"
-                rows={4}
-              />
-            </div>
-            <div>
-              <Label>下次行动</Label>
-              <Input
-                value={followUpData.next_action}
-                onChange={(e) =>
-                  setFollowUpData({
-                    ...followUpData,
-                    next_action: e.target.value,
-                  })
-                }
-                placeholder="如：发送报价单"
-              />
-            </div>
-            <div>
-              <Label>行动时间</Label>
-              <Input
-                type="date"
-                value={followUpData.next_action_at}
-                onChange={(e) =>
-                  setFollowUpData({
-                    ...followUpData,
-                    next_action_at: e.target.value,
-                  })
-                }
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowFollowUpDialog(false)}
-            >
-              取消
-            </Button>
-            <Button onClick={handleAddFollowUp}>保存</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <FollowUpDialog
+        open={showFollowUpDialog}
+        onOpenChange={setShowFollowUpDialog}
+        data={followUpData}
+        setData={setFollowUpData}
+        onSave={handleAddFollowUp}
+      />
     </motion.div>
   );
 }

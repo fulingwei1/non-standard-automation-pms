@@ -16,12 +16,12 @@ const PurchaseOrderCard = ({
   const urgencyInfo = PURCHASE_ORDER_URGENCY[order.urgency] || { label: 'Normal', color: 'blue' };
 
   const formatDate = (dateStr) => {
-    if (!dateStr) return 'N/A';
+    if (!dateStr) {return 'N/A';}
     return new Date(dateStr).toLocaleDateString('zh-CN');
   };
 
   const calculateProgress = () => {
-    if (!order.total_quantity || !order.delivered_quantity) return 0;
+    if (!order.total_quantity || !order.delivered_quantity) {return 0;}
     return Math.round((order.delivered_quantity / order.total_quantity) * 100);
   };
 
@@ -65,8 +65,7 @@ const PurchaseOrderCard = ({
           <div
             className={`h-2 rounded-full ${progress >= 100 ? 'bg-green-500' : progress >= 50 ? 'bg-blue-500' : 'bg-yellow-500'}`}
             style={{ width: `${Math.min(progress, 100)}%` }}
-          >
-          </div>
+           />
         </div>
       </div>
 

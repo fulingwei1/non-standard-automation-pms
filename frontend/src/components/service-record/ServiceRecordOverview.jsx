@@ -97,7 +97,7 @@ const ServiceRecordOverview = ({
 
   // 获取优先级服务
   const priorityServices = useMemo(() => {
-    if (!records) return [];
+    if (!records) {return [];}
     
     return records
       .filter(record => {
@@ -113,7 +113,7 @@ const ServiceRecordOverview = ({
 
   // 今日服务
   const todayServices = useMemo(() => {
-    if (!records) return [];
+    if (!records) {return [];}
     
     const today = new Date().toDateString();
     return records.filter(record => {

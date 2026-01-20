@@ -95,7 +95,7 @@ def list_culture_wall_configs(
     items = configs[start:end]
 
     return PaginatedResponse(
-        items=[CultureWallConfigResponse.from_orm(c) for c in items],
+        items=[CultureWallConfigResponse.model_validate(c) for c in items],
         total=total,
         page=page,
         page_size=page_size,

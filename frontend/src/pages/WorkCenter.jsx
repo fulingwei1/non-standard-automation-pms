@@ -215,7 +215,7 @@ export default function WorkCenter() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
           <p className="text-gray-500">加载工作中心数据...</p>
         </div>
       </div>);
@@ -247,9 +247,7 @@ export default function WorkCenter() {
                   className={cn(
                     "w-3 h-3 rounded-full",
                     getStatusColor(todayOverview.currentStatus)
-                  )}>
-
-                </div>
+                  )} />
                 <span className="text-sm">
                   {todayOverview.currentStatus === "working" ?
                   "工作中" :
@@ -362,7 +360,7 @@ export default function WorkCenter() {
                       </p>
                     </div>
                     <ChevronRight className="w-4 h-4 text-gray-400 ml-auto" />
-                  </button>
+                </button>
                 )}
               </div>
             </CardContent>
@@ -386,16 +384,16 @@ export default function WorkCenter() {
                       {activity.content &&
                     <p className="text-sm text-gray-600">
                           {activity.content}
-                        </p>
+                    </p>
                     }
                       {activity.project &&
                     <p className="text-sm text-blue-600">
                           {activity.project}
-                        </p>
+                    </p>
                     }
                       <p className="text-xs text-gray-500">{activity.time}</p>
                     </div>
-                  </div>
+                </div>
                 )}
               </div>
 
@@ -462,7 +460,7 @@ export default function WorkCenter() {
                   {stats.unreadNotifications > 0 &&
                   <Badge className="ml-auto" variant="destructive">
                       {stats.unreadNotifications}
-                    </Badge>
+                  </Badge>
                   }
                 </button>
 

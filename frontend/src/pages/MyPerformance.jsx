@@ -157,7 +157,7 @@ const MyPerformance = () => {
 
                 <tab.icon className="h-4 w-4" />
                 {tab.label}
-              </button>
+            </button>
             )}
           </div>
         </motion.div>

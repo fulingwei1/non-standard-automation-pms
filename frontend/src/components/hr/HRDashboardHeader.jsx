@@ -4,6 +4,7 @@
  */
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { PageHeader } from "../layout";
 import {
   Button,
@@ -31,8 +32,11 @@ export default function HRDashboardHeader({
   mockHRStats,
   refreshing,
   onRefresh,
-  onExportReport
+  onExportReport,
+  onCreateRecruitment,
+  onOpenSettings
 }) {
+  const navigate = useNavigate();
   const [_selectedTab, setSelectedTab] = useState(null);
   const handlePrint = () => {
     window.print();
@@ -61,7 +65,11 @@ export default function HRDashboardHeader({
           className="flex items-center gap-2"
           onClick={() => {
             setSelectedTab("recruitment");
-            // TODO: 打开新建招聘对话框
+            if (typeof onCreateRecruitment === "function") {
+              onCreateRecruitment();
+            } else {
+              toast.info("请在招聘管理模块中发布招聘");
+            }
           }}>
 
             <UserPlus className="w-4 h-4" />
@@ -73,7 +81,7 @@ export default function HRDashboardHeader({
           className="flex items-center gap-2"
           onClick={() => {
             setSelectedTab("performance");
-            // TODO: 跳转到绩效管理页面
+            navigate("/performance");
           }}>
 
             <Award className="w-4 h-4" />
@@ -117,15 +125,18 @@ export default function HRDashboardHeader({
               </DropdownMenuItem>
               <DropdownMenuItem
               onClick={() => {
-
-                // TODO: Implement settings
+                if (typeof onOpenSettings === "function") {
+                  onOpenSettings();
+                } else {
+                  navigate("/settings");
+                }
               }}>
                 <Settings className="w-4 h-4 mr-2" />
                 设置
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </motion.div>
+      </motion.div>
       } />);
 
 

@@ -183,7 +183,7 @@ export default function ProjectSettlement() {
               <Plus className="w-4 h-4" />
               创建结算
             </Button>
-          </motion.div>
+        </motion.div>
         } />
 
 
@@ -306,7 +306,7 @@ export default function ProjectSettlement() {
                 {Object.entries(statusConfig).map(([key, val]) =>
                 <option key={key} value={key}>
                     {val.label}
-                  </option>
+                </option>
                 )}
               </select>
             </div>
@@ -366,7 +366,7 @@ export default function ProjectSettlement() {
                           <div>
                               结算日期: {settlement.settlementDate} · 结算人:{" "}
                               {settlement.settledBy}
-                            </div>
+                          </div>
                           }
                         </div>
                       </div>
@@ -453,7 +453,7 @@ export default function ProjectSettlement() {
               {filteredSettlements.length === 0 &&
               <div className="text-center py-12 text-slate-500">
                   暂无结算单
-                </div>
+              </div>
               }
             </div>
           </CardContent>
@@ -593,11 +593,11 @@ export default function ProjectSettlement() {
                             {milestone.received ?
                         <div className="text-xs text-slate-400">
                                 已收 · {milestone.receivedDate}
-                              </div> :
+                        </div> :
 
                         <div className="text-xs text-slate-400">
                                 待收 · 到期: {milestone.dueDate}
-                              </div>
+                        </div>
                         }
                           </div>
                         </div>
@@ -614,11 +614,11 @@ export default function ProjectSettlement() {
                           </div>
                         </div>
                       </div>
-                    </div>
+                </div>
                 )}
                 </div>
               </div>
-            </div>
+          </div>
           }
           <DialogFooter>
             <Button

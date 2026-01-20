@@ -87,12 +87,12 @@ export default function ECNManagement() {
   };
 
   const handleViewDetail = (ecn) => {
-    if (!ecn?.id) return;
+    if (!ecn?.id) {return;}
     navigate(`${ecn.id}`);
   };
 
   const handleSubmit = async (ecnId) => {
-    if (!confirm("确认提交此ECN？提交后将进入评估流程。")) return;
+    if (!confirm("确认提交此ECN？提交后将进入评估流程。")) {return;}
     try {
       await ecnApi.submit(ecnId, { remark: "" });
       await fetchECNs();

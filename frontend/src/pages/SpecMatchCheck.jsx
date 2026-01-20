@@ -41,9 +41,9 @@ export default function SpecMatchCheck() {
     setLoading(true);
     try {
       const params = { page: 1, page_size: 100 };
-      if (projectId) params.project_id = parseInt(projectId);
-      if (matchType) params.match_type = matchType;
-      if (matchStatus) params.match_status = matchStatus;
+      if (projectId) {params.project_id = parseInt(projectId);}
+      if (matchType) {params.match_type = matchType;}
+      if (matchStatus) {params.match_status = matchStatus;}
 
       const response = await api.get("/technical-spec/match/records", {
         params,

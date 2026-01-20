@@ -12,6 +12,8 @@ import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Input } from "../components/ui/input";
 import { fadeIn } from "../lib/animations";
+import { alertApi, notificationApi } from "../services/api";
+import { toast } from "../components/ui";
 
 const alertTypes = [
   { value: "PROJ_DELAY", label: "项目进度延期预警" },
@@ -39,40 +41,82 @@ export default function AlertSubscription() {
 
   const loadSubscriptions = async () => {
     try {
-      // Mock data for now
-      setSubscriptions([
-        {
-          id: 1,
-          alert_type: "PROJ_DELAY",
-          min_level: "WARNING",
-          is_active: true,
-        },
-        {
-          id: 2,
-          alert_type: "PO_DELIVERY",
-          min_level: "CRITICAL",
-          is_active: true,
-        },
-      ]);
+      const localQuiet = localStorage.getItem("alertQuietHours");
+      if (localQuiet) {
+        const parsed = JSON.parse(localQuiet);
+        if (parsed?.quietStart) {setQuietStart(parsed.quietStart);}
+        if (parsed?.quietEnd) {setQuietEnd(parsed.quietEnd);}
+      }
+
+      const res = await alertApi.subscriptions.list({ page: 1, page_size: 1000 });
+      const items = res.data?.items || res.data || [];
+      setSubscriptions(Array.isArray(items) ? items : []);
+
+      // best-effort: load notification settings if backend supports it
+      try {
+        const settingsRes = await notificationApi.getSettings();
+        const settings = settingsRes?.data;
+        if (settings?.quiet_start) {setQuietStart(settings.quiet_start);}
+        if (settings?.quiet_end) {setQuietEnd(settings.quiet_end);}
+      } catch {
+        // ignore
+      }
     } catch (error) {
       console.error("Failed to load subscriptions:", error);
+      // fallback: empty list, UI still usable
+      setSubscriptions([]);
     }
   };
 
-  const handleToggle = (id) => {
-    setSubscriptions((prev) =>
-      prev.map((sub) =>
-        sub.id === id ? { ...sub, is_active: !sub.is_active } : sub,
-      ),
-    );
+  const handleToggle = (alertType) => {
+    setSubscriptions((prev) => {
+      const found = prev.find((s) => s.alert_type === alertType);
+      if (!found) {
+        return [
+          ...prev,
+          { id: null, alert_type: alertType, min_level: "WARNING", is_active: true },
+        ];
+      }
+      return prev.map((sub) =>
+        sub.alert_type === alertType ? { ...sub, is_active: !sub.is_active } : sub,
+      );
+    });
   };
 
   const handleSave = async () => {
     try {
-      // Save subscriptions
-      // TODO: Call API to save subscriptions
+      localStorage.setItem(
+        "alertQuietHours",
+        JSON.stringify({ quietStart, quietEnd }),
+      );
+
+      await Promise.all(
+        subscriptions.map((sub) => {
+          const payload = {
+            alert_type: sub.alert_type,
+            min_level: sub.min_level,
+            is_active: sub.is_active,
+          };
+          if (sub.id) {
+            return alertApi.subscriptions.update(sub.id, payload);
+          }
+          return alertApi.subscriptions.create(payload);
+        }),
+      );
+
+      // best-effort: persist quiet hours to backend if supported
+      try {
+        await notificationApi.updateSettings({
+          quiet_start: quietStart,
+          quiet_end: quietEnd,
+        });
+      } catch {
+        // ignore
+      }
+      toast.success("订阅配置已保存");
     } catch (error) {
       console.error("Failed to save subscriptions:", error);
+      toast.error("保存失败，请稍后重试");
     }
   };
 
@@ -169,7 +213,7 @@ export default function AlertSubscription() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleToggle(subscription?.id || 0)}
+                        onClick={() => handleToggle(type.value)}
                       >
                         {subscription?.is_active ? "已订阅" : "未订阅"}
                       </Button>

@@ -214,7 +214,7 @@ const CustomerSatisfaction = () => {
           <div style={{ fontSize: 12, color: '#666' }}>
             {SURVEY_TYPES[record.type?.toUpperCase()]?.label}
           </div>
-        </div>
+    </div>
 
   },
   {
@@ -234,7 +234,7 @@ const CustomerSatisfaction = () => {
     <div>
           <Rate disabled value={score} style={{ fontSize: 14 }} />
           <div style={{ fontSize: 12, color: '#666' }}>{score}/5.0</div>
-        </div>
+    </div>
 
   },
   {
@@ -249,7 +249,7 @@ const CustomerSatisfaction = () => {
           <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
             {record.responseCount}/{record.targetCount}
           </div>
-        </div>
+    </div>
 
   },
   {
@@ -279,7 +279,7 @@ const CustomerSatisfaction = () => {
 
             删除
           </Button>
-        </Space>
+    </Space>
 
   }];
 
@@ -328,9 +328,9 @@ const CustomerSatisfaction = () => {
 
                       <Download size={14} className="mr-2" />
                       导出{format.label}
-                    </Menu.Item>
+                </Menu.Item>
                 )}
-                </Menu>
+              </Menu>
               }>
 
               <Button icon={<Download size={16} />}>
@@ -353,7 +353,7 @@ const CustomerSatisfaction = () => {
           <span>
               <BarChart3 size={16} />
               概览分析
-            </span>
+          </span>
           }
           key="overview">
 
@@ -369,7 +369,7 @@ const CustomerSatisfaction = () => {
           <span>
               <FileText size={16} />
               调查管理
-            </span>
+          </span>
           }
           key="surveys">
 
@@ -387,7 +387,7 @@ const CustomerSatisfaction = () => {
           <span>
               <PieChart size={16} />
               满意度分析
-            </span>
+          </span>
           }
           key="analytics">
 
@@ -403,7 +403,7 @@ const CustomerSatisfaction = () => {
           <span>
               <MessageSquare size={16} />
               反馈管理
-            </span>
+          </span>
           }
           key="feedback">
 
@@ -419,7 +419,7 @@ const CustomerSatisfaction = () => {
           <span>
               <Settings size={16} />
               问卷模板
-            </span>
+          </span>
           }
           key="templates">
 
@@ -452,7 +452,7 @@ const CustomerSatisfaction = () => {
                 <Statistic title="完成率" value={(selectedSurvey.responseCount / selectedSurvey.targetCount * 100).toFixed(1)} suffix="%" />
               </Col>
             </Row>
-          </div>
+        </div>
         }
       </Modal>
     </motion.div>);

@@ -188,7 +188,7 @@ export const formatStage = (stage) => {
 };
 
 export const getPriorityValue = (item) => {
-  if (!item.priority) return 0;
+  if (!item.priority) {return 0;}
   return getPriorityConfig(item.priority).value;
 };
 

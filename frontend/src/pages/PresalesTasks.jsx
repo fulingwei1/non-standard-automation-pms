@@ -213,7 +213,7 @@ function TaskCard({ task, onClick }) {
             <span className="text-white">{task.progress}%</span>
           </div>
           <Progress value={task.progress} className="h-1.5" />
-        </div>
+      </div>
       }
 
       <div className="flex items-center justify-between text-xs">
@@ -244,7 +244,7 @@ function TaskDetailPanel({ task, onClose, onUpdate }) {
   const [isCompleting, setIsCompleting] = useState(false);
   const [isAccepting, setIsAccepting] = useState(false);
 
-  if (!task) return null;
+  if (!task) {return null;}
 
   const priorityStyle = getPriorityStyle(task.priority);
   const statusConfig = taskStatuses.find((s) => s.id === task.status);
@@ -451,7 +451,7 @@ function TaskDetailPanel({ task, onClose, onUpdate }) {
                   {task.status === "completed" &&
                 <CheckCircle className="w-4 h-4 text-emerald-500 ml-auto" />
                 }
-                </div>
+              </div>
               )}
             </div>
           </div>
@@ -463,7 +463,7 @@ function TaskDetailPanel({ task, onClose, onUpdate }) {
               <p className="text-2xl font-bold text-emerald-400">
                 ¥{task.amount}万
               </p>
-            </div>
+          </div>
           }
         </div>
 
@@ -478,7 +478,7 @@ function TaskDetailPanel({ task, onClose, onUpdate }) {
               <CheckCircle className="w-4 h-4 mr-2" />
               {isAccepting ? "接单中..." : "接单处理"}
             </Button>
-          </div>
+        </div>
         }
 
         {(task.status === "in_progress" || task.status === "reviewing") &&
@@ -534,7 +534,7 @@ function TaskDetailPanel({ task, onClose, onUpdate }) {
                 {isCompleting ? "完成中..." : "完成工单"}
               </Button>
             </div>
-          </div>
+        </div>
         }
 
         {/* Footer */}
@@ -702,7 +702,7 @@ export default function PresalesTasks() {
               <Plus className="w-4 h-4" />
               新建任务
             </Button>
-          </motion.div>
+        </motion.div>
         } />
 
 
@@ -729,7 +729,7 @@ export default function PresalesTasks() {
                 )} />
 
                 {type.name}
-              </Button>
+            </Button>
             )}
           </div>
 
@@ -754,7 +754,7 @@ export default function PresalesTasks() {
               {taskStatuses.map((status) =>
               <option key={status.id} value={status.id}>
                   {status.name}
-                </option>
+              </option>
               )}
             </select>
             <div className="flex bg-surface-50 rounded-lg p-1">
@@ -792,9 +792,9 @@ export default function PresalesTasks() {
               <ListTodo className="w-12 h-12 mx-auto mb-4 text-slate-600" />
               <p className="text-lg font-medium">暂无任务</p>
               <p className="text-sm">请调整筛选条件或创建新任务</p>
-            </div>
+        </div>
         }
-        </motion.div> :
+      </motion.div> :
 
       <motion.div
         variants={fadeIn}
@@ -829,13 +829,13 @@ export default function PresalesTasks() {
               <div className="text-center py-8 text-slate-400">
                       <ListTodo className="w-8 h-8 mx-auto mb-2 text-slate-600" />
                       <p className="text-sm">暂无任务</p>
-                    </div>
+              </div>
               }
                 </CardContent>
               </Card>
-            </div>
+        </div>
         )}
-        </motion.div>
+      </motion.div>
       }
 
       {/* 任务详情面板 */}

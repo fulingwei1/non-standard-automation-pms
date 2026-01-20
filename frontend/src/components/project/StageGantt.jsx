@@ -170,7 +170,7 @@ export default function StageGantt({ stages }) {
               {stage.description &&
               <p className="text-xs text-slate-400 ml-28 mt-1">
                   {stage.description}
-                </p>
+              </p>
               }
             </div>);
 

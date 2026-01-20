@@ -87,10 +87,10 @@ export default function ArrivalManagement() {
     try {
       setLoading(true);
       const params = {};
-      if (filterStatus && filterStatus !== "all") params.status = filterStatus;
+      if (filterStatus && filterStatus !== "all") {params.status = filterStatus;}
       if (filterProject && filterProject !== "all")
-        params.project_id = filterProject;
-      if (searchKeyword) params.search = searchKeyword;
+        {params.project_id = filterProject;}
+      if (searchKeyword) {params.search = searchKeyword;}
       const res = await purchaseApi.receipts.list(params);
       const receiptList = res.data?.items || res.data || [];
       setReceipts(receiptList);
@@ -114,7 +114,7 @@ export default function ArrivalManagement() {
     }
   };
   const handleReceive = async () => {
-    if (!selectedReceipt) return;
+    if (!selectedReceipt) {return;}
     try {
       await purchaseApi.receipts.receive(selectedReceipt.id, receiveData);
       setShowReceiveDialog(false);

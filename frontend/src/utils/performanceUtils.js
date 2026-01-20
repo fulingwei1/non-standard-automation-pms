@@ -78,11 +78,11 @@ export const getLevelInfo = (level) => {
  * 获取趋势图标和颜色
  */
 export const getTrendIcon = (current, previous) => {
-  if (!previous) return { icon: Minus, color: "text-slate-400" };
+  if (!previous) {return { icon: Minus, color: "text-slate-400" };}
   if (current > previous)
-    return { icon: ArrowUpRight, color: "text-emerald-400" };
+    {return { icon: ArrowUpRight, color: "text-emerald-400" };}
   if (current < previous)
-    return { icon: ArrowDownRight, color: "text-red-400" };
+    {return { icon: ArrowDownRight, color: "text-red-400" };}
   return { icon: Minus, color: "text-slate-400" };
 };
 
@@ -90,7 +90,7 @@ export const getTrendIcon = (current, previous) => {
  * 计算季度对比数据
  */
 export const calculateQuarterComparison = (quarterlyTrend) => {
-  if (!quarterlyTrend || quarterlyTrend.length < 2) return null;
+  if (!quarterlyTrend || quarterlyTrend.length < 2) {return null;}
   const current = quarterlyTrend[quarterlyTrend.length - 1];
   const previous = quarterlyTrend[quarterlyTrend.length - 2];
   return {

@@ -119,11 +119,11 @@ export default function ProductionPlanList() {
     try {
       setLoading(true);
       const params = {};
-      if (filterType) params.plan_type = filterType;
-      if (filterProject) params.project_id = filterProject;
-      if (filterWorkshop) params.workshop_id = filterWorkshop;
-      if (filterStatus) params.status = filterStatus;
-      if (searchKeyword) params.search = searchKeyword;
+      if (filterType) {params.plan_type = filterType;}
+      if (filterProject) {params.project_id = filterProject;}
+      if (filterWorkshop) {params.workshop_id = filterWorkshop;}
+      if (filterStatus) {params.status = filterStatus;}
+      if (searchKeyword) {params.search = searchKeyword;}
       const res = await productionApi.productionPlans.list(params);
       const planList = res.data?.items || res.data || [];
       setPlans(planList);
@@ -171,7 +171,7 @@ export default function ProductionPlanList() {
     }
   };
   const handlePublish = async (planId) => {
-    if (!confirm("确认发布此生产计划？")) return;
+    if (!confirm("确认发布此生产计划？")) {return;}
     try {
       await productionApi.productionPlans.publish(planId);
       fetchPlans();
@@ -223,7 +223,7 @@ export default function ProductionPlanList() {
                 {Object.entries(typeConfigs).map(([key, config]) =>
                 <SelectItem key={key} value={key}>
                     {config.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -236,7 +236,7 @@ export default function ProductionPlanList() {
                 {projects.map((proj) =>
                 <SelectItem key={proj.id} value={proj.id.toString()}>
                     {proj.project_name}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -249,7 +249,7 @@ export default function ProductionPlanList() {
                 {workshops.map((ws) =>
                 <SelectItem key={ws.id} value={ws.id.toString()}>
                     {ws.workshop_name}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -262,7 +262,7 @@ export default function ProductionPlanList() {
                 {Object.entries(statusConfigs).map(([key, config]) =>
                 <SelectItem key={key} value={key}>
                     {config.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -332,7 +332,7 @@ export default function ProductionPlanList() {
                   <>
                           <span className="mx-1">-</span>
                           {formatDate(plan.plan_end_date)}
-                        </>
+                  </>
                   }
                     </TableCell>
                     <TableCell>
@@ -371,14 +371,14 @@ export default function ProductionPlanList() {
                       onClick={() => handlePublish(plan.id)}>
 
                             <CheckCircle2 className="w-4 h-4" />
-                          </Button>
+                    </Button>
                     }
                       </div>
                     </TableCell>
-                  </TableRow>
+              </TableRow>
               )}
               </TableBody>
-            </Table>
+          </Table>
           }
         </CardContent>
       </Card>
@@ -420,7 +420,7 @@ export default function ProductionPlanList() {
                       {Object.entries(typeConfigs).map(([key, config]) =>
                       <SelectItem key={key} value={key}>
                           {config.label}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -444,7 +444,7 @@ export default function ProductionPlanList() {
                       {projects.map((proj) =>
                       <SelectItem key={proj.id} value={proj.id.toString()}>
                           {proj.project_name}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -470,11 +470,11 @@ export default function ProductionPlanList() {
                       {workshops.map((ws) =>
                     <SelectItem key={ws.id} value={ws.id.toString()}>
                           {ws.workshop_name}
-                        </SelectItem>
+                    </SelectItem>
                     )}
                     </SelectContent>
                   </Select>
-                </div>
+              </div>
               }
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -602,9 +602,9 @@ export default function ProductionPlanList() {
               <div>
                     <div className="text-sm text-slate-500 mb-1">描述</div>
                     <div>{selectedPlan.description}</div>
-                  </div>
-              }
               </div>
+              }
+            </div>
             }
           </DialogBody>
           <DialogFooter>
@@ -618,7 +618,7 @@ export default function ProductionPlanList() {
             <Button onClick={() => handlePublish(selectedPlan.id)}>
                 <CheckCircle2 className="w-4 h-4 mr-2" />
                 发布计划
-              </Button>
+            </Button>
             }
           </DialogFooter>
         </DialogContent>

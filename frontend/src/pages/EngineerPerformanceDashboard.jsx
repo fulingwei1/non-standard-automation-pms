@@ -35,7 +35,7 @@ const EngineerPerformanceDashboard = () => {
   const fetchTopEngineers = async (jobType = null) => {
     try {
       const params = { n: 10 };
-      if (jobType) params.job_type = jobType;
+      if (jobType) {params.job_type = jobType;}
       const response = await axios.get('/api/v1/engineer-performance/ranking/top', { params });
       if (response.data.code === 200) {
         setTopEngineers(response.data.data);
@@ -96,9 +96,9 @@ const EngineerPerformanceDashboard = () => {
       key: 'rank',
       width: 60,
       render: (rank) => {
-        if (rank === 1) return <TrophyOutlined style={{ color: '#FFD700', fontSize: 20 }} />;
-        if (rank === 2) return <TrophyOutlined style={{ color: '#C0C0C0', fontSize: 18 }} />;
-        if (rank === 3) return <TrophyOutlined style={{ color: '#CD7F32', fontSize: 16 }} />;
+        if (rank === 1) {return <TrophyOutlined style={{ color: '#FFD700', fontSize: 20 }} />;}
+        if (rank === 2) {return <TrophyOutlined style={{ color: '#C0C0C0', fontSize: 18 }} />;}
+        if (rank === 3) {return <TrophyOutlined style={{ color: '#CD7F32', fontSize: 16 }} />;}
         return rank;
       }
     },

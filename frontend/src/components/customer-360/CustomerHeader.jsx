@@ -41,17 +41,17 @@ export function CustomerHeader({ customer, loading = false, onTabChange }) {
         {/* 骨架屏 */}
         <div className="grid grid-cols-12 gap-4">
           <div className="col-span-4">
-            <div className="animate-pulse h-32 bg-slate-800 rounded-lg"></div>
+            <div className="animate-pulse h-32 bg-slate-800 rounded-lg" />
           </div>
           <div className="col-span-8 space-y-3">
-            <div className="h-8 bg-slate-700 rounded w-3/4"></div>
-            <div className="h-6 bg-slate-700 rounded w-1/2"></div>
+            <div className="h-8 bg-slate-700 rounded w-3/4" />
+            <div className="h-6 bg-slate-700 rounded w-1/2" />
             <div className="grid grid-cols-3 gap-2">
-              <div className="h-4 bg-slate-700 rounded"></div>
-              <div className="h-4 bg-slate-700 rounded"></div>
-              <div className="h-4 bg-slate-700 rounded"></div>
+              <div className="h-4 bg-slate-700 rounded" />
+              <div className="h-4 bg-slate-700 rounded" />
+              <div className="h-4 bg-slate-700 rounded" />
             </div>
-            <div className="h-20 bg-slate-700 rounded"></div>
+            <div className="h-20 bg-slate-700 rounded" />
           </div>
         </div>
 
@@ -59,10 +59,10 @@ export function CustomerHeader({ customer, loading = false, onTabChange }) {
           {[...Array(4)].map((_, i) =>
           <Card key={i}>
               <CardHeader className="pb-2">
-                <div className="h-4 bg-slate-700 rounded w-20"></div>
+                <div className="h-4 bg-slate-700 rounded w-20" />
               </CardHeader>
               <CardContent>
-                <div className="h-8 bg-slate-700 rounded"></div>
+                <div className="h-8 bg-slate-700 rounded" />
               </CardContent>
           </Card>
           )}

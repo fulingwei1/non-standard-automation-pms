@@ -147,7 +147,7 @@ export default function MyBonus() {
 
   // 格式化金额
   const formatAmount = (amount) => {
-    if (!amount) return "0.00";
+    if (!amount) {return "0.00";}
     return parseFloat(amount).toLocaleString("zh-CN", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
@@ -256,7 +256,7 @@ export default function MyBonus() {
               <Download className="w-4 h-4" />
               导出
             </Button>
-          </div>
+        </div>
         } />
 
 
@@ -342,7 +342,7 @@ export default function MyBonus() {
 
                     <tab.icon className="w-4 h-4" />
                     {tab.label}
-                  </Button>
+                </Button>
                 )}
               </div>
             </CardContent>
@@ -391,7 +391,7 @@ export default function MyBonus() {
                     </div>
                   </div>
                 </CardContent>
-              </Card>
+          </Card>
           }
 
             {/* 最近计算记录 */}
@@ -441,10 +441,10 @@ export default function MyBonus() {
                               </p>
                             </div>
                           </div>
-                        </div>);
+                    </div>);
 
                 })}
-                  </div> :
+              </div> :
 
               <EmptyState
                 icon={FileText}
@@ -454,7 +454,7 @@ export default function MyBonus() {
               }
               </CardContent>
             </Card>
-          </motion.div>
+        </motion.div>
         }
 
         {/* 计算记录 Tab */}
@@ -512,10 +512,10 @@ export default function MyBonus() {
                         <p>审批意见: {calc.approval_comment}</p>
                         }
                           </div>
-                        </div>);
+                    </div>);
 
                 })}
-                  </div> :
+              </div> :
 
               <EmptyState
                 icon={FileText}
@@ -525,7 +525,7 @@ export default function MyBonus() {
               }
               </CardContent>
             </Card>
-          </motion.div>
+        </motion.div>
         }
 
         {/* 发放记录 Tab */}
@@ -556,7 +556,7 @@ export default function MyBonus() {
                               {dist.distribution_code &&
                           <span className="text-sm text-slate-400">
                                   单号: {dist.distribution_code}
-                                </span>
+                          </span>
                           }
                             </div>
                             <p className="text-xl font-bold text-white">
@@ -578,10 +578,10 @@ export default function MyBonus() {
                         }
                             {dist.remark && <p>备注: {dist.remark}</p>}
                           </div>
-                        </div>);
+                    </div>);
 
                 })}
-                  </div> :
+              </div> :
 
               <EmptyState
                 icon={Receipt}
@@ -591,7 +591,7 @@ export default function MyBonus() {
               }
               </CardContent>
             </Card>
-          </motion.div>
+        </motion.div>
         }
       </div>
     </div>);

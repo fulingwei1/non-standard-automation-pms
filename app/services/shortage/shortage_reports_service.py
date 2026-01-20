@@ -81,7 +81,7 @@ class ShortageReportsService:
             total=total,
             page=page,
             page_size=page_size,
-            items=[ShortageReportResponse.from_orm(item) for item in items]
+            items=[ShortageReportResponse.model_validate(item) for item in items]
         )
 
     def create_shortage_report(

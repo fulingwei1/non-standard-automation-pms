@@ -104,9 +104,9 @@ export default function WorkshopManagement() {
     try {
       setLoading(true);
       const params = { page: 1, page_size: 100 };
-      if (filterType) params.workshop_type = filterType;
-      if (filterActive !== "") params.is_active = filterActive === "true";
-      if (searchKeyword) params.search = searchKeyword;
+      if (filterType) {params.workshop_type = filterType;}
+      if (filterActive !== "") {params.is_active = filterActive === "true";}
+      if (searchKeyword) {params.search = searchKeyword;}
       const res = await productionApi.workshops.list(params);
       const workshopList = res.data?.items || res.data || [];
       setWorkshops(workshopList);
@@ -134,7 +134,7 @@ export default function WorkshopManagement() {
   };
 
   const handleEdit = async () => {
-    if (!selectedWorkshop) return;
+    if (!selectedWorkshop) {return;}
     try {
       await productionApi.workshops.update(selectedWorkshop.id, workshopForm);
       setShowEditDialog(false);
@@ -226,7 +226,7 @@ export default function WorkshopManagement() {
                 {Object.entries(typeConfigs).map(([key, config]) =>
                 <SelectItem key={key} value={key}>
                     {config.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -305,12 +305,12 @@ export default function WorkshopManagement() {
                   <Badge className="bg-emerald-500">
                           <CheckCircle2 className="w-3 h-3 mr-1" />
                           启用
-                        </Badge> :
+                  </Badge> :
 
                   <Badge className="bg-gray-500">
                           <XCircle className="w-3 h-3 mr-1" />
                           停用
-                        </Badge>
+                  </Badge>
                   }
                     </TableCell>
                     <TableCell className="text-right">
@@ -340,10 +340,10 @@ export default function WorkshopManagement() {
                         </Button>
                       </div>
                     </TableCell>
-                  </TableRow>
+              </TableRow>
               )}
               </TableBody>
-            </Table>
+          </Table>
           }
         </CardContent>
       </Card>
@@ -405,7 +405,7 @@ export default function WorkshopManagement() {
                       {Object.entries(typeConfigs).map(([key, config]) =>
                       <SelectItem key={key} value={key}>
                           {config.label}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -431,7 +431,7 @@ export default function WorkshopManagement() {
                       {managers.map((mgr) =>
                       <SelectItem key={mgr.id} value={mgr.id.toString()}>
                           {mgr.real_name || mgr.username}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -553,7 +553,7 @@ export default function WorkshopManagement() {
                       {Object.entries(typeConfigs).map(([key, config]) =>
                       <SelectItem key={key} value={key}>
                           {config.label}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -579,7 +579,7 @@ export default function WorkshopManagement() {
                       {managers.map((mgr) =>
                       <SelectItem key={mgr.id} value={mgr.id.toString()}>
                           {mgr.real_name || mgr.username}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -714,9 +714,9 @@ export default function WorkshopManagement() {
               <div>
                     <div className="text-sm text-slate-500 mb-1">描述</div>
                     <div>{selectedWorkshop.description}</div>
-                  </div>
-              }
               </div>
+              }
+            </div>
             }
           </DialogBody>
           <DialogFooter>
@@ -735,7 +735,7 @@ export default function WorkshopManagement() {
 
                 <Edit className="w-4 h-4 mr-2" />
                 编辑
-              </Button>
+            </Button>
             }
           </DialogFooter>
         </DialogContent>

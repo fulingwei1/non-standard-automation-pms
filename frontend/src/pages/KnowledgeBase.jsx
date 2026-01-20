@@ -301,7 +301,7 @@ const KnowledgeBase = () => {
             <Tag size="small">{CATEGORIES[record.category?.toUpperCase()]?.label}</Tag>
             {record.isFavorite && <Star size={12} style={{ color: '#faad14' }} />}
           </div>
-        </div>
+    </div>
 
   },
   {
@@ -312,7 +312,7 @@ const KnowledgeBase = () => {
     <div style={{ display: 'flex', alignItems: 'center' }}>
           <Avatar size="small" icon={<Users />} />
           <span style={{ marginLeft: 8 }}>{author}</span>
-        </div>
+    </div>
 
   },
   {
@@ -345,7 +345,7 @@ const KnowledgeBase = () => {
           {record.rating &&
       <Rate disabled value={record.rating} style={{ fontSize: 12 }} />
       }
-        </div>
+    </div>
 
   },
   {
@@ -395,7 +395,7 @@ const KnowledgeBase = () => {
 
             删除
           </Button>
-        </Space>
+    </Space>
 
   }];
 
@@ -421,7 +421,7 @@ const KnowledgeBase = () => {
               backgroundColor: typeConfig?.color || '#f0f0f0'
             }}>
                   <span style={{ fontSize: 48 }}>{fileConfig?.icon || '📄'}</span>
-                </div>
+            </div>
             }
             actions={[
             <Eye key="view" onClick={() => handleDocumentView(doc)} />,
@@ -435,7 +435,7 @@ const KnowledgeBase = () => {
               title={
               <div style={{ fontSize: 14, height: 40, overflow: 'hidden' }}>
                     {doc.title}
-                  </div>
+              </div>
               }
               description={
               <div>
@@ -448,14 +448,14 @@ const KnowledgeBase = () => {
                         <Users size={10} /> {doc.author} · <Clock size={10} /> {doc.createdAt}
                       </div>
                     </div>
-                  </div>
+              </div>
               } />
 
             </Card>
-          </Col>);
+        </Col>);
 
     })}
-    </Row>;
+  </Row>;
 
 
   return (
@@ -528,7 +528,7 @@ const KnowledgeBase = () => {
                 {Object.values(KNOWLEDGE_TYPES).map((type) =>
                 <Select.Option key={type.value} value={type.value}>
                     {type.icon} {type.label}
-                  </Select.Option>
+                </Select.Option>
                 )}
               </Select>
               <Select
@@ -541,7 +541,7 @@ const KnowledgeBase = () => {
                 {Object.values(CATEGORIES).map((cat) =>
                 <Select.Option key={cat.value} value={cat.value}>
                     {cat.label}
-                  </Select.Option>
+                </Select.Option>
                 )}
               </Select>
               <Select
@@ -554,7 +554,7 @@ const KnowledgeBase = () => {
                 {Object.values(STATUS_OPTIONS).map((status) =>
                 <Select.Option key={status.value} value={status.value}>
                     <Tag color={status.color}>{status.label}</Tag>
-                  </Select.Option>
+                </Select.Option>
                 )}
               </Select>
             </Space>
@@ -575,7 +575,7 @@ const KnowledgeBase = () => {
           <span>
                 <TrendingUp size={16} />
                 概览分析
-              </span>,
+          </span>,
 
           children:
           <KnowledgeBaseOverview
@@ -583,7 +583,7 @@ const KnowledgeBase = () => {
             loading={loading}
             onNavigate={(type, value) => {
               setActiveTab('documents');
-              if (type === 'type') setFilters({ ...filters, type: value });
+              if (type === 'type') {setFilters({ ...filters, type: value });}
             }} />
 
 
@@ -594,7 +594,7 @@ const KnowledgeBase = () => {
           <span>
                 <FileText size={16} />
                 文档管理 ({filteredDocuments.length})
-              </span>,
+          </span>,
 
           children: loading ?
           <Spin size="large" style={{ display: 'block', textAlign: 'center', padding: '100px 0' }} /> :
@@ -616,7 +616,7 @@ const KnowledgeBase = () => {
           <span>
                 <Folder size={16} />
                 分类管理
-              </span>,
+          </span>,
 
           children:
           <CategoryManager
@@ -632,7 +632,7 @@ const KnowledgeBase = () => {
           <span>
                 <Filter size={16} />
                 高级搜索
-              </span>,
+          </span>,
 
           children:
           <SearchAndFilter

@@ -56,9 +56,9 @@ const getLevelColor = (level) => {
 
 const getScoreColor = (actual, target) => {
   const ratio = actual / target;
-  if (ratio >= 1.0) return "text-emerald-400";
-  if (ratio >= 0.9) return "text-blue-400";
-  if (ratio >= 0.8) return "text-amber-400";
+  if (ratio >= 1.0) {return "text-emerald-400";}
+  if (ratio >= 0.9) {return "text-blue-400";}
+  if (ratio >= 0.8) {return "text-amber-400";}
   return "text-red-400";
 };
 
@@ -130,7 +130,7 @@ export default function PerformanceResults() {
               <MessageSquare className="w-4 h-4" />
               申诉
             </Button>
-          </div>
+        </div>
         } />
 
 
@@ -141,7 +141,7 @@ export default function PerformanceResults() {
             {loading ?
             <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
-              </div> :
+            </div> :
 
             <div className="flex items-start justify-between gap-6">
                 <div className="flex items-start gap-4">
@@ -216,7 +216,7 @@ export default function PerformanceResults() {
                     </p>
                   </div>
                 </div>
-              </div>
+            </div>
             }
           </CardContent>
         </Card>
@@ -252,7 +252,7 @@ export default function PerformanceResults() {
               {loading ?
               <div className="flex items-center justify-center py-12">
                   <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
-                </div> :
+              </div> :
 
               <div className="space-y-4">
                   {currentResult.indicators.map((indicator, index) =>
@@ -331,9 +331,9 @@ export default function PerformanceResults() {
                     value={indicator.score / indicator.weight * 100}
                     className="h-2 bg-slate-700/50" />
 
-                    </motion.div>
+                </motion.div>
                 )}
-                </div>
+              </div>
               }
             </CardContent>
           </Card>
@@ -352,7 +352,7 @@ export default function PerformanceResults() {
               {loading ?
               <div className="flex items-center justify-center py-12">
                   <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
-                </div> :
+              </div> :
 
               <div className="space-y-3">
                   {historyResults.map((result, index) =>
@@ -406,14 +406,14 @@ export default function PerformanceResults() {
                         <TrendingDown className="w-4 h-4" />
                         }
                               <span>{Math.abs(result.change)}</span>
-                            </div>
+                      </div>
                       }
                           <ChevronRight className="w-5 h-5 text-slate-400" />
                         </div>
                       </div>
-                    </motion.div>
+                </motion.div>
                 )}
-                </div>
+              </div>
               }
             </CardContent>
           </Card>
@@ -432,7 +432,7 @@ export default function PerformanceResults() {
               {loading ?
               <div className="flex items-center justify-center py-12">
                   <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
-                </div> :
+              </div> :
 
               <div className="space-y-4">
                   {currentResult.comments.map((comment, index) =>
@@ -457,9 +457,9 @@ export default function PerformanceResults() {
                           </p>
                         </div>
                       </div>
-                    </motion.div>
+                </motion.div>
                 )}
-                </div>
+              </div>
               }
             </CardContent>
           </Card>

@@ -30,7 +30,7 @@ export default function MaterialSelectDialog({
 
   // 过滤物料
   const filteredMaterials = useMemo(() => {
-    if (!searchQuery) return materials;
+    if (!searchQuery) {return materials;}
 
     const query = searchQuery.toLowerCase();
     return materials.filter(

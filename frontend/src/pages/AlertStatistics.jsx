@@ -196,10 +196,10 @@ const AlertStatistics = () => {
             {record.tags?.map((tag) =>
         <Tag key={tag} size="small" style={{ marginRight: 4 }}>
                 {tag}
-              </Tag>
+        </Tag>
         )}
           </div>
-        </div>
+    </div>
 
   },
   {
@@ -211,7 +211,7 @@ const AlertStatistics = () => {
       return (
         <Tag color={config?.color}>
             {config?.icon} {config?.label}
-          </Tag>);
+        </Tag>);
 
     }
   },
@@ -224,7 +224,7 @@ const AlertStatistics = () => {
       return (
         <Tag color={config?.color}>
             {config?.label}
-          </Tag>);
+        </Tag>);
 
     }
   },
@@ -237,7 +237,7 @@ const AlertStatistics = () => {
       return (
         <Tag color={config?.color}>
             {config?.label}
-          </Tag>);
+        </Tag>);
 
     }
   },
@@ -260,9 +260,9 @@ const AlertStatistics = () => {
           {record.resolvedAt &&
       <div style={{ fontSize: 12, color: '#52c41a' }}>
               <CheckCircle size={12} /> 解决: {record.resolvedAt}
-            </div>
+      </div>
       }
-        </div>
+    </div>
 
   },
   {
@@ -284,9 +284,9 @@ const AlertStatistics = () => {
         onClick={() => handleEditAlert(record)}>
 
               处理
-            </Button>
+      </Button>
       }
-        </Space>
+    </Space>
 
   }];
 
@@ -298,7 +298,7 @@ const AlertStatistics = () => {
     <span>
           <BarChart3 size={16} />
           概览分析
-        </span>,
+    </span>,
 
     content: <AlertOverview data={mockData} loading={loading} onNavigate={setActiveTab} />
   },
@@ -308,7 +308,7 @@ const AlertStatistics = () => {
     <span>
           <TrendingUp size={16} />
           趋势分析
-        </span>,
+    </span>,
 
     content: <AlertTrendAnalysis alerts={filteredAlerts} loading={loading} />
   },
@@ -318,7 +318,7 @@ const AlertStatistics = () => {
     <span>
           <Filter size={16} />
           分布分析
-        </span>,
+    </span>,
 
     content: <AlertDistribution alerts={filteredAlerts} loading={loading} />
   },
@@ -328,7 +328,7 @@ const AlertStatistics = () => {
     <span>
           <Activity size={16} />
           性能指标
-        </span>,
+    </span>,
 
     content: <AlertPerformance data={mockData} loading={loading} />
   },
@@ -338,7 +338,7 @@ const AlertStatistics = () => {
     <span>
           <FileText size={16} />
           详细列表 ({filteredAlerts.length})
-        </span>,
+    </span>,
 
     content: <AlertDetails alerts={filteredAlerts} loading={loading} />
   }];
@@ -410,7 +410,7 @@ const AlertStatistics = () => {
                 {Object.values(ALERT_TYPES).map((type) =>
                 <Select.Option key={type.value} value={type.value}>
                     {type.icon} {type.label}
-                  </Select.Option>
+                </Select.Option>
                 )}
               </Select>
               <Select
@@ -423,7 +423,7 @@ const AlertStatistics = () => {
                 {Object.values(ALERT_LEVELS).map((level) =>
                 <Select.Option key={level.value} value={level.value}>
                     <Tag color={level.color}>{level.label}</Tag>
-                  </Select.Option>
+                </Select.Option>
                 )}
               </Select>
               <Select
@@ -436,7 +436,7 @@ const AlertStatistics = () => {
                 {Object.values(ALERT_STATUS).map((status) =>
                 <Select.Option key={status.value} value={status.value}>
                     <Tag color={status.color}>{status.label}</Tag>
-                  </Select.Option>
+                </Select.Option>
                 )}
               </Select>
             </Space>
@@ -455,7 +455,7 @@ const AlertStatistics = () => {
           {tabItems.map((item) =>
           <TabPane key={item.key} tab={item.tab}>
               {item.content}
-            </TabPane>
+          </TabPane>
           )}
         </Tabs>
       </Card>

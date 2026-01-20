@@ -140,7 +140,7 @@ export default function TimesheetBatchOperations() {
       for (const [projectId, projectTimesheets] of Object.entries(
         projectGroups
       )) {
-        if (projectId === "other") continue;
+        if (projectId === "other") {continue;}
 
         const firstTs = projectTimesheets[0];
         const workDate = new Date(firstTs.work_date);
@@ -364,7 +364,7 @@ export default function TimesheetBatchOperations() {
 
                     <CheckCircle2 className="w-4 h-4 mr-2" />
                     批量审批
-                  </Button>
+              </Button>
               }
                 <Button
                 onClick={() => setShowExportDialog(true)}
@@ -391,7 +391,7 @@ export default function TimesheetBatchOperations() {
                 </Button>
               </div>
             </div>
-          </motion.div>
+        </motion.div>
         }
 
         {/* 工时记录列表 */}
@@ -421,12 +421,12 @@ export default function TimesheetBatchOperations() {
             <div className="text-center py-8">
                 <Clock className="w-8 h-8 animate-spin text-blue-500 mx-auto mb-2" />
                 <p className="text-slate-400">加载中...</p>
-              </div> :
+            </div> :
             timesheets.length === 0 ?
             <div className="text-center py-8">
                 <AlertCircle className="w-12 h-12 text-slate-500 mx-auto mb-2" />
                 <p className="text-slate-400">暂无数据</p>
-              </div> :
+            </div> :
 
             <div className="space-y-2">
                 {timesheets.map((timesheet) =>
@@ -478,9 +478,9 @@ export default function TimesheetBatchOperations() {
                         </p>
                       </div>
                     </div>
-                  </div>
-              )}
               </div>
+              )}
+            </div>
             }
           </CardContent>
         </Card>
@@ -589,7 +589,7 @@ export default function TimesheetBatchOperations() {
                   className="text-blue-500" />
 
                   {option.label}
-                </label>
+              </label>
               )}
             </div>
           </div>

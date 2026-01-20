@@ -393,7 +393,7 @@ class ProgressIntegrationService:
             blocking_issues = self.db.query(Issue).filter(
                 Issue.project_id == acceptance_order.project_id,
                 Issue.is_blocking == True,
-                Issue.status.in_([IssueStatusEnum.OPEN.value, IssueStatusEnum.PROCESSING.value]),
+                Issue.status.in_([IssueStatusEnum.OPEN.value, IssueStatusEnum.IN_PROGRESS.value]),
                 Issue.acceptance_order_id != acceptance_order.id
             ).count()
 

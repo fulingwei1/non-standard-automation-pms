@@ -100,9 +100,9 @@ export default function MaterialRequisitionList() {
     try {
       setLoading(true);
       const params = {};
-      if (filterProject) params.project_id = filterProject;
-      if (filterStatus) params.status = filterStatus;
-      if (searchKeyword) params.search = searchKeyword;
+      if (filterProject) {params.project_id = filterProject;}
+      if (filterStatus) {params.status = filterStatus;}
+      if (searchKeyword) {params.search = searchKeyword;}
       const res = await productionApi.materialRequisitions.list(params);
       const reqList = res.data?.items || res.data || [];
       setRequisitions(reqList);
@@ -144,7 +144,7 @@ export default function MaterialRequisitionList() {
     }
   };
   const handleApprove = async () => {
-    if (!selectedRequisition) return;
+    if (!selectedRequisition) {return;}
     try {
       await productionApi.materialRequisitions.approve(
         selectedRequisition.id,
@@ -204,7 +204,7 @@ export default function MaterialRequisitionList() {
                 {projects.map((proj) =>
                 <SelectItem key={proj.id} value={proj.id.toString()}>
                     {proj.project_name}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -217,7 +217,7 @@ export default function MaterialRequisitionList() {
                 {Object.entries(statusConfigs).map(([key, config]) =>
                 <SelectItem key={key} value={key}>
                     {config.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -307,14 +307,14 @@ export default function MaterialRequisitionList() {
                       }}>
 
                             <CheckCircle2 className="w-4 h-4" />
-                          </Button>
+                    </Button>
                     }
                       </div>
                     </TableCell>
-                  </TableRow>
+              </TableRow>
               )}
               </TableBody>
-            </Table>
+          </Table>
           }
         </CardContent>
       </Card>
@@ -345,7 +345,7 @@ export default function MaterialRequisitionList() {
                     {projects.map((proj) =>
                     <SelectItem key={proj.id} value={proj.id.toString()}>
                         {proj.project_name}
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -462,13 +462,13 @@ export default function MaterialRequisitionList() {
                                 {item.issued_qty || 0}
                               </TableCell>
                               <TableCell>{item.unit}</TableCell>
-                            </TableRow>
+                    </TableRow>
                     )}
                         </TableBody>
                       </Table>
-                    </div>
-              }
               </div>
+              }
+            </div>
             }
           </DialogBody>
           <DialogFooter>
@@ -488,7 +488,7 @@ export default function MaterialRequisitionList() {
 
                   <CheckCircle2 className="w-4 h-4 mr-2" />
                   审批
-                </Button>
+            </Button>
             }
           </DialogFooter>
         </DialogContent>
@@ -538,10 +538,10 @@ export default function MaterialRequisitionList() {
                       })
                       } />
 
-                          </div>
+                  </div>
                   )}
                       </div>
-                    </div>
+              </div>
               }
                 <div>
                   <label className="text-sm font-medium mb-2 block">
@@ -558,7 +558,7 @@ export default function MaterialRequisitionList() {
                   placeholder="审批意见" />
 
                 </div>
-              </div>
+            </div>
             }
           </DialogBody>
           <DialogFooter>

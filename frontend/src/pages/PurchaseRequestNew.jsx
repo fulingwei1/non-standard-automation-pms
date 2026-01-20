@@ -192,7 +192,7 @@ export default function PurchaseRequestNew() {
 
   // Filter materials for search
   const filteredMaterials = materials.filter((m) => {
-    if (!materialSearchQuery) return true;
+    if (!materialSearchQuery) {return true;}
     const query = materialSearchQuery.toLowerCase();
     return (
       m.material_code?.toLowerCase().includes(query) ||
@@ -367,7 +367,7 @@ export default function PurchaseRequestNew() {
 
               <ArrowLeft className="w-4 h-4 mr-2" />
               返回
-            </Button>
+          </Button>
           } />
 
 
@@ -409,7 +409,7 @@ export default function PurchaseRequestNew() {
                           value={project.id.toString()}>
 
                             {project.project_name}
-                          </SelectItem>
+                        </SelectItem>
                         )}
                       </SelectContent>
                     </Select>
@@ -440,7 +440,7 @@ export default function PurchaseRequestNew() {
                           value={machine.id.toString()}>
 
                             {machine.machine_code} - {machine.machine_name}
-                          </SelectItem>
+                        </SelectItem>
                         )}
                       </SelectContent>
                     </Select>
@@ -471,7 +471,7 @@ export default function PurchaseRequestNew() {
                           value={supplier.id.toString()}>
 
                             {supplier.supplier_name || supplier.name}
-                          </SelectItem>
+                        </SelectItem>
                         )}
                       </SelectContent>
                     </Select>
@@ -554,7 +554,7 @@ export default function PurchaseRequestNew() {
                 <div className="text-center py-8 text-slate-400">
                     <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
                     <p>暂无物料，点击上方按钮添加</p>
-                  </div> :
+                </div> :
 
                 <div className="space-y-3">
                     {formData.items.map((item, index) =>
@@ -696,9 +696,9 @@ export default function PurchaseRequestNew() {
 
                           </div>
                         </div>
-                      </div>
-                  )}
                   </div>
+                  )}
+                </div>
                 }
               </CardContent>
             </Card>
@@ -766,7 +766,7 @@ export default function PurchaseRequestNew() {
                   <div className="text-center py-8 text-slate-400">
                       <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
                       <p>未找到物料</p>
-                    </div> :
+                  </div> :
 
                   filteredMaterials.map((material) =>
                   <div
@@ -795,7 +795,7 @@ export default function PurchaseRequestNew() {
                             </p>
                           </div>
                         </div>
-                      </div>
+                  </div>
                   )
                   }
                 </div>

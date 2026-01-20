@@ -18,7 +18,7 @@ export function useECNDetail(ecnId) {
   const [activeTab, setActiveTab] = useState("info");
 
   const fetchECNDetail = useCallback(async () => {
-    if (!ecnId) return;
+    if (!ecnId) {return;}
 
     try {
       setLoading(true);

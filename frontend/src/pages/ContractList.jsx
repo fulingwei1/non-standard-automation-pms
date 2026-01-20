@@ -175,7 +175,7 @@ export default function ContractList() {
               <Plus className="w-4 h-4" />
               新建合同
             </Button>
-          </motion.div>
+        </motion.div>
         } />
 
 
@@ -260,7 +260,7 @@ export default function ContractList() {
             {Object.entries(statusConfig).map(([key, val]) =>
             <option key={key} value={key}>
                 {val.label}
-              </option>
+            </option>
             )}
           </select>
         </div>
@@ -277,7 +277,7 @@ export default function ContractList() {
             <Loader2 className="w-6 h-6 animate-spin" />
             <span>加载中...</span>
           </div>
-        </motion.div>
+      </motion.div>
       }
 
       {/* Error State */}
@@ -291,7 +291,7 @@ export default function ContractList() {
               <Button onClick={() => window.location.reload()}>重新加载</Button>
             </CardContent>
           </Card>
-        </motion.div>
+      </motion.div>
       }
 
       {/* Content */}
@@ -429,7 +429,7 @@ export default function ContractList() {
               <Plus className="w-4 h-4 mr-2" />
               新建合同
             </Button>
-          </div>
+        </div>
         }
       </motion.div>
       }
@@ -585,7 +585,7 @@ function ContractDetailPanel({ contract, onClose }) {
                 <FileText className="w-4 h-4 text-slate-500" />
                 <span className="text-slate-400">项目:</span>
                 <span className="text-blue-400">{contract.projectName}</span>
-              </div>
+            </div>
             }
             <div className="flex items-center gap-3">
               <Calendar className="w-4 h-4 text-slate-500" />
@@ -668,19 +668,19 @@ function ContractDetailPanel({ contract, onClose }) {
                       {isPaid ?
                     <span className="text-emerald-400">
                           已收款: {term.paidDate}
-                        </span> :
+                    </span> :
 
                     <span className={isOverdue ? "text-red-400" : ""}>
                           应收日期: {term.dueDate || "-"}
                           {isOverdue && " (已逾期)"}
-                        </span>
+                    </span>
                     }
                     </div>
-                  </div>);
+                </div>);
 
             })}
             </div>
-          </div>
+        </div>
         }
 
         {/* Attachments */}
@@ -700,10 +700,10 @@ function ContractDetailPanel({ contract, onClose }) {
                   <Button variant="ghost" size="sm">
                     <Download className="w-4 h-4" />
                   </Button>
-                </div>
+            </div>
             )}
             </div>
-          </div>
+        </div>
         }
 
         {/* Notes */}
@@ -713,7 +713,7 @@ function ContractDetailPanel({ contract, onClose }) {
             <p className="text-sm text-white bg-surface-50 p-3 rounded-lg">
               {contract.notes}
             </p>
-          </div>
+        </div>
         }
 
         {/* Terminate Reason */}
@@ -723,7 +723,7 @@ function ContractDetailPanel({ contract, onClose }) {
               <XCircle className="w-4 h-4" />
               终止原因: {contract.terminateReason}
             </div>
-          </div>
+        </div>
         }
       </div>
 
@@ -736,7 +736,7 @@ function ContractDetailPanel({ contract, onClose }) {
         <Button className="flex-1">
             <Edit className="w-4 h-4 mr-2" />
             编辑
-          </Button>
+        </Button>
         }
       </div>
     </motion.div>);

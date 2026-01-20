@@ -124,11 +124,11 @@ export default function AnalyticsDashboard() {
         
         <div className="flex items-center gap-3 bg-surface-100 px-4 py-2 rounded-full border border-white/5 shadow-sm">
           <div className="relative flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
           </div>
           <span className="text-sm font-medium text-slate-300">实时监控中</span>
-          <div className="h-4 w-px bg-white/10 mx-1"></div>
+          <div className="h-4 w-px bg-white/10 mx-1" />
           <button 
             onClick={refresh}
             className="flex items-center gap-2 text-xs text-slate-400 hover:text-primary-400 transition-colors"

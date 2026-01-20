@@ -146,7 +146,7 @@ const StatCard = ({ config }) => {
             )}>
 
               {config.trend}
-            </p>
+          </p>
           }
         </div>
         <div className={cn("rounded-lg p-3", config.bg)}>
@@ -164,9 +164,9 @@ const TodoItem = ({ todo, onComplete }) => {
   const Icon = typeConfig.icon;
 
   const getDaysColor = (daysLeft) => {
-    if (daysLeft === 0) return "text-red-400";
-    if (daysLeft <= 2) return "text-orange-400";
-    if (daysLeft <= 7) return "text-amber-400";
+    if (daysLeft === 0) {return "text-red-400";}
+    if (daysLeft <= 2) {return "text-orange-400";}
+    if (daysLeft <= 7) {return "text-amber-400";}
     return "text-cyan-400";
   };
 
@@ -202,7 +202,7 @@ const TodoItem = ({ todo, onComplete }) => {
               {todo.daysLeft === 0 ?
               <span className="text-xs font-medium text-red-400">
                   今天截止
-                </span> :
+              </span> :
 
               <span
                 className={cn(
@@ -211,7 +211,7 @@ const TodoItem = ({ todo, onComplete }) => {
                 )}>
 
                   {todo.daysLeft}天截止
-                </span>
+              </span>
               }
             </div>
           </div>
@@ -250,8 +250,8 @@ const PurchaseOrderRow = ({ order }) => {
   };
 
   const getDaysColor = (daysLeft) => {
-    if (daysLeft < 0) return "text-red-400";
-    if (daysLeft <= 3) return "text-orange-400";
+    if (daysLeft < 0) {return "text-red-400";}
+    if (daysLeft <= 3) {return "text-orange-400";}
     return "text-cyan-400";
   };
 
@@ -399,10 +399,10 @@ export default function ProcurementEngineerWorkstation() {
 
         // Determine arrival status based on order status
         let arrivalStatus = "pending";
-        if (order.status === "SHIPPED") arrivalStatus = "in_transit";else
-        if (order.status === "RECEIVED") arrivalStatus = "completed";else
+        if (order.status === "SHIPPED") {arrivalStatus = "in_transit";}else
+        if (order.status === "RECEIVED") {arrivalStatus = "completed";}else
         if (daysLeft < 0 && order.status !== "RECEIVED")
-        arrivalStatus = "delayed";
+        {arrivalStatus = "delayed";}
 
         return {
           id: order.order_no || order.id?.toString(),
@@ -578,7 +578,7 @@ export default function ProcurementEngineerWorkstation() {
 
               <Plus className="w-4 h-4 mr-1" />
               新建采购订单
-            </Button>
+          </Button>
           } />
 
 
@@ -599,9 +599,9 @@ export default function ProcurementEngineerWorkstation() {
                 <CardContent className="p-5">
                   <div className="h-20 bg-slate-700/50 rounded" />
                 </CardContent>
-              </Card>
+          </Card>
           )}
-          </div> :
+        </div> :
         error ?
         <ApiIntegrationError
           error={error}
@@ -618,7 +618,7 @@ export default function ProcurementEngineerWorkstation() {
             {Object.entries(stats).map(([key, config]) =>
           <StatCard key={key} config={config} />
           )}
-          </motion.div>
+        </motion.div>
         }
 
         {/* Main content - two column layout */}
@@ -655,7 +655,7 @@ export default function ProcurementEngineerWorkstation() {
                   )}
                   </motion.div>
                 </CardContent>
-              </Card>
+            </Card>
             }
 
             {/* All todos */}
@@ -764,7 +764,7 @@ export default function ProcurementEngineerWorkstation() {
 
                     <item.icon className={cn("h-4 w-4", item.color)} />
                     {item.label}
-                  </Button>
+                </Button>
                 )}
               </CardContent>
             </Card>
@@ -813,7 +813,7 @@ export default function ProcurementEngineerWorkstation() {
                     value={Math.min(metric.value, 100)}
                     className="mt-1 h-1.5 bg-slate-700/50" />
 
-                  </div>
+                </div>
                 )}
               </CardContent>
             </Card>
@@ -870,7 +870,7 @@ export default function ProcurementEngineerWorkstation() {
               <div className="text-center py-8 text-slate-500">
                   <Package className="h-12 w-12 mx-auto mb-3 text-slate-500/50" />
                   <p className="text-sm">暂无采购订单</p>
-                </div>
+              </div>
               }
             </motion.div>
           </CardContent>
@@ -904,7 +904,7 @@ export default function ProcurementEngineerWorkstation() {
               <div className="text-center py-8 text-slate-500">
                   <CheckCircle2 className="h-12 w-12 mx-auto mb-3 text-emerald-500/50" />
                   <p className="text-sm">暂无缺料预警</p>
-                </div>
+              </div>
               }
             </motion.div>
           </CardContent>

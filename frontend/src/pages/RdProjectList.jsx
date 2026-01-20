@@ -513,10 +513,10 @@ export default function RdProjectList() {
         page: pagination.page,
         page_size: pagination.page_size,
       };
-      if (searchQuery) params.keyword = searchQuery;
-      if (filterStatus && filterStatus !== "all") params.status = filterStatus;
+      if (searchQuery) {params.keyword = searchQuery;}
+      if (filterStatus && filterStatus !== "all") {params.status = filterStatus;}
       if (filterCategoryType && filterCategoryType !== "all")
-        params.category_type = filterCategoryType;
+        {params.category_type = filterCategoryType;}
 
       const response = await rdProjectApi.list(params);
       const data = response.data || response;

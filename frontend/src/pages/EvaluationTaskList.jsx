@@ -104,14 +104,14 @@ const EvaluationTaskList = () => {
           <div className="space-y-4">
             {isLoading ?
             <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-12 border border-slate-700/50 text-center">
-                <div className="animate-spin h-12 w-12 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                <div className="animate-spin h-12 w-12 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
                 <p className="text-slate-400">加载中...</p>
-              </div> :
+            </div> :
             filteredTasks.length === 0 ?
             <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-12 border border-slate-700/50 text-center">
                 <AlertCircle className="h-12 w-12 text-slate-600 mx-auto mb-4" />
                 <p className="text-slate-400">暂无评价任务</p>
-              </div> :
+            </div> :
 
             filteredTasks.map((task, index) =>
             <TaskItem

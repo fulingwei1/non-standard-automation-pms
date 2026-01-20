@@ -176,11 +176,11 @@ export default function SupplierManagementData() {
     try {
       const params = {};
       if (ratingData.quality_rating > 0)
-      params.quality_rating = ratingData.quality_rating;
+      {params.quality_rating = ratingData.quality_rating;}
       if (ratingData.delivery_rating > 0)
-      params.delivery_rating = ratingData.delivery_rating;
+      {params.delivery_rating = ratingData.delivery_rating;}
       if (ratingData.service_rating > 0)
-      params.service_rating = ratingData.service_rating;
+      {params.service_rating = ratingData.service_rating;}
 
       await supplierApi.updateRating(selectedSupplier.id, params);
       setShowRatingDialog(false);
@@ -264,7 +264,7 @@ export default function SupplierManagementData() {
             actions={
             <Button onClick={() => setShowCreateDialog(true)}>
                 <Plus className="mr-2 h-4 w-4" /> 新增供应商
-              </Button>
+            </Button>
             } />
 
 
@@ -320,7 +320,7 @@ export default function SupplierManagementData() {
                 {loading ?
                 <div className="p-4 text-center text-slate-400">
                     加载中...
-                  </div> :
+                </div> :
 
                 <>
                     <div className="overflow-x-auto">
@@ -373,7 +373,7 @@ export default function SupplierManagementData() {
                                 {supplier.contact_phone &&
                             <div className="text-xs text-slate-500">
                                     {supplier.contact_phone}
-                                  </div>
+                            </div>
                             }
                               </td>
                               <td className="px-4 py-2 text-sm">
@@ -385,7 +385,7 @@ export default function SupplierManagementData() {
                                   supplier.overall_rating
                                 ).toFixed(1)}
                                     </span>
-                                  </div> :
+                            </div> :
 
                             <span className="text-slate-500">-</span>
                             }
@@ -399,7 +399,7 @@ export default function SupplierManagementData() {
                               )}>
 
                                     {supplier.supplier_level}级
-                                  </Badge>
+                            </Badge>
                             }
                               </td>
                               <td className="px-4 py-2 text-sm">
@@ -450,7 +450,7 @@ export default function SupplierManagementData() {
                                   </Button>
                                 </div>
                               </td>
-                            </tr>
+                        </tr>
                         )}
                         </tbody>
                       </table>
@@ -458,7 +458,7 @@ export default function SupplierManagementData() {
                     {suppliers.length === 0 &&
                   <p className="p-4 text-center text-slate-400">
                         没有找到符合条件的供应商。
-                      </p>
+                  </p>
                   }
                     {total > pageSize &&
                   <div className="mt-4 flex items-center justify-between">
@@ -488,9 +488,9 @@ export default function SupplierManagementData() {
                             下一页
                           </Button>
                         </div>
-                      </div>
+                  </div>
                   }
-                  </>
+                </>
                 }
               </CardContent>
             </Card>
@@ -727,7 +727,7 @@ export default function SupplierManagementData() {
                         )}>
 
                             {selectedSupplier.supplier_level}级
-                          </Badge>
+                      </Badge>
                       }
                       </p>
                     </div>
@@ -765,7 +765,7 @@ export default function SupplierManagementData() {
                         <p className="font-medium text-slate-200">
                           {selectedSupplier.contact_person}
                         </p>
-                      </div>
+                  </div>
                   }
                     {selectedSupplier.contact_phone &&
                   <div>
@@ -773,7 +773,7 @@ export default function SupplierManagementData() {
                         <p className="font-medium text-slate-200">
                           {selectedSupplier.contact_phone}
                         </p>
-                      </div>
+                  </div>
                   }
                     {selectedSupplier.contact_email &&
                   <div>
@@ -781,7 +781,7 @@ export default function SupplierManagementData() {
                         <p className="font-medium text-slate-200">
                           {selectedSupplier.contact_email}
                         </p>
-                      </div>
+                  </div>
                   }
                     {selectedSupplier.address &&
                   <div>
@@ -789,10 +789,10 @@ export default function SupplierManagementData() {
                         <p className="font-medium text-slate-200">
                           {selectedSupplier.address}
                         </p>
-                      </div>
+                  </div>
                   }
                   </div>
-                </div>
+              </div>
               }
               <DialogFooter>
                 <Button

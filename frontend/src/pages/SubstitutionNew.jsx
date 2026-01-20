@@ -89,11 +89,11 @@ export default function SubstitutionNew() {
 
     // 验证
     const newErrors = {};
-    if (!formData.project_id) newErrors.project_id = "请选择项目";
+    if (!formData.project_id) {newErrors.project_id = "请选择项目";}
     if (!formData.original_material_id)
-    newErrors.original_material_id = "请选择原物料";
+    {newErrors.original_material_id = "请选择原物料";}
     if (!formData.substitute_material_id)
-    newErrors.substitute_material_id = "请选择替代物料";
+    {newErrors.substitute_material_id = "请选择替代物料";}
     if (formData.original_material_id === formData.substitute_material_id) {
       newErrors.substitute_material_id = "替代物料不能与原物料相同";
     }
@@ -207,14 +207,14 @@ export default function SubstitutionNew() {
                     {projects.map((project) =>
                     <SelectItem key={project.id} value={String(project.id)}>
                         {project.project_name} ({project.project_code})
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
                 {errors.project_id &&
                 <div className="text-sm text-red-400 mt-1">
                     {errors.project_id}
-                  </div>
+                </div>
                 }
               </div>
 
@@ -272,21 +272,21 @@ export default function SubstitutionNew() {
                         value={String(material.id)}>
 
                           {material.material_code} - {material.material_name}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
                   {errors.original_material_id &&
                   <div className="text-sm text-red-400 mt-1">
                       {errors.original_material_id}
-                    </div>
+                  </div>
                   }
                 </div>
                 {originalMaterial &&
                 <div className="text-sm text-muted-foreground">
                     规格：{originalMaterial.specification || "-"} | 单位：
                     {originalMaterial.unit || "-"}
-                  </div>
+                </div>
                 }
                 <div>
                   <Label htmlFor="original_qty" className="required">
@@ -307,7 +307,7 @@ export default function SubstitutionNew() {
                   {errors.original_qty &&
                   <div className="text-sm text-red-400 mt-1">
                       {errors.original_qty}
-                    </div>
+                  </div>
                   }
                 </div>
               </div>
@@ -350,21 +350,21 @@ export default function SubstitutionNew() {
                         value={String(material.id)}>
 
                             {material.material_code} - {material.material_name}
-                          </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
                   {errors.substitute_material_id &&
                   <div className="text-sm text-red-400 mt-1">
                       {errors.substitute_material_id}
-                    </div>
+                  </div>
                   }
                 </div>
                 {substituteMaterial &&
                 <div className="text-sm text-muted-foreground">
                     规格：{substituteMaterial.specification || "-"} | 单位：
                     {substituteMaterial.unit || "-"}
-                  </div>
+                </div>
                 }
                 <div>
                   <Label htmlFor="substitute_qty" className="required">
@@ -385,7 +385,7 @@ export default function SubstitutionNew() {
                   {errors.substitute_qty &&
                   <div className="text-sm text-red-400 mt-1">
                       {errors.substitute_qty}
-                    </div>
+                  </div>
                   }
                 </div>
               </div>
@@ -416,7 +416,7 @@ export default function SubstitutionNew() {
               {errors.substitution_reason &&
               <div className="text-sm text-red-400 mt-1">
                   {errors.substitution_reason}
-                </div>
+              </div>
               }
             </div>
 

@@ -234,7 +234,7 @@ export default function ShortageManagementBoard() {
             {alerts.length === 0 ?
             <div className="text-center py-8 text-slate-400">
                 暂无缺料预警
-              </div> :
+            </div> :
 
             <div className="space-y-3">
                 {alerts.slice(0, 5).map((alert) =>
@@ -272,7 +272,7 @@ export default function ShortageManagementBoard() {
                     {alert.project_name &&
                 <div className="text-xs text-slate-500">
                         项目: {alert.project_name}
-                      </div>
+                </div>
                 }
                     <div className="text-xs text-slate-500 mt-1">
                       缺料数量:{" "}
@@ -280,9 +280,9 @@ export default function ShortageManagementBoard() {
                         {alert.shortage_qty}
                       </span>
                     </div>
-                  </div>
-              )}
               </div>
+              )}
+            </div>
             }
           </CardContent>
         </Card>
@@ -305,7 +305,7 @@ export default function ShortageManagementBoard() {
             {arrivals.length === 0 ?
             <div className="text-center py-8 text-slate-400">
                 暂无到货跟踪
-              </div> :
+            </div> :
 
             <div className="space-y-3">
                 {arrivals.slice(0, 5).map((arrival) =>
@@ -354,11 +354,11 @@ export default function ShortageManagementBoard() {
                     {arrival.supplier_name &&
                 <div className="text-xs text-slate-500 mt-1">
                         供应商: {arrival.supplier_name}
-                      </div>
+                </div>
                 }
-                  </div>
-              )}
               </div>
+              )}
+            </div>
             }
           </CardContent>
         </Card>

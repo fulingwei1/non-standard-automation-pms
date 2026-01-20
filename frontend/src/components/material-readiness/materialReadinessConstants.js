@@ -173,7 +173,7 @@ export const getPriorityColor = (priority) => {
 
 // 计算齐套率
 export const calculateReadinessRate = (materials) => {
-  if (!materials || materials.length === 0) return 0;
+  if (!materials || materials.length === 0) {return 0;}
   
   const availableMaterials = materials.filter(material => 
     material.status === MATERIAL_STATUS.AVAILABLE

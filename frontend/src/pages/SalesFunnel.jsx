@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   TrendingUp,
   TrendingDown,
@@ -33,8 +34,8 @@ import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import {
   salesStatisticsApi,
-  opportunityApi as _opportunityApi,
-  customerApi as _customerApi } from
+  customerApi,
+  userApi } from
 "../services/api";
 
 const stages = [
@@ -50,6 +51,7 @@ const stages = [
 
 
 export default function SalesFunnel() {
+  const navigate = useNavigate();
   const [funnelData, setFunnelData] = useState([]);
   const [_loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState("month"); // month, quarter, year
@@ -57,9 +59,34 @@ export default function SalesFunnel() {
   const [customerId, setCustomerId] = useState(null);
   const [industry, setIndustry] = useState("");
   const [_selectedStage, setSelectedStage] = useState(null);
+  const [owners, setOwners] = useState([]);
+  const [customers, setCustomers] = useState([]);
 
   useEffect(() => {
     loadFunnelData();
+  }, []);
+
+  useEffect(() => {
+    const loadFilterOptions = async () => {
+      try {
+        const [usersRes, customersRes] = await Promise.all([
+          userApi.list({ page: 1, page_size: 200 }),
+          customerApi.list({ page: 1, page_size: 200 }),
+        ]);
+
+        const userItems = usersRes?.data?.items || usersRes?.data || [];
+        const customerItems = customersRes?.data?.items || customersRes?.data || [];
+
+        setOwners(Array.isArray(userItems) ? userItems : []);
+        setCustomers(Array.isArray(customerItems) ? customerItems : []);
+      } catch (error) {
+        console.warn("Failed to load filter options:", error);
+        setOwners([]);
+        setCustomers([]);
+      }
+    };
+
+    loadFilterOptions();
   }, []);
 
   const loadFunnelData = async () => {
@@ -88,9 +115,9 @@ export default function SalesFunnel() {
         end_date: endDate.toISOString().split("T")[0]
       };
 
-      if (ownerId) params.owner_id = ownerId;
-      if (customerId) params.customer_id = customerId;
-      if (industry) params.industry = industry;
+      if (ownerId) {params.owner_id = ownerId;}
+      if (customerId) {params.customer_id = customerId;}
+      if (industry) {params.industry = industry;}
 
       const res = await salesStatisticsApi.funnel(params);
       const data = res.data || {};
@@ -192,7 +219,16 @@ export default function SalesFunnel() {
 
   const handleStageClick = (stage) => {
     setSelectedStage(stage);
-    // TODO: Navigate to detail page or show modal
+    const routeMap = {
+      leads: "/sales/leads",
+      opportunities: "/opportunities",
+      quotes: "/quotations",
+      contracts: "/contracts",
+    };
+    const to = routeMap[stage];
+    if (to) {
+      navigate(to);
+    }
   };
 
   return (
@@ -234,7 +270,7 @@ export default function SalesFunnel() {
                     销售人员
                   </label>
                   <Select
-                    value={ownerId || "all"}
+                    value={ownerId?.toString() || "all"}
                     onValueChange={(v) =>
                     setOwnerId(v === "all" ? null : parseInt(v))
                     }>
@@ -244,7 +280,11 @@ export default function SalesFunnel() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">全部</SelectItem>
-                      {/* TODO: Load from API */}
+                      {owners.map((u) => (
+                        <SelectItem key={u.id} value={u.id?.toString()}>
+                          {u.real_name || u.username || `用户#${u.id}`}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -253,7 +293,7 @@ export default function SalesFunnel() {
                     客户
                   </label>
                   <Select
-                    value={customerId || "all"}
+                    value={customerId?.toString() || "all"}
                     onValueChange={(v) =>
                     setCustomerId(v === "all" ? null : parseInt(v))
                     }>
@@ -263,7 +303,11 @@ export default function SalesFunnel() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">全部</SelectItem>
-                      {/* TODO: Load from API */}
+                      {customers.map((c) => (
+                        <SelectItem key={c.id} value={c.id?.toString()}>
+                          {c.customer_name || c.name || `客户#${c.id}`}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -331,7 +375,7 @@ export default function SalesFunnel() {
                           {data.value > 0 &&
                           <span className="text-slate-400 text-sm">
                               ¥{(data.value / 10000).toFixed(0)}万
-                            </span>
+                          </span>
                           }
                         </div>
                         <div className="flex items-center gap-4 text-sm">
@@ -356,7 +400,7 @@ export default function SalesFunnel() {
                             <TrendingUp className="w-4 h-4" />
                             }
                               流失 {dropRate}%
-                            </span>
+                          </span>
                           }
                           <ChevronRight className="w-4 h-4 text-slate-500" />
                         </div>

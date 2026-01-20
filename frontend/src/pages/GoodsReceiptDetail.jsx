@@ -110,7 +110,7 @@ export default function GoodsReceiptDetail() {
   };
 
   const handleInspect = async () => {
-    if (!inspectingItem) return;
+    if (!inspectingItem) {return;}
 
     if (inspectData.inspect_qty > inspectingItem.received_qty) {
       toast.error("送检数量不能超过收货数量");

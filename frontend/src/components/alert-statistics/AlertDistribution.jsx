@@ -47,7 +47,7 @@ export function AlertDistribution({
 
   // 计算告警级别分布
   const levelDistribution = useMemo(() => {
-    if (!data || !Array.isArray(data)) return [];
+    if (!data || !Array.isArray(data)) {return [];}
 
     const distribution = {
       CRITICAL: { ...ALERT_LEVEL_STATS.CRITICAL, count: 0 },
@@ -71,7 +71,7 @@ export function AlertDistribution({
 
   // 计算告警状态分布
   const statusDistribution = useMemo(() => {
-    if (!data || !Array.isArray(data)) return [];
+    if (!data || !Array.isArray(data)) {return [];}
 
     const distribution = {
       PENDING: { ...ALERT_STATUS_STATS.PENDING, count: 0 },
@@ -97,7 +97,7 @@ export function AlertDistribution({
 
   // 计算告警类型分布
   const typeDistribution = useMemo(() => {
-    if (!data || !Array.isArray(data)) return [];
+    if (!data || !Array.isArray(data)) {return [];}
 
     const distribution = {};
     const subtypes = {};
@@ -138,7 +138,7 @@ export function AlertDistribution({
 
   // 计算项目分布
   const projectDistribution = useMemo(() => {
-    if (!data || !Array.isArray(data)) return [];
+    if (!data || !Array.isArray(data)) {return [];}
 
     const distribution = {};
 
@@ -173,7 +173,7 @@ export function AlertDistribution({
 
   // 计算雷达图数据
   const radarData = useMemo(() => {
-    if (!data || data.length === 0) return [];
+    if (!data || data.length === 0) {return [];}
 
     return [
     {

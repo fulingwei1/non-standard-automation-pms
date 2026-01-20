@@ -181,7 +181,7 @@ export default function MobileMaterialRequisition() {
                 </div>
               </div>
             </CardContent>
-          </Card>
+        </Card>
         }
 
         {/* 错误提示 */}
@@ -191,7 +191,7 @@ export default function MobileMaterialRequisition() {
             <div className="flex-1">
               <div className="text-sm font-medium text-red-800">{error}</div>
             </div>
-          </div>
+        </div>
         }
 
         {/* 成功提示 */}
@@ -203,7 +203,7 @@ export default function MobileMaterialRequisition() {
                 领料申请成功！
               </div>
             </div>
-          </div>
+        </div>
         }
 
         {/* 物料列表 */}
@@ -232,7 +232,7 @@ export default function MobileMaterialRequisition() {
                     className="p-1 h-auto text-red-500">
 
                         <X className="w-4 h-4" />
-                      </Button>
+                  </Button>
                   }
                   </div>
 
@@ -256,7 +256,7 @@ export default function MobileMaterialRequisition() {
                         value={String(material.id)}>
 
                             {material.material_code} - {material.material_name}
-                          </SelectItem>
+                      </SelectItem>
                       )}
                       </SelectContent>
                     </Select>
@@ -270,7 +270,7 @@ export default function MobileMaterialRequisition() {
                       </div>
                       <div className="text-xs text-slate-500">物料名称</div>
                       <div className="text-sm">{item.material_name}</div>
-                    </div>
+                </div>
                 }
 
                   <div>
@@ -291,7 +291,7 @@ export default function MobileMaterialRequisition() {
                       </div>
                     </div>
                   </div>
-                </div>
+              </div>
               )}
             </div>
           </CardContent>

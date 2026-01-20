@@ -105,8 +105,8 @@ export function AlertTable({
         bValue = new Date(bValue || 0).getTime();
       }
 
-      if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
-      if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+      if (aValue < bValue) {return sortDirection === "asc" ? -1 : 1;}
+      if (aValue > bValue) {return sortDirection === "asc" ? 1 : -1;}
       return 0;
     });
 
@@ -135,7 +135,7 @@ export function AlertTable({
 
   // 获取排序图标
   const getSortIcon = (field) => {
-    if (sortField !== field) return null;
+    if (sortField !== field) {return null;}
     return sortDirection === "asc" ?
     <ChevronUp className="h-4 w-4 ml-1" /> :
 
@@ -178,7 +178,7 @@ export function AlertTable({
 
   // 格式化时间
   const formatTime = (timestamp) => {
-    if (!timestamp) return '-';
+    if (!timestamp) {return '-';}
     const date = new Date(timestamp);
     const now = new Date();
     const diffMs = now - date;
@@ -186,16 +186,16 @@ export function AlertTable({
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffMinutes < 1) return '刚刚';
-    if (diffMinutes < 60) return `${diffMinutes}分钟前`;
-    if (diffHours < 24) return `${diffHours}小时前`;
-    if (diffDays < 7) return `${diffDays}天前`;
+    if (diffMinutes < 1) {return '刚刚';}
+    if (diffMinutes < 60) {return `${diffMinutes}分钟前`;}
+    if (diffHours < 24) {return `${diffHours}小时前`;}
+    if (diffDays < 7) {return `${diffDays}天前`;}
     return date.toLocaleDateString();
   };
 
   // 渲染操作列
   const renderActions = (_alert) => {
-    if (!showActions) return null;
+    if (!showActions) {return null;}
 
     return (
       <div className="flex items-center gap-2">

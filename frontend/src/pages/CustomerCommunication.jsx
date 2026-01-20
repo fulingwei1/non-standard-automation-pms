@@ -267,7 +267,7 @@ export default function CustomerCommunication() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("确定要删除这个沟通记录吗？")) return;
+    if (!confirm("确定要删除这个沟通记录吗？")) {return;}
 
     try {
       await customerCommunicationApi.delete(id);
@@ -324,7 +324,7 @@ export default function CustomerCommunication() {
   // Helper functions for display
   const getStatusBadge = (status) => {
     const config = statusConfig[status];
-    if (!config) return <Badge variant="secondary">{status}</Badge>;
+    if (!config) {return <Badge variant="secondary">{status}</Badge>;}
 
     return (
       <Badge variant="secondary" className={cn("border-0", config.bg, config.color)}>
@@ -335,7 +335,7 @@ export default function CustomerCommunication() {
 
   const getPriorityBadge = (priority) => {
     const config = priorityConfig[priority];
-    if (!config) return <Badge variant="secondary">{priority}</Badge>;
+    if (!config) {return <Badge variant="secondary">{priority}</Badge>;}
 
     return (
       <Badge variant="secondary" className={cn("border-0", config.bg, config.color)}>
@@ -346,7 +346,7 @@ export default function CustomerCommunication() {
 
   const getTypeDisplay = (type) => {
     const config = communicationTypeConfig[type];
-    if (!config) return type;
+    if (!config) {return type;}
     const Icon = config.icon;
     return (
       <div className="flex items-center space-x-1">
@@ -357,9 +357,9 @@ export default function CustomerCommunication() {
   };
 
   const getSatisfactionDisplay = (rating) => {
-    if (!rating) return <span className="text-gray-400">未评分</span>;
+    if (!rating) {return <span className="text-gray-400">未评分</span>;}
     const config = satisfactionConfig[rating];
-    if (!config) return <span>{rating}</span>;
+    if (!config) {return <span>{rating}</span>;}
 
     return (
       <div className="flex items-center space-x-1">
@@ -414,7 +414,7 @@ export default function CustomerCommunication() {
         <Button onClick={() => setShowCreateDialog(true)}>
             <Plus className="mr-2 h-4 w-4" />
             新建沟通记录
-          </Button>
+        </Button>
         } />
 
 
@@ -450,7 +450,7 @@ export default function CustomerCommunication() {
                 {COMMUNICATION_FILTER_OPTIONS.map((option) =>
                 <SelectItem key={option.value} value={option.value}>
                     {option.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -463,7 +463,7 @@ export default function CustomerCommunication() {
                 {PRIORITY_FILTER_OPTIONS.map((option) =>
                 <SelectItem key={option.value} value={option.value}>
                     {option.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -476,7 +476,7 @@ export default function CustomerCommunication() {
                 {TYPE_FILTER_OPTIONS.map((option) =>
                 <SelectItem key={option.value} value={option.value}>
                     {option.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -489,7 +489,7 @@ export default function CustomerCommunication() {
                 {TOPIC_FILTER_OPTIONS.map((option) =>
                 <SelectItem key={option.value} value={option.value}>
                     {option.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -503,7 +503,7 @@ export default function CustomerCommunication() {
                 {customers.map((customer) =>
                 <SelectItem key={customer.id} value={customer.id}>
                     {customer.name}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -546,13 +546,13 @@ export default function CustomerCommunication() {
                     <TableCell colSpan={9} className="text-center py-8">
                       加载中...
                     </TableCell>
-                  </TableRow> :
+                </TableRow> :
                 communications.length === 0 ?
                 <TableRow>
                     <TableCell colSpan={9} className="text-center py-8">
                       暂无沟通记录
                     </TableCell>
-                  </TableRow> :
+                </TableRow> :
 
                 communications.map((comm) =>
                 <TableRow key={comm.id}>
@@ -596,7 +596,7 @@ export default function CustomerCommunication() {
                           </Button>
                         </div>
                       </TableCell>
-                    </TableRow>
+                </TableRow>
                 )
                 }
               </TableBody>
@@ -627,7 +627,7 @@ export default function CustomerCommunication() {
                   {customers.map((customer) =>
                   <SelectItem key={customer.id} value={customer.id} className="text-white">
                       {customer.name}
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -648,7 +648,7 @@ export default function CustomerCommunication() {
                   {Object.entries(COMMUNICATION_TYPE).map(([_key, value]) =>
                   <SelectItem key={value} value={value} className="text-white">
                       {getCommunicationTypeIcon(value)} {COMMUNICATION_TYPE_LABELS[value]}
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -669,7 +669,7 @@ export default function CustomerCommunication() {
                   {Object.entries(COMMUNICATION_TOPIC).map(([_key, value]) =>
                   <SelectItem key={value} value={value} className="text-white">
                       {COMMUNICATION_TOPIC_LABELS[value]}
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -690,7 +690,7 @@ export default function CustomerCommunication() {
                   {Object.entries(COMMUNICATION_PRIORITY).map(([_key, value]) =>
                   <SelectItem key={value} value={value} className="text-white">
                       {COMMUNICATION_PRIORITY_LABELS[value]}
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -761,7 +761,7 @@ export default function CustomerCommunication() {
                   {users.map((user) =>
                   <SelectItem key={user.id} value={user.id} className="text-white">
                       {user.name}
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -786,7 +786,7 @@ export default function CustomerCommunication() {
                   {Object.entries(CUSTOMER_SATISFACTION).map(([_key, value]) =>
                   <SelectItem key={value} value={value.toString()} className="text-white">
                       {CUSTOMER_SATISFACTION_LABELS[value]}
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -916,21 +916,21 @@ export default function CustomerCommunication() {
                   <p className="mt-1 text-sm whitespace-pre-wrap bg-slate-800 p-3 rounded">
                     {selectedCommunication.customer_feedback}
                   </p>
-                </div>
+            </div>
             }
 
               {selectedCommunication.next_action &&
             <div>
                   <label className="text-sm font-medium text-gray-400">后续行动</label>
                   <p className="mt-1 text-sm">{selectedCommunication.next_action}</p>
-                </div>
+            </div>
             }
 
               {selectedCommunication.next_action_date &&
             <div>
                   <label className="text-sm font-medium text-gray-400">行动日期</label>
                   <p className="mt-1 text-sm">{formatDate(selectedCommunication.next_action_date)}</p>
-                </div>
+            </div>
             }
 
               {selectedCommunication.notes &&
@@ -939,9 +939,9 @@ export default function CustomerCommunication() {
                   <p className="mt-1 text-sm whitespace-pre-wrap bg-slate-800 p-3 rounded">
                     {selectedCommunication.notes}
                   </p>
-                </div>
-            }
             </div>
+            }
+          </div>
           }
           <DialogFooter className="mt-6">
             <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
@@ -974,7 +974,7 @@ export default function CustomerCommunication() {
                   {customers.map((customer) =>
                   <SelectItem key={customer.id} value={customer.id} className="text-white">
                       {customer.name}
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -995,7 +995,7 @@ export default function CustomerCommunication() {
                   {Object.entries(COMMUNICATION_TYPE).map(([_key, value]) =>
                   <SelectItem key={value} value={value} className="text-white">
                       {getCommunicationTypeIcon(value)} {COMMUNICATION_TYPE_LABELS[value]}
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>

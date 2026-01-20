@@ -172,7 +172,7 @@ export default function OpportunityManagement() {
   };
 
   const _handleUpdate = async () => {
-    if (!selectedOpp) return;
+    if (!selectedOpp) {return;}
     try {
       await opportunityApi.update(selectedOpp.id, formData);
       setShowEditDialog(false);
@@ -185,7 +185,7 @@ export default function OpportunityManagement() {
   };
 
   const handleSubmitGate = async () => {
-    if (!selectedOpp) return;
+    if (!selectedOpp) {return;}
     try {
       await opportunityApi.submitGate(selectedOpp.id, gateData);
       setShowGateDialog(false);
@@ -289,7 +289,7 @@ export default function OpportunityManagement() {
         <Button onClick={() => setShowCreateDialog(true)}>
             <Plus className="mr-2 h-4 w-4" />
             新建商机
-          </Button>
+        </Button>
         } />
 
 
@@ -380,7 +380,7 @@ export default function OpportunityManagement() {
                   onClick={() => setStageFilter(key)}>
 
                     {config.label}
-                  </DropdownMenuItem>
+                </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
@@ -396,7 +396,7 @@ export default function OpportunityManagement() {
           <CardContent className="p-12 text-center">
             <p className="text-slate-400">暂无商机数据</p>
           </CardContent>
-        </Card> :
+      </Card> :
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {opportunities.map((opp) =>
@@ -425,13 +425,13 @@ export default function OpportunityManagement() {
                 <div className="flex items-center gap-2 text-slate-300">
                         <DollarSign className="h-4 w-4 text-slate-400" />
                         {parseFloat(opp.est_amount).toLocaleString()} 元
-                      </div>
+                </div>
                 }
                     {opp.owner_name &&
                 <div className="flex items-center gap-2 text-slate-300">
                         <User className="h-4 w-4 text-slate-400" />
                         负责人: {opp.owner_name}
-                      </div>
+                </div>
                 }
                   </div>
                   <div className="flex gap-2 mt-4">
@@ -468,9 +468,9 @@ export default function OpportunityManagement() {
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
+        </motion.div>
         )}
-        </div>
+      </div>
       }
 
       {/* 分页 */}
@@ -493,7 +493,7 @@ export default function OpportunityManagement() {
 
             下一页
           </Button>
-        </div>
+      </div>
       }
 
       {/* 创建商机对话框 */}
@@ -518,7 +518,7 @@ export default function OpportunityManagement() {
                   {customers.map((customer) =>
                   <option key={customer.id} value={customer.id}>
                       {customer.customer_name}
-                    </option>
+                  </option>
                   )}
                 </select>
               </div>
@@ -564,7 +564,7 @@ export default function OpportunityManagement() {
                   {Object.entries(stageConfig).map(([key, config]) =>
                   <option key={key} value={key}>
                       {config.label}
-                    </option>
+                  </option>
                   )}
                 </select>
               </div>
@@ -905,9 +905,9 @@ export default function OpportunityManagement() {
                       </p>
                     </div>
                   </div>
-                </div>
-            }
             </div>
+            }
+          </div>
           }
           <DialogFooter>
             <Button
@@ -919,6 +919,4 @@ export default function OpportunityManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </motion.div>);
-
-}
+    </motion.div>);}

@@ -56,9 +56,9 @@ export default function PipelineBreakAnalysis() {
     setLoading(true);
     try {
       const params = {};
-      if (startDate) params.start_date = startDate;
-      if (endDate) params.end_date = endDate;
-      if (pipelineType !== "all") params.pipeline_type = pipelineType;
+      if (startDate) {params.start_date = startDate;}
+      if (endDate) {params.end_date = endDate;}
+      if (pipelineType !== "all") {params.pipeline_type = pipelineType;}
 
       const [breaksRes, reasonsRes, patternsRes, warningsRes] =
       await Promise.all([
@@ -68,11 +68,11 @@ export default function PipelineBreakAnalysis() {
       pipelineAnalysisApi.getBreakWarnings({ days_ahead: 7 })]
       );
 
-      if (breaksRes.data?.data) setBreakData(breaksRes.data.data);
-      if (reasonsRes.data?.data) setBreakReasons(reasonsRes.data.data);
-      if (patternsRes.data?.data) setBreakPatterns(patternsRes.data.data);
+      if (breaksRes.data?.data) {setBreakData(breaksRes.data.data);}
+      if (reasonsRes.data?.data) {setBreakReasons(reasonsRes.data.data);}
+      if (patternsRes.data?.data) {setBreakPatterns(patternsRes.data.data);}
       if (warningsRes.data?.data?.warnings)
-      setWarnings(warningsRes.data.data.warnings);
+      {setWarnings(warningsRes.data.data.warnings);}
     } catch (error) {
       console.error("加载断链分析失败:", error);
     } finally {
@@ -97,8 +97,8 @@ export default function PipelineBreakAnalysis() {
   };
 
   const getHealthBadge = (rate) => {
-    if (rate >= 30) return <Badge variant="destructive">严重</Badge>;
-    if (rate >= 15) return <Badge variant="warning">有风险</Badge>;
+    if (rate >= 30) {return <Badge variant="destructive">严重</Badge>;}
+    if (rate >= 15) {return <Badge variant="warning">有风险</Badge>;}
     return <Badge variant="success">正常</Badge>;
   };
 
@@ -184,11 +184,11 @@ export default function PipelineBreakAnalysis() {
                     </div>
                   </div>
                   <Badge variant="warning">预警</Badge>
-                </div>
+            </div>
             )}
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -219,7 +219,7 @@ export default function PipelineBreakAnalysis() {
                       </div>
                       {getHealthBadge(stage.break_rate)}
                     </CardContent>
-                  </Card>
+              </Card>
               )}
               </div>
 
@@ -254,14 +254,14 @@ export default function PipelineBreakAnalysis() {
                             <TableCell>
                               {getHealthBadge(data.break_rate)}
                             </TableCell>
-                          </TableRow>
+                      </TableRow>
 
                     )}
                     </TableBody>
                   </Table>
                 </CardContent>
               </Card>
-            </div>
+          </div>
           }
         </TabsContent>
 
@@ -306,16 +306,16 @@ export default function PipelineBreakAnalysis() {
                                 <TableCell>
                                   {record.responsible_person_name || "未设置"}
                                 </TableCell>
-                              </TableRow>
+                      </TableRow>
                       )}
                           </TableBody>
-                        </Table>
+                  </Table>
                   }
                     </CardContent>
-                  </Card>
+              </Card>
 
             )}
-            </div>
+          </div>
           }
         </TabsContent>
 
@@ -331,7 +331,7 @@ export default function PipelineBreakAnalysis() {
                   断链原因分析功能开发中...
                 </div>
               </CardContent>
-            </Card>
+          </Card>
           }
         </TabsContent>
 
@@ -357,10 +357,10 @@ export default function PipelineBreakAnalysis() {
                       断链率:{" "}
                       {breakPatterns.most_common_stage.break_rate.toFixed(2)}%
                     </div>
-                  </div>
+              </div>
               }
               </CardContent>
-            </Card>
+          </Card>
           }
         </TabsContent>
       </Tabs>

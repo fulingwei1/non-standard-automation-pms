@@ -51,7 +51,21 @@ export default function MilestoneRateReport() {
     parseInt(projectIdFromQuery) :
     null
   );
-  const [_projects, _setProjects] = useState([]);
+  const [projects, setProjects] = useState([]);
+
+  useEffect(() => {
+    const loadProjects = async () => {
+      try {
+        const res = await projectApi.list({ page: 1, page_size: 200 });
+        const items = res.data?.items || res.data || [];
+        setProjects(Array.isArray(items) ? items : []);
+      } catch (error) {
+        console.warn("Failed to load projects:", error);
+        setProjects([]);
+      }
+    };
+    loadProjects();
+  }, []);
 
   useEffect(() => {
     if (selectedProjectId) {
@@ -63,7 +77,7 @@ export default function MilestoneRateReport() {
   }, [selectedProjectId]);
 
   const fetchProject = async () => {
-    if (!selectedProjectId) return;
+    if (!selectedProjectId) {return;}
     try {
       const res = await projectApi.get(selectedProjectId);
       setProject(res.data || res);
@@ -135,7 +149,7 @@ export default function MilestoneRateReport() {
 
               <ArrowLeft className="w-4 h-4 mr-2" />
               返回项目
-            </Button>
+          </Button>
           }
           <PageHeader
             title={
@@ -158,7 +172,11 @@ export default function MilestoneRateReport() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">全部项目</SelectItem>
-              {/* TODO: 添加项目列表选择 */}
+              {projects.map((p) => (
+                <SelectItem key={p.id} value={p.id?.toString()}>
+                  {p.project_name || p.project_code || `项目#${p.id}`}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Button variant="outline" onClick={fetchReportData}>
@@ -224,7 +242,7 @@ export default function MilestoneRateReport() {
               </div>
             </CardContent>
           </Card>
-        </div>
+      </div>
       }
 
       {/* Completion Rate Progress */}
@@ -261,7 +279,7 @@ export default function MilestoneRateReport() {
               </div>
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* Milestone List */}
@@ -295,7 +313,7 @@ export default function MilestoneRateReport() {
                           {milestone.is_key &&
                         <Badge variant="outline" className="text-xs">
                               关键
-                            </Badge>
+                        </Badge>
                         }
                           <Badge
                           className={cn("text-xs", getStatusColor(status))}>
@@ -308,22 +326,22 @@ export default function MilestoneRateReport() {
                           {milestone.planned_date &&
                         <div>
                               计划日期: {formatDate(milestone.planned_date)}
-                            </div>
+                        </div>
                         }
                           {milestone.actual_date &&
                         <div>
                               实际日期: {formatDate(milestone.actual_date)}
-                            </div>
+                        </div>
                         }
                         </div>
                       </div>
                     </div>
-                  </div>);
+                </div>);
 
             })}
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {reportData?.milestones && reportData.milestones.length === 0 &&
@@ -333,7 +351,7 @@ export default function MilestoneRateReport() {
               暂无里程碑数据
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
     </div>);
 

@@ -120,12 +120,12 @@ function NotificationItem({ notification, onMarkRead, onDelete }) {
               className="text-[10px] px-1.5 py-0 text-slate-400 border-slate-600">
 
                 抄送
-              </Badge>
+            </Badge>
             }
             {notification.priority === "high" &&
             <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
                 紧急
-              </Badge>
+            </Badge>
             }
           </div>
           <p className="text-sm text-slate-400 line-clamp-2">
@@ -139,7 +139,7 @@ function NotificationItem({ notification, onMarkRead, onDelete }) {
             {notification.relatedId &&
             <span className="text-xs text-accent">
                 #{notification.relatedId}
-              </span>
+            </span>
             }
           </div>
         </div>
@@ -154,7 +154,7 @@ function NotificationItem({ notification, onMarkRead, onDelete }) {
             className="h-8 w-8 p-0">
 
               <Check className="w-4 h-4" />
-            </Button>
+          </Button>
           }
           <Button
             variant="ghost"
@@ -267,7 +267,7 @@ export default function NotificationCenter() {
 
   const filteredNotifications = notifications.filter((n) => {
     if (search && !n.title?.includes(search) && !n.content?.includes(search))
-    return false;
+    {return false;}
     return true;
   });
 
@@ -391,7 +391,7 @@ export default function NotificationCenter() {
                     <stat.icon className={cn("w-8 h-8", stat.color)} />
                   </div>
                 </CardContent>
-              </Card>
+            </Card>
             )}
           </motion.div>
 
@@ -416,7 +416,7 @@ export default function NotificationCenter() {
 
                         <type.icon className="w-4 h-4" />
                         {type.label}
-                      </Button>
+                    </Button>
                     )}
                   </div>
 
@@ -472,22 +472,22 @@ export default function NotificationCenter() {
                   清空
                 </Button>
               </div>
-            </motion.div>
+          </motion.div>
           }
 
           {/* Notification List */}
           <motion.div variants={fadeIn} className="space-y-3">
             {loading ?
             <div className="text-center py-16">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto" />
                 <p className="text-sm text-slate-400 mt-4">加载中...</p>
-              </div> :
+            </div> :
             error ?
             <div className="text-center py-16">
                 <AlertTriangle className="w-16 h-16 mx-auto text-red-400 mb-4" />
                 <h3 className="text-lg font-medium text-red-400">加载失败</h3>
                 <p className="text-sm text-slate-500 mt-1">请刷新页面重试</p>
-              </div> :
+            </div> :
 
             <AnimatePresence mode="popLayout">
                 {filteredNotifications.length > 0 ?
@@ -514,9 +514,9 @@ export default function NotificationCenter() {
                   "没有符合条件的通知" :
                   "所有通知都已处理"}
                     </p>
-                  </motion.div>
+              </motion.div>
               }
-              </AnimatePresence>
+            </AnimatePresence>
             }
           </motion.div>
         </motion.div>

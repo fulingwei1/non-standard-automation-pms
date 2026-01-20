@@ -67,9 +67,9 @@ export default function WorkReportList() {
     try {
       setLoading(true);
       const params = {};
-      if (filterStatus) params.status = filterStatus;
-      if (filterType) params.report_type = filterType;
-      if (searchKeyword) params.search = searchKeyword;
+      if (filterStatus) {params.status = filterStatus;}
+      if (filterType) {params.report_type = filterType;}
+      if (searchKeyword) {params.search = searchKeyword;}
       const res = await productionApi.workReports.list(params);
       const reportList = res.data?.items || res.data || [];
       setReports(reportList);
@@ -89,7 +89,7 @@ export default function WorkReportList() {
     }
   };
   const handleApprove = async (reportId) => {
-    if (!confirm("确认审批通过此报工记录？")) return;
+    if (!confirm("确认审批通过此报工记录？")) {return;}
     try {
       await productionApi.workReports.approve(reportId);
       fetchReports();

@@ -21,7 +21,7 @@ export default function Shipments() {
         <Button className="gap-2">
             <Package className="w-4 h-4" />
             新建出货单
-          </Button>
+        </Button>
         } />
 
       <div className="container mx-auto px-4 py-6">

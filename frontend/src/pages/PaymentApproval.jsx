@@ -228,7 +228,7 @@ export default function PaymentApproval() {
   }, [loadPendingPayments]);
 
   const handleConfirmApproval = async () => {
-    if (!selectedPayment) return;
+    if (!selectedPayment) {return;}
 
     // Validate rejection reason
     if (approvalAction === "reject" && !approvalComment.trim()) {
@@ -299,7 +299,7 @@ export default function PaymentApproval() {
               <CheckCircle2 className="w-4 h-4" />
               批量审批
             </Button>
-          </motion.div>
+        </motion.div>
         } />
 
 
@@ -398,7 +398,7 @@ export default function PaymentApproval() {
                 {Object.entries(typeConfig).map(([key, val]) =>
                 <option key={key} value={key}>
                     {val.label}
-                  </option>
+                </option>
                 )}
               </select>
               <select
@@ -460,7 +460,7 @@ export default function PaymentApproval() {
                               {payment.priority === "urgent" ?
                             "紧急" :
                             "高优先级"}
-                            </Badge> :
+                          </Badge> :
                           null}
                           <span className="text-sm text-slate-400">
                             {payment.daysPending > 0 ?
@@ -488,7 +488,7 @@ export default function PaymentApproval() {
                           {payment.description &&
                           <div className="text-slate-500 mt-1">
                               {payment.description}
-                            </div>
+                          </div>
                           }
                         </div>
                         {payment.attachments &&
@@ -498,7 +498,7 @@ export default function PaymentApproval() {
                               <span className="text-xs text-slate-500">
                                 {payment.attachments.length}个附件
                               </span>
-                            </div>
+                        </div>
                         }
                       </div>
                       <div className="text-right ml-4">
@@ -508,7 +508,7 @@ export default function PaymentApproval() {
                         {payment.dueDate &&
                         <div className="text-xs text-slate-400 mb-3">
                             到期: {payment.dueDate}
-                          </div>
+                        </div>
                         }
                         <div className="flex gap-2">
                           <Button
@@ -546,7 +546,7 @@ export default function PaymentApproval() {
               {filteredPayments.length === 0 &&
               <div className="text-center py-12 text-slate-500">
                   暂无待审批付款
-                </div>
+              </div>
               }
             </div>
           </CardContent>
@@ -569,7 +569,7 @@ export default function PaymentApproval() {
                   <p className="text-sm text-slate-400">
                     金额: {formatCurrency(selectedPayment.amount)}
                   </p>
-                </div>
+              </div>
               }
             </DialogDescription>
           </DialogHeader>
@@ -653,19 +653,19 @@ export default function PaymentApproval() {
               <div>
                     <label className="text-sm text-slate-400">项目</label>
                     <p className="text-white">{selectedPayment.projectName}</p>
-                  </div>
+              </div>
               }
                 {selectedPayment.supplier &&
               <div>
                     <label className="text-sm text-slate-400">供应商</label>
                     <p className="text-white">{selectedPayment.supplier}</p>
-                  </div>
+              </div>
               }
                 {selectedPayment.department &&
               <div>
                     <label className="text-sm text-slate-400">部门</label>
                     <p className="text-white">{selectedPayment.department}</p>
-                  </div>
+              </div>
               }
                 <div>
                   <label className="text-sm text-slate-400">提交时间</label>
@@ -676,7 +676,7 @@ export default function PaymentApproval() {
             <div>
                   <label className="text-sm text-slate-400">描述</label>
                   <p className="text-white">{selectedPayment.description}</p>
-                </div>
+            </div>
             }
               {selectedPayment.attachments &&
             selectedPayment.attachments.length > 0 &&
@@ -693,12 +693,12 @@ export default function PaymentApproval() {
                           <Button variant="ghost" size="sm" className="ml-auto">
                             下载
                           </Button>
-                        </div>
+                </div>
                 )}
                     </div>
-                  </div>
-            }
             </div>
+            }
+          </div>
           }
           <DialogFooter>
             <Button variant="outline" onClick={() => setSelectedPayment(null)}>

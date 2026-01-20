@@ -57,7 +57,7 @@ export default function MobileProgressReport() {
   };
 
   const calculateWorkHours = (startTime) => {
-    if (!startTime) return 0;
+    if (!startTime) {return 0;}
     const start = new Date(startTime);
     const now = new Date();
     const diffMs = now - start;

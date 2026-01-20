@@ -151,7 +151,7 @@ export default function ECNTypeManagement() {
   };
 
   const handleDelete = async (typeId) => {
-    if (!confirm("确认删除此ECN类型配置？")) return;
+    if (!confirm("确认删除此ECN类型配置？")) {return;}
     try {
       await ecnApi.deleteEcnType(typeId);
       fetchECNTypes();
@@ -254,9 +254,9 @@ export default function ECNTypeManagement() {
                           {type.required_depts.map((dept) =>
                     <Badge key={dept} className="bg-blue-500">
                               {dept}
-                            </Badge>
+                    </Badge>
                     )}
-                        </div> :
+                  </div> :
 
                   <span className="text-slate-400">-</span>
                   }
@@ -267,9 +267,9 @@ export default function ECNTypeManagement() {
                           {type.optional_depts.map((dept) =>
                     <Badge key={dept} className="bg-slate-500">
                               {dept}
-                            </Badge>
+                    </Badge>
                     )}
-                        </div> :
+                  </div> :
 
                   <span className="text-slate-400">-</span>
                   }
@@ -301,10 +301,10 @@ export default function ECNTypeManagement() {
                         </Button>
                       </div>
                     </TableCell>
-                  </TableRow>
+              </TableRow>
               )}
               </TableBody>
-            </Table>
+          </Table>
           }
         </CardContent>
       </Card>
@@ -389,13 +389,13 @@ export default function ECNTypeManagement() {
                       {typeForm.required_depts.includes(dept) &&
                     <CheckCircle2 className="w-3 h-3 ml-1" />
                     }
-                    </Button>
+                  </Button>
                   )}
                 </div>
                 {typeForm.required_depts.length > 0 &&
                 <div className="text-xs text-slate-500 mt-1">
                     已选择: {typeForm.required_depts.join(", ")}
-                  </div>
+                </div>
                 }
               </div>
               <div>
@@ -419,13 +419,13 @@ export default function ECNTypeManagement() {
                       {typeForm.optional_depts.includes(dept) &&
                     <CheckCircle2 className="w-3 h-3 ml-1" />
                     }
-                    </Button>
+                  </Button>
                   )}
                 </div>
                 {typeForm.optional_depts.length > 0 &&
                 <div className="text-xs text-slate-500 mt-1">
                     已选择: {typeForm.optional_depts.join(", ")}
-                  </div>
+                </div>
                 }
               </div>
               <div>

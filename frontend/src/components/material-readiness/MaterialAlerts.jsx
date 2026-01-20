@@ -239,7 +239,7 @@ export function MaterialAlertItem({
                     )}>
 
                       {levelConfig.label}
-                    </Badge>
+                  </Badge>
                   }
                   <Badge
                     variant="outline"
@@ -325,14 +325,14 @@ export function MaterialAlertItem({
                       <p>升级警报</p>
                     </TooltipContent>
                   </Tooltip>
-                </>
+              </>
               }
 
               {alert.is_resolved &&
               <div className="flex items-center space-x-1 text-xs text-gray-500">
                   <CheckCircle2 className="h-3 w-3 text-green-600" />
                   <span>已解决</span>
-                </div>
+              </div>
               }
             </div>
           </div>
@@ -343,7 +343,7 @@ export function MaterialAlertItem({
             {alert.resolved_at &&
             <span>
                 解决于 {formatDateTime(alert.resolved_at)}
-              </span>
+            </span>
             }
           </div>
 
@@ -415,7 +415,7 @@ export function MaterialAlertItem({
                               <span className="text-gray-500">物料类型</span>
                               <span>{formatMaterialType(alert.material.type)}</span>
                             </div>
-                          </>
+                      </>
                       }
                         {alert.supplier &&
                       <>
@@ -431,7 +431,7 @@ export function MaterialAlertItem({
                               <span className="text-gray-500">联系电话</span>
                               <span>{alert.supplier.phone || '-'}</span>
                             </div>
-                          </>
+                      </>
                       }
                         {alert.project &&
                       <>
@@ -443,7 +443,7 @@ export function MaterialAlertItem({
                               <span className="text-gray-500">项目名称</span>
                               <span>{alert.project.name || '-'}</span>
                             </div>
-                          </>
+                      </>
                       }
                       </div>
                     </div>
@@ -462,7 +462,7 @@ export function MaterialAlertItem({
                       <div className="flex justify-between">
                             <span className="text-gray-500">解决时间</span>
                             <span>{formatDateTime(alert.resolved_at)}</span>
-                          </div>
+                      </div>
                       }
                         <div className="flex justify-between">
                           <span className="text-gray-500">状态</span>
@@ -488,7 +488,7 @@ export function MaterialAlertItem({
                         <p className="text-sm text-gray-600">
                           {alert.resolution}
                         </p>
-                      </div>
+                  </div>
                   }
                   </div>
                 </DialogBody>
@@ -501,14 +501,14 @@ export function MaterialAlertItem({
                       <Button variant="outline" onClick={() => onEscalate?.(alert)}>
                         升级警报
                       </Button>
-                    </>
+                </>
                 }
                   <Button onClick={() => setShowDetail(false)}>
                     关闭
                   </Button>
                 </DialogFooter>
               </DialogContent>
-            </Dialog>
+          </Dialog>
           }
         </CardContent>
       </Card>
@@ -617,7 +617,7 @@ export function MaterialAlerts({
 
               <RefreshCw className="h-4 w-4 mr-1" />
               刷新
-            </Button>
+          </Button>
           }
           {onExport &&
           <Button
@@ -627,7 +627,7 @@ export function MaterialAlerts({
 
               <Download className="h-4 w-4 mr-1" />
               导出
-            </Button>
+          </Button>
           }
         </div>
       </div>
@@ -699,7 +699,7 @@ export function MaterialAlerts({
               <div className="text-xs text-gray-500">未解决</div>
             </CardContent>
           </Card>
-        </div>
+      </div>
       }
 
       {/* 过滤器和排序 */}
@@ -745,7 +745,7 @@ export function MaterialAlerts({
               "暂无警报"}
               </p>
             </CardContent>
-          </Card> :
+        </Card> :
 
         filteredAlerts.map((alert) =>
         <MaterialAlertItem

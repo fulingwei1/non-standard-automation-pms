@@ -27,7 +27,7 @@ const AlertOverview = ({ data, loading, onNavigate }) => {
   const [_selectedPeriod, _setSelectedPeriod] = useState('last_24h');
 
   const overviewStats = useMemo(() => {
-    if (!data?.alerts) return {};
+    if (!data?.alerts) {return {};}
 
     const totalAlerts = data.alerts.length;
     const activeAlerts = data.alerts.filter((a) => a.status === 'active').length;
@@ -55,7 +55,7 @@ const AlertOverview = ({ data, loading, onNavigate }) => {
   }, [data]);
 
   const typeDistribution = useMemo(() => {
-    if (!data?.alerts) return {};
+    if (!data?.alerts) {return {};}
 
     const distribution = {};
     Object.keys(ALERT_TYPES).forEach((key) => {
@@ -72,7 +72,7 @@ const AlertOverview = ({ data, loading, onNavigate }) => {
   }, [data]);
 
   const levelDistribution = useMemo(() => {
-    if (!data?.alerts) return {};
+    if (!data?.alerts) {return {};}
 
     const distribution = {};
     Object.keys(ALERT_LEVELS).forEach((key) => {
@@ -89,7 +89,7 @@ const AlertOverview = ({ data, loading, onNavigate }) => {
   }, [data]);
 
   const recentCriticalAlerts = useMemo(() => {
-    if (!data?.alerts) return [];
+    if (!data?.alerts) {return [];}
 
     return data.alerts.
     filter((alert) => alert.level === 'critical' && alert.status === 'active').

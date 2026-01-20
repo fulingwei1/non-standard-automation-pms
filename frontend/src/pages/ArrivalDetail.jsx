@@ -154,7 +154,7 @@ export default function ArrivalDetail() {
 
   const handleUpdateStatus = async (status) => {
     if (!confirm(`确认要将状态更新为"${statusConfigs[status]?.label}"吗？`))
-      return;
+      {return;}
     setActionLoading(true);
     try {
       await shortageApi.arrivals.updateStatus(id, status);

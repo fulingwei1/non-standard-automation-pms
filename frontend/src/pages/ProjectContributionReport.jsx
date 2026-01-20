@@ -128,11 +128,11 @@ export default function ProjectContributionReport() {
                     </div>
                   </div>
                   <Award className="h-5 w-5 text-yellow-500" />
-                </div>
+            </div>
             )}
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* 详细贡献列表 */}
@@ -176,12 +176,12 @@ export default function ProjectContributionReport() {
                       {contrib.pm_rating ?
                     <span className="text-yellow-500">
                           ⭐ {contrib.pm_rating}/5
-                        </span> :
+                    </span> :
 
                     <span className="text-gray-400">未评分</span>
                     }
                     </td>
-                  </tr>
+                </tr>
                 )}
               </tbody>
             </table>

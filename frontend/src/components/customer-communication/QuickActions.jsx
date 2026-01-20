@@ -274,7 +274,7 @@ export const QuickActions = ({
                   onChange={(e) => setLocalSearch(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleSearch();
+                    if (e.key === 'Enter') {handleSearch();}
                   }} />
 
               </div>

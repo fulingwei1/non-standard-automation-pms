@@ -72,7 +72,7 @@ export default function BiddingDetail() {
 
   // Load bidding detail
   const loadBiddingDetail = useCallback(async () => {
-    if (!id) return;
+    if (!id) {return;}
 
     try {
       setLoading(true);
@@ -285,7 +285,7 @@ export default function BiddingDetail() {
                   <Share2 className="w-4 h-4" />
                   分享
                 </Button>
-              </motion.div>
+            </motion.div>
             } />
 
         </div>
@@ -406,7 +406,7 @@ export default function BiddingDetail() {
 
                       <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-400" />
                       <span>{point}</span>
-                    </motion.li>
+                  </motion.li>
                   )}
                 </ul>
               </div>
@@ -468,7 +468,7 @@ export default function BiddingDetail() {
                     <span className="text-sm text-slate-400">
                       {evalItem.completedDate || evalItem.dueDate}
                     </span>
-                  </motion.div>
+                </motion.div>
                 )}
               </div>
             </CardContent>
@@ -513,7 +513,7 @@ export default function BiddingDetail() {
                       <Download className="h-4 w-4" />
                     </Button>
                   </div>
-                </motion.div>
+              </motion.div>
               )}
               <Button
                 variant="ghost"
@@ -576,7 +576,7 @@ export default function BiddingDetail() {
                       </p>
                     </div>
                   </div>
-                </motion.div>
+              </motion.div>
               )}
             </CardContent>
           </Card>
@@ -598,7 +598,7 @@ export default function BiddingDetail() {
                     <span className="font-semibold text-amber-400">
                       {formatCurrency(parseInt(comp.estimatedPrice))}
                     </span>
-                  </motion.div>
+                </motion.div>
                 )}
               </div>
               <div className="mt-3 rounded-lg bg-blue-500/10 border border-blue-500/30 px-3 py-2 text-xs">

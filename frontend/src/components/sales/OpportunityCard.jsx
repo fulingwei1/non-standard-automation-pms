@@ -62,8 +62,8 @@ export default function OpportunityCard({
   const priorityConf = priorityConfig[priority] || priorityConfig.medium;
 
   const getDaysColor = () => {
-    if (daysInStage > 14) return "text-red-400";
-    if (daysInStage > 7) return "text-amber-400";
+    if (daysInStage > 14) {return "text-red-400";}
+    if (daysInStage > 7) {return "text-amber-400";}
     return "text-slate-400";
   };
 

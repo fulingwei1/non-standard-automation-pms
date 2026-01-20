@@ -107,7 +107,7 @@ export default function BestPracticeRecommendations() {
   };
 
   const fetchRecommendations = async () => {
-    if (!projectId) return;
+    if (!projectId) {return;}
     try {
       setLoading(true);
       const res = await projectReviewApi.getProjectBestPracticeRecommendations(

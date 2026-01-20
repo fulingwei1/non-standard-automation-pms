@@ -67,9 +67,9 @@ export default function PresaleExpenseManagement() {
     setLoading(true);
     try {
       const params = { page, page_size: pageSize };
-      if (startDate) params.start_date = startDate;
-      if (endDate) params.end_date = endDate;
-      if (salespersonId) params.salesperson_id = parseInt(salespersonId);
+      if (startDate) {params.start_date = startDate;}
+      if (endDate) {params.end_date = endDate;}
+      if (salespersonId) {params.salesperson_id = parseInt(salespersonId);}
 
       const response = await presaleExpenseApi.getLostProjectExpenses(params);
       if (response.data && response.data.data) {
@@ -87,8 +87,8 @@ export default function PresaleExpenseManagement() {
   const loadStatistics = async () => {
     try {
       const params = { group_by: groupBy };
-      if (startDate) params.start_date = startDate;
-      if (endDate) params.end_date = endDate;
+      if (startDate) {params.start_date = startDate;}
+      if (endDate) {params.end_date = endDate;}
 
       const response = await presaleExpenseApi.getExpenseStatistics(params);
       if (response.data && response.data.data) {
@@ -123,7 +123,7 @@ export default function PresaleExpenseManagement() {
   };
 
   const formatHours = (hours) => {
-    if (!hours) return "0h";
+    if (!hours) {return "0h";}
     return `${parseFloat(hours).toFixed(1)}h`;
   };
 
@@ -271,7 +271,7 @@ export default function PresaleExpenseManagement() {
               </div>
             </CardContent>
           </Card>
-        </div>
+      </div>
       }
 
       {/* 费用统计 */}
@@ -303,17 +303,17 @@ export default function PresaleExpenseManagement() {
                 <>
                       <TableHead>人员</TableHead>
                       <TableHead>部门</TableHead>
-                    </>
+                </>
                 }
                   {groupBy === "department" &&
                 <>
                       <TableHead>部门</TableHead>
-                    </>
+                </>
                 }
                   {groupBy === "time" &&
                 <>
                       <TableHead>月份</TableHead>
-                    </>
+                </>
                 }
                   <TableHead>项目数</TableHead>
                   <TableHead>总工时</TableHead>
@@ -327,27 +327,27 @@ export default function PresaleExpenseManagement() {
                 <>
                         <TableCell>{stat.person_name}</TableCell>
                         <TableCell>{stat.department || "-"}</TableCell>
-                      </>
+                </>
                 }
                     {groupBy === "department" &&
                 <>
                         <TableCell>{stat.department_name}</TableCell>
-                      </>
+                </>
                 }
                     {groupBy === "time" &&
                 <>
                         <TableCell>{stat.month}</TableCell>
-                      </>
+                </>
                 }
                     <TableCell>{stat.project_count || 0}</TableCell>
                     <TableCell>{formatHours(stat.total_hours)}</TableCell>
                     <TableCell>{formatAmount(stat.total_amount)}</TableCell>
-                  </TableRow>
+              </TableRow>
               )}
               </TableBody>
             </Table>
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* 费用列表 */}
@@ -395,10 +395,10 @@ export default function PresaleExpenseManagement() {
                     <TableCell>{expense.salesperson_name || "-"}</TableCell>
                     <TableCell>{expense.loss_reason || "-"}</TableCell>
                     <TableCell>{expense.expense_date}</TableCell>
-                  </TableRow>
+              </TableRow>
               )}
               </TableBody>
-            </Table>
+          </Table>
           }
 
           {/* 分页 */}
@@ -425,7 +425,7 @@ export default function PresaleExpenseManagement() {
                   下一页
                 </Button>
               </div>
-            </div>
+          </div>
           }
         </CardContent>
       </Card>

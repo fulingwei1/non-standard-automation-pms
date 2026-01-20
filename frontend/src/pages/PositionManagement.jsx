@@ -97,8 +97,8 @@ export default function PositionManagement() {
     setLoading(true);
     try {
       const params = { page, page_size: pageSize };
-      if (searchKeyword) params.keyword = searchKeyword;
-      if (filterCategory !== "all") params.category = filterCategory;
+      if (searchKeyword) {params.keyword = searchKeyword;}
+      if (filterCategory !== "all") {params.category = filterCategory;}
 
       const response = await organizationApi.listPositions(params);
       const data = response.data;
@@ -458,7 +458,7 @@ export default function PositionManagement() {
       </motion.div>
 
       {/* 创建对话框 */}
-      <Dialog open={showCreateDialog} onOpenChange={(open) => { setShowCreateDialog(open); if (!open) resetForm(); }}>
+      <Dialog open={showCreateDialog} onOpenChange={(open) => { setShowCreateDialog(open); if (!open) {resetForm();} }}>
         <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
             <DialogTitle>新增岗位</DialogTitle>

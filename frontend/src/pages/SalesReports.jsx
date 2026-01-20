@@ -203,7 +203,7 @@ export default function SalesReports() {
               <Download className="w-4 h-4" />
               导出报表
             </Button>
-          </motion.div>
+        </motion.div>
         } />
 
 
@@ -227,14 +227,14 @@ export default function SalesReports() {
                       <span className="text-xs text-emerald-400">
                         +{currentMonth.growth}%
                       </span>
-                    </> :
+                  </> :
 
                   <>
                       <ArrowDownRight className="w-3 h-3 text-red-400" />
                       <span className="text-xs text-red-400">
                         {currentMonth.growth}%
                       </span>
-                    </>
+                  </>
                   }
                   <span className="text-xs text-slate-500">vs 上月</span>
                 </div>
@@ -342,11 +342,11 @@ export default function SalesReports() {
                           {item.growth > 0 ?
                           <span className="text-emerald-400 text-xs">
                               +{item.growth}%
-                            </span> :
+                          </span> :
 
                           <span className="text-red-400 text-xs">
                               {item.growth}%
-                            </span>
+                          </span>
                           }
                         </div>
                       </div>
@@ -408,20 +408,20 @@ export default function SalesReports() {
                           {customer.growth > 0 ?
                       <p className="text-xs text-emerald-400">
                               +{customer.growth}%
-                            </p> :
+                      </p> :
 
                       <p className="text-xs text-red-400">
                               {customer.growth}%
-                            </p>
+                      </p>
                       }
                         </div>
                       </div>
-                    </div>
+                </div>
                 ) :
 
                 <div className="text-center py-8 text-slate-500 text-sm">
                     暂无客户数据
-                  </div>
+                </div>
                 }
               </div>
             </CardContent>
@@ -463,12 +463,12 @@ export default function SalesReports() {
                         </span>
                       </div>
                       <Progress value={product.ratio} className="h-1.5" />
-                    </div>
+                </div>
                 ) :
 
                 <div className="text-center py-8 text-slate-500 text-sm">
                     暂无产品数据
-                  </div>
+                </div>
                 }
               </div>
             </CardContent>
@@ -521,12 +521,12 @@ export default function SalesReports() {
                     }
                     className="h-1.5 mt-2" />
 
-                    </div>
+                </div>
                 ) :
 
                 <div className="text-center py-8 text-slate-500 text-sm">
                     暂无区域数据
-                  </div>
+                </div>
                 }
               </div>
             </CardContent>

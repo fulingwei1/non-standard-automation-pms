@@ -13,7 +13,7 @@ import { evalResultConfigs } from './ecnConstants';
  * 评估汇总卡片组件
  */
 const EvaluationSummaryCard = ({ summary }) => {
-  if (!summary) return null;
+  if (!summary) {return null;}
 
   const completionRate = summary.total_evaluations > 0
     ? (summary.submitted_count / summary.total_evaluations) * 100
@@ -75,7 +75,7 @@ const EvaluationSummaryCard = ({ summary }) => {
  */
 const EvaluationCard = ({ evaluation, onSubmit, formatDate }) => {
   const handleSubmit = async () => {
-    if (!confirm('确认提交此评估？提交后将无法修改。')) return;
+    if (!confirm('确认提交此评估？提交后将无法修改。')) {return;}
     await onSubmit(evaluation.id);
   };
 

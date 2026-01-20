@@ -17,9 +17,9 @@ const getApprovalNodeStyle = (approval) => {
   const isRejected = approval.approval_result === 'REJECTED';
   const isPending = approval.status === 'PENDING';
 
-  if (isApproved) return { color: 'bg-green-500', icon: 'approved' };
-  if (isRejected) return { color: 'bg-red-500', icon: 'rejected' };
-  if (isPending) return { color: 'bg-blue-500', icon: 'pending' };
+  if (isApproved) {return { color: 'bg-green-500', icon: 'approved' };}
+  if (isRejected) {return { color: 'bg-red-500', icon: 'rejected' };}
+  if (isPending) {return { color: 'bg-blue-500', icon: 'pending' };}
   return { color: 'bg-slate-300', icon: 'default' };
 };
 
@@ -31,9 +31,9 @@ const getApprovalStatusBadge = (approval) => {
   const isRejected = approval.approval_result === 'REJECTED';
   const isPending = approval.status === 'PENDING';
 
-  if (isApproved) return { className: 'bg-green-500', label: '已通过' };
-  if (isRejected) return { className: 'bg-red-500', label: '已驳回' };
-  if (isPending) return { className: 'bg-blue-500', label: '待审批' };
+  if (isApproved) {return { className: 'bg-green-500', label: '已通过' };}
+  if (isRejected) {return { className: 'bg-red-500', label: '已驳回' };}
+  if (isPending) {return { className: 'bg-blue-500', label: '待审批' };}
   return { className: 'bg-slate-500', label: approval.status };
 };
 
@@ -120,7 +120,7 @@ const ApprovalCard = ({ approval, onApprove, onReject, formatDate }) => {
         <div className="text-sm">
             <span className="text-slate-500">审批时间:</span>{' '}
             {formatDate(approval.approved_at)}
-          </div>
+        </div>
         }
 
         {/* 审批期限 */}
@@ -131,7 +131,7 @@ const ApprovalCard = ({ approval, onApprove, onReject, formatDate }) => {
             {approval.is_overdue &&
           <span className="text-red-500 ml-2">（已超期）</span>
           }
-          </div>
+        </div>
         }
 
         {/* 审批意见 */}
@@ -141,7 +141,7 @@ const ApprovalCard = ({ approval, onApprove, onReject, formatDate }) => {
             <div className="p-2 bg-slate-50 rounded text-sm">
               {approval.approval_opinion}
             </div>
-          </div>
+        </div>
         }
 
         {/* 审批操作按钮（仅待审批状态显示） */}
@@ -157,7 +157,7 @@ const ApprovalCard = ({ approval, onApprove, onReject, formatDate }) => {
             <Button size="sm" onClick={handleApprove}>
               通过
             </Button>
-          </div>
+        </div>
         }
       </CardContent>
     </Card>);
@@ -206,7 +206,7 @@ export const ECNApprovalsTab = ({
             onReject={onReject}
             formatDate={formatDate} />
 
-          </div>
+        </div>
         )}
       </div>
     </div>);

@@ -184,7 +184,7 @@ export default function TechnicalAssessment() {
   };
 
   const handleExportReport = () => {
-    if (!assessment) return;
+    if (!assessment) {return;}
 
     const report = {
       评估编号: assessment.id,
@@ -277,7 +277,7 @@ export default function TechnicalAssessment() {
                   variant="outline">
 
                     {showHistory ? "隐藏历史" : "查看历史"}
-                  </Button>
+                </Button>
                 }
                 {assessment && assessment.status === "COMPLETED" &&
                 <Button
@@ -287,7 +287,7 @@ export default function TechnicalAssessment() {
 
                     <Download className="w-4 h-4 mr-2" />
                     导出报告
-                  </Button>
+                </Button>
                 }
                 {!assessment &&
                 <Button
@@ -295,7 +295,7 @@ export default function TechnicalAssessment() {
                   className="bg-blue-600 hover:bg-blue-700">
 
                     申请技术评估
-                  </Button>
+                </Button>
                 }
                 {assessment && assessment.status === "PENDING" &&
                 <Button
@@ -304,7 +304,7 @@ export default function TechnicalAssessment() {
                   className="bg-green-600 hover:bg-green-700">
 
                     {evaluating ? "评估中..." : "执行评估"}
-                  </Button>
+                </Button>
                 }
               </div>
             </div>
@@ -324,13 +324,13 @@ export default function TechnicalAssessment() {
                   {assessment.evaluator_name &&
                 <span className="text-gray-400">
                       评估人: {assessment.evaluator_name}
-                    </span>
+                </span>
                 }
                   {assessment.evaluated_at &&
                 <span className="text-gray-400">
                       评估时间:{" "}
                       {new Date(assessment.evaluated_at).toLocaleString()}
-                    </span>
+                </span>
                 }
                 </div>
 
@@ -344,9 +344,9 @@ export default function TechnicalAssessment() {
                   value={assessment.total_score}
                   className="flex-1" />
 
-                  </div>
+              </div>
               }
-              </div> :
+            </div> :
 
             <div className="text-gray-400">尚未申请技术评估</div>
             }
@@ -387,7 +387,7 @@ export default function TechnicalAssessment() {
                           {item.total_score !== null &&
                         <span className="text-lg font-bold">
                               {item.total_score}分
-                            </span>
+                        </span>
                         }
                           {item.decision &&
                         <Badge
@@ -398,7 +398,7 @@ export default function TechnicalAssessment() {
 
                               {decisionConfig[item.decision]?.label ||
                           item.decision}
-                            </Badge>
+                        </Badge>
                         }
                         </div>
                         <span className="text-xs text-gray-400">
@@ -415,16 +415,16 @@ export default function TechnicalAssessment() {
                               <div className="text-sm font-semibold">
                                 {score}
                               </div>
-                            </div>
+                      </div>
                       )}
-                        </div>
+                    </div>
                     }
-                    </div>);
+                  </div>);
 
               })}
               </div>
             </CardContent>
-          </Card>
+        </Card>
         }
 
         {assessment && assessment.status === "COMPLETED" &&
@@ -485,7 +485,7 @@ export default function TechnicalAssessment() {
                                 value={score / 20 * 100}
                                 className="h-2" />
 
-                                </div>);
+                            </div>);
 
                         }
                       )}
@@ -516,11 +516,11 @@ export default function TechnicalAssessment() {
                           <li key={idx}>{condition}</li>
                           )}
                                 </ul>
-                              </div>
-                      }
-                          </div>
-                    }
                       </div>
+                      }
+                    </div>
+                    }
+                  </div>
                   }
                   </TabsContent>
 
@@ -578,7 +578,7 @@ export default function TechnicalAssessment() {
                             new Date(a.date) - new Date(b.date)
                           );
 
-                          if (trendData.length === 0) return null;
+                          if (trendData.length === 0) {return null;}
 
                           return (
                             <div key={dim} className="space-y-2">
@@ -586,17 +586,17 @@ export default function TechnicalAssessment() {
                                       {dimensionNames[dim]}
                                     </div>
                                     <TrendChart data={trendData} height={150} />
-                                  </div>);
+                            </div>);
 
                         })}
                             </div>
-                          </div>
+                    </div>
                     }
-                      </div> :
+                  </div> :
 
                   <div className="text-gray-400 text-center py-8">
                         需要至少2次评估才能显示趋势分析
-                      </div>
+                  </div>
                   }
                   </TabsContent>
 
@@ -655,15 +655,15 @@ export default function TechnicalAssessment() {
                             ).toLocaleDateString() :
                             "未评估"}
                                   </div>
-                                </div>
+                        </div>
                         )}
                           </div>
                         </div>
-                      </div> :
+                  </div> :
 
                   <div className="text-gray-400 text-center py-8">
                         需要至少2次评估才能显示对比分析
-                      </div>
+                  </div>
                   }
                   </TabsContent>
 
@@ -694,9 +694,9 @@ export default function TechnicalAssessment() {
                               </span>
                             </div>
                             <div className="text-sm">{risk.description}</div>
-                          </div>
+                    </div>
                     )}
-                      </div> :
+                  </div> :
 
                   <div className="text-gray-400">无风险记录</div>
                   }
@@ -722,9 +722,9 @@ export default function TechnicalAssessment() {
                             <div className="text-sm text-gray-400">
                               {case_.lesson_learned}
                             </div>
-                          </div>
+                    </div>
                     )}
-                      </div> :
+                  </div> :
 
                   <div className="text-gray-400">无相似案例</div>
                   }
@@ -734,7 +734,7 @@ export default function TechnicalAssessment() {
                     {assessment.ai_analysis ?
                   <div className="p-4 bg-gray-700 rounded-lg whitespace-pre-wrap">
                         {assessment.ai_analysis}
-                      </div> :
+                  </div> :
 
                   <div className="text-gray-400">未启用AI分析</div>
                   }
@@ -742,7 +742,7 @@ export default function TechnicalAssessment() {
                 </Tabs>
               </CardContent>
             </Card>
-          </>
+        </>
         }
 
         {assessment && assessment.status === "PENDING" &&
@@ -782,7 +782,7 @@ export default function TechnicalAssessment() {
                 </div>
               </div>
             </CardContent>
-          </Card>
+        </Card>
         }
       </div>
     </div>);

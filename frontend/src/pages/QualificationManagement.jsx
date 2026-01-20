@@ -223,7 +223,7 @@ export default function QualificationManagement() {
   };
 
   const handleDeleteLevel = async (id) => {
-    if (!confirm("确定要删除该等级吗？")) return;
+    if (!confirm("确定要删除该等级吗？")) {return;}
 
     try {
       await qualificationApi.deleteLevel(id);
@@ -376,13 +376,13 @@ export default function QualificationManagement() {
               <Button onClick={() => navigate("/qualifications/levels/new")}>
                   <Plus className="h-4 w-4 mr-2" />
                   新建等级
-                </Button>
+              </Button>
               }
               {activeTab === "models" &&
               <Button onClick={() => navigate("/qualifications/models/new")}>
                   <Plus className="h-4 w-4 mr-2" />
                   新建能力模型
-                </Button>
+              </Button>
               }
               {activeTab === "employees" &&
               <Button
@@ -390,19 +390,19 @@ export default function QualificationManagement() {
 
                   <UserCheck className="h-4 w-4 mr-2" />
                   认证员工
-                </Button>
+              </Button>
               }
               {activeTab === "levels" &&
               <Button onClick={() => navigate("/qualifications/levels/new")}>
                   <Plus className="h-4 w-4 mr-2" />
                   新建等级
-                </Button>
+              </Button>
               }
               {activeTab === "models" &&
               <Button onClick={() => navigate("/qualifications/models/new")}>
                   <Plus className="h-4 w-4 mr-2" />
                   新建能力模型
-                </Button>
+              </Button>
               }
             </div>
           </div>
@@ -516,11 +516,11 @@ export default function QualificationManagement() {
                         {level.is_active ?
                       <Badge className="bg-green-100 text-green-800">
                             启用
-                          </Badge> :
+                      </Badge> :
 
                       <Badge className="bg-gray-100 text-gray-800">
                             停用
-                          </Badge>
+                      </Badge>
                       }
                       </TableCell>
                       <TableCell>
@@ -556,7 +556,7 @@ export default function QualificationManagement() {
                           </Button>
                         </div>
                       </TableCell>
-                    </TableRow>
+                  </TableRow>
                   )}
                 </TableBody>
               </Table>
@@ -643,11 +643,11 @@ export default function QualificationManagement() {
                         {model.is_active ?
                       <Badge className="bg-green-100 text-green-800">
                             启用
-                          </Badge> :
+                      </Badge> :
 
                       <Badge className="bg-gray-100 text-gray-800">
                             停用
-                          </Badge>
+                      </Badge>
                       }
                       </TableCell>
                       <TableCell>
@@ -676,7 +676,7 @@ export default function QualificationManagement() {
                           </Button>
                         </div>
                       </TableCell>
-                    </TableRow>
+                  </TableRow>
                   )}
                 </TableBody>
               </Table>
@@ -785,7 +785,7 @@ export default function QualificationManagement() {
                           </Button>
                         </div>
                       </TableCell>
-                    </TableRow>
+                  </TableRow>
                   )}
                 </TableBody>
               </Table>
@@ -840,7 +840,7 @@ export default function QualificationManagement() {
 
               <div className="flex items-center justify-center h-64 text-gray-400">
                     暂无评估数据
-                  </div>;
+              </div>;
 
             })()}
             </CardContent>
@@ -887,7 +887,7 @@ export default function QualificationManagement() {
                           style={{ width: `${percentage}%` }} />
 
                         </div>
-                      </div>);
+                    </div>);
 
                 }
               )}
@@ -934,14 +934,14 @@ export default function QualificationManagement() {
                           style={{ width: `${percentage}%` }} />
 
                         </div>
-                      </div>);
+                    </div>);
 
                 }
               )}
               </div>
             </CardContent>
           </Card>
-        </div>
+      </div>
       }
 
       {/* 分页 */}
@@ -987,7 +987,7 @@ export default function QualificationManagement() {
               </Button>
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
     </div>);
 

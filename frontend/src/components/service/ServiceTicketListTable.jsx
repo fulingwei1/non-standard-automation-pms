@@ -58,8 +58,8 @@ export function ServiceTicketListTable({
       bValue = new Date(bValue);
     }
 
-    if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
-    if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
+    if (aValue < bValue) {return sortConfig.direction === "asc" ? -1 : 1;}
+    if (aValue > bValue) {return sortConfig.direction === "asc" ? 1 : -1;}
     return 0;
   });
 
@@ -156,7 +156,7 @@ export function ServiceTicketListTable({
                     {sortConfig.key === "ticket_no" &&
                     <span className="text-xs text-slate-400">
                         {sortConfig.direction === "asc" ? "↑" : "↓"}
-                      </span>
+                    </span>
                     }
                   </div>
                 </TableHead>
@@ -174,7 +174,7 @@ export function ServiceTicketListTable({
                     {sortConfig.key === "reported_time" &&
                     <span className="text-xs text-slate-400">
                         {sortConfig.direction === "asc" ? "↑" : "↓"}
-                      </span>
+                    </span>
                     }
                   </div>
                 </TableHead>
@@ -254,7 +254,7 @@ export function ServiceTicketListTable({
                     <div className="flex items-center gap-1">
                           <User className="w-3 h-3 text-slate-400" />
                           {ticket.assigned_engineer}
-                        </div> :
+                    </div> :
 
                     <span className="text-slate-400">未分配</span>
                     }
@@ -286,11 +286,11 @@ export function ServiceTicketListTable({
                       className="h-8 w-8 p-0">
 
                           <Edit className="w-4 h-4" />
-                        </Button>
+                    </Button>
                     }
                     </div>
                   </TableCell>
-                </TableRow>
+              </TableRow>
               )}
             </TableBody>
           </Table>

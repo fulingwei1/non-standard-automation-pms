@@ -120,8 +120,8 @@ export function TeamAssignment({
     }).
     sort((a, b) => {
       // Sort by availability first, then by skill level
-      if (a.current_task_count === 0 && b.current_task_count > 0) return -1;
-      if (a.current_task_count > 0 && b.current_task_count === 0) return 1;
+      if (a.current_task_count === 0 && b.current_task_count > 0) {return -1;}
+      if (a.current_task_count > 0 && b.current_task_count === 0) {return 1;}
       return (b.skill_level || 0) - (a.skill_level || 0);
     });
   }, [engineers, searchQuery, statusFilter, skillFilter, locationFilter]);
@@ -245,7 +245,7 @@ export function TeamAssignment({
   const uniqueLocations = useMemo(() => {
     const locationsSet = new Set();
     engineers.forEach((engineer) => {
-      if (engineer.location) locationsSet.add(engineer.location);
+      if (engineer.location) {locationsSet.add(engineer.location);}
     });
     return Array.from(locationsSet).sort();
   }, [engineers]);
@@ -290,7 +290,7 @@ export function TeamAssignment({
                     <div className="flex items-center gap-1">
                         <MapPin className="w-3 h-3" />
                         <span className="truncate">{engineer.location}</span>
-                      </div>
+                    </div>
                     }
                   </div>
                 </div>
@@ -311,7 +311,7 @@ export function TeamAssignment({
             <Button variant="outline" size="sm" onClick={() => setShowAssignDialog(true)}>
               查看全部 {filteredEngineers.length} 位工程师
             </Button>
-          </div>
+        </div>
         }
       </div>);
 
@@ -353,7 +353,7 @@ export function TeamAssignment({
                 {uniqueSkills.map((skill) =>
               <SelectItem key={skill} value={skill}>
                     {skill}
-                  </SelectItem>
+              </SelectItem>
               )}
               </SelectContent>
             </Select>
@@ -367,12 +367,12 @@ export function TeamAssignment({
                 {uniqueLocations.map((location) =>
               <SelectItem key={location} value={location}>
                     {location}
-                  </SelectItem>
+              </SelectItem>
               )}
               </SelectContent>
             </Select>
           </div>
-        </div>
+      </div>
       }
 
       {/* Engineers Grid */}
@@ -442,13 +442,13 @@ export function TeamAssignment({
                     <div className="flex items-center gap-2 text-slate-400">
                         <Phone className="w-3 h-3" />
                         <span>{engineer.phone}</span>
-                      </div>
+                    </div>
                     }
                     {engineer.email &&
                     <div className="flex items-center gap-2 text-slate-400">
                         <Mail className="w-3 h-3" />
                         <span>{engineer.email}</span>
-                      </div>
+                    </div>
                     }
                   </div>
 
@@ -457,7 +457,7 @@ export function TeamAssignment({
                   <div className="flex items-center gap-2 text-xs text-slate-400">
                       <MapPin className="w-3 h-3" />
                       <span>{engineer.location}</span>
-                    </div>
+                  </div>
                   }
 
                   {/* Workload */}
@@ -488,15 +488,15 @@ export function TeamAssignment({
                         className="text-xs">
 
                             {skill}
-                          </Badge>
+                      </Badge>
                       )}
                         {engineer.skills.length > 3 &&
                       <Badge variant="outline" className="text-xs">
                             +{engineer.skills.length - 3}
-                          </Badge>
+                      </Badge>
                       }
                       </div>
-                    </div>
+                  </div>
                   }
 
                   {/* Current Tasks Preview */}
@@ -513,15 +513,15 @@ export function TeamAssignment({
                             <div className="text-slate-400 text-[10px]">
                               {formatDate(task.scheduled_date)} · {formatDuration(task.estimated_duration)}
                             </div>
-                          </div>
+                      </div>
                       )}
                         {tasks.length > 2 &&
                       <div className="text-xs text-slate-500 text-center">
                             还有 {tasks.length - 2} 个任务...
-                          </div>
+                      </div>
                       }
                       </div>
-                    </div>
+                  </div>
                   }
 
                   {/* Action Buttons */}
@@ -535,7 +535,7 @@ export function TeamAssignment({
 
                         <Plus className="w-3 h-3 mr-1" />
                         分配任务
-                      </Button>
+                    </Button>
                     }
 
                     {engineer.is_off_duty &&
@@ -547,7 +547,7 @@ export function TeamAssignment({
 
                         <UserX className="w-3 h-3 mr-1" />
                         休假中
-                      </Button>
+                    </Button>
                     }
                   </div>
                 </CardContent>
@@ -563,7 +563,7 @@ export function TeamAssignment({
           <User className="w-12 h-12 mx-auto mb-3 text-slate-600" />
           <p>没有找到符合条件的工程师</p>
           <p className="text-sm mt-1">请尝试调整搜索条件</p>
-        </div>
+      </div>
       }
 
       {/* Assign Task Dialog */}
@@ -587,7 +587,7 @@ export function TeamAssignment({
                     {availableTasks.map((task) =>
                     <SelectItem key={task.id} value={task.id}>
                         {task.title} · {task.scheduled_date} · {task.location}
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -606,7 +606,7 @@ export function TeamAssignment({
                     {filteredEngineers.map((engineer) =>
                     <SelectItem key={engineer.id} value={engineer.id}>
                         {engineer.first_name} {engineer.last_name} · {engineer.location} · 可用
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -636,7 +636,7 @@ export function TeamAssignment({
                     <span className="text-white ml-2">{selectedTask.location || "未指定"}</span>
                   </div>
                 </CardContent>
-              </Card>
+            </Card>
             }
           </DialogBody>
           <DialogFooter>
@@ -689,13 +689,13 @@ export function TeamAssignment({
                 <div className="flex items-center gap-2">
                       <Phone className="w-4 h-4 text-slate-400" />
                       <span>{showEngineerDetail.phone}</span>
-                    </div>
+                </div>
                 }
                   {showEngineerDetail.email &&
                 <div className="flex items-center gap-2">
                       <Mail className="w-4 h-4 text-slate-400" />
                       <span>{showEngineerDetail.email}</span>
-                    </div>
+                </div>
                 }
                 </div>
               </div>
@@ -708,7 +708,7 @@ export function TeamAssignment({
                     <MapPin className="w-4 h-4 text-slate-400" />
                     <span>{showEngineerDetail.location}</span>
                   </div>
-                </div>
+            </div>
             }
 
               {/* Skills */}
@@ -719,10 +719,10 @@ export function TeamAssignment({
                     {showEngineerDetail.skills.map((skill, index) =>
                 <Badge key={index} className="text-xs">
                         {skill}
-                      </Badge>
+                </Badge>
                 )}
                   </div>
-                </div>
+            </div>
             }
 
               {/* Performance */}
@@ -764,7 +764,7 @@ export function TeamAssignment({
                       <div className="mt-1 text-xs text-slate-400">
                         {task.location} · 预计 {formatDuration(task.estimated_duration)}
                       </div>
-                    </div>
+                </div>
                 )}
                 </div>
               </div>
@@ -775,7 +775,7 @@ export function TeamAssignment({
               </Button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
+      </Dialog>
       }
     </>);
 

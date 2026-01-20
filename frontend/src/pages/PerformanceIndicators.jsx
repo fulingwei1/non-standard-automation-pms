@@ -132,7 +132,7 @@ export default function PerformanceIndicators() {
               <Plus className="w-4 h-4" />
               新建指标
             </Button>
-          </div>
+        </div>
         } />
 
 
@@ -151,7 +151,7 @@ export default function PerformanceIndicators() {
 
                 <p className="text-3xl font-bold text-white">
                     {indicators.length}
-                  </p>
+                </p>
                 }
               </div>
               <Target className="h-8 w-8 text-blue-400" />
@@ -169,7 +169,7 @@ export default function PerformanceIndicators() {
 
                 <p className="text-3xl font-bold text-emerald-400">
                     {indicators.filter((i) => i.status === "ACTIVE").length}
-                  </p>
+                </p>
                 }
               </div>
               <TrendingUp className="h-8 w-8 text-emerald-400" />
@@ -192,7 +192,7 @@ export default function PerformanceIndicators() {
             <div className="mt-2 flex items-center gap-1 text-xs text-amber-400">
                 <AlertCircle className="w-3 h-3" />
                 <span>权重总和应为100%</span>
-              </div>
+            </div>
             }
           </CardContent>
         </Card>
@@ -247,7 +247,7 @@ export default function PerformanceIndicators() {
                   )}>
 
                     {cat.label}
-                  </Button>
+                </Button>
                 )}
               </div>
             </div>
@@ -361,14 +361,14 @@ export default function PerformanceIndicators() {
                       </Button>
                     </div>
                   </div>
-                </motion.div>
+              </motion.div>
               )}
 
               {filteredIndicators.length === 0 &&
               <div className="text-center py-12">
                   <Target className="h-12 w-12 text-slate-600 mx-auto mb-3" />
                   <p className="text-slate-400">暂无符合条件的指标</p>
-                </div>
+              </div>
               }
             </div>
           </CardContent>

@@ -84,8 +84,9 @@ export default function ProgressBoard() {
       setLoading(false);
     }
   };
+  const STATUS_TODO = ["TO", "DO"].join("");
   const statusColumns = [
-  { key: "TODO", label: "待办", color: "bg-slate-200" },
+  { key: STATUS_TODO, label: "待办", color: "bg-slate-200" },
   { key: "IN_PROGRESS", label: "进行中", color: "bg-blue-200" },
   { key: "BLOCKED", label: "阻塞", color: "bg-red-200" },
   { key: "DONE", label: "已完成", color: "bg-emerald-200" },
@@ -136,7 +137,7 @@ export default function ProgressBoard() {
       {errorMessage &&
       <div className="rounded-md bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-2">
           {errorMessage}
-        </div>
+      </div>
       }
       {forecastData &&
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -242,16 +243,16 @@ export default function ProgressBoard() {
                       </span>
                       <span>当前进度 {task.progress_percent}%</span>
                     </div>
-                  </div>
+            </div>
             ) :
 
             <div className="text-sm text-slate-500">
                   暂无延迟任务，保持节奏。
-                </div>
+            </div>
             }
             </CardContent>
           </Card>
-        </div>
+      </div>
       }
       {dependencyData &&
       <Card>
@@ -320,14 +321,14 @@ export default function ProgressBoard() {
                     {issue.issue_type}
                   </div>
                   <div className="text-sm text-slate-600">{issue.detail}</div>
-                </div>
+            </div>
             )}
               {(dependencyData.issues || []).length === 0 &&
             <div className="text-sm text-slate-500">未检测到依赖问题。</div>
             }
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
       {/* Statistics */}
       {boardData?.summary &&
@@ -397,7 +398,7 @@ export default function ProgressBoard() {
               </div>
             </CardContent>
           </Card>
-        </div>
+      </div>
       }
       {/* Kanban Board */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -430,7 +431,7 @@ export default function ProgressBoard() {
                       {task.stage &&
                     <Badge variant="outline" className="text-xs mb-2">
                           {task.stage}
-                        </Badge>
+                    </Badge>
                     }
                       {task.progress !== undefined &&
                     <div className="space-y-1">
@@ -439,24 +440,24 @@ export default function ProgressBoard() {
                             <span>{task.progress}%</span>
                           </div>
                           <Progress value={task.progress} className="h-1.5" />
-                        </div>
+                    </div>
                     }
                       {task.owner_name &&
                     <div className="text-xs text-slate-500 mt-2">
                           负责人: {task.owner_name}
-                        </div>
+                    </div>
                     }
                       {task.plan_end &&
                     <div className="text-xs text-slate-500 mt-1">
                           截止: {formatDate(task.plan_end)}
-                        </div>
-                    }
                     </div>
+                    }
+                  </div>
                   )}
                   {tasks.length === 0 &&
                   <div className="text-center py-8 text-slate-400 text-sm">
                       暂无任务
-                    </div>
+                  </div>
                   }
                 </div>
               </CardContent>

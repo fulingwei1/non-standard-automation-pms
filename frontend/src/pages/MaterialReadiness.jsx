@@ -374,7 +374,7 @@ export default function MaterialReadiness() {
                       <Badge variant="secondary">{count}</Badge>
                       <span className="text-xs text-muted-foreground">{percentage}%</span>
                     </div>
-                  </div>);
+                </div>);
 
             })}
             </div>
@@ -423,7 +423,7 @@ export default function MaterialReadiness() {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {Object.entries(typeDistribution).map(([type, count]) => {
-            if (count === 0) return null;
+            if (count === 0) {return null;}
             const percentage = stats.total > 0 ? (count / stats.total * 100).toFixed(1) : 0;
 
             return (
@@ -434,7 +434,7 @@ export default function MaterialReadiness() {
                   <p className="text-sm font-medium">{getMaterialTypeLabel(type)}</p>
                   <p className="text-2xl font-bold">{count}</p>
                   <p className="text-xs text-muted-foreground">{percentage}%</p>
-                </div>);
+              </div>);
 
           })}
           </div>
@@ -486,7 +486,7 @@ export default function MaterialReadiness() {
           </div>
         </CardContent>
       </Card>
-    </div>;
+  </div>;
 
 
   // 渲染列表视图
@@ -515,13 +515,13 @@ export default function MaterialReadiness() {
                   <TableCell colSpan={7} className="text-center py-8">
                     加载中...
                   </TableCell>
-                </TableRow> :
+            </TableRow> :
             materials.length === 0 ?
             <TableRow>
                   <TableCell colSpan={7} className="text-center py-8">
                     暂无物料数据
                   </TableCell>
-                </TableRow> :
+            </TableRow> :
 
             materials.map((material) =>
             <TableRow key={material.id}>
@@ -557,14 +557,14 @@ export default function MaterialReadiness() {
                         </Button>
                       </div>
                     </TableCell>
-                  </TableRow>
+            </TableRow>
             )
             }
             </TableBody>
           </Table>
         </div>
       </CardContent>
-    </Card>;
+  </Card>;
 
 
   return (
@@ -587,7 +587,7 @@ export default function MaterialReadiness() {
               <Download className="mr-2 h-4 w-4" />
               导出
             </Button>
-          </div>
+        </div>
         } />
 
 
@@ -638,7 +638,7 @@ export default function MaterialReadiness() {
                   {MATERIAL_STATUS_FILTER_OPTIONS.map((option) =>
                   <SelectItem key={option.value} value={option.value}>
                       {option.label}
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -651,7 +651,7 @@ export default function MaterialReadiness() {
                   {TYPE_FILTER_OPTIONS.map((option) =>
                   <SelectItem key={option.value} value={option.value}>
                       {option.label}
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -665,7 +665,7 @@ export default function MaterialReadiness() {
                   {projects.map((project) =>
                   <SelectItem key={project.id} value={project.id}>
                       {project.name}
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -687,7 +687,7 @@ export default function MaterialReadiness() {
               齐套分析图表功能开发中...
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* 详情对话框 */}
@@ -729,9 +729,9 @@ export default function MaterialReadiness() {
             <div>
                   <p className="text-sm text-muted-foreground">描述</p>
                   <p className="font-medium">{selectedMaterial.description}</p>
-                </div>
-            }
             </div>
+            }
+          </div>
           }
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDetailDialog(false)}>

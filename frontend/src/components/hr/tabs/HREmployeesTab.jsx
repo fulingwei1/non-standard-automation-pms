@@ -57,7 +57,8 @@ export default function HREmployeesTab({
             <Button
               className="flex items-center gap-2"
               onClick={() => {
-                // TODO: Open add employee dialog
+                setSelectedEmployee(null);
+                setShowEmployeeDialog(true);
               }}
             >
               <UserPlus className="w-4 h-4" />
@@ -227,7 +228,8 @@ export default function HREmployeesTab({
                           title="编辑员工"
                           className="hover:bg-amber-500/20 hover:text-amber-400"
                           onClick={() => {
-                            // TODO: Open edit employee dialog
+                            setSelectedEmployee(employee);
+                            setShowEmployeeDialog(true);
                           }}
                         >
                           <Edit className="w-4 h-4" />

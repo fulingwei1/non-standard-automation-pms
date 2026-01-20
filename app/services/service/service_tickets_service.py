@@ -269,7 +269,7 @@ class ServiceTicketsService:
             total=total,
             page=page,
             page_size=page_size,
-            items=[ServiceTicketResponse.from_orm(item) for item in items]
+            items=[ServiceTicketResponse.model_validate(item) for item in items]
         )
 
     def get_service_ticket(self, ticket_id: int) -> Optional[ServiceTicket]:

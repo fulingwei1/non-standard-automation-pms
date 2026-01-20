@@ -99,7 +99,7 @@ export default function MaterialRequisitionDetail() {
   };
 
   const handleApprove = async () => {
-    if (!requisition) return;
+    if (!requisition) {return;}
     try {
       await productionApi.materialRequisitions.approve(
         requisition.id,
@@ -118,7 +118,7 @@ export default function MaterialRequisitionDetail() {
   };
 
   const handleIssue = async () => {
-    if (!requisition) return;
+    if (!requisition) {return;}
     try {
       await productionApi.materialRequisitions.issue(requisition.id, issueData);
       setShowIssueDialog(false);

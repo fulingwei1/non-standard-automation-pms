@@ -117,7 +117,7 @@ export function getDateByRange(range, type) {
  * @returns {string} 格式化后的金额字符串
  */
 export function formatAmount(amount) {
-  if (!amount) return '¥0';
+  if (!amount) {return '¥0';}
   if (amount >= 10000) {
     return `¥${(amount / 10000).toFixed(1)}万`;
   }
@@ -145,8 +145,8 @@ export function getOnTimeRateRating(rate) {
  * @returns {string} Tailwind CSS 类名
  */
 export function getQualityRateBadgeColor(rate) {
-  if (rate >= 98) return 'bg-emerald-500';
-  if (rate >= 90) return 'bg-amber-500';
+  if (rate >= 98) {return 'bg-emerald-500';}
+  if (rate >= 90) {return 'bg-amber-500';}
   return 'bg-red-500';
 }
 
@@ -156,7 +156,7 @@ export function getQualityRateBadgeColor(rate) {
  * @returns {string} Tailwind CSS 类名
  */
 export function getOnTimeRateBadgeColor(rate) {
-  if (rate >= 90) return 'bg-emerald-500';
-  if (rate >= 75) return 'bg-amber-500';
+  if (rate >= 90) {return 'bg-emerald-500';}
+  if (rate >= 75) {return 'bg-amber-500';}
   return 'bg-red-500';
 }

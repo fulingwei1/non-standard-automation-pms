@@ -220,7 +220,7 @@ export default function MobileWorkerTaskList() {
                     <span className="font-medium">{task.progress}%</span>
                   </div>
                   <Progress value={task.progress} className="h-2" />
-                </div>
+          </div>
           }
 
               {/* 操作按钮 */}
@@ -236,7 +236,7 @@ export default function MobileWorkerTaskList() {
 
                     <PlayCircle className="w-4 h-4 mr-1" />
                     开工
-                  </Button>
+            </Button>
             }
                 {(task.status === "STARTED" ||
             task.status === "IN_PROGRESS" ||
@@ -267,10 +267,10 @@ export default function MobileWorkerTaskList() {
 
                       完工
                     </Button>
-                  </>
+            </>
             }
               </div>
-            </div>
+        </div>
         )
         }
       </div>

@@ -69,7 +69,7 @@ const formatDateKey = (date) => {
 
 // Helper: Parse date string
 const parseDate = (dateStr) => {
-  if (!dateStr) return null;
+  if (!dateStr) {return null;}
   return new Date(dateStr);
 };
 

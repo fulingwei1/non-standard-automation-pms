@@ -268,19 +268,19 @@ export const OpportunityUtils = {
 
   // 计算年龄惩罚
   calculateAgePenalty(createdDate) {
-    if (!createdDate) return 0;
+    if (!createdDate) {return 0;}
     const ageInDays = Math.floor((new Date() - new Date(createdDate)) / (1000 * 60 * 60 * 24));
-    if (ageInDays > 180) return 10;
-    if (ageInDays > 90) return 5;
+    if (ageInDays > 180) {return 10;}
+    if (ageInDays > 90) {return 5;}
     return 0;
   },
 
   // 计算金额奖励
   calculateAmountBonus(amount) {
-    if (!amount) return 0;
-    if (amount > 1000000) return 10;
-    if (amount > 500000) return 7;
-    if (amount > 100000) return 5;
+    if (!amount) {return 0;}
+    if (amount > 1000000) {return 10;}
+    if (amount > 500000) {return 7;}
+    if (amount > 100000) {return 5;}
     return 0;
   },
 
@@ -302,7 +302,7 @@ export const OpportunityUtils = {
 
   // 计算销售周期
   calculateSalesCycle(opportunity) {
-    if (!opportunity.createdDate) return 0;
+    if (!opportunity.createdDate) {return 0;}
     const created = new Date(opportunity.createdDate);
     const now = new Date();
     return Math.floor((now - created) / (1000 * 60 * 60 * 24));
@@ -311,17 +311,17 @@ export const OpportunityUtils = {
   // 判断是否超期
   isOverdue(opportunity) {
     const expectedCloseDate = opportunity.expectedCloseDate;
-    if (!expectedCloseDate) return false;
+    if (!expectedCloseDate) {return false;}
     return new Date(expectedCloseDate) < new Date();
   },
 
   // 计算超期天数
   getOverdueDays(opportunity) {
     const expectedCloseDate = opportunity.expectedCloseDate;
-    if (!expectedCloseDate) return 0;
+    if (!expectedCloseDate) {return 0;}
     const now = new Date();
     const expected = new Date(expectedCloseDate);
-    if (expected > now) return 0;
+    if (expected > now) {return 0;}
     return Math.floor((now - expected) / (1000 * 60 * 60 * 24));
   },
 
@@ -345,7 +345,7 @@ export const OpportunityUtils = {
 
   // 格式化金额
   formatCurrency(amount) {
-    if (!amount) return '¥0';
+    if (!amount) {return '¥0';}
     if (amount >= 10000) {
       return `¥${(amount / 10000).toFixed(1)}万`;
     }
@@ -354,7 +354,7 @@ export const OpportunityUtils = {
 
   // 格式化日期
   formatDate(date) {
-    if (!date) return '';
+    if (!date) {return '';}
     return new Date(date).toLocaleDateString('zh-CN');
   },
 

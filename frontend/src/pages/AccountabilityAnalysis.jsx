@@ -53,8 +53,8 @@ export default function AccountabilityAnalysis() {
     setLoading(true);
     try {
       const params = {};
-      if (startDate) params.start_date = startDate;
-      if (endDate) params.end_date = endDate;
+      if (startDate) {params.start_date = startDate;}
+      if (endDate) {params.end_date = endDate;}
 
       const [stageRes, personRes, deptRes, costRes] = await Promise.all([
       accountabilityApi.getByStage(params),
@@ -63,10 +63,10 @@ export default function AccountabilityAnalysis() {
       accountabilityApi.getCostImpact(params)]
       );
 
-      if (stageRes.data?.data) setByStageData(stageRes.data.data);
-      if (personRes.data?.data) setByPersonData(personRes.data.data);
-      if (deptRes.data?.data) setByDepartmentData(deptRes.data.data);
-      if (costRes.data?.data) setCostImpactData(costRes.data.data);
+      if (stageRes.data?.data) {setByStageData(stageRes.data.data);}
+      if (personRes.data?.data) {setByPersonData(personRes.data.data);}
+      if (deptRes.data?.data) {setByDepartmentData(deptRes.data.data);}
+      if (costRes.data?.data) {setCostImpactData(costRes.data.data);}
     } catch (error) {
       console.error("加载归责分析失败:", error);
     } finally {
@@ -159,7 +159,7 @@ export default function AccountabilityAnalysis() {
               </div>
             </CardContent>
           </Card>
-        </div>
+      </div>
       }
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -205,16 +205,16 @@ export default function AccountabilityAnalysis() {
                                 <TableCell>
                                   {formatAmount(person.cost_impact)}
                                 </TableCell>
-                              </TableRow>
+                      </TableRow>
                       )}
                           </TableBody>
-                        </Table>
+                  </Table>
                   }
                     </CardContent>
-                  </Card>
+              </Card>
 
             )}
-            </div>
+          </div>
           }
         </TabsContent>
 
@@ -258,13 +258,13 @@ export default function AccountabilityAnalysis() {
                           <TableCell>
                             {Object.keys(person.stages || {}).length} 个环节
                           </TableCell>
-                        </TableRow>
+                  </TableRow>
                   )}
                     </TableBody>
-                  </Table>
+              </Table>
               }
               </CardContent>
-            </Card>
+          </Card>
           }
         </TabsContent>
 
@@ -301,13 +301,13 @@ export default function AccountabilityAnalysis() {
                             <TableCell>{dept.total_breaks}</TableCell>
                             <TableCell>{formatAmount(dept.cost_impact)}</TableCell>
                             <TableCell>{dept.person_count} 人</TableCell>
-                          </TableRow>
+                  </TableRow>
                   )}
                       </TableBody>
-                    </Table>
+              </Table>
               }
               </CardContent>
-            </Card>
+          </Card>
           }
         </TabsContent>
 
@@ -336,15 +336,15 @@ export default function AccountabilityAnalysis() {
                                 {getBreakStageLabel(stage)}
                               </TableCell>
                               <TableCell>{formatAmount(cost)}</TableCell>
-                            </TableRow>
+                      </TableRow>
 
                     )}
                       </TableBody>
-                    </Table>
+                </Table>
                 }
                 </CardContent>
               </Card>
-            </div>
+          </div>
           }
         </TabsContent>
       </Tabs>

@@ -18,7 +18,8 @@ import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger } from
+  TabsTrigger,
+  toast } from
 "../components/ui";
 import ProjectBonusPanel from "../components/project/ProjectBonusPanel";
 import ProjectMeetingPanel from "../components/project/ProjectMeetingPanel";
@@ -117,7 +118,7 @@ export default function ProjectWorkspace() {
               <h1 className="text-2xl font-bold">{project.project_name}</h1>
               <p className="text-sm text-gray-500">{project.project_code}</p>
             </div>
-          </div>
+        </div>
         } />
 
 
@@ -214,9 +215,9 @@ export default function ProjectWorkspace() {
                     {member.start_date && member.end_date &&
                   <p className="text-xs text-gray-400 mt-2">
                         {member.start_date} ~ {member.end_date}
-                      </p>
+                  </p>
                   }
-                  </div>
+                </div>
                 )}
               </div>
             </CardContent>
@@ -253,7 +254,7 @@ export default function ProjectWorkspace() {
                       </Badge>
                       <Progress value={task.progress} className="w-20" />
                     </div>
-                  </div>
+                </div>
                 )}
               </div>
             </CardContent>
@@ -275,10 +276,24 @@ export default function ProjectWorkspace() {
         <TabsContent value="solutions" className="space-y-6">
           <SolutionLibrary
             projectId={id}
-            onApplyTemplate={(template) => {
-              // TODO: 实现应用模板逻辑
-              console.log("Apply template:", template);
-            }} />
+            onApplyTemplate={async (template) => {
+              const text =
+                template?.solution ||
+                template?.solution_template ||
+                template?.description_template ||
+                "";
+              if (!text) {
+                toast.info("该模板暂无可复制内容");
+                return;
+              }
+              try {
+                await navigator.clipboard.writeText(text);
+                toast.success("已复制模板内容到剪贴板");
+              } catch {
+                toast.info("复制失败，请手动复制模板内容");
+              }
+            }}
+          />
 
         </TabsContent>
 
@@ -319,7 +334,7 @@ export default function ProjectWorkspace() {
 
                       {doc.status}
                     </Badge>
-                  </div>
+                </div>
                 )}
               </div>
             </CardContent>

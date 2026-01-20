@@ -59,7 +59,7 @@ export default function ProjectGantt() {
     }
   };
   const calculateProgress = (task) => {
-    if (task.status === "COMPLETED") return 100;
+    if (task.status === "COMPLETED") {return 100;}
     return task.progress || 0;
   };
   const getStatusColor = (status) => {
@@ -147,7 +147,7 @@ export default function ProjectGantt() {
                         <Badge className="bg-red-500">
                               <AlertTriangle className="w-3 h-3 mr-1" />
                               逾期
-                            </Badge>
+                        </Badge>
                         }
                         </div>
                         <div className="flex items-center gap-4 text-sm text-slate-500">
@@ -160,14 +160,14 @@ export default function ProjectGantt() {
                         <div className="flex items-center gap-1">
                               <Users className="w-4 h-4" />
                               {task.assignee_name}
-                            </div>
+                        </div>
                         }
                           {task.dependencies &&
                         task.dependencies.length > 0 &&
                         <div className="flex items-center gap-1">
                                 <Clock className="w-4 h-4" />
                                 依赖 {task.dependencies.length} 个任务
-                              </div>
+                        </div>
                         }
                         </div>
                       </div>
@@ -179,10 +179,10 @@ export default function ProjectGantt() {
                       </div>
                     </div>
                     <Progress value={progress} className="h-2" />
-                  </div>);
+                </div>);
 
             })}
-            </div>
+          </div>
           }
         </CardContent>
       </Card>

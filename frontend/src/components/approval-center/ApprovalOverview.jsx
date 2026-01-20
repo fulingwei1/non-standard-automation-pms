@@ -29,7 +29,7 @@ const ApprovalOverview = ({ data, loading, onNavigate }) => {
   const [_selectedPeriod, _setSelectedPeriod] = useState('week');
 
   const overviewStats = useMemo(() => {
-    if (!data?.approvals) return {};
+    if (!data?.approvals) {return {};}
 
     const totalApprovals = data.approvals.length;
     const pendingApprovals = data.approvals.filter((a) => a.status === 'pending').length;
@@ -55,7 +55,7 @@ const ApprovalOverview = ({ data, loading, onNavigate }) => {
   }, [data]);
 
   const typeDistribution = useMemo(() => {
-    if (!data?.approvals) return {};
+    if (!data?.approvals) {return {};}
 
     const distribution = {};
     Object.keys(APPROVAL_TYPES).forEach((key) => {
@@ -72,7 +72,7 @@ const ApprovalOverview = ({ data, loading, onNavigate }) => {
   }, [data]);
 
   const priorityDistribution = useMemo(() => {
-    if (!data?.approvals) return {};
+    if (!data?.approvals) {return {};}
 
     const distribution = {};
     Object.keys(APPROVAL_PRIORITY).forEach((key) => {
@@ -89,7 +89,7 @@ const ApprovalOverview = ({ data, loading, onNavigate }) => {
   }, [data]);
 
   const myPendingApprovals = useMemo(() => {
-    if (!data?.approvals) return [];
+    if (!data?.approvals) {return [];}
 
     return data.approvals.
     filter((approval) =>
@@ -110,7 +110,7 @@ const ApprovalOverview = ({ data, loading, onNavigate }) => {
   }, [data]);
 
   const recentApprovals = useMemo(() => {
-    if (!data?.approvals) return [];
+    if (!data?.approvals) {return [];}
 
     return data.approvals.
     sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)).

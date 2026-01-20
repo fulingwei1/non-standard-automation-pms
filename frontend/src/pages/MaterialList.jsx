@@ -93,10 +93,10 @@ export default function MaterialList() {
       setError(null);
       const params = {};
       if (filterCategory && filterCategory !== "all")
-      params.category_id = filterCategory;
+      {params.category_id = filterCategory;}
       if (filterSupplier && filterSupplier !== "all")
-      params.supplier_id = filterSupplier;
-      if (searchKeyword) params.search = searchKeyword;
+      {params.supplier_id = filterSupplier;}
+      if (searchKeyword) {params.search = searchKeyword;}
       const res = await materialApi.list(params);
       const materialList = res.data?.items || res.data || [];
       setMaterials(materialList);
@@ -162,7 +162,7 @@ export default function MaterialList() {
     }
   };
   const filteredMaterials = useMemo(() => {
-    if (!materials || materials.length === 0) return [];
+    if (!materials || materials.length === 0) {return [];}
 
     return materials.filter((material) => {
       if (searchKeyword) {
@@ -225,7 +225,7 @@ export default function MaterialList() {
                   {categories.map((cat) =>
                   <SelectItem key={cat.id} value={cat.id.toString()}>
                       {cat.name}
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -241,7 +241,7 @@ export default function MaterialList() {
                     value={supplier.id.toString()}>
 
                       {supplier.name}
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -268,7 +268,7 @@ export default function MaterialList() {
             filteredMaterials.length === 0 ?
             <div className="text-center py-8 text-slate-400">
                 暂无物料数据
-              </div> :
+            </div> :
 
             <Table>
                 <TableHeader>
@@ -299,7 +299,7 @@ export default function MaterialList() {
                         {material.category_name ?
                     <Badge variant="outline">
                             {material.category_name}
-                          </Badge> :
+                    </Badge> :
 
                     "-"
                     }
@@ -317,7 +317,7 @@ export default function MaterialList() {
                             <span className="text-sm">
                               {material.supplier_name}
                             </span>
-                          </div> :
+                    </div> :
 
                     "-"
                     }
@@ -333,10 +333,10 @@ export default function MaterialList() {
                           </Button>
                         </div>
                       </TableCell>
-                    </TableRow>
+                </TableRow>
                 )}
                 </TableBody>
-              </Table>
+            </Table>
             }
           </CardContent>
         </Card>
@@ -411,7 +411,7 @@ export default function MaterialList() {
                       {categories.map((cat) =>
                       <SelectItem key={cat.id} value={cat.id.toString()}>
                           {cat.name}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -465,7 +465,7 @@ export default function MaterialList() {
                         value={supplier.id.toString()}>
 
                           {supplier.name}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -546,9 +546,9 @@ export default function MaterialList() {
                 <div>
                       <div className="text-sm text-slate-500 mb-1">备注</div>
                       <div>{selectedMaterial.remark}</div>
-                    </div>
-                }
                 </div>
+                }
+              </div>
               }
             </DialogBody>
             <DialogFooter>

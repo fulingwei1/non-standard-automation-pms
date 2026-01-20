@@ -287,10 +287,10 @@ export const CHART_TYPE_CONFIG = {
 
 // 获取满意度评分配置
 export const getSatisfactionScoreConfig = (score) => {
-  if (score >= 5) return satisfactionScoreConfig.excellent;
-  if (score >= 4) return satisfactionScoreConfig.good;
-  if (score >= 3) return satisfactionScoreConfig.average;
-  if (score >= 2) return satisfactionScoreConfig.poor;
+  if (score >= 5) {return satisfactionScoreConfig.excellent;}
+  if (score >= 4) {return satisfactionScoreConfig.good;}
+  if (score >= 3) {return satisfactionScoreConfig.average;}
+  if (score >= 2) {return satisfactionScoreConfig.poor;}
   return satisfactionScoreConfig.terrible;
 };
 
@@ -311,29 +311,29 @@ export const getPriorityConfig = (priority) => {
 
 // 格式化满意度评分
 export const formatSatisfactionScore = (score) => {
-  if (!score) return "-";
+  if (!score) {return "-";}
   return `${score.toFixed(1)}分`;
 };
 
 // 计算满意度等级
 export const getSatisfactionLevel = (score) => {
-  if (score >= 4.5) return "excellent";
-  if (score >= 3.5) return "good";
-  if (score >= 2.5) return "average";
-  if (score >= 1.5) return "poor";
+  if (score >= 4.5) {return "excellent";}
+  if (score >= 3.5) {return "good";}
+  if (score >= 2.5) {return "average";}
+  if (score >= 1.5) {return "poor";}
   return "terrible";
 };
 
 // 计算正面反馈比例
 export const calculatePositiveRate = (feedbacks) => {
-  if (!feedbacks || feedbacks.length === 0) return 0;
+  if (!feedbacks || feedbacks.length === 0) {return 0;}
   const positiveCount = feedbacks.filter(f => f.rating >= 4).length;
   return ((positiveCount / feedbacks.length) * 100).toFixed(1);
 };
 
 // 计算解决率
 export const calculateResolutionRate = (feedbacks) => {
-  if (!feedbacks || feedbacks.length === 0) return 0;
+  if (!feedbacks || feedbacks.length === 0) {return 0;}
   const resolvedCount = feedbacks.filter(f => ["resolved", "closed"].includes(f.status)).length;
   return ((resolvedCount / feedbacks.length) * 100).toFixed(1);
 };

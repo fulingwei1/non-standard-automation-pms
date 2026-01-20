@@ -18,13 +18,13 @@ from app.core import security
 from app.core.config import settings
 from app.models.sales import Quote, QuoteItem
 from app.models.user import User
-from app.schemas.common import Response
+from app.schemas.common import ResponseModel
 from app.schemas.sales import QuoteItemResponse, QuoteResponse
 
 router = APIRouter()
 
 
-@router.get("/quotes/status", response_model=Response[List[QuoteResponse]])
+@router.get("/quotes/status", response_model=ResponseModel[List[QuoteResponse]])
 def get_quote_status(
     db: Session = Depends(get_db),
     skip: int = Query(0, ge=0, description="跳过记录数"),
@@ -47,12 +47,13 @@ def get_quote_status(
         # TODO: 实现status查询逻辑
         quotes = db.query(Quote).offset(skip).limit(limit).all()
 
-        return Response.success(
-            data=[QuoteResponse.from_orm(quote) for quote in quotes],
-            message="报价status列表获取成功"
+        return ResponseModel(
+            code=200,
+            message="报价status列表获取成功",
+            data=[QuoteResponse.model_validate(quote) for quote in quotes]
         )
     except Exception as e:
-        return Response.error(message=f"获取报价status失败: {str(e)}")
+        return ResponseModel(code=500, message=f"获取报价status失败: {str(e)}")
 
 
 @router.post("/quotes/status")
@@ -74,6 +75,6 @@ def create_quote_status(
     """
     try:
         # TODO: 实现status创建逻辑
-        return Response.success(message="报价status创建成功")
+        return ResponseModel(code=200, message="报价status创建成功")
     except Exception as e:
-        return Response.error(message=f"创建报价status失败: {str(e)}")
+        return ResponseModel(code=500, message=f"创建报价status失败: {str(e)}")

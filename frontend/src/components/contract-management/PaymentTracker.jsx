@@ -70,7 +70,7 @@ const PaymentTracker = ({ contracts = [], loading = false }) => {
         </Col>
       </Row>
 
-      <Card title="付款明细（占位）" loading={loading}>
+      <Card title="付款明细" loading={loading}>
         <Table rowKey="id" dataSource={contracts} columns={columns} pagination={false} />
       </Card>
     </div>

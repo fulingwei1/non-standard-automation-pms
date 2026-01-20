@@ -23,7 +23,7 @@ export const serviceApi = {
     uploadPhoto: (recordId, file, description) => {
       const formData = new FormData();
       formData.append("file", file);
-      if (description) formData.append("description", description);
+      if (description) {formData.append("description", description);}
       return api.post(`/service-records/${recordId}/photos`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });

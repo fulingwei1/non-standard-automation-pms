@@ -52,7 +52,7 @@ const slideDown = {
  * 沟通详情卡片
  */
 const CommunicationDetailCard = ({ communication }) => {
-  if (!communication) return null;
+  if (!communication) {return null;}
 
   const config = getStatusConfig(communication.status);
   const typeConfig = getTypeConfig(communication.communication_type);
@@ -162,9 +162,9 @@ const CommunicationDetailCard = ({ communication }) => {
               {communication.communication_records.map((record, index) =>
             <div key={index} className="flex gap-3">
                   <div className="flex flex-col items-center">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <div className="w-2 h-2 bg-blue-500 rounded-full" />
                     {index < communication.communication_records.length - 1 &&
-                <div className="w-0.5 h-16 bg-slate-200 dark:bg-slate-700 mt-2"></div>
+                <div className="w-0.5 h-16 bg-slate-200 dark:bg-slate-700 mt-2" />
                 }
                   </div>
                   <div className="flex-1 pb-4">

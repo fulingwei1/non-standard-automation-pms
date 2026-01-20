@@ -203,19 +203,19 @@ export const formatPaymentAmount = (amount) => {
 };
 
 export const formatPaymentDate = (dateStr) => {
-  if (!dateStr) return "--";
+  if (!dateStr) {return "--";}
   const date = new Date(dateStr);
   return date.toLocaleDateString("zh-CN");
 };
 
 export const formatPaymentDateTime = (dateStr) => {
-  if (!dateStr) return "--";
+  if (!dateStr) {return "--";}
   const date = new Date(dateStr);
   return date.toLocaleString("zh-CN");
 };
 
 export const calculateOverdueDays = (dueDate) => {
-  if (!dueDate) return 0;
+  if (!dueDate) {return 0;}
   const due = new Date(dueDate);
   const now = new Date();
   const diffTime = now - due;

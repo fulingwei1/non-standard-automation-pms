@@ -163,7 +163,7 @@ export default function SalesDirectorStatsOverview({
 
   // 渲染趋势指示器
   const renderTrendIndicator = (trend, value) => {
-    if (trend === 'stable' || !value) return null;
+    if (trend === 'stable' || !value) {return null;}
 
     const isPositive = trend === 'upward';
     const Icon = isPositive ? ArrowUpRight : ArrowDownRight;
@@ -222,7 +222,7 @@ export default function SalesDirectorStatsOverview({
                   <span>0</span>
                   <span>{formatPercentage(100)}</span>
                 </div>
-              </div>
+            </div>
             }
           </CardContent>
         </Card>
@@ -239,15 +239,15 @@ export default function SalesDirectorStatsOverview({
           <Card key={i} className="animate-pulse">
               <CardContent className="p-6">
                 <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-slate-700 rounded-lg"></div>
+                  <div className="w-12 h-12 bg-slate-700 rounded-lg" />
                   <div className="flex-1">
-                    <div className="h-4 bg-slate-700 rounded mb-2"></div>
-                    <div className="h-6 bg-slate-700 rounded w-3/4"></div>
+                    <div className="h-4 bg-slate-700 rounded mb-2" />
+                    <div className="h-6 bg-slate-700 rounded w-3/4" />
                   </div>
                 </div>
-                <div className="mt-4 h-2 bg-slate-700 rounded"></div>
+                <div className="mt-4 h-2 bg-slate-700 rounded" />
               </CardContent>
-            </Card>
+          </Card>
           )}
         </div>
       </div>);
@@ -273,7 +273,7 @@ export default function SalesDirectorStatsOverview({
               )}>
 
                 {period.label}
-              </button>
+            </button>
             )}
           </div>
         </div>
@@ -288,7 +288,7 @@ export default function SalesDirectorStatsOverview({
             className="text-xs bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition-colors">
 
               刷新
-            </button>
+          </button>
           }
         </div>
       </div>
@@ -351,7 +351,7 @@ export default function SalesDirectorStatsOverview({
                 {statsData.teamSize.growth > 0 &&
                 <span className="ml-1">
                     (增长 {formatPercentage(statsData.teamSize.growth)})
-                  </span>
+                </span>
                 }
               </div>
             </div>

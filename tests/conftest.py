@@ -7,7 +7,6 @@ sys.modules["redis"] = redis_mock
 sys.modules["redis.exceptions"] = MagicMock()
 
 import os
-from pathlib import Path
 
 # ---------------------------------------------------------------------------
 # Test database isolation
@@ -15,12 +14,8 @@ from pathlib import Path
 # The repository may contain a pre-existing `data/app.db` with legacy/demo data
 # and schema drift (e.g. wrong column types). API tests should run against a
 # clean, predictable SQLite database.
-_PROJECT_ROOT = Path(__file__).resolve().parents[1]
-_TEST_DB_PATH = _PROJECT_ROOT / "data" / "test_app.db"
-_TEST_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-if _TEST_DB_PATH.exists():
-    _TEST_DB_PATH.unlink()
-os.environ["SQLITE_DB_PATH"] = str(_TEST_DB_PATH)
+# Use in-memory SQLite database for tests to avoid readonly file permission issues.
+os.environ["SQLITE_DB_PATH"] = ":memory:"
 # Disable schedulers during tests to avoid background writes.
 os.environ.setdefault("ENABLE_SCHEDULER", "false")
 
@@ -243,6 +238,7 @@ def client() -> Generator:
     with TestClient(app) as c:
         yield c
 
+
 @pytest.fixture(scope="module")
 def admin_token(client: TestClient) -> str:
     """
@@ -279,6 +275,7 @@ def admin_token(client: TestClient) -> str:
         # 为了健壮性，这里先返回 None，测试用例中再处理
         return None
 
+
 @pytest.fixture(scope="module")
 def normal_user_token(client: TestClient) -> str:
     """获取普通用户 token"""
@@ -305,6 +302,7 @@ def normal_user_token(client: TestClient) -> str:
         return r.json()["access_token"]
     else:
         return None
+
 
 @pytest.fixture(scope="module")
 def sales_user_token(client: TestClient) -> str:
@@ -334,6 +332,7 @@ def sales_user_token(client: TestClient) -> str:
         return r.json()["access_token"]
     else:
         return None
+
 
 @pytest.fixture(scope="module")
 def finance_user_token(client: TestClient) -> str:
@@ -383,9 +382,15 @@ def db_session() -> Generator[Session, None, None]:
 # 测试辅助常量 & 工具
 # ---------------------------------------------------------------------------
 
-ENGINEER_CREDENTIALS: Dict[str, str] = {"username": "engineer_test", "password": "engineer123"}
+ENGINEER_CREDENTIALS: Dict[str, str] = {
+    "username": "engineer_test",
+    "password": "engineer123",
+}
 PM_CREDENTIALS: Dict[str, str] = {"username": "pm_test", "password": "pm123"}
-REGULAR_USER_CREDENTIALS: Dict[str, str] = {"username": "regular_user", "password": "regular123"}
+REGULAR_USER_CREDENTIALS: Dict[str, str] = {
+    "username": "regular_user",
+    "password": "regular123",
+}
 
 ENGINEER_PERMISSION_SPECS: Tuple[Tuple[str, str], ...] = (
     ("engineer:read", "工程师进度查看"),
@@ -410,8 +415,6 @@ def _ensure_permission(db: Session, code: str, name: str) -> Permission:
     db.commit()
     db.refresh(permission)
     return permission
-
-
 
 
 def _get_or_create_employee(
@@ -604,7 +607,9 @@ def regular_user(db_session: Session) -> User:
 
 
 def _ensure_customer(db: Session) -> Customer:
-    customer = db.query(Customer).filter(Customer.customer_code == "CUST-ENGINEER").first()
+    customer = (
+        db.query(Customer).filter(Customer.customer_code == "CUST-ENGINEER").first()
+    )
     if not customer:
         customer = Customer(
             customer_code="CUST-ENGINEER",
@@ -681,7 +686,11 @@ def create_test_task(
         session: Session = overrides.pop("db", db_session)
         task_code = overrides.get("task_code", f"TASK-{uuid.uuid4().hex[:10].upper()}")
 
-        existing = session.query(TaskUnified).filter(TaskUnified.task_code == task_code).first()
+        existing = (
+            session.query(TaskUnified)
+            .filter(TaskUnified.task_code == task_code)
+            .first()
+        )
         if existing:
             session.delete(existing)
             session.commit()
@@ -696,9 +705,13 @@ def create_test_task(
             project_code=overrides.get("project_code", mock_project.project_code),
             project_name=overrides.get("project_name", mock_project.project_name),
             assignee_id=overrides.get("assignee_id", mock_user.id),
-            assignee_name=overrides.get("assignee_name", mock_user.real_name or mock_user.username),
+            assignee_name=overrides.get(
+                "assignee_name", mock_user.real_name or mock_user.username
+            ),
             assigner_id=overrides.get("assigner_id", mock_user.id),
-            assigner_name=overrides.get("assigner_name", mock_user.real_name or mock_user.username),
+            assigner_name=overrides.get(
+                "assigner_name", mock_user.real_name or mock_user.username
+            ),
             plan_start_date=overrides.get("plan_start_date"),
             plan_end_date=overrides.get("plan_end_date"),
             deadline=overrides.get("deadline"),
@@ -760,6 +773,7 @@ def mock_important_task(
 # 认证头部 fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture(scope="function")
 def auth_headers(client: TestClient, engineer_user: User) -> Dict[str, str]:
     """返回普通工程师的Bearer Token"""
@@ -816,7 +830,6 @@ def db(db_session: Session) -> Session:
 
 from tests.factories import (
     AdminUserFactory,
-    BomHeaderFactory,
     ContractFactory,
     CustomerFactory,
     EmployeeFactory,
@@ -831,8 +844,6 @@ from tests.factories import (
     SupplierFactory,
     UserFactory,
     create_complete_project_setup,
-    create_test_project,
-    create_test_user,
 )
 
 

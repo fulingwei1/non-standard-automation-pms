@@ -350,7 +350,7 @@ export const getMonthlyNewUsers = (users) => {
 
 // 计算用户增长率
 export const calculateUserGrowthRate = (currentUsers, previousUsers) => {
-  if (previousUsers === 0) return currentUsers > 0 ? 100 : 0;
+  if (previousUsers === 0) {return currentUsers > 0 ? 100 : 0;}
   return ((currentUsers - previousUsers) / previousUsers * 100).toFixed(1);
 };
 

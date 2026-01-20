@@ -684,7 +684,7 @@ export function getNavForRole(role) {
  * 包含齐套分析、物料分析等页面的访问权限
  */
 export function hasProcurementAccess(role, isSuperuser = false) {
-  if (isSuperuser) return true;
+  if (isSuperuser) {return true;}
 
   const allowedRoles = [
     "admin",
@@ -727,7 +727,7 @@ export function hasProcurementAccess(role, isSuperuser = false) {
  * 检查是否有财务模块访问权限
  */
 export function hasFinanceAccess(role, isSuperuser = false) {
-  if (isSuperuser) return true;
+  if (isSuperuser) {return true;}
 
   // 统一转换为字符串并转为小写进行比较（英文角色）
   const roleStr = String(role || "").trim();
@@ -782,7 +782,7 @@ export function hasFinanceAccess(role, isSuperuser = false) {
  * 包含装配齐套看板等页面的访问权限
  */
 export function hasProductionAccess(role, isSuperuser = false) {
-  if (isSuperuser) return true;
+  if (isSuperuser) {return true;}
 
   const allowedRoles = [
     "admin",
@@ -821,25 +821,49 @@ export function hasProductionAccess(role, isSuperuser = false) {
 
 /**
  * 检查是否有项目复盘访问权限
+ * 优先使用权限代码检查（动态），角色检查作为兜底（兼容旧数据）
+ * @param {string} role - 用户角色代码
+ * @param {boolean} isSuperuser - 是否超级管理员
+ * @param {string[]} permissions - 用户权限代码列表（可选，优先使用）
  */
-export function hasProjectReviewAccess(role, isSuperuser = false) {
-  if (isSuperuser) return true;
+export function hasProjectReviewAccess(role, isSuperuser = false, permissions = []) {
+  // 超级管理员直接放行
+  if (isSuperuser) {return true;}
 
+  // 优先使用权限代码检查（推荐方式，从数据库动态获取）
+  if (permissions && permissions.length > 0) {
+    const requiredPermissions = [
+      'project_review:read',
+      'lessons_learned:read',
+      'best_practice:read'
+    ];
+    // 只要有任一项目复盘相关权限即可访问
+    return requiredPermissions.some(perm => permissions.includes(perm));
+  }
+
+  // 兜底：角色白名单（兼容旧系统，权限数据未迁移完成时使用）
   const allowedRoles = [
     "admin",
     "super_admin",
+    "ADMIN",
     "chairman",
     "gm",
+    "GM",
+    "PMO_DIR",
     "project_dept_manager",
+    "PROJECT_MANAGER",
     "pmc",
     "pm",
+    "PM",
     "tech_dev_manager",
+    "CTO",
     "me_dept_manager",
+    "ME_MGR",
     "ee_dept_manager",
+    "EE_MGR",
     "te_dept_manager",
-    "项目部经理",
-    "项目经理",
-    "技术开发部经理",
+    "VP",
+    "PRODUCTION_DIR",
   ];
 
   return allowedRoles.includes(role);

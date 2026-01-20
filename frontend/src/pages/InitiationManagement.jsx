@@ -140,7 +140,7 @@ export default function InitiationManagement() {
         <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
             <Plus className="h-4 w-4" />
             新建申请
-          </Button>
+        </Button>
         } />
 
 
@@ -192,7 +192,7 @@ export default function InitiationManagement() {
               </Button>
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* List */}
@@ -203,7 +203,7 @@ export default function InitiationManagement() {
         map((_, i) =>
         <SkeletonCard key={i} />
         )}
-        </div> :
+      </div> :
       error ? null :
       <>
           {initiations.length > 0 ?
@@ -276,7 +276,7 @@ export default function InitiationManagement() {
                           onClick={() => handleSubmit(initiation.id)}>
 
                                 提交评审
-                              </Button>
+                        </Button>
                         }
                             {initiation.status === "APPROVED" &&
                         initiation.project_id &&
@@ -290,7 +290,7 @@ export default function InitiationManagement() {
                           }>
 
                                   查看项目
-                                </Button>
+                        </Button>
                         }
                           </div>
                           <Button
@@ -306,18 +306,18 @@ export default function InitiationManagement() {
                         </div>
                       </CardContent>
                     </Card>
-                  </motion.div>);
+              </motion.div>);
 
           })}
-            </div> :
+        </div> :
 
         <Card>
               <CardContent className="p-12 text-center text-slate-500">
                 暂无立项申请
               </CardContent>
-            </Card>
+        </Card>
         }
-        </>
+      </>
       }
 
       {/* Pagination */}
@@ -342,7 +342,7 @@ export default function InitiationManagement() {
 
             下一页
           </Button>
-        </div>
+      </div>
       }
 
       {/* Create Dialog */}

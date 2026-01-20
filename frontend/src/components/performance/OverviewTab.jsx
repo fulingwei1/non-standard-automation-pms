@@ -93,7 +93,7 @@ export const OverviewTab = ({ currentPeriod, latestScore, quarterlyTrend }) => {
                     {currentPeriod.deptEvaluation.score}
                   </p>
                   <p className="text-xs text-slate-400">已评分</p>
-                </div> :
+              </div> :
 
               <span
                 className={cn(
@@ -102,7 +102,7 @@ export const OverviewTab = ({ currentPeriod, latestScore, quarterlyTrend }) => {
                 )}>
 
                   {getStatusBadge("PENDING").label}
-                </span>
+              </span>
               }
             </div>
           </div>
@@ -131,7 +131,7 @@ export const OverviewTab = ({ currentPeriod, latestScore, quarterlyTrend }) => {
                         {proj.score}
                       </p>
                       <p className="text-xs text-slate-400">已评分</p>
-                    </div> :
+                </div> :
 
                 <span
                   className={cn(
@@ -140,9 +140,9 @@ export const OverviewTab = ({ currentPeriod, latestScore, quarterlyTrend }) => {
                   )}>
 
                       {getStatusBadge("PENDING").label}
-                    </span>
+                </span>
                 }
-                </div>
+              </div>
               )}
             </div>
           </div>
@@ -239,7 +239,7 @@ export const OverviewTab = ({ currentPeriod, latestScore, quarterlyTrend }) => {
                   <p className="text-sm text-slate-400">
                     相比上季度 {quarterComparison.percentChange}%
                   </p>
-                </>
+            </>
             }
             </div>
           </div>
@@ -277,12 +277,12 @@ export const OverviewTab = ({ currentPeriod, latestScore, quarterlyTrend }) => {
                         ({ps.weight}%)
                       </span>
                     </div>
-                  </div>
+              </div>
               )}
               </div>
             </div>
           </div>
-        </div>
+      </div>
       }
 
       {/* 季度趋势图 */}
@@ -312,7 +312,7 @@ export const OverviewTab = ({ currentPeriod, latestScore, quarterlyTrend }) => {
 
                 {item.level}级
               </span>
-            </div>
+          </div>
           )}
         </div>
       </div>

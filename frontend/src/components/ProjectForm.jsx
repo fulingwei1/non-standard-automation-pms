@@ -59,7 +59,7 @@ const ProjectForm = ({ isOpen, onClose, onSubmit, initialData = {} }) => {
     onSubmit(formData);
   };
 
-  if (!isOpen) return null;
+  if (!isOpen) {return null;}
 
   return (
     <div className="modal-overlay">

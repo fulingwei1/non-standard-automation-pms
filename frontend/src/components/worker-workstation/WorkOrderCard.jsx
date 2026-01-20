@@ -50,7 +50,7 @@ export default function WorkOrderCard({ order, onAction }) {
               {isOverdue &&
               <Badge variant="destructive" className="text-xs">
                   已逾期
-                </Badge>
+              </Badge>
               }
             </div>
             <p className="text-sm text-slate-400">{order.project_name || order.project_code}</p>
@@ -91,13 +91,13 @@ export default function WorkOrderCard({ order, onAction }) {
           <div className="flex items-center gap-1">
               <Clock className="w-3 h-3" />
               <span>开始: {formatDate(order.plan_start_time)}</span>
-            </div>
+          </div>
           }
           {order.plan_end_time &&
           <div className="flex items-center gap-1">
               <Clock className="w-3 h-3" />
               <span>结束: {formatDate(order.plan_end_time)}</span>
-            </div>
+          </div>
           }
         </div>
 
@@ -113,7 +113,7 @@ export default function WorkOrderCard({ order, onAction }) {
 
               <action.icon className="w-4 h-4 mr-1" />
               {action.label}
-            </Button>
+          </Button>
           )}
         </div>
       </CardContent>

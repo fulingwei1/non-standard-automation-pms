@@ -36,14 +36,14 @@ export default function QuickActionPanel({ project, onRefresh }) {
 
   // 检查是否可以推进阶段
   const canAdvanceStage = () => {
-    if (!project?.stage) return false;
+    if (!project?.stage) {return false;}
     const stageOrder = parseInt(project.stage.replace("S", ""));
     return stageOrder < 9;
   };
 
   // 检查自动流转
   const handleCheckAutoTransition = async () => {
-    if (!project?.id) return;
+    if (!project?.id) {return;}
 
     setLoading(true);
     try {
@@ -97,7 +97,7 @@ export default function QuickActionPanel({ project, onRefresh }) {
               检查自动流转
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-          </>
+        </>
         }
 
         {/* 状态更新 */}

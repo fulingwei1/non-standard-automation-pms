@@ -295,7 +295,7 @@ export default function CostTemplateManagement() {
   const equipmentTypes = useMemo(() => {
     const types = new Set();
     templates.forEach((t) => {
-      if (t.equipment_type) types.add(t.equipment_type);
+      if (t.equipment_type) {types.add(t.equipment_type);}
     });
     return Array.from(types);
   }, [templates]);
@@ -314,7 +314,7 @@ export default function CostTemplateManagement() {
         <Button onClick={handleCreate}>
             <Plus className="h-4 w-4 mr-2" />
             新建模板
-          </Button>
+        </Button>
         } />
 
 
@@ -353,7 +353,7 @@ export default function CostTemplateManagement() {
                 {equipmentTypes.map((type) =>
                 <SelectItem key={type} value={type}>
                     {type}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -404,7 +404,7 @@ export default function CostTemplateManagement() {
               <div className="flex items-center gap-2">
                     <FileText className="h-4 w-4" />
                     <span>设备: {template.equipment_type}</span>
-                  </div>
+              </div>
               }
                 <div className="flex items-center gap-2">
                   <DollarSign className="h-4 w-4" />
@@ -447,7 +447,7 @@ export default function CostTemplateManagement() {
                 </Button>
               </div>
             </CardContent>
-          </Card>
+        </Card>
         )}
       </div>
 
@@ -456,7 +456,7 @@ export default function CostTemplateManagement() {
           <CardContent className="py-12 text-center text-slate-400">
             暂无模板，点击"新建模板"创建第一个模板
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* Create/Edit Dialog */}
@@ -688,10 +688,10 @@ export default function CostTemplateManagement() {
 
                               <Trash2 className="h-4 w-4" />
                             </Button>
-                          </div>
+                      </div>
                       )}
                       </div>
-                    </div>
+                  </div>
 
                 )}
 
@@ -699,7 +699,7 @@ export default function CostTemplateManagement() {
                 formData.cost_structure.categories.length === 0) &&
                 <div className="text-center py-8 text-slate-400">
                     点击"添加分类"开始构建成本结构
-                  </div>
+                </div>
                 }
               </div>
             </div>
@@ -792,16 +792,16 @@ export default function CostTemplateManagement() {
                                 <TableCell>
                                   {formatCurrency(item.default_cost || 0)}
                                 </TableCell>
-                              </TableRow>
+                      </TableRow>
                       )}
                           </TableBody>
                         </Table>
-                      </div>
+                </div>
 
               )}
-                </div>
-            }
             </div>
+            }
+          </div>
           }
 
           <DialogFooter>

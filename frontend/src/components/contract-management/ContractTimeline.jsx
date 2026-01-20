@@ -262,7 +262,7 @@ export function ContractTimeline({
         {/* 时间线主体 */}
         <div className="relative">
           {/* 垂直时间线 */}
-          <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-slate-200"></div>
+          <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-slate-200" />
 
           {months.map((month, _monthIndex) =>
           <div key={month} className="relative">
@@ -372,7 +372,7 @@ export function ContractTimeline({
                       </Card>
 
                       {!isLast &&
-                    <div className="absolute left-[-16px] top-full w-0.5 h-4 bg-slate-200"></div>
+                    <div className="absolute left-[-16px] top-full w-0.5 h-4 bg-slate-200" />
                     }
                   </div>);
 

@@ -84,10 +84,10 @@ export default function HourlyRateManagement() {
         page_size: pageSize,
       };
 
-      if (configType) params.config_type = configType;
-      if (userId) params.user_id = parseInt(userId);
-      if (roleId) params.role_id = parseInt(roleId);
-      if (deptId) params.dept_id = parseInt(deptId);
+      if (configType) {params.config_type = configType;}
+      if (userId) {params.user_id = parseInt(userId);}
+      if (roleId) {params.role_id = parseInt(roleId);}
+      if (deptId) {params.dept_id = parseInt(deptId);}
 
       const response = await hourlyRateApi.list(params);
       const data = response.data?.data || response.data || response;

@@ -185,7 +185,7 @@ export default function ProjectFormStepper({
 
   // 项目编码唯一性检查
   const handleCodeBlur = async () => {
-    if (!formData.project_code || initialData.id) return;
+    if (!formData.project_code || initialData.id) {return;}
 
     setValidatingCode(true);
     setCodeError("");
@@ -264,12 +264,12 @@ export default function ProjectFormStepper({
     const step = STEPS[stepIndex];
     switch (step.id) {
       case "basic":
-        if (!formData.project_code) return "请输入项目编码";
-        if (!formData.project_name) return "请输入项目名称";
-        if (codeError) return codeError;
+        if (!formData.project_code) {return "请输入项目编码";}
+        if (!formData.project_name) {return "请输入项目名称";}
+        if (codeError) {return codeError;}
         return null;
       case "customer":
-        if (!formData.customer_id) return "请选择客户";
+        if (!formData.customer_id) {return "请选择客户";}
         return null;
       case "finance":
         // 财务信息可选
@@ -390,7 +390,7 @@ export default function ProjectFormStepper({
     }
   };
 
-  if (!open) return null;
+  if (!open) {return null;}
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

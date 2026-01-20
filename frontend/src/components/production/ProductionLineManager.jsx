@@ -96,7 +96,7 @@ export default function ProductionLineManager({
   // 渲染状态徽章
   const renderStatusBadge = (status) => {
     const config = PRODUCTION_LINE_STATUS[status.toUpperCase()];
-    if (!config) return <Badge variant="secondary">{status}</Badge>;
+    if (!config) {return <Badge variant="secondary">{status}</Badge>;}
 
     return (
       <Badge className={cn(config.color.replace('bg-', 'bg-'), 'text-white')}>
@@ -108,7 +108,7 @@ export default function ProductionLineManager({
   // 渲染班次徽章
   const renderShiftBadge = (shift) => {
     const config = WORK_SHIFT[shift.toUpperCase()];
-    if (!config) return <Badge variant="outline">{shift}</Badge>;
+    if (!config) {return <Badge variant="outline">{shift}</Badge>;}
 
     return (
       <Badge variant="outline" className="border-blue-200 text-blue-700">
@@ -245,12 +245,12 @@ export default function ProductionLineManager({
               )}>
 
                   {equipment.name}
-                </Badge>
+            </Badge>
             )}
               {workshop.equipments?.length > 3 &&
             <Badge variant="outline" className="text-xs">
                   +{workshop.equipments.length - 3} 更多
-                </Badge>
+            </Badge>
             }
             </div>
           </div>
@@ -275,13 +275,13 @@ export default function ProductionLineManager({
 
                   <Icon className="w-3 h-3 mr-1" />
                   {action.label}
-                </Button>);
+              </Button>);
 
           })}
           </div>
         </CardContent>
       </Card>
-    </motion.div>;
+  </motion.div>;
 
 
   if (loading) {
@@ -291,14 +291,14 @@ export default function ProductionLineManager({
           {[...Array(8)].map((_, i) =>
           <Card key={i} className="animate-pulse">
               <CardContent className="p-6">
-                <div className="h-4 bg-gray-200 rounded mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded mb-4" />
                 <div className="space-y-3">
-                  <div className="h-3 bg-gray-200 rounded"></div>
-                  <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-8 bg-gray-200 rounded"></div>
+                  <div className="h-3 bg-gray-200 rounded" />
+                  <div className="h-3 bg-gray-200 rounded w-3/4" />
+                  <div className="h-8 bg-gray-200 rounded" />
                 </div>
               </CardContent>
-            </Card>
+          </Card>
           )}
         </div>
       </div>);
@@ -390,7 +390,7 @@ export default function ProductionLineManager({
                 {Object.values(PRODUCTION_LINE_STATUS).map((status) =>
                 <option key={status.value} value={status.value}>
                     {status.label}
-                  </option>
+                </option>
                 )}
               </select>
               
@@ -403,7 +403,7 @@ export default function ProductionLineManager({
                 {Object.values(WORK_SHIFT).map((shift) =>
                 <option key={shift.value} value={shift.value}>
                     {shift.label}
-                  </option>
+                </option>
                 )}
               </select>
             </div>
@@ -425,7 +425,7 @@ export default function ProductionLineManager({
             <h3 className="text-lg font-medium text-gray-900 mb-2">没有找到生产线</h3>
             <p className="text-gray-600">请调整搜索条件或筛选器</p>
           </CardContent>
-        </Card>
+      </Card>
       }
     </div>);
 

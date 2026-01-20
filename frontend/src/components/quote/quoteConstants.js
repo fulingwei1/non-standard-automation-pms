@@ -359,20 +359,20 @@ export const calculateGrossMargin = (totalPrice, costTotal) => {
 
 // 格式化报价编号
 export const formatQuoteNumber = (id, prefix = "QT") => {
-  if (!id) return "";
+  if (!id) {return "";}
   const paddedId = String(id).padStart(6, '0');
   return `${prefix}-${paddedId}`;
 };
 
 // 计算转换率
 export const calculateConversionRate = (converted, sent) => {
-  if (!sent || sent === 0) return 0;
+  if (!sent || sent === 0) {return 0;}
   return ((converted / sent) * 100).toFixed(1);
 };
 
 // 获取下一个版本号
 export const getNextVersionNumber = (currentVersion) => {
-  if (!currentVersion) return "V1";
+  if (!currentVersion) {return "V1";}
   
   // 处理 V1, V2 等格式
   const match = currentVersion.match(/^V(\d+)$/);

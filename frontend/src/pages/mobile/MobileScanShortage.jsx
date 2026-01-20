@@ -2,7 +2,7 @@
  * Mobile Scan Shortage - 移动端扫码上报缺料
  * 功能：扫码工单，选择物料，上报缺料
  */
-import { useState, useEffect as _useEffect } from "react";
+import { useState, useEffect as _useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -25,9 +25,11 @@ export default function MobileScanShortage() {
   const [loading, setLoading] = useState(false);
   const [workOrder, setWorkOrder] = useState(null);
   const [error, setError] = useState("");
+  const cameraInputRef = useRef(null);
 
-  const handleScan = async () => {
-    if (!scanInput.trim()) {
+  const handleScan = async (value) => {
+    const input = (value ?? scanInput).trim();
+    if (!input) {
       setError("请输入工单号");
       return;
     }
@@ -36,14 +38,14 @@ export default function MobileScanShortage() {
       setLoading(true);
       setError("");
       const res = await productionApi.workOrders.list({
-        search: scanInput,
+        search: input,
         page_size: 10
       });
       const orders = res.data?.items || res.data || [];
-      const order = orders.find((o) => o.work_order_no === scanInput);
+      const order = orders.find((o) => o.work_order_no === input);
 
       if (!order) {
-        setError("未找到工单: " + scanInput);
+        setError("未找到工单: " + input);
         return;
       }
 
@@ -57,6 +59,31 @@ export default function MobileScanShortage() {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCameraScan = async (file) => {
+    if (!file) {return;}
+    try {
+      if (!("BarcodeDetector" in window)) {
+        alert("当前浏览器不支持自动扫码，请手动输入工单号");
+        return;
+      }
+      const detector = new window.BarcodeDetector({
+        formats: ["qr_code", "code_128", "code_39", "ean_13", "ean_8"],
+      });
+      const bitmap = await createImageBitmap(file);
+      const results = await detector.detect(bitmap);
+      const rawValue = results?.[0]?.rawValue;
+      if (!rawValue) {
+        setError("未识别到二维码/条码，请重试或手动输入工单号");
+        return;
+      }
+      setScanInput(rawValue);
+      await handleScan(rawValue);
+    } catch (error) {
+      console.error("Camera scan failed:", error);
+      setError("扫码失败，请手动输入工单号");
     }
   };
 
@@ -119,13 +146,24 @@ export default function MobileScanShortage() {
                   variant="outline"
                   className="w-full"
                   onClick={() => {
-                    // TODO: 打开相机扫码
-                    alert("扫码功能需要调用相机API");
+                    cameraInputRef.current?.click();
                   }}>
 
                   <Camera className="w-4 h-4 mr-2" />
                   打开相机扫码
                 </Button>
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    e.target.value = "";
+                    await handleCameraScan(file);
+                  }}
+                />
               </div>
             </div>
           </CardContent>
@@ -138,7 +176,7 @@ export default function MobileScanShortage() {
             <div className="flex-1">
               <div className="text-sm font-medium text-red-800">{error}</div>
             </div>
-          </div>
+        </div>
         }
 
         {/* 工单信息预览 */}
@@ -170,7 +208,7 @@ export default function MobileScanShortage() {
                 </div>
               </div>
             </CardContent>
-          </Card>
+        </Card>
         }
 
         {/* 快捷入口 */}

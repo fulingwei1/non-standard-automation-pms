@@ -50,11 +50,11 @@ export function InteractionTimeline({
           <div className="space-y-4">
             {[...Array(3)].map((_, i) =>
             <div key={i} className="flex gap-4">
-                <div className="animate-pulse w-2 h-16 bg-slate-700 rounded-full flex-shrink-0"></div>
+                <div className="animate-pulse w-2 h-16 bg-slate-700 rounded-full flex-shrink-0" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-slate-700 rounded w-1/3"></div>
-                  <div className="h-3 bg-slate-700 rounded w-full"></div>
-                  <div className="h-3 bg-slate-700 rounded w-2/3"></div>
+                  <div className="h-4 bg-slate-700 rounded w-1/3" />
+                  <div className="h-3 bg-slate-700 rounded w-full" />
+                  <div className="h-3 bg-slate-700 rounded w-2/3" />
                 </div>
             </div>
             )}
@@ -67,8 +67,8 @@ export function InteractionTimeline({
   // 过滤互动记录
   const filteredInteractions = interactions.
   filter((interaction) => {
-    if (filterType !== "all" && interaction.type !== filterType) return false;
-    if (searchTerm && !interaction.description.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+    if (filterType !== "all" && interaction.type !== filterType) {return false;}
+    if (searchTerm && !interaction.description.toLowerCase().includes(searchTerm.toLowerCase())) {return false;}
     return true;
   }).
   sort((a, b) => new Date(b.interaction_date) - new Date(a.interaction_date));
@@ -189,7 +189,7 @@ export function InteractionTimeline({
 
           <div className="relative">
               {/* 时间轴线 */}
-              <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-slate-700"></div>
+              <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-slate-700" />
 
               {/* 互动记录 */}
               {Object.entries(groupedInteractions).map(([date, dayInteractions]) =>
@@ -207,7 +207,7 @@ export function InteractionTimeline({
                 <div key={interaction.id || index} className="relative">
                         {/* 连接线 */}
                         {index < dayInteractions.length - 1 &&
-                  <div className="absolute left-[-8px] top-12 bottom-0 w-0.5 bg-slate-700"></div>
+                  <div className="absolute left-[-8px] top-12 bottom-0 w-0.5 bg-slate-700" />
                   }
 
                         {/* 互动卡片 */}
@@ -316,7 +316,7 @@ export function InteractionTimeline({
  * @param {Object} interaction - 互动记录详情
  */
 export function InteractionDetail({ interaction }) {
-  if (!interaction) return null;
+  if (!interaction) {return null;}
 
   const typeConfig = getInteractionTypeConfig(interaction.type);
 

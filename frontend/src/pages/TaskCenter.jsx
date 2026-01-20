@@ -113,12 +113,12 @@ function AssemblyTaskCard({ task, onStatusChange, onStepToggle }) {
           <button
             onClick={() => {
               if (task.status === "pending")
-              onStatusChange(task.id, "in_progress");else
+              {onStatusChange(task.id, "in_progress");}else
               if (
               task.status === "in_progress" &&
               stepsCompleted === stepsTotal)
 
-              onStatusChange(task.id, "completed");
+              {onStatusChange(task.id, "completed");}
             }}
             className={cn(
               "p-3 rounded-xl transition-colors",
@@ -153,7 +153,7 @@ function AssemblyTaskCard({ task, onStatusChange, onStepToggle }) {
         <div className="mt-4 p-4 rounded-xl bg-red-500/10 text-sm text-red-300 flex items-center gap-3">
             <AlertTriangle className="w-5 h-5 flex-shrink-0" />
             <span>{task.blockReason}</span>
-          </div>
+        </div>
         }
 
         {/* Progress */}
@@ -169,7 +169,7 @@ function AssemblyTaskCard({ task, onStatusChange, onStepToggle }) {
             value={stepsCompleted / stepsTotal * 100 || 0}
             className="h-2" />
 
-          </div>
+        </div>
         }
 
         {/* Time info */}
@@ -242,13 +242,13 @@ function AssemblyTaskCard({ task, onStatusChange, onStepToggle }) {
 
                         {part.name} x{part.qty}
                       </span>
-                    </div>
+              </div>
               )}
                 </div>
-              </motion.div>
+          </motion.div>
           }
           </AnimatePresence>
-        </div>
+      </div>
       }
 
       {/* Work instructions */}
@@ -292,10 +292,10 @@ function AssemblyTaskCard({ task, onStatusChange, onStepToggle }) {
 
                   {step.desc}
                 </span>
-              </button>
+          </button>
           )}
           </div>
-        </div>
+      </div>
       }
 
       {/* Notes */}
@@ -305,7 +305,7 @@ function AssemblyTaskCard({ task, onStatusChange, onStepToggle }) {
             <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
             {task.notes}
           </p>
-        </div>
+      </div>
       }
 
       {/* Tools needed */}
@@ -315,7 +315,7 @@ function AssemblyTaskCard({ task, onStatusChange, onStepToggle }) {
             <span className="font-medium">所需工具：</span>
             {task.tools.join("、")}
           </p>
-        </div>
+      </div>
       }
     </motion.div>);
 
@@ -353,9 +353,9 @@ function TaskCard({ task, onStatusChange }) {
           <button
             onClick={() => {
               if (task.status === "pending")
-              onStatusChange(task.id, "in_progress");else
+              {onStatusChange(task.id, "in_progress");}else
               if (task.status === "in_progress")
-              onStatusChange(task.id, "completed");
+              {onStatusChange(task.id, "completed");}
             }}
             className={cn(
               "mt-0.5 p-1 rounded-lg transition-colors",
@@ -392,7 +392,7 @@ function TaskCard({ task, onStatusChange }) {
         <div className="mt-3 p-2 rounded-lg bg-red-500/10 text-xs text-red-300 flex items-center gap-2">
             <AlertTriangle className="w-3 h-3" />
             {task.blockReason}
-          </div>
+        </div>
         }
 
         {/* Progress */}
@@ -403,7 +403,7 @@ function TaskCard({ task, onStatusChange }) {
               <span className="text-white">{task.progress}%</span>
             </div>
             <Progress value={task.progress} className="h-1.5" />
-          </div>
+        </div>
         }
 
         {/* Meta Info */}
@@ -439,9 +439,9 @@ function TaskCard({ task, onStatusChange }) {
             className="text-[10px] px-1.5">
 
                 {tag}
-              </Badge>
+          </Badge>
           )}
-          </div>
+        </div>
         }
 
         {/* Subtasks */}
@@ -495,13 +495,13 @@ function TaskCard({ task, onStatusChange }) {
 
                           {subTask.title}
                         </span>
-                      </div>
+                </div>
                 )}
                   </div>
-                </motion.div>
+            </motion.div>
             }
             </AnimatePresence>
-          </div>
+        </div>
         }
 
         {/* Blocked By */}
@@ -509,7 +509,7 @@ function TaskCard({ task, onStatusChange }) {
         <div className="mt-3 p-2 rounded-lg bg-surface-2/50 text-xs flex items-center gap-2 text-slate-400">
             <ArrowRight className="w-3 h-3" />
             依赖任务：<span className="text-accent">{task.blockedBy}</span>
-          </div>
+        </div>
         }
       </div>
     </motion.div>);
@@ -663,7 +663,7 @@ export default function TaskCenter() {
   };
 
   const filteredTasks = tasks.filter((task) => {
-    if (statusFilter !== "all" && task.status !== statusFilter) return false;
+    if (statusFilter !== "all" && task.status !== statusFilter) {return false;}
     if (
     searchQuery &&
     !task.title.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -699,7 +699,7 @@ export default function TaskCenter() {
   const handleStepToggle = async (taskId, stepNumber) => {
     try {
       const task = tasks.find((t) => t.id === taskId);
-      if (!task) return;
+      if (!task) {return;}
 
       const newInstructions = task.instructions.map((step) =>
       step.step === stepNumber ? { ...step, done: !step.done } : step
@@ -720,7 +720,7 @@ export default function TaskCenter() {
       // Update local state
       setTasks((prev) =>
       prev.map((t) => {
-        if (t.id !== taskId) return t;
+        if (t.id !== taskId) {return t;}
         return { ...t, instructions: newInstructions, progress };
       })
       );
@@ -802,7 +802,7 @@ export default function TaskCenter() {
                   <stat.icon className={cn("w-8 h-8", stat.color)} />
                 </div>
               </CardContent>
-            </Card>
+          </Card>
           )}
         </motion.div>
 
@@ -826,7 +826,7 @@ export default function TaskCenter() {
               className="whitespace-nowrap">
 
                 {filter.label}
-              </Button>
+            </Button>
             )}
           </div>
         </motion.div>
@@ -853,7 +853,7 @@ export default function TaskCenter() {
             "没有符合条件的任务" :
             "今日没有分配的装配任务"}
             </p>
-          </motion.div>
+        </motion.div>
         }
       </motion.div>);
 
@@ -877,7 +877,7 @@ export default function TaskCenter() {
         <Button>
               <Plus className="w-4 h-4 mr-1" />
               新建任务
-            </Button>
+        </Button>
 
         } />
 
@@ -931,7 +931,7 @@ export default function TaskCenter() {
                 <stat.icon className={cn("w-6 h-6", stat.color)} />
               </div>
             </CardContent>
-          </Card>
+        </Card>
         )}
       </motion.div>
 
@@ -958,7 +958,7 @@ export default function TaskCenter() {
                   onClick={() => setStatusFilter(filter.value)}>
 
                       {filter.label}
-                    </Button>
+                </Button>
                 )}
                 </div>
                 <div className="flex items-center gap-2 w-full md:w-auto">
@@ -993,7 +993,7 @@ export default function TaskCenter() {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+      </motion.div>
       }
 
       {/* Task List */}
@@ -1009,7 +1009,7 @@ export default function TaskCenter() {
           onStatusChange={handleStatusChange} />
 
         )}
-        </motion.div>
+      </motion.div>
       }
 
       {/* Kanban View */}
@@ -1043,15 +1043,15 @@ export default function TaskCenter() {
                       {statusTasks.length === 0 &&
                     <div className="p-8 text-center text-slate-500 border border-dashed border-border rounded-xl">
                           暂无任务
-                        </div>
+                    </div>
                     }
                     </div>
-                  </div>);
+                </div>);
 
             }
           )}
           </div>
-        </motion.div>
+      </motion.div>
       }
 
       {/* Empty State */}
@@ -1064,7 +1064,7 @@ export default function TaskCenter() {
           "没有符合条件的任务" :
           '点击"新建任务"开始工作'}
           </p>
-        </motion.div>
+      </motion.div>
       }
     </motion.div>);
 

@@ -60,8 +60,8 @@ export const SatisfactionCard = ({
   const satisfactionTrend = useMemo(() => {
     if (satisfaction.previousScore) {
       const diff = satisfaction.averageScore - satisfaction.previousScore;
-      if (diff > 0.1) return { trend: "up", color: "text-emerald-400" };
-      if (diff < -0.1) return { trend: "down", color: "text-red-400" };
+      if (diff > 0.1) {return { trend: "up", color: "text-emerald-400" };}
+      if (diff < -0.1) {return { trend: "down", color: "text-red-400" };}
       return { trend: "stable", color: "text-slate-400" };
     }
     return { trend: "stable", color: "text-slate-400" };

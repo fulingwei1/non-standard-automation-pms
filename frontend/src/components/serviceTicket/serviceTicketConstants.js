@@ -201,7 +201,7 @@ export const frontendToBackendUrgency = {
 // 辅助函数
 export const getStatusBadge = (status) => {
   const config = statusConfig[status];
-  if (!config) return status;
+  if (!config) {return status;}
 
   return (
     <span
@@ -214,7 +214,7 @@ export const getStatusBadge = (status) => {
 
 export const getUrgencyBadge = (urgency) => {
   const config = urgencyConfig[urgency];
-  if (!config) return urgency;
+  if (!config) {return urgency;}
 
   return (
     <span
@@ -227,7 +227,7 @@ export const getUrgencyBadge = (urgency) => {
 
 export const getProblemTypeBadge = (problemType) => {
   const config = problemTypeConfig[problemType];
-  if (!config) return problemType;
+  if (!config) {return problemType;}
 
   return (
     <span className="inline-flex items-center gap-1 text-sm text-slate-300">

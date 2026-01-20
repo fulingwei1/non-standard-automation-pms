@@ -88,7 +88,7 @@ export default function MilestoneManagement() {
     try {
       setLoading(true);
       const params = { project_id: id };
-      if (filterStatus) params.status = filterStatus;
+      if (filterStatus) {params.status = filterStatus;}
       const res = await milestoneApi.list(id);
       const milestoneList = res.data || res || [];
       setMilestones(milestoneList);
@@ -126,7 +126,7 @@ export default function MilestoneManagement() {
     }
   };
   const handleCompleteMilestone = async (milestoneId) => {
-    if (!confirm("确认完成此里程碑？")) return;
+    if (!confirm("确认完成此里程碑？")) {return;}
     try {
       await milestoneApi.complete(milestoneId);
       fetchMilestones();
@@ -152,8 +152,8 @@ export default function MilestoneManagement() {
     return <Icon className="w-4 h-4" />;
   };
   const isOverdue = (milestone) => {
-    if (milestone.status === "COMPLETED") return false;
-    if (!milestone.planned_date) return false;
+    if (milestone.status === "COMPLETED") {return false;}
+    if (!milestone.planned_date) {return false;}
     return new Date(milestone.planned_date) < new Date();
   };
   return (
@@ -191,7 +191,7 @@ export default function MilestoneManagement() {
                 {Object.entries(statusConfigs).map(([key, config]) =>
                 <SelectItem key={key} value={key}>
                     {config.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -239,19 +239,19 @@ export default function MilestoneManagement() {
                           {milestone.milestone_type &&
                         <Badge variant="outline">
                               {milestone.milestone_type}
-                            </Badge>
+                        </Badge>
                         }
                           {overdue &&
                         <Badge className="bg-red-500">
                               <AlertTriangle className="w-3 h-3 mr-1" />
                               逾期
-                            </Badge>
+                        </Badge>
                         }
                         </div>
                         {milestone.description &&
                       <p className="text-sm text-slate-500 mb-2">
                             {milestone.description}
-                          </p>
+                      </p>
                       }
                         <div className="flex items-center gap-4 text-sm text-slate-500">
                           <div className="flex items-center gap-1">
@@ -265,13 +265,13 @@ export default function MilestoneManagement() {
                               <Target className="w-4 h-4" />
                               目标金额: ¥
                               {milestone.target_amount.toLocaleString()}
-                            </div>
+                        </div>
                         }
                           {milestone.completed_date &&
                         <div className="flex items-center gap-1 text-emerald-600">
                               <CheckCircle2 className="w-4 h-4" />
                               完成时间: {formatDate(milestone.completed_date)}
-                            </div>
+                        </div>
                         }
                         </div>
                       </div>
@@ -293,14 +293,14 @@ export default function MilestoneManagement() {
 
                             <CheckCircle2 className="w-4 h-4 mr-2" />
                             完成
-                          </Button>
+                      </Button>
                       }
                       </div>
                     </div>
-                  </div>);
+                </div>);
 
             })}
-            </div>
+          </div>
           }
         </CardContent>
       </Card>
@@ -451,7 +451,7 @@ export default function MilestoneManagement() {
                       <div className="font-medium">
                         ¥{selectedMilestone.target_amount.toLocaleString()}
                       </div>
-                    </div>
+                </div>
                 }
                   {selectedMilestone.completed_date &&
                 <div>
@@ -459,16 +459,16 @@ export default function MilestoneManagement() {
                         完成日期
                       </div>
                       <div>{formatDate(selectedMilestone.completed_date)}</div>
-                    </div>
+                </div>
                 }
                 </div>
                 {selectedMilestone.description &&
               <div>
                     <div className="text-sm text-slate-500 mb-1">描述</div>
                     <div>{selectedMilestone.description}</div>
-                  </div>
-              }
               </div>
+              }
+            </div>
             }
           </DialogBody>
           <DialogFooter>
@@ -484,7 +484,7 @@ export default function MilestoneManagement() {
 
                 <CheckCircle2 className="w-4 h-4 mr-2" />
                 完成里程碑
-              </Button>
+            </Button>
             }
           </DialogFooter>
         </DialogContent>

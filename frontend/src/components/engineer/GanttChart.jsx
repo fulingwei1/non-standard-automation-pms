@@ -37,7 +37,7 @@ const ZOOM_LEVELS = {
 
 // Helper: Format date
 const formatDate = (date, format) => {
-  if (!date) return "";
+  if (!date) {return "";}
   const d = new Date(date);
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, "0");
@@ -85,8 +85,8 @@ const getDateRange = (tasks) => {
   tasks.forEach((task) => {
     const start = new Date(task.plannedStart);
     const end = new Date(task.plannedEnd);
-    if (start < minDate) minDate = start;
-    if (end > maxDate) maxDate = end;
+    if (start < minDate) {minDate = start;}
+    if (end > maxDate) {maxDate = end;}
   });
 
   // Add padding
@@ -288,7 +288,7 @@ export default function GanttChart({ tasks, onTaskSelect, selectedTaskId }) {
   // Get today line position
   const todayOffset = useMemo(() => {
     const today = new Date();
-    if (today < dateRange.start || today > dateRange.end) return null;
+    if (today < dateRange.start || today > dateRange.end) {return null;}
     return getDaysBetween(dateRange.start, today) * dayWidth;
   }, [dateRange, dayWidth]);
 
@@ -303,13 +303,13 @@ export default function GanttChart({ tasks, onTaskSelect, selectedTaskId }) {
 
   // Zoom controls
   const handleZoomIn = () => {
-    if (zoom === "month") setZoom("week");
-    else if (zoom === "week") setZoom("day");
+    if (zoom === "month") {setZoom("week");}
+    else if (zoom === "week") {setZoom("day");}
   };
 
   const handleZoomOut = () => {
-    if (zoom === "day") setZoom("week");
-    else if (zoom === "week") setZoom("month");
+    if (zoom === "day") {setZoom("week");}
+    else if (zoom === "week") {setZoom("month");}
   };
 
   // Scroll to today

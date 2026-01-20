@@ -52,13 +52,13 @@ export function AlertTrendChart({
 
   // 处理数据
   const processedData = useMemo(() => {
-    if (!data || !Array.isArray(data)) return [];
+    if (!data || !Array.isArray(data)) {return [];}
 
     // 根据时间维度聚合数据
     const groupedData = {};
 
     data.forEach((alert) => {
-      if (!alert.created_at) return;
+      if (!alert.created_at) {return;}
 
       const date = new Date(alert.created_at);
       let key;
@@ -119,7 +119,7 @@ export function AlertTrendChart({
 
   // 计算趋势指标
   const trendMetrics = useMemo(() => {
-    if (processedData.length < 2) return null;
+    if (processedData.length < 2) {return null;}
 
     const latest = processedData[processedData.length - 1];
     const previous = processedData[processedData.length - 2];

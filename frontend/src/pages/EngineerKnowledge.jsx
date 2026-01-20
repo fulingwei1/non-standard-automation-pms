@@ -289,9 +289,9 @@ const EngineerKnowledge = () => {
       key: 'rank',
       width: 60,
       render: (rank) => {
-        if (rank === 1) return <StarOutlined style={{ color: '#FFD700', fontSize: 20 }} />;
-        if (rank === 2) return <StarOutlined style={{ color: '#C0C0C0', fontSize: 18 }} />;
-        if (rank === 3) return <StarOutlined style={{ color: '#CD7F32', fontSize: 16 }} />;
+        if (rank === 1) {return <StarOutlined style={{ color: '#FFD700', fontSize: 20 }} />;}
+        if (rank === 2) {return <StarOutlined style={{ color: '#C0C0C0', fontSize: 18 }} />;}
+        if (rank === 3) {return <StarOutlined style={{ color: '#CD7F32', fontSize: 16 }} />;}
         return rank;
       }
     },

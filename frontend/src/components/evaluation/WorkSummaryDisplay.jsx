@@ -11,7 +11,7 @@ import {
  * 工作总结展示组件
  */
 export const WorkSummaryDisplay = ({ workSummary }) => {
-  if (!workSummary) return null;
+  if (!workSummary) {return null;}
 
   return (
     <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 overflow-hidden">

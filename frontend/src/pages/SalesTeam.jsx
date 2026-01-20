@@ -84,6 +84,16 @@ export default function SalesTeam() {
   const [selectedMember, setSelectedMember] = useState(null);
   const [showMemberDialog, setShowMemberDialog] = useState(false);
 
+  // 从其他页面跳转时，直接打开成员详情
+  useEffect(() => {
+    const openMember = location.state?.openMember;
+    if (!openMember) {return;}
+    setSelectedMember(openMember);
+    setShowMemberDialog(true);
+    // 清理 state，避免刷新/返回时重复弹窗
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [location.state?.openMember, navigate, location.pathname]);
+
   // 日期验证
   useEffect(() => {
     validateDateRange();
@@ -91,7 +101,7 @@ export default function SalesTeam() {
 
   // 获取团队数据（依赖筛选条件）
   useEffect(() => {
-    if (dateError) return;
+    if (dateError) {return;}
     fetchTeamData();
   }, [
   filters.departmentId,
@@ -104,7 +114,7 @@ export default function SalesTeam() {
 
   // 搜索过滤
   const filteredMembers = useMemo(() => {
-    if (!searchTerm) return teamMembers;
+    if (!searchTerm) {return teamMembers;}
     const keyword = searchTerm.toLowerCase();
     return teamMembers.filter((member) => {
       const name = member.name?.toLowerCase?.() || "";
@@ -125,14 +135,14 @@ export default function SalesTeam() {
 
   // 导出数据
   const handleExport = async () => {
-    if (usingMockData || dateError) return;
+    if (usingMockData || dateError) {return;}
     try {
       setExporting(true);
       const params = {};
-      if (filters.departmentId) params.department_id = filters.departmentId;
-      if (filters.region) params.region = filters.region.trim();
-      if (filters.startDate) params.start_date = filters.startDate;
-      if (filters.endDate) params.end_date = filters.endDate;
+      if (filters.departmentId) {params.department_id = filters.departmentId;}
+      if (filters.region) {params.region = filters.region.trim();}
+      if (filters.startDate) {params.start_date = filters.startDate;}
+      if (filters.endDate) {params.end_date = filters.endDate;}
       const res = await salesTeamApi.exportTeam(params);
       const blob = new Blob([res.data], { type: "text/csv;charset=utf-8;" });
       const url = window.URL.createObjectURL(blob);
@@ -159,13 +169,13 @@ export default function SalesTeam() {
 
   // 导航到绩效页面
   const handleNavigatePerformance = (member) => {
-    if (!member?.id) return;
+    if (!member?.id) {return;}
     navigate(`/performance/results/${member.id}`);
   };
 
   // 导航到CRM页面
   const handleNavigateCRM = (member) => {
-    if (!member?.id) return;
+    if (!member?.id) {return;}
     navigate(`/customers?owner_id=${member.id}`);
   };
 
@@ -223,7 +233,7 @@ export default function SalesTeam() {
               <UserPlus className="w-4 h-4" />
               添加成员
             </Button>
-          </motion.div>
+        </motion.div>
         } />
 
 
@@ -231,7 +241,7 @@ export default function SalesTeam() {
       {usingMockData &&
       <p className="text-xs text-amber-400 px-1">
           接口不可用时已自动启用"演示环境备用数据"兜底，真实数据可用时将立即恢复。
-        </p>
+      </p>
       }
 
       {/* 筛选器 */}

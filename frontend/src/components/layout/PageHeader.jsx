@@ -14,7 +14,7 @@ export function PageHeader({
   const resolvedActions = [];
 
   const appendAction = (item, index) => {
-    if (!item) return;
+    if (!item) {return;}
     // React element
     if (item?.$$typeof) {
       resolvedActions.push(

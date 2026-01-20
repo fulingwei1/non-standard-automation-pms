@@ -140,7 +140,7 @@ export default function ECNDetail() {
   };
 
   const handleAnalyzeBomImpact = async () => {
-    if (analyzingBom) return;
+    if (analyzingBom) {return;}
 
     try {
       setAnalyzingBom(true);
@@ -221,7 +221,7 @@ export default function ECNDetail() {
 
               <ArrowLeft className="w-4 h-4" />
               返回列表
-            </button>
+          </button>
           } />
 
         <div className="max-w-[1600px] mx-auto space-y-6">
@@ -269,7 +269,7 @@ export default function ECNDetail() {
             <span className={`px-3 py-1 rounded-full text-sm ${statusConfig.color} ${statusConfig.textColor}`}>
               {statusConfig.label}
             </span>
-          </div>
+        </div>
         }
         subtitle={`创建时间: ${formatDate(ecn.created_time)} | 创建人: ${ecn.created_by_name || ecn.created_by}`}
         actions={
@@ -288,7 +288,7 @@ export default function ECNDetail() {
               <ArrowLeft className="w-4 h-4" />
               返回列表
             </button>
-          </div>
+        </div>
         } />
 
 
@@ -303,7 +303,7 @@ export default function ECNDetail() {
 
                 <span>{tab.icon}</span>
                 <span className="hidden sm:inline">{tab.label}</span>
-              </TabsTrigger>
+            </TabsTrigger>
             )}
           </TabsList>
 

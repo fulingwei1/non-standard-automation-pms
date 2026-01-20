@@ -77,7 +77,7 @@ export function ServiceTicketBatchActions({
       return;
     }
 
-    if (submitting) return;
+    if (submitting) {return;}
 
     try {
       setSubmitting(true);
@@ -97,7 +97,7 @@ export function ServiceTicketBatchActions({
   };
 
   const handleBatchDelete = async () => {
-    if (submitting) return;
+    if (submitting) {return;}
 
     try {
       setSubmitting(true);
@@ -193,7 +193,7 @@ export function ServiceTicketBatchActions({
 
       {/* Batch Assign Dialog */}
       {showBatchAssignDialog && (
-        <Dialog open={true} onOpenChange={() => setShowBatchAssignDialog(false)}>
+        <Dialog open onOpenChange={() => setShowBatchAssignDialog(false)}>
           <DialogContent className="max-w-md bg-slate-900 border-slate-700">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
@@ -258,7 +258,7 @@ export function ServiceTicketBatchActions({
 
       {/* Batch Delete Dialog */}
       {showBatchDeleteDialog && (
-        <Dialog open={true} onOpenChange={() => setShowBatchDeleteDialog(false)}>
+        <Dialog open onOpenChange={() => setShowBatchDeleteDialog(false)}>
           <DialogContent className="max-w-md bg-slate-900 border-slate-700">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-red-400">

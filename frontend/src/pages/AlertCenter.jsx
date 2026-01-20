@@ -214,7 +214,7 @@ export default function AlertCenter() {
 
   // 批量确认预警
   const handleBatchAcknowledge = useCallback(async () => {
-    if (selectedAlerts.size === 0) return;
+    if (selectedAlerts.size === 0) {return;}
 
     try {
       const promises = Array.from(selectedAlerts).map((id) =>
@@ -234,7 +234,7 @@ export default function AlertCenter() {
 
   // 批量解决预警
   const handleBatchResolve = useCallback(async () => {
-    if (selectedAlerts.size === 0) return;
+    if (selectedAlerts.size === 0) {return;}
 
     try {
       const promises = Array.from(selectedAlerts).map((id) =>
@@ -525,7 +525,7 @@ export default function AlertCenter() {
                     {Object.entries(ALERT_LEVELS).map(([key, config]) =>
                     <option key={key} value={key}>
                         {config.label}
-                      </option>
+                    </option>
                     )}
                   </select>
                   <select
@@ -537,7 +537,7 @@ export default function AlertCenter() {
                     {Object.entries(ALERT_STATUS).map(([key, config]) =>
                     <option key={key} value={key}>
                         {config.label}
-                      </option>
+                    </option>
                     )}
                   </select>
                   <select
@@ -549,7 +549,7 @@ export default function AlertCenter() {
                     {projects.map((project) =>
                     <option key={project.id} value={project.id}>
                         {project.name}
-                      </option>
+                    </option>
                     )}
                   </select>
                   <Input
@@ -599,11 +599,11 @@ export default function AlertCenter() {
 
                       <AlertTriangle className="h-4 w-4 mr-2" />
                       创建测试预警
-                    </Button>
+                </Button>
                 } />
 
               </CardContent>
-            </Card> :
+          </Card> :
 
           <>
               <Card>
@@ -627,7 +627,7 @@ export default function AlertCenter() {
 
                             批量解决 ({selectedAlerts.size})
                           </Button>
-                        </>
+                    </>
                     }
                       <Button
                       size="sm"
@@ -726,7 +726,7 @@ export default function AlertCenter() {
                                   <p className="text-sm text-white line-clamp-2">
                                     {alert.description}
                                   </p>
-                                </div>
+                              </div>
                               }
 
                               <div className="flex flex-wrap gap-2">
@@ -737,7 +737,7 @@ export default function AlertCenter() {
                                   className="bg-blue-500 hover:bg-blue-600">
 
                                     确认
-                                  </Button>
+                                </Button>
                                 }
                                 {availableActions.includes('解决') &&
                                 <Button
@@ -749,7 +749,7 @@ export default function AlertCenter() {
                                   className="bg-emerald-500 hover:bg-emerald-600">
 
                                     解决
-                                  </Button>
+                                </Button>
                                 }
                                 <Button
                                   size="sm"
@@ -769,7 +769,7 @@ export default function AlertCenter() {
 
               })}
               </div>
-            </>
+          </>
           }
 
           {/* 分页 */}
@@ -792,7 +792,7 @@ export default function AlertCenter() {
 
                 下一页
               </Button>
-            </div>
+          </div>
           }
         </motion.div>
 
@@ -807,7 +807,7 @@ export default function AlertCenter() {
               <div className="text-sm text-slate-300">
                   <p><strong>预警:</strong> {selectedAlert.title}</p>
                   <p><strong>级别:</strong> {getAlertLevelConfig(selectedAlert.alert_level).label}</p>
-                </div>
+              </div>
               }
               <div>
                 <label className="text-sm font-medium text-slate-300">解决方案</label>
@@ -888,7 +888,7 @@ export default function AlertCenter() {
                           <p className="text-white">
                             {new Date(selectedAlert.first_action_time).toLocaleString()}
                           </p>
-                        </div>
+                    </div>
                     }
                       {selectedAlert.resolved_time &&
                     <div>
@@ -896,7 +896,7 @@ export default function AlertCenter() {
                           <p className="text-white">
                             {new Date(selectedAlert.resolved_time).toLocaleString()}
                           </p>
-                        </div>
+                    </div>
                     }
                     </div>
                   </div>
@@ -906,7 +906,7 @@ export default function AlertCenter() {
               <div>
                     <h3 className="text-lg font-semibold text-white mb-4">详细描述</h3>
                     <p className="text-slate-300">{selectedAlert.description}</p>
-                  </div>
+              </div>
               }
 
                 {selectedAlert.trigger_data &&
@@ -915,9 +915,9 @@ export default function AlertCenter() {
                     <pre className="bg-slate-800 p-4 rounded text-sm text-slate-300 overflow-auto">
                       {JSON.stringify(selectedAlert.trigger_data, null, 2)}
                     </pre>
-                  </div>
-              }
               </div>
+              }
+            </div>
             }
             <DialogFooter>
               <Button

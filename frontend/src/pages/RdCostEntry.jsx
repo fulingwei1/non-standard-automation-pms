@@ -280,7 +280,7 @@ export default function RdCostEntry() {
                         {cost.cost_date &&
                       <Badge variant="secondary" className="text-xs">
                             {formatDate(cost.cost_date)}
-                          </Badge>
+                      </Badge>
                       }
                       </div>
                       <p className="text-sm text-slate-400">
@@ -289,7 +289,7 @@ export default function RdCostEntry() {
                       {cost.remark &&
                     <p className="text-xs text-slate-500 mt-1">
                           {cost.remark}
-                        </p>
+                    </p>
                     }
                     </div>
                     <div className="text-right">
@@ -299,13 +299,13 @@ export default function RdCostEntry() {
                       {cost.deductible_amount && cost.deductible_amount > 0 &&
                     <p className="text-xs text-primary">
                           扣除: {formatCurrency(cost.deductible_amount)}
-                        </p>
+                    </p>
                     }
                     </div>
-                  </div>);
+                </div>);
 
             })}
-            </div> :
+          </div> :
 
           <div className="text-center py-12 text-slate-500">
               <FileText className="h-12 w-12 mx-auto mb-4 text-slate-600" />
@@ -318,7 +318,7 @@ export default function RdCostEntry() {
                 <Plus className="h-4 w-4 mr-2" />
                 录入第一条费用
               </Button>
-            </div>
+          </div>
           }
         </CardContent>
       </Card>
@@ -350,7 +350,7 @@ export default function RdCostEntry() {
                       {costTypes.map((type) =>
                       <SelectItem key={type.id} value={type.id.toString()}>
                           {type.cost_type_name}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -399,13 +399,13 @@ export default function RdCostEntry() {
 
                         <Calculator className="h-4 w-4 mr-2" />
                         自动计算
-                      </Button>
+                    </Button>
                     }
                   </div>
                   {isLaborType &&
                   <p className="text-xs text-slate-500 mt-1">
                       点击"自动计算"可根据该日期的工时数据自动计算人工费用
-                    </p>
+                  </p>
                   }
                 </div>
                 <div>

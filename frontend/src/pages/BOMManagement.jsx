@@ -135,10 +135,10 @@ export default function BOMManagement() {
     try {
       setLoading(true);
       const params = {};
-      if (filterProject) params.project_id = filterProject;
-      if (filterMachine) params.machine_id = filterMachine;
-      if (filterStatus) params.status = filterStatus;
-      if (searchKeyword) params.search = searchKeyword;
+      if (filterProject) {params.project_id = filterProject;}
+      if (filterMachine) {params.machine_id = filterMachine;}
+      if (filterStatus) {params.status = filterStatus;}
+      if (searchKeyword) {params.search = searchKeyword;}
       const res = await bomApi.list(params);
       const bomList = res.data?.items || res.data || [];
       setBoms(bomList);
@@ -179,7 +179,7 @@ export default function BOMManagement() {
     }
   };
   const handleReleaseBOM = async () => {
-    if (!selectedBom) return;
+    if (!selectedBom) {return;}
     try {
       await bomApi.release(selectedBom.id, releaseNote);
       setShowReleaseDialog(false);
@@ -192,7 +192,7 @@ export default function BOMManagement() {
     }
   };
   const handleImport = async () => {
-    if (!importFile || !selectedBom) return;
+    if (!importFile || !selectedBom) {return;}
     try {
       await bomApi.import(selectedBom.id, importFile);
       setShowImportDialog(false);
@@ -257,7 +257,7 @@ export default function BOMManagement() {
               onValueChange={(val) => {
                 setFilterProject(val);
                 setFilterMachine("");
-                if (val) fetchMachines(val);
+                if (val) {fetchMachines(val);}
               }}>
 
               <SelectTrigger>
@@ -268,7 +268,7 @@ export default function BOMManagement() {
                 {projects.map((proj) =>
                 <SelectItem key={proj.id} value={proj.id.toString()}>
                     {proj.project_name}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -285,7 +285,7 @@ export default function BOMManagement() {
                 {machines.map((machine) =>
                 <SelectItem key={machine.id} value={machine.id.toString()}>
                     {machine.machine_name}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -298,7 +298,7 @@ export default function BOMManagement() {
                 {Object.entries(statusConfigs).map(([key, config]) =>
                 <SelectItem key={key} value={key}>
                     {config.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -389,10 +389,10 @@ export default function BOMManagement() {
                         </Button>
                       </div>
                     </TableCell>
-                  </TableRow>
+              </TableRow>
               )}
               </TableBody>
-            </Table>
+          </Table>
           }
         </CardContent>
       </Card>
@@ -441,7 +441,7 @@ export default function BOMManagement() {
 
                           <CheckCircle2 className="w-4 h-4 mr-2" />
                           发布
-                        </Button>
+                    </Button>
                     }
                     </div>
                   </div>
@@ -493,7 +493,7 @@ export default function BOMManagement() {
                         <Badge className="bg-amber-500">关键</Badge>
                         }
                           </TableCell>
-                        </TableRow>
+                    </TableRow>
                     )}
                     </TableBody>
                   </Table>
@@ -536,7 +536,7 @@ export default function BOMManagement() {
                             </div>
                           </div>
                         </CardContent>
-                      </Card>
+                  </Card>
                   )}
                   </div>
                 </TabsContent>
@@ -584,7 +584,7 @@ export default function BOMManagement() {
                     </div>
                   </div>
                 </TabsContent>
-              </Tabs>
+            </Tabs>
             }
           </DialogBody>
           <DialogFooter>
@@ -628,7 +628,7 @@ export default function BOMManagement() {
                     {projects.map((proj) =>
                     <SelectItem key={proj.id} value={proj.id.toString()}>
                         {proj.project_name}
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -652,7 +652,7 @@ export default function BOMManagement() {
                       value={machine.id.toString()}>
 
                         {machine.machine_name}
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>

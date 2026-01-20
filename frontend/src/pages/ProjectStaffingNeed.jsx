@@ -265,7 +265,7 @@ export default function ProjectStaffingNeed() {
         `确定要取消需求"${need.project_name} - ${need.role_name}"吗？`,
       )
     )
-      return;
+      {return;}
 
     try {
       await staffMatchingApi.cancelStaffingNeed(need.id);

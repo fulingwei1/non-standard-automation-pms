@@ -77,8 +77,8 @@ export default function BudgetManagement() {
             budgetAmount > 0 ? usedAmount / budgetAmount * 100 : 0;
 
             let status = "NORMAL";
-            if (usageRate >= 90) status = "CRITICAL";else
-            if (usageRate >= 80) status = "WARNING";
+            if (usageRate >= 90) {status = "CRITICAL";}else
+            if (usageRate >= 80) {status = "WARNING";}
 
             return {
               id: project.id,
@@ -126,20 +126,20 @@ export default function BudgetManagement() {
       }
       if (filterStatus !== "all") {
         if (filterStatus === "critical" && budget.status !== "CRITICAL")
-        return false;
+        {return false;}
         if (filterStatus === "warning" && budget.status !== "WARNING")
-        return false;
+        {return false;}
         if (filterStatus === "normal" && budget.status !== "NORMAL")
-        return false;
+        {return false;}
       }
       if (filterUsageRate !== "all") {
-        if (filterUsageRate === "high" && budget.usage_rate < 80) return false;
+        if (filterUsageRate === "high" && budget.usage_rate < 80) {return false;}
         if (
         filterUsageRate === "medium" && (
         budget.usage_rate < 50 || budget.usage_rate >= 80))
 
-        return false;
-        if (filterUsageRate === "low" && budget.usage_rate >= 50) return false;
+        {return false;}
+        if (filterUsageRate === "low" && budget.usage_rate >= 50) {return false;}
       }
       return true;
     });
@@ -314,7 +314,7 @@ export default function BudgetManagement() {
             filteredBudgets.length === 0 ?
             <div className="text-center py-8 text-slate-400">
                 暂无预算数据
-              </div> :
+            </div> :
 
             <Table>
                 <TableHeader>
@@ -393,10 +393,10 @@ export default function BudgetManagement() {
                           <Eye className="w-4 h-4" />
                         </Button>
                       </TableCell>
-                    </TableRow>
+                </TableRow>
                 )}
                 </TableBody>
-              </Table>
+            </Table>
             }
           </CardContent>
         </Card>

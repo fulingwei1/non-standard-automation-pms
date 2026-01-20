@@ -139,7 +139,7 @@ export default function AIStaffMatching() {
 
   // 执行AI匹配
   const handleExecuteMatching = async () => {
-    if (!selectedNeed) return;
+    if (!selectedNeed) {return;}
 
     setMatching(true);
     try {
@@ -184,7 +184,7 @@ export default function AIStaffMatching() {
       `确定要采纳 ${candidate.employee_name} 作为该职位的候选人吗？`
     ))
 
-    return;
+    {return;}
 
     try {
       await staffMatchingApi.acceptCandidate({
@@ -220,7 +220,7 @@ export default function AIStaffMatching() {
   };
 
   const confirmReject = async () => {
-    if (!rejectReason.trim()) return;
+    if (!rejectReason.trim()) {return;}
 
     try {
       await staffMatchingApi.rejectCandidate({
@@ -236,9 +236,9 @@ export default function AIStaffMatching() {
 
   // 获取得分颜色
   const getScoreColor = (score) => {
-    if (score >= 85) return "text-green-400";
-    if (score >= 70) return "text-blue-400";
-    if (score >= 55) return "text-yellow-400";
+    if (score >= 85) {return "text-green-400";}
+    if (score >= 70) {return "text-blue-400";}
+    if (score >= 55) {return "text-yellow-400";}
     return "text-red-400";
   };
 
@@ -417,7 +417,7 @@ export default function AIStaffMatching() {
                     <option key={need.id} value={need.id}>
                           {need.project_name} - {need.role_name} (
                           {need.priority})
-                        </option>
+                    </option>
                     )}
                     </select>
 
@@ -504,14 +504,14 @@ export default function AIStaffMatching() {
                               className="text-xs">
 
                                       {skill.tag_name} ≥{skill.min_score}
-                                    </Badge>
+                            </Badge>
 
                           )}
                               </div>
-                            </div>
+                      </div>
                       }
                         </CardContent>
-                      </Card>
+                  </Card>
                   }
 
                     <Button
@@ -524,12 +524,12 @@ export default function AIStaffMatching() {
                     <>
                           <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                           正在匹配...
-                        </> :
+                    </> :
 
                     <>
                           <Rocket className="h-4 w-4 mr-2" />
                           执行AI智能匹配
-                        </>
+                    </>
                     }
                     </Button>
                   </div>
@@ -548,7 +548,7 @@ export default function AIStaffMatching() {
                           <Badge className="bg-green-500/20 text-green-400">
                             达标: {matchingResult.qualified_count}
                           </Badge>
-                        </div>
+                    </div>
                     }
                     </div>
 
@@ -558,7 +558,7 @@ export default function AIStaffMatching() {
                         <p className="text-slate-400">
                           AI正在分析员工档案，计算匹配得分...
                         </p>
-                      </div> :
+                  </div> :
                   matchingResult ?
                   <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
                         {/* 提示信息 */}
@@ -628,7 +628,7 @@ export default function AIStaffMatching() {
                                       {isQualified &&
                                 <Badge className="bg-green-500/20 text-green-400">
                                           达标
-                                        </Badge>
+                                </Badge>
                                 }
                                     </div>
 
@@ -681,7 +681,7 @@ export default function AIStaffMatching() {
                                     }
                                     className="h-1.5" />
 
-                                        </div>
+                                </div>
                                 )}
                                     </div>
                                   </div>
@@ -728,7 +728,7 @@ export default function AIStaffMatching() {
                                       className="text-xs bg-green-500/20 text-green-400">
 
                                               {skill}
-                                            </Badge>
+                                    </Badge>
 
                                   )}
                                       </div>
@@ -747,11 +747,11 @@ export default function AIStaffMatching() {
                                       className="text-xs bg-red-500/20 text-red-400">
 
                                                 {skill}
-                                              </Badge>
+                                    </Badge>
 
                                   )}
                                         </div>
-                                      </div>
+                              </div>
                               }
 
                                     <div className="flex gap-2 pt-2">
@@ -775,24 +775,24 @@ export default function AIStaffMatching() {
                                     </div>
                                   </div>
                                 </div>
-                              </motion.div>);
+                        </motion.div>);
 
                     }) :
 
                     <div className="text-center py-12 text-slate-400">
                             暂无匹配的候选人
-                          </div>
+                    </div>
                     }
-                      </div> :
+                  </div> :
 
                   <div className="flex flex-col items-center justify-center py-20 text-slate-400">
                         <Users className="h-12 w-12 mb-4 opacity-50" />
                         <p>请选择人员需求并执行AI匹配</p>
-                      </div>
+                  </div>
                   }
                   </div>
                 </div>
-              </motion.div> :
+            </motion.div> :
 
             <motion.div
               key="history"
@@ -822,11 +822,11 @@ export default function AIStaffMatching() {
                 {historyLoading ?
               <div className="text-center py-12 text-slate-400">
                     加载中...
-                  </div> :
+              </div> :
               matchingHistory.length === 0 ?
               <div className="text-center py-12 text-slate-400">
                     暂无历史记录
-                  </div> :
+              </div> :
 
               <div className="space-y-3">
                     {matchingHistory.map((history) =>
@@ -860,7 +860,7 @@ export default function AIStaffMatching() {
                         <span className="flex items-center gap-1">
                                   <Check className="h-3 w-3" />
                                   采纳时间: {history.accept_time}
-                                </span>
+                        </span>
                         }
                               {history.acceptor_name &&
                         <span>处理人: {history.acceptor_name}</span>
@@ -886,7 +886,7 @@ export default function AIStaffMatching() {
                       <Badge className="bg-green-500/20 text-green-400">
                                 <Check className="h-3 w-3 mr-1" />
                                 已采纳
-                              </Badge> :
+                      </Badge> :
                       history.is_accepted === false ?
                       <Badge
                         className="bg-red-500/20 text-red-400"
@@ -894,17 +894,17 @@ export default function AIStaffMatching() {
 
                                 <X className="h-3 w-3 mr-1" />
                                 已拒绝
-                              </Badge> :
+                      </Badge> :
 
                       <Badge variant="secondary">待处理</Badge>
                       }
                           </div>
                         </div>
-                      </motion.div>
+                </motion.div>
                 )}
-                  </div>
+              </div>
               }
-              </motion.div>
+            </motion.div>
             }
           </AnimatePresence>
         </CardContent>

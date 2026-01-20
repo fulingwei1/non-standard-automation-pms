@@ -90,13 +90,13 @@ export default function MeetingReports() {
   };
 
   const formatDate = (dateStr) => {
-    if (!dateStr) return "-";
+    if (!dateStr) {return "-";}
     const date = new Date(dateStr);
     return date.toLocaleDateString("zh-CN");
   };
 
   const renderComparison = (comparison) => {
-    if (!comparison) return null;
+    if (!comparison) {return null;}
 
     const change = comparison.change || 0;
     const changeRate = comparison.change_rate || "0%";
@@ -135,7 +135,7 @@ export default function MeetingReports() {
         <Button onClick={() => setGenerateDialogOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             生成报告
-          </Button>
+        </Button>
         } />
 
 
@@ -201,16 +201,16 @@ export default function MeetingReports() {
       <div className="space-y-4">
         {loading ?
         <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
             <p className="text-gray-600">加载中...</p>
-          </div> :
+        </div> :
         reports.length === 0 ?
         <Card>
             <CardContent className="p-12 text-center">
               <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-500">暂无报告</p>
             </CardContent>
-          </Card> :
+        </Card> :
 
         reports.map((report) =>
         <Card key={report.id} className="hover:shadow-md transition-shadow">
@@ -279,7 +279,7 @@ export default function MeetingReports() {
                             {report.report_data.summary.action_completion_rate}
                           </div>
                         </div>
-                      </div>
+                </div>
                 }
                     {report.comparison_data &&
                 <div className="mt-4 p-4 bg-blue-50 rounded-lg">
@@ -336,7 +336,7 @@ export default function MeetingReports() {
                             </div>
                           </div>
                         </div>
-                      </div>
+                </div>
                 }
                   </div>
                   <div className="flex gap-2 ml-4">
@@ -380,7 +380,7 @@ export default function MeetingReports() {
                   </div>
                 </div>
               </CardContent>
-            </Card>
+        </Card>
         )
         }
       </div>
@@ -407,7 +407,7 @@ export default function MeetingReports() {
               下一页
             </Button>
           </div>
-        </div>
+      </div>
       }
 
       {/* 生成报告对话框 */}
@@ -464,10 +464,10 @@ export default function MeetingReports() {
                   {Array.from({ length: 12 }, (_, i) => i + 1).map((m) =>
                 <option key={m} value={m}>
                       {m}月
-                    </option>
+                </option>
                 )}
                 </select>
-              </div>
+            </div>
             }
             <div>
               <label className="block text-sm font-medium mb-1">

@@ -131,7 +131,7 @@ export default function CultureWallCarousel({
   };
 
   const getAllItems = () => {
-    if (!data) return [];
+    if (!data) {return [];}
     const items = [];
 
     // 添加各类内容（管理员设置的内容）
@@ -169,7 +169,7 @@ export default function CultureWallCarousel({
   };
 
   const formatDate = (dateStr) => {
-    if (!dateStr) return "";
+    if (!dateStr) {return "";}
     const date = new Date(dateStr);
     return date.toLocaleDateString("zh-CN", {
       year: "numeric",
@@ -180,7 +180,7 @@ export default function CultureWallCarousel({
 
   const renderContentItem = (item) => {
     const config = contentTypeConfig[item.content_type || item.category];
-    if (!config) return null;
+    if (!config) {return null;}
 
     const Icon = config.icon;
 
@@ -399,7 +399,7 @@ export default function CultureWallCarousel({
       <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50" style={{ height }}>
         <CardContent className="flex items-center justify-center h-full">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2" />
             <p className="text-sm text-slate-400">加载中...</p>
           </div>
         </CardContent>

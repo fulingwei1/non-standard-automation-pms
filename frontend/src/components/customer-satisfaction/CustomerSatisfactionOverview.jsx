@@ -24,7 +24,7 @@ const CustomerSatisfactionOverview = ({ data, loading, onRefresh: _onRefresh }) 
   const [_selectedPeriod, _setSelectedPeriod] = useState('month');
 
   const overviewStats = useMemo(() => {
-    if (!data?.surveys) return {};
+    if (!data?.surveys) {return {};}
 
     const totalSurveys = data.surveys.length;
     const completedSurveys = data.surveys.filter((s) => s.status === 'completed').length;
@@ -41,7 +41,7 @@ const CustomerSatisfactionOverview = ({ data, loading, onRefresh: _onRefresh }) 
   }, [data]);
 
   const satisfactionDistribution = useMemo(() => {
-    if (!data?.responses) return {};
+    if (!data?.responses) {return {};}
 
     const distribution = {};
     Object.keys(SATISFACTION_LEVELS).forEach((key) => {

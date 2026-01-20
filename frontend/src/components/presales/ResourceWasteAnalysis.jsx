@@ -31,7 +31,7 @@ const LOSS_REASONS = {
  * 格式化金额
  */
 const formatAmount = (amount) => {
-  if (!amount && amount !== 0) return "-";
+  if (!amount && amount !== 0) {return "-";}
   const num = parseFloat(amount);
   if (num >= 10000) {
     return `${(num / 10000).toFixed(1)}万`;
@@ -194,7 +194,7 @@ const LossReasonDistribution = ({ data }) => {
               <span className="text-sm text-slate-500 w-16 text-right">
                 {item.count}次 ({item.percent}%)
               </span>
-            </div>
+          </div>
           )}
         </div>
       </CardContent>
@@ -263,7 +263,7 @@ const SalespersonPerformanceRanking = ({ data, type = "waste" }) => {
                     {sp.department &&
                     <span className="text-xs text-slate-400">
                         {sp.department}
-                      </span>
+                    </span>
                     }
                   </div>
                   <Badge
@@ -305,9 +305,9 @@ const SalespersonPerformanceRanking = ({ data, type = "waste" }) => {
                     {sp.top_loss_reasons.map((r, i) =>
                   <Badge key={i} variant="outline" className="text-xs">
                         {LOSS_REASONS[r.reason]?.label || r.reason} ({r.count})
-                      </Badge>
+                  </Badge>
                   )}
-                  </div>
+                </div>
                 }
               </div>);
 
@@ -374,7 +374,7 @@ const MonthlyWasteTrend = ({ data }) => {
               <span className="col-span-2 text-right text-red-500">
                 {item.wasted_hours?.toFixed(0)}h
               </span>
-            </div>
+          </div>
           )}
         </div>
         <div className="flex justify-end gap-4 mt-2 text-xs text-slate-400">

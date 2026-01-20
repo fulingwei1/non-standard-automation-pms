@@ -147,7 +147,6 @@ export default function HRContractsTab() {
                 <Button
                   className="bg-blue-600 hover:bg-blue-700"
                   onClick={() => {
-                    // TODO: 打开新建合同对话框
                     toast.info("新建合同功能待实现");
                   }}
                 >
@@ -264,7 +263,6 @@ export default function HRContractsTab() {
                                   variant="ghost"
                                   className="text-blue-400 hover:text-blue-300"
                                   onClick={() => {
-                                    // TODO: 查看合同详情
                                     toast.info("查看合同详情功能待实现");
                                   }}
                                 >

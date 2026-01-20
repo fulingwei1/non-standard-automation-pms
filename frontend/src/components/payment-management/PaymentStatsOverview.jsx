@@ -39,9 +39,9 @@ import {
 import { cn } from "../../lib/utils";
 
 const calculateAging = (dueDate) => {
-  if (!dueDate) return 0;
+  if (!dueDate) {return 0;}
   const due = new Date(dueDate);
-  if (Number.isNaN(due.getTime())) return 0;
+  if (Number.isNaN(due.getTime())) {return 0;}
   const now = new Date();
   const diffMs = now.getTime() - due.getTime();
   return Math.floor(diffMs / (1000 * 60 * 60 * 24));
@@ -161,7 +161,7 @@ export function PaymentStatsOverview({
     const agingData = {};
 
     payments.forEach((payment) => {
-      if (payment.status === 'paid') return;
+      if (payment.status === 'paid') {return;}
 
       const daysOverdue = Math.max(0, calculateAging(payment.due_date));
       const period = getAgingPeriod(daysOverdue);
@@ -186,7 +186,7 @@ export function PaymentStatsOverview({
     const collectionData = {};
 
     payments.forEach((payment) => {
-      if (payment.status === 'paid') return;
+      if (payment.status === 'paid') {return;}
 
       const daysOverdue = Math.max(0, calculateAging(payment.due_date));
       const collection = getCollectionRecommendation(daysOverdue, payment.amount, payment.customer_credit_rating);
@@ -262,14 +262,14 @@ export function PaymentStatsOverview({
           )}>
                 {Math.abs(trendValue)}%
               </span>
-            </div>
+        </div>
         }
           {description &&
         <p className="text-xs text-slate-500 mt-2">{description}</p>
         }
         </div>
       </div>
-    </motion.div>;
+  </motion.div>;
 
 
   if (loading) {
@@ -277,8 +277,8 @@ export function PaymentStatsOverview({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {Array.from({ length: 8 }).map((_, i) =>
         <div key={i} className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 animate-pulse">
-            <div className="h-20 bg-slate-700/50 rounded-lg"></div>
-          </div>
+            <div className="h-20 bg-slate-700/50 rounded-lg" />
+        </div>
         )}
       </div>);
 
@@ -347,7 +347,7 @@ export function PaymentStatsOverview({
                   <span className="text-sm text-slate-300">
                     {item.name}: {item.value}
                   </span>
-                </div>
+              </div>
               )}
             </div>
           </CardContent>
@@ -385,7 +385,7 @@ export function PaymentStatsOverview({
                       {item.riskLevel}
                     </Badge>
                   </div>
-                </div>
+              </div>
               )}
             </div>
           </CardContent>
@@ -419,7 +419,7 @@ export function PaymentStatsOverview({
                     <div className="text-lg font-bold text-white">{item.count}</div>
                     <div className="text-xs text-slate-400">个付款</div>
                   </div>
-                </div>
+              </div>
               )}
             </div>
           </CardContent>

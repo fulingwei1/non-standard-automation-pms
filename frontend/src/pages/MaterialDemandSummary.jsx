@@ -91,11 +91,11 @@ export default function MaterialDemandSummary() {
     try {
       setLoading(true);
       const params = {};
-      if (filterProject) params.project_id = filterProject;
-      if (filterMaterial) params.material_id = filterMaterial;
-      if (startDate) params.start_date = startDate;
-      if (endDate) params.end_date = endDate;
-      if (searchKeyword) params.search = searchKeyword;
+      if (filterProject) {params.project_id = filterProject;}
+      if (filterMaterial) {params.material_id = filterMaterial;}
+      if (startDate) {params.start_date = startDate;}
+      if (endDate) {params.end_date = endDate;}
+      if (searchKeyword) {params.search = searchKeyword;}
       const res = await materialDemandApi.list(params);
       const demandList = res.data?.items || res.data || [];
       setDemands(demandList);
@@ -209,7 +209,7 @@ export default function MaterialDemandSummary() {
               </div>
             </CardContent>
           </Card>
-        </div>
+      </div>
       }
       {/* Filters */}
       <Card>
@@ -233,7 +233,7 @@ export default function MaterialDemandSummary() {
                 {projects.map((proj) =>
                 <SelectItem key={proj.id} value={proj.id.toString()}>
                     {proj.project_name}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -321,10 +321,10 @@ export default function MaterialDemandSummary() {
                         </Button>
                       </div>
                     </TableCell>
-                  </TableRow>
+              </TableRow>
               )}
               </TableBody>
-            </Table>
+          </Table>
           }
         </CardContent>
       </Card>
@@ -357,7 +357,7 @@ export default function MaterialDemandSummary() {
                     {projects.map((proj) =>
                     <SelectItem key={proj.id} value={proj.id.toString()}>
                         {proj.project_name}
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -465,13 +465,13 @@ export default function MaterialDemandSummary() {
                         formatDate(detail.required_date) :
                         "-"}
                             </TableCell>
-                          </TableRow>
+                    </TableRow>
                     )}
                       </TableBody>
                     </Table>
-                  </div>
-              }
               </div>
+              }
+            </div>
             }
           </DialogBody>
           <DialogFooter>

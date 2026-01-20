@@ -177,7 +177,7 @@ const MaterialRow = ({ material, onView }) => {
                 </span>
               </div>
               <Progress value={usageProgress} className="h-1.5" />
-            </div>
+          </div>
           }
         </div>
 
@@ -195,7 +195,7 @@ const MaterialRow = ({ material, onView }) => {
               <p className="text-slate-300">
                 {formatDate(material.actualArrivalDate)}
               </p>
-            </div>
+          </div>
           }
           <div>
             <p className="text-slate-500 text-xs mb-1">位置</p>
@@ -214,7 +214,7 @@ const MaterialRow = ({ material, onView }) => {
 
                 {material.daysUntilExpiry} 天
               </p>
-            </div>
+          </div>
           }
         </div>
 
@@ -229,7 +229,7 @@ const MaterialRow = ({ material, onView }) => {
               )}>
 
                 {qualityStatusConfig[material.qualityStatus]?.label}
-              </Badge>
+            </Badge>
             }
             <Badge className="bg-slate-700/50 text-slate-300 text-xs">
               {material.nextAction}
@@ -470,7 +470,7 @@ export default function MaterialTracking() {
       {error &&
       <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400 text-sm">
           {error}
-        </div>
+      </div>
       }
 
       {/* Statistics */}
@@ -573,7 +573,7 @@ export default function MaterialTracking() {
                 className={cn(filterStatus === key && cfg.color)}>
 
                   {cfg.label}
-                </Button>
+              </Button>
               )}
             </div>
           </div>
@@ -606,7 +606,7 @@ export default function MaterialTracking() {
 
               <Package className="w-12 h-12 text-slate-500 mx-auto mb-3" />
               <p className="text-slate-400">没有符合条件的物料</p>
-            </motion.div>
+          </motion.div>
           }
         </AnimatePresence>
       </motion.div>
@@ -633,11 +633,11 @@ export default function MaterialTracking() {
 
                     <span className="w-2 h-2 rounded-full bg-red-400" />
                     {m.name} - 预期到货: {formatDate(m.expectedDate)}
-                  </li>
+            </li>
             )}
             </ul>
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* Create Material Dialog */}
@@ -717,7 +717,7 @@ function CreateMaterialDialog({ categories, onClose, onSuccess }) {
   };
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
+    <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700">
         <DialogHeader>
           <DialogTitle>新建物料</DialogTitle>
@@ -739,7 +739,7 @@ function CreateMaterialDialog({ categories, onClose, onSuccess }) {
               {errors.material_code &&
               <div className="text-sm text-red-400 mt-1">
                   {errors.material_code}
-                </div>
+              </div>
               }
             </div>
             <div>
@@ -757,7 +757,7 @@ function CreateMaterialDialog({ categories, onClose, onSuccess }) {
               {errors.material_name &&
               <div className="text-sm text-red-400 mt-1">
                   {errors.material_name}
-                </div>
+              </div>
               }
             </div>
             <div>
@@ -779,7 +779,7 @@ function CreateMaterialDialog({ categories, onClose, onSuccess }) {
                   {categories.map((cat) =>
                   <SelectItem key={cat.id} value={cat.id.toString()}>
                       {cat.category_name}
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>

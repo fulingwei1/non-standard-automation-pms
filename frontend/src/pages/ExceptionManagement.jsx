@@ -127,11 +127,11 @@ export default function ExceptionManagement() {
     try {
       setLoading(true);
       const params = {};
-      if (filterProject) params.project_id = filterProject;
-      if (filterType) params.event_type = filterType;
-      if (filterSeverity) params.severity = filterSeverity;
-      if (filterStatus) params.status = filterStatus;
-      if (searchKeyword) params.keyword = searchKeyword;
+      if (filterProject) {params.project_id = filterProject;}
+      if (filterType) {params.event_type = filterType;}
+      if (filterSeverity) {params.severity = filterSeverity;}
+      if (filterStatus) {params.status = filterStatus;}
+      if (searchKeyword) {params.keyword = searchKeyword;}
       const res = await exceptionApi.list(params);
       const exceptionList = res.data?.items || res.data || [];
       setExceptions(exceptionList);
@@ -183,7 +183,7 @@ export default function ExceptionManagement() {
     }
   };
   const handleException = async () => {
-    if (!selectedException) return;
+    if (!selectedException) {return;}
     try {
       // Use update method to update status and add action description
       await exceptionApi.update(selectedException.id, {
@@ -251,7 +251,7 @@ export default function ExceptionManagement() {
                 {projects.map((proj) =>
                 <SelectItem key={proj.id} value={proj.id.toString()}>
                     {proj.project_name}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -264,7 +264,7 @@ export default function ExceptionManagement() {
                 {Object.entries(typeConfigs).map(([key, config]) =>
                 <SelectItem key={key} value={key}>
                     {config.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -277,7 +277,7 @@ export default function ExceptionManagement() {
                 {Object.entries(severityConfigs).map(([key, config]) =>
                 <SelectItem key={key} value={key}>
                     {config.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -290,7 +290,7 @@ export default function ExceptionManagement() {
                 {Object.entries(statusConfigs).map(([key, config]) =>
                 <SelectItem key={key} value={key}>
                     {config.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -387,7 +387,7 @@ export default function ExceptionManagement() {
                           <span className="text-sm">
                             {exception.responsible_user_name}
                           </span>
-                        </div> :
+                  </div> :
 
                   <span className="text-slate-400">未分配</span>
                   }
@@ -411,14 +411,14 @@ export default function ExceptionManagement() {
                       }}>
 
                             <Edit className="w-4 h-4" />
-                          </Button>
+                    </Button>
                     }
                       </div>
                     </TableCell>
-                  </TableRow>
+              </TableRow>
               )}
               </TableBody>
-            </Table>
+          </Table>
           }
         </CardContent>
       </Card>
@@ -465,7 +465,7 @@ export default function ExceptionManagement() {
                       {projects.map((proj) =>
                       <SelectItem key={proj.id} value={proj.id.toString()}>
                           {proj.project_name}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -487,7 +487,7 @@ export default function ExceptionManagement() {
                       {Object.entries(typeConfigs).map(([key, config]) =>
                       <SelectItem key={key} value={key}>
                           {config.label}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -511,7 +511,7 @@ export default function ExceptionManagement() {
                       {Object.entries(severityConfigs).map(([key, config]) =>
                       <SelectItem key={key} value={key}>
                           {config.label}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -671,15 +671,15 @@ export default function ExceptionManagement() {
               <div>
                     <div className="text-sm text-slate-500 mb-1">异常描述</div>
                     <div>{selectedException.event_description}</div>
-                  </div>
+              </div>
               }
                 {selectedException.impact_description &&
               <div>
                     <div className="text-sm text-slate-500 mb-1">影响说明</div>
                     <div>{selectedException.impact_description}</div>
-                  </div>
-              }
               </div>
+              }
+            </div>
             }
           </DialogBody>
           <DialogFooter>
@@ -698,7 +698,7 @@ export default function ExceptionManagement() {
 
                 <Edit className="w-4 h-4 mr-2" />
                 处理异常
-              </Button>
+            </Button>
             }
           </DialogFooter>
         </DialogContent>
@@ -754,7 +754,7 @@ export default function ExceptionManagement() {
                   placeholder="填写处理措施和结果..." />
 
                 </div>
-              </div>
+            </div>
             }
           </DialogBody>
           <DialogFooter>

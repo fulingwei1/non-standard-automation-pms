@@ -175,7 +175,7 @@ export default function PermissionManagement() {
   const filteredPermissions = Object.entries(groupedPermissions).reduce(
     (acc, [module, perms]) => {
       const filtered = perms.filter((p) => {
-        if (!searchKeyword) return true;
+        if (!searchKeyword) {return true;}
         const keyword = searchKeyword.toLowerCase();
         return (
           p.permission_code?.toLowerCase().includes(keyword) ||
@@ -345,7 +345,7 @@ export default function PermissionManagement() {
                 {modules.map((module) =>
                 <SelectItem key={module} value={module}>
                     {module}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -398,7 +398,7 @@ export default function PermissionManagement() {
               </div>
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* 权限列表 */}
@@ -407,7 +407,7 @@ export default function PermissionManagement() {
           <CardContent className="pt-6">
             <div className="text-center py-8 text-slate-400">加载中...</div>
           </CardContent>
-        </Card> :
+      </Card> :
       isDemoAccount ? null : Object.keys(filteredPermissions).length ===
       0 ?
       <Card>
@@ -416,7 +416,7 @@ export default function PermissionManagement() {
               {searchKeyword ? "未找到匹配的权限" : "暂无权限数据"}
             </div>
           </CardContent>
-        </Card> :
+      </Card> :
 
       <div className="space-y-4">
           {Object.entries(filteredPermissions).map(([module, perms]) =>
@@ -468,7 +468,7 @@ export default function PermissionManagement() {
                         )}>
 
                                   {permission.action}
-                                </Badge>
+                      </Badge>
                       }
                               {permission.is_active === false &&
                       <Badge
@@ -476,7 +476,7 @@ export default function PermissionManagement() {
                         className="text-xs">
 
                                   已禁用
-                                </Badge>
+                      </Badge>
                       }
                             </div>
                             <p className="text-sm text-slate-400 ml-6">
@@ -485,7 +485,7 @@ export default function PermissionManagement() {
                             {permission.description &&
                     <p className="text-xs text-slate-500 ml-6 mt-1">
                                 {permission.description}
-                              </p>
+                    </p>
                     }
                             {permission.resource &&
                     <div className="flex items-center gap-2 mt-2 ml-6">
@@ -493,7 +493,7 @@ export default function PermissionManagement() {
                                 <span className="text-xs text-slate-500">
                                   资源: {permission.resource}
                                 </span>
-                              </div>
+                    </div>
                     }
                           </div>
                           <Button
@@ -505,15 +505,15 @@ export default function PermissionManagement() {
                             <Eye className="h-4 w-4 mr-1" />
                             详情
                           </Button>
-                        </div>
+                </div>
                 )}
                     </div>
-                  </CardContent>
+            </CardContent>
             }
               </Card>
-            </motion.div>
+        </motion.div>
         )}
-        </div>
+      </div>
       }
 
       {/* 权限详情对话框 */}
@@ -551,7 +551,7 @@ export default function PermissionManagement() {
                   <p className="text-white mt-1">
                     {selectedPermission.description}
                   </p>
-                </div>
+            </div>
             }
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -580,7 +580,7 @@ export default function PermissionManagement() {
                     className={getActionColor(selectedPermission.action)}>
 
                         {selectedPermission.action}
-                      </Badge> :
+                  </Badge> :
 
                   "未指定"
                   }
@@ -594,7 +594,7 @@ export default function PermissionManagement() {
                     {selectedPermission.is_active !== false ?
                   <Badge className="bg-green-500/10 text-green-400">
                         启用
-                      </Badge> :
+                  </Badge> :
 
                   <Badge variant="destructive">禁用</Badge>
                   }
@@ -623,9 +623,9 @@ export default function PermissionManagement() {
                     "zh-CN"
                   )}
                       </p>
-                    </div>
+              </div>
               }
-                </div>
+            </div>
             }
               <div className="pt-4 border-t border-slate-700">
                 <label className="text-sm font-medium text-slate-400 mb-2 block">
@@ -645,19 +645,19 @@ export default function PermissionManagement() {
                         <Badge variant="secondary" className="ml-auto text-xs">
                           {role.role_code}
                         </Badge>
-                      </div>
+                </div>
                 ) :
 
                 <p className="text-sm text-slate-500 text-center py-4">
                       暂无角色拥有此权限
-                    </p>
+                </p>
                 }
                 </div>
                 <p className="text-xs text-slate-500 mt-2">
                   提示：权限通常通过角色管理页面进行分配
                 </p>
               </div>
-            </div>
+          </div>
           }
         </DialogContent>
       </Dialog>

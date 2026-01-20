@@ -218,9 +218,9 @@ export default function ProjectBoard() {
               <Skeleton className="h-32 mb-2" />
               <Skeleton className="h-32 mb-2" />
               <Skeleton className="h-32" />
-            </div>
-        )}
         </div>
+        )}
+      </div>
       }
 
       {/* 看板视图 */}
@@ -261,7 +261,7 @@ export default function ProjectBoard() {
 
             <ChevronRight className="w-5 h-5" />
           </button>
-        </div>
+      </div>
       }
 
       {/* 矩阵视图 */}
@@ -290,7 +290,7 @@ export default function ProjectBoard() {
           <p className="text-slate-400">
             {searchQuery ? "没有找到匹配的项目" : "当前筛选条件下没有项目"}
           </p>
-        </div>
+      </div>
       }
     </motion.div>);
 
@@ -331,7 +331,7 @@ function MatrixView({ projects, stages, onProjectClick }) {
             <th key={stage.key} className="p-2 text-center">
                 <div className="text-xs text-slate-400">{stage.key}</div>
                 <div className="text-sm text-white">{stage.shortName}</div>
-              </th>
+            </th>
             )}
           </tr>
         </thead>
@@ -380,21 +380,21 @@ function MatrixView({ projects, stages, onProjectClick }) {
                       )}>
 
                             {project.project_code}
-                          </motion.div>
+                    </motion.div>
                     )}
                         {cellProjects.length > 3 &&
                     <div className="text-xs text-slate-500">
                             +{cellProjects.length - 3} 更多
-                          </div>
+                    </div>
                     }
-                      </div> :
+                  </div> :
 
                   <span className="text-slate-600">-</span>
                   }
-                  </td>);
+                </td>);
 
             })}
-            </tr>
+          </tr>
           )}
         </tbody>
       </table>
@@ -495,7 +495,7 @@ function ListView({ projects, onProjectClick, isProjectRelevant }) {
               </div>
             </div>
           </Card>
-        </motion.div>
+      </motion.div>
       )}
     </div>);
 

@@ -58,9 +58,9 @@ export default function EmployeeProfileDetail() {
         staffMatchingApi.getEvaluations({ employee_id: id }),
         staffMatchingApi.getPerformance({ employee_id: id })]
         );
-        if (profileRes.data) setProfile(profileRes.data);
-        if (evalRes.data?.items) setEvaluations(evalRes.data.items);
-        if (perfRes.data?.items) setPerformance(perfRes.data.items);
+        if (profileRes.data) {setProfile(profileRes.data);}
+        if (evalRes.data?.items) {setEvaluations(evalRes.data.items);}
+        if (perfRes.data?.items) {setPerformance(perfRes.data.items);}
       } catch (error) {
         console.error("加载数据失败:", error);
       } finally {
@@ -73,7 +73,7 @@ export default function EmployeeProfileDetail() {
   // 按标签类型分组评价
   const groupedEvaluations = evaluations.reduce((acc, eval_) => {
     const type = eval_.tag_type || "SKILL";
-    if (!acc[type]) acc[type] = [];
+    if (!acc[type]) {acc[type] = [];}
     acc[type].push(eval_);
     return acc;
   }, {});
@@ -119,9 +119,9 @@ export default function EmployeeProfileDetail() {
 
 
   const getScoreColor = (score) => {
-    if (score >= 85) return "text-green-400";
-    if (score >= 70) return "text-blue-400";
-    if (score >= 55) return "text-yellow-400";
+    if (score >= 85) {return "text-green-400";}
+    if (score >= 70) {return "text-blue-400";}
+    if (score >= 55) {return "text-yellow-400";}
     return "text-red-400";
   };
 
@@ -143,7 +143,7 @@ export default function EmployeeProfileDetail() {
         <Button variant="outline" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             返回
-          </Button>
+        </Button>
         } />
 
 
@@ -220,7 +220,7 @@ export default function EmployeeProfileDetail() {
                     </span>
                   </div>
                   <Progress value={dim.score} className="h-2" />
-                </div>
+              </div>
               )}
 
               <div className="pt-4 border-t border-white/10">
@@ -288,7 +288,7 @@ export default function EmployeeProfileDetail() {
                             <div className="text-xs text-slate-500 mt-1">
                               {eval_.evaluator_name} · {eval_.evaluated_at}
                             </div>
-                          </div>
+                        </div>
                         )}
                       </div>
                     </div>);
@@ -307,7 +307,7 @@ export default function EmployeeProfileDetail() {
               {performance.length === 0 ?
               <div className="text-center py-8 text-slate-400">
                   暂无绩效记录
-                </div> :
+              </div> :
 
               <div className="space-y-3">
                   {performance.map((perf) =>
@@ -349,9 +349,9 @@ export default function EmployeeProfileDetail() {
                           </div>
                         </div>
                       </div>
-                    </motion.div>
+                </motion.div>
                 )}
-                </div>
+              </div>
               }
             </CardContent>
           </Card>

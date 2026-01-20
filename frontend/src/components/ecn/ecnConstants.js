@@ -149,7 +149,7 @@ export const tabConfigs = [
 
 // 工具函数
 export const getPriorityValue = (item) => {
-  if (!item.priority) return 0;
+  if (!item.priority) {return 0;}
   return priorityConfigs[item.priority]?.value || 0;
 };
 

@@ -103,7 +103,7 @@ export default function ShortageReportDetail() {
   };
 
   const handleConfirm = async () => {
-    if (!confirm("确认要确认此缺料上报吗？")) return;
+    if (!confirm("确认要确认此缺料上报吗？")) {return;}
     setActionLoading(true);
     try {
       await shortageApi.reports.confirm(id);
@@ -138,7 +138,7 @@ export default function ShortageReportDetail() {
   };
 
   const handleResolve = async () => {
-    if (!confirm("确认要标记此缺料上报为已解决吗？")) return;
+    if (!confirm("确认要标记此缺料上报为已解决吗？")) {return;}
     setActionLoading(true);
     try {
       await shortageApi.reports.resolve(id);

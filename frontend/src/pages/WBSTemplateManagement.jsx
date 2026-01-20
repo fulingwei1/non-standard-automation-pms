@@ -87,8 +87,8 @@ export default function WBSTemplateManagement() {
         page: 1,
         page_size: 100
       };
-      if (filterType) params.project_type = filterType;
-      if (searchKeyword) params.keyword = searchKeyword;
+      if (filterType) {params.project_type = filterType;}
+      if (searchKeyword) {params.keyword = searchKeyword;}
       const res = await progressApi.wbsTemplates.list(params);
       setTemplates(res.data?.items || res.data || []);
     } catch (error) {
@@ -200,7 +200,7 @@ export default function WBSTemplateManagement() {
                 {Object.entries(typeConfigs).map(([key, config]) =>
                 <SelectItem key={key} value={key}>
                     {config.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -247,7 +247,7 @@ export default function WBSTemplateManagement() {
                         {template.description &&
                     <p className="text-sm text-slate-500 mb-2">
                             {template.description}
-                          </p>
+                    </p>
                     }
                         <div className="flex items-center gap-4 text-sm text-slate-500">
                           <span>任务数: {template.task_count || 0}</span>
@@ -279,9 +279,9 @@ export default function WBSTemplateManagement() {
                       </div>
                     </div>
                   </CardContent>
-                </Card>
+            </Card>
             )}
-            </div>
+          </div>
           }
         </CardContent>
       </Card>
@@ -314,14 +314,14 @@ export default function WBSTemplateManagement() {
               <div>
                     <div className="text-sm text-slate-500 mb-1">描述</div>
                     <div>{selectedTemplate.description}</div>
-                  </div>
+              </div>
               }
                 <div>
                   <div className="text-sm font-medium mb-3">模板任务列表</div>
                   {templateTasks.length === 0 ?
                 <div className="text-center py-4 text-slate-400">
                       暂无任务
-                    </div> :
+                </div> :
 
                 <div className="space-y-2">
                       {templateTasks.map((task) =>
@@ -342,7 +342,7 @@ export default function WBSTemplateManagement() {
 
                           <ChevronRight className="w-4 h-4" />
                           }
-                                </Button> :
+                        </Button> :
 
                         <div className="w-8" />
                         }
@@ -353,7 +353,7 @@ export default function WBSTemplateManagement() {
                                 {task.description &&
                           <div className="text-sm text-slate-500">
                                     {task.description}
-                                  </div>
+                          </div>
                           }
                               </div>
                             </div>
@@ -361,7 +361,7 @@ export default function WBSTemplateManagement() {
                               {task.planned_duration &&
                         <Badge variant="outline">
                                   {task.planned_duration} 天
-                                </Badge>
+                        </Badge>
                         }
                             </div>
                           </div>
@@ -378,18 +378,18 @@ export default function WBSTemplateManagement() {
                                   {child.description &&
                         <div className="text-slate-500">
                                       {child.description}
-                                    </div>
-                        }
-                                </div>
-                      )}
-                            </div>
-                    }
                         </div>
-                  )}
+                        }
+                      </div>
+                      )}
                     </div>
+                    }
+                  </div>
+                  )}
+                </div>
                 }
                 </div>
-              </div>
+            </div>
             }
           </DialogBody>
           <DialogFooter>
@@ -442,7 +442,7 @@ export default function WBSTemplateManagement() {
                     {Object.entries(typeConfigs).map(([key, config]) =>
                     <SelectItem key={key} value={key}>
                         {config.label}
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -496,7 +496,7 @@ export default function WBSTemplateManagement() {
                     {projects.map((proj) =>
                     <SelectItem key={proj.id} value={proj.id.toString()}>
                         {proj.project_name}
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -513,7 +513,7 @@ export default function WBSTemplateManagement() {
                       {selectedTemplate.task_count || 0} 个任务
                     </div>
                   </div>
-                </div>
+              </div>
               }
             </div>
           </DialogBody>

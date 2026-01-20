@@ -79,7 +79,7 @@ export default function CustomerManagement() {
   const [editCustomer, setEditCustomer] = useState(null);
 
   const formatCurrency = (value) => {
-    if (value === null || value === undefined) return "-";
+    if (value === null || value === undefined) {return "-";}
     try {
       return new Intl.NumberFormat("zh-CN", {
         style: "currency",
@@ -243,7 +243,7 @@ export default function CustomerManagement() {
         actions={
         <Button onClick={() => setShowCreateDialog(true)}>
             <Plus className="mr-2 h-4 w-4" /> 新增客户
-          </Button>
+        </Button>
         } />
 
 
@@ -267,7 +267,7 @@ export default function CustomerManagement() {
                   {industries.map((industry) =>
                   <SelectItem key={industry} value={industry}>
                       {industry}
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -287,7 +287,7 @@ export default function CustomerManagement() {
             {loading ?
             <div className="p-4 text-center text-muted-foreground">
                 加载中...
-              </div> :
+            </div> :
 
             <>
                 <div className="overflow-x-auto">
@@ -337,7 +337,7 @@ export default function CustomerManagement() {
                             {customer.contact_phone &&
                         <div className="text-xs text-muted-foreground">
                                 {customer.contact_phone}
-                              </div>
+                        </div>
                         }
                           </td>
                           <td className="px-4 py-2 text-sm">
@@ -384,7 +384,7 @@ export default function CustomerManagement() {
                               </Button>
                             </div>
                           </td>
-                        </tr>
+                    </tr>
                     )}
                     </tbody>
                   </table>
@@ -392,7 +392,7 @@ export default function CustomerManagement() {
                 {customers.length === 0 &&
               <p className="p-4 text-center text-muted-foreground">
                     没有找到符合条件的客户。
-                  </p>
+              </p>
               }
                 {total > pageSize &&
               <div className="mt-4 flex items-center justify-between">
@@ -422,9 +422,9 @@ export default function CustomerManagement() {
                         下一页
                       </Button>
                     </div>
-                  </div>
+              </div>
               }
-              </>
+            </>
             }
           </CardContent>
         </Card>
@@ -664,7 +664,7 @@ export default function CustomerManagement() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
+          </div>
           }
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowEditDialog(false)}>
@@ -745,7 +745,7 @@ export default function CustomerManagement() {
                   </p>
                 </div>
               </div>
-            </div>
+          </div>
           }
           <DialogFooter>
             <Button onClick={() => setShowDetailDialog(false)}>关闭</Button>
@@ -774,7 +774,7 @@ export default function CustomerManagement() {
           {loading360 ?
           <div className="py-10 text-center text-muted-foreground">
               正在加载客户画像...
-            </div> :
+          </div> :
           customer360 ?
           <div className="space-y-6">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -838,12 +838,12 @@ export default function CustomerManagement() {
                           <span>进度 {project.progress_pct || 0}%</span>
                           <span>{formatCurrency(project.contract_amount)}</span>
                         </div>
-                      </div>
+                  </div>
                   )}
                     {(customer360.projects || []).length === 0 &&
                   <div className="text-sm text-muted-foreground">
                         暂无项目记录
-                      </div>
+                  </div>
                   }
                   </CardContent>
                 </Card>
@@ -869,12 +869,12 @@ export default function CustomerManagement() {
                               {formatCurrency(opportunity.est_amount)}
                             </span>
                           </div>
-                        </div>
+                  </div>
                   )}
                     {(customer360.opportunities || []).length === 0 &&
                   <div className="text-sm text-muted-foreground">
                         暂无商机数据
-                      </div>
+                  </div>
                   }
                   </CardContent>
                 </Card>
@@ -898,12 +898,12 @@ export default function CustomerManagement() {
                           <span className="text-muted-foreground">
                             {quote.status}
                           </span>
-                        </div>
+                    </div>
                     )}
                       {(customer360.quotes || []).length === 0 &&
                     <div className="text-sm text-muted-foreground">
                           暂无报价记录
-                        </div>
+                    </div>
                     }
                     </div>
                     <div>
@@ -921,12 +921,12 @@ export default function CustomerManagement() {
                             <span>
                               {formatCurrency(contract.contract_amount)}
                             </span>
-                          </div>
+                    </div>
                     )}
                       {(customer360.contracts || []).length === 0 &&
                     <div className="text-sm text-muted-foreground">
                           暂无合同记录
-                        </div>
+                    </div>
                     }
                     </div>
                   </CardContent>
@@ -951,12 +951,12 @@ export default function CustomerManagement() {
                             <span className="text-muted-foreground">
                               {formatCurrency(invoice.total_amount)}
                             </span>
-                          </div>
+                    </div>
                     )}
                       {(customer360.invoices || []).length === 0 &&
                     <div className="text-sm text-muted-foreground">
                           暂无发票记录
-                        </div>
+                    </div>
                     }
                     </div>
                     <div>
@@ -983,12 +983,12 @@ export default function CustomerManagement() {
 
                               {formatCurrency(plan.planned_amount)}
                             </span>
-                          </div>
+                    </div>
                     )}
                       {(customer360.payment_plans || []).length === 0 &&
                     <div className="text-sm text-muted-foreground">
                           暂无收款计划
-                        </div>
+                    </div>
                     }
                     </div>
                   </CardContent>
@@ -1018,20 +1018,20 @@ export default function CustomerManagement() {
                           <span>{item.owner_name || "-"}</span>
                           <span>{item.communication_type || "-"}</span>
                         </div>
-                      </div>
+                </div>
                 )}
                   {(customer360.communications || []).length === 0 &&
                 <div className="text-sm text-muted-foreground">
                       暂无沟通记录
-                    </div>
+                </div>
                 }
                 </CardContent>
               </Card>
-            </div> :
+          </div> :
 
           <div className="py-10 text-center text-muted-foreground">
               请选择客户查看360视图。
-            </div>
+          </div>
           }
         </DialogContent>
       </Dialog>

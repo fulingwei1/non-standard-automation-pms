@@ -94,7 +94,7 @@ export default function DispatchManagement() {
     try {
       setLoading(true);
       const params = { status: filterStatus || "PENDING" };
-      if (filterWorkshop) params.workshop_id = filterWorkshop;
+      if (filterWorkshop) {params.workshop_id = filterWorkshop;}
       const res = await productionApi.workOrders.list(params);
       const orderList = res.data?.items || res.data || [];
       setWorkOrders(orderList);
@@ -171,7 +171,7 @@ export default function DispatchManagement() {
                 {workshops.map((ws) =>
                 <SelectItem key={ws.id} value={ws.id.toString()}>
                     {ws.workshop_name}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -201,7 +201,7 @@ export default function DispatchManagement() {
             onClick={() => setSelectedOrders(new Set())}>
 
               清空选择
-            </Button>
+          </Button>
           }
         </div>
         <Button
@@ -226,7 +226,7 @@ export default function DispatchManagement() {
           pendingOrders.length === 0 ?
           <div className="text-center py-8 text-slate-400">
               暂无待派工工单
-            </div> :
+          </div> :
 
           <Table>
               <TableHeader>
@@ -291,10 +291,10 @@ export default function DispatchManagement() {
                     <TableCell>
                       <Badge variant="outline">{order.priority || "-"}</Badge>
                     </TableCell>
-                  </TableRow>
+              </TableRow>
               )}
               </TableBody>
-            </Table>
+          </Table>
           }
         </CardContent>
       </Card>
@@ -331,14 +331,14 @@ export default function DispatchManagement() {
                     {workers.map((worker) =>
                     <SelectItem key={worker.id} value={worker.id.toString()}>
                         {worker.worker_name}
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
                 {workers.length === 0 &&
                 <div className="text-xs text-slate-400 mt-1">
                     暂无工人数据，请先配置工人信息
-                  </div>
+                </div>
                 }
               </div>
               <div>

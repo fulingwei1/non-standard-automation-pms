@@ -279,7 +279,7 @@ const CustomerServiceDashboard = () => {
           <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
             <Users size={12} /> {record.customerName}
           </div>
-        </div>
+    </div>
 
   },
   {
@@ -291,7 +291,7 @@ const CustomerServiceDashboard = () => {
       return (
         <Tag color={config?.color}>
             {config?.icon} {config?.label}
-          </Tag>);
+        </Tag>);
 
     }
   },
@@ -306,9 +306,9 @@ const CustomerServiceDashboard = () => {
           {record.engineer &&
       <div style={{ fontSize: 11, color: '#999', marginTop: 4 }}>
               负责人: {record.engineer}
-            </div>
+      </div>
       }
-        </div>
+    </div>
 
   },
   {
@@ -320,7 +320,7 @@ const CustomerServiceDashboard = () => {
       return (
         <Tag color={config?.color}>
             {config?.label}
-          </Tag>);
+        </Tag>);
 
     }
   },
@@ -335,7 +335,7 @@ const CustomerServiceDashboard = () => {
           <div style={{ fontSize: 11, color: '#666' }}>
             创建: {record.createdAt}
           </div>
-        </div>
+    </div>
 
   },
   {
@@ -349,7 +349,7 @@ const CustomerServiceDashboard = () => {
             <div style={{ fontSize: 11, color: '#666', marginTop: 4 }}>
               {satisfaction}/5.0
             </div>
-          </div> :
+    </div> :
 
     <span style={{ color: '#999' }}>未评价</span>
 
@@ -381,7 +381,7 @@ const CustomerServiceDashboard = () => {
         onClick={() => handleResolveTicket(record.id)}>
 
               解决
-            </Button>
+      </Button>
       }
           <Dropdown
         overlay={
@@ -396,14 +396,14 @@ const CustomerServiceDashboard = () => {
                 <Menu.Item onClick={() => handleAssignTicket(record, '李工程师')}>
                   <Users size={14} /> 分配给李工程师
                 </Menu.Item>
-              </Menu>
+        </Menu>
         }>
 
             <Button type="link" icon={<Settings size={16} />}>
               更多
             </Button>
           </Dropdown>
-        </Space>
+    </Space>
 
   }];
 
@@ -475,7 +475,7 @@ const CustomerServiceDashboard = () => {
                 {Object.values(TICKET_STATUS).map((status) =>
                 <Select.Option key={status.value} value={status.value}>
                     <Tag color={status.color}>{status.label}</Tag>
-                  </Select.Option>
+                </Select.Option>
                 )}
               </Select>
               <Select
@@ -488,7 +488,7 @@ const CustomerServiceDashboard = () => {
                 {Object.values(PRIORITY_LEVELS).map((priority) =>
                 <Select.Option key={priority.value} value={priority.value}>
                     <Tag color={priority.color}>{priority.label}</Tag>
-                  </Select.Option>
+                </Select.Option>
                 )}
               </Select>
               <Select
@@ -501,7 +501,7 @@ const CustomerServiceDashboard = () => {
                 {Object.values(SERVICE_TYPES).map((type) =>
                 <Select.Option key={type.value} value={type.value}>
                     {type.icon} {type.label}
-                  </Select.Option>
+                </Select.Option>
                 )}
               </Select>
             </Space>
@@ -521,7 +521,7 @@ const CustomerServiceDashboard = () => {
           <span>
               <BarChart3 size={16} />
               概览分析
-            </span>
+          </span>
           }
           key="overview">
 
@@ -554,7 +554,7 @@ const CustomerServiceDashboard = () => {
           <span>
               <FileText size={16} />
               工单管理 ({filteredTickets.length})
-            </span>
+          </span>
           }
           key="tickets">
 
@@ -572,7 +572,7 @@ const CustomerServiceDashboard = () => {
           <span>
               <Car size={16} />
               现场服务 ({fieldServices.length})
-            </span>
+          </span>
           }
           key="field-service">
 
@@ -588,7 +588,7 @@ const CustomerServiceDashboard = () => {
           <span>
               <Shield size={16} />
               质保管理 ({warrantyProjects.length})
-            </span>
+          </span>
           }
           key="warranty">
 
@@ -603,7 +603,7 @@ const CustomerServiceDashboard = () => {
           <span>
               <Star size={16} />
               满意度跟踪
-            </span>
+          </span>
           }
           key="satisfaction">
 
@@ -645,7 +645,7 @@ const CustomerServiceDashboard = () => {
                   {Object.values(SERVICE_TYPES).map((type) =>
                   <Select.Option key={type.value} value={type.value}>
                       {type.icon} {type.label}
-                    </Select.Option>
+                  </Select.Option>
                   )}
                 </Select>
               </Form.Item>
@@ -656,7 +656,7 @@ const CustomerServiceDashboard = () => {
                   {Object.values(PRIORITY_LEVELS).map((priority) =>
                   <Select.Option key={priority.value} value={priority.value}>
                       <Tag color={priority.color}>{priority.label}</Tag>
-                    </Select.Option>
+                  </Select.Option>
                   )}
                 </Select>
               </Form.Item>

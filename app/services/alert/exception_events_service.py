@@ -116,7 +116,7 @@ class ExceptionEventsService:
             total=total,
             page=page,
             page_size=page_size,
-            items=[ExceptionEventResponse.from_orm(item) for item in items]
+            items=[ExceptionEventResponse.model_validate(item) for item in items]
         )
 
     def get_exception_event(self, event_id: int) -> Optional[ExceptionEvent]:

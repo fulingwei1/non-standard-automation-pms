@@ -24,7 +24,7 @@ const ProjectHeader = ({ project, onEdit, onViewDocuments, onViewTimeline }) => 
 
   // Calculate project progress based on stages
   const calculateProgress = () => {
-    if (!project.stages || project.stages.length === 0) return 0;
+    if (!project.stages || project.stages.length === 0) {return 0;}
 
     const completedStages = project.stages.filter((stage) =>
     stage.status === 'COMPLETED'
@@ -268,7 +268,7 @@ const ProjectHeader = ({ project, onEdit, onViewDocuments, onViewTimeline }) => 
               </div>
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* Additional Info */}

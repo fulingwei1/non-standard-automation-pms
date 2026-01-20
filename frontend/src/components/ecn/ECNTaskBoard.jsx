@@ -101,9 +101,9 @@ export function ECNTaskBoard({
     const endDate = new Date(task.planned_end);
     const daysLeft = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
 
-    if (daysLeft < 0) return { label: "延期", color: "bg-red-500" };
-    if (daysLeft <= 3) return { label: "紧急", color: "bg-orange-500" };
-    if (daysLeft <= 7) return { label: "中等", color: "bg-yellow-500" };
+    if (daysLeft < 0) {return { label: "延期", color: "bg-red-500" };}
+    if (daysLeft <= 3) {return { label: "紧急", color: "bg-orange-500" };}
+    if (daysLeft <= 7) {return { label: "中等", color: "bg-yellow-500" };}
     return { label: "正常", color: "bg-green-500" };
   };
 
@@ -118,7 +118,7 @@ export function ECNTaskBoard({
         <Button onClick={() => setShowTaskDialog(true)}>
             <Plus className="w-4 h-4 mr-2" />
             创建任务
-          </Button>
+        </Button>
         }
       </div>
 
@@ -165,7 +165,7 @@ export function ECNTaskBoard({
                           {task.task_dept &&
                         <Badge variant="outline" className="text-xs">
                               {task.task_dept}
-                            </Badge>
+                        </Badge>
                         }
                         </div>
 
@@ -173,14 +173,14 @@ export function ECNTaskBoard({
                       <div className="flex items-center gap-1 text-xs text-slate-400">
                             <User className="w-3 h-3" />
                             {task.assignee_name}
-                          </div>
+                      </div>
                       }
 
                         {task.planned_end &&
                       <div className="flex items-center gap-1 text-xs text-slate-400">
                             <Calendar className="w-3 h-3" />
                             截止: {formatDate(task.planned_end)}
-                          </div>
+                      </div>
                       }
 
                         {task.progress !== undefined &&
@@ -195,31 +195,29 @@ export function ECNTaskBoard({
                               "h-1.5 rounded-full transition-all",
                               task.progress === 100 ? "bg-green-500" : "bg-blue-500"
                             )}
-                            style={{ width: `${task.progress}%` }}>
-
-                              </div>
+                            style={{ width: `${task.progress}%` }} />
                             </div>
-                          </div>
+                      </div>
                       }
 
                         {task.description &&
                       <div className="text-xs text-slate-300 line-clamp-2 mt-2">
                             {task.description}
-                          </div>
+                      </div>
                       }
                       </div>
                     </CardContent>
-                  </Card>);
+                </Card>);
 
             })}
 
               {getTasksByStatus(status).length === 0 &&
             <div className="text-center py-8 text-slate-500 text-sm">
                   暂无任务
-                </div>
+            </div>
             }
             </div>
-          </div>
+        </div>
         )}
       </div>
 
@@ -257,7 +255,7 @@ export function ECNTaskBoard({
                     {Object.entries(taskTypeConfigs).map(([key, config]) =>
                     <SelectItem key={key} value={key}>
                         {config.label}
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>

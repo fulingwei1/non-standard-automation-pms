@@ -153,7 +153,7 @@ export default function ProjectDetail() {
     return config ?
     <Badge className={cn(config.color, "text-white")}>
         {config.label}
-      </Badge> :
+    </Badge> :
 
     <Badge variant="secondary">{status}</Badge>;
 
@@ -171,21 +171,21 @@ export default function ProjectDetail() {
     return config ?
     <Badge className={cn(config.color, "text-white")}>
         {config.label}
-      </Badge> :
+    </Badge> :
 
     <Badge variant="secondary">{priority}</Badge>;
 
   };
 
   const calculateProgress = () => {
-    if (!stages || stages.length === 0) return 0;
+    if (!stages || stages.length === 0) {return 0;}
     const completedStages = stages.filter((stage) => stage.status === 'completed').length;
     return Math.round(completedStages / stages.length * 100);
   };
 
   const calculateBudgetUtilization = () => {
     const budget = project?.budget_amount || project?.budget || 0;
-    if (!project || !budget) return 0;
+    if (!project || !budget) {return 0;}
     const totalCosts = costs.reduce((sum, cost) => sum + (cost.amount || 0), 0);
     return Math.round(totalCosts / budget * 100);
   };
@@ -218,7 +218,7 @@ export default function ProjectDetail() {
                 <Skeleton className="h-4 w-24 mb-2" />
                 <Skeleton className="h-8 w-16" />
               </CardContent>
-            </Card>
+          </Card>
           )}
         </div>
         <Card>
@@ -232,7 +232,7 @@ export default function ProjectDetail() {
                     <Skeleton className="h-4 w-48 mb-2" />
                     <Skeleton className="h-3 w-32" />
                   </div>
-                </div>
+              </div>
               )}
             </div>
           </CardContent>
@@ -282,7 +282,7 @@ export default function ProjectDetail() {
               <Download className="mr-2 h-4 w-4" />
               导出
             </Button>
-          </div>
+        </div>
         } />
 
 
@@ -396,7 +396,7 @@ export default function ProjectDetail() {
                       </div>
                     </div>
                     <Badge variant="outline">{member.status}</Badge>
-                  </div>
+                </div>
                 )}
                 {members.length === 0 &&
                 <p className="text-center text-gray-500 py-4">暂无团队成员</p>
@@ -427,7 +427,7 @@ export default function ProjectDetail() {
                       {stage.status === 'completed' ? '已完成' :
                     stage.status === 'in_progress' ? '进行中' : '未开始'}
                     </Badge>
-                  </div>
+                </div>
                 )}
                 {stages.length === 0 &&
                 <p className="text-center text-gray-500 py-4">暂无项目阶段</p>
@@ -484,7 +484,7 @@ export default function ProjectDetail() {
                   <p className="text-sm font-medium">
                     {formatDate(milestone.target_date)}
                   </p>
-                </div>
+              </div>
               )}
               {milestones.length === 0 &&
               <p className="text-center text-gray-500 py-4 col-span-3">暂无里程碑</p>
@@ -521,7 +521,7 @@ export default function ProjectDetail() {
                       <Download className="h-4 w-4" />
                     </Button>
                   </div>
-                </div>
+              </div>
               )}
               {documents.length === 0 &&
               <p className="text-center text-gray-500 py-4">暂无文档</p>
@@ -550,7 +550,7 @@ export default function ProjectDetail() {
                 <Button>保存</Button>
               </DialogFooter>
             </DialogContent>
-          </Dialog>
+        </Dialog>
         }
       </AnimatePresence>
     </motion.div>);

@@ -121,7 +121,7 @@ export default function FixedAssetsManagement() {
               <Plus className="w-4 h-4 mr-2" />
               新增资产
             </Button>
-          </div>
+        </div>
         } />
 
 
@@ -382,7 +382,7 @@ export default function FixedAssetsManagement() {
                     </div>
                   </div>
                 </CardContent>
-              </Card>
+            </Card>
             )}
           </div>
         </TabsContent>
@@ -491,7 +491,7 @@ export default function FixedAssetsManagement() {
                           </div>
                         </div>
                       </div>
-                    </div>
+                </div>
                 )}
               </div>
             </CardContent>
@@ -544,7 +544,7 @@ export default function FixedAssetsManagement() {
                         </div>
                       </div>
                     </div>
-                  </div>
+                </div>
                 )}
               </div>
             </CardContent>

@@ -93,10 +93,10 @@ export default function ShortageReportList() {
     try {
       setLoading(true);
       const params = {};
-      if (filterProject) params.project_id = filterProject;
-      if (filterStatus) params.status = filterStatus;
-      if (filterUrgentLevel) params.urgent_level = filterUrgentLevel;
-      if (searchKeyword) params.keyword = searchKeyword;
+      if (filterProject) {params.project_id = filterProject;}
+      if (filterStatus) {params.status = filterStatus;}
+      if (filterUrgentLevel) {params.urgent_level = filterUrgentLevel;}
+      if (searchKeyword) {params.keyword = searchKeyword;}
       const res = await shortageApi.reports.list(params);
       const reportList = res.data?.items || res.data || [];
       setReports(reportList);
@@ -116,7 +116,7 @@ export default function ShortageReportList() {
     }
   };
   const handleConfirm = async (reportId) => {
-    if (!confirm("确认此缺料上报？")) return;
+    if (!confirm("确认此缺料上报？")) {return;}
     try {
       await shortageApi.reports.confirm(reportId);
       fetchReports();
@@ -169,7 +169,7 @@ export default function ShortageReportList() {
                 {projects.map((proj) =>
                 <SelectItem key={proj.id} value={proj.id.toString()}>
                     {proj.project_name}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -182,7 +182,7 @@ export default function ShortageReportList() {
                 {Object.entries(statusConfigs).map(([key, config]) =>
                 <SelectItem key={key} value={key}>
                     {config.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -198,7 +198,7 @@ export default function ShortageReportList() {
                 {Object.entries(urgentLevelConfigs).map(([key, config]) =>
                 <SelectItem key={key} value={key}>
                     {config.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -297,14 +297,14 @@ export default function ShortageReportList() {
                       onClick={() => handleConfirm(report.id)}>
 
                             <CheckCircle2 className="w-4 h-4" />
-                          </Button>
+                    </Button>
                     }
                       </div>
                     </TableCell>
-                  </TableRow>
+              </TableRow>
               )}
               </TableBody>
-            </Table>
+          </Table>
           }
         </CardContent>
       </Card>
@@ -375,21 +375,21 @@ export default function ShortageReportList() {
               <div>
                     <div className="text-sm text-slate-500 mb-1">上报说明</div>
                     <div>{selectedReport.report_description}</div>
-                  </div>
+              </div>
               }
                 {selectedReport.handle_plan &&
               <div>
                     <div className="text-sm text-slate-500 mb-1">处理方案</div>
                     <div>{selectedReport.handle_plan}</div>
-                  </div>
+              </div>
               }
                 {selectedReport.resolve_method &&
               <div>
                     <div className="text-sm text-slate-500 mb-1">解决方式</div>
                     <div>{selectedReport.resolve_method}</div>
-                  </div>
-              }
               </div>
+              }
+            </div>
             }
           </DialogBody>
           <DialogFooter>
@@ -403,7 +403,7 @@ export default function ShortageReportList() {
             <Button onClick={() => handleConfirm(selectedReport.id)}>
                 <CheckCircle2 className="w-4 h-4 mr-2" />
                 确认上报
-              </Button>
+            </Button>
             }
           </DialogFooter>
         </DialogContent>

@@ -124,10 +124,10 @@ export default function WorkOrderManagement() {
     try {
       setLoading(true);
       const params = {};
-      if (filterProject) params.project_id = filterProject;
-      if (filterStatus) params.status = filterStatus;
-      if (filterPriority) params.priority = filterPriority;
-      if (searchKeyword) params.search = searchKeyword;
+      if (filterProject) {params.project_id = filterProject;}
+      if (filterStatus) {params.status = filterStatus;}
+      if (filterPriority) {params.priority = filterPriority;}
+      if (searchKeyword) {params.search = searchKeyword;}
       const res = await productionApi.workOrders.list(params);
       const orderList = res.data?.items || res.data || [];
       setWorkOrders(orderList);
@@ -179,7 +179,7 @@ export default function WorkOrderManagement() {
     }
   };
   const handleAssign = async () => {
-    if (!selectedOrder) return;
+    if (!selectedOrder) {return;}
     try {
       await productionApi.workOrders.assign(selectedOrder.id, assignData);
       setShowAssignDialog(false);
@@ -237,7 +237,7 @@ export default function WorkOrderManagement() {
                 {projects.map((proj) =>
                 <SelectItem key={proj.id} value={proj.id.toString()}>
                     {proj.project_name}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -250,7 +250,7 @@ export default function WorkOrderManagement() {
                 {Object.entries(statusConfigs).map(([key, config]) =>
                 <SelectItem key={key} value={key}>
                     {config.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -263,7 +263,7 @@ export default function WorkOrderManagement() {
                 {Object.entries(priorityConfigs).map(([key, config]) =>
                 <SelectItem key={key} value={key}>
                     {config.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -320,7 +320,7 @@ export default function WorkOrderManagement() {
                       {order.specification &&
                   <div className="text-xs text-slate-500">
                           {order.specification}
-                        </div>
+                  </div>
                   }
                     </TableCell>
                     <TableCell>{order.plan_qty || 0}</TableCell>
@@ -366,7 +366,7 @@ export default function WorkOrderManagement() {
                   <>
                           <span className="mx-1">-</span>
                           {formatDate(order.plan_end_date)}
-                        </>
+                  </>
                   }
                     </TableCell>
                     <TableCell className="text-right">
@@ -388,14 +388,14 @@ export default function WorkOrderManagement() {
                       }}>
 
                             <User className="w-4 h-4" />
-                          </Button>
+                    </Button>
                     }
                       </div>
                     </TableCell>
-                  </TableRow>
+              </TableRow>
               )}
               </TableBody>
-            </Table>
+          </Table>
           }
         </CardContent>
       </Card>
@@ -440,7 +440,7 @@ export default function WorkOrderManagement() {
                       {projects.map((proj) =>
                       <SelectItem key={proj.id} value={proj.id.toString()}>
                           {proj.project_name}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -579,7 +579,7 @@ export default function WorkOrderManagement() {
                     {Object.entries(priorityConfigs).map(([key, config]) =>
                     <SelectItem key={key} value={key}>
                         {config.label}
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -697,9 +697,9 @@ export default function WorkOrderManagement() {
               <div>
                     <div className="text-sm text-slate-500 mb-1">工作内容</div>
                     <div>{selectedOrder.work_content}</div>
-                  </div>
-              }
               </div>
+              }
+            </div>
             }
           </DialogBody>
           <DialogFooter>
@@ -718,7 +718,7 @@ export default function WorkOrderManagement() {
 
                 <User className="w-4 h-4 mr-2" />
                 派工
-              </Button>
+            </Button>
             }
           </DialogFooter>
         </DialogContent>
@@ -774,7 +774,7 @@ export default function WorkOrderManagement() {
                   placeholder="工位ID" />
 
                 </div>
-              </div>
+            </div>
             }
           </DialogBody>
           <DialogFooter>

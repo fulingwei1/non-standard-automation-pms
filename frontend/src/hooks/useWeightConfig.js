@@ -123,7 +123,7 @@ export const useWeightConfig = () => {
   // 处理权重变化
   const handleWeightChange = (type, value) => {
     const numValue = Number(value);
-    if (numValue < 0 || numValue > 100) return;
+    if (numValue < 0 || numValue > 100) {return;}
 
     if (type === "dept") {
       setWeights({

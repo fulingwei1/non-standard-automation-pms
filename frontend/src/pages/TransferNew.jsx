@@ -93,8 +93,8 @@ export default function TransferNew() {
 
     // 验证
     const newErrors = {};
-    if (!formData.to_project_id) newErrors.to_project_id = "请选择调入项目";
-    if (!formData.material_id) newErrors.material_id = "请选择物料";
+    if (!formData.to_project_id) {newErrors.to_project_id = "请选择调入项目";}
+    if (!formData.material_id) {newErrors.material_id = "请选择物料";}
     if (!formData.transfer_qty || parseFloat(formData.transfer_qty) <= 0) {
       newErrors.transfer_qty = "请输入有效的调拨数量";
     }

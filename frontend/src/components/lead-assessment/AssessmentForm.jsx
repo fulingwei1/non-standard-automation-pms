@@ -211,7 +211,7 @@ export const AssessmentForm = ({
   const handleFieldChange = (field, value) => {
     setFormData((prev) => {
       const updatedData = { ...prev, [field]: value };
-      if (onChange) onChange(updatedData);
+      if (onChange) {onChange(updatedData);}
       return updatedData;
     });
   };
@@ -284,7 +284,7 @@ export const AssessmentForm = ({
     }
 
     setShowResults(false);
-    if (onClose) onClose();
+    if (onClose) {onClose();}
   };
 
   // 保存草稿
@@ -306,7 +306,7 @@ export const AssessmentForm = ({
   // 渲染评估问题
   const renderAssessmentQuestions = (categoryId) => {
     const questions = ASSESSMENT_QUESTIONS[categoryId];
-    if (!questions) return null;
+    if (!questions) {return null;}
 
     return questions.map((question, index) => {
       const questionId = `${categoryId}_${index}`;
@@ -335,7 +335,7 @@ export const AssessmentForm = ({
                 <RadioGroupItem value="false" id={`${questionId}_no`} />
                 <Label htmlFor={`${questionId}_no`} className="text-sm">否</Label>
               </div>
-            </RadioGroup>
+          </RadioGroup>
           }
 
           {question.type === 'rating' &&
@@ -353,13 +353,13 @@ export const AssessmentForm = ({
                   <span key={i} className="text-amber-500">★</span>
                   )}
                     </Label>
-                  </div>
+              </div>
               )}
               </RadioGroup>
               <div className="text-xs text-slate-500 text-right">
                 权重: {(question.weight * 100).toFixed(0)}%
               </div>
-            </div>
+          </div>
           }
 
           {question.type === 'select' &&
@@ -378,13 +378,13 @@ export const AssessmentForm = ({
                       {option.score &&
                   <Badge variant="secondary" className="ml-2">
                           +{option.score}分
-                        </Badge>
+                  </Badge>
                   }
                     </div>
-                  </SelectItem>
+              </SelectItem>
               )}
               </SelectContent>
-            </Select>
+          </Select>
           }
         </div>);
 
@@ -447,7 +447,7 @@ export const AssessmentForm = ({
   { value: "summary", label: "评分结果" }];
 
 
-  if (!isOpen) return null;
+  if (!isOpen) {return null;}
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -459,7 +459,7 @@ export const AssessmentForm = ({
             {lead &&
             <Badge variant="outline" className="ml-2">
                 {lead.contactName} - {lead.companyName}
-              </Badge>
+            </Badge>
             }
           </DialogTitle>
         </DialogHeader>
@@ -488,7 +488,7 @@ export const AssessmentForm = ({
                 className="text-xs">
 
                   {tab.label}
-                </TabsTrigger>
+              </TabsTrigger>
               )}
             </TabsList>
 
@@ -581,7 +581,7 @@ export const AssessmentForm = ({
                                   优先级: {industry.priority}
                                 </Badge>
                               </div>
-                            </SelectItem>
+                          </SelectItem>
                           )}
                         </SelectContent>
                       </Select>
@@ -606,7 +606,7 @@ export const AssessmentForm = ({
                                 {source.score}分
                               </Badge>
                             </div>
-                          </SelectItem>
+                        </SelectItem>
                         )}
                       </SelectContent>
                     </Select>
@@ -653,7 +653,7 @@ export const AssessmentForm = ({
                                 <span>{type.label}</span>
                                 {type.score && <Badge variant="secondary" className="ml-2">+{type.score}分</Badge>}
                               </div>
-                            </SelectItem>
+                          </SelectItem>
                           )}
                         </SelectContent>
                       </Select>
@@ -690,7 +690,7 @@ export const AssessmentForm = ({
                               <div className="font-medium">{budget.label}</div>
                               <div className="text-sm text-slate-600">{budget.description}</div>
                             </div>
-                          </SelectItem>
+                        </SelectItem>
                         )}
                       </SelectContent>
                     </Select>
@@ -721,7 +721,7 @@ export const AssessmentForm = ({
                                   {timeline.score}分
                                 </Badge>
                               </div>
-                            </SelectItem>
+                          </SelectItem>
                           )}
                         </SelectContent>
                       </Select>
@@ -774,7 +774,7 @@ export const AssessmentForm = ({
                   <CardContent className="space-y-6">
                     {renderAssessmentQuestions(category.id)}
                   </CardContent>
-                </Card>
+              </Card>
               )}
 
               <div className="flex justify-between items-center">
@@ -851,7 +851,7 @@ export const AssessmentForm = ({
                 <AlertDescription className="text-sm">
                   草稿已保存
                 </AlertDescription>
-              </Alert>
+            </Alert>
             }
 
             <div className="flex gap-2">

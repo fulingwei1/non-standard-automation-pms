@@ -162,7 +162,7 @@ export default function KitCheck() {
   };
 
   const handleConfirmStart = async (workOrderId, confirmType = "start_now") => {
-    if (!confirm(`确认工单物料齐套，可以开工吗？`)) return;
+    if (!confirm(`确认工单物料齐套，可以开工吗？`)) {return;}
 
     setActionLoading(true);
     try {
@@ -309,11 +309,11 @@ export default function KitCheck() {
           {loading ?
           <div className="text-center py-8 text-muted-foreground">
               加载中...
-            </div> :
+          </div> :
           workOrders.length === 0 ?
           <div className="text-center py-8 text-muted-foreground">
               暂无待检查工单
-            </div> :
+          </div> :
 
           <div className="space-y-3">
               {workOrders.map((wo) => {
@@ -394,10 +394,10 @@ export default function KitCheck() {
                         检查
                       </Button>
                     </div>
-                  </div>);
+                </div>);
 
             })}
-            </div>
+          </div>
           }
 
           {total > pageSize &&
@@ -425,7 +425,7 @@ export default function KitCheck() {
                   下一页
                 </Button>
               </div>
-            </div>
+          </div>
           }
         </CardContent>
       </Card>
@@ -440,7 +440,7 @@ export default function KitCheck() {
             {detailLoading ?
             <div className="text-center py-8 text-muted-foreground">
                 加载中...
-              </div> :
+            </div> :
             detailData ?
             <div className="space-y-6">
                 {/* 工单信息 */}
@@ -577,15 +577,15 @@ export default function KitCheck() {
                         "缺料"}
                           </Badge>
                         </div>
-                      </div>
+                  </div>
                   )}
                   </div>
                 </div>
-              </div> :
+            </div> :
 
             <div className="text-center py-8 text-muted-foreground">
                 暂无数据
-              </div>
+            </div>
             }
           </DialogBody>
           <DialogFooter>
@@ -612,9 +612,9 @@ export default function KitCheck() {
 
                     <Play className="h-4 w-4 mr-2" />
                     确认开工
-                  </Button>
+              </Button>
               }
-              </>
+            </>
             }
           </DialogFooter>
         </DialogContent>

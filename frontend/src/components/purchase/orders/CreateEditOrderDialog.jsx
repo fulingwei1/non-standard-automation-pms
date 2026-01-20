@@ -61,7 +61,7 @@ export default function CreateEditOrderDialog({
                   {suppliers.map((supplier) =>
                   <SelectItem key={supplier.id} value={supplier.id}>
                       {supplier.name}
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -80,7 +80,7 @@ export default function CreateEditOrderDialog({
                   {projects.map((project) =>
                   <SelectItem key={project.id} value={project.id}>
                       {project.name}
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -102,7 +102,7 @@ export default function CreateEditOrderDialog({
                   {Object.entries(PAYMENT_TERMS_CONFIGS).map(([key, config]) =>
                   <SelectItem key={key} value={key}>
                       {config.label}
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -121,7 +121,7 @@ export default function CreateEditOrderDialog({
                   {Object.entries(SHIPPING_METHODS).map(([key, config]) =>
                   <SelectItem key={key} value={key}>
                       {config.label}
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -145,7 +145,7 @@ export default function CreateEditOrderDialog({
                   <SelectItem value="critical">非常紧急</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+          </div>
           }
 
           {/* 备注 */}

@@ -100,18 +100,18 @@ export function DispatchCard({
   const isOverdue = isTaskOverdue(task.status, task.planned_end_date);
 
   function calculateProgress(task) {
-    if (task.status === "COMPLETED") return 100;
-    if (task.status === "CANCELLED") return 0;
-    if (task.progress !== undefined) return task.progress;
+    if (task.status === "COMPLETED") {return 100;}
+    if (task.status === "CANCELLED") {return 0;}
+    if (task.progress !== undefined) {return task.progress;}
 
-    if (!task.start_date || !task.end_date) return 0;
+    if (!task.start_date || !task.end_date) {return 0;}
 
     const now = new Date();
     const start = new Date(task.start_date);
     const end = new Date(task.end_date);
 
-    if (now < start) return 0;
-    if (now > end) return 100;
+    if (now < start) {return 0;}
+    if (now > end) {return 100;}
 
     const total = end - start;
     const elapsed = now - start;
@@ -195,7 +195,7 @@ export function DispatchCard({
           <div className="flex items-center gap-1">
               <MapPin className="w-3 h-3" />
               <span>{task.location}</span>
-            </div>
+          </div>
           }
         </div>
 
@@ -211,11 +211,9 @@ export function DispatchCard({
                 "h-1 rounded-full transition-all",
                 getProgressColor(progress)
               )}
-              style={{ width: `${progress}%` }}>
-
-              </div>
+              style={{ width: `${progress}%` }} />
             </div>
-          </div>
+        </div>
         }
       </motion.div>);
 
@@ -267,13 +265,13 @@ export function DispatchCard({
                   {task.installation_type &&
                   <Badge variant="outline" className="text-xs">
                       {installationTypeConfig.label}
-                    </Badge>
+                  </Badge>
                   }
 
                   {task.project_name &&
                   <Badge variant="outline" className="text-xs">
                       项目: {task.project_name}
-                    </Badge>
+                  </Badge>
                   }
                 </div>
               </div>
@@ -302,7 +300,7 @@ export function DispatchCard({
                 }}>
 
                     <User className="w-4 h-4" />
-                  </Button>
+              </Button>
               }
 
                 {canDelete &&
@@ -315,9 +313,9 @@ export function DispatchCard({
                 }}>
 
                     <Trash2 className="w-4 h-4" />
-                  </Button>
+              </Button>
               }
-              </div>
+            </div>
             }
           </div>
         </CardHeader>
@@ -327,7 +325,7 @@ export function DispatchCard({
           {task.description &&
           <p className="text-sm text-slate-300 line-clamp-2">
               {task.description}
-            </p>
+          </p>
           }
 
           {/* 时间信息 */}
@@ -347,7 +345,7 @@ export function DispatchCard({
           <div className="flex items-center gap-1 text-xs text-slate-400">
               <MapPin className="w-3 h-3" />
               <span>{task.location}</span>
-            </div>
+          </div>
           }
 
           {/* 负责人信息 */}
@@ -355,7 +353,7 @@ export function DispatchCard({
           <div className="flex items-center gap-1 text-xs text-slate-400">
               <User className="w-3 h-3" />
               <span>负责人: {task.assigned_engineer_name}</span>
-            </div>
+          </div>
           }
 
           {/* 联系信息 */}
@@ -365,15 +363,15 @@ export function DispatchCard({
             <div className="flex items-center gap-1 text-slate-400">
                   <Phone className="w-3 h-3" />
                   <span>{task.contact_phone}</span>
-                </div>
+            </div>
             }
               {task.contact_email &&
             <div className="flex items-center gap-1 text-slate-400">
                   <Mail className="w-3 h-3" />
                   <span>{task.contact_email}</span>
-                </div>
-            }
             </div>
+            }
+          </div>
           }
 
           {/* 进度条 */}
@@ -389,11 +387,9 @@ export function DispatchCard({
                   "h-1.5 rounded-full transition-all",
                   getProgressColor(progress)
                 )}
-                style={{ width: `${progress}%` }}>
-
-                </div>
+                style={{ width: `${progress}%` }} />
               </div>
-            </div>
+          </div>
           }
 
           {/* 状态操作按钮 */}
@@ -410,7 +406,7 @@ export function DispatchCard({
 
                   <Play className="w-3 h-3 mr-1" />
                   开始
-                </Button>
+            </Button>
             }
 
               {canPause &&
@@ -424,7 +420,7 @@ export function DispatchCard({
 
                   <Pause className="w-3 h-3 mr-1" />
                   暂停
-                </Button>
+            </Button>
             }
 
               {canComplete &&
@@ -438,9 +434,9 @@ export function DispatchCard({
 
                   <Square className="w-3 h-3 mr-1" />
                   完成
-                </Button>
+            </Button>
             }
-            </div>
+          </div>
           }
         </CardContent>
       </motion.div>
@@ -518,7 +514,7 @@ export function DispatchCard({
                 <p className="mt-1 text-sm text-slate-300">
                   {task.location}
                 </p>
-              </div>
+            </div>
             }
 
             {(task.contact_phone || task.contact_email) &&
@@ -532,7 +528,7 @@ export function DispatchCard({
                 <p>邮箱: {task.contact_email}</p>
                 }
                 </div>
-              </div>
+            </div>
             }
 
             {task.assigned_engineer_name &&
@@ -543,10 +539,10 @@ export function DispatchCard({
                   {task.assigned_engineer_contact &&
                 <span className="ml-2 text-slate-400">
                       ({task.assigned_engineer_contact})
-                    </span>
+                </span>
                 }
                 </p>
-              </div>
+            </div>
             }
           </DialogBody>
           <DialogFooter>
@@ -562,7 +558,7 @@ export function DispatchCard({
 
                     <Play className="w-4 h-4 mr-1" />
                     开始任务
-                  </Button>
+              </Button>
               }
 
                 {canComplete &&
@@ -574,9 +570,9 @@ export function DispatchCard({
 
                     <CheckCircle2 className="w-4 h-4 mr-1" />
                     完成任务
-                  </Button>
+              </Button>
               }
-              </>
+            </>
             }
             <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
               关闭
@@ -628,7 +624,7 @@ export function DispatchCard({
                   <SelectContent>
                     {Object.entries(priorityConfigs).map(([key, config]) => <SelectItem key={key} value={key}>
                         {config.label}
-                      </SelectItem>
+                                                                            </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -749,9 +745,9 @@ export function DispatchCard({
 }
 
 function getProgressColor(progress) {
-  if (progress === 100) return "bg-green-500";
-  if (progress >= 75) return "bg-blue-500";
-  if (progress >= 50) return "bg-yellow-500";
-  if (progress >= 25) return "bg-orange-500";
+  if (progress === 100) {return "bg-green-500";}
+  if (progress >= 75) {return "bg-blue-500";}
+  if (progress >= 50) {return "bg-yellow-500";}
+  if (progress >= 25) {return "bg-orange-500";}
   return "bg-red-500";
 }

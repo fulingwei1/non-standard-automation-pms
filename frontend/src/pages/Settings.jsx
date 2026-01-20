@@ -56,7 +56,7 @@ function ProfileSection() {
       department: "未知部门",
       role: "用户",
     };
-    if (!stored) return defaultUser;
+    if (!stored) {return defaultUser;}
     try {
       const parsed = JSON.parse(stored);
       return { ...defaultUser, ...parsed };

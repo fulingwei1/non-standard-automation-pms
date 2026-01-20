@@ -222,7 +222,7 @@ export default function LeadDetail() {
                 <ArrowRight className="w-4 h-4 mr-2" />
                 转商机
               </Button>
-            </>
+          </>
           }
         </div>
       </div>
@@ -282,7 +282,7 @@ export default function LeadDetail() {
                   <Mail className="w-4 h-4 text-slate-400" />
                   {lead.contact_email}
                 </div>
-              </div>
+            </div>
             }
             {lead.address &&
             <div>
@@ -291,7 +291,7 @@ export default function LeadDetail() {
                   <MapPin className="w-4 h-4 text-slate-400" />
                   {lead.address}
                 </div>
-              </div>
+            </div>
             }
             {lead.next_action_at &&
             <div>
@@ -300,7 +300,7 @@ export default function LeadDetail() {
                   <Clock className="w-4 h-4 text-slate-400" />
                   {formatDate(lead.next_action_at)}
                 </div>
-              </div>
+            </div>
             }
             <div>
               <div className="text-sm text-slate-500 mb-1">创建时间</div>
@@ -316,7 +316,7 @@ export default function LeadDetail() {
               <div className="p-3 bg-slate-50 rounded-lg">
                 {lead.demand_summary}
               </div>
-            </div>
+          </div>
           }
         </CardContent>
       </Card>
@@ -369,13 +369,13 @@ export default function LeadDetail() {
                           <span className="text-slate-500">
                             {formatDate(followUp.next_action_at)}
                           </span>
-                        </>
+                </>
                 }
-                    </div>
+              </div>
               }
-                </div>
-            )}
             </div>
+            )}
+          </div>
           }
         </CardContent>
       </Card>
@@ -405,7 +405,7 @@ export default function LeadDetail() {
                       ([key, config]) =>
                       <SelectItem key={key} value={key}>
                           {config.label}
-                        </SelectItem>
+                      </SelectItem>
 
                     )}
                   </SelectContent>
@@ -501,7 +501,7 @@ export default function LeadDetail() {
                       value={customer.id.toString()}>
 
                         {customer.customer_name}
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>

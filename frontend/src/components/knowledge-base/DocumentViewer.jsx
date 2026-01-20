@@ -11,7 +11,7 @@ import { KNOWLEDGE_TYPES, FILE_TYPES, CATEGORIES, ACCESS_LEVELS, STATUS_OPTIONS 
 const { Paragraph, Link, Text } = Typography;
 
 const DocumentViewer = ({ document, onClose }) => {
-  if (!document) return null;
+  if (!document) {return null;}
 
   const typeConfig = KNOWLEDGE_TYPES[document.type?.toUpperCase()];
   const fileConfig = FILE_TYPES[document.fileType?.toUpperCase()];

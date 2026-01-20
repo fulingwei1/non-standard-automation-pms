@@ -361,7 +361,7 @@ export const calculateSLACompliance = (issue) => {
   const hoursElapsed = (now - created) / (1000 * 60 * 60);
 
   const sla = ISSUE_SLA_CONFIG[issue.severity];
-  if (!sla) return null;
+  if (!sla) {return null;}
 
   return {
     response: hoursElapsed <= sla.response,

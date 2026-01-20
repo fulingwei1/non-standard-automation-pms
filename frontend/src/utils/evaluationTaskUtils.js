@@ -41,9 +41,9 @@ export const getTypeBadge = (type, projectName) => {
  * 获取紧急程度颜色
  */
 export const getUrgencyColor = (daysLeft) => {
-  if (daysLeft < 0) return "text-slate-500"; // 已过期
-  if (daysLeft <= 2) return "text-red-400"; // 紧急
-  if (daysLeft <= 5) return "text-amber-400"; // 警告
+  if (daysLeft < 0) {return "text-slate-500";} // 已过期
+  if (daysLeft <= 2) {return "text-red-400";} // 紧急
+  if (daysLeft <= 5) {return "text-amber-400";} // 警告
   return "text-emerald-400"; // 正常
 };
 
@@ -98,13 +98,13 @@ export const filterTasks = (tasks, searchTerm, typeFilter) => {
         evaluationType !== "dept" &&
         evaluationType !== "DEPT_MANAGER"
       )
-        return false;
+        {return false;}
       if (
         typeFilter === "project" &&
         evaluationType !== "project" &&
         evaluationType !== "PROJECT_MANAGER"
       )
-        return false;
+        {return false;}
     }
 
     return true;

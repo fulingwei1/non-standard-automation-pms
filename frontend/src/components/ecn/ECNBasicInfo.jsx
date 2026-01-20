@@ -25,9 +25,9 @@ export function ECNBasicInfo({ ecn, loading }) {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="animate-pulse">
-              <div className="h-4 bg-slate-700 rounded mb-2"></div>
-              <div className="h-4 bg-slate-700 rounded mb-2"></div>
-              <div className="h-4 bg-slate-700 rounded"></div>
+              <div className="h-4 bg-slate-700 rounded mb-2" />
+              <div className="h-4 bg-slate-700 rounded mb-2" />
+              <div className="h-4 bg-slate-700 rounded" />
             </div>
           </CardContent>
         </Card>
@@ -37,9 +37,9 @@ export function ECNBasicInfo({ ecn, loading }) {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="animate-pulse">
-              <div className="h-4 bg-slate-700 rounded mb-2"></div>
-              <div className="h-4 bg-slate-700 rounded mb-2"></div>
-              <div className="h-4 bg-slate-700 rounded"></div>
+              <div className="h-4 bg-slate-700 rounded mb-2" />
+              <div className="h-4 bg-slate-700 rounded mb-2" />
+              <div className="h-4 bg-slate-700 rounded" />
             </div>
           </CardContent>
         </Card>
@@ -180,10 +180,10 @@ export function ECNBasicInfo({ ecn, loading }) {
                 {ecn.affected_departments.map((dept, index) =>
               <Badge key={index} variant="outline" className="text-xs">
                     {dept}
-                  </Badge>
+              </Badge>
               )}
               </div>
-            </div>
+          </div>
           }
         </CardContent>
       </Card>

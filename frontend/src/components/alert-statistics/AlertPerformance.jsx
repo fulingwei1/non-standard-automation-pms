@@ -57,14 +57,14 @@ const AlertPerformance = ({ data, loading = false }) => {
 
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
-          <Card title="升级率（占位）" loading={loading}>
-            <Text type="secondary">用于展示告警升级/转派趋势</Text>
+          <Card title="升级率" loading={loading}>
+            <Text type="secondary">告警升级/转派趋势</Text>
             <Progress percent={metrics.escalationRate} strokeColor={CHART_COLORS.WARNING} />
           </Card>
         </Col>
         <Col xs={24} lg={12}>
-          <Card title="误报率（占位）" loading={loading}>
-            <Text type="secondary">用于展示误报/噪声告警比例</Text>
+          <Card title="误报率" loading={loading}>
+            <Text type="secondary">误报/噪声告警比例</Text>
             <Progress percent={metrics.falsePositiveRate} strokeColor={CHART_COLORS.ERROR} />
           </Card>
         </Col>

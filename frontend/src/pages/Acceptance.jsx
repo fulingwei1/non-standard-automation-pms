@@ -225,7 +225,7 @@ function AcceptanceCard({ acceptance, onView }) {
 function AcceptanceDetailDialog({ acceptance, open, onOpenChange }) {
   const [activeTab, setActiveTab] = useState("checklist");
 
-  if (!acceptance) return null;
+  if (!acceptance) {return null;}
 
   const type = typeConfigs[acceptance.type] || {
     label: acceptance.type || "未知",

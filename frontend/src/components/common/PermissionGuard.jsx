@@ -25,7 +25,7 @@ export function PermissionGuard({
   fallback = null,
 }) {
   const hasAccess = useMemo(() => {
-    if (!permission) return true;
+    if (!permission) {return true;}
 
     if (Array.isArray(permission)) {
       return requireAll
@@ -51,7 +51,7 @@ export function PermissionGuard({
  */
 export function useHasPermission(permission, requireAll = false) {
   return useMemo(() => {
-    if (!permission) return true;
+    if (!permission) {return true;}
 
     if (Array.isArray(permission)) {
       return requireAll

@@ -95,8 +95,8 @@ export default function AcceptanceTemplateManagement() {
     try {
       setLoading(true);
       const params = { page: 1, page_size: 100 };
-      if (filterType) params.template_type = filterType;
-      if (searchKeyword) params.search = searchKeyword;
+      if (filterType) {params.template_type = filterType;}
+      if (searchKeyword) {params.search = searchKeyword;}
       const res = await acceptanceApi.templates.list(params);
       const templateList = res.data?.items || res.data || [];
       setTemplates(templateList);
@@ -232,7 +232,7 @@ export default function AcceptanceTemplateManagement() {
                 {Object.entries(typeConfigs).map(([key, config]) =>
                 <SelectItem key={key} value={key}>
                     {config.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -315,10 +315,10 @@ export default function AcceptanceTemplateManagement() {
                         </Button>
                       </div>
                     </TableCell>
-                  </TableRow>
+              </TableRow>
               )}
               </TableBody>
-            </Table>
+          </Table>
           }
         </CardContent>
       </Card>
@@ -363,7 +363,7 @@ export default function AcceptanceTemplateManagement() {
                       {Object.entries(typeConfigs).map(([key, config]) =>
                       <SelectItem key={key} value={key}>
                           {config.label}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -461,7 +461,7 @@ export default function AcceptanceTemplateManagement() {
               <div>
                     <div className="text-sm text-slate-500 mb-1">描述</div>
                     <div>{selectedTemplate.description}</div>
-                  </div>
+              </div>
               }
                 <div>
                   <div className="text-sm text-slate-500 mb-2">检查项列表</div>
@@ -469,7 +469,7 @@ export default function AcceptanceTemplateManagement() {
                     {templateItems.length === 0 ?
                   <div className="text-center py-4 text-slate-400">
                         暂无检查项
-                      </div> :
+                  </div> :
 
                   templateItems.map((item) =>
                   <div key={item.id} className="border rounded-lg p-3">
@@ -483,25 +483,25 @@ export default function AcceptanceTemplateManagement() {
                                 {item.is_key_item &&
                           <Badge variant="destructive" className="ml-1">
                                     关键项
-                                  </Badge>
+                          </Badge>
                           }
                               </div>
                               {item.acceptance_criteria &&
                         <div className="text-xs text-slate-600 mt-1">
                                   验收标准: {item.acceptance_criteria}
-                                </div>
+                        </div>
                         }
                             </div>
                             {item.is_required &&
                       <Badge className="bg-blue-500">必检</Badge>
                       }
                           </div>
-                        </div>
+                  </div>
                   )
                   }
                   </div>
                 </div>
-              </div>
+            </div>
             }
           </DialogBody>
           <DialogFooter>
@@ -520,7 +520,7 @@ export default function AcceptanceTemplateManagement() {
 
                 <CheckSquare className="w-4 h-4 mr-2" />
                 管理检查项
-              </Button>
+            </Button>
             }
           </DialogFooter>
         </DialogContent>
@@ -658,7 +658,7 @@ export default function AcceptanceTemplateManagement() {
                   {templateItems.length === 0 ?
                   <div className="text-center py-4 text-slate-400">
                       暂无检查项
-                    </div> :
+                  </div> :
 
                   templateItems.map((item) =>
                   <div key={item.id} className="border rounded-lg p-3">
@@ -672,7 +672,7 @@ export default function AcceptanceTemplateManagement() {
                             {item.acceptance_criteria &&
                         <div className="text-xs text-slate-600 mt-1">
                                 验收标准: {item.acceptance_criteria}
-                              </div>
+                        </div>
                         }
                           </div>
                           <div className="flex items-center gap-2">
@@ -684,7 +684,7 @@ export default function AcceptanceTemplateManagement() {
                         }
                           </div>
                         </div>
-                      </div>
+                  </div>
                   )
                   }
                 </div>

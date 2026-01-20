@@ -306,7 +306,7 @@ export default function ECNOverdueAlerts() {
               {selectedAlerts.size > 0 &&
               <Button variant="outline" onClick={handleBatchProcess}>
                   批量处理 ({selectedAlerts.size})
-                </Button>
+              </Button>
               }
               <Button onClick={fetchAlerts} variant="outline">
                 <RefreshCw className="w-4 h-4 mr-2" />
@@ -323,7 +323,7 @@ export default function ECNOverdueAlerts() {
           <CardContent className="pt-6">
             <div className="text-center py-8 text-slate-400">加载中...</div>
           </CardContent>
-        </Card> :
+      </Card> :
       filteredAlerts.length === 0 ?
       <Card>
           <CardContent className="pt-6">
@@ -333,7 +333,7 @@ export default function ECNOverdueAlerts() {
             `暂无${alertTypeConfigs[filterType]?.label || ""}提醒`}
             </div>
           </CardContent>
-        </Card> :
+      </Card> :
 
       <div className="space-y-4">
           {/* 评估超时 */}
@@ -429,13 +429,13 @@ export default function ECNOverdueAlerts() {
                               查看ECN
                             </Button>
                           </TableCell>
-                        </TableRow>);
+                    </TableRow>);
 
                 })}
                   </TableBody>
                 </Table>
               </CardContent>
-            </Card>
+        </Card>
         }
 
           {/* 审批超时 */}
@@ -535,13 +535,13 @@ export default function ECNOverdueAlerts() {
                               查看ECN
                             </Button>
                           </TableCell>
-                        </TableRow>);
+                    </TableRow>);
 
                 })}
                   </TableBody>
                 </Table>
               </CardContent>
-            </Card>
+        </Card>
         }
 
           {/* 任务超时 */}
@@ -637,15 +637,15 @@ export default function ECNOverdueAlerts() {
                               查看ECN
                             </Button>
                           </TableCell>
-                        </TableRow>);
+                    </TableRow>);
 
                 })}
                   </TableBody>
                 </Table>
               </CardContent>
-            </Card>
+        </Card>
         }
-        </div>
+      </div>
       }
     </div>);
 

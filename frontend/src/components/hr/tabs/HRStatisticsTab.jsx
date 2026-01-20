@@ -58,7 +58,6 @@ export default function HRStatisticsTab({
                     size="sm"
                     onClick={() => {
                       setStatisticsPeriod(period);
-                      // TODO: Reload statistics data
                     }}>
 
                       {period === "month" ?
@@ -66,7 +65,7 @@ export default function HRStatisticsTab({
                     period === "quarter" ?
                     "季度" :
                     "年度"}
-                    </Button>
+                  </Button>
                   )}
                 </div>
               </div>
@@ -126,7 +125,7 @@ export default function HRStatisticsTab({
                     value={item.percentage}
                     className="h-2 bg-slate-700/50" />
 
-                  </div>
+                </div>
                 )}
               </div>
               <div className="mt-4 pt-4 border-t border-slate-700/50">
@@ -172,7 +171,7 @@ export default function HRStatisticsTab({
                     value={item.percentage}
                     className="h-2 bg-slate-700/50" />
 
-                  </div>
+                </div>
                 )}
               </div>
               <div className="mt-4 pt-4 border-t border-slate-700/50">
@@ -221,7 +220,7 @@ export default function HRStatisticsTab({
                     value={item.percentage}
                     className="h-2 bg-slate-700/50" />
 
-                  </div>
+                </div>
                 )}
               </div>
             </CardContent>
@@ -271,7 +270,7 @@ export default function HRStatisticsTab({
                     value={dept.avgScore}
                     className="h-2 bg-slate-700/50" />
 
-                  </div>
+                </div>
                 )}
               </div>
             </CardContent>

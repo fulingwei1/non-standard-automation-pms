@@ -74,7 +74,7 @@ const getFileIcon = (fileName) => {
 
 // Format file size
 const formatFileSize = (bytes) => {
-  if (!bytes) return "0 B";
+  if (!bytes) {return "0 B";}
   const k = 1024;
   const sizes = ["B", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -273,7 +273,7 @@ export default function Documents() {
         <Button className="gap-2" onClick={() => setShowUploadDialog(true)}>
             <Upload className="w-4 h-4" />
             上传文件
-          </Button>
+        </Button>
         } />
 
       <div className="container mx-auto px-4 py-6 space-y-6">
@@ -309,7 +309,7 @@ export default function Documents() {
                         value={project.id || project.project_code}>
 
                           {project.project_name}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -363,31 +363,31 @@ export default function Documents() {
                           <div className="flex items-center gap-1">
                                 <Archive className="w-3 h-3" />
                                 {formatFileSize(doc.file_size)}
-                              </div>
+                          </div>
                           }
                             {doc.created_at &&
                           <div className="flex items-center gap-1">
                                 <Calendar className="w-3 h-3" />
                                 {formatDate(doc.created_at)}
-                              </div>
+                          </div>
                           }
                             {doc.project_id &&
                           <div className="flex items-center gap-1">
                                 <Folder className="w-3 h-3" />
                                 {getProjectName(doc.project_id)}
-                              </div>
+                          </div>
                           }
                             {doc.uploaded_by &&
                           <div className="flex items-center gap-1">
                                 <User className="w-3 h-3" />
                                 {doc.uploaded_by}
-                              </div>
+                          </div>
                           }
                           </div>
                           {doc.description &&
                         <p className="text-xs text-slate-500 mt-2 line-clamp-2">
                               {doc.description}
-                            </p>
+                        </p>
                         }
                         </div>
                       </div>
@@ -404,15 +404,15 @@ export default function Documents() {
                         {doc.file_type &&
                       <Badge variant="outline" className="text-xs">
                             {doc.file_type}
-                          </Badge>
+                      </Badge>
                       }
                       </div>
                     </CardContent>
                   </Card>
-                </motion.div>);
+              </motion.div>);
 
           })}
-          </motion.div>
+        </motion.div>
         }
 
         {/* Upload Dialog */}
@@ -440,7 +440,7 @@ export default function Documents() {
                       value={project.id || project.project_code}>
 
                         {project.project_name}
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -467,7 +467,7 @@ export default function Documents() {
                     {uploadFile &&
                     <span className="text-xs text-slate-500">
                         {formatFileSize(uploadFile.size)}
-                      </span>
+                    </span>
                     }
                   </label>
                 </div>
@@ -505,6 +505,4 @@ export default function Documents() {
           </DialogContent>
         </Dialog>
       </div>
-    </div>);
-
-}
+    </div>);}

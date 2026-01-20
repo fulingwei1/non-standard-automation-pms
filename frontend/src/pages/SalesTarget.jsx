@@ -190,7 +190,7 @@ export default function SalesTarget() {
   };
 
   const handleUpdate = async () => {
-    if (!selectedTarget) return;
+    if (!selectedTarget) {return;}
     try {
       await salesTargetApi.update(selectedTarget.id, {
         target_value: formData.target_value,

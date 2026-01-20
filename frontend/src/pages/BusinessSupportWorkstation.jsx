@@ -146,9 +146,9 @@ const formatCurrency = (value) => {
 };
 
 const getDaysColor = (daysLeft) => {
-  if (daysLeft === 0) return "text-red-400";
-  if (daysLeft <= 2) return "text-orange-400";
-  if (daysLeft <= 7) return "text-amber-400";
+  if (daysLeft === 0) {return "text-red-400";}
+  if (daysLeft <= 2) {return "text-orange-400";}
+  if (daysLeft <= 7) {return "text-amber-400";}
   return "text-cyan-400";
 };
 
@@ -184,7 +184,7 @@ const StatCard = ({ config, value }) => {
             {!isValueCurrency &&
             <p className="text-xs font-normal text-slate-500">
                 {config.unit}
-              </p>
+            </p>
             }
           </div>
         </div>
@@ -235,7 +235,7 @@ const TodoItem = ({ todo, onComplete }) => {
               {todo.daysLeft === 0 ?
               <span className="text-xs font-medium text-red-400">
                   今天截止
-                </span> :
+              </span> :
 
               <span
                 className={cn(
@@ -244,7 +244,7 @@ const TodoItem = ({ todo, onComplete }) => {
                 )}>
 
                   {todo.daysLeft}天截止
-                </span>
+              </span>
               }
             </div>
           </div>
@@ -338,7 +338,7 @@ const ContractCard = ({ contract }) => {
                 {stage.status === "paid" ? "已到账" : "待回款"}
               </Badge>
             </div>
-          </div>
+        </div>
         )}
       </div>
 
@@ -544,7 +544,7 @@ export default function BusinessSupportWorkstation() {
               <Plus className="w-4 h-4" />
               新建合同
             </Button>
-          </motion.div>
+        </motion.div>
         } />
 
 
@@ -556,15 +556,15 @@ export default function BusinessSupportWorkstation() {
               <CardContent className="p-4">
                 <div className="h-20 bg-slate-700/50 rounded" />
               </CardContent>
-            </Card>
+        </Card>
         )}
-        </div> :
+      </div> :
       error ?
       <Card className="bg-red-500/10 border-red-500/30">
           <CardContent className="p-4">
             <p className="text-red-400 text-sm">{error}</p>
           </CardContent>
-        </Card> :
+      </Card> :
 
       <motion.div
         variants={staggerContainer}
@@ -575,7 +575,7 @@ export default function BusinessSupportWorkstation() {
           {Object.entries(getStatConfig(dashboardData)).map(([key, config]) =>
         <StatCard key={key} config={config} value={config.value} />
         )}
-        </motion.div>
+      </motion.div>
       }
 
       {/* Main content - two column layout (2/3 + 1/3) */}
@@ -614,7 +614,7 @@ export default function BusinessSupportWorkstation() {
                   </motion.div>
                 </CardContent>
               </Card>
-            </motion.div>
+          </motion.div>
           }
 
           {/* All todos - Today's work list */}
@@ -650,7 +650,7 @@ export default function BusinessSupportWorkstation() {
                   <div className="text-center py-8 text-slate-500">
                       <CheckCircle2 className="h-12 w-12 mx-auto mb-3 text-emerald-500/50" />
                       <p className="text-sm">所有任务已完成！</p>
-                    </div>
+                  </div>
                   }
                 </motion.div>
               </CardContent>
@@ -726,7 +726,7 @@ export default function BusinessSupportWorkstation() {
                       <item.icon className={cn("h-4 w-4", item.color)} />
                     </div>
                     <span>{item.label}</span>
-                  </Button>
+                </Button>
                 )}
               </CardContent>
             </Card>
@@ -781,7 +781,7 @@ export default function BusinessSupportWorkstation() {
                     value={metric.progress}
                     className="h-1.5 bg-slate-700/50" />
 
-                  </div>
+                </div>
                 )}
               </CardContent>
             </Card>

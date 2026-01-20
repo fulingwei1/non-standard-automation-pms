@@ -364,7 +364,7 @@ export default function QuoteManagement() {
 
               新建报价
             </Button>
-          </div>
+        </div>
         } />
 
 
@@ -482,7 +482,7 @@ export default function QuoteManagement() {
                       </div>
                     </div>
                   </div>
-                </div>
+            </div>
             }
 
               {/* 操作按钮 */}
@@ -510,7 +510,7 @@ export default function QuoteManagement() {
                   发送
                 </Button>
               </div>
-            </div>
+          </div>
           }
         </DialogContent>
       </Dialog>

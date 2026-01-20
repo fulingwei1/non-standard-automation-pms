@@ -40,9 +40,9 @@ export default function UtilizationChart({
       height,
       color: ({ rate, utilization }) => {
         const r = rate || utilization || 0;
-        if (r >= 100) return "#ef4444"; // 过载
-        if (r >= 80) return "#22c55e"; // 饱和
-        if (r >= 60) return "#3b82f6"; // 正常
+        if (r >= 100) {return "#ef4444";} // 过载
+        if (r >= 80) {return "#22c55e";} // 饱和
+        if (r >= 60) {return "#3b82f6";} // 正常
         return "#64748b"; // 空闲
       },
       barWidthRatio: 0.6,

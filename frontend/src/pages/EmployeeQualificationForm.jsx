@@ -300,7 +300,7 @@ export default function EmployeeQualificationForm() {
 
               <div className="flex items-center justify-center h-64 text-gray-400">
                   暂无评估数据
-                </div>
+              </div>
               }
             </CardContent>
           </Card>
@@ -322,7 +322,7 @@ export default function EmployeeQualificationForm() {
               }))} />
 
             </CardContent>
-          </Card>
+        </Card>
         }
 
         {/* 操作按钮 */}
@@ -386,11 +386,11 @@ export default function EmployeeQualificationForm() {
                   <SelectItem key={emp.id} value={emp.id.toString()}>
                         {emp.employee_code || `E${emp.id}`} -{" "}
                         {emp.name || `员工${emp.id}`}
-                      </SelectItem>
+                  </SelectItem>
                   )}
                   </SelectContent>
                 </Select>
-              </div>
+            </div>
             }
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -432,7 +432,7 @@ export default function EmployeeQualificationForm() {
                     {levels.map((level) =>
                     <SelectItem key={level.id} value={level.id.toString()}>
                         {level.level_code} - {level.level_name}
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -457,7 +457,7 @@ export default function EmployeeQualificationForm() {
                     {...register("valid_until")} />
 
                   </div>
-                </>
+              </>
               }
             </div>
 
@@ -513,7 +513,7 @@ export default function EmployeeQualificationForm() {
                                   {item.description &&
                           <p className="text-xs text-gray-500">
                                       {item.description}
-                                    </p>
+                          </p>
                           }
                                 </div>
                                 <Input
@@ -528,21 +528,21 @@ export default function EmployeeQualificationForm() {
                           onChange={(e) => {
                             const details = { ...assessmentDetails };
                             if (!details[key])
-                            details[key] = { score: 0, items: {} };
+                            {details[key] = { score: 0, items: {} };}
                             if (!details[key].items)
-                            details[key].items = {};
+                            {details[key].items = {};}
                             details[key].items[item.name] =
                             parseFloat(e.target.value) || 0;
                             setValue("assessment_details", details);
                           }}
                           className="w-20" />
 
-                              </div>
+                      </div>
                       )}
                           </div>
-                        </CardContent>
+                  </CardContent>
                   }
-                    </Card>
+                </Card>
 
               )}
 
@@ -555,9 +555,9 @@ export default function EmployeeQualificationForm() {
                     <CardContent>
                       <CompetencyRadarChart data={assessmentDetails} />
                     </CardContent>
-                  </Card>
+              </Card>
               }
-              </div>
+            </div>
             }
 
             {/* 操作按钮 */}

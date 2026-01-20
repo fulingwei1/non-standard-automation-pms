@@ -172,7 +172,7 @@ export default function WeeklyReport() {
             onChange={(e) => setWeekStart(e.target.value)}
             className="w-40" />
 
-          </div>
+        </div>
         } />
 
 
@@ -325,14 +325,14 @@ export default function WeeklyReport() {
                           <ArrowRight className="h-5 w-5 text-slate-500" />
                         </div>
                       </div>
-                    </Link>);
+                  </Link>);
 
               })}
-              </div> :
+            </div> :
 
             <div className="p-12 text-center text-slate-500">
                 本周暂无项目更新
-              </div>
+            </div>
             }
           </CardContent>
         </Card>

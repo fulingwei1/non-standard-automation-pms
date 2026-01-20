@@ -48,9 +48,9 @@ const StatCard = ({
       <Card className="bg-surface-50 border-white/10">
         <CardContent className="p-6">
           <div className="animate-pulse space-y-3">
-            <div className="w-8 h-8 bg-slate-700 rounded"></div>
-            <div className="h-6 bg-slate-700 rounded w-3/4"></div>
-            <div className="h-4 bg-slate-700 rounded w-1/2"></div>
+            <div className="w-8 h-8 bg-slate-700 rounded" />
+            <div className="h-6 bg-slate-700 rounded w-3/4" />
+            <div className="h-4 bg-slate-700 rounded w-1/2" />
           </div>
         </CardContent>
       </Card>
@@ -237,9 +237,9 @@ const FinancialHealthCard = ({ healthScore, loading }) => {
       <Card className="bg-surface-50 border-white/10">
         <CardContent className="p-6">
           <div className="animate-pulse space-y-3">
-            <div className="h-4 bg-slate-700 rounded w-1/3"></div>
-            <div className="h-8 bg-slate-700 rounded w-1/2"></div>
-            <div className="h-4 bg-slate-700 rounded w-2/3"></div>
+            <div className="h-4 bg-slate-700 rounded w-1/3" />
+            <div className="h-8 bg-slate-700 rounded w-1/2" />
+            <div className="h-4 bg-slate-700 rounded w-2/3" />
           </div>
         </CardContent>
       </Card>
@@ -295,10 +295,10 @@ const BudgetExecutionCard = ({ budgetData, loading }) => {
       <Card className="bg-surface-50 border-white/10">
         <CardContent className="p-6">
           <div className="animate-pulse space-y-3">
-            <div className="h-4 bg-slate-700 rounded w-1/4"></div>
+            <div className="h-4 bg-slate-700 rounded w-1/4" />
             <div className="space-y-2">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-3 bg-slate-700 rounded w-full"></div>
+                <div key={i} className="h-3 bg-slate-700 rounded w-full" />
               ))}
             </div>
           </div>

@@ -535,7 +535,7 @@ export const getNotificationChannelConfig = (channel) => {
  * 计算预警响应时间
  */
 export const calculateResponseTime = (createdTime, firstActionTime) => {
-  if (!createdTime || !firstActionTime) return 0;
+  if (!createdTime || !firstActionTime) {return 0;}
   
   const created = new Date(createdTime);
   const action = new Date(firstActionTime);
@@ -547,7 +547,7 @@ export const calculateResponseTime = (createdTime, firstActionTime) => {
  * 计算预警解决时间
  */
 export const calculateResolutionTime = (createdTime, resolvedTime) => {
-  if (!createdTime || !resolvedTime) return 0;
+  if (!createdTime || !resolvedTime) {return 0;}
   
   const created = new Date(createdTime);
   const resolved = new Date(resolvedTime);
@@ -697,13 +697,13 @@ export const getAlertSummary = (alerts, dateRange = null) => {
  * 检查是否需要升级
  */
 export const requiresEscalation = (alert, currentTime = new Date()) => {
-  if (!alert.created_time) return false;
+  if (!alert.created_time) {return false;}
   
   const created = new Date(alert.created_time);
   const elapsed = (currentTime - created) / (1000 * 60); // 分钟
   
   const levelConfig = getAlertLevelConfig(alert.alert_level);
-  if (!levelConfig.autoEscalate) return false;
+  if (!levelConfig.autoEscalate) {return false;}
   
   const escalationWindows = ALERT_TIME_CONFIG.ESCALATION_TIME_WINDOWS[levelConfig.level];
   return escalationWindows.intervals.some(interval => elapsed > interval);
@@ -736,7 +736,7 @@ export const isBusinessHour = (timestamp) => {
  * 格式化预警时间显示
  */
 export const formatAlertTime = (timestamp) => {
-  if (!timestamp) return '-';
+  if (!timestamp) {return '-';}
   
   const date = new Date(timestamp);
   const now = new Date();

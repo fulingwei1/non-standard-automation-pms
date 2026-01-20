@@ -261,7 +261,7 @@ export default function FinanceManagerDashboard() {
                 <Skeleton className="h-4 w-24 mb-2" />
                 <Skeleton className="h-8 w-16" />
               </CardContent>
-            </Card>
+          </Card>
           )}
         </div>
       </div>);
@@ -288,7 +288,7 @@ export default function FinanceManagerDashboard() {
               <Download className="mr-2 h-4 w-4" />
               导出报表
             </Button>
-          </div>
+        </div>
         } />
 
 
@@ -393,7 +393,7 @@ export default function FinanceManagerDashboard() {
                         <X className="h-4 w-4 text-red-600" />
                       </Button>
                     </div>
-                  </div>
+              </div>
               )}
               {financialStats.pendingApprovals === 0 &&
               <p className="text-center text-muted-foreground py-4">暂无待审批交易</p>
@@ -474,14 +474,14 @@ export default function FinanceManagerDashboard() {
                         <Eye className="h-4 w-4" />
                       </Button>
                     </TableCell>
-                  </TableRow>
+                </TableRow>
                 )}
                 {recentTransactions.length === 0 &&
                 <TableRow>
                     <TableCell colSpan={6} className="text-center py-8">
                       暂无交易记录
                     </TableCell>
-                  </TableRow>
+                </TableRow>
                 }
               </TableBody>
             </Table>
@@ -577,9 +577,9 @@ export default function FinanceManagerDashboard() {
             <div>
                   <p className="text-sm text-muted-foreground">备注</p>
                   <p className="font-medium">{selectedTransaction.notes}</p>
-                </div>
-            }
             </div>
+            }
+          </div>
           }
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDetailDialog(false)}>

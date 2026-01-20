@@ -101,7 +101,7 @@ export const IssueListManager = ({
         issue.description?.toLowerCase().includes(searchLower) ||
         issue.id?.toLowerCase().includes(searchLower) ||
         issue.assignee?.toLowerCase().includes(searchLower);
-        if (!matchesSearch) return false;
+        if (!matchesSearch) {return false;}
       }
 
       // 状态过滤
@@ -189,7 +189,7 @@ export const IssueListManager = ({
 
   // 处理选择
   const handleSelectionChange = useCallback((issueId, selected) => {
-    if (!onSelectionChange) return;
+    if (!onSelectionChange) {return;}
 
     let newSelection;
     if (selected) {
@@ -202,7 +202,7 @@ export const IssueListManager = ({
 
   // 处理全选
   const handleSelectAll = useCallback((selected) => {
-    if (!onSelectionChange) return;
+    if (!onSelectionChange) {return;}
     onSelectionChange(selected ? sortedIssues.map((issue) => issue.id) : []);
   }, [sortedIssues, onSelectionChange]);
 
@@ -443,7 +443,7 @@ export const IssueListManager = ({
               {columnIssues.length === 0 &&
               <div className="text-center py-8 text-slate-500 text-sm">
                   暂无问题
-                </div>
+              </div>
               }
             </div>
           </CardContent>
@@ -527,7 +527,7 @@ export const IssueListManager = ({
                   {ISSUE_SORT_OPTIONS.map((option) =>
                   <SelectItem key={option.value} value={option.value}>
                       {option.label}
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -539,19 +539,19 @@ export const IssueListManager = ({
               <Button variant="outline" size="sm" onClick={onImport}>
                   <Upload className="w-4 h-4 mr-2" />
                   导入
-                </Button>
+              </Button>
               }
               {onExport &&
               <Button variant="outline" size="sm" onClick={onExport}>
                   <Download className="w-4 h-4 mr-2" />
                   导出
-                </Button>
+              </Button>
               }
               {onIssueCreate &&
               <Button onClick={onIssueCreate} className="bg-blue-600 hover:bg-blue-700">
                   <Plus className="w-4 h-4 mr-2" />
                   新建问题
-                </Button>
+              </Button>
               }
             </div>
           </div>
@@ -594,10 +594,10 @@ export const IssueListManager = ({
                     {sortedIssues.map((issue, index) => renderTableRow(issue, index))}
                   </tbody>
                 </table>
-              </div>
+          </div>
           }
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* 看板视图 */}
@@ -618,10 +618,10 @@ export const IssueListManager = ({
             {activeId ?
           <div className="bg-slate-800 border border-slate-600 rounded-lg p-4 shadow-xl">
                 <p className="text-white text-sm">拖拽中...</p>
-              </div> :
+          </div> :
           null}
           </DragOverlay>
-        </DndContext>
+      </DndContext>
       }
     </div>);
 

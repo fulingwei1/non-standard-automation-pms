@@ -151,7 +151,7 @@ export default function LeadRequirementDetail() {
                 <Badge className="bg-orange-500">
                     <Lock className="w-3 h-3 mr-1" />
                     已冻结 {requirementDetail.requirement_version}
-                  </Badge>
+                </Badge>
                 }
                 <Button
                   onClick={() =>

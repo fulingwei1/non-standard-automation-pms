@@ -47,7 +47,7 @@ export function TabsTrigger({ value, children, className }) {
 export function TabsContent({ value, children, className }) {
   const { value: selectedValue } = useContext(TabsContext);
 
-  if (selectedValue !== value) return null;
+  if (selectedValue !== value) {return null;}
 
   return <div className={cn("mt-6", className)}>{children}</div>;
 }

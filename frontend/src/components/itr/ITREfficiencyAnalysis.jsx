@@ -39,9 +39,9 @@ export default function ITREfficiencyAnalysis() {
 
     try {
       const params = {};
-      if (projectId) params.project_id = parseInt(projectId);
-      if (startDate) params.start_date = startDate;
-      if (endDate) params.end_date = endDate;
+      if (projectId) {params.project_id = parseInt(projectId);}
+      if (startDate) {params.start_date = startDate;}
+      if (endDate) {params.end_date = endDate;}
 
       // 并行加载所有数据
       const [efficiencyRes, satisfactionRes, bottlenecksRes, slaRes] =
@@ -85,7 +85,7 @@ export default function ITREfficiencyAnalysis() {
 
   // 准备图表数据
   const prepareResolutionTimeChart = () => {
-    if (!efficiencyData?.resolution_time) return null;
+    if (!efficiencyData?.resolution_time) {return null;}
 
     const data = efficiencyData.resolution_time;
     return {
@@ -100,7 +100,7 @@ export default function ITREfficiencyAnalysis() {
   };
 
   const prepareSatisfactionChart = () => {
-    if (!satisfactionData?.trend) return null;
+    if (!satisfactionData?.trend) {return null;}
 
     const trend = satisfactionData.trend || [];
     return {
@@ -115,7 +115,7 @@ export default function ITREfficiencyAnalysis() {
   };
 
   const prepareBottlenecksChart = () => {
-    if (!bottlenecksData?.bottlenecks) return null;
+    if (!bottlenecksData?.bottlenecks) {return null;}
 
     const bottlenecks = bottlenecksData.bottlenecks || [];
     return {

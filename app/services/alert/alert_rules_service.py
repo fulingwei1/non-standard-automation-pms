@@ -96,7 +96,7 @@ class AlertRulesService:
             total=total,
             page=page,
             page_size=page_size,
-            items=[AlertRuleResponse.from_orm(item) for item in items]
+            items=[AlertRuleResponse.model_validate(item) for item in items]
         )
 
     def get_alert_rule(self, rule_id: int) -> Optional[AlertRule]:

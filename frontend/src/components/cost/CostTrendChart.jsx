@@ -15,7 +15,7 @@ export function CostTrendChart({
   // data格式: [{ version_no: 'V1', created_at: '2025-01-01', total_price: 200000, total_cost: 160000, gross_margin: 20 }, ...]
 
   const sortedData = useMemo(() => {
-    if (!data || !Array.isArray(data)) return [];
+    if (!data || !Array.isArray(data)) {return [];}
     return [...data].sort((a, b) => {
       const dateA = new Date(a.created_at || 0);
       const dateB = new Date(b.created_at || 0);
@@ -54,7 +54,7 @@ export function CostTrendChart({
 
   // Calculate points for each line
   const pricePoints = useMemo(() => {
-    if (sortedData.length === 0) return [];
+    if (sortedData.length === 0) {return [];}
     return sortedData.map((item, index) => {
       const x =
         padding.left +
@@ -75,7 +75,7 @@ export function CostTrendChart({
   }, [sortedData, maxPrice, padding, chartWidth, chartHeight]);
 
   const costPoints = useMemo(() => {
-    if (sortedData.length === 0) return [];
+    if (sortedData.length === 0) {return [];}
     return sortedData.map((item, index) => {
       const x =
         padding.left +
@@ -96,7 +96,7 @@ export function CostTrendChart({
   }, [sortedData, maxCost, padding, chartWidth, chartHeight]);
 
   const marginPoints = useMemo(() => {
-    if (sortedData.length === 0) return [];
+    if (sortedData.length === 0) {return [];}
     const marginRange = maxMargin - minMargin || 100;
     return sortedData.map((item, index) => {
       const x =
@@ -119,21 +119,21 @@ export function CostTrendChart({
 
   // Generate path data
   const pricePath = useMemo(() => {
-    if (pricePoints.length === 0) return "";
+    if (pricePoints.length === 0) {return "";}
     return pricePoints
       .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
       .join(" ");
   }, [pricePoints]);
 
   const costPath = useMemo(() => {
-    if (costPoints.length === 0) return "";
+    if (costPoints.length === 0) {return "";}
     return costPoints
       .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
       .join(" ");
   }, [costPoints]);
 
   const marginPath = useMemo(() => {
-    if (marginPoints.length === 0) return "";
+    if (marginPoints.length === 0) {return "";}
     return marginPoints
       .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
       .join(" ");
@@ -150,8 +150,8 @@ export function CostTrendChart({
 
   // Format Y-axis labels for price/cost
   const formatPriceLabel = (value) => {
-    if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
-    if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
+    if (value >= 1000000) {return `${(value / 1000000).toFixed(1)}M`;}
+    if (value >= 1000) {return `${(value / 1000).toFixed(0)}K`;}
     return value.toFixed(0);
   };
 

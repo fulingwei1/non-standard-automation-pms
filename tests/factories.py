@@ -21,8 +21,7 @@
 """
 
 import random
-import string
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 
 import factory
@@ -40,11 +39,21 @@ from app.models.project import (
     ProjectMilestone,
     ProjectStage,
 )
-from app.models.purchase import PurchaseOrder, PurchaseOrderItem, PurchaseRequest
-from app.models.sales import Contract, Lead, Opportunity, Quote
-from app.models.user import Permission, Role, User
+from app.models.purchase import PurchaseOrder, PurchaseRequest
+from app.models.sales import (
+    ApprovalWorkflow,
+    ApprovalWorkflowStep,
+    Contract,
+    Lead,
+    Opportunity,
+    Quote,
+)
+from app.models.ecn import Ecn
+from app.models.acceptance import AcceptanceOrder, AcceptanceTemplate
+from app.models.user import Role, User
 
 # ============== 基础配置 ==============
+
 
 class BaseFactory(SQLAlchemyModelFactory):
     """基础工厂类，提供数据库会话"""
@@ -66,6 +75,7 @@ class BaseFactory(SQLAlchemyModelFactory):
 
 
 # ============== 组织架构 ==============
+
 
 class DepartmentFactory(BaseFactory):
     """部门工厂"""
@@ -90,15 +100,14 @@ class EmployeeFactory(BaseFactory):
     name = factory.Sequence(lambda n: f"测试员工{n}")
     department = "技术部"
     role = "ENGINEER"
-    phone = factory.LazyFunction(
-        lambda: f"138{random.randint(10000000, 99999999)}"
-    )
+    phone = factory.LazyFunction(lambda: f"138{random.randint(10000000, 99999999)}")
     is_active = True
     employment_status = "active"
     employment_type = "regular"
 
 
 # ============== 用户与权限 ==============
+
 
 class UserFactory(BaseFactory):
     """用户工厂"""
@@ -118,12 +127,12 @@ class UserFactory(BaseFactory):
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
         """确保先创建 employee"""
-        employee = kwargs.pop('employee', None)
+        employee = kwargs.pop("employee", None)
         if employee is None:
             employee = EmployeeFactory()
-        kwargs['employee_id'] = employee.id
-        kwargs.setdefault('real_name', employee.name)
-        kwargs.setdefault('department', employee.department)
+        kwargs["employee_id"] = employee.id
+        kwargs.setdefault("real_name", employee.name)
+        kwargs.setdefault("department", employee.department)
 
         with get_session() as session:
             obj = model_class(*args, **kwargs)
@@ -157,6 +166,7 @@ class RoleFactory(BaseFactory):
 
 # ============== 客户 ==============
 
+
 class CustomerFactory(BaseFactory):
     """客户工厂"""
 
@@ -178,13 +188,16 @@ class CustomerFactory(BaseFactory):
 
 # ============== 项目 ==============
 
+
 class ProjectFactory(BaseFactory):
     """项目工厂"""
 
     class Meta:
         model = Project
 
-    project_code = factory.Sequence(lambda n: f"PJ{date.today().strftime('%y%m%d')}{n:03d}")
+    project_code = factory.Sequence(
+        lambda n: f"PJ{date.today().strftime('%y%m%d')}{n:03d}"
+    )
     project_name = factory.Sequence(lambda n: f"测试项目{n}")
     short_name = factory.Sequence(lambda n: f"项目{n}")
     project_type = "NEW"
@@ -200,7 +213,7 @@ class ProjectFactory(BaseFactory):
 
     @factory.lazy_attribute
     def customer_name(self):
-        return f"客户名称"
+        return "客户名称"
 
 
 class ProjectWithCustomerFactory(ProjectFactory):
@@ -247,6 +260,7 @@ class ProjectMilestoneFactory(BaseFactory):
 
 
 # ============== 物料与BOM ==============
+
 
 class MaterialCategoryFactory(BaseFactory):
     """物料类别工厂"""
@@ -300,7 +314,9 @@ class BomHeaderFactory(BaseFactory):
     class Meta:
         model = BomHeader
 
-    bom_code = factory.Sequence(lambda n: f"BOM{date.today().strftime('%y%m%d')}{n:03d}")
+    bom_code = factory.Sequence(
+        lambda n: f"BOM{date.today().strftime('%y%m%d')}{n:03d}"
+    )
     bom_name = factory.Sequence(lambda n: f"测试BOM{n}")
     version = "1.0"
     status = "DRAFT"
@@ -319,6 +335,7 @@ class BomItemFactory(BaseFactory):
 
 # ============== 采购 ==============
 
+
 class PurchaseOrderFactory(BaseFactory):
     """采购订单工厂"""
 
@@ -329,7 +346,9 @@ class PurchaseOrderFactory(BaseFactory):
     order_type = "NORMAL"
     order_title = factory.Sequence(lambda n: f"采购订单{n}")
     status = "DRAFT"
-    total_amount = factory.LazyFunction(lambda: Decimal(str(random.uniform(1000, 100000))))
+    total_amount = factory.LazyFunction(
+        lambda: Decimal(str(random.uniform(1000, 100000)))
+    )
     required_date = factory.LazyFunction(lambda: date.today() + timedelta(days=14))
 
 
@@ -339,7 +358,9 @@ class PurchaseRequestFactory(BaseFactory):
     class Meta:
         model = PurchaseRequest
 
-    request_no = factory.Sequence(lambda n: f"PR{date.today().strftime('%y%m%d')}{n:04d}")
+    request_no = factory.Sequence(
+        lambda n: f"PR{date.today().strftime('%y%m%d')}{n:04d}"
+    )
     request_type = "PROJECT"
     request_reason = "项目物料采购"
     status = "DRAFT"
@@ -348,13 +369,16 @@ class PurchaseRequestFactory(BaseFactory):
 
 # ============== 销售 ==============
 
+
 class LeadFactory(BaseFactory):
     """销售线索工厂"""
 
     class Meta:
         model = Lead
 
-    lead_code = factory.Sequence(lambda n: f"LD{date.today().strftime('%y%m%d')}{n:04d}")
+    lead_code = factory.Sequence(
+        lambda n: f"LD{date.today().strftime('%y%m%d')}{n:04d}"
+    )
     lead_name = factory.Sequence(lambda n: f"测试线索{n}")
     company_name = factory.Sequence(lambda n: f"潜在客户公司{n}")
     contact_name = factory.Sequence(lambda n: f"联系人{n}")
@@ -363,7 +387,9 @@ class LeadFactory(BaseFactory):
     )
     source = "WEBSITE"
     status = "NEW"
-    estimated_amount = factory.LazyFunction(lambda: Decimal(str(random.uniform(10000, 1000000))))
+    estimated_amount = factory.LazyFunction(
+        lambda: Decimal(str(random.uniform(10000, 1000000)))
+    )
 
 
 class OpportunityFactory(BaseFactory):
@@ -372,13 +398,19 @@ class OpportunityFactory(BaseFactory):
     class Meta:
         model = Opportunity
 
-    opportunity_code = factory.Sequence(lambda n: f"OP{date.today().strftime('%y%m%d')}{n:04d}")
+    opportunity_code = factory.Sequence(
+        lambda n: f"OP{date.today().strftime('%y%m%d')}{n:04d}"
+    )
     opportunity_name = factory.Sequence(lambda n: f"测试商机{n}")
     stage = "INITIAL"
     status = "ACTIVE"
     probability = 30
-    expected_amount = factory.LazyFunction(lambda: Decimal(str(random.uniform(50000, 2000000))))
-    expected_close_date = factory.LazyFunction(lambda: date.today() + timedelta(days=60))
+    expected_amount = factory.LazyFunction(
+        lambda: Decimal(str(random.uniform(50000, 2000000)))
+    )
+    expected_close_date = factory.LazyFunction(
+        lambda: date.today() + timedelta(days=60)
+    )
 
 
 class QuoteFactory(BaseFactory):
@@ -387,11 +419,15 @@ class QuoteFactory(BaseFactory):
     class Meta:
         model = Quote
 
-    quote_code = factory.Sequence(lambda n: f"QT{date.today().strftime('%y%m%d')}{n:04d}")
+    quote_code = factory.Sequence(
+        lambda n: f"QT{date.today().strftime('%y%m%d')}{n:04d}"
+    )
     quote_name = factory.Sequence(lambda n: f"测试报价{n}")
     version = 1
     status = "DRAFT"
-    total_amount = factory.LazyFunction(lambda: Decimal(str(random.uniform(50000, 2000000))))
+    total_amount = factory.LazyFunction(
+        lambda: Decimal(str(random.uniform(50000, 2000000)))
+    )
     valid_until = factory.LazyFunction(lambda: date.today() + timedelta(days=30))
 
 
@@ -401,11 +437,15 @@ class ContractFactory(BaseFactory):
     class Meta:
         model = Contract
 
-    contract_code = factory.Sequence(lambda n: f"CT{date.today().strftime('%y%m%d')}{n:04d}")
+    contract_code = factory.Sequence(
+        lambda n: f"CT{date.today().strftime('%y%m%d')}{n:04d}"
+    )
     contract_name = factory.Sequence(lambda n: f"测试合同{n}")
     contract_type = "SALES"
     status = "DRAFT"
-    contract_amount = factory.LazyFunction(lambda: Decimal(str(random.uniform(100000, 5000000))))
+    contract_amount = factory.LazyFunction(
+        lambda: Decimal(str(random.uniform(100000, 5000000)))
+    )
     signing_date = factory.LazyFunction(lambda: date.today())
     effective_date = factory.LazyFunction(lambda: date.today())
     expiry_date = factory.LazyFunction(lambda: date.today() + timedelta(days=365))
@@ -413,15 +453,20 @@ class ContractFactory(BaseFactory):
 
 # ============== 预算 ==============
 
+
 class ProjectBudgetFactory(BaseFactory):
     """项目预算工厂"""
 
     class Meta:
         model = ProjectBudget
 
-    budget_no = factory.Sequence(lambda n: f"BG{date.today().strftime('%y%m%d')}{n:04d}")
+    budget_no = factory.Sequence(
+        lambda n: f"BG{date.today().strftime('%y%m%d')}{n:04d}"
+    )
     budget_type = "INITIAL"
-    total_amount = factory.LazyFunction(lambda: Decimal(str(random.uniform(100000, 1000000))))
+    total_amount = factory.LazyFunction(
+        lambda: Decimal(str(random.uniform(100000, 1000000)))
+    )
     budget_year = factory.LazyFunction(lambda: date.today().year)
     version = 1
     status = "DRAFT"
@@ -436,10 +481,101 @@ class ProjectBudgetItemFactory(BaseFactory):
     item_no = factory.Sequence(lambda n: f"{n:02d}")
     item_name = factory.Sequence(lambda n: f"预算项{n}")
     cost_type = "MATERIAL"
-    budget_amount = factory.LazyFunction(lambda: Decimal(str(random.uniform(10000, 100000))))
+    budget_amount = factory.LazyFunction(
+        lambda: Decimal(str(random.uniform(10000, 100000)))
+    )
+
+
+# ============== ECN ==============
+
+
+class EcnFactory(BaseFactory):
+    """ECN工厂"""
+
+    class Meta:
+        model = Ecn
+
+    ecn_no = factory.Sequence(lambda n: f"ECN{date.today().strftime('%y%m%d')}{n:04d}")
+    ecn_title = factory.Sequence(lambda n: f"测试ECN{n}")
+    ecn_type = "DESIGN"
+    source_type = "INTERNAL"
+    change_reason = "测试变更原因"
+    change_description = "测试变更描述"
+    change_scope = "PARTIAL"
+    priority = "NORMAL"
+    urgency = "NORMAL"
+    status = "DRAFT"
+
+
+# ============== 验收 ==============
+
+
+class AcceptanceTemplateFactory(BaseFactory):
+    """验收模板工厂"""
+
+    class Meta:
+        model = AcceptanceTemplate
+
+    template_code = factory.Sequence(lambda n: f"AT{n:04d}")
+    template_name = factory.Sequence(lambda n: f"测试验收模板{n}")
+    acceptance_type = "FAT"
+    equipment_type = "TEST_EQUIPMENT"
+    version = "1.0"
+    is_system = False
+    is_active = True
+
+
+class AcceptanceOrderFactory(BaseFactory):
+    """验收单工厂"""
+
+    class Meta:
+        model = AcceptanceOrder
+
+    order_no = factory.Sequence(
+        lambda n: f"ACC{date.today().strftime('%y%m%d')}{n:04d}"
+    )
+    acceptance_type = "FAT"
+    status = "DRAFT"
+    planned_date = factory.LazyFunction(lambda: date.today() + timedelta(days=7))
+    total_items = 10
+    passed_items = 0
+    failed_items = 0
+    na_items = 0
+    pass_rate = Decimal("0.00")
+
+
+# ============== 审批工作流 ==============
+
+
+class ApprovalWorkflowFactory(BaseFactory):
+    """审批工作流工厂"""
+
+    class Meta:
+        model = ApprovalWorkflow
+
+    workflow_type = "QUOTE"
+    workflow_name = factory.Sequence(lambda n: f"测试审批流程{n}")
+    description = "测试审批工作流描述"
+    is_active = True
+
+
+class ApprovalWorkflowStepFactory(BaseFactory):
+    """审批工作流步骤工厂"""
+
+    class Meta:
+        model = ApprovalWorkflowStep
+
+    step_order = factory.Sequence(lambda n: n + 1)
+    step_name = factory.Sequence(lambda n: f"审批步骤{n}")
+    approver_role = "MANAGER"
+    is_required = True
+    can_delegate = True
+    can_withdraw = True
+    due_hours = 24
 
 
 # ============== 便捷方法 ==============
+
 
 def create_test_user(username: str = None, is_admin: bool = False, **kwargs) -> User:
     """
@@ -455,7 +591,7 @@ def create_test_user(username: str = None, is_admin: bool = False, **kwargs) -> 
     """
     factory_class = AdminUserFactory if is_admin else UserFactory
     if username:
-        kwargs['username'] = username
+        kwargs["username"] = username
     return factory_class(**kwargs)
 
 
@@ -485,7 +621,9 @@ def create_complete_project_setup():
     customer = CustomerFactory()
 
     # 创建项目
-    project = ProjectFactory(customer_id=customer.id, customer_name=customer.customer_name)
+    project = ProjectFactory(
+        customer_id=customer.id, customer_name=customer.customer_name
+    )
 
     # 创建供应商
     supplier = SupplierFactory()
@@ -497,9 +635,9 @@ def create_complete_project_setup():
     bom = BomHeaderFactory(project_id=project.id)
 
     return {
-        'customer': customer,
-        'project': project,
-        'supplier': supplier,
-        'materials': materials,
-        'bom': bom,
+        "customer": customer,
+        "project": project,
+        "supplier": supplier,
+        "materials": materials,
+        "bom": bom,
     }

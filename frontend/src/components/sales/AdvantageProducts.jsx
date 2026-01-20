@@ -155,10 +155,10 @@ function CategorySection({
                       <Copy className="w-3 h-3 text-slate-400" />
                     </button>
                   </div>
-                </motion.div>
+            </motion.div>
             )}
             </div>
-          </motion.div>
+        </motion.div>
         }
       </AnimatePresence>
     </motion.div>);
@@ -168,13 +168,13 @@ function CategorySection({
 // 搜索结果高亮
 function HighlightedProduct({ product, searchTerm, onSelect }) {
   const highlightText = (text, term) => {
-    if (!term) return text;
+    if (!term) {return text;}
     const parts = text.split(new RegExp(`(${term})`, "gi"));
     return parts.map((part, i) =>
     part.toLowerCase() === term.toLowerCase() ?
     <span key={i} className="bg-yellow-500/30 text-yellow-300">
           {part}
-        </span> :
+    </span> :
 
     part
 
@@ -331,7 +331,7 @@ export default function AdvantageProducts({
           "全部收起" :
           "全部展开"}
           </button>
-        </div>
+      </div>
       }
 
       {/* 搜索框 */}
@@ -351,7 +351,7 @@ export default function AdvantageProducts({
             "transition-all duration-200"
           )} />
 
-        </div>
+      </div>
       }
 
       {/* 搜索结果 */}
@@ -368,7 +368,7 @@ export default function AdvantageProducts({
           onSelect={onProductSelect} />
 
         )}
-        </div>
+      </div>
       }
 
       {/* 无搜索结果 */}
@@ -376,7 +376,7 @@ export default function AdvantageProducts({
       <div className="text-center py-4 text-slate-500">
           <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
           <p className="text-sm">未找到匹配的产品</p>
-        </div>
+      </div>
       }
 
       {/* 分类列表 */}
@@ -392,14 +392,14 @@ export default function AdvantageProducts({
           onProductSelect={onProductSelect} />
 
         )}
-        </div>
+      </div>
       }
 
       {/* 错误提示 */}
       {error &&
       <div className="text-center py-2 text-amber-400 text-xs">
           {error}（显示演示数据）
-        </div>
+      </div>
       }
     </motion.div>);
 
@@ -584,7 +584,7 @@ export function AdvantageProductSelect({
             {loading ?
           <div className="flex items-center justify-center py-4">
                 <Loader2 className="w-4 h-4 animate-spin text-primary-400" />
-              </div> :
+          </div> :
 
           products.map((product) =>
           <button
@@ -606,10 +606,10 @@ export function AdvantageProductSelect({
                     {product.product_code}
                   </span>
                   {product.product_name}
-                </button>
+          </button>
           )
           }
-          </motion.div>
+        </motion.div>
         }
       </AnimatePresence>
     </div>);

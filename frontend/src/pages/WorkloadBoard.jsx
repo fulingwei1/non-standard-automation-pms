@@ -57,9 +57,9 @@ export default function WorkloadBoard() {
   const fetchDashboardData = async () => {
     try {
       const params = {};
-      if (selectedDept) params.dept_id = selectedDept;
-      if (dateRange.start) params.start_date = dateRange.start;
-      if (dateRange.end) params.end_date = dateRange.end;
+      if (selectedDept) {params.dept_id = selectedDept;}
+      if (dateRange.start) {params.start_date = dateRange.start;}
+      if (dateRange.end) {params.end_date = dateRange.end;}
       const res = await workloadApi.dashboard(params);
       setDashboardData(res.data || res);
     } catch (error) {
@@ -70,9 +70,9 @@ export default function WorkloadBoard() {
     try {
       setLoading(true);
       const params = {};
-      if (selectedDept) params.dept_id = selectedDept;
-      if (dateRange.start) params.start_date = dateRange.start;
-      if (dateRange.end) params.end_date = dateRange.end;
+      if (selectedDept) {params.dept_id = selectedDept;}
+      if (dateRange.start) {params.start_date = dateRange.start;}
+      if (dateRange.end) {params.end_date = dateRange.end;}
       const res = await workloadApi.team(params);
       const teamList = res.data?.items || res.data || [];
       setTeamWorkload(teamList);
@@ -84,23 +84,23 @@ export default function WorkloadBoard() {
   };
   const getLoadStatus = (rate) => {
     if (rate >= 120)
-      return {
+      {return {
         label: "超负荷",
         color: "bg-red-500",
         textColor: "text-red-600",
-      };
+      };}
     if (rate >= 100)
-      return {
+      {return {
         label: "满负荷",
         color: "bg-orange-500",
         textColor: "text-orange-600",
-      };
+      };}
     if (rate >= 80)
-      return {
+      {return {
         label: "正常",
         color: "bg-emerald-500",
         textColor: "text-emerald-600",
-      };
+      };}
     return { label: "空闲", color: "bg-blue-500", textColor: "text-blue-600" };
   };
   if (loading) {

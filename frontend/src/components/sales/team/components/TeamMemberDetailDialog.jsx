@@ -24,7 +24,7 @@ export default function TeamMemberDetailDialog({
   onNavigatePerformance,
   onNavigateCRM,
 }) {
-  if (!member) return null;
+  if (!member) {return null;}
 
   const personalMonthly = member.personalTargets?.monthly;
   const recentFollowUp = member.recentFollowUp;

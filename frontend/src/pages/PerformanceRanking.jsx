@@ -62,9 +62,9 @@ export default function PerformanceRanking() {
   }, []);
 
   const getRankBadge = (rank) => {
-    if (rank === 1) return <Medal className="w-6 h-6 text-amber-400" />;
-    if (rank === 2) return <Medal className="w-6 h-6 text-slate-300" />;
-    if (rank === 3) return <Medal className="w-6 h-6 text-orange-400" />;
+    if (rank === 1) {return <Medal className="w-6 h-6 text-amber-400" />;}
+    if (rank === 2) {return <Medal className="w-6 h-6 text-slate-300" />;}
+    if (rank === 3) {return <Medal className="w-6 h-6 text-orange-400" />;}
     return <span className="text-slate-400 font-bold">#{rank}</span>;
   };
 
@@ -101,7 +101,7 @@ export default function PerformanceRanking() {
               {loading ?
               <div className="flex items-center justify-center py-12">
                   <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
-                </div> :
+              </div> :
 
               <div className="space-y-3">
                   {employeeRanking.map((employee) =>
@@ -143,21 +143,21 @@ export default function PerformanceRanking() {
                                 <span className="text-sm">
                                   +{employee.change}
                                 </span>
-                              </div> :
+                      </div> :
 
                       <div className="flex items-center gap-1 text-red-400">
                                 <TrendingDown className="w-4 h-4" />
                                 <span className="text-sm">
                                   {employee.change}
                                 </span>
-                              </div>
+                      </div>
                       }
-                          </div>
+                    </div>
                     }
                       </div>
-                    </motion.div>
+                </motion.div>
                 )}
-                </div>
+              </div>
               }
             </CardContent>
           </Card>
@@ -175,7 +175,7 @@ export default function PerformanceRanking() {
               {loading ?
               <div className="flex items-center justify-center py-12">
                   <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
-                </div> :
+              </div> :
 
               <div className="space-y-3">
                   {departmentRanking.map((dept) =>
@@ -206,9 +206,9 @@ export default function PerformanceRanking() {
                         </div>
                         <div className="text-xs text-slate-400">平均分数</div>
                       </div>
-                    </motion.div>
+                </motion.div>
                 )}
-                </div>
+              </div>
               }
             </CardContent>
           </Card>

@@ -211,7 +211,7 @@ export default function PurchaseOrderFromBOM() {
           <Button variant="outline" onClick={() => navigate("/purchases")}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               返回
-            </Button>
+          </Button>
           } />
 
 
@@ -250,7 +250,7 @@ export default function PurchaseOrderFromBOM() {
                       <SelectItem key={bom.id} value={bom.id.toString()}>
                               {bom.bom_no} -{" "}
                               {bom.project_name || bom.machine_name || ""}
-                            </SelectItem>
+                      </SelectItem>
                       )}
                         </SelectContent>
                       </Select>
@@ -276,7 +276,7 @@ export default function PurchaseOrderFromBOM() {
                         value={supplier.id.toString()}>
 
                               {supplier.supplier_name}
-                            </SelectItem>
+                      </SelectItem>
                       )}
                         </SelectContent>
                       </Select>
@@ -293,11 +293,11 @@ export default function PurchaseOrderFromBOM() {
                         {loading ? "生成中..." : "生成预览"}
                       </Button>
                     </div>
-                  </>
+              </>
               }
               </CardContent>
             </Card>
-          </motion.div>
+        </motion.div>
         }
 
         {/* Step 2: Preview Orders */}
@@ -479,14 +479,14 @@ export default function PurchaseOrderFromBOM() {
                                 <TableCell className="text-slate-200 text-right font-medium">
                                   ¥{item.amount_with_tax?.toFixed(2)}
                                 </TableCell>
-                              </TableRow>
+                        </TableRow>
                         )}
                           </TableBody>
                         </Table>
                       </div>
                     </div>
                   </CardContent>
-                </Card>
+            </Card>
             )}
             </div>
 
@@ -505,7 +505,7 @@ export default function PurchaseOrderFromBOM() {
               `创建 ${preview.preview?.length || 0} 个采购订单`}
               </Button>
             </div>
-          </motion.div>
+        </motion.div>
         }
 
         {/* Step 3: Result */}
@@ -550,7 +550,7 @@ export default function PurchaseOrderFromBOM() {
                           查看
                         </Button>
                       </div>
-                    </div>
+                </div>
                 )}
                 </div>
                 <div className="flex gap-2 pt-4">
@@ -570,7 +570,7 @@ export default function PurchaseOrderFromBOM() {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+        </motion.div>
         }
 
         {/* Edit Order Dialog */}
@@ -623,7 +623,7 @@ export default function PurchaseOrderFromBOM() {
                 <Button onClick={handleSaveEditedOrder}>保存</Button>
               </DialogFooter>
             </DialogContent>
-          </Dialog>
+        </Dialog>
         }
       </div>
     </div>);

@@ -45,8 +45,8 @@ export function useHRTransactions() {
         page: 1,
         page_size: 50,
       };
-      if (filter.type !== "all") params.transaction_type = filter.type;
-      if (filter.status !== "all") params.status = filter.status;
+      if (filter.type !== "all") {params.transaction_type = filter.type;}
+      if (filter.status !== "all") {params.status = filter.status;}
 
       const response = await hrApi.transactions.list(params);
       setTransactions(response.data?.items || []);

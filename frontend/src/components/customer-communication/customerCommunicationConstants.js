@@ -197,13 +197,13 @@ export const getCommunicationTypeIcon = (type) => {
 
 // 计算平均满意度
 export const calculateAverageSatisfaction = (communications) => {
-  if (!communications || communications.length === 0) return 0;
+  if (!communications || communications.length === 0) {return 0;}
   
   const validRatings = communications
     .filter(comm => comm.satisfaction_rating)
     .map(comm => comm.satisfaction_rating);
   
-  if (validRatings.length === 0) return 0;
+  if (validRatings.length === 0) {return 0;}
   
   const sum = validRatings.reduce((total, rating) => total + rating, 0);
   return (sum / validRatings.length).toFixed(1);
@@ -211,7 +211,7 @@ export const calculateAverageSatisfaction = (communications) => {
 
 // 计算响应率
 export const calculateResponseRate = (communications) => {
-  if (!communications || communications.length === 0) return 0;
+  if (!communications || communications.length === 0) {return 0;}
   
   const respondedCommunications = communications.filter(comm => 
     comm.status === COMMUNICATION_STATUS.COMPLETED || 

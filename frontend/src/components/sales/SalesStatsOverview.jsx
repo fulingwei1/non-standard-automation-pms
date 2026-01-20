@@ -123,7 +123,7 @@ export const SalesStatsOverview = ({
           )}>
                 <Clock className="w-3 h-3" />
                 <span>最后更新: {formatAutoRefreshTime(lastAutoRefreshAt)}</span>
-              </div>
+          </div>
           }
           </div>
 
@@ -140,7 +140,7 @@ export const SalesStatsOverview = ({
                 <option value={300}>5分钟</option>
                 <option value={600}>10分钟</option>
                 <option value={1800}>30分钟</option>
-              </select>
+          </select>
           }
             
             {onRefresh &&
@@ -153,10 +153,10 @@ export const SalesStatsOverview = ({
 
                 <RefreshCw className={cn("w-3 h-3 mr-1", loading && "animate-spin")} />
                 刷新
-              </Button>
+          </Button>
           }
           </div>
-        </motion.div>
+      </motion.div>
       }
 
       {/* 统计卡片网格 */}
@@ -197,7 +197,7 @@ export const SalesStatsOverview = ({
                         {card.value}
                       </p>
                       <div className="flex items-center gap-1 mt-1">
-                        <div className="w-2 h-2 rounded-full bg-current opacity-60"></div>
+                        <div className="w-2 h-2 rounded-full bg-current opacity-60" />
                         <p className="text-xs text-slate-500">{card.subtitle}</p>
                       </div>
                     </div>

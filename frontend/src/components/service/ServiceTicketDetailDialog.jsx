@@ -34,8 +34,8 @@ export function ServiceTicketDetailDialog({ ticket, onClose, onAssign, onCloseTi
   });
 
   const resolveConfigByKeyOrLabel = (configs, value, fallbackKey) => {
-    if (!configs) return undefined;
-    if (!value) return configs[fallbackKey] || Object.values(configs)[0];
+    if (!configs) {return undefined;}
+    if (!value) {return configs[fallbackKey] || Object.values(configs)[0];}
     return (
       configs[value] ||
       Object.values(configs).find((config) => config.label === value) ||
@@ -58,7 +58,7 @@ export function ServiceTicketDetailDialog({ ticket, onClose, onAssign, onCloseTi
       return;
     }
 
-    if (submitting) return;
+    if (submitting) {return;}
 
     try {
       setSubmitting(true);
@@ -70,7 +70,7 @@ export function ServiceTicketDetailDialog({ ticket, onClose, onAssign, onCloseTi
 
   return (
     <>
-      <Dialog open={true} onOpenChange={onClose}>
+      <Dialog open onOpenChange={onClose}>
         <DialogContent className="max-w-4xl bg-slate-900 border-slate-700 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -141,7 +141,7 @@ export function ServiceTicketDetailDialog({ ticket, onClose, onAssign, onCloseTi
                 <p className="text-sm text-slate-400 mb-2">处理时间线</p>
                 
                 <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-blue-400 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 bg-blue-400 rounded-full mt-2" />
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-white">工单创建</span>
@@ -155,7 +155,7 @@ export function ServiceTicketDetailDialog({ ticket, onClose, onAssign, onCloseTi
 
                 {ticket.assigned_time && (
                   <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-yellow-400 rounded-full mt-2"></div>
+                    <div className="w-2 h-2 bg-yellow-400 rounded-full mt-2" />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-white">工单分配</span>
@@ -177,7 +177,7 @@ export function ServiceTicketDetailDialog({ ticket, onClose, onAssign, onCloseTi
 
                 {ticket.resolved_time && (
                   <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-green-400 rounded-full mt-2"></div>
+                    <div className="w-2 h-2 bg-green-400 rounded-full mt-2" />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-white">工单解决</span>
@@ -297,7 +297,7 @@ export function ServiceTicketDetailDialog({ ticket, onClose, onAssign, onCloseTi
 
       {/* Close Dialog */}
       {showCloseDialog && (
-        <Dialog open={true} onOpenChange={() => setShowCloseDialog(false)}>
+        <Dialog open onOpenChange={() => setShowCloseDialog(false)}>
           <DialogContent className="max-w-md bg-slate-900 border-slate-700">
             <DialogHeader>
               <DialogTitle>关闭工单</DialogTitle>

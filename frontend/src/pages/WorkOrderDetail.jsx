@@ -250,7 +250,7 @@ export default function WorkOrderDetail() {
                   100).
                   toFixed(1)}
                     %
-                  </span>
+                </span>
                 }
               </div>
             </div>
@@ -332,7 +332,7 @@ export default function WorkOrderDetail() {
               {workReports.length === 0 ?
               <div className="text-center py-8 text-slate-400">
                   暂无报工记录
-                </div> :
+              </div> :
 
               <Table>
                   <TableHeader>
@@ -396,10 +396,10 @@ export default function WorkOrderDetail() {
                             {report.status === "APPROVED" ? "已审批" : "待审批"}
                           </Badge>
                         </TableCell>
-                      </TableRow>
+                  </TableRow>
                   )}
                   </TableBody>
-                </Table>
+              </Table>
               }
             </TabsContent>
             <TabsContent value="details" className="mt-4">
@@ -414,25 +414,25 @@ export default function WorkOrderDetail() {
                 <div>
                     <div className="text-sm font-medium mb-2">图纸编号</div>
                     <div className="font-mono">{workOrder.drawing_no}</div>
-                  </div>
+                </div>
                 }
                 {workOrder.remark &&
                 <div>
                     <div className="text-sm font-medium mb-2">备注</div>
                     <div className="text-slate-600">{workOrder.remark}</div>
-                  </div>
+                </div>
                 }
                 {workOrder.actual_start_time &&
                 <div>
                     <div className="text-sm font-medium mb-2">实际开始时间</div>
                     <div>{formatDate(workOrder.actual_start_time)}</div>
-                  </div>
+                </div>
                 }
                 {workOrder.actual_end_time &&
                 <div>
                     <div className="text-sm font-medium mb-2">实际结束时间</div>
                     <div>{formatDate(workOrder.actual_end_time)}</div>
-                  </div>
+                </div>
                 }
               </div>
             </TabsContent>

@@ -95,15 +95,15 @@ const EngineerPerformanceRanking = () => {
 
   // 排名变化显示
   const renderRankChange = (change) => {
-    if (!change || change === 0) return <span className="text-gray-400">-</span>;
-    if (change > 0) return <span className="text-green-600">↑{change}</span>;
+    if (!change || change === 0) {return <span className="text-gray-400">-</span>;}
+    if (change > 0) {return <span className="text-green-600">↑{change}</span>;}
     return <span className="text-red-600">↓{Math.abs(change)}</span>;
   };
 
   // 分数变化显示
   const renderScoreChange = (change) => {
-    if (!change || change === 0) return <span className="text-gray-400">-</span>;
-    if (change > 0) return <span className="text-green-600">+{change.toFixed(2)}</span>;
+    if (!change || change === 0) {return <span className="text-gray-400">-</span>;}
+    if (change > 0) {return <span className="text-green-600">+{change.toFixed(2)}</span>;}
     return <span className="text-red-600">{change.toFixed(2)}</span>;
   };
 
@@ -116,9 +116,9 @@ const EngineerPerformanceRanking = () => {
       width: 80,
       fixed: 'left',
       render: (rank) => {
-        if (rank === 1) return <TrophyOutlined style={{ color: '#FFD700', fontSize: 24 }} />;
-        if (rank === 2) return <TrophyOutlined style={{ color: '#C0C0C0', fontSize: 22 }} />;
-        if (rank === 3) return <TrophyOutlined style={{ color: '#CD7F32', fontSize: 20 }} />;
+        if (rank === 1) {return <TrophyOutlined style={{ color: '#FFD700', fontSize: 24 }} />;}
+        if (rank === 2) {return <TrophyOutlined style={{ color: '#C0C0C0', fontSize: 22 }} />;}
+        if (rank === 3) {return <TrophyOutlined style={{ color: '#CD7F32', fontSize: 20 }} />;}
         return <span className="font-semibold text-lg">{rank}</span>;
       }
     },

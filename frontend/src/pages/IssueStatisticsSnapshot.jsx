@@ -145,7 +145,7 @@ export default function IssueStatisticsSnapshot() {
 
   // 计算趋势数据
   const trendData = useMemo(() => {
-    if (snapshots.length < 2) return null;
+    if (snapshots.length < 2) {return null;}
 
     const sorted = [...snapshots].sort(
       (a, b) => new Date(a.snapshot_date) - new Date(b.snapshot_date),
@@ -173,7 +173,7 @@ export default function IssueStatisticsSnapshot() {
 
   // 计算对比数据（最新 vs 最早）
   const comparison = useMemo(() => {
-    if (snapshots.length < 2) return null;
+    if (snapshots.length < 2) {return null;}
 
     const sorted = [...snapshots].sort(
       (a, b) => new Date(a.snapshot_date) - new Date(b.snapshot_date),

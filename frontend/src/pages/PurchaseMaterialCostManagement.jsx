@@ -310,7 +310,7 @@ export default function PurchaseMaterialCostManagement() {
   const materialTypes = useMemo(() => {
     const types = new Set();
     costs.forEach((c) => {
-      if (c.material_type) types.add(c.material_type);
+      if (c.material_type) {types.add(c.material_type);}
     });
     return Array.from(types);
   }, [costs]);
@@ -340,7 +340,7 @@ export default function PurchaseMaterialCostManagement() {
                 {reminder.is_due &&
             <Badge className="ml-2 bg-red-500">到期</Badge>
             }
-              </Button>
+          </Button>
           }
             <Button variant="outline">
               <Download className="h-4 w-4 mr-2" />
@@ -354,7 +354,7 @@ export default function PurchaseMaterialCostManagement() {
               <Plus className="h-4 w-4 mr-2" />
               新增成本
             </Button>
-          </div>
+        </div>
         } />
 
 
@@ -391,7 +391,7 @@ export default function PurchaseMaterialCostManagement() {
               </div>
             </div>
           </div>
-        </motion.div>
+      </motion.div>
       }
 
       {/* Reminder Info Card (when not due) */}
@@ -424,7 +424,7 @@ export default function PurchaseMaterialCostManagement() {
               </Button>
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* Filters */}
@@ -451,7 +451,7 @@ export default function PurchaseMaterialCostManagement() {
                 {materialTypes.map((type) =>
                 <SelectItem key={type} value={type}>
                     {type}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -510,7 +510,7 @@ export default function PurchaseMaterialCostManagement() {
                       {cost.material_code &&
                     <div className="text-xs text-slate-400">
                           {cost.material_code}
-                        </div>
+                    </div>
                     }
                     </div>
                   </TableCell>
@@ -566,7 +566,7 @@ export default function PurchaseMaterialCostManagement() {
                       </Button>
                     </div>
                   </TableCell>
-                </TableRow>
+              </TableRow>
               )}
             </TableBody>
           </Table>
@@ -574,7 +574,7 @@ export default function PurchaseMaterialCostManagement() {
           {filteredCosts.length === 0 && !loading &&
           <div className="text-center py-12 text-slate-400">
               暂无成本记录，点击"新增成本"添加第一条记录
-            </div>
+          </div>
           }
         </CardContent>
       </Card>
@@ -762,7 +762,7 @@ export default function PurchaseMaterialCostManagement() {
                     {suppliers.map((s) =>
                     <SelectItem key={s.id} value={s.id.toString()}>
                         {s.supplier_name}
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -964,9 +964,9 @@ export default function PurchaseMaterialCostManagement() {
                       </div>
                     </div>
                   </div>
-                </div>
-            }
             </div>
+            }
+          </div>
           }
 
           <DialogFooter>
@@ -980,7 +980,7 @@ export default function PurchaseMaterialCostManagement() {
             <Button onClick={handleAcknowledgeReminder}>
                 <CheckCircle2 className="h-4 w-4 mr-2" />
                 我已更新，确认提醒
-              </Button>
+            </Button>
             }
           </DialogFooter>
         </DialogContent>

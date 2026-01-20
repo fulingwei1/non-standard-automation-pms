@@ -123,12 +123,12 @@ export default function LessonsLearnedLibrary() {
         page,
         page_size: pageSize
       };
-      if (keyword) params.keyword = keyword;
-      if (lessonType) params.lesson_type = lessonType;
-      if (category) params.category = category;
-      if (status) params.status = status;
-      if (priority) params.priority = priority;
-      if (projectId) params.project_id = projectId;
+      if (keyword) {params.keyword = keyword;}
+      if (lessonType) {params.lesson_type = lessonType;}
+      if (category) {params.category = category;}
+      if (status) {params.status = status;}
+      if (priority) {params.priority = priority;}
+      if (projectId) {params.project_id = projectId;}
 
       const res = await projectReviewApi.searchLessonsLearned(params);
       const data = res.data || res;
@@ -215,7 +215,7 @@ export default function LessonsLearnedLibrary() {
                   {categories.map((cat) =>
                   <option key={cat} value={cat}>
                       {cat}
-                    </option>
+                  </option>
                   )}
                 </select>
                 <select
@@ -249,13 +249,13 @@ export default function LessonsLearnedLibrary() {
               <SkeletonCard />
               <SkeletonCard />
               <SkeletonCard />
-            </div> :
+          </div> :
           lessons.length === 0 ?
           <Card>
               <CardContent className="p-12 text-center">
                 <p className="text-slate-400">暂无经验教训</p>
               </CardContent>
-            </Card> :
+          </Card> :
 
           <motion.div variants={staggerContainer} className="space-y-4">
               {lessons.map((lesson) => {
@@ -295,7 +295,7 @@ export default function LessonsLearnedLibrary() {
                             <span>
                                   项目: {lesson.project_code}{" "}
                                   {lesson.project_name}
-                                </span>
+                            </span>
                             }
                               {lesson.category &&
                             <span>分类: {lesson.category}</span>
@@ -309,7 +309,7 @@ export default function LessonsLearnedLibrary() {
                               {lesson.resolved_date &&
                             <span className="text-emerald-400">
                                   已解决: {formatDate(lesson.resolved_date)}
-                                </span>
+                            </span>
                             }
                             </div>
                             {lesson.root_cause &&
@@ -318,7 +318,7 @@ export default function LessonsLearnedLibrary() {
                                   <span className="font-medium">根本原因:</span>{" "}
                                   {lesson.root_cause}
                                 </p>
-                              </div>
+                          </div>
                           }
                             {lesson.improvement_action &&
                           <div className="mt-2 p-3 bg-surface-2 rounded-md">
@@ -326,7 +326,7 @@ export default function LessonsLearnedLibrary() {
                                   <span className="font-medium">改进措施:</span>{" "}
                                   {lesson.improvement_action}
                                 </p>
-                              </div>
+                          </div>
                           }
                           </div>
                           <div className="ml-4 flex gap-2">
@@ -342,10 +342,10 @@ export default function LessonsLearnedLibrary() {
                         </div>
                       </CardContent>
                     </Card>
-                  </motion.div>);
+                </motion.div>);
 
             })}
-            </motion.div>
+          </motion.div>
           }
 
           {/* 分页 */}
@@ -372,7 +372,7 @@ export default function LessonsLearnedLibrary() {
                   下一页
                 </Button>
               </div>
-            </div>
+          </div>
           }
         </TabsContent>
 
@@ -431,7 +431,7 @@ export default function LessonsLearnedLibrary() {
                   </div>
                 </CardContent>
               </Card>
-            </div> :
+          </div> :
 
           <SkeletonCard />
           }
@@ -455,12 +455,12 @@ export default function LessonsLearnedLibrary() {
 
                               <span className="text-slate-300">{cat}</span>
                               <Badge variant="secondary">{count}</Badge>
-                            </div>
+                    </div>
 
                   )}
                       </div>
                     </CardContent>
-                  </Card>
+            </Card>
             }
 
               {/* 按状态统计 */}
@@ -480,12 +480,12 @@ export default function LessonsLearnedLibrary() {
 
                               <span className="text-slate-300">{status}</span>
                               <Badge variant="secondary">{count}</Badge>
-                            </div>
+                    </div>
 
                   )}
                       </div>
                     </CardContent>
-                  </Card>
+            </Card>
             }
 
               {/* 按优先级统计 */}
@@ -505,14 +505,14 @@ export default function LessonsLearnedLibrary() {
 
                               <span className="text-slate-300">{priority}</span>
                               <Badge variant="secondary">{count}</Badge>
-                            </div>
+                    </div>
 
                   )}
                       </div>
                     </CardContent>
-                  </Card>
+            </Card>
             }
-            </div>
+          </div>
           }
         </TabsContent>
       </Tabs>

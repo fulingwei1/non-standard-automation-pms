@@ -112,7 +112,7 @@ function OrderCard({ order, onView, onEdit, onDelete, onSubmit, onApprove }) {
               className={cn("text-[10px] border", urgency?.color)}>
 
                 {urgency?.label}
-              </Badge>
+            </Badge>
             }
           </div>
           <p className="text-sm text-slate-400">{order.supplierName}</p>
@@ -181,7 +181,7 @@ function OrderCard({ order, onView, onEdit, onDelete, onSubmit, onApprove }) {
       <div className="mb-3 p-2 rounded-lg bg-red-500/10 text-xs text-red-300 flex items-center gap-2">
           <AlertTriangle className="w-3 h-3" />
           {order.delayReason}
-        </div>
+      </div>
       }
 
       {/* Actions */}
@@ -206,7 +206,7 @@ function OrderCard({ order, onView, onEdit, onDelete, onSubmit, onApprove }) {
             title="编辑">
 
               <Edit3 className="w-3.5 h-3.5" />
-            </Button>
+          </Button>
           }
           {order.status === ORDER_STATUS.DRAFT && onDelete &&
           <Button
@@ -217,7 +217,7 @@ function OrderCard({ order, onView, onEdit, onDelete, onSubmit, onApprove }) {
             title="删除">
 
               <Trash2 className="w-3.5 h-3.5" />
-            </Button>
+          </Button>
           }
           {(order.status === ORDER_STATUS.PENDING || order.status === ORDER_STATUS.PARTIAL_RECEIVED) && onSubmit &&
           <Button
@@ -228,7 +228,7 @@ function OrderCard({ order, onView, onEdit, onDelete, onSubmit, onApprove }) {
             title="确认收货">
 
               <CheckCircle2 className="w-3.5 h-3.5" />
-            </Button>
+          </Button>
           }
           {order.status === ORDER_STATUS.DRAFT && onApprove &&
           <Button
@@ -239,7 +239,7 @@ function OrderCard({ order, onView, onEdit, onDelete, onSubmit, onApprove }) {
             title="提交审批">
 
               <CheckCircle2 className="w-3.5 h-3.5" />
-            </Button>
+          </Button>
           }
         </div>
       </div>
@@ -557,7 +557,7 @@ export default function PurchaseOrders() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4" />
           <p className="text-text-secondary">加载采购订单...</p>
         </div>
       </div>);
@@ -616,7 +616,7 @@ export default function PurchaseOrders() {
                     {Object.entries(ORDER_STATUS_CONFIGS).map(([key, config]) =>
                     <SelectItem key={key} value={key}>
                         {config.label}
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -709,7 +709,7 @@ export default function PurchaseOrders() {
                   handleSubmitApproval();
                 }} />
 
-              </motion.div>
+            </motion.div>
             )}
           </AnimatePresence>
         </div>
@@ -723,7 +723,7 @@ export default function PurchaseOrders() {
               <Plus className="h-4 w-4 mr-2" />
               创建第一个采购订单
             </Button>
-          </div>
+        </div>
         }
 
         {/* Create Order Modal */}
@@ -749,7 +749,7 @@ export default function PurchaseOrders() {
                       {suppliers.map((supplier) =>
                       <SelectItem key={supplier.id} value={supplier.id}>
                           {supplier.name}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -769,7 +769,7 @@ export default function PurchaseOrders() {
                       {projects.map((project) =>
                       <SelectItem key={project.id} value={project.id}>
                           {project.name}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -792,7 +792,7 @@ export default function PurchaseOrders() {
                       {Object.entries(PAYMENT_TERMS_CONFIGS).map(([key, config]) =>
                       <SelectItem key={key} value={key}>
                           {config.label}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -812,7 +812,7 @@ export default function PurchaseOrders() {
                       {Object.entries(SHIPPING_METHODS).map(([key, config]) =>
                       <SelectItem key={key} value={key}>
                           {config.label}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -922,13 +922,13 @@ export default function PurchaseOrders() {
                               ¥{PurchaseOrderUtils.formatCurrency(item.qty * item.price)}
                             </td>
                             <td className="px-4 py-2 text-sm text-white text-right">{item.received}</td>
-                          </tr>
+                      </tr>
                       )}
                       </tbody>
                     </table>
                   </div>
                 </div>
-              </div>
+            </div>
             }
             <DialogFooter>
               <Button

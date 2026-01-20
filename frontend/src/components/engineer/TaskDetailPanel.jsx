@@ -30,7 +30,7 @@ import {
   ChevronRight,
   Target,
 } from "lucide-react";
-import { Button, Badge, Input, Progress, Card, CardContent } from "../ui";
+import { Button, Badge, Input, Progress, Card, CardContent, toast } from "../ui";
 import { cn } from "../../lib/utils";
 
 // Deliverable status config
@@ -167,13 +167,44 @@ export default function TaskDetailPanel({
   };
 
   // Handle file view
-  const handleFileView = () => {
-    // TODO: Implement file view functionality
+  const getDeliverableUrl = (item) => {
+    return (
+      item?.url ||
+      item?.file_url ||
+      item?.fileUrl ||
+      item?.download_url ||
+      item?.downloadUrl ||
+      item?.preview_url ||
+      item?.previewUrl ||
+      ""
+    );
+  };
+
+  // Handle file view
+  const handleFileView = (item) => {
+    const url = getDeliverableUrl(item);
+    if (!url) {
+      toast.info("该交付物暂无可预览链接");
+      return;
+    }
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   // Handle file download
-  const handleFileDownload = () => {
-    // TODO: Implement file download functionality
+  const handleFileDownload = (item) => {
+    const url = getDeliverableUrl(item);
+    if (!url) {
+      toast.info("该交付物暂无可下载链接");
+      return;
+    }
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = item?.name || "download";
+    a.rel = "noopener noreferrer";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   };
 
   return (

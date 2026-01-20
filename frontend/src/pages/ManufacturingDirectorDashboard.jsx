@@ -118,17 +118,17 @@ export default function ManufacturingDirectorDashboard() {
               <ClipboardCheck className="w-4 h-4" />
               审批中心
             </Button>
-          </motion.div>
+        </motion.div>
         } />
 
 
       {/* 文化墙滚动播放 */}
       <motion.div variants={fadeIn}>
         <CultureWallCarousel
-          autoPlay={true}
+          autoPlay
           interval={5000}
-          showControls={true}
-          showIndicators={true}
+          showControls
+          showIndicators
           height="400px"
           onItemClick={(item) => {
             // 点击项目时的处理，可以跳转到详情页或文化墙页面
@@ -163,7 +163,7 @@ export default function ManufacturingDirectorDashboard() {
             onClick={() => setSelectedDate("")}>
 
               清空
-            </Button>
+          </Button>
           }
         </div>
       </div>
@@ -173,7 +173,7 @@ export default function ManufacturingDirectorDashboard() {
           {dailyError &&
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
               {dailyError}
-            </div>
+        </div>
         }
           {(productionDaily || shortageDaily) &&
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -234,10 +234,10 @@ export default function ManufacturingDirectorDashboard() {
                     {productionDaily.overall?.summary &&
               <p className="text-sm text-slate-300">
                         {productionDaily.overall.summary}
-                      </p>
+              </p>
               }
                   </CardContent>
-                </Card>
+          </Card>
           }
               {shortageDaily &&
           <Card className="bg-slate-900/60 border-slate-800">
@@ -313,7 +313,7 @@ export default function ManufacturingDirectorDashboard() {
                               <p className="text-base text-white">
                                 {shortageDaily.alerts?.levels?.[levelKey] ?? 0}
                               </p>
-                            </div>);
+                      </div>);
 
                   }
                 )}
@@ -323,16 +323,16 @@ export default function ManufacturingDirectorDashboard() {
                       {shortageDaily.stoppage?.hours ?? 0} 小时
                     </div>
                   </CardContent>
-                </Card>
+          </Card>
           }
-            </div>
+        </div>
         }
           {loadingDaily &&
         <div className="text-sm text-slate-400">
               正在同步最新日报数据...
-            </div>
-        }
         </div>
+        }
+      </div>
       }
 
       {/* Key Statistics - 8 column grid for 4 departments */}
@@ -363,7 +363,7 @@ export default function ManufacturingDirectorDashboard() {
             color="text-emerald-400"
             bg="bg-emerald-500/10" />
 
-            </>
+        </>
         }
 
           {/* Customer Service Department Stats */}
@@ -386,7 +386,7 @@ export default function ManufacturingDirectorDashboard() {
             color="text-amber-400"
             bg="bg-amber-500/10" />
 
-            </>
+        </>
         }
 
           {/* Warehouse Department Stats */}
@@ -409,7 +409,7 @@ export default function ManufacturingDirectorDashboard() {
             color="text-indigo-400"
             bg="bg-indigo-500/10" />
 
-            </>
+        </>
         }
 
           {/* Shipping Department Stats */}
@@ -430,7 +430,7 @@ export default function ManufacturingDirectorDashboard() {
           color="text-green-400"
           bg="bg-green-500/10" />
 
-        </motion.div>
+      </motion.div>
       }
 
       {/* Main Content Tabs */}
@@ -494,7 +494,7 @@ export default function ManufacturingDirectorDashboard() {
                     查看详情
                   </Button>
                 </CardContent>
-              </Card>
+            </Card>
             }
 
             {/* Customer Service Overview */}
@@ -536,7 +536,7 @@ export default function ManufacturingDirectorDashboard() {
                     查看详情
                   </Button>
                 </CardContent>
-              </Card>
+            </Card>
             }
 
             {/* Warehouse & Shipping Overview */}
@@ -586,7 +586,7 @@ export default function ManufacturingDirectorDashboard() {
                     查看详情
                   </Button>
                 </CardContent>
-              </Card>
+            </Card>
             }
           </div>
 
@@ -692,7 +692,7 @@ export default function ManufacturingDirectorDashboard() {
                         </p>
                       </div>
                     </div>
-                  </motion.div>
+                </motion.div>
                 )}
               </CardContent>
             </Card>
@@ -921,11 +921,11 @@ export default function ManufacturingDirectorDashboard() {
                         </p>
                       </div>
                     </div>
-                  </> :
+                </> :
 
                 <div className="text-center py-8 text-slate-500">
                     <p>发货数据需要从API获取</p>
-                  </div>
+                </div>
                 }
               </CardContent>
             </Card>

@@ -59,19 +59,19 @@ const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole
 
   // Format workload text
   const formatWorkload = (workload) => {
-    if (workload === 0) return '空闲';
-    if (workload < 30) return '轻度';
-    if (workload < 60) return '中度';
-    if (workload < 80) return '繁忙';
+    if (workload === 0) {return '空闲';}
+    if (workload < 30) {return '轻度';}
+    if (workload < 60) {return '中度';}
+    if (workload < 80) {return '繁忙';}
     return '过载';
   };
 
   // Get workload color
   const getWorkloadColor = (workload) => {
-    if (workload === 0) return '#10B981';
-    if (workload < 30) return '#3B82F6';
-    if (workload < 60) return '#F59E0B';
-    if (workload < 80) return '#EF4444';
+    if (workload === 0) {return '#10B981';}
+    if (workload < 30) {return '#3B82F6';}
+    if (workload < 60) {return '#F59E0B';}
+    if (workload < 80) {return '#EF4444';}
     return '#DC2626';
   };
 
@@ -130,13 +130,13 @@ const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole
               <div className="flex items-center gap-2 text-xs text-gray-500">
                   <Mail className="w-3 h-3" />
                   <span className="truncate">{member.email}</span>
-                </div>
+              </div>
               }
               {member.phone &&
               <div className="flex items-center gap-2 text-xs text-gray-500">
                   <Phone className="w-3 h-3" />
                   <span>{member.phone}</span>
-                </div>
+              </div>
               }
               {member.join_date &&
               <div className="flex items-center gap-2 text-xs text-gray-500">
@@ -144,7 +144,7 @@ const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole
                   <span>
                     加入于 {format(new Date(member.join_date), 'yyyy-MM-dd')}
                   </span>
-                </div>
+              </div>
               }
             </div>
 
@@ -167,15 +167,15 @@ const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole
                   className="text-xs">
 
                       {proj.name}
-                    </Badge>
+                </Badge>
                 )}
                   {member.assigned_projects.length > 3 &&
                 <Badge variant="secondary" className="text-xs">
                       +{member.assigned_projects.length - 3}
-                    </Badge>
+                </Badge>
                 }
                 </div>
-              </div>
+            </div>
             }
           </div>
         </div>
@@ -268,15 +268,15 @@ const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole
                     {index < project.team_members.length - 1 &&
                 <Separator />
                 }
-                  </React.Fragment>
+              </React.Fragment>
               )}
-              </div> :
+            </div> :
 
             <div className="text-center py-12 text-gray-500">
                 <UserX className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                 <p className="text-lg font-medium mb-2">暂无团队成员</p>
                 <p className="text-sm">点击"添加成员"按钮邀请团队成员</p>
-              </div>
+            </div>
             }
           </ScrollArea>
         </CardContent>
@@ -362,9 +362,9 @@ const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole
                           <Badge variant="outline" className="text-xs">
                             {proj.status}
                           </Badge>
-                        </div>
+                  </div>
                   )}
-                    </div> :
+                </div> :
 
                 <p className="text-sm text-gray-500">暂无其他项目</p>
                 }
@@ -388,7 +388,7 @@ const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole
                   移除成员
                 </Button>
               </DialogFooter>
-            </>
+          </>
           }
         </DialogContent>
       </Dialog>
@@ -415,7 +415,7 @@ const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole
               }}>
 
                 {role.icon} {role.name}
-              </Button>
+            </Button>
             )}
           </div>
         </DialogContent>

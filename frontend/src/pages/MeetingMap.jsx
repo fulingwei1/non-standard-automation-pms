@@ -47,8 +47,8 @@ export default function MeetingMap() {
     try {
       setLoading(true);
       const params = {};
-      if (filters.rhythm_level) params.rhythm_level = filters.rhythm_level;
-      if (filters.cycle_type) params.cycle_type = filters.cycle_type;
+      if (filters.rhythm_level) {params.rhythm_level = filters.rhythm_level;}
+      if (filters.cycle_type) {params.cycle_type = filters.cycle_type;}
 
       const res = await managementRhythmApi.meetingMap.get(params);
       const data = res.data || res;
@@ -68,13 +68,13 @@ export default function MeetingMap() {
     setFilters(newFilters);
     const params = new URLSearchParams();
     if (newFilters.rhythm_level)
-      params.set("rhythm_level", newFilters.rhythm_level);
-    if (newFilters.cycle_type) params.set("cycle_type", newFilters.cycle_type);
+      {params.set("rhythm_level", newFilters.rhythm_level);}
+    if (newFilters.cycle_type) {params.set("cycle_type", newFilters.cycle_type);}
     setSearchParams(params);
   };
 
   const formatDate = (dateStr) => {
-    if (!dateStr) return "-";
+    if (!dateStr) {return "-";}
     const date = new Date(dateStr);
     return date.toLocaleDateString("zh-CN", {
       month: "2-digit",
@@ -83,7 +83,7 @@ export default function MeetingMap() {
   };
 
   const formatTime = (timeStr) => {
-    if (!timeStr) return "";
+    if (!timeStr) {return "";}
     return timeStr.substring(0, 5);
   };
 
@@ -152,7 +152,7 @@ export default function MeetingMap() {
           <h2 className="text-xl font-semibold">按层级查看</h2>
           {Object.entries(byLevel).map(([level, items]) => {
             const config = rhythmLevelConfig[level];
-            if (!config) return null;
+            if (!config) {return null;}
             const Icon = config.icon;
 
             return (

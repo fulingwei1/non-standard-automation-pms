@@ -165,7 +165,7 @@ export default function ProjectReviewDetail() {
 
   // 发布评审
   const handlePublish = async () => {
-    if (!confirm("确定要发布这个评审报告吗？")) return;
+    if (!confirm("确定要发布这个评审报告吗？")) {return;}
 
     try {
       setSaving(true);
@@ -181,7 +181,7 @@ export default function ProjectReviewDetail() {
 
   // 归档评审
   const handleArchive = async () => {
-    if (!confirm("确定要归档这个评审报告吗？")) return;
+    if (!confirm("确定要归档这个评审报告吗？")) {return;}
 
     try {
       setSaving(true);
@@ -386,15 +386,15 @@ export default function ProjectReviewDetail() {
                   <Trash2 className="h-4 w-4 mr-2" />
                   删除
                 </Button>
-              </>
+          </>
           }
             {review.status === "PUBLISHED" &&
           <Button variant="outline" onClick={handleArchive} disabled={saving}>
                 <Archive className="h-4 w-4 mr-2" />
                 归档
-              </Button>
+          </Button>
           }
-          </div>
+        </div>
         } />
 
 
@@ -452,10 +452,10 @@ export default function ProjectReviewDetail() {
 
                     <Plus className="h-4 w-4 mr-2" />
                     添加第一条经验教训
-                  </Button>
+              </Button>
               }
               </CardContent>
-            </Card> :
+          </Card> :
 
           <div className="grid gap-4">
               {lessons.map((lesson) => {
@@ -501,7 +501,7 @@ export default function ProjectReviewDetail() {
                             <p className="text-slate-400 text-sm">
                               {lesson.actions}
                             </p>
-                          </div>
+                      </div>
                       }
                       </div>
                       {review.status === "DRAFT" &&
@@ -535,13 +535,13 @@ export default function ProjectReviewDetail() {
 
                             <Trash2 className="h-4 w-4" />
                           </Button>
-                        </div>
+                    </div>
                     }
                     </div>
-                  </motion.div>);
+                </motion.div>);
 
             })}
-            </div>
+          </div>
           }
         </TabsContent>
 
@@ -574,10 +574,10 @@ export default function ProjectReviewDetail() {
 
                     <Plus className="h-4 w-4 mr-2" />
                     添加第一条最佳实践
-                  </Button>
+              </Button>
               }
               </CardContent>
-            </Card> :
+          </Card> :
 
           <div className="grid gap-4">
               {bestPractices.map((practice) =>
@@ -612,7 +612,7 @@ export default function ProjectReviewDetail() {
                           <p className="text-slate-400 text-sm">
                             {practice.applicability}
                           </p>
-                        </div>
+                  </div>
                   }
                       {practice.benefits &&
                   <div className="mb-3">
@@ -622,7 +622,7 @@ export default function ProjectReviewDetail() {
                           <p className="text-slate-400 text-sm">
                             {practice.benefits}
                           </p>
-                        </div>
+                  </div>
                   }
                       {practice.implementation &&
                   <div>
@@ -632,7 +632,7 @@ export default function ProjectReviewDetail() {
                           <p className="text-slate-400 text-sm">
                             {practice.implementation}
                           </p>
-                        </div>
+                  </div>
                   }
                     </div>
                     {review.status === "DRAFT" &&
@@ -667,12 +667,12 @@ export default function ProjectReviewDetail() {
 
                           <Trash2 className="h-4 w-4" />
                         </Button>
-                      </div>
+                </div>
                 }
                   </div>
-                </motion.div>
+            </motion.div>
             )}
-            </div>
+          </div>
           }
         </TabsContent>
       </Tabs>

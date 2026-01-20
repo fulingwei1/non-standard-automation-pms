@@ -105,9 +105,9 @@ export default function OutsourcingOrderList() {
     try {
       setLoading(true);
       const params = {};
-      if (filterProject) params.project_id = filterProject;
-      if (filterStatus) params.status = filterStatus;
-      if (searchKeyword) params.keyword = searchKeyword;
+      if (filterProject) {params.project_id = filterProject;}
+      if (filterStatus) {params.status = filterStatus;}
+      if (searchKeyword) {params.keyword = searchKeyword;}
       const res = await outsourcingApi.orders.list(params);
       const orderList = res.data?.items || res.data || [];
       setOrders(orderList);
@@ -194,7 +194,7 @@ export default function OutsourcingOrderList() {
                 {projects.map((proj) =>
                 <SelectItem key={proj.id} value={proj.id.toString()}>
                     {proj.project_name}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -207,7 +207,7 @@ export default function OutsourcingOrderList() {
                 {Object.entries(statusConfigs).map(([key, config]) =>
                 <SelectItem key={key} value={key}>
                     {config.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -301,10 +301,10 @@ export default function OutsourcingOrderList() {
                         </Button>
                       </div>
                     </TableCell>
-                  </TableRow>
+              </TableRow>
               )}
               </TableBody>
-            </Table>
+          </Table>
           }
         </CardContent>
       </Card>
@@ -348,7 +348,7 @@ export default function OutsourcingOrderList() {
                       {projects.map((proj) =>
                       <SelectItem key={proj.id} value={proj.id.toString()}>
                           {proj.project_name}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -492,7 +492,7 @@ export default function OutsourcingOrderList() {
                     </div>
                   </div>
                 </div>
-              </div>
+            </div>
             }
           </DialogBody>
           <DialogFooter>

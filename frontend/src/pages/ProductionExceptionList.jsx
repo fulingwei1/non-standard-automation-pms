@@ -122,11 +122,11 @@ export default function ProductionExceptionList() {
     try {
       setLoading(true);
       const params = {};
-      if (filterProject) params.project_id = filterProject;
-      if (filterType) params.exception_type = filterType;
-      if (filterLevel) params.exception_level = filterLevel;
-      if (filterStatus) params.status = filterStatus;
-      if (searchKeyword) params.search = searchKeyword;
+      if (filterProject) {params.project_id = filterProject;}
+      if (filterType) {params.exception_type = filterType;}
+      if (filterLevel) {params.exception_level = filterLevel;}
+      if (filterStatus) {params.status = filterStatus;}
+      if (searchKeyword) {params.search = searchKeyword;}
       const res = await productionApi.exceptions.list(params);
       const excList = res.data?.items || res.data || [];
       setExceptions(excList);
@@ -173,7 +173,7 @@ export default function ProductionExceptionList() {
     }
   };
   const handleException = async () => {
-    if (!selectedException) return;
+    if (!selectedException) {return;}
     try {
       await productionApi.exceptions.handle(selectedException.id, handleData);
       setShowHandleDialog(false);
@@ -191,7 +191,7 @@ export default function ProductionExceptionList() {
     }
   };
   const handleClose = async (excId) => {
-    if (!confirm("确认关闭此异常？")) return;
+    if (!confirm("确认关闭此异常？")) {return;}
     try {
       await productionApi.exceptions.close(excId);
       fetchExceptions();
@@ -244,7 +244,7 @@ export default function ProductionExceptionList() {
                 {projects.map((proj) =>
                 <SelectItem key={proj.id} value={proj.id.toString()}>
                     {proj.project_name}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -257,7 +257,7 @@ export default function ProductionExceptionList() {
                 {Object.entries(typeConfigs).map(([key, config]) =>
                 <SelectItem key={key} value={key}>
                     {config.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -270,7 +270,7 @@ export default function ProductionExceptionList() {
                 {Object.entries(levelConfigs).map(([key, config]) =>
                 <SelectItem key={key} value={key}>
                     {config.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -283,7 +283,7 @@ export default function ProductionExceptionList() {
                 {Object.entries(statusConfigs).map(([key, config]) =>
                 <SelectItem key={key} value={key}>
                     {config.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -390,7 +390,7 @@ export default function ProductionExceptionList() {
                       }}>
 
                             <Edit className="w-4 h-4" />
-                          </Button>
+                    </Button>
                     }
                         {exc.status === "RESOLVED" &&
                     <Button
@@ -399,14 +399,14 @@ export default function ProductionExceptionList() {
                       onClick={() => handleClose(exc.id)}>
 
                             <CheckCircle2 className="w-4 h-4" />
-                          </Button>
+                    </Button>
                     }
                       </div>
                     </TableCell>
-                  </TableRow>
+              </TableRow>
               )}
               </TableBody>
-            </Table>
+          </Table>
           }
         </CardContent>
       </Card>
@@ -448,7 +448,7 @@ export default function ProductionExceptionList() {
                       {Object.entries(typeConfigs).map(([key, config]) =>
                       <SelectItem key={key} value={key}>
                           {config.label}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -470,7 +470,7 @@ export default function ProductionExceptionList() {
                       {Object.entries(levelConfigs).map(([key, config]) =>
                       <SelectItem key={key} value={key}>
                           {config.label}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -495,7 +495,7 @@ export default function ProductionExceptionList() {
                     {projects.map((proj) =>
                     <SelectItem key={proj.id} value={proj.id.toString()}>
                         {proj.project_name}
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -644,21 +644,21 @@ export default function ProductionExceptionList() {
               <div>
                     <div className="text-sm text-slate-500 mb-1">异常描述</div>
                     <div>{selectedException.description}</div>
-                  </div>
+              </div>
               }
                 {selectedException.handle_plan &&
               <div>
                     <div className="text-sm text-slate-500 mb-1">处理方案</div>
                     <div>{selectedException.handle_plan}</div>
-                  </div>
+              </div>
               }
                 {selectedException.handle_result &&
               <div>
                     <div className="text-sm text-slate-500 mb-1">处理结果</div>
                     <div>{selectedException.handle_result}</div>
-                  </div>
-              }
               </div>
+              }
+            </div>
             }
           </DialogBody>
           <DialogFooter>
@@ -679,13 +679,13 @@ export default function ProductionExceptionList() {
 
                   <Edit className="w-4 h-4 mr-2" />
                   处理异常
-                </Button>
+            </Button>
             }
             {selectedException && selectedException.status === "RESOLVED" &&
             <Button onClick={() => handleClose(selectedException.id)}>
                 <CheckCircle2 className="w-4 h-4 mr-2" />
                 关闭异常
-              </Button>
+            </Button>
             }
           </DialogFooter>
         </DialogContent>
@@ -735,7 +735,7 @@ export default function ProductionExceptionList() {
                   placeholder="填写处理结果..." />
 
                 </div>
-              </div>
+            </div>
             }
           </DialogBody>
           <DialogFooter>

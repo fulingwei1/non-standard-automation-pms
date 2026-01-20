@@ -99,7 +99,7 @@ export default function ProjectClosureManagement() {
   }, [selectedProjectId]);
 
   const fetchProjectData = async () => {
-    if (!selectedProjectId) return;
+    if (!selectedProjectId) {return;}
     try {
       const res = await projectApi.get(selectedProjectId);
       const data = res.data || res;
@@ -110,7 +110,7 @@ export default function ProjectClosureManagement() {
   };
 
   const fetchClosure = async () => {
-    if (!selectedProjectId) return;
+    if (!selectedProjectId) {return;}
     try {
       setLoading(true);
       const res = await pmoApi.closures.get(selectedProjectId);
@@ -221,7 +221,7 @@ export default function ProjectClosureManagement() {
                     </div>
                     <ArrowRight className="h-5 w-5 text-slate-500" />
                   </div>
-                </div>
+              </div>
               )}
             </div>
           </CardContent>
@@ -256,16 +256,16 @@ export default function ProjectClosureManagement() {
 
                 <FileText className="h-4 w-4" />
                 创建结项申请
-              </Button>
+          </Button>
           }
-          </div>
+        </div>
         } />
 
 
       {loading ?
       <div className="grid grid-cols-1 gap-4">
           <SkeletonCard />
-        </div> :
+      </div> :
       closure ?
       <div className="space-y-6">
           {/* Status Card */}
@@ -316,7 +316,7 @@ export default function ProjectClosureManagement() {
                           {closure.cost_variance >= 0 ? "+" : ""}
                           {formatCurrency(closure.cost_variance)}
                         </span>
-                      </div>
+                </div>
                 }
                 </div>
                 <div className="space-y-2">
@@ -364,7 +364,7 @@ export default function ProjectClosureManagement() {
                           {closure.hours_variance >= 0 ? "+" : ""}
                           {closure.hours_variance} 小时
                         </span>
-                      </div>
+                </div>
                 }
                 </div>
                 <div className="space-y-2">
@@ -408,7 +408,7 @@ export default function ProjectClosureManagement() {
                           {closure.schedule_variance >= 0 ? "+" : ""}
                           {closure.schedule_variance} 天
                         </span>
-                      </div>
+                </div>
                 }
                 </div>
                 <div className="space-y-2">
@@ -456,7 +456,7 @@ export default function ProjectClosureManagement() {
                     <p className="text-white mt-1 whitespace-pre-wrap">
                       {closure.acceptance_notes}
                     </p>
-                  </div>
+              </div>
               }
               </div>
             </CardContent>
@@ -473,7 +473,7 @@ export default function ProjectClosureManagement() {
                   {closure.project_summary}
                 </p>
               </CardContent>
-            </Card>
+        </Card>
         }
 
           {/* Achievement */}
@@ -487,7 +487,7 @@ export default function ProjectClosureManagement() {
                   {closure.achievement}
                 </p>
               </CardContent>
-            </Card>
+        </Card>
         }
 
           {/* Lessons Learned */}
@@ -505,13 +505,13 @@ export default function ProjectClosureManagement() {
 
                     <Edit className="h-4 w-4 mr-2" />
                     编辑
-                  </Button>
+              </Button>
               }
               </div>
               {closure.lessons_learned ?
             <p className="text-white whitespace-pre-wrap">
                   {closure.lessons_learned}
-                </p> :
+            </p> :
 
             <p className="text-slate-500">暂无经验教训记录</p>
             }
@@ -523,7 +523,7 @@ export default function ProjectClosureManagement() {
                   <p className="text-white whitespace-pre-wrap">
                     {closure.improvement_suggestions}
                   </p>
-                </div>
+            </div>
             }
             </CardContent>
           </Card>
@@ -544,7 +544,7 @@ export default function ProjectClosureManagement() {
                     <div className="flex-1">
                       <Progress value={closure.quality_score} />
                     </div>
-                  </div> :
+              </div> :
 
               <p className="text-slate-500">未评分</p>
               }
@@ -565,7 +565,7 @@ export default function ProjectClosureManagement() {
                     <div className="flex-1">
                       <Progress value={closure.customer_satisfaction} />
                     </div>
-                  </div> :
+              </div> :
 
               <p className="text-slate-500">未评分</p>
               }
@@ -591,11 +591,11 @@ export default function ProjectClosureManagement() {
                       <p className="text-white mt-1 whitespace-pre-wrap">
                         {closure.review_notes}
                       </p>
-                    </div>
+              </div>
               }
                 </div>
               </CardContent>
-            </Card>
+        </Card>
         }
 
           {/* Actions */}
@@ -611,7 +611,7 @@ export default function ProjectClosureManagement() {
 
                       <CheckCircle2 className="h-4 w-4 mr-2" />
                       提交评审
-                    </Button>
+              </Button>
               }
                   <Button
                 variant="outline"
@@ -622,9 +622,9 @@ export default function ProjectClosureManagement() {
                   </Button>
                 </div>
               </CardContent>
-            </Card>
+        </Card>
         }
-        </div> :
+      </div> :
 
       <Card>
           <CardContent className="p-12 text-center">
@@ -646,7 +646,7 @@ export default function ProjectClosureManagement() {
               </div>
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* Create Dialog */}
@@ -1025,7 +1025,7 @@ function LessonsClosureDialog({ open, onOpenChange, onSubmit, closure }) {
 
 // Closure Detail Dialog
 function ClosureDetailDialog({ open, onOpenChange, closure }) {
-  if (!closure) return null;
+  if (!closure) {return null;}
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

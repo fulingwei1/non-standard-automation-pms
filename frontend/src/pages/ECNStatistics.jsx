@@ -382,10 +382,10 @@ export default function ECNStatistics() {
                         </Badge>
                       </div>
                       <div className="font-medium">{count}</div>
-                    </div>
+                </div>
                 )}
                 </div>
-              </div> :
+            </div> :
 
             <div className="text-center py-8 text-slate-400">暂无数据</div>
             }
@@ -416,10 +416,10 @@ export default function ECNStatistics() {
                         </Badge>
                       </div>
                       <div className="font-medium">{count}</div>
-                    </div>
+                </div>
                 )}
                 </div>
-              </div> :
+            </div> :
 
             <div className="text-center py-8 text-slate-400">暂无数据</div>
             }

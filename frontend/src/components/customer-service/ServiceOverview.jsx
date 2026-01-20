@@ -32,7 +32,7 @@ const ServiceOverview = ({ data, loading, onNavigate }) => {
   const [_selectedPeriod, _setSelectedPeriod] = useState('today');
 
   const overviewStats = useMemo(() => {
-    if (!data?.tickets) return {};
+    if (!data?.tickets) {return {};}
 
     const totalTickets = data.tickets.length;
     const openTickets = data.tickets.filter((t) => ['open', 'in_progress'].includes(t.status)).length;
@@ -55,7 +55,7 @@ const ServiceOverview = ({ data, loading, onNavigate }) => {
   }, [data]);
 
   const statusDistribution = useMemo(() => {
-    if (!data?.tickets) return {};
+    if (!data?.tickets) {return {};}
 
     const distribution = {};
     Object.keys(TICKET_STATUS).forEach((key) => {
@@ -72,7 +72,7 @@ const ServiceOverview = ({ data, loading, onNavigate }) => {
   }, [data]);
 
   const priorityDistribution = useMemo(() => {
-    if (!data?.tickets) return {};
+    if (!data?.tickets) {return {};}
 
     const distribution = {};
     Object.keys(PRIORITY_LEVELS).forEach((key) => {
@@ -89,7 +89,7 @@ const ServiceOverview = ({ data, loading, onNavigate }) => {
   }, [data]);
 
   const urgentTickets = useMemo(() => {
-    if (!data?.tickets) return [];
+    if (!data?.tickets) {return [];}
 
     return data.tickets.
     filter((ticket) => ticket.priority === 'critical' && ['open', 'in_progress'].includes(ticket.status)).
@@ -98,7 +98,7 @@ const ServiceOverview = ({ data, loading, onNavigate }) => {
   }, [data]);
 
   const recentActivities = useMemo(() => {
-    if (!data?.activities) return [];
+    if (!data?.activities) {return [];}
 
     return data.activities.
     sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).
@@ -164,8 +164,8 @@ const ServiceOverview = ({ data, loading, onNavigate }) => {
   };
 
   const getMetricColor = (value, target) => {
-    if (value >= target) return CHART_COLORS.POSITIVE;
-    if (value >= target * 0.8) return CHART_COLORS.WARNING;
+    if (value >= target) {return CHART_COLORS.POSITIVE;}
+    if (value >= target * 0.8) {return CHART_COLORS.WARNING;}
     return CHART_COLORS.NEGATIVE;
   };
 

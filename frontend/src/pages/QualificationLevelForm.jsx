@@ -142,7 +142,7 @@ export default function QualificationLevelForm() {
                 <p className="text-sm text-red-500 flex items-center gap-1">
                     <AlertCircle className="h-4 w-4" />
                     {errors.level_code.message}
-                  </p>
+                </p>
                 }
                 <p className="text-xs text-gray-500">
                   建议使用: ASSISTANT(助理级), JUNIOR(初级), MIDDLE(中级),
@@ -166,7 +166,7 @@ export default function QualificationLevelForm() {
                 <p className="text-sm text-red-500 flex items-center gap-1">
                     <AlertCircle className="h-4 w-4" />
                     {errors.level_name.message}
-                  </p>
+                </p>
                 }
               </div>
 
@@ -189,7 +189,7 @@ export default function QualificationLevelForm() {
                 <p className="text-sm text-red-500 flex items-center gap-1">
                     <AlertCircle className="h-4 w-4" />
                     {errors.level_order.message}
-                  </p>
+                </p>
                 }
                 <p className="text-xs text-gray-500">
                   数字越小，等级越低（1=最低，5=最高）

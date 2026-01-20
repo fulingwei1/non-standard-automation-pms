@@ -3,12 +3,14 @@ import { AnimatePresence } from "framer-motion";
 import { cn } from "../../lib/utils";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
+import { ToastContainer, useToast } from "../ui";
 
 /**
  * 主布局组件
  */
 export function MainLayout({ children, onLogout }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const { toasts, removeToast } = useToast();
   // Get user from localStorage
   const [user, setUser] = useState(() => {
     try {
@@ -51,6 +53,7 @@ export function MainLayout({ children, onLogout }) {
 
   return (
     <div className="min-h-screen bg-surface-0">
+      <ToastContainer toasts={toasts} onClose={removeToast} />
       {/* Sidebar */}
       <Sidebar
         collapsed={sidebarCollapsed}

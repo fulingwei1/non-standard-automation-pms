@@ -98,6 +98,68 @@ export default function LeaveManagement() {
     return { pending, approved, rejected, totalDays };
   }, [leaveApplications]);
 
+  const leaveBalanceRows = useMemo(() => {
+    const byEmployee = new Map();
+    leaveApplications
+      .filter((a) => a.status === "approved")
+      .forEach((a) => {
+        const key = a.employee || "未知员工";
+        const existing = byEmployee.get(key) || {
+          employee: key,
+          department: a.department || "-",
+          usedDays: 0,
+          approvedCount: 0,
+        };
+        existing.usedDays += Number(a.days || 0);
+        existing.approvedCount += 1;
+        byEmployee.set(key, existing);
+      });
+    return Array.from(byEmployee.values()).sort((a, b) => b.usedDays - a.usedDays);
+  }, [leaveApplications]);
+
+  const leaveTypeChart = useMemo(() => {
+    const byType = new Map();
+    leaveApplications.forEach((a) => {
+      const type = a.type || "未分类";
+      byType.set(type, (byType.get(type) || 0) + 1);
+    });
+    return Array.from(byType.entries()).map(([label, value]) => ({ label, value }));
+  }, [leaveApplications]);
+
+  const leaveStatusChart = useMemo(() => {
+    const counts = {
+      pending: 0,
+      approved: 0,
+      rejected: 0,
+    };
+    leaveApplications.forEach((a) => {
+      if (counts[a.status] !== undefined) counts[a.status] += 1;
+    });
+    return [
+      { label: "待审批", value: counts.pending, color: "#f59e0b" },
+      { label: "已批准", value: counts.approved, color: "#10b981" },
+      { label: "已拒绝", value: counts.rejected, color: "#ef4444" },
+    ];
+  }, [leaveApplications]);
+
+  const monthlyLeaveTrend = useMemo(() => {
+    const byMonth = new Map();
+    leaveApplications
+      .filter((a) => a.status === "approved")
+      .forEach((a) => {
+        const date = a.startDate ? new Date(a.startDate) : null;
+        const key = date && !Number.isNaN(date.getTime())
+          ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`
+          : "unknown";
+        byMonth.set(key, (byMonth.get(key) || 0) + Number(a.days || 0));
+      });
+    return Array.from(byMonth.entries())
+      .filter(([k]) => k !== "unknown")
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(-12)
+      .map(([month, value]) => ({ month, value }));
+  }, [leaveApplications]);
+
   return (
     <motion.div
       variants={staggerContainer}
@@ -118,7 +180,7 @@ export default function LeaveManagement() {
               <BarChart3 className="w-4 h-4 mr-2" />
               统计分析
             </Button>
-          </div>
+        </div>
         } />
 
 
@@ -355,7 +417,7 @@ export default function LeaveManagement() {
                       {app.rejectReason &&
                     <div className="text-sm text-red-400 mb-2">
                           拒绝原因: {app.rejectReason}
-                        </div>
+                    </div>
                     }
                       <div className="text-xs text-slate-500">
                         提交时间: {app.submitTime}
@@ -368,11 +430,11 @@ export default function LeaveManagement() {
                         <Button size="sm" variant="outline">
                           拒绝
                         </Button>
-                      </div>
+                  </div>
                   }
                   </div>
                 </CardContent>
-              </Card>
+            </Card>
             )}
           </div>
         </TabsContent>
@@ -383,7 +445,38 @@ export default function LeaveManagement() {
               <CardTitle>假期余额</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-slate-400">TODO: 员工假期余额列表</p>
+              {leaveBalanceRows.length === 0 ? (
+                <div className="text-slate-400 text-sm py-6 text-center">
+                  暂无已批准请假记录，无法计算余额使用情况
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-slate-700">
+                        <th className="text-left py-2 pr-2 text-slate-400 font-medium">员工</th>
+                        <th className="text-left py-2 pr-2 text-slate-400 font-medium">部门</th>
+                        <th className="text-right py-2 pl-2 text-slate-400 font-medium">已休(天)</th>
+                        <th className="text-right py-2 pl-2 text-slate-400 font-medium">次数</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {leaveBalanceRows.map((row) => (
+                        <tr key={row.employee} className="border-b border-slate-800/60">
+                          <td className="py-2 pr-2 text-white">{row.employee}</td>
+                          <td className="py-2 pr-2 text-slate-300">{row.department}</td>
+                          <td className="py-2 pl-2 text-right text-white font-medium">
+                            {row.usedDays.toFixed(1)}
+                          </td>
+                          <td className="py-2 pl-2 text-right text-slate-300">
+                            {row.approvedCount}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -394,7 +487,27 @@ export default function LeaveManagement() {
               <CardTitle>统计分析</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-slate-400">TODO: 请假统计分析图表</p>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <div className="text-sm font-medium text-white">请假类型分布</div>
+                  <SimpleBarChart data={leaveTypeChart} height={180} />
+                </div>
+                <div className="space-y-3">
+                  <div className="text-sm font-medium text-white">审批状态分布</div>
+                  <SimplePieChart data={leaveStatusChart} size={180} />
+                </div>
+              </div>
+
+              <div className="mt-6 space-y-3">
+                <div className="text-sm font-medium text-white">月度请假天数趋势</div>
+                {monthlyLeaveTrend.length === 0 ? (
+                  <div className="text-slate-400 text-sm py-6 text-center">
+                    暂无已批准请假记录
+                  </div>
+                ) : (
+                  <MonthlyTrendChart data={monthlyLeaveTrend} valueKey="value" labelKey="month" height={180} />
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

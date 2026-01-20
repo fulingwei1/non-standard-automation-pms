@@ -146,7 +146,7 @@ export default function FinancialReports() {
               <Download className="w-4 h-4" />
               导出报表
             </Button>
-          </motion.div>
+        </motion.div>
         } />
 
 
@@ -389,7 +389,7 @@ export default function FinancialReports() {
                     xField="month"
                     yField="value"
                     seriesField="type"
-                    isGroup={true}
+                    isGroup
                     height={300}
                     colors={["#f59e0b", "#ef4444", "#10b981"]}
                     formatter={(v) => `¥${(v / 10000).toFixed(0)}万`} />
@@ -436,7 +436,7 @@ export default function FinancialReports() {
                                   100
                                 ).toFixed(1)}
                                   %
-                                </span>
+                              </span>
                               }
                             </div>
                           </div>
@@ -582,7 +582,7 @@ export default function FinancialReports() {
 
                                   {item.variance > 0 ? "+" : ""}
                                   {formatCurrency(item.variance)}
-                                </span>
+                              </span>
                               }
                             </div>
                           </div>
@@ -709,7 +709,7 @@ export default function FinancialReports() {
                     xField="category"
                     yField="value"
                     seriesField="type"
-                    isGroup={true}
+                    isGroup
                     height={280}
                     colors={["#64748b", "#3b82f6"]}
                     formatter={(v) => `¥${(v / 10000).toFixed(0)}万`} />
@@ -778,7 +778,7 @@ export default function FinancialReports() {
                     xField="project"
                     yField="value"
                     seriesField="type"
-                    isGroup={true}
+                    isGroup
                     height={280}
                     colors={["#f59e0b", "#ef4444"]}
                     formatter={(v) => `¥${(v / 10000).toFixed(0)}万`} />

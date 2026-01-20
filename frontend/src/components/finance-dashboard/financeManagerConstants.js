@@ -233,7 +233,7 @@ export const calculateNetProfit = (income, expenses) => {
 
 // 计算预算利用率
 export const calculateBudgetUtilization = (spent, budget) => {
-  if (!budget || budget === 0) return 0;
+  if (!budget || budget === 0) {return 0;}
   return Math.round((spent / budget) * 100);
 };
 
@@ -305,7 +305,7 @@ export const getOverduePayments = (transactions) => {
       return false;
     }
     
-    if (!transaction.due_date) return false;
+    if (!transaction.due_date) {return false;}
     
     const dueDate = new Date(transaction.due_date);
     return dueDate < today;

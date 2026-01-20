@@ -13,7 +13,7 @@ import {
  * 归一化分布数据
  */
 export const normalizeDistribution = (distribution = []) => {
-  if (!Array.isArray(distribution)) return [];
+  if (!Array.isArray(distribution)) {return [];}
   return distribution.map((item, index) => {
     const rawValue = Number(item.value ?? item.count ?? 0);
     const rawPercentage = Number(item.percentage ?? item.rate ?? 0);
@@ -225,7 +225,7 @@ export const transformTeamMember = (member = {}) => {
  * 聚合目标数据
  */
 export const aggregateTargets = (targets = []) => {
-  if (!targets.length) return null;
+  if (!targets.length) {return null;}
   const totals = targets.reduce(
     (acc, target) => {
       const targetValue = Number(target.target_value ?? 0);

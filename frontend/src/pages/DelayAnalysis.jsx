@@ -53,9 +53,9 @@ export default function DelayAnalysis() {
     setLoading(true);
     try {
       const params = {};
-      if (startDate) params.start_date = startDate;
-      if (endDate) params.end_date = endDate;
-      if (projectId) params.project_id = parseInt(projectId);
+      if (startDate) {params.start_date = startDate;}
+      if (endDate) {params.end_date = endDate;}
+      if (projectId) {params.project_id = parseInt(projectId);}
 
       const response = await delayAnalysisApi.getRootCause(params);
       if (response.data?.data) {
@@ -72,8 +72,8 @@ export default function DelayAnalysis() {
     setLoading(true);
     try {
       const params = {};
-      if (startDate) params.start_date = startDate;
-      if (endDate) params.end_date = endDate;
+      if (startDate) {params.start_date = startDate;}
+      if (endDate) {params.end_date = endDate;}
 
       const response = await delayAnalysisApi.getImpact(params);
       if (response.data?.data) {
@@ -101,9 +101,9 @@ export default function DelayAnalysis() {
   };
 
   useEffect(() => {
-    if (activeTab === "root-cause") loadRootCause();
-    if (activeTab === "impact") loadImpact();
-    if (activeTab === "trends") loadTrends();
+    if (activeTab === "root-cause") {loadRootCause();}
+    if (activeTab === "impact") {loadImpact();}
+    if (activeTab === "trends") {loadTrends();}
   }, [activeTab]);
 
   return (
@@ -220,14 +220,14 @@ export default function DelayAnalysis() {
                               <TableCell>
                                 {cause.average_delay_days} 天
                               </TableCell>
-                            </TableRow>
+                    </TableRow>
                     )}
                         </TableBody>
-                      </Table>
+                </Table>
                 }
                 </CardContent>
               </Card>
-            </div>
+          </div>
           }
         </TabsContent>
 
@@ -285,14 +285,14 @@ export default function DelayAnalysis() {
                               <TableCell>
                                 {formatAmount(project.cost_impact)}
                               </TableCell>
-                            </TableRow>
+                    </TableRow>
                     )}
                         </TableBody>
-                      </Table>
+                </Table>
                 }
                 </CardContent>
               </Card>
-            </div>
+          </div>
           }
         </TabsContent>
 
@@ -343,14 +343,14 @@ export default function DelayAnalysis() {
                               {trend.delay_rate.toFixed(2)}%
                             </TableCell>
                             <TableCell>{trend.total_delay_days} 天</TableCell>
-                          </TableRow>
+                    </TableRow>
                     )}
                       </TableBody>
-                    </Table>
+                </Table>
                 }
                 </CardContent>
               </Card>
-            </div>
+          </div>
           }
         </TabsContent>
       </Tabs>

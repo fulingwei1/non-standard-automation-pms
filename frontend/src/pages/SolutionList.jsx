@@ -171,7 +171,7 @@ function SolutionCard({ solution, onView }) {
           className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded-full">
 
             {tag}
-          </span>
+        </span>
         )}
       </div>
 
@@ -193,7 +193,7 @@ function SolutionCard({ solution, onView }) {
             <span className="text-white">{solution.progress}%</span>
           </div>
           <Progress value={solution.progress} className="h-1.5" />
-        </div>
+      </div>
       }
 
       <div className="flex items-center justify-between text-xs pt-3 border-t border-white/5">
@@ -454,7 +454,7 @@ export default function SolutionList() {
               <Plus className="w-4 h-4" />
               新建方案
             </Button>
-          </motion.div>
+        </motion.div>
         } />
 
 
@@ -510,7 +510,7 @@ export default function SolutionList() {
                 {stat.value}
               </p>
             </CardContent>
-          </Card>
+        </Card>
         )}
       </motion.div>
 
@@ -542,7 +542,7 @@ export default function SolutionList() {
               {solutionStatuses.map((status) =>
               <option key={status.id} value={status.id}>
                   {status.name}
-                </option>
+              </option>
               )}
             </select>
             <select
@@ -553,7 +553,7 @@ export default function SolutionList() {
               {deviceTypes.map((type) =>
               <option key={type.id} value={type.id}>
                   {type.name}
-                </option>
+              </option>
               )}
             </select>
             <div className="flex bg-surface-50 rounded-lg p-1">
@@ -581,14 +581,14 @@ export default function SolutionList() {
       <div className="text-center py-16 text-slate-400">
           <FileText className="w-12 h-12 mx-auto mb-4 text-slate-600 animate-pulse" />
           <p className="text-lg font-medium">加载中...</p>
-        </div>
+      </div>
       }
 
       {/* 错误提示 */}
       {error && !loading &&
       <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400 text-sm">
           {error}
-        </div>
+      </div>
       }
 
       {/* 方案列表 */}
@@ -612,9 +612,9 @@ export default function SolutionList() {
                 <FileText className="w-12 h-12 mx-auto mb-4 text-slate-600" />
                 <p className="text-lg font-medium">暂无方案</p>
                 <p className="text-sm">请调整筛选条件或创建新方案</p>
-              </div>
+        </div>
         }
-          </motion.div> :
+      </motion.div> :
 
       <motion.div
         variants={fadeIn}
@@ -654,12 +654,12 @@ export default function SolutionList() {
                         <p className="text-lg font-medium">暂无方案</p>
                         <p className="text-sm">请调整筛选条件或创建新方案</p>
                       </td>
-                    </tr>
+              </tr>
               }
                 </tbody>
               </table>
             </div>
-          </motion.div>)
+      </motion.div>)
       }
     </motion.div>);
 

@@ -56,7 +56,7 @@ export const useSalesTeamFilters = (defaultRange) => {
    */
   const handleApplyQuickRange = useCallback((rangeKey) => {
     const preset = QUICK_RANGE_PRESETS.find((item) => item.key === rangeKey);
-    if (!preset) return;
+    if (!preset) {return;}
     const range = preset.getRange();
     setFilters((prev) => ({
       ...prev,

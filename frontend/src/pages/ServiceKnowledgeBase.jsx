@@ -233,8 +233,8 @@ export default function ServiceKnowledgeBase() {
 
     return result.sort((a, b) => {
       // Featured first, then by view count
-      if (a.is_featured && !b.is_featured) return -1;
-      if (!a.is_featured && b.is_featured) return 1;
+      if (a.is_featured && !b.is_featured) {return -1;}
+      if (!a.is_featured && b.is_featured) {return 1;}
       return b.view_count - a.view_count;
     });
   }, [articles, searchQuery, categoryFilter, faqFilter]);
@@ -273,11 +273,10 @@ export default function ServiceKnowledgeBase() {
     }
   };
 
-  const handleDeleteArticle = async (_articleId) => {
-    if (!confirm("确定要删除这篇文章吗？")) return;
+  const handleDeleteArticle = async (articleId) => {
+    if (!confirm("确定要删除这篇文章吗？")) {return;}
     try {
-      // TODO: 调用API
-      // await knowledgeBaseApi.delete(articleId)
+      await serviceApi.knowledgeBase.delete(articleId);
       toast.success("文章删除成功");
       await loadArticles();
       await loadStatistics();
@@ -318,7 +317,7 @@ export default function ServiceKnowledgeBase() {
               <Plus className="w-4 h-4" />
               创建文章
             </Button>
-          </div>
+        </div>
         } />
 
 
@@ -435,7 +434,7 @@ export default function ServiceKnowledgeBase() {
 
                       <XCircle className="w-4 h-4" />
                       清除
-                    </Button>
+                  </Button>
                   }
                 </div>
               </div>
@@ -506,7 +505,7 @@ export default function ServiceKnowledgeBase() {
 
                                 <HelpCircle className="w-3 h-3 mr-1" />
                                 FAQ
-                              </Badge>
+                          </Badge>
                           }
                             <Badge className={cn(status.color, "text-xs")}>
                               {status.label}
@@ -537,7 +536,7 @@ export default function ServiceKnowledgeBase() {
 
                                   <Tag className="w-3 h-3 mr-1" />
                                   {tag}
-                                </Badge>
+                            </Badge>
                             )}
                             </div>
                             <div className="flex items-center gap-4 text-xs text-slate-500">
@@ -573,7 +572,7 @@ export default function ServiceKnowledgeBase() {
                       </div>
                     </CardContent>
                   </Card>
-                </motion.div>);
+              </motion.div>);
 
           })
           }
@@ -642,7 +641,7 @@ function CreateArticleDialog({ onClose, onSubmit }) {
   };
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
+    <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-4xl bg-slate-900 border-slate-700 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>创建知识库文章</DialogTitle>
@@ -735,7 +734,7 @@ function CreateArticleDialog({ onClose, onSubmit }) {
 
                     </div>
                   </details>
-                </div>
+              </div>
               }
             </div>
 
@@ -762,9 +761,9 @@ function CreateArticleDialog({ onClose, onSubmit }) {
                     className="w-3 h-3 ml-1 cursor-pointer"
                     onClick={() => handleRemoveTag(tag)} />
 
-                    </Badge>
+                </Badge>
                 )}
-                </div>
+              </div>
               }
             </div>
 
@@ -841,7 +840,7 @@ function ArticleDetailDialog({ article, onClose, onUpdate, onDelete }) {
   const status = statusConfig[article.status] || statusConfig["草稿"];
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
+    <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-5xl bg-slate-900 border-slate-700 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -858,7 +857,7 @@ function ArticleDetailDialog({ article, onClose, onUpdate, onDelete }) {
               className="text-xs text-blue-400 border-blue-500/30">
 
                 FAQ
-              </Badge>
+            </Badge>
             }
           </DialogTitle>
           <DialogDescription>知识库文章详情</DialogDescription>
@@ -899,10 +898,10 @@ function ArticleDetailDialog({ article, onClose, onUpdate, onDelete }) {
                 {formData.content &&
               <div className="mt-2 text-xs text-slate-500">
                     {formData.content.length} 字符
-                  </div>
+              </div>
               }
               </div>
-            </div> :
+          </div> :
 
           <div className="space-y-6">
               <div>
@@ -929,10 +928,10 @@ function ArticleDetailDialog({ article, onClose, onUpdate, onDelete }) {
 
                         <Tag className="w-3 h-3 mr-1" />
                         {tag}
-                      </Badge>
+                </Badge>
                 )}
                   </div>
-                </div>
+            </div>
             }
 
               <div className="grid grid-cols-2 gap-4">
@@ -973,7 +972,7 @@ function ArticleDetailDialog({ article, onClose, onUpdate, onDelete }) {
                   <span className="text-white">{article.helpful_count}</span>
                 </div>
               </div>
-            </div>
+          </div>
           }
         </DialogBody>
         <DialogFooter>
@@ -986,7 +985,7 @@ function ArticleDetailDialog({ article, onClose, onUpdate, onDelete }) {
                 <Save className="w-4 h-4 mr-2" />
                 保存
               </Button>
-            </> :
+          </> :
 
           <>
               <Button variant="outline" onClick={() => onDelete(article.id)}>
@@ -1000,7 +999,7 @@ function ArticleDetailDialog({ article, onClose, onUpdate, onDelete }) {
               <Button variant="outline" onClick={onClose}>
                 关闭
               </Button>
-            </>
+          </>
           }
         </DialogFooter>
       </DialogContent>

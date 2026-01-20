@@ -110,28 +110,28 @@ OPPORTUNITY_STAGE_MAP[stage?.toUpperCase?.()] || "lead";
 
 const mapOpportunityPriority = (priority) => {
   const value = (priority || "").toString().toLowerCase();
-  if (value.includes("urgent")) return "urgent";
-  if (value.includes("high")) return "high";
-  if (value.includes("low")) return "low";
+  if (value.includes("urgent")) {return "urgent";}
+  if (value.includes("high")) {return "high";}
+  if (value.includes("low")) {return "low";}
   return "medium";
 };
 
 const mapProjectStageLabel = (stage) => {
-  if (!stage) return "进行中";
+  if (!stage) {return "进行中";}
   const normalized = stage.toString().toUpperCase();
   return PROJECT_STAGE_LABELS[normalized] || stage;
 };
 
 const mapProjectHealth = (health) => {
-  if (!health) return "warning";
+  if (!health) {return "warning";}
   const normalized = health.toString().toUpperCase();
   return HEALTH_MAP[normalized] || "warning";
 };
 
 const isCurrentMonth = (date) => {
-  if (!date) return false;
+  if (!date) {return false;}
   const checkDate = new Date(date);
-  if (isNaN(checkDate.getTime())) return false;
+  if (isNaN(checkDate.getTime())) {return false;}
   const now = new Date();
   return (
     checkDate.getFullYear() === now.getFullYear() &&
@@ -141,18 +141,18 @@ const isCurrentMonth = (date) => {
 
 const mapTaskToTodoType = (task) => {
   const type = (task.task_type || task.source_type || "").toUpperCase();
-  if (type.includes("QUOTE")) return "quote";
-  if (type.includes("PAY")) return "payment";
-  if (type.includes("VISIT")) return "visit";
-  if (type.includes("APPROVAL")) return "approval";
-  if (type.includes("FOLLOW")) return "follow";
+  if (type.includes("QUOTE")) {return "quote";}
+  if (type.includes("PAY")) {return "payment";}
+  if (type.includes("VISIT")) {return "visit";}
+  if (type.includes("APPROVAL")) {return "approval";}
+  if (type.includes("FOLLOW")) {return "follow";}
   return "reminder";
 };
 
 const calculateDaysBetween = (date) => {
-  if (!date) return 0;
+  if (!date) {return 0;}
   const target = new Date(date);
-  if (isNaN(target.getTime())) return 0;
+  if (isNaN(target.getTime())) {return 0;}
   const diff = Date.now() - target.getTime();
   return Math.max(Math.floor(diff / (1000 * 60 * 60 * 24)), 0);
 };
@@ -412,7 +412,7 @@ export default function SalesWorkstation() {
       reduce((sum, p) => sum + (p.amount || 0), 0);
       const overduePayment = paymentEntries.
       filter((p) => {
-        if (p.status === "overdue") return true;
+        if (p.status === "overdue") {return true;}
         if (p.status !== "paid" && p.dueDate) {
           return new Date(p.dueDate) < new Date();
         }
@@ -594,7 +594,7 @@ export default function SalesWorkstation() {
               <Target className="w-4 h-4" />
               新建商机
             </Button>
-          </motion.div>
+        </motion.div>
         } />
 
 
@@ -743,7 +743,7 @@ export default function SalesWorkstation() {
               {todos.length === 0 ?
               <div className="text-center py-8 text-slate-500 text-sm">
                   暂无待办事项
-                </div> :
+              </div> :
 
               todos.map((todo) => {
                 const config = todoTypeConfig[todo.type] || {
@@ -794,7 +794,7 @@ export default function SalesWorkstation() {
                       <span className="text-xs text-slate-500">
                         {todo.time}
                       </span>
-                    </motion.div>);
+                  </motion.div>);
 
               })
               }
@@ -868,7 +868,7 @@ export default function SalesWorkstation() {
                             )} />
 
                           }
-                          </div>);
+                        </div>);
 
                     }
                   )}
@@ -890,7 +890,7 @@ export default function SalesWorkstation() {
                       验收: {project.acceptanceDate}
                     </span>
                   </div>
-                </motion.div>
+              </motion.div>
               )}
             </CardContent>
           </Card>

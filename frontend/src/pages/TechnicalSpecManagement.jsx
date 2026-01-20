@@ -64,8 +64,8 @@ export default function TechnicalSpecManagement() {
     setLoading(true);
     try {
       const params = { page: 1, page_size: 100 };
-      if (projectId) params.project_id = projectId;
-      if (searchKeyword) params.keyword = searchKeyword;
+      if (projectId) {params.project_id = projectId;}
+      if (searchKeyword) {params.keyword = searchKeyword;}
 
       const response = await api.get("/technical-spec/requirements", {
         params
@@ -106,7 +106,7 @@ export default function TechnicalSpecManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("确定要删除这个规格要求吗？")) return;
+    if (!confirm("确定要删除这个规格要求吗？")) {return;}
 
     try {
       await api.delete(`/technical-spec/requirements/${id}`);
@@ -205,7 +205,7 @@ export default function TechnicalSpecManagement() {
           requirements.length === 0 ?
           <div className="text-center py-8 text-gray-500">
               暂无规格要求，点击"新增规格要求"开始添加
-            </div> :
+          </div> :
 
           <div className="space-y-4">
               {requirements.map((req) =>
@@ -235,14 +235,14 @@ export default function TechnicalSpecManagement() {
                     <span className="ml-4">
                               <span className="font-medium">型号:</span>{" "}
                               {req.model}
-                            </span>
+                    </span>
                     }
-                        </p>
+                  </p>
                   }
                       {req.remark &&
                   <p className="text-sm text-gray-500 mt-2">
                           {req.remark}
-                        </p>
+                  </p>
                   }
                     </div>
                     <div className="flex items-center gap-2">
@@ -262,9 +262,9 @@ export default function TechnicalSpecManagement() {
                       </Button>
                     </div>
                   </div>
-                </div>
-            )}
             </div>
+            )}
+          </div>
           }
         </CardContent>
       </Card>

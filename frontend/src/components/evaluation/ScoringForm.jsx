@@ -21,7 +21,7 @@ export const ScoringForm = ({
 }) => {
   // 获取评分等级
   const getScoreLevel = (score) => {
-    if (!score) return null;
+    if (!score) {return null;}
     const numScore = Number(score);
     return scoringGuidelines.find((g) => {
       const [min, max] = g.range.split("-").map(Number);

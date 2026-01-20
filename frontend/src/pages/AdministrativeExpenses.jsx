@@ -165,7 +165,7 @@ export default function AdministrativeExpenses() {
               <option value="quarter">本季度</option>
               <option value="year">本年</option>
             </select>
-          </div>
+        </div>
         } />
 
 
@@ -225,14 +225,14 @@ export default function AdministrativeExpenses() {
                       <span className="text-xs text-emerald-400">
                         {Math.abs(expenseStats.trend)}%
                       </span>
-                    </> :
+                  </> :
 
                   <>
                       <TrendingUp className="w-3 h-3 text-red-400" />
                       <span className="text-xs text-red-400">
                         +{expenseStats.trend}%
                       </span>
-                    </>
+                  </>
                   }
                   <span className="text-xs text-slate-500 ml-1">vs 上月</span>
                 </div>
@@ -517,7 +517,7 @@ export default function AdministrativeExpenses() {
                           </div>
                         </div>
                       </div>
-                    </div>
+                </div>
                 )}
               </div>
             </CardContent>

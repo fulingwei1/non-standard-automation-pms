@@ -592,10 +592,10 @@ export function getInvoiceStatus(status) {
  * 获取账龄期间配置
  */
 export function getAgingPeriod(daysOverdue) {
-  if (daysOverdue <= 0) return AGING_PERIODS.CURRENT;
-  if (daysOverdue <= 30) return AGING_PERIODS.DAYS_1_30;
-  if (daysOverdue <= 60) return AGING_PERIODS.DAYS_31_60;
-  if (daysOverdue <= 90) return AGING_PERIODS.DAYS_61_90;
+  if (daysOverdue <= 0) {return AGING_PERIODS.CURRENT;}
+  if (daysOverdue <= 30) {return AGING_PERIODS.DAYS_1_30;}
+  if (daysOverdue <= 60) {return AGING_PERIODS.DAYS_31_60;}
+  if (daysOverdue <= 90) {return AGING_PERIODS.DAYS_61_90;}
   return AGING_PERIODS.DAYS_OVER_90;
 }
 
@@ -624,7 +624,7 @@ export function getCreditRating(rating) {
  * 计算账龄
  */
 export function calculateAging(dueDate) {
-  if (!dueDate) return 0;
+  if (!dueDate) {return 0;}
   const today = new Date();
   const due = new Date(dueDate);
   const diffTime = today - due;
@@ -635,7 +635,7 @@ export function calculateAging(dueDate) {
  * 计算DSO（应收账款周转天数）
  */
 export function calculateDSO(receivables, monthlyRevenue) {
-  if (!monthlyRevenue || monthlyRevenue === 0) return 0;
+  if (!monthlyRevenue || monthlyRevenue === 0) {return 0;}
   return Math.round(receivables / monthlyRevenue * 30);
 }
 
@@ -643,7 +643,7 @@ export function calculateDSO(receivables, monthlyRevenue) {
  * 计算回款率
  */
 export function calculateCollectionRate(collectedAmount, totalAmount) {
-  if (!totalAmount || totalAmount === 0) return 0;
+  if (!totalAmount || totalAmount === 0) {return 0;}
   return Math.round(collectedAmount / totalAmount * 100);
 }
 
@@ -651,7 +651,7 @@ export function calculateCollectionRate(collectedAmount, totalAmount) {
  * 计算逾期利息
  */
 export function calculateOverdueInterest(amount, daysOverdue, interestRate = 0.05) {
-  if (daysOverdue <= 0) return 0;
+  if (daysOverdue <= 0) {return 0;}
   const dailyRate = interestRate / 365;
   return amount * daysOverdue * dailyRate;
 }
@@ -702,7 +702,7 @@ export function getCollectionRecommendation(overdueDays, amount, creditRating) {
  * 格式化金额
  */
 export function formatCurrency(amount, currency = '¥') {
-  if (!amount && amount !== 0) return '-';
+  if (!amount && amount !== 0) {return '-';}
 
   // 转换为元（如果是分为单位）
   const yuan = amount >= 1000 ? amount / 10000 : amount;
@@ -715,7 +715,7 @@ export function formatCurrency(amount, currency = '¥') {
  * 格式化百分比
  */
 export function formatPercentage(value, decimals = 1) {
-  if (!value && value !== 0) return '-';
+  if (!value && value !== 0) {return '-';}
   return `${value.toFixed(decimals)}%`;
 }
 

@@ -158,7 +158,7 @@ export default function WorkerWorkstation() {
 
   // 加载我的工单
   const fetchMyWorkOrders = useCallback(async () => {
-    if (!workerId) return;
+    if (!workerId) {return;}
 
     try {
       setLoading(true);
@@ -177,7 +177,7 @@ export default function WorkerWorkstation() {
 
   // 加载我的报工记录
   const fetchMyReports = useCallback(async () => {
-    if (!workerId) return;
+    if (!workerId) {return;}
 
     try {
       const res = await productionApi.workReports.my({
@@ -201,7 +201,7 @@ export default function WorkerWorkstation() {
 
   // 开工报工
   const handleStartWork = async () => {
-    if (!selectedOrder || submitting) return;
+    if (!selectedOrder || submitting) {return;}
 
     const errors = validateReportData('START', startData, selectedOrder);
     if (errors.length > 0) {
@@ -238,7 +238,7 @@ export default function WorkerWorkstation() {
 
   // 进度报工
   const handleProgressReport = async () => {
-    if (!selectedOrder || submitting) return;
+    if (!selectedOrder || submitting) {return;}
 
     const errors = validateReportData('PROGRESS', progressData, selectedOrder);
     if (errors.length > 0) {
@@ -275,7 +275,7 @@ export default function WorkerWorkstation() {
 
   // 完工报工
   const handleCompleteWork = async () => {
-    if (!selectedOrder || submitting) return;
+    if (!selectedOrder || submitting) {return;}
 
     const errors = validateReportData('COMPLETE', completeData, selectedOrder);
     if (errors.length > 0) {
@@ -326,7 +326,7 @@ export default function WorkerWorkstation() {
 
   // 快捷数量选择
   const handleQuickQuantity = (type, value) => {
-    if (!selectedOrder) return;
+    if (!selectedOrder) {return;}
     const planQty = selectedOrder.plan_qty || 0;
 
     if (type === "completed") {
@@ -402,7 +402,7 @@ export default function WorkerWorkstation() {
   // 快速操作处理
   const handleQuickAction = (action) => {
     const order = myWorkOrders.find((o) => o.id === action.orderId);
-    if (!order) return;
+    if (!order) {return;}
 
     setSelectedOrder(order);
 
@@ -518,7 +518,7 @@ export default function WorkerWorkstation() {
                       {Object.entries(WORK_ORDER_STATUS).map(([key, config]) =>
                       <SelectItem key={key} value={key}>
                           {config.label}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -576,7 +576,7 @@ export default function WorkerWorkstation() {
                               onClick={() => handleQuickAction(action)}>
 
                                 <action.icon className="h-4 w-4" />
-                              </Button>
+                            </Button>
                             )}
                           </div>
                         </TableCell>
@@ -588,7 +588,7 @@ export default function WorkerWorkstation() {
               {filteredWorkOrders.length === 0 &&
               <div className="text-center py-8 text-gray-500">
                   暂无工单数据
-                </div>
+              </div>
               }
             </CardContent>
           </Card>
@@ -643,7 +643,7 @@ export default function WorkerWorkstation() {
               {myReports.length === 0 &&
               <div className="text-center py-8 text-gray-500">
                   暂无报工记录
-                </div>
+              </div>
               }
             </CardContent>
           </Card>
@@ -660,7 +660,7 @@ export default function WorkerWorkstation() {
             {selectedOrder &&
             <div className="text-sm text-gray-600">
                 工单号：{selectedOrder.order_number}
-              </div>
+            </div>
             }
             <div>
               <label className="text-sm font-medium">开工说明</label>
@@ -719,7 +719,7 @@ export default function WorkerWorkstation() {
             {selectedOrder &&
             <div className="text-sm text-gray-600">
                 工单号：{selectedOrder.order_number}
-              </div>
+            </div>
             }
             <div>
               <label className="text-sm font-medium">进度百分比</label>
@@ -784,7 +784,7 @@ export default function WorkerWorkstation() {
             {selectedOrder &&
             <div className="text-sm text-gray-600">
                 工单号：{selectedOrder.order_number} | 计划数量：{selectedOrder.plan_qty}
-              </div>
+            </div>
             }
             
             <div className="grid grid-cols-2 gap-4">
@@ -808,7 +808,7 @@ export default function WorkerWorkstation() {
                       onClick={() => handleQuickQuantity("completed", option.value)}>
 
                         {option.label}
-                      </Button>
+                    </Button>
                     )}
                     <Button
                       size="sm"
@@ -901,9 +901,9 @@ export default function WorkerWorkstation() {
 
                         <X className="h-3 w-3" />
                       </Button>
-                    </div>
-                )}
                 </div>
+                )}
+              </div>
               }
             </div>
           </div>

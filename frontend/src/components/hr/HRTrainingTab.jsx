@@ -33,7 +33,8 @@ import {
   CardTitle,
   Button,
   Badge,
-  Progress
+  Progress,
+  toast
 } from '../ui';
 import { cn } from '../../lib/utils';
 import { fadeIn } from '../../lib/animations';
@@ -280,7 +281,7 @@ const HRTrainingTab = ({
               <Button
                 variant="outline"
                 className="justify-start gap-2 h-auto py-3 hover:bg-amber-500/10 hover:border-amber-500/30"
-                onClick={() => {/* TODO: 培训分析 */}}
+                onClick={() => toast.info("培训分析功能待接入")}
               >
                 <BarChart3 className="w-4 h-4 text-amber-400" />
                 <span>培训分析</span>

@@ -51,6 +51,21 @@ export default function DelayReasonsReport() {
     null
   );
   const [topN, setTopN] = useState(10);
+  const [projects, setProjects] = useState([]);
+
+  useEffect(() => {
+    const loadProjects = async () => {
+      try {
+        const res = await projectApi.list({ page: 1, page_size: 200 });
+        const items = res.data?.items || res.data || [];
+        setProjects(Array.isArray(items) ? items : []);
+      } catch (error) {
+        console.warn("Failed to load projects:", error);
+        setProjects([]);
+      }
+    };
+    loadProjects();
+  }, []);
 
   useEffect(() => {
     if (selectedProjectId) {
@@ -60,7 +75,7 @@ export default function DelayReasonsReport() {
   }, [selectedProjectId, topN]);
 
   const fetchProject = async () => {
-    if (!selectedProjectId) return;
+    if (!selectedProjectId) {return;}
     try {
       const res = await projectApi.get(selectedProjectId);
       setProject(res.data || res);
@@ -105,7 +120,7 @@ export default function DelayReasonsReport() {
 
               <ArrowLeft className="w-4 h-4 mr-2" />
               返回项目
-            </Button>
+          </Button>
           }
           <PageHeader
             title={
@@ -139,7 +154,11 @@ export default function DelayReasonsReport() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部项目</SelectItem>
-                  {/* TODO: 添加项目列表选择 */}
+                  {projects.map((p) => (
+                    <SelectItem key={p.id} value={p.id?.toString()}>
+                      {p.project_name || p.project_code || `项目#${p.id}`}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -177,7 +196,7 @@ export default function DelayReasonsReport() {
               <AlertTriangle className="w-12 h-12 text-red-500" />
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* Delay Reasons List */}
@@ -216,11 +235,11 @@ export default function DelayReasonsReport() {
                     </div>
                   </div>
                   <Progress value={item.percentage} className="h-2" />
-                </div>
+            </div>
             )}
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {reportData?.reasons && reportData.reasons.length === 0 &&
@@ -232,7 +251,7 @@ export default function DelayReasonsReport() {
             "暂无延期原因数据"}
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* Insights */}
@@ -255,7 +274,7 @@ export default function DelayReasonsReport() {
                     {reportData.reasons[0].count} 个任务，占比{" "}
                     {reportData.reasons[0].percentage.toFixed(1)}%。
                   </div>
-                </div>
+            </div>
             }
               {reportData.reasons.length > 1 &&
             <div className="p-3 bg-slate-50 rounded-lg">
@@ -274,11 +293,11 @@ export default function DelayReasonsReport() {
                 toFixed(1)}
                     %。
                   </div>
-                </div>
+            </div>
             }
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
     </div>);
 

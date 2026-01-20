@@ -49,13 +49,12 @@ import { adminApi } from "../services/api";
 export default function AdministrativeApprovals() {
   const [_loading, setLoading] = useState(true);
   const [approvals, setApprovals] = useState([]);
-  const [_approvedList, setApprovedList] = useState([]);
-  const [_rejectedList, setRejectedList] = useState([]);
+  const [approvedList, setApprovedList] = useState([]);
+  const [rejectedList, setRejectedList] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
 
-  // Load data from API with fallback to mock data
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -65,7 +64,7 @@ export default function AdministrativeApprovals() {
           setApprovals(res.data.items);
         }
       } catch (_err) {
-        console.log("Admin approvals API unavailable, using mock data");
+        console.error("Failed to fetch pending approvals");
       }
 
       try {
@@ -76,7 +75,7 @@ export default function AdministrativeApprovals() {
           setApprovedList(approvedRes.data.items);
         }
       } catch (_err) {
-        console.log("Approved approvals API unavailable");
+        console.error("Failed to fetch approved list");
       }
 
       try {
@@ -87,7 +86,7 @@ export default function AdministrativeApprovals() {
           setRejectedList(rejectedRes.data.items);
         }
       } catch (_err) {
-        console.log("Rejected approvals API unavailable");
+        console.error("Failed to fetch rejected list");
       }
 
       setLoading(false);
@@ -122,9 +121,7 @@ export default function AdministrativeApprovals() {
       await adminApi.approvals.approve(id, { comment: "同意" });
       setApprovals((prev) => prev.filter((a) => a.id !== id));
     } catch (_err) {
-      console.log("Approval API unavailable");
-      // Simulate approval in demo mode
-      setApprovals((prev) => prev.filter((a) => a.id !== id));
+      console.error("Failed to approve request");
     }
   };
 
@@ -133,9 +130,7 @@ export default function AdministrativeApprovals() {
       await adminApi.approvals.reject(id, { reason: "不符合要求" });
       setApprovals((prev) => prev.filter((a) => a.id !== id));
     } catch (_err) {
-      console.log("Rejection API unavailable");
-      // Simulate rejection in demo mode
-      setApprovals((prev) => prev.filter((a) => a.id !== id));
+      console.error("Failed to reject request");
     }
   };
 
@@ -175,7 +170,7 @@ export default function AdministrativeApprovals() {
         <Button variant="outline">
             <Download className="w-4 h-4 mr-2" />
             导出
-          </Button>
+        </Button>
         } />
 
 
@@ -390,7 +385,7 @@ export default function AdministrativeApprovals() {
                           {approval.priority === "high" &&
                           <Badge className="text-xs bg-red-500/20 text-red-400 border-red-500/30">
                               紧急
-                            </Badge>
+                          </Badge>
                           }
                         </div>
                         <div className="text-sm text-slate-400 mb-2">
@@ -414,7 +409,7 @@ export default function AdministrativeApprovals() {
                           {approval.amount &&
                           <span className="font-medium text-amber-400">
                               {formatCurrency(approval.amount)}
-                            </span>
+                          </span>
                           }
                         </div>
                       </div>
@@ -444,37 +439,277 @@ export default function AdministrativeApprovals() {
           </div>
         </TabsContent>
 
-        <TabsContent value="approved">
-          <Card>
-            <CardHeader>
-              <CardTitle>已批准</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-slate-400">TODO: 已批准列表</p>
-            </CardContent>
-          </Card>
+        <TabsContent value="approved" className="space-y-4">
+          {approvedList.length === 0 ? (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <CheckCircle2 className="h-12 w-12 text-slate-600 mx-auto mb-4" />
+                <p className="text-slate-400">暂无已批准记录</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {approvedList.map((approval) => {
+                const TypeIcon = getTypeIcon(approval.type);
+                return (
+                  <Card key={approval.id}>
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <TypeIcon className="h-5 w-5 text-slate-400" />
+                            <h3 className="text-lg font-semibold text-white">
+                              {approval.title}
+                            </h3>
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                approval.type === "office_supplies" &&
+                                "bg-blue-500/20 text-blue-400 border-blue-500/30",
+                                approval.type === "vehicle" &&
+                                "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
+                                approval.type === "asset" &&
+                                "bg-purple-500/20 text-purple-400 border-purple-500/30",
+                                approval.type === "meeting" &&
+                                "bg-green-500/20 text-green-400 border-green-500/30",
+                                approval.type === "leave" &&
+                                "bg-pink-500/20 text-pink-400 border-pink-500/30"
+                              )}>
+                              {getTypeLabel(approval.type)}
+                            </Badge>
+                            <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+                              <CheckCircle2 className="w-3 h-3 mr-1" />
+                              已批准
+                            </Badge>
+                          </div>
+                          <div className="text-sm text-slate-400 mb-2">
+                            {approval.department} · {approval.applicant}
+                          </div>
+                          <div className="text-sm text-slate-500 mb-3">
+                            {approval.items && `物品: ${approval.items.join("、")}`}
+                            {approval.purpose && `用途: ${approval.purpose}`}
+                            {approval.item && `资产: ${approval.item}`}
+                          </div>
+                          <div className="flex items-center gap-4 text-xs text-slate-500">
+                            <span>提交: {approval.submitTime}</span>
+                            {approval.approvedTime && (
+                              <span className="text-green-400">
+                                批准: {approval.approvedTime}
+                              </span>
+                            )}
+                            {approval.approver && (
+                              <span>审批人: {approval.approver}</span>
+                            )}
+                            {approval.amount && (
+                              <span className="font-medium text-amber-400">
+                                {formatCurrency(approval.amount)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <Button variant="outline" size="sm">
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </TabsContent>
 
-        <TabsContent value="rejected">
-          <Card>
-            <CardHeader>
-              <CardTitle>已拒绝</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-slate-400">TODO: 已拒绝列表</p>
-            </CardContent>
-          </Card>
+        <TabsContent value="rejected" className="space-y-4">
+          {rejectedList.length === 0 ? (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <XCircle className="h-12 w-12 text-slate-600 mx-auto mb-4" />
+                <p className="text-slate-400">暂无已拒绝记录</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {rejectedList.map((approval) => {
+                const TypeIcon = getTypeIcon(approval.type);
+                return (
+                  <Card key={approval.id}>
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <TypeIcon className="h-5 w-5 text-slate-400" />
+                            <h3 className="text-lg font-semibold text-white">
+                              {approval.title}
+                            </h3>
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                approval.type === "office_supplies" &&
+                                "bg-blue-500/20 text-blue-400 border-blue-500/30",
+                                approval.type === "vehicle" &&
+                                "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
+                                approval.type === "asset" &&
+                                "bg-purple-500/20 text-purple-400 border-purple-500/30",
+                                approval.type === "meeting" &&
+                                "bg-green-500/20 text-green-400 border-green-500/30",
+                                approval.type === "leave" &&
+                                "bg-pink-500/20 text-pink-400 border-pink-500/30"
+                              )}>
+                              {getTypeLabel(approval.type)}
+                            </Badge>
+                            <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
+                              <XCircle className="w-3 h-3 mr-1" />
+                              已拒绝
+                            </Badge>
+                          </div>
+                          <div className="text-sm text-slate-400 mb-2">
+                            {approval.department} · {approval.applicant}
+                          </div>
+                          <div className="text-sm text-slate-500 mb-3">
+                            {approval.items && `物品: ${approval.items.join("、")}`}
+                            {approval.purpose && `用途: ${approval.purpose}`}
+                            {approval.item && `资产: ${approval.item}`}
+                          </div>
+                          {approval.rejectReason && (
+                            <div className="text-sm text-red-400/80 mb-3 p-2 bg-red-500/10 rounded">
+                              拒绝原因: {approval.rejectReason}
+                            </div>
+                          )}
+                          <div className="flex items-center gap-4 text-xs text-slate-500">
+                            <span>提交: {approval.submitTime}</span>
+                            {approval.rejectedTime && (
+                              <span className="text-red-400">
+                                拒绝: {approval.rejectedTime}
+                              </span>
+                            )}
+                            {approval.approver && (
+                              <span>审批人: {approval.approver}</span>
+                            )}
+                            {approval.amount && (
+                              <span className="font-medium text-amber-400">
+                                {formatCurrency(approval.amount)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <Button variant="outline" size="sm">
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </TabsContent>
 
-        <TabsContent value="history">
-          <Card>
-            <CardHeader>
-              <CardTitle>审批历史</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-slate-400">TODO: 审批历史列表</p>
-            </CardContent>
-          </Card>
+        <TabsContent value="history" className="space-y-4">
+          {approvedList.length === 0 && rejectedList.length === 0 ? (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <Clock className="h-12 w-12 text-slate-600 mx-auto mb-4" />
+                <p className="text-slate-400">暂无审批历史记录</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {/* Combine and sort by time - approved items marked with status */}
+              {[
+                ...approvedList.map(item => ({ ...item, status: 'approved' })),
+                ...rejectedList.map(item => ({ ...item, status: 'rejected' }))
+              ]
+                .sort((a, b) => {
+                  const timeA = a.approvedTime || a.rejectedTime || a.submitTime || '';
+                  const timeB = b.approvedTime || b.rejectedTime || b.submitTime || '';
+                  return timeB.localeCompare(timeA);
+                })
+                .map((approval) => {
+                  const TypeIcon = getTypeIcon(approval.type);
+                  const isApproved = approval.status === 'approved';
+                  return (
+                    <Card key={`${approval.status}-${approval.id}`}>
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <TypeIcon className="h-5 w-5 text-slate-400" />
+                              <h3 className="text-lg font-semibold text-white">
+                                {approval.title}
+                              </h3>
+                              <Badge
+                                variant="outline"
+                                className={cn(
+                                  approval.type === "office_supplies" &&
+                                  "bg-blue-500/20 text-blue-400 border-blue-500/30",
+                                  approval.type === "vehicle" &&
+                                  "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
+                                  approval.type === "asset" &&
+                                  "bg-purple-500/20 text-purple-400 border-purple-500/30",
+                                  approval.type === "meeting" &&
+                                  "bg-green-500/20 text-green-400 border-green-500/30",
+                                  approval.type === "leave" &&
+                                  "bg-pink-500/20 text-pink-400 border-pink-500/30"
+                                )}>
+                                {getTypeLabel(approval.type)}
+                              </Badge>
+                              {isApproved ? (
+                                <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+                                  <CheckCircle2 className="w-3 h-3 mr-1" />
+                                  已批准
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
+                                  <XCircle className="w-3 h-3 mr-1" />
+                                  已拒绝
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="text-sm text-slate-400 mb-2">
+                              {approval.department} · {approval.applicant}
+                            </div>
+                            <div className="text-sm text-slate-500 mb-3">
+                              {approval.items && `物品: ${approval.items.join("、")}`}
+                              {approval.purpose && `用途: ${approval.purpose}`}
+                              {approval.item && `资产: ${approval.item}`}
+                            </div>
+                            {!isApproved && approval.rejectReason && (
+                              <div className="text-sm text-red-400/80 mb-3 p-2 bg-red-500/10 rounded">
+                                拒绝原因: {approval.rejectReason}
+                              </div>
+                            )}
+                            <div className="flex items-center gap-4 text-xs text-slate-500">
+                              <span>提交: {approval.submitTime}</span>
+                              {isApproved && approval.approvedTime && (
+                                <span className="text-green-400">
+                                  批准: {approval.approvedTime}
+                                </span>
+                              )}
+                              {!isApproved && approval.rejectedTime && (
+                                <span className="text-red-400">
+                                  拒绝: {approval.rejectedTime}
+                                </span>
+                              )}
+                              {approval.approver && (
+                                <span>审批人: {approval.approver}</span>
+                              )}
+                              {approval.amount && (
+                                <span className="font-medium text-amber-400">
+                                  {formatCurrency(approval.amount)}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <Button variant="outline" size="sm">
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </motion.div>);

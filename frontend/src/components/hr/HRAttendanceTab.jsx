@@ -28,7 +28,7 @@ const AttendanceStatCard = ({ title, value, icon: Icon, progress }) =>
     <Progress value={progress} className="h-2" />
     }
     </CardContent>
-  </Card>;
+</Card>;
 
 
 /**
@@ -54,7 +54,7 @@ const AttendanceTrendItem = ({ date, attendanceRate, lateCount, leaveCount }) =>
       </div>
     </div>
     <Progress value={attendanceRate} className="h-2" />
-  </div>;
+</div>;
 
 
 /**
@@ -137,7 +137,7 @@ export const HRAttendanceTab = ({
 
             <div className="text-center py-8 text-slate-400">
                 暂无考勤趋势数据
-              </div>
+            </div>
             }
           </div>
         </CardContent>

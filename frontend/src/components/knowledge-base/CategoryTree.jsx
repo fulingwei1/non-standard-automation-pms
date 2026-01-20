@@ -68,7 +68,7 @@ export default function CategoryTree({
 
   // Filter categories based on search
   const filteredCategories = categoryTree.filter((category) => {
-    if (!searchTerm) return true;
+    if (!searchTerm) {return true;}
 
     const searchLower = searchTerm.toLowerCase();
     return (
@@ -116,7 +116,7 @@ export default function CategoryTree({
                 className="flex-shrink-0">
 
                   <ChevronRight className="w-4 h-4 text-slate-500" />
-                </motion.div>
+              </motion.div>
               }
 
               {/* Category Icon */}
@@ -139,7 +139,7 @@ export default function CategoryTree({
                 {showStats &&
                 <Badge variant="secondary" className="text-xs ml-2">
                     {Math.floor(Math.random() * 50) + 10}篇
-                  </Badge>
+                </Badge>
                 }
               </div>
             </div>
@@ -169,9 +169,9 @@ export default function CategoryTree({
                 }}>
 
                     <ChevronDown className="w-3 h-3" />
-                  </Button>
+              </Button>
               }
-              </div>
+            </div>
             }
           </div>
 
@@ -179,7 +179,7 @@ export default function CategoryTree({
           {!compact && category.description &&
           <p className="text-xs text-slate-400 mt-1 ml-8">
               {category.description}
-            </p>
+          </p>
           }
         </motion.div>
 
@@ -200,7 +200,7 @@ export default function CategoryTree({
               level={level + 1} />
 
             )}
-            </motion.div>
+          </motion.div>
           }
         </AnimatePresence>
       </div>);
@@ -226,7 +226,7 @@ export default function CategoryTree({
             className="w-full pl-10 pr-4 py-2 bg-surface-50 border border-white/10 rounded-lg text-sm text-white placeholder-slate-400 focus:outline-none focus:border-primary/30 focus:ring-1 focus:ring-primary/20" />
 
           </div>
-        </div>
+      </div>
       }
 
       {/* Categories List */}
@@ -253,10 +253,10 @@ export default function CategoryTree({
 
                 {formatCategory(category)}
                 <span className="ml-1 text-slate-500">({count})</span>
-              </Badge>
+          </Badge>
           )}
           </div>
-        </div>
+      </div>
       }
 
       {/* Add Category Button */}
@@ -274,7 +274,7 @@ export default function CategoryTree({
             <Plus className="w-4 h-4 mr-2" />
             添加分类
           </Button>
-        </div>}
+      </div>}
     </div>);
 
 }
@@ -303,7 +303,7 @@ export function CategorySelector({
   null;
 
   const filteredCategories = categoryTree.filter((category) => {
-    if (!searchTerm) return true;
+    if (!searchTerm) {return true;}
     const searchLower = searchTerm.toLowerCase();
     return (
       category.label.toLowerCase().includes(searchLower) ||
@@ -334,7 +334,7 @@ export function CategorySelector({
               {selectedSubcategory &&
             <span className="text-slate-400">/ {selectedSubcategory}</span>
             }
-            </> :
+          </> :
 
           <span className="text-slate-400">{placeholder}</span>
           }
@@ -412,14 +412,14 @@ export function CategorySelector({
                             {subcategory.icon}
                           </div>
                           <span className="text-sm text-slate-300">{subcategory.label}</span>
-                        </div>
-                )}
-                    </div>
-              }
                 </div>
+                )}
+              </div>
+              }
+            </div>
             )}
             </div>
-          </motion.div>
+        </motion.div>
         }
       </AnimatePresence>
     </div>);
@@ -442,7 +442,7 @@ export function CategoryFilterPills({
     onCategorySelect?.(category, subcategory);
   };
 
-  if (!selectedCategory) return null;
+  if (!selectedCategory) {return null;}
 
   return (
     <div className="flex flex-wrap gap-2">

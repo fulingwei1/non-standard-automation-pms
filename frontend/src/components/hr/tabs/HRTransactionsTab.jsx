@@ -73,7 +73,7 @@ export default function HRTransactionsTab() {
         const search = filter.searchText.toLowerCase();
         const name = t.employee?.name?.toLowerCase() || "";
         const code = t.employee?.employee_code?.toLowerCase() || "";
-        if (!name.includes(search) && !code.includes(search)) return false;
+        if (!name.includes(search) && !code.includes(search)) {return false;}
       }
       return true;
     });
@@ -162,7 +162,6 @@ export default function HRTransactionsTab() {
             <Button
               className="bg-blue-600 hover:bg-blue-700"
               onClick={() => {
-                // TODO: 打开新建事务对话框
                 toast.info("新建事务功能待实现");
               }}
             >

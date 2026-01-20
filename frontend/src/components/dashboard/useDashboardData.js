@@ -39,7 +39,7 @@ export function useDashboardData({
 
   // 从缓存读取数据
   const getCachedData = useCallback(() => {
-    if (!cacheKey) return null;
+    if (!cacheKey) {return null;}
     try {
       const cached = localStorage.getItem(cacheKey);
       if (cached) {
@@ -60,7 +60,7 @@ export function useDashboardData({
   // 保存数据到缓存
   const setCachedData = useCallback(
     (dataToCache) => {
-      if (!cacheKey) return;
+      if (!cacheKey) {return;}
       try {
         localStorage.setItem(
           cacheKey,
@@ -79,7 +79,7 @@ export function useDashboardData({
   // 获取数据
   const fetchData = useCallback(
     async (force = false) => {
-      if (!enabled) return;
+      if (!enabled) {return;}
 
       // 如果不是强制刷新，先尝试从缓存读取
       if (!force && cacheKey) {

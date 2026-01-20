@@ -8,6 +8,7 @@ export { default as ResponseRiskDialog } from "./ResponseRiskDialog";
 export { default as StatusRiskDialog } from "./StatusRiskDialog";
 export { default as CloseRiskDialog } from "./CloseRiskDialog";
 export { default as RiskDetailDialog } from "./RiskDetailDialog";
+export { RiskList } from "./RiskList";
 export {
   getRiskLevelBadge,
   getStatusBadge,

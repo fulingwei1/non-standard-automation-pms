@@ -26,7 +26,7 @@ const LeadOverview = ({ data, loading, onNavigate }) => {
   const [_selectedPeriod, _setSelectedPeriod] = useState('month');
 
   const overviewStats = useMemo(() => {
-    if (!data?.leads) return {};
+    if (!data?.leads) {return {};}
 
     const totalLeads = data.leads.length;
     const qualifiedLeads = data.leads.filter((l) => l.qualification === 'qualified').length;
@@ -49,7 +49,7 @@ const LeadOverview = ({ data, loading, onNavigate }) => {
   }, [data]);
 
   const sourceDistribution = useMemo(() => {
-    if (!data?.leads) return {};
+    if (!data?.leads) {return {};}
 
     const distribution = {};
     LEAD_SOURCES.forEach((source) => {
@@ -57,7 +57,7 @@ const LeadOverview = ({ data, loading, onNavigate }) => {
     });
 
     data.leads.forEach((lead) => {
-      if (!lead.source) return;
+      if (!lead.source) {return;}
       if (distribution[lead.source] !== undefined) {
         distribution[lead.source] += 1;
       }
@@ -67,7 +67,7 @@ const LeadOverview = ({ data, loading, onNavigate }) => {
   }, [data]);
 
   const qualificationDistribution = useMemo(() => {
-    if (!data?.leads) return {};
+    if (!data?.leads) {return {};}
 
     const distribution = {};
     Object.keys(QUALIFICATION_LEVELS).forEach((key) => {
@@ -84,7 +84,7 @@ const LeadOverview = ({ data, loading, onNavigate }) => {
   }, [data]);
 
   const hotLeads = useMemo(() => {
-    if (!data?.leads) return [];
+    if (!data?.leads) {return [];}
 
     return data.leads.
     filter((lead) => lead.qualification === 'hot' && lead.score >= 80).
@@ -93,7 +93,7 @@ const LeadOverview = ({ data, loading, onNavigate }) => {
   }, [data]);
 
   const upcomingFollowUps = useMemo(() => {
-    if (!data?.followUps) return [];
+    if (!data?.followUps) {return [];}
 
     const today = new Date();
     return data.followUps.
@@ -254,7 +254,7 @@ const LeadOverview = ({ data, loading, onNavigate }) => {
             extra={
             <Button type="link" onClick={() => onNavigate && onNavigate('hot-leads')}>
                 查看更多
-              </Button>
+            </Button>
             }>
 
             <List
@@ -269,7 +269,7 @@ const LeadOverview = ({ data, loading, onNavigate }) => {
                         <Tag color={getScoreColor(lead.score)} style={{ marginLeft: 8 }}>
                           {lead.score}分
                         </Tag>
-                      </div>
+                  </div>
                   }
                   description={
                   <div>
@@ -277,10 +277,10 @@ const LeadOverview = ({ data, loading, onNavigate }) => {
                         <div style={{ fontSize: 11, color: '#999', marginTop: 4 }}>
                           <Phone size={10} /> {lead.phone}
                         </div>
-                      </div>
+                  </div>
                   } />
 
-                </List.Item>
+              </List.Item>
               }
               size="small" />
 
@@ -295,7 +295,7 @@ const LeadOverview = ({ data, loading, onNavigate }) => {
             extra={
             <Button type="link" onClick={() => onNavigate && onNavigate('follow-ups')}>
                 查看更多
-              </Button>
+            </Button>
             }>
 
             <Timeline>
@@ -314,7 +314,7 @@ const LeadOverview = ({ data, loading, onNavigate }) => {
                       <Calendar size={10} /> {followUp.dueDate}
                     </div>
                   </div>
-                </Timeline.Item>
+              </Timeline.Item>
               )}
             </Timeline>
           </Card>
@@ -335,10 +335,10 @@ const LeadOverview = ({ data, loading, onNavigate }) => {
             onClick={() => onNavigate && onNavigate('overdue')}>
 
                 立即处理
-              </Button>
+          </Button>
           } />
 
-        </Card>
+      </Card>
       }
     </div>);
 

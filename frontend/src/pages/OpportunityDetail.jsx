@@ -161,7 +161,7 @@ export default function OpportunityDetail() {
           <Button onClick={() => setShowGateDialog(true)}>
               <CheckCircle2 className="w-4 h-4 mr-2" />
               提交阶段门
-            </Button>
+          </Button>
           }
         </div>
       </div>
@@ -208,9 +208,9 @@ export default function OpportunityDetail() {
                       {isCurrent &&
                     <Badge className="mt-1" variant="outline">
                           当前
-                        </Badge>
+                    </Badge>
                     }
-                    </div>);
+                  </div>);
 
               })}
             </div>
@@ -282,25 +282,25 @@ export default function OpportunityDetail() {
               <div>
                   <div className="text-sm text-slate-500 mb-1">预算范围</div>
                   <div className="font-medium">{opportunity.budget_range}</div>
-                </div>
+              </div>
               }
               {opportunity.decision_chain &&
               <div>
                   <div className="text-sm text-slate-500 mb-1">决策链</div>
                   <div>{opportunity.decision_chain}</div>
-                </div>
+              </div>
               }
               {opportunity.delivery_window &&
               <div>
                   <div className="text-sm text-slate-500 mb-1">交付窗口</div>
                   <div>{opportunity.delivery_window}</div>
-                </div>
+              </div>
               }
               {opportunity.acceptance_basis &&
               <div>
                   <div className="text-sm text-slate-500 mb-1">验收标准</div>
                   <div>{opportunity.acceptance_basis}</div>
-                </div>
+              </div>
               }
               {opportunity.score !== null &&
               opportunity.score !== undefined &&
@@ -315,7 +315,7 @@ export default function OpportunityDetail() {
                     className="flex-1 h-2" />
 
                     </div>
-                  </div>
+              </div>
               }
               {opportunity.gate_passed_at &&
               <div>
@@ -323,7 +323,7 @@ export default function OpportunityDetail() {
                     阶段门通过时间
                   </div>
                   <div>{formatDate(opportunity.gate_passed_at)}</div>
-                </div>
+              </div>
               }
             </div>
           </CardContent>
@@ -341,13 +341,13 @@ export default function OpportunityDetail() {
             <div>
                   <div className="text-sm text-slate-500 mb-1">产品对象</div>
                   <div>{opportunity.requirement.product_object}</div>
-                </div>
+            </div>
             }
               {opportunity.requirement.ct_seconds &&
             <div>
                   <div className="text-sm text-slate-500 mb-1">节拍(秒)</div>
                   <div>{opportunity.requirement.ct_seconds}</div>
-                </div>
+            </div>
             }
               {opportunity.requirement.interface_desc &&
             <div>
@@ -355,23 +355,23 @@ export default function OpportunityDetail() {
                     接口/通信协议
                   </div>
                   <div>{opportunity.requirement.interface_desc}</div>
-                </div>
+            </div>
             }
               {opportunity.requirement.site_constraints &&
             <div>
                   <div className="text-sm text-slate-500 mb-1">现场约束</div>
                   <div>{opportunity.requirement.site_constraints}</div>
-                </div>
+            </div>
             }
               {opportunity.requirement.acceptance_criteria &&
             <div className="md:col-span-4">
                   <div className="text-sm text-slate-500 mb-1">验收依据</div>
                   <div>{opportunity.requirement.acceptance_criteria}</div>
-                </div>
+            </div>
             }
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
       {/* Gate Dialog */}
       <Dialog open={showGateDialog} onOpenChange={setShowGateDialog}>
@@ -433,7 +433,7 @@ export default function OpportunityDetail() {
                       </ul>
                     </div>
                   </div>
-                </div>
+              </div>
               }
               <div>
                 <label className="text-sm font-medium mb-2 block">备注</label>

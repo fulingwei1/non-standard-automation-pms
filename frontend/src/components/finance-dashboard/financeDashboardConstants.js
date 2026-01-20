@@ -437,9 +437,9 @@ export const defaultFinanceData = {
 
 // 工具函数
 export const formatCurrency = (value, _currency = 'CNY') => {
-  if (value === 0) return '¥0';
-  if (value >= 100000000) return `¥${(value / 100000000).toFixed(2)}亿`;
-  if (value >= 10000) return `¥${(value / 10000).toFixed(2)}万`;
+  if (value === 0) {return '¥0';}
+  if (value >= 100000000) {return `¥${(value / 100000000).toFixed(2)}亿`;}
+  if (value >= 10000) {return `¥${(value / 10000).toFixed(2)}万`;}
   return `¥${value.toLocaleString()}`;
 };
 
@@ -448,23 +448,23 @@ export const formatPercentage = (value, decimals = 2) => {
 };
 
 export const getHealthLevel = (score) => {
-  if (score >= 90) return healthLevels.EXCELLENT;
-  if (score >= 75) return healthLevels.GOOD;
-  if (score >= 60) return healthLevels.FAIR;
-  if (score >= 45) return healthLevels.POOR;
+  if (score >= 90) {return healthLevels.EXCELLENT;}
+  if (score >= 75) {return healthLevels.GOOD;}
+  if (score >= 60) {return healthLevels.FAIR;}
+  if (score >= 45) {return healthLevels.POOR;}
   return healthLevels.CRITICAL;
 };
 
 export const getBudgetStatus = (actual, budget) => {
   const ratio = budget > 0 ? actual / budget : 0;
-  if (ratio >= 1.1) return budgetStatuses.EXCEEDED;
-  if (ratio >= 0.9) return budgetStatuses.WARNING;
-  if (ratio < 0.7) return budgetStatuses.UNDERSPENT;
+  if (ratio >= 1.1) {return budgetStatuses.EXCEEDED;}
+  if (ratio >= 0.9) {return budgetStatuses.WARNING;}
+  if (ratio < 0.7) {return budgetStatuses.UNDERSPENT;}
   return budgetStatuses.ON_TRACK;
 };
 
 export const calculateTrend = (current, previous) => {
-  if (previous === 0) return 0;
+  if (previous === 0) {return 0;}
   return (current - previous) / previous * 100;
 };
 

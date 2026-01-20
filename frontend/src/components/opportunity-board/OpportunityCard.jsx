@@ -130,7 +130,7 @@ export const OpportunityCard = ({
 
   // 渲染预计成交时间
   const renderExpectedClose = () => {
-    if (!daysToClose) return null;
+    if (!daysToClose) {return null;}
 
     let timeText = "";
     let timeColor = "";

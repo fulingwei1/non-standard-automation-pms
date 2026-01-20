@@ -28,6 +28,7 @@ from app.models.enums import ApprovalDecision, TaskImportance, TaskPriority, Tas
 from app.models.task_center import (
     TaskApprovalWorkflow,
     TaskCompletionProof,
+    TaskStatusEnum,
     TaskUnified,
 )
 from app.services.progress_aggregation_service import ProgressAggregationService
@@ -296,7 +297,7 @@ class TestUpdateTaskProgress:
     ):
         """进度>0时自动改变状态为IN_PROGRESS"""
         # 确保初始状态为ACCEPTED
-        mock_task.status = TaskStatus.ACCEPTED
+        mock_task.status = TaskStatusEnum.ACCEPTED.value
         db_session.commit()
 
         progress_data = {"progress": 10}
@@ -362,7 +363,7 @@ class TestUpdateTaskProgress:
         self, client: TestClient, auth_headers: dict, mock_task, db_session: Session
     ):
         """已完成或已拒绝的任务不能更新进度"""
-        mock_task.status = TaskStatus.COMPLETED
+        mock_task.status = TaskStatusEnum.COMPLETED.value
         db_session.commit()
 
         progress_data = {"progress": 60}

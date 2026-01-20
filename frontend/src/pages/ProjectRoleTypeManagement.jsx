@@ -356,7 +356,7 @@ export default function ProjectRoleTypeManagement() {
     }
     if (filterActive !== "all") {
       const isActive = filterActive === "active";
-      if (rt.is_active !== isActive) return false;
+      if (rt.is_active !== isActive) {return false;}
     }
     return true;
   }).
@@ -380,7 +380,7 @@ export default function ProjectRoleTypeManagement() {
         <Button onClick={handleCreateClick}>
             <Plus className="h-4 w-4 mr-2" />
             新增角色类型
-          </Button>
+        </Button>
         } />
 
 
@@ -436,7 +436,7 @@ export default function ProjectRoleTypeManagement() {
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
+          </motion.div>
           )}
         </motion.div>
 
@@ -526,7 +526,7 @@ export default function ProjectRoleTypeManagement() {
                             加载中...
                           </div>
                         </TableCell>
-                      </TableRow> :
+                    </TableRow> :
                     filteredRoleTypes.length === 0 ?
                     <TableRow>
                         <TableCell
@@ -535,7 +535,7 @@ export default function ProjectRoleTypeManagement() {
 
                           暂无数据
                         </TableCell>
-                      </TableRow> :
+                    </TableRow> :
 
                     filteredRoleTypes.map((roleType, index) =>
                     <motion.tr
@@ -589,7 +589,7 @@ export default function ProjectRoleTypeManagement() {
                             {roleType.can_have_team ?
                         <div className="flex items-center justify-center">
                                 <Users className="h-4 w-4 text-blue-400" />
-                              </div> :
+                        </div> :
 
                         <span className="text-slate-600">-</span>
                         }
@@ -598,7 +598,7 @@ export default function ProjectRoleTypeManagement() {
                             {roleType.is_required ?
                         <div className="flex items-center justify-center">
                                 <CheckCircle className="h-4 w-4 text-amber-400" />
-                              </div> :
+                        </div> :
 
                         <span className="text-slate-600">-</span>
                         }
@@ -631,7 +631,7 @@ export default function ProjectRoleTypeManagement() {
                               </Button>
                             </div>
                           </TableCell>
-                        </motion.tr>
+                    </motion.tr>
                     )
                     }
                   </AnimatePresence>

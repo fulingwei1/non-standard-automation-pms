@@ -155,7 +155,7 @@ export default function TagManagement() {
 
   // 删除标签
   const handleDelete = async (tag) => {
-    if (!window.confirm(`确定要删除标签"${tag.tag_name}"吗？`)) return;
+    if (!window.confirm(`确定要删除标签"${tag.tag_name}"吗？`)) {return;}
 
     try {
       await staffMatchingApi.deleteTag(tag.id);

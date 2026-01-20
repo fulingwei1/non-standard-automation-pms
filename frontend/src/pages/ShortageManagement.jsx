@@ -310,7 +310,7 @@ export default function ShortageManagement() {
                   </p>
                 </CardContent>
               </Card>
-            </motion.div>
+          </motion.div>
           }
 
           {/* 最近缺料上报 */}
@@ -370,12 +370,12 @@ export default function ShortageManagement() {
                               <Eye className="h-4 w-4" />
                             </Button>
                           </div>
-                        </div>);
+                    </div>);
 
                 })}
                   </div>
                 </CardContent>
-              </Card>
+          </Card>
           }
         </TabsContent>
 
@@ -421,11 +421,11 @@ export default function ShortageManagement() {
               {loading ?
               <div className="text-center py-8 text-muted-foreground">
                   加载中...
-                </div> :
+              </div> :
               reports.length === 0 ?
               <div className="text-center py-8 text-muted-foreground">
                   暂无缺料上报记录
-                </div> :
+              </div> :
 
               <div className="space-y-3">
                   {reports.map((report) => {
@@ -476,10 +476,10 @@ export default function ShortageManagement() {
                           <Eye className="h-4 w-4 mr-2" />
                           查看
                         </Button>
-                      </div>);
+                    </div>);
 
                 })}
-                </div>
+              </div>
               }
               {total > pageSize &&
               <div className="flex items-center justify-between mt-4 pt-4 border-t">
@@ -509,7 +509,7 @@ export default function ShortageManagement() {
                       下一页
                     </Button>
                   </div>
-                </div>
+              </div>
               }
             </CardContent>
           </Card>
@@ -549,11 +549,11 @@ export default function ShortageManagement() {
               {loading ?
               <div className="text-center py-8 text-muted-foreground">
                   加载中...
-                </div> :
+              </div> :
               arrivals.length === 0 ?
               <div className="text-center py-8 text-muted-foreground">
                   暂无到货跟踪记录
-                </div> :
+              </div> :
 
               <div className="space-y-3">
                   {arrivals.map((arrival) =>
@@ -575,7 +575,7 @@ export default function ShortageManagement() {
                         className="bg-red-500/20 text-red-400">
 
                               延迟 {arrival.delay_days} 天
-                            </Badge>
+                      </Badge>
                       }
                           <Badge variant="outline">{arrival.status}</Badge>
                         </div>
@@ -598,9 +598,9 @@ export default function ShortageManagement() {
                         <Eye className="h-4 w-4 mr-2" />
                         查看
                       </Button>
-                    </div>
-                )}
                 </div>
+                )}
+              </div>
               }
             </CardContent>
           </Card>
@@ -625,11 +625,11 @@ export default function ShortageManagement() {
               {loading ?
               <div className="text-center py-8 text-muted-foreground">
                   加载中...
-                </div> :
+              </div> :
               substitutions.length === 0 ?
               <div className="text-center py-8 text-muted-foreground">
                   暂无物料替代申请
-                </div> :
+              </div> :
 
               <div className="space-y-3">
                   {substitutions.map((sub) =>
@@ -662,9 +662,9 @@ export default function ShortageManagement() {
                         <Eye className="h-4 w-4 mr-2" />
                         查看
                       </Button>
-                    </div>
-                )}
                 </div>
+                )}
+              </div>
               }
             </CardContent>
           </Card>
@@ -689,11 +689,11 @@ export default function ShortageManagement() {
               {loading ?
               <div className="text-center py-8 text-muted-foreground">
                   加载中...
-                </div> :
+              </div> :
               transfers.length === 0 ?
               <div className="text-center py-8 text-muted-foreground">
                   暂无物料调拨申请
-                </div> :
+              </div> :
 
               <div className="space-y-3">
                   {transfers.map((transfer) =>
@@ -727,9 +727,9 @@ export default function ShortageManagement() {
                         <Eye className="h-4 w-4 mr-2" />
                         查看
                       </Button>
-                    </div>
-                )}
                 </div>
+                )}
+              </div>
               }
             </CardContent>
           </Card>

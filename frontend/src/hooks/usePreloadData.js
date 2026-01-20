@@ -26,7 +26,7 @@ export function usePreloadData(config) {
 
   // 检查缓存
   const getCachedData = () => {
-    if (!cacheKey) return null;
+    if (!cacheKey) {return null;}
     try {
       const cached = localStorage.getItem(cacheKey);
       if (cached) {
@@ -46,7 +46,7 @@ export function usePreloadData(config) {
 
   // 保存到缓存
   const setCachedData = (dataToCache) => {
-    if (!cacheKey) return;
+    if (!cacheKey) {return;}
     try {
       localStorage.setItem(
         cacheKey,
@@ -62,14 +62,14 @@ export function usePreloadData(config) {
 
   // 加载数据
   const loadData = async () => {
-    if (hasLoaded || loading) return;
+    if (hasLoaded || loading) {return;}
 
     // 先检查缓存
     const cached = getCachedData();
     if (cached) {
       setData(cached);
       setHasLoaded(true);
-      if (onSuccess) onSuccess(cached);
+      if (onSuccess) {onSuccess(cached);}
       return;
     }
 

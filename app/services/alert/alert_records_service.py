@@ -115,7 +115,7 @@ class AlertRecordsService:
             total=total,
             page=page,
             page_size=page_size,
-            items=[AlertRecordResponse.from_orm(item) for item in items]
+            items=[AlertRecordResponse.model_validate(item) for item in items]
         )
 
     def get_alert_record(self, alert_id: int) -> Optional[AlertRecord]:

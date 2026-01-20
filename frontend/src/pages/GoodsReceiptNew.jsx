@@ -227,7 +227,7 @@ export default function GoodsReceiptNew() {
 
               <ArrowLeft className="w-4 h-4 mr-2" />
               返回
-            </Button>
+          </Button>
           } />
 
 
@@ -256,7 +256,7 @@ export default function GoodsReceiptNew() {
 
               </CardContent>
             </Card>
-          </motion.div> :
+        </motion.div> :
 
         <motion.div variants={fadeIn} className="space-y-6">
             {/* Order Info */}
@@ -289,7 +289,7 @@ export default function GoodsReceiptNew() {
                     </div>
                   </div>
                 </CardContent>
-              </Card>
+          </Card>
           }
 
             {/* Receipt Form */}
@@ -429,12 +429,12 @@ export default function GoodsReceiptNew() {
                           <Button size="sm" variant="ghost" className="ml-4">
                             <Plus className="w-4 h-4" />
                           </Button>
-                        </div>);
+                    </div>);
 
                 })}
                   </div>
                 </CardContent>
-              </Card>
+          </Card>
           }
 
             {/* Selected Items */}
@@ -533,12 +533,12 @@ export default function GoodsReceiptNew() {
                               <X className="w-4 h-4" />
                             </Button>
                           </TableCell>
-                        </TableRow>
+                  </TableRow>
                   )}
                     </TableBody>
                   </Table>
                 </CardContent>
-              </Card>
+          </Card>
           }
 
             {/* Actions */}
@@ -557,7 +557,7 @@ export default function GoodsReceiptNew() {
                 {loading ? "创建中..." : "创建收货单"}
               </Button>
             </div>
-          </motion.div>
+        </motion.div>
         }
       </div>
     </div>);
@@ -645,7 +645,7 @@ function OrderSelectionForm({ onSelect }) {
                 {order.project_name &&
               <p className="text-slate-500 text-xs mt-1">
                     {order.project_name}
-                  </p>
+              </p>
               }
               </div>
               <div className="text-right">
@@ -656,7 +656,7 @@ function OrderSelectionForm({ onSelect }) {
               </div>
               <ChevronRight className="w-5 h-5 text-slate-400 ml-4" />
             </div>
-          </div>
+        </div>
         )}
       </div>
     </div>);

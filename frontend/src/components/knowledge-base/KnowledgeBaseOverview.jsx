@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { Card, Row, Col, Statistic, Progress, Tag, Avatar, List, Button } from 'antd';
+import { Card, Row, Col, Statistic, Progress, Tag, Avatar, Button, Flex } from 'antd';
 import {
   BookOpen,
   FileText,
@@ -27,7 +27,7 @@ const KnowledgeBaseOverview = ({ data, loading, onNavigate }) => {
   const [_selectedType, _setSelectedType] = useState(null);
 
   const overviewStats = useMemo(() => {
-    if (!data?.documents) return {};
+    if (!data?.documents) {return {};}
 
     const totalDocs = data.documents.length;
     const publishedDocs = data.documents.filter((d) => d.status === 'published').length;
@@ -44,7 +44,7 @@ const KnowledgeBaseOverview = ({ data, loading, onNavigate }) => {
   }, [data]);
 
   const typeDistribution = useMemo(() => {
-    if (!data?.documents) return {};
+    if (!data?.documents) {return {};}
 
     const distribution = {};
     Object.keys(KNOWLEDGE_TYPES).forEach((key) => {
@@ -61,7 +61,7 @@ const KnowledgeBaseOverview = ({ data, loading, onNavigate }) => {
   }, [data]);
 
   const recentDocuments = useMemo(() => {
-    if (!data?.documents) return [];
+    if (!data?.documents) {return [];}
 
     return data.documents.
     sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).
@@ -69,7 +69,7 @@ const KnowledgeBaseOverview = ({ data, loading, onNavigate }) => {
   }, [data]);
 
   const popularDocuments = useMemo(() => {
-    if (!data?.documents) return [];
+    if (!data?.documents) {return [];}
 
     return data.documents.
     sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0)).
@@ -113,43 +113,36 @@ const KnowledgeBaseOverview = ({ data, loading, onNavigate }) => {
     const fileConfig = FILE_TYPES[doc.fileType?.toUpperCase()];
 
     return (
-      <List.Item
+      <Flex
         key={doc.id}
-        actions={[
-        <Button type="link" icon={<Eye />} size="small">
-            查看
-          </Button>,
-        <Button type="link" icon={<Download />} size="small">
-            下载
-          </Button>]
-        }>
-
-        <List.Item.Meta
-          avatar={
+        align="center"
+        justify="space-between"
+        style={{ padding: '12px 0', borderBottom: '1px solid #f0f0f0' }}
+      >
+        <Flex align="center" gap={12} style={{ flex: 1, minWidth: 0 }}>
           <Avatar
             icon={fileConfig?.icon || '📄'}
-            style={{ backgroundColor: typeConfig?.color || '#1890ff' }} />
-
-          }
-          title={
-          <div>
+            style={{ backgroundColor: typeConfig?.color || '#1890ff', flexShrink: 0 }}
+          />
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div>
               <span style={{ cursor: 'pointer' }}>{doc.title}</span>
               <Tag size="small" style={{ marginLeft: 8 }}>
                 {typeConfig?.label}
               </Tag>
             </div>
-          }
-          description={
-          <div>
-              <div>{doc.description}</div>
-              <div style={{ fontSize: 12, color: '#999', marginTop: 4 }}>
-                <Clock /> {doc.createdAt} · <Users /> {doc.author}
-              </div>
+            <div style={{ color: '#666', fontSize: 13, marginTop: 4 }}>{doc.description}</div>
+            <div style={{ fontSize: 12, color: '#999', marginTop: 4 }}>
+              <Clock size={12} style={{ verticalAlign: 'middle' }} /> {doc.createdAt} · <Users size={12} style={{ verticalAlign: 'middle' }} /> {doc.author}
             </div>
-          } />
-
-      </List.Item>);
-
+          </div>
+        </Flex>
+        <Flex gap={4} style={{ flexShrink: 0 }}>
+          <Button type="link" icon={<Eye size={14} />} size="small">查看</Button>
+          <Button type="link" icon={<Download size={14} />} size="small">下载</Button>
+        </Flex>
+      </Flex>
+    );
   };
 
   return (
@@ -221,13 +214,16 @@ const KnowledgeBaseOverview = ({ data, loading, onNavigate }) => {
             extra={
             <Button type="link" onClick={() => onNavigate && onNavigate('recent')}>
                 查看更多
-              </Button>
+            </Button>
             }>
 
-            <List
-              dataSource={recentDocuments}
-              renderItem={renderRecentDocument}
-              size="small" />
+            <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+              {recentDocuments.length > 0 ? (
+                recentDocuments.map(renderRecentDocument)
+              ) : (
+                <div style={{ textAlign: 'center', color: '#999', padding: '20px 0' }}>暂无文档</div>
+              )}
+            </div>
 
           </Card>
         </Col>
@@ -240,13 +236,16 @@ const KnowledgeBaseOverview = ({ data, loading, onNavigate }) => {
             extra={
             <Button type="link" onClick={() => onNavigate && onNavigate('popular')}>
                 查看更多
-              </Button>
+            </Button>
             }>
 
-            <List
-              dataSource={popularDocuments}
-              renderItem={renderRecentDocument}
-              size="small" />
+            <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+              {popularDocuments.length > 0 ? (
+                popularDocuments.map(renderRecentDocument)
+              ) : (
+                <div style={{ textAlign: 'center', color: '#999', padding: '20px 0' }}>暂无文档</div>
+              )}
+            </div>
 
           </Card>
         </Col>

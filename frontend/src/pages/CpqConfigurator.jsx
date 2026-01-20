@@ -138,7 +138,7 @@ export default function CpqConfigurator() {
   );
 
   const previewPrice = async () => {
-    if (!selectedRuleSet && !selectedTemplate) return;
+    if (!selectedRuleSet && !selectedTemplate) {return;}
 
     setPreviewLoading(true);
     try {
@@ -246,7 +246,7 @@ export default function CpqConfigurator() {
                 value={typeof opt === "string" ? opt : opt.value}>
 
                   {typeof opt === "string" ? opt : opt.label}
-                </SelectItem>
+              </SelectItem>
               )}
             </SelectContent>
           </Select>);
@@ -331,7 +331,7 @@ export default function CpqConfigurator() {
               <Save className="w-4 h-4" />
               保存草稿
             </Button>
-          </motion.div>
+        </motion.div>
         } />
 
 
@@ -368,7 +368,7 @@ export default function CpqConfigurator() {
                         value={ruleSet.id.toString()}>
 
                           {ruleSet.rule_name} ({ruleSet.rule_code})
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -393,7 +393,7 @@ export default function CpqConfigurator() {
                         value={template.id.toString()}>
 
                           {template.template_name} ({template.template_code})
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -429,13 +429,13 @@ export default function CpqConfigurator() {
                       {config.description &&
                     <p className="text-xs text-slate-400 mt-1">
                           {config.description}
-                        </p>
+                    </p>
                     }
-                    </div>);
+                  </div>);
 
               })}
               </CardContent>
-            </Card>
+          </Card>
           }
 
           {/* Manual Adjustments */}
@@ -470,7 +470,7 @@ export default function CpqConfigurator() {
 
                 </div>
               </CardContent>
-            </Card>
+          </Card>
           }
         </div>
 
@@ -485,7 +485,7 @@ export default function CpqConfigurator() {
                 {previewLoading &&
                 <Badge variant="outline" className="ml-auto">
                     计算中...
-                  </Badge>
+                </Badge>
                 }
               </CardTitle>
             </CardHeader>
@@ -494,7 +494,7 @@ export default function CpqConfigurator() {
               <div className="text-center py-8 text-slate-400">
                   <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
                   <p>请选择规则集或模板并配置产品</p>
-                </div> :
+              </div> :
 
               <>
                   <div className="space-y-3">
@@ -529,9 +529,9 @@ export default function CpqConfigurator() {
                                 {(adj.value || 0) >= 0 ? "+" : ""}
                                 {formatCurrency(adj.value || 0)}
                               </span>
-                            </div>
+                    </div>
                     )}
-                        </div>
+                  </div>
                   }
                     <div className="flex items-center justify-between pt-2 border-t border-slate-700">
                       <span className="text-lg font-semibold text-white">
@@ -553,7 +553,7 @@ export default function CpqConfigurator() {
                           {pricePreview.approval_reason || "此报价需要上级审批"}
                         </div>
                       </AlertDescription>
-                    </Alert>
+                </Alert>
                 }
 
                   {/* Confidence Level */}
@@ -575,9 +575,9 @@ export default function CpqConfigurator() {
                         {pricePreview.confidence_level === "MEDIUM" && "中"}
                         {pricePreview.confidence_level === "LOW" && "低"}
                       </Badge>
-                    </div>
+                </div>
                 }
-                </>
+              </>
               }
             </CardContent>
           </Card>
@@ -624,15 +624,15 @@ export default function CpqConfigurator() {
                                 {(adj.value || 0) >= 0 ? "+" : ""}
                                 {formatCurrency(adj.value || 0)}
                               </span>
-                            </div>
-                    )}
-                        </div>
-                  }
                     </div>
+                    )}
+                  </div>
+                  }
+                </div>
                 )}
                 </div>
               </CardContent>
-            </Card>
+          </Card>
           }
         </div>
       </div>

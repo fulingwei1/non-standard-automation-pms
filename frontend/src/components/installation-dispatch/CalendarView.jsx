@@ -77,7 +77,7 @@ const formatDateKey = (date) => {
 
 // Helper: Parse date string
 const parseDate = (dateStr) => {
-  if (!dateStr) return null;
+  if (!dateStr) {return null;}
   return new Date(dateStr);
 };
 
@@ -167,7 +167,7 @@ function TaskBlock({ task, onClick, isSelected, compact = false }) {
         <div className="flex items-center gap-1">
             <Clock className="w-2.5 h-2.5" />
             <span>{task.estimated_duration}小时</span>
-          </div>
+        </div>
         }
       </div>
 
@@ -175,7 +175,7 @@ function TaskBlock({ task, onClick, isSelected, compact = false }) {
       <div className="flex items-center gap-1 mt-1 text-[10px] text-red-400">
           <AlertTriangle className="w-2.5 h-2.5" />
           已逾期
-        </div>
+      </div>
       }
     </motion.div>);
 
@@ -248,7 +248,7 @@ function DayCell({
             className="text-[10px] text-red-400 border-red-500/30 bg-red-500/10">
 
               {dueTasks.length}
-            </Badge>
+          </Badge>
           }
           {assignedTasks.length > 0 && startingTasks.length > 0 &&
           <Badge
@@ -256,7 +256,7 @@ function DayCell({
             className="text-[10px] text-green-400 border-green-500/30 bg-green-500/10">
 
               {assignedTasks.length}
-            </Badge>
+          </Badge>
           }
         </div>
       </div>
@@ -278,9 +278,9 @@ function DayCell({
             {startingTasks.length > 3 &&
           <div className="text-[10px] text-slate-500 text-center">
                 +{startingTasks.length - 3} 更多
-              </div>
+          </div>
           }
-          </> :
+        </> :
         viewMode === "week" ?
         // Compact view for week
         <>
@@ -296,9 +296,9 @@ function DayCell({
             {dayTasks.length > 4 &&
           <div className="text-[10px] text-slate-500 text-center">
                 +{dayTasks.length - 4} 更多
-              </div>
+          </div>
           }
-          </> :
+        </> :
 
         // Detailed view for day
         dayTasks.
@@ -315,12 +315,12 @@ function DayCell({
         {viewMode === "week" && dayTasks.length > 4 &&
         <div className="text-[10px] text-slate-500 text-center">
             +{dayTasks.length - 4} 更多
-          </div>
+        </div>
         }
         {viewMode === "day" && dayTasks.length > 5 &&
         <div className="text-[10px] text-slate-500 text-center">
             +{dayTasks.length - 5} 更多
-          </div>
+        </div>
         }
       </div>
     </div>);
@@ -361,7 +361,7 @@ function WeekView({ currentDate, tasks, onTaskClick, selectedTaskId: _selectedTa
             <div className={`text-xs ${date.getDay() === 0 || date.getDay() === 6 ? "text-slate-500" : "text-slate-400"}`}>
               {DAYS_OF_WEEK[date.getDay()]}
             </div>
-          </div>
+        </div>
         )}
       </div>
 
@@ -373,7 +373,7 @@ function WeekView({ currentDate, tasks, onTaskClick, selectedTaskId: _selectedTa
             <div key={hour} className="grid grid-cols-7 gap-2">
               {weekDays.map((date) => {
                 const hourTasks = getTasksForDate(date).filter((task) => {
-                  if (!task.scheduled_date) return false;
+                  if (!task.scheduled_date) {return false;}
                   const taskDate = parseDate(task.scheduled_date);
                   return (
                     isSameDay(taskDate, date) &&
@@ -397,12 +397,12 @@ function WeekView({ currentDate, tasks, onTaskClick, selectedTaskId: _selectedTa
                       }}>
 
                         {task.title}
-                      </div>
+                    </div>
                     )}
                     {hourTasks.length > 1 &&
                     <div className="absolute bottom-1 right-1 text-[10px] text-slate-500">
                         +{hourTasks.length - 1}
-                      </div>
+                    </div>
                     }
                   </div>);
 
@@ -559,7 +559,7 @@ export default function CalendarView({
               }}>
 
                 {mode.label}
-              </Button>
+            </Button>
             )}
           </div>
 
@@ -586,7 +586,7 @@ export default function CalendarView({
           <Button size="sm" onClick={() => setViewMode("month")}>
               <Plus className="w-4 h-4 mr-1" />
               新建任务
-            </Button>
+          </Button>
           }
         </div>
       </div>
@@ -603,9 +603,9 @@ export default function CalendarView({
           )}>
 
               {day}
-            </div>
-        )}
         </div>
+        )}
+      </div>
       }
 
       {/* Calendar Grid */}
@@ -643,10 +643,10 @@ export default function CalendarView({
               viewMode={viewMode}
               onDateClick={onDateSelect} />
 
-              </motion.div>
+          </motion.div>
           )}
           </AnimatePresence>
-        </div>
+      </div>
       }
 
       {/* Legend */}

@@ -91,7 +91,7 @@ export default function PresalesIntegration() {
       {error &&
       <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded">
           {error}
-        </div>
+      </div>
       }
 
       {/* 仪表板概览 */}
@@ -154,7 +154,7 @@ export default function PresalesIntegration() {
               </div>
             </CardContent>
           </Card>
-        </div>
+      </div>
       }
 
       <Tabs defaultValue="dashboard" className="space-y-4">
@@ -195,16 +195,16 @@ export default function PresalesIntegration() {
                             <td className="p-2 font-semibold">
                               {(stat.win_rate * 100).toFixed(1)}%
                             </td>
-                          </tr>
+                    </tr>
                     )}
                       </tbody>
                     </table>
-                  </div> :
+              </div> :
 
               <div className="text-center py-8 text-gray-500">暂无数据</div>
               }
               </CardContent>
-            </Card>
+          </Card>
           }
         </TabsContent>
 
@@ -242,7 +242,7 @@ export default function PresalesIntegration() {
                     onClick={() => {
                       const period =
                       document.getElementById("waste-period").value;
-                      if (period) handleLoadResourceWaste(period);
+                      if (period) {handleLoadResourceWaste(period);}
                     }}>
 
                     查询
@@ -290,7 +290,7 @@ export default function PresalesIntegration() {
                       浪费成本: ¥{resourceWaste.wasted_cost || 0}
                     </div>
                   </div>
-                </div>
+              </div>
               }
             </CardContent>
           </Card>

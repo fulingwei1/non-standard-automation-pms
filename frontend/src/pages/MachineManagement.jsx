@@ -169,9 +169,9 @@ export default function MachineManagement() {
     try {
       setLoading(true);
       const params = { project_id: id };
-      if (filterStatus) params.status = filterStatus;
-      if (filterHealth) params.health = filterHealth;
-      if (searchKeyword) params.search = searchKeyword;
+      if (filterStatus) {params.status = filterStatus;}
+      if (filterHealth) {params.health = filterHealth;}
+      if (searchKeyword) {params.search = searchKeyword;}
       const res = await machineApi.list(params);
       const machineList = res.data?.items || res.data || [];
       setMachines(machineList);

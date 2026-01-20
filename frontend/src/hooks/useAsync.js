@@ -59,12 +59,12 @@ export function useApiCall(apiCall, options = {}) {
         setError(null);
         const result = await apiCall(...args);
         setData(result);
-        if (onSuccess) onSuccess(result);
+        if (onSuccess) {onSuccess(result);}
         return result;
       } catch (err) {
         setError(err);
-        if (onError) onError(err);
-        else console.error("API call failed:", err);
+        if (onError) {onError(err);}
+        else {console.error("API call failed:", err);}
         throw err;
       } finally {
         setLoading(false);

@@ -16,7 +16,7 @@ export function required(value, message = "此字段为必填项") {
  * Email validator
  */
 export function email(value, message = "请输入有效的邮箱地址") {
-  if (!value) return undefined;
+  if (!value) {return undefined;}
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(value)) {
     return message;
@@ -29,7 +29,7 @@ export function email(value, message = "请输入有效的邮箱地址") {
  */
 export function minLength(min, message) {
   return (value) => {
-    if (!value) return undefined;
+    if (!value) {return undefined;}
     if (value.length < min) {
       return message || `至少需要 ${min} 个字符`;
     }
@@ -42,7 +42,7 @@ export function minLength(min, message) {
  */
 export function maxLength(max, message) {
   return (value) => {
-    if (!value) return undefined;
+    if (!value) {return undefined;}
     if (value.length > max) {
       return message || `最多 ${max} 个字符`;
     }
@@ -54,7 +54,7 @@ export function maxLength(max, message) {
  * Number validator
  */
 export function number(value, message = "请输入有效的数字") {
-  if (!value) return undefined;
+  if (!value) {return undefined;}
   if (isNaN(Number(value))) {
     return message;
   }
@@ -66,7 +66,7 @@ export function number(value, message = "请输入有效的数字") {
  */
 export function minValue(min, message) {
   return (value) => {
-    if (!value) return undefined;
+    if (!value) {return undefined;}
     const num = Number(value);
     if (isNaN(num) || num < min) {
       return message || `值必须大于或等于 ${min}`;
@@ -80,7 +80,7 @@ export function minValue(min, message) {
  */
 export function maxValue(max, message) {
   return (value) => {
-    if (!value) return undefined;
+    if (!value) {return undefined;}
     const num = Number(value);
     if (isNaN(num) || num > max) {
       return message || `值必须小于或等于 ${max}`;
@@ -93,7 +93,7 @@ export function maxValue(max, message) {
  * Phone number validator
  */
 export function phone(value, message = "请输入有效的手机号码") {
-  if (!value) return undefined;
+  if (!value) {return undefined;}
   const phoneRegex = /^1[3-9]\d{9}$/;
   if (!phoneRegex.test(value)) {
     return message;
@@ -105,7 +105,7 @@ export function phone(value, message = "请输入有效的手机号码") {
  * URL validator
  */
 export function url(value, message = "请输入有效的 URL") {
-  if (!value) return undefined;
+  if (!value) {return undefined;}
   try {
     new URL(value);
     return undefined;
@@ -118,7 +118,7 @@ export function url(value, message = "请输入有效的 URL") {
  * Date validator
  */
 export function date(value, message = "请输入有效的日期") {
-  if (!value) return undefined;
+  if (!value) {return undefined;}
   const date = new Date(value);
   if (isNaN(date.getTime())) {
     return message;
@@ -133,7 +133,7 @@ export function combine(...validators) {
   return (value) => {
     for (const validator of validators) {
       const error = validator(value);
-      if (error) return error;
+      if (error) {return error;}
     }
     return undefined;
   };

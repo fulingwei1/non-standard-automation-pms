@@ -73,7 +73,7 @@ const AlertTrendAnalysis = ({ alerts = [], loading = false }) => {
         </Col>
       </Row>
 
-      <Card title="趋势（占位）" loading={loading} style={{ marginBottom: 16 }}>
+      <Card title="解决率趋势" loading={loading} style={{ marginBottom: 16 }}>
         <Progress percent={stats.resolvedRate} strokeColor={CHART_COLORS.SUCCESS} />
       </Card>
 

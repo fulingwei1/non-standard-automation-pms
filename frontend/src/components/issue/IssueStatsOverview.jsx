@@ -167,7 +167,7 @@ export const IssueStatsOverview = ({
 
   // 渲染趋势指示器
   const renderTrendIndicator = (trend, value) => {
-    if (trend === "neutral" || !value) return null;
+    if (trend === "neutral" || !value) {return null;}
 
     return (
       <div className={cn(
@@ -241,7 +241,7 @@ export const IssueStatsOverview = ({
 
               <Activity className={cn("w-3 h-3 mr-1", loading && "animate-spin")} />
               刷新
-            </Button>
+          </Button>
           }
         </div>
 
@@ -258,9 +258,9 @@ export const IssueStatsOverview = ({
 
                 <mode.icon className="w-3 h-3 mr-1" />
                 {mode.label}
-              </Button>
+          </Button>
           )}
-          </div>
+        </div>
         }
       </motion.div>
 
@@ -361,7 +361,7 @@ export const IssueStatsOverview = ({
                         <span>{card.progress}%</span>
                         <span>100%</span>
                       </div>
-                    </div>
+                  </div>
                   }
                 </CardContent>
               </Card>
@@ -394,7 +394,7 @@ export const IssueStatsOverview = ({
 
             <div className="text-center py-8 text-slate-400">
                 暂无数据
-              </div>
+            </div>
             }
           </CardContent>
         </Card>
@@ -416,7 +416,7 @@ export const IssueStatsOverview = ({
 
             <div className="text-center py-8 text-slate-400">
                 暂无数据
-              </div>
+            </div>
             }
           </CardContent>
         </Card>
@@ -438,7 +438,7 @@ export const IssueStatsOverview = ({
 
             <div className="text-center py-8 text-slate-400">
                 暂无数据
-              </div>
+            </div>
             }
           </CardContent>
         </Card>

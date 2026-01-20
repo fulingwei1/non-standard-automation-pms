@@ -177,7 +177,7 @@ export default function MaterialAnalysis() {
   // 获取材料状态
   const getItemStatus = (item, orders) => {
     const relatedOrders = orders.filter((order) => order.material_item === item.id);
-    if (relatedOrders.length === 0) return "not_ordered";
+    if (relatedOrders.length === 0) {return "not_ordered";}
 
     const hasDelivered = relatedOrders.some((order) => order.status === "delivered");
     const hasInTransit = relatedOrders.some((order) => order.status === "in_transit");
@@ -187,9 +187,9 @@ export default function MaterialAnalysis() {
       new Date(order.expected_delivery_date) < new Date()
     );
 
-    if (hasDelivered) return "arrived";
-    if (hasDelayed) return "delayed";
-    if (hasInTransit) return "in_transit";
+    if (hasDelivered) {return "arrived";}
+    if (hasDelayed) {return "delayed";}
+    if (hasInTransit) {return "in_transit";}
     return "not_ordered";
   };
 
@@ -297,7 +297,7 @@ export default function MaterialAnalysis() {
               <Badge variant="destructive" className="flex items-center gap-1">
                   <AlertTriangle className="w-3 h-3" />
                   风险
-                </Badge>
+              </Badge>
               }
               <Badge
                 variant={
@@ -378,10 +378,10 @@ export default function MaterialAnalysis() {
 
                       {getMaterialStatus(material.status).label}
                     </Badge>
-                  </div>
+              </div>
               )}
               </div>
-            </motion.div>
+          </motion.div>
           }
         </div>
       </motion.div>);
@@ -417,7 +417,7 @@ export default function MaterialAnalysis() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
       </div>);
 
   }
@@ -453,7 +453,7 @@ export default function MaterialAnalysis() {
               <Download className="w-4 h-4 mr-2" />
               导出
             </Button>
-          </div>
+        </div>
         } />
 
 
@@ -552,7 +552,7 @@ export default function MaterialAnalysis() {
               <CardContent className="p-12 text-center">
                 <div className="text-slate-400">没有找到匹配的项目</div>
               </CardContent>
-            </Card>
+          </Card>
           }
         </TabsContent>
       </Tabs>

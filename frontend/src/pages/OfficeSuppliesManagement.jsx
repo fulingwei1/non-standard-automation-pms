@@ -130,7 +130,7 @@ export default function OfficeSuppliesManagement() {
               <Plus className="w-4 h-4 mr-2" />
               新建采购订单
             </Button>
-          </div>
+        </div>
         } />
 
 
@@ -370,7 +370,7 @@ export default function OfficeSuppliesManagement() {
                     </div>
                   </div>
                 </CardContent>
-              </Card>
+            </Card>
             )}
           </div>
         </TabsContent>
@@ -450,7 +450,7 @@ export default function OfficeSuppliesManagement() {
                         </Button>
                       </div>
                     </div>
-                  </div>
+                </div>
                 )}
               </div>
             </CardContent>
@@ -492,7 +492,7 @@ export default function OfficeSuppliesManagement() {
                         合作中
                       </Badge>
                     </div>
-                  </div>
+                </div>
                 )}
               </div>
             </CardContent>
@@ -592,7 +592,7 @@ export default function OfficeSuppliesManagement() {
                     编辑信息
                   </Button>
                 </div>
-              </div>
+            </div>
             }
           </DialogBody>
         </DialogContent>

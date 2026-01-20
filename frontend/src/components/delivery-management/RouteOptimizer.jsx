@@ -129,7 +129,7 @@ const RouteStats = ({ stats }) => {
               <div className="text-xs text-slate-400">
                 {stats[stat.key + '_unit'] || stat.unit}
               </div>
-            </div>
+          </div>
           )}
         </div>
       </CardContent>
@@ -167,7 +167,7 @@ const RouteNode = ({ node, isActive, onClick }) => {
             <>
                 <MapPin className="w-4 h-4 text-slate-500" />
                 {node.recipient_name}
-              </> :
+            </> :
 
             <Truck className="w-4 h-4 text-slate-500" />
             }
@@ -178,13 +178,13 @@ const RouteNode = ({ node, isActive, onClick }) => {
           {node.estimated_time &&
           <div className="text-xs text-slate-400">
               预计 {new Date(node.estimated_time).toLocaleTimeString()}
-            </div>
+          </div>
           }
         </div>
         {node.distance &&
         <div className="text-sm text-slate-500">
             {node.distance} km
-          </div>
+        </div>
         }
       </div>
     </motion.div>);
@@ -282,7 +282,7 @@ export const RouteOptimizer = ({
             </div>
             <Progress value={75} className="h-2" />
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* 路线统计 */}
@@ -311,7 +311,7 @@ export const RouteOptimizer = ({
                   <Download className="w-4 h-4 mr-2" />
                   导出路线
                 </Button>
-              </div>
+            </div>
             }
           </div>
         </CardHeader>
@@ -333,11 +333,11 @@ export const RouteOptimizer = ({
                   {index < routeNodes.length - 1 &&
               <div className="flex items-center justify-center my-2">
                       <Navigation className="w-4 h-4 text-slate-400" />
-                    </div>
+              </div>
               }
-                </motion.div>
+            </motion.div>
             )}
-            </div> :
+          </div> :
 
           <div className="py-12 text-center">
               <Map className="w-12 h-12 text-slate-400 mx-auto mb-4" />
@@ -345,7 +345,7 @@ export const RouteOptimizer = ({
               <p className="text-sm text-slate-400">
                 点击优化按钮开始路线优化
               </p>
-            </div>
+          </div>
           }
         </CardContent>
       </Card>
@@ -384,7 +384,7 @@ export const RouteOptimizer = ({
                       {selectedRoute.selectedNode.recipient_address}
                     </span>
                   </div>
-                </>
+            </>
             }
               {selectedRoute.selectedNode.distance &&
             <div>
@@ -392,7 +392,7 @@ export const RouteOptimizer = ({
                   <span className="ml-2 font-medium">
                     {selectedRoute.selectedNode.distance} km
                   </span>
-                </div>
+            </div>
             }
               {selectedRoute.selectedNode.estimated_time &&
             <div>
@@ -400,11 +400,11 @@ export const RouteOptimizer = ({
                   <span className="ml-2 font-medium">
                     {new Date(selectedRoute.selectedNode.estimated_time).toLocaleString()}
                   </span>
-                </div>
+            </div>
             }
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
     </motion.div>);
 

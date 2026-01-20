@@ -237,8 +237,8 @@ export default function WorkLog() {
         page,
         page_size: pageSize,
       };
-      if (filterStartDate) params.start_date = filterStartDate;
-      if (filterEndDate) params.end_date = filterEndDate;
+      if (filterStartDate) {params.start_date = filterStartDate;}
+      if (filterEndDate) {params.end_date = filterEndDate;}
 
       const res = await workLogApi.list(params);
       const data = res.data?.data || res.data || {};
@@ -324,7 +324,7 @@ export default function WorkLog() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("确定要删除这条工作日志吗？")) return;
+    if (!confirm("确定要删除这条工作日志吗？")) {return;}
 
     try {
       await workLogApi.delete(id);

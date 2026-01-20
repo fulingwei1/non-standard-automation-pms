@@ -206,7 +206,7 @@ function SurveyCard({ survey, onClick }) {
 
 // 调研详情面板
 function SurveyDetailPanel({ survey, onClose }) {
-  if (!survey) return null;
+  if (!survey) {return null;}
 
   const methodConfig = getMethodIcon(survey.method);
   const MethodIcon = methodConfig.icon;

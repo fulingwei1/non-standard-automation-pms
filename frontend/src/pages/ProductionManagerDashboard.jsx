@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo as _useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   LayoutDashboard,
@@ -31,7 +32,8 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-  Button } from
+  Button,
+  toast } from
 "../components/ui";
 import {
   productionApi,
@@ -57,6 +59,7 @@ import {
 "../components/production";
 
 export default function ProductionManagerDashboard() {
+  const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState("overview");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -217,9 +220,13 @@ export default function ProductionManagerDashboard() {
 
   // 处理生产线编辑
   const handleEditLine = useCallback((workshop) => {
-    // TODO: 打开编辑对话框
-    console.log('Edit workshop:', workshop);
-  }, []);
+    if (!workshop?.id) {
+      toast.info("未找到可编辑的生产线信息");
+      return;
+    }
+    toast.info("已跳转到生产线管理页面进行编辑");
+    navigate("/workshops", { state: { editWorkshop: workshop } });
+  }, [navigate]);
 
   // Tab配置
   const tabs = [
@@ -376,16 +383,16 @@ export default function ProductionManagerDashboard() {
                             {levelConfig.label}
                           </Badge>
                         </div>
-                      </motion.div>);
+                    </motion.div>);
 
                 })}
-                </div> :
+              </div> :
 
               <div className="text-center py-8">
                   <AlertTriangle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">暂无预警信息</h3>
                   <p className="text-gray-600">当前没有生产预警信息</p>
-                </div>
+              </div>
               }
             </CardContent>
           </Card>

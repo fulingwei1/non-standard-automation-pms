@@ -71,7 +71,7 @@ export function ServiceTicketListHeader({
                       {option.icon && <option.icon className="w-4 h-4" />}
                       {option.label}
                     </div>
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -169,7 +169,7 @@ export function ServiceTicketListHeader({
                   {filterOptions.statuses.map((status) =>
                 <SelectItem key={status.value} value={status.value}>
                       {status.label}
-                    </SelectItem>
+                </SelectItem>
                 )}
                 </SelectContent>
               </Select>
@@ -189,7 +189,7 @@ export function ServiceTicketListHeader({
                   {filterOptions.urgencies.map((urgency) =>
                 <SelectItem key={urgency.value} value={urgency.value}>
                       {urgency.label}
-                    </SelectItem>
+                </SelectItem>
                 )}
                 </SelectContent>
               </Select>
@@ -212,7 +212,7 @@ export function ServiceTicketListHeader({
                         {type.icon && <span>{type.icon}</span>}
                         {type.label}
                       </div>
-                    </SelectItem>
+                </SelectItem>
                 )}
                 </SelectContent>
               </Select>
@@ -274,7 +274,7 @@ export function ServiceTicketListHeader({
               清除所有筛选
             </Button>
           </div>
-        </div>
+      </div>
       }
 
       {/* 日期范围筛选 */}
@@ -343,7 +343,7 @@ export function ServiceTicketListHeader({
               </Button>
             </div>
           </div>
-        </div>
+      </div>
       }
     </div>);
 

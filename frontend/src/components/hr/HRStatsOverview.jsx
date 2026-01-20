@@ -36,9 +36,9 @@ const StatCard = ({
       <Card className="bg-surface-50 border-white/10">
         <CardContent className="p-6">
           <div className="animate-pulse space-y-3">
-            <div className="w-8 h-8 bg-slate-700 rounded"></div>
-            <div className="h-6 bg-slate-700 rounded w-3/4"></div>
-            <div className="h-4 bg-slate-700 rounded w-1/2"></div>
+            <div className="w-8 h-8 bg-slate-700 rounded" />
+            <div className="h-6 bg-slate-700 rounded w-3/4" />
+            <div className="h-4 bg-slate-700 rounded w-1/2" />
           </div>
         </CardContent>
       </Card>);
@@ -67,7 +67,7 @@ const StatCard = ({
               <ArrowDownRight className="w-4 h-4" />
               }
                 {Math.abs(trend)}%
-              </div>
+            </div>
             }
           </div>
           <div>
@@ -145,12 +145,12 @@ const DepartmentDistribution = ({ departments, loading }) => {
       <Card className="bg-surface-50 border-white/10">
         <CardContent className="p-6">
           <div className="animate-pulse space-y-3">
-            <div className="h-4 bg-slate-700 rounded w-1/3"></div>
+            <div className="h-4 bg-slate-700 rounded w-1/3" />
             {[...Array(5)].map((_, i) =>
             <div key={i} className="flex items-center justify-between">
-                <div className="h-3 bg-slate-700 rounded w-1/4"></div>
-                <div className="h-3 bg-slate-700 rounded w-1/6"></div>
-              </div>
+                <div className="h-3 bg-slate-700 rounded w-1/4" />
+                <div className="h-3 bg-slate-700 rounded w-1/6" />
+            </div>
             )}
           </div>
         </CardContent>
@@ -166,7 +166,7 @@ const DepartmentDistribution = ({ departments, loading }) => {
           {departments?.slice(0, 6).map((dept, index) =>
           <div key={index} className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                <div className="w-2 h-2 bg-blue-400 rounded-full" />
                 <span className="text-sm text-slate-300">{dept.name}</span>
               </div>
               <div className="flex items-center gap-3">
@@ -174,12 +174,10 @@ const DepartmentDistribution = ({ departments, loading }) => {
                 <div className="w-16 bg-slate-700 rounded-full h-2">
                   <div
                   className="bg-blue-400 h-2 rounded-full"
-                  style={{ width: `${dept.percentage}%` }}>
-
-                  </div>
+                  style={{ width: `${dept.percentage}%` }} />
                 </div>
               </div>
-            </div>
+          </div>
           )}
         </div>
       </CardContent>
@@ -194,12 +192,12 @@ const PendingItems = ({ items, loading }) => {
       <Card className="bg-surface-50 border-white/10">
         <CardContent className="p-6">
           <div className="animate-pulse space-y-3">
-            <div className="h-4 bg-slate-700 rounded w-1/3"></div>
+            <div className="h-4 bg-slate-700 rounded w-1/3" />
             {[...Array(3)].map((_, i) =>
             <div key={i} className="p-3 bg-slate-800 rounded">
-                <div className="h-3 bg-slate-700 rounded w-3/4 mb-2"></div>
-                <div className="h-3 bg-slate-700 rounded w-1/2"></div>
-              </div>
+                <div className="h-3 bg-slate-700 rounded w-3/4 mb-2" />
+                <div className="h-3 bg-slate-700 rounded w-1/2" />
+            </div>
             )}
           </div>
         </CardContent>
@@ -229,7 +227,7 @@ const PendingItems = ({ items, loading }) => {
               <div className="text-xs text-slate-500 mt-2">
                 {item.time} • {item.department}
               </div>
-            </div>
+          </div>
           )}
         </div>
       </CardContent>

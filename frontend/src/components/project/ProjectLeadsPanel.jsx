@@ -128,7 +128,7 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
 
   // 加载项目角色概览
   const loadRoleOverview = useCallback(async () => {
-    if (!projectId) return;
+    if (!projectId) {return;}
     setLoading(true);
     try {
       const response = await projectRoleApi.getOverview(projectId);
@@ -221,7 +221,7 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
     if (
       !window.confirm(`确定要移除 ${lead.user?.real_name || "该负责人"} 吗？`)
     )
-      return;
+      {return;}
     try {
       await projectRoleApi.leads.delete(projectId, lead.id);
       loadRoleOverview();
@@ -570,7 +570,7 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
                       onCheckedChange={(checked) => {
                         const newConfigs = [...roleConfigs];
                         newConfigs[index].is_enabled = checked;
-                        if (!checked) newConfigs[index].is_required = false;
+                        if (!checked) {newConfigs[index].is_required = false;}
                         setRoleConfigs(newConfigs);
                       }}
                     />

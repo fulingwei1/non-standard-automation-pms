@@ -81,7 +81,7 @@ export default function ArticleCard({
 
   // 格式化日期
   const formatDate = (date) => {
-    if (!date) return "无日期";
+    if (!date) {return "无日期";}
     const d = new Date(date);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   };
@@ -191,7 +191,7 @@ export default function ArticleCard({
           {showActions &&
           <Button variant="ghost" size="icon" className="h-8 w-8">
               <MoreHorizontal className="w-4 h-4 text-slate-400" />
-            </Button>
+          </Button>
           }
         </div>
 
@@ -204,13 +204,13 @@ export default function ArticleCard({
           <div className="flex items-center gap-1 mb-2">
               <Star className="w-4 h-4 text-amber-500" />
               <span className="text-xs text-amber-400 font-medium">精选文章</span>
-            </div>
+          </div>
           }
           {popular &&
           <div className="flex items-center gap-1 mb-2">
               <TrendingUp className="w-4 h-4 text-blue-500" />
               <span className="text-xs text-blue-400 font-medium">热门文章</span>
-            </div>
+          </div>
           }
         </div>
 
@@ -218,7 +218,7 @@ export default function ArticleCard({
         {summary &&
         <p className="text-sm text-slate-300 mb-3 line-clamp-2">
             {summary}
-          </p>
+        </p>
         }
 
         {/* Tags */}
@@ -227,14 +227,14 @@ export default function ArticleCard({
             {tags.slice(0, 3).map((tag, index) =>
           <Badge key={index} variant="secondary" className="text-xs">
                 #{tag}
-              </Badge>
+          </Badge>
           )}
             {tags.length > 3 &&
           <Badge variant="secondary" className="text-xs">
                 +{tags.length - 3}
-              </Badge>
+          </Badge>
           }
-          </div>
+        </div>
         }
 
         {/* Content Preview */}
@@ -243,7 +243,7 @@ export default function ArticleCard({
             <p className="text-xs text-slate-400 line-clamp-3">
               {content.substring(0, 150)}...
             </p>
-          </div>
+        </div>
         }
 
         {/* Stats and Actions */}
@@ -277,7 +277,7 @@ export default function ArticleCard({
           <div className="flex items-center gap-1 text-xs text-slate-400">
               <File className="w-3 h-3" />
               <span>{attachments.length}个附件</span>
-            </div>
+          </div>
           }
         </div>
       </div>
@@ -323,9 +323,9 @@ export default function ArticleCard({
 
                   <Download className="w-4 h-4 mr-1" />
                   下载
-                </Button>
+            </Button>
             }
-            </div>
+          </div>
           }
 
           <Button
@@ -348,19 +348,19 @@ export default function ArticleCard({
 
 // Article Card Tags Component
 function ArticleCardTags({ article }) {
-  if (!article.tags || article.tags.length === 0) return null;
+  if (!article.tags || article.tags.length === 0) {return null;}
 
   return (
     <div className="flex flex-wrap gap-1 mb-3">
       {article.tags.slice(0, 3).map((tag, index) =>
       <Badge key={index} variant="secondary" className="text-xs">
           #{tag}
-        </Badge>
+      </Badge>
       )}
       {article.tags.length > 3 &&
       <Badge variant="secondary" className="text-xs">
           +{article.tags.length - 3}
-        </Badge>
+      </Badge>
       }
     </div>);
 

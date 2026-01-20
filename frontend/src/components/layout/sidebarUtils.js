@@ -23,7 +23,8 @@ import {
   manufacturingDirectorNavGroups,
   customerServiceManagerNavGroups,
   customerServiceEngineerNavGroups,
-  teamLeaderNavGroups
+  teamLeaderNavGroups,
+  financeManagerNavGroups
 } from "./sidebarConfig";
 
 // Filter navigation items based on role permissions
@@ -181,48 +182,7 @@ export function getNavGroupsForRole(role, isSuperuser = false) {
       break;
     case "finance_manager":
     case "财务经理":
-      navGroups = [
-        {
-          label: "财务管理",
-          items: [
-            {
-              name: "财务工作台",
-              path: "/finance-manager-dashboard",
-              icon: "LayoutDashboard"
-            },
-            {
-              name: "财务成本",
-              path: "/cost-quotes/financial-costs",
-              icon: "DollarSign"
-            },
-            { name: "成本核算", path: "/costs", icon: "Calculator" },
-            {
-              name: "付款审批",
-              path: "/payment-approval",
-              icon: "ClipboardCheck"
-            },
-            { name: "项目结算", path: "/settlement", icon: "FileText" },
-            { name: "财务报表", path: "/financial-reports", icon: "BarChart3" },
-            { name: "决策驾驶舱", path: "/executive-dashboard", icon: "Gauge" }
-          ]
-        },
-        {
-          label: "监控与预警",
-          items: [{ name: "预警中心", path: "/alerts", icon: "AlertTriangle" }]
-        },
-        {
-          label: "个人中心",
-          items: [
-            { name: "通知中心", path: "/notifications", icon: "Bell" },
-            {
-              name: "知识管理",
-              path: "/knowledge-base",
-              icon: "BookOpen"
-            },
-            { name: "个人设置", path: "/settings", icon: "Settings" }
-          ]
-        }
-      ];
+      navGroups = financeManagerNavGroups;
       break;
     case "hr_manager":
     case "人事经理":

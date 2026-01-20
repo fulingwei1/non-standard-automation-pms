@@ -143,7 +143,7 @@ export const PurchaseOrderUtils = {
 
   // 计算订单总金额
   calculateOrderTotal(items) {
-    if (!items || !Array.isArray(items)) return 0;
+    if (!items || !Array.isArray(items)) {return 0;}
     return items.reduce((total, item) => {
       return total + (parseFloat(item.price || 0) * parseFloat(item.qty || 0));
     }, 0);
@@ -151,7 +151,7 @@ export const PurchaseOrderUtils = {
 
   // 计算已收货金额
   calculateReceivedAmount(items) {
-    if (!items || !Array.isArray(items)) return 0;
+    if (!items || !Array.isArray(items)) {return 0;}
     return items.reduce((total, item) => {
       return total + (parseFloat(item.price || 0) * parseFloat(item.received || 0));
     }, 0);
@@ -159,7 +159,7 @@ export const PurchaseOrderUtils = {
 
   // 计算到货率
   calculateDeliveryRate(items) {
-    if (!items || !Array.isArray(items)) return 0;
+    if (!items || !Array.isArray(items)) {return 0;}
     const totalQty = items.reduce((sum, item) => sum + (parseFloat(item.qty || 0)), 0);
     const receivedQty = items.reduce((sum, item) => sum + (parseFloat(item.received || 0)), 0);
     return totalQty > 0 ? (receivedQty / totalQty * 100).toFixed(1) : 0;
@@ -175,19 +175,19 @@ export const PurchaseOrderUtils = {
 
   // 计算延期天数
   getDelayedDays(expectedDate) {
-    if (!expectedDate) return 0;
+    if (!expectedDate) {return 0;}
     const now = new Date();
     const expected = new Date(expectedDate);
-    if (expected > now) return 0;
+    if (expected > now) {return 0;}
     const diffTime = Math.abs(now - expected);
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   },
 
   // 获取订单优先级
   getOrderPriority(urgency, delayedDays) {
-    if (urgency === ORDER_URGENCY.CRITICAL) return 1;
-    if (urgency === ORDER_URGENCY.URGENT) return 2;
-    if (delayedDays > 0) return 3;
+    if (urgency === ORDER_URGENCY.CRITICAL) {return 1;}
+    if (urgency === ORDER_URGENCY.URGENT) {return 2;}
+    if (delayedDays > 0) {return 3;}
     return 4;
   },
 
@@ -202,7 +202,7 @@ export const PurchaseOrderUtils = {
 
   // 格式化日期
   formatDate(date) {
-    if (!date) return '';
+    if (!date) {return '';}
     return new Date(date).toLocaleDateString('zh-CN');
   },
 
@@ -249,7 +249,7 @@ export const PurchaseOrderUtils = {
 
   // 搜索订单
   searchOrders(orders, searchQuery) {
-    if (!searchQuery || !orders) return orders;
+    if (!searchQuery || !orders) {return orders;}
     
     const query = searchQuery.toLowerCase();
     return orders.filter(order => 
@@ -261,13 +261,13 @@ export const PurchaseOrderUtils = {
 
   // 按状态过滤订单
   filterOrdersByStatus(orders, statusFilter) {
-    if (!statusFilter || statusFilter === 'all') return orders;
+    if (!statusFilter || statusFilter === 'all') {return orders;}
     return orders.filter(order => order.status === statusFilter);
   },
 
   // 排序订单
   sortOrders(orders, sortBy, sortOrder = 'desc') {
-    if (!sortBy) return orders;
+    if (!sortBy) {return orders;}
     
     return [...orders].sort((a, b) => {
       let aValue = a[sortBy];

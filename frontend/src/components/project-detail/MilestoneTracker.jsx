@@ -29,7 +29,7 @@ const MilestoneTracker = ({ project, onStageClick, onAddMilestone }) => {
 
   // Calculate days difference
   const getDaysDiff = (date1, date2) => {
-    if (!date1 || !date2) return 0;
+    if (!date1 || !date2) {return 0;}
     return differenceInDays(new Date(date2), new Date(date1));
   };
 
@@ -40,7 +40,7 @@ const MilestoneTracker = ({ project, onStageClick, onAddMilestone }) => {
 
   // Get milestone status
   const getMilestoneStatus = (milestone) => {
-    if (!milestone.target_date) return MILESTONE_STATUSES.NOT_STARTED;
+    if (!milestone.target_date) {return MILESTONE_STATUSES.NOT_STARTED;}
 
     const today = new Date();
     const targetDate = new Date(milestone.target_date);
@@ -137,12 +137,12 @@ const MilestoneTracker = ({ project, onStageClick, onAddMilestone }) => {
             {status.code === MILESTONE_STATUSES.DELAYED.code &&
             <span className="text-red-500">
                 已延期 {Math.abs(daysDiff)} 天
-              </span>
+            </span>
             }
             {milestone.completed_at &&
             <span className="text-green-500">
                 完成于 {format(new Date(milestone.completed_at), 'MM-dd')}
-              </span>
+            </span>
             }
           </div>
         </div>
@@ -214,7 +214,7 @@ const MilestoneTracker = ({ project, onStageClick, onAddMilestone }) => {
                     }}>
 
                       查看详情
-                    </Button>
+                  </Button>
                   }
                   {isExpanded &&
                   <Button
@@ -226,7 +226,7 @@ const MilestoneTracker = ({ project, onStageClick, onAddMilestone }) => {
                     }}>
 
                       + 里程碑
-                    </Button>
+                  </Button>
                   }
                 </div>
               </div>
@@ -260,7 +260,7 @@ const MilestoneTracker = ({ project, onStageClick, onAddMilestone }) => {
         {isExpanded && stage.milestones && stage.milestones.length > 0 &&
         <div className="ml-14 space-y-1">
             {stage.milestones.map((milestone) => renderMilestone(milestone, stage.code))}
-          </div>
+        </div>
         }
 
         {index < PROJECT_STAGES.length - 1 &&
@@ -295,7 +295,7 @@ const MilestoneTracker = ({ project, onStageClick, onAddMilestone }) => {
 
             <div className="text-center py-8 text-gray-500">
                 暂无阶段数据
-              </div>
+            </div>
             }
           </div>
         </ScrollArea>

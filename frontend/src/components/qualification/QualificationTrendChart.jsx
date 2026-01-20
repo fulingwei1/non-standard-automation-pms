@@ -15,7 +15,7 @@ export function QualificationTrendChart({
   // data格式: [{ date: '2024-01-15', total_score: 85, period: '2024-Q1' }, ...]
 
   const sortedData = useMemo(() => {
-    if (!data || !Array.isArray(data)) return [];
+    if (!data || !Array.isArray(data)) {return [];}
     return [...data].sort((a, b) => {
       const dateA = new Date(a.date || a.assessed_at || a.period || 0);
       const dateB = new Date(b.date || b.assessed_at || b.period || 0);
@@ -24,13 +24,13 @@ export function QualificationTrendChart({
   }, [data]);
 
   const maxValue = useMemo(() => {
-    if (sortedData.length === 0) return 100;
+    if (sortedData.length === 0) {return 100;}
     const scores = sortedData.map((d) => d.total_score || d.score || 0);
     return Math.max(...scores, 100);
   }, [sortedData]);
 
   const minValue = useMemo(() => {
-    if (sortedData.length === 0) return 0;
+    if (sortedData.length === 0) {return 0;}
     const scores = sortedData.map((d) => d.total_score || d.score || 0);
     return Math.min(...scores, 0);
   }, [sortedData]);
@@ -41,7 +41,7 @@ export function QualificationTrendChart({
   const chartHeight = height;
 
   const points = useMemo(() => {
-    if (sortedData.length === 0) return [];
+    if (sortedData.length === 0) {return [];}
     return sortedData.map((item, index) => {
       const score = item.total_score || item.score || 0;
       const x =
@@ -64,7 +64,7 @@ export function QualificationTrendChart({
   }, [sortedData, chartWidth, chartHeight, padding, maxValue, valueRange]);
 
   const pathData = useMemo(() => {
-    if (points.length === 0) return "";
+    if (points.length === 0) {return "";}
     return points
       .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
       .join(" ");
@@ -94,7 +94,7 @@ export function QualificationTrendChart({
         {showGrid && (
           <g opacity="0.1">
             {[0, 20, 40, 60, 80, 100].map((value) => {
-              if (value < minValue || value > maxValue) return null;
+              if (value < minValue || value > maxValue) {return null;}
               const y =
                 padding.top +
                 ((maxValue - value) / valueRange) *

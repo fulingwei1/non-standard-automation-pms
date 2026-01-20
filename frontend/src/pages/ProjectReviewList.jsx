@@ -181,10 +181,10 @@ export default function ProjectReviewList() {
         page,
         page_size: pageSize,
       };
-      if (projectId) params.project_id = projectId;
-      if (status) params.status = status;
-      if (startDate) params.start_date = startDate;
-      if (endDate) params.end_date = endDate;
+      if (projectId) {params.project_id = projectId;}
+      if (status) {params.status = status;}
+      if (startDate) {params.start_date = startDate;}
+      if (endDate) {params.end_date = endDate;}
 
       const res = await projectReviewApi.list(params);
       const data = res.data || res;
@@ -205,7 +205,7 @@ export default function ProjectReviewList() {
   };
 
   const handleDelete = async () => {
-    if (!deleteDialog.review) return;
+    if (!deleteDialog.review) {return;}
     try {
       await projectReviewApi.delete(deleteDialog.review.id);
       setDeleteDialog({ open: false, review: null });

@@ -73,7 +73,7 @@ export default function ProgressReportDialog({
                 className="bg-slate-800/50 border-slate-700/50 hover:bg-slate-700/50">
 
                   {option.label}
-                </Button>
+              </Button>
               )}
             </div>
           </div>

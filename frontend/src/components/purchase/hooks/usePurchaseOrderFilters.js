@@ -94,8 +94,8 @@ export const usePurchaseOrderFilters = (initialState = {}) => {
    */
   const activeFiltersCount = useMemo(() => {
     let count = 0;
-    if (searchQuery !== "") count++;
-    if (statusFilter !== "all") count++;
+    if (searchQuery !== "") {count++;}
+    if (statusFilter !== "all") {count++;}
     return count;
   }, [searchQuery, statusFilter]);
 

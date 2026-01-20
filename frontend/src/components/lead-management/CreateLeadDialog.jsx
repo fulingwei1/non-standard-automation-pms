@@ -1,14 +1,24 @@
-
-
+import React from "react";
+import {
+  Button,
+  Input,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  Label,
+  Textarea,
+} from "../../components/ui";
 
 export default function CreateLeadDialog({
   open,
   onOpenChange,
   formData,
-  onDataChange,
+  setFormData,
   statusConfig,
   onCreate,
-  loading = false,
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -24,7 +34,7 @@ export default function CreateLeadDialog({
               <Input
                 value={formData.customer_name}
                 onChange={(e) =>
-                  onDataChange({ ...formData, customer_name: e.target.value })
+                  setFormData({ ...formData, customer_name: e.target.value })
                 }
                 placeholder="请输入客户名称"
               />
@@ -34,7 +44,7 @@ export default function CreateLeadDialog({
               <Input
                 value={formData.source}
                 onChange={(e) =>
-                  onDataChange({ ...formData, source: e.target.value })
+                  setFormData({ ...formData, source: e.target.value })
                 }
                 placeholder="展会/转介绍/网络等"
               />
@@ -44,7 +54,7 @@ export default function CreateLeadDialog({
               <Input
                 value={formData.industry}
                 onChange={(e) =>
-                  onDataChange({ ...formData, industry: e.target.value })
+                  setFormData({ ...formData, industry: e.target.value })
                 }
                 placeholder="请输入行业"
               />
@@ -54,7 +64,7 @@ export default function CreateLeadDialog({
               <Input
                 value={formData.contact_name}
                 onChange={(e) =>
-                  onDataChange({ ...formData, contact_name: e.target.value })
+                  setFormData({ ...formData, contact_name: e.target.value })
                 }
                 placeholder="请输入联系人"
               />
@@ -64,7 +74,7 @@ export default function CreateLeadDialog({
               <Input
                 value={formData.contact_phone}
                 onChange={(e) =>
-                  onDataChange({ ...formData, contact_phone: e.target.value })
+                  setFormData({ ...formData, contact_phone: e.target.value })
                 }
                 placeholder="请输入联系电话"
               />
@@ -74,7 +84,7 @@ export default function CreateLeadDialog({
               <select
                 value={formData.status}
                 onChange={(e) =>
-                  onDataChange({ ...formData, status: e.target.value })
+                  setFormData({ ...formData, status: e.target.value })
                 }
                 className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
               >
@@ -91,7 +101,7 @@ export default function CreateLeadDialog({
             <Textarea
               value={formData.demand_summary}
               onChange={(e) =>
-                onDataChange({ ...formData, demand_summary: e.target.value })
+                setFormData({ ...formData, demand_summary: e.target.value })
               }
               placeholder="请输入需求摘要"
               rows={4}
@@ -102,9 +112,7 @@ export default function CreateLeadDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             取消
           </Button>
-          <Button onClick={onCreate} disabled={loading}>
-            创建
-          </Button>
+          <Button onClick={onCreate}>创建</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

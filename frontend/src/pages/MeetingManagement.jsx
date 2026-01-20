@@ -100,7 +100,7 @@ const MeetingManagement = () => {
     <span>
           <Calendar size={16} />
           即将召开 ({meetings.filter((m) => m.status === 'scheduled').length})
-        </span>,
+    </span>,
 
     content:
     <div>
@@ -116,13 +116,13 @@ const MeetingManagement = () => {
                     <div style={{ fontSize: 12, color: '#666' }}>
                       <Users size={12} /> {record.participants.length}人
                     </div>
-                  </div>
+          </div>
 
         }]
         }
         loading={loading} />
 
-        </div>
+    </div>
 
   }];
 
@@ -175,7 +175,7 @@ const MeetingManagement = () => {
           {tabItems.map((item) =>
           <TabPane key={item.key} tab={item.tab}>
               {item.content}
-            </TabPane>
+          </TabPane>
           )}
         </Tabs>
       </Card>

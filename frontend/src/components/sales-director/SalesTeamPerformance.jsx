@@ -160,7 +160,7 @@ export default function SalesTeamPerformance({
                 {isTopPerformer &&
                 <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 text-white font-bold text-sm">
                     {index + 1}
-                  </div>
+                </div>
                 }
                 <div>
                   <h3 className="font-semibold text-slate-100">{member.name}</h3>
@@ -168,7 +168,7 @@ export default function SalesTeamPerformance({
                   {member.region &&
                   <Badge variant="outline" className="mt-1">
                       {SALES_REGIONS[member.region.toUpperCase()]?.label || member.region}
-                    </Badge>
+                  </Badge>
                   }
                 </div>
               </div>
@@ -225,7 +225,7 @@ export default function SalesTeamPerformance({
 
   // 渲染配置编辑器
   const renderConfigEditor = () => {
-    if (!isEditingConfig) return null;
+    if (!isEditingConfig) {return null;}
 
     return (
       <Card className="mb-6">
@@ -273,7 +273,7 @@ export default function SalesTeamPerformance({
           {configFormError &&
           <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-3 py-2 rounded-md text-sm">
               {configFormError}
-            </div>
+          </div>
           }
 
           {/* 当前指标列表 */}
@@ -306,7 +306,7 @@ export default function SalesTeamPerformance({
 
                     删除
                   </Button>
-                </div>
+              </div>
               )}
             </div>
           </div>
@@ -324,7 +324,7 @@ export default function SalesTeamPerformance({
                 {availableMetricOptions.map((metric) =>
                 <option key={metric.value} value={metric.value}>
                     {metric.label} - {metric.description}
-                  </option>
+                </option>
                 )}
               </select>
               <Button
@@ -436,7 +436,7 @@ export default function SalesTeamPerformance({
             {Object.values(SALES_REGIONS).map((region) =>
             <option key={region.value} value={region.value}>
                 {region.label}
-              </option>
+            </option>
             )}
           </select>
 
@@ -486,11 +486,11 @@ export default function SalesTeamPerformance({
               {displayRankingMetrics.map((metric, index) =>
             <Badge key={index} variant="outline" className="bg-blue-500/10 border-blue-500/30 text-blue-300">
                   {metric.label} ({formatPercentage((metric.weight || 0) * 100)})
-                </Badge>
+            </Badge>
             )}
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* 团队成员排名 */}
@@ -505,7 +505,7 @@ export default function SalesTeamPerformance({
             <h3 className="text-lg font-medium text-slate-100 mb-2">没有找到团队成员</h3>
             <p className="text-slate-400">请调整搜索条件或筛选器</p>
           </CardContent>
-        </Card>
+      </Card>
       }
     </div>);
 

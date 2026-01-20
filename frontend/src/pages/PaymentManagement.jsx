@@ -51,7 +51,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter } from
+  DialogFooter,
+  toast } from
 "../components/ui";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../components/ui/tabs";
 import { cn } from "../lib/utils";
@@ -323,7 +324,7 @@ export default function PaymentManagement() {
                 {isOverdue &&
                 <Badge variant="destructive">
                     逾期{payment.overdueDay}天
-                  </Badge>
+                </Badge>
                 }
               </div>
             </div>
@@ -334,7 +335,7 @@ export default function PaymentManagement() {
               {payment.paidAmount > 0 &&
               <div className="text-sm text-slate-400">
                   已付: {formatCurrency(payment.paidAmount)}
-                </div>
+              </div>
               }
             </div>
           </div>
@@ -345,7 +346,7 @@ export default function PaymentManagement() {
               {payment.dueDate &&
               <span className="ml-4">
                   到期日: {new Date(payment.dueDate).toLocaleDateString()}
-                </span>
+              </span>
               }
             </div>
             <div className="flex items-center gap-2">
@@ -360,7 +361,7 @@ export default function PaymentManagement() {
 
                   <FileText className="w-3 h-3 mr-1" />
                   开票
-                </Button>
+              </Button>
               }
               <Button
                 variant="ghost"
@@ -422,7 +423,7 @@ export default function PaymentManagement() {
                 </div>
               </div>
             </CardContent>
-          </Card>
+        </Card>
         )}
       </div>);
 
@@ -431,7 +432,7 @@ export default function PaymentManagement() {
   if (loading && payments.length === 0) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
       </div>);
 
   }
@@ -453,7 +454,7 @@ export default function PaymentManagement() {
               <Bell className="w-4 h-4 mr-2" />
               批量催收
             </Button>
-          </div>
+        </div>
         } />
 
 
@@ -551,13 +552,13 @@ export default function PaymentManagement() {
                               </div>
                             </div>
                           </div>
-                        </div>
+                  </div>
                   )}
                     </div>
-                  </CardContent>
+              </CardContent>
               }
               </Card>
-            </motion.div>
+          </motion.div>
           }
 
           {/* 搜索和筛选 */}
@@ -585,7 +586,7 @@ export default function PaymentManagement() {
                     {Object.values(PAYMENT_TYPES).map((type) =>
                     <option key={type.key} value={type.key}>
                         {type.label}
-                      </option>
+                    </option>
                     )}
                   </select>
                   <select
@@ -597,7 +598,7 @@ export default function PaymentManagement() {
                     {Object.values(PAYMENT_STATUS).map((status) =>
                     <option key={status.key} value={status.key}>
                         {status.label}
-                      </option>
+                    </option>
                     )}
                   </select>
                   <div className="flex items-center gap-1">
@@ -632,7 +633,7 @@ export default function PaymentManagement() {
                   "暂无付款记录"}
                   </div>
                 </CardContent>
-              </Card> :
+            </Card> :
 
             <>
                 {viewMode === "list" ?
@@ -718,7 +719,7 @@ export default function PaymentManagement() {
 
                                         <FileText className="w-3 h-3 mr-1" />
                                         开票
-                                      </Button>
+                              </Button>
                               }
                                     <Button
                                 variant="ghost"
@@ -732,19 +733,19 @@ export default function PaymentManagement() {
                                     </Button>
                                   </div>
                                 </td>
-                              </motion.tr>
+                        </motion.tr>
                         )}
                           </AnimatePresence>
                         </tbody>
                       </table>
                     </div>
-                  </Card> :
+              </Card> :
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filteredPayments.map((payment) =>
                 <PaymentCard key={payment.id} payment={payment} />
                 )}
-                  </div>
+              </div>
               }
 
                 {/* 分页 */}
@@ -767,9 +768,9 @@ export default function PaymentManagement() {
 
                       下一页
                     </Button>
-                  </div>
+              </div>
               }
-              </>
+            </>
             }
           </div>
         </TabsContent>
@@ -825,7 +826,7 @@ export default function PaymentManagement() {
                     {selectedPayment.projectName}
                   </div>
                 </div>
-              </div>
+            </div>
             }
           </div>
           <DialogFooter>
@@ -833,9 +834,25 @@ export default function PaymentManagement() {
               取消
             </Button>
             <Button onClick={() => {
-              // TODO: 实现开票逻辑
-              console.log("申请开票:", selectedPayment);
-              setShowInvoiceDialog(false);
+              if (!selectedPayment?.id) {
+                toast.error("未选择需要开票的记录");
+                return;
+              }
+              (async () => {
+                try {
+                  const today = new Date().toISOString().split("T")[0];
+                  await _invoiceApi.issue(selectedPayment.id, { issue_date: today });
+                  toast.success("开票已提交");
+                  setShowInvoiceDialog(false);
+                  await loadPayments();
+                } catch (err) {
+                  console.error("申请开票失败:", err);
+                  toast.error(
+                    "申请开票失败: " +
+                      (err?.response?.data?.detail || err.message || "请稍后重试"),
+                  );
+                }
+              })();
             }}>
               确认申请
             </Button>
@@ -937,9 +954,9 @@ export default function PaymentManagement() {
                   <div className="text-slate-300">
                     {selectedPayment.notes}
                   </div>
-                </div>
-            }
             </div>
+            }
+          </div>
           }
           <DialogFooter>
             <Button onClick={() => setShowDetailDialog(false)}>
@@ -971,9 +988,26 @@ export default function PaymentManagement() {
               取消
             </Button>
             <Button onClick={() => {
-              // TODO: 实现批量催收逻辑
-              console.log("批量催收:", reminders);
-              setShowCollectionDialog(false);
+              (async () => {
+                try {
+                  const lines = reminders.map((r) => {
+                    const due = r.due_date ? new Date(r.due_date).toLocaleDateString() : "-";
+                    const amount = r.unpaid_amount ?? r.amount ?? "";
+                    return `${r.customer_name || "-"} | 发票:${r.invoice_code || "-"} | 未付:${amount} | 到期:${due}`;
+                  });
+                  const content = [
+                    `批量催收清单（${reminders.length}条）`,
+                    ...lines,
+                  ].join("\n");
+                  await navigator.clipboard.writeText(content);
+                  toast.success("已复制催收清单到剪贴板");
+                } catch (err) {
+                  console.error("批量催收处理失败:", err);
+                  toast.info("无法自动发送通知，请手动处理催收");
+                } finally {
+                  setShowCollectionDialog(false);
+                }
+              })();
             }}>
               确认发送
             </Button>

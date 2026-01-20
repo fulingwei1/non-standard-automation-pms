@@ -7,7 +7,7 @@ import { formatDate } from "../lib/utils";
 
 // Format file size
 const formatFileSize = (bytes) => {
-  if (!bytes) return "0 B";
+  if (!bytes) {return "0 B";}
   const k = 1024;
   const sizes = ["B", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -134,7 +134,7 @@ export default function RdProjectDocuments() {
         page: pagination.page,
         page_size: pagination.page_size
       };
-      if (filterType) params.doc_type = filterType;
+      if (filterType) {params.doc_type = filterType;}
 
       const response = await rdProjectApi.getDocuments(id, params);
       const data = response.data?.data || response.data || response;
@@ -291,7 +291,7 @@ export default function RdProjectDocuments() {
                 {Object.entries(docTypeMap).map(([key, value]) =>
                 <SelectItem key={key} value={key}>
                     {value.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -334,7 +334,7 @@ export default function RdProjectDocuments() {
                     {doc.doc_no &&
                   <p className="text-xs text-slate-500 mb-2">
                         编号: {doc.doc_no}
-                      </p>
+                  </p>
                   }
                     <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
                       <span>版本: {doc.version}</span>
@@ -345,7 +345,7 @@ export default function RdProjectDocuments() {
                     {doc.description &&
                   <p className="text-sm text-slate-500 mb-3 line-clamp-2">
                         {doc.description}
-                      </p>
+                  </p>
                   }
                     <div className="flex items-center justify-between pt-3 border-t border-white/5">
                       <div className="flex items-center gap-2 text-xs text-slate-500">
@@ -363,10 +363,10 @@ export default function RdProjectDocuments() {
                         </Button>
                       </div>
                     </div>
-                  </div>);
+                </div>);
 
             })}
-            </div> :
+          </div> :
 
           <div className="text-center py-12 text-slate-500">
               <FileText className="h-12 w-12 mx-auto mb-4 text-slate-600" />
@@ -379,7 +379,7 @@ export default function RdProjectDocuments() {
                 <Plus className="h-4 w-4 mr-2" />
                 上传第一个文档
               </Button>
-            </div>
+          </div>
           }
 
           {/* Pagination */}
@@ -409,7 +409,7 @@ export default function RdProjectDocuments() {
 
                 下一页
               </Button>
-            </div>
+          </div>
           }
         </CardContent>
       </Card>
@@ -439,7 +439,7 @@ export default function RdProjectDocuments() {
                       <span className="text-xs">
                         ({formatFileSize(uploadFile.size)})
                       </span>
-                    </div>
+                  </div>
                   }
                 </div>
               </div>
@@ -462,7 +462,7 @@ export default function RdProjectDocuments() {
                       {Object.entries(docTypeMap).map(([key, value]) =>
                       <SelectItem key={key} value={key}>
                           {value.label}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>

@@ -133,7 +133,7 @@ export default function QuoteCostAnalysis() {
 
   // Calculate cost structure by category
   const structureByCategory = useMemo(() => {
-    if (!costStructure?.by_category) return [];
+    if (!costStructure?.by_category) {return [];}
     return costStructure.by_category.map((cat) => ({
       ...cat,
       percentage:
@@ -172,7 +172,7 @@ export default function QuoteCostAnalysis() {
               <Download className="h-4 w-4 mr-2" />
               导出报告
             </Button>
-          </div>
+        </div>
         } />
 
 
@@ -212,7 +212,7 @@ export default function QuoteCostAnalysis() {
                       {versions.map((v) =>
                       <SelectItem key={v.id} value={v.id.toString()}>
                           {v.version_no} - {formatDate(v.created_at)}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -237,7 +237,7 @@ export default function QuoteCostAnalysis() {
                       {versions.map((v) =>
                       <SelectItem key={v.id} value={v.id.toString()}>
                           {v.version_no} - {formatDate(v.created_at)}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -367,17 +367,17 @@ export default function QuoteCostAnalysis() {
                             {item.change_pct >= 0 ? "+" : ""}
                             {item.change_pct?.toFixed(2)}%
                           </TableCell>
-                        </TableRow>
+                    </TableRow>
                     )}
                     </TableBody>
                   </Table>
-                </div>
+              </div>
               }
 
               {!comparison && selectedVersions[0] && selectedVersions[1] &&
               <div className="text-center py-8 text-slate-400">
                   加载对比数据中...
-                </div>
+              </div>
               }
             </CardContent>
           </Card>
@@ -404,8 +404,8 @@ export default function QuoteCostAnalysis() {
                       gross_margin: v.gross_margin || 0
                     }))}
                     height={300}
-                    showGrid={true}
-                    showPoints={true} />
+                    showGrid
+                    showPoints />
 
                   </div>
 
@@ -474,19 +474,19 @@ export default function QuoteCostAnalysis() {
                                     毛利率: {marginChange >= 0 ? "+" : ""}
                                     {marginChange.toFixed(2)}%
                                   </div>
-                                </div>
+                            </div>
                             }
                             </TableCell>
-                          </TableRow>);
+                        </TableRow>);
 
                     })}
                     </TableBody>
                   </Table>
-                </div> :
+              </div> :
 
               <div className="text-center py-8 text-slate-400">
                   暂无版本数据
-                </div>
+              </div>
               }
             </CardContent>
           </Card>
@@ -558,7 +558,7 @@ export default function QuoteCostAnalysis() {
                       percentage: parseFloat(cat.percentage)
                     }))}
                     size={300}
-                    showLegend={true} />
+                    showLegend />
 
                   </div>
 
@@ -605,15 +605,15 @@ export default function QuoteCostAnalysis() {
                           <TableCell>
                             <Badge className="bg-slate-600">-</Badge>
                           </TableCell>
-                        </TableRow>
+                    </TableRow>
                     )}
                     </TableBody>
                   </Table>
-                </div> :
+              </div> :
 
               <div className="text-center py-8 text-slate-400">
                   暂无成本结构数据
-                </div>
+              </div>
               }
             </CardContent>
           </Card>

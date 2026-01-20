@@ -293,7 +293,7 @@ export function PieChart({ data, width = 200, height = 200 }) {
 // 工时趋势图卡片
 export function TimesheetTrendChart({ data, title = "工时趋势" }) {
   const chartData = useMemo(() => {
-    if (!data || !Array.isArray(data)) return [];
+    if (!data || !Array.isArray(data)) {return [];}
     return data.map((item) => ({
       label: item.date || item.label || "",
       value: parseFloat(item.hours || item.value || 0)
@@ -320,7 +320,7 @@ export function TimesheetTrendChart({ data, title = "工时趋势" }) {
 // 部门对比图卡片
 export function DepartmentComparisonChart({ data, title = "部门工时对比" }) {
   const chartData = useMemo(() => {
-    if (!data || !Array.isArray(data)) return [];
+    if (!data || !Array.isArray(data)) {return [];}
     return data.map((item) => ({
       label: item.department_name || item.label || "",
       value: parseFloat(item.total_hours || item.value || 0)
@@ -347,7 +347,7 @@ export function DepartmentComparisonChart({ data, title = "部门工时对比" }
 // 项目工时分布图卡片
 export function ProjectDistributionChart({ data, title = "项目工时分布" }) {
   const chartData = useMemo(() => {
-    if (!data || !Array.isArray(data)) return [];
+    if (!data || !Array.isArray(data)) {return [];}
     return data.
     slice(0, 6) // 只显示前6个项目
     .map((item) => ({

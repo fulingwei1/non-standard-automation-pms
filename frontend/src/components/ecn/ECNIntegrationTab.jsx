@@ -58,7 +58,7 @@ export default function ECNIntegrationTab({
 
   // 批量同步
   const handleBatchSync = async () => {
-    if (!confirm("确认要同步到所有相关模块吗？")) return;
+    if (!confirm("确认要同步到所有相关模块吗？")) {return;}
 
     try {
       const results = [];

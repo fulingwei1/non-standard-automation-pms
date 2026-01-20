@@ -160,13 +160,13 @@ export const getTechnicianStatusColor = (status) => {
 
 // 计算派工完成率
 export const calculateCompletionRate = (completed, total) => {
-  if (total === 0) return 0;
+  if (total === 0) {return 0;}
   return ((completed / total) * 100).toFixed(1);
 };
 
 // 计算延期率
 export const calculateDelayRate = (delayed, total) => {
-  if (total === 0) return 0;
+  if (total === 0) {return 0;}
   return ((delayed / total) * 100).toFixed(1);
 };
 
@@ -240,7 +240,7 @@ export const getTechnicianStatusStats = (technicians) => {
 
 // 计算技术人员工作负载
 export const calculateTechnicianWorkload = (assignedTasks, maxTasks = 5) => {
-  if (!assignedTasks) return 0;
+  if (!assignedTasks) {return 0;}
   const workload = (assignedTasks.length / maxTasks) * 100;
   return Math.min(workload, 100);
 };
@@ -265,7 +265,7 @@ export const getBestMatchTechnician = (technicians, requiredSkills, currentWorkl
 
 // 计算技能匹配度
 export const calculateSkillMatch = (technicianSkills, requiredSkills) => {
-  if (!requiredSkills || requiredSkills.length === 0) return 100;
+  if (!requiredSkills || requiredSkills.length === 0) {return 100;}
   
   const matchedSkills = technicianSkills.filter(skill => 
     requiredSkills.includes(skill)

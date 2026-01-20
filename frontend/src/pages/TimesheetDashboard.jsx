@@ -183,7 +183,7 @@ export default function TimesheetDashboard() {
               {[2024, 2025, 2026].map((year) =>
               <option key={year} value={year}>
                   {year}年
-                </option>
+              </option>
               )}
             </select>
             <select
@@ -194,7 +194,7 @@ export default function TimesheetDashboard() {
               {Array.from({ length: 12 }, (_, i) => i + 1).map((month) =>
               <option key={month} value={month}>
                   {month}月
-                </option>
+              </option>
               )}
             </select>
           </div>
@@ -339,7 +339,7 @@ export default function TimesheetDashboard() {
                         {monthSummary.holiday_hours?.toFixed(1) || 0}h
                       </p>
                     </div>
-                  </div>
+                </div>
                 }
               </CardContent>
             </Card>
@@ -393,7 +393,7 @@ export default function TimesheetDashboard() {
                           {dept.user_count || 0}人
                         </span>
                       </div>
-                    </div>
+                  </div>
                   )}
                 </div>
               </CardContent>
@@ -428,7 +428,7 @@ export default function TimesheetDashboard() {
                           {project.user_count || 0}人
                         </span>
                       </div>
-                    </div>
+                  </div>
                   )}
                 </div>
               </CardContent>
@@ -448,7 +448,7 @@ export default function TimesheetDashboard() {
                 <div className="text-center py-8">
                     <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-2" />
                     <p className="text-slate-400">未发现异常记录</p>
-                  </div> :
+                </div> :
 
                 <div className="space-y-2">
                     {anomalies.map((anomaly, index) =>
@@ -465,9 +465,9 @@ export default function TimesheetDashboard() {
                           </p>
                         </div>
                         <Badge variant="destructive">{anomaly.severity}</Badge>
-                      </div>
-                  )}
                   </div>
+                  )}
+                </div>
                 }
               </CardContent>
             </Card>

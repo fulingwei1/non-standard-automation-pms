@@ -135,7 +135,7 @@ export function TicketQueue({
 
   // 获取排序图标
   const getSortIcon = (key) => {
-    if (sortConfig.key !== key) return <ArrowUpDown className="w-4 h-4" />;
+    if (sortConfig.key !== key) {return <ArrowUpDown className="w-4 h-4" />;}
     return sortConfig.direction === "asc" ?
     <ChevronUp className="w-4 h-4" /> :
     <ChevronDown className="w-4 h-4" />;

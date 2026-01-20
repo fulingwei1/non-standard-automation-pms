@@ -43,7 +43,8 @@ import {
   GitBranch,
   Send,
   Target,
-  ExternalLink } from
+  ExternalLink,
+  Calculator } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import { Button } from "../components/ui/button";
@@ -123,7 +124,7 @@ export default function SolutionDetail() {
 
   // Load solution detail
   const loadSolution = useCallback(async () => {
-    if (!id) return;
+    if (!id) {return;}
 
     try {
       setLoading(true);
@@ -385,7 +386,7 @@ export default function SolutionDetail() {
 
               <tab.icon className="w-4 h-4" />
               {tab.name}
-            </Button>
+          </Button>
           )}
         </div>
       </motion.div>
@@ -412,7 +413,7 @@ export default function SolutionDetail() {
                     className="px-3 py-1 bg-primary/10 text-primary text-xs rounded-full">
 
                         {tag}
-                      </span>
+                  </span>
                   )}
                   </div>
                 </CardContent>
@@ -493,7 +494,7 @@ export default function SolutionDetail() {
                           {review.comments}
                         </p>
                       </div>
-                    </div>
+                </div>
                 )}
                 </CardContent>
               </Card>
@@ -522,7 +523,7 @@ export default function SolutionDetail() {
                         </p>
                         <p className="text-xs text-slate-500">{person.role}</p>
                       </div>
-                    </div>
+                </div>
                 )}
                 </CardContent>
               </Card>
@@ -551,7 +552,7 @@ export default function SolutionDetail() {
                 </CardContent>
               </Card>
             </div>
-          </div>
+        </div>
         }
 
         {/* 技术规格 Tab */}
@@ -577,7 +578,7 @@ export default function SolutionDetail() {
                     "材质"}
                       </span>
                       <span className="text-white">{value}</span>
-                    </div>
+                </div>
 
               )}
               </CardContent>
@@ -624,7 +625,7 @@ export default function SolutionDetail() {
                   {solution.techSpecs.testItems.map((item, index) =>
                 <Badge key={index} variant="outline" className="text-xs">
                       {item}
-                    </Badge>
+                </Badge>
                 )}
                 </div>
               </CardContent>
@@ -639,7 +640,7 @@ export default function SolutionDetail() {
                   {solution.techSpecs.testStandards.map((standard, index) =>
                 <Badge key={index} className="text-xs bg-blue-500">
                       {standard}
-                    </Badge>
+                </Badge>
                 )}
                 </div>
               </CardContent>
@@ -671,13 +672,13 @@ export default function SolutionDetail() {
                         <p className="text-sm font-medium text-white">
                           {value}
                         </p>
-                      </div>
+                  </div>
 
                 )}
                 </div>
               </CardContent>
             </Card>
-          </div>
+        </div>
         }
 
         {/* 设备配置 Tab */}
@@ -716,7 +717,7 @@ export default function SolutionDetail() {
                           <td className="py-3 text-right text-emerald-400">
                             ¥{item.totalPrice.toLocaleString()}
                           </td>
-                        </tr>
+                    </tr>
                     )}
                     </tbody>
                   </table>
@@ -757,7 +758,7 @@ export default function SolutionDetail() {
                           <td className="py-3 text-right text-emerald-400">
                             ¥{item.totalPrice.toLocaleString()}
                           </td>
-                        </tr>
+                    </tr>
                     )}
                     </tbody>
                   </table>
@@ -788,7 +789,7 @@ export default function SolutionDetail() {
                       <span className="text-sm text-emerald-400">
                         ¥{item.price.toLocaleString()}
                       </span>
-                    </div>
+                </div>
                 )}
                 </CardContent>
               </Card>
@@ -817,12 +818,12 @@ export default function SolutionDetail() {
                       <span className="text-sm text-emerald-400">
                         ¥{item.totalPrice.toLocaleString()}
                       </span>
-                    </div>
+                </div>
                 )}
                 </CardContent>
               </Card>
             </div>
-          </div>
+        </div>
         }
 
         {/* 成本估算 Tab */}
@@ -883,7 +884,7 @@ export default function SolutionDetail() {
                             <div className="w-28 text-right text-sm text-white">
                               ¥{item.value.toLocaleString()}
                             </div>
-                          </div>);
+                      </div>);
 
                   })}
                       <div className="flex items-center gap-4 pt-4 border-t border-white/5">
@@ -932,15 +933,15 @@ export default function SolutionDetail() {
                     </div>
                   </CardContent>
                 </Card>
-              </> :
+          </> :
 
           <div className="col-span-full text-center py-16 text-slate-400">
                 <Calculator className="w-12 h-12 mx-auto mb-4 text-slate-600" />
                 <p className="text-lg font-medium">暂无成本估算</p>
                 <p className="text-sm">请先进行成本核算</p>
-              </div>
-          }
           </div>
+          }
+        </div>
         }
 
         {/* 交付物 Tab */}
@@ -974,7 +975,7 @@ export default function SolutionDetail() {
                           {item.file ?
                         <p className="text-xs text-slate-500">
                               {item.file} ({item.size})
-                            </p> :
+                        </p> :
 
                         <p className="text-xs text-slate-500">待上传</p>
                         }
@@ -992,15 +993,15 @@ export default function SolutionDetail() {
                         {item.file &&
                       <Button variant="ghost" size="sm">
                             <Download className="w-4 h-4" />
-                          </Button>
+                      </Button>
                       }
                       </div>
-                    </div>);
+                  </div>);
 
               })}
               </div>
             </CardContent>
-          </Card>
+        </Card>
         }
 
         {/* 版本历史 Tab */}
@@ -1049,11 +1050,11 @@ export default function SolutionDetail() {
                       </div>
                       <p className="text-sm text-white">{version.changes}</p>
                     </div>
-                  </div>
+              </div>
               )}
               </div>
             </CardContent>
-          </Card>
+        </Card>
         }
       </motion.div>
     </motion.div>);

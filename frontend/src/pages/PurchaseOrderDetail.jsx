@@ -129,7 +129,7 @@ const POLineItem = ({ item, idx: _idx }) =>
         {statusConfig[item.status]?.label || item.status}
       </Badge>
     </div>
-  </motion.div>;
+</motion.div>;
 
 
 const TimelineStage = ({ stage, idx, total }) => {
@@ -163,12 +163,12 @@ const TimelineStage = ({ stage, idx, total }) => {
         {stage.date &&
         <p className="text-xs text-slate-500 mt-1">
             {formatDate(stage.date)}
-          </p>
+        </p>
         }
         {stage.daysLeft &&
         <p className="text-xs text-amber-400 mt-1">
             还需 {stage.daysLeft} 天
-          </p>
+        </p>
         }
         <p className="text-xs text-slate-400 mt-1">{stage.description}</p>
       </motion.div>
@@ -384,7 +384,7 @@ export default function PurchaseOrderDetail() {
   }, [loadPurchaseOrder]);
 
   const progress = useMemo(() => {
-    if (!po) return 0;
+    if (!po) {return 0;}
     const completedStages = po.timeline.filter(
       (s) => s.status === "completed"
     ).length;
@@ -394,7 +394,7 @@ export default function PurchaseOrderDetail() {
   }, [po]);
 
   const totalItems = useMemo(() => {
-    if (!po) return 0;
+    if (!po) {return 0;}
     return po.items.reduce((sum, item) => sum + item.amount, 0);
   }, [po]);
 
@@ -618,7 +618,7 @@ export default function PurchaseOrderDetail() {
 
                   {/* Header */}
                   <div className="flex items-center border-b-2 border-slate-600 py-3 text-sm font-medium text-slate-400">
-                    <div className="w-12"></div>
+                    <div className="w-12" />
                     <div className="flex-1">物料描述</div>
                     <div className="w-24 text-right">数量</div>
                     <div className="w-24 text-right">单价</div>
@@ -768,7 +768,7 @@ export default function PurchaseOrderDetail() {
                       <Button size="sm" variant="ghost">
                         <Download className="w-4 h-4" />
                       </Button>
-                    </motion.div>
+                  </motion.div>
                   )}
                 </motion.div>
               </CardContent>
@@ -825,7 +825,7 @@ export default function PurchaseOrderDetail() {
                     <Download className="w-4 h-4" />
                     导出PDF
                   </Button>
-                </>
+              </>
               }
               {po.status === "draft" &&
               <>
@@ -837,7 +837,7 @@ export default function PurchaseOrderDetail() {
                     <Edit className="w-4 h-4" />
                     编辑订单
                   </Button>
-                </>
+              </>
               }
             </div>
           </CardContent>

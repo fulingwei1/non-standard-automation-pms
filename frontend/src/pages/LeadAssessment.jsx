@@ -295,7 +295,7 @@ const LeadAssessment = () => {
             {INDUSTRY_TYPES[record.industry?.toUpperCase()]?.label} · 
             {COMPANY_SIZES[record.companySize?.toUpperCase()]?.label}
           </div>
-        </div>
+    </div>
 
   },
   {
@@ -309,7 +309,7 @@ const LeadAssessment = () => {
           <div style={{ fontSize: 12 }}>
             <Mail size={12} /> {record.email}
           </div>
-        </div>
+    </div>
 
   },
   {
@@ -328,7 +328,7 @@ const LeadAssessment = () => {
               {QUALIFICATION_LEVELS[record.qualification?.toUpperCase()]?.label}
             </Tag>
           </div>
-        </div>
+    </div>
 
   },
   {
@@ -353,7 +353,7 @@ const LeadAssessment = () => {
             size="small"
             style={{ marginTop: 4 }} />
 
-          </div>);
+        </div>);
 
     }
   },
@@ -366,7 +366,7 @@ const LeadAssessment = () => {
       return (
         <Tag color={config?.color}>
             {config?.icon} {config?.label || source}
-          </Tag>);
+        </Tag>);
 
     }
   },
@@ -377,7 +377,7 @@ const LeadAssessment = () => {
     render: (date) =>
     <div style={{ fontSize: 12 }}>
           <Calendar size={12} /> {date}
-        </div>
+    </div>
 
   },
   {
@@ -413,7 +413,7 @@ const LeadAssessment = () => {
         onClick={() => handleConvertLead(record)}>
 
               转化
-            </Button>
+      </Button>
       }
           <Dropdown
         overlay={
@@ -428,14 +428,14 @@ const LeadAssessment = () => {
 
                   <XCircle size={14} /> 删除线索
                 </Menu.Item>
-              </Menu>
+        </Menu>
         }>
 
             <Button type="link" icon={<Settings size={16} />}>
               更多
             </Button>
           </Dropdown>
-        </Space>
+    </Space>
 
   }];
 
@@ -514,7 +514,7 @@ const LeadAssessment = () => {
                 {Object.values(LEAD_SOURCES).map((source) =>
                 <Select.Option key={source.value} value={source.value}>
                     {source.icon} {source.label}
-                  </Select.Option>
+                </Select.Option>
                 )}
               </Select>
               <Select
@@ -527,7 +527,7 @@ const LeadAssessment = () => {
                 {Object.values(LEAD_STATUS).map((status) =>
                 <Select.Option key={status.value} value={status.value}>
                     <Tag color={status.color}>{status.label}</Tag>
-                  </Select.Option>
+                </Select.Option>
                 )}
               </Select>
               <Select
@@ -540,7 +540,7 @@ const LeadAssessment = () => {
                 {Object.values(QUALIFICATION_LEVELS).map((qual) =>
                 <Select.Option key={qual.value} value={qual.value}>
                     <Tag color={qual.color}>{qual.label}</Tag>
-                  </Select.Option>
+                </Select.Option>
                 )}
               </Select>
               <Select
@@ -553,7 +553,7 @@ const LeadAssessment = () => {
                 {Object.values(INDUSTRY_TYPES).map((industry) =>
                 <Select.Option key={industry.value} value={industry.value}>
                     {industry.label}
-                  </Select.Option>
+                </Select.Option>
                 )}
               </Select>
             </Space>
@@ -573,7 +573,7 @@ const LeadAssessment = () => {
           <span>
               <BarChart3 size={16} />
               概览分析
-            </span>
+          </span>
           }
           key="overview">
 
@@ -599,7 +599,7 @@ const LeadAssessment = () => {
           <span>
               <Users size={16} />
               线索列表 ({filteredLeads.length})
-            </span>
+          </span>
           }
           key="leads">
 
@@ -618,7 +618,7 @@ const LeadAssessment = () => {
           <span>
               <Award size={16} />
               评估表单
-            </span>
+          </span>
           }
           key="assessment">
 
@@ -647,7 +647,7 @@ const LeadAssessment = () => {
           <span>
               <Target size={16} />
               评分引擎
-            </span>
+          </span>
           }
           key="scoring">
 
@@ -666,7 +666,7 @@ const LeadAssessment = () => {
           <span>
               <MessageSquare size={16} />
               跟进管理
-            </span>
+          </span>
           }
           key="followups">
 

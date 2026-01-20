@@ -86,17 +86,17 @@ const StatCard = ({ title, value, subtitle, trend, icon: Icon, color, bg }) => {
             <>
                   <ArrowUpRight className="w-3 h-3 text-emerald-400" />
                   <span className="text-xs text-emerald-400">+{trend}%</span>
-                </> :
+            </> :
             trend < 0 ?
             <>
                   <ArrowDownRight className="w-3 h-3 text-red-400" />
                   <span className="text-xs text-red-400">{trend}%</span>
-                </> :
+            </> :
             null}
               {trend !== 0 &&
             <span className="text-xs text-slate-500 ml-1">vs 上月</span>
             }
-            </div>
+          </div>
           }
         </div>
         <div className={cn("rounded-lg p-3 bg-opacity-20", bg)}>
@@ -363,7 +363,7 @@ export default function PresalesManagerWorkstation() {
               <Users className="w-4 h-4" />
               团队管理
             </Button>
-          </motion.div>
+        </motion.div>
         } />
 
 
@@ -491,7 +491,7 @@ export default function PresalesManagerWorkstation() {
                               {member.pendingReview > 0 &&
                             <span className="text-amber-400 ml-1">
                                   · 待审核 {member.pendingReview}
-                                </span>
+                            </span>
                             }
                             </div>
                           </div>
@@ -524,7 +524,7 @@ export default function PresalesManagerWorkstation() {
                         className="h-1.5 bg-slate-700/50" />
 
                       </div>
-                    </div>
+                  </div>
                   )}
                 </div>
               </CardContent>
@@ -602,7 +602,7 @@ export default function PresalesManagerWorkstation() {
                         截止: {solution.deadline}
                       </span>
                     </div>
-                  </div>
+                </div>
                 )}
               </CardContent>
             </Card>
@@ -640,12 +640,12 @@ export default function PresalesManagerWorkstation() {
                           {item.priority === "high" &&
                         <Badge className="text-xs bg-red-500/20 text-red-400 border-red-500/30">
                               紧急
-                            </Badge>
+                        </Badge>
                         }
                           {item.daysWaiting > 1 &&
                         <Badge className="text-xs bg-orange-500/20 text-orange-400 border-orange-500/30">
                               待处理 {item.daysWaiting} 天
-                            </Badge>
+                        </Badge>
                         }
                         </div>
                         <p className="font-medium text-white text-sm">
@@ -665,7 +665,7 @@ export default function PresalesManagerWorkstation() {
                         {formatCurrency(item.amount)}
                       </span>
                     </div>
-                  </div>
+                </div>
                 )}
                 <Link to="/solutions">
                   <Button variant="outline" className="w-full mt-3">
@@ -747,7 +747,7 @@ export default function PresalesManagerWorkstation() {
                       className="h-1 bg-slate-700/50" />
 
                     </div>
-                  </div>
+                </div>
                 )}
               </CardContent>
             </Card>

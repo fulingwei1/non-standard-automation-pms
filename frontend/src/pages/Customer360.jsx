@@ -255,7 +255,7 @@ const Customer360 = () => {
     <span>
           <BarChart3 size={16} />
           基本信息
-        </span>,
+    </span>,
 
     content: <CustomerBasicInfo customer={customer} loading={loading} />
   },
@@ -265,7 +265,7 @@ const Customer360 = () => {
     <span>
           <Package size={16} />
           订单历史 ({customer?.orders?.length || 0})
-        </span>,
+    </span>,
 
     content: <CustomerOrderHistory orders={customer?.orders || []} loading={loading} />
   },
@@ -275,7 +275,7 @@ const Customer360 = () => {
     <span>
           <FileText size={16} />
           报价历史 ({customer?.quotes?.length || 0})
-        </span>,
+    </span>,
 
     content: <CustomerQuoteHistory quotes={customer?.quotes || []} loading={loading} />
   },
@@ -285,7 +285,7 @@ const Customer360 = () => {
     <span>
           <Receipt size={16} />
           合同管理 ({customer?.contracts?.length || 0})
-        </span>,
+    </span>,
 
     content: <CustomerContractHistory contracts={customer?.contracts || []} loading={loading} />
   },
@@ -295,7 +295,7 @@ const Customer360 = () => {
     <span>
           <DollarSign size={16} />
           支付记录 ({customer?.payments?.length || 0})
-        </span>,
+    </span>,
 
     content: <CustomerPaymentRecords payments={customer?.payments || []} loading={loading} />
   },
@@ -305,7 +305,7 @@ const Customer360 = () => {
     <span>
           <Target size={16} />
           项目交付 ({customer?.projects?.length || 0})
-        </span>,
+    </span>,
 
     content: <CustomerProjectDelivery projects={customer?.projects || []} loading={loading} />
   },
@@ -315,7 +315,7 @@ const Customer360 = () => {
     <span>
           <Star size={16} />
           满意度调查 ({customer?.satisfactions?.length || 0})
-        </span>,
+    </span>,
 
     content: <CustomerSatisfaction satisfactions={customer?.satisfactions || []} loading={loading} />
   },
@@ -325,7 +325,7 @@ const Customer360 = () => {
     <span>
           <MessageSquare size={16} />
           服务记录 ({customer?.services?.length || 0})
-        </span>,
+    </span>,
 
     content: <CustomerServiceRecords services={customer?.services || []} loading={loading} />
   },
@@ -335,7 +335,7 @@ const Customer360 = () => {
     <span>
           <TrendingUp size={16} />
           数据分析
-        </span>,
+    </span>,
 
     content: <CustomerAnalytics customer={customer} loading={loading} />
   }];
@@ -376,7 +376,7 @@ const Customer360 = () => {
               {customer &&
               <Text type="secondary">
                   {customer.name} - {customer.contactPerson}
-                </Text>
+              </Text>
               }
             </div>
           </div>
@@ -429,7 +429,7 @@ const Customer360 = () => {
           {tabItems.map((item) =>
           <TabPane key={item.key} tab={item.tab}>
               {item.content}
-            </TabPane>
+          </TabPane>
           )}
         </Tabs>
       </Card>

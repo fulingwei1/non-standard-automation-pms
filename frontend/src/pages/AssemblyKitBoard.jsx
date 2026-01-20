@@ -217,16 +217,16 @@ export default function AssemblyKitBoard() {
   };
 
   const getKitRateColor = (rate) => {
-    if (rate >= 100) return "text-emerald-600";
-    if (rate >= 80) return "text-blue-600";
-    if (rate >= 50) return "text-amber-600";
+    if (rate >= 100) {return "text-emerald-600";}
+    if (rate >= 80) {return "text-blue-600";}
+    if (rate >= 50) {return "text-amber-600";}
     return "text-red-600";
   };
 
   const _getProgressColor = (rate) => {
-    if (rate >= 100) return "bg-emerald-500";
-    if (rate >= 80) return "bg-blue-500";
-    if (rate >= 50) return "bg-amber-500";
+    if (rate >= 100) {return "bg-emerald-500";}
+    if (rate >= 80) {return "bg-blue-500";}
+    if (rate >= 50) {return "bg-amber-500";}
     return "bg-red-500";
   };
 
@@ -262,7 +262,7 @@ export default function AssemblyKitBoard() {
               {projects.map((proj) =>
               <SelectItem key={proj.id} value={proj.id.toString()}>
                   {proj.name || proj.project_name}
-                </SelectItem>
+              </SelectItem>
               )}
             </SelectContent>
           </Select>
@@ -493,7 +493,7 @@ export default function AssemblyKitBoard() {
                           {analysis.machine_no &&
                       <Badge variant="outline">
                               {analysis.machine_no}
-                            </Badge>
+                      </Badge>
                       }
                         </div>
                         <div className="text-sm text-slate-500 mb-2">
@@ -535,18 +535,18 @@ export default function AssemblyKitBoard() {
 
                     <Badge className="bg-red-500">
                             阻塞于 {analysis.first_blocked_stage}
-                          </Badge>
+                    </Badge>
                     }
                         <Eye className="w-4 h-4 text-slate-400" />
                       </div>
                     </div>
-                  </div>
+              </div>
               )}
-              </div> :
+            </div> :
 
             <div className="text-center py-8 text-slate-400">
                 暂无分析记录
-              </div>
+            </div>
             }
           </CardContent>
         </Card>
@@ -575,7 +575,7 @@ export default function AssemblyKitBoard() {
                         {suggestion.machine_no &&
                     <span className="text-sm text-slate-500">
                             {suggestion.machine_no}
-                          </span>
+                    </span>
                     }
                       </div>
                       <Badge variant="outline" className="bg-blue-100">
@@ -617,11 +617,11 @@ export default function AssemblyKitBoard() {
                                 <span className="font-medium">
                                   {factor.score}/{factor.max}分
                                 </span>
-                              </div>
+                      </div>
 
                     )}
                         </div>
-                      </div>
+                </div>
                 }
                     {suggestion.resource_allocation &&
                 <div className="text-xs text-slate-500 mb-2 p-2 bg-white rounded">
@@ -649,15 +649,15 @@ export default function AssemblyKitBoard() {
                       length
                       }
                                 个
-                              </div>
+                    </div>
                     }
                         </div>
-                      </div>
+                </div>
                 }
                     {suggestion.reason &&
                 <div className="text-sm text-slate-500 mb-3 p-2 bg-white rounded">
                         {suggestion.reason}
-                      </div>
+                </div>
                 }
                     <div className="flex gap-2">
                       <Button
@@ -681,13 +681,13 @@ export default function AssemblyKitBoard() {
                         拒绝
                       </Button>
                     </div>
-                  </div>
+              </div>
               )}
-              </div> :
+            </div> :
 
             <div className="text-center py-8 text-slate-400">
                 暂无待处理建议
-              </div>
+            </div>
             }
           </CardContent>
         </Card>
@@ -732,7 +732,7 @@ export default function AssemblyKitBoard() {
                         {alert.machine_no &&
                       <div className="text-xs text-slate-500">
                             {alert.machine_no}
-                          </div>
+                      </div>
                       }
                       </TableCell>
                       <TableCell>
@@ -755,13 +755,13 @@ export default function AssemblyKitBoard() {
                       <TableCell className="text-sm">
                         {new Date(alert.response_deadline).toLocaleString()}
                       </TableCell>
-                    </TableRow>);
+                  </TableRow>);
 
               })}
               </TableBody>
             </Table>
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* Analysis Detail Dialog */}
@@ -852,13 +852,13 @@ export default function AssemblyKitBoard() {
                           {stage.can_start ?
                       <span className="text-emerald-600 ml-1">
                               可开始
-                            </span> :
+                      </span> :
 
                       <span className="text-red-600 ml-1">阻塞</span>
                       }
                         </div>
                       </div>
-                    </div>
+                </div>
                 )}
                 </div>
               </div>
@@ -914,13 +914,13 @@ export default function AssemblyKitBoard() {
                               {detail.alert_level}
                             </Badge>
                           </TableCell>
-                        </TableRow>
+                  </TableRow>
                   )}
                     </TableBody>
                   </Table>
-                </div>
-            }
             </div>
+            }
+          </div>
           }
         </DialogContent>
       </Dialog>

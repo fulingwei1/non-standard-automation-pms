@@ -18,7 +18,7 @@ const RadioGroup = React.forwardRef(
     const currentValue = isControlled ? value : uncontrolledValue;
 
     const handleChange = (nextValue) => {
-      if (!isControlled) setUncontrolledValue(nextValue);
+      if (!isControlled) {setUncontrolledValue(nextValue);}
       onValueChange?.(nextValue);
     };
 

@@ -128,7 +128,7 @@ export default function AcceptanceExecution() {
     }
   };
   const handleUpdateItem = async () => {
-    if (!selectedItem) return;
+    if (!selectedItem) {return;}
     try {
       await acceptanceApi.orders.updateItem(selectedItem.id, itemResult);
       setShowItemDialog(false);

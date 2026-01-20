@@ -238,13 +238,13 @@ export default function DataImportExport() {
       <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded flex items-center gap-2">
           <XCircle className="h-5 w-5" />
           {error}
-        </div>
+      </div>
       }
       {success &&
       <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded flex items-center gap-2">
           <CheckCircle className="h-5 w-5" />
           {success}
-        </div>
+      </div>
       }
 
       <Tabs defaultValue="import" className="space-y-4">
@@ -274,7 +274,7 @@ export default function DataImportExport() {
                       {templateTypes.map((type) =>
                       <SelectItem key={type.type} value={type.type}>
                           {type.name} - {type.description}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -310,7 +310,7 @@ export default function DataImportExport() {
 
                     <Download className="h-4 w-4 mr-2" />
                     下载模板
-                  </Button>
+                </Button>
                 }
                 <Button
                   onClick={handlePreviewImport}
@@ -378,15 +378,15 @@ export default function DataImportExport() {
 
                             第 {error.row} 行，字段 {error.field}：
                             {error.message}
-                          </div>
+                    </div>
                     )}
                         {previewData.errors.length > 20 &&
                     <div className="text-sm text-gray-500">
                             还有 {previewData.errors.length - 20} 个错误...
-                          </div>
+                    </div>
                     }
                       </div>
-                    </div>
+                </div>
                 }
 
                   {previewData.preview_data &&
@@ -404,7 +404,7 @@ export default function DataImportExport() {
                           ).map((key) =>
                           <th key={key} className="text-left p-2">
                                     {key}
-                                  </th>
+                          </th>
                           )}
                               </tr>
                             </thead>
@@ -414,18 +414,18 @@ export default function DataImportExport() {
                                   {Object.values(row).map((value, cellIdx) =>
                           <td key={cellIdx} className="p-2">
                                       {String(value || "")}
-                                    </td>
+                          </td>
                           )}
-                                </tr>
+                        </tr>
                         )}
                             </tbody>
                           </table>
                         </div>
-                      </div>
+                </div>
                 }
                 </div>
               </CardContent>
-            </Card>
+          </Card>
           }
         </TabsContent>
 
@@ -468,7 +468,7 @@ export default function DataImportExport() {
                     })
                     } />
 
-                  </div>
+                </div>
                 }
 
                 {(exportType === "timesheet" || exportType === "workload") &&
@@ -499,7 +499,7 @@ export default function DataImportExport() {
                       } />
 
                     </div>
-                  </>
+                </>
                 }
               </div>
 

@@ -38,7 +38,7 @@ export function TrendChart({ data, height = 250, showPoints = true }) {
   }, [data, height, padding, minValue, valueRange]);
 
   const pathData = useMemo(() => {
-    if (points.length === 0) return "";
+    if (points.length === 0) {return "";}
     return points
       .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
       .join(" ");

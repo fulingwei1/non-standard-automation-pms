@@ -303,7 +303,7 @@ export default function QualificationAssessmentList() {
 
                     暂无评估记录
                   </TableCell>
-                </TableRow> :
+              </TableRow> :
 
               assessments.map((assessment) =>
               <TableRow key={assessment.id}>
@@ -337,7 +337,7 @@ export default function QualificationAssessmentList() {
                         查看详情
                       </Button>
                     </TableCell>
-                  </TableRow>
+              </TableRow>
               )
               }
             </TableBody>
@@ -365,9 +365,9 @@ export default function QualificationAssessmentList() {
               }))} />
 
                 </CardContent>
-              </Card>
+        </Card>
         )}
-        </div>
+      </div>
       }
 
       {/* 分页 */}
@@ -413,7 +413,7 @@ export default function QualificationAssessmentList() {
               </Button>
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
     </motion.div>);
 

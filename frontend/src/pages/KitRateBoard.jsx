@@ -61,7 +61,7 @@ export default function KitRateBoard() {
     try {
       setLoading(true);
       const params = {};
-      if (filterProject && filterProject !== "all") params.project_ids = filterProject;
+      if (filterProject && filterProject !== "all") {params.project_ids = filterProject;}
       const res = await purchaseApi.kitRate.dashboard(params);
       const data = res.data || res || null;
 
@@ -102,13 +102,13 @@ export default function KitRateBoard() {
     }
   };
   const getKitRateColor = (rate) => {
-    if (rate >= 90) return "text-emerald-600";
-    if (rate >= 70) return "text-amber-600";
+    if (rate >= 90) {return "text-emerald-600";}
+    if (rate >= 70) {return "text-amber-600";}
     return "text-red-600";
   };
   const getKitRateBadge = (rate) => {
-    if (rate >= 90) return { label: "良好", color: "bg-emerald-500" };
-    if (rate >= 70) return { label: "一般", color: "bg-amber-500" };
+    if (rate >= 90) {return { label: "良好", color: "bg-emerald-500" };}
+    if (rate >= 70) {return { label: "一般", color: "bg-amber-500" };}
     return { label: "不足", color: "bg-red-500" };
   };
   if (loading) {
@@ -135,7 +135,7 @@ export default function KitRateBoard() {
               {projects.map((proj) =>
               <SelectItem key={proj.id} value={proj.id.toString()}>
                   {proj.project_name}
-                </SelectItem>
+              </SelectItem>
               )}
             </SelectContent>
           </Select>
@@ -205,7 +205,7 @@ export default function KitRateBoard() {
               </div>
             </CardContent>
           </Card>
-        </div>
+      </div>
       }
       {/* Kit Rate Distribution */}
       <Card>
@@ -254,7 +254,7 @@ export default function KitRateBoard() {
                         {item.shortage_count > 0 ?
                       <Badge className="bg-red-500">
                             {item.shortage_count} 项
-                          </Badge> :
+                      </Badge> :
 
                       <span className="text-slate-400">-</span>
                       }
@@ -263,7 +263,7 @@ export default function KitRateBoard() {
                         {item.in_transit_count > 0 ?
                       <Badge variant="outline">
                             {item.in_transit_count} 项
-                          </Badge> :
+                      </Badge> :
 
                       <span className="text-slate-400">-</span>
                       }
@@ -271,11 +271,11 @@ export default function KitRateBoard() {
                       <TableCell>
                         <Badge className={badge.color}>{badge.label}</Badge>
                       </TableCell>
-                    </TableRow>);
+                  </TableRow>);
 
               })}
               </TableBody>
-            </Table> :
+          </Table> :
 
           <div className="text-center py-8 text-slate-400">暂无数据</div>
           }
@@ -317,11 +317,11 @@ export default function KitRateBoard() {
                       </div>
                     </div>
                   </div>
-                </div>
+            </div>
             )}
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
     </div>);
 

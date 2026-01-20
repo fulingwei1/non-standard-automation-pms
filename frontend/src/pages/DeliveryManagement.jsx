@@ -139,7 +139,7 @@ const DeliveryManagement = () => {
     <span>
           <PackageCheck size={16} />
           交付概览
-        </span>,
+    </span>,
 
     content: <DeliveryOverview data={mockData} loading={loading} />
   },
@@ -149,7 +149,7 @@ const DeliveryManagement = () => {
     <span>
           <Calendar size={16} />
           交付计划 ({filteredDeliveries.filter((d) => d.status === 'pending' || d.status === 'preparing').length})
-        </span>,
+    </span>,
 
     content: <DeliveryPlan deliveries={filteredDeliveries} loading={loading} />
   },
@@ -159,7 +159,7 @@ const DeliveryManagement = () => {
     <span>
           <Truck size={16} />
           物流跟踪 ({filteredDeliveries.filter((d) => d.status === 'shipped' || d.status === 'in_transit').length})
-        </span>,
+    </span>,
 
     content: <DeliveryTracking deliveries={filteredDeliveries} loading={loading} />
   }];
@@ -234,7 +234,7 @@ const DeliveryManagement = () => {
           {tabItems.map((item) =>
           <TabPane key={item.key} tab={item.tab}>
               {item.content}
-            </TabPane>
+          </TabPane>
           )}
         </Tabs>
       </Card>

@@ -160,7 +160,7 @@ export default function SchedulerConfigManagement() {
 
   // 保存配置
   const handleSave = async () => {
-    if (!editingConfig) return;
+    if (!editingConfig) {return;}
 
     try {
       const updateData = {
@@ -208,10 +208,10 @@ export default function SchedulerConfigManagement() {
 
   // 格式化Cron配置显示
   const formatCronConfig = (cronConfig) => {
-    if (!cronConfig || typeof cronConfig !== "object") return "未配置";
+    if (!cronConfig || typeof cronConfig !== "object") {return "未配置";}
 
     const parts = [];
-    if (cronConfig.hour !== undefined) parts.push(`${cronConfig.hour}:00`);
+    if (cronConfig.hour !== undefined) {parts.push(`${cronConfig.hour}:00`);}
     if (cronConfig.minute !== undefined) {
       if (cronConfig.hour === undefined) {
         parts.push(`每小时${cronConfig.minute}分`);
@@ -221,8 +221,8 @@ export default function SchedulerConfigManagement() {
         parts.push(`${hour}:${minute}`);
       }
     }
-    if (cronConfig.day !== undefined) parts.push(`每月${cronConfig.day}号`);
-    if (cronConfig.month !== undefined) parts.push(`${cronConfig.month}月`);
+    if (cronConfig.day !== undefined) {parts.push(`每月${cronConfig.day}号`);}
+    if (cronConfig.month !== undefined) {parts.push(`${cronConfig.month}月`);}
 
     if (parts.length === 0) {
       // 检查是否是每小时执行
@@ -384,7 +384,7 @@ export default function SchedulerConfigManagement() {
                 {categories.map((cat) =>
                 <SelectItem key={cat} value={cat}>
                     {cat}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -465,7 +465,7 @@ export default function SchedulerConfigManagement() {
                     )}>
 
                           {config.risk_level}
-                        </Badge>
+                  </Badge>
                   }
                     </TableCell>
                     <TableCell>
@@ -490,10 +490,10 @@ export default function SchedulerConfigManagement() {
                         </Button>
                       </div>
                     </TableCell>
-                  </TableRow>
+              </TableRow>
               )}
               </TableBody>
-            </Table>
+          </Table>
           }
         </CardContent>
       </Card>
@@ -564,7 +564,7 @@ export default function SchedulerConfigManagement() {
                     {Object.entries(CRON_PRESETS).map(([key, preset]) =>
                   <SelectItem key={key} value={key}>
                         {preset.label}
-                      </SelectItem>
+                  </SelectItem>
                   )}
                   </SelectContent>
                 </Select>
@@ -623,7 +623,7 @@ export default function SchedulerConfigManagement() {
                     示例：hour=7, minute=0 表示每天7:00执行；minute=0
                     表示每小时整点执行
                   </p>
-                </div>
+            </div>
             }
 
               {/* 风险级别和SLA */}
@@ -639,9 +639,9 @@ export default function SchedulerConfigManagement() {
 
                     {editingConfig.risk_level}
                   </Badge>
-                </div>
-            }
             </div>
+            }
+          </div>
           }
 
           <DialogFooter>

@@ -68,7 +68,7 @@ export default function StrategicMeetingDetail() {
   };
 
   const formatDate = (dateStr) => {
-    if (!dateStr) return "-";
+    if (!dateStr) {return "-";}
     const date = new Date(dateStr);
     return date.toLocaleDateString("zh-CN", {
       year: "numeric",
@@ -78,7 +78,7 @@ export default function StrategicMeetingDetail() {
   };
 
   const formatTime = (timeStr) => {
-    if (!timeStr) return "";
+    if (!timeStr) {return "";}
     return timeStr.substring(0, 5);
   };
 
@@ -86,7 +86,7 @@ export default function StrategicMeetingDetail() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
           <p className="text-gray-600">加载中...</p>
         </div>
       </div>

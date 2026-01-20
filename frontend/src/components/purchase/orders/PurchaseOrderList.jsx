@@ -28,11 +28,11 @@ export default function PurchaseOrderList({
             key={i}
             className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4 animate-pulse"
           >
-            <div className="h-4 bg-slate-700/50 rounded mb-3 w-1/3"></div>
-            <div className="h-3 bg-slate-700/50 rounded mb-2"></div>
-            <div className="h-3 bg-slate-700/50 rounded mb-4 w-2/3"></div>
-            <div className="h-2 bg-slate-700/50 rounded mb-1"></div>
-            <div className="h-8 bg-slate-700/30 rounded"></div>
+            <div className="h-4 bg-slate-700/50 rounded mb-3 w-1/3" />
+            <div className="h-3 bg-slate-700/50 rounded mb-2" />
+            <div className="h-3 bg-slate-700/50 rounded mb-4 w-2/3" />
+            <div className="h-2 bg-slate-700/50 rounded mb-1" />
+            <div className="h-8 bg-slate-700/30 rounded" />
           </div>
         ))}
       </div>

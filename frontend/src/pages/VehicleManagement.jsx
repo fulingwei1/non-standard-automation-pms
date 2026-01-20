@@ -107,7 +107,7 @@ export default function VehicleManagement() {
         <Button>
             <Plus className="w-4 h-4 mr-2" />
             新增车辆
-          </Button>
+        </Button>
         } />
 
 
@@ -319,31 +319,31 @@ export default function VehicleManagement() {
                             <p className="text-white font-medium">
                               {vehicle.driver}
                             </p>
-                          </div>
+                      </div>
                       }
                       </div>
                       {vehicle.purpose &&
                     <div className="text-sm text-slate-400 mb-2">
                           用途: {vehicle.purpose} · 目的地:{" "}
                           {vehicle.destination}
-                        </div>
+                    </div>
                     }
                       {vehicle.startTime &&
                     <div className="text-xs text-slate-500">
                           使用时间: {vehicle.startTime} - {vehicle.endTime}
-                        </div>
+                    </div>
                     }
                       {vehicle.nextMaintenance &&
                     <div className="text-xs text-amber-400 mt-2">
                           下次保养: {vehicle.nextMaintenance} (里程:{" "}
                           {vehicle.nextMaintenanceMileage.toLocaleString()} km)
-                        </div>
+                    </div>
                     }
                       {vehicle.maintenanceReason &&
                     <div className="text-xs text-amber-400 mt-2">
                           {vehicle.maintenanceReason} · 预计归还:{" "}
                           {vehicle.returnDate}
-                        </div>
+                    </div>
                     }
                     </div>
                     <div className="flex gap-2 ml-4">
@@ -356,7 +356,7 @@ export default function VehicleManagement() {
                     </div>
                   </div>
                 </CardContent>
-              </Card>
+            </Card>
             )}
           </div>
         </TabsContent>
@@ -416,7 +416,7 @@ export default function VehicleManagement() {
                           </div>
                         </div>
                       </div>
-                    </div>
+                </div>
                 )}
               </div>
             </CardContent>
@@ -472,7 +472,7 @@ export default function VehicleManagement() {
                           </div>
                         </div>
                       </div>
-                    </div>
+                </div>
                 )}
                 {vehicles.
                 filter((v) => v.nextMaintenance).
@@ -501,7 +501,7 @@ export default function VehicleManagement() {
                           </div>
                         </div>
                       </div>
-                    </div>
+                </div>
                 )}
               </div>
             </CardContent>
@@ -592,7 +592,7 @@ export default function VehicleManagement() {
                         </div>
                       </div>
                     </div>
-                  </div>
+                </div>
                 )}
               </div>
             </CardContent>

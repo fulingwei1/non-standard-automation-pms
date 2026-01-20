@@ -199,7 +199,7 @@ export function ECNStatsCards({ stats = {}, ecns = [] }) {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {Object.entries(statusConfigs).map(([key, config]) => {
               const count = ecns.filter(ecn => ecn.status === key).length;
-              if (count === 0) return null;
+              if (count === 0) {return null;}
               
               return (
                 <div key={key} className="text-center">

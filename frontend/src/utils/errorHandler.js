@@ -8,7 +8,7 @@
  * @returns {string} - Human-readable error message
  */
 export function getErrorMessage(error) {
-  if (!error) return "未知错误";
+  if (!error) {return "未知错误";}
 
   // Axios error
   if (error.response) {
@@ -96,7 +96,7 @@ export function isValidationError(error) {
  * @returns {Object} - Field errors object
  */
 export function getValidationErrors(error) {
-  if (!isValidationError(error)) return {};
+  if (!isValidationError(error)) {return {};}
 
   const { data } = error.response;
   if (data?.errors) {

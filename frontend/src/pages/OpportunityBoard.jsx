@@ -243,8 +243,8 @@ export default function OpportunityBoard() {
   const sortedOpportunities = useMemo(() => {
     return [...filteredOpportunities].sort((a, b) => {
       // 优先显示热门机会
-      if (a.isHot && !b.isHot) return -1;
-      if (!a.isHot && b.isHot) return 1;
+      if (a.isHot && !b.isHot) {return -1;}
+      if (!a.isHot && b.isHot) {return 1;}
 
       // 按评分排序
       return b.score - a.score;
@@ -316,7 +316,7 @@ export default function OpportunityBoard() {
   };
 
   const handleDeleteOpportunity = async () => {
-    if (!confirm("确定要删除这个销售机会吗？")) return;
+    if (!confirm("确定要删除这个销售机会吗？")) {return;}
 
     try {
       await opportunityApi.delete(selectedOpportunity.id);
@@ -344,7 +344,7 @@ export default function OpportunityBoard() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4" />
           <p className="text-text-secondary">加载销售机会...</p>
         </div>
       </div>);
@@ -379,7 +379,7 @@ export default function OpportunityBoard() {
 
               <Icon className="w-4 h-4" />
               {label}
-            </button>
+          </button>
           )}
         </div>
 
@@ -413,7 +413,7 @@ export default function OpportunityBoard() {
                     {Object.entries(OPPORTUNITY_PRIORITY_CONFIGS).map(([key, config]) =>
                     <SelectItem key={key} value={key}>
                         {config.label}
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -427,7 +427,7 @@ export default function OpportunityBoard() {
                     {Object.entries(SALES_SOURCE_CONFIGS).map(([key, config]) =>
                     <SelectItem key={key} value={key}>
                         {config.label}
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -441,7 +441,7 @@ export default function OpportunityBoard() {
                     {Object.entries(OPPORTUNITY_TYPE_CONFIGS).map(([key, config]) =>
                     <SelectItem key={key} value={key}>
                         {config.label}
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -455,7 +455,7 @@ export default function OpportunityBoard() {
                     {owners.map((owner) =>
                     <SelectItem key={owner.id} value={owner.id}>
                         {owner.name}
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -543,10 +543,10 @@ export default function OpportunityBoard() {
 
                     )}
                       </div>
-                    </div>);
+                </div>);
 
             })}
-            </div>
+          </div>
           }
 
           {viewMode === "funnel" &&
@@ -581,13 +581,13 @@ export default function OpportunityBoard() {
                               {conversionRate}%
                             </span>
                           </div>
-                        </div>);
+                      </div>);
 
                   })}
                   </div>
                 </CardContent>
               </Card>
-            </div>
+          </div>
           }
 
           {viewMode === "list" &&
@@ -658,12 +658,12 @@ export default function OpportunityBoard() {
                             <Eye className="w-4 h-4" />
                           </Button>
                         </td>
-                      </tr>
+                  </tr>
                   )}
                   </tbody>
                 </table>
               </div>
-            </div>
+          </div>
           }
         </motion.div>
 
@@ -725,7 +725,7 @@ export default function OpportunityBoard() {
                       {Object.entries(OPPORTUNITY_PRIORITY_CONFIGS).map(([key, config]) =>
                       <SelectItem key={key} value={key}>
                           {config.label}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -743,7 +743,7 @@ export default function OpportunityBoard() {
                       {Object.entries(SALES_SOURCE_CONFIGS).map(([key, config]) =>
                       <SelectItem key={key} value={key}>
                           {config.label}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -761,7 +761,7 @@ export default function OpportunityBoard() {
                       {Object.entries(OPPORTUNITY_TYPE_CONFIGS).map(([key, config]) =>
                       <SelectItem key={key} value={key}>
                           {config.label}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -779,7 +779,7 @@ export default function OpportunityBoard() {
                       {owners.map((owner) =>
                       <SelectItem key={owner.id} value={owner.id}>
                           {owner.name}
-                        </SelectItem>
+                      </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -893,13 +893,13 @@ export default function OpportunityBoard() {
                             <span className="text-white">
                               {OpportunityUtils.formatDate(selectedOpportunity.nextActionDate)}
                             </span>
-                          </div>
+                      </div>
                       }
                         {OpportunityUtils.isOverdue(selectedOpportunity) &&
                       <div className="p-2 rounded-lg bg-red-500/10 text-red-300 text-sm">
                             <AlertTriangle className="w-4 h-4 inline mr-1" />
                             已超期 {OpportunityUtils.getOverdueDays(selectedOpportunity)} 天
-                          </div>
+                      </div>
                       }
                       </CardContent>
                     </Card>
@@ -923,7 +923,7 @@ export default function OpportunityBoard() {
                     删除
                   </Button>
                 </DialogFooter>
-              </>
+            </>
             }
           </DialogContent>
         </Dialog>

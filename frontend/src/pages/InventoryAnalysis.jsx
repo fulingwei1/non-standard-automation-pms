@@ -117,11 +117,11 @@ export default function InventoryAnalysis() {
 
   // Tab切换时加载对应数据
   useEffect(() => {
-    if (activeTab === 'turnover-rate') loadTurnoverRate();
-    else if (activeTab === 'stale-materials') loadStaleMaterials();
-    else if (activeTab === 'safety-stock') loadSafetyStock();
-    else if (activeTab === 'abc-analysis') loadAbcAnalysis();
-    else if (activeTab === 'cost-occupancy') loadCostOccupancy();
+    if (activeTab === 'turnover-rate') {loadTurnoverRate();}
+    else if (activeTab === 'stale-materials') {loadStaleMaterials();}
+    else if (activeTab === 'safety-stock') {loadSafetyStock();}
+    else if (activeTab === 'abc-analysis') {loadAbcAnalysis();}
+    else if (activeTab === 'cost-occupancy') {loadCostOccupancy();}
   }, [activeTab]);
 
   // 呆滞阈值变化时重新加载
@@ -133,7 +133,7 @@ export default function InventoryAnalysis() {
 
   // 格式化金额
   const formatAmount = (amount) => {
-    if (!amount) return "¥0";
+    if (!amount) {return "¥0";}
     if (amount >= 10000) {
       return `¥${(amount / 10000).toFixed(1)}万`;
     }

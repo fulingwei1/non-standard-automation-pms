@@ -105,10 +105,10 @@ export default function ProjectTaskList() {
     try {
       setLoading(true);
       const params = { project_id: id };
-      if (filterStatus) params.status = filterStatus;
-      if (filterStage) params.stage = filterStage;
-      if (filterAssignee) params.assignee_id = filterAssignee;
-      if (searchKeyword) params.search = searchKeyword;
+      if (filterStatus) {params.status = filterStatus;}
+      if (filterStage) {params.stage = filterStage;}
+      if (filterAssignee) {params.assignee_id = filterAssignee;}
+      if (searchKeyword) {params.search = searchKeyword;}
       const res = await progressApi.tasks.list(params);
       const taskList = res.data?.items || res.data || [];
       setTasks(taskList);
@@ -252,7 +252,7 @@ export default function ProjectTaskList() {
               </div>
             </CardContent>
           </Card>
-        </div>
+      </div>
       }
       {/* Filters */}
       <Card>
@@ -276,7 +276,7 @@ export default function ProjectTaskList() {
                 {Object.entries(statusConfigs).map(([key, config]) =>
                 <SelectItem key={key} value={key}>
                     {config.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -338,7 +338,7 @@ export default function ProjectTaskList() {
                             {task.description &&
                           <div className="text-xs text-slate-500 line-clamp-1">
                                 {task.description}
-                              </div>
+                          </div>
                           }
                           </div>
                         </div>
@@ -362,7 +362,7 @@ export default function ProjectTaskList() {
                             <span className="text-sm">
                               {task.assignee_name}
                             </span>
-                          </div> :
+                      </div> :
 
                       <span className="text-slate-400">未分配</span>
                       }
@@ -378,13 +378,13 @@ export default function ProjectTaskList() {
                               <span className={cn(isOverdue && "text-red-500")}>
                                 {formatDate(task.planned_end_date)}
                               </span>
-                            </>
+                        </>
                         }
                         </div>
                         {isOverdue &&
                       <Badge className="bg-red-500 text-xs mt-1">
                             逾期
-                          </Badge>
+                      </Badge>
                       }
                       </TableCell>
                       <TableCell>
@@ -413,11 +413,11 @@ export default function ProjectTaskList() {
                           </Button>
                         </div>
                       </TableCell>
-                    </TableRow>);
+                  </TableRow>);
 
               })}
               </TableBody>
-            </Table>
+          </Table>
           }
         </CardContent>
       </Card>
@@ -602,9 +602,9 @@ export default function ProjectTaskList() {
               <div>
                     <div className="text-sm text-slate-500 mb-1">描述</div>
                     <div>{selectedTask.description}</div>
-                  </div>
-              }
               </div>
+              }
+            </div>
             }
           </DialogBody>
           <DialogFooter>

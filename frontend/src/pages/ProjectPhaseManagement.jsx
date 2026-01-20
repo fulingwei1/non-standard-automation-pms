@@ -123,7 +123,7 @@ export default function ProjectPhaseManagement() {
   }, [selectedProjectId]);
 
   const fetchProjectData = async () => {
-    if (!selectedProjectId) return;
+    if (!selectedProjectId) {return;}
     try {
       const res = await projectApi.get(selectedProjectId);
       const data = res.data || res;
@@ -135,7 +135,7 @@ export default function ProjectPhaseManagement() {
   };
 
   const fetchPhases = async () => {
-    if (!selectedProjectId) return;
+    if (!selectedProjectId) {return;}
     try {
       setLoading(true);
       setError(null);
@@ -263,7 +263,7 @@ export default function ProjectPhaseManagement() {
                     </div>
                     <ArrowRight className="h-5 w-5 text-slate-500" />
                   </div>
-                </div>
+              </div>
               )}
             </div>
           </CardContent>
@@ -289,7 +289,7 @@ export default function ProjectPhaseManagement() {
 
             <ArrowLeft className="h-4 w-4 mr-2" />
             选择项目
-          </Button>
+        </Button>
         } />
 
 
@@ -318,7 +318,7 @@ export default function ProjectPhaseManagement() {
               </Button>
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {loading ?
@@ -328,7 +328,7 @@ export default function ProjectPhaseManagement() {
         map((_, i) =>
         <SkeletonCard key={i} />
         )}
-        </div> :
+      </div> :
       error ? null : phases.length > 0 ?
       <div className="space-y-4">
           {phases.map((phase, _index) => {
@@ -358,7 +358,7 @@ export default function ProjectPhaseManagement() {
                             {reviewBadge &&
                           <Badge variant={reviewBadge.variant}>
                                 {reviewBadge.label}
-                              </Badge>
+                          </Badge>
                           }
                           </div>
                           <p className="text-xs text-slate-500 mt-1">
@@ -426,7 +426,7 @@ export default function ProjectPhaseManagement() {
                             <p className="text-sm text-white mt-1">
                               {phase.entry_criteria}
                             </p>
-                          </div>
+                    </div>
                     }
                         {phase.exit_criteria &&
                     <div>
@@ -436,9 +436,9 @@ export default function ProjectPhaseManagement() {
                             <p className="text-sm text-white mt-1">
                               {phase.exit_criteria}
                             </p>
-                          </div>
+                    </div>
                     }
-                      </div>
+                  </div>
                   }
 
                     {/* Actions */}
@@ -457,7 +457,7 @@ export default function ProjectPhaseManagement() {
 
                             <FileCheck className="h-4 w-4 mr-2" />
                             入口检查
-                          </Button>
+                      </Button>
                       }
                         {phase.status === "IN_PROGRESS" &&
                       <>
@@ -487,9 +487,9 @@ export default function ProjectPhaseManagement() {
 
                                 <CheckCircle2 className="h-4 w-4 mr-2" />
                                 阶段评审
-                              </Button>
+                        </Button>
                         }
-                          </>
+                      </>
                       }
                         {phase.status !== "COMPLETED" &&
                       phase.status !== "SKIPPED" &&
@@ -505,7 +505,7 @@ export default function ProjectPhaseManagement() {
 
                               <Play className="h-4 w-4 mr-2" />
                               推进阶段
-                            </Button>
+                      </Button>
                       }
                       </div>
                       <Button
@@ -519,16 +519,16 @@ export default function ProjectPhaseManagement() {
                     </div>
                   </CardContent>
                 </Card>
-              </motion.div>);
+            </motion.div>);
 
         })}
-        </div> :
+      </div> :
 
       <Card>
           <CardContent className="p-12 text-center text-slate-500">
             该项目暂无阶段数据
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* Entry Check Dialog */}
@@ -826,7 +826,7 @@ function AdvanceDialog({ open, onOpenChange, onSubmit }) {
 
 // Phase Detail Dialog
 function PhaseDetailDialog({ open, onOpenChange, phase }) {
-  if (!phase) return null;
+  if (!phase) {return null;}
 
   const statusBadge = getStatusBadge(phase.status);
   const reviewBadge = phase.review_result ?
@@ -915,16 +915,16 @@ function PhaseDetailDialog({ open, onOpenChange, phase }) {
                 <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
                       <span className="text-xs text-slate-400">入口条件</span>
                       <p className="text-white mt-1">{phase.entry_criteria}</p>
-                    </div>
+                </div>
                 }
                   {phase.exit_criteria &&
                 <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
                       <span className="text-xs text-slate-400">出口条件</span>
                       <p className="text-white mt-1">{phase.exit_criteria}</p>
-                    </div>
+                </div>
                 }
                 </div>
-              </div>
+            </div>
             }
 
             {/* Check Results */}
@@ -942,7 +942,7 @@ function PhaseDetailDialog({ open, onOpenChange, phase }) {
                       <p className="text-white mt-1 whitespace-pre-wrap">
                         {phase.entry_check_result}
                       </p>
-                    </div>
+                </div>
                 }
                   {phase.exit_check_result &&
                 <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
@@ -952,10 +952,10 @@ function PhaseDetailDialog({ open, onOpenChange, phase }) {
                       <p className="text-white mt-1 whitespace-pre-wrap">
                         {phase.exit_check_result}
                       </p>
-                    </div>
+                </div>
                 }
                 </div>
-              </div>
+            </div>
             }
 
             {/* Review */}
@@ -973,7 +973,7 @@ function PhaseDetailDialog({ open, onOpenChange, phase }) {
                           {reviewBadge.label}
                         </Badge>
                       </p>
-                    </div>
+                </div>
                 }
                   {phase.review_date &&
                 <div>
@@ -981,7 +981,7 @@ function PhaseDetailDialog({ open, onOpenChange, phase }) {
                       <p className="text-white">
                         {formatDate(phase.review_date)}
                       </p>
-                    </div>
+                </div>
                 }
                   {phase.review_notes &&
                 <div>
@@ -989,10 +989,10 @@ function PhaseDetailDialog({ open, onOpenChange, phase }) {
                       <p className="text-white mt-1 whitespace-pre-wrap">
                         {phase.review_notes}
                       </p>
-                    </div>
+                </div>
                 }
                 </div>
-              </div>
+            </div>
             }
           </div>
         </DialogBody>

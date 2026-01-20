@@ -67,12 +67,12 @@ export default function AuditLogs() {
         page_size: pageSize,
       };
 
-      if (operatorId) params.operator_id = parseInt(operatorId);
-      if (targetType) params.target_type = targetType;
-      if (targetId) params.target_id = parseInt(targetId);
-      if (action) params.action = action;
-      if (startDate) params.start_date = startDate;
-      if (endDate) params.end_date = endDate;
+      if (operatorId) {params.operator_id = parseInt(operatorId);}
+      if (targetType) {params.target_type = targetType;}
+      if (targetId) {params.target_id = parseInt(targetId);}
+      if (action) {params.action = action;}
+      if (startDate) {params.start_date = startDate;}
+      if (endDate) {params.end_date = endDate;}
 
       const response = await auditApi.list(params);
       const data = response.data?.data || response.data || response;
@@ -134,13 +134,13 @@ export default function AuditLogs() {
 
   const getActionBadgeColor = (action) => {
     if (action?.includes("CREATE") || action?.includes("ADD"))
-      return "bg-green-100 text-green-800";
+      {return "bg-green-100 text-green-800";}
     if (action?.includes("UPDATE") || action?.includes("MODIFY"))
-      return "bg-blue-100 text-blue-800";
+      {return "bg-blue-100 text-blue-800";}
     if (action?.includes("DELETE") || action?.includes("REMOVE"))
-      return "bg-red-100 text-red-800";
+      {return "bg-red-100 text-red-800";}
     if (action?.includes("VIEW") || action?.includes("READ"))
-      return "bg-gray-100 text-gray-800";
+      {return "bg-gray-100 text-gray-800";}
     return "bg-purple-100 text-purple-800";
   };
 

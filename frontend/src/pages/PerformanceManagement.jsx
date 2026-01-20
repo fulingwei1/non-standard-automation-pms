@@ -161,24 +161,24 @@ export default function PerformanceManagement() {
           <>
                   <TrendingUp className="w-3 h-3 text-emerald-400" />
                   <span className="text-xs text-emerald-400">+{trend}%</span>
-                </> :
+          </> :
           trend < 0 ?
           <>
                   <TrendingDown className="w-3 h-3 text-red-400" />
                   <span className="text-xs text-red-400">{trend}%</span>
-                </> :
+          </> :
           null}
               {trend !== 0 &&
           <span className="text-xs text-slate-500 ml-1">vs 上期</span>
           }
-            </div>
+        </div>
         }
         </div>
         <div className={cn("rounded-lg p-3 bg-opacity-20", `bg-${color}`)}>
           <Icon className={cn("h-6 w-6", color)} />
         </div>
       </div>
-    </motion.div>;
+  </motion.div>;
 
 
   return (
@@ -217,7 +217,7 @@ export default function PerformanceManagement() {
               <BarChart3 className="w-4 h-4" />
               绩效结果
             </Button>
-          </motion.div>
+        </motion.div>
         } />
 
 
@@ -228,7 +228,7 @@ export default function PerformanceManagement() {
             {loading ?
             <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-violet-400" />
-              </div> :
+            </div> :
 
             <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -266,7 +266,7 @@ export default function PerformanceManagement() {
                 <Badge className="bg-violet-500/20 text-violet-400 border-violet-500/30">
                   进行中
                 </Badge>
-              </div>
+            </div>
             }
           </CardContent>
         </Card>
@@ -329,11 +329,11 @@ export default function PerformanceManagement() {
                   {loading ?
                   <div className="flex items-center justify-center py-8">
                       <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
-                    </div> :
+                  </div> :
                   pendingTasks.length === 0 ?
                   <div className="text-center py-8 text-slate-400">
                       暂无待办事项
-                    </div> :
+                  </div> :
 
                   pendingTasks.map((task) =>
                   <div
@@ -369,7 +369,7 @@ export default function PerformanceManagement() {
                         <Badge variant="outline" className="bg-slate-700/40">
                           {task.count} 项
                         </Badge>
-                      </div>
+                  </div>
                   )
                   }
                 </div>
@@ -401,11 +401,11 @@ export default function PerformanceManagement() {
                   {loading ?
                   <div className="flex items-center justify-center py-8">
                       <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
-                    </div> :
+                  </div> :
                   recentResults.length === 0 ?
                   <div className="text-center py-8 text-slate-400">
                       暂无绩效数据
-                    </div> :
+                  </div> :
 
                   recentResults.map((result) =>
                   <div
@@ -444,7 +444,7 @@ export default function PerformanceManagement() {
                       <TrendingDown className="w-4 h-4 text-red-400" />
                       }
                         </div>
-                      </div>
+                  </div>
                   )
                   }
                 </div>
@@ -468,11 +468,11 @@ export default function PerformanceManagement() {
                   {loading ?
                   <div className="flex items-center justify-center py-8">
                       <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
-                    </div> :
+                  </div> :
                   departmentPerformance.length === 0 ?
                   <div className="text-center py-8 text-slate-400">
                       暂无部门数据
-                    </div> :
+                  </div> :
 
                   departmentPerformance.map((dept, index) =>
                   <div
@@ -508,18 +508,18 @@ export default function PerformanceManagement() {
                                 <span className="text-xs text-emerald-400">
                                   +{dept.change}
                                 </span>
-                              </> :
+                      </> :
 
                       <>
                                 <TrendingDown className="w-3 h-3 text-red-400" />
                                 <span className="text-xs text-red-400">
                                   {dept.change}
                                 </span>
-                              </>
+                      </>
                       }
-                          </div>
+                    </div>
                     }
-                      </div>
+                  </div>
                   )
                   }
                 </div>
@@ -540,7 +540,7 @@ export default function PerformanceManagement() {
                 {loading ?
                 <div className="flex items-center justify-center py-8">
                     <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
-                  </div> :
+                </div> :
 
                 <div className="space-y-4">
                     <div className="space-y-2">
@@ -594,7 +594,7 @@ export default function PerformanceManagement() {
                       className="h-2 bg-slate-700/50" />
 
                     </div>
-                  </div>
+                </div>
                 }
               </CardContent>
             </Card>

@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useCallback, useMemo as _useMemo } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   TrendingUp,
@@ -55,6 +56,7 @@ import {
 "../components/sales-director";
 
 export default function SalesDirectorWorkstation() {
+  const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState("overview");
   const [selectedPeriod, setSelectedPeriod] = useState("month");
   const [loading, setLoading] = useState(false);
@@ -214,8 +216,7 @@ export default function SalesDirectorWorkstation() {
   // 处理配置更新
   const handleConfigUpdate = useCallback(async (newConfig) => {
     try {
-      // TODO: 实现配置保存API
-      console.log('Saving ranking config:', newConfig);
+      await salesTeamApi.updateRankingConfig(newConfig);
       setRankingConfig({ metrics: newConfig });
     } catch (err) {
       throw new Error('配置保存失败: ' + err.message);
@@ -224,9 +225,9 @@ export default function SalesDirectorWorkstation() {
 
   // 处理成员详情查看
   const handleViewMemberDetail = useCallback((member) => {
-    // TODO: 实现成员详情页面
-    console.log('View member detail:', member);
-  }, []);
+    if (!member) {return;}
+    navigate("/sales/team", { state: { openMember: member } });
+  }, [navigate]);
 
   // Tab配置
   const tabs = [
@@ -319,12 +320,12 @@ export default function SalesDirectorWorkstation() {
                       <Badge variant="outline" className="text-orange-400 border-orange-500/50">
                         待审批
                       </Badge>
-                    </div>
+                  </div>
                   )}
                   {pendingApprovals.length === 0 &&
                   <div className="text-center text-slate-500 py-4">
                       暂无待审批合同
-                    </div>
+                  </div>
                   }
                 </div>
               </CardContent>
@@ -353,7 +354,7 @@ export default function SalesDirectorWorkstation() {
                           </div>
                         </div>
                       </div>
-                    </div>
+                  </div>
                   )}
                 </div>
               </CardContent>
@@ -371,7 +372,7 @@ export default function SalesDirectorWorkstation() {
                 <div className="space-y-3">
                   {recentActivities.slice(0, 3).map((activity, _index) =>
                   <div key={`${activity.type}-${activity.id}`} className="flex items-center gap-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
-                      <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                      <div className="w-2 h-2 rounded-full bg-green-500" />
                       <div className="flex-1">
                         <div className="text-sm text-slate-200">
                           {activity.type === 'opportunity' ? '新商机' : '新发票'}: {activity.name || activity.title}
@@ -380,7 +381,7 @@ export default function SalesDirectorWorkstation() {
                           {new Date(activity.createdAt || activity.createTime).toLocaleDateString()}
                         </div>
                       </div>
-                    </div>
+                  </div>
                   )}
                 </div>
               </CardContent>

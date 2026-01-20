@@ -167,12 +167,12 @@ const MilestoneTimeline = ({ milestones }) => {
                 {milestone.completedDate &&
               <span className="text-emerald-400">
                     完成: {formatDate(milestone.completedDate)}
-                  </span>
+              </span>
               }
               </div>
             </div>
           </div>
-        </motion.div>
+      </motion.div>
       )}
     </div>);
 
@@ -403,7 +403,7 @@ export default function ContractDetail() {
                             {deliverable.completedDate}
                           </span>
                           <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                        </>
+                    </>
                     }
                       {deliverable.status === "in_progress" &&
                     <>
@@ -411,7 +411,7 @@ export default function ContractDetail() {
                             截止: {deliverable.dueDate}
                           </span>
                           <Clock className="h-4 w-4 text-blue-400" />
-                        </>
+                    </>
                     }
                       {deliverable.status === "pending" &&
                     <>
@@ -419,10 +419,10 @@ export default function ContractDetail() {
                             截止: {deliverable.dueDate}
                           </span>
                           <AlertTriangle className="h-4 w-4 text-slate-500" />
-                        </>
+                    </>
                     }
                     </div>
-                  </motion.div>
+                </motion.div>
                 )}
               </motion.div>
             </CardContent>
@@ -526,7 +526,7 @@ export default function ContractDetail() {
 
                     <Download className="h-3.5 w-3.5" />
                   </Button>
-                </motion.div>
+              </motion.div>
               )}
               <Button
                 variant="ghost"

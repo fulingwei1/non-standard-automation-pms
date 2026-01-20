@@ -182,12 +182,12 @@ export function ECNImpactAnalysis({
                     BOM #{impact.bom_id}: {impact.affected_item_count}
                     项受影响, 成本影响¥{impact.cost_impact?.toLocaleString()}, 
                     交期影响{impact.schedule_impact_days}天
-                  </div>
+            </div>
             )}
-              </div>
+          </div>
           }
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* 呆滞料风险分析结果 */}
@@ -220,11 +220,11 @@ export function ECNImpactAnalysis({
                       </div>
                     </div>
                   </div>
-                </Card>
+            </Card>
             )}
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* 责任分摊对话框 */}

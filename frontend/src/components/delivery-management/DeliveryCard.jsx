@@ -70,7 +70,7 @@ const DeliveryProgress = ({ stage }) => {
  * 配送位置追踪组件
  */
 const LocationTracker = ({ locations = [] }) => {
-  if (!locations || locations.length === 0) return null;
+  if (!locations || locations.length === 0) {return null;}
 
   const currentLocation = locations[locations.length - 1];
   const isDelivered = currentLocation.status === 'DELIVERED';

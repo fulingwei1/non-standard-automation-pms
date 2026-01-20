@@ -223,7 +223,7 @@ export function PermissionLoading({ children, fallback = null }) {
     return fallback ||
     <div className="flex items-center justify-center h-full">
         <div className="text-gray-500">加载权限中...</div>
-      </div>;
+    </div>;
 
   }
 

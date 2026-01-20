@@ -143,10 +143,10 @@ export function ECNEvaluationManager({
             )}>
                   {getRiskLevelConfig(evaluationSummary.average_risk_level).label}
                 </Badge>
-              </div>
+          </div>
           }
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* 部门评估 */}
@@ -156,7 +156,7 @@ export function ECNEvaluationManager({
         <Button onClick={() => setShowEvaluationDialog(true)}>
             <Plus className="w-4 h-4 mr-2" />
             创建评估
-          </Button>
+        </Button>
         }
       </div>
 
@@ -165,7 +165,7 @@ export function ECNEvaluationManager({
           <CardContent className="py-8 text-center text-slate-400">
             暂无评估记录
           </CardContent>
-        </Card> :
+      </Card> :
 
       <div className="space-y-4">
           {evaluations.map((evaluation) =>
@@ -192,7 +192,7 @@ export function ECNEvaluationManager({
                     {evaluation.impact_type &&
                 <Badge variant="outline" className="text-xs">
                         {impactTypeConfigs[evaluation.impact_type]?.label || evaluation.impact_type}
-                      </Badge>
+                </Badge>
                 }
                     {evaluation.risk_level &&
                 <Badge className={cn(
@@ -201,7 +201,7 @@ export function ECNEvaluationManager({
                   "text-xs"
                 )}>
                         {getRiskLevelConfig(evaluation.risk_level).label}
-                      </Badge>
+                </Badge>
                 }
                   </div>
                 </div>
@@ -251,9 +251,9 @@ export function ECNEvaluationManager({
                   </div>
                 </div>
               </CardContent>
-            </Card>
+        </Card>
         )}
-        </div>
+      </div>
       }
 
       {/* 创建评估对话框 */}
@@ -300,7 +300,7 @@ export function ECNEvaluationManager({
                     {Object.entries(impactTypeConfigs).map(([key, config]) =>
                     <SelectItem key={key} value={key}>
                         {config.icon} {config.label}
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>

@@ -223,7 +223,7 @@ export const MessageList = ({
           <Table>
             <TableHeader>
               <TableRow className="bg-slate-50 dark:bg-slate-900/50">
-                <TableHead className="w-12"></TableHead>
+                <TableHead className="w-12" />
                 <TableHead>消息</TableHead>
                 <TableHead>类型</TableHead>
                 <TableHead>渠道</TableHead>

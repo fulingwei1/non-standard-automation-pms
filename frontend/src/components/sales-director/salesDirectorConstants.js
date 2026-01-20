@@ -323,7 +323,7 @@ export const toISODate = (date) => {
 
 // 工具函数：计算趋势
 export const calculateTrend = (current, previous) => {
-  if (!previous || previous === 0) return { trend: 'stable', value: 0 };
+  if (!previous || previous === 0) {return { trend: 'stable', value: 0 };}
   const change = (current - previous) / Math.abs(previous) * 100;
   const trend = change > 5 ? 'upward' : change < -5 ? 'downward' : 'stable';
   return { trend, value: Math.abs(change) };

@@ -358,7 +358,7 @@ export default function RoleManagement() {
         actions={
         <Button onClick={() => setShowCreateDialog(true)}>
             <Plus className="mr-2 h-4 w-4" /> 新增角色
-          </Button>
+        </Button>
         } />
 
 
@@ -389,7 +389,7 @@ export default function RoleManagement() {
             {loading ?
             <div className="p-4 text-center text-muted-foreground">
                 加载中...
-              </div> :
+            </div> :
 
             <>
                 <div className="overflow-x-auto">
@@ -449,11 +449,11 @@ export default function RoleManagement() {
                               {role.role_type === "SYSTEM" || role.is_system ?
                           <Badge variant="destructive">
                                   <Shield className="h-3 w-3 mr-1" /> 系统
-                                </Badge> :
+                          </Badge> :
 
                           <Badge variant="outline" className="text-blue-600 border-blue-300">
                                   自定义
-                                </Badge>
+                          </Badge>
                           }
                             </div>
                           </td>
@@ -496,7 +496,7 @@ export default function RoleManagement() {
                               </Button>
                             </div>
                           </td>
-                        </tr>
+                    </tr>
                     )}
                     </tbody>
                   </table>
@@ -504,7 +504,7 @@ export default function RoleManagement() {
                 {roles.length === 0 &&
               <p className="p-4 text-center text-muted-foreground">
                     没有找到符合条件的角色。
-                  </p>
+              </p>
               }
                 {total > pageSize &&
               <div className="mt-4 flex items-center justify-between">
@@ -534,9 +534,9 @@ export default function RoleManagement() {
                         下一页
                       </Button>
                     </div>
-                  </div>
+              </div>
               }
-              </>
+            </>
             }
           </CardContent>
         </Card>
@@ -627,7 +627,7 @@ export default function RoleManagement() {
                   {roleCategoryOptions.map((option) =>
                   <SelectItem key={option.value} value={option.value}>
                       {option.label}
-                    </SelectItem>
+                  </SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -650,14 +650,14 @@ export default function RoleManagement() {
                     {dataScopeOptions.map((option) =>
                     <SelectItem key={option.value} value={option.value}>
                         {option.label}
-                      </SelectItem>
+                    </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
                 {newRole.data_scope &&
                 <p className="text-xs text-muted-foreground">
                     {dataScopeOptions.find((opt) => opt.value === newRole.data_scope)?.description}
-                  </p>
+                </p>
                 }
               </div>
             </div>
@@ -724,7 +724,7 @@ export default function RoleManagement() {
                     {roleCategoryOptions.map((option) =>
                   <SelectItem key={option.value} value={option.value}>
                         {option.label}
-                      </SelectItem>
+                  </SelectItem>
                   )}
                   </SelectContent>
                 </Select>
@@ -747,14 +747,14 @@ export default function RoleManagement() {
                       {dataScopeOptions.map((option) =>
                     <SelectItem key={option.value} value={option.value}>
                           {option.label}
-                        </SelectItem>
+                    </SelectItem>
                     )}
                     </SelectContent>
                   </Select>
                   {editRole.data_scope &&
                 <p className="text-xs text-muted-foreground">
                       {dataScopeOptions.find((opt) => opt.value === editRole.data_scope)?.description}
-                    </p>
+                </p>
                 }
                 </div>
               </div>
@@ -780,7 +780,7 @@ export default function RoleManagement() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
+          </div>
           }
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowEditDialog(false)}>
@@ -831,10 +831,10 @@ export default function RoleManagement() {
                       className="rounded" />
 
                         <span className="text-sm">{perm.permission_name}</span>
-                      </label>
+                  </label>
                   )}
                   </div>
-                </div>
+              </div>
 
             )}
           </div>
@@ -912,7 +912,7 @@ export default function RoleManagement() {
                           type="checkbox"
                           checked={allSelected}
                           ref={(el) => {
-                            if (el) el.indeterminate = someSelected;
+                            if (el) {el.indeterminate = someSelected;}
                           }}
                           onChange={() => toggleGroupAll(group)}
                           className="rounded" />
@@ -944,9 +944,9 @@ export default function RoleManagement() {
                         className="rounded" />
 
                           <span className="text-sm">{item.name}</span>
-                        </label>
+                    </label>
                     )}
-                    </div>
+                  </div>
                   }
                 </div>);
 
@@ -989,11 +989,11 @@ export default function RoleManagement() {
                     {selectedRole.role_type === "SYSTEM" || selectedRole.is_system ?
                   <Badge variant="destructive">
                         <Shield className="h-3 w-3 mr-1" /> 系统角色
-                      </Badge> :
+                  </Badge> :
 
                   <Badge variant="outline" className="text-blue-600 border-blue-300">
                         自定义角色
-                      </Badge>
+                  </Badge>
                   }
                   </p>
                 </div>
@@ -1035,7 +1035,7 @@ export default function RoleManagement() {
                   selectedRole.permissions.map((perm, idx) =>
                   <Badge key={idx} variant="secondary">
                           {perm}
-                        </Badge>
+                  </Badge>
                   ) :
 
                   <span className="text-muted-foreground">无权限</span>
@@ -1043,7 +1043,7 @@ export default function RoleManagement() {
                   </div>
                 </div>
               </div>
-            </div>
+          </div>
           }
           <DialogFooter>
             <Button onClick={() => setShowDetailDialog(false)}>关闭</Button>

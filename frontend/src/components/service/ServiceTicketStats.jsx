@@ -251,7 +251,7 @@ export function ServiceTicketStats({ tickets = [], stats: externalStats = null }
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {Object.entries(statusConfigs).map(([key, config]) => {
               const count = tickets.filter(ticket => ticket.status === key).length;
-              if (count === 0) return null;
+              if (count === 0) {return null;}
               
               return (
                 <div key={key} className="text-center">
@@ -282,7 +282,7 @@ export function ServiceTicketStats({ tickets = [], stats: externalStats = null }
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
             {Object.entries(urgencyConfigs).map(([key, config]) => {
               const count = tickets.filter(ticket => ticket.urgency === key).length;
-              if (count === 0) return null;
+              if (count === 0) {return null;}
               
               return (
                 <div key={key} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg">

@@ -371,7 +371,7 @@ export default function Timesheet() {
 
   // 处理添加新记录
   const handleAddEntry = async (newEntry) => {
-    if (!newEntry.project_id) return;
+    if (!newEntry.project_id) {return;}
 
     setSaving(true);
     try {
@@ -424,7 +424,7 @@ export default function Timesheet() {
   // 处理工时修改（防抖处理，避免频繁请求）
   const handleHoursChange = async (entryId, dateStr, value) => {
     const entry = entries.find((e) => e.id === entryId);
-    if (!entry) return;
+    if (!entry) {return;}
 
     const hours = parseFloat(value) || 0;
 
@@ -500,7 +500,7 @@ export default function Timesheet() {
   // 处理删除记录
   const handleDeleteEntry = async (entryId) => {
     const entry = entries.find((e) => e.id === entryId);
-    if (!entry || !confirm("确定要删除这条工时记录吗？")) return;
+    if (!entry || !confirm("确定要删除这条工时记录吗？")) {return;}
 
     try {
       // 删除该条目对应的所有工时记录
@@ -1003,7 +1003,7 @@ export default function Timesheet() {
                             {weeklyTotal}h
                           </span>
                         </td>
-                        <td colSpan={2}></td>
+                        <td colSpan={2} />
                       </tr>
                     </tbody>
                   </table>

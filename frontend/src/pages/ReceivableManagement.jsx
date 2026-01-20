@@ -144,7 +144,7 @@ export default function ReceivableManagement() {
   }, []);
 
   const handleReceivePayment = async () => {
-    if (!selectedReceivable) return;
+    if (!selectedReceivable) {return;}
     try {
       // 使用新的回款登记API
       await paymentApi.create({
@@ -173,7 +173,7 @@ export default function ReceivableManagement() {
   };
 
   const formatCurrency = (value) => {
-    if (!value) return "0";
+    if (!value) {return "0";}
     const num = parseFloat(value);
     if (num >= 10000) {
       return (num / 10000).toFixed(1) + "万";
@@ -299,7 +299,7 @@ export default function ReceivableManagement() {
               <Download className="mr-2 h-4 w-4" />
               导出数据
             </Button>
-          </div>
+        </div>
         } />
 
 
@@ -426,7 +426,7 @@ export default function ReceivableManagement() {
                             </div>
                           </div>
                         </CardContent>
-                      </Card>);
+                  </Card>);
 
               })}
               </div>
@@ -484,15 +484,15 @@ export default function ReceivableManagement() {
                             <span className="text-xs text-slate-500">
                               {formatCurrency(bucket.amount || 0)}
                             </span>
-                          </div>);
+                    </div>);
 
                 })}
                   </div>
-                </div>
+            </div>
             }
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* 筛选栏 */}
@@ -528,7 +528,7 @@ export default function ReceivableManagement() {
                   onClick={() => setStatusFilter(key)}>
 
                     {config.label}
-                  </DropdownMenuItem>
+                </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
@@ -553,7 +553,7 @@ export default function ReceivableManagement() {
           <CardContent className="p-12 text-center">
             <p className="text-slate-400">暂无应收账款数据</p>
           </CardContent>
-        </Card> :
+      </Card> :
 
       <Card>
           <CardHeader>
@@ -594,7 +594,7 @@ export default function ReceivableManagement() {
                           {receivable.overdue_days > 0 &&
                         <Badge className="bg-red-500">
                               逾期 {receivable.overdue_days} 天
-                            </Badge>
+                        </Badge>
                         }
                         </div>
                         <div className="mt-1 flex items-center gap-3 text-sm">
@@ -611,7 +611,7 @@ export default function ReceivableManagement() {
                               <span className="text-slate-500">
                                 到期: {receivable.due_date}
                               </span>
-                            </>
+                        </>
                         }
                         </div>
                         <div className="mt-2">
@@ -643,7 +643,7 @@ export default function ReceivableManagement() {
 
                             <CreditCard className="h-4 w-4 mr-2" />
                             记录收款
-                          </Button>
+                      </Button>
                       }
                         <Button
                         size="sm"
@@ -660,12 +660,12 @@ export default function ReceivableManagement() {
                         </Button>
                       </div>
                     </div>
-                  </motion.div>);
+                </motion.div>);
 
             })}
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* 分页 */}
@@ -688,7 +688,7 @@ export default function ReceivableManagement() {
 
             下一页
           </Button>
-        </div>
+      </div>
       }
 
       {/* 记录收款对话框 */}

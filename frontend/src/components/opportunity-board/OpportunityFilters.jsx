@@ -170,7 +170,7 @@ export const OpportunityFilters = ({
       onChange={(e) => setRangeFilter('search', e.target.value)}
       className="pl-10" />
 
-    </div>;
+  </div>;
 
 
   // 渲染快速过滤器
@@ -186,9 +186,9 @@ export const OpportunityFilters = ({
 
           <Icon className="mr-1 h-3 w-3" />
           {label}
-        </Button>
+    </Button>
     )}
-    </div>;
+  </div>;
 
 
   // 渲染多选过滤器
@@ -212,7 +212,7 @@ export const OpportunityFilters = ({
                   {selectedValues.includes(value) &&
                 <X className="ml-1 h-3 w-3" />
                 }
-                </Badge>
+              </Badge>
               )}
             </div>
           </div>
@@ -231,7 +231,7 @@ export const OpportunityFilters = ({
       value={filters[key] || ''}
       onChange={(e) => setRangeFilter(key, e.target.value ? Number(e.target.value) : undefined)} />
 
-    </div>;
+  </div>;
 
 
   // 渲染日期范围过滤器
@@ -243,7 +243,7 @@ export const OpportunityFilters = ({
       value={filters[key] || ''}
       onChange={(e) => setRangeFilter(key, e.target.value)} />
 
-    </div>;
+  </div>;
 
 
   // 渲染选择器过滤器
@@ -259,11 +259,11 @@ export const OpportunityFilters = ({
           {options.map(({ value, label }) =>
         <SelectItem key={value} value={value}>
               {label}
-            </SelectItem>
+        </SelectItem>
         )}
         </SelectContent>
       </Select>
-    </div>;
+  </div>;
 
 
   // 渲染排序选项
@@ -278,11 +278,11 @@ export const OpportunityFilters = ({
           {sortOptionsConfig.map(({ value, label }) =>
         <SelectItem key={value} value={value}>
               {label}
-            </SelectItem>
+        </SelectItem>
         )}
         </SelectContent>
       </Select>
-    </div>;
+  </div>;
 
 
   return (
@@ -294,7 +294,7 @@ export const OpportunityFilters = ({
             {getActiveFilterCount() > 0 &&
             <Badge variant="secondary">
                 {getActiveFilterCount()} 个筛选条件
-              </Badge>
+            </Badge>
             }
             <Button
               variant="ghost"
@@ -311,7 +311,7 @@ export const OpportunityFilters = ({
               onClick={clearAllFilters}>
 
                 <RotateCcw className="h-4 w-4" />
-              </Button>
+            </Button>
             }
           </div>
         </div>
@@ -359,7 +359,7 @@ export const OpportunityFilters = ({
 
             {/* 排序 */}
             {renderSortSelector()}
-          </div>
+        </div>
         }
       </CardContent>
     </Card>);

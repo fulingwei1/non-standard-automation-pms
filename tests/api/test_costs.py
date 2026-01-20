@@ -456,7 +456,7 @@ class TestBudgetExecution:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/costs/projects/{project.id}/budget-execution",
+            f"{settings.API_V1_PREFIX}/costs/budget/projects/{project.id}/execution",
             headers=headers
         )
 
@@ -478,7 +478,7 @@ class TestLaborCostCalculation:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.post(
-            f"{settings.API_V1_PREFIX}/costs/projects/{project.id}/calculate-labor-cost",
+            f"{settings.API_V1_PREFIX}/costs/labor/projects/{project.id}/calculate-labor-cost",
             headers=headers
         )
 
@@ -503,7 +503,7 @@ class TestCostAllocation:
         allocation_request = {}
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/costs/{cost.id}/allocate",
+            f"{settings.API_V1_PREFIX}/costs/allocation/{cost.id}/allocate",
             json=allocation_request,
             headers=headers
         )
@@ -525,7 +525,7 @@ class TestCostBudgetAlert:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.post(
-            f"{settings.API_V1_PREFIX}/costs/projects/{project.id}/check-budget-alert",
+            f"{settings.API_V1_PREFIX}/costs/alert/projects/{project.id}/check-budget-alert",
             headers=headers
         )
 
@@ -539,7 +539,7 @@ class TestCostBudgetAlert:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.post(
-            f"{settings.API_V1_PREFIX}/costs/check-all-projects-budget",
+            f"{settings.API_V1_PREFIX}/costs/alert/check-all-projects-budget",
             headers=headers
         )
 

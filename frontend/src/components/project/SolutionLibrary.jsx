@@ -10,7 +10,7 @@ import {
 "../ui";
 import { BookOpen, Search, Plus, Star, Copy } from "lucide-react";
 import { formatDate as _formatDate } from "../../lib/utils";
-import { projectWorkspaceApi as _projectWorkspaceApi } from "../../services/api";
+import { issueTemplateApi } from "../../services/api";
 
 export default function SolutionLibrary({ projectId, onApplyTemplate }) {
   const [loading, setLoading] = useState(true);
@@ -25,12 +25,28 @@ export default function SolutionLibrary({ projectId, onApplyTemplate }) {
   const fetchTemplates = async () => {
     try {
       setLoading(true);
-      // TODO: 实现解决方案模板API
-      // const response = await solutionTemplateApi.list({ project_id: projectId })
-      // setTemplates(response.data)
-      setTemplates([]);
+      const response = await issueTemplateApi.list({
+        page: 1,
+        page_size: 200,
+        is_active: true,
+      });
+      const items = response.data?.items || response.data || [];
+      const mapped = (Array.isArray(items) ? items : []).map((t) => ({
+        id: t.id,
+        template_name: t.template_name,
+        template_code: t.template_code,
+        category: t.category,
+        issue_type: t.issue_type || t.category,
+        applicable_scenarios: t.remark || "",
+        solution: t.solution_template || "",
+        usage_count: t.usage_count || 0,
+        success_rate: null,
+        avg_resolution_time: null,
+      }));
+      setTemplates(mapped);
     } catch (error) {
       console.error("Failed to load solution templates:", error);
+      setTemplates([]);
     } finally {
       setLoading(false);
     }
@@ -121,7 +137,7 @@ export default function SolutionLibrary({ projectId, onApplyTemplate }) {
                     {template.applicable_scenarios &&
                 <p className="text-sm text-gray-600 mb-2">
                         {template.applicable_scenarios}
-                      </p>
+                </p>
                 }
                     <div className="p-3 bg-gray-50 rounded text-sm">
                       {template.solution.substring(0, 300)}
@@ -154,15 +170,15 @@ export default function SolutionLibrary({ projectId, onApplyTemplate }) {
                     </Button>
                   </div>
                 </div>
-              </div>
+          </div>
           )}
-          </div> :
+        </div> :
 
         <div className="text-center py-12 text-gray-500">
             {searchQuery || filterType !== "all" ?
           "没有找到匹配的模板" :
           "暂无解决方案模板"}
-          </div>
+        </div>
         }
       </CardContent>
     </Card>);

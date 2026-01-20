@@ -53,9 +53,9 @@ export default function CostOverrunAnalysis() {
     setLoading(true);
     try {
       const params = {};
-      if (startDate) params.start_date = startDate;
-      if (endDate) params.end_date = endDate;
-      if (projectId) params.project_id = parseInt(projectId);
+      if (startDate) {params.start_date = startDate;}
+      if (endDate) {params.end_date = endDate;}
+      if (projectId) {params.project_id = parseInt(projectId);}
 
       const response = await costOverrunApi.getReasons(params);
       if (response.data?.data) {
@@ -72,8 +72,8 @@ export default function CostOverrunAnalysis() {
     setLoading(true);
     try {
       const params = {};
-      if (startDate) params.start_date = startDate;
-      if (endDate) params.end_date = endDate;
+      if (startDate) {params.start_date = startDate;}
+      if (endDate) {params.end_date = endDate;}
 
       const response = await costOverrunApi.getAccountability(params);
       if (response.data?.data) {
@@ -90,8 +90,8 @@ export default function CostOverrunAnalysis() {
     setLoading(true);
     try {
       const params = {};
-      if (startDate) params.start_date = startDate;
-      if (endDate) params.end_date = endDate;
+      if (startDate) {params.start_date = startDate;}
+      if (endDate) {params.end_date = endDate;}
 
       const response = await costOverrunApi.getImpact(params);
       if (response.data?.data) {
@@ -105,9 +105,9 @@ export default function CostOverrunAnalysis() {
   };
 
   useEffect(() => {
-    if (activeTab === "reasons") loadReasons();
-    if (activeTab === "accountability") loadAccountability();
-    if (activeTab === "impact") loadImpact();
+    if (activeTab === "reasons") {loadReasons();}
+    if (activeTab === "accountability") {loadAccountability();}
+    if (activeTab === "impact") {loadImpact();}
   }, [activeTab]);
 
   return (
@@ -209,14 +209,14 @@ export default function CostOverrunAnalysis() {
                             <TableCell>
                               {formatAmount(reason.average_overrun)}
                             </TableCell>
-                          </TableRow>
+                    </TableRow>
                     )}
                       </TableBody>
-                    </Table>
+                </Table>
                 }
                 </CardContent>
               </Card>
-            </div>
+          </div>
           }
         </TabsContent>
 
@@ -256,13 +256,13 @@ export default function CostOverrunAnalysis() {
                       slice(0, 2).
                       join(", ")}
                             </TableCell>
-                          </TableRow>
+                  </TableRow>
                   )}
                       </TableBody>
-                    </Table>
+              </Table>
               }
               </CardContent>
-            </Card>
+          </Card>
           }
         </TabsContent>
 
@@ -328,14 +328,14 @@ export default function CostOverrunAnalysis() {
                               <TableCell>
                                 {project.margin_impact?.toFixed(2) || 0}%
                               </TableCell>
-                            </TableRow>
+                    </TableRow>
                     )}
                         </TableBody>
-                      </Table>
+                </Table>
                 }
                 </CardContent>
               </Card>
-            </div>
+          </div>
           }
         </TabsContent>
       </Tabs>

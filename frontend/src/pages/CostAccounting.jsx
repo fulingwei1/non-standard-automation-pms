@@ -189,7 +189,7 @@ export default function CostAccounting() {
               <Plus className="w-4 h-4" />
               录入成本
             </Button>
-          </motion.div>
+        </motion.div>
         } />
 
 
@@ -309,7 +309,7 @@ export default function CostAccounting() {
                 {projects.map((p) =>
                 <option key={p.id} value={p.id}>
                     {p.name}
-                  </option>
+                </option>
                 )}
               </select>
               <select
@@ -321,7 +321,7 @@ export default function CostAccounting() {
                 {Object.entries(costTypeConfig).map(([key, val]) =>
                 <option key={key} value={key}>
                     {val.label}
-                  </option>
+                </option>
                 )}
               </select>
               <select
@@ -400,7 +400,7 @@ export default function CostAccounting() {
                             <div className="text-xs text-slate-400">
                                 含税:{" "}
                                 {formatCurrency(cost.amount + cost.taxAmount)}
-                              </div>
+                            </div>
                             }
                           </div>
                         </div>
@@ -410,7 +410,7 @@ export default function CostAccounting() {
                   {filteredCosts.length === 0 &&
                   <div className="text-center py-12 text-slate-500">
                       暂无成本记录
-                    </div>
+                  </div>
                   }
                 </div>
               </CardContent>
@@ -526,7 +526,7 @@ export default function CostAccounting() {
                   {projects.map((p) =>
                   <option key={p.id} value={p.id}>
                       {p.name}
-                    </option>
+                  </option>
                   )}
                 </select>
               </div>
@@ -537,7 +537,7 @@ export default function CostAccounting() {
                   {Object.entries(costTypeConfig).map(([key, val]) =>
                   <option key={key} value={key}>
                       {val.label}
-                    </option>
+                  </option>
                   )}
                 </select>
               </div>
@@ -613,7 +613,7 @@ export default function CostAccounting() {
                 <label className="text-sm text-slate-400">描述</label>
                 <p className="text-white">{selectedCost.description}</p>
               </div>
-            </div>
+          </div>
           }
           <DialogFooter>
             <Button variant="outline" onClick={() => setSelectedCost(null)}>

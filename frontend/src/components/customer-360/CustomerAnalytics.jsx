@@ -11,7 +11,7 @@ const { Text } = Typography;
 
 const CustomerAnalytics = ({ customer, loading = false }) => {
   const stats = useMemo(() => {
-    if (!customer) return null;
+    if (!customer) {return null;}
 
     return {
       lifetimeValue: Number(customer.lifetimeValue || 0),
@@ -23,7 +23,7 @@ const CustomerAnalytics = ({ customer, loading = false }) => {
     };
   }, [customer]);
 
-  if (!customer) return null;
+  if (!customer) {return null;}
 
   return (
     <div>
@@ -58,7 +58,7 @@ const CustomerAnalytics = ({ customer, loading = false }) => {
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
           <Card title="增长趋势" loading={loading}>
-            <Text type="secondary">近期开票/订单增长（占位）</Text>
+            <Text type="secondary">近期开票/订单增长</Text>
             <Progress percent={stats?.growthTrend || 0} strokeColor={CHART_COLORS.SUCCESS} />
           </Card>
         </Col>

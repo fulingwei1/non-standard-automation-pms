@@ -98,7 +98,7 @@ export default function AIClarificationChat() {
     const currentClarification = clarifications.find(
       (c) => c.id === clarificationId
     );
-    if (!currentClarification) return;
+    if (!currentClarification) {return;}
 
     const questionsArray = JSON.parse(currentClarification.questions);
     const answersArray = questionsArray.map((_, idx) => answers[idx] || "");
@@ -191,7 +191,7 @@ export default function AIClarificationChat() {
                               </span>
                             </div>
                             {answersArray[idx]}
-                          </div> :
+                      </div> :
 
                       <Textarea
                         className="mt-2 bg-gray-600 border-gray-500 text-white"
@@ -203,7 +203,7 @@ export default function AIClarificationChat() {
                         } />
 
                       }
-                      </div>
+                    </div>
                     )}
                   </div>
                 </div>
@@ -221,7 +221,7 @@ export default function AIClarificationChat() {
                   <Send className="w-4 h-4 mr-2" />
                   }
                     提交回答
-                  </Button>
+                </Button>
                 }
               </CardContent>
             </Card>);

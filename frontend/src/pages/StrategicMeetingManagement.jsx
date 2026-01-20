@@ -69,7 +69,7 @@ export default function StrategicMeetingManagement() {
         ...filters
       };
       Object.keys(params).forEach((key) => {
-        if (!params[key]) delete params[key];
+        if (!params[key]) {delete params[key];}
       });
 
       const res = await managementRhythmApi.meetings.list(params);
@@ -109,13 +109,13 @@ export default function StrategicMeetingManagement() {
     setPage(1);
     const params = new URLSearchParams();
     Object.entries(newFilters).forEach(([k, v]) => {
-      if (v) params.set(k, v);
+      if (v) {params.set(k, v);}
     });
     setSearchParams(params);
   };
 
   const formatDate = (dateStr) => {
-    if (!dateStr) return "-";
+    if (!dateStr) {return "-";}
     const date = new Date(dateStr);
     return date.toLocaleDateString("zh-CN", {
       year: "numeric",
@@ -125,7 +125,7 @@ export default function StrategicMeetingManagement() {
   };
 
   const formatTime = (timeStr) => {
-    if (!timeStr) return "";
+    if (!timeStr) {return "";}
     return timeStr.substring(0, 5);
   };
 
@@ -138,7 +138,7 @@ export default function StrategicMeetingManagement() {
         <Button onClick={() => setCreateDialogOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             创建会议
-          </Button>
+        </Button>
         } />
 
 
@@ -159,7 +159,7 @@ export default function StrategicMeetingManagement() {
                 {Object.entries(rhythmLevelConfig).map(([key, config]) =>
                 <option key={key} value={key}>
                     {config.label}
-                  </option>
+                </option>
                 )}
               </select>
             </div>
@@ -190,7 +190,7 @@ export default function StrategicMeetingManagement() {
                 {Object.entries(statusConfig).map(([key, config]) =>
                 <option key={key} value={key}>
                     {config.label}
-                  </option>
+                </option>
                 )}
               </select>
             </div>
@@ -217,9 +217,9 @@ export default function StrategicMeetingManagement() {
                 <CardContent className="p-4">
                   <div className="h-20 bg-gray-200 rounded animate-pulse" />
                 </CardContent>
-              </Card>
+          </Card>
           )}
-          </div> :
+        </div> :
         meetings.length > 0 ?
         meetings.map((meeting) => {
           const levelConfig = rhythmLevelConfig[meeting.rhythm_level];
@@ -246,7 +246,7 @@ export default function StrategicMeetingManagement() {
                         {levelConfig &&
                       <Badge className={levelConfig.color}>
                             {levelConfig.label}
-                          </Badge>
+                      </Badge>
                       }
                         <h3 className="text-lg font-semibold">
                           {meeting.meeting_name}
@@ -260,20 +260,20 @@ export default function StrategicMeetingManagement() {
                           {meeting.start_time &&
                         <span className="text-gray-400">
                               {formatTime(meeting.start_time)}
-                            </span>
+                        </span>
                         }
                         </div>
                         {meeting.organizer_name &&
                       <div className="flex items-center gap-2">
                             <Users className="w-4 h-4" />
                             <span>{meeting.organizer_name}</span>
-                          </div>
+                      </div>
                       }
                         {meeting.location &&
                       <div className="flex items-center gap-2">
                             <Target className="w-4 h-4" />
                             <span>{meeting.location}</span>
-                          </div>
+                      </div>
                       }
                         {meeting.action_items_count > 0 &&
                       <div className="flex items-center gap-2">
@@ -282,7 +282,7 @@ export default function StrategicMeetingManagement() {
                               {meeting.completed_action_items_count}/
                               {meeting.action_items_count} 行动项
                             </span>
-                          </div>
+                      </div>
                       }
                       </div>
                       {meeting.action_items_count > 0 &&
@@ -305,14 +305,14 @@ export default function StrategicMeetingManagement() {
                           style={{ width: `${completionRate}%` }} />
 
                           </div>
-                        </div>
+                    </div>
                     }
                       {meeting.agenda &&
                     <div className="text-sm text-gray-600 mb-2">
                           <FileText className="w-4 h-4 inline mr-1" />
                           {meeting.agenda.substring(0, 100)}
                           {meeting.agenda.length > 100 && "..."}
-                        </div>
+                    </div>
                     }
                     </div>
                     <div className="flex items-center gap-2 ml-4">
@@ -329,7 +329,7 @@ export default function StrategicMeetingManagement() {
                     </div>
                   </div>
                 </CardContent>
-              </Card>);
+            </Card>);
 
         }) :
 
@@ -338,7 +338,7 @@ export default function StrategicMeetingManagement() {
               <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-500">暂无会议数据</p>
             </CardContent>
-          </Card>
+        </Card>
         }
       </div>
 
@@ -368,7 +368,7 @@ export default function StrategicMeetingManagement() {
               下一页
             </Button>
           </div>
-        </div>
+      </div>
       }
 
       {/* Create Meeting Dialog - Simplified for now */}

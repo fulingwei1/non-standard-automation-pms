@@ -22,7 +22,7 @@ export function useIntersectionObserver(
   const [hasIntersected, setHasIntersected] = useState(false);
 
   useEffect(() => {
-    if (!enabled || !elementRef.current) return;
+    if (!enabled || !elementRef.current) {return;}
 
     const observer = new IntersectionObserver(
       ([entry]) => {

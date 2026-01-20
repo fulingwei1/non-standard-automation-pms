@@ -49,7 +49,7 @@ export function useHRContracts() {
         page: 1,
         page_size: 50,
       };
-      if (filter.status !== "all") params.status = filter.status;
+      if (filter.status !== "all") {params.status = filter.status;}
 
       const response = await hrApi.contracts.list(params);
       setContracts(response.data?.items || []);
@@ -91,7 +91,7 @@ export function useHRContracts() {
           !code.includes(search) &&
           !contractNo.includes(search)
         )
-          return false;
+          {return false;}
       }
       return true;
     });

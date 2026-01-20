@@ -163,10 +163,10 @@ export const ScoringMatrix = ({
 
   // 获取评分等级
   const getScoreLevel = (score) => {
-    if (score >= 80) return { level: "excellent", color: "#52c41a", label: "优秀" };
-    if (score >= 60) return { level: "good", color: "#1890ff", label: "良好" };
-    if (score >= 40) return { level: "average", color: "#faad14", label: "一般" };
-    if (score >= 20) return { level: "poor", color: "#ff7a45", label: "较差" };
+    if (score >= 80) {return { level: "excellent", color: "#52c41a", label: "优秀" };}
+    if (score >= 60) {return { level: "good", color: "#1890ff", label: "良好" };}
+    if (score >= 40) {return { level: "average", color: "#faad14", label: "一般" };}
+    if (score >= 20) {return { level: "poor", color: "#ff7a45", label: "较差" };}
     return { level: "very_poor", color: "#ff4d4f", label: "很差" };
   };
 
@@ -206,7 +206,7 @@ export const ScoringMatrix = ({
     // 平均分数据
     const avgScores = SCORING_CATEGORIES.map((category) => {
       const categoryLeads = filteredLeads.filter((lead) => lead.scores?.[category.id]);
-      if (categoryLeads.length === 0) return 0;
+      if (categoryLeads.length === 0) {return 0;}
 
       const avgScore = categoryLeads.reduce((sum, lead) =>
       sum + (lead.scores[category.id] || 0), 0) / categoryLeads.length;
@@ -300,7 +300,7 @@ export const ScoringMatrix = ({
                     {lead.companyName &&
                     <p className="text-sm text-slate-600 truncate">
                         {lead.companyName}
-                      </p>
+                    </p>
                     }
                   </div>
                 </div>
@@ -312,7 +312,7 @@ export const ScoringMatrix = ({
                     <p className="text-sm text-slate-900 truncate">
                       {lead.projectName}
                     </p>
-                  </div>
+                </div>
                 }
 
                 {/* 评分 */}
@@ -320,7 +320,7 @@ export const ScoringMatrix = ({
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-slate-600">线索评分</span>
                     <div className="flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded-full`} style={{ backgroundColor: scoreLevel.color }} />
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: scoreLevel.color }} />
                       <span className="text-sm font-medium" style={{ color: scoreLevel.color }}>
                         {scoreLevel.label}
                       </span>
@@ -374,13 +374,13 @@ export const ScoringMatrix = ({
                     <div className="flex items-center gap-2 text-sm">
                           <Mail className="h-4 w-4 text-slate-500" />
                           <span>{lead.contactEmail}</span>
-                        </div>
+                    </div>
                     }
                       {lead.contactPhone &&
                     <div className="flex items-center gap-2 text-sm">
                           <Phone className="h-4 w-4 text-slate-500" />
                           <span>{lead.contactPhone}</span>
-                        </div>
+                    </div>
                     }
                       {lead.description &&
                     <div>
@@ -388,10 +388,10 @@ export const ScoringMatrix = ({
                           <p className="text-sm text-slate-600 line-clamp-2">
                             {lead.description}
                           </p>
-                        </div>
+                    </div>
                     }
                     </div>
-                  </motion.div>
+                </motion.div>
                 }
               </div>
             </motion.div>);
@@ -426,7 +426,7 @@ export const ScoringMatrix = ({
               <Minus className="h-3 w-3" />
               }
                   <span>{Math.abs(change)}%</span>
-                </div>
+            </div>
             }
             </div>
           </div>
@@ -435,7 +435,7 @@ export const ScoringMatrix = ({
           </div>
         </div>
       </CardContent>
-    </Card>;
+  </Card>;
 
 
   return (
@@ -461,7 +461,7 @@ export const ScoringMatrix = ({
           {selectedLeads.length > 0 &&
           <Button variant="outline" onClick={() => onBulkAction && onBulkAction("score", selectedLeads)}>
               批量评分
-            </Button>
+          </Button>
           }
         </div>
       </div>
@@ -518,7 +518,7 @@ export const ScoringMatrix = ({
                 {LEAD_STATUSES.map((status) =>
                 <SelectItem key={status.value} value={status.value}>
                     {status.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -532,7 +532,7 @@ export const ScoringMatrix = ({
                 {INDUSTRIES.map((industry) =>
                 <SelectItem key={industry.value} value={industry.value}>
                     {industry.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -546,7 +546,7 @@ export const ScoringMatrix = ({
                 {LEAD_SOURCES.slice(0, 5).map((source) =>
                 <SelectItem key={source.value} value={source.value}>
                     {source.label}
-                  </SelectItem>
+                </SelectItem>
                 )}
               </SelectContent>
             </Select>

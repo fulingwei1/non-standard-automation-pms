@@ -9,10 +9,8 @@ export * from "./hrConstants";
 // HR 管理组件
 export { HRStatsOverview } from "./HRStatsOverview";
 export { EmployeeManager } from "./EmployeeManager";
-
-// TODO: 添加其他组件的导出
-// export { AttendanceManager } from "./AttendanceManager";
-// export { PayrollManager } from "./PayrollManager";
-// export { PerformanceManager } from "./PerformanceManager";
-// export { TrainingManager } from "./TrainingManager";
-// export { HRAnalytics } from "./HRAnalytics";
+export { default as HRAttendanceTab } from "./HRAttendanceTab";
+export { default as HRDashboardHeader } from "./HRDashboardHeader";
+export { default as HRDashboardOverview } from "./HRDashboardOverview";
+export { default as HREmployeesTab } from "./HREmployeesTab";
+export { default as HRRecruitmentTab } from "./HRRecruitmentTab";

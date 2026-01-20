@@ -80,7 +80,7 @@ export default function WorkerManagement() {
     try {
       setLoading(true);
       const params = { page: 1, page_size: 100 };
-      if (searchKeyword) params.search = searchKeyword;
+      if (searchKeyword) {params.search = searchKeyword;}
       const res = await productionApi.workers.list(params);
       const workerList = res.data?.items || res.data || [];
       setWorkers(workerList);
@@ -108,7 +108,7 @@ export default function WorkerManagement() {
   };
 
   const handleEdit = async () => {
-    if (!selectedWorker) return;
+    if (!selectedWorker) {return;}
     try {
       await productionApi.workers.update(selectedWorker.id, workerForm);
       setShowEditDialog(false);

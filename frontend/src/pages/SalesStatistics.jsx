@@ -205,7 +205,7 @@ export default function SalesStatistics() {
   }, [timeRange]);
 
   const formatCurrency = (value) => {
-    if (!value) return "0";
+    if (!value) {return "0";}
     const num = parseFloat(value);
     if (num >= 10000) {
       return (num / 10000).toFixed(1) + "万";
@@ -214,7 +214,7 @@ export default function SalesStatistics() {
   };
 
   const formatPercent = (value) => {
-    if (!value) return "0%";
+    if (!value) {return "0%";}
     return parseFloat(value).toFixed(1) + "%";
   };
 
@@ -308,7 +308,7 @@ export default function SalesStatistics() {
               <Download className="mr-2 h-4 w-4" />
               导出报表
             </Button>
-          </div>
+        </div>
         } />
 
 
@@ -379,7 +379,7 @@ export default function SalesStatistics() {
               </div>
             </CardContent>
           </Card>
-        </div>
+      </div>
       }
 
       {/* 销售漏斗 */}
@@ -428,7 +428,7 @@ export default function SalesStatistics() {
                               {stage.amount &&
                           <span className="text-sm text-slate-400">
                                   {formatCurrency(stage.amount)}
-                                </span>
+                          </span>
                           }
                             </div>
                             <div className="flex items-center gap-2">
@@ -442,7 +442,7 @@ export default function SalesStatistics() {
                                   <span className="text-sm text-slate-400">
                                     {conversionRate}% 转化率
                                   </span>
-                                </>
+                          </>
                           }
                             </div>
                           </div>
@@ -462,17 +462,17 @@ export default function SalesStatistics() {
                           }} />
 
                           </div>
-                        </div>);
+                    </div>);
 
                 })}
                   </div>
-                </> :
+            </> :
 
             <p className="text-center text-slate-400 py-8">暂无漏斗数据</p>
             }
             </div>
           </CardContent>
-        </Card>
+      </Card>
       }
 
       {/* 商机阶段分布 */}
@@ -513,7 +513,7 @@ export default function SalesStatistics() {
                         style={{ width: `${percentage}%` }} />
 
                       </div>
-                    </div>);
+                  </div>);
 
               })}
               </div>
@@ -585,17 +585,17 @@ export default function SalesStatistics() {
                             style={{ width: `${percentage}%` }} />
 
                                 </div>
-                              </div>);
+                      </div>);
 
                   })}
                         </div>
-                      </div>
+              </div>
               }
                 </div>
               </CardContent>
-            </Card>
+        </Card>
         }
-        </div>
+      </div>
       }
 
       {loading &&

@@ -72,11 +72,11 @@ export default function IssueManagement() {
       setLoading(true);
       // 过滤掉值为 "all" 的参数，后端不接受 "all" 作为筛选值
       const apiParams = {};
-      if (filters.status && filters.status !== "all") apiParams.status = filters.status;
-      if (filters.severity && filters.severity !== "all") apiParams.severity = filters.severity;
-      if (filters.category && filters.category !== "all") apiParams.category = filters.category;
-      if (filters.priority && filters.priority !== "all") apiParams.priority = filters.priority;
-      if (searchTerm) apiParams.keyword = searchTerm;
+      if (filters.status && filters.status !== "all") {apiParams.status = filters.status;}
+      if (filters.severity && filters.severity !== "all") {apiParams.severity = filters.severity;}
+      if (filters.category && filters.category !== "all") {apiParams.category = filters.category;}
+      if (filters.priority && filters.priority !== "all") {apiParams.priority = filters.priority;}
+      if (searchTerm) {apiParams.keyword = searchTerm;}
 
       const response = await issueApi.getIssues(apiParams);
       // API 返回 {items: [...], total, page, page_size, pages}
@@ -325,7 +325,7 @@ export default function IssueManagement() {
 
               新建问题
             </Button>
-          </div>
+        </div>
         } />
 
 
@@ -433,7 +433,7 @@ export default function IssueManagement() {
                   编辑
                 </Button>
               </div>
-            </div>
+          </div>
           }
         </DialogContent>
       </Dialog>

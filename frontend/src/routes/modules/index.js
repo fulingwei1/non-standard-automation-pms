@@ -1,0 +1,10 @@
+export { DashboardRoutes } from "./dashboardRoutes";
+export { ProjectRoutes } from "./projectRoutes";
+export { SalesRoutes } from "./salesRoutes";
+export { ProcurementRoutes } from "./procurementRoutes";
+export { ProductionRoutes } from "./productionRoutes";
+export { FinanceRoutes } from "./financeRoutes";
+export { HRRoutes } from "./hrRoutes";
+export { PresalesRoutes } from "./presalesRoutes";
+export { PMORoutes } from "./pmoRoutes";
+export { SystemRoutes } from "./systemRoutes";

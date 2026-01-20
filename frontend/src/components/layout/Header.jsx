@@ -23,7 +23,7 @@ export function Header({ sidebarCollapsed = false, user, onLogout }) {
   // Get user from localStorage if not provided
   const currentUser = useMemo(() => {
     try {
-      if (user) return user;
+      if (user) {return user;}
       const userStr = localStorage.getItem("user");
       if (userStr) {
         return JSON.parse(userStr);
@@ -38,17 +38,17 @@ export function Header({ sidebarCollapsed = false, user, onLogout }) {
   // Get welcome message based on time of day
   const welcomeMessage = useMemo(() => {
     const hour = new Date().getHours();
-    if (hour < 6) return "夜深了，注意休息";
-    if (hour < 9) return "早上好";
-    if (hour < 12) return "上午好";
-    if (hour < 14) return "中午好";
-    if (hour < 18) return "下午好";
-    if (hour < 22) return "晚上好";
+    if (hour < 6) {return "夜深了，注意休息";}
+    if (hour < 9) {return "早上好";}
+    if (hour < 12) {return "上午好";}
+    if (hour < 14) {return "中午好";}
+    if (hour < 18) {return "下午好";}
+    if (hour < 22) {return "晚上好";}
     return "夜深了，注意休息";
   }, []);
 
   const roleInfo = useMemo(() => {
-    if (!currentUser) return null;
+    if (!currentUser) {return null;}
     return getRoleInfo(currentUser.role || "admin");
   }, [currentUser]);
 

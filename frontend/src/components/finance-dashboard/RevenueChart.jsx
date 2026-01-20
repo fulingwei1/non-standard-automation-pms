@@ -34,13 +34,13 @@ const RevenueOverviewCard = ({ revenueData, loading }) => {
       <Card className="bg-surface-50 border-white/10">
         <CardContent className="p-6">
           <div className="animate-pulse space-y-3">
-            <div className="h-8 bg-slate-700 rounded w-1/3"></div>
+            <div className="h-8 bg-slate-700 rounded w-1/3" />
             <div className="grid grid-cols-3 gap-4">
               {[...Array(3)].map((_, i) =>
               <div key={i} className="space-y-2">
-                  <div className="h-4 bg-slate-700 rounded w-1/2"></div>
-                  <div className="h-6 bg-slate-700 rounded"></div>
-                </div>
+                  <div className="h-4 bg-slate-700 rounded w-1/2" />
+                  <div className="h-6 bg-slate-700 rounded" />
+              </div>
               )}
             </div>
           </div>
@@ -73,7 +73,7 @@ const RevenueOverviewCard = ({ revenueData, loading }) => {
                 {revenueData.growth >= 0 ? "↑" : "↓"}
                 {Math.abs(revenueData.growth)}%
                 <span className="text-slate-500">较上月</span>
-              </div>
+            </div>
             }
           </div>
 
@@ -109,9 +109,7 @@ const RevenueOverviewCard = ({ revenueData, loading }) => {
           <div className="w-full bg-slate-700 rounded-full h-2">
             <div
               className="bg-gradient-to-r from-green-400 to-emerald-500 h-2 rounded-full transition-all duration-500"
-              style={{ width: `${Math.min(revenueData.achievementRate, 100)}%` }}>
-
-            </div>
+              style={{ width: `${Math.min(revenueData.achievementRate, 100)}%` }} />
           </div>
           <div className="flex justify-between text-xs text-slate-500 mt-1">
             <span>0%</span>
@@ -128,7 +126,7 @@ const RevenueOverviewCard = ({ revenueData, loading }) => {
 // 收入类型饼图
 const RevenueTypeDistribution = ({ revenueByType, loading }) => {
   const chartData = useMemo(() => {
-    if (!revenueByType || revenueByType.length === 0) return [];
+    if (!revenueByType || revenueByType.length === 0) {return [];}
     return revenueByType.map((item) => ({
       type: item.type,
       value: item.value,
@@ -141,8 +139,8 @@ const RevenueTypeDistribution = ({ revenueByType, loading }) => {
       <Card className="bg-surface-50 border-white/10">
         <CardContent className="p-6">
           <div className="animate-pulse space-y-3">
-            <div className="h-4 bg-slate-700 rounded w-1/3"></div>
-            <div className="h-40 bg-slate-700 rounded"></div>
+            <div className="h-4 bg-slate-700 rounded w-1/3" />
+            <div className="h-40 bg-slate-700 rounded" />
           </div>
         </CardContent>
       </Card>);
@@ -200,9 +198,7 @@ const RevenueTypeDistribution = ({ revenueByType, loading }) => {
                   <div className="flex items-center gap-3">
                     <div
                       className="w-4 h-4 rounded"
-                      style={{ backgroundColor: colors[index] }}>
-
-                    </div>
+                      style={{ backgroundColor: colors[index] }} />
                     <div>
                       <div className="text-sm font-medium text-white">
                         {revenueType?.label || item.type}
@@ -233,7 +229,7 @@ const RevenueTypeDistribution = ({ revenueByType, loading }) => {
 // 收入趋势图
 const RevenueTrendChart = ({ revenueByMonth, loading, timeRange }) => {
   const chartData = useMemo(() => {
-    if (!revenueByMonth || revenueByMonth.length === 0) return [];
+    if (!revenueByMonth || revenueByMonth.length === 0) {return [];}
     return revenueByMonth.map((item) => ({
       month: item.month,
       actual: item.actual,
@@ -247,8 +243,8 @@ const RevenueTrendChart = ({ revenueByMonth, loading, timeRange }) => {
       <Card className="bg-surface-50 border-white/10">
         <CardContent className="p-6">
           <div className="animate-pulse space-y-3">
-            <div className="h-4 bg-slate-700 rounded w-1/3"></div>
-            <div className="h-64 bg-slate-700 rounded"></div>
+            <div className="h-4 bg-slate-700 rounded w-1/3" />
+            <div className="h-64 bg-slate-700 rounded" />
           </div>
         </CardContent>
       </Card>);
@@ -292,8 +288,8 @@ const RevenueTrendChart = ({ revenueByMonth, loading, timeRange }) => {
           yField="actual"
           seriesField="type"
           height={300}
-          showPoint={true}
-          showArea={true}
+          showPoint
+          showArea
           formatter={formatter}
           colors={['#4ade80']}
           tooltip={{
@@ -318,7 +314,7 @@ const RevenueTrendChart = ({ revenueByMonth, loading, timeRange }) => {
 // 客户收入分析
 const CustomerRevenueAnalysis = ({ revenueByCustomer, loading }) => {
   const chartData = useMemo(() => {
-    if (!revenueByCustomer || revenueByCustomer.length === 0) return [];
+    if (!revenueByCustomer || revenueByCustomer.length === 0) {return [];}
     return revenueByCustomer.
     sort((a, b) => b.value - a.value).
     slice(0, 10).
@@ -335,10 +331,10 @@ const CustomerRevenueAnalysis = ({ revenueByCustomer, loading }) => {
       <Card className="bg-surface-50 border-white/10">
         <CardContent className="p-6">
           <div className="animate-pulse space-y-3">
-            <div className="h-4 bg-slate-700 rounded w-1/3"></div>
+            <div className="h-4 bg-slate-700 rounded w-1/3" />
             <div className="space-y-2">
               {[...Array(5)].map((_, i) =>
-              <div key={i} className="h-3 bg-slate-700 rounded w-full"></div>
+              <div key={i} className="h-3 bg-slate-700 rounded w-full" />
               )}
             </div>
           </div>
@@ -390,7 +386,7 @@ const CustomerRevenueAnalysis = ({ revenueByCustomer, loading }) => {
                   {formatCurrency(item.revenue)}
                 </div>
               </div>
-            </div>
+          </div>
           )}
         </div>
 

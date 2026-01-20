@@ -289,16 +289,16 @@ export default function RdCostSummary() {
                     }
                     color="primary" />
 
-                      </div>
+                </div>
                 ) :
 
                 <div className="text-center py-8 text-slate-500">
                       暂无费用数据
-                    </div>
+                </div>
                 }
                 </div>
               </CardContent>
-            </Card>
+          </Card>
           }
         </TabsContent>
 
@@ -331,9 +331,9 @@ export default function RdCostSummary() {
                       {item.count || 0} 条记录
                     </p>
                   </CardContent>
-                </Card>
+            </Card>
             )}
-            </div> :
+          </div> :
 
           <Card>
               <CardContent className="p-6">
@@ -341,7 +341,7 @@ export default function RdCostSummary() {
                   暂无费用数据
                 </div>
               </CardContent>
-            </Card>
+          </Card>
           }
         </TabsContent>
 
@@ -432,13 +432,13 @@ export default function RdCostSummary() {
                                 %占比
                               </p>
                             </div>
-                          </div>
+                  </div>
                   )}
                       </div>
                     </CardContent>
-                  </Card>
+            </Card>
             }
-            </> :
+          </> :
 
           <Card>
               <CardContent className="p-6">
@@ -452,7 +452,7 @@ export default function RdCostSummary() {
                   </p>
                 </div>
               </CardContent>
-            </Card>
+          </Card>
           }
         </TabsContent>
       </Tabs>

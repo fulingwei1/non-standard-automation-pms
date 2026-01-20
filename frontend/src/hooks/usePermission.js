@@ -39,10 +39,10 @@ export function usePermission() {
    */
   const hasPermission = useCallback((permissionCode) => {
     // 超级管理员拥有所有权限
-    if (isSuperuser) return true;
+    if (isSuperuser) {return true;}
 
     // 检查权限列表
-    if (!permissions || !Array.isArray(permissions)) return false;
+    if (!permissions || !Array.isArray(permissions)) {return false;}
 
     return permissions.includes(permissionCode);
   }, [permissions, isSuperuser]);
@@ -53,9 +53,9 @@ export function usePermission() {
    * @returns {boolean}
    */
   const hasAnyPermission = useCallback((permissionCodes) => {
-    if (isSuperuser) return true;
-    if (!permissions || !Array.isArray(permissions)) return false;
-    if (!permissionCodes || !Array.isArray(permissionCodes)) return false;
+    if (isSuperuser) {return true;}
+    if (!permissions || !Array.isArray(permissions)) {return false;}
+    if (!permissionCodes || !Array.isArray(permissionCodes)) {return false;}
 
     return permissionCodes.some(code => permissions.includes(code));
   }, [permissions, isSuperuser]);
@@ -66,9 +66,9 @@ export function usePermission() {
    * @returns {boolean}
    */
   const hasAllPermissions = useCallback((permissionCodes) => {
-    if (isSuperuser) return true;
-    if (!permissions || !Array.isArray(permissions)) return false;
-    if (!permissionCodes || !Array.isArray(permissionCodes)) return true;
+    if (isSuperuser) {return true;}
+    if (!permissions || !Array.isArray(permissions)) {return false;}
+    if (!permissionCodes || !Array.isArray(permissionCodes)) {return true;}
 
     return permissionCodes.every(code => permissions.includes(code));
   }, [permissions, isSuperuser]);
@@ -79,14 +79,14 @@ export function usePermission() {
    * @returns {boolean}
    */
   const canAccessMenu = useCallback((menuCode) => {
-    if (isSuperuser) return true;
-    if (!menus || !Array.isArray(menus)) return false;
+    if (isSuperuser) {return true;}
+    if (!menus || !Array.isArray(menus)) {return false;}
 
     // 递归检查菜单树
     const findMenu = (menuList, code) => {
       for (const menu of menuList) {
-        if (menu.code === code) return true;
-        if (menu.children && findMenu(menu.children, code)) return true;
+        if (menu.code === code) {return true;}
+        if (menu.children && findMenu(menu.children, code)) {return true;}
       }
       return false;
     };
@@ -100,8 +100,8 @@ export function usePermission() {
    * @returns {string|null} - 权限范围：ALL, BUSINESS_UNIT, DEPARTMENT, TEAM, PROJECT, OWN, null
    */
   const getDataScope = useCallback((resourceType) => {
-    if (isSuperuser) return 'ALL';
-    if (!dataScopes || typeof dataScopes !== 'object') return null;
+    if (isSuperuser) {return 'ALL';}
+    if (!dataScopes || typeof dataScopes !== 'object') {return null;}
 
     return dataScopes[resourceType] || null;
   }, [dataScopes, isSuperuser]);
@@ -115,10 +115,10 @@ export function usePermission() {
    * @returns {boolean}
    */
   const canAccessData = useCallback((resourceType, data, currentUserId, userOrgUnitIds = []) => {
-    if (isSuperuser) return true;
+    if (isSuperuser) {return true;}
 
     const scope = getDataScope(resourceType);
-    if (!scope) return false;
+    if (!scope) {return false;}
 
     switch (scope) {
       case 'ALL':
@@ -128,7 +128,7 @@ export function usePermission() {
       case 'DEPARTMENT':
       case 'TEAM':
         // 检查数据的组织单元是否在用户可访问范围内
-        if (!data.org_unit_id && !data.department_id) return true;
+        if (!data.org_unit_id && !data.department_id) {return true;}
         {
           const dataOrgId = data.org_unit_id || data.department_id;
           return userOrgUnitIds.includes(dataOrgId);
@@ -136,7 +136,7 @@ export function usePermission() {
 
       case 'PROJECT':
         // 检查是否参与该项目
-        if (!data.project_id) return true;
+        if (!data.project_id) {return true;}
         // 这需要额外的项目成员信息，返回 null 表示需要服务端检查
         return null;
 
@@ -155,7 +155,7 @@ export function usePermission() {
    * 获取用户可见的菜单树
    */
   const visibleMenus = useMemo(() => {
-    if (isSuperuser) return menus || [];
+    if (isSuperuser) {return menus || [];}
     return menus || [];
   }, [menus, isSuperuser]);
 

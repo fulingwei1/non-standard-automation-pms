@@ -78,7 +78,7 @@ export function UserCard({
 
   // 处理删除操作
   const handleDelete = async () => {
-    if (!user.id) return;
+    if (!user.id) {return;}
 
     setIsDeleting(true);
     try {
@@ -90,7 +90,7 @@ export function UserCard({
 
   // 处理状态切换
   const handleToggleStatus = async () => {
-    if (!user.id) return;
+    if (!user.id) {return;}
 
     setIsToggling(true);
     try {
@@ -102,13 +102,13 @@ export function UserCard({
 
   // 处理重置密码
   const handleResetPassword = async () => {
-    if (!user.id) return;
+    if (!user.id) {return;}
     await onResetPassword?.(user.id);
   };
 
   // 处理角色分配
   const handleAssignRole = () => {
-    if (!user.id) return;
+    if (!user.id) {return;}
     onAssignRole?.(user);
   };
 
@@ -135,12 +135,12 @@ export function UserCard({
           }}>
 
             {formatUserRole(role.role_code)}
-          </Badge>
+        </Badge>
         )}
         {userRoles.length > 2 &&
         <Badge variant="outline" className="text-xs">
             +{userRoles.length - 2}
-          </Badge>
+        </Badge>
         }
       </div>);
 
@@ -203,8 +203,8 @@ export function UserCard({
     let creditColor = "text-green-600";
     let creditIcon = "💎";
 
-    if (credits < 50) creditColor = "text-red-600";else
-    if (credits < 100) creditColor = "text-yellow-600";
+    if (credits < 50) {creditColor = "text-red-600";}else
+    if (credits < 100) {creditColor = "text-yellow-600";}
 
     return (
       <div className={cn("flex items-center gap-1 text-xs", creditColor)}>
@@ -311,7 +311,7 @@ export function UserCard({
                   删除用户
                 </DropdownMenuItem>
               </DropdownMenuContent>
-            </DropdownMenu>
+          </DropdownMenu>
           }
         </div>
       </CardHeader>
@@ -323,25 +323,25 @@ export function UserCard({
           <div className="flex items-center gap-2 text-sm">
               <Mail className="w-4 h-4 text-muted-foreground" />
               <span className="truncate">{user.email}</span>
-            </div>
+          </div>
           }
           {user.phone &&
           <div className="flex items-center gap-2 text-sm">
               <Phone className="w-4 h-4 text-muted-foreground" />
               <span className="truncate">{user.phone}</span>
-            </div>
+          </div>
           }
           {user.department &&
           <div className="flex items-center gap-2 text-sm">
               <Building2 className="w-4 h-4 text-muted-foreground" />
               <span className="truncate">{user.department}</span>
-            </div>
+          </div>
           }
           {user.position &&
           <div className="flex items-center gap-2 text-sm">
               <UserIcon className="w-4 h-4 text-muted-foreground" />
               <span className="truncate">{user.position}</span>
-            </div>
+          </div>
           }
         </div>
 
@@ -364,7 +364,7 @@ export function UserCard({
             <span className="text-xs text-muted-foreground">
               认证方式: {user.auth_type}
             </span>
-          </div>
+        </div>
         }
 
         {/* 系统标识 */}
@@ -374,7 +374,7 @@ export function UserCard({
               <Shield className="w-3 h-3 mr-1" />
               超级管理员
             </Badge>
-          </div>
+        </div>
         }
       </CardContent>
     </Card>);

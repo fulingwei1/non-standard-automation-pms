@@ -15,7 +15,7 @@ export function CompetencyRadarChart({
   // data格式: { technical_skills: 85, business_skills: 80, ... }
 
   const dimensions = useMemo(() => {
-    if (!data || typeof data !== "object") return [];
+    if (!data || typeof data !== "object") {return [];}
 
     const dimensionNames = {
       technical_skills: "专业技能",
@@ -49,7 +49,7 @@ export function CompetencyRadarChart({
 
   // 计算每个维度的坐标点
   const points = useMemo(() => {
-    if (dimensions.length === 0) return [];
+    if (dimensions.length === 0) {return [];}
     return dimensions.map((dim, index) => {
       const angle = index * angleStep - Math.PI / 2;
       const normalizedScore = Math.min(dim.score / maxScore, 1);
@@ -68,7 +68,7 @@ export function CompetencyRadarChart({
   // 生成网格线（5个等级）
   const gridLevels = 5;
   const gridLines = useMemo(() => {
-    if (dimensions.length === 0) return [];
+    if (dimensions.length === 0) {return [];}
     return Array.from({ length: gridLevels }, (_, i) => {
       const level = (i + 1) / gridLevels;
       const levelRadius = radius * level;
@@ -84,13 +84,13 @@ export function CompetencyRadarChart({
 
   // 生成数据区域路径
   const dataPath = useMemo(() => {
-    if (points.length === 0) return "";
+    if (points.length === 0) {return "";}
     return points.map((p) => `${p.x},${p.y}`).join(" ");
   }, [points]);
 
   // 计算平均分
   const avgScore = useMemo(() => {
-    if (dimensions.length === 0) return 0;
+    if (dimensions.length === 0) {return 0;}
     const sum = dimensions.reduce((acc, dim) => acc + dim.score, 0);
     return Math.round(sum / dimensions.length);
   }, [dimensions]);
@@ -171,7 +171,7 @@ export function CompetencyRadarChart({
             className="text-sm font-bold fill-blue-600">
 
                 {point.score}
-              </text>
+          </text>
           }
             {/* 维度标签 */}
             {showLabels &&
@@ -183,9 +183,9 @@ export function CompetencyRadarChart({
             fontWeight="500">
 
                 {point.label}
-              </text>
+          </text>
           }
-          </g>
+        </g>
         )}
 
         {/* 中心点 */}

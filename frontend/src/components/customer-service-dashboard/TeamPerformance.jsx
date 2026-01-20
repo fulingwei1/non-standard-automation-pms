@@ -163,16 +163,16 @@ export function TeamPerformance({
 
   // 绩效等级映射
   const getPerformanceLevel = (resolutionRate) => {
-    if (resolutionRate >= 90) return { level: "优秀", color: "text-green-600", bgColor: "bg-green-100" };
-    if (resolutionRate >= 80) return { level: "良好", color: "text-blue-600", bgColor: "bg-blue-100" };
-    if (resolutionRate >= 70) return { level: "合格", color: "text-yellow-600", bgColor: "bg-yellow-100" };
+    if (resolutionRate >= 90) {return { level: "优秀", color: "text-green-600", bgColor: "bg-green-100" };}
+    if (resolutionRate >= 80) {return { level: "良好", color: "text-blue-600", bgColor: "bg-blue-100" };}
+    if (resolutionRate >= 70) {return { level: "合格", color: "text-yellow-600", bgColor: "bg-yellow-100" };}
     return { level: "待改进", color: "text-red-600", bgColor: "bg-red-100" };
   };
 
   // 获取趋势图标
   const _getTrendIcon = (current, previous) => {
-    if (current > previous) return <TrendingUp className="w-4 h-4 text-green-500" />;
-    if (current < previous) return <TrendingDown className="w-4 h-4 text-red-500" />;
+    if (current > previous) {return <TrendingUp className="w-4 h-4 text-green-500" />;}
+    if (current < previous) {return <TrendingDown className="w-4 h-4 text-red-500" />;}
     return null;
   };
 

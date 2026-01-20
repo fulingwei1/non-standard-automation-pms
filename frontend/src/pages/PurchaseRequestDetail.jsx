@@ -134,7 +134,7 @@ export default function PurchaseRequestDetail() {
   };
 
   const handleGenerateOrders = async () => {
-    if (!id) return;
+    if (!id) {return;}
     try {
       setGenerating(true);
       await purchaseApi.requests.generateOrders(id);

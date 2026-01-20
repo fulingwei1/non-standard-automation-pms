@@ -435,7 +435,7 @@ export const getFeedbackConfig = (rating) => {
  * 计算服务时长
  */
 export const calculateServiceDuration = (startTime, endTime) => {
-  if (!startTime || !endTime) return 0;
+  if (!startTime || !endTime) {return 0;}
 
   const start = new Date(startTime);
   const end = new Date(endTime);
@@ -449,7 +449,7 @@ export const calculateServiceDuration = (startTime, endTime) => {
  * 计算服务响应时间
  */
 export const calculateResponseTime = (requestTime, startTime) => {
-  if (!requestTime || !startTime) return 0;
+  if (!requestTime || !startTime) {return 0;}
 
   const request = new Date(requestTime);
   const start = new Date(startTime);
@@ -538,7 +538,7 @@ export const generateServiceReportNumber = (serviceType, date = new Date()) => {
  * 获取服务状态变更历史
  */
 export const getServiceStatusHistory = (records) => {
-  if (!records || records.length === 0) return [];
+  if (!records || records.length === 0) {return [];}
 
   const history = [];
   let previousStatus = null;
@@ -572,7 +572,7 @@ export const getNextServiceRecommendation = (serviceType, lastServiceDate) => {
   const serviceTypeConfig = getServiceTypeConfig(serviceType);
   const recommendation = recommendations[serviceTypeConfig.label];
 
-  if (!recommendation) return null;
+  if (!recommendation) {return null;}
 
   const nextDate = new Date(lastServiceDate);
   nextDate.setDate(nextDate.getDate() + recommendation.days);
@@ -610,7 +610,7 @@ export const calculateServiceCompletionRate = (services, dateRange = null) => {
  * 获取服务质量评分
  */
 export const getServiceQualityScore = (feedbacks) => {
-  if (!feedbacks || feedbacks.length === 0) return 0;
+  if (!feedbacks || feedbacks.length === 0) {return 0;}
 
   const totalScore = feedbacks.reduce((sum, feedback) => sum + feedback.rating, 0);
   return Math.round(totalScore / feedbacks.length * 100) / 100;

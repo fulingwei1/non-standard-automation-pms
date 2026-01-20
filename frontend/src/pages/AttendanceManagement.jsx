@@ -97,7 +97,7 @@ export default function AttendanceManagement() {
               <BarChart3 className="w-4 h-4 mr-2" />
               统计分析
             </Button>
-          </div>
+        </div>
         } />
 
 
@@ -228,7 +228,7 @@ export default function AttendanceManagement() {
                     </div>
                   </div>
                 </CardContent>
-              </Card>
+            </Card>
             )}
           </div>
         </TabsContent>
@@ -239,7 +239,9 @@ export default function AttendanceManagement() {
               <CardTitle>考勤记录</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-slate-400">TODO: 考勤记录列表</p>
+              <div className="text-slate-400 text-sm py-6 text-center">
+                暂无考勤明细记录（当前仅展示部门考勤统计）
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -296,10 +298,10 @@ export default function AttendanceManagement() {
                           <Button size="sm" variant="outline">
                             拒绝
                           </Button>
-                        </div>
+                    </div>
                     }
                     </div>
-                  </div>
+                </div>
                 )}
               </div>
             </CardContent>
@@ -312,7 +314,9 @@ export default function AttendanceManagement() {
               <CardTitle>加班管理</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-slate-400">TODO: 加班申请列表</p>
+              <div className="text-slate-400 text-sm py-6 text-center">
+                暂无加班申请数据
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

@@ -69,18 +69,18 @@ export default function Dashboard() {
 
   // 处理不同API响应格式
   const projects = (() => {
-    if (!projectsData) return [];
-    if (Array.isArray(projectsData)) return projectsData;
-    if (Array.isArray(projectsData.items)) return projectsData.items;
-    if (Array.isArray(projectsData.data)) return projectsData.data;
+    if (!projectsData) {return [];}
+    if (Array.isArray(projectsData)) {return projectsData;}
+    if (Array.isArray(projectsData.items)) {return projectsData.items;}
+    if (Array.isArray(projectsData.data)) {return projectsData.data;}
     return [];
   })();
 
   const machines = (() => {
-    if (!machinesData) return [];
-    if (Array.isArray(machinesData)) return machinesData;
-    if (Array.isArray(machinesData.items)) return machinesData.items;
-    if (Array.isArray(machinesData.data)) return machinesData.data;
+    if (!machinesData) {return [];}
+    if (Array.isArray(machinesData)) {return machinesData;}
+    if (Array.isArray(machinesData.items)) {return machinesData.items;}
+    if (Array.isArray(machinesData.data)) {return machinesData.data;}
     return [];
   })();
 
@@ -165,7 +165,7 @@ export default function Dashboard() {
                 map((_, i) =>
                 <SkeletonCard key={i} />
                 )}
-                </div> :
+              </div> :
               recentProjects.length > 0 ?
               // 使用虚拟滚动优化长列表性能
               recentProjects.length > 10 ?
@@ -221,14 +221,14 @@ export default function Dashboard() {
 
                         {/* Arrow */}
                         <ArrowRight className="h-5 w-5 text-slate-600 group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                      </Link>
+                </Link>
                 )}
-                  </div> :
+              </div> :
 
 
               <div className="p-12 text-center text-slate-500">
                   暂无项目数据
-                </div>
+              </div>
               }
             </CardContent>
           </Card>

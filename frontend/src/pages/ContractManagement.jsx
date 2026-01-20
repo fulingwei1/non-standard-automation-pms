@@ -234,7 +234,7 @@ const ContractManagement = () => {
             <Tag size="small">{CONTRACT_TYPES[record.type?.toUpperCase()]?.label}</Tag>
             <span style={{ marginLeft: 8 }}>{record.clientName}</span>
           </div>
-        </div>
+    </div>
 
   },
   {
@@ -253,7 +253,7 @@ const ContractManagement = () => {
               {SIGNATURE_STATUS[record.signatureStatus?.toUpperCase()]?.label}
             </Tag>
           </div>
-        </div>
+    </div>
 
   },
   {
@@ -263,7 +263,7 @@ const ContractManagement = () => {
     render: (value) =>
     <span style={{ fontWeight: 'bold', color: CHART_COLORS.POSITIVE }}>
           ¥{value?.toLocaleString()}
-        </span>
+    </span>
 
   },
   {
@@ -280,9 +280,9 @@ const ContractManagement = () => {
           {record.signingDeadline &&
       <div style={{ fontSize: 12, color: '#ff4d4f' }}>
               <AlertTriangle size={12} /> 期限: {record.signingDeadline}
-            </div>
+      </div>
       }
-        </div>
+    </div>
 
   },
   {
@@ -294,7 +294,7 @@ const ContractManagement = () => {
       return (
         <Tag color={config?.color}>
             {config?.label}
-          </Tag>);
+        </Tag>);
 
     }
   },
@@ -324,7 +324,7 @@ const ContractManagement = () => {
         onClick={() => handleSignContract(record)}>
 
               签署
-            </Button>
+      </Button>
       }
           {record.status === 'signed' &&
       <Button
@@ -333,7 +333,7 @@ const ContractManagement = () => {
         onClick={() => handleCreateProject(record)}>
 
               创建项目
-            </Button>
+      </Button>
       }
           <Dropdown
         overlay={
@@ -351,14 +351,14 @@ const ContractManagement = () => {
 
                   <XCircle size={14} /> 删除合同
                 </Menu.Item>
-              </Menu>
+        </Menu>
         }>
 
             <Button type="link" icon={<MoreHorizontal size={16} />}>
               更多
             </Button>
           </Dropdown>
-        </Space>
+    </Space>
 
   }];
 
@@ -429,7 +429,7 @@ const ContractManagement = () => {
                 {Object.values(CONTRACT_TYPES).map((type) =>
                 <Select.Option key={type.value} value={type.value}>
                     {type.icon} {type.label}
-                  </Select.Option>
+                </Select.Option>
                 )}
               </Select>
               <Select
@@ -442,7 +442,7 @@ const ContractManagement = () => {
                 {Object.values(CONTRACT_STATUS).map((status) =>
                 <Select.Option key={status.value} value={status.value}>
                     <Tag color={status.color}>{status.label}</Tag>
-                  </Select.Option>
+                </Select.Option>
                 )}
               </Select>
               <Select
@@ -455,7 +455,7 @@ const ContractManagement = () => {
                 {Object.values(SIGNATURE_STATUS).map((status) =>
                 <Select.Option key={status.value} value={status.value}>
                     <Tag color={status.color}>{status.label}</Tag>
-                  </Select.Option>
+                </Select.Option>
                 )}
               </Select>
             </Space>
@@ -475,7 +475,7 @@ const ContractManagement = () => {
           <span>
               <TrendingUp size={16} />
               概览分析
-            </span>
+          </span>
           }
           key="overview">
 
@@ -484,8 +484,8 @@ const ContractManagement = () => {
             loading={loading}
             onNavigate={(type, value) => {
               setActiveTab('contracts');
-              if (type === 'status') setFilters({ ...filters, status: value });
-              if (type === 'risks') setFilters({ ...filters, riskLevel: 'high' });
+              if (type === 'status') {setFilters({ ...filters, status: value });}
+              if (type === 'risks') {setFilters({ ...filters, riskLevel: 'high' });}
             }} />
 
         </TabPane>
@@ -495,7 +495,7 @@ const ContractManagement = () => {
           <span>
               <FileText size={16} />
               合同列表 ({filteredContracts.length})
-            </span>
+          </span>
           }
           key="contracts">
 
@@ -514,7 +514,7 @@ const ContractManagement = () => {
           <span>
               <Edit size={16} />
               合同编辑
-            </span>
+          </span>
           }
           key="editor">
 
@@ -537,7 +537,7 @@ const ContractManagement = () => {
           <span>
               <FileCheck size={16} />
               签署管理
-            </span>
+          </span>
           }
           key="signature">
 
@@ -553,7 +553,7 @@ const ContractManagement = () => {
           <span>
               <DollarSign size={16} />
               付款跟踪
-            </span>
+          </span>
           }
           key="payment">
 

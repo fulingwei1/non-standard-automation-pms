@@ -105,7 +105,7 @@ const DEFAULT_PERMISSION_MODULES = [
 
 
 const cloneRolePermissions = (roles) => {
-  if (!Array.isArray(roles)) return [];
+  if (!Array.isArray(roles)) {return [];}
   return roles.map((role) => ({
     ...role,
     permissions: Array.isArray(role.permissions) ? [...role.permissions] : []
@@ -142,20 +142,20 @@ const StatCard = ({
             <>
                   <ArrowUpRight className="w-3 h-3 text-emerald-400" />
                   <span className="text-xs text-emerald-400">+{trend}</span>
-                </> :
+            </> :
             trend < 0 ?
             <>
                   <ArrowDownRight className="w-3 h-3 text-red-400" />
                   <span className="text-xs text-red-400">{trend}</span>
-                </> :
+            </> :
             null}
-            </div>
+          </div>
           }
         </div>
         {Icon &&
         <div className={cn("p-3 rounded-lg", bg)}>
             <Icon className={cn("w-5 h-5", color)} />
-          </div>
+        </div>
         }
       </div>
     </motion.div>);
@@ -201,7 +201,7 @@ export default function AdminDashboard() {
   }, []);
 
   useEffect(() => {
-    if (!permissionNotice) return;
+    if (!permissionNotice) {return;}
     const timer = setTimeout(() => setPermissionNotice(null), 3000);
     return () => clearTimeout(timer);
   }, [permissionNotice]);
@@ -229,12 +229,12 @@ export default function AdminDashboard() {
   rolePermissions.find((role) => role.roleCode === selectedRoleCode) || null;
 
   const isRolePermissionsChanged = (role) => {
-    if (!role) return false;
+    if (!role) {return false;}
     const savedRole = savedRolePermissions.find(
       (item) => item.roleCode === role.roleCode
     );
-    if (!savedRole) return true;
-    if (savedRole.permissions.length !== role.permissions.length) return true;
+    if (!savedRole) {return true;}
+    if (savedRole.permissions.length !== role.permissions.length) {return true;}
     const savedSet = new Set(savedRole.permissions);
     return role.permissions.some((perm) => !savedSet.has(perm));
   };
@@ -263,10 +263,10 @@ export default function AdminDashboard() {
   };
 
   const _handleTogglePermission = (moduleCode) => {
-    if (!selectedRoleCode) return;
+    if (!selectedRoleCode) {return;}
     setRolePermissions((prev) =>
     prev.map((role) => {
-      if (role.roleCode !== selectedRoleCode) return role;
+      if (role.roleCode !== selectedRoleCode) {return role;}
       const hasPermission = role.permissions.includes(moduleCode);
       return {
         ...role,

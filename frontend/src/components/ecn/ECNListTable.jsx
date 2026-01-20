@@ -65,8 +65,8 @@ export function ECNListTable({
       bValue = Number.isNaN(bDate.getTime()) ? 0 : bDate.getTime();
     }
     
-    if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
-    if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
+    if (aValue < bValue) {return sortConfig.direction === "asc" ? -1 : 1;}
+    if (aValue > bValue) {return sortConfig.direction === "asc" ? 1 : -1;}
     return 0;
   });
 

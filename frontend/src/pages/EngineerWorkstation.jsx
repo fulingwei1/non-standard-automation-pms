@@ -444,7 +444,7 @@ function TaskListItem({ task, onClick, isSelected }) {
             <span className="flex items-center gap-1">
                 <FileText className="w-3 h-3" />
                 {task.deliverables.length} 文件
-              </span>
+            </span>
             }
           </div>
 
@@ -453,7 +453,7 @@ function TaskListItem({ task, onClick, isSelected }) {
           <div className="mt-2 p-2 rounded-lg bg-red-500/10 text-xs text-red-300 flex items-center gap-2">
               <AlertTriangle className="w-3 h-3" />
               {task.blockedReason}
-            </div>
+          </div>
           }
         </div>
 
@@ -586,9 +586,9 @@ export default function EngineerWorkstation() {
   // Filter tasks
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
-      if (statusFilter !== "all" && task.status !== statusFilter) return false;
+      if (statusFilter !== "all" && task.status !== statusFilter) {return false;}
       if (projectFilter !== "all" && task.projectId !== projectFilter)
-      return false;
+      {return false;}
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         return (
@@ -696,7 +696,7 @@ export default function EngineerWorkstation() {
               <Send className="w-4 h-4 mr-1" />
               申请评审
             </Button>
-          </div>
+        </div>
         } />
 
 
@@ -768,7 +768,7 @@ export default function EngineerWorkstation() {
 
                     <mode.icon className="w-4 h-4" />
                     {mode.label}
-                  </Button>
+                </Button>
                 )}
               </div>
 
@@ -784,7 +784,7 @@ export default function EngineerWorkstation() {
                   {projects.map((p) =>
                   <option key={p.id} value={p.id}>
                       {p.name}
-                    </option>
+                  </option>
                   )}
                 </select>
 
@@ -868,9 +868,9 @@ export default function EngineerWorkstation() {
                 "没有符合条件的任务" :
                 "当前没有分配给您的设计任务"}
                   </p>
-                </div>
-            }
             </div>
+            }
+          </div>
           }
 
           {/* Project View - 按项目分组展示 */}
@@ -898,11 +898,11 @@ export default function EngineerWorkstation() {
                 tasksByProject[projectId].tasks.push(task);
                 tasksByProject[projectId].stats.total++;
                 if (task.status === "in_progress")
-                tasksByProject[projectId].stats.inProgress++;else
+                {tasksByProject[projectId].stats.inProgress++;}else
                 if (task.status === "completed")
-                tasksByProject[projectId].stats.completed++;else
+                {tasksByProject[projectId].stats.completed++;}else
                 if (task.status === "pending")
-                tasksByProject[projectId].stats.pending++;
+                {tasksByProject[projectId].stats.pending++;}
               });
 
               const projectGroups = Object.values(tasksByProject);
@@ -921,7 +921,7 @@ export default function EngineerWorkstation() {
                       "没有符合条件的任务" :
                       "当前没有分配给您的设计任务"}
                       </p>
-                    </div>);
+                  </div>);
 
               }
 
@@ -981,10 +981,10 @@ export default function EngineerWorkstation() {
                     )}
                       </div>
                     </CardContent>
-                  </Card>
+              </Card>
               );
             })()}
-            </div>
+          </div>
           }
         </div>
 

@@ -29,12 +29,12 @@ const CashFlowSummaryCard = ({ cashFlowData, loading }) => {
         <Card key={i} className="bg-surface-50 border-white/10">
             <CardContent className="p-6">
               <div className="animate-pulse space-y-3">
-                <div className="w-8 h-8 bg-slate-700 rounded"></div>
-                <div className="h-6 bg-slate-700 rounded w-3/4"></div>
-                <div className="h-4 bg-slate-700 rounded w-1/2"></div>
+                <div className="w-8 h-8 bg-slate-700 rounded" />
+                <div className="h-6 bg-slate-700 rounded w-3/4" />
+                <div className="h-4 bg-slate-700 rounded w-1/2" />
               </div>
             </CardContent>
-          </Card>
+        </Card>
         )}
       </div>);
 
@@ -92,7 +92,7 @@ const CashFlowSummaryCard = ({ cashFlowData, loading }) => {
               <div className="text-sm text-slate-400">{item.label}</div>
             </div>
           </CardContent>
-        </Card>
+      </Card>
       )}
     </div>);
 
@@ -101,7 +101,7 @@ const CashFlowSummaryCard = ({ cashFlowData, loading }) => {
 // 现金流趋势图
 const CashFlowTrendChart = ({ cashFlowByMonth, loading }) => {
   const chartData = useMemo(() => {
-    if (!cashFlowByMonth || cashFlowByMonth.length === 0) return [];
+    if (!cashFlowByMonth || cashFlowByMonth.length === 0) {return [];}
     return cashFlowByMonth.map((item) => ({
       month: item.month,
       operating: item.operating,
@@ -116,8 +116,8 @@ const CashFlowTrendChart = ({ cashFlowByMonth, loading }) => {
       <Card className="bg-surface-50 border-white/10">
         <CardContent className="p-6">
           <div className="animate-pulse space-y-3">
-            <div className="h-4 bg-slate-700 rounded w-1/3"></div>
-            <div className="h-64 bg-slate-700 rounded"></div>
+            <div className="h-4 bg-slate-700 rounded w-1/3" />
+            <div className="h-64 bg-slate-700 rounded" />
           </div>
         </CardContent>
       </Card>);
@@ -150,8 +150,8 @@ const CashFlowTrendChart = ({ cashFlowByMonth, loading }) => {
             yField="net"
             seriesField="type"
             height={300}
-            showPoint={true}
-            showArea={true}
+            showPoint
+            showArea
             formatter={formatter}
             colors={['#4ade80', '#ef4444', '#60a5fa', '#a78bfa']}
             tooltip={{
@@ -185,7 +185,7 @@ const CashFlowDetailTable = ({
   setPeriod
 }) => {
   const filteredData = useMemo(() => {
-    if (!cashFlowDetails) return [];
+    if (!cashFlowDetails) {return [];}
 
     return cashFlowDetails.
     filter((item) => {
@@ -222,10 +222,10 @@ const CashFlowDetailTable = ({
       <Card className="bg-surface-50 border-white/10">
         <CardContent className="p-6">
           <div className="animate-pulse space-y-3">
-            <div className="h-4 bg-slate-700 rounded w-1/3"></div>
+            <div className="h-4 bg-slate-700 rounded w-1/3" />
             <div className="space-y-2">
               {[...Array(5)].map((_, i) =>
-              <div key={i} className="h-3 bg-slate-700 rounded w-full"></div>
+              <div key={i} className="h-3 bg-slate-700 rounded w-full" />
               )}
             </div>
           </div>
@@ -334,7 +334,7 @@ const CashFlowDetailTable = ({
         {filteredData.length === 0 &&
         <div className="text-center py-8 text-slate-400">
             暂无现金流数据
-          </div>
+        </div>
         }
 
         {/* 汇总行 */}
@@ -351,7 +351,7 @@ const CashFlowDetailTable = ({
                 </div>
               </div>
             </div>
-          </div>
+        </div>
         }
       </CardContent>
     </Card>);
@@ -365,10 +365,10 @@ const CashFlowAnalysisCard = ({ analysisData, loading }) => {
       <Card className="bg-surface-50 border-white/10">
         <CardContent className="p-6">
           <div className="animate-pulse space-y-3">
-            <div className="h-4 bg-slate-700 rounded w-1/3"></div>
+            <div className="h-4 bg-slate-700 rounded w-1/3" />
             <div className="space-y-2">
               {[...Array(4)].map((_, i) =>
-              <div key={i} className="h-3 bg-slate-700 rounded w-full"></div>
+              <div key={i} className="h-3 bg-slate-700 rounded w-full" />
               )}
             </div>
           </div>
@@ -421,7 +421,7 @@ const CashFlowAnalysisCard = ({ analysisData, loading }) => {
               )}>
                     {metric.trend >= 0 ? "↑" : "↓"}
                     {Math.abs(metric.trend)}%
-                  </div>
+              </div>
               }
               </div>
               <div className={cn(
@@ -430,7 +430,7 @@ const CashFlowAnalysisCard = ({ analysisData, loading }) => {
             )}>
                 {metric.value}
               </div>
-            </div>
+          </div>
           )}
         </div>
 
@@ -444,9 +444,7 @@ const CashFlowAnalysisCard = ({ analysisData, loading }) => {
                 className="bg-gradient-to-r from-green-400 to-emerald-500 h-2 rounded-full"
                 style={{
                   width: `${Math.abs(analysisData.operatingRatio)}%`
-                }}>
-
-              </div>
+                }} />
             </div>
             <span className="text-sm font-medium text-white">
               {analysisData.operatingRatio >= 0 ? '+' : ''}

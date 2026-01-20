@@ -39,7 +39,7 @@ export default function ServiceTicketManagement() {
 
   const getPriorityValue = (ticket) => {
     const urgency = ticket?.urgency;
-    if (!urgency) return 0;
+    if (!urgency) {return 0;}
 
     if (urgencyConfigs[urgency]?.level !== undefined) {
       return urgencyConfigs[urgency].level;
@@ -198,8 +198,8 @@ export default function ServiceTicketManagement() {
       }
 
       let comparison = 0;
-      if (aValue < bValue) comparison = -1;
-      if (aValue > bValue) comparison = 1;
+      if (aValue < bValue) {comparison = -1;}
+      if (aValue > bValue) {comparison = 1;}
 
       return sortDirection === 'desc' ? -comparison : comparison;
     });
@@ -387,7 +387,7 @@ export default function ServiceTicketManagement() {
               <Plus className="w-4 h-4 mr-2" />
               创建工单
             </Button>
-          </div>
+        </div>
         } />
 
 

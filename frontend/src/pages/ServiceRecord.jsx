@@ -235,7 +235,7 @@ export default function ServiceRecord() {
           (r) => r.status === "已完成" || r.status === "COMPLETED"
         ).length,
         thisMonth: records.filter((r) => {
-          if (!r.service_date) return false;
+          if (!r.service_date) {return false;}
           const recordDate = new Date(r.service_date);
           return recordDate >= thisMonthStart;
         }).length,
@@ -432,7 +432,7 @@ export default function ServiceRecord() {
                     {Object.values(SERVICE_TYPES).map((type) =>
                     <option key={type.label} value={type.label}>
                         {type.label}
-                      </option>
+                    </option>
                     )}
                   </select>
                   <select
@@ -444,7 +444,7 @@ export default function ServiceRecord() {
                     {Object.values(SERVICE_STATUS).map((status) =>
                     <option key={status.label} value={status.label}>
                         {status.label}
-                      </option>
+                    </option>
                     )}
                   </select>
                   <Input
@@ -486,11 +486,11 @@ export default function ServiceRecord() {
 
                       <Plus className="h-4 w-4 mr-2" />
                       创建第一个服务记录
-                    </Button>
+                </Button>
                 } />
 
               </CardContent>
-            </Card> :
+          </Card> :
 
           filteredRecords.map((record, index) => {
             const statusConfig = getServiceStatusConfig(record.status);
@@ -551,7 +551,7 @@ export default function ServiceRecord() {
                               <p className="text-sm text-white line-clamp-2">
                                 {record.service_content}
                               </p>
-                            </div>
+                        </div>
                         }
 
                           {record.photos && record.photos.length > 0 &&
@@ -559,7 +559,7 @@ export default function ServiceRecord() {
                               <Camera className="h-4 w-4 text-slate-400" />
                               <span className="text-slate-300">照片:</span>
                               <span className="text-white">{record.photos.length} 张</span>
-                            </div>
+                        </div>
                         }
                         </div>
 
@@ -584,7 +584,7 @@ export default function ServiceRecord() {
                       </div>
                     </CardContent>
                   </Card>
-                </motion.div>);
+              </motion.div>);
 
           })
           }
@@ -768,9 +768,9 @@ export default function ServiceRecord() {
 
                       <X className="h-3 w-3" />
                     </Button>
-                  </div>
-              )}
               </div>
+              )}
+            </div>
             }
           </div>
 
@@ -862,7 +862,7 @@ export default function ServiceRecord() {
 
                 )}
                   </div>
-                </div>
+            </div>
             }
 
               {/* 客户反馈 */}
@@ -885,13 +885,13 @@ export default function ServiceRecord() {
 
                     )}
                         </div>
-                      </div>
+                </div>
                 }
                     <p className="text-slate-300">{selectedRecord.customer_feedback}</p>
                   </div>
-                </div>
-            }
             </div>
+            }
+          </div>
           }
 
           <DialogFooter>

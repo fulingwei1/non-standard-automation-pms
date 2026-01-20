@@ -37,7 +37,7 @@ const WorkerWorkOverview = ({
 }) => {
   // 计算关键指标
   const stats = useMemo(() => {
-    if (!workOrders || !reports) return {};
+    if (!workOrders || !reports) {return {};}
 
     const today = new Date();
     const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -87,7 +87,7 @@ const WorkerWorkOverview = ({
 
   // 获取可用的快速操作
   const quickActions = useMemo(() => {
-    if (!workOrders || workOrders.length === 0) return [];
+    if (!workOrders || workOrders.length === 0) {return [];}
     
     // 找到当前可以操作的工单
     const actionableOrders = workOrders.filter(order => {
@@ -95,7 +95,7 @@ const WorkerWorkOverview = ({
       return actions.length > 0;
     });
     
-    if (actionableOrders.length === 0) return [];
+    if (actionableOrders.length === 0) {return [];}
     
     const firstOrder = actionableOrders[0];
     const actions = getNextAvailableActions(firstOrder);
