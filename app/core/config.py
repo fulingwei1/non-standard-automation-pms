@@ -110,6 +110,7 @@ class Settings(BaseSettings):
     # 文件上传配置
     UPLOAD_DIR: str = "uploads"
     MAX_UPLOAD_SIZE: int = 10 * 1024 * 1024  # 10MB
+    ALLOWED_EXTENSIONS: List[str] = [".jpg", ".jpeg", ".png", ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".zip"]
 
     # 分页配置
     DEFAULT_PAGE_SIZE: int = 20
