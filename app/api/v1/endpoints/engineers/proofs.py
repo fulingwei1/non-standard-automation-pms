@@ -15,12 +15,44 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.core.config import settings
 from app.models.project import Project
 from app.models.task_center import TaskCompletionProof, TaskUnified
 from app.models.user import User
 from app.schemas import engineer as schemas
 
 logger = logging.getLogger(__name__)
+
+
+def validate_file_upload(file: UploadFile, content: bytes) -> None:
+    """
+    验证上传文件的大小和类型
+
+    Args:
+        file: 上传的文件对象
+        content: 文件内容字节
+
+    Raises:
+        HTTPException: 文件大小超限或类型不允许时抛出
+    """
+    # 验证文件大小
+    file_size = len(content)
+    if file_size > settings.MAX_UPLOAD_SIZE:
+        max_size_mb = settings.MAX_UPLOAD_SIZE / (1024 * 1024)
+        raise HTTPException(
+            status_code=400,
+            detail=f"文件大小超过限制，最大允许 {max_size_mb:.0f}MB"
+        )
+
+    # 验证文件类型
+    if file.filename:
+        file_ext = os.path.splitext(file.filename)[1].lower()
+        if file_ext not in settings.ALLOWED_EXTENSIONS:
+            allowed = ", ".join(settings.ALLOWED_EXTENSIONS)
+            raise HTTPException(
+                status_code=400,
+                detail=f"不支持的文件类型 '{file_ext}'，允许的类型: {allowed}"
+            )
 
 router = APIRouter()
 
@@ -51,6 +83,12 @@ async def upload_completion_proof(
     if proof_type not in valid_proof_types:
         raise HTTPException(status_code=400, detail=f"无效的证明类型，必须是: {', '.join(valid_proof_types)}")
 
+    # 读取文件内容
+    content = await file.read()
+
+    # 验证文件大小和类型
+    validate_file_upload(file, content)
+
     # 保存文件
     import uuid
     upload_dir = f"uploads/task_proofs/{task_id}"
@@ -61,7 +99,6 @@ async def upload_completion_proof(
     file_path = os.path.join(upload_dir, unique_filename)
 
     # 写入文件
-    content = await file.read()
     with open(file_path, "wb") as f:
         f.write(content)
 

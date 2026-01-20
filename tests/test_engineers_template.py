@@ -794,15 +794,96 @@ class TestSecurity:
 
     def test_file_upload_size_limit(self, client: TestClient, auth_headers: dict, mock_task):
         """测试文件上传大小限制"""
-        # TODO: 实现文件上传测试
-        # 验证 MAX_FILE_SIZE = 10MB 限制
-        pass
+        from app.core.config import settings
+        import io
+
+        # 创建一个超过大小限制的文件（MAX_UPLOAD_SIZE + 1 字节）
+        oversized_content = b"x" * (settings.MAX_UPLOAD_SIZE + 1)
+        oversized_file = io.BytesIO(oversized_content)
+
+        response = client.post(
+            f"/api/v1/engineers/tasks/{mock_task.id}/completion-proofs/upload",
+            files={"file": ("test_large.pdf", oversized_file, "application/pdf")},
+            data={"proof_type": "DOCUMENT"},
+            headers=auth_headers
+        )
+
+        # 验证文件大小超限时返回 400 错误
+        assert response.status_code == 400
+        assert "文件大小超过限制" in response.json()["detail"]
+
+        # 验证合法大小的文件可以上传
+        valid_content = b"valid file content"
+        valid_file = io.BytesIO(valid_content)
+
+        response = client.post(
+            f"/api/v1/engineers/tasks/{mock_task.id}/completion-proofs/upload",
+            files={"file": ("test_valid.pdf", valid_file, "application/pdf")},
+            data={"proof_type": "DOCUMENT"},
+            headers=auth_headers
+        )
+
+        # 测试用户可能没有权限或任务不属于该用户
+        if response.status_code == 403:
+            pytest.skip("Test user does not have permission or task not assigned to them")
+
+        assert response.status_code == 200
 
     def test_file_type_whitelist(self, client: TestClient, auth_headers: dict, mock_task):
         """测试文件类型白名单"""
-        # TODO: 实现文件类型验证测试
-        # 验证 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".pdf", ".doc", ".docx"}
-        pass
+        from app.core.config import settings
+        import io
+
+        # 测试不支持的文件类型（如 .exe）
+        invalid_content = b"executable content"
+        invalid_file = io.BytesIO(invalid_content)
+
+        response = client.post(
+            f"/api/v1/engineers/tasks/{mock_task.id}/completion-proofs/upload",
+            files={"file": ("malicious.exe", invalid_file, "application/octet-stream")},
+            data={"proof_type": "DOCUMENT"},
+            headers=auth_headers
+        )
+
+        # 验证不支持的文件类型返回 400 错误
+        assert response.status_code == 400
+        assert "不支持的文件类型" in response.json()["detail"]
+
+        # 测试另一个不支持的文件类型（如 .sh）
+        shell_content = b"#!/bin/bash\necho hello"
+        shell_file = io.BytesIO(shell_content)
+
+        response = client.post(
+            f"/api/v1/engineers/tasks/{mock_task.id}/completion-proofs/upload",
+            files={"file": ("script.sh", shell_file, "text/x-shellscript")},
+            data={"proof_type": "DOCUMENT"},
+            headers=auth_headers
+        )
+
+        assert response.status_code == 400
+        assert "不支持的文件类型" in response.json()["detail"]
+
+        # 验证支持的文件类型可以上传（.pdf, .jpg, .png, .doc, .docx, .xls, .xlsx, .zip）
+        for ext, mime in [
+            (".jpg", "image/jpeg"),
+            (".png", "image/png"),
+            (".pdf", "application/pdf"),
+        ]:
+            valid_content = b"valid file content"
+            valid_file = io.BytesIO(valid_content)
+
+            response = client.post(
+                f"/api/v1/engineers/tasks/{mock_task.id}/completion-proofs/upload",
+                files={"file": (f"test{ext}", valid_file, mime)},
+                data={"proof_type": "DOCUMENT"},
+                headers=auth_headers
+            )
+
+            # 测试用户可能没有权限或任务不属于该用户
+            if response.status_code == 403:
+                pytest.skip("Test user does not have permission or task not assigned to them")
+
+            assert response.status_code == 200, f"Failed for extension {ext}"
 
 
 # ==================== 运行说明 ====================
