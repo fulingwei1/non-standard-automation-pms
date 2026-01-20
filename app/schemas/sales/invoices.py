@@ -14,10 +14,13 @@ from app.schemas.common import TimestampSchema
 
 class InvoiceCreate(BaseModel):
     """创建发票"""
-    model_config = {'populate_by_name': True}
+
+    model_config = {"populate_by_name": True}
 
     contract_id: int = Field(description="合同ID")
-    invoice_code: Optional[str] = Field(default=None, max_length=20, description="发票编码")
+    invoice_code: Optional[str] = Field(
+        default=None, max_length=20, description="发票编码"
+    )
     invoice_type: Optional[str] = Field(default=None, description="发票类型")
     invoice_amount: Decimal = Field(gt=0, description="发票金额")
     tax_rate: Optional[Decimal] = Field(default=None, description="税率")
@@ -76,12 +79,51 @@ class InvoiceResponse(TimestampSchema):
 
 class InvoiceIssueRequest(BaseModel):
     """开票请求"""
+
     issue_date: date = Field(description="开票日期")
+
+
+# 回款争议相关 Schema
+class ReceivableDisputeCreate(BaseModel):
+    """创建回款争议"""
+
+    model_config = {"populate_by_name": True}
+
+    payment_id: int = Field(description="付款节点ID")
+    reason_code: Optional[str] = Field(
+        default=None, max_length=30, description="原因代码"
+    )
+    description: Optional[str] = Field(default=None, description="描述")
+    status: Optional[str] = Field(default="OPEN", description="状态")
+    responsible_dept: Optional[str] = Field(
+        default=None, max_length=50, description="责任部门"
+    )
+    responsible_id: Optional[int] = Field(default=None, description="责任人ID")
+    expect_resolve_date: Optional[date] = Field(
+        default=None, description="预期解决日期"
+    )
+
+
+class ReceivableDisputeResponse(TimestampSchema):
+    """回款争议响应"""
+
+    id: int = Field(description="争议ID")
+    payment_id: int = Field(description="付款节点ID")
+    reason_code: Optional[str] = Field(default=None, description="原因代码")
+    description: Optional[str] = Field(default=None, description="描述")
+    status: str = Field(description="状态")
+    responsible_dept: Optional[str] = Field(default=None, description="责任部门")
+    responsible_id: Optional[int] = Field(default=None, description="责任人ID")
+    responsible_name: Optional[str] = Field(default=None, description="责任人姓名")
+    expect_resolve_date: Optional[date] = Field(
+        default=None, description="预期解决日期"
+    )
 
 
 # 审批相关 Schema（多级审批 - 旧版）
 class InvoiceApprovalCreate(BaseModel):
     """创建发票审批"""
+
     invoice_id: int = Field(description="发票ID")
     approval_level: int = Field(description="审批层级")
     approval_role: str = Field(description="审批角色")
@@ -91,6 +133,7 @@ class InvoiceApprovalCreate(BaseModel):
 
 class InvoiceApprovalResponse(TimestampSchema):
     """发票审批响应"""
+
     id: int = Field(description="审批ID")
     invoice_id: int = Field(description="发票ID")
     approval_level: int = Field(description="审批层级")

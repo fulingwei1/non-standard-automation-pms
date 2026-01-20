@@ -76,10 +76,19 @@ def get_quote_stats(
     # 增长率
     growth = round((this_period - last_period) / last_period * 100, 1) if last_period > 0 else 0
 
-    # 金额统计 - 从当前版本获取总价
+    # 金额统计 - 从当前版本获取总价和毛利率
     all_quotes = base_query.all()
-    total_amount = sum([float(q.current_version.total_price or 0) if q.current_version else 0 for q in all_quotes])
+    total_amount = 0
+    margins = []
+    for q in all_quotes:
+        if q.current_version:
+            if q.current_version.total_price:
+                total_amount += float(q.current_version.total_price)
+            if q.current_version.gross_margin:
+                margins.append(float(q.current_version.gross_margin))
+
     avg_amount = total_amount / total if total > 0 else 0
+    avg_margin = sum(margins) / len(margins) if margins else 0
 
     # 转化率
     conversion_rate = round(converted / total * 100, 1) if total > 0 else 0
@@ -108,7 +117,7 @@ def get_quote_stats(
             "converted": converted,
             "totalAmount": total_amount,
             "avgAmount": round(avg_amount, 2),
-            "avgMargin": 18.5,  # TODO: 从实际数据计算
+            "avgMargin": round(avg_margin, 2),
             "conversionRate": conversion_rate,
             "thisMonth": this_period,
             "lastMonth": last_period,

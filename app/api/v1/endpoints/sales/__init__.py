@@ -7,11 +7,13 @@
 
 from fastapi import APIRouter
 
-# 只导入可工作的模块
+# 导入所有模块
 from . import (
     assessments,
     contracts,
+    disputes,  # 回款争议管理
     expenses,
+    invoices,  # 发票管理
     leads,
     loss_analysis,
     opportunities,
@@ -19,9 +21,10 @@ from . import (
     priority,
     quotes,
     statistics,
+    team,  # 销售团队管理与业绩排名
+    targets,  # 销售目标管理
 )
 
-# from . import invoices  # 新增：发票管理模块 - 暂时禁用，存在导入问题
 # from . import templates  # 模板管理模块 - 已拆分为templates包 - 暂时禁用，存在导入问题
 
 # 创建主路由
@@ -34,17 +37,20 @@ router.include_router(leads.router, tags=["sales-leads"])
 router.include_router(opportunities.router, tags=["sales-opportunities"])
 router.include_router(quotes.router, tags=["sales-quotes"])
 router.include_router(contracts.router, tags=["sales-contracts"])
-# router.include_router(invoices.router, tags=["sales-invoices"])  # 新增：发票管理路由 - 暂时禁用
+router.include_router(invoices.router, tags=["sales-invoices"])
 router.include_router(payments.router, tags=["sales-payments"])
 router.include_router(statistics.router, tags=["sales-statistics"])
 router.include_router(loss_analysis.router, tags=["sales-loss-analysis"])
 router.include_router(expenses.router, tags=["sales-expenses"])
 router.include_router(assessments.router, tags=["sales-assessments"])
+router.include_router(disputes.router, tags=["sales-disputes"])
+router.include_router(targets.router, tags=["sales-targets"])
+router.include_router(team.router, tags=["sales-team"])
 # router.include_router(templates.router, tags=["sales-templates"])  # 暂时禁用，存在导入问题
 
 # 以下模块暂时禁用（缺少 schema 定义）
 # from . import cost_management
-# from . import receivables, workflows, disputes
-# from . import requirements, team, targets
+# from . import receivables, workflows
+# from . import requirements
 # from . import pipeline_analysis, accountability, health
 # from . import delay_analysis, cost_overrun, information_gap, cross_analysis

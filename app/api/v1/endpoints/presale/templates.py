@@ -10,11 +10,10 @@
 包含：支持工单管理、技术方案管理、方案模板库、投标管理、售前统计
 """
 from datetime import date, datetime
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import desc, func, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -26,34 +25,13 @@ from app.models.presale import (
     PresaleSolutionTemplate,
     PresaleSupportTicket,
     PresaleTenderRecord,
-    PresaleTicketDeliverable,
-    PresaleTicketProgress,
-    PresaleWorkload,
 )
-from app.models.project import Project
-from app.models.sales import Opportunity
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.presale import (
-    DeliverableCreate,
-    DeliverableResponse,
-    SolutionCostResponse,
-    SolutionCreate,
     SolutionResponse,
-    SolutionReviewRequest,
-    SolutionUpdate,
     TemplateCreate,
     TemplateResponse,
-    TenderCreate,
-    TenderResponse,
-    TenderResultUpdate,
-    TicketAcceptRequest,
-    TicketBoardResponse,
-    TicketCreate,
-    TicketProgressUpdate,
-    TicketRatingRequest,
-    TicketResponse,
-    TicketUpdate,
 )
 
 router = APIRouter()
@@ -301,8 +279,21 @@ def apply_template(
 
     # 如果模板有成本模板，创建成本明细
     if template.cost_template:
-        # TODO: 解析cost_template JSON并创建PresaleSolutionCost记录
-        pass
+        # 解析cost_template JSON并创建PresaleSolutionCost记录
+        # cost_template格式：[{"category": "...", "item_name": "...", "unit_price": 100, ...}, ...]
+        cost_items = template.cost_template if isinstance(template.cost_template, list) else []
+        for item in cost_items:
+            cost_record = PresaleSolutionCost(
+                solution_id=solution.id,
+                category=item.get('category', '其他'),
+                item_name=item.get('item_name', ''),
+                specification=item.get('specification'),
+                unit=item.get('unit'),
+                quantity=item.get('quantity'),
+                unit_price=item.get('unit_price'),
+                amount=item.get('amount')
+            )
+            db.add(cost_record)
 
     # 更新模板使用次数
     template.use_count = (template.use_count or 0) + 1

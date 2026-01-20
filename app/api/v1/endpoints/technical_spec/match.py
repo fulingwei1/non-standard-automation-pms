@@ -26,6 +26,24 @@ from app.utils.spec_matcher import SpecMatcher
 router = APIRouter()
 
 
+def get_match_target_name(db: Session, match_type: str, match_target_id: int) -> Optional[str]:
+    """根据匹配类型获取目标名称"""
+    if not match_target_id:
+        return None
+
+    if match_type == 'BOM':
+        bom_item = db.query(BomItem).filter(BomItem.id == match_target_id).first()
+        if bom_item:
+            return bom_item.material_name or bom_item.material_code
+    elif match_type == 'PURCHASE_ORDER':
+        from app.models.purchase import PurchaseOrderItem
+        po_item = db.query(PurchaseOrderItem).filter(PurchaseOrderItem.id == match_target_id).first()
+        if po_item:
+            return po_item.material_name or po_item.material_code
+
+    return None
+
+
 @router.post("/match/check", response_model=SpecMatchCheckResponse)
 def check_spec_match(
     check_request: SpecMatchCheckRequest,
@@ -164,7 +182,7 @@ def list_match_records(
                 created_at=record.spec_requirement.created_at,
                 updated_at=record.spec_requirement.updated_at,
             ) if record.spec_requirement else None,
-            match_target_name=None,  # TODO: 根据match_type获取目标名称
+            match_target_name=get_match_target_name(db, record.match_type, record.match_target_id),
             created_at=record.created_at,
             updated_at=record.updated_at,
         ))

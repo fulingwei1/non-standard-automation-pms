@@ -79,10 +79,27 @@ def init_wbs_from_template(
             status="TODO"
         )
 
-        # 如果启用自动分配负责人，根据角色分配（这里简化处理，实际需要根据角色查找用户）
+        # 如果启用自动分配负责人，根据角色分配
         if init_request.assign_owners and template_task.default_owner_role:
-            # TODO: 根据角色查找用户并分配
-            pass
+            # 根据角色查找用户并分配
+            from app.models.user import Role, UserRole
+
+            # 查找角色
+            role = db.query(Role).filter(
+                Role.role_code == template_task.default_owner_role
+            ).first()
+
+            if role:
+                # 查找拥有该角色的第一个活跃用户
+                user_role = db.query(UserRole).join(
+                    User, UserRole.user_id == User.id
+                ).filter(
+                    UserRole.role_id == role.id,
+                    User.is_active == True
+                ).first()
+
+                if user_role:
+                    task.owner_id = user_role.user_id
 
         db.add(task)
         db.flush()  # 获取task.id

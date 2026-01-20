@@ -283,14 +283,13 @@ class SupplierFactory(BaseFactory):
 
     supplier_code = factory.Sequence(lambda n: f"SUP{n:05d}")
     supplier_name = factory.Sequence(lambda n: f"测试供应商{n}")
-    short_name = factory.Sequence(lambda n: f"供应商{n}")
+    supplier_short_name = factory.Sequence(lambda n: f"供应商{n}")
     supplier_type = "STANDARD"
     contact_person = factory.Sequence(lambda n: f"供应商联系人{n}")
     contact_phone = factory.LazyFunction(
         lambda: f"137{random.randint(10000000, 99999999)}"
     )
     status = "APPROVED"
-    is_active = True
 
 
 class MaterialFactory(BaseFactory):

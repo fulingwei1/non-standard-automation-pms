@@ -6,9 +6,9 @@
 
 from datetime import date
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from sqlalchemy import func, or_
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models.enums import ProjectEvaluationLevelEnum
@@ -75,13 +75,36 @@ class ProjectEvaluationService:
         """
         从数据库获取评价等级阈值配置
 
-        注意：目前等级阈值存储在评价维度配置的JSON中，或使用默认值
+        首先尝试从 ProjectEvaluationDimension 表中查找 dimension_code='LEVEL_THRESHOLDS' 的配置，
+        如果不存在则使用默认值。
 
         Returns:
             Dict[ProjectEvaluationLevelEnum, Decimal]: 等级阈值字典
         """
-        # TODO: 可以添加专门的评价等级配置表
-        # 目前使用默认值
+        # 尝试从数据库获取等级阈值配置
+        config = self.db.query(ProjectEvaluationDimension).filter(
+            ProjectEvaluationDimension.dimension_code == 'LEVEL_THRESHOLDS'
+        ).first()
+
+        if config and config.scoring_rules:
+            try:
+                rules = config.scoring_rules
+                thresholds = {}
+                level_mapping = {
+                    'S': ProjectEvaluationLevelEnum.S,
+                    'A': ProjectEvaluationLevelEnum.A,
+                    'B': ProjectEvaluationLevelEnum.B,
+                    'C': ProjectEvaluationLevelEnum.C,
+                    'D': ProjectEvaluationLevelEnum.D
+                }
+                for level, enum_val in level_mapping.items():
+                    if level in rules:
+                        thresholds[enum_val] = Decimal(str(rules[level]))
+                if thresholds:
+                    return thresholds
+            except (KeyError, ValueError, TypeError):
+                pass  # 配置格式错误，使用默认值
+
         return self.DEFAULT_LEVEL_THRESHOLDS
 
     def calculate_total_score(
@@ -228,11 +251,32 @@ class ProjectEvaluationService:
         Returns:
             Optional[Decimal]: 得分（如果无法计算则返回None）
         """
-        # 尝试从项目成员工时统计中获取
-        # 或者从进度跟踪模块获取
-        # 这里先返回None，需要手动评价
+        from sqlalchemy import func
 
-        # TODO: 集成工时统计模块
+        from app.models.timesheet import Timesheet
+
+        # 查询项目的总工时（小时）
+        total_hours_result = self.db.query(
+            func.coalesce(func.sum(Timesheet.total_hours), 0)
+        ).filter(
+            Timesheet.project_id == project.id
+        ).scalar()
+
+        if total_hours_result and total_hours_result > 0:
+            # 将工时转换为人天（8小时/天）
+            total_days = float(total_hours_result) / 8
+
+            # 根据人天数计算得分
+            if total_days > 1000:
+                return Decimal('2')  # 1-3分，取中间值
+            elif total_days >= 500:
+                return Decimal('5')  # 4-6分
+            elif total_days >= 200:
+                return Decimal('7.5')  # 7-8分
+            else:
+                return Decimal('9.5')  # 9-10分
+
+        # 如果没有工时数据，返回None需要手动评价
         return None
 
     def generate_evaluation_code(self) -> str:

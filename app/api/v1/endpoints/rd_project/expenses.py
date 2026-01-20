@@ -288,7 +288,6 @@ def calculate_labor_cost(
         raise HTTPException(status_code=404, detail="用户不存在")
 
     # 查询工时记录（从timesheet表）
-    from app.models.timesheet import Timesheet
     timesheets = db.query(Timesheet).filter(
         Timesheet.user_id == calc_request.user_id,
         Timesheet.work_date >= calc_request.start_date,
@@ -304,8 +303,8 @@ def calculate_labor_cost(
     # 获取时薪（如果未提供，使用默认值或从用户配置获取）
     hourly_rate = calc_request.hourly_rate
     if not hourly_rate:
-        # TODO: 从用户配置或系统配置获取默认时薪
-        hourly_rate = Decimal(100)  # 默认时薪
+        from app.services.hourly_rate_service import HourlyRateService
+        hourly_rate = HourlyRateService.get_user_hourly_rate(db, calc_request.user_id, calc_request.start_date)
 
     # 计算费用金额
     cost_amount = total_hours * hourly_rate

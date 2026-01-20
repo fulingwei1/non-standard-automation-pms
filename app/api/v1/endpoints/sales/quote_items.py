@@ -1,80 +1,208 @@
 # -*- coding: utf-8 -*-
 """
-报价items管理 - 自动生成
+报价明细items管理
 从 sales/quotes.py 拆分
 """
 
-from datetime import datetime
-from decimal import Decimal
-from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from fastapi.responses import StreamingResponse
-from sqlalchemy import desc, or_
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_active_user, get_db
+from app.api.deps import get_db
 from app.core import security
-from app.core.config import settings
-from app.models.sales import Quote, QuoteItem
+from app.models.sales import QuoteItem, QuoteVersion
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.schemas.sales import QuoteItemResponse, QuoteResponse
 
 router = APIRouter()
 
 
-@router.get("/quotes/items", response_model=ResponseModel[List[QuoteResponse]])
+@router.get("/quotes/{quote_version_id}/items", response_model=ResponseModel)
 def get_quote_items(
+    quote_version_id: int,
     db: Session = Depends(get_db),
     skip: int = Query(0, ge=0, description="跳过记录数"),
     limit: int = Query(50, ge=1, le=200, description="返回记录数"),
     current_user: User = Depends(security.get_current_active_user),
 ):
     """
-    获取报价items列表
+    获取报价版本的明细列表
 
     Args:
+        quote_version_id: 报价版本ID
         db: 数据库会话
         skip: 跳过记录数
         limit: 返回记录数
         current_user: 当前用户
 
     Returns:
-        Response[List[QuoteResponse]]: 报价items列表
+        ResponseModel: 报价明细列表
     """
     try:
-        # TODO: 实现items查询逻辑
-        quotes = db.query(Quote).offset(skip).limit(limit).all()
+        # 验证报价版本存在
+        quote_version = db.query(QuoteVersion).filter(
+            QuoteVersion.id == quote_version_id
+        ).first()
+        if not quote_version:
+            raise HTTPException(status_code=404, detail="报价版本不存在")
+
+        # 查询明细列表
+        items = db.query(QuoteItem).filter(
+            QuoteItem.quote_version_id == quote_version_id
+        ).order_by(QuoteItem.id).offset(skip).limit(limit).all()
+
+        # 转换为字典列表
+        items_data = [{
+            "id": item.id,
+            "quote_version_id": item.quote_version_id,
+            "item_type": item.item_type,
+            "item_name": item.item_name,
+            "qty": float(item.qty) if item.qty else None,
+            "unit_price": float(item.unit_price) if item.unit_price else None,
+            "cost": float(item.cost) if item.cost else None,
+            "lead_time_days": item.lead_time_days,
+            "remark": item.remark,
+            "cost_category": item.cost_category,
+            "cost_source": item.cost_source,
+            "specification": item.specification,
+            "unit": item.unit
+        } for item in items]
 
         return ResponseModel(
             code=200,
-            message="报价items列表获取成功",
-            data=[QuoteResponse.model_validate(quote) for quote in quotes]
+            message="报价明细列表获取成功",
+            data=items_data
         )
+    except HTTPException:
+        raise
     except Exception as e:
-        return ResponseModel(code=500, message=f"获取报价items失败: {str(e)}")
+        return ResponseModel(code=500, message=f"获取报价明细失败: {str(e)}")
 
 
-@router.post("/quotes/items")
-def create_quote_items(
-    quote_data: dict,
+@router.post("/quotes/{quote_version_id}/items", response_model=ResponseModel)
+def create_quote_item(
+    quote_version_id: int,
+    item_data: dict,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.get_current_active_user),
 ):
     """
-    创建报价items
+    创建报价明细
 
     Args:
-        quote_data: 报价数据
+        quote_version_id: 报价版本ID
+        item_data: 明细数据
         db: 数据库会话
         current_user: 当前用户
 
     Returns:
-        Response: 创建结果
+        ResponseModel: 创建结果
     """
     try:
-        # TODO: 实现items创建逻辑
-        return ResponseModel(code=200, message="报价items创建成功")
+        # 验证报价版本存在
+        quote_version = db.query(QuoteVersion).filter(
+            QuoteVersion.id == quote_version_id
+        ).first()
+        if not quote_version:
+            raise HTTPException(status_code=404, detail="报价版本不存在")
+
+        # 创建明细
+        item = QuoteItem(
+            quote_version_id=quote_version_id,
+            item_type=item_data.get("item_type"),
+            item_name=item_data.get("item_name"),
+            qty=item_data.get("qty"),
+            unit_price=item_data.get("unit_price"),
+            cost=item_data.get("cost"),
+            lead_time_days=item_data.get("lead_time_days"),
+            remark=item_data.get("remark"),
+            cost_category=item_data.get("cost_category"),
+            cost_source=item_data.get("cost_source", "MANUAL"),
+            specification=item_data.get("specification"),
+            unit=item_data.get("unit")
+        )
+        db.add(item)
+        db.commit()
+        db.refresh(item)
+
+        return ResponseModel(
+            code=200,
+            message="报价明细创建成功",
+            data={"id": item.id}
+        )
+    except HTTPException:
+        raise
     except Exception as e:
-        return ResponseModel(code=500, message=f"创建报价items失败: {str(e)}")
+        db.rollback()
+        return ResponseModel(code=500, message=f"创建报价明细失败: {str(e)}")
+
+
+@router.put("/quotes/items/{item_id}", response_model=ResponseModel)
+def update_quote_item(
+    item_id: int,
+    item_data: dict,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.get_current_active_user),
+):
+    """
+    更新报价明细
+
+    Args:
+        item_id: 明细ID
+        item_data: 更新数据
+        db: 数据库会话
+        current_user: 当前用户
+
+    Returns:
+        ResponseModel: 更新结果
+    """
+    try:
+        item = db.query(QuoteItem).filter(QuoteItem.id == item_id).first()
+        if not item:
+            raise HTTPException(status_code=404, detail="报价明细不存在")
+
+        # 更新字段
+        for field in ["item_type", "item_name", "qty", "unit_price", "cost",
+                      "lead_time_days", "remark", "cost_category", "specification", "unit"]:
+            if field in item_data:
+                setattr(item, field, item_data[field])
+
+        db.commit()
+        return ResponseModel(code=200, message="报价明细更新成功")
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        return ResponseModel(code=500, message=f"更新报价明细失败: {str(e)}")
+
+
+@router.delete("/quotes/items/{item_id}", response_model=ResponseModel)
+def delete_quote_item(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.get_current_active_user),
+):
+    """
+    删除报价明细
+
+    Args:
+        item_id: 明细ID
+        db: 数据库会话
+        current_user: 当前用户
+
+    Returns:
+        ResponseModel: 删除结果
+    """
+    try:
+        item = db.query(QuoteItem).filter(QuoteItem.id == item_id).first()
+        if not item:
+            raise HTTPException(status_code=404, detail="报价明细不存在")
+
+        db.delete(item)
+        db.commit()
+        return ResponseModel(code=200, message="报价明细删除成功")
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        return ResponseModel(code=500, message=f"删除报价明细失败: {str(e)}")

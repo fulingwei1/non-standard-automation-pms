@@ -1,80 +1,170 @@
 # -*- coding: utf-8 -*-
 """
-报价cost_analysis管理 - 自动生成
-从 sales/quotes.py 拆分
+报价成本分析
+包含：成本对比、毛利分析、历史趋势
 """
 
-from datetime import datetime
+from datetime import date, timedelta
 from decimal import Decimal
-from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from fastapi.responses import StreamingResponse
-from sqlalchemy import desc, or_
-from sqlalchemy.orm import Session, joinedload
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func
+from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_active_user, get_db
+from app.api.deps import get_db
 from app.core import security
-from app.core.config import settings
-from app.models.sales import Quote, QuoteItem
+from app.models.sales import Quote, QuoteVersion, QuoteItem
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.schemas.sales import QuoteItemResponse, QuoteResponse
 
 router = APIRouter()
 
 
-@router.get("/quotes/cost_analysis", response_model=ResponseModel[List[QuoteResponse]])
-def get_quote_cost_analysis(
-    db: Session = Depends(get_db),
-    skip: int = Query(0, ge=0, description="跳过记录数"),
-    limit: int = Query(50, ge=1, le=200, description="返回记录数"),
-    current_user: User = Depends(security.get_current_active_user),
-):
-    """
-    获取报价cost_analysis列表
-
-    Args:
-        db: 数据库会话
-        skip: 跳过记录数
-        limit: 返回记录数
-        current_user: 当前用户
-
-    Returns:
-        Response[List[QuoteResponse]]: 报价cost_analysis列表
-    """
-    try:
-        # TODO: 实现cost_analysis查询逻辑
-        quotes = db.query(Quote).offset(skip).limit(limit).all()
-
-        return ResponseModel(
-            code=200,
-            message="报价cost_analysis列表获取成功",
-            data=[QuoteResponse.model_validate(quote) for quote in quotes]
-        )
-    except Exception as e:
-        return ResponseModel(code=500, message=f"获取报价cost_analysis失败: {str(e)}")
-
-
-@router.post("/quotes/cost_analysis")
-def create_quote_cost_analysis(
-    quote_data: dict,
+@router.get("/quotes/{quote_id}/cost-analysis", response_model=ResponseModel)
+def get_cost_analysis(
+    quote_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.get_current_active_user),
 ):
     """
-    创建报价cost_analysis
+    获取报价成本分析
 
     Args:
-        quote_data: 报价数据
+        quote_id: 报价ID
         db: 数据库会话
         current_user: 当前用户
 
     Returns:
-        Response: 创建结果
+        ResponseModel: 成本分析结果
     """
-    try:
-        # TODO: 实现cost_analysis创建逻辑
-        return ResponseModel(code=200, message="报价cost_analysis创建成功")
-    except Exception as e:
-        return ResponseModel(code=500, message=f"创建报价cost_analysis失败: {str(e)}")
+    quote = db.query(Quote).filter(Quote.id == quote_id).first()
+    if not quote:
+        raise HTTPException(status_code=404, detail="报价不存在")
+
+    versions = db.query(QuoteVersion).filter(
+        QuoteVersion.quote_id == quote_id
+    ).order_by(QuoteVersion.created_at).all()
+
+    if not versions:
+        return ResponseModel(code=200, message="暂无版本数据", data={})
+
+    # 版本趋势
+    version_trend = [{
+        "version_no": v.version_no,
+        "total_price": float(v.total_price) if v.total_price else 0,
+        "cost_total": float(v.cost_total) if v.cost_total else 0,
+        "gross_margin": float(v.gross_margin) if v.gross_margin else 0,
+        "created_at": v.created_at.isoformat() if v.created_at else None,
+    } for v in versions]
+
+    # 当前版本的成本结构
+    current = versions[-1]
+    items = db.query(QuoteItem).filter(
+        QuoteItem.quote_version_id == current.id
+    ).all()
+
+    # 按类型汇总
+    cost_by_type = {}
+    for item in items:
+        t = item.item_type or "其他"
+        if t not in cost_by_type:
+            cost_by_type[t] = Decimal('0')
+        cost_by_type[t] += item.cost or Decimal('0')
+
+    cost_structure = [
+        {"type": k, "cost": float(v), "ratio": round(float(v) / float(current.cost_total) * 100, 2) if current.cost_total else 0}
+        for k, v in cost_by_type.items()
+    ]
+
+    # 计算版本间变化
+    changes = []
+    for i in range(1, len(versions)):
+        prev = versions[i - 1]
+        curr = versions[i]
+        price_change = float(curr.total_price or 0) - float(prev.total_price or 0)
+        cost_change = float(curr.cost_total or 0) - float(prev.cost_total or 0)
+        margin_change = float(curr.gross_margin or 0) - float(prev.gross_margin or 0)
+
+        changes.append({
+            "from_version": prev.version_no,
+            "to_version": curr.version_no,
+            "price_change": price_change,
+            "cost_change": cost_change,
+            "margin_change": round(margin_change, 2),
+        })
+
+    return ResponseModel(
+        code=200,
+        message="获取成本分析成功",
+        data={
+            "quote_id": quote_id,
+            "version_count": len(versions),
+            "current_version": {
+                "version_no": current.version_no,
+                "total_price": float(current.total_price) if current.total_price else 0,
+                "cost_total": float(current.cost_total) if current.cost_total else 0,
+                "gross_margin": float(current.gross_margin) if current.gross_margin else 0,
+            },
+            "cost_structure": cost_structure,
+            "version_trend": version_trend,
+            "version_changes": changes,
+        }
+    )
+
+
+@router.get("/quotes/cost-analysis/benchmark", response_model=ResponseModel)
+def get_cost_benchmark(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.get_current_active_user),
+):
+    """
+    获取成本基准对比（同类报价的平均毛利率等）
+
+    Args:
+        db: 数据库会话
+        current_user: 当前用户
+
+    Returns:
+        ResponseModel: 基准数据
+    """
+    # 基础查询：近90天的报价
+    ninety_days_ago = date.today() - timedelta(days=90)
+
+    result = db.query(
+        func.count(Quote.id).label("quote_count"),
+        func.avg(QuoteVersion.gross_margin).label("avg_margin"),
+        func.min(QuoteVersion.gross_margin).label("min_margin"),
+        func.max(QuoteVersion.gross_margin).label("max_margin"),
+    ).join(
+        QuoteVersion, Quote.current_version_id == QuoteVersion.id
+    ).filter(
+        Quote.created_at >= ninety_days_ago
+    ).first()
+
+    # 毛利率分布
+    distribution = db.query(
+        func.case(
+            (QuoteVersion.gross_margin < 10, "0-10%"),
+            (QuoteVersion.gross_margin < 20, "10-20%"),
+            (QuoteVersion.gross_margin < 30, "20-30%"),
+            else_="30%+"
+        ).label("range"),
+        func.count(Quote.id).label("count")
+    ).join(
+        QuoteVersion, Quote.current_version_id == QuoteVersion.id
+    ).filter(
+        Quote.created_at >= ninety_days_ago
+    ).group_by("range").all()
+
+    return ResponseModel(
+        code=200,
+        message="获取成本基准成功",
+        data={
+            "period": "近90天",
+            "quote_count": result.quote_count if result else 0,
+            "avg_margin": round(float(result.avg_margin), 2) if result and result.avg_margin else 0,
+            "min_margin": round(float(result.min_margin), 2) if result and result.min_margin else 0,
+            "max_margin": round(float(result.max_margin), 2) if result and result.max_margin else 0,
+            "margin_distribution": [{"range": d.range, "count": d.count} for d in distribution]
+        }
+    )

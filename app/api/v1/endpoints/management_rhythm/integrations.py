@@ -9,61 +9,16 @@
 管理节律 API endpoints
 包含：节律配置、战略会议、行动项、仪表盘、会议地图
 """
-from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import date
+from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import and_, desc, func, or_
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
-from app.models.enums import (
-    ActionItemStatus,
-    MeetingCycleType,
-    MeetingRhythmLevel,
-    RhythmHealthStatus,
-)
-from app.models.management_rhythm import (
-    ManagementRhythmConfig,
-    MeetingActionItem,
-    MeetingReport,
-    MeetingReportConfig,
-    ReportMetricDefinition,
-    RhythmDashboardSnapshot,
-    StrategicMeeting,
-)
 from app.models.user import User
-from app.schemas.common import PaginatedResponse, ResponseModel
-from app.schemas.management_rhythm import (
-    ActionItemCreate,
-    ActionItemResponse,
-    ActionItemUpdate,
-    AvailableMetricsResponse,
-    MeetingCalendarResponse,
-    MeetingMapItem,
-    MeetingMapResponse,
-    MeetingReportConfigCreate,
-    MeetingReportConfigResponse,
-    MeetingReportConfigUpdate,
-    MeetingReportGenerateRequest,
-    MeetingReportResponse,
-    MeetingStatisticsResponse,
-    ReportMetricDefinitionCreate,
-    ReportMetricDefinitionResponse,
-    ReportMetricDefinitionUpdate,
-    RhythmConfigCreate,
-    RhythmConfigResponse,
-    RhythmConfigUpdate,
-    RhythmDashboardResponse,
-    RhythmDashboardSummary,
-    StrategicMeetingCreate,
-    StrategicMeetingMinutesRequest,
-    StrategicMeetingResponse,
-    StrategicMeetingUpdate,
-    StrategicStructureTemplate,
-)
 
 router = APIRouter()
 
@@ -92,23 +47,55 @@ def get_financial_metrics(
     """
     from sqlalchemy import func
 
-    from app.models.budget import Budget
-    from app.models.cost import ProjectCost
+    from app.models.budget import ProjectBudget
+    from app.models.project.financial import ProjectCost, ProjectPaymentPlan
 
-    # 获取收入、成本、利润等财务数据
-    # 这里需要根据实际的数据模型进行调整
+    # 构建日期过滤条件
+    cost_query = db.query(func.coalesce(func.sum(ProjectCost.amount), 0))
+    if start_date:
+        cost_query = cost_query.filter(ProjectCost.cost_date >= start_date)
+    if end_date:
+        cost_query = cost_query.filter(ProjectCost.cost_date <= end_date)
+
+    # 查询成本总额
+    total_cost = float(cost_query.scalar() or 0)
+
+    # 查询收入（已收款金额）
+    revenue_query = db.query(func.coalesce(func.sum(ProjectPaymentPlan.actual_amount), 0)).filter(
+        ProjectPaymentPlan.status.in_(['PARTIAL', 'COMPLETED'])
+    )
+    if start_date:
+        revenue_query = revenue_query.filter(ProjectPaymentPlan.actual_date >= start_date)
+    if end_date:
+        revenue_query = revenue_query.filter(ProjectPaymentPlan.actual_date <= end_date)
+    total_revenue = float(revenue_query.scalar() or 0)
+
+    # 计算利润
+    profit = total_revenue - total_cost
+
+    # 查询预算总额（已批准的预算）
+    budget_total = db.query(func.coalesce(func.sum(ProjectBudget.total_amount), 0)).filter(
+        ProjectBudget.status == 'APPROVED',
+        ProjectBudget.is_active == True
+    ).scalar() or 0
+
+    # 计算毛利率和净利润率
+    gross_margin_rate = (profit / total_revenue * 100) if total_revenue > 0 else 0.0
+    net_profit_rate = gross_margin_rate  # 简化处理，实际需考虑其他费用
+
+    # 现金流（收入 - 成本）
+    cash_flow = profit
+
     metrics = {
-        "revenue": 0.0,
-        "cost": 0.0,
-        "profit": 0.0,
-        "cash_flow": 0.0,
-        "gross_margin_rate": 0.0,
-        "net_profit_rate": 0.0,
+        "revenue": total_revenue,
+        "cost": total_cost,
+        "profit": profit,
+        "cash_flow": cash_flow,
+        "gross_margin_rate": round(gross_margin_rate, 2),
+        "net_profit_rate": round(net_profit_rate, 2),
+        "budget_total": float(budget_total),
+        "budget_usage_rate": round((total_cost / float(budget_total) * 100) if budget_total else 0, 2),
     }
-
-    # TODO: 集成实际的财务数据查询逻辑
-    # 示例：从ProjectCost表查询成本数据
-    # 示例：从Budget表查询预算数据
 
     return metrics
 

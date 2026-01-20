@@ -49,6 +49,8 @@ from .invoices import (
     InvoiceIssueRequest,
     InvoiceResponse,
     InvoiceUpdate,
+    ReceivableDisputeCreate,
+    ReceivableDisputeResponse,
 )
 from .leads import (
     LeadCreate,
@@ -56,6 +58,14 @@ from .leads import (
     LeadFollowUpResponse,
     LeadResponse,
     LeadUpdate,
+)
+from .workflow import (
+    RankingMetric,
+    SalesRankingConfigResponse,
+    SalesRankingConfigUpdateRequest,
+    SalesTargetCreate,
+    SalesTargetResponse,
+    SalesTargetUpdate,
 )
 from .opportunities import (
     OpportunityCreate,
@@ -80,41 +90,82 @@ from .quotes import (
 
 __all__ = [
     # 线索相关
-    "LeadCreate", "LeadUpdate", "LeadResponse",
-    "LeadFollowUpCreate", "LeadFollowUpResponse",
-
+    "LeadCreate",
+    "LeadUpdate",
+    "LeadResponse",
+    "LeadFollowUpCreate",
+    "LeadFollowUpResponse",
     # 机会相关
-    "OpportunityCreate", "OpportunityUpdate", "OpportunityResponse",
-    "OpportunityRequirementCreate", "OpportunityRequirementResponse",
-
+    "OpportunityCreate",
+    "OpportunityUpdate",
+    "OpportunityResponse",
+    "OpportunityRequirementCreate",
+    "OpportunityRequirementResponse",
     # 报价相关
-    "QuoteCreate", "QuoteUpdate", "QuoteResponse",
-    "QuoteItemCreate", "QuoteItemUpdate", "QuoteItemResponse",
-    "QuoteItemBatchUpdate", "QuoteVersionCreate", "QuoteVersionResponse",
-    "GateSubmitRequest", "QuoteApproveRequest",
-
+    "QuoteCreate",
+    "QuoteUpdate",
+    "QuoteResponse",
+    "QuoteItemCreate",
+    "QuoteItemUpdate",
+    "QuoteItemResponse",
+    "QuoteItemBatchUpdate",
+    "QuoteVersionCreate",
+    "QuoteVersionResponse",
+    "GateSubmitRequest",
+    "QuoteApproveRequest",
     # 合同相关
-    "ContractCreate", "ContractUpdate", "ContractResponse",
-    "ContractDeliverableCreate", "ContractDeliverableResponse",
-    "ContractAmendmentCreate", "ContractAmendmentResponse",
-    "ContractSignRequest", "ContractProjectCreateRequest",
+    "ContractCreate",
+    "ContractUpdate",
+    "ContractResponse",
+    "ContractDeliverableCreate",
+    "ContractDeliverableResponse",
+    "ContractAmendmentCreate",
+    "ContractAmendmentResponse",
+    "ContractSignRequest",
+    "ContractProjectCreateRequest",
     # 审批工作流相关
-    "ApprovalStartRequest", "ApprovalActionRequest", "ApprovalStatusResponse",
-    "ApprovalRecordResponse", "ApprovalHistoryResponse",
-
+    "ApprovalStartRequest",
+    "ApprovalActionRequest",
+    "ApprovalStatusResponse",
+    "ApprovalRecordResponse",
+    "ApprovalHistoryResponse",
     # 成本模板相关
-    "QuoteCostTemplateCreate", "QuoteCostTemplateUpdate", "QuoteCostTemplateResponse",
-    "PurchaseMaterialCostCreate", "PurchaseMaterialCostUpdate", "PurchaseMaterialCostResponse",
-    "MaterialCostMatchRequest", "MaterialCostMatchResponse",
-    "MaterialCostUpdateReminderResponse", "MaterialCostUpdateReminderUpdate",
-
+    "QuoteCostTemplateCreate",
+    "QuoteCostTemplateUpdate",
+    "QuoteCostTemplateResponse",
+    "PurchaseMaterialCostCreate",
+    "PurchaseMaterialCostUpdate",
+    "PurchaseMaterialCostResponse",
+    "MaterialCostMatchRequest",
+    "MaterialCostMatchResponse",
+    "MaterialCostUpdateReminderResponse",
+    "MaterialCostUpdateReminderUpdate",
     # 发票相关
-    "InvoiceCreate", "InvoiceUpdate", "InvoiceResponse", "InvoiceIssueRequest",
-    "InvoiceApprovalCreate", "InvoiceApprovalResponse",
-
+    "InvoiceCreate",
+    "InvoiceUpdate",
+    "InvoiceResponse",
+    "InvoiceIssueRequest",
+    "InvoiceApprovalCreate",
+    "InvoiceApprovalResponse",
+    # 回款争议相关
+    "ReceivableDisputeCreate",
+    "ReceivableDisputeResponse",
+    # 销售目标相关
+    "SalesTargetCreate",
+    "SalesTargetUpdate",
+    "SalesTargetResponse",
+    # 销售排名配置相关
+    "RankingMetric",
+    "SalesRankingConfigUpdateRequest",
+    "SalesRankingConfigResponse",
     # 技术评估相关
-    "TechnicalAssessmentApplyRequest", "TechnicalAssessmentEvaluateRequest", "TechnicalAssessmentResponse",
-    "ScoringRuleCreate", "ScoringRuleResponse",
-    "FailureCaseCreate", "FailureCaseResponse",
-    "OpenItemCreate", "OpenItemResponse",
+    "TechnicalAssessmentApplyRequest",
+    "TechnicalAssessmentEvaluateRequest",
+    "TechnicalAssessmentResponse",
+    "ScoringRuleCreate",
+    "ScoringRuleResponse",
+    "FailureCaseCreate",
+    "FailureCaseResponse",
+    "OpenItemCreate",
+    "OpenItemResponse",
 ]

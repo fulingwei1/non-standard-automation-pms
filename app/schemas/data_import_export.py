@@ -3,12 +3,11 @@
 数据导入导出 Schema
 """
 
-from datetime import date, datetime
+from datetime import date
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-from .common import BaseSchema, PaginatedResponse, TimestampSchema
 
 # ==================== 数据导入 ====================
 
@@ -20,8 +19,7 @@ class ImportTemplateTypeResponse(BaseModel):
 class ImportPreviewRequest(BaseModel):
     """预览导入数据请求"""
     template_type: str = Field(description="模板类型")
-    file_url: Optional[str] = Field(None, description="文件URL")
-    # TODO: 支持文件上传
+    file_url: Optional[str] = Field(None, description="文件URL（直接上传文件请使用 /import/preview 端点的 UploadFile 参数）")
 
 
 class ImportPreviewResponse(BaseModel):

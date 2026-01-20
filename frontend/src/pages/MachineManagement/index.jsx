@@ -15,7 +15,7 @@ import { Button } from '../../components/ui/button';
 import { useMachineData, useMachineDocuments } from './hooks';
 
 // Components
-import { MachineFilters, MachineTable, CreateMachineDialog } from './components';
+import { MachineFilters, MachineTable, CreateMachineDialog, MachineDetailDialog } from './components';
 
 // Constants
 import { initialMachineForm } from './constants';
@@ -147,8 +147,20 @@ export default function MachineManagement() {
                 onSubmit={handleCreateMachine}
             />
 
-            {/* TODO: 添加机台详情对话框组件 */}
-            {/* 原文件中的详情对话框逻辑较复杂，可以进一步拆分为独立组件 */}
+            {/* 机台详情对话框 */}
+            <MachineDetailDialog
+                open={showDetailDialog}
+                onOpenChange={(open) => {
+                    setShowDetailDialog(open);
+                    if (!open) {
+                        setSelectedMachine(null);
+                        // 清除 URL 参数
+                        searchParams.delete('machine_id');
+                        setSearchParams(searchParams);
+                    }
+                }}
+                machine={selectedMachine}
+            />
         </div>
     );
 }
