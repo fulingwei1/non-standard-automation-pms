@@ -1,0 +1,1 @@
+export { useManufacturingDashboard } from './useManufacturingDashboard';
