@@ -45,7 +45,7 @@ class TestMilestonesAPI:
             project_id=1,
             planned_date=date.today() + timedelta(days=30),
             status="PENDING",
-            is_key_milestone=False,
+            is_key=False,
         )
         db_session.add(milestone)
         db_session.commit()
@@ -75,7 +75,7 @@ class TestMilestonesAPI:
             "project_id": test_project.id,
             "planned_date": (date.today() + timedelta(days=30)).isoformat(),
             "status": "PENDING",
-            "is_key_milestone": False,
+            "is_key": False,
         }
         response = client.post(
             "/api/v1/milestones/",

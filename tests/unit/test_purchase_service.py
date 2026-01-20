@@ -162,6 +162,7 @@ class TestPurchaseOrderOperations:
         service = PurchaseService(db_session)
         result = service.submit_purchase_order(mock_purchase_order.id)
         assert result is True
+        db_session.commit()  # 服务不自动 commit，需手动提交
         db_session.refresh(mock_purchase_order)
         assert mock_purchase_order.status == "SUBMITTED"
 
@@ -178,6 +179,7 @@ class TestPurchaseOrderOperations:
         service = PurchaseService(db_session)
         result = service.approve_purchase_order(mock_purchase_order.id, mock_user.id)
         assert result is True
+        db_session.commit()  # 服务不自动 commit，需手动提交
         db_session.refresh(mock_purchase_order)
         assert mock_purchase_order.status == "APPROVED"
 
@@ -566,11 +568,13 @@ class TestPurchaseServiceIntegration:
 
         # 2. 提交订单
         service.submit_purchase_order(order.id)
+        db_session.commit()  # 服务不自动 commit
         db_session.refresh(order)
         assert order.status == "SUBMITTED"
 
         # 3. 审批订单
         service.approve_purchase_order(order.id, mock_user.id)
+        db_session.commit()  # 服务不自动 commit
         db_session.refresh(order)
         assert order.status == "APPROVED"
 

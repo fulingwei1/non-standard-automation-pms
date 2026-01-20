@@ -5,14 +5,11 @@
 从 purchase.py 拆分出来的业务逻辑
 """
 
-from datetime import date, datetime
-from decimal import Decimal
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy.orm import Session, joinedload, selectinload
+from sqlalchemy.orm import Session, joinedload
 
-from app.models.material import BomHeader, BomItem, Material, Supplier
-from app.models.project import Machine, Project
 from app.models.purchase import (
     GoodsReceipt,
     GoodsReceiptItem,
@@ -125,8 +122,7 @@ class PurchaseService:
                          status: Optional[str] = None) -> List[GoodsReceipt]:
         """获取收货记录列表"""
         query = self.db.query(GoodsReceipt).options(
-            selectinload(GoodsReceipt.items),
-            joinedload(GoodsReceipt.purchase_order),
+            joinedload(GoodsReceipt.order),
             joinedload(GoodsReceipt.supplier)
         )
 
@@ -168,7 +164,6 @@ class PurchaseService:
                            status: Optional[str] = None) -> List[PurchaseRequest]:
         """获取采购申请列表"""
         query = self.db.query(PurchaseRequest).options(
-            selectinload(PurchaseRequest.items),
             joinedload(PurchaseRequest.project),
             joinedload(PurchaseRequest.requester)
         )

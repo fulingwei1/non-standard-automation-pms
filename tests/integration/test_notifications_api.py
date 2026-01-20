@@ -51,7 +51,7 @@ class TestNotificationsAPI:
             title="测试通知",
             content="测试通知内容",
             notification_type="SYSTEM",
-            recipient_id=1,
+            user_id=1,
             is_read=False,
             created_at=datetime.now(),
         )
@@ -84,7 +84,7 @@ class TestNotificationsAPI:
             title="未读通知",
             content="测试内容",
             notification_type="SYSTEM",
-            recipient_id=1,
+            user_id=1,
             is_read=False,
             created_at=datetime.now(),
         )
@@ -114,7 +114,7 @@ class TestNotificationsAPI:
             title="待删除通知",
             content="测试内容",
             notification_type="SYSTEM",
-            recipient_id=1,
+            user_id=1,
             is_read=True,
             created_at=datetime.now(),
         )
