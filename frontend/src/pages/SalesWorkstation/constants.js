@@ -1,45 +1,59 @@
-// 线索状态配置
-export const leadStatusConfigs = {
-    new: { label: '新线索', color: 'bg-blue-500' },
-    contacted: { label: '已联系', color: 'bg-cyan-500' },
-    qualified: { label: '已验证', color: 'bg-emerald-500' },
-    unqualified: { label: '不合格', color: 'bg-slate-500' },
-    converted: { label: '已转化', color: 'bg-purple-500' },
+// Constants for SalesWorkstation
+export const DEFAULT_STATS = {
+    monthlyTarget: 1200000,
+    monthlyAchieved: 0,
+    opportunityCount: 0,
+    hotOpportunities: 0,
+    pendingPayment: 0,
+    overduePayment: 0,
+    customerCount: 0,
+    newCustomers: 0
 };
 
-// 商机阶段配置
-export const opportunityStageConfigs = {
-    initial: { label: '初步接触', color: 'bg-slate-500', probability: 10 },
-    qualified: { label: '需求确认', color: 'bg-blue-500', probability: 30 },
-    proposal: { label: '方案报价', color: 'bg-cyan-500', probability: 50 },
-    negotiation: { label: '商务谈判', color: 'bg-amber-500', probability: 75 },
-    closed_won: { label: '赢单', color: 'bg-emerald-500', probability: 100 },
-    closed_lost: { label: '丢单', color: 'bg-red-500', probability: 0 },
+export const OPPORTUNITY_STAGE_MAP = {
+    DISCOVERY: "lead",
+    QUALIFIED: "contact",
+    PROPOSAL: "quote",
+    NEGOTIATION: "negotiate",
+    WON: "won",
+    LOST: "lost",
+    ON_HOLD: "contact"
 };
 
-// 线索来源配置
-export const leadSourceConfigs = {
-    website: '官网',
-    referral: '转介绍',
-    exhibition: '展会',
-    cold_call: '陌生拜访',
-    advertisement: '广告',
-    other: '其他',
+export const PROJECT_STAGE_LABELS = {
+    INITIATION: "立项",
+    PLAN: "计划",
+    DESIGN: "设计",
+    PRODUCTION: "生产",
+    DELIVERY: "交付",
+    ACCEPTANCE: "验收",
+    CLOSED: "结项"
 };
 
-// 销售漏斗阶段（用于管道视图）
-export const pipelineStages = [
-    { id: 'initial', label: '初步接触' },
-    { id: 'qualified', label: '需求确认' },
-    { id: 'proposal', label: '方案报价' },
-    { id: 'negotiation', label: '商务谈判' },
-    { id: 'closed', label: '已成交' },
-];
+export const HEALTH_MAP = {
+    H1: "good",
+    HEALTH_GREEN: "good",
+    GREEN: "good",
+    H2: "warning",
+    HEALTH_YELLOW: "warning",
+    YELLOW: "warning",
+    H3: "critical",
+    HEALTH_RED: "critical",
+    RED: "critical"
+};
 
-// 仪表板卡片配置
-export const dashboardCards = [
-    { id: 'leads', label: '线索总数', icon: 'Users', color: 'blue' },
-    { id: 'newLeads', label: '本月新增', icon: 'TrendingUp', color: 'emerald' },
-    { id: 'conversion', label: '转化率', icon: 'Percent', color: 'purple' },
-    { id: 'revenue', label: '预期收入', icon: 'DollarSign', color: 'amber' },
-];
+export const todoTypeConfig = {
+    follow: { icon: "Phone", color: "text-blue-400", bg: "bg-blue-500/20" },
+    quote: { icon: "FileText", color: "text-amber-400", bg: "bg-amber-500/20" },
+    payment: { icon: "DollarSign", color: "text-emerald-400", bg: "bg-emerald-500/20" },
+    visit: { icon: "Building2", color: "text-purple-400", bg: "bg-purple-500/20" },
+    acceptance: { icon: "CheckCircle2", color: "text-pink-400", bg: "bg-pink-500/20" },
+    approval: { icon: "CheckCircle2", color: "text-orange-400", bg: "bg-orange-500/20" },
+    reminder: { icon: "AlertTriangle", color: "text-red-400", bg: "bg-red-500/20" }
+};
+
+export const healthColors = {
+    good: "bg-emerald-500",
+    warning: "bg-amber-500",
+    critical: "bg-red-500"
+};

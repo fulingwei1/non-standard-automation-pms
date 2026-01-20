@@ -1,1 +1,1 @@
-export { useSalesWorkstationData } from './useSalesWorkstationData';
+export * from './useSalesWorkstation';
