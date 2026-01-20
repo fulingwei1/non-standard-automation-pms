@@ -8,8 +8,10 @@ from datetime import date, datetime, timedelta
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
+from app.models.enums import DisputeReasonCodeEnum, DisputeStatusEnum
 from app.models.notification import Notification
 from app.models.project import ProjectPaymentPlan
+from app.models.sales.invoices import ReceivableDispute
 from app.services.sales_reminder.base import create_notification, find_users_by_role
 
 
@@ -78,11 +80,59 @@ def notify_payment_plan_upcoming(db: Session, days_before: int = 7) -> int:
     return count
 
 
+def _create_overdue_dispute_record(
+    db: Session,
+    payment_id: int,
+    overdue_days: int,
+    description: str = None
+) -> ReceivableDispute:
+    """
+    为逾期收款创建争议记录
+
+    Args:
+        db: 数据库会话
+        payment_id: 付款计划ID
+        overdue_days: 逾期天数
+        description: 描述信息
+
+    Returns:
+        创建的 ReceivableDispute 记录
+    """
+    # 检查是否已存在该付款计划的争议记录
+    existing_dispute = db.query(ReceivableDispute).filter(
+        and_(
+            ReceivableDispute.payment_id == payment_id,
+            ReceivableDispute.reason_code == DisputeReasonCodeEnum.OVERDUE.value,
+            ReceivableDispute.status.in_([
+                DisputeStatusEnum.OPEN.value,
+                DisputeStatusEnum.IN_PROGRESS.value
+            ])
+        )
+    ).first()
+
+    if existing_dispute:
+        # 已存在未解决的争议记录，更新描述
+        existing_dispute.description = description or f"收款已逾期 {overdue_days} 天"
+        return existing_dispute
+
+    # 创建新的争议记录
+    dispute = ReceivableDispute(
+        payment_id=payment_id,
+        reason_code=DisputeReasonCodeEnum.OVERDUE.value,
+        description=description or f"收款已逾期 {overdue_days} 天，系统自动生成争议记录",
+        status=DisputeStatusEnum.OPEN.value,
+        responsible_dept="财务部",
+        expect_resolve_date=date.today() + timedelta(days=30)  # 默认30天内解决
+    )
+    db.add(dispute)
+    return dispute
+
+
 def notify_payment_overdue(db: Session) -> int:
     """
     Issue 3.5: 收款逾期提醒（增强版）
     提醒已逾期的收款，按逾期天数分级提醒（7天、15天、30天、60天）
-    逾期必须选择原因并生成 receivable_disputes 记录（待实现）
+    逾期时自动生成 receivable_disputes 记录以跟踪争议
     """
     today = date.today()
 
@@ -105,6 +155,15 @@ def notify_payment_overdue(db: Session) -> int:
         # 只在特定天数发送提醒（避免每天重复发送）
         if overdue_days not in reminder_days and overdue_days < 7:
             continue
+
+        # 为逾期收款创建/更新争议记录
+        _create_overdue_dispute_record(
+            db=db,
+            payment_id=plan.id,
+            overdue_days=overdue_days,
+            description=f"收款计划 {plan.payment_name} 已逾期 {overdue_days} 天，" +
+                       f"未收金额：{plan.planned_amount - (plan.actual_amount or 0)}"
+        )
 
         # 获取需要通知的用户：收款责任人、销售、财务、销售经理
         user_ids = set()

@@ -74,6 +74,8 @@ class DisputeReasonCodeEnum(str, Enum):
     DELIVERY_DELAY = "DELIVERY_DELAY"
     QUALITY_ISSUE = "QUALITY_ISSUE"
     SCOPE_CHANGE = "SCOPE_CHANGE"
+    OVERDUE = "OVERDUE"  # 收款逾期
+    CUSTOMER_DELAY = "CUSTOMER_DELAY"  # 客户延迟付款
     OTHER = "OTHER"
 
 
