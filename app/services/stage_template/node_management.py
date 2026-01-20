@@ -29,6 +29,9 @@ class NodeManagementMixin:
         approval_role_ids: Optional[List[int]] = None,
         auto_condition: Optional[Dict[str, Any]] = None,
         description: Optional[str] = None,
+        owner_role_code: Optional[str] = None,
+        participant_role_codes: Optional[List[str]] = None,
+        deliverables: Optional[List[str]] = None,
     ) -> NodeDefinition:
         """
         添加节点定义
@@ -47,6 +50,9 @@ class NodeManagementMixin:
             approval_role_ids: 审批角色ID列表
             auto_condition: 自动完成条件配置
             description: 节点描述
+            owner_role_code: 负责角色编码
+            participant_role_codes: 参与角色编码列表
+            deliverables: 交付物清单
 
         Returns:
             NodeDefinition: 创建的节点定义
@@ -72,6 +78,9 @@ class NodeManagementMixin:
             approval_role_ids=approval_role_ids,
             auto_condition=auto_condition,
             description=description,
+            owner_role_code=owner_role_code,
+            participant_role_codes=participant_role_codes,
+            deliverables=deliverables,
         )
         self.db.add(node)
         self.db.flush()

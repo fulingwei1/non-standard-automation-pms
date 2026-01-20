@@ -131,6 +131,10 @@ class InitializationMixin:
                     completion_method=node_def.completion_method,
                     is_required=node_override.get("is_required", node_def.is_required),
                     planned_date=node_start_date + timedelta(days=node_estimated_days) if node_estimated_days else None,
+                    # 复制责任分配与交付物字段
+                    owner_role_code=node_def.owner_role_code,
+                    participant_role_codes=node_def.participant_role_codes,
+                    deliverables=node_def.deliverables,
                 )
                 self.db.add(node_instance)
                 self.db.flush()

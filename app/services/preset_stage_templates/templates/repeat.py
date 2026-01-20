@@ -31,6 +31,9 @@ REPEAT_TEMPLATE: Dict[str, Any] = {
                     "completion_method": "MANUAL",
                     "is_required": True,
                     "description": "登记订单信息",
+                    "owner_role_code": "PM",
+                    "participant_role_codes": [],
+                    "deliverables": ["订单登记表"],
                 },
                 {
                     "node_code": "R1N02",
@@ -42,6 +45,9 @@ REPEAT_TEMPLATE: Dict[str, Any] = {
                     "is_required": True,
                     "description": "安排生产计划",
                     "dependency_node_codes": ["R1N01"],
+                    "owner_role_code": "PMC",
+                    "participant_role_codes": ["PM"],
+                    "deliverables": ["生产计划"],
                 },
             ]
         },
@@ -62,6 +68,9 @@ REPEAT_TEMPLATE: Dict[str, Any] = {
                     "completion_method": "MANUAL",
                     "is_required": True,
                     "description": "检查物料库存",
+                    "owner_role_code": "PMC",
+                    "participant_role_codes": [],
+                    "deliverables": ["库存检查报告"],
                 },
                 {
                     "node_code": "R2N02",
@@ -73,6 +82,9 @@ REPEAT_TEMPLATE: Dict[str, Any] = {
                     "is_required": False,
                     "description": "采购缺料物料",
                     "dependency_node_codes": ["R2N01"],
+                    "owner_role_code": "PMC",
+                    "participant_role_codes": [],
+                    "deliverables": ["采购订单"],
                 },
                 {
                     "node_code": "R2N03",
@@ -84,6 +96,9 @@ REPEAT_TEMPLATE: Dict[str, Any] = {
                     "is_required": True,
                     "description": "物料齐套确认",
                     "dependency_node_codes": ["R2N01"],
+                    "owner_role_code": "PMC",
+                    "participant_role_codes": [],
+                    "deliverables": ["齐套确认单"],
                 },
             ]
         },
@@ -104,6 +119,9 @@ REPEAT_TEMPLATE: Dict[str, Any] = {
                     "completion_method": "MANUAL",
                     "is_required": True,
                     "description": "下达生产任务单",
+                    "owner_role_code": "PMC",
+                    "participant_role_codes": [],
+                    "deliverables": ["生产任务单"],
                 },
                 {
                     "node_code": "R3N02",
@@ -115,6 +133,9 @@ REPEAT_TEMPLATE: Dict[str, Any] = {
                     "is_required": True,
                     "description": "批量装配生产",
                     "dependency_node_codes": ["R3N01"],
+                    "owner_role_code": "ASM",
+                    "participant_role_codes": ["ME", "EE"],
+                    "deliverables": ["生产记录"],
                 },
                 {
                     "node_code": "R3N03",
@@ -126,6 +147,9 @@ REPEAT_TEMPLATE: Dict[str, Any] = {
                     "is_required": True,
                     "description": "设备调试测试",
                     "dependency_node_codes": ["R3N02"],
+                    "owner_role_code": "TE",
+                    "participant_role_codes": ["EE"],
+                    "deliverables": ["调试报告"],
                 },
                 {
                     "node_code": "R3N04",
@@ -137,6 +161,9 @@ REPEAT_TEMPLATE: Dict[str, Any] = {
                     "is_required": True,
                     "description": "产品质量检验",
                     "dependency_node_codes": ["R3N03"],
+                    "owner_role_code": "QA",
+                    "participant_role_codes": [],
+                    "deliverables": ["质检报告"],
                 },
             ]
         },
@@ -157,6 +184,9 @@ REPEAT_TEMPLATE: Dict[str, Any] = {
                     "completion_method": "MANUAL",
                     "is_required": True,
                     "description": "包装入成品库",
+                    "owner_role_code": "PMC",
+                    "participant_role_codes": ["ASM"],
+                    "deliverables": ["入库单"],
                 },
                 {
                     "node_code": "R4N02",
@@ -168,6 +198,9 @@ REPEAT_TEMPLATE: Dict[str, Any] = {
                     "is_required": True,
                     "description": "安排物流发货",
                     "dependency_node_codes": ["R4N01"],
+                    "owner_role_code": "PMC",
+                    "participant_role_codes": [],
+                    "deliverables": ["发货单", "物流单号"],
                 },
                 {
                     "node_code": "R4N03",
@@ -179,6 +212,9 @@ REPEAT_TEMPLATE: Dict[str, Any] = {
                     "is_required": True,
                     "description": "客户签收确认",
                     "dependency_node_codes": ["R4N02"],
+                    "owner_role_code": "PM",
+                    "participant_role_codes": [],
+                    "deliverables": ["签收单"],
                 },
             ]
         },

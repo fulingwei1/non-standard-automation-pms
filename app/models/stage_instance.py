@@ -54,7 +54,7 @@ class ProjectStageInstance(Base, TimestampMixin):
         String(20),
         default=StageStatusEnum.PENDING.value,
         nullable=False,
-        comment="状态: PENDING/IN_PROGRESS/COMPLETED/SKIPPED",
+        comment="状态: PENDING/IN_PROGRESS/COMPLETED/DELAYED/BLOCKED/SKIPPED",
     )
     planned_start_date = Column(Date, comment="计划开始日期")
     planned_end_date = Column(Date, comment="计划结束日期")
@@ -62,6 +62,24 @@ class ProjectStageInstance(Base, TimestampMixin):
     actual_end_date = Column(Date, comment="实际结束日期")
     is_modified = Column(Boolean, default=False, comment="是否被调整过")
     remark = Column(Text, comment="备注")
+
+    # 扩展字段（从模板复制）
+    category = Column(String(20), default="execution", comment="阶段分类")
+    is_milestone = Column(Boolean, default=False, comment="是否关键里程碑")
+    is_parallel = Column(Boolean, default=False, comment="是否支持并行执行")
+    progress = Column(Integer, default=0, comment="阶段进度百分比")
+
+    # 门控检查
+    entry_criteria = Column(Text, comment="入口条件")
+    exit_criteria = Column(Text, comment="出口条件")
+    entry_check_result = Column(Text, comment="入口检查结果")
+    exit_check_result = Column(Text, comment="出口检查结果")
+
+    # 阶段评审
+    review_required = Column(Boolean, default=False, comment="是否需要评审")
+    review_result = Column(String(20), comment="评审结果: PASSED/CONDITIONAL/FAILED")
+    review_date = Column(DateTime, comment="评审日期")
+    review_notes = Column(Text, comment="评审记录")
 
     # 关系
     project = relationship("Project", back_populates="stage_instances")
@@ -113,8 +131,9 @@ class ProjectNodeInstance(Base, TimestampMixin):
         String(20),
         default=StageStatusEnum.PENDING.value,
         nullable=False,
-        comment="状态: PENDING/IN_PROGRESS/COMPLETED/SKIPPED",
+        comment="状态: PENDING/IN_PROGRESS/COMPLETED/DELAYED/BLOCKED/SKIPPED",
     )
+    progress = Column(Integer, default=0, comment="节点进度百分比")
     completion_method = Column(
         String(20),
         default=CompletionMethodEnum.MANUAL.value,
@@ -139,12 +158,21 @@ class ProjectNodeInstance(Base, TimestampMixin):
         comment="子任务全部完成时是否自动完成节点"
     )
 
+    # 责任分配与交付物（从模板复制，可修改）
+    owner_role_code = Column(String(50), comment="负责角色编码")
+    participant_role_codes = Column(JSONType, comment="参与角色编码列表(JSON数组)")
+    deliverables = Column(JSONType, comment="交付物清单(JSON数组)")
+    # 实际指派的人员
+    owner_id = Column(Integer, ForeignKey("users.id"), comment="实际负责人ID")
+    participant_ids = Column(JSONType, comment="实际参与人ID列表(JSON数组)")
+
     # 关系
     project = relationship("Project", back_populates="node_instances")
     stage_instance = relationship("ProjectStageInstance", back_populates="nodes")
     node_definition = relationship("NodeDefinition")
     completer = relationship("User", foreign_keys=[completed_by])
     assignee = relationship("User", foreign_keys=[assignee_id])
+    owner = relationship("User", foreign_keys=[owner_id])
     tasks = relationship(
         "NodeTask",
         back_populates="node_instance",

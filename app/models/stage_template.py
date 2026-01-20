@@ -72,9 +72,16 @@ class StageDefinition(Base, TimestampMixin):
     stage_code = Column(String(20), nullable=False, comment="阶段编码")
     stage_name = Column(String(100), nullable=False, comment="阶段名称")
     sequence = Column(Integer, nullable=False, default=0, comment="排序序号")
+    category = Column(
+        String(20),
+        default="execution",
+        comment="阶段分类: sales/presales/execution/closure",
+    )
     estimated_days = Column(Integer, comment="预计工期(天)")
     description = Column(Text, comment="阶段描述")
     is_required = Column(Boolean, default=True, comment="是否必需阶段")
+    is_milestone = Column(Boolean, default=False, comment="是否关键里程碑")
+    is_parallel = Column(Boolean, default=False, comment="是否支持并行执行")
 
     # 关系
     template = relationship("StageTemplate", back_populates="stages")
@@ -122,6 +129,11 @@ class NodeDefinition(Base, TimestampMixin):
     approval_role_ids = Column(JSONType, comment="审批角色ID列表(JSON数组)")
     auto_condition = Column(JSONType, comment="自动完成条件配置(JSON)")
     description = Column(Text, comment="节点描述")
+
+    # 责任分配与交付物
+    owner_role_code = Column(String(50), comment="负责角色编码")
+    participant_role_codes = Column(JSONType, comment="参与角色编码列表(JSON数组)")
+    deliverables = Column(JSONType, comment="交付物清单(JSON数组)")
 
     # 关系
     stage = relationship("StageDefinition", back_populates="nodes")

@@ -4,7 +4,7 @@
 提供模板的导入导出功能
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from app.models.enums import TemplateProjectTypeEnum
 from app.models.stage_template import NodeDefinition
@@ -54,6 +54,10 @@ class ImportExportMixin:
                             "auto_condition": node.auto_condition,
                             "description": node.description,
                             "dependency_node_codes": self._get_dependency_codes(node),
+                            # 责任分配与交付物
+                            "owner_role_code": node.owner_role_code,
+                            "participant_role_codes": node.participant_role_codes,
+                            "deliverables": node.deliverables,
                         }
                         for node in sorted(stage.nodes, key=lambda n: n.sequence)
                     ]
@@ -81,7 +85,6 @@ class ImportExportMixin:
         Returns:
             StageTemplate: 创建的模板
         """
-        from app.models.stage_template import StageTemplate
 
         template = self.create_template(
             template_code=override_code or data["template_code"],
@@ -120,6 +123,10 @@ class ImportExportMixin:
                     approval_role_ids=node_data.get("approval_role_ids"),
                     auto_condition=node_data.get("auto_condition"),
                     description=node_data.get("description"),
+                    # 责任分配与交付物
+                    owner_role_code=node_data.get("owner_role_code"),
+                    participant_role_codes=node_data.get("participant_role_codes"),
+                    deliverables=node_data.get("deliverables"),
                 )
                 node_code_to_id[node_data["node_code"]] = node.id
 

@@ -10,11 +10,36 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import and_
 
 from app.models.enums import CompletionMethodEnum, StageStatusEnum
-from app.models.stage_instance import ProjectNodeInstance
+from app.models.stage_instance import NodeTask, ProjectNodeInstance
 
 
 class HelpersMixin:
     """辅助方法功能混入类"""
+
+    def _check_tasks_completion(self, node: ProjectNodeInstance) -> None:
+        """
+        检查节点的子任务是否全部完成
+
+        如果节点有子任务且配置了 auto_complete_on_tasks，
+        则必须等所有子任务完成/跳过后才能手动完成节点。
+        """
+        # 查询节点的子任务
+        tasks = self.db.query(NodeTask).filter(
+            NodeTask.node_instance_id == node.id
+        ).all()
+
+        if not tasks:
+            # 没有子任务，可以直接完成
+            return
+
+        # 检查是否有未完成的任务
+        incomplete_tasks = [
+            t for t in tasks
+            if t.status not in [StageStatusEnum.COMPLETED.value, StageStatusEnum.SKIPPED.value]
+        ]
+
+        if incomplete_tasks:
+            raise ValueError(f"还有 {len(incomplete_tasks)} 个子任务未完成，请先完成所有子任务")
 
     def _check_node_dependencies(self, node: ProjectNodeInstance) -> bool:
         """检查节点依赖是否满足"""

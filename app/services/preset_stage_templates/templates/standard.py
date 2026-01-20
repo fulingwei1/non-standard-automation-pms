@@ -31,6 +31,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "completion_method": "MANUAL",
                     "is_required": True,
                     "description": "登记客户需求基本信息",
+                    "owner_role_code": "SALES",
+                    "participant_role_codes": ["PM"],
+                    "deliverables": ["需求登记表"],
                 },
                 {
                     "node_code": "S1N02",
@@ -41,6 +44,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "completion_method": "MANUAL",
                     "is_required": True,
                     "description": "评估技术实现可行性",
+                    "owner_role_code": "CTO",
+                    "participant_role_codes": ["ME", "EE", "SW"],
+                    "deliverables": ["可行性评估报告"],
                 },
                 {
                     "node_code": "S1N03",
@@ -51,6 +57,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "completion_method": "MANUAL",
                     "is_required": True,
                     "description": "编制项目报价",
+                    "owner_role_code": "SALES",
+                    "participant_role_codes": ["FINANCE"],
+                    "deliverables": ["报价单"],
                 },
                 {
                     "node_code": "S1N04",
@@ -62,6 +71,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "is_required": True,
                     "description": "确认合同签订",
                     "dependency_node_codes": ["S1N03"],
+                    "owner_role_code": "GM",
+                    "participant_role_codes": ["SALES_DIR", "SALES"],
+                    "deliverables": ["签订合同"],
                 },
             ]
         },
@@ -82,6 +94,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "completion_method": "MANUAL",
                     "is_required": True,
                     "description": "与客户确认详细需求",
+                    "owner_role_code": "PM",
+                    "participant_role_codes": ["ME", "EE", "SW", "SALES"],
+                    "deliverables": ["会议纪要", "需求确认书"],
                 },
                 {
                     "node_code": "S2N02",
@@ -93,6 +108,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "is_required": True,
                     "description": "编制整体技术方案",
                     "dependency_node_codes": ["S2N01"],
+                    "owner_role_code": "ME",
+                    "participant_role_codes": ["EE", "SW"],
+                    "deliverables": ["技术方案书"],
                 },
                 {
                     "node_code": "S2N03",
@@ -105,6 +123,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "required_attachments": True,
                     "description": "完成机械结构设计图纸",
                     "dependency_node_codes": ["S2N02"],
+                    "owner_role_code": "ME",
+                    "participant_role_codes": [],
+                    "deliverables": ["3D模型", "2D装配图", "零件图"],
                 },
                 {
                     "node_code": "S2N04",
@@ -117,6 +138,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "required_attachments": True,
                     "description": "完成电气原理图和接线图",
                     "dependency_node_codes": ["S2N02"],
+                    "owner_role_code": "EE",
+                    "participant_role_codes": [],
+                    "deliverables": ["电气原理图", "接线图", "元器件清单"],
                 },
                 {
                     "node_code": "S2N05",
@@ -128,6 +152,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "is_required": True,
                     "description": "技术方案评审通过",
                     "dependency_node_codes": ["S2N03", "S2N04"],
+                    "owner_role_code": "CTO",
+                    "participant_role_codes": ["ME", "EE", "SW", "QA"],
+                    "deliverables": ["评审记录"],
                 },
             ]
         },
@@ -149,6 +176,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "is_required": True,
                     "required_attachments": True,
                     "description": "编制物料清单",
+                    "owner_role_code": "ME",
+                    "participant_role_codes": ["EE"],
+                    "deliverables": ["BOM清单"],
                 },
                 {
                     "node_code": "S3N02",
@@ -160,6 +190,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "is_required": True,
                     "description": "物料清单评审确认",
                     "dependency_node_codes": ["S3N01"],
+                    "owner_role_code": "CTO",
+                    "participant_role_codes": ["PU_MGR", "PMC"],
+                    "deliverables": ["BOM评审记录"],
                 },
                 {
                     "node_code": "S3N03",
@@ -171,6 +204,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "is_required": True,
                     "description": "提交采购申请",
                     "dependency_node_codes": ["S3N02"],
+                    "owner_role_code": "PMC",
+                    "participant_role_codes": ["PU_MGR"],
+                    "deliverables": ["采购申请单"],
                 },
                 {
                     "node_code": "S3N04",
@@ -182,6 +218,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "is_required": True,
                     "description": "选择供应商并下单",
                     "dependency_node_codes": ["S3N03"],
+                    "owner_role_code": "PU_MGR",
+                    "participant_role_codes": ["PU_ASSISTANT"],
+                    "deliverables": ["采购订单"],
                 },
                 {
                     "node_code": "S3N05",
@@ -193,6 +232,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "is_required": True,
                     "description": "物料到货并完成验收",
                     "dependency_node_codes": ["S3N04"],
+                    "owner_role_code": "QA",
+                    "participant_role_codes": ["PU_ASSISTANT"],
+                    "deliverables": ["入库单", "检验报告"],
                 },
             ]
         },
@@ -213,6 +255,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "completion_method": "MANUAL",
                     "is_required": True,
                     "description": "发放加工图纸给车间/外协",
+                    "owner_role_code": "ME",
+                    "participant_role_codes": ["PMC"],
+                    "deliverables": ["加工图纸"],
                 },
                 {
                     "node_code": "S4N02",
@@ -224,6 +269,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "is_required": True,
                     "description": "内部加工自制零件",
                     "dependency_node_codes": ["S4N01"],
+                    "owner_role_code": "PMC",
+                    "participant_role_codes": [],
+                    "deliverables": ["加工完成零件"],
                 },
                 {
                     "node_code": "S4N03",
@@ -235,6 +283,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "is_required": False,
                     "description": "外协加工零件",
                     "dependency_node_codes": ["S4N01"],
+                    "owner_role_code": "PU_MGR",
+                    "participant_role_codes": ["PU_ASSISTANT"],
+                    "deliverables": ["外协加工零件"],
                 },
                 {
                     "node_code": "S4N04",
@@ -246,6 +297,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "is_required": True,
                     "description": "零件检验合格入库",
                     "dependency_node_codes": ["S4N02"],
+                    "owner_role_code": "QA",
+                    "participant_role_codes": [],
+                    "deliverables": ["检验报告", "入库单"],
                 },
             ]
         },
@@ -266,6 +320,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "completion_method": "MANUAL",
                     "is_required": True,
                     "description": "完成机械部分装配",
+                    "owner_role_code": "ME",
+                    "participant_role_codes": [],
+                    "deliverables": ["装配完成确认"],
                 },
                 {
                     "node_code": "S5N02",
@@ -277,6 +334,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "is_required": True,
                     "description": "完成电气接线安装",
                     "dependency_node_codes": ["S5N01"],
+                    "owner_role_code": "EE",
+                    "participant_role_codes": [],
+                    "deliverables": ["接线完成确认"],
                 },
                 {
                     "node_code": "S5N03",
@@ -288,6 +348,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "is_required": True,
                     "description": "软件程序调试",
                     "dependency_node_codes": ["S5N02"],
+                    "owner_role_code": "SW",
+                    "participant_role_codes": ["EE"],
+                    "deliverables": ["调试记录"],
                 },
                 {
                     "node_code": "S5N04",
@@ -299,6 +362,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "is_required": True,
                     "description": "整机联调测试",
                     "dependency_node_codes": ["S5N03"],
+                    "owner_role_code": "ME",
+                    "participant_role_codes": ["EE", "SW", "QA"],
+                    "deliverables": ["联调测试报告"],
                 },
             ]
         },
@@ -319,6 +385,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "completion_method": "MANUAL",
                     "is_required": True,
                     "description": "内部预验收检查",
+                    "owner_role_code": "QA",
+                    "participant_role_codes": ["ME", "EE", "SW"],
+                    "deliverables": ["预验收检查表"],
                 },
                 {
                     "node_code": "S6N02",
@@ -330,6 +399,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "is_required": True,
                     "description": "客户出厂验收",
                     "dependency_node_codes": ["S6N01"],
+                    "owner_role_code": "PM",
+                    "participant_role_codes": ["QA", "SALES"],
+                    "deliverables": ["FAT验收记录"],
                 },
                 {
                     "node_code": "S6N03",
@@ -342,6 +414,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "required_attachments": True,
                     "description": "FAT验收报告签署",
                     "dependency_node_codes": ["S6N02"],
+                    "owner_role_code": "PM",
+                    "participant_role_codes": ["QA"],
+                    "deliverables": ["FAT验收报告"],
                 },
             ]
         },
@@ -362,6 +437,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "completion_method": "MANUAL",
                     "is_required": True,
                     "description": "设备包装入箱",
+                    "owner_role_code": "PMC",
+                    "participant_role_codes": [],
+                    "deliverables": ["装箱单"],
                 },
                 {
                     "node_code": "S7N02",
@@ -373,6 +451,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "is_required": True,
                     "description": "安排物流发货",
                     "dependency_node_codes": ["S7N01"],
+                    "owner_role_code": "PMC",
+                    "participant_role_codes": ["PU_ASSISTANT"],
+                    "deliverables": ["发货单", "物流单号"],
                 },
                 {
                     "node_code": "S7N03",
@@ -384,6 +465,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "is_required": True,
                     "description": "确认发货到达",
                     "dependency_node_codes": ["S7N02"],
+                    "owner_role_code": "SALES",
+                    "participant_role_codes": ["PM"],
+                    "deliverables": ["签收单"],
                 },
             ]
         },
@@ -404,6 +488,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "completion_method": "MANUAL",
                     "is_required": True,
                     "description": "现场设备安装",
+                    "owner_role_code": "ME",
+                    "participant_role_codes": ["EE"],
+                    "deliverables": ["安装完成确认"],
                 },
                 {
                     "node_code": "S8N02",
@@ -415,6 +502,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "is_required": True,
                     "description": "现场设备调试",
                     "dependency_node_codes": ["S8N01"],
+                    "owner_role_code": "SW",
+                    "participant_role_codes": ["ME", "EE"],
+                    "deliverables": ["现场调试记录"],
                 },
                 {
                     "node_code": "S8N03",
@@ -426,6 +516,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "is_required": True,
                     "description": "客户现场验收",
                     "dependency_node_codes": ["S8N02"],
+                    "owner_role_code": "PM",
+                    "participant_role_codes": ["QA", "SALES"],
+                    "deliverables": ["SAT验收记录"],
                 },
                 {
                     "node_code": "S8N04",
@@ -438,6 +531,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "required_attachments": True,
                     "description": "SAT验收报告签署",
                     "dependency_node_codes": ["S8N03"],
+                    "owner_role_code": "PM",
+                    "participant_role_codes": ["QA"],
+                    "deliverables": ["SAT验收报告"],
                 },
             ]
         },
@@ -459,6 +555,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "is_required": True,
                     "required_attachments": True,
                     "description": "整理归档项目文档",
+                    "owner_role_code": "PM",
+                    "participant_role_codes": ["ME", "EE", "SW"],
+                    "deliverables": ["项目文档包", "技术资料"],
                 },
                 {
                     "node_code": "S9N02",
@@ -469,6 +568,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "completion_method": "MANUAL",
                     "is_required": False,
                     "description": "客户操作培训",
+                    "owner_role_code": "SW",
+                    "participant_role_codes": ["ME", "EE"],
+                    "deliverables": ["培训记录", "操作手册"],
                 },
                 {
                     "node_code": "S9N03",
@@ -480,6 +582,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "is_required": True,
                     "description": "移交售后质保服务",
                     "dependency_node_codes": ["S9N01"],
+                    "owner_role_code": "PM",
+                    "participant_role_codes": ["QA"],
+                    "deliverables": ["质保交接单"],
                 },
                 {
                     "node_code": "S9N04",
@@ -491,6 +596,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "is_required": True,
                     "description": "项目结项审批确认",
                     "dependency_node_codes": ["S9N03"],
+                    "owner_role_code": "GM",
+                    "participant_role_codes": ["CTO", "CFO"],
+                    "deliverables": ["结项审批单"],
                 },
                 {
                     "node_code": "S9N05",
@@ -501,6 +609,9 @@ STANDARD_TEMPLATE: Dict[str, Any] = {
                     "completion_method": "MANUAL",
                     "is_required": False,
                     "description": "项目经验总结归档",
+                    "owner_role_code": "PM",
+                    "participant_role_codes": ["ME", "EE", "SW"],
+                    "deliverables": ["经验总结报告"],
                 },
             ]
         },

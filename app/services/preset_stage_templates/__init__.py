@@ -2,20 +2,23 @@
 """
 预置阶段模板数据
 
-包含三个初始模板：
-1. TPL_STANDARD - 标准全流程（新产品完整流程）
-2. TPL_QUICK - 简易快速开发（简单新产品）
-3. TPL_REPEAT - 重复生产（老产品复制）
+包含四个初始模板：
+1. TPL_FULL_LIFECYCLE - 完整生命周期（22阶段全流程）
+2. TPL_STANDARD - 标准全流程（新产品完整流程）
+3. TPL_QUICK - 简易快速开发（简单新产品）
+4. TPL_REPEAT - 重复生产（老产品复制）
 """
 
 from typing import Any, Dict, List, Optional
 
+from .templates.full_lifecycle import FULL_LIFECYCLE_TEMPLATE
 from .templates.quick import QUICK_TEMPLATE
 from .templates.repeat import REPEAT_TEMPLATE
 from .templates.standard import STANDARD_TEMPLATE
 
 # 所有预置模板列表
 PRESET_TEMPLATES: List[Dict[str, Any]] = [
+    FULL_LIFECYCLE_TEMPLATE,
     STANDARD_TEMPLATE,
     QUICK_TEMPLATE,
     REPEAT_TEMPLATE,
@@ -63,6 +66,7 @@ def init_preset_templates(template_service) -> List:
 
 
 __all__ = [
+    "FULL_LIFECYCLE_TEMPLATE",
     "STANDARD_TEMPLATE",
     "QUICK_TEMPLATE",
     "REPEAT_TEMPLATE",
