@@ -55,24 +55,6 @@ const MeetingManagement = () => {
   const [activeTab, setActiveTab] = useState('upcoming');
   const [_searchText, _setSearchText] = useState('');
 
-  // 模拟数据
-  const mockData = {
-    meetings: [
-    {
-      id: 1,
-      title: '项目进度评审会',
-      type: 'project',
-      status: 'scheduled',
-      organizer: '张经理',
-      startTime: '2024-01-20 14:00',
-      endTime: '2024-01-20 16:00',
-      location: '会议室A',
-      participants: ['张三', '李四', '王五', '赵六'],
-      description: '评审本月项目进度，协调资源分配'
-    }
-    // 更多模拟数据...
-    ]
-  };
 
   // 数据加载
   useEffect(() => {
@@ -82,11 +64,9 @@ const MeetingManagement = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      // 模拟API调用
-      setTimeout(() => {
-        setMeetings(mockData.meetings);
-        setLoading(false);
-      }, 1000);
+      const data = await getMeetings();
+      setMeetings(data);
+      setLoading(false);
     } catch (_error) {
       message.error('加载会议数据失败');
       setLoading(false);

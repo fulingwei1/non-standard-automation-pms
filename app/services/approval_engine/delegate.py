@@ -347,7 +347,6 @@ class ApprovalDelegateService:
             log.original_notified = True
             log.original_notified_at = datetime.now()
 
-            # TODO: 发送通知
             # 获取代理配置
             config = (
                 self.db.query(ApprovalDelegate)
@@ -357,7 +356,7 @@ class ApprovalDelegateService:
 
             if config and config.notify_original:
                 # 发送通知给原审批人
-                pass
+                self._send_delegate_notification(log, config)
 
     def cleanup_expired_delegates(self):
         """
@@ -371,3 +370,56 @@ class ApprovalDelegateService:
             ApprovalDelegate.is_active == True,
             ApprovalDelegate.end_date < today,
         ).update({"is_active": False}, synchronize_session=False)
+
+    def _send_delegate_notification(
+        self,
+        log: ApprovalDelegateLog,
+        config: ApprovalDelegate
+    ):
+        """
+        发送代理审批完成通知给原审批人
+
+        Args:
+            log: 代理日志记录
+            config: 代理配置
+        """
+        from app.services.approval_engine.notify import ApprovalNotifyService
+
+        try:
+            # 获取审批任务信息
+            task = (
+                self.db.query(ApprovalTask)
+                .filter(ApprovalTask.id == log.task_id)
+                .first()
+            )
+
+            if not task or not task.instance:
+                return
+
+            instance = task.instance
+
+            # 构建通知内容
+            action_text = {
+                "APPROVED": "通过",
+                "REJECTED": "驳回",
+            }.get(log.action, "处理")
+
+            notification = {
+                "type": "APPROVAL_DELEGATED_RESULT",
+                "title": f"代理审批已{action_text}: {instance.title}",
+                "content": f"您的代理人已{action_text}审批「{instance.title}」",
+                "receiver_id": config.user_id,  # 原审批人
+                "instance_id": instance.id,
+                "task_id": task.id,
+                "urgency": "NORMAL",
+                "created_at": datetime.now().isoformat(),
+            }
+
+            # 使用通知服务发送
+            notify_service = ApprovalNotifyService(self.db)
+            notify_service._send_notification(notification)
+
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"发送代理审批通知失败: {e}")

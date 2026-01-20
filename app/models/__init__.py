@@ -297,6 +297,15 @@ from .report_center import (
     ReportSubscription,
     ReportTemplate,
 )
+from .stage_instance import (
+    ProjectNodeInstance,
+    ProjectStageInstance,
+)
+from .stage_template import (
+    NodeDefinition,
+    StageDefinition,
+    StageTemplate,
+)
 from .sales import (  # Technical Assessment; Approval Workflow
     AIClarification,
     ApprovalHistory,
@@ -587,6 +596,12 @@ __all__ = [
     "DataImportTask",
     "DataExportTask",
     "ImportTemplate",
+    # Stage Template
+    "StageTemplate",
+    "StageDefinition",
+    "NodeDefinition",
+    "ProjectStageInstance",
+    "ProjectNodeInstance",
     # Technical Spec
     "TechnicalSpecRequirement",
     "SpecMatchRecord",

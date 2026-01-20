@@ -4,7 +4,6 @@
 基于装配工艺路径的智能齐套分析系统
 """
 
-from datetime import datetime
 
 from sqlalchemy import (
     Boolean,
@@ -17,7 +16,6 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
-    UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
 
@@ -409,3 +407,85 @@ class SchedulingSuggestion(Base, TimestampMixin):
 
     def __repr__(self):
         return f'<SchedulingSuggestion {self.suggestion_no} type={self.suggestion_type}>'
+
+
+# ==================== 齐套率历史快照 ====================
+
+class KitRateSnapshot(Base):
+    """
+    齐套率历史快照表
+
+    用于记录项目/机台每日的齐套率状态，支持历史趋势分析。
+    快照来源：
+    - DAILY: 每日凌晨定时任务自动生成
+    - STAGE_CHANGE: 项目阶段切换时自动生成
+    - MANUAL: 用户手动触发
+    """
+    __tablename__ = 'mes_kit_rate_snapshot'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    # 快照对象
+    project_id = Column(Integer, ForeignKey('projects.id'), nullable=False, comment='项目ID')
+    machine_id = Column(Integer, ForeignKey('machines.id'), comment='机台ID（可选，不填则为项目级快照）')
+
+    # 快照时间
+    snapshot_date = Column(Date, nullable=False, comment='快照日期')
+    snapshot_time = Column(DateTime, nullable=False, comment='快照精确时间')
+
+    # 快照来源
+    snapshot_type = Column(
+        String(20),
+        nullable=False,
+        default='DAILY',
+        comment='快照类型：DAILY/STAGE_CHANGE/MANUAL'
+    )
+    trigger_event = Column(String(100), comment='触发事件（如：S3->S4阶段切换）')
+
+    # 齐套率数据
+    kit_rate = Column(Numeric(5, 2), nullable=False, default=0, comment='齐套率(%)')
+    kit_status = Column(
+        String(20),
+        nullable=False,
+        default='shortage',
+        comment='齐套状态：complete/partial/shortage'
+    )
+
+    # 物料统计
+    total_items = Column(Integer, default=0, comment='BOM物料总项数')
+    fulfilled_items = Column(Integer, default=0, comment='已齐套项数')
+    shortage_items = Column(Integer, default=0, comment='缺料项数')
+    in_transit_items = Column(Integer, default=0, comment='在途项数')
+
+    # 阻塞性物料统计
+    blocking_total = Column(Integer, default=0, comment='阻塞性物料总数')
+    blocking_fulfilled = Column(Integer, default=0, comment='阻塞性已齐套数')
+    blocking_kit_rate = Column(Numeric(5, 2), default=0, comment='阻塞性齐套率(%)')
+
+    # 金额统计
+    total_amount = Column(Numeric(14, 2), default=0, comment='物料总金额')
+    shortage_amount = Column(Numeric(14, 2), default=0, comment='缺料金额')
+
+    # 项目阶段信息（快照时的状态）
+    project_stage = Column(String(20), comment='项目当前阶段')
+    project_health = Column(String(10), comment='项目健康度')
+
+    # 分阶段齐套率（JSON格式）
+    stage_kit_rates = Column(Text, comment='各装配阶段齐套率JSON')
+
+    # 关系
+    project = relationship('Project')
+    machine = relationship('Machine')
+
+    __table_args__ = (
+        # 每个项目每天只有一条 DAILY 快照（但可以有多条 STAGE_CHANGE）
+        Index('idx_kit_snapshot_project_date', 'project_id', 'snapshot_date'),
+        Index('idx_kit_snapshot_machine_date', 'machine_id', 'snapshot_date'),
+        Index('idx_kit_snapshot_type', 'snapshot_type'),
+        Index('idx_kit_snapshot_date', 'snapshot_date'),
+        # 用于快速查询某项目的历史
+        Index('idx_kit_snapshot_project_time', 'project_id', 'snapshot_time'),
+    )
+
+    def __repr__(self):
+        return f'<KitRateSnapshot project={self.project_id} date={self.snapshot_date} rate={self.kit_rate}%>'

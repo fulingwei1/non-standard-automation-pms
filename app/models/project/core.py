@@ -86,6 +86,11 @@ class Project(Base, TimestampMixin):
     template_id = Column(Integer, ForeignKey("project_templates.id"), comment="创建时使用的模板ID")
     template_version_id = Column(Integer, ForeignKey("project_template_versions.id"), comment="创建时使用的模板版本ID")
 
+    # 阶段模板关联（阶段模板化功能）
+    stage_template_id = Column(Integer, ForeignKey("stage_templates.id"), comment="阶段模板ID")
+    current_stage_instance_id = Column(Integer, comment="当前阶段实例ID")
+    current_node_instance_id = Column(Integer, comment="当前节点实例ID")
+
     # 销售关联
     opportunity_id = Column(Integer, ForeignKey("opportunities.id"), comment="销售机会ID")
     contract_id = Column(Integer, ForeignKey("contracts.id"), comment="合同ID")
@@ -147,6 +152,14 @@ class Project(Base, TimestampMixin):
     financial_costs = relationship("FinancialProjectCost", back_populates="project", lazy="dynamic")
     documents = relationship(
         "ProjectDocument", back_populates="project", lazy="dynamic"
+    )
+    # 阶段模板化关系
+    stage_template = relationship("StageTemplate", foreign_keys=[stage_template_id])
+    stage_instances = relationship(
+        "ProjectStageInstance", back_populates="project", lazy="dynamic"
+    )
+    node_instances = relationship(
+        "ProjectNodeInstance", back_populates="project", lazy="dynamic"
     )
 
     __table_args__ = (

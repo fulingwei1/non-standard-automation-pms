@@ -912,9 +912,7 @@ export default function OpportunityManagement() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowDetailDialog(false)}>
-
-              关闭
+              onClick={() => setShowDetailDialog(false)}>              关闭
             </Button>
           </DialogFooter>
         </DialogContent>

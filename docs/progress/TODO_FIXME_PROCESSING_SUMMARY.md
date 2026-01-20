@@ -1,7 +1,7 @@
 # TODO/FIXME 标记处理总结
 
 > **更新日期**: 2026-01-20
-> **处理进度**: **95%** (仅剩 8 处待处理)
+> **处理进度**: **98%** (仅剩 2 处待处理)
 
 ---
 
@@ -11,10 +11,10 @@
 
 | 统计项 | 原记录 | 当前实际 |
 |--------|:------:|:--------:|
-| 总 TODO/FIXME 数量 | ~145 个 | **8 个** |
-| 已处理 | 4 个 | **137+ 个** |
-| 待处理 | ~141 个 | **8 个** |
-| 处理进度 | 3% | **95%** |
+| 总 TODO/FIXME 数量 | ~145 个 | **2 个** |
+| 已处理 | 4 个 | **143+ 个** |
+| 待处理 | ~141 个 | **2 个** |
+| 处理进度 | 3% | **98%** |
 
 ---
 
@@ -59,54 +59,40 @@
 | 售前管理 | 解析 cost_template JSON | ✅ 已实现 |
 | 工作量管理 | 从 WorkerSkill 表获取技能 | ✅ 模块重构 |
 | PMO 阶段推进 | 推进到下一阶段的逻辑 | ✅ 已实现 (`pmo/phases.py:322-347`) |
-| PMO 负荷复用 | 调用 workload 模块 API | ✅ 已实现 |
+| PMO 负荷复用 | 调用 workload 模块 API | ✅ ���实现 |
 | 销售权限 | 实现更严格的权限检查 | ✅ 已实现 |
+
+### 6. 审批系统 ✅ (2026-01-20 实现)
+
+**审批权限验证**
+- ✅ `app/api/v1/endpoints/projects/approvals.py` - 实现 `_check_approval_permission()` 函数
+- 支持指定审批人检查、角色检查、向后兼容
+
+**审批通知服务**
+- ✅ `app/services/approval_engine/notify.py` - 通知去重（30分钟窗口）
+- ✅ 用户通知偏好检查（免打扰时段、渠道偏好）
+- ✅ 多渠道通知（站内、邮件、企微队列）
+
+**审批代理通知**
+- ✅ `app/services/approval_engine/delegate.py` - 代理审批完成后通知原审批人
+
+### 7. 齐套率历史快照 ✅ (2026-01-20 实现)
+
+**文件**: `app/models/assembly_kit.py`, `app/utils/scheduled_tasks/kit_rate_tasks.py`
+
+- ✅ 创建 `KitRateSnapshot` 模型
+- ✅ 每日快照定时任务 (`daily_kit_rate_snapshot`)
+- ✅ 阶段切换时自动快照 (`create_stage_change_snapshot`)
+- ✅ 趋势查询接口 (`/kit-rate/trend`) - 支持按日/月分组
+- ✅ 快照查询接口 (`/kit-rate/snapshots`)
 
 ---
 
-## 三、待处理的 TODO/FIXME (8 处)
+## 三、待处理的 TODO/FIXME (2 处)
 
-### 高优先级 (P1) - 4 处
+### 中优先级 (P2) - 1 处
 
-#### 1. 审批权限验证
-
-**文件**: `app/api/v1/endpoints/projects/approvals.py:200`
-
-```python
-# TODO: 验证当前用户是否有权限审批（角色或指定审批人）
-# 简化处理：任何活跃用户都可以审批
-```
-
-**建议**: 集成 `approval_engine` 的权限检查逻辑
-
-#### 2. 审批通知服务 (3 处)
-
-**文件**: `app/services/approval_engine/notify.py:373-375`
-
-```python
-# TODO: 根据用户配置和通知类型选择渠道
-# TODO: 异步发送通知
-# TODO: 通知去重和聚合
-```
-
-**建议**:
-- 集成企业微信/钉钉 SDK
-- 使用 Celery 或 APScheduler 实现异步
-- 添加 Redis 缓存实现去重
-
-#### 3. 审批代理通知
-
-**文件**: `app/services/approval_engine/delegate.py:350`
-
-```python
-# TODO: 发送通知
-```
-
-**建议**: 复用 `notify.py` 的通知服务
-
-### 中优先级 (P2) - 3 处
-
-#### 4. ERP 集成
+#### 1. ERP 集成
 
 **文件**: `app/api/v1/endpoints/projects/sync_utils.py:73`
 
@@ -116,21 +102,9 @@
 
 **建议**: 根据客户实际 ERP 系统对接需求实现
 
-#### 5. 齐套率历史快照 (2 处)
-
-**文件**: `app/api/v1/endpoints/kit_rate/dashboard.py:108, 207`
-
-```
-历史快照功能待实现（需要创建 KitRateSnapshot 模型）
-```
-
-**建议**:
-- 创建 `KitRateSnapshot` 模型
-- 添加定时任务每日生成快照
-
 ### 低优先级 (P3) - 1 处
 
-#### 6. 团队表模型
+#### 2. 团队表模型
 
 **文件**: `app/models/sales/workflow.py:132`
 
@@ -166,24 +140,10 @@ team_id = Column(Integer, comment="团队ID（团队目标，暂未实现团队�
 
 ## 六、下一步建议
 
-### 短期 (1-2 周)
+### 按需实现 (P2/P3)
 
-1. **完善审批系统** (P1)
-   - 实现审批权限验证
-   - 集成通知渠道（企微/邮件）
-   - 实现异步通知和去重
-
-### 中期 (1 个月)
-
-2. **齐套率增强** (P2)
-   - 创建 KitRateSnapshot 模型
-   - 实现历史趋势分析
-
-### 长期 (按需)
-
-3. **外部系统集成** (P2/P3)
-   - ERP 集成（根据客户需求）
-   - 团队管理模块（按需开发）
+1. **ERP 集成** - 根据客户实际 ERP 系统对接
+2. **团队管理模块** - 当需要团队目标管理功能时开发
 
 ---
 

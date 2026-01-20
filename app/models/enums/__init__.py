@@ -103,6 +103,14 @@ from .sales import (
     WinProbabilityLevelEnum,
 )
 
+# 阶段模板相关
+from .stage import (
+    CompletionMethodEnum,
+    NodeTypeEnum,
+    StageStatusEnum,
+    TemplateProjectTypeEnum,
+)
+
 # 审批和工作流
 from .workflow import (
     ApprovalActionEnum,
@@ -222,4 +230,9 @@ __all__ = [
     "AlertLevelEnum",
     "AlertStatusEnum",
     "AlertRuleTypeEnum",
+    # 阶段模板相关
+    "NodeTypeEnum",
+    "CompletionMethodEnum",
+    "StageStatusEnum",
+    "TemplateProjectTypeEnum",
 ]
