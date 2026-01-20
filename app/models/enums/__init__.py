@@ -148,6 +148,17 @@ from .workflow import (
     WorkflowTypeEnum,
 )
 
+# 踩坑库相关
+from .pitfall import (
+    PitfallEquipmentType,
+    PitfallProblemType,
+    PitfallSensitiveReason,
+    PitfallSourceType,
+    PitfallStage,
+    PitfallStatus,
+    RecommendationTriggerType,
+)
+
 __all__ = [
     # 项目相关
     "ProjectStageEnum",
@@ -270,4 +281,12 @@ __all__ = [
     "HealthLevelEnum",
     "ObjectiveLevelEnum",
     "StrategyReviewTypeEnum",
+    # 踩坑库相关
+    "PitfallStage",
+    "PitfallEquipmentType",
+    "PitfallProblemType",
+    "PitfallSourceType",
+    "PitfallStatus",
+    "PitfallSensitiveReason",
+    "RecommendationTriggerType",
 ]
