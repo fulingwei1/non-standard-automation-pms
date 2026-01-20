@@ -3,7 +3,7 @@
 客户供应商入驻 Schema
 """
 
-from datetime import date
+from datetime import date, datetime
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
