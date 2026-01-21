@@ -77,3 +77,13 @@ router.include_router(payment_plans.router, tags=["projects-payment-plans"])
 
 # 扩展功能路由（复盘、经验教训、高级分析等）
 router.include_router(extended.router, tags=["projects-extended"])
+
+# === 项目模块整合：迁移的子模块路由 ===
+from .milestones import router as milestones_router
+
+# 里程碑路由（项目内操作）
+router.include_router(
+    milestones_router,
+    prefix="/{project_id}/milestones",
+    tags=["projects-milestones"],
+)

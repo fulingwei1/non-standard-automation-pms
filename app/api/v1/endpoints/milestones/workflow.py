@@ -22,7 +22,7 @@ from app.schemas.project import MilestoneResponse
 router = APIRouter()
 
 
-@router.put("/{milestone_id}/complete", response_model=MilestoneResponse)
+@router.put("/{milestone_id}/complete", response_model=MilestoneResponse, deprecated=True)
 def complete_milestone(
     *,
     db: Session = Depends(deps.get_db),
@@ -32,6 +32,8 @@ def complete_milestone(
     current_user: User = Depends(security.require_permission("milestone:read")),
 ) -> Any:
     """
+    ⚠️ Deprecated: 请使用 PUT /projects/{project_id}/milestones/{milestone_id}/complete
+
     完成里程碑（自动触发收款计划开票）
     """
     import logging
@@ -149,7 +151,7 @@ def complete_milestone(
     return milestone
 
 
-@router.delete("/{milestone_id}", status_code=200)
+@router.delete("/{milestone_id}", status_code=200, deprecated=True)
 def delete_milestone(
     *,
     db: Session = Depends(deps.get_db),
@@ -157,6 +159,8 @@ def delete_milestone(
     current_user: User = Depends(security.require_permission("milestone:read")),
 ) -> Any:
     """
+    ⚠️ Deprecated: 请使用 DELETE /projects/{project_id}/milestones/{milestone_id}
+
     删除里程碑
     """
     milestone = (
