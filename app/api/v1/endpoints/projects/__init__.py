@@ -85,6 +85,7 @@ from .machines import router as machines_router
 from .members import router as members_router
 from .milestones import router as milestones_router
 from .resource_plan import router as resource_plan_router
+from .work_logs import router as work_logs_router
 
 # 里程碑路由（项目内操作）
 router.include_router(
@@ -119,4 +120,11 @@ router.include_router(
     costs_router,
     prefix="/{project_id}/costs",
     tags=["projects-costs"],
+)
+
+# 工作日志路由（项目内操作）
+router.include_router(
+    work_logs_router,
+    prefix="/{project_id}/work-logs",
+    tags=["projects-work-logs"],
 )
