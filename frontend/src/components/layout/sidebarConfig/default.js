@@ -29,7 +29,6 @@ export const defaultNavGroups = [
     items: [
       { name: "工作台", path: "/dashboard", icon: "LayoutDashboard", badge: null },
       { name: "运营大屏", path: "/operation", icon: "BarChart3", permission: "operation:dashboard:read", permissionLabel: "运营大屏" },
-      { name: "工作中心", path: "/work-center", icon: "LayoutDashboard", badge: null },
       { name: "预警中心", path: "/alerts", icon: "AlertTriangle", badge: "3", permission: "alert:read", permissionLabel: "预警查看" },
       { name: "问题管理", path: "/issues", icon: "AlertCircle", permission: "issue:read", permissionLabel: "问题查看" },
       { name: "通知中心", path: "/notifications", icon: "Bell", badge: "5" },
@@ -49,21 +48,14 @@ export const defaultNavGroups = [
       { name: "销售团队", path: "/sales-team", icon: "Users", permission: "sales:team:read", permissionLabel: "销售团队" },
       { name: "销售目标", path: "/sales/targets", icon: "Target", permission: "sales:target:read", permissionLabel: "销售目标" },
       { name: "销售统计", path: "/sales/statistics", icon: "BarChart3", permission: "sales:statistics:read", permissionLabel: "销售统计" },
-      { name: "销售报告", path: "/sales-reports", icon: "FileText", permission: "sales:report:read", permissionLabel: "销售报告" },
+      { name: "销售分析", path: "/sales/analysis", icon: "TrendingUp", permission: "sales:analysis:read", permissionLabel: "销售分析" },
       { name: "合同管理", path: "/sales/contracts", icon: "FileCheck", permission: "sales:contract:read", permissionLabel: "合同查看" },
       { name: "合同审批", path: "/contract-approval", icon: "ClipboardCheck", permission: "sales:contract:approve", permissionLabel: "合同审批" },
       { name: "投标管理", path: "/bidding", icon: "Target", permission: "sales:bid:read", permissionLabel: "投标管理" },
       { name: "应收账款", path: "/sales/receivables", icon: "CreditCard", permission: "finance:receivable:read", permissionLabel: "应收账款" },
       { name: "回款跟踪", path: "/payments", icon: "CreditCard", permission: "finance:payment:read", permissionLabel: "回款查看" },
       { name: "发票管理", path: "/invoices", icon: "Receipt", permission: "finance:invoice:read", permissionLabel: "发票管理" },
-      { name: "未中标分析", path: "/sales/loss-analysis", icon: "TrendingDown", permission: "sales:analysis:read", permissionLabel: "销售分析" },
-      { name: "售前费用", path: "/sales/presale-expenses", icon: "DollarSign", permission: "sales:expense:read", permissionLabel: "费用查看" },
-      { name: "断链分析", path: "/sales/pipeline-break-analysis", icon: "AlertTriangle", permission: "sales:analysis:read", permissionLabel: "销售分析" },
-      { name: "归责分析", path: "/sales/accountability-analysis", icon: "Users", permission: "sales:analysis:read", permissionLabel: "销售分析" },
-      { name: "健康度监控", path: "/sales/health-monitoring", icon: "Activity", permission: "sales:analysis:read", permissionLabel: "销售分析" },
-      { name: "延期分析", path: "/sales/delay-analysis", icon: "Clock", permission: "sales:analysis:read", permissionLabel: "销售分析" },
-      { name: "成本超支分析", path: "/sales/cost-overrun-analysis", icon: "DollarSign", permission: "sales:analysis:read", permissionLabel: "销售分析" },
-      { name: "信息质量分析", path: "/sales/information-gap-analysis", icon: "FileText", permission: "sales:analysis:read", permissionLabel: "销售分析" }
+      { name: "售前费用", path: "/sales/presale-expenses", icon: "DollarSign", permission: "sales:expense:read", permissionLabel: "费用查看" }
     ]
   },
   // 3. 售前技术
@@ -100,8 +92,6 @@ export const defaultNavGroups = [
       { name: "排期看板", path: "/progress-tracking/schedule", icon: "Calendar", permission: "project:schedule:read", permissionLabel: "排期查看" },
       { name: "甘特图", path: "/progress-tracking/gantt", icon: "BarChart3", permission: "project:gantt:read", permissionLabel: "甘特图查看" },
       { name: "进度报告", path: "/progress-tracking/reports", icon: "FileText", permission: "project:progress:read", permissionLabel: "进度报告" },
-      { name: "项目周报", path: "/pmo/weekly-report", icon: "BarChart3", permission: "project:report:read", permissionLabel: "项目报表" },
-      { name: "风险预警", path: "/pmo/risk-wall", icon: "AlertTriangle", permission: "project:risk:read", permissionLabel: "风险预警" },
       { name: "资源总览", path: "/pmo/resource-overview", icon: "Users", permission: "resource:read", permissionLabel: "资源查看" },
       { name: "会议管理", path: "/pmo/meetings", icon: "Calendar", permission: "meeting:read", permissionLabel: "会议管理" },
       { name: "最佳实践", path: "/projects/best-practices/recommend", icon: "Sparkles", permission: "project:bestpractice:read", permissionLabel: "最佳实践" }
@@ -130,9 +120,7 @@ export const defaultNavGroups = [
     label: "研发管理",
     items: [
       { name: "研发项目列表", path: "/rd-projects", icon: "Briefcase", permission: "rd:project:read", permissionLabel: "研发项目" },
-      { name: "研发成本录入", path: "/rd-cost-entry", icon: "DollarSign", permission: "rd:cost:create", permissionLabel: "研发成本录入" },
-      { name: "研发成本汇总", path: "/rd-cost-summary", icon: "Calculator", permission: "rd:cost:read", permissionLabel: "研发成本汇总" },
-      { name: "研发成本报告", path: "/rd-cost-reports", icon: "FileText", permission: "rd:cost:report", permissionLabel: "研发成本报告" }
+      { name: "研发成本管理", path: "/rd-cost", icon: "DollarSign", permission: "rd:cost:read", permissionLabel: "研发成本" }
     ]
   },
   // 8. 采购管理
@@ -150,7 +138,6 @@ export const defaultNavGroups = [
       { name: "物料跟踪", path: "/material-tracking", icon: "Package", permission: "material:track:read", permissionLabel: "物料跟踪" },
       { name: "物料需求汇总", path: "/material-demands", icon: "List", permission: "material:demand:read", permissionLabel: "物料需求" },
       { name: "收货管理", path: "/purchases/receipts", icon: "Truck", permission: "purchase:receipt:read", permissionLabel: "收货管理" },
-      { name: "到货跟踪", path: "/arrivals", icon: "Truck", permission: "purchase:arrival:read", permissionLabel: "到货跟踪" },
       { name: "缺料管理", path: "/shortage", icon: "Package", permission: "material:shortage:read", permissionLabel: "缺料管理" },
       { name: "齐套分析", path: "/material-analysis", icon: "Boxes", permission: "material:analysis:read", permissionLabel: "齐套分析" },
       { name: "采购分析", path: "/procurement-analysis", icon: "BarChart3", permission: "purchase:analysis:read", permissionLabel: "采购分析" },
@@ -200,7 +187,6 @@ export const defaultNavGroups = [
     items: [
       { name: "客服工作台", path: "/customer-service-dashboard", icon: "LayoutDashboard", permission: "service:dashboard:read", permissionLabel: "客服工作台" },
       { name: "服务工单", path: "/service-tickets", icon: "FileText", permission: "service:ticket:read", permissionLabel: "服务工单" },
-      { name: "服务记录", path: "/service-records", icon: "ClipboardCheck", permission: "service:record:read", permissionLabel: "服务记录" },
       { name: "客户沟通", path: "/customer-communications", icon: "MessageSquare", permission: "customer:communication:read", permissionLabel: "客户沟通" },
       { name: "满意度调查", path: "/customer-satisfaction", icon: "Star", permission: "customer:satisfaction:read", permissionLabel: "满意度调查" },
       { name: "服务分析", path: "/service-analytics", icon: "BarChart3", permission: "service:analytics:read", permissionLabel: "服务分析" },
@@ -271,7 +257,6 @@ export const defaultNavGroups = [
       { name: "角色管理", path: "/role-management", icon: "Shield", permission: "system:role:manage", permissionLabel: "角色管理" },
       { name: "权限管理", path: "/permission-management", icon: "Key", permission: "system:permission:manage", permissionLabel: "权限管理" },
       { name: "项目角色", path: "/project-role-types", icon: "UserCog", permission: "system:projectrole:manage", permissionLabel: "项目角色管理" },
-      { name: "部门管理", path: "/department-management", icon: "Building2", permission: "system:department:manage", permissionLabel: "部门管理" },
       { name: "组织管理", path: "/organization-management", icon: "Building2", permission: "system:org:manage", permissionLabel: "组织管理" },
       { name: "岗位管理", path: "/position-management", icon: "UserCog", permission: "system:position:manage", permissionLabel: "岗位管理" },
       { name: "人事管理", path: "/hr-management", icon: "Users", permission: "system:hr:manage", permissionLabel: "人事管理" },
