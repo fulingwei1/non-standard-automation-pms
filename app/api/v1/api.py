@@ -88,13 +88,8 @@ api_router.include_router(kit_check.router, prefix="", tags=["kit-check"])
 from app.api.v1.endpoints.progress import router as progress_router
 
 api_router.include_router(progress_router, prefix="/progress", tags=["progress"])
-# 短缺预警模块已拆分为shortage_alerts包
-from app.api.v1.endpoints.shortage_alerts import router as shortage_alerts_router
-
-api_router.include_router(
-    shortage_alerts_router, prefix="/shortage-alerts", tags=["shortage-alerts"]
-)
-# 短缺管理模块已拆分为shortage包
+# 缺料管理模块（三层架构重构）
+# 结构: detection（预警检测）-> handling（问题处理）-> analytics（统计报表）
 from app.api.v1.endpoints.shortage import router as shortage_router
 
 api_router.include_router(shortage_router, prefix="/shortage", tags=["shortage"])
