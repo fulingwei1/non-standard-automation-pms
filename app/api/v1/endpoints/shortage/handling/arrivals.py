@@ -29,10 +29,9 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.material import Material
+from app.models.material import Material, Supplier
 from app.models.purchase import PurchaseOrder
 from app.models.shortage import ArrivalFollowUp, MaterialArrival, ShortageReport
-from app.models.supplier import Supplier
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.shortage import (

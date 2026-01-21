@@ -89,6 +89,7 @@ from .progress import router as progress_router
 from .resource_plan import router as resource_plan_router
 from .roles import router as roles_router
 from .stages import router as stages_router
+from .timesheet import router as timesheet_router
 from .work_logs import router as work_logs_router
 
 # 里程碑路由（项目内操作）
@@ -159,4 +160,11 @@ router.include_router(
     stages_router,
     prefix="/{project_id}/stages",
     tags=["projects-stages"],
+)
+
+# 工时路由（项目内操作）
+router.include_router(
+    timesheet_router,
+    prefix="/{project_id}/timesheet",
+    tags=["projects-timesheet"],
 )
