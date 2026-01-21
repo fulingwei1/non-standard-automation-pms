@@ -80,6 +80,7 @@ router.include_router(payment_plans.router, tags=["projects-payment-plans"])
 router.include_router(extended.router, tags=["projects-extended"])
 
 # === 项目模块整合：迁移的子模块路由 ===
+from .costs import router as costs_router
 from .machines import router as machines_router
 from .members import router as members_router
 from .milestones import router as milestones_router
@@ -111,4 +112,11 @@ router.include_router(
     members_router,
     prefix="/{project_id}/members",
     tags=["projects-members"],
+)
+
+# 成本路由（项目内操作）
+router.include_router(
+    costs_router,
+    prefix="/{project_id}/costs",
+    tags=["projects-costs"],
 )
