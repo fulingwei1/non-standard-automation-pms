@@ -1,0 +1,100 @@
+# -*- coding: utf-8 -*-
+"""
+主模型导出 - 绩效和人员相关
+"""
+from ...user import Permission, PermissionAudit, Role, RolePermission, User, UserRole
+from ...organization import (
+    ContractReminder,
+    Department,
+    Employee,
+    EmployeeContract,
+    EmployeeHrProfile,
+    HrTransaction,
+    SalaryRecord,
+)
+from ...organization_v2 import (
+    AssignmentType,
+    EmployeeOrgAssignment,
+    JobLevel,
+    JobLevelCategory,
+    OrganizationUnit,
+    OrganizationUnitType,
+    Position,
+    PositionCategory,
+    PositionRole,
+)
+from ...performance import (
+    EvaluationWeightConfig,
+    MonthlyWorkSummary,
+    PerformanceAdjustmentHistory,
+    PerformanceAppeal,
+    PerformanceEvaluation,
+    PerformanceEvaluationRecord,
+    PerformanceIndicator,
+    PerformancePeriod,
+    PerformanceRankingSnapshot,
+    PerformanceResult,
+    ProjectContribution,
+)
+from ...staff_matching import (
+    HrAIMatchingLog,
+    HrEmployeeProfile,
+    HrEmployeeTagEvaluation,
+    HrProjectPerformance,
+    HrTagDict,
+    MesProjectStaffingNeed,
+)
+from ...qualification import (
+    EmployeeQualification,
+    PositionCompetencyModel,
+    QualificationAssessment,
+    QualificationLevel,
+)
+from ...hourly_rate import HourlyRateConfig
+
+__all__ = [
+    "User",
+    "Role",
+    "Permission",
+    "RolePermission",
+    "UserRole",
+    "PermissionAudit",
+    "Department",
+    "Employee",
+    "EmployeeHrProfile",
+    "HrTransaction",
+    "EmployeeContract",
+    "ContractReminder",
+    "SalaryRecord",
+    "OrganizationUnit",
+    "Position",
+    "JobLevel",
+    "EmployeeOrgAssignment",
+    "PositionRole",
+    "OrganizationUnitType",
+    "PositionCategory",
+    "JobLevelCategory",
+    "AssignmentType",
+    "PerformancePeriod",
+    "PerformanceIndicator",
+    "PerformanceResult",
+    "PerformanceEvaluation",
+    "PerformanceAppeal",
+    "ProjectContribution",
+    "PerformanceRankingSnapshot",
+    "PerformanceAdjustmentHistory",
+    "MonthlyWorkSummary",
+    "PerformanceEvaluationRecord",
+    "EvaluationWeightConfig",
+    "HrTagDict",
+    "HrEmployeeTagEvaluation",
+    "HrEmployeeProfile",
+    "HrProjectPerformance",
+    "MesProjectStaffingNeed",
+    "HrAIMatchingLog",
+    "QualificationLevel",
+    "PositionCompetencyModel",
+    "EmployeeQualification",
+    "QualificationAssessment",
+    "HourlyRateConfig",
+]

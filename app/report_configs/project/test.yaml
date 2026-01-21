@@ -1,0 +1,43 @@
+# 简单测试报告配置
+# 用于单元测试
+
+meta:
+  name: 测试报告
+  code: TEST_REPORT
+  description: 用于单元测试的简单报告
+  version: "1.0"
+
+permissions:
+  roles: []
+  data_scope: project
+
+parameters:
+  - name: project_id
+    type: integer
+    required: false
+    default: 1
+
+cache:
+  enabled: false
+
+data_sources: {}
+
+sections:
+  - id: test_metrics
+    title: 测试指标
+    type: metrics
+    items:
+      - label: 固定值
+        value: "100"
+      - label: 参数值
+        value: "{{ params.project_id }}"
+
+exports:
+  json:
+    enabled: true
+  pdf:
+    enabled: false
+  excel:
+    enabled: false
+  word:
+    enabled: false
