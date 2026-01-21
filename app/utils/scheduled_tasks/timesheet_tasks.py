@@ -16,7 +16,7 @@ def daily_timesheet_reminder_task():
     每日工时填报提醒任务
     每天上午9:00执行，提醒未填报昨天工时的用户
     """
-    from app.services.timesheet_reminder_service import notify_timesheet_missing
+    from app.services.timesheet_reminder import notify_timesheet_missing
 
     try:
         with get_db_session() as db:
@@ -39,7 +39,7 @@ def weekly_timesheet_reminder_task():
     每周工时填报提醒任务
     每周一上午10:00执行，提醒未完成上周工时填报的用户
     """
-    from app.services.timesheet_reminder_service import notify_weekly_timesheet_missing
+    from app.services.timesheet_reminder import notify_weekly_timesheet_missing
 
     try:
         with get_db_session() as db:
@@ -62,7 +62,7 @@ def timesheet_anomaly_alert_task():
     异常工时预警任务
     每天下午14:00执行，检测并提醒异常工时记录
     """
-    from app.services.timesheet_reminder_service import notify_timesheet_anomaly
+    from app.services.timesheet_reminder import notify_timesheet_anomaly
 
     try:
         with get_db_session() as db:
@@ -85,7 +85,7 @@ def timesheet_approval_timeout_reminder_task():
     工时审批超时提醒任务
     每天上午11:00和下午15:00执行，提醒审批超时的记录
     """
-    from app.services.timesheet_reminder_service import notify_approval_timeout
+    from app.services.timesheet_reminder import notify_approval_timeout
 
     try:
         with get_db_session() as db:
@@ -108,7 +108,7 @@ def timesheet_sync_failure_alert_task():
     工时数据同步失败提醒任务
     每天下午16:00执行，检查并提醒同步失败的记录
     """
-    from app.services.timesheet_reminder_service import notify_sync_failure
+    from app.services.timesheet_reminder import notify_sync_failure
 
     try:
         with get_db_session() as db:

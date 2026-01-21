@@ -14,7 +14,7 @@ from datetime import datetime, date, timedelta
 from decimal import Decimal
 from sqlalchemy.orm import Session
 
-from app.services.timesheet_reminder_service import (
+from app.services.timesheet_reminder import (
     create_timesheet_notification,
     notify_timesheet_missing,
     notify_weekly_timesheet_missing
@@ -25,29 +25,29 @@ from app.models.notification import Notification
 
 
 @pytest.fixture
-def test_user(db_session: Session):
-    """创建测试用户"""
-    user = User(
-        username="test_user",
+def test_user_for_reminder(db_session: Session):
+    """创建测试用户（用于工时提醒测试）"""
+    from tests.conftest import _get_or_create_user
+    
+    user = _get_or_create_user(
+        db_session,
+        username="test_user_reminder",
+        password="test123",
         real_name="测试用户",
-        email="test@example.com",
-        hashed_password="hashed",
-        is_active=True
+        department="技术部",
+        employee_role="ENGINEER"
     )
-    db_session.add(user)
-    db_session.commit()
-    db_session.refresh(user)
     return user
 
 
 class TestTimesheetReminderService:
     """Test suite for timesheet_reminder_service."""
 
-    def test_create_timesheet_notification_success(self, db_session, test_user):
+    def test_create_timesheet_notification_success(self, db_session, test_user_for_reminder):
         """测试创建工时通知 - 成功场景"""
         notification = create_timesheet_notification(
             db=db_session,
-            user_id=test_user.id,
+            user_id=test_user_for_reminder.id,
             notification_type="TIMESHEET_MISSING",
             title="工时填报提醒",
             content="请及时填报工时",
@@ -60,16 +60,16 @@ class TestTimesheetReminderService:
         db_session.commit()
         
         assert notification is not None
-        assert notification.user_id == test_user.id
+        assert notification.user_id == test_user_for_reminder.id
         assert notification.notification_type == "TIMESHEET_MISSING"
         assert notification.title == "工时填报提醒"
         assert notification.content == "请及时填报工时"
 
-    def test_create_timesheet_notification_minimal(self, db_session, test_user):
+    def test_create_timesheet_notification_minimal(self, db_session, test_user_for_reminder):
         """测试创建工时通知 - 最小参数"""
         notification = create_timesheet_notification(
             db=db_session,
-            user_id=test_user.id,
+            user_id=test_user_for_reminder.id,
             notification_type="TIMESHEET_MISSING",
             title="提醒",
             content="内容"
@@ -78,7 +78,7 @@ class TestTimesheetReminderService:
         assert notification is not None
         assert notification.link_url == "/timesheet"  # 默认值
 
-    def test_notify_timesheet_missing_default_date(self, db_session, test_user):
+    def test_notify_timesheet_missing_default_date(self, db_session, test_user_for_reminder):
         """测试提醒未填报工时 - 默认日期（昨天）"""
         # 确保用户没有昨天的工时记录
         result = notify_timesheet_missing(db_session)
@@ -86,7 +86,7 @@ class TestTimesheetReminderService:
         assert isinstance(result, int)
         assert result >= 0
 
-    def test_notify_timesheet_missing_specific_date(self, db_session, test_user):
+    def test_notify_timesheet_missing_specific_date(self, db_session, test_user_for_reminder):
         """测试提醒未填报工时 - 指定日期"""
         target_date = date.today() - timedelta(days=2)
         
@@ -95,11 +95,11 @@ class TestTimesheetReminderService:
         assert isinstance(result, int)
         assert result >= 0
 
-    def test_notify_timesheet_missing_with_existing_timesheet(self, db_session, test_user):
+    def test_notify_timesheet_missing_with_existing_timesheet(self, db_session, test_user_for_reminder):
         """测试提醒未填报工时 - 已有工时记录"""
         # 创建工时记录
         timesheet = Timesheet(
-            user_id=test_user.id,
+            user_id=test_user_for_reminder.id,
             project_id=1,
             work_date=date.today() - timedelta(days=1),
             hours=8.0,
@@ -114,14 +114,14 @@ class TestTimesheetReminderService:
         # 已有记录，应该不发送提醒
         assert isinstance(result, int)
 
-    def test_notify_weekly_timesheet_missing_default_week(self, db_session, test_user):
+    def test_notify_weekly_timesheet_missing_default_week(self, db_session, test_user_for_reminder):
         """测试提醒未完成周工时填报 - 默认周（上周）"""
         result = notify_weekly_timesheet_missing(db_session)
         
         assert isinstance(result, int)
         assert result >= 0
 
-    def test_notify_weekly_timesheet_missing_specific_week(self, db_session, test_user):
+    def test_notify_weekly_timesheet_missing_specific_week(self, db_session, test_user_for_reminder):
         """测试提醒未完成周工时填报 - 指定周"""
         week_start = date.today() - timedelta(days=14)
         
@@ -130,14 +130,14 @@ class TestTimesheetReminderService:
         assert isinstance(result, int)
         assert result >= 0
 
-    def test_notify_weekly_timesheet_missing_with_complete_week(self, db_session, test_user):
+    def test_notify_weekly_timesheet_missing_with_complete_week(self, db_session, test_user_for_reminder):
         """测试提醒未完成周工时填报 - 已完成周工时"""
         week_start = date.today() - timedelta(days=7)
         
         # 创建一周的工时记录
         for i in range(5):
             timesheet = Timesheet(
-                user_id=test_user.id,
+                user_id=test_user_for_reminder.id,
                 project_id=1,
                 work_date=week_start + timedelta(days=i),
                 hours=8.0,
