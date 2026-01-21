@@ -60,8 +60,16 @@ class DataSyncService:
             updated_fields.append("contract_date")
 
         # 同步交期（如果有）
-        if contract.delivery_deadline and contract.delivery_deadline != project.planned_end_date:
-            project.planned_end_date = contract.delivery_deadline
+        # 优先从 Contract 的 delivery_deadline 字段获取（如果存在）
+        # 否则从关联的 QuoteVersion 获取 delivery_date
+        delivery_date = None
+        if hasattr(contract, 'delivery_deadline') and contract.delivery_deadline:
+            delivery_date = contract.delivery_deadline
+        elif contract.quote_version and hasattr(contract.quote_version, 'delivery_date') and contract.quote_version.delivery_date:
+            delivery_date = contract.quote_version.delivery_date
+        
+        if delivery_date and delivery_date != project.planned_end_date:
+            project.planned_end_date = delivery_date
             updated_fields.append("planned_end_date")
 
         if updated_fields:

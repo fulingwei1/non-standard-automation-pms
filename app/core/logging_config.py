@@ -42,7 +42,7 @@ class SensitiveDataFilter(logging.Filter):
             msg = record.msg
             for pattern, replacement in self.SENSITIVE_PATTERNS:
                 if pattern.lower() in msg.lower():
-                    record.msg = msg.replace(pattern, replacement, flags=0)
+                    record.msg = msg.replace(pattern, replacement)
                     break
 
         return True

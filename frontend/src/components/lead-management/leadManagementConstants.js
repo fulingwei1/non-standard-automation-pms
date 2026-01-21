@@ -12,3 +12,15 @@ export const statusConfig = {
     textColor: "text-emerald-400",
   },
 };
+
+// 线索来源选项
+export const sourceOptions = [
+  { value: "exhibition", label: "展会" },
+  { value: "referral", label: "转介绍" },
+  { value: "website", label: "官网" },
+  { value: "cold_call", label: "电销" },
+  { value: "social_media", label: "社交媒体" },
+  { value: "advertising", label: "广告投放" },
+  { value: "partner", label: "合作伙伴" },
+  { value: "other", label: "其他" },
+];

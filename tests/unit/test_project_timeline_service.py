@@ -13,7 +13,7 @@ from unittest.mock import MagicMock, patch, Mock
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from sqlalchemy.orm import Session
-import services.project_timeline_service
+import app.services.project_timeline_service
 
 
 
@@ -24,42 +24,42 @@ class TestProjectTimelineService:
     def test_collect_status_change_events(self):
         """测试 collect_status_change_events 函数"""
         # TODO: 实现测试逻辑
-        from services.project_timeline_service import collect_status_change_events
+        from app.services.project_timeline_service import collect_status_change_events
         pass
 
 
     def test_collect_milestone_events(self):
         """测试 collect_milestone_events 函数"""
         # TODO: 实现测试逻辑
-        from services.project_timeline_service import collect_milestone_events
+        from app.services.project_timeline_service import collect_milestone_events
         pass
 
 
     def test_collect_task_events(self):
         """测试 collect_task_events 函数"""
         # TODO: 实现测试逻辑
-        from services.project_timeline_service import collect_task_events
+        from app.services.project_timeline_service import collect_task_events
         pass
 
 
     def test_collect_cost_events(self):
         """测试 collect_cost_events 函数"""
         # TODO: 实现测试逻辑
-        from services.project_timeline_service import collect_cost_events
+        from app.services.project_timeline_service import collect_cost_events
         pass
 
 
     def test_collect_document_events(self):
         """测试 collect_document_events 函数"""
         # TODO: 实现测试逻辑
-        from services.project_timeline_service import collect_document_events
+        from app.services.project_timeline_service import collect_document_events
         pass
 
 
     def test_add_project_created_event(self):
         """测试 add_project_created_event 函数"""
         # TODO: 实现测试逻辑
-        from services.project_timeline_service import add_project_created_event
+        from app.services.project_timeline_service import add_project_created_event
         pass
 
 

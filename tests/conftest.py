@@ -71,7 +71,7 @@ def _ensure_login_user(
         employee_role=employee_role,
     )
     if user.is_superuser != is_superuser:
-        db.query(User).filter(User.id == user.id).update({'is_superuser': is_superuser})
+        db.query(User).filter(User.id == user.id).update({"is_superuser": is_superuser})
         db.commit()
     return user
 
@@ -241,21 +241,23 @@ def client() -> Generator:
         yield c
 
 
-def _get_auth_token(db: Session, username: str = "admin", password: str = "admin123") -> str:
+def _get_auth_token(
+    db: Session, username: str = "admin", password: str = "admin123"
+) -> str:
     """
     获取认证 token 的辅助函数
-    
+
     Args:
         db: 数据库会话
         username: 用户名
         password: 密码
-        
+
     Returns:
         JWT token 字符串
     """
     from app.main import app
     from fastapi.testclient import TestClient
-    
+
     # 确保用户存在
     _ensure_login_user(
         db,
@@ -267,7 +269,7 @@ def _get_auth_token(db: Session, username: str = "admin", password: str = "admin
         is_superuser=(username == "admin"),
     )
     db.commit()
-    
+
     # 通过登录接口获取 token
     client = TestClient(app)
     login_data = {
@@ -278,7 +280,9 @@ def _get_auth_token(db: Session, username: str = "admin", password: str = "admin
     if response.status_code == 200:
         return response.json()["access_token"]
     else:
-        raise ValueError(f"Failed to get auth token: {response.status_code} - {response.text}")
+        raise ValueError(
+            f"Failed to get auth token: {response.status_code} - {response.text}"
+        )
 
 
 @pytest.fixture(scope="module")
@@ -408,16 +412,61 @@ def finance_user_token(client: TestClient) -> str:
 def db_session() -> Generator[Session, None, None]:
     """
     提供与应用相同的数据库会话，供测试直接操作数据库数据
+
+    每个测试结束后自动回滚，确保测试隔离：
+    - 使用事务包装所有操作
+    - 测试结束时回滚，不提交数据
+    - 避免测试间相互影响
     """
     session: Session = SessionLocal()
+    transaction = session.begin_nested()
+
     try:
         yield session
-        session.commit()
-    except Exception:
-        session.rollback()
-        raise
     finally:
+        # 强制回滚，不提交任何数据到数据库
+        if transaction.is_active:
+            transaction.rollback()
         session.close()
+
+
+# ---------------------------------------------------------------------------
+# 认证 Token 缓存
+# ---------------------------------------------------------------------------
+_token_cache: Dict[str, str] = {}
+
+
+def _get_cached_token(username: str) -> str | None:
+    """
+    从缓存获取 token，避免重复登录请求
+
+    登录请求较慢，缓存 token 可以显著提升测试执行速度
+    """
+    return _token_cache.get(username)
+
+
+def _set_cached_token(username: str, token: str) -> None:
+    """
+    缓存 token 供后续测试使用
+    """
+    _token_cache[username] = token
+
+
+def _clear_token_cache() -> None:
+    """
+    清空 token 缓存，用于 session 级清理
+    """
+    _token_cache.clear()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def clear_token_cache_on_session_end():
+    """
+    Session 级别清理：每个测试会话结束后清空 token 缓存
+    避免跨 session 的 token 污染
+    """
+    yield
+    _clear_token_cache()
 
 
 # ---------------------------------------------------------------------------
@@ -497,14 +546,16 @@ def _get_or_create_employee(
     db.flush()
     return employee
     db.flush()
-    
+
     # Update employee fields using query instead of direct assignment
-    db.query(Employee).filter(Employee.id == employee.id).update({
-        'is_active': True,
-        'employment_status': 'active',
-        'department': department,
-        'role': role
-    })
+    db.query(Employee).filter(Employee.id == employee.id).update(
+        {
+            "is_active": True,
+            "employment_status": "active",
+            "department": department,
+            "role": role,
+        }
+    )
     return employee
 
 
@@ -828,7 +879,7 @@ def mock_important_task(
 
 @pytest.fixture(scope="function")
 def auth_headers(client: TestClient, engineer_user: User) -> Dict[str, str]:
-    """返回普通工程师的Bearer Token"""
+    """Return engineer user Bearer Token"""
     response = client.post(
         f"{settings.API_V1_PREFIX}/auth/login",
         data={
@@ -836,14 +887,14 @@ def auth_headers(client: TestClient, engineer_user: User) -> Dict[str, str]:
             "password": ENGINEER_CREDENTIALS["password"],
         },
     )
-    assert response.status_code == 200, "工程师账号登录失败"
+    assert response.status_code == 200, "Engineer login failed"
     token = response.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
 
 
 @pytest.fixture(scope="function")
 def pm_auth_headers(client: TestClient, pm_user: User) -> Dict[str, str]:
-    """返回PM账号的Bearer Token"""
+    """Return PM user Bearer Token"""
     response = client.post(
         f"{settings.API_V1_PREFIX}/auth/login",
         data={
@@ -851,14 +902,14 @@ def pm_auth_headers(client: TestClient, pm_user: User) -> Dict[str, str]:
             "password": PM_CREDENTIALS["password"],
         },
     )
-    assert response.status_code == 200, "PM账号登录失败"
+    assert response.status_code == 200, "PM login failed"
     token = response.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
 
 
 @pytest.fixture(scope="function")
 def regular_user_token(client: TestClient, regular_user: User) -> str:
-    """返回普通业务用户的Bearer Token"""
+    """Get regular user Bearer Token"""
     response = client.post(
         f"{settings.API_V1_PREFIX}/auth/login",
         data={
@@ -866,13 +917,13 @@ def regular_user_token(client: TestClient, regular_user: User) -> str:
             "password": REGULAR_USER_CREDENTIALS["password"],
         },
     )
-    assert response.status_code == 200, "普通业务账号登录失败"
+    assert response.status_code == 200, "Regular user login failed"
     return response.json()["access_token"]
 
 
 @pytest.fixture(scope="function")
 def db(db_session: Session) -> Session:
-    """兼容旧测试中引用的 db fixture"""
+    """Alias for db_session fixture for backward compatibility"""
     return db_session
 
 
@@ -901,99 +952,290 @@ from tests.factories import (
 
 @pytest.fixture(scope="function")
 def test_employee() -> Employee:
-    """创建测试员工"""
+    """Create test employee"""
     return EmployeeFactory()
 
 
 @pytest.fixture(scope="function")
 def test_user() -> User:
-    """创建测试用户"""
+    """Create test user"""
     return UserFactory()
 
 
 @pytest.fixture(scope="function")
 def test_admin() -> User:
-    """创建测试管理员"""
+    """Create test admin"""
     return AdminUserFactory()
 
 
 @pytest.fixture(scope="function")
 def test_customer() -> Customer:
-    """创建测试客户"""
+    """Create test customer"""
     return CustomerFactory()
 
 
 @pytest.fixture(scope="function")
 def test_project() -> Project:
-    """创建测试项目（不带客户关联）"""
+    """Create test project (without customer relationship)"""
     return ProjectFactory()
 
 
 @pytest.fixture(scope="function")
 def test_project_with_customer() -> Project:
-    """创建测试项目（带客户关联）"""
+    """Create test project (with customer relationship)"""
     return ProjectWithCustomerFactory()
 
 
 @pytest.fixture(scope="function")
 def test_supplier():
-    """创建测试供应商"""
+    """Create test supplier"""
     return SupplierFactory()
 
 
 @pytest.fixture(scope="function")
 def test_material():
-    """创建测试物料"""
+    """Create test material"""
     return MaterialFactory()
 
 
 @pytest.fixture(scope="function")
 def test_materials():
-    """创建多个测试物料"""
+    """Create multiple test materials"""
     return MaterialFactory.create_batch(5)
 
 
 @pytest.fixture(scope="function")
 def test_purchase_order():
-    """创建测试采购订单"""
+    """Create test purchase order"""
     return PurchaseOrderFactory()
 
 
 @pytest.fixture(scope="function")
 def test_lead():
-    """创建测试销售线索"""
+    """Create test lead"""
     return LeadFactory()
 
 
 @pytest.fixture(scope="function")
 def test_opportunity():
-    """创建测试商机"""
+    """Create test opportunity"""
     return OpportunityFactory()
 
 
 @pytest.fixture(scope="function")
 def test_quote():
-    """创建测试报价单"""
+    """Create test quote"""
     return QuoteFactory()
 
 
 @pytest.fixture(scope="function")
 def test_contract():
-    """创建测试合同"""
+    """Create test contract"""
     return ContractFactory()
 
 
 @pytest.fixture(scope="function")
 def test_budget():
-    """创建测试预算"""
+    """Create test budget"""
     return ProjectBudgetFactory()
 
 
 @pytest.fixture(scope="function")
 def complete_project_setup():
     """
-    创建完整的项目测试数据集
+    Create complete project test dataset
 
-    包含：客户、项目、供应商、物料、BOM
+    Includes: customer, project, supplier, materials, BOM
     """
     return create_complete_project_setup()
+
+
+# ============================================================================
+# Unified Mocking Pattern - External Services
+# ============================================================================
+
+from unittest.mock import MagicMock
+
+
+@pytest.fixture(scope="function")
+def mock_db_session():
+    """
+    提供模拟数据库会话，用于服务层单元测试
+    不需要真实数据库连接，适合快速单元测试
+    """
+    return MagicMock(spec=Session)
+
+
+@pytest.fixture(scope="function")
+def mock_user_simple():
+    """创建简单的模拟用户对象（用于服务测试）"""
+    user = MagicMock()
+    user.id = 1
+    user.username = "test_user"
+    user.real_name = "测试用户"
+    user.department = "测试部门"
+    user.department_id = 1
+    user.is_active = True
+    user.is_superuser = False
+    return user
+
+
+@pytest.fixture(scope="function")
+def mock_project_simple():
+    """创建简单的模拟项目对象（用于服务测试）"""
+    project = MagicMock()
+    project.id = 1
+    project.project_code = "PJ260101001"
+    project.project_name = "测试项目"
+    project.customer_id = 1
+    project.customer_name = "测试客户"
+    project.stage = "S1"
+    project.status = "ST01"
+    project.health = "H1"
+    project.is_active = True
+    return project
+
+
+@pytest.fixture(scope="function")
+def mock_department_simple():
+    """创建简单的模拟部门对象（用于服务测试）"""
+    dept = MagicMock()
+    dept.id = 1
+    dept.dept_code = "DEPT001"
+    dept.dept_name = "测试部门"
+    dept.is_active = True
+    return dept
+
+
+# ---------------------------------------------------------------------------
+# 统一 Mocking 模式 - 外部服务
+# ---------------------------------------------------------------------------
+
+from unittest.mock import MagicMock, Mock
+from io import BytesIO
+
+
+class ExternalServiceMocker:
+    """
+    统一的外部服务 Mock 管理
+
+    支持的 Mock 类型：
+    - HTTP 客户端
+    - Redis 缓存
+    - 文件系统操作
+    - PDF/Excel 生成
+    - 邮件服务
+    - 异步任务执行
+    """
+
+    @staticmethod
+    def mock_redis():
+        """Mock redis client, return empty result or preset data"""
+        return MagicMock()
+
+    @staticmethod
+    def mock_http_client(response_data=None, status_code=200):
+        """Mock HTTP client endpoint, simulate API response"""
+        mock_response = Mock()
+        mock_response.status_code = status_code
+        mock_response.json.return_value = response_data or {}
+        mock_response.text = ""
+        return mock_response
+
+    @staticmethod
+    def mock_pdf_generation():
+        """Mock PDF generation, return BytesIO object"""
+        return BytesIO(b"mock_pdf_content")
+
+    @staticmethod
+    def mock_excel_generation():
+        """Mock Excel generation, return BytesIO object"""
+        return BytesIO(b"mock_excel_content")
+
+    @staticmethod
+    def mock_email_service():
+        """Mock email service, always return success"""
+        mock = Mock()
+        mock.send.return_value = True
+        return mock
+
+    @staticmethod
+    def mock_file_write():
+        """Mock file write operation"""
+        return Mock()
+
+    @staticmethod
+    def mock_redis_get(return_value=None):
+        """Mock Redis GET operation, for cache testing"""
+        return MagicMock(return_value=return_value)
+
+    @staticmethod
+    def mock_redis_set():
+        """Mock Redis SET operation, for cache testing"""
+        return MagicMock()
+
+
+@pytest.fixture(scope="function")
+def external_service_mocker():
+    """
+    Provide unified external service Mock tools
+
+    Usage:
+        mocker = external_service_mocker()
+        http_mock = mocker.mock_http_client({"data": "test"})
+        pdf_mock = mocker.mock_pdf_generation()
+    """
+    return ExternalServiceMocker()
+
+
+@pytest.fixture(scope="function")
+def mock_redis_operations():
+    """
+    Mock all Redis operations for testing without external Redis dependency
+
+    In unit tests, use this fixture instead of real Redis connection
+    """
+    redis_mock = MagicMock()
+    redis_mock.get.return_value = None
+    redis_mock.set.return_value = True
+    redis_mock.delete.return_value = True
+    redis_mock.exists.return_value = False
+    redis_mock.expire.return_value = True
+    return redis_mock
+
+
+@pytest.fixture(scope="function")
+def mock_pdf_excel_export():
+    """
+    Mock PDF/Excel 导出功能
+
+    用于测试导出服务时：
+    - 不生成真实文件
+    - 不依赖真实的 PDF/Excel 库
+    - 验证数据转换逻辑
+    """
+    return BytesIO(b"mock_export_content")
+
+
+@pytest.fixture(scope="function")
+def mock_external_dependencies():
+    """
+    Mock 所有外部依赖，用于纯单元测试
+
+    包含：
+    - Redis
+    - HTTP 客户端
+    - 文件系统
+    - PDF/Excel 生成
+    - 邮件服务
+    - 异步任务
+    """
+    return {
+        "redis": MagicMock(),
+        "http_client": Mock(),
+        "pdf_generator": BytesIO(b""),
+        "excel_generator": BytesIO(b""),
+        "email_service": Mock(send=True),
+        "file_system": Mock(),
+        "async_task": Mock(),
+    }

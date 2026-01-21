@@ -12,7 +12,7 @@ import pytest
 from unittest.mock import MagicMock, patch, Mock
 from datetime import datetime, date, timedelta
 from decimal import Decimal
-import services.excel_template_service
+import app.services.excel_template_service
 
 
 
@@ -23,21 +23,21 @@ class TestExcelTemplateService:
     def test_create_template_excel(self):
         """测试 create_template_excel 函数"""
         # TODO: 实现测试逻辑
-        from services.excel_template_service import create_template_excel
+        from app.services.excel_template_service import create_template_excel
         pass
 
 
     def test_apply_template_styles(self):
         """测试 apply_template_styles 函数"""
         # TODO: 实现测试逻辑
-        from services.excel_template_service import apply_template_styles
+        from app.services.excel_template_service import apply_template_styles
         pass
 
 
     def test_get_template_config(self):
         """测试 get_template_config 函数"""
         # TODO: 实现测试逻辑
-        from services.excel_template_service import get_template_config
+        from app.services.excel_template_service import get_template_config
         pass
 
 

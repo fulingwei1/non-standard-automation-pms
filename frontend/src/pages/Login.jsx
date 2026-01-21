@@ -199,6 +199,14 @@ export default function Login({ onLoginSuccess }) {const _errorCode_1 = null;
           } else if (userData.is_superuser) {
             // 如果没有角色信息但 is_superuser 为 true，默认使用 super_admin
             userRole = "super_admin";
+          } else {
+            // 用户没有分配角色且不是超级管理员，显示警告
+            logger.warn("[Login] 用户没有分配角色:", userData.username);
+            // 清除 token
+            localStorage.removeItem("token");
+            setError("您的账号尚未分配角色，请联系管理员进行角色配置");
+            setLoading(false);
+            return;
           }
 
           const frontendUser = {
@@ -227,21 +235,29 @@ export default function Login({ onLoginSuccess }) {const _errorCode_1 = null;
           return;
         }
       } catch (userErr) {
-        logger.warn("获取用户信息失败，使用备用信息:", userErr);
-        // 如果获取用户信息失败，创建基本用户信息（默认为管理员）
-        const fallbackUser = {
-          id: 1,
-          username: username,
-          name: username,
-          role: "admin",
-          is_superuser: true,
-          isSuperuser: true,
-          department: "系统",
-          roles: ["系统管理员"]
-        };
+        logger.error("获取用户信息失败:", userErr);
+        // 清除已保存的 token，因为无法获取用户信息
+        localStorage.removeItem("token");
 
-        localStorage.setItem("user", JSON.stringify(fallbackUser));
-        onLoginSuccess();
+        // 根据错误类型给出不同提示
+        let userErrMessage = "获取用户信息失败，请重新登录";
+
+        if (userErr.response?.status === 500) {
+          // 服务器内部错误，可能是数据库问题或角色未配置
+          userErrMessage = "系统错误：无法加载用户角色信息，请联系管理员检查账号配置";
+        } else if (userErr.response?.status === 401) {
+          // Token 无效
+          userErrMessage = "登录凭证已过期，请重新登录";
+        } else if (userErr.response?.status === 404) {
+          // 用户不存在
+          userErrMessage = "用户账号不存在或已被删除，请联系管理员";
+        } else if (!userErr.response) {
+          // 网络错误
+          userErrMessage = "网络连接失败，请检查网络后重试";
+        }
+
+        setError(userErrMessage);
+        setLoading(false);
         return;
       }
 

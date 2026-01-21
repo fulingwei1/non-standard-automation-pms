@@ -6,10 +6,10 @@
 """
 
 import pytest
-from fastapi import HTTPException
-from sqlalchemy.orm import Session
+# from fastapi import HTTPException
+# from sqlalchemy.orm import Session
 
-from app.factories import (
+from tests.factories import (
     AcceptanceIssueFactory,
     AcceptanceOrderFactory,
     UserFactory,
@@ -303,7 +303,7 @@ class TestIssueFollowUps:
 @pytest.fixture
 def test_acceptance_order(db_session: Session):
     """创建测试验收单"""
-    from app.factories import ProjectFactory, MachineFactory
+    from tests.factories import ProjectFactory, MachineFactory
 
     project = ProjectFactory.create(project_code="P2025001", stage="S5")
     machine = MachineFactory.create(project=project, machine_code="PN001", stage="S5")

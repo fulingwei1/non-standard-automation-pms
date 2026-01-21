@@ -34,43 +34,52 @@ __all__ = [
 
 def get_sales_data_scope(user: User, db: Session) -> str:
     """
-    Issue 7.1: 获取销售数据权限范围
+    获取销售数据权限范围（基于数据库角色配置）
+
+    完全基于数据库中角色的 data_scope 字段，不再硬编码角色代码。
+    管理员可以在角色管理中配置每个角色的数据权限范围。
 
     Returns:
-        'ALL': 销售总监 - 可以看到所有数据
-        'TEAM': 销售经理 - 可以看到团队数据（同部门或下属）
-        'OWN': 销售 - 只能看到自己的数据
-        'FINANCE_ONLY': 财务 - 只能看到发票和收款数据
+        'ALL': 可以看到所有数据
+        'DEPT': 可以看到部门数据
+        'TEAM': 可以看到团队数据（下属）
+        'PROJECT': 可以看到参与项目的数据
+        'OWN': 只能看到自己的数据
+        'FINANCE_ONLY': 财务专用 - 只能看到发票和收款数据
         'NONE': 无权限
     """
     if user.is_superuser:
         return "ALL"
 
-    # 获取用户所有角色的角色代码
-    role_codes = set()
+    # 使用 DataScopeService 获取用户的数据权限范围
+    from app.services.data_scope_service import DataScopeService
+
+    db_scope = DataScopeService.get_user_data_scope(db, user)
+
+    # 映射数据库的 DataScopeEnum 值到销售模块使用的值
+    # 数据库值: ALL, DEPT, SUBORDINATE, PROJECT, OWN, CUSTOMER
+    scope_mapping = {
+        "ALL": "ALL",
+        "DEPT": "DEPT",
+        "SUBORDINATE": "TEAM",  # 下属 -> 团队
+        "PROJECT": "PROJECT",
+        "OWN": "OWN",
+        "CUSTOMER": "OWN",  # 客户门户降级为个人
+    }
+
+    sales_scope = scope_mapping.get(db_scope, "OWN")
+
+    # 特殊处理：检查是否是财务角色（财务对于发票/收款有特殊权限）
+    # 这里通过检查角色是否有 FINANCE 相关权限来判断
     for user_role in user.roles:
         if user_role.role and user_role.role.is_active:
             role_code = (user_role.role.role_code or "").upper()
-            role_codes.add(role_code)
+            # 财务角色：如果数据范围是 ALL，则保持 ALL；否则标记为 FINANCE_ONLY
+            if role_code in ["FINANCE", "FI", "CFO", "财务", "财务人员", "财务专员", "财务经理", "财务总监"]:
+                if sales_scope != "ALL":
+                    return "FINANCE_ONLY"
 
-    # 优先级：SALES_DIRECTOR > SALES_MANAGER > FINANCE > SALES
-    if any(
-        code in ["SALES_DIRECTOR", "SALESDIRECTOR", "销售总监"] for code in role_codes
-    ):
-        return "ALL"
-    elif any(
-        code in ["SALES_MANAGER", "SALESMANAGER", "销售经理"] for code in role_codes
-    ):
-        return "TEAM"
-    elif any(
-        code in ["FINANCE", "财务", "FINANCE_MANAGER", "财务经理"]
-        for code in role_codes
-    ):
-        return "FINANCE_ONLY"
-    elif any(code in ["SALES", "销售", "PRESALES", "售前"] for code in role_codes):
-        return "OWN"
-
-    return "NONE"
+    return sales_scope
 
 
 def filter_sales_data_by_scope(
@@ -81,7 +90,7 @@ def filter_sales_data_by_scope(
     owner_field_name: str = "owner_id",
 ) -> Any:
     """
-    Issue 7.1: 根据销售数据权限范围过滤查询
+    根据销售数据权限范围过滤查询（基于数据库配置）
 
     Args:
         query: SQLAlchemy 查询对象
@@ -93,45 +102,63 @@ def filter_sales_data_by_scope(
     Returns:
         过滤后的查询对象
     """
+
+    from app.models.organization import Department
+    from app.services.data_scope_service import DataScopeService
+
     scope = get_sales_data_scope(user, db)
+    owner_field = getattr(model_class, owner_field_name, None)
 
     if scope == "ALL":
-        # 销售总监：不进行任何过滤
+        # 全部可见：不进行任何过滤
         return query
-    elif scope == "TEAM":
-        # 销售经理：可以看到团队数据（同部门或下属）
-        from app.models.organization import Department
 
-        from ..models.user import User
-
-        # 获取用户部门
-        if user.department:
+    elif scope == "DEPT":
+        # 部门可见：同部门用户的数据
+        if user.department and owner_field is not None:
             dept = (
                 db.query(Department)
                 .filter(Department.dept_name == user.department)
                 .first()
             )
             if dept:
-                # 同部门的所有用户ID
+                from ..models.user import User as UserModel
                 dept_users = (
-                    db.query(User).filter(User.department == user.department).all()
+                    db.query(UserModel).filter(UserModel.department == user.department).all()
                 )
                 dept_user_ids = [u.id for u in dept_users]
-                # 过滤：负责人是同部门的用户，或者是当前用户
-                owner_field = getattr(model_class, owner_field_name)
                 return query.filter(owner_field.in_(dept_user_ids + [user.id]))
+        # 无部门信息，降级为 OWN
+        if owner_field is not None:
+            return query.filter(owner_field == user.id)
+        return query.filter(False)
 
-        # 如果没有部门信息，降级为OWN
-        owner_field = getattr(model_class, owner_field_name)
-        return query.filter(owner_field == user.id)
+    elif scope == "TEAM":
+        # 团队可见：自己 + 直接下属的数据
+        if owner_field is not None:
+            subordinate_ids = DataScopeService.get_subordinate_ids(db, user.id)
+            allowed_user_ids = list(subordinate_ids | {user.id})
+            return query.filter(owner_field.in_(allowed_user_ids))
+        return query.filter(False)
+
+    elif scope == "PROJECT":
+        # 项目可见：参与项目相关的数据
+        # 对于销售数据，降级为 OWN（销售数据通常不按项目划分）
+        if owner_field is not None:
+            return query.filter(owner_field == user.id)
+        return query.filter(False)
+
     elif scope == "OWN":
-        # 销售：只能看到自己的数据
-        owner_field = getattr(model_class, owner_field_name)
-        return query.filter(owner_field == user.id)
+        # 个人可见：只能看到自己的数据
+        if owner_field is not None:
+            return query.filter(owner_field == user.id)
+        return query.filter(False)
+
     elif scope == "FINANCE_ONLY":
-        # 财务：对于非发票/收款数据，返回空结果
-        # 这个函数主要用于线索/商机/报价/合同，发票和收款有单独的过滤逻辑
-        return query.filter(False)  # 返回空结果
+        # 财务专用：对于非发票/收款数据，返回空结果
+        # 发票和收款使用 filter_sales_finance_data_by_scope
+        return query.filter(False)
+
     else:
         # 无权限：返回空结果
         return query.filter(False)
@@ -145,54 +172,69 @@ def filter_sales_finance_data_by_scope(
     owner_field_name: str = "owner_id",
 ) -> Any:
     """
-    Issue 7.1: 财务数据权限过滤（发票和收款）
-    财务可以看到所有发票和收款数据
+    财务数据权限过滤（发票和收款）
+
+    财务角色可以看到所有发票和收款数据，其他角色按数据权限范围过滤。
     """
+    from app.models.organization import Department
+    from app.services.data_scope_service import DataScopeService
+
     scope = get_sales_data_scope(user, db)
+    owner_field = getattr(model_class, owner_field_name, None)
 
     if scope in ["ALL", "FINANCE_ONLY"]:
-        # 销售总监和财务：可以看到所有发票和收款数据
+        # 全部可见 或 财务专用：可以看到所有发票和收款数据
         return query
-    elif scope == "TEAM":
-        # 销售经理：可以看到团队数据
-        from app.models.organization import Department
 
-        if user.department:
+    elif scope == "DEPT":
+        # 部门可见
+        if user.department and owner_field is not None:
             dept = (
                 db.query(Department)
                 .filter(Department.dept_name == user.department)
                 .first()
             )
             if dept:
-                from ..models.user import User
-
+                from ..models.user import User as UserModel
                 dept_users = (
-                    db.query(User).filter(User.department == user.department).all()
+                    db.query(UserModel).filter(UserModel.department == user.department).all()
                 )
                 dept_user_ids = [u.id for u in dept_users]
-                owner_field = getattr(model_class, owner_field_name)
                 return query.filter(owner_field.in_(dept_user_ids + [user.id]))
+        if owner_field is not None:
+            return query.filter(owner_field == user.id)
+        return query.filter(False)
 
-        owner_field = getattr(model_class, owner_field_name)
-        return query.filter(owner_field == user.id)
-    elif scope == "OWN":
-        # 销售：只能看到自己的数据
-        owner_field = getattr(model_class, owner_field_name)
-        return query.filter(owner_field == user.id)
+    elif scope == "TEAM":
+        # 团队可见：自己 + 直接下属
+        if owner_field is not None:
+            subordinate_ids = DataScopeService.get_subordinate_ids(db, user.id)
+            allowed_user_ids = list(subordinate_ids | {user.id})
+            return query.filter(owner_field.in_(allowed_user_ids))
+        return query.filter(False)
+
+    elif scope in ["OWN", "PROJECT"]:
+        # 个人可见 或 项目可见（销售数据降级为个人）
+        if owner_field is not None:
+            return query.filter(owner_field == user.id)
+        return query.filter(False)
+
     else:
         return query.filter(False)
 
 
 def check_sales_create_permission(user: User, db: Session) -> bool:
     """
-    Issue 7.2: 检查销售数据创建权限
-    创建权限：销售、销售经理、销售总监
+    检查销售数据创建权限
+
+    创建权限：有数据范围权限的用户都可以创建
     """
     if user.is_superuser:
         return True
 
     scope = get_sales_data_scope(user, db)
-    return scope in ["ALL", "TEAM", "OWN"]
+    # 除了 FINANCE_ONLY 和 NONE，其他都可以创建
+    return scope in ["ALL", "DEPT", "TEAM", "PROJECT", "OWN"]
 
 
 def check_sales_edit_permission(
@@ -202,20 +244,23 @@ def check_sales_edit_permission(
     entity_owner_id: Optional[int] = None,
 ) -> bool:
     """
-    Issue 7.2: 检查销售数据编辑权限
-    编辑权限：创建人、负责人、销售经理、销售总监
+    检查销售数据编辑权限
+
+    编辑权限规则：
+    - ALL/DEPT/TEAM: 可以编辑权限范围内的所有数据
+    - PROJECT/OWN: 只能编辑自己创建或负责的数据
     """
     if user.is_superuser:
         return True
 
     scope = get_sales_data_scope(user, db)
 
-    # 销售总监和销售经理可以编辑所有数据
-    if scope in ["ALL", "TEAM"]:
+    # ALL、DEPT、TEAM 可以编辑范围内的数据
+    if scope in ["ALL", "DEPT", "TEAM"]:
         return True
 
-    # 销售只能编辑自己创建或负责的数据
-    if scope == "OWN":
+    # PROJECT、OWN 只能编辑自己创建或负责的数据
+    if scope in ["PROJECT", "OWN"]:
         if entity_created_by and entity_created_by == user.id:
             return True
         if entity_owner_id and entity_owner_id == user.id:
@@ -231,15 +276,18 @@ def check_sales_delete_permission(
     entity_created_by: Optional[int] = None,
 ) -> bool:
     """
-    Issue 7.2: 检查销售数据删除权限
-    删除权限：仅创建人、销售总监、管理员
+    检查销售数据删除权限
+
+    删除权限规则：
+    - ALL: 可以删除所有数据
+    - 其他: 只有创建人可以删除自己的数据
     """
     if user.is_superuser:
         return True
 
     scope = get_sales_data_scope(user, db)
 
-    # 销售总监可以删除所有数据
+    # ALL 可以删除所有数据
     if scope == "ALL":
         return True
 
@@ -302,29 +350,26 @@ def require_sales_delete_permission(entity_created_by: Optional[int] = None):
     return permission_checker
 
 
-def has_sales_assessment_access(user: User) -> bool:
-    """检查用户是否有技术评估权限"""
+def has_sales_assessment_access(user: User, db: Session = None) -> bool:
+    """
+    检查用户是否有技术评估权限
+
+    基于数据权限范围判断：
+    - ALL, DEPT, TEAM, PROJECT, OWN 都有评估权限
+    - FINANCE_ONLY 没有评估权限（财务不参与技术评估）
+    """
     if user.is_superuser:
         return True
 
-    # 定义有技术评估权限的角色代码
-    assessment_roles = [
-        "sales",
-        "sales_engineer",
-        "sales_manager",
-        "sales_director",
-        "presales_engineer",
-        "presales_manager",
-        "te",  # 技术工程师
-        "technical_engineer",
-        "admin",
-        "super_admin",
-    ]
+    # 如果提供了 db，使用数据权限范围判断
+    if db:
+        scope = get_sales_data_scope(user, db)
+        # 除了财务和无权限，其他都可以做技术评估
+        return scope in ["ALL", "DEPT", "TEAM", "PROJECT", "OWN"]
 
-    # 检查用户角色
+    # 兼容旧代码：没有 db 时，检查用户是否有任何活跃角色
     for user_role in user.roles:
-        role_code = user_role.role.role_code.lower() if user_role.role.role_code else ""
-        if role_code in assessment_roles:
+        if user_role.role and user_role.role.is_active:
             return True
 
     return False
@@ -333,8 +378,11 @@ def has_sales_assessment_access(user: User) -> bool:
 def require_sales_assessment_access():
     """技术评估权限检查依赖"""
 
-    async def assessment_checker(current_user: User = Depends(get_current_active_user)):
-        if not has_sales_assessment_access(current_user):
+    async def assessment_checker(
+        current_user: User = Depends(get_current_active_user),
+        db: Session = Depends(get_db),
+    ):
+        if not has_sales_assessment_access(current_user, db):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="您没有权限进行技术评估"
             )
@@ -345,42 +393,25 @@ def require_sales_assessment_access():
 
 def has_sales_approval_access(user: User, db: Session) -> bool:
     """
-    检查用户是否有销售审批权限
-    包括：报价审批、合同审批、发票审批
+    检查用户是否有销售审批权限（报价审批、合同审批、发票审批）
+
+    基于数据权限范围判断：
+    - ALL: 高级管理层，有全部审批权限
+    - DEPT: 部门经理，有部门级审批权限
+    - TEAM: 团队负责人，有团队级审批权限
+    - 其他: 没有审批权限
     """
     if user.is_superuser:
         return True
 
-    # 定义有审批权限的角色代码
-    approval_roles = [
-        "sales_manager",  # 销售经理
-        "销售经理",
-        "sales_director",  # 销售总监
-        "销售总监",
-        "finance_manager",  # 财务经理
-        "财务经理",
-        "finance_director",  # 财务总监
-        "财务总监",
-        "gm",  # 总经理
-        "总经理",
-        "chairman",  # 董事长
-        "董事长",
-        "admin",  # 系统管理员
-        "super_admin",  # 超级管理员
-    ]
-
-    # 检查用户角色
-    for user_role in user.roles:
-        role_code = user_role.role.role_code.lower() if user_role.role.role_code else ""
-        if role_code in approval_roles:
-            return True
-
-    return False
+    scope = get_sales_data_scope(user, db)
+    # 只有 ALL、DEPT、TEAM 级别的用户有审批权限
+    return scope in ["ALL", "DEPT", "TEAM"]
 
 
 def check_sales_approval_permission(user: User, approval: Any, db: Session) -> bool:
     """
-    检查销售审批权限
+    检查销售审批权限（基于数据权限范围）
 
     Args:
         user: 当前用户
@@ -389,11 +420,15 @@ def check_sales_approval_permission(user: User, approval: Any, db: Session) -> b
 
     Returns:
         bool: 是否有审批权限
+
+    审批级别与数据权限范围映射：
+    - 一级审批(level=1): DEPT, TEAM 级别用户可以审批
+    - 二级及以上审批(level>=2): 只有 ALL 级别用户可以审批
     """
     if user.is_superuser:
         return True
 
-    # 检查用户是否有审批权限角色
+    # 检查用户是否有基本审批权限
     if not has_sales_approval_access(user, db):
         return False
 
@@ -404,32 +439,18 @@ def check_sales_approval_permission(user: User, approval: Any, db: Session) -> b
     # 如果指定了审批角色，检查用户是否具有该角色
     if approval_role:
         for user_role in user.roles:
-            if user_role.role.role_code == approval_role:
+            if user_role.role and user_role.role.role_code == approval_role:
                 return True
 
-    # 根据审批级别检查权限
+    # 根据数据权限范围和审批级别判断
+    scope = get_sales_data_scope(user, db)
+
     if approval_level == 1:
-        # 一级审批：销售经理、财务经理
-        level1_roles = ["sales_manager", "销售经理", "finance_manager", "财务经理"]
-        for user_role in user.roles:
-            if user_role.role.role_code.lower() in level1_roles:
-                return True
-
+        # 一级审批：DEPT, TEAM, ALL 都可以
+        return scope in ["ALL", "DEPT", "TEAM"]
     elif approval_level >= 2:
-        # 二级及以上审批：销售总监、财务总监、总经理
-        level2_roles = [
-            "sales_director",
-            "销售总监",
-            "finance_director",
-            "财务总监",
-            "gm",
-            "总经理",
-            "chairman",
-            "董事长",
-        ]
-        for user_role in user.roles:
-            if user_role.role.role_code.lower() in level2_roles:
-                return True
+        # 二级及以上审批：只有 ALL 级别可以
+        return scope == "ALL"
 
     return False
 

@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
-from .common import BaseSchema, TimestampSchema
+from .common import TimestampSchema
 
 
 def validate_password_strength(password: str) -> str:
@@ -116,7 +116,10 @@ class RoleCreate(BaseModel):
     role_name: str = Field(max_length=100, description="角色名称")
     description: Optional[str] = None
     data_scope: str = Field(default="OWN", description="数据权限范围")
+    parent_id: Optional[int] = Field(default=None, description="父角色ID（继承）")
     permission_ids: Optional[List[int]] = Field(default_factory=list)
+    nav_groups: Optional[List[str]] = Field(default=None, description="导航组配置")
+    ui_config: Optional[Dict[str, Any]] = Field(default=None, description="UI配置")
 
 
 class RoleUpdate(BaseModel):
@@ -124,8 +127,11 @@ class RoleUpdate(BaseModel):
     role_name: Optional[str] = None
     description: Optional[str] = None
     data_scope: Optional[str] = None
+    parent_id: Optional[int] = Field(default=None, description="父角色ID（继承）")
     is_active: Optional[bool] = None
     permission_ids: Optional[List[int]] = None
+    nav_groups: Optional[List[str]] = Field(default=None, description="导航组配置")
+    ui_config: Optional[Dict[str, Any]] = Field(default=None, description="UI配置")
 
 
 class RoleResponse(TimestampSchema):
@@ -135,9 +141,14 @@ class RoleResponse(TimestampSchema):
     role_name: str
     description: Optional[str] = None
     data_scope: str
+    parent_id: Optional[int] = Field(default=None, description="父角色ID")
+    parent_name: Optional[str] = Field(default=None, description="父角色名称")
     is_system: bool = False
     is_active: bool = True
+    sort_order: int = Field(default=0, description="排序")
     permissions: List[str] = Field(default_factory=list)
+    permission_count: int = Field(default=0, description="直接权限数量")
+    inherited_permission_count: int = Field(default=0, description="继承权限数量")
     nav_groups: Optional[List[str]] = Field(default=None, description="导航组配置")
     ui_config: Optional[Dict[str, Any]] = Field(default=None, description="UI配置")
 
@@ -157,3 +168,114 @@ class PermissionResponse(TimestampSchema):
 class UserRoleAssign(BaseModel):
     """用户角色分配"""
     role_ids: List[int] = Field(default_factory=list, description="角色ID列表")
+
+
+# ============================================================
+# 角色模板 Schemas
+# ============================================================
+
+class RoleTemplateCreate(BaseModel):
+    """创建角色模板"""
+    template_code: str = Field(max_length=50, description="模板编码")
+    template_name: str = Field(max_length=100, description="模板名称")
+    description: Optional[str] = None
+    data_scope: str = Field(default="OWN", description="数据权限范围")
+    permission_ids: Optional[List[int]] = Field(default_factory=list, description="权限ID列表")
+    sort_order: int = Field(default=0, description="排序")
+
+
+class RoleTemplateUpdate(BaseModel):
+    """更新角色模板"""
+    template_name: Optional[str] = None
+    description: Optional[str] = None
+    data_scope: Optional[str] = None
+    permission_ids: Optional[List[int]] = None
+    is_active: Optional[bool] = None
+    sort_order: Optional[int] = None
+
+
+class RoleTemplateResponse(TimestampSchema):
+    """角色模板响应"""
+    id: int
+    template_code: str
+    template_name: str
+    description: Optional[str] = None
+    data_scope: str
+    permission_ids: List[int] = Field(default_factory=list)
+    is_active: bool = True
+    sort_order: int = 0
+
+
+# ============================================================
+# 角色对比 Schemas
+# ============================================================
+
+class RoleComparisonRequest(BaseModel):
+    """角色对比请求"""
+    role_ids: List[int] = Field(min_length=2, max_length=5, description="要对比的角色ID列表（2-5个）")
+
+
+class RoleComparisonItem(BaseModel):
+    """角色对比项"""
+    role_id: int
+    role_code: str
+    role_name: str
+    data_scope: str
+    permissions: List[str] = Field(default_factory=list)
+    permission_ids: List[int] = Field(default_factory=list)
+
+
+class RoleComparisonResponse(BaseModel):
+    """角色对比响应"""
+    roles: List[RoleComparisonItem]
+    common_permissions: List[str] = Field(default_factory=list, description="共同拥有的权限")
+    diff_permissions: Dict[str, List[str]] = Field(default_factory=dict, description="差异权限（角色ID -> 独有权限列表）")
+
+
+# ============================================================
+# 数据权限规则 Schemas
+# ============================================================
+
+class DataScopeRuleCreate(BaseModel):
+    """创建数据权限规则"""
+    role_id: int = Field(description="角色ID")
+    rule_type: str = Field(description="规则类型：INCLUDE/EXCLUDE")
+    target_type: str = Field(description="目标类型：DEPARTMENT/PROJECT/USER")
+    target_id: int = Field(description="目标ID")
+
+
+class DataScopeRuleResponse(TimestampSchema):
+    """数据权限规则响应"""
+    id: int
+    role_id: int
+    rule_type: str
+    target_type: str
+    target_id: int
+    target_name: Optional[str] = Field(default=None, description="目标名称（冗余）")
+    is_active: bool = True
+
+
+class RoleWithFullPermissions(BaseModel):
+    """完整权限的角色响应（用于角色详情）"""
+    id: int
+    role_code: str
+    role_name: str
+    description: Optional[str] = None
+    data_scope: str
+    parent_id: Optional[int] = None
+    parent_name: Optional[str] = None
+    is_system: bool = False
+    is_active: bool = True
+    sort_order: int = 0
+
+    # 权限详情
+    direct_permissions: List[PermissionResponse] = Field(default_factory=list, description="直接分配的权限")
+    inherited_permissions: List[PermissionResponse] = Field(default_factory=list, description="继承的权限")
+
+    # 数据权限规则
+    data_scope_rules: List[DataScopeRuleResponse] = Field(default_factory=list, description="自定义数据权限规则")
+
+    # 前端配置
+    nav_groups: Optional[List[str]] = None
+    ui_config: Optional[Dict[str, Any]] = None
+

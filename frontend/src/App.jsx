@@ -11,6 +11,7 @@ import zhCN from "antd/locale/zh_CN";
 import ErrorBoundary from "./components/common/ErrorBoundary";
 import { MainLayout } from "./components/layout/MainLayout";
 import { AppRoutes } from "./routes/routeConfig";
+import { PermissionProvider } from "./context/PermissionContext";
 
 // Pages
 import Login from "./pages/Login";
@@ -173,9 +174,11 @@ function App() {
             <Route
               path="*"
               element={
-              <MainLayout onLogout={handleLogout}>
+              <PermissionProvider>
+                <MainLayout onLogout={handleLogout}>
                     <AppRoutes />
-              </MainLayout>
+                </MainLayout>
+              </PermissionProvider>
               } />)
 
             }

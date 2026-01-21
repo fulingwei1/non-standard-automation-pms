@@ -7,7 +7,7 @@
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 
-from app.models.enums import CompletionMethodEnum, StageStatusEnum
+from app.models.enums import StageStatusEnum
 from app.models.project import Project
 from app.models.stage_instance import ProjectNodeInstance
 
@@ -82,6 +82,9 @@ class NodeOperationsMixin:
         if node.status not in [StageStatusEnum.PENDING.value, StageStatusEnum.IN_PROGRESS.value]:
             raise ValueError(f"节点当前状态为 {node.status}，无法完成")
 
+        # 检查子任务是否全部完成
+        self._check_tasks_completion(node)
+
         # 验证完成条件
         self._validate_node_completion(node, attachments, approval_record_id)
 
@@ -124,6 +127,36 @@ class NodeOperationsMixin:
 
         node.status = StageStatusEnum.SKIPPED.value
         node.remark = reason or node.remark
+
+        self.db.flush()
+        return node
+
+    def assign_node(
+        self,
+        node_instance_id: int,
+        assignee_id: int,
+        auto_complete_on_tasks: bool = True,
+    ) -> ProjectNodeInstance:
+        """
+        分配节点负责人
+
+        Args:
+            node_instance_id: 节点实例ID
+            assignee_id: 负责人ID
+            auto_complete_on_tasks: 子任务全部完成时是否自动完成节点
+
+        Returns:
+            ProjectNodeInstance: 更新后的节点实例
+        """
+        node = self.db.query(ProjectNodeInstance).filter(
+            ProjectNodeInstance.id == node_instance_id
+        ).first()
+
+        if not node:
+            raise ValueError(f"节点实例 {node_instance_id} 不存在")
+
+        node.assignee_id = assignee_id
+        node.auto_complete_on_tasks = auto_complete_on_tasks
 
         self.db.flush()
         return node

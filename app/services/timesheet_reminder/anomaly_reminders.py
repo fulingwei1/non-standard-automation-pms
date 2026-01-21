@@ -21,6 +21,7 @@ from app.models.notification import Notification
 from app.models.timesheet import Timesheet
 from app.models.user import User
 from app.services.timesheet_quality_service import TimesheetQualityService
+from app.services.timesheet_reminder.base import create_timesheet_notification
 
 logger = logging.getLogger(__name__)
 

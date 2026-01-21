@@ -27,9 +27,17 @@ from app.schemas.shortage import (
     MaterialArrivalResponse,
 )
 
+from app.services.data_scope_service import DataScopeConfig
+
 from .arrival_helpers import generate_arrival_no
 
 router = APIRouter()
+
+# 到货跟踪数据权限配置（无直接项目字段，仅按创建人过滤）
+ARRIVAL_DATA_SCOPE_CONFIG = DataScopeConfig(
+    owner_field=None,  # MaterialArrival 没有 created_by 字段
+    project_field=None,  # 无直接项目关联
+)
 
 
 @router.post("/shortage/arrivals", response_model=MaterialArrivalResponse, status_code=status.HTTP_201_CREATED)

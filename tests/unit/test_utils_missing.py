@@ -481,7 +481,6 @@ class TestWeChatClient:
         mock_get.assert_not_called()
 
     @patch('app.utils.wechat_client.requests.post')
-    @patch('app.utils.wechat_client.requests.post')
     @patch('app.utils.wechat_client.WeChatClient.get_access_token')
     def test_send_message_success(self, mock_get_token, mock_post):
         """Test send_message success"""

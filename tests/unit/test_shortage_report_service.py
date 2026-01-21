@@ -13,7 +13,7 @@ from unittest.mock import MagicMock, patch, Mock
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from sqlalchemy.orm import Session
-import services.shortage_report_service
+import app.services.shortage_report_service
 
 
 
@@ -24,49 +24,49 @@ class TestShortageReportService:
     def test_calculate_alert_statistics(self):
         """测试 calculate_alert_statistics 函数"""
         # TODO: 实现测试逻辑
-        from services.shortage_report_service import calculate_alert_statistics
+        from app.services.shortage_report_service import calculate_alert_statistics
         pass
 
 
     def test_calculate_report_statistics(self):
         """测试 calculate_report_statistics 函数"""
         # TODO: 实现测试逻辑
-        from services.shortage_report_service import calculate_report_statistics
+        from app.services.shortage_report_service import calculate_report_statistics
         pass
 
 
     def test_calculate_kit_statistics(self):
         """测试 calculate_kit_statistics 函数"""
         # TODO: 实现测试逻辑
-        from services.shortage_report_service import calculate_kit_statistics
+        from app.services.shortage_report_service import calculate_kit_statistics
         pass
 
 
     def test_calculate_arrival_statistics(self):
         """测试 calculate_arrival_statistics 函数"""
         # TODO: 实现测试逻辑
-        from services.shortage_report_service import calculate_arrival_statistics
+        from app.services.shortage_report_service import calculate_arrival_statistics
         pass
 
 
     def test_calculate_response_time_statistics(self):
         """测试 calculate_response_time_statistics 函数"""
         # TODO: 实现测试逻辑
-        from services.shortage_report_service import calculate_response_time_statistics
+        from app.services.shortage_report_service import calculate_response_time_statistics
         pass
 
 
     def test_calculate_stoppage_statistics(self):
         """测试 calculate_stoppage_statistics 函数"""
         # TODO: 实现测试逻辑
-        from services.shortage_report_service import calculate_stoppage_statistics
+        from app.services.shortage_report_service import calculate_stoppage_statistics
         pass
 
 
     def test_build_daily_report_data(self):
         """测试 build_daily_report_data 函数"""
         # TODO: 实现测试逻辑
-        from services.shortage_report_service import build_daily_report_data
+        from app.services.shortage_report_service import build_daily_report_data
         pass
 
 

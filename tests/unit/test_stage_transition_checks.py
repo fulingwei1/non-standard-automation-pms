@@ -13,7 +13,7 @@ from unittest.mock import MagicMock, patch, Mock
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from sqlalchemy.orm import Session
-import services.stage_transition_checks
+import app.services.stage_transition_checks
 
 
 
@@ -24,49 +24,49 @@ class TestStageTransitionChecks:
     def test_check_s3_to_s4_transition(self):
         """测试 check_s3_to_s4_transition 函数"""
         # TODO: 实现测试逻辑
-        from services.stage_transition_checks import check_s3_to_s4_transition
+        from app.services.stage_transition_checks import check_s3_to_s4_transition
         pass
 
 
     def test_check_s4_to_s5_transition(self):
         """测试 check_s4_to_s5_transition 函数"""
         # TODO: 实现测试逻辑
-        from services.stage_transition_checks import check_s4_to_s5_transition
+        from app.services.stage_transition_checks import check_s4_to_s5_transition
         pass
 
 
     def test_check_s5_to_s6_transition(self):
         """测试 check_s5_to_s6_transition 函数"""
         # TODO: 实现测试逻辑
-        from services.stage_transition_checks import check_s5_to_s6_transition
+        from app.services.stage_transition_checks import check_s5_to_s6_transition
         pass
 
 
     def test_check_s7_to_s8_transition(self):
         """测试 check_s7_to_s8_transition 函数"""
         # TODO: 实现测试逻辑
-        from services.stage_transition_checks import check_s7_to_s8_transition
+        from app.services.stage_transition_checks import check_s7_to_s8_transition
         pass
 
 
     def test_check_s8_to_s9_transition(self):
         """测试 check_s8_to_s9_transition 函数"""
         # TODO: 实现测试逻辑
-        from services.stage_transition_checks import check_s8_to_s9_transition
+        from app.services.stage_transition_checks import check_s8_to_s9_transition
         pass
 
 
     def test_get_stage_status_mapping(self):
         """测试 get_stage_status_mapping 函数"""
         # TODO: 实现测试逻辑
-        from services.stage_transition_checks import get_stage_status_mapping
+        from app.services.stage_transition_checks import get_stage_status_mapping
         pass
 
 
     def test_execute_stage_transition(self):
         """测试 execute_stage_transition 函数"""
         # TODO: 实现测试逻辑
-        from services.stage_transition_checks import execute_stage_transition
+        from app.services.stage_transition_checks import execute_stage_transition
         pass
 
 

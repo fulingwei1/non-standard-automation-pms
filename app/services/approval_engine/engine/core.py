@@ -159,6 +159,10 @@ class ApprovalEngineCore:
             # 没有下一节点，审批完成
             instance.status = "APPROVED"
             instance.completed_at = datetime.now()
+
+            # 调用适配器的通过回调
+            self._call_adapter_callback(instance, "on_approved")
+
             self.notify.notify_approved(instance)
             return
 
@@ -167,6 +171,23 @@ class ApprovalEngineCore:
         instance.current_node_id = next_node.id
 
         self._create_node_tasks(instance, next_node, context)
+
+    def _call_adapter_callback(
+        self,
+        instance: ApprovalInstance,
+        callback_name: str,
+    ):
+        """调用适配器回调方法"""
+        from ..adapters import get_adapter
+
+        try:
+            adapter = get_adapter(instance.entity_type, self.db)
+            callback = getattr(adapter, callback_name, None)
+            if callback:
+                callback(instance.entity_id, instance)
+        except ValueError:
+            # 未配置适配器的业务类型，忽略
+            pass
 
     def _return_to_node(
         self,

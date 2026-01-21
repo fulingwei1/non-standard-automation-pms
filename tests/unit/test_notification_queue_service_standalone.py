@@ -6,7 +6,6 @@
 from unittest.mock import MagicMock, patch
 
 
-
 class TestEnqueueNotification:
     """测试通知入队"""
 
@@ -69,7 +68,10 @@ class TestDequeueNotification:
     def test_dequeue_blocking(self, mock_get_redis):
         """阻塞模式出队"""
         mock_redis = MagicMock()
-        mock_redis.blpop.return_value = [b'{"notification_id": 123}']
+        mock_redis.blpop.return_value = [
+            b"notification:dispatch:queue",
+            b'{"notification_id": 123}',
+        ]
 
         mock_get_redis.return_value = mock_redis
 
@@ -80,7 +82,7 @@ class TestDequeueNotification:
         assert result is not None
         assert isinstance(result, dict)
         assert result["notification_id"] == 123
-        mock_redis.blpop.assert_called_once()
+        mock_redis.blpop.assert_called_once_with("notification:dispatch:queue", 5)
 
     @patch("app.services.notification_queue.get_redis_client")
     def test_dequeue_non_blocking(self, mock_get_redis):
@@ -131,7 +133,10 @@ class TestDequeueNotification:
     def test_custom_timeout_param(self, mock_get_redis):
         """自定义超时参数"""
         mock_redis = MagicMock()
-        mock_redis.blpop.return_value = [b'{"notification_id": 123}']
+        mock_redis.blpop.return_value = [
+            b"notification:dispatch:queue",
+            b'{"notification_id": 123}',
+        ]
 
         mock_get_redis.return_value = mock_redis
 

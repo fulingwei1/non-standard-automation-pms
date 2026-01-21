@@ -91,7 +91,7 @@ class AutoFixMixin:
             try:
                 if suggestion['type'] == 'auto_select_collaborators':
                     # 自动抽取合作人员
-                    from app.services.collaboration_rating_service import (
+                    from app.services.collaboration_rating import (
                         CollaborationRatingService,
                     )
                     collab_service = CollaborationRatingService(self.db)

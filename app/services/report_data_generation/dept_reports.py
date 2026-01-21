@@ -42,8 +42,8 @@ class DeptReportMixin:
 
         # 部门基本信息
         summary = {
-            "department_name": department.name,
-            "department_code": department.code if hasattr(department, 'code') else "",
+            "department_name": department.dept_name,
+            "department_code": department.dept_code if hasattr(department, 'dept_code') else "",
             "period_start": start_date.isoformat(),
             "period_end": end_date.isoformat()
         }
@@ -135,16 +135,16 @@ class DeptReportMixin:
 
         # 部门基本信息
         summary = {
-            "department_name": department.name,
-            "department_code": department.code if hasattr(department, 'code') else "",
+            "department_name": department.dept_name,
+            "department_code": department.dept_code if hasattr(department, 'dept_code') else "",
             "period_start": start_date.isoformat(),
             "period_end": end_date.isoformat(),
             "report_type": "月报"
         }
 
-        # 获取部门人员
+        # 获取部门人员（User 模型只有 department 字符串字段）
         dept_members = db.query(User).filter(
-            User.department_id == department_id,
+            User.department == department.dept_name,
             User.is_active == True
         ).all()
         dept_user_ids = [u.id for u in dept_members]

@@ -65,12 +65,14 @@ class TestSalesTeamService:
         self, sales_team_service, test_sales_user
     ):
         target = SalesTarget(
+            target_scope="PERSONAL",
             user_id=test_sales_user.id,
             target_type="LEAD_COUNT",
             target_value=Decimal("100"),
             target_period="MONTHLY",
             period_value="2024-01",
             status="ACTIVE",
+            created_by=test_sales_user.id,
         )
         sales_team_service.db.add(target)
         sales_team_service.db.commit()
@@ -87,12 +89,14 @@ class TestSalesTeamService:
         self, sales_team_service, test_sales_user
     ):
         target = SalesTarget(
+            target_scope="PERSONAL",
             user_id=test_sales_user.id,
             target_type="OPPORTUNITY_COUNT",
             target_value=Decimal("50"),
             target_period="MONTHLY",
             period_value="2024-01",
             status="ACTIVE",
+            created_by=test_sales_user.id,
         )
         sales_team_service.db.add(target)
         sales_team_service.db.commit()
@@ -109,12 +113,14 @@ class TestSalesTeamService:
         self, sales_team_service, test_sales_user
     ):
         target = SalesTarget(
+            target_scope="PERSONAL",
             user_id=test_sales_user.id,
             target_type="CONTRACT_AMOUNT",
             target_value=Decimal("1000000"),
             target_period="MONTHLY",
             period_value="2024-01",
             status="ACTIVE",
+            created_by=test_sales_user.id,
         )
         sales_team_service.db.add(target)
         sales_team_service.db.commit()
@@ -131,12 +137,14 @@ class TestSalesTeamService:
         self, sales_team_service, test_sales_user
     ):
         target = SalesTarget(
+            target_scope="PERSONAL",
             user_id=test_sales_user.id,
             target_type="LEAD_COUNT",
             target_value=Decimal("0"),
             target_period="MONTHLY",
             period_value="2024-01",
             status="ACTIVE",
+            created_by=test_sales_user.id,
         )
         sales_team_service.db.add(target)
         sales_team_service.db.commit()
@@ -152,12 +160,14 @@ class TestSalesTeamService:
         self, sales_team_service, test_sales_user
     ):
         target = SalesTarget(
+            target_scope="PERSONAL",
             user_id=test_sales_user.id,
             target_type="COLLECTION_AMOUNT",
             target_value=Decimal("500000"),
             target_period="MONTHLY",
             period_value="2024-01",
             status="ACTIVE",
+            created_by=test_sales_user.id,
         )
         sales_team_service.db.add(target)
         sales_team_service.db.commit()
@@ -182,12 +192,14 @@ class TestSalesTeamService:
         self, sales_team_service, test_sales_user
     ):
         target = SalesTarget(
+            target_scope="PERSONAL",
             user_id=test_sales_user.id,
             target_type="CONTRACT_AMOUNT",
             target_value=Decimal("1000000"),
             target_period="MONTHLY",
             period_value="2024-01",
             status="ACTIVE",
+            created_by=test_sales_user.id,
         )
         sales_team_service.db.add(target)
         sales_team_service.db.commit()
@@ -197,47 +209,134 @@ class TestSalesTeamService:
         )
 
         assert test_sales_user.id in result
-        assert "MONTHLY" in result[test_sales_user.id]
+        assert "monthly" in result[test_sales_user.id]  # 注意：返回的是小写 "monthly"
 
-    def test_get_recent_followups_empty_user_ids(self, sales_team_service):
-        result = sales_team_service.get_recent_followups([])
+    def test_get_followup_statistics_map_empty_user_ids(self, sales_team_service):
+        """测试空用户ID列表的跟进统计"""
+        result = sales_team_service.get_followup_statistics_map([], None, None)
         assert result == {}
 
-    def test_get_recent_followups_success(self, sales_team_service, test_sales_user):
-        result = sales_team_service.get_recent_followups([test_sales_user.id])
+    def test_get_followup_statistics_map_success(self, sales_team_service, test_sales_user):
+        """测试获取跟进统计"""
+        result = sales_team_service.get_followup_statistics_map(
+            [test_sales_user.id],
+            None,
+            None
+        )
         assert isinstance(result, dict)
 
-    def test_get_recent_followups_with_limit(self, sales_team_service, test_sales_user):
-        result = sales_team_service.get_recent_followups([test_sales_user.id], limit=5)
-        assert isinstance(result, dict)
-
-    def test_get_customer_distribution_empty_user_ids(self, sales_team_service):
-        result = sales_team_service.get_customer_distribution([])
+    def test_get_recent_followups_map_empty_user_ids(self, sales_team_service):
+        """测试空用户ID列表的最近跟进（使用 get_recent_followups_map）"""
+        result = sales_team_service.get_recent_followups_map([])
         assert result == {}
 
-    def test_get_customer_distribution_success(
+    def test_get_recent_followups_map_success(self, sales_team_service, test_sales_user):
+        """测试获取最近跟进（使用 get_recent_followups_map）"""
+        result = sales_team_service.get_recent_followups_map([test_sales_user.id])
+        assert isinstance(result, dict)
+
+    def test_get_recent_followups_map_with_date_range(self, sales_team_service, test_sales_user):
+        """测试带日期范围的最近跟进（使用 get_recent_followups_map）"""
+        from datetime import datetime, timedelta
+        start = datetime.now() - timedelta(days=30)
+        end = datetime.now()
+        result = sales_team_service.get_recent_followups_map(
+            [test_sales_user.id],
+            start_datetime=start,
+            end_datetime=end
+        )
+        assert isinstance(result, dict)
+
+    def test_get_customer_distribution_map_empty_user_ids(self, sales_team_service):
+        """测试空用户ID列表的客户分布"""
+        from datetime import date
+        result = sales_team_service.get_customer_distribution_map([], None, None)
+        assert result == {}
+
+    def test_get_customer_distribution_map_success(
         self, sales_team_service, test_sales_user
     ):
-        result = sales_team_service.get_customer_distribution([test_sales_user.id])
+        """测试获取客户分布"""
+        from datetime import date
+        result = sales_team_service.get_customer_distribution_map(
+            [test_sales_user.id],
+            date(2024, 1, 1),
+            date(2024, 12, 31)
+        )
         assert isinstance(result, dict)
 
-    def test_get_team_statistics_empty_user_ids(self, sales_team_service):
-        result = sales_team_service.get_team_statistics([])
+    def test_get_lead_quality_stats_map_empty_user_ids(self, sales_team_service):
+        """测试空用户ID列表的线索质量统计"""
+        from datetime import datetime
+        result = sales_team_service.get_lead_quality_stats_map([], None, None)
         assert result == {}
 
-    def test_get_team_statistics_success(self, sales_team_service, test_sales_user):
-        result = sales_team_service.get_team_statistics([test_sales_user.id])
+    def test_get_lead_quality_stats_map_success(
+        self, sales_team_service, test_sales_user
+    ):
+        """测试获取线索质量统计"""
+        from datetime import datetime
+        result = sales_team_service.get_lead_quality_stats_map(
+            [test_sales_user.id],
+            None,
+            None
+        )
         assert isinstance(result, dict)
-        assert test_sales_user.id in result
+
+    def test_get_opportunity_stats_map_empty_user_ids(self, sales_team_service):
+        """测试空用户ID列表的商机统计"""
+        from datetime import datetime
+        result = sales_team_service.get_opportunity_stats_map([], None, None)
+        assert result == {}
+
+    def test_get_opportunity_stats_map_success(
+        self, sales_team_service, test_sales_user
+    ):
+        """测试获取商机统计"""
+        from datetime import datetime
+        result = sales_team_service.get_opportunity_stats_map(
+            [test_sales_user.id],
+            None,
+            None
+        )
+        assert isinstance(result, dict)
+
+    def test_get_recent_followups_map_empty_user_ids(self, sales_team_service):
+        """测试空用户ID列表的最近跟进"""
+        result = sales_team_service.get_recent_followups_map([])
+        assert result == {}
+
+    def test_get_recent_followups_map_success(
+        self, sales_team_service, test_sales_user
+    ):
+        """测试获取最近跟进"""
+        result = sales_team_service.get_recent_followups_map([test_sales_user.id])
+        assert isinstance(result, dict)
+
+    def test_get_recent_followups_map_with_date_range(
+        self, sales_team_service, test_sales_user
+    ):
+        """测试带日期范围的最近跟进"""
+        from datetime import datetime, timedelta
+        start = datetime.now() - timedelta(days=30)
+        end = datetime.now()
+        result = sales_team_service.get_recent_followups_map(
+            [test_sales_user.id],
+            start_datetime=start,
+            end_datetime=end
+        )
+        assert isinstance(result, dict)
 
     def test_invalid_target_type(self, sales_team_service, test_sales_user):
         target = SalesTarget(
+            target_scope="PERSONAL",  # 必填字段
             user_id=test_sales_user.id,
             target_type="INVALID_TYPE",
             target_value=Decimal("100"),
             target_period="MONTHLY",
             period_value="2024-01",
             status="ACTIVE",
+            created_by=test_sales_user.id,  # 必填字段
         )
         sales_team_service.db.add(target)
         sales_team_service.db.commit()

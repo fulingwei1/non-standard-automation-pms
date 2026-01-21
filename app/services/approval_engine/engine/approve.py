@@ -4,7 +4,7 @@
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from app.models.approval import ApprovalNodeDefinition, ApprovalTask
 from app.models.user import User
@@ -128,6 +128,10 @@ class ApprovalProcessMixin:
             # 驳回到发起人（审批结束）
             instance.status = "REJECTED"
             instance.completed_at = datetime.now()
+
+            # 调用适配器的驳回回调
+            self._call_adapter_callback(instance, "on_rejected")
+
             # 通知发起人
             self.notify.notify_rejected(
                 instance,

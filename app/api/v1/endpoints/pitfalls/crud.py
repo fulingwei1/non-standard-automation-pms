@@ -1,0 +1,248 @@
+# -*- coding: utf-8 -*-
+"""
+踩坑记录 CRUD API
+"""
+
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.orm import Session
+
+from app.api.deps import get_db
+from app.core import security
+from app.models.user import User
+from app.schemas.common import ResponseModel
+from app.schemas.pitfall import (
+    PitfallCreate,
+    PitfallUpdate,
+)
+from app.services.pitfall import PitfallService
+
+router = APIRouter()
+
+
+@router.post("", response_model=ResponseModel)
+def create_pitfall(
+    data: PitfallCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.get_current_active_user),
+):
+    """
+    创建踩坑记录
+
+    必填字段：title, description
+    其他字段可选，支持后续补充完善
+    """
+    service = PitfallService(db)
+
+    pitfall = service.create_pitfall(
+        title=data.title,
+        description=data.description,
+        solution=data.solution,
+        stage=data.stage,
+        equipment_type=data.equipment_type,
+        problem_type=data.problem_type,
+        tags=data.tags,
+        root_cause=data.root_cause,
+        impact=data.impact,
+        prevention=data.prevention,
+        cost_impact=data.cost_impact,
+        schedule_impact=data.schedule_impact,
+        source_type=data.source_type,
+        source_project_id=data.source_project_id,
+        source_ecn_id=data.source_ecn_id,
+        source_issue_id=data.source_issue_id,
+        is_sensitive=data.is_sensitive,
+        sensitive_reason=data.sensitive_reason,
+        visible_to=data.visible_to,
+        created_by=current_user.id,
+    )
+
+    return ResponseModel(
+        code=200,
+        message="踩坑记录创建成功",
+        data={"id": pitfall.id, "pitfall_no": pitfall.pitfall_no},
+    )
+
+
+@router.get("", response_model=ResponseModel)
+def list_pitfalls(
+    keyword: Optional[str] = Query(None, description="关键词搜索"),
+    stage: Optional[str] = Query(None, description="阶段筛选"),
+    equipment_type: Optional[str] = Query(None, description="设备类型筛选"),
+    problem_type: Optional[str] = Query(None, description="问题类型筛选"),
+    status: Optional[str] = Query(None, description="状态筛选"),
+    verified_only: bool = Query(False, description="仅显示已验证"),
+    skip: int = Query(0, ge=0, description="跳过记录数"),
+    limit: int = Query(20, ge=1, le=100, description="返回记录数"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.get_current_active_user),
+):
+    """
+    获取踩坑列表
+
+    支持多维度筛选和关键词搜索
+    """
+    service = PitfallService(db)
+
+    pitfalls, total = service.list_pitfalls(
+        user_id=current_user.id,
+        keyword=keyword,
+        stage=stage,
+        equipment_type=equipment_type,
+        problem_type=problem_type,
+        status=status,
+        verified_only=verified_only,
+        skip=skip,
+        limit=limit,
+    )
+
+    items = [
+        {
+            "id": p.id,
+            "pitfall_no": p.pitfall_no,
+            "title": p.title,
+            "stage": p.stage,
+            "equipment_type": p.equipment_type,
+            "problem_type": p.problem_type,
+            "tags": p.tags,
+            "status": p.status,
+            "verified": p.verified,
+            "verify_count": p.verify_count,
+            "created_at": p.created_at.isoformat() if p.created_at else None,
+        }
+        for p in pitfalls
+    ]
+
+    return ResponseModel(
+        code=200,
+        message="获取踩坑列表成功",
+        data={"total": total, "items": items},
+    )
+
+
+@router.get("/{pitfall_id}", response_model=ResponseModel)
+def get_pitfall(
+    pitfall_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.get_current_active_user),
+):
+    """
+    获取踩坑详情
+
+    敏感记录需要相应权限
+    """
+    service = PitfallService(db)
+
+    pitfall = service.get_pitfall(pitfall_id, current_user.id)
+    if not pitfall:
+        raise HTTPException(status_code=404, detail="踩坑记录不存在或无权限查看")
+
+    return ResponseModel(
+        code=200,
+        message="获取踩坑详情成功",
+        data={
+            "id": pitfall.id,
+            "pitfall_no": pitfall.pitfall_no,
+            "title": pitfall.title,
+            "description": pitfall.description,
+            "solution": pitfall.solution,
+            "stage": pitfall.stage,
+            "equipment_type": pitfall.equipment_type,
+            "problem_type": pitfall.problem_type,
+            "tags": pitfall.tags,
+            "root_cause": pitfall.root_cause,
+            "impact": pitfall.impact,
+            "prevention": pitfall.prevention,
+            "cost_impact": float(pitfall.cost_impact) if pitfall.cost_impact else None,
+            "schedule_impact": pitfall.schedule_impact,
+            "source_type": pitfall.source_type,
+            "source_project_id": pitfall.source_project_id,
+            "is_sensitive": pitfall.is_sensitive,
+            "status": pitfall.status,
+            "verified": pitfall.verified,
+            "verify_count": pitfall.verify_count,
+            "created_by": pitfall.created_by,
+            "created_at": pitfall.created_at.isoformat()
+            if pitfall.created_at
+            else None,
+            "updated_at": pitfall.updated_at.isoformat()
+            if pitfall.updated_at
+            else None,
+        },
+    )
+
+
+@router.put("/{pitfall_id}", response_model=ResponseModel)
+def update_pitfall(
+    pitfall_id: int,
+    data: PitfallUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.get_current_active_user),
+):
+    """
+    更新踩坑记录
+
+    只有创建人可以编辑
+    """
+    service = PitfallService(db)
+
+    update_data = data.model_dump(exclude_unset=True)
+    pitfall = service.update_pitfall(pitfall_id, current_user.id, **update_data)
+
+    if not pitfall:
+        raise HTTPException(status_code=404, detail="踩坑记录不存在或无权限编辑")
+
+    return ResponseModel(
+        code=200,
+        message="踩坑记录更新成功",
+        data={"id": pitfall.id},
+    )
+
+
+@router.delete("/{pitfall_id}", response_model=ResponseModel)
+def delete_pitfall(
+    pitfall_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.get_current_active_user),
+):
+    """
+    删除踩坑记录
+
+    只有创建人可以删除
+    """
+    service = PitfallService(db)
+
+    success = service.delete_pitfall(pitfall_id, current_user.id)
+    if not success:
+        raise HTTPException(status_code=404, detail="踩坑记录不存在或无权限删除")
+
+    return ResponseModel(
+        code=200,
+        message="踩坑记录删除成功",
+        data={"id": pitfall_id},
+    )
+
+
+@router.post("/{pitfall_id}/publish", response_model=ResponseModel)
+def publish_pitfall(
+    pitfall_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.get_current_active_user),
+):
+    """
+    发布踩坑记录
+
+    草稿状态 -> 已发布
+    """
+    service = PitfallService(db)
+
+    pitfall = service.publish_pitfall(pitfall_id, current_user.id)
+    if not pitfall:
+        raise HTTPException(status_code=404, detail="踩坑记录不存在或无权限发布")
+
+    return ResponseModel(
+        code=200,
+        message="踩坑记录发布成功",
+        data={"id": pitfall.id, "status": pitfall.status},
+    )

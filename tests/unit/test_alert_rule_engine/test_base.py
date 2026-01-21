@@ -8,13 +8,8 @@ File Size: 28 lines
 Batch: 3
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, Mock
-from datetime import datetime, date, timedelta
-from decimal import Decimal
-from services.alert_rule_engine.base import AlertRuleEngineBase
-
-
+from sqlalchemy.orm import Session
+from app.services.alert_rule_engine.base import AlertRuleEngineBase
 
 
 class TestAlertRuleEngineBase:
@@ -24,11 +19,10 @@ class TestAlertRuleEngineBase:
         """测试服务初始化"""
         service = AlertRuleEngineBase(db_session)
         assert service is not None
-        if hasattr(service, 'db'):
+        if hasattr(service, "db"):
             assert service.db == db_session
 
-
-    def test_level_priority(self, alert_rule_engine/base):
+    def test_level_priority(self, db_session: Session):
         """测试 level_priority 方法"""
         # TODO: 实现测试逻辑
         # 1. 准备测试数据
@@ -36,15 +30,13 @@ class TestAlertRuleEngineBase:
         # 3. 验证结果
         pass
 
-
-    def test_get_field_value(self, alert_rule_engine/base):
+    def test_get_field_value(self, db_session: Session):
         """测试 get_field_value 方法"""
         # TODO: 实现测试逻辑
         # 1. 准备测试数据
         # 2. 调用方法
         # 3. 验证结果
         pass
-
 
     # TODO: 添加更多测试用例
     # - 正常流程测试 (Happy Path)

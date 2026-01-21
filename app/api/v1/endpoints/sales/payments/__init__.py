@@ -26,7 +26,8 @@ from .payment_statistics import router as payment_statistics_router
 router = APIRouter()
 
 # 注册子路由
+# 注意：statistics 路由必须在 records 路由之前，否则 /payments/statistics 会被 /payments/{payment_id} 匹配
 router.include_router(payment_plans_router)
+router.include_router(payment_statistics_router)  # 必须在 payment_records_router 之前
 router.include_router(payment_records_router)
-router.include_router(payment_statistics_router)
 router.include_router(payment_exports_router)

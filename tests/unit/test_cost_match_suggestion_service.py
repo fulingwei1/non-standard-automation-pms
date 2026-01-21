@@ -22,8 +22,7 @@ from app.services.cost_match_suggestion_service import (
     calculate_summary,
     process_cost_match_suggestions
 )
-from app.models.sales import QuoteItem
-from app.models.material import PurchaseMaterialCost
+from app.models.sales import QuoteItem, PurchaseMaterialCost
 from app.schemas.sales import CostMatchSuggestion
 
 

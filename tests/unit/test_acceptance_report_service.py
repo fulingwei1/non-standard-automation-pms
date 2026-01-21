@@ -1,159 +1,167 @@
 # -*- coding: utf-8 -*-
 """
-Tests for acceptance_report_service
-Covers: app/services/acceptance_report_service.py
-Coverage Target: 0% -> 50%+
+测试验收报告生成服务 - 修正版
 """
+
+from datetime import date
+from unittest.mock import MagicMock
 
 import pytest
 
-# Skip entire module - AcceptanceReportService class does not exist
-# The service only has functions, no class
-pytestmark = pytest.mark.skip(
-    reason="AcceptanceReportService class does not exist - service uses functions"
+from app.services.acceptance_report_service import (
+    generate_report_no,
+    get_report_version,
 )
 
-from decimal import Decimal
-from unittest.mock import patch
-from sqlalchemy.orm import Session
+
+# ===== Mock Classes =====
+
+class MockAcceptanceReport:
+    """Mock AcceptanceReport for testing"""
+    def __init__(
+        self,
+        id: int,
+        report_no: str,
+        report_type: str,
+        version: int
+    ):
+        self.id = id
+        self.report_no = report_no
+        self.report_type = report_type
+        self.version = version
 
 
-class TestAcceptanceReportService:
-    """验收报告服务测试"""
+# ===== Tests for generate_report_no =====
 
-    @pytest.fixture
-    def service(self, db_session: Session):
-        from app.services.acceptance_report_service import AcceptanceReportService
-        return AcceptanceReportService(db_session)
+class TestGenerateReportNo:
+    """测试 generate_report_no 方法"""
 
-    def test_init_service(self, service, db_session: Session):
-        """测试服务初始化"""
-        from app.services.acceptance_report_service import AcceptanceReportService
-        svc = AcceptanceReportService(db_session)
-        assert svc.db == db_session
+    def test_generate_fat_report_no(self):
+        """测试FAT报告编号生成（无历史记录）"""
+        db_session = MagicMock()
+        mock_query = MagicMock()
+        mock_query.count.return_value = 0
+        mock_query.filter.return_value = mock_query
 
-    def test_generate_fat_report(self, service, db_session: Session):
-        """测试生成FAT验收报告"""
-        mock_data = {
-            "project": {"project_code": "PJ001", "project_name": "测试项目"},
-            "machine": {"machine_code": "M001", "machine_name": "测试设备"},
-            "items": [],
-            "summary": {"total": 10, "passed": 8, "failed": 2}
-        }
+        result = generate_report_no(db_session, "FAT")
 
-        with patch.object(service, '_generate_report_data', return_value=mock_data):
-            result = service.generate_fat_report(acceptance_order_id=1)
-            assert result is not None
+        assert result == "FAT-20250121-001"
 
-    def test_generate_sat_report(self, service, db_session: Session):
-        """测试生成SAT验收报告"""
-        mock_data = {
-            "project": {"project_code": "PJ001", "project_name": "测试项目"},
-            "machine": {"machine_code": "M001", "machine_name": "测试设备"},
-            "items": [],
-            "summary": {"total": 15, "passed": 15, "failed": 0}
-        }
+    def test_generate_fat_report_no_with_history(self):
+        """测试FAT报告编号生成（有2条历史记录）"""
+        db_session = MagicMock()
+        mock_query = MagicMock()
+        mock_query.count.return_value = 2
+        mock_query.filter.return_value = mock_query
 
-        with patch.object(service, '_generate_report_data', return_value=mock_data):
-            result = service.generate_sat_report(acceptance_order_id=1)
-            assert result is not None
+        result = generate_report_no(db_session, "FAT")
 
-    def test_generate_final_report(self, service, db_session: Session):
-        """测试生成终验收报告"""
-        mock_data = {
-            "project": {"project_code": "PJ001", "project_name": "测试项目"},
-            "machine": {"machine_code": "M001", "machine_name": "测试设备"},
-            "items": [],
-            "summary": {"total": 20, "passed": 20, "failed": 0}
-        }
+        assert result == "FAT-20250121-003"
 
-        with patch.object(service, '_generate_report_data', return_value=mock_data):
-            result = service.generate_final_report(acceptance_order_id=1)
-            assert result is not None
+    def test_generate_sat_report_no(self):
+        """测试SAT报告编号生成（无历史记录）"""
+        db_session = MagicMock()
+        mock_query = MagicMock()
+        mock_query.count.return_value = 0
+        mock_query.filter.return_value = mock_query
 
-    def test_calculate_pass_rate(self, service):
-        """测试通过率计算"""
-        pass_rate = service._calculate_pass_rate(passed=8, total=10)
-        assert pass_rate == Decimal("80.00")
+        result = generate_report_no(db_session, "SAT")
 
-    def test_calculate_pass_rate_zero_total(self, service):
-        """测试零总数通过率"""
-        pass_rate = service._calculate_pass_rate(passed=0, total=0)
-        assert pass_rate == Decimal("0")
+        assert result == "SAT-20250121-001"
 
-    def test_calculate_pass_rate_all_passed(self, service):
-        """测试全部通过"""
-        pass_rate = service._calculate_pass_rate(passed=10, total=10)
-        assert pass_rate == Decimal("100.00")
+    def test_generate_sat_report_no_with_history(self):
+        """测试SAT报告编号生成（有5条历史记录）"""
+        db_session = MagicMock()
+        mock_query = MagicMock()
+        mock_query.count.return_value = 5
+        mock_query.filter.return_value = mock_query
 
-    def test_calculate_pass_rate_all_failed(self, service):
-        """测试全部失败"""
-        pass_rate = service._calculate_pass_rate(passed=0, total=10)
-        assert pass_rate == Decimal("0")
+        result = generate_report_no(db_session, "SAT")
 
-    def test_get_summary_stats(self, service, db_session: Session):
-        """测试汇总统计"""
-        mock_stats = {
-            "total_orders": 5,
-            "total_items": 100,
-            "passed_items": 85,
-            "failed_items": 10,
-            "na_items": 5,
-            "overall_pass_rate": Decimal("85.00")
-        }
+        assert result == "SAT-20250121-006"
 
-        with patch.object(service, '_get_summary_stats', return_value=mock_stats):
-            result = service.get_summary_stats(year=2025)
-            assert result == mock_stats
+    def test_generate_ar_report_no(self):
+        """测试AR报告编号生成（无历史记录）"""
+        db_session = MagicMock()
+        mock_query = MagicMock()
+        mock_query.count.return_value = 10
+        mock_query.filter.return_value = mock_query
 
-    def test_get_summary_stats_by_project(self, service, db_session: Session):
-        """测试按项目汇总统计"""
-        mock_stats = {
-            "project_id": 1,
-            "project_code": "PJ001",
-            "total_orders": 2,
-            "total_items": 20,
-            "passed_items": 18,
-            "failed_items": 2
-        }
+        result = generate_report_no(db_session, "AR")
 
-        with patch.object(service, '_get_summary_stats', return_value=mock_stats):
-            result = service.get_summary_stats(project_id=1)
-            assert result["project_id"] == 1
+        assert result == "AR-20250121-011"
+
+    def test_generate_ar_report_no_with_history(self):
+        """测试AR报告编号生成（有11条历史记录）"""
+        db_session = MagicMock()
+        mock_query = MagicMock()
+        mock_query.count.return_value = 11
+        mock_query.filter.return_value = mock_query
+
+        result = generate_report_no(db_session, "AR")
+
+        assert result == "AR-20250121-012"
 
 
-class TestAcceptanceReportServiceExport:
-    """验收报告导出测试"""
+# ===== Tests for get_report_version =====
 
-    @pytest.fixture
-    def service(self, db_session: Session):
-        from app.services.acceptance_report_service import AcceptanceReportService
-        return AcceptanceReportService(db_session)
+class TestGetReportVersion:
+    """测试 get_report_version 方法"""
 
-    def test_export_to_pdf(self, service, db_session: Session):
-        """测试导出PDF"""
-        mock_data = {
-            "project": {"project_code": "PJ001", "project_name": "测试项目"},
-            "machine": {"machine_code": "M001", "machine_name": "测试设备"},
-            "items": [],
-            "summary": {"total": 10, "passed": 8, "failed": 2}
-        }
+    def test_get_version_first_fat_report(self):
+        """测试首次FAT报告版本"""
+        db_session = MagicMock()
+        mock_query = MagicMock()
+        mock_query.filter.return_value.first.return_value = None
 
-        with patch.object(service, '_generate_report_data', return_value=mock_data):
-            with patch.object(service, '_render_pdf', return_value=b"PDF content"):
-                result = service.export_to_pdf(acceptance_order_id=1)
-                assert result is not None
+        order_id = 1
+        db_session.query.return_value = mock_query
 
-    def test_export_to_excel(self, service, db_session: Session):
-        """测试导出Excel"""
-        mock_data = {
-            "project": {"project_code": "PJ001", "project_name": "测试项目"},
-            "machine": {"machine_code": "M001", "machine_name": "测试设备"},
-            "items": [],
-            "summary": {"total": 10, "passed": 8, "failed": 2}
-        }
+        result = get_report_version(db_session, order_id, "FAT")
 
-        with patch.object(service, '_generate_report_data', return_value=mock_data):
-            with patch.object(service, '_render_excel', return_value=b"Excel content"):
-                result = service.export_to_excel(acceptance_order_id=1)
-                assert result is not None
+        assert result == 1
+
+    def test_get_version_second_fat_report(self):
+        """测试第二次FAT报告版本（version号递增）"""
+        db_session = MagicMock()
+        
+        class MockReport:
+            id: int = 1
+            report_no: str = "FAT-20250121-001"
+            report_type: str = "FAT"
+            version: int = 1
+
+        mock_query = MagicMock()
+        mock_query.filter.return_value.first.return_value = MockReport()
+        db_session.query.return_value = mock_query
+
+        order_id = 2
+        result = get_report_version(db_session, order_id, "FAT")
+
+        assert result == 2
+
+    def test_get_version_sat_report(self):
+        """测试SAT报告版本"""
+        db_session = MagicMock()
+        mock_query = MagicMock()
+        mock_query.filter.return_value.first.return_value = None
+
+        order_id = 1
+        db_session.query.return_value = mock_query
+
+        result = get_report_version(db_session, order_id, "SAT")
+
+        assert result == 1
+
+    def test_get_version_first_ar_report(self):
+        """测试首次AR报告版本"""
+        db_session = MagicMock()
+        mock_query = MagicMock()
+        mock_query.filter.return_value.first.return_value = None
+
+        order_id = 1
+        db_session.query.return_value = mock_query
+
+        result = get_report_version(db_session, order_id, "AR")
+
+        assert result == 1

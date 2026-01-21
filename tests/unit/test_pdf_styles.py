@@ -12,7 +12,7 @@ import pytest
 from unittest.mock import MagicMock, patch, Mock
 from datetime import datetime, date, timedelta
 from decimal import Decimal
-import services.pdf_styles
+import app.services.pdf_styles
 
 
 
@@ -23,42 +23,42 @@ class TestPdfStyles:
     def test_get_pdf_styles(self):
         """测试 get_pdf_styles 函数"""
         # TODO: 实现测试逻辑
-        from services.pdf_styles import get_pdf_styles
+        from app.services.pdf_styles import get_pdf_styles
         pass
 
 
     def test_get_table_style_base(self):
         """测试 get_table_style_base 函数"""
         # TODO: 实现测试逻辑
-        from services.pdf_styles import get_table_style_base
+        from app.services.pdf_styles import get_table_style_base
         pass
 
 
     def test_get_info_table_style(self):
         """测试 get_info_table_style 函数"""
         # TODO: 实现测试逻辑
-        from services.pdf_styles import get_info_table_style
+        from app.services.pdf_styles import get_info_table_style
         pass
 
 
     def test_get_stats_table_style(self):
         """测试 get_stats_table_style 函数"""
         # TODO: 实现测试逻辑
-        from services.pdf_styles import get_stats_table_style
+        from app.services.pdf_styles import get_stats_table_style
         pass
 
 
     def test_get_issue_table_style(self):
         """测试 get_issue_table_style 函数"""
         # TODO: 实现测试逻辑
-        from services.pdf_styles import get_issue_table_style
+        from app.services.pdf_styles import get_issue_table_style
         pass
 
 
     def test_get_signature_table_style(self):
         """测试 get_signature_table_style 函数"""
         # TODO: 实现测试逻辑
-        from services.pdf_styles import get_signature_table_style
+        from app.services.pdf_styles import get_signature_table_style
         pass
 
 

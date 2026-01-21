@@ -3,6 +3,7 @@
 销售统计 - 核心统计功能
 
 包含销售漏斗、商机按阶段统计、汇总统计
+已集成数据权限过滤：不同角色看到不同范围的统计数据
 """
 
 from datetime import date, datetime
@@ -13,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.core.sales_permissions import filter_sales_data_by_scope
 from app.models.sales import Contract, Invoice, Lead, Opportunity, Quote
 from app.models.user import User
 from app.schemas.common import ResponseModel
@@ -28,13 +30,21 @@ def get_sales_funnel(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
-    获取销售漏斗统计
+    获取销售漏斗统计（已集成数据权限过滤）
     """
+    # 构建基础查询
     query_leads = db.query(Lead)
     query_opps = db.query(Opportunity)
     query_quotes = db.query(Quote)
     query_contracts = db.query(Contract)
 
+    # 应用数据权限过滤
+    query_leads = filter_sales_data_by_scope(query_leads, current_user, db, Lead, "owner_id")
+    query_opps = filter_sales_data_by_scope(query_opps, current_user, db, Opportunity, "owner_id")
+    query_quotes = filter_sales_data_by_scope(query_quotes, current_user, db, Quote, "owner_id")
+    query_contracts = filter_sales_data_by_scope(query_contracts, current_user, db, Contract, "owner_id")
+
+    # 日期过滤
     if start_date:
         query_leads = query_leads.filter(Lead.created_at >= datetime.combine(start_date, datetime.min.time()))
         query_opps = query_opps.filter(Opportunity.created_at >= datetime.combine(start_date, datetime.min.time()))
@@ -85,15 +95,30 @@ def get_opportunities_by_stage(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
-    按阶段统计商机
+    按阶段统计商机（已集成数据权限过滤）
     """
     stages = ["DISCOVERY", "QUALIFIED", "PROPOSAL", "NEGOTIATION", "WON", "LOST", "ON_HOLD"]
     result = {}
 
     from sqlalchemy import func
+
+    # 构建基础查询并应用数据权限过滤
+    base_query = db.query(Opportunity)
+    base_query = filter_sales_data_by_scope(base_query, current_user, db, Opportunity, "owner_id")
+
     for stage in stages:
-        count = db.query(Opportunity).filter(Opportunity.stage == stage).count()
-        total_amount = db.query(func.sum(Opportunity.est_amount)).filter(Opportunity.stage == stage).scalar() or 0
+        stage_query = base_query.filter(Opportunity.stage == stage)
+        count = stage_query.count()
+
+        # 对于金额统计，需要重新构建查询
+        amount_query = db.query(func.sum(Opportunity.est_amount)).filter(Opportunity.stage == stage)
+        # 应用数据权限过滤（需要子查询方式）
+        filtered_ids = [opp.id for opp in base_query.filter(Opportunity.stage == stage).all()]
+        if filtered_ids:
+            total_amount = db.query(func.sum(Opportunity.est_amount)).filter(Opportunity.id.in_(filtered_ids)).scalar() or 0
+        else:
+            total_amount = 0
+
         result[stage] = {
             "count": count,
             "total_amount": float(total_amount)
@@ -114,13 +139,33 @@ def get_sales_summary(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
-    获取销售汇总统计
+    获取销售汇总统计（已集成数据权限过滤）
     """
+    # 构建基础查询
     query_leads = db.query(Lead)
     query_opps = db.query(Opportunity)
     query_contracts = db.query(Contract)
-    query_invoices = db.query(Invoice)
 
+    # 应用数据权限过滤
+    query_leads = filter_sales_data_by_scope(query_leads, current_user, db, Lead, "owner_id")
+    query_opps = filter_sales_data_by_scope(query_opps, current_user, db, Opportunity, "owner_id")
+    query_contracts = filter_sales_data_by_scope(query_contracts, current_user, db, Contract, "owner_id")
+
+    # 发票通过合同关联过滤（Invoice 没有 owner_id/created_by 字段）
+    # 先获取用户有权限访问的合同ID列表，然后基于这些合同过滤发票
+    accessible_contract_ids = [c.id for c in query_contracts.all()]
+    if accessible_contract_ids:
+        query_invoices = db.query(Invoice).filter(Invoice.contract_id.in_(accessible_contract_ids))
+    else:
+        # 用户没有可访问的合同时，检查是否有全局权限
+        from app.core.sales_permissions import get_sales_data_scope
+        scope = get_sales_data_scope(current_user, db)
+        if scope in ["ALL", "FINANCE_ONLY"]:
+            query_invoices = db.query(Invoice)
+        else:
+            query_invoices = db.query(Invoice).filter(Invoice.id == -1)  # 返回空结果
+
+    # 日期过滤
     if start_date:
         query_leads = query_leads.filter(Lead.created_at >= datetime.combine(start_date, datetime.min.time()))
         query_opps = query_opps.filter(Opportunity.created_at >= datetime.combine(start_date, datetime.min.time()))

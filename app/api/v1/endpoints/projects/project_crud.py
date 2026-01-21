@@ -6,10 +6,9 @@
 """
 
 import logging
-from datetime import datetime
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session, joinedload, selectinload
 
@@ -147,7 +146,23 @@ def read_projects(
     total = int(total) if total is not None else 0
     pages = (total + page_size - 1) // page_size if total > 0 else 0
 
-    project_items = [ProjectListResponse.model_validate(p) for p in projects]
+    # 转换为响应对象，映射字段
+    project_items = []
+    for p in projects:
+        item_dict = {
+            "id": p.id,
+            "project_code": p.project_code,
+            "project_name": p.project_name,
+            "customer_name": p.customer_name,
+            "stage": p.stage,
+            "health": p.health,
+            "progress_pct": p.progress_pct,
+            "pm_name": p.pm_name,
+            "pm_id": p.pm_id,
+            "sales_id": p.salesperson_id,  # 映射 salesperson_id -> sales_id
+            "te_id": getattr(p, "te_id", None),  # 技术负责人ID（如有）
+        }
+        project_items.append(ProjectListResponse(**item_dict))
 
     result = PaginatedResponse(
         items=project_items,

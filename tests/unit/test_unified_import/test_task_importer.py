@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Tests for unified_import/task_importer service
-Covers: app/services/unified_import/task_importer.py
+Tests for import_service service
+Covers: app/services/import_service.py
 Coverage Target: 0% → 60%+
 Current Coverage: 0%
 File Size: 79 lines
@@ -13,12 +13,12 @@ from unittest.mock import MagicMock, patch, Mock
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from sqlalchemy.orm import Session
-from services.unified_import.task_importer import TaskImporter
+from app.services.unified_import.task_importer import TaskImporter
 
 
 
 @pytest.fixture
-def unified_import/task_importer(db_session: Session):
+def import_service(db_session: Session):
     """创建 TaskImporter 实例"""
     return TaskImporter(db_session)
 
@@ -34,7 +34,7 @@ class TestTaskImporter:
             assert service.db == db_session
 
 
-    def test_import_task_data(self, unified_import/task_importer):
+    def test_import_task_data(self, db_session: Session):
         """测试 import_task_data 方法"""
         # TODO: 实现测试逻辑
         # 1. 准备测试数据

@@ -424,3 +424,174 @@ class TestEdgeCases:
             assert data_row[7] == 5000.0
             assert data_row[8] == 2000.0
             assert data_row[9] == 12000.0
+
+
+class TestGenerateProjectReportExcel:
+    """测试生成项目报表"""
+
+    def test_generate_project_report_success(
+        self, timesheet_report_service, mock_aggregation_service
+    ):
+        """测试成功生成项目报表"""
+        from datetime import date
+        
+        # Mock 数据
+        project_data = {
+            "project_name": "测试项目A",
+            "personnel_stats": [
+                {
+                    "user_name": "张三",
+                    "total_hours": 160.0,
+                    "contribution_rate": 50.0
+                }
+            ],
+            "daily_stats": [
+                {
+                    "date": "2024-01-15",
+                    "hours": 8.0,
+                    "personnel_count": 1,
+                    "personnel": [{"user_name": "张三"}]
+                }
+            ]
+        }
+        mock_aggregation_service.generate_project_report.return_value = project_data
+
+        # 生成报表
+        result = timesheet_report_service.generate_project_report_excel(
+            project_id=1,
+            start_date=date(2024, 1, 1),
+            end_date=date(2024, 1, 31)
+        )
+
+        # 验证
+        assert isinstance(result, io.BytesIO)
+        mock_aggregation_service.generate_project_report.assert_called_once_with(
+            1, date(2024, 1, 1), date(2024, 1, 31)
+        )
+
+        # 验证 Excel 文件
+        result.seek(0)
+        wb = load_workbook(result)
+        
+        # 验证有两个工作表
+        assert len(wb.sheetnames) == 2
+        assert "人员贡献度" in wb.sheetnames
+        assert "每日工时分布" in wb.sheetnames
+
+        # 验证人员贡献度工作表
+        ws1 = wb["人员贡献度"]
+        headers1 = [cell.value for cell in ws1[3]]
+        expected_headers1 = ["人员姓名", "总工时", "贡献度(%)"]
+        assert headers1 == expected_headers1
+
+        # 验证每日工时分布工作表
+        ws2 = wb["每日工时分布"]
+        headers2 = [cell.value for cell in ws2[3]]
+        expected_headers2 = ["日期", "总工时", "参与人数", "人员列表"]
+        assert headers2 == expected_headers2
+
+    def test_generate_project_report_error(
+        self, timesheet_report_service, mock_aggregation_service
+    ):
+        """测试项目报表生成错误场景"""
+        from datetime import date
+        
+        # Mock 错误数据
+        project_data = {"error": "项目不存在"}
+        mock_aggregation_service.generate_project_report.return_value = project_data
+
+        # 生成报表
+        result = timesheet_report_service.generate_project_report_excel(
+            project_id=999,
+            start_date=date(2024, 1, 1),
+            end_date=date(2024, 1, 31)
+        )
+
+        # 验证返回错误提示的Excel
+        assert isinstance(result, io.BytesIO)
+        result.seek(0)
+        wb = load_workbook(result)
+        ws = wb.active
+        assert ws['A1'].value == "项目不存在"
+
+
+class TestGenerateProjectReportExcel:
+    """测试生成项目报表"""
+
+    def test_generate_project_report_success(
+        self, timesheet_report_service, mock_aggregation_service
+    ):
+        """测试成功生成项目报表"""
+        # Mock 数据
+        project_data = [
+            {
+                "project_code": "PJ001",
+                "project_name": "测试项目A",
+                "personnel_records": [
+                    {
+                        "user_name": "张三",
+                        "date": "2024-01-15",
+                        "hours": 8.0,
+                        "task_name": "功能开发",
+                        "work_content": "实现用户登录功能",
+                    }
+                ],
+            }
+        ]
+        mock_aggregation_service.generate_project_report.return_value = project_data
+
+        # 生成报表
+        result = timesheet_report_service.generate_project_report_excel(
+            2024, 1, project_id=1
+        )
+
+        # 验证
+        assert isinstance(result, io.BytesIO)
+        mock_aggregation_service.generate_project_report.assert_called_once_with(
+            2024, 1, 1
+        )
+
+        # 验证 Excel 文件
+        result.seek(0)
+        wb = load_workbook(result)
+        ws = wb.active
+        assert ws.title == "2024年1月项目工时表"
+
+        # 验证表头
+        headers = [cell.value for cell in ws[4]]
+        expected_headers = [
+            "项目编号",
+            "项目名称",
+            "人员姓名",
+            "工作日期",
+            "工时",
+            "任务名称",
+            "工作内容",
+        ]
+        assert headers == expected_headers
+
+        # 验证数据行
+        data_row = [cell.value for cell in ws[5]]
+        assert data_row[0] == "PJ001"
+        assert data_row[1] == "测试项目A"
+        assert data_row[2] == "张三"
+        assert data_row[3] == "2024-01-15"
+        assert data_row[4] == 8.0
+        assert data_row[5] == "功能开发"
+        assert data_row[6] == "实现用户登录功能"
+
+    def test_generate_project_report_empty_data(
+        self, timesheet_report_service, mock_aggregation_service
+    ):
+        """测试生成空数据的项目报表"""
+        mock_aggregation_service.generate_project_report.return_value = []
+
+        result = timesheet_report_service.generate_project_report_excel(2024, 1, project_id=1)
+
+        assert isinstance(result, io.BytesIO)
+        result.seek(0)
+        wb = load_workbook(result)
+        ws = wb.active
+
+        # 只有表头，没有数据行
+        assert ws.max_row == 4  # 标题行(1-2) + 空行(3) + 表头行(4)

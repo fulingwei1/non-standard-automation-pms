@@ -9,7 +9,8 @@ import {
   HRRoutes,
   PresalesRoutes,
   PMORoutes,
-  SystemRoutes
+  SystemRoutes,
+  StrategyRoutes
 } from "./modules";
 
 export function AppRoutes() {
@@ -25,6 +26,7 @@ export function AppRoutes() {
       {PresalesRoutes()}
       {PMORoutes()}
       {SystemRoutes()}
+      {StrategyRoutes()}
     </Routes>
   );
 }

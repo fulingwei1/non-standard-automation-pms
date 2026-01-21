@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Tests for alert_rule_engine/level_determiner service
-Covers: app/services/alert_rule_engine/level_determiner.py
+Tests for level_service service
+Covers: app/services/level_service.py
 Coverage Target: 0% → 60%+
 Current Coverage: 0%
 File Size: 8 lines
@@ -9,10 +9,11 @@ Batch: 3
 """
 
 import pytest
+from sqlalchemy.orm import Session
 from unittest.mock import MagicMock, patch, Mock
 from datetime import datetime, date, timedelta
 from decimal import Decimal
-from services.alert_rule_engine.level_determiner import LevelDeterminer
+from app.services.alert_rule_engine.level_determiner import LevelDeterminer
 
 
 
@@ -28,7 +29,7 @@ class TestLevelDeterminer:
             assert service.db == db_session
 
 
-    def test_determine_alert_level(self, alert_rule_engine/level_determiner):
+    def test_determine_alert_level(self, db_session: Session):
         """测试 determine_alert_level 方法"""
         # TODO: 实现测试逻辑
         # 1. 准备测试数据

@@ -2,7 +2,7 @@
 """
 测试数据工厂
 
-使用 factory_boy 创建测试数据，确保测试数据的一致性和可重复性。
+使用 factory 创建测试数据，确保测试数据的一致性和可重复性。
 
 使用示例：
     from tests.factories import UserFactory, ProjectFactory
@@ -30,7 +30,9 @@ from factory.alchemy import SQLAlchemyModelFactory
 from app.core.security import get_password_hash
 from app.models.base import get_session
 from app.models.budget import ProjectBudget, ProjectBudgetItem
+from app.models.project.financial import ProjectCost
 from app.models.material import BomHeader, BomItem, Material, MaterialCategory, Supplier
+from app.models.acceptance import AcceptanceOrder, AcceptanceTemplate, AcceptanceIssue
 from app.models.organization import Department, Employee
 from app.models.project import (
     Customer,
@@ -53,7 +55,6 @@ from app.models.sales import (
     Quote,
 )
 from app.models.ecn import Ecn
-from app.models.acceptance import AcceptanceOrder, AcceptanceTemplate
 from app.models.user import Role, User
 
 # ============== 基础配置 ==============
@@ -303,7 +304,9 @@ class ProjectPaymentPlanFactory(BaseFactory):
     payment_name = factory.Sequence(lambda n: f"第{n}期款项")
     payment_type = "ADVANCE"
     payment_ratio = Decimal("30.00")
-    planned_amount = factory.LazyFunction(lambda: Decimal(str(random.uniform(10000, 100000))))
+    planned_amount = factory.LazyFunction(
+        lambda: Decimal(str(random.uniform(10000, 100000)))
+    )
     actual_amount = Decimal("0.00")
     planned_date = factory.LazyFunction(lambda: date.today() + timedelta(days=30))
     status = "PENDING"
@@ -704,4 +707,88 @@ def create_complete_project_setup():
         "supplier": supplier,
         "materials": materials,
         "bom": bom,
+    }
+
+
+# ============== 缺失的Factory类 ==============
+
+
+class BudgetFactory(ProjectBudgetFactory):
+    """预算工厂别名（用于向后兼容）"""
+
+    pass
+
+
+class AcceptanceIssueFactory(BaseFactory):
+    """验收问题工厂"""
+
+    class Meta:
+        model = AcceptanceIssue
+
+    issue_no = factory.Sequence(lambda n: f"ISS{n:05d}")
+    issue_title = factory.Sequence(lambda n: f"测试问题{n}")
+    issue_type = "FUNCTIONAL"
+    severity = "NORMAL"
+    description = factory.Sequence(lambda n: f"测试问题描述{n}")
+    status = "OPEN"
+
+
+class ProjectCostFactory(BaseFactory):
+    """项目成本工厂"""
+
+    class Meta:
+        model = ProjectCost
+
+    cost_no = factory.Sequence(lambda n: f"CST{n:05d}")
+    cost_type = "MATERIAL"
+    description = factory.Sequence(lambda n: f"测试成本{n}")
+    budget_amount = factory.LazyFunction(
+        lambda: Decimal(str(random.uniform(10000, 100000)))
+    )
+    actual_amount = factory.LazyFunction(
+        lambda: Decimal(str(random.uniform(10000, 100000)))
+    )
+    cost_date = factory.LazyFunction(lambda: date.today())
+    status = "PENDING"
+
+
+# ============================================================================
+# 服务测试辅助函数（非 Factory 类）
+# ============================================================================
+
+def create_mock_timesheet_data():
+    """创建模拟工时数据（用于服务测试）"""
+    return {
+        'user_id': 1,
+        'user_name': '测试用户',
+        'normal_hours': 160.0,
+        'overtime_hours': 10.0,
+        'weekend_hours': 8.0,
+        'holiday_hours': 4.0,
+    }
+
+
+def create_mock_project_data():
+    """创建模拟项目数据（用于服务测试）"""
+    return {
+        'id': 1,
+        'project_code': 'PJ260101001',
+        'project_name': '测试项目',
+        'customer_id': 1,
+        'customer_name': '测试客户',
+        'stage': 'S1',
+        'status': 'ST01',
+        'health': 'H1',
+    }
+
+
+def create_mock_user_data():
+    """创建模拟用户数据（用于服务测试）"""
+    return {
+        'id': 1,
+        'username': 'test_user',
+        'real_name': '测试用户',
+        'department': '测试部门',
+        'department_id': 1,
+        'is_active': True,
     }

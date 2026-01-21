@@ -13,7 +13,7 @@ from unittest.mock import MagicMock, patch, Mock
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from sqlalchemy.orm import Session
-import services.sales_monthly_report_service
+import app.services.sales_monthly_report_service
 
 
 
@@ -24,49 +24,49 @@ class TestSalesMonthlyReportService:
     def test_parse_month_string(self):
         """测试 parse_month_string 函数"""
         # TODO: 实现测试逻辑
-        from services.sales_monthly_report_service import parse_month_string
+        from app.services.sales_monthly_report_service import parse_month_string
         pass
 
 
     def test_calculate_month_range(self):
         """测试 calculate_month_range 函数"""
         # TODO: 实现测试逻辑
-        from services.sales_monthly_report_service import calculate_month_range
+        from app.services.sales_monthly_report_service import calculate_month_range
         pass
 
 
     def test_calculate_contract_statistics(self):
         """测试 calculate_contract_statistics 函数"""
         # TODO: 实现测试逻辑
-        from services.sales_monthly_report_service import calculate_contract_statistics
+        from app.services.sales_monthly_report_service import calculate_contract_statistics
         pass
 
 
     def test_calculate_order_statistics(self):
         """测试 calculate_order_statistics 函数"""
         # TODO: 实现测试逻辑
-        from services.sales_monthly_report_service import calculate_order_statistics
+        from app.services.sales_monthly_report_service import calculate_order_statistics
         pass
 
 
     def test_calculate_receipt_statistics(self):
         """测试 calculate_receipt_statistics 函数"""
         # TODO: 实现测试逻辑
-        from services.sales_monthly_report_service import calculate_receipt_statistics
+        from app.services.sales_monthly_report_service import calculate_receipt_statistics
         pass
 
 
     def test_calculate_invoice_statistics(self):
         """测试 calculate_invoice_statistics 函数"""
         # TODO: 实现测试逻辑
-        from services.sales_monthly_report_service import calculate_invoice_statistics
+        from app.services.sales_monthly_report_service import calculate_invoice_statistics
         pass
 
 
     def test_calculate_bidding_statistics(self):
         """测试 calculate_bidding_statistics 函数"""
         # TODO: 实现测试逻辑
-        from services.sales_monthly_report_service import calculate_bidding_statistics
+        from app.services.sales_monthly_report_service import calculate_bidding_statistics
         pass
 
 

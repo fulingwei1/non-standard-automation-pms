@@ -13,7 +13,7 @@ from unittest.mock import MagicMock, patch, Mock
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from sqlalchemy.orm import Session
-from services.pipeline_break_analysis_service import PipelineBreakAnalysisService
+from app.services.pipeline_break_analysis_service import PipelineBreakAnalysisService
 
 
 

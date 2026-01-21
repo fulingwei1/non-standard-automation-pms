@@ -13,7 +13,7 @@ from unittest.mock import MagicMock, patch, Mock
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from sqlalchemy.orm import Session
-import services.bonus_allocation_parser
+import app.services.bonus_allocation_parser
 
 
 
@@ -24,63 +24,63 @@ class TestBonusAllocationParser:
     def test_validate_file_type(self):
         """测试 validate_file_type 函数"""
         # TODO: 实现测试逻辑
-        from services.bonus_allocation_parser import validate_file_type
+        from app.services.bonus_allocation_parser import validate_file_type
         pass
 
 
     def test_save_uploaded_file(self):
         """测试 save_uploaded_file 函数"""
         # TODO: 实现测试逻辑
-        from services.bonus_allocation_parser import save_uploaded_file
+        from app.services.bonus_allocation_parser import save_uploaded_file
         pass
 
 
     def test_parse_excel_file(self):
         """测试 parse_excel_file 函数"""
         # TODO: 实现测试逻辑
-        from services.bonus_allocation_parser import parse_excel_file
+        from app.services.bonus_allocation_parser import parse_excel_file
         pass
 
 
     def test_validate_required_columns(self):
         """测试 validate_required_columns 函数"""
         # TODO: 实现测试逻辑
-        from services.bonus_allocation_parser import validate_required_columns
+        from app.services.bonus_allocation_parser import validate_required_columns
         pass
 
 
     def test_get_column_value(self):
         """测试 get_column_value 函数"""
         # TODO: 实现测试逻辑
-        from services.bonus_allocation_parser import get_column_value
+        from app.services.bonus_allocation_parser import get_column_value
         pass
 
 
     def test_parse_row_data(self):
         """测试 parse_row_data 函数"""
         # TODO: 实现测试逻辑
-        from services.bonus_allocation_parser import parse_row_data
+        from app.services.bonus_allocation_parser import parse_row_data
         pass
 
 
     def test_parse_date(self):
         """测试 parse_date 函数"""
         # TODO: 实现测试逻辑
-        from services.bonus_allocation_parser import parse_date
+        from app.services.bonus_allocation_parser import parse_date
         pass
 
 
     def test_validate_row_data(self):
         """测试 validate_row_data 函数"""
         # TODO: 实现测试逻辑
-        from services.bonus_allocation_parser import validate_row_data
+        from app.services.bonus_allocation_parser import validate_row_data
         pass
 
 
     def test_parse_allocation_sheet(self):
         """测试 parse_allocation_sheet 函数"""
         # TODO: 实现测试逻辑
-        from services.bonus_allocation_parser import parse_allocation_sheet
+        from app.services.bonus_allocation_parser import parse_allocation_sheet
         pass
 
 

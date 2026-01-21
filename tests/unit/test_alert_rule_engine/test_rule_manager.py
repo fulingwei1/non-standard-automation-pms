@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Tests for alert_rule_engine/rule_manager service
-Covers: app/services/alert_rule_engine/rule_manager.py
+Tests for rule_service service
+Covers: app/services/rule_service.py
 Coverage Target: 0% → 60%+
 Current Coverage: 0%
 File Size: 12 lines
@@ -13,12 +13,12 @@ from unittest.mock import MagicMock, patch, Mock
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from sqlalchemy.orm import Session
-from services.alert_rule_engine.rule_manager import RuleManager
+from app.services.alert_rule_engine.rule_manager import RuleManager
 
 
 
 @pytest.fixture
-def alert_rule_engine/rule_manager(db_session: Session):
+def rule_service(db_session: Session):
     """创建 RuleManager 实例"""
     return RuleManager(db_session)
 
@@ -34,7 +34,7 @@ class TestRuleManager:
             assert service.db == db_session
 
 
-    def test_get_or_create_rule(self, alert_rule_engine/rule_manager):
+    def test_get_or_create_rule(self, db_session: Session):
         """测试 get_or_create_rule 方法"""
         # TODO: 实现测试逻辑
         # 1. 准备测试数据

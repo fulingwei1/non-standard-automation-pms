@@ -46,6 +46,7 @@ from .contracts import (
     ContractUpdate,
 )
 from .cost_templates import (
+    CostMatchSuggestion,
     MaterialCostMatchRequest,
     MaterialCostMatchResponse,
     MaterialCostUpdateReminderResponse,
@@ -187,6 +188,7 @@ __all__ = [
     "MaterialCostMatchResponse",
     "MaterialCostUpdateReminderResponse",
     "MaterialCostUpdateReminderUpdate",
+    "CostMatchSuggestion",
     # 发票相关
     "InvoiceCreate",
     "InvoiceUpdate",

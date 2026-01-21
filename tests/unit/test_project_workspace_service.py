@@ -13,7 +13,7 @@ from unittest.mock import MagicMock, patch, Mock
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from sqlalchemy.orm import Session
-import services.project_workspace_service
+import app.services.project_workspace_service
 
 
 
@@ -24,56 +24,56 @@ class TestProjectWorkspaceService:
     def test_build_project_basic_info(self):
         """测试 build_project_basic_info 函数"""
         # TODO: 实现测试逻辑
-        from services.project_workspace_service import build_project_basic_info
+        from app.services.project_workspace_service import build_project_basic_info
         pass
 
 
     def test_build_team_info(self):
         """测试 build_team_info 函数"""
         # TODO: 实现测试逻辑
-        from services.project_workspace_service import build_team_info
+        from app.services.project_workspace_service import build_team_info
         pass
 
 
     def test_build_task_info(self):
         """测试 build_task_info 函数"""
         # TODO: 实现测试逻辑
-        from services.project_workspace_service import build_task_info
+        from app.services.project_workspace_service import build_task_info
         pass
 
 
     def test_build_bonus_info(self):
         """测试 build_bonus_info 函数"""
         # TODO: 实现测试逻辑
-        from services.project_workspace_service import build_bonus_info
+        from app.services.project_workspace_service import build_bonus_info
         pass
 
 
     def test_build_meeting_info(self):
         """测试 build_meeting_info 函数"""
         # TODO: 实现测试逻辑
-        from services.project_workspace_service import build_meeting_info
+        from app.services.project_workspace_service import build_meeting_info
         pass
 
 
     def test_build_issue_info(self):
         """测试 build_issue_info 函数"""
         # TODO: 实现测试逻辑
-        from services.project_workspace_service import build_issue_info
+        from app.services.project_workspace_service import build_issue_info
         pass
 
 
     def test_build_solution_info(self):
         """测试 build_solution_info 函数"""
         # TODO: 实现测试逻辑
-        from services.project_workspace_service import build_solution_info
+        from app.services.project_workspace_service import build_solution_info
         pass
 
 
     def test_build_document_info(self):
         """测试 build_document_info 函数"""
         # TODO: 实现测试逻辑
-        from services.project_workspace_service import build_document_info
+        from app.services.project_workspace_service import build_document_info
         pass
 
 

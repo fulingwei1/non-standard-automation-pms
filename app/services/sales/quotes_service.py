@@ -3,22 +3,16 @@
 销售报价管理服务
 """
 
-from datetime import date, datetime, timedelta
-from decimal import Decimal
-from typing import Any, List, Optional
+from datetime import date
+from typing import Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
-from sqlalchemy import desc, func, or_
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session, joinedload
 
-from app.api import deps
-from app.core import security
-from app.core.config import settings
-from app.models.project import Customer, Project
-from app.models.sales import Quote, QuoteItem, QuoteTemplate
+from app.models.sales import Quote
 from app.models.user import User
-from app.schemas.common import PaginatedResponse, ResponseModel
-from app.schemas.sales import QuoteCreate, QuoteItemCreate, QuoteResponse, QuoteUpdate
+from app.schemas.common import PaginatedResponse
+from app.schemas.sales import QuoteCreate
 
 
 class QuotesService:
@@ -35,14 +29,20 @@ class QuotesService:
         status: Optional[str] = None,
         customer_id: Optional[int] = None,
         start_date: Optional[date] = None,
-        end_date: Optional[date] = None
+        end_date: Optional[date] = None,
+        current_user: Optional[User] = None
     ) -> PaginatedResponse:
-        """获取报价列表"""
+        """获取报价列表（已集成数据权限过滤）"""
         query = self.db.query(Quote).options(
             joinedload(Quote.customer),
             joinedload(Quote.owner),
             joinedload(Quote.opportunity)
         )
+
+        # 应用数��权限过滤
+        if current_user:
+            from app.core.sales_permissions import filter_sales_data_by_scope
+            query = filter_sales_data_by_scope(query, current_user, self.db, Quote, "owner_id")
 
         # 搜索条件
         if keyword:

@@ -11,6 +11,7 @@ import {
   Label,
   Textarea,
 } from "../../components/ui";
+import { sourceOptions } from "./leadManagementConstants";
 
 export default function CreateLeadDialog({
   open,
@@ -41,13 +42,20 @@ export default function CreateLeadDialog({
             </div>
             <div>
               <Label>来源</Label>
-              <Input
+              <select
                 value={formData.source}
                 onChange={(e) =>
                   setFormData({ ...formData, source: e.target.value })
                 }
-                placeholder="展会/转介绍/网络等"
-              />
+                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
+              >
+                <option value="">请选择来源</option>
+                {sourceOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <Label>行业</Label>

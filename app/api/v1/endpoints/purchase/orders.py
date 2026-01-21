@@ -20,6 +20,7 @@ from app.models.purchase import (
 )
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.data_scope_service import DataScopeConfig, DataScopeService
 
 from .utils import (
     decimal_value,
@@ -29,6 +30,13 @@ from .utils import (
 )
 
 router = APIRouter()
+
+# 采购订单数据权限配置
+PO_DATA_SCOPE_CONFIG = DataScopeConfig(
+    owner_field="created_by",
+    additional_owner_fields=["approved_by"],
+    project_field="project_id",
+)
 
 
 @router.get("/")
@@ -41,8 +49,14 @@ def list_purchase_orders(
     status: Optional[str] = Query(None),
     current_user: User = Depends(get_current_active_user),
 ):
-    """获取采购订单列表"""
+    """获取采购订单列表（按数据权限过滤）"""
     query = db.query(PurchaseOrder)
+
+    # 应用数据权限过滤
+    query = DataScopeService.filter_by_scope(
+        db, query, PurchaseOrder, current_user, PO_DATA_SCOPE_CONFIG
+    )
+
     if keyword:
         query = query.filter(
             or_(

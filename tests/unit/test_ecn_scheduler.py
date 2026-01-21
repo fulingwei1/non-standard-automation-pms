@@ -13,7 +13,7 @@ from unittest.mock import MagicMock, patch, Mock
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from sqlalchemy.orm import Session
-import services.ecn_scheduler
+import app.services.ecn_scheduler
 
 
 
@@ -24,42 +24,42 @@ class TestEcnScheduler:
     def test_check_evaluation_overdue(self):
         """测试 check_evaluation_overdue 函数"""
         # TODO: 实现测试逻辑
-        from services.ecn_scheduler import check_evaluation_overdue
+        from app.services.ecn_scheduler import check_evaluation_overdue
         pass
 
 
     def test_check_approval_overdue(self):
         """测试 check_approval_overdue 函数"""
         # TODO: 实现测试逻辑
-        from services.ecn_scheduler import check_approval_overdue
+        from app.services.ecn_scheduler import check_approval_overdue
         pass
 
 
     def test_check_task_overdue(self):
         """测试 check_task_overdue 函数"""
         # TODO: 实现测试逻辑
-        from services.ecn_scheduler import check_task_overdue
+        from app.services.ecn_scheduler import check_task_overdue
         pass
 
 
     def test_check_all_overdue(self):
         """测试 check_all_overdue 函数"""
         # TODO: 实现测试逻辑
-        from services.ecn_scheduler import check_all_overdue
+        from app.services.ecn_scheduler import check_all_overdue
         pass
 
 
     def test_send_overdue_notifications(self):
         """测试 send_overdue_notifications 函数"""
         # TODO: 实现测试逻辑
-        from services.ecn_scheduler import send_overdue_notifications
+        from app.services.ecn_scheduler import send_overdue_notifications
         pass
 
 
     def test_run_ecn_scheduler(self):
         """测试 run_ecn_scheduler 函数"""
         # TODO: 实现测试逻辑
-        from services.ecn_scheduler import run_ecn_scheduler
+        from app.services.ecn_scheduler import run_ecn_scheduler
         pass
 
 

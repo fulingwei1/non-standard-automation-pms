@@ -1,6 +1,7 @@
 export { default as LeadStatsCards } from "./LeadStatsCards";
 export { default as LeadFilters } from "./LeadFilters";
 export { default as LeadList } from "./LeadList";
+export { default as LeadInsights } from "./LeadInsights";
 export { default as CreateLeadDialog } from "./CreateLeadDialog";
 export { default as EditLeadDialog } from "./EditLeadDialog";
 export { default as ConvertLeadDialog } from "./ConvertLeadDialog";

@@ -8,18 +8,10 @@ File Size: 7 lines
 Batch: 3
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, Mock
-from datetime import datetime, date, timedelta
-from decimal import Decimal
-import services.performance_collector.constants
 
 
-
-
-class TestPerformanceCollector/Constants:
+class TestPerformanceCollectorConstants:
     """Test suite for performance_collector/constants."""
-
 
     # TODO: 添加更多测试用例
     # - 正常流程测试 (Happy Path)

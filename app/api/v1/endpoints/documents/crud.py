@@ -2,7 +2,6 @@
 """
 文档CRUD操作
 """
-from pathlib import Path
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -19,8 +18,15 @@ from app.schemas.project import (
     ProjectDocumentCreate,
     ProjectDocumentResponse,
 )
+from app.services.data_scope_service import DataScopeConfig, DataScopeService
 
 router = APIRouter()
+
+# 文档数据权限配置
+DOCUMENT_DATA_SCOPE_CONFIG = DataScopeConfig(
+    owner_field="uploaded_by",
+    project_field="project_id",
+)
 
 
 @router.get("/", response_model=PaginatedResponse[ProjectDocumentResponse])
@@ -36,9 +42,14 @@ def read_documents(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
-    获取文档记录列表（支持分页、筛选）
+    获取文档记录列表（按数据权限过滤）
     """
     query = db.query(ProjectDocument)
+
+    # 应用数据权限过滤
+    query = DataScopeService.filter_by_scope(
+        db, query, ProjectDocument, current_user, DOCUMENT_DATA_SCOPE_CONFIG
+    )
 
     if project_id:
         query = query.filter(ProjectDocument.project_id == project_id)
