@@ -51,12 +51,15 @@ class ReportDataGenerationCore:
 
         # 获取用户的角色代码
         user_role_codes = []
-        user_roles = db.query(User).filter(User.id == user.id).first()
-        if user_roles:
-            # 这里假设用户模型有 roles 关系
-            for user_role in getattr(user_roles, 'user_roles', []):
-                if user_role.role and user_role.role.is_active:
-                    user_role_codes.append(user_role.role.role_code)
+        # User.roles 是 lazy="dynamic" 关系，需要调用 .all() 或遍历
+        from app.models.user import UserRole, Role
+        user_roles = db.query(UserRole).join(Role).filter(
+            UserRole.user_id == user.id,
+            Role.is_active == True
+        ).all()
+        for user_role in user_roles:
+            if user_role.role and user_role.role.is_active:
+                user_role_codes.append(user_role.role.role_code)
 
         # 如果没有角色，不允许
         if not user_role_codes:

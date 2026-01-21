@@ -11,8 +11,8 @@ from decimal import Decimal
 import pytest
 from sqlalchemy.orm import Session
 
-from app.models.alert import AlertLevelEnum, AlertRecord, AlertRule
-from app.models.enums import IssueStatusEnum, ProjectHealthEnum
+from app.models.enums import AlertLevelEnum, IssueStatusEnum, ProjectHealthEnum
+from app.models.alert import AlertRecord, AlertRule
 from app.models.issue import Issue, IssueTypeEnum
 from app.models.progress import Task
 from app.models.project import Project, ProjectMilestone, ProjectStatusLog

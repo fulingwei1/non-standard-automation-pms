@@ -10,7 +10,7 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
-from sqlalchemy import and_, func, or_
+from sqlalchemy import and_, case, func, or_
 from sqlalchemy.orm import Session
 
 from app.models.enums import (
@@ -67,7 +67,7 @@ class WinRatePredictionService:
 
         stats = self.db.query(
             func.count(Project.id).label('total'),
-            func.sum(func.case(
+            func.sum(case(
                 (Project.outcome == LeadOutcomeEnum.WON.value, 1),
                 else_=0
             )).label('won')
@@ -102,7 +102,7 @@ class WinRatePredictionService:
         elif customer_name:
             # 通过客户名称查找
             customer = self.db.query(Customer).filter(
-                Customer.name == customer_name
+                Customer.customer_name == customer_name
             ).first()
             if customer:
                 query = query.filter(Project.customer_id == customer.id)

@@ -10,7 +10,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.models.sales import Lead, LeadFollowUp
-from app.services.lead_priority_scoring_service import LeadPriorityScoringService
+from app.services.lead_priority_scoring import LeadPriorityScoringService
 
 
 @pytest.fixture

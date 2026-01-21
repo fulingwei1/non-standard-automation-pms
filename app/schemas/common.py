@@ -4,7 +4,7 @@
 """
 
 from datetime import datetime
-from typing import Any, Generic, List, Optional, TypeVar
+from typing import Generic, List, Optional, TypeVar
 
 from pydantic import BaseModel, Field
 
@@ -68,3 +68,11 @@ class AuditSchema(TimestampSchema):
     """带审计信息的 Schema"""
     created_by: Optional[int] = None
     created_by_name: Optional[str] = None
+
+
+class PageResponse(BaseModel, Generic[T]):
+    """分页响应模型（使用 skip/limit）"""
+    items: List[T] = Field(default=[], description="数据列表")
+    total: int = Field(default=0, description="总记录数")
+    skip: int = Field(default=0, description="跳过记录数")
+    limit: int = Field(default=20, description="每页条数")

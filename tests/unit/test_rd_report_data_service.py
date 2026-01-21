@@ -13,7 +13,7 @@ from unittest.mock import MagicMock, patch, Mock
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from sqlalchemy.orm import Session
-import services.rd_report_data_service
+import app.services.rd_report_data_service
 
 
 
@@ -24,42 +24,42 @@ class TestRdReportDataService:
     def test_build_auxiliary_ledger_data(self):
         """测试 build_auxiliary_ledger_data 函数"""
         # TODO: 实现测试逻辑
-        from services.rd_report_data_service import build_auxiliary_ledger_data
+        from app.services.rd_report_data_service import build_auxiliary_ledger_data
         pass
 
 
     def test_build_deduction_detail_data(self):
         """测试 build_deduction_detail_data 函数"""
         # TODO: 实现测试逻辑
-        from services.rd_report_data_service import build_deduction_detail_data
+        from app.services.rd_report_data_service import build_deduction_detail_data
         pass
 
 
     def test_build_high_tech_data(self):
         """测试 build_high_tech_data 函数"""
         # TODO: 实现测试逻辑
-        from services.rd_report_data_service import build_high_tech_data
+        from app.services.rd_report_data_service import build_high_tech_data
         pass
 
 
     def test_build_intensity_data(self):
         """测试 build_intensity_data 函数"""
         # TODO: 实现测试逻辑
-        from services.rd_report_data_service import build_intensity_data
+        from app.services.rd_report_data_service import build_intensity_data
         pass
 
 
     def test_build_personnel_data(self):
         """测试 build_personnel_data 函数"""
         # TODO: 实现测试逻辑
-        from services.rd_report_data_service import build_personnel_data
+        from app.services.rd_report_data_service import build_personnel_data
         pass
 
 
     def test_get_rd_report_data(self):
         """测试 get_rd_report_data 函数"""
         # TODO: 实现测试逻辑
-        from services.rd_report_data_service import get_rd_report_data
+        from app.services.rd_report_data_service import get_rd_report_data
         pass
 
 

@@ -36,7 +36,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
-import { projectApi, customerApi, orgApi } from "../../services/api";
+import { projectApi, customerApi, orgApi, stageViewsApi } from "../../services/api";
 import { toast } from "../ui/toast";
 import { BasicInfoStep } from "./steps/BasicInfoStep";
 import { CustomerInfoStep } from "./steps/CustomerInfoStep";
@@ -109,12 +109,14 @@ export default function ProjectFormStepper({
     description: "",
     requirements: "",
     template_id: null,
+    stage_template_id: null, // 阶段模板ID
     ...initialData,
   });
 
   // 选项数据
   const [customers, setCustomers] = useState([]);
   const [employees, setEmployees] = useState([]);
+  const [stageTemplates, setStageTemplates] = useState([]); // 阶段模板列表
   const [filteredCustomers, setFilteredCustomers] = useState([]);
   const [customerSearch, setCustomerSearch] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -125,14 +127,16 @@ export default function ProjectFormStepper({
     if (open) {
       const loadOptions = async () => {
         try {
-          const [custRes, empRes, statsRes] = await Promise.all([
+          const [custRes, empRes, statsRes, stageTemplatesRes] = await Promise.all([
             customerApi.list(),
             orgApi.employees(),
             projectApi.getStats?.() || Promise.resolve({ data: { by_pm: [] } }), // Sprint 3.2: 加载项目经理统计
+            stageViewsApi.templates.list({ is_active: true }), // 加载阶段模板
           ]);
           setCustomers(custRes.data || []);
           setEmployees(empRes.data || []);
           setFilteredCustomers(custRes.data || []);
+          setStageTemplates(stageTemplatesRes.data?.items || stageTemplatesRes.data || []);
 
           // Sprint 3.2: 构建项目经理统计映射
           if (statsRes.data?.by_pm) {
@@ -347,6 +351,7 @@ export default function ProjectFormStepper({
             formData={formData}
             setFormData={setFormData}
             recommendedTemplates={recommendedTemplates}
+            stageTemplates={stageTemplates}
             currentStep={currentStep}
             initialData={initialData}
             validatingCode={validatingCode}

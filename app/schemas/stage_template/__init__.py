@@ -84,6 +84,7 @@ from .node_tasks import (
 
 # 视图
 from .views import (
+    TemplateGroup,
     PipelineStatistics,
     PipelineViewResponse,
     ProjectStageOverview,
@@ -101,6 +102,26 @@ from .status import (
     StageReviewRequest,
     UpdateStageStatusRequest,
 )
+
+# Rebuild models to resolve forward references (Pydantic v2 requirement)
+# This is necessary because views.py models reference other models from the same module
+# that are defined in other files (StageProgress from progress.py, StageDefinitionResponse from definitions.py)
+# Pydantic v2 requires explicit resolution of these forward references during schema generation
+for model_name in [
+    "ProjectStageOverview",
+    "PipelineStatistics",
+    "TemplateGroup",
+    "PipelineViewResponse",
+    "TimelineNode",
+    "TimelineStage",
+    "TimelineViewResponse",
+    "TreeTask",
+    "TreeNode",
+    "TreeStage",
+    "TreeViewResponse",
+]:
+    if model_name in locals():
+        locals()[model_name].model_rebuild()
 
 __all__ = [
     # 节点和阶段定义
@@ -158,6 +179,7 @@ __all__ = [
     "ProjectStageOverview",
     "PipelineStatistics",
     "PipelineViewResponse",
+    "TemplateGroup",
     "TimelineNode",
     "TimelineStage",
     "TimelineViewResponse",

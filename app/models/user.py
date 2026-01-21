@@ -74,6 +74,7 @@ class Role(Base, TimestampMixin):
     role_name = Column(String(100), nullable=False, comment="角色名称")
     description = Column(Text, comment="角色描述")
     data_scope = Column(String(20), default="OWN", comment="数据权限范围")
+    parent_id = Column(Integer, ForeignKey("roles.id"), nullable=True, comment="父角色ID（继承）")
     is_system = Column(Boolean, default=False, comment="是否系统预置")
     is_active = Column(Boolean, default=True, comment="是否启用")
     sort_order = Column(Integer, default=0, comment="排序")
@@ -84,6 +85,7 @@ class Role(Base, TimestampMixin):
     # 关系
     users = relationship("UserRole", back_populates="role", lazy="dynamic")
     permissions = relationship("RolePermission", back_populates="role", lazy="dynamic")
+    parent = relationship("Role", remote_side=[id], backref="children")
 
     def __repr__(self):
         return f"<Role {self.role_code}>"
@@ -101,15 +103,18 @@ class Permission(Base, TimestampMixin):
         "perm_code", String(100), unique=True, nullable=False, comment="权限编码"
     )
     permission_name = Column("perm_name", String(200), nullable=False, comment="权限名称")
-    module = Column(String(50), comment="所属模块")
+    module = Column(String(50), comment="所属模块编码")
+    page_code = Column(String(50), nullable=True, comment="所属页面编码")
     # 以下字段在旧表结构中可能不存在，设为可选
     resource = Column(String(50), nullable=True, comment="资源类型")
-    action = Column(String(20), comment="操作类型")
+    action = Column(String(20), comment="操作类型: VIEW/CREATE/EDIT/DELETE/APPROVE/EXPORT")
+    depends_on = Column(Integer, ForeignKey("permissions.id"), nullable=True, comment="依赖的权限ID")
     description = Column(Text, nullable=True, comment="权限描述")
     is_active = Column(Boolean, default=True, nullable=True, comment="是否启用")
 
     # 关系
     roles = relationship("RolePermission", back_populates="permission", lazy="dynamic")
+    parent_permission = relationship("Permission", remote_side=[id], backref="dependent_permissions")
 
     def __repr__(self):
         return f"<Permission {self.permission_code}>"
@@ -143,6 +148,24 @@ class UserRole(Base):
     # 关系
     user = relationship("User", back_populates="roles")
     role = relationship("Role", back_populates="users")
+
+
+class RoleTemplate(Base, TimestampMixin):
+    """角色模板表"""
+
+    __tablename__ = "role_templates"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    template_code = Column(String(50), unique=True, nullable=False, comment="模板编码")
+    template_name = Column(String(100), nullable=False, comment="模板名称")
+    description = Column(Text, comment="模板描述")
+    data_scope = Column(String(20), default="OWN", comment="数据权限范围")
+    permission_ids = Column(JSON, comment="权限ID数组")
+    is_active = Column(Boolean, default=True, comment="是否启用")
+    sort_order = Column(Integer, default=0, comment="排序")
+
+    def __repr__(self):
+        return f"<RoleTemplate {self.template_code}>"
 
 
 class PermissionAudit(Base, TimestampMixin):

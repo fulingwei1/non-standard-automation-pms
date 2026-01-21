@@ -211,7 +211,7 @@ async def auto_select_collaborators(
     current_user: User = Depends(get_current_user)
 ):
     """自动匿名抽取5个合作人员进行评价"""
-    from app.services.collaboration_rating_service import CollaborationRatingService
+    from app.services.collaboration_rating import CollaborationRatingService
 
     service = CollaborationRatingService(db)
 
@@ -249,7 +249,7 @@ async def submit_rating(
     current_user: User = Depends(get_current_user)
 ):
     """提交跨部门协作评价"""
-    from app.services.collaboration_rating_service import CollaborationRatingService
+    from app.services.collaboration_rating import CollaborationRatingService
 
     service = CollaborationRatingService(db)
 
@@ -284,7 +284,7 @@ async def get_pending_ratings_new(
     current_user: User = Depends(get_current_user)
 ):
     """获取当前用户待评价的列表"""
-    from app.services.collaboration_rating_service import CollaborationRatingService
+    from app.services.collaboration_rating import CollaborationRatingService
 
     service = CollaborationRatingService(db)
 
@@ -322,7 +322,7 @@ async def get_rating_statistics(
     current_user: User = Depends(get_current_user)
 ):
     """获取指定周期的评价统计信息"""
-    from app.services.collaboration_rating_service import CollaborationRatingService
+    from app.services.collaboration_rating import CollaborationRatingService
 
     service = CollaborationRatingService(db)
 
@@ -345,7 +345,7 @@ async def get_collaboration_trend(
     current_user: User = Depends(get_current_user)
 ):
     """获取工程师的跨部门协作趋势"""
-    from app.services.collaboration_rating_service import CollaborationRatingService
+    from app.services.collaboration_rating import CollaborationRatingService
 
     service = CollaborationRatingService(db)
 
@@ -367,7 +367,7 @@ async def analyze_rating_quality(
     current_user: User = Depends(get_current_user)
 ):
     """分析指定周期的评价质量"""
-    from app.services.collaboration_rating_service import CollaborationRatingService
+    from app.services.collaboration_rating import CollaborationRatingService
 
     service = CollaborationRatingService(db)
 
@@ -392,7 +392,7 @@ async def auto_complete_missing_ratings(
     """自动完成缺失的评价（使用默认值）"""
     from decimal import Decimal
 
-    from app.services.collaboration_rating_service import CollaborationRatingService
+    from app.services.collaboration_rating import CollaborationRatingService
 
     service = CollaborationRatingService(db)
 

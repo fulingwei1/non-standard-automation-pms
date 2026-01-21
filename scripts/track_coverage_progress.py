@@ -258,7 +258,10 @@ def main():
     
     # 输出摘要
     print("\n" + "="*60)
-    print(report.split("## 📊 总体覆盖率")[1].split("## 📈 进度对比")[0])
+    if "## 📊 总体覆盖率" in report and "## 📈 进度对比" in report:
+        print(report.split("## 📊 总体覆盖率")[1].split("## 📈 进度对比")[0])
+    else:
+        print(report)
     print("="*60)
 
 

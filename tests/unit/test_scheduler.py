@@ -179,7 +179,7 @@ class TestWrapJobCallable:
 class TestLoadTaskConfigFromDb:
     """Test _load_task_config_from_db function"""
 
-    @patch('app.utils.scheduler.get_db_session')
+    @patch('app.models.base.get_db_session')
     def test_load_task_config_from_db_success(self, mock_get_db_session):
         """Test loading task config from database"""
         from app.utils.scheduler import _load_task_config_from_db
@@ -205,7 +205,7 @@ class TestLoadTaskConfigFromDb:
         assert result["enabled"] is True
         assert "cron" in result
 
-    @patch('app.utils.scheduler.get_db_session')
+    @patch('app.models.base.get_db_session')
     def test_load_task_config_from_db_not_found(self, mock_get_db_session):
         """Test loading task config when not found"""
         from app.utils.scheduler import _load_task_config_from_db
@@ -225,7 +225,7 @@ class TestLoadTaskConfigFromDb:
         assert result is None
 
     @patch('app.utils.scheduler.logger')
-    @patch('app.utils.scheduler.get_db_session')
+    @patch('app.models.base.get_db_session')
     def test_load_task_config_from_db_exception(self, mock_get_db_session, mock_logger):
         """Test loading task config handles exceptions"""
         from app.utils.scheduler import _load_task_config_from_db

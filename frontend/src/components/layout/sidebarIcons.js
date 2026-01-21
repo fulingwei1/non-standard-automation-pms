@@ -9,6 +9,7 @@ import {
   Kanban,
   Calendar,
   ListTodo,
+  List,
   ShoppingCart,
   Package,
   AlertTriangle,
@@ -42,13 +43,16 @@ import {
   Crown,
   Award,
   TrendingUp,
+  TrendingDown,
   CheckCircle2,
   MessageSquare,
   Star,
   Layers,
   Heart,
   Key,
-  Activity
+  Activity,
+  Workflow,
+  Gauge
 } from "lucide-react";
 
 // Icon mapping
@@ -59,6 +63,7 @@ export const iconMap = {
   Kanban,
   Calendar,
   ListTodo,
+  List,
   ShoppingCart,
   Package,
   AlertTriangle,
@@ -92,11 +97,14 @@ export const iconMap = {
   Crown,
   Award,
   TrendingUp,
+  TrendingDown,
   CheckCircle2,
   MessageSquare,
   Star,
   Layers,
   Heart,
   Key,
-  Activity
+  Activity,
+  Workflow,
+  Gauge
 };

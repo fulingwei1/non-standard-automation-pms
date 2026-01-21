@@ -24,6 +24,9 @@ class ProjectStageOverview(BaseModel):
     project_code: str
     project_name: str
     customer_name: Optional[str] = None
+    template_id: Optional[int] = Field(default=None, description="模板ID")
+    template_code: Optional[str] = Field(default=None, description="模板编码")
+    template_name: Optional[str] = Field(default=None, description="模板名称")
     current_stage_code: Optional[str] = None
     current_stage_name: Optional[str] = None
     progress_pct: float = Field(default=0, description="整体进度百分比")
@@ -44,12 +47,29 @@ class PipelineStatistics(BaseModel):
     by_current_stage: Dict[str, int] = Field(default={}, description="按当前阶段统计")
 
 
+
+class TemplateGroup(BaseModel):
+    """模板分组（用于按模板分组显示项目）"""
+    template_id: int
+    template_code: str
+    template_name: str
+    project_count: int = Field(default=0, description="项目数量")
+    stage_definitions: List[StageDefinitionResponse] = Field(default=[], description="阶段定义")
+    projects: List[ProjectStageOverview] = Field(default=[], description="项目列表")
+
+
 class PipelineViewResponse(BaseModel):
     """流水线视图响应"""
     statistics: PipelineStatistics
     projects: List[ProjectStageOverview]
     stage_definitions: List[StageDefinitionResponse] = Field(
         default=[], description="阶段定义列表（用于表头）"
+    )
+    template_groups: List[TemplateGroup] = Field(
+        default=[], description="按模板分组的项目（当 group_by_template=true 时返回）"
+    )
+    available_templates: List[Dict[str, Any]] = Field(
+        default=[], description="可用模板列表（用于筛选下拉框）"
     )
 
 

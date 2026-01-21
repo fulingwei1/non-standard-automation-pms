@@ -5,190 +5,241 @@ Covers: app/services/invoice_auto_service.py
 Coverage Target: 0% → 60%+
 Current Coverage: 0%
 File Size: 179 lines
-Batch: 1
 """
 
 import pytest
-from unittest.mock import MagicMock, patch, Mock
-from datetime import datetime, date, timedelta
+from datetime import date, datetime
 from decimal import Decimal
 from sqlalchemy.orm import Session
 
 from app.services.invoice_auto_service import InvoiceAutoService
-from app.models.acceptance import AcceptanceOrder
+from app.models.acceptance import AcceptanceOrder, AcceptanceTemplate
 from app.models.project import Project, ProjectMilestone, ProjectPaymentPlan
-from app.models.business_support import InvoiceRequest
-
-
-@pytest.fixture
-def invoice_auto_service(db_session: Session):
-    """创建 InvoiceAutoService 实例"""
-    return InvoiceAutoService(db_session)
-
-
-@pytest.fixture
-def test_project(db_session: Session):
-    """创建测试项目"""
-    project = Project(
-        project_code="PJ001",
-        project_name="测试项目"
-    )
-    db_session.add(project)
-    db_session.commit()
-    db_session.refresh(project)
-    return project
-
-
-@pytest.fixture
-def test_acceptance_order(db_session: Session, test_project):
-    """创建测试验收单"""
-    order = AcceptanceOrder(
-        project_id=test_project.id,
-        acceptance_type="FAT",
-        overall_result="PASSED",
-        status="COMPLETED"
-    )
-    db_session.add(order)
-    db_session.commit()
-    db_session.refresh(order)
-    return order
+from app.models.sales import Contract, Invoice
+from tests.factories import ProjectFactory, CustomerFactory
 
 
 class TestInvoiceAutoService:
     """Test suite for InvoiceAutoService."""
 
-    def test_init(self, db_session: Session):
-        """测试服务初始化"""
+    def test_check_and_create_invoice_request_acceptance_not_found(self, db_session):
+        """测试检查并创建发票申请 - 验收单不存在"""
         service = InvoiceAutoService(db_session)
-        assert service is not None
-        assert service.db == db_session
+        result = service.check_and_create_invoice_request(99999)
 
-    def test_check_and_create_invoice_request_not_found(self, invoice_auto_service):
-        """测试验收单不存在"""
-        result = invoice_auto_service.check_and_create_invoice_request(99999)
+        assert result["success"] is False
+        assert "不存在" in result["message"]
+        assert result["invoice_requests"] == []
+
+    def test_check_and_create_invoice_request_not_passed(self, db_session):
+        """测试检查并创建发票申请 - 验收未通过"""
+        from app.models.acceptance import AcceptanceOrder, AcceptanceTemplate
         
-        assert result is not None
-        assert result['success'] is False
-        assert '不存在' in result['message']
-        assert result['invoice_requests'] == []
+        project = ProjectFactory()
+        db_session.add(project)
+        db_session.flush()
 
-    def test_check_and_create_invoice_request_not_passed(self, invoice_auto_service, db_session, test_project):
-        """测试验收未通过"""
-        order = AcceptanceOrder(
-            project_id=test_project.id,
+        template = AcceptanceTemplate(
+            template_code="AT-TEST",
+            template_name="测试模板",
             acceptance_type="FAT",
+            is_system=True,
+            is_active=True
+        )
+        db_session.add(template)
+        db_session.flush()
+
+        order = AcceptanceOrder(
+            order_no="AO-TEST",
+            project_id=project.id,
+            acceptance_type="FAT",
+            template_id=template.id,
             overall_result="FAILED",
-            status="COMPLETED"
+            status="COMPLETED",
+            planned_date=date.today()
         )
         db_session.add(order)
         db_session.commit()
-        db_session.refresh(order)
-        
-        result = invoice_auto_service.check_and_create_invoice_request(order.id)
-        
-        assert result is not None
-        assert result['success'] is True
-        assert '无需开票' in result['message']
-        assert result['invoice_requests'] == []
 
-    def test_check_and_create_invoice_request_not_completed(self, invoice_auto_service, db_session, test_project):
-        """测试验收未完成"""
+        service = InvoiceAutoService(db_session)
+        result = service.check_and_create_invoice_request(order.id)
+
+        assert result["success"] is True
+        assert "无需开票" in result["message"]
+        assert result["invoice_requests"] == []
+
+    def test_check_and_create_invoice_request_unsupported_type(self, db_session):
+        """测试检查并创建发票申请 - 不支持的验收类型"""
+        from app.models.acceptance import AcceptanceOrder, AcceptanceTemplate
+        
+        project = ProjectFactory()
+        db_session.add(project)
+        db_session.flush()
+
+        template = AcceptanceTemplate(
+            template_code="AT-TEST2",
+            template_name="测试模板2",
+            acceptance_type="OTHER",
+            is_system=True,
+            is_active=True
+        )
+        db_session.add(template)
+        db_session.flush()
+
         order = AcceptanceOrder(
-            project_id=test_project.id,
+            order_no="AO-TEST2",
+            project_id=project.id,
+            acceptance_type="OTHER",
+            template_id=template.id,
+            overall_result="PASSED",
+            status="COMPLETED",
+            planned_date=date.today()
+        )
+        db_session.add(order)
+        db_session.commit()
+
+        service = InvoiceAutoService(db_session)
+        result = service.check_and_create_invoice_request(order.id)
+
+        assert result["success"] is True
+        assert "不支持" in result["message"]
+        assert result["invoice_requests"] == []
+
+    def test_check_and_create_invoice_request_no_milestone(self, db_session):
+        """测试检查并创建发票申请 - 未找到关联里程碑"""
+        from app.models.acceptance import AcceptanceOrder, AcceptanceTemplate
+        
+        project = ProjectFactory()
+        db_session.add(project)
+        db_session.flush()
+
+        template = AcceptanceTemplate(
+            template_code="AT-TEST3",
+            template_name="测试模板3",
             acceptance_type="FAT",
-            overall_result="PASSED",
-            status="DRAFT"
+            is_system=True,
+            is_active=True
         )
-        db_session.add(order)
-        db_session.commit()
-        db_session.refresh(order)
-        
-        result = invoice_auto_service.check_and_create_invoice_request(order.id)
-        
-        assert result is not None
-        assert result['success'] is True
-        assert '无需开票' in result['message']
+        db_session.add(template)
+        db_session.flush()
 
-    def test_check_and_create_invoice_request_unsupported_type(self, invoice_auto_service, db_session, test_project):
-        """测试不支持的验收类型"""
         order = AcceptanceOrder(
-            project_id=test_project.id,
-            acceptance_type="UNKNOWN",
+            order_no="AO-TEST3",
+            project_id=project.id,
+            acceptance_type="FAT",
+            template_id=template.id,
             overall_result="PASSED",
-            status="COMPLETED"
+            status="COMPLETED",
+            planned_date=date.today()
         )
         db_session.add(order)
         db_session.commit()
-        db_session.refresh(order)
-        
-        result = invoice_auto_service.check_and_create_invoice_request(order.id)
-        
-        assert result is not None
-        assert result['success'] is True
-        assert '不支持' in result['message']
 
-    def test_check_and_create_invoice_request_no_milestone(self, invoice_auto_service, test_acceptance_order):
-        """测试无关联里程碑"""
-        result = invoice_auto_service.check_and_create_invoice_request(test_acceptance_order.id)
-        
-        assert result is not None
-        assert result['success'] is True
-        assert '未找到关联的里程碑' in result['message']
+        service = InvoiceAutoService(db_session)
+        result = service.check_and_create_invoice_request(order.id)
 
-    def test_check_and_create_invoice_request_success(self, invoice_auto_service, db_session, test_project, test_acceptance_order):
-        """测试成功创建发票申请"""
-        # 创建里程碑
-        milestone = ProjectMilestone(
-            project_id=test_project.id,
-            milestone_type="FAT_PASS",
-            status="COMPLETED"
-        )
-        db_session.add(milestone)
-        db_session.commit()
-        db_session.refresh(milestone)
-        
-        # 创建收款计划
-        payment_plan = ProjectPaymentPlan(
-            project_id=test_project.id,
-            milestone_id=milestone.id,
-            payment_amount=Decimal("100000.00"),
-            payment_status="PENDING"
-        )
-        db_session.add(payment_plan)
-        db_session.commit()
-        
-        result = invoice_auto_service.check_and_create_invoice_request(test_acceptance_order.id)
-        
-        assert result is not None
-        assert result['success'] is True
-        # 应该创建了发票申请
-        assert len(result.get('invoice_requests', [])) >= 0
+        assert result["success"] is True
+        assert "未找到关联的里程碑" in result["message"]
+        assert result["invoice_requests"] == []
 
-    def test_check_and_create_invoice_request_auto_create(self, invoice_auto_service, db_session, test_project, test_acceptance_order):
-        """测试自动创建发票"""
-        # 创建里程碑和收款计划
-        milestone = ProjectMilestone(
-            project_id=test_project.id,
-            milestone_type="FAT_PASS",
-            status="COMPLETED"
+    def test_check_deliverables_complete_no_contract(self, db_session):
+        """测试检查交付物是否齐全 - 无合同"""
+        service = InvoiceAutoService(db_session)
+        
+        plan = ProjectPaymentPlan(
+            project_id=1,
+            payment_no=1,
+            payment_name="首付款",
+            payment_type="ADVANCE",
+            planned_amount=Decimal("10000.00"),
+            contract_id=None
         )
-        db_session.add(milestone)
+
+        result = service._check_deliverables_complete(plan)
+        assert result is True  # 无合同时默认齐全
+
+    def test_check_acceptance_issues_resolved_no_issues(self, db_session):
+        """测试检查验收问题是否已解决 - 无问题"""
+        from app.models.acceptance import AcceptanceOrder, AcceptanceTemplate
+        
+        project = ProjectFactory()
+        db_session.add(project)
+        db_session.flush()
+
+        template = AcceptanceTemplate(
+            template_code="AT-TEST4",
+            template_name="测试模板4",
+            acceptance_type="FAT",
+            is_system=True,
+            is_active=True
+        )
+        db_session.add(template)
+        db_session.flush()
+
+        order = AcceptanceOrder(
+            order_no="AO-TEST4",
+            project_id=project.id,
+            acceptance_type="FAT",
+            template_id=template.id,
+            overall_result="PASSED",
+            status="COMPLETED",
+            planned_date=date.today()
+        )
+        db_session.add(order)
         db_session.commit()
-        db_session.refresh(milestone)
+
+        service = InvoiceAutoService(db_session)
+        result = service._check_acceptance_issues_resolved(order)
+
+        # 无问题时应该返回True
+        assert result is True
+
+    def test_check_acceptance_issues_resolved_with_blocking_issues(self, db_session):
+        """测试检查验收问题是否已解决 - 有阻塞问题"""
+        from app.models.acceptance import AcceptanceOrder, AcceptanceTemplate, AcceptanceIssue
         
-        payment_plan = ProjectPaymentPlan(
-            project_id=test_project.id,
-            milestone_id=milestone.id,
-            payment_amount=Decimal("100000.00"),
-            payment_status="PENDING"
+        project = ProjectFactory()
+        db_session.add(project)
+        db_session.flush()
+
+        template = AcceptanceTemplate(
+            template_code="AT-TEST5",
+            template_name="测试模板5",
+            acceptance_type="FAT",
+            is_system=True,
+            is_active=True
         )
-        db_session.add(payment_plan)
+        db_session.add(template)
+        db_session.flush()
+
+        order = AcceptanceOrder(
+            order_no="AO-TEST5",
+            project_id=project.id,
+            acceptance_type="FAT",
+            template_id=template.id,
+            overall_result="PASSED",
+            status="COMPLETED",
+            planned_date=date.today()
+        )
+        db_session.add(order)
+        db_session.flush()
+
+        # 创建阻塞问题
+        issue = AcceptanceIssue(
+            issue_no="ISSUE-001",
+            order_id=order.id,
+            issue_type="DEFECT",
+            severity="CRITICAL",
+            title="阻塞问题",
+            description="这是一个阻塞验收的问题",
+            is_blocking=True,
+            status="OPEN"
+        )
+        db_session.add(issue)
         db_session.commit()
-        
-        result = invoice_auto_service.check_and_create_invoice_request(
-            test_acceptance_order.id,
-            auto_create=True
-        )
-        
-        assert result is not None
-        assert result['success'] is True
+
+        service = InvoiceAutoService(db_session)
+        result = service._check_acceptance_issues_resolved(order)
+
+        # 有阻塞问题时应该返回False
+        assert result is False

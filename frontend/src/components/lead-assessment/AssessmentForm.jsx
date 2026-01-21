@@ -200,10 +200,10 @@ export const AssessmentForm = ({
   }, [totalScore]);
 
   // 获取跟进策略
+  // FOLLOW_UP_STRATEGIES 按 minScore 降序排列，找到第一个 minScore <= totalScore 的策略
   const getFollowUpStrategy = useMemo(() => {
     return FOLLOW_UP_STRATEGIES.find((strategy) => {
-      const score = totalScore;
-      return score >= strategy.scoreRange[0] && score <= strategy.scoreRange[1];
+      return totalScore >= strategy.minScore;
     }) || FOLLOW_UP_STRATEGIES[FOLLOW_UP_STRATEGIES.length - 1];
   }, [totalScore]);
 

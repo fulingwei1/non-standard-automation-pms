@@ -28,7 +28,7 @@ from ..production import (
 from ..material import (
     BomHeader,
     BomItem,
-    MaterialInventoryAlert,
+    MaterialShortage,
     PurchaseOrder,
     PurchaseRequest,
 )
@@ -65,7 +65,7 @@ __all__ = [
     "BomItem",
     "PurchaseOrder",
     "PurchaseRequest",
-    "MaterialInventoryAlert",
+    "MaterialShortage",
     # 短缺
     "ShortageReport",
     "ShortageDailyReport",

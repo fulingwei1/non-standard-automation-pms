@@ -13,7 +13,7 @@ from unittest.mock import MagicMock, patch, Mock
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from sqlalchemy.orm import Session
-import services.project_relations_service
+import app.services.project_relations_service
 
 
 
@@ -24,28 +24,28 @@ class TestProjectRelationsService:
     def test_get_material_transfer_relations(self):
         """测试 get_material_transfer_relations 函数"""
         # TODO: 实现测试逻辑
-        from services.project_relations_service import get_material_transfer_relations
+        from app.services.project_relations_service import get_material_transfer_relations
         pass
 
 
     def test_get_shared_resource_relations(self):
         """测试 get_shared_resource_relations 函数"""
         # TODO: 实现测试逻辑
-        from services.project_relations_service import get_shared_resource_relations
+        from app.services.project_relations_service import get_shared_resource_relations
         pass
 
 
     def test_get_shared_customer_relations(self):
         """测试 get_shared_customer_relations 函数"""
         # TODO: 实现测试逻辑
-        from services.project_relations_service import get_shared_customer_relations
+        from app.services.project_relations_service import get_shared_customer_relations
         pass
 
 
     def test_calculate_relation_statistics(self):
         """测试 calculate_relation_statistics 函数"""
         # TODO: 实现测试逻辑
-        from services.project_relations_service import calculate_relation_statistics
+        from app.services.project_relations_service import calculate_relation_statistics
         pass
 
 

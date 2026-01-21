@@ -22,8 +22,15 @@ from app.schemas.progress import (
     TaskResponse,
     TaskUpdate,
 )
+from app.services.data_scope_service import DataScopeConfig, DataScopeService
 
 router = APIRouter()
+
+# 任务数据权限配置
+TASK_DATA_SCOPE_CONFIG = DataScopeConfig(
+    owner_field="owner_id",
+    project_field="project_id",
+)
 
 
 @router.get("/projects/{project_id}/tasks", response_model=TaskListResponse, status_code=status.HTTP_200_OK)
@@ -40,7 +47,7 @@ def read_project_tasks(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
-    获取项目任务列表
+    获取项目任务列表（按数据权限过滤）
     """
     # 验证项目是否存在
     project = db.query(Project).filter(Project.id == project_id).first()
@@ -48,6 +55,11 @@ def read_project_tasks(
         raise HTTPException(status_code=404, detail="项目不存在")
 
     query = db.query(Task).filter(Task.project_id == project_id)
+
+    # 应用数据权限过滤
+    query = DataScopeService.filter_by_scope(
+        db, query, Task, current_user, TASK_DATA_SCOPE_CONFIG
+    )
 
     # 机台筛选
     if machine_id:

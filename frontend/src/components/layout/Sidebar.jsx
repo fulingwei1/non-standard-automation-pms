@@ -4,6 +4,7 @@ import { roleApi } from "../../services/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "../../lib/utils";
 import { useDebounce } from "../../hooks/useDebounce";
+import { usePermission } from "../../hooks/usePermission";
 import NavGroup from "./NavGroup";
 import NavItem from "./NavItem";
 import { getRoleInfo } from "../../lib/roleConfig";
@@ -22,6 +23,9 @@ import { filterNavItemsByRole, getNavGroupsForRole } from "./sidebarUtils";
 
 export function Sidebar({ collapsed = false, onToggle, onLogout, user }) {
   const location = useLocation();
+
+  // 获取权限检查函数
+  const { hasPermission } = usePermission();
 
   // State for dynamic menu from backend
   const [dynamicNavGroups, setDynamicNavGroups] = useState(null);
@@ -316,6 +320,7 @@ export function Sidebar({ collapsed = false, onToggle, onLogout, user }) {
               onToggleFavorite={toggleFavorite}
               onToggleCollapse={toggleGroupCollapse}
               activePath={location.pathname}
+              checkPermission={hasPermission}
             />
           );
         })}

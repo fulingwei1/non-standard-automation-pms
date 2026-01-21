@@ -269,12 +269,68 @@ async def get_current_active_superuser(
     return current_user
 
 
+def _load_user_permissions_from_db(user_id: int, db: Session) -> set:
+    """从数据库加载用户权限（含继承）"""
+    from sqlalchemy import text
+
+    # 查询用户直接拥有的权限 + 通过角色继承链获得的权限
+    sql = """
+        WITH RECURSIVE role_tree AS (
+            -- 用户直接拥有的角色
+            SELECT r.id, r.parent_id
+            FROM roles r
+            JOIN user_roles ur ON ur.role_id = r.id
+            WHERE ur.user_id = :user_id
+
+            UNION ALL
+
+            -- 递归获取父角色
+            SELECT r.id, r.parent_id
+            FROM roles r
+            JOIN role_tree rt ON r.id = rt.parent_id
+        )
+        SELECT DISTINCT p.perm_code
+        FROM role_tree rt
+        JOIN role_permissions rp ON rt.id = rp.role_id
+        JOIN permissions p ON rp.permission_id = p.id
+    """
+    result = db.execute(text(sql), {"user_id": user_id})
+    return {row[0] for row in result.fetchall()}
+
+
 def check_permission(user: User, permission_code: str, db: Session = None) -> bool:
-    """检查用户权限"""
+    """
+    检查用户权限（带缓存）
+
+    优先从缓存获取用户权限列表，缓存不存在时从数据库加载并缓存。
+    """
     if user.is_superuser:
         return True
 
-    # 使用SQL查询避免ORM关系错误
+    # 尝试使用缓存
+    try:
+        from ..services.permission_cache_service import get_permission_cache_service
+        cache_service = get_permission_cache_service()
+
+        # 从缓存获取用户权限
+        cached_permissions = cache_service.get_user_permissions(user.id)
+
+        if cached_permissions is not None:
+            # 缓存命中
+            logger.debug(f"Permission cache hit for user {user.id}")
+            return permission_code in cached_permissions
+
+        # 缓存未命中，从数据库加载
+        if db is not None:
+            permissions = _load_user_permissions_from_db(user.id, db)
+            # 写入缓存
+            cache_service.set_user_permissions(user.id, permissions)
+            logger.debug(f"Permission cache miss for user {user.id}, loaded {len(permissions)} permissions")
+            return permission_code in permissions
+    except Exception as e:
+        logger.warning(f"Permission cache failed, fallback to DB: {e}")
+
+    # 降级：直接查询数据库
     try:
         from sqlalchemy import text
 

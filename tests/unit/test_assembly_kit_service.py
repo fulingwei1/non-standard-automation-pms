@@ -13,7 +13,7 @@ from unittest.mock import MagicMock, patch, Mock
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from sqlalchemy.orm import Session
-import services.assembly_kit_service
+import app.services.assembly_kit_service
 
 
 
@@ -24,35 +24,35 @@ class TestAssemblyKitService:
     def test_validate_analysis_inputs(self):
         """测试 validate_analysis_inputs 函数"""
         # TODO: 实现测试逻辑
-        from services.assembly_kit_service import validate_analysis_inputs
+        from app.services.assembly_kit_service import validate_analysis_inputs
         pass
 
 
     def test_initialize_stage_results(self):
         """测试 initialize_stage_results 函数"""
         # TODO: 实现测试逻辑
-        from services.assembly_kit_service import initialize_stage_results
+        from app.services.assembly_kit_service import initialize_stage_results
         pass
 
 
     def test_analyze_bom_item(self):
         """测试 analyze_bom_item 函数"""
         # TODO: 实现测试逻辑
-        from services.assembly_kit_service import analyze_bom_item
+        from app.services.assembly_kit_service import analyze_bom_item
         pass
 
 
     def test_get_expected_arrival_date(self):
         """测试 get_expected_arrival_date 函数"""
         # TODO: 实现测试逻辑
-        from services.assembly_kit_service import get_expected_arrival_date
+        from app.services.assembly_kit_service import get_expected_arrival_date
         pass
 
 
     def test_calculate_stage_kit_rates(self):
         """测试 calculate_stage_kit_rates 函数"""
         # TODO: 实现测试逻辑
-        from services.assembly_kit_service import calculate_stage_kit_rates
+        from app.services.assembly_kit_service import calculate_stage_kit_rates
         pass
 
 

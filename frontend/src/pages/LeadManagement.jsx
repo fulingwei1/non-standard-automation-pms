@@ -14,6 +14,7 @@ import {
   LeadStatsCards,
   LeadFilters,
   LeadList,
+  LeadInsights,
   CreateLeadDialog,
   EditLeadDialog,
   ConvertLeadDialog,
@@ -284,7 +285,17 @@ export default function LeadManagement() {
       />
 
       {/* 统计卡片 */}
-      <LeadStatsCards stats={stats} />
+      <LeadStatsCards stats={stats} leads={leads} />
+
+      {/* 数据洞察：来源分布、热门线索、即将跟进 */}
+      <LeadInsights
+        leads={leads}
+        onViewLead={handleViewDetail}
+        onViewAll={() => {
+          setShowKeyLeadsOnly(true);
+          setSortBy("priority");
+        }}
+      />
 
       {/* 筛选栏 */}
       <LeadFilters

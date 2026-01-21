@@ -96,8 +96,8 @@ from .annual_work_service import (
     update_progress,
 )
 
-# 目标分解服务
-from .decomposition_service import (
+# 目标分解服务（已拆分为 decomposition 模块）
+from .decomposition import (
     batch_create_personal_kpis,
     create_department_objective,
     create_personal_kpi,
@@ -117,8 +117,8 @@ from .decomposition_service import (
     update_personal_kpi,
 )
 
-# 战略审视服务
-from .review_service import (
+# 战略审视服务（已拆分为 review 模块）
+from .review import (
     create_calendar_event,
     create_strategy_review,
     delete_calendar_event,

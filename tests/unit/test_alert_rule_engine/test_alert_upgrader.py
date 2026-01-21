@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Tests for alert_rule_engine/alert_upgrader service
-Covers: app/services/alert_rule_engine/alert_upgrader.py
+Tests for alert_service service
+Covers: app/services/alert_service.py
 Coverage Target: 0% → 60%+
 Current Coverage: 0%
 File Size: 60 lines
@@ -13,12 +13,12 @@ from unittest.mock import MagicMock, patch, Mock
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from sqlalchemy.orm import Session
-from services.alert_rule_engine.alert_upgrader import AlertUpgrader
+from app.services.alert_rule_engine.alert_upgrader import AlertUpgrader
 
 
 
 @pytest.fixture
-def alert_rule_engine/alert_upgrader(db_session: Session):
+def alert_service(db_session: Session):
     """创建 AlertUpgrader 实例"""
     return AlertUpgrader(db_session)
 
@@ -34,7 +34,7 @@ class TestAlertUpgrader:
             assert service.db == db_session
 
 
-    def test_notification_service(self, alert_rule_engine/alert_upgrader):
+    def test_notification_service(self, db_session: Session):
         """测试 notification_service 方法"""
         # TODO: 实现测试逻辑
         # 1. 准备测试数据
@@ -43,7 +43,7 @@ class TestAlertUpgrader:
         pass
 
 
-    def test_subscription_service(self, alert_rule_engine/alert_upgrader):
+    def test_subscription_service(self, db_session: Session):
         """测试 subscription_service 方法"""
         # TODO: 实现测试逻辑
         # 1. 准备测试数据
@@ -52,7 +52,7 @@ class TestAlertUpgrader:
         pass
 
 
-    def test_upgrade_alert(self, alert_rule_engine/alert_upgrader):
+    def test_upgrade_alert(self, db_session: Session):
         """测试 upgrade_alert 方法"""
         # TODO: 实现测试逻辑
         # 1. 准备测试数据
@@ -61,7 +61,7 @@ class TestAlertUpgrader:
         pass
 
 
-    def test_check_level_escalation(self, alert_rule_engine/alert_upgrader):
+    def test_check_level_escalation(self, db_session: Session):
         """测试 check_level_escalation 方法"""
         # TODO: 实现测试逻辑
         # 1. 准备测试数据

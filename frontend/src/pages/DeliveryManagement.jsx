@@ -94,6 +94,7 @@ const DeliveryManagement = () => {
       message.error('加载交付数据失败');
       setLoading(false);
     }
+  };
 
   // 过滤数据
   const filteredDeliveries = useMemo(() => {

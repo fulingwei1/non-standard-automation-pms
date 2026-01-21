@@ -68,7 +68,7 @@ def notify_timesheet_missing(db: Session, target_date: Optional[date] = None) ->
     # 查找技术相关部门的ID
     tech_departments = (
         db.query(Department)
-        .filter(Department.name.in_(["技术部", "研发部", "工程部", "研发中心"]))
+        .filter(Department.dept_name.in_(["技术部", "研发部", "工程部", "研发中心"]))
         .all()
     )
     tech_dept_ids = [d.id for d in tech_departments]
@@ -202,7 +202,7 @@ def notify_weekly_timesheet_missing(
     # 查找技术相关部门的ID
     tech_departments = (
         db.query(Department)
-        .filter(Department.name.in_(["技术部", "研发部", "工程部", "研发中心"]))
+        .filter(Department.dept_name.in_(["技术部", "研发部", "工程部", "研发中心"]))
         .all()
     )
     tech_dept_ids = [d.id for d in tech_departments]

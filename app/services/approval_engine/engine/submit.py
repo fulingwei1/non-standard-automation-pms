@@ -6,11 +6,10 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy.orm import Session
-
 from app.models.approval import ApprovalInstance, ApprovalTemplate
 from app.models.user import User
 
+from ..adapters import get_adapter
 from .core import ApprovalEngineCore
 
 
@@ -64,7 +63,21 @@ class ApprovalSubmitMixin:
         if not initiator:
             raise ValueError(f"发起人不存在: {initiator_id}")
 
-        # 3. 构建上下文
+        # 3. 获取业务适配器并验证
+        adapter = None
+        try:
+            adapter = get_adapter(entity_type, self.db)
+            # 验证是否可以提交
+            can_submit, error_msg = adapter.validate_submit(entity_id)
+            if not can_submit:
+                raise ValueError(error_msg)
+        except ValueError as e:
+            # 如果适配器不存在或验证失败，抛出异常
+            if "不支持的业务类型" not in str(e):
+                raise
+            # 对于未配置适配器的业务类型，允许继续（保持向后兼容）
+
+        # 4. 构建上下文（合并表单数据和实体数据）
         context = {
             "form_data": form_data,
             "initiator": {
@@ -75,12 +88,26 @@ class ApprovalSubmitMixin:
             "entity": {"type": entity_type, "id": entity_id},
         }
 
-        # 4. 选择审批流程
+        # 如果有适配器，获取实体数据用于条件路由
+        if adapter:
+            entity_data = adapter.get_entity_data(entity_id)
+            context["entity_data"] = entity_data
+            # 合并到form_data供条件路由使用
+            context["form_data"] = {**form_data, "entity": entity_data}
+
+        # 5. 选择审批流程
         flow = self.router.select_flow(template.id, context)
         if not flow:
             raise ValueError(f"未找到适用的审批流程: {template_code}")
 
-        # 5. 创建审批实例
+        # 6. 确定标题和摘要
+        if adapter:
+            if not title and hasattr(adapter, 'generate_title'):
+                title = adapter.generate_title(entity_id)
+            if not summary and hasattr(adapter, 'generate_summary'):
+                summary = adapter.generate_summary(entity_id)
+
+        # 7. 创建审批实例
         instance_no = self._generate_instance_no(template_code)
         instance = ApprovalInstance(
             instance_no=instance_no,
@@ -101,7 +128,11 @@ class ApprovalSubmitMixin:
         self.db.add(instance)
         self.db.flush()
 
-        # 6. 记录操作日志
+        # 8. 调用适配器的提交回调
+        if adapter:
+            adapter.on_submit(entity_id, instance)
+
+        # 9. 记录操作日志
         self._log_action(
             instance_id=instance.id,
             operator_id=initiator_id,
@@ -110,13 +141,13 @@ class ApprovalSubmitMixin:
             comment=None,
         )
 
-        # 7. 创建第一个节点的任务
+        # 10. 创建第一个节点的任务
         first_node = self._get_first_node(flow.id)
         if first_node:
             instance.current_node_id = first_node.id
             self._create_node_tasks(instance, first_node, context)
 
-        # 8. 处理抄送
+        # 11. 处理抄送
         if cc_user_ids:
             self.executor.create_cc_records(
                 instance=instance,

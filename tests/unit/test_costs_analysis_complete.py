@@ -6,9 +6,9 @@
 """
 
 import pytest
-from sqlalchemy.orm import Session
+# from sqlalchemy.orm import Session
 
-from app.factories import (
+from tests.factories import (
     ProjectFactory,
     ProjectCostFactory,
     MachineFactory,

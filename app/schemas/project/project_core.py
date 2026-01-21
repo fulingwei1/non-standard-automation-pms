@@ -36,6 +36,8 @@ class ProjectCreate(BaseModel):
     budget_amount: Optional[Decimal] = Field(default=0)
     pm_id: Optional[int] = None
     description: Optional[str] = None
+    # 阶段模板
+    stage_template_id: Optional[int] = Field(default=None, description="阶段模板ID")
 
 
 class ProjectUpdate(BaseModel):
@@ -63,6 +65,8 @@ class ProjectUpdate(BaseModel):
     actual_cost: Optional[Decimal] = None
     pm_id: Optional[int] = None
     description: Optional[str] = None
+    # 阶段模板
+    stage_template_id: Optional[int] = Field(default=None, description="阶段模板ID")
     # 销售关联
     lead_id: Optional[int] = None
     opportunity_id: Optional[int] = None
@@ -113,6 +117,8 @@ class ProjectResponse(TimestampSchema):
     pm_id: Optional[int] = None
     pm_name: Optional[str] = None
     is_active: bool = True
+    # 阶段模板
+    stage_template_id: Optional[int] = None
     # 销售关联
     lead_id: Optional[int] = None
     opportunity_id: Optional[int] = None
@@ -153,6 +159,10 @@ class ProjectListResponse(BaseSchema):
     health: str
     progress_pct: Decimal
     pm_name: Optional[str] = None
+    # 筛选所需的ID字段
+    pm_id: Optional[int] = None
+    sales_id: Optional[int] = None  # 对应 salesperson_id
+    te_id: Optional[int] = None  # 技术负责人ID（如有）
 
     class Config:
         from_attributes = True

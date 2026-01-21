@@ -43,12 +43,17 @@ class AnalysisReportMixin:
 
         # 获取人员范围
         if department_id:
-            users = db.query(User).filter(
-                User.department_id == department_id,
-                User.is_active == True
-            ).all()
             dept = db.query(Department).filter(Department.id == department_id).first()
-            scope_name = dept.name if dept else "部门"
+            if dept:
+                # User 模型只有 department 字符串字段，通过部门名称匹配
+                users = db.query(User).filter(
+                    User.department == dept.dept_name,
+                    User.is_active == True
+                ).all()
+                scope_name = dept.dept_name
+            else:
+                users = []
+                scope_name = "部门"
         else:
             users = db.query(User).filter(User.is_active == True).all()
             scope_name = "全公司"

@@ -13,7 +13,7 @@ from .tickets import router as tickets_router
 
 router = APIRouter()
 
-router.include_router(tickets_router)
+router.include_router(tickets_router, prefix="/presale/tickets", tags=["presale-tickets"])
 router.include_router(proposals_router)
 router.include_router(templates_router)
 router.include_router(bids_router)

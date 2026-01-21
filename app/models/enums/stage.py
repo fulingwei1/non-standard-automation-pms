@@ -22,10 +22,27 @@ class CompletionMethodEnum(str, Enum):
 
 class StageStatusEnum(str, Enum):
     """阶段/节点状态"""
-    PENDING = "PENDING"  # 待开始
-    IN_PROGRESS = "IN_PROGRESS"  # 进行中
-    COMPLETED = "COMPLETED"  # 已完成
-    SKIPPED = "SKIPPED"  # 已跳过
+    PENDING = "PENDING"  # 待开始 - 灰色
+    IN_PROGRESS = "IN_PROGRESS"  # 进行中 - 蓝色
+    COMPLETED = "COMPLETED"  # 已完成 - 绿色
+    DELAYED = "DELAYED"  # 已延期 - 红色
+    BLOCKED = "BLOCKED"  # 受阻 - 橙色
+    SKIPPED = "SKIPPED"  # 已跳过 - 灰色
+
+
+class StageCategoryEnum(str, Enum):
+    """阶段分类"""
+    SALES = "sales"  # 销售阶段
+    PRESALES = "presales"  # 售前阶段
+    EXECUTION = "execution"  # 执行阶段
+    CLOSURE = "closure"  # 收尾阶段
+
+
+class ReviewResultEnum(str, Enum):
+    """评审结果"""
+    PASSED = "PASSED"  # 通过
+    CONDITIONAL = "CONDITIONAL"  # 有条件通过
+    FAILED = "FAILED"  # 未通过
 
 
 class TemplateProjectTypeEnum(str, Enum):

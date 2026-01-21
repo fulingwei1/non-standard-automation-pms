@@ -92,6 +92,9 @@ import {
   CHART_COLORS } from
 '../components/contract-management/contractManagementConstants';
 
+// 导入 API service
+import { getContracts, getContractDetail, createContract, updateContract, deleteContract, getContractHistory } from '../services/contractService';
+
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
 const { RangePicker } = DatePicker;
@@ -108,11 +111,6 @@ const ContractManagement = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [editingContract, setEditingContract] = useState(null);
-
-// 导入 API service
-import { getContracts, getContractDetail, createContract, updateContract, deleteContract, getContractHistory } from '../services/contractService';
-
-
 
   // 数据加载
   useEffect(() => {

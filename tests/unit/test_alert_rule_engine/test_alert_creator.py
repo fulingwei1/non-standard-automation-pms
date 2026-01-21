@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Tests for alert_rule_engine/alert_creator service
-Covers: app/services/alert_rule_engine/alert_creator.py
+Tests for alert_service service
+Covers: app/services/alert_service.py
 Coverage Target: 0% → 60%+
 Current Coverage: 0%
 File Size: 51 lines
@@ -13,12 +13,12 @@ from unittest.mock import MagicMock, patch, Mock
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from sqlalchemy.orm import Session
-from services.alert_rule_engine.alert_creator import AlertCreator
+from app.services.alert_rule_engine.alert_creator import AlertCreator
 
 
 
 @pytest.fixture
-def alert_rule_engine/alert_creator(db_session: Session):
+def alert_service(db_session: Session):
     """创建 AlertCreator 实例"""
     return AlertCreator(db_session)
 
@@ -34,7 +34,7 @@ class TestAlertCreator:
             assert service.db == db_session
 
 
-    def test_notification_service(self, alert_rule_engine/alert_creator):
+    def test_notification_service(self, db_session: Session):
         """测试 notification_service 方法"""
         # TODO: 实现测试逻辑
         # 1. 准备测试数据
@@ -43,7 +43,7 @@ class TestAlertCreator:
         pass
 
 
-    def test_subscription_service(self, alert_rule_engine/alert_creator):
+    def test_subscription_service(self, db_session: Session):
         """测试 subscription_service 方法"""
         # TODO: 实现测试逻辑
         # 1. 准备测试数据
@@ -52,7 +52,7 @@ class TestAlertCreator:
         pass
 
 
-    def test_should_create_alert(self, alert_rule_engine/alert_creator):
+    def test_should_create_alert(self, db_session: Session):
         """测试 should_create_alert 方法"""
         # TODO: 实现测试逻辑
         # 1. 准备测试数据
@@ -61,7 +61,7 @@ class TestAlertCreator:
         pass
 
 
-    def test_create_alert(self, alert_rule_engine/alert_creator):
+    def test_create_alert(self, db_session: Session):
         """测试 create_alert 方法"""
         # TODO: 实现测试逻辑
         # 1. 准备测试数据

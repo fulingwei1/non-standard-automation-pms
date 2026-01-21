@@ -4,7 +4,7 @@
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from app.models.approval import ApprovalCarbonCopy, ApprovalComment, ApprovalInstance, ApprovalTask
 from app.models.user import User
@@ -115,6 +115,9 @@ class ApprovalActionsMixin:
         instance.status = "CANCELLED"
         instance.completed_at = datetime.now()
 
+        # 调用适配器的撤回回调
+        self._call_adapter_callback(instance, "on_withdrawn")
+
         # 记录日志
         self._log_action(
             instance_id=instance.id,
@@ -173,6 +176,9 @@ class ApprovalActionsMixin:
         old_status = instance.status
         instance.status = "TERMINATED"
         instance.completed_at = datetime.now()
+
+        # 调用适配器的终止回调
+        self._call_adapter_callback(instance, "on_terminated")
 
         # 记录日志
         self._log_action(

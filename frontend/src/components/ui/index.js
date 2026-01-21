@@ -89,6 +89,7 @@ export {
   TableCaption,
 } from "./table";
 export { Alert, AlertTitle, AlertDescription, alertVariants } from "./alert";
+export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "./tooltip";
 export { Checkbox } from "./checkbox";
 export { Switch } from "./switch";
 export { Slider } from "./slider";

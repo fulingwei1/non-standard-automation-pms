@@ -1,5 +1,5 @@
 // Contract Management API Service
-import { apiClient } from './apiClient';
+import apiClient from './apiClient';
 
 /**
  * 获取合同列表

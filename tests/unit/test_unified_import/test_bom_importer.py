@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Tests for unified_import/bom_importer service
-Covers: app/services/unified_import/bom_importer.py
+Tests for import_service service
+Covers: app/services/import_service.py
 Coverage Target: 0% → 60%+
 Current Coverage: 0%
 File Size: 77 lines
@@ -13,12 +13,12 @@ from unittest.mock import MagicMock, patch, Mock
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from sqlalchemy.orm import Session
-from services.unified_import.bom_importer import BomImporter
+from app.services.unified_import.bom_importer import BomImporter
 
 
 
 @pytest.fixture
-def unified_import/bom_importer(db_session: Session):
+def import_service(db_session: Session):
     """创建 BomImporter 实例"""
     return BomImporter(db_session)
 
@@ -34,7 +34,7 @@ class TestBomImporter:
             assert service.db == db_session
 
 
-    def test_import_bom_data(self, unified_import/bom_importer):
+    def test_import_bom_data(self, db_session: Session):
         """测试 import_bom_data 方法"""
         # TODO: 实现测试逻辑
         # 1. 准备测试数据

@@ -326,6 +326,7 @@ from .sales import (  # Technical Assessment; Approval Workflow
     Lead,
     LeadFollowUp,
     LeadRequirementDetail,
+    MaterialCostUpdateReminder,
     OpenItem,
     Opportunity,
     OpportunityRequirement,
@@ -355,6 +356,11 @@ from .service import (
     ServiceTicketCcUser,
     ServiceTicketProject,
 )
+from .pitfall import (
+    Pitfall,
+    PitfallLearningProgress,
+    PitfallRecommendation,
+)
 from .shortage import (
     AlertHandleLog,
     ArrivalFollowUp,
@@ -363,7 +369,6 @@ from .shortage import (
     MaterialRequirement,
     MaterialSubstitution,
     MaterialTransfer,
-    ShortageAlert,
     ShortageDailyReport,
     ShortageReport,
     WorkOrderBom,
@@ -488,7 +493,7 @@ __all__ = [
     "KitCheck",
     "AlertHandleLog",
     "ShortageDailyReport",
-    "ShortageAlert",
+    # ShortageAlert 已废弃 - 使用 AlertRecord.target_type='SHORTAGE'
     # Purchase
     "PurchaseOrder",
     "PurchaseOrderItem",
@@ -698,6 +703,10 @@ __all__ = [
     "CustomerCommunication",
     "CustomerSatisfaction",
     "KnowledgeBase",
+    # Pitfall
+    "Pitfall",
+    "PitfallRecommendation",
+    "PitfallLearningProgress",
     # SLA
     "SLAPolicy",
     "SLAMonitor",

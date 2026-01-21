@@ -13,7 +13,7 @@ from unittest.mock import MagicMock, patch, Mock
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from sqlalchemy.orm import Session
-import services.timesheet_aggregation_helpers
+import app.services.timesheet_aggregation_helpers
 
 
 
@@ -24,49 +24,49 @@ class TestTimesheetAggregationHelpers:
     def test_calculate_month_range(self):
         """测试 calculate_month_range 函数"""
         # TODO: 实现测试逻辑
-        from services.timesheet_aggregation_helpers import calculate_month_range
+        from app.services.timesheet_aggregation_helpers import calculate_month_range
         pass
 
 
     def test_query_timesheets(self):
         """测试 query_timesheets 函数"""
         # TODO: 实现测试逻辑
-        from services.timesheet_aggregation_helpers import query_timesheets
+        from app.services.timesheet_aggregation_helpers import query_timesheets
         pass
 
 
     def test_calculate_hours_summary(self):
         """测试 calculate_hours_summary 函数"""
         # TODO: 实现测试逻辑
-        from services.timesheet_aggregation_helpers import calculate_hours_summary
+        from app.services.timesheet_aggregation_helpers import calculate_hours_summary
         pass
 
 
     def test_build_project_breakdown(self):
         """测试 build_project_breakdown 函数"""
         # TODO: 实现测试逻辑
-        from services.timesheet_aggregation_helpers import build_project_breakdown
+        from app.services.timesheet_aggregation_helpers import build_project_breakdown
         pass
 
 
     def test_build_daily_breakdown(self):
         """测试 build_daily_breakdown 函数"""
         # TODO: 实现测试逻辑
-        from services.timesheet_aggregation_helpers import build_daily_breakdown
+        from app.services.timesheet_aggregation_helpers import build_daily_breakdown
         pass
 
 
     def test_build_task_breakdown(self):
         """测试 build_task_breakdown 函数"""
         # TODO: 实现测试逻辑
-        from services.timesheet_aggregation_helpers import build_task_breakdown
+        from app.services.timesheet_aggregation_helpers import build_task_breakdown
         pass
 
 
     def test_get_or_create_summary(self):
         """测试 get_or_create_summary 函数"""
         # TODO: 实现测试逻辑
-        from services.timesheet_aggregation_helpers import get_or_create_summary
+        from app.services.timesheet_aggregation_helpers import get_or_create_summary
         pass
 
 

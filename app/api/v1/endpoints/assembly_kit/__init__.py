@@ -11,7 +11,7 @@ from .bom_attributes import smart_recommend_assembly_attrs
 from .dashboard import router as dashboard_router
 
 # Compatibility exports for unit/integration tests
-from .kit_analysis import execute_kit_analysis
+from .kit_analysis.analysis import execute_kit_analysis
 from .kit_analysis import router as kit_analysis_router
 from .material_mapping import router as material_mapping_router
 from .scheduling import generate_scheduling_suggestions
@@ -26,7 +26,7 @@ router = APIRouter()
 router.include_router(stages_router)
 router.include_router(material_mapping_router)
 router.include_router(bom_attributes_router)
-router.include_router(kit_analysis_router)
+router.include_router(kit_analysis_router, prefix="/assembly-kit/kit-analysis", tags=["kit_analysis"])
 router.include_router(shortage_alerts_router)
 router.include_router(alert_rules_router)
 router.include_router(wechat_config_router)
