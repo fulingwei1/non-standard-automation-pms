@@ -7,12 +7,13 @@
  ├── role_crud.py     # 角色CRUD操作
  ├── permissions.py   # 权限分配
  ├── role_detail.py   # 角色详情和比较
- └── inheritance.py   # 继承树
+ ├── inheritance.py   # 继承树
+ └── data_scope.py    # 数据权限规则管理
 """
 
 from fastapi import APIRouter
 
-from . import inheritance, permissions, role_crud, role_detail, utils
+from . import data_scope, inheritance, permissions, role_crud, role_detail, utils
 
 # 创建主路由
 router = APIRouter()
@@ -22,5 +23,6 @@ router.include_router(role_crud.router, tags=["角色管理"])
 router.include_router(permissions.router, tags=["角色管理"])
 router.include_router(role_detail.router, tags=["角色管理"])
 router.include_router(inheritance.router, tags=["角色管理"])
+router.include_router(data_scope.router, tags=["角色管理"])
 
 __all__ = ["router"]

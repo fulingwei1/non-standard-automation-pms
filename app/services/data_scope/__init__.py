@@ -9,6 +9,7 @@
 - project_filter: 项目过滤相关方法
 - issue_filter: 问题过滤方法
 - generic_filter: 通用过滤方法
+- custom_rule: 自定义规则处理
 """
 
 # 配置
@@ -25,6 +26,9 @@ from .issue_filter import IssueFilterService
 
 # 通用过滤服务
 from .generic_filter import GenericFilterService
+
+# 自定义规则服务
+from .custom_rule import CustomRuleService
 
 
 # 为了向后兼容，创建 DataScopeService 类，聚合所有方法
@@ -48,6 +52,11 @@ class DataScopeService:
     filter_by_scope = staticmethod(GenericFilterService.filter_by_scope)
     check_customer_access = staticmethod(GenericFilterService.check_customer_access)
 
+    # 自定义规则方法
+    get_custom_rule = staticmethod(CustomRuleService.get_custom_rule)
+    apply_custom_filter = staticmethod(CustomRuleService.apply_custom_filter)
+    validate_scope_config = staticmethod(CustomRuleService.validate_scope_config)
+
 
 # 导出所有公共接口
 __all__ = [
@@ -61,4 +70,5 @@ __all__ = [
     "ProjectFilterService",
     "IssueFilterService",
     "GenericFilterService",
+    "CustomRuleService",
 ]
