@@ -187,7 +187,7 @@ export function SystemRoutes() {
       <Route path="/staff-matching/matching" element={<AIStaffMatching />} />
 
       {/* Personal Center */}
-      <Route path="/work-center" element={<WorkCenter />} />
+      <Route path="/work-center" element={<Navigate to="/dashboard" replace />} />
       <Route path="/notifications" element={<NotificationCenter />} />
       <Route path="/timesheet" element={<Timesheet />} />
       <Route path="/timesheet/dashboard" element={<TimesheetDashboard />} />

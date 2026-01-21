@@ -13,16 +13,14 @@ export const productionNavGroups = [
     items: [
       { name: "工作台", path: "/dashboard", icon: "LayoutDashboard" },
       { name: "运营大屏", path: "/operation", icon: "BarChart3", permission: "operation:dashboard:read", permissionLabel: "运营大屏" },
-      { name: "工作中心", path: "/work-center", icon: "LayoutDashboard" },
       { name: "生产看板", path: "/production-board", icon: "Kanban", permission: "production:board:read", permissionLabel: "生产看板" },
       { name: "项目看板", path: "/progress-tracking/board", icon: "Kanban", permission: "project:project:read", permissionLabel: "项目查看" },
       { name: "排期看板", path: "/progress-tracking/schedule", icon: "Calendar", permission: "project:schedule:read", permissionLabel: "排期查看" },
       { name: "装配任务", path: "/assembly-tasks", icon: "Wrench", permission: "assembly:task:read", permissionLabel: "装配任务" },
       { name: "装配齐套", path: "/assembly-kit", icon: "Wrench", permission: "assembly:kit:read", permissionLabel: "装配齐套" },
-      { name: "齐套检查", path: "/kit-check", icon: "CheckCircle2", permission: "material:kit:read", permissionLabel: "齐套检查" },
       { name: "齐套分析", path: "/material-analysis", icon: "Package", permission: "material:analysis:read", permissionLabel: "齐套分析" },
       { name: "项目进度", path: "/sales-projects", icon: "Briefcase", permission: "project:project:read", permissionLabel: "项目查看" },
-      { name: "工程师绩效排名", path: "/engineer-performance/ranking", icon: "TrendingUp", permission: "performance:read", permissionLabel: "绩效查看" }
+      { name: "绩效排名", path: "/performance/ranking", icon: "TrendingUp", permission: "performance:ranking:read", permissionLabel: "绩效排名" }
     ]
   },
   {

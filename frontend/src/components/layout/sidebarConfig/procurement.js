@@ -31,7 +31,7 @@ export const buyerNavGroups = [
       },
       { name: "供应商管理", path: "/suppliers", icon: "Building2", permission: "supplier:read", permissionLabel: "供应商查看" },
       { name: "缺料管理", path: "/shortage", icon: "Package", permission: "material:shortage:read", permissionLabel: "缺料管理" },
-      { name: "到货跟踪", path: "/arrivals", icon: "Truck", permission: "purchase:arrival:read", permissionLabel: "到货跟踪" }
+      { name: "收货管理", path: "/purchases/receipts", icon: "Truck", permission: "purchase:receipt:read", permissionLabel: "收货管理" }
     ]
   },
   {
@@ -41,19 +41,9 @@ export const buyerNavGroups = [
   {
     label: "个人中心",
     items: [
-      {
-        name: "工作中心",
-        path: "/work-center",
-        icon: "LayoutDashboard",
-        badge: null
-      },
       { name: "通知中心", path: "/notifications", icon: "Bell" },
       { name: "工时填报", path: "/timesheet", icon: "Clock" },
-      {
-        name: "知识管理",
-        path: "/knowledge-base",
-        icon: "BookOpen"
-      },
+      { name: "知识管理", path: "/knowledge-base", icon: "BookOpen" },
       { name: "个人设置", path: "/settings", icon: "Settings" }
     ]
   }
@@ -80,7 +70,6 @@ export const procurementNavGroups = [
     items: [
       { name: "物料跟踪", path: "/materials", icon: "Package", permission: "material:read", permissionLabel: "物料查看" },
       { name: "收货管理", path: "/purchases/receipts", icon: "Truck", permission: "purchase:receipt:read", permissionLabel: "收货管理" },
-      { name: "到货跟踪", path: "/arrivals", icon: "Truck", permission: "purchase:arrival:read", permissionLabel: "到货跟踪" },
       { name: "齐套分析", path: "/material-analysis", icon: "Boxes", permission: "material:analysis:read", permissionLabel: "齐套分析" },
       { name: "BOM装配配置", path: "/bom-assembly-attrs", icon: "Settings", permission: "bom:config:manage", permissionLabel: "BOM配置管理" }
     ]
@@ -102,8 +91,7 @@ export const procurementNavGroups = [
   {
     label: "监控与预警",
     items: [
-      { name: "预警中心", path: "/alerts", icon: "AlertTriangle", permission: "alert:read", permissionLabel: "预警查看" },
-      { name: "缺料预警", path: "/shortage-alert", icon: "AlertTriangle", permission: "material:shortage:read", permissionLabel: "缺料预警" }
+      { name: "预警中心", path: "/alerts", icon: "AlertTriangle", permission: "alert:read", permissionLabel: "预警查看" }
     ]
   },
   {
@@ -146,7 +134,7 @@ export const procurementManagerNavGroups = [
       { name: "采购订单", path: "/purchases", icon: "ShoppingCart", permission: "purchase:read", permissionLabel: "采购订单查看" },
       { name: "供应商管理", path: "/suppliers", icon: "Building2", permission: "supplier:manage", permissionLabel: "供应商管理" },
       { name: "缺料管理", path: "/shortage", icon: "Package", permission: "material:shortage:read", permissionLabel: "缺料管理" },
-      { name: "到货跟踪", path: "/arrivals", icon: "Truck", permission: "purchase:arrival:read", permissionLabel: "到货跟踪" },
+      { name: "收货管理", path: "/purchases/receipts", icon: "Truck", permission: "purchase:receipt:read", permissionLabel: "收货管理" },
       { name: "齐套分析", path: "/material-analysis", icon: "Package", permission: "material:analysis:read", permissionLabel: "齐套分析" }
     ]
   },
