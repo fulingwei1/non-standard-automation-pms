@@ -241,11 +241,18 @@ class ExcelRenderer(Renderer):
 
     def _auto_adjust_column_width(self, ws) -> None:
         """自动调整列宽"""
-        for column_cells in ws.columns:
-            max_length = 0
-            column = column_cells[0].column_letter
+        from openpyxl.cell.cell import MergedCell
+        from openpyxl.utils import get_column_letter
 
-            for cell in column_cells:
+        for col_idx in range(1, ws.max_column + 1):
+            max_length = 0
+            column = get_column_letter(col_idx)
+
+            for row in range(1, ws.max_row + 1):
+                cell = ws.cell(row=row, column=col_idx)
+                # 跳过合并单元格
+                if isinstance(cell, MergedCell):
+                    continue
                 try:
                     if cell.value:
                         # 中文字符按 2 个单位计算

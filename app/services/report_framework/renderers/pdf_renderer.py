@@ -49,6 +49,7 @@ class PdfRenderer(Renderer):
         """
         self.output_dir = output_dir
         self._font_registered = False
+        self._font_name = "Helvetica"  # 默认字体
         self._register_fonts()
 
     @property
@@ -69,17 +70,19 @@ class PdfRenderer(Renderer):
                 try:
                     pdfmetrics.registerFont(TTFont("Chinese", font_path))
                     self._font_registered = True
+                    self._font_name = "Chinese"
                     return
                 except Exception:
                     continue
 
         # 如果没有找到中文字体，使用默认字体
         self._font_registered = True
+        self._font_name = "Helvetica"
 
     def _get_styles(self) -> Dict[str, ParagraphStyle]:
         """获取样式"""
         styles = getSampleStyleSheet()
-        font_name = "Chinese" if self._font_registered else "Helvetica"
+        font_name = self._font_name
 
         return {
             "title": ParagraphStyle(
@@ -262,7 +265,7 @@ class PdfRenderer(Renderer):
             table.setStyle(TableStyle([
                 ("ALIGN", (0, 0), (-1, -1), "CENTER"),
                 ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                ("FONTNAME", (0, 0), (-1, -1), "Chinese" if self._font_registered else "Helvetica"),
+                ("FONTNAME", (0, 0), (-1, -1), self._font_name),
                 ("FONTSIZE", (0, 0), (-1, -1), 10),
                 ("GRID", (0, 0), (-1, -1), 0.5, colors.lightgrey),
                 ("BACKGROUND", (0, 0), (-1, -1), colors.Color(0.95, 0.95, 0.95)),
@@ -314,7 +317,7 @@ class PdfRenderer(Renderer):
         table.setStyle(TableStyle([
             ("ALIGN", (0, 0), (-1, -1), "LEFT"),
             ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-            ("FONTNAME", (0, 0), (-1, -1), "Chinese" if self._font_registered else "Helvetica"),
+            ("FONTNAME", (0, 0), (-1, -1), self._font_name),
             ("FONTSIZE", (0, 0), (-1, -1), 8),
             # 表头样式
             ("BACKGROUND", (0, 0), (-1, 0), colors.Color(0.2, 0.4, 0.6)),
