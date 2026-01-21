@@ -43,7 +43,6 @@ export const defaultNavGroups = [
     label: "销售管理",
     items: [
       { name: "客户管理", path: "/customers", icon: "Building2", permission: "customer:read", permissionLabel: "客户查看" },
-      { name: "商机看板", path: "/opportunities", icon: "Target", permission: "sales:opportunity:read", permissionLabel: "商机查看" },
       { name: "商机管理", path: "/sales/opportunities", icon: "Target", permission: "sales:opportunity:read", permissionLabel: "商机管理" },
       { name: "线索管理", path: "/sales/leads", icon: "Users", permission: "sales:lead:read", permissionLabel: "线索查看" },
       { name: "线索评估", path: "/lead-assessment", icon: "CheckCircle2", permission: "sales:lead:assess", permissionLabel: "线索评估" },
@@ -193,7 +192,6 @@ export const defaultNavGroups = [
       { name: "外协订单", path: "/outsourcing-orders", icon: "Truck", permission: "outsourcing:read", permissionLabel: "外协订单" },
       { name: "缺料管理看板", path: "/shortage-management-board", icon: "AlertTriangle", permission: "shortage:board:read", permissionLabel: "缺料看板" },
       { name: "缺料报告", path: "/shortage-reports", icon: "FileText", permission: "shortage:report:read", permissionLabel: "缺料报告" },
-      { name: "到货跟踪", path: "/arrival-tracking", icon: "Truck", permission: "arrival:track:read", permissionLabel: "到货跟踪" },
       { name: "项目进度", path: "/sales-projects", icon: "Briefcase", permission: "project:project:read", permissionLabel: "项目查看" }
     ]
   },
@@ -203,8 +201,6 @@ export const defaultNavGroups = [
     items: [
       { name: "发货计划", path: "/pmc/delivery-plan", icon: "Calendar", permission: "delivery:plan:read", permissionLabel: "发货计划" },
       { name: "发货订单", path: "/pmc/delivery-orders", icon: "Truck", permission: "delivery:order:read", permissionLabel: "发货订单" },
-      { name: "待发货", path: "/pmc/delivery-orders?status=pending", icon: "Package", permission: "delivery:order:read", permissionLabel: "发货订单" },
-      { name: "在途订单", path: "/pmc/delivery-orders?status=in_transit", icon: "Truck", permission: "delivery:order:read", permissionLabel: "发货订单" },
       { name: "出货管理", path: "/shipments", icon: "Package", permission: "shipment:read", permissionLabel: "出货管理" }
     ]
   },
@@ -267,7 +263,6 @@ export const defaultNavGroups = [
   {
     label: "个人中心",
     items: [
-      { name: "通知中心", path: "/notifications", icon: "Bell" },
       { name: "工时填报", path: "/timesheet", icon: "Clock" },
       { name: "工时仪表板", path: "/timesheet/dashboard", icon: "Gauge", permission: "timesheet:dashboard:read", permissionLabel: "工时仪表板" },
       { name: "工时批量操作", path: "/timesheet/batch", icon: "ListTodo", permission: "timesheet:batch:manage", permissionLabel: "工时批量" },
