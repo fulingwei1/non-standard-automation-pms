@@ -1,0 +1,165 @@
+# 项目周报配置
+# 报告代码: PROJECT_WEEKLY
+
+meta:
+  name: 项目周报
+  code: PROJECT_WEEKLY
+  description: 项目经理每周汇报项目进展、任务完成情况和问题风险
+  version: "1.0"
+
+permissions:
+  roles:
+    - PROJECT_MANAGER
+    - DEPARTMENT_MANAGER
+    - ADMIN
+  data_scope: project
+
+parameters:
+  - name: project_id
+    type: integer
+    required: true
+    description: 项目ID
+  - name: start_date
+    type: date
+    required: true
+    description: 开始日期
+  - name: end_date
+    type: date
+    required: true
+    description: 结束日期
+
+cache:
+  enabled: true
+  ttl: 3600
+  key_pattern: "report:PROJECT_WEEKLY:{project_id}:{start_date}"
+
+schedule:
+  enabled: false
+  cron: "0 8 * * 1"
+  params:
+    start_date: "{{ last_monday() }}"
+    end_date: "{{ last_sunday() }}"
+
+data_sources:
+  project:
+    type: query
+    sql: |
+      SELECT p.*, c.name as customer_name
+      FROM projects p
+      LEFT JOIN customers c ON p.customer_id = c.id
+      WHERE p.id = :project_id
+
+  tasks:
+    type: query
+    sql: |
+      SELECT t.*, u.name as assignee_name
+      FROM tasks t
+      LEFT JOIN users u ON t.assignee_id = u.id
+      WHERE t.project_id = :project_id
+        AND (t.updated_at BETWEEN :start_date AND :end_date
+             OR t.status = 'IN_PROGRESS')
+      ORDER BY t.created_at DESC
+
+  milestones:
+    type: query
+    sql: |
+      SELECT * FROM milestones
+      WHERE project_id = :project_id
+      ORDER BY target_date
+
+  issues:
+    type: query
+    sql: |
+      SELECT i.*, u.name as reporter_name
+      FROM issues i
+      LEFT JOIN users u ON i.reporter_id = u.id
+      WHERE i.project_id = :project_id
+        AND i.created_at BETWEEN :start_date AND :end_date
+      ORDER BY i.severity DESC, i.created_at DESC
+
+sections:
+  - id: summary
+    title: 概览
+    type: metrics
+    items:
+      - label: 任务总数
+        value: "{{ tasks | length }}"
+      - label: 已完成
+        value: "{{ tasks | count_by('status', 'DONE') }}"
+      - label: 进行中
+        value: "{{ tasks | count_by('status', 'IN_PROGRESS') }}"
+      - label: 完成率
+        value: "{{ ((tasks | count_by('status', 'DONE')) / (tasks | length) * 100) | round_num(1) }}%"
+      - label: 本周新增问题
+        value: "{{ issues | length }}"
+      - label: 里程碑数
+        value: "{{ milestones | length }}"
+
+  - id: task_list
+    title: 本周任务
+    type: table
+    source: tasks
+    columns:
+      - field: task_name
+        label: 任务名称
+      - field: status
+        label: 状态
+        format: status_badge
+      - field: assignee_name
+        label: 负责人
+      - field: progress
+        label: 进度
+        format: percentage
+      - field: updated_at
+        label: 更新时间
+        format: date
+
+  - id: milestone_list
+    title: 里程碑
+    type: table
+    source: milestones
+    columns:
+      - field: name
+        label: 里程碑
+      - field: target_date
+        label: 目标日期
+        format: date
+      - field: status
+        label: 状态
+        format: status_badge
+
+  - id: issue_list
+    title: 本周问题
+    type: table
+    source: issues
+    columns:
+      - field: title
+        label: 问题标题
+      - field: severity
+        label: 严重程度
+      - field: status
+        label: 状态
+        format: status_badge
+      - field: reporter_name
+        label: 报告人
+
+exports:
+  json:
+    enabled: true
+  pdf:
+    enabled: true
+    template: project_weekly.html
+    orientation: portrait
+  excel:
+    enabled: true
+    sheets:
+      - name: 概览
+        section: summary
+      - name: 任务明细
+        section: task_list
+      - name: 里程碑
+        section: milestone_list
+      - name: 问题
+        section: issue_list
+  word:
+    enabled: false

@@ -319,7 +319,71 @@ async def legacy_arrivals(...):
 
 ---
 
-## 七、决策确认
+## 八、实施记录
+
+### 8.1 Phase 1 实施完成（2026-01-21）
+
+**实际方案**：shortage 模块已重构为三层架构
+
+```
+app/api/v1/endpoints/shortage/
+├── __init__.py             # 模块聚合（三层架构）
+├── detection/              # 预警检测层
+│   ├── alerts.py          # 预警管理
+│   └── monitoring.py      # 监控检测
+├── handling/               # 问题处理层
+│   ├── reports.py         # 缺料上报
+│   ├── arrivals.py        # 到货跟踪
+│   ├── substitutions.py   # 物料替代
+│   └── transfers.py       # 物料调拨
+└── analytics/              # 统计报表层
+    ├── dashboard.py       # 统计看板
+    └── statistics.py      # 统计分析
+```
+
+**变更说明**：
+- shortage_alerts 模块已删除
+- 所有功能整合到 shortage 模块的三层架构中
+- API路由统一在 `/shortage/` 前缀下
+
+### 8.2 Phase 2 实施完成（2026-01-21）
+
+**实际方案**：保留三个独立模块，添加统一查询端点
+
+由于三个齐套模块（kit_rate、kit_check、assembly_kit）功能定位明确且已良好组织，
+采用"轻整合"方案：保留原有模块结构，添加统一的齐套率查询API。
+
+**新增文件**：
+- `app/api/v1/endpoints/kit_rate/unified.py` - 统一齐套率查询端点
+
+**新增API端点**：
+```
+GET /kit-rates/unified/{project_id}  # 统一齐套率查询
+    - 参数: machine_id（可选）
+    - 返回: 四种计算结果
+      - quantity_based: 按数量比例
+      - amount_based: 按金额比例
+      - item_count_based: 按项计数
+      - stage_based: 按装配阶段
+
+GET /kit-rates/comparison            # 多项目齐套率对比
+    - 参数: project_ids（逗号分隔）
+    - 返回: 各项目齐套率对比数据
+```
+
+**保留的原有结构**：
+- `kit_rate/` - 简单齐套率（按数量/金额）
+- `kit_check/` - 工单齐套检查（开工前确认）
+- `assembly_kit/` - 工艺阶段齐套（含阻塞物料）
+
+### 8.3 整合效果
+
+| 指标 | 整合前 | 整合后 | 说明 |
+|------|--------|--------|------|
+| shortage模块 | 2个重复模块 | 1个三层架构 | ✅ 消除重复 |
+| 齐套模块 | 3个独立模块 | 3个模块+统一API | ✅ 保留专业性 |
+| 统一入口 | 无 | `/kit-rates/unified/` | ✅ 便于前端 |
+| 兼容性 | - | 100% | ✅ 无破坏性变更 |
 
 | 决策项 | 结论 |
 |--------|------|

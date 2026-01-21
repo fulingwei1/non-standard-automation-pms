@@ -275,3 +275,8 @@ api_router.include_router(approvals_router, tags=["approvals"])
 from app.api.v1.endpoints.strategy import router as strategy_router
 
 api_router.include_router(strategy_router, prefix="/strategy", tags=["strategy"])
+
+# 统一报告框架
+from app.api.v1.endpoints.reports import router as reports_router
+
+api_router.include_router(reports_router, tags=["reports"])
