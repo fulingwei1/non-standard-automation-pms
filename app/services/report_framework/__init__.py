@@ -10,6 +10,7 @@
 """
 
 from app.services.report_framework.config_loader import ConfigLoader, ConfigError
+from app.services.report_framework.engine import ReportEngine
 from app.services.report_framework.models import (
     ReportConfig,
     ReportMeta,
@@ -17,7 +18,6 @@ from app.services.report_framework.models import (
     SectionType,
 )
 
-# 延迟导入其他模块（避免循环依赖）
 __all__ = [
     "ConfigLoader",
     "ConfigError",
@@ -25,10 +25,5 @@ __all__ = [
     "ReportMeta",
     "DataSourceType",
     "SectionType",
+    "ReportEngine",
 ]
-
-
-def get_engine():
-    """获取 ReportEngine（延迟导入）"""
-    from app.services.report_framework.engine import ReportEngine
-    return ReportEngine
