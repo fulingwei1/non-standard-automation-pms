@@ -197,3 +197,83 @@ DROP TABLE IF EXISTS mes_shortage_alert_rule;
 2. 迁移 `mes_shortage_alert_rule` 数据到 `alert_rules`
 3. 删除 `mat_shortage_alert` 和 `mes_shortage_alert_rule` 表
 4. 删除 `ShortageAlert` 模型类
+
+### Phase 2 完成 (2026-01-21)
+
+**已迁移的服务（从 ShortageAlert 迁移到 AlertRecord）：**
+1. `app/services/progress_integration_service.py`
+   - `handle_shortage_alert_created()` - 使用 `AlertRecord.target_type=='SHORTAGE'`
+   - `handle_shortage_alert_resolved()` - 使用 `AlertRecord` 查询
+
+2. `app/services/shortage_report_service.py`
+   - `calculate_alert_statistics()` - 使用 `AlertRecord.target_type=='SHORTAGE'`
+   - `calculate_response_time_statistics()` - 使用 `AlertRecord.handle_start_at/handle_end_at`
+   - `calculate_stoppage_statistics()` - 从 `alert_data` JSON 提取业务字段
+
+3. `app/services/urgent_purchase_from_shortage_service.py`
+   - `create_urgent_purchase_request_from_alert()` - 从 `alert_data` JSON 提取缺料字段
+   - `auto_trigger_urgent_purchase_for_alerts()` - 使用 `AlertRecord` 查询
+
+4. `app/api/v1/endpoints/shortage_alerts/alerts_crud.py`
+   - `update_shortage_alert()` - 进度联动使用 `AlertRecord`
+   - `resolve_shortage_alert()` - 进度联动使用 `AlertRecord`
+
+**字段映射（ShortageAlert → AlertRecord）：**
+| ShortageAlert 字段 | AlertRecord 字段 | 备注 |
+|-------------------|-----------------|------|
+| `material_id` | `target_id` | |
+| `material_code` | `target_no` | |
+| `material_name` | `target_name` | |
+| `handle_start_time` | `handle_start_at` | |
+| `resolve_time` | `handle_end_at` | |
+| `shortage_qty` | `alert_data.shortage_qty` | JSON字段 |
+| `impact_type` | `alert_data.impact_type` | JSON字段 |
+| `estimated_delay_days` | `alert_data.estimated_delay_days` | JSON字段 |
+| `related_po_no` | `alert_data.related_po_no` | JSON字段 |
+
+**Phase 3 待办（进行中）：**
+1. 迁移 `ShortageAlertRule` → `AlertRule`（4 行数据）
+2. 更新引用 `ShortageAlertRule` 的服务
+3. 删除 `mat_shortage_alert` 表和 `ShortageAlert` 模型
+
+### Phase 3 完成 (2026-01-21)
+
+**决策变更：**
+- `ShortageAlertRule` (mes_shortage_alert_rule) 保留不迁移
+- 原因：该表是 assembly_kit 模块的专用配置表，具有特化字段（days_before_required, only_blocking, min_shortage_rate 等）
+- assembly_kit 模块有完整的 CRUD API 依赖此表
+
+**已清理：**
+1. 删除 `ShortageAlert` 类（app/models/shortage/alerts.py）
+2. 更新 app/models/shortage/__init__.py - 移除 ShortageAlert 导出
+3. 更新 app/models/__init__.py - 移除 ShortageAlert 导出
+4. 创建迁移脚本 migrations/20260121_alert_system_cleanup_phase2.sql
+
+**保留项：**
+- `ShortageAlertRule` (mes_shortage_alert_rule) - assembly_kit 模块专用规则配置
+- `AlertRule` (alert_rules) - 通用预警规则配置
+
+**最终架构：**
+```
+┌─────────────────────────────────────────────────────────────┐
+│  alert_rules (通用预警规则)                                  │
+│  - target_type 区分业务类型: PROJECT/MATERIAL/SHORTAGE/...  │
+├─────────────────────────────────────────────────────────────┤
+│  mes_shortage_alert_rule (齐套分析专用规则)                  │
+│  - 保留用于 assembly_kit 模块                               │
+│  - 具有特化字段：days_before_required, only_blocking 等     │
+├─────────────────────────────────────────────────────────────┤
+│  alert_records (统一���警记录)                                │
+│  - target_type + target_id 关联任意业务对象                  │
+│  - target_type='SHORTAGE' 替代原 mat_shortage_alert 表       │
+│  - alert_data JSON 存储业务特定字段                          │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## 总结
+
+预警系统合并已完成：
+- ✅ Phase 1: 删除孤儿表 (shortage_alerts, mes_shortage_detail)
+- ✅ Phase 2: 迁移 ShortageAlert 服务到 AlertRecord
+- ✅ Phase 3: 清理 ShortageAlert 模型，保留 ShortageAlertRule
+
