@@ -8,6 +8,8 @@
 import { lazy } from 'react';
 
 // 使用 lazy 加载组件以提升性能
+const WelcomeCard = lazy(() => import('../widgets/WelcomeCard'));
+const CultureWallWidget = lazy(() => import('../widgets/CultureWallWidget'));
 const StatsCard = lazy(() => import('../widgets/StatsCard'));
 const TaskList = lazy(() => import('../widgets/TaskList'));
 const NotificationPanel = lazy(() => import('../widgets/NotificationPanel'));
@@ -48,6 +50,18 @@ const UserStats = lazy(() => import('../widgets/admin/UserStats'));
  */
 export const widgetRegistry = {
   // ============ 通用组件 ============
+  'welcome-card': {
+    component: WelcomeCard,
+    category: 'common',
+    defaultSize: 'full',
+    description: '欢迎卡片（整合自工作中心）'
+  },
+  'culture-wall': {
+    component: CultureWallWidget,
+    category: 'common',
+    defaultSize: 'full',
+    description: '企业文化墙（高流量位置展示企业文化）'
+  },
   'stats-card': {
     component: StatsCard,
     category: 'common',
