@@ -18,7 +18,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.models.alert import AlertRule
-from app.models import AlertLevelEnum
+from app.models.enums import AlertLevelEnum
 from app.services.alert_rule_engine import (
     AlertCreator,
     AlertRuleEngineBase,
