@@ -1,15 +1,11 @@
 import { Route } from "react-router-dom";
 import { FinanceProtectedRoute } from "../../components/common/ProtectedRoute";
 
-import SalesWorkstation from "../../pages/SalesWorkstation";
-import SalesDirectorWorkstation from "../../pages/SalesDirectorWorkstation";
-import SalesManagerWorkstation from "../../pages/SalesManagerWorkstation";
 import SalesReports from "../../pages/SalesReports";
 import SalesTeam from "../../pages/SalesTeam";
 import SalesTarget from "../../pages/SalesTarget";
 import CpqConfigurator from "../../pages/CpqConfigurator";
 import ContractApproval from "../../pages/ContractApproval";
-import BusinessSupportWorkstation from "../../pages/BusinessSupportWorkstation";
 import CustomerList from "../../pages/CustomerList";
 import OpportunityBoard from "../../pages/OpportunityBoard";
 import LeadAssessment from "../../pages/LeadAssessment";
@@ -51,25 +47,12 @@ import InformationGapAnalysis from "../../pages/InformationGapAnalysis";
 export function SalesRoutes() {
   return (
     <>
-      <Route path="/sales-dashboard" element={<SalesWorkstation />} />
-      <Route
-        path="/sales-director-dashboard"
-        element={<SalesDirectorWorkstation />}
-      />
-      <Route
-        path="/sales-manager-dashboard"
-        element={<SalesManagerWorkstation />}
-      />
       <Route path="/sales-reports" element={<SalesReports />} />
       <Route path="/sales-team" element={<SalesTeam />} />
       <Route path="/sales/team" element={<SalesTeam />} />
       <Route path="/sales/team/ranking" element={<SalesTeam />} />
       <Route path="/sales/targets" element={<SalesTarget />} />
       <Route path="/contract-approval" element={<ContractApproval />} />
-      <Route
-        path="/business-support"
-        element={<BusinessSupportWorkstation />}
-      />
       <Route path="/customers" element={<CustomerList />} />
       <Route path="/opportunities" element={<OpportunityBoard />} />
       <Route path="/lead-assessment" element={<LeadAssessment />} />

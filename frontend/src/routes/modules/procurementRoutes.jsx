@@ -4,8 +4,6 @@ import {
   ProductionProtectedRoute
 } from "../../components/common/ProtectedRoute";
 
-import ProcurementEngineerWorkstation from "../../pages/ProcurementEngineerWorkstation";
-import ProcurementManagerDashboard from "../../pages/ProcurementManagerDashboard";
 import PurchaseOrders from "../../pages/PurchaseOrders";
 import PurchaseOrderDetail from "../../pages/PurchaseOrderDetail";
 import PurchaseRequestList from "../../pages/PurchaseRequestList";
@@ -43,14 +41,6 @@ import ArrivalNew from "../../pages/ArrivalNew";
 export function ProcurementRoutes() {
   return (
     <>
-      <Route
-        path="/procurement-manager-dashboard"
-        element={<ProcurementManagerDashboard />}
-      />
-      <Route
-        path="/procurement-dashboard"
-        element={<ProcurementEngineerWorkstation />}
-      />
       <Route
         path="/purchases"
         element={

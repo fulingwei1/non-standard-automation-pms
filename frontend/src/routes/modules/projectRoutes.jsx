@@ -21,10 +21,15 @@ import MachineManagement from "../../pages/MachineManagement";
 import MilestoneManagement from "../../pages/MilestoneManagement";
 import AssemblerTaskCenter from "../../pages/AssemblerTaskCenter";
 import EngineerWorkstation from "../../pages/EngineerWorkstation";
+import ProjectStageView from "../../pages/ProjectStageView";
 
 export function ProjectRoutes() {
   return (
     <>
+      {/* 项目阶段视图 - 22阶段三视图 */}
+      <Route path="/stage-view" element={<ProjectStageView />} />
+      <Route path="/projects/stage-view" element={<ProjectStageView />} />
+
       {/* 进度跟踪模块 - 新路由 */}
       <Route path="/progress-tracking/tasks" element={<TaskCenter />} />
       <Route path="/progress-tracking/board" element={<ProjectBoard />} />
