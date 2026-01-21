@@ -18,3 +18,22 @@ __all__ = [
     "RenderError",
     "JsonRenderer",
 ]
+
+# 可选渲染器（需要额外依赖）
+try:
+    from app.services.report_framework.renderers.pdf_renderer import PdfRenderer
+    __all__.append("PdfRenderer")
+except ImportError:
+    pass
+
+try:
+    from app.services.report_framework.renderers.excel_renderer import ExcelRenderer
+    __all__.append("ExcelRenderer")
+except ImportError:
+    pass
+
+try:
+    from app.services.report_framework.renderers.word_renderer import WordRenderer
+    __all__.append("WordRenderer")
+except ImportError:
+    pass
