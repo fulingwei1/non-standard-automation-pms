@@ -326,3 +326,222 @@ class TestReportEngineIntegration:
         # 日期转换
         result = engine._convert_param_type("2026-01-21", ParameterType.DATE)
         assert result == date(2026, 1, 21)
+
+
+class TestPdfRenderer:
+    """测试 PDF 渲染器"""
+
+    def test_render_pdf(self, tmp_path):
+        """测试渲染 PDF"""
+        from app.services.report_framework.renderers import PdfRenderer
+
+        renderer = PdfRenderer(output_dir=str(tmp_path))
+        sections = [
+            {
+                "id": "summary",
+                "title": "项目概览",
+                "type": "metrics",
+                "items": [
+                    {"label": "总数", "value": 100},
+                    {"label": "完成", "value": 80},
+                    {"label": "进行中", "value": 15},
+                    {"label": "待启动", "value": 5},
+                ]
+            }
+        ]
+        metadata = {"code": "TEST_PDF", "name": "PDF 测试报告"}
+
+        result = renderer.render(sections, metadata)
+
+        assert result.format == "pdf"
+        assert result.file_path is not None
+        assert result.file_path.endswith(".pdf")
+        assert result.content_type == "application/pdf"
+        # 验证文件存在
+        import os
+        assert os.path.exists(result.file_path)
+
+    def test_render_pdf_with_table(self, tmp_path):
+        """测试渲染 PDF 表格"""
+        from app.services.report_framework.renderers import PdfRenderer
+
+        renderer = PdfRenderer(output_dir=str(tmp_path))
+        sections = [
+            {
+                "id": "tasks",
+                "title": "任务列表",
+                "type": "table",
+                "columns": [
+                    {"field": "name", "label": "名称"},
+                    {"field": "status", "label": "状态"},
+                ],
+                "data": [
+                    {"name": "任务1", "status": "完成"},
+                    {"name": "任务2", "status": "进行中"},
+                ]
+            }
+        ]
+        metadata = {"code": "TEST_TABLE", "name": "表格测试"}
+
+        result = renderer.render(sections, metadata)
+        assert result.format == "pdf"
+        assert result.file_path.endswith(".pdf")
+
+
+class TestExcelRenderer:
+    """测试 Excel 渲染器"""
+
+    def test_render_excel(self, tmp_path):
+        """测试渲染 Excel"""
+        from app.services.report_framework.renderers import ExcelRenderer
+
+        renderer = ExcelRenderer(output_dir=str(tmp_path))
+        sections = [
+            {
+                "id": "summary",
+                "title": "项目概览",
+                "type": "metrics",
+                "items": [
+                    {"label": "总数", "value": 100},
+                    {"label": "完成", "value": 80},
+                ]
+            }
+        ]
+        metadata = {"code": "TEST_EXCEL", "name": "Excel 测试报告"}
+
+        result = renderer.render(sections, metadata)
+
+        assert result.format == "excel"
+        assert result.file_path is not None
+        assert result.file_path.endswith(".xlsx")
+        assert result.content_type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        # 验证文件存在
+        import os
+        assert os.path.exists(result.file_path)
+
+    def test_render_excel_with_table(self, tmp_path):
+        """测试渲染 Excel 表格"""
+        from app.services.report_framework.renderers import ExcelRenderer
+
+        renderer = ExcelRenderer(output_dir=str(tmp_path))
+        sections = [
+            {
+                "id": "tasks",
+                "title": "任务列表",
+                "type": "table",
+                "columns": [
+                    {"field": "name", "label": "名称"},
+                    {"field": "status", "label": "状态"},
+                    {"field": "progress", "label": "进度"},
+                ],
+                "data": [
+                    {"name": "任务1", "status": "完成", "progress": 100},
+                    {"name": "任务2", "status": "进行中", "progress": 50},
+                    {"name": "任务3", "status": "待启动", "progress": 0},
+                ]
+            }
+        ]
+        metadata = {"code": "TEST_TABLE", "name": "表格测试"}
+
+        result = renderer.render(sections, metadata)
+        assert result.format == "excel"
+        assert result.file_path.endswith(".xlsx")
+
+
+class TestWordRenderer:
+    """测试 Word 渲染器"""
+
+    def test_render_word(self, tmp_path):
+        """测试渲染 Word"""
+        from app.services.report_framework.renderers import WordRenderer
+
+        renderer = WordRenderer(output_dir=str(tmp_path))
+        sections = [
+            {
+                "id": "summary",
+                "title": "项目概览",
+                "type": "metrics",
+                "items": [
+                    {"label": "总数", "value": 100},
+                    {"label": "完成", "value": 80},
+                ]
+            }
+        ]
+        metadata = {"code": "TEST_WORD", "name": "Word 测试报告"}
+
+        result = renderer.render(sections, metadata)
+
+        assert result.format == "word"
+        assert result.file_path is not None
+        assert result.file_path.endswith(".docx")
+        assert result.content_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        # 验证文件存在
+        import os
+        assert os.path.exists(result.file_path)
+
+    def test_render_word_with_table(self, tmp_path):
+        """测试渲染 Word 表格"""
+        from app.services.report_framework.renderers import WordRenderer
+
+        renderer = WordRenderer(output_dir=str(tmp_path))
+        sections = [
+            {
+                "id": "tasks",
+                "title": "任务列表",
+                "type": "table",
+                "columns": [
+                    {"field": "name", "label": "名称"},
+                    {"field": "status", "label": "状态"},
+                ],
+                "data": [
+                    {"name": "任务1", "status": "完成"},
+                    {"name": "任务2", "status": "进行中"},
+                ]
+            }
+        ]
+        metadata = {"code": "TEST_TABLE", "name": "表格测试"}
+
+        result = renderer.render(sections, metadata)
+        assert result.format == "word"
+        assert result.file_path.endswith(".docx")
+
+
+class TestEngineWithRenderers:
+    """测试 ReportEngine 使用多种渲染器"""
+
+    def test_engine_has_all_renderers(self):
+        """测试引擎注册了所有渲染器"""
+        from app.services.report_framework.engine import ReportEngine
+
+        mock_db = MagicMock()
+        engine = ReportEngine(mock_db, config_dir="app/report_configs")
+
+        # 检查所有渲染器已注册
+        assert "json" in engine.renderers
+        assert "pdf" in engine.renderers
+        assert "excel" in engine.renderers
+        assert "word" in engine.renderers
+
+    def test_generate_pdf_report(self, tmp_path):
+        """测试生成 PDF 格式报告"""
+        from app.services.report_framework.engine import ReportEngine
+        from app.services.report_framework.renderers import PdfRenderer
+
+        mock_db = MagicMock()
+        engine = ReportEngine(mock_db, config_dir="app/report_configs")
+
+        # 替换为使用临时目录的渲染器
+        engine.renderers["pdf"] = PdfRenderer(output_dir=str(tmp_path))
+
+        result = engine.generate(
+            report_code="TEST_REPORT",
+            params={"project_id": 1},
+            format="pdf",
+            user=None,
+            skip_cache=True,
+        )
+
+        assert result is not None
+        assert result.format == "pdf"
+        assert result.file_path.endswith(".pdf")
+

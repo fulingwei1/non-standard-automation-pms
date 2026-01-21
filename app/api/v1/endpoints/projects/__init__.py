@@ -15,6 +15,7 @@
  ├── sync.py           # 数据同步/ERP (新)
  ├── extended.py       # 扩展功能（复盘、分析等）
  ├── gate_checks.py    # 阶段门校验
+ ├── milestones/       # 项目里程碑（新迁移）
  └── utils.py          # 工具函数
 """
 

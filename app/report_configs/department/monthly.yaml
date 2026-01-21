@@ -1,0 +1,187 @@
+# 部门月报配置
+# 报告代码: DEPT_MONTHLY
+
+meta:
+  name: 部门月报
+  code: DEPT_MONTHLY
+  description: 部门经理每月汇报部门项目进展、人员工时和关键指标
+  version: "1.0"
+
+permissions:
+  roles:
+    - DEPARTMENT_MANAGER
+    - HR
+    - ADMIN
+  data_scope: department
+
+parameters:
+  - name: department_id
+    type: integer
+    required: true
+    description: 部门ID
+  - name: start_date
+    type: date
+    required: true
+    description: 月度开始日期
+  - name: end_date
+    type: date
+    required: true
+    description: 月度结束日期
+
+cache:
+  enabled: true
+  ttl: 7200
+  key_pattern: "report:DEPT_MONTHLY:{department_id}:{start_date}"
+
+schedule:
+  enabled: false
+  cron: "0 9 1 * *"
+  params:
+    start_date: "{{ this_month_start() }}"
+    end_date: "{{ this_month_end() }}"
+
+data_sources:
+  department:
+    type: query
+    sql: |
+      SELECT *
+      FROM departments
+      WHERE id = :department_id
+
+  members:
+    type: query
+    sql: |
+      SELECT u.*, d.dept_name as department_name
+      FROM users u
+      LEFT JOIN departments d ON u.department_id = d.id
+      WHERE u.department_id = :department_id
+        AND u.is_active = 1
+      ORDER BY u.real_name
+
+  timesheets:
+    type: query
+    sql: |
+      SELECT ts.*, u.real_name as user_name, p.project_name
+      FROM timesheets ts
+      LEFT JOIN users u ON ts.user_id = u.id
+      LEFT JOIN projects p ON ts.project_id = p.id
+      WHERE u.department_id = :department_id
+        AND ts.work_date BETWEEN :start_date AND :end_date
+      ORDER BY ts.work_date
+
+  project_hours:
+    type: query
+    sql: |
+      SELECT p.id as project_id, p.project_name, p.project_code,
+             SUM(ts.hours) as total_hours,
+             COUNT(DISTINCT ts.user_id) as member_count,
+             COUNT(ts.id) as timesheet_count
+      FROM timesheets ts
+      LEFT JOIN users u ON ts.user_id = u.id
+      LEFT JOIN projects p ON ts.project_id = p.id
+      WHERE u.department_id = :department_id
+        AND ts.work_date BETWEEN :start_date AND :end_date
+        AND ts.project_id IS NOT NULL
+      GROUP BY p.id, p.project_name, p.project_code
+      ORDER BY total_hours DESC
+      LIMIT 20
+
+  user_workload:
+    type: query
+    sql: |
+      SELECT u.id as user_id, u.real_name, u.position,
+             SUM(ts.hours) as total_hours,
+             COUNT(DISTINCT ts.project_id) as project_count,
+             COUNT(ts.id) as timesheet_count
+      FROM users u
+      LEFT JOIN timesheets ts ON u.id = ts.user_id
+        AND ts.work_date BETWEEN :start_date AND :end_date
+      WHERE u.department_id = :department_id
+        AND u.is_active = 1
+      GROUP BY u.id, u.real_name, u.position
+      ORDER BY total_hours DESC
+
+sections:
+  - id: dept_summary
+    title: 部门概况
+    type: metrics
+    items:
+      - label: 部门名称
+        value: "{{ department[0].dept_name if department else '-' }}"
+      - label: 统计周期
+        value: "{{ params.start_date }} ~ {{ params.end_date }}"
+      - label: 在职人数
+        value: "{{ members | length }}"
+      - label: 参与项目数
+        value: "{{ project_hours | length }}"
+
+  - id: timesheet_summary
+    title: 工时统计
+    type: metrics
+    items:
+      - label: 总工时
+        value: "{{ timesheets | sum_by('hours') | round_num(1) }} 小时"
+      - label: 人均工时
+        value: "{{ (timesheets | sum_by('hours') / (members | length)) | round_num(1) if members else 0 }} 小时"
+      - label: 工单数
+        value: "{{ timesheets | length }}"
+
+  - id: project_breakdown
+    title: 项目工时分布
+    type: table
+    source: project_hours
+    columns:
+      - field: project_code
+        label: 项目编号
+      - field: project_name
+        label: 项目名称
+      - field: total_hours
+        label: 总工时
+        format: number
+      - field: member_count
+        label: 参与人数
+      - field: timesheet_count
+        label: 工单数
+
+  - id: member_workload
+    title: 人员工时
+    type: table
+    source: user_workload
+    columns:
+      - field: real_name
+        label: 姓名
+      - field: position
+        label: 职位
+      - field: total_hours
+        label: 总工时
+        format: number
+      - field: project_count
+        label: 参与项目数
+      - field: timesheet_count
+        label: 工单数
+
+  - id: project_chart
+    title: 项目工时占比
+    type: chart
+    chart_type: pie
+    source: project_hours
+    label_field: project_name
+    value_field: total_hours
+
+exports:
+  json:
+    enabled: true
+  pdf:
+    enabled: true
+    orientation: portrait
+  excel:
+    enabled: true
+    sheets:
+      - name: 部门概况
+        section: dept_summary
+      - name: 项目工时
+        section: project_breakdown
+      - name: 人员工时
+        section: member_workload
+  word:
+    enabled: true

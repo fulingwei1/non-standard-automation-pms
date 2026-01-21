@@ -72,6 +72,25 @@ class ReportEngine:
             "json": JsonRenderer(),
         }
 
+        # 注册可选渲染器（PDF、Excel、Word）
+        try:
+            from app.services.report_framework.renderers.pdf_renderer import PdfRenderer
+            self.renderers["pdf"] = PdfRenderer()
+        except ImportError:
+            pass  # reportlab 未安装
+
+        try:
+            from app.services.report_framework.renderers.excel_renderer import ExcelRenderer
+            self.renderers["excel"] = ExcelRenderer()
+        except ImportError:
+            pass  # openpyxl 未安装
+
+        try:
+            from app.services.report_framework.renderers.word_renderer import WordRenderer
+            self.renderers["word"] = WordRenderer()
+        except ImportError:
+            pass  # python-docx 未安装
+
     def generate(
         self,
         report_code: str,

@@ -280,3 +280,10 @@ api_router.include_router(strategy_router, prefix="/strategy", tags=["strategy"]
 from app.api.v1.endpoints.reports import router as reports_router
 
 api_router.include_router(reports_router, tags=["reports"])
+
+# === 项目模块整合：新增跨项目维度路由 ===
+from app.api.v1.endpoints import my, departments, analytics
+
+api_router.include_router(my.router, prefix="/my", tags=["my"])
+api_router.include_router(departments.router, prefix="/departments", tags=["departments"])
+api_router.include_router(analytics.router, prefix="/analytics", tags=["analytics"])

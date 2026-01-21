@@ -1,0 +1,197 @@
+# 项目月报配置
+# 报告代码: PROJECT_MONTHLY
+
+meta:
+  name: 项目月报
+  code: PROJECT_MONTHLY
+  description: 项目经理每月汇报项目进展、成本概况和里程碑完成情况
+  version: "1.0"
+
+permissions:
+  roles:
+    - PROJECT_MANAGER
+    - DEPARTMENT_MANAGER
+    - ADMIN
+    - FINANCE
+  data_scope: project
+
+parameters:
+  - name: project_id
+    type: integer
+    required: true
+    description: 项目ID
+  - name: start_date
+    type: date
+    required: true
+    description: 月度开始日期
+  - name: end_date
+    type: date
+    required: true
+    description: 月度结束日期
+
+cache:
+  enabled: true
+  ttl: 7200
+  key_pattern: "report:PROJECT_MONTHLY:{project_id}:{start_date}"
+
+schedule:
+  enabled: false
+  cron: "0 9 1 * *"
+  params:
+    start_date: "{{ this_month_start() }}"
+    end_date: "{{ this_month_end() }}"
+
+data_sources:
+  project:
+    type: query
+    sql: |
+      SELECT p.*, c.name as customer_name
+      FROM projects p
+      LEFT JOIN customers c ON p.customer_id = c.id
+      WHERE p.id = :project_id
+
+  milestones:
+    type: query
+    sql: |
+      SELECT *
+      FROM milestones
+      WHERE project_id = :project_id
+        AND (milestone_date BETWEEN :start_date AND :end_date
+             OR status IN ('IN_PROGRESS', 'DELAYED'))
+      ORDER BY milestone_date
+
+  timesheets:
+    type: query
+    sql: |
+      SELECT ts.*, u.name as user_name
+      FROM timesheets ts
+      LEFT JOIN users u ON ts.user_id = u.id
+      WHERE ts.project_id = :project_id
+        AND ts.work_date BETWEEN :start_date AND :end_date
+      ORDER BY ts.work_date
+
+  costs:
+    type: query
+    sql: |
+      SELECT *
+      FROM project_costs
+      WHERE project_id = :project_id
+        AND cost_date BETWEEN :start_date AND :end_date
+      ORDER BY cost_date
+
+  machines:
+    type: query
+    sql: |
+      SELECT *
+      FROM machines
+      WHERE project_id = :project_id
+      ORDER BY machine_code
+
+sections:
+  - id: summary
+    title: 项目概览
+    type: metrics
+    items:
+      - label: 项目名称
+        value: "{{ project[0].project_name if project else '-' }}"
+      - label: 客户名称
+        value: "{{ project[0].customer_name if project else '-' }}"
+      - label: 当前阶段
+        value: "{{ project[0].current_stage if project else 'S1' }}"
+      - label: 健康状态
+        value: "{{ project[0].health_status if project else 'H1' }}"
+      - label: 整体进度
+        value: "{{ (project[0].progress or 0) | percentage(0) }}"
+      - label: 统计周期
+        value: "{{ params.start_date }} ~ {{ params.end_date }}"
+
+  - id: milestone_summary
+    title: 里程碑概况
+    type: metrics
+    items:
+      - label: 里程碑总数
+        value: "{{ milestones | length }}"
+      - label: 已完成
+        value: "{{ milestones | count_by('status', 'COMPLETED') }}"
+      - label: 进行中
+        value: "{{ milestones | count_by('status', 'IN_PROGRESS') }}"
+      - label: 延期
+        value: "{{ milestones | count_by('status', 'DELAYED') }}"
+      - label: 完成率
+        value: "{{ ((milestones | count_by('status', 'COMPLETED')) / (milestones | length) * 100) | round_num(1) if milestones else 0 }}%"
+
+  - id: timesheet_summary
+    title: 工时统计
+    type: metrics
+    items:
+      - label: 总工时
+        value: "{{ timesheets | sum_by('hours') | round_num(1) }} 小时"
+      - label: 参与人数
+        value: "{{ timesheets | map(attribute='user_id') | unique | length }}"
+      - label: 人均工时
+        value: "{{ (timesheets | sum_by('hours') / (timesheets | map(attribute='user_id') | unique | length)) | round_num(1) if timesheets else 0 }} 小时"
+
+  - id: cost_summary
+    title: 成本概况
+    type: metrics
+    items:
+      - label: 计划预算
+        value: "{{ (project[0].budget_amount or 0) | currency }}"
+      - label: 本月成本
+        value: "{{ costs | sum_by('amount') | currency }}"
+      - label: 累计成本
+        value: "{{ (project[0].actual_cost or 0) | currency }}"
+      - label: 预算使用率
+        value: "{{ ((project[0].actual_cost or 0) / (project[0].budget_amount or 1) * 100) | round_num(1) }}%"
+
+  - id: milestone_list
+    title: 里程碑明细
+    type: table
+    source: milestones
+    columns:
+      - field: milestone_name
+        label: 里程碑名称
+      - field: milestone_date
+        label: 计划日期
+        format: date
+      - field: actual_date
+        label: 实际日期
+        format: date
+      - field: status
+        label: 状态
+        format: status_badge
+
+  - id: machine_list
+    title: 机台进度
+    type: table
+    source: machines
+    columns:
+      - field: machine_code
+        label: 机台编号
+      - field: machine_name
+        label: 机台名称
+      - field: status
+        label: 状态
+        format: status_badge
+      - field: progress
+        label: 进度
+        format: percentage
+
+exports:
+  json:
+    enabled: true
+  pdf:
+    enabled: true
+    template: project_monthly.html
+    orientation: portrait
+  excel:
+    enabled: true
+    sheets:
+      - name: 概览
+        section: summary
+      - name: 里程碑
+        section: milestone_list
+      - name: 机台进度
+        section: machine_list
+  word:
+    enabled: true

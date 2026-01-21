@@ -32,7 +32,7 @@
 
 ```
 项目 A (ICT测试设备)
-├── S2-方案���计: 机械工程师 1人 (50%), 电气工程师 1人 (30%)
+├── S2-方案设计: 机械工程师 1人 (50%), 电气工程师 1人 (30%)
 ├── S3-采购备料: 采购员 1人 (100%)
 ├── S4-加工制造: 机械工程师 1人 (80%)
 ├── S5-装配调试: 电气工程师 2人 (100%), 软件工程师 1人 (100%)
@@ -126,9 +126,17 @@ class ProjectStageResourcePlan(Base, TimestampMixin):
           "assigned_employees": [
             {"id": 101, "name": "张三", "department": "机械部"}
           ]
+        },
+        {
+          "role_code": "EE",
+          "role_name": "电气工程师",
+          "headcount": 1,
+          "allocation_pct": 30,
+          "status": "PENDING",
+          "assigned_employees": []
         }
       ],
-      "fill_rate": 50
+      "fill_rate": 50  // 填充率
     }
   ],
   "overall_fill_rate": 45
@@ -157,14 +165,88 @@ class ProjectStageResourcePlan(Base, TimestampMixin):
 ```
 /projects/{project_id}/resource-conflicts/
 ├── GET /                           # 获取项目的所有资源冲突
-├── GET /check                      # 检查当前分配是否有冲突
-└── POST /resolve                   # 标记冲突已解决
+├── GET /check                      # 检查当前分配是否有冲突（保存前预检）
+└── POST /resolve                   # 标记冲突已解决（手动确认）
 
 /analytics/resource-conflicts/
 ├── GET /                           # 全局资源冲突列表
 ├── GET /by-employee/{employee_id}  # 特定员工的冲突
 ├── GET /by-department/{dept_id}    # 部门内的冲突
 └── GET /summary                    # 冲突汇总统计
+```
+
+### 冲突检测逻辑
+
+```python
+# app/services/project/resource_conflict_service.py
+
+class ResourceConflictService:
+    """资源冲突检测服务"""
+
+    @staticmethod
+    def detect_conflicts(employee_id: int, db: Session) -> List[ResourceConflict]:
+        """检测员工的所有资源冲突"""
+        # 获取员工所有分配
+        assignments = db.query(ProjectStageResourcePlan).filter(
+            ProjectStageResourcePlan.assigned_employee_id == employee_id,
+            ProjectStageResourcePlan.assignment_status == 'ASSIGNED',
+        ).all()
+
+        conflicts = []
+
+        # 检测时间重叠
+        for i, a1 in enumerate(assignments):
+            for a2 in assignments[i+1:]:
+                overlap = calculate_date_overlap(
+                    a1.planned_start, a1.planned_end,
+                    a2.planned_start, a2.planned_end
+                )
+                if overlap:
+                    total_allocation = a1.allocation_pct + a2.allocation_pct
+                    if total_allocation > 100:
+                        conflicts.append(ResourceConflict(
+                            employee_id=employee_id,
+                            project_a_id=a1.project_id,
+                            project_b_id=a2.project_id,
+                            overlap_start=overlap[0],
+                            overlap_end=overlap[1],
+                            total_allocation=total_allocation,
+                            over_allocation=total_allocation - 100,
+                        ))
+
+        return conflicts
+
+    @staticmethod
+    def check_assignment_conflict(
+        employee_id: int,
+        project_id: int,
+        start_date: date,
+        end_date: date,
+        allocation_pct: Decimal,
+        db: Session
+    ) -> Optional[ResourceConflict]:
+        """检查新分配是否会产生冲突"""
+        # 获取员工在时间范围内的现有分配
+        existing = db.query(ProjectStageResourcePlan).filter(
+            ProjectStageResourcePlan.assigned_employee_id == employee_id,
+            ProjectStageResourcePlan.assignment_status == 'ASSIGNED',
+            ProjectStageResourcePlan.project_id != project_id,  # 排除本项目
+            ProjectStageResourcePlan.planned_end >= start_date,
+            ProjectStageResourcePlan.planned_start <= end_date,
+        ).all()
+
+        # 计算重叠期间的总分配
+        for assignment in existing:
+            overlap = calculate_date_overlap(
+                start_date, end_date,
+                assignment.planned_start, assignment.planned_end
+            )
+            if overlap:
+                total = allocation_pct + assignment.allocation_pct
+                if total > 100:
+                    return ResourceConflict(...)
+
+        return None
 ```
 
 ### 响应示例
@@ -193,9 +275,12 @@ class ProjectStageResourcePlan(Base, TimestampMixin):
       "overlap_period": "2026-03-15 ~ 2026-03-31",
       "total_allocation": 180,
       "over_allocation": 80,
-      "severity": "HIGH"
+      "severity": "HIGH",  // HIGH: >150%, MEDIUM: >120%, LOW: >100%
+      "resolved": false
     }
-  ]
+  ],
+  "conflict_count": 1,
+  "affected_employees": 1
 }
 ```
 
@@ -205,7 +290,7 @@ class ProjectStageResourcePlan(Base, TimestampMixin):
 
 ### 业务场景
 
-部门经理需要了解团队的工作负载分布：
+部门经理需要了解团队的工作负载分布，识别过载和闲置：
 
 ```
 机械部工作负载分布 (2026年3月)
@@ -222,9 +307,9 @@ class ProjectStageResourcePlan(Base, TimestampMixin):
 ```
 /departments/{dept_id}/workload/
 ├── GET /summary                    # 部门工作量汇总
-├── GET /distribution               # 负载分布
+├── GET /distribution               # 负载分布（柱状图数据）
 ├── GET /members/{user_id}          # 成员详细工作量
-├── GET /trend                      # 负载趋势
+├── GET /trend                      # 负载趋势（折线图数据）
 └── GET /forecast                   # 未来负载预测
 
 /analytics/workload/
@@ -237,6 +322,28 @@ class ProjectStageResourcePlan(Base, TimestampMixin):
 ### 响应示例
 
 ```json
+// GET /departments/5/workload/summary?month=2026-03
+{
+  "department": {"id": 5, "name": "机械部"},
+  "period": "2026-03",
+  "summary": {
+    "total_employees": 8,
+    "total_capacity_hours": 1408,  // 8人 × 22天 × 8小时
+    "allocated_hours": 1250,
+    "utilization_rate": 88.8,
+    "overloaded_count": 1,         // >100%
+    "optimal_count": 4,            // 80-100%
+    "underutilized_count": 2,      // 50-80%
+    "idle_count": 1                // <50%
+  },
+  "distribution": [
+    {"range": "0-50%", "count": 1, "employees": [{"id": 104, "name": "赵六"}]},
+    {"range": "50-80%", "count": 2, "employees": [...]},
+    {"range": "80-100%", "count": 4, "employees": [...]},
+    {"range": ">100%", "count": 1, "employees": [{"id": 101, "name": "张三", "utilization": 180}]}
+  ]
+}
+
 // GET /analytics/workload/bottlenecks
 {
   "period": "2026-03",
@@ -246,13 +353,17 @@ class ProjectStageResourcePlan(Base, TimestampMixin):
       "skill": {"code": "EMC_DEBUG", "name": "EMC调试"},
       "severity": "HIGH",
       "detail": "仅2人具备该技能，当前负载均>90%",
+      "affected_projects": [
+        {"id": 123, "name": "ICT测试设备-华为"},
+        {"id": 456, "name": "视觉检测线-小米"}
+      ],
       "recommendation": "建议安排技能培训或外部招聘"
     },
     {
       "type": "DEPARTMENT_OVERLOAD",
       "department": {"id": 5, "name": "机械部"},
       "severity": "MEDIUM",
-      "detail": "部门平均负载120%",
+      "detail": "部门平均负载120%，3月中旬达到峰值",
       "recommendation": "考虑跨部门借调或外协"
     }
   ]
@@ -273,7 +384,7 @@ class ProjectStageResourcePlan(Base, TimestampMixin):
 结果:
 ├── 李四 (电气部) - EMC调试:4分, 可用率:40%, 匹配度:85%
 ├── 王五 (电气部) - EMC调试:3分, 可用率:60%, 匹配度:72%
-└── 陈七 (测试部) - EMC调试:5分, 可用率:10%, 匹配度:65%
+└── 陈七 (测试部) - EMC调试:5分, 可用率:10%, 匹配度:65% (可用率低)
 ```
 
 ### API 设计
@@ -302,11 +413,60 @@ GET /analytics/skill-matrix/search?
   available_from=2026-03-01          # 可用时间范围
   available_to=2026-03-31
   min_availability=30                # 最低可用率%
+  sort_by=match_score                # 排序: match_score/availability/skill_score
 ```
 
 ### 响应示例
 
 ```json
+// GET /analytics/skill-matrix/search?skills=EMC_DEBUG&available_from=2026-03-01&available_to=2026-03-31
+{
+  "query": {
+    "skills": ["EMC_DEBUG"],
+    "period": "2026-03-01 ~ 2026-03-31",
+    "min_availability": 0
+  },
+  "results": [
+    {
+      "employee": {
+        "id": 102,
+        "name": "李四",
+        "department": "电气部",
+        "title": "高级电气工程师"
+      },
+      "skill_match": {
+        "EMC_DEBUG": {"score": 4, "level": "熟练", "last_used": "2026-01"}
+      },
+      "availability": {
+        "current_allocation": 60,
+        "available_pct": 40,
+        "available_hours": 70,
+        "current_projects": [
+          {"id": 789, "name": "老化设备-OPPO", "allocation": 60}
+        ]
+      },
+      "match_score": 85,
+      "recommendation": "RECOMMENDED"
+    },
+    {
+      "employee": {"id": 103, "name": "王五", ...},
+      "skill_match": {"EMC_DEBUG": {"score": 3, "level": "一般"}},
+      "availability": {"available_pct": 60},
+      "match_score": 72,
+      "recommendation": "ACCEPTABLE"
+    }
+  ],
+  "total_count": 3,
+  "skill_summary": {
+    "EMC_DEBUG": {
+      "total_qualified": 5,        // 具备该技能的总人数
+      "currently_available": 3,    // 当前有空闲的人数
+      "avg_score": 3.6,
+      "coverage_departments": ["电气部", "测试部"]
+    }
+  }
+}
+
 // GET /analytics/skill-matrix/gaps
 {
   "analysis_period": "2026-Q1",
@@ -315,16 +475,27 @@ GET /analytics/skill-matrix/search?
       "skill": {"code": "VISION_ALGO", "name": "视觉算法"},
       "severity": "CRITICAL",
       "current_headcount": 1,
-      "required_headcount": 3,
+      "required_headcount": 3,      // 基于项目需求预测
       "gap": 2,
+      "affected_projects": [
+        {"id": 456, "name": "视觉检测线-小米", "need_date": "2026-02-15"}
+      ],
       "recommendation": "紧急招聘或外部顾问"
+    },
+    {
+      "skill": {"code": "PLC_SIEMENS", "name": "西门子PLC编程"},
+      "severity": "MEDIUM",
+      "current_headcount": 4,
+      "required_headcount": 5,
+      "gap": 1,
+      "recommendation": "安排内部培训，从三菱PLC工程师转型"
     }
   ],
   "training_opportunities": [
     {
       "skill": {"code": "EMC_DEBUG", "name": "EMC调试"},
       "potential_trainees": [
-        {"id": 105, "name": "周八", "readiness": 80}
+        {"id": 105, "name": "周八", "current_skills": ["EE_DESIGN"], "readiness": 80}
       ]
     }
   ]
@@ -340,17 +511,55 @@ GET /analytics/skill-matrix/search?
 ```
 /projects/{project_id}/
 ├── ... (现有路由)
+│
 ├── /resource-plan/              # 资源计划 (新增)
+│   ├── GET /
+│   ├── POST /
+│   ├── GET /summary
+│   ├── GET /timeline
+│   ├── GET /stages/{stage_code}
+│   ├── PUT /stages/{stage_code}
+│   ├── POST /{plan_id}/assign
+│   ├── POST /{plan_id}/release
+│   └── GET /{plan_id}/candidates
+│
 └── /resource-conflicts/         # 资源冲突 (新增)
+    ├── GET /
+    ├── GET /check
+    └── POST /resolve
 
 /departments/{dept_id}/
-├── /workload/                   # 工作量 (增强)
+├── /workload/                   # 工作量 (已有，增强)
+│   ├── GET /summary
+│   ├── GET /distribution
+│   ├── GET /members/{user_id}
+│   ├── GET /trend
+│   └── GET /forecast
+│
 └── /skill-matrix/               # 部门技能矩阵 (新增)
+    ├── GET /
+    └── GET /gaps
 
 /analytics/
-├── /workload/                   # 全局工作量 (增强)
+├── /workload/                   # 全局工作量 (已有，增强)
+│   ├── GET /overview
+│   ├── GET /bottlenecks
+│   ├── GET /by-skill/{skill_code}
+│   └── GET /heatmap
+│
 ├── /resource-conflicts/         # 全局资源冲突 (新增)
+│   ├── GET /
+│   ├── GET /by-employee/{employee_id}
+│   ├── GET /by-department/{dept_id}
+│   └── GET /summary
+│
 └── /skill-matrix/               # 全局技能矩阵 (新增)
+    ├── GET /
+    ├── GET /skills
+    ├── GET /skills/{skill_code}
+    ├── GET /search
+    ├── GET /gaps
+    └── GET /coverage
 ```
 
 ---
