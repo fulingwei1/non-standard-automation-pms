@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-import pytest
-pytestmark = pytest.mark.skip(reason='Mock configuration issues - needs rewrite')
+# Note: Mock configuration has been reviewed and tests are now enabled
 
 import pytest
 from datetime import date

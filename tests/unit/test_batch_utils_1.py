@@ -1,17 +1,13 @@
 # -*- coding: utf-8 -*-
-import pytest
-pytestmark = pytest.mark.skip(reason='Mock configuration issues - needs rewrite')
-
 """
 Comprehensive unit tests for utils directory modules.
 Tests cover: code_config, number_generator, permission_helpers, pinyin_utils,
 redis_client, scheduler, scheduler_metrics, spec_extractor, spec_match_service, spec_matcher
 """
 
+import pytest
 from decimal import Decimal
 from unittest.mock import Mock, patch
-
-import pytest
 
 # ============================================================================
 # Tests for code_config.py
