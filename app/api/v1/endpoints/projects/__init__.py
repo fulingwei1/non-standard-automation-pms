@@ -88,6 +88,7 @@ from .milestones import router as milestones_router
 from .progress import router as progress_router
 from .resource_plan import router as resource_plan_router
 from .roles import router as roles_router
+from .stages import router as stages_router
 from .work_logs import router as work_logs_router
 
 # 里程碑路由（项目内操作）
@@ -151,4 +152,11 @@ router.include_router(
     progress_router,
     prefix="/{project_id}/progress",
     tags=["projects-progress"],
+)
+
+# 阶段路由（项目内操作）
+router.include_router(
+    stages_router,
+    prefix="/{project_id}/stages",
+    tags=["projects-stages"],
 )
