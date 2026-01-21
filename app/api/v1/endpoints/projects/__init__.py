@@ -81,6 +81,7 @@ router.include_router(extended.router, tags=["projects-extended"])
 
 # === 项目模块整合：迁移的子模块路由 ===
 from .costs import router as costs_router
+from .evaluations import router as evaluations_router
 from .machines import router as machines_router
 from .members import router as members_router
 from .milestones import router as milestones_router
@@ -135,4 +136,11 @@ router.include_router(
     roles_router,
     prefix="/{project_id}/roles",
     tags=["projects-roles"],
+)
+
+# 评价路由（项目内操作）
+router.include_router(
+    evaluations_router,
+    prefix="/{project_id}/evaluations",
+    tags=["projects-evaluations"],
 )
