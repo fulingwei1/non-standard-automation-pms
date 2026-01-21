@@ -20,6 +20,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'sales', metrics: ['leads', 'opportunities', 'contracts', 'revenue'] } },
       { id: 'sales-funnel' },
       { id: 'leads-list', props: { limit: 10 } },
@@ -34,6 +35,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'sales-manager', metrics: ['team-revenue', 'team-quota', 'pipeline', 'win-rate'] } },
       { id: 'revenue-chart' },
       { id: 'sales-funnel' },
@@ -49,6 +51,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'sales-director', metrics: ['total-revenue', 'ytd-growth', 'forecast', 'headcount'] } },
       { id: 'revenue-chart', props: { view: 'overview' } },
       { id: 'sales-funnel', props: { view: 'department' } },
@@ -63,6 +66,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'presales', metrics: ['proposals', 'win-rate', 'response-time', 'active-projects'] } },
       { id: 'task-list', props: { filter: 'presales' } },
       { id: 'project-progress', props: { filter: 'presales' } },
@@ -76,6 +80,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'business', metrics: ['contracts', 'orders', 'deliveries', 'collections'] } },
       { id: 'task-list', props: { filter: 'business' } },
       { id: 'approval-pending' },
@@ -89,6 +94,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'pmo', metrics: ['active-projects', 'on-track', 'delayed', 'completed'] } },
       { id: 'project-progress', props: { view: 'overview' } },
       { id: 'trend-chart', props: { type: 'project-health' } },
@@ -103,6 +109,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'pmc', metrics: ['my-projects', 'on-track', 'issues', 'milestones'] } },
       { id: 'project-progress', props: { view: 'my-projects' } },
       { id: 'kit-status' },
@@ -117,6 +124,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'pm', metrics: ['my-projects', 'tasks', 'issues', 'timeline'] } },
       { id: 'project-progress', props: { view: 'my-projects' } },
       { id: 'task-list', props: { filter: 'project' } },
@@ -131,6 +139,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'engineer', metrics: ['tasks', 'hours-logged', 'ecn-pending', 'reviews'] } },
       { id: 'task-list', props: { filter: 'engineer' } },
       { id: 'project-progress', props: { view: 'my-tasks' } },
@@ -145,6 +154,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'engineer', metrics: ['tasks', 'hours-logged', 'designs', 'reviews'] } },
       { id: 'task-list', props: { filter: 'mechanical' } },
       { id: 'project-progress', props: { view: 'my-tasks' } },
@@ -158,6 +168,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'engineer', metrics: ['tasks', 'hours-logged', 'designs', 'reviews'] } },
       { id: 'task-list', props: { filter: 'electrical' } },
       { id: 'project-progress', props: { view: 'my-tasks' } },
@@ -171,6 +182,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'engineer', metrics: ['tasks', 'hours-logged', 'commits', 'reviews'] } },
       { id: 'task-list', props: { filter: 'software' } },
       { id: 'project-progress', props: { view: 'my-tasks' } },
@@ -183,6 +195,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'engineer', metrics: ['tasks', 'hours-logged', 'tests', 'bugs'] } },
       { id: 'task-list', props: { filter: 'testing' } },
       { id: 'project-progress', props: { view: 'my-tasks' } },
@@ -196,6 +209,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'procurement', metrics: ['orders', 'pending', 'overdue', 'savings'] } },
       { id: 'task-list', props: { filter: 'procurement' } },
       { id: 'kit-status' },
@@ -209,6 +223,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'procurement-manager', metrics: ['total-orders', 'budget', 'suppliers', 'lead-time'] } },
       { id: 'approval-pending' },
       { id: 'trend-chart', props: { type: 'procurement-spend' } },
@@ -222,6 +237,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'buyer', metrics: ['orders', 'arrivals', 'issues', 'urgent'] } },
       { id: 'task-list', props: { filter: 'buyer' } },
       { id: 'recent-items', props: { type: 'purchase-orders' } },
@@ -235,6 +251,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'production', metrics: ['work-orders', 'in-progress', 'completed', 'yield'] } },
       { id: 'production-board' },
       { id: 'kit-status' },
@@ -248,6 +265,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'production-manager', metrics: ['capacity', 'efficiency', 'quality', 'delivery'] } },
       { id: 'production-board', props: { view: 'overview' } },
       { id: 'trend-chart', props: { type: 'production-output' } },
@@ -262,6 +280,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'manufacturing', metrics: ['total-output', 'oee', 'quality-rate', 'on-time-delivery'] } },
       { id: 'trend-chart', props: { type: 'manufacturing-kpi' } },
       { id: 'production-board', props: { view: 'executive' } },
@@ -275,6 +294,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'assembler', metrics: ['my-tasks', 'completed', 'in-progress', 'quality'] } },
       { id: 'work-order-list', props: { filter: 'my-orders' } },
       { id: 'task-list', props: { filter: 'assembly' } },
@@ -288,6 +308,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'customer-service', metrics: ['tickets', 'open', 'resolved', 'satisfaction'] } },
       { id: 'task-list', props: { filter: 'service' } },
       { id: 'recent-items', props: { type: 'tickets' } },
@@ -300,6 +321,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'cs-manager', metrics: ['total-tickets', 'sla', 'csat', 'team-load'] } },
       { id: 'trend-chart', props: { type: 'service-metrics' } },
       { id: 'task-list', props: { filter: 'service-team' } },
@@ -314,6 +336,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'finance', metrics: ['invoices', 'payments', 'receivables', 'payables'] } },
       { id: 'task-list', props: { filter: 'finance' } },
       { id: 'approval-pending' },
@@ -326,6 +349,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'finance-manager', metrics: ['revenue', 'costs', 'profit', 'cash-flow'] } },
       { id: 'trend-chart', props: { type: 'financial' } },
       { id: 'approval-pending' },
@@ -340,6 +364,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'hr', metrics: ['employees', 'new-hires', 'attendance', 'leave-requests'] } },
       { id: 'task-list', props: { filter: 'hr' } },
       { id: 'approval-pending' },
@@ -352,6 +377,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'hr-manager', metrics: ['headcount', 'turnover', 'hiring', 'training'] } },
       { id: 'trend-chart', props: { type: 'hr-metrics' } },
       { id: 'approval-pending' },
@@ -366,6 +392,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'executive', metrics: ['revenue', 'profit', 'projects', 'employees'] } },
       { id: 'revenue-chart', props: { view: 'executive' } },
       { id: 'trend-chart', props: { type: 'company-kpi' } },
@@ -380,6 +407,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'chairman', metrics: ['annual-revenue', 'growth', 'market-share', 'roi'] } },
       { id: 'revenue-chart', props: { view: 'strategic' } },
       { id: 'trend-chart', props: { type: 'strategic-kpi' } },
@@ -392,6 +420,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'vp', metrics: ['dept-revenue', 'dept-projects', 'dept-headcount', 'dept-kpi'] } },
       { id: 'trend-chart', props: { type: 'dept-kpi' } },
       { id: 'project-progress', props: { view: 'department' } },
@@ -406,6 +435,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'admin', metrics: ['users', 'roles', 'logins', 'errors'] } },
       { id: 'system-health' },
       { id: 'user-stats' },
@@ -419,6 +449,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'super-admin', metrics: ['users', 'roles', 'permissions', 'system-load'] } },
       { id: 'system-health' },
       { id: 'user-stats' },
@@ -433,6 +464,7 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
+      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card' },
       { id: 'task-list' },
       { id: 'notification-panel' },
