@@ -91,6 +91,7 @@ from .roles import router as roles_router
 from .stages import router as stages_router
 from .timesheet import router as timesheet_router
 from .work_logs import router as work_logs_router
+from .workload import router as workload_router
 
 # 里程碑路由（项目内操作）
 router.include_router(
@@ -167,4 +168,11 @@ router.include_router(
     timesheet_router,
     prefix="/{project_id}/timesheet",
     tags=["projects-timesheet"],
+)
+
+# 工作量路由（项目内操作）
+router.include_router(
+    workload_router,
+    prefix="/{project_id}/workload",
+    tags=["projects-workload"],
 )
