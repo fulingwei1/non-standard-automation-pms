@@ -98,8 +98,9 @@ router.include_router(
     tags=["projects-machines"],
 )
 
-# 资源计划路由
+# 资源计划路由（项目内操作）
 router.include_router(
     resource_plan_router,
+    prefix="/{project_id}/resource-plan",
     tags=["projects-resource-plan"],
 )
