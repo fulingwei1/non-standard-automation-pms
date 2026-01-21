@@ -1,0 +1,271 @@
+# 会议月报配置
+# 报告代码: MEETING_MONTHLY
+
+meta:
+  name: 会议月报
+  code: MEETING_MONTHLY
+  description: 月度会议统计报告，包含会议执行、行动项完成、关键决策等信息
+  version: "1.0"
+
+permissions:
+  roles:
+    - PROJECT_MANAGER
+    - DEPARTMENT_MANAGER
+    - PMO
+    - ADMIN
+  data_scope: company
+
+parameters:
+  - name: year
+    type: integer
+    required: true
+    description: 报告年份
+  - name: month
+    type: integer
+    required: true
+    description: 报告月份
+  - name: rhythm_level
+    type: string
+    required: false
+    default: null
+    description: 节律层级筛选（STRATEGIC/TACTICAL/OPERATIONAL）
+
+cache:
+  enabled: true
+  ttl: 3600
+  key_pattern: "report:MEETING_MONTHLY:{year}:{month}:{rhythm_level}"
+
+schedule:
+  enabled: true
+  cron: "0 9 1 * *"
+  params:
+    year: "{{ last_month_year() }}"
+    month: "{{ last_month() }}"
+
+data_sources:
+  # 本月会议列表
+  meetings:
+    type: query
+    sql: |
+      SELECT sm.*,
+             u.real_name as organizer_name,
+             d.dept_name as department_name
+      FROM strategic_meetings sm
+      LEFT JOIN users u ON sm.organizer_id = u.id
+      LEFT JOIN departments d ON sm.department_id = d.id
+      WHERE sm.meeting_date >= :start_date
+        AND sm.meeting_date <= :end_date
+      ORDER BY sm.meeting_date DESC
+
+  # 会议统计
+  meeting_stats:
+    type: query
+    sql: |
+      SELECT
+        COUNT(*) as total_meetings,
+        SUM(CASE WHEN status IN ('COMPLETED', 'completed') THEN 1 ELSE 0 END) as completed_meetings,
+        SUM(CASE WHEN status IN ('SCHEDULED', 'scheduled') THEN 1 ELSE 0 END) as scheduled_meetings,
+        SUM(CASE WHEN status IN ('CANCELLED', 'cancelled') THEN 1 ELSE 0 END) as cancelled_meetings,
+        SUM(CASE WHEN rhythm_level = 'STRATEGIC' THEN 1 ELSE 0 END) as strategic_count,
+        SUM(CASE WHEN rhythm_level = 'TACTICAL' THEN 1 ELSE 0 END) as tactical_count,
+        SUM(CASE WHEN rhythm_level = 'OPERATIONAL' THEN 1 ELSE 0 END) as operational_count
+      FROM strategic_meetings
+      WHERE meeting_date >= :start_date
+        AND meeting_date <= :end_date
+
+  # 行动项列表
+  action_items:
+    type: query
+    sql: |
+      SELECT mai.*,
+             sm.meeting_name,
+             u.real_name as assignee_name
+      FROM meeting_action_items mai
+      LEFT JOIN strategic_meetings sm ON mai.meeting_id = sm.id
+      LEFT JOIN users u ON mai.assignee_id = u.id
+      WHERE sm.meeting_date >= :start_date
+        AND sm.meeting_date <= :end_date
+      ORDER BY mai.due_date
+
+  # 行动项统计
+  action_item_stats:
+    type: query
+    sql: |
+      SELECT
+        COUNT(*) as total_items,
+        SUM(CASE WHEN mai.status IN ('COMPLETED', 'completed') THEN 1 ELSE 0 END) as completed_items,
+        SUM(CASE WHEN mai.status IN ('PENDING', 'IN_PROGRESS', 'pending', 'in_progress') AND mai.due_date < CURRENT_DATE THEN 1 ELSE 0 END) as overdue_items,
+        SUM(CASE WHEN mai.status IN ('PENDING', 'IN_PROGRESS', 'pending', 'in_progress') THEN 1 ELSE 0 END) as pending_items
+      FROM meeting_action_items mai
+      LEFT JOIN strategic_meetings sm ON mai.meeting_id = sm.id
+      WHERE sm.meeting_date >= :start_date
+        AND sm.meeting_date <= :end_date
+
+  # 关键决策
+  key_decisions:
+    type: query
+    sql: |
+      SELECT md.*,
+             sm.meeting_name,
+             sm.meeting_date
+      FROM meeting_decisions md
+      LEFT JOIN strategic_meetings sm ON md.meeting_id = sm.id
+      WHERE sm.meeting_date >= :start_date
+        AND sm.meeting_date <= :end_date
+        AND md.is_key_decision = 1
+      ORDER BY sm.meeting_date DESC
+      LIMIT 20
+
+  # 上月统计（用于对比）
+  prev_meeting_stats:
+    type: query
+    sql: |
+      SELECT
+        COUNT(*) as total_meetings,
+        SUM(CASE WHEN status IN ('COMPLETED', 'completed') THEN 1 ELSE 0 END) as completed_meetings
+      FROM strategic_meetings
+      WHERE meeting_date >= DATE(:start_date, '-1 month')
+        AND meeting_date < :start_date
+
+  prev_action_item_stats:
+    type: query
+    sql: |
+      SELECT
+        COUNT(*) as total_items,
+        SUM(CASE WHEN mai.status IN ('COMPLETED', 'completed') THEN 1 ELSE 0 END) as completed_items
+      FROM meeting_action_items mai
+      LEFT JOIN strategic_meetings sm ON mai.meeting_id = sm.id
+      WHERE sm.meeting_date >= DATE(:start_date, '-1 month')
+        AND sm.meeting_date < :start_date
+
+sections:
+  - id: report_header
+    title: 报告概览
+    type: metrics
+    items:
+      - label: 报告期间
+        value: "{{ params.year }}年{{ params.month }}月"
+
+  - id: meeting_summary
+    title: 会议统计
+    type: metrics
+    items:
+      - label: 会议总数
+        value: "{{ meeting_stats[0].total_meetings if meeting_stats else 0 }}"
+      - label: 已完成
+        value: "{{ meeting_stats[0].completed_meetings if meeting_stats else 0 }}"
+      - label: 已取消
+        value: "{{ meeting_stats[0].cancelled_meetings if meeting_stats else 0 }}"
+      - label: 会议完成率
+        value: "{{ ((meeting_stats[0].completed_meetings or 0) / (meeting_stats[0].total_meetings or 1) * 100) | round_num(1) }}%"
+      - label: 环比变化
+        value: "{{ (((meeting_stats[0].total_meetings or 0) - (prev_meeting_stats[0].total_meetings or 0)) / (prev_meeting_stats[0].total_meetings or 1) * 100) | round_num(1) }}%"
+
+  - id: level_summary
+    title: 按层级统计
+    type: metrics
+    items:
+      - label: 战略级会议
+        value: "{{ meeting_stats[0].strategic_count if meeting_stats else 0 }}"
+      - label: 战术级会议
+        value: "{{ meeting_stats[0].tactical_count if meeting_stats else 0 }}"
+      - label: 运营级会议
+        value: "{{ meeting_stats[0].operational_count if meeting_stats else 0 }}"
+
+  - id: action_item_summary
+    title: 行动项统计
+    type: metrics
+    items:
+      - label: 行动项总数
+        value: "{{ action_item_stats[0].total_items if action_item_stats else 0 }}"
+      - label: 已完成
+        value: "{{ action_item_stats[0].completed_items if action_item_stats else 0 }}"
+      - label: 进行中
+        value: "{{ action_item_stats[0].pending_items if action_item_stats else 0 }}"
+      - label: 已逾期
+        value: "{{ action_item_stats[0].overdue_items if action_item_stats else 0 }}"
+      - label: 完成率
+        value: "{{ ((action_item_stats[0].completed_items or 0) / (action_item_stats[0].total_items or 1) * 100) | round_num(1) }}%"
+
+  - id: meeting_list
+    title: 会议明细
+    type: table
+    source: meetings
+    columns:
+      - field: meeting_name
+        label: 会议名称
+      - field: rhythm_level
+        label: 层级
+        format: status_badge
+      - field: meeting_date
+        label: 会议日期
+        format: date
+      - field: organizer_name
+        label: 组织者
+      - field: status
+        label: 状态
+        format: status_badge
+      - field: participants_count
+        label: 参会人数
+
+  - id: action_item_list
+    title: 行动项明细
+    type: table
+    source: action_items
+    columns:
+      - field: meeting_name
+        label: 来源会议
+      - field: title
+        label: 行动项
+      - field: assignee_name
+        label: 负责人
+      - field: due_date
+        label: 截止日期
+        format: date
+      - field: status
+        label: 状态
+        format: status_badge
+
+  - id: key_decision_list
+    title: 关键决策
+    type: table
+    source: key_decisions
+    columns:
+      - field: meeting_name
+        label: 会议
+      - field: meeting_date
+        label: 日期
+        format: date
+      - field: decision_content
+        label: 决策内容
+      - field: decision_result
+        label: 决策结果
+
+  - id: meeting_level_chart
+    title: 会议层级分布
+    type: chart
+    chart_type: pie
+    source: meeting_stats
+    label_field: level
+    value_field: count
+
+exports:
+  json:
+    enabled: true
+  pdf:
+    enabled: true
+    orientation: portrait
+  excel:
+    enabled: true
+    sheets:
+      - name: 统计概览
+        section: meeting_summary
+      - name: 会议明细
+        section: meeting_list
+      - name: 行动项
+        section: action_item_list
+      - name: 关键决策
+        section: key_decision_list
+  word:
+    enabled: true
+    template: meeting_monthly.docx

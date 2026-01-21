@@ -26,6 +26,14 @@ from .lifecycle import ProjectStage, ProjectStatus, ProjectStatusLog
 # 项目团队
 from .team import ProjectMember, ProjectMemberContribution
 
+# 资源计划
+from .resource_plan import (
+    AssignmentStatusEnum,
+    ConflictSeverityEnum,
+    ProjectStageResourcePlan,
+    ResourceConflict,
+)
+
 __all__ = [
     # 客户相关
     "Customer",
@@ -48,4 +56,9 @@ __all__ = [
     "ProjectDocument",
     "ProjectTemplate",
     "ProjectTemplateVersion",
+    # 资源计划
+    "ProjectStageResourcePlan",
+    "ResourceConflict",
+    "AssignmentStatusEnum",
+    "ConflictSeverityEnum",
 ]

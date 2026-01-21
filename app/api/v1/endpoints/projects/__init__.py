@@ -81,10 +81,26 @@ router.include_router(extended.router, tags=["projects-extended"])
 
 # === 项目模块整合：迁移的子模块路由 ===
 from .milestones import router as milestones_router
+from .machines import router as machines_router
+from .resource_plan import router as resource_plan_router
 
 # 里程碑路由（项目内操作）
 router.include_router(
     milestones_router,
     prefix="/{project_id}/milestones",
-    tags=["projects-milestones"]
+    tags=["projects-milestones"],
+)
+
+# 机台路由（项目内操作）
+router.include_router(
+    machines_router,
+    prefix="/{project_id}/machines",
+    tags=["projects-machines"],
+)
+
+# 资源计划路由（项目内操作）
+router.include_router(
+    resource_plan_router,
+    prefix="/{project_id}/resource-plan",
+    tags=["projects-resource-plan"],
 )

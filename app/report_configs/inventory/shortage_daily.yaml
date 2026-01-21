@@ -1,0 +1,188 @@
+# 缺料日报配置
+# 报告代码: SHORTAGE_DAILY
+
+meta:
+  name: 缺料日报
+  code: SHORTAGE_DAILY
+  description: PMC 每日缺料预警汇总、齐套率和到货统计
+  version: "1.0"
+
+permissions:
+  roles:
+    - PMC
+    - WAREHOUSE
+    - PURCHASE
+    - PRODUCTION_MANAGER
+    - ADMIN
+  data_scope: company
+
+parameters:
+  - name: target_date
+    type: date
+    required: true
+    description: 统计日期
+
+cache:
+  enabled: true
+  ttl: 1800
+  key_pattern: "report:SHORTAGE_DAILY:{target_date}"
+
+schedule:
+  enabled: true
+  cron: "0 8 * * *"
+  params:
+    target_date: "{{ yesterday() }}"
+
+data_sources:
+  # 预警统计
+  alerts:
+    type: query
+    sql: |
+      SELECT
+        COUNT(*) as total,
+        SUM(CASE WHEN DATE(created_at) = :target_date THEN 1 ELSE 0 END) as new_count,
+        SUM(CASE WHEN handle_end_at IS NOT NULL AND DATE(handle_end_at) = :target_date THEN 1 ELSE 0 END) as resolved_count,
+        SUM(CASE WHEN status IN ('PENDING', 'PROCESSING', 'pending', 'handling', 'escalated') THEN 1 ELSE 0 END) as pending_count,
+        SUM(CASE WHEN alert_level IN ('level1', 'INFO') THEN 1 ELSE 0 END) as level1_count,
+        SUM(CASE WHEN alert_level IN ('level2', 'WARNING') THEN 1 ELSE 0 END) as level2_count,
+        SUM(CASE WHEN alert_level IN ('level3', 'CRITICAL') THEN 1 ELSE 0 END) as level3_count,
+        SUM(CASE WHEN alert_level IN ('level4', 'URGENT') THEN 1 ELSE 0 END) as level4_count
+      FROM alert_records
+      WHERE target_type = 'SHORTAGE'
+
+  # 上报统计
+  reports:
+    type: query
+    sql: |
+      SELECT
+        SUM(CASE WHEN DATE(report_time) = :target_date THEN 1 ELSE 0 END) as new_reports,
+        SUM(CASE WHEN resolved_at IS NOT NULL AND DATE(resolved_at) = :target_date THEN 1 ELSE 0 END) as resolved_reports
+      FROM shortage_reports
+
+  # 齐套统计
+  kit_checks:
+    type: query
+    sql: |
+      SELECT
+        COUNT(*) as total_work_orders,
+        SUM(CASE WHEN LOWER(kit_status) = 'complete' THEN 1 ELSE 0 END) as kit_complete_count,
+        ROUND(AVG(kit_rate), 2) as avg_kit_rate
+      FROM kit_checks
+      WHERE DATE(check_time) = :target_date
+
+  # 到货统计
+  arrivals:
+    type: query
+    sql: |
+      SELECT
+        SUM(CASE WHEN expected_date = :target_date THEN 1 ELSE 0 END) as expected_arrivals,
+        SUM(CASE WHEN actual_date = :target_date THEN 1 ELSE 0 END) as actual_arrivals,
+        SUM(CASE WHEN actual_date = :target_date AND is_delayed = 1 THEN 1 ELSE 0 END) as delayed_arrivals
+      FROM material_arrivals
+
+  # 响应时间统计
+  response_times:
+    type: query
+    sql: |
+      SELECT
+        AVG(TIMESTAMPDIFF(MINUTE, created_at, handle_start_at)) as avg_response_minutes,
+        AVG(TIMESTAMPDIFF(HOUR, created_at, handle_end_at)) as avg_resolve_hours
+      FROM alert_records
+      WHERE target_type = 'SHORTAGE'
+        AND DATE(created_at) = :target_date
+        AND handle_start_at IS NOT NULL
+
+  # 预警详情列表
+  alert_list:
+    type: query
+    sql: |
+      SELECT ar.*, p.project_name, m.material_name
+      FROM alert_records ar
+      LEFT JOIN projects p ON ar.project_id = p.id
+      LEFT JOIN materials m ON ar.target_id = m.id
+      WHERE ar.target_type = 'SHORTAGE'
+        AND DATE(ar.created_at) = :target_date
+      ORDER BY ar.alert_level DESC, ar.created_at DESC
+      LIMIT 50
+
+sections:
+  - id: alert_summary
+    title: 预警统计
+    type: metrics
+    items:
+      - label: 今日新增
+        value: "{{ alerts[0].new_count if alerts else 0 }}"
+      - label: 今日解决
+        value: "{{ alerts[0].resolved_count if alerts else 0 }}"
+      - label: 待处理
+        value: "{{ alerts[0].pending_count if alerts else 0 }}"
+      - label: L3/L4紧急
+        value: "{{ (alerts[0].level3_count or 0) + (alerts[0].level4_count or 0) if alerts else 0 }}"
+
+  - id: kit_summary
+    title: 齐套统计
+    type: metrics
+    items:
+      - label: 工单数
+        value: "{{ kit_checks[0].total_work_orders if kit_checks else 0 }}"
+      - label: 完全齐套
+        value: "{{ kit_checks[0].kit_complete_count if kit_checks else 0 }}"
+      - label: 平均齐套率
+        value: "{{ (kit_checks[0].avg_kit_rate or 0) | percentage(1) }}"
+
+  - id: arrival_summary
+    title: 到货统计
+    type: metrics
+    items:
+      - label: 预计到货
+        value: "{{ arrivals[0].expected_arrivals if arrivals else 0 }}"
+      - label: 实际到货
+        value: "{{ arrivals[0].actual_arrivals if arrivals else 0 }}"
+      - label: 延迟到货
+        value: "{{ arrivals[0].delayed_arrivals if arrivals else 0 }}"
+      - label: 准时率
+        value: "{{ (((arrivals[0].actual_arrivals or 0) - (arrivals[0].delayed_arrivals or 0)) / (arrivals[0].actual_arrivals or 1) * 100) | round_num(1) }}%"
+
+  - id: response_summary
+    title: 响应效率
+    type: metrics
+    items:
+      - label: 平均响应时间
+        value: "{{ (response_times[0].avg_response_minutes or 0) | round_num(0) }} 分钟"
+      - label: 平均解决时间
+        value: "{{ (response_times[0].avg_resolve_hours or 0) | round_num(1) }} 小时"
+
+  - id: alert_list
+    title: 今日预警明细
+    type: table
+    source: alert_list
+    columns:
+      - field: project_name
+        label: 项目
+      - field: material_name
+        label: 物料
+      - field: alert_level
+        label: 级别
+        format: status_badge
+      - field: status
+        label: 状态
+        format: status_badge
+      - field: created_at
+        label: 创建时间
+        format: datetime
+
+exports:
+  json:
+    enabled: true
+  pdf:
+    enabled: true
+    orientation: landscape
+  excel:
+    enabled: true
+    sheets:
+      - name: 统计概览
+        section: alert_summary
+      - name: 预警明细
+        section: alert_list
+  word:
+    enabled: false

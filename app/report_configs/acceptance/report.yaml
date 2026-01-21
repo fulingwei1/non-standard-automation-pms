@@ -1,0 +1,251 @@
+# 验收报告配置（出厂验收/现场验收）
+# 报告代码: ACCEPTANCE_REPORT
+
+meta:
+  name: 验收报告
+  code: ACCEPTANCE_REPORT
+  description: 项目设备验收报告，包含检查项统计、问题清单和签字信息
+  version: "1.0"
+
+permissions:
+  roles:
+    - QA
+    - PROJECT_MANAGER
+    - PRODUCTION_MANAGER
+    - ADMIN
+  data_scope: project
+
+parameters:
+  - name: order_id
+    type: integer
+    required: true
+    description: 验收单ID
+  - name: report_type
+    type: string
+    required: false
+    default: "FAT"
+    description: 报告类型（FAT/SAT/FINAL）
+
+cache:
+  enabled: true
+  ttl: 1800
+  key_pattern: "report:ACCEPTANCE:{order_id}"
+
+schedule:
+  enabled: false
+
+data_sources:
+  # 验收单信息
+  acceptance_order:
+    type: query
+    sql: |
+      SELECT ao.*,
+             p.project_name, p.project_code,
+             m.machine_name, m.machine_code,
+             c.name as customer_name
+      FROM acceptance_orders ao
+      LEFT JOIN projects p ON ao.project_id = p.id
+      LEFT JOIN machines m ON ao.machine_id = m.id
+      LEFT JOIN customers c ON p.customer_id = c.id
+      WHERE ao.id = :order_id
+
+  # 检查项列表
+  check_items:
+    type: query
+    sql: |
+      SELECT aoi.*, ati.item_name, ati.category, ati.priority
+      FROM acceptance_order_items aoi
+      LEFT JOIN acceptance_template_items ati ON aoi.template_item_id = ati.id
+      WHERE aoi.order_id = :order_id
+      ORDER BY ati.category, ati.sort_order
+
+  # 检查项统计
+  item_stats:
+    type: query
+    sql: |
+      SELECT
+        COUNT(*) as total_items,
+        SUM(CASE WHEN LOWER(check_result) = 'pass' THEN 1 ELSE 0 END) as passed_items,
+        SUM(CASE WHEN LOWER(check_result) = 'fail' THEN 1 ELSE 0 END) as failed_items,
+        SUM(CASE WHEN LOWER(check_result) = 'na' THEN 1 ELSE 0 END) as na_items
+      FROM acceptance_order_items
+      WHERE order_id = :order_id
+
+  # 问题列表
+  issues:
+    type: query
+    sql: |
+      SELECT ai.*, u.real_name as handler_name
+      FROM acceptance_issues ai
+      LEFT JOIN users u ON ai.handler_id = u.id
+      WHERE ai.order_id = :order_id
+      ORDER BY ai.priority DESC, ai.created_at
+
+  # 问题统计
+  issue_stats:
+    type: query
+    sql: |
+      SELECT
+        COUNT(*) as total_issues,
+        SUM(CASE WHEN status IN ('RESOLVED', 'CLOSED', 'resolved', 'closed') THEN 1 ELSE 0 END) as resolved_issues,
+        SUM(CASE WHEN status IN ('PENDING', 'IN_PROGRESS', 'pending', 'in_progress') THEN 1 ELSE 0 END) as pending_issues,
+        SUM(CASE WHEN LOWER(severity) = 'critical' THEN 1 ELSE 0 END) as critical_issues,
+        SUM(CASE WHEN LOWER(severity) = 'major' THEN 1 ELSE 0 END) as major_issues,
+        SUM(CASE WHEN LOWER(severity) = 'minor' THEN 1 ELSE 0 END) as minor_issues
+      FROM acceptance_issues
+      WHERE order_id = :order_id
+
+  # 签字信息
+  signers:
+    type: query
+    sql: |
+      SELECT
+        qa.real_name as qa_signer_name,
+        ao.customer_signer,
+        ao.signed_at,
+        ao.customer_signed_at
+      FROM acceptance_orders ao
+      LEFT JOIN users qa ON ao.qa_signer_id = qa.id
+      WHERE ao.id = :order_id
+
+sections:
+  - id: report_header
+    title: 报告基本信息
+    type: metrics
+    items:
+      - label: 验收单号
+        value: "{{ acceptance_order[0].order_no if acceptance_order else '-' }}"
+      - label: 验收类型
+        value: "{{ acceptance_order[0].acceptance_type if acceptance_order else '-' }}"
+      - label: 验收状态
+        value: "{{ acceptance_order[0].status if acceptance_order else '-' }}"
+
+  - id: project_info
+    title: 项目信息
+    type: metrics
+    items:
+      - label: 项目名称
+        value: "{{ acceptance_order[0].project_name if acceptance_order else '-' }}"
+      - label: 项目编号
+        value: "{{ acceptance_order[0].project_code if acceptance_order else '-' }}"
+      - label: 客户名称
+        value: "{{ acceptance_order[0].customer_name if acceptance_order else '-' }}"
+      - label: 机台名称
+        value: "{{ acceptance_order[0].machine_name if acceptance_order else '-' }}"
+      - label: 机台编号
+        value: "{{ acceptance_order[0].machine_code if acceptance_order else '-' }}"
+
+  - id: acceptance_result
+    title: 验收结果
+    type: metrics
+    items:
+      - label: 计划开始日期
+        value: "{{ acceptance_order[0].planned_start_date if acceptance_order else '-' }}"
+      - label: 计划结束日期
+        value: "{{ acceptance_order[0].planned_end_date if acceptance_order else '-' }}"
+      - label: 实际开始日期
+        value: "{{ acceptance_order[0].actual_start_date if acceptance_order else '-' }}"
+      - label: 实际结束日期
+        value: "{{ acceptance_order[0].actual_end_date if acceptance_order else '-' }}"
+      - label: 合格率
+        value: "{{ (acceptance_order[0].pass_rate or 0) | percentage(1) }}"
+
+  - id: check_item_summary
+    title: 检查项统计
+    type: metrics
+    items:
+      - label: 总检查项
+        value: "{{ item_stats[0].total_items if item_stats else 0 }}"
+      - label: 合格项
+        value: "{{ item_stats[0].passed_items if item_stats else 0 }}"
+      - label: 不合格项
+        value: "{{ item_stats[0].failed_items if item_stats else 0 }}"
+      - label: 不适用项
+        value: "{{ item_stats[0].na_items if item_stats else 0 }}"
+      - label: 检查通过率
+        value: "{{ ((item_stats[0].passed_items or 0) / (item_stats[0].total_items or 1) * 100) | round_num(1) }}%"
+
+  - id: issue_summary
+    title: 问题统计
+    type: metrics
+    items:
+      - label: 问题总数
+        value: "{{ issue_stats[0].total_issues if issue_stats else 0 }}"
+      - label: 已解决
+        value: "{{ issue_stats[0].resolved_issues if issue_stats else 0 }}"
+      - label: 待解决
+        value: "{{ issue_stats[0].pending_issues if issue_stats else 0 }}"
+      - label: 严重问题
+        value: "{{ issue_stats[0].critical_issues if issue_stats else 0 }}"
+      - label: 主要问题
+        value: "{{ issue_stats[0].major_issues if issue_stats else 0 }}"
+      - label: 次要问题
+        value: "{{ issue_stats[0].minor_issues if issue_stats else 0 }}"
+
+  - id: check_item_list
+    title: 检查项明细
+    type: table
+    source: check_items
+    columns:
+      - field: category
+        label: 分类
+      - field: item_name
+        label: 检查项
+      - field: check_result
+        label: 结果
+        format: status_badge
+      - field: remarks
+        label: 备注
+
+  - id: issue_list
+    title: 问题清单
+    type: table
+    source: issues
+    columns:
+      - field: issue_no
+        label: 问题编号
+      - field: description
+        label: 问题描述
+      - field: severity
+        label: 严重程度
+        format: status_badge
+      - field: status
+        label: 状态
+        format: status_badge
+      - field: handler_name
+        label: 处理人
+      - field: due_date
+        label: 截止日期
+        format: date
+
+  - id: signature_info
+    title: 签字信息
+    type: metrics
+    items:
+      - label: 质检签字
+        value: "{{ signers[0].qa_signer_name if signers else '-' }}"
+      - label: 质检签字时间
+        value: "{{ signers[0].signed_at if signers else '-' }}"
+      - label: 客户签字
+        value: "{{ signers[0].customer_signer if signers else '-' }}"
+      - label: 客户签字时间
+        value: "{{ signers[0].customer_signed_at if signers else '-' }}"
+
+exports:
+  json:
+    enabled: true
+  pdf:
+    enabled: true
+    template: acceptance_report.html
+    orientation: portrait
+  excel:
+    enabled: true
+    sheets:
+      - name: 报告概要
+        section: check_item_summary
+      - name: 检查项明细
+        section: check_item_list
+      - name: 问题清单
+        section: issue_list
+  word:
+    enabled: true

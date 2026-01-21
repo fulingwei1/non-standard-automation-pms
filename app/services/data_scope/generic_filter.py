@@ -4,6 +4,7 @@
 支持任意模型的数据权限过滤
 """
 
+import logging
 from typing import Optional
 
 from sqlalchemy import or_
@@ -15,6 +16,8 @@ from app.models.user import User
 
 from .config import DataScopeConfig
 from .user_scope import UserScopeService
+
+logger = logging.getLogger(__name__)
 
 
 class GenericFilterService:
@@ -157,6 +160,31 @@ class GenericFilterService:
             if conditions:
                 return query.filter(or_(*conditions))
             # 没有条件时降级为 OWN
+            if owner_fields:
+                return query.filter(or_(*[field == user.id for field in owner_fields]))
+            return query.filter(False)
+
+        # CUSTOM：自定义规则
+        if data_scope == "CUSTOM":
+            try:
+                from .custom_rule import CustomRuleService
+                # 尝试获取自定义规则并应用
+                custom_rule = CustomRuleService.get_custom_rule(
+                    db, user.id, model.__tablename__
+                )
+                if custom_rule:
+                    return CustomRuleService.apply_custom_filter(
+                        query, db, user, custom_rule, model,
+                        owner_field=config.owner_field or "created_by",
+                        project_field=config.project_field or "project_id"
+                    )
+                else:
+                    logger.warning(
+                        f"用户 {user.id} 有 CUSTOM 权限但未找到规则，降级为 OWN"
+                    )
+            except Exception as e:
+                logger.error(f"应用自定义规则失败: {e}")
+            # 降级为 OWN
             if owner_fields:
                 return query.filter(or_(*[field == user.id for field in owner_fields]))
             return query.filter(False)

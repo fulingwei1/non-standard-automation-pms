@@ -17,7 +17,7 @@ from app.schemas.project import MilestoneCreate, MilestoneResponse, MilestoneUpd
 router = APIRouter()
 
 
-@router.get("/", response_model=List[MilestoneResponse])
+@router.get("/", response_model=List[MilestoneResponse], deprecated=True)
 def read_milestones(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
@@ -27,6 +27,8 @@ def read_milestones(
     current_user: User = Depends(security.require_permission("milestone:read")),
 ) -> Any:
     """
+    ⚠️ Deprecated: 请使用 GET /projects/{project_id}/milestones/
+
     Retrieve milestones.
     """
     from app.services.data_scope_service import DataScopeService
@@ -78,7 +80,7 @@ def read_milestones(
     return milestones
 
 
-@router.get("/projects/{project_id}/milestones", response_model=List[MilestoneResponse])
+@router.get("/projects/{project_id}/milestones", response_model=List[MilestoneResponse], deprecated=True)
 def get_project_milestones(
     *,
     db: Session = Depends(deps.get_db),
@@ -87,6 +89,8 @@ def get_project_milestones(
     current_user: User = Depends(security.require_permission("milestone:read")),
 ) -> Any:
     """
+    ⚠️ Deprecated: 请使用 GET /projects/{project_id}/milestones/
+
     获取项目的里程碑列表
     """
     # 检查项目访问权限
@@ -101,7 +105,7 @@ def get_project_milestones(
     return milestones
 
 
-@router.post("/", response_model=MilestoneResponse)
+@router.post("/", response_model=MilestoneResponse, deprecated=True)
 def create_milestone(
     *,
     db: Session = Depends(deps.get_db),
@@ -109,6 +113,8 @@ def create_milestone(
     current_user: User = Depends(security.require_permission("milestone:create")),
 ) -> Any:
     """
+    ⚠️ Deprecated: 请使用 POST /projects/{project_id}/milestones/
+
     Create new milestone.
     """
     # 检查项目访问权限
@@ -122,7 +128,7 @@ def create_milestone(
     return milestone
 
 
-@router.get("/{milestone_id}", response_model=MilestoneResponse)
+@router.get("/{milestone_id}", response_model=MilestoneResponse, deprecated=True)
 def read_milestone(
     *,
     db: Session = Depends(deps.get_db),
@@ -130,6 +136,8 @@ def read_milestone(
     current_user: User = Depends(security.require_permission("milestone:read")),
 ) -> Any:
     """
+    ⚠️ Deprecated: 请使用 GET /projects/{project_id}/milestones/{milestone_id}
+
     Get milestone by ID.
     """
     milestone = (
@@ -140,7 +148,7 @@ def read_milestone(
     return milestone
 
 
-@router.put("/{milestone_id}", response_model=MilestoneResponse)
+@router.put("/{milestone_id}", response_model=MilestoneResponse, deprecated=True)
 def update_milestone(
     *,
     db: Session = Depends(deps.get_db),
@@ -149,6 +157,8 @@ def update_milestone(
     current_user: User = Depends(security.require_permission("milestone:read")),
 ) -> Any:
     """
+    ⚠️ Deprecated: 请使用 PUT /projects/{project_id}/milestones/{milestone_id}
+
     Update a milestone.
     """
     milestone = (
