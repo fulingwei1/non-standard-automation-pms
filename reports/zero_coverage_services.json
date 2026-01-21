@@ -1,0 +1,726 @@
+{
+  "total": 120,
+  "total_statements": 12379,
+  "services": [
+    {
+      "filepath": "app/services/notification_dispatcher.py",
+      "service_name": "notification_dispatcher",
+      "statements": 309,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/timesheet_report_service.py",
+      "service_name": "timesheet_report_service",
+      "statements": 290,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/status_transition_service.py",
+      "service_name": "status_transition_service",
+      "statements": 219,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/sales_team_service.py",
+      "service_name": "sales_team_service",
+      "statements": 200,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/win_rate_prediction_service.py",
+      "service_name": "win_rate_prediction_service",
+      "statements": 200,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/report_data_generation_service.py",
+      "service_name": "report_data_generation_service",
+      "statements": 193,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/report_export_service.py",
+      "service_name": "report_export_service",
+      "statements": 193,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/resource_waste_analysis_service.py",
+      "service_name": "resource_waste_analysis_service",
+      "statements": 193,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/pipeline_health_service.py",
+      "service_name": "pipeline_health_service",
+      "statements": 191,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/hr_profile_import_service.py",
+      "service_name": "hr_profile_import_service",
+      "statements": 187,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/docx_content_builders.py",
+      "service_name": "docx_content_builders",
+      "statements": 186,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/metric_calculation_service.py",
+      "service_name": "metric_calculation_service",
+      "statements": 181,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/cost_collection_service.py",
+      "service_name": "cost_collection_service",
+      "statements": 180,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/invoice_auto_service.py",
+      "service_name": "invoice_auto_service",
+      "statements": 179,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/collaboration_rating_service.py",
+      "service_name": "collaboration_rating_service",
+      "statements": 172,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/timesheet_reminder_service.py",
+      "service_name": "timesheet_reminder_service",
+      "statements": 172,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/template_report_service.py",
+      "service_name": "template_report_service",
+      "statements": 171,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/timesheet_sync_service.py",
+      "service_name": "timesheet_sync_service",
+      "statements": 171,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/scheduling_suggestion_service.py",
+      "service_name": "scheduling_suggestion_service",
+      "statements": 164,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/excel_export_service.py",
+      "service_name": "excel_export_service",
+      "statements": 160,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/cost_overrun_analysis_service.py",
+      "service_name": "cost_overrun_analysis_service",
+      "statements": 158,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/employee_import_service.py",
+      "service_name": "employee_import_service",
+      "statements": 154,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/resource_allocation_service.py",
+      "service_name": "resource_allocation_service",
+      "statements": 153,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/progress_integration_service.py",
+      "service_name": "progress_integration_service",
+      "statements": 148,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/permission_service.py",
+      "service_name": "permission_service",
+      "statements": 147,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/pdf_content_builders.py",
+      "service_name": "pdf_content_builders",
+      "statements": 142,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/cache_service.py",
+      "service_name": "cache_service",
+      "statements": 139,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/pipeline_break_analysis_service.py",
+      "service_name": "pipeline_break_analysis_service",
+      "statements": 139,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/data_scope_service_v2.py",
+      "service_name": "data_scope_service_v2",
+      "statements": 138,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/data_sync_service.py",
+      "service_name": "data_sync_service",
+      "statements": 138,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/material_transfer_service.py",
+      "service_name": "material_transfer_service",
+      "statements": 137,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/sales_ranking_service.py",
+      "service_name": "sales_ranking_service",
+      "statements": 135,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/timesheet_aggregation_service.py",
+      "service_name": "timesheet_aggregation_service",
+      "statements": 135,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/bonus_allocation_parser.py",
+      "service_name": "bonus_allocation_parser",
+      "statements": 134,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/acceptance_completion_service.py",
+      "service_name": "acceptance_completion_service",
+      "statements": 131,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/project_export_service.py",
+      "service_name": "project_export_service",
+      "statements": 130,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/assembly_kit_optimizer.py",
+      "service_name": "assembly_kit_optimizer",
+      "statements": 129,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/information_gap_analysis_service.py",
+      "service_name": "information_gap_analysis_service",
+      "statements": 125,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/health_calculator.py",
+      "service_name": "health_calculator",
+      "statements": 123,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/pipeline_accountability_service.py",
+      "service_name": "pipeline_accountability_service",
+      "statements": 122,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/payment_adjustment_service.py",
+      "service_name": "payment_adjustment_service",
+      "statements": 120,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/project_dashboard_service.py",
+      "service_name": "project_dashboard_service",
+      "statements": 118,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/wechat_alert_service.py",
+      "service_name": "wechat_alert_service",
+      "statements": 115,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/alert_efficiency_service.py",
+      "service_name": "alert_efficiency_service",
+      "statements": 112,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/delivery_validation_service.py",
+      "service_name": "delivery_validation_service",
+      "statements": 112,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/assembly_attr_recommender.py",
+      "service_name": "assembly_attr_recommender",
+      "statements": 111,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/alert_pdf_service.py",
+      "service_name": "alert_pdf_service",
+      "statements": 110,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/meeting_report_helpers.py",
+      "service_name": "meeting_report_helpers",
+      "statements": 108,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/timesheet_quality_service.py",
+      "service_name": "timesheet_quality_service",
+      "statements": 108,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/cpq_pricing_service.py",
+      "service_name": "cpq_pricing_service",
+      "statements": 107,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/assembly_kit_service.py",
+      "service_name": "assembly_kit_service",
+      "statements": 106,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/delay_root_cause_service.py",
+      "service_name": "delay_root_cause_service",
+      "statements": 106,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/cost_analysis_service.py",
+      "service_name": "cost_analysis_service",
+      "statements": 102,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/overtime_calculation_service.py",
+      "service_name": "overtime_calculation_service",
+      "statements": 100,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/performance_stats_service.py",
+      "service_name": "performance_stats_service",
+      "statements": 100,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/ecn_scheduler.py",
+      "service_name": "ecn_scheduler",
+      "statements": 97,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/urgent_purchase_from_shortage_service.py",
+      "service_name": "urgent_purchase_from_shortage_service",
+      "statements": 96,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/acceptance_report_service.py",
+      "service_name": "acceptance_report_service",
+      "statements": 95,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/pdf_export_service.py",
+      "service_name": "pdf_export_service",
+      "statements": 95,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/alert_response_service.py",
+      "service_name": "alert_response_service",
+      "statements": 93,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/resource_planning_service.py",
+      "service_name": "resource_planning_service",
+      "statements": 93,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/kit_rate_statistics_service.py",
+      "service_name": "kit_rate_statistics_service",
+      "statements": 92,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/alert_rule_engine/condition_evaluator.py",
+      "service_name": "alert_rule_engine/condition_evaluator",
+      "statements": 91,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/acceptance_bonus_service.py",
+      "service_name": "acceptance_bonus_service",
+      "statements": 90,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/sla_service.py",
+      "service_name": "sla_service",
+      "statements": 89,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/comparison_calculation_service.py",
+      "service_name": "comparison_calculation_service",
+      "statements": 88,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/unified_import/timesheet_importer.py",
+      "service_name": "unified_import/timesheet_importer",
+      "statements": 88,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/cost_review_service.py",
+      "service_name": "cost_review_service",
+      "statements": 87,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/budget_analysis_service.py",
+      "service_name": "budget_analysis_service",
+      "statements": 84,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/cost_match_suggestion_service.py",
+      "service_name": "cost_match_suggestion_service",
+      "statements": 84,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/project_relation_discovery_service.py",
+      "service_name": "project_relation_discovery_service",
+      "statements": 84,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/timesheet_aggregation_helpers.py",
+      "service_name": "timesheet_aggregation_helpers",
+      "statements": 79,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/unified_import/task_importer.py",
+      "service_name": "unified_import/task_importer",
+      "statements": 79,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/meeting_report_service.py",
+      "service_name": "meeting_report_service",
+      "statements": 78,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/alert_subscription_service.py",
+      "service_name": "alert_subscription_service",
+      "statements": 77,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/unified_import/bom_importer.py",
+      "service_name": "unified_import/bom_importer",
+      "statements": 77,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/unified_import/material_importer.py",
+      "service_name": "unified_import/material_importer",
+      "statements": 75,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/rd_report_data_service.py",
+      "service_name": "rd_report_data_service",
+      "statements": 73,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/alert_trend_service.py",
+      "service_name": "alert_trend_service",
+      "statements": 71,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/labor_cost_calculation_service.py",
+      "service_name": "labor_cost_calculation_service",
+      "statements": 71,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/meeting_report_docx_service.py",
+      "service_name": "meeting_report_docx_service",
+      "statements": 70,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/stage_advance_service.py",
+      "service_name": "stage_advance_service",
+      "statements": 70,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/cost_allocation_service.py",
+      "service_name": "cost_allocation_service",
+      "statements": 69,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/payment_statistics_service.py",
+      "service_name": "payment_statistics_service",
+      "statements": 67,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/performance_collector/work_log.py",
+      "service_name": "performance_collector/work_log",
+      "statements": 66,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/stage_transition_checks.py",
+      "service_name": "stage_transition_checks",
+      "statements": 66,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/purchase_order_from_bom_service.py",
+      "service_name": "purchase_order_from_bom_service",
+      "statements": 64,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/labor_cost_service.py",
+      "service_name": "labor_cost_service",
+      "statements": 61,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/project_relations_service.py",
+      "service_name": "project_relations_service",
+      "statements": 61,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/template_recommendation_service.py",
+      "service_name": "template_recommendation_service",
+      "statements": 61,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/alert_rule_engine/alert_upgrader.py",
+      "service_name": "alert_rule_engine/alert_upgrader",
+      "statements": 60,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/job_duty_task_service.py",
+      "service_name": "job_duty_task_service",
+      "statements": 60,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/revenue_service.py",
+      "service_name": "revenue_service",
+      "statements": 59,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/user_workload_service.py",
+      "service_name": "user_workload_service",
+      "statements": 59,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/culture_wall_service.py",
+      "service_name": "culture_wall_service",
+      "statements": 58,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/sales_monthly_report_service.py",
+      "service_name": "sales_monthly_report_service",
+      "statements": 57,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/advantage_product_import_service.py",
+      "service_name": "advantage_product_import_service",
+      "statements": 55,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/project_workspace_service.py",
+      "service_name": "project_workspace_service",
+      "statements": 55,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/unified_import/base.py",
+      "service_name": "unified_import/base",
+      "statements": 54,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/project_timeline_service.py",
+      "service_name": "project_timeline_service",
+      "statements": 53,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/alert_rule_engine/alert_creator.py",
+      "service_name": "alert_rule_engine/alert_creator",
+      "statements": 51,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/budget_execution_check_service.py",
+      "service_name": "budget_execution_check_service",
+      "statements": 51,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/shortage_report_service.py",
+      "service_name": "shortage_report_service",
+      "statements": 51,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/issue_statistics_service.py",
+      "service_name": "issue_statistics_service",
+      "statements": 49,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/spec_match_service.py",
+      "service_name": "spec_match_service",
+      "statements": 48,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/business_support_dashboard_service.py",
+      "service_name": "business_support_dashboard_service",
+      "statements": 47,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/ticket_assignment_service.py",
+      "service_name": "ticket_assignment_service",
+      "statements": 47,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/pdf_styles.py",
+      "service_name": "pdf_styles",
+      "statements": 46,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/purchase_request_from_bom_service.py",
+      "service_name": "purchase_request_from_bom_service",
+      "statements": 46,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/cost_alert_service.py",
+      "service_name": "cost_alert_service",
+      "statements": 45,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/bonus_distribution_service.py",
+      "service_name": "bonus_distribution_service",
+      "statements": 39,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/notification_queue.py",
+      "service_name": "notification_queue",
+      "statements": 37,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/excel_template_service.py",
+      "service_name": "excel_template_service",
+      "statements": 36,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/unified_import/unified_importer.py",
+      "service_name": "unified_import/unified_importer",
+      "statements": 34,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/alert_rule_engine/alert_generator.py",
+      "service_name": "alert_rule_engine/alert_generator",
+      "statements": 30,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/alert_rule_engine/base.py",
+      "service_name": "alert_rule_engine/base",
+      "statements": 28,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/unified_import/user_importer.py",
+      "service_name": "unified_import/user_importer",
+      "statements": 13,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/alert_rule_engine/rule_manager.py",
+      "service_name": "alert_rule_engine/rule_manager",
+      "statements": 12,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/alert_rule_engine/level_determiner.py",
+      "service_name": "alert_rule_engine/level_determiner",
+      "statements": 8,
+      "coverage": 0.0
+    },
+    {
+      "filepath": "app/services/performance_collector/constants.py",
+      "service_name": "performance_collector/constants",
+      "statements": 7,
+      "coverage": 0.0
+    }
+  ]
+}

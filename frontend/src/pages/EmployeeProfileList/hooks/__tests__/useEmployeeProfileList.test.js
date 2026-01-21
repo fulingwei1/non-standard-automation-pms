@@ -1,12 +1,13 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useEmployeeProfileList } from '../useEmployeeProfileList';
-import { employeeApi } from '../../../../services/api';
+import { organizationApi, staffMatchingApi } from '../../../../services/api';
 
 // Mock API
 vi.mock('../../../../services/api', () => {
     return {
-        employeeApi: { list: vi.fn(), get: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), query: vi.fn(), aiMatch: vi.fn(), assign: vi.fn() }
+        organizationApi: { list: vi.fn(), get: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), query: vi.fn(), aiMatch: vi.fn(), assign: vi.fn() },
+        staffMatchingApi: { list: vi.fn(), get: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), query: vi.fn(), aiMatch: vi.fn(), assign: vi.fn() }
     };
 });
 
@@ -20,7 +21,7 @@ describe('useEmployeeProfileList Hook', () => {
     vi.clearAllMocks();
     
     // Auto-setup mocks for known methods
-    const apiObjects = [employeeApi];
+    const apiObjects = [organizationApi, staffMatchingApi];
     apiObjects.forEach(api => {
         if (api) {
             if (api.list) api.list.mockResolvedValue(mockResponse);

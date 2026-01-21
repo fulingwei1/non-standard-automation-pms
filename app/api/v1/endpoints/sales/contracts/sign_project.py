@@ -144,17 +144,29 @@ def create_contract_project(
     if existing:
         raise HTTPException(status_code=400, detail="项目编码已存在")
 
+    # 获取线索ID（通过商机关联）
+    lead_id = None
+    if contract.opportunity_id:
+        from app.models.sales import Opportunity
+        opportunity = db.query(Opportunity).filter(Opportunity.id == contract.opportunity_id).first()
+        if opportunity and hasattr(opportunity, "lead_id"):
+            lead_id = opportunity.lead_id
+
     # 创建项目
     project = Project(
         project_code=project_request.project_code,
         project_name=project_request.project_name,
         customer_id=contract.customer_id,
         contract_no=contract.contract_code,
+        customer_contract_no=getattr(contract, "customer_contract_no", None),
         contract_amount=contract.contract_amount,
         contract_date=contract.signed_date,
         pm_id=project_request.pm_id,
         planned_start_date=project_request.planned_start_date,
         planned_end_date=project_request.planned_end_date,
+        lead_id=lead_id,
+        opportunity_id=contract.opportunity_id,
+        contract_id=contract.id,
     )
 
     # 填充客户信息

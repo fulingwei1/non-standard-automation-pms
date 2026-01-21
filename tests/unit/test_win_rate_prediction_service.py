@@ -15,7 +15,7 @@ from app.models.enums import (
     WinProbabilityLevelEnum,
 )
 from app.models.project import Customer, Project
-from app.schemas.sales import DimensionScore
+from app.schemas.presales import DimensionScore
 from app.services.win_rate_prediction_service import WinRatePredictionService
 
 

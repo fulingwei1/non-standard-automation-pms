@@ -23,6 +23,8 @@ class ProjectCreate(BaseModel):
     short_name: Optional[str] = Field(default=None, max_length=50)
     customer_id: Optional[int] = None
     contract_no: Optional[str] = None
+    customer_contract_no: Optional[str] = None
+    lead_id: Optional[int] = None
     project_type: Optional[str] = None
     machine_count: int = Field(
         default=1, ge=1
@@ -43,6 +45,8 @@ class ProjectUpdate(BaseModel):
     short_name: Optional[str] = None
     customer_id: Optional[int] = None
     contract_no: Optional[str] = None
+    customer_contract_no: Optional[str] = None
+    lead_id: Optional[int] = None
     project_type: Optional[str] = None
     project_category: Optional[str] = None
     stage: Optional[str] = None
@@ -60,8 +64,11 @@ class ProjectUpdate(BaseModel):
     pm_id: Optional[int] = None
     description: Optional[str] = None
     # 销售关联
+    lead_id: Optional[int] = None
     opportunity_id: Optional[int] = None
     contract_id: Optional[int] = None
+    contract_no: Optional[str] = None
+    customer_contract_no: Optional[str] = None
     # ERP集成
     erp_synced: Optional[bool] = None
     erp_order_no: Optional[str] = None
@@ -107,8 +114,11 @@ class ProjectResponse(TimestampSchema):
     pm_name: Optional[str] = None
     is_active: bool = True
     # 销售关联
+    lead_id: Optional[int] = None
     opportunity_id: Optional[int] = None
     contract_id: Optional[int] = None
+    contract_no: Optional[str] = None
+    customer_contract_no: Optional[str] = None
     # ERP集成
     erp_synced: bool = False
     erp_sync_time: Optional[datetime] = None

@@ -1,7 +1,8 @@
-import { Route } from "react-router-dom";
+import { Route, Navigate } from "react-router-dom";
 import { AppProtectedRoute } from "../../components/common/AppProtectedRoute";
 
 import Dashboard from "../../pages/Dashboard";
+import UnifiedDashboard from "../../pages/UnifiedDashboard";
 import ChairmanWorkstation from "../../pages/ChairmanWorkstation";
 import GeneralManagerWorkstation from "../../pages/gm-workstation";
 import AdminDashboard from "../../pages/AdminDashboard";
@@ -29,6 +30,30 @@ export function DashboardRoutes() {
           </AppProtectedRoute>
         }
       />
+      {/* 统一工作台 - 新的统一入口 */}
+      <Route
+        path="/dashboard"
+        element={
+          <AppProtectedRoute>
+            <UnifiedDashboard />
+          </AppProtectedRoute>
+        }
+      />
+      {/* 旧工作台路由重定向到统一工作台 */}
+      <Route path="/workstation" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/sales-dashboard" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/engineer-workstation" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/production-dashboard" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/procurement-dashboard" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/manufacturing-director-dashboard" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/production-manager-dashboard" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/worker-workstation" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/customer-service-dashboard" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/finance-manager-dashboard" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/hr-manager-dashboard" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/presales-dashboard" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/business-support" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/procurement-manager-dashboard" element={<Navigate to="/dashboard" replace />} />
       <Route
         path="/chairman-dashboard"
         element={

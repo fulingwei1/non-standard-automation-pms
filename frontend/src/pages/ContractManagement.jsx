@@ -109,43 +109,10 @@ const ContractManagement = () => {
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [editingContract, setEditingContract] = useState(null);
 
-  // 模拟数据
-  const mockData = {
-    contracts: [
-    {
-      id: 1,
-      title: '光伏电站建设合同',
-      type: 'sales',
-      status: 'executing',
-      signatureStatus: 'signed',
-      value: 2500000,
-      clientName: '绿色能源科技有限公司',
-      signingDate: '2024-01-15',
-      expiryDate: '2024-12-31',
-      signingDeadline: '2024-01-20',
-      riskLevel: 'medium',
-      paymentTerms: 'progress',
-      approvalLevel: 'director',
-      template: 'standard_sales',
-      createdBy: '张销售',
-      createdAt: '2024-01-10'
-    }
-    // 更多模拟数据...
-    ],
-    riskContracts: [
-    {
-      id: 2,
-      title: '高风险采购合同',
-      riskLevel: 'high',
-      reason: '付款条款过于宽松'
-    }],
+// 导入 API service
+import { getContracts, getContractDetail, createContract, updateContract, deleteContract, getContractHistory } from '../services/contractService';
 
-    monthlyStats: {
-      growth: 8.5,
-      newContracts: 12,
-      completedContracts: 8
-    }
-  };
+
 
   // 数据加载
   useEffect(() => {
@@ -155,13 +122,11 @@ const ContractManagement = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      // 模拟API调用
-      setTimeout(() => {
-        setContracts(mockData.contracts);
-        setLoading(false);
-      }, 1000);
+      const data = await getContracts();
+      setContracts(data);
+      setLoading(false);
     } catch (_error) {
-      message.error('加载数据失败');
+      message.error('加载合同数据失败');
       setLoading(false);
     }
   };

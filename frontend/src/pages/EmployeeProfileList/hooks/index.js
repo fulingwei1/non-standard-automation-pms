@@ -1,1 +1,1 @@
-export { useEmployeeProfileList } from './useEmployeeProfileList';
+export * from './useEmployeeProfileList';

@@ -156,6 +156,13 @@ class ServiceTicket(Base, TimestampMixin):
         cascade='all, delete-orphan'
     )
 
+    # 关联问题关系
+    related_issues = relationship(
+        'Issue',
+        foreign_keys='Issue.service_ticket_id',
+        backref='service_ticket_ref'
+    )
+
     def __repr__(self):
         return f'<ServiceTicket {self.ticket_no}>'
 

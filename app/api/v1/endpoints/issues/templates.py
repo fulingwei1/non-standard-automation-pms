@@ -109,6 +109,8 @@ def _build_issue_response(issue: Issue) -> IssueResponse:
         project_name=issue.project.project_name if issue.project else None,
         machine_code=issue.machine.machine_code if issue.machine else None,
         machine_name=issue.machine.machine_name if issue.machine else None,
+        service_ticket_id=issue.service_ticket_id,
+        service_ticket_no=issue.service_ticket.ticket_no if issue.service_ticket else None,
     )
 
 

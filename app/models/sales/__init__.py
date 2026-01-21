@@ -65,6 +65,14 @@ from .workflow import (
     SalesTarget,
 )
 
+# 团队管理
+from .team import (
+    SalesTeam,
+    SalesTeamMember,
+    TeamPerformanceSnapshot,
+    TeamPKRecord,
+)
+
 __all__ = [
     # 线索和商机
     "Lead",
@@ -110,4 +118,9 @@ __all__ = [
     "ApprovalHistory",
     "SalesTarget",
     "SalesRankingConfig",
+    # 团队管理
+    "SalesTeam",
+    "SalesTeamMember",
+    "TeamPerformanceSnapshot",
+    "TeamPKRecord",
 ]

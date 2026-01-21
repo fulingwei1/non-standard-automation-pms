@@ -1,7 +1,5 @@
 import { Route } from "react-router-dom";
 
-import HRManagerDashboard from "../../pages/HRManagerDashboard";
-import AdministrativeManagerWorkstation from "../../pages/AdministrativeManagerWorkstation";
 import PerformanceManagement from "../../pages/PerformanceManagement";
 import PerformanceRanking from "../../pages/PerformanceRanking";
 import PerformanceIndicators from "../../pages/PerformanceIndicators";
@@ -26,11 +24,6 @@ import EngineerKnowledge from "../../pages/EngineerKnowledge";
 export function HRRoutes() {
   return (
     <>
-      <Route path="/hr-manager-dashboard" element={<HRManagerDashboard />} />
-      <Route
-        path="/administrative-dashboard"
-        element={<AdministrativeManagerWorkstation />}
-      />
       <Route path="/performance" element={<PerformanceManagement />} />
       <Route path="/performance/ranking" element={<PerformanceRanking />} />
       <Route

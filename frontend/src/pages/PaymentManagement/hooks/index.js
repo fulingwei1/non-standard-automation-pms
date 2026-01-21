@@ -1,1 +1,1 @@
-export { usePaymentData } from './usePaymentData';
+export * from './usePaymentManagement';

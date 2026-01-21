@@ -13,7 +13,7 @@ from app.api.deps import get_current_user, get_db
 from app.models.performance import PerformancePeriod
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.services.data_integrity_service import DataIntegrityService
+from app.services.data_integrity import DataIntegrityService
 
 router = APIRouter(prefix="/data-integrity", tags=["数据完整性"])
 

@@ -3,7 +3,6 @@
 审批工作流和销售目标模型
 """
 from datetime import datetime
-from decimal import Decimal
 
 from sqlalchemy import (
     JSON,
@@ -129,7 +128,7 @@ class SalesTarget(Base, TimestampMixin):
     target_scope = Column(String(20), nullable=False, comment="目标范围：PERSONAL/TEAM/DEPARTMENT")
     user_id = Column(Integer, ForeignKey("users.id"), comment="用户ID（个人目标）")
     department_id = Column(Integer, ForeignKey("departments.id"), comment="部门ID（部门目标）")
-    team_id = Column(Integer, comment="团队ID（团队目标，暂未实现团队表）")
+    team_id = Column(Integer, ForeignKey("sales_teams.id"), comment="团队ID（团队目标）")
     target_type = Column(String(20), nullable=False, comment="目标类型：LEAD_COUNT/OPPORTUNITY_COUNT/CONTRACT_AMOUNT/COLLECTION_AMOUNT")
     target_period = Column(String(20), nullable=False, comment="目标周期：MONTHLY/QUARTERLY/YEARLY")
     period_value = Column(String(20), nullable=False, comment="周期标识：2025-01/2025-Q1/2025")
@@ -140,6 +139,7 @@ class SalesTarget(Base, TimestampMixin):
 
     user = relationship("User", foreign_keys=[user_id])
     department = relationship("Department", foreign_keys=[department_id])
+    team = relationship("SalesTeam", foreign_keys=[team_id])
     creator = relationship("User", foreign_keys=[created_by])
 
     __table_args__ = (
@@ -148,6 +148,7 @@ class SalesTarget(Base, TimestampMixin):
         Index("idx_sales_target_status", "status"),
         Index("idx_sales_target_user", "user_id"),
         Index("idx_sales_target_department", "department_id"),
+        Index("idx_sales_target_team", "team_id"),
     )
 
     def __repr__(self):

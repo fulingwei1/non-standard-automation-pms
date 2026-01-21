@@ -71,9 +71,8 @@ def _ensure_login_user(
         employee_role=employee_role,
     )
     if user.is_superuser != is_superuser:
-        user.is_superuser = is_superuser
+        db.query(User).filter(User.id == user.id).update({'is_superuser': is_superuser})
         db.commit()
-        db.refresh(user)
     return user
 
 
@@ -240,6 +239,46 @@ def client() -> Generator:
         app.state.limiter.enabled = False
     with TestClient(app) as c:
         yield c
+
+
+def _get_auth_token(db: Session, username: str = "admin", password: str = "admin123") -> str:
+    """
+    获取认证 token 的辅助函数
+    
+    Args:
+        db: 数据库会话
+        username: 用户名
+        password: 密码
+        
+    Returns:
+        JWT token 字符串
+    """
+    from app.main import app
+    from fastapi.testclient import TestClient
+    
+    # 确保用户存在
+    _ensure_login_user(
+        db,
+        username=username,
+        password=password,
+        real_name="测试用户" if username != "admin" else "系统管理员",
+        department="测试部门" if username != "admin" else "系统",
+        employee_role="ENGINEER" if username != "admin" else "ADMIN",
+        is_superuser=(username == "admin"),
+    )
+    db.commit()
+    
+    # 通过登录接口获取 token
+    client = TestClient(app)
+    login_data = {
+        "username": username,
+        "password": password,
+    }
+    response = client.post(f"{settings.API_V1_PREFIX}/auth/login", data=login_data)
+    if response.status_code == 200:
+        return response.json()["access_token"]
+    else:
+        raise ValueError(f"Failed to get auth token: {response.status_code} - {response.text}")
 
 
 @pytest.fixture(scope="module")
@@ -456,6 +495,16 @@ def _get_or_create_employee(
     )
     db.add(employee)
     db.flush()
+    return employee
+    db.flush()
+    
+    # Update employee fields using query instead of direct assignment
+    db.query(Employee).filter(Employee.id == employee.id).update({
+        'is_active': True,
+        'employment_status': 'active',
+        'department': department,
+        'role': role
+    })
     return employee
 
 

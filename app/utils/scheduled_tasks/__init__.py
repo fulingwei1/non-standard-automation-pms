@@ -41,6 +41,13 @@ from .hr_tasks import (
     check_employee_confirmation_reminder,
 )
 
+# ==================== 齐套率任务 ====================
+from .kit_rate_tasks import (
+    create_kit_rate_snapshot,
+    create_stage_change_snapshot,
+    daily_kit_rate_snapshot,
+)
+
 # ==================== 问题管理任务 ====================
 from .issue_scheduled_tasks import (
     check_blocking_issues,
@@ -150,6 +157,9 @@ SCHEDULED_TASKS = {
     # HR任务
     'check_contract_expiry_reminder': check_contract_expiry_reminder,
     'check_employee_confirmation_reminder': check_employee_confirmation_reminder,
+
+    # 齐套率任务
+    'daily_kit_rate_snapshot': daily_kit_rate_snapshot,
 }
 
 # ==================== 任务分组 ====================
@@ -229,6 +239,12 @@ TASK_GROUPS = {
         'tasks': [
             'check_contract_expiry_reminder',
             'check_employee_confirmation_reminder',
+        ]
+    },
+    'kit_rate': {
+        'name': '齐套率管理',
+        'tasks': [
+            'daily_kit_rate_snapshot',
         ]
     },
 }
@@ -349,4 +365,9 @@ __all__ = [
     # HR
     'check_contract_expiry_reminder',
     'check_employee_confirmation_reminder',
+
+    # 齐套率
+    'daily_kit_rate_snapshot',
+    'create_kit_rate_snapshot',
+    'create_stage_change_snapshot',
 ]

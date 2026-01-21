@@ -78,7 +78,8 @@ class Contract(Base, TimestampMixin):
     """合同主表"""
     __tablename__ = "contracts"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    contract_code = Column(String(20), unique=True, nullable=False, comment="合同编码")
+    contract_code = Column(String(20), unique=True, nullable=False, comment="合同编码（内部）")
+    customer_contract_no = Column(String(100), comment="客户合同编号（外部）")
     opportunity_id = Column(Integer, ForeignKey("opportunities.id"), nullable=False, comment="商机ID")
     quote_version_id = Column(Integer, ForeignKey("quote_versions.id"), comment="报价版本ID")
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False, comment="客户ID")

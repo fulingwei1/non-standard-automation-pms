@@ -5,43 +5,18 @@
 """
 
 from datetime import date, datetime
-from decimal import Decimal
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
-from sqlalchemy import desc, func, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.material import BomItem, Material, MaterialShortage
-from app.models.production import WorkOrder
-from app.models.project import Machine, Project
-from app.models.purchase import PurchaseOrder, PurchaseOrderItem
-from app.models.shortage import (
-    ArrivalFollowUp,
-    MaterialArrival,
-    MaterialSubstitution,
-    MaterialTransfer,
-    ShortageReport,
-)
+from app.models.material import MaterialShortage
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
-from app.schemas.shortage import (
-    ArrivalFollowUpCreate,
-    MaterialArrivalListResponse,
-    MaterialArrivalResponse,
-    MaterialSubstitutionCreate,
-    MaterialSubstitutionListResponse,
-    MaterialSubstitutionResponse,
-    MaterialTransferCreate,
-    MaterialTransferListResponse,
-    MaterialTransferResponse,
-    ShortageReportCreate,
-    ShortageReportListResponse,
-    ShortageReportResponse,
-)
 
 router = APIRouter(tags=["alerts_crud"])
 
@@ -234,14 +209,15 @@ def update_shortage_alert(
 
     # 缺料联动：如果预警级别提升或影响类型变为stop/delivery，触发任务阻塞
     try:
-        from app.models.shortage import ShortageAlert as ShortageAlertModel
+        from app.models.alert import AlertRecord
         from app.services.progress_integration_service import ProgressIntegrationService
 
-        # 查找对应的ShortageAlert记录（如果存在）
-        shortage_alert = db.query(ShortageAlertModel).filter(
-            ShortageAlertModel.project_id == alert.project_id,
-            ShortageAlertModel.material_code == alert.material_code,
-            ShortageAlertModel.status.in_(['pending', 'handling'])
+        # 查找对应的AlertRecord记录（使用统一预警表，target_type='SHORTAGE'）
+        shortage_alert = db.query(AlertRecord).filter(
+            AlertRecord.target_type == 'SHORTAGE',
+            AlertRecord.project_id == alert.project_id,
+            AlertRecord.target_no == alert.material_code,
+            AlertRecord.status.in_(['PENDING', 'PROCESSING', 'pending', 'handling'])
         ).first()
 
         if shortage_alert:
@@ -410,14 +386,15 @@ def resolve_shortage_alert(
 
     # 缺料联动：解决缺料预警，自动解除相关任务阻塞
     try:
-        from app.models.shortage import ShortageAlert as ShortageAlertModel
+        from app.models.alert import AlertRecord
         from app.services.progress_integration_service import ProgressIntegrationService
 
-        # 查找对应的ShortageAlert记录（如果存在）
-        shortage_alert = db.query(ShortageAlertModel).filter(
-            ShortageAlertModel.project_id == alert.project_id,
-            ShortageAlertModel.material_code == alert.material_code,
-            ShortageAlertModel.status.in_(['pending', 'handling'])
+        # 查找对应的AlertRecord记录（使用统一预警表，target_type='SHORTAGE'）
+        shortage_alert = db.query(AlertRecord).filter(
+            AlertRecord.target_type == 'SHORTAGE',
+            AlertRecord.project_id == alert.project_id,
+            AlertRecord.target_no == alert.material_code,
+            AlertRecord.status.in_(['PENDING', 'PROCESSING', 'pending', 'handling'])
         ).first()
 
         if shortage_alert:

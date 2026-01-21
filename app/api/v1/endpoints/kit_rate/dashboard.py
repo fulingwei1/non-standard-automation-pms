@@ -98,93 +98,131 @@ def get_kit_rate_trend(
         None, description="开始日期（可选，默认30天前）"
     ),
     end_date: Optional[date] = Query(None, description="结束日期（可选，默认今天）"),
-    group_by: str = Query("month", description="分组方式：month"),
+    group_by: str = Query("day", description="分组方式：day（每日）或 month（每月）"),
     current_user: User = Depends(security.require_procurement_access()),
 ) -> Any:
     """
-    获取齐套趋势分析
+    获取齐套率趋势分析（基于历史快照数据）
 
-    注意：此端点返回当前项目状态，不提供历史趋势数据。
-    历史快照功能待实现（需要创建 KitRateSnapshot 模型）。
+    - 支持按日（day）或按月（month）分组
+    - 基于 KitRateSnapshot 快照表查询历史数据
+    - 如果指定项目则返回该项目的趋势，否则返回所有活跃项目的平均趋势
     """
     from datetime import timedelta as td
+
+
+    from app.models.assembly_kit import KitRateSnapshot
+    from app.schemas.common import ResponseModel
 
     # 设置默认日期范围
     if end_date is None:
         end_date = date.today()
     if start_date is None:
-        start_date = end_date - td(days=90)  # 默认90天（3个月）
+        start_date = end_date - td(days=90)  # 默认90天
 
-    if group_by != "month":
+    if group_by not in ["day", "month"]:
         raise HTTPException(
-            status_code=400, detail="当前仅支持按月分组（group_by=month）"
+            status_code=400, detail="group_by 必须是 day 或 month"
         )
 
-    # 确定要查询的项目
+    # 构建快照查询
+    query = db.query(KitRateSnapshot).filter(
+        KitRateSnapshot.snapshot_date >= start_date,
+        KitRateSnapshot.snapshot_date <= end_date,
+    )
+
     if project_id:
-        projects = db.query(Project).filter(Project.id == project_id).all()
-    else:
-        projects = db.query(Project).filter(Project.is_active == True).all()
+        query = query.filter(KitRateSnapshot.project_id == project_id)
 
-    # 生成月份范围
-    months_list = []
-    current = end_date
+    snapshots = query.order_by(KitRateSnapshot.snapshot_date).all()
 
-    # 从结束日期往前推算月份，直到覆盖 start_date
-    while current >= start_date:
-        months_list.insert(0, current.replace(day=1))
-        if current.month == 1:
-            current = date(current.year - 1, 12, 1)
-        else:
-            current = date(current.year, current.month - 1, 1)
+    # 如果没有快照数据，返回空趋势并提示
+    if not snapshots:
+        return ResponseModel(
+            code=200,
+            message="success",
+            data={
+                "start_date": start_date.isoformat(),
+                "end_date": end_date.isoformat(),
+                "group_by": group_by,
+                "trend_data": [],
+                "summary": {
+                    "avg_kit_rate": 0.0,
+                    "max_kit_rate": 0.0,
+                    "min_kit_rate": 0.0,
+                    "data_points": 0,
+                },
+                "note": "暂无快照数据。定时任务会在每日凌晨自动生成快照。",
+            },
+        )
 
-    # 查询每个月份的项目数据
+    # 按分组方式聚合数据
     trend_data = []
 
-    for month_date in months_list:
-        month_start = month_date
-        if month_date.month == 12:
-            next_month_start = date(month_date.year + 1, 1, 1)
-        else:
-            next_month_start = date(month_date.year, month_date.month + 1, 1)
+    if group_by == "day":
+        # 按日分组
+        daily_data = {}
+        for snapshot in snapshots:
+            day_key = snapshot.snapshot_date.isoformat()
+            if day_key not in daily_data:
+                daily_data[day_key] = {
+                    "rates": [],
+                    "total_items": 0,
+                    "fulfilled_items": 0,
+                    "shortage_items": 0,
+                }
+            daily_data[day_key]["rates"].append(float(snapshot.kit_rate))
+            daily_data[day_key]["total_items"] += snapshot.total_items or 0
+            daily_data[day_key]["fulfilled_items"] += snapshot.fulfilled_items or 0
+            daily_data[day_key]["shortage_items"] += snapshot.shortage_items or 0
 
-        # 查询该月份创建的项目
-        month_projects = [
-            p
-            for p in projects
-            if p.created_at and month_start <= p.created_at.date() < next_month_start
-        ]
+        for day_key in sorted(daily_data.keys()):
+            data = daily_data[day_key]
+            avg_rate = sum(data["rates"]) / len(data["rates"]) if data["rates"] else 0.0
+            trend_data.append({
+                "date": day_key,
+                "kit_rate": round(avg_rate, 2),
+                "project_count": len(data["rates"]),
+                "total_items": data["total_items"],
+                "fulfilled_items": data["fulfilled_items"],
+                "shortage_items": data["shortage_items"],
+            })
 
-        total_kit_rate = 0.0
-        project_count = len(month_projects)
+    else:  # month
+        # 按月分组
+        monthly_data = {}
+        for snapshot in snapshots:
+            month_key = snapshot.snapshot_date.strftime("%Y-%m")
+            if month_key not in monthly_data:
+                monthly_data[month_key] = {
+                    "rates": [],
+                    "total_items": 0,
+                    "fulfilled_items": 0,
+                    "shortage_items": 0,
+                }
+            monthly_data[month_key]["rates"].append(float(snapshot.kit_rate))
+            monthly_data[month_key]["total_items"] += snapshot.total_items or 0
+            monthly_data[month_key]["fulfilled_items"] += snapshot.fulfilled_items or 0
+            monthly_data[month_key]["shortage_items"] += snapshot.shortage_items or 0
 
-        for project in month_projects:
-            try:
-                kit_rate_data = get_project_kit_rate(
-                    db=db,
-                    project_id=project.id,
-                    calculate_by="quantity",
-                    current_user=current_user,
-                )
-                total_kit_rate += kit_rate_data["kit_rate"]
-            except (ValueError, TypeError, KeyError):
-                pass
-
-        avg_kit_rate = total_kit_rate / project_count if project_count > 0 else 0.0
-
-        trend_data.append(
-            {
-                "date": month_date.strftime("%Y-%m"),
-                "kit_rate": round(avg_kit_rate, 2),
-                "project_count": project_count,
-            }
-        )
+        for month_key in sorted(monthly_data.keys()):
+            data = monthly_data[month_key]
+            avg_rate = sum(data["rates"]) / len(data["rates"]) if data["rates"] else 0.0
+            trend_data.append({
+                "date": month_key,
+                "kit_rate": round(avg_rate, 2),
+                "project_count": len(data["rates"]),
+                "total_items": data["total_items"],
+                "fulfilled_items": data["fulfilled_items"],
+                "shortage_items": data["shortage_items"],
+            })
 
     # 计算汇总统计
     if trend_data:
-        avg_rate = sum(d["kit_rate"] for d in trend_data) / len(trend_data)
-        max_rate = max(d["kit_rate"] for d in trend_data)
-        min_rate = min(d["kit_rate"] for d in trend_data)
+        all_rates = [d["kit_rate"] for d in trend_data]
+        avg_rate = sum(all_rates) / len(all_rates)
+        max_rate = max(all_rates)
+        min_rate = min(all_rates)
     else:
         avg_rate = 0.0
         max_rate = 0.0
@@ -204,6 +242,82 @@ def get_kit_rate_trend(
                 "min_kit_rate": round(min_rate, 2),
                 "data_points": len(trend_data),
             },
-            "note": "当前返回项目创建月份的实际齐套率。历史快照功能待实现。",
+        },
+    )
+
+
+@router.get("/kit-rate/snapshots")
+def get_kit_rate_snapshots(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int = Query(..., description="项目ID"),
+    start_date: Optional[date] = Query(None, description="开始日期"),
+    end_date: Optional[date] = Query(None, description="结束日期"),
+    snapshot_type: Optional[str] = Query(None, description="快照类型: DAILY/STAGE_CHANGE/MANUAL"),
+    current_user: User = Depends(security.require_procurement_access()),
+) -> Any:
+    """
+    获取项目的齐套率快照历史
+
+    返回指定项目的所有快照记录，包括每日快照和阶段切换快照。
+    """
+    from datetime import timedelta as td
+
+    from app.models.assembly_kit import KitRateSnapshot
+    from app.schemas.common import ResponseModel
+
+    # 设置默认日期范围
+    if end_date is None:
+        end_date = date.today()
+    if start_date is None:
+        start_date = end_date - td(days=30)
+
+    # 查询快照
+    query = db.query(KitRateSnapshot).filter(
+        KitRateSnapshot.project_id == project_id,
+        KitRateSnapshot.snapshot_date >= start_date,
+        KitRateSnapshot.snapshot_date <= end_date,
+    )
+
+    if snapshot_type:
+        query = query.filter(KitRateSnapshot.snapshot_type == snapshot_type)
+
+    snapshots = query.order_by(KitRateSnapshot.snapshot_time.desc()).all()
+
+    # 获取项目信息
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="项目不存在")
+
+    snapshot_list = []
+    for s in snapshots:
+        snapshot_list.append({
+            "id": s.id,
+            "snapshot_date": s.snapshot_date.isoformat(),
+            "snapshot_time": s.snapshot_time.isoformat() if s.snapshot_time else None,
+            "snapshot_type": s.snapshot_type,
+            "trigger_event": s.trigger_event,
+            "kit_rate": float(s.kit_rate) if s.kit_rate else 0.0,
+            "kit_status": s.kit_status,
+            "total_items": s.total_items,
+            "fulfilled_items": s.fulfilled_items,
+            "shortage_items": s.shortage_items,
+            "in_transit_items": s.in_transit_items,
+            "blocking_kit_rate": float(s.blocking_kit_rate) if s.blocking_kit_rate else 0.0,
+            "project_stage": s.project_stage,
+            "project_health": s.project_health,
+        })
+
+    return ResponseModel(
+        code=200,
+        message="success",
+        data={
+            "project_id": project_id,
+            "project_code": project.project_code,
+            "project_name": project.project_name,
+            "start_date": start_date.isoformat(),
+            "end_date": end_date.isoformat(),
+            "total_snapshots": len(snapshot_list),
+            "snapshots": snapshot_list,
         },
     )

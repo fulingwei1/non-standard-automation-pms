@@ -34,7 +34,8 @@ class Project(Base, TimestampMixin):
     customer_name = Column(String(200), comment="客户名称（冗余）")
     customer_contact = Column(String(100), comment="客户联系人")
     customer_phone = Column(String(50), comment="联系电话")
-    contract_no = Column(String(100), comment="合同编号")
+    contract_no = Column(String(100), comment="合同编号（内部编号）")
+    customer_contract_no = Column(String(100), comment="客户合同编号（外部编号）")
 
     # 项目信息
     project_type = Column(String(20), comment="项目类型")
@@ -86,7 +87,13 @@ class Project(Base, TimestampMixin):
     template_id = Column(Integer, ForeignKey("project_templates.id"), comment="创建时使用的模板ID")
     template_version_id = Column(Integer, ForeignKey("project_template_versions.id"), comment="创建时使用的模板版本ID")
 
+    # 阶段模板关联（阶段模板化功能）
+    stage_template_id = Column(Integer, ForeignKey("stage_templates.id"), comment="阶段模板ID")
+    current_stage_instance_id = Column(Integer, comment="当前阶段实例ID")
+    current_node_instance_id = Column(Integer, comment="当前节点实例ID")
+
     # 销售关联
+    lead_id = Column(Integer, ForeignKey("leads.id"), comment="关联线索ID")
     opportunity_id = Column(Integer, ForeignKey("opportunities.id"), comment="销售机会ID")
     contract_id = Column(Integer, ForeignKey("contracts.id"), comment="合同ID")
 
@@ -133,6 +140,7 @@ class Project(Base, TimestampMixin):
         "User", foreign_keys=[pm_id], back_populates="managed_projects"
     )
     department = relationship(Department)
+    lead = relationship("Lead", foreign_keys=[lead_id])
     opportunity = relationship("Opportunity", foreign_keys=[opportunity_id])
     contract = relationship("Contract", foreign_keys=[contract_id])
     salesperson = relationship("User", foreign_keys=[salesperson_id])
@@ -148,6 +156,14 @@ class Project(Base, TimestampMixin):
     documents = relationship(
         "ProjectDocument", back_populates="project", lazy="dynamic"
     )
+    # 阶段模板化关系
+    stage_template = relationship("StageTemplate", foreign_keys=[stage_template_id])
+    stage_instances = relationship(
+        "ProjectStageInstance", back_populates="project", lazy="dynamic"
+    )
+    node_instances = relationship(
+        "ProjectNodeInstance", back_populates="project", lazy="dynamic"
+    )
 
     __table_args__ = (
         Index("idx_projects_code", "project_code"),
@@ -162,6 +178,7 @@ class Project(Base, TimestampMixin):
         Index("idx_projects_active_archived", "is_active", "is_archived"),
         Index("idx_projects_created_at", "created_at"),  # 用于排序
         Index("idx_projects_type_category", "project_type", "product_category"),  # 用于筛选
+        Index("idx_projects_lead", "lead_id"),  # 线索关联
         Index("idx_projects_opportunity", "opportunity_id"),  # 销售机会关联
         Index("idx_projects_contract", "contract_id"),  # 合同关联
         Index("idx_projects_erp_sync", "erp_synced", "erp_sync_status"),  # ERP同步状态

@@ -1,12 +1,14 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { usePurchaseOrderFromBOM } from '../usePurchaseOrderFromBOM';
-import { purchaseOrderApi } from '../../../../services/api';
+import { bomApi, purchaseApi, supplierApi } from '../../../../services/api';
 
 // Mock API
 vi.mock('../../../../services/api', () => {
     return {
-        purchaseOrderApi: { list: vi.fn(), get: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), query: vi.fn(), aiMatch: vi.fn(), assign: vi.fn() }
+        bomApi: { list: vi.fn(), get: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), query: vi.fn(), aiMatch: vi.fn(), assign: vi.fn() },
+        purchaseApi: { list: vi.fn(), get: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), query: vi.fn(), aiMatch: vi.fn(), assign: vi.fn() },
+        supplierApi: { list: vi.fn(), get: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), query: vi.fn(), aiMatch: vi.fn(), assign: vi.fn() }
     };
 });
 
@@ -20,7 +22,7 @@ describe('usePurchaseOrderFromBOM Hook', () => {
     vi.clearAllMocks();
     
     // Auto-setup mocks for known methods
-    const apiObjects = [purchaseOrderApi];
+    const apiObjects = [bomApi, purchaseApi, supplierApi];
     apiObjects.forEach(api => {
         if (api) {
             if (api.list) api.list.mockResolvedValue(mockResponse);

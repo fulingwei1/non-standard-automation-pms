@@ -60,6 +60,9 @@ class ContractStatusHandler:
                 project.contract_amount = (
                     contract.contract_amount or project.contract_amount
                 )
+                # 同步客户合同编号
+                if hasattr(contract, "customer_contract_no") and contract.customer_contract_no:
+                    project.customer_contract_no = contract.customer_contract_no
 
                 # 记录状态变更
                 self._log_status_change(
@@ -100,17 +103,33 @@ class ContractStatusHandler:
 
         planned_end_date = getattr(contract, "delivery_deadline", None)
 
+        # 获取线索ID（通过商机关联）
+        lead_id = None
+        if contract.opportunity_id:
+            from app.models.sales import Opportunity
+            opportunity = (
+                self.db.query(Opportunity)
+                .filter(Opportunity.id == contract.opportunity_id)
+                .first()
+            )
+            if opportunity and hasattr(opportunity, "lead_id"):
+                lead_id = opportunity.lead_id
+
         project = Project(
             project_code=project_code,
             project_name=fallback_name,
             customer_id=contract.customer_id,
             contract_no=contract.contract_code,
+            customer_contract_no=getattr(contract, "customer_contract_no", None),
             contract_amount=contract.contract_amount or 0,
             contract_date=contract.signed_date,
             planned_end_date=planned_end_date,
             stage="S3",
             status="ST08",
             health="H1",
+            lead_id=lead_id,
+            opportunity_id=contract.opportunity_id,
+            contract_id=contract.id,
         )
 
         # 填充客户信息

@@ -297,6 +297,16 @@ from .report_center import (
     ReportSubscription,
     ReportTemplate,
 )
+from .stage_instance import (
+    NodeTask,
+    ProjectNodeInstance,
+    ProjectStageInstance,
+)
+from .stage_template import (
+    NodeDefinition,
+    StageDefinition,
+    StageTemplate,
+)
 from .sales import (  # Technical Assessment; Approval Workflow
     AIClarification,
     ApprovalHistory,
@@ -392,6 +402,39 @@ from .timesheet import (
 )
 from .user import Permission, PermissionAudit, Role, RolePermission, User, UserRole
 from .work_log import WorkLog, WorkLogConfig, WorkLogMention
+
+# Unified Approval System - 统一审批系统
+from .approval import (
+    ApprovalActionLog,
+    ApprovalCarbonCopy,
+    ApprovalComment,
+    ApprovalCountersignResult,
+    ApprovalDelegate,
+    ApprovalDelegateLog,
+    ApprovalFlowDefinition,
+    ApprovalInstance,
+    ApprovalNodeDefinition,
+    ApprovalRoutingRule,
+    ApprovalTask,
+    ApprovalTemplate,
+    ApprovalTemplateVersion,
+)
+
+# Strategy Management - BEM 战略管理
+from .strategy import (
+    AnnualKeyWork,
+    AnnualKeyWorkProjectLink,
+    CSF,
+    DepartmentObjective,
+    KPI,
+    KPIDataSource,
+    KPIHistory,
+    PersonalKPI,
+    Strategy,
+    StrategyCalendarEvent,
+    StrategyComparison,
+    StrategyReview,
+)
 
 __all__ = [
     # Base
@@ -570,6 +613,13 @@ __all__ = [
     "DataImportTask",
     "DataExportTask",
     "ImportTemplate",
+    # Stage Template
+    "StageTemplate",
+    "StageDefinition",
+    "NodeDefinition",
+    "ProjectStageInstance",
+    "ProjectNodeInstance",
+    "NodeTask",
     # Technical Spec
     "TechnicalSpecRequirement",
     "SpecMatchRecord",
@@ -768,4 +818,31 @@ __all__ = [
     "MenuType",
     "PermissionType",
     "ResourceType",
+    # Unified Approval System - 统一审批系统
+    "ApprovalTemplate",
+    "ApprovalTemplateVersion",
+    "ApprovalFlowDefinition",
+    "ApprovalNodeDefinition",
+    "ApprovalRoutingRule",
+    "ApprovalInstance",
+    "ApprovalTask",
+    "ApprovalCarbonCopy",
+    "ApprovalCountersignResult",
+    "ApprovalActionLog",
+    "ApprovalComment",
+    "ApprovalDelegate",
+    "ApprovalDelegateLog",
+    # Strategy Management - BEM 战略管理
+    "Strategy",
+    "CSF",
+    "KPI",
+    "KPIHistory",
+    "KPIDataSource",
+    "AnnualKeyWork",
+    "AnnualKeyWorkProjectLink",
+    "DepartmentObjective",
+    "PersonalKPI",
+    "StrategyReview",
+    "StrategyCalendarEvent",
+    "StrategyComparison",
 ]
