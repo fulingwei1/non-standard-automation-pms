@@ -1,16 +1,12 @@
 # -*- coding: utf-8 -*-
-import pytest
-pytestmark = pytest.mark.skip(reason='Mock configuration issues - needs rewrite')
-
 """
 BOM采购订单服务单元测试
 """
 
+import pytest
 from datetime import date
 from decimal import Decimal
 from unittest.mock import Mock
-
-import pytest
 from sqlalchemy.orm import Session
 
 from app.models.material import BomHeader, BomItem, Material
