@@ -102,17 +102,121 @@ class HelpersMixin:
                         node.actual_date = date.today()
 
     def _check_auto_condition(self, node: ProjectNodeInstance) -> bool:
-        """检查自动完成条件"""
+        """
+        检查自动完成条件
+
+        auto_condition JSON 格式示例：
+        - {"type": "all_dependencies"}: 所有依赖完成即完成
+        - {"type": "percentage", "threshold": 80}: 依赖完成百分比达到阈值
+        - {"type": "tasks_complete"}: 所有子任务完成
+        - {"type": "custom", "field": "progress", "operator": ">=", "value": 100}: 自定义条件
+        """
         node_def = node.node_definition
         if not node_def or not node_def.auto_condition:
             # 无条件配置，依赖满足即可完成
             return True
 
-        # TODO: 实现自动条件检查逻辑
-        # auto_condition 可能包含：
-        # - "all_dependencies": 所有依赖完成即完成
-        # - "percentage": 依赖完成百分比达到阈值
-        # - "custom": 自定义条件
+        condition = node_def.auto_condition
+        condition_type = condition.get("type", "all_dependencies")
+
+        if condition_type == "all_dependencies":
+            # 所有依赖完成即可完成（已在调用前检查，这里返回True）
+            return True
+
+        elif condition_type == "percentage":
+            # 依赖完成百分比达到阈值
+            threshold = condition.get("threshold", 100)
+            return self._check_dependency_percentage(node, threshold)
+
+        elif condition_type == "tasks_complete":
+            # 所有子任务完成
+            return self._check_all_tasks_complete(node)
+
+        elif condition_type == "custom":
+            # 自定义条件
+            return self._check_custom_condition(node, condition)
+
+        # 未知类型，默认返回True
+        return True
+
+    def _check_dependency_percentage(self, node: ProjectNodeInstance, threshold: int) -> bool:
+        """检查依赖完成百分比是否达到阈值"""
+        if not node.dependency_node_instance_ids:
+            return True
+
+        total = len(node.dependency_node_instance_ids)
+        if total == 0:
+            return True
+
+        # 统计已完成的依赖数量
+        completed = self.db.query(ProjectNodeInstance).filter(
+            and_(
+                ProjectNodeInstance.id.in_(node.dependency_node_instance_ids),
+                ProjectNodeInstance.status.in_([
+                    StageStatusEnum.COMPLETED.value,
+                    StageStatusEnum.SKIPPED.value
+                ])
+            )
+        ).count()
+
+        percentage = (completed / total) * 100
+        return percentage >= threshold
+
+    def _check_all_tasks_complete(self, node: ProjectNodeInstance) -> bool:
+        """检查所有子任务是否完成"""
+        tasks = self.db.query(NodeTask).filter(
+            NodeTask.node_instance_id == node.id
+        ).all()
+
+        if not tasks:
+            # 没有子任务，视为满足条件
+            return True
+
+        # 检查所有任务是否为完成或跳过状态
+        for task in tasks:
+            if task.status not in [StageStatusEnum.COMPLETED.value, StageStatusEnum.SKIPPED.value]:
+                return False
+
+        return True
+
+    def _check_custom_condition(self, node: ProjectNodeInstance, condition: Dict[str, Any]) -> bool:
+        """
+        检查自定义条件
+
+        支持的字段: progress, status
+        支持的操作符: ==, !=, >, <, >=, <=
+        """
+        field = condition.get("field")
+        operator = condition.get("operator")
+        value = condition.get("value")
+
+        if not all([field, operator, value is not None]):
+            # 条件不完整，默认返回True
+            return True
+
+        # 获取节点的实际值
+        actual_value = getattr(node, field, None)
+        if actual_value is None:
+            return False
+
+        # 执行比较
+        try:
+            if operator == "==":
+                return actual_value == value
+            elif operator == "!=":
+                return actual_value != value
+            elif operator == ">":
+                return actual_value > value
+            elif operator == "<":
+                return actual_value < value
+            elif operator == ">=":
+                return actual_value >= value
+            elif operator == "<=":
+                return actual_value <= value
+        except (TypeError, ValueError):
+            # 比较出错，返回False
+            return False
+
         return True
 
     def _check_stage_completion(self, stage_instance_id: int) -> None:
