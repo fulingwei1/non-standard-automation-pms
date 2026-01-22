@@ -35,7 +35,20 @@ non-standard-automation-pms/
 │   │   └── v1/
 │   │       ├── api.py            # API 路由聚合
 │   │       └── endpoints/        # API 端点模块
-│   │           └── projects.py   # 项目 CRUD 端点
+│   │           └── projects/     # 项目模块（已整合）
+│   │               ├── core.py           # 核心CRUD
+│   │               ├── stages/           # 阶段管理
+│   │               ├── milestones/       # 里程碑管理
+│   │               ├── machines/         # 机台管理
+│   │               ├── members/          # 团队成员
+│   │               ├── roles/            # 项目角色
+│   │               ├── costs/            # 成本管理
+│   │               ├── progress/         # 进度管理
+│   │               ├── work_logs/        # 工作日志
+│   │               ├── evaluations/      # 项目评价
+│   │               ├── timesheet/        # 工时管理
+│   │               ├── workload/         # 工作量管理
+│   │               └── resource_plan/    # 资源计划
 │   ├── core/                     # 核心配置
 │   │   ├── config.py             # 应用配置 (pydantic-settings)
 │   │   └── security.py           # JWT 认证、密码加密、权限控制
@@ -51,6 +64,11 @@ non-standard-automation-pms/
 │   │   ├── outsourcing.py        # 外协供应商/订单模型
 │   │   ├── alert.py              # 预警和异常模型
 │   │   └── organization.py       # 部门组织模型
+│   ├── services/                 # 业务服务层
+│   │   ├── project_execution_service.py   # 项目执行服务
+│   │   ├── project_resource_service.py    # 项目资源服务
+│   │   ├── project_finance_service.py     # 项目财务服务
+│   │   └── project_analytics_service.py   # 项目分析服务
 │   └── schemas/                  # Pydantic 数据模式（API 验证）
 │       ├── common.py             # 通用响应模式
 │       ├── auth.py               # 认证模式
@@ -121,6 +139,38 @@ non-standard-automation-pms/
 
 - **模型**: `AlertRule`, `AlertRecord`, `ExceptionEvent`, `AlertStatistics`, `ProjectHealthSnapshot`
 - 预警级别：提示、警告、严重、紧急
+
+## 项目中心 API 结构
+
+系统采用项目中心 API 设计，所有项目相关操作均通过 `/projects/{project_id}/` 访问：
+
+### 项目子模块路由
+
+| 路由 | 描述 | 主要功能 |
+|------|------|----------|
+| `/projects/{id}/milestones/` | 里程碑管理 | 列表、创建、完成、删除 |
+| `/projects/{id}/machines/` | 机台管理 | CRUD、批量操作 |
+| `/projects/{id}/members/` | 团队成员 | 添加、移除、角色管理 |
+| `/projects/{id}/roles/` | 项目角色 | 负责人、团队成员、配置 |
+| `/projects/{id}/costs/` | 成本管理 | 成本记录、统计、审批 |
+| `/projects/{id}/progress/` | 进度管理 | 汇总、甘特图、看板 |
+| `/projects/{id}/stages/` | 阶段管理 | 初始化、推进、门禁检查 |
+| `/projects/{id}/work-logs/` | 工作日志 | 查看、汇总 |
+| `/projects/{id}/evaluations/` | 项目评价 | 创建、确认、统计 |
+| `/projects/{id}/timesheet/` | 工时管理 | 记录、汇总、统计 |
+| `/projects/{id}/workload/` | 工作量管理 | 团队负荷、甘特图、摘要 |
+| `/projects/{id}/resource-plan/` | 资源计划 | 资源分配、需求 |
+
+### 服务层
+
+项目业务逻辑通过服务层统一管理：
+
+| 服务 | 职责 |
+|------|------|
+| `ProjectExecutionService` | 阶段管理、门禁检查、进度聚合 |
+| `ProjectResourceService` | 团队管理、资源负荷、贡献度 |
+| `ProjectFinanceService` | 成本统计、人工成本、奖金 |
+| `ProjectAnalyticsService` | 仪表盘、统计分析、趋势 |
 
 ## 开发命令
 
