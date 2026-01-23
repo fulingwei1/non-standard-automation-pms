@@ -190,12 +190,12 @@ const ContractManagement = () => {
     key: 'info',
     render: (_, record) =>
     <div>
-          <div style={{ fontWeight: 'bold', cursor: 'pointer' }}>
+          <div className="font-semibold cursor-pointer hover:text-primary transition-colors">
             {record.title}
           </div>
-          <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
+          <div className="text-xs text-slate-400 mt-1 flex items-center gap-2">
             <Tag size="small">{CONTRACT_TYPES[record.type?.toUpperCase()]?.label}</Tag>
-            <span style={{ marginLeft: 8 }}>{record.clientName}</span>
+            <span>{record.clientName}</span>
           </div>
     </div>
 
@@ -208,7 +208,7 @@ const ContractManagement = () => {
           <Tag color={CONTRACT_STATUS[record.status?.toUpperCase()]?.color}>
             {CONTRACT_STATUS[record.status?.toUpperCase()]?.label}
           </Tag>
-          <div style={{ marginTop: 4 }}>
+          <div className="mt-1">
             <Tag
           size="small"
           color={SIGNATURE_STATUS[record.signatureStatus?.toUpperCase()]?.color}>
@@ -224,7 +224,7 @@ const ContractManagement = () => {
     dataIndex: 'value',
     key: 'value',
     render: (value) =>
-    <span style={{ fontWeight: 'bold', color: CHART_COLORS.POSITIVE }}>
+    <span className="font-semibold text-emerald-400">
           ¥{value?.toLocaleString()}
     </span>
 
@@ -233,15 +233,15 @@ const ContractManagement = () => {
     title: '签署信息',
     key: 'signing',
     render: (_, record) =>
-    <div>
-          <div style={{ fontSize: 12 }}>
+    <div className="text-xs space-y-1">
+          <div className="flex items-center gap-1">
             <Calendar size={12} /> 签署: {record.signingDate || '-'}
           </div>
-          <div style={{ fontSize: 12 }}>
+          <div className="flex items-center gap-1">
             <Clock size={12} /> 到期: {record.expiryDate}
           </div>
           {record.signingDeadline &&
-      <div style={{ fontSize: 12, color: '#ff4d4f' }}>
+      <div className="flex items-center gap-1 text-red-400">
               <AlertTriangle size={12} /> 期限: {record.signingDeadline}
       </div>
       }
@@ -331,45 +331,42 @@ const ContractManagement = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="contract-management-container"
-      style={{ padding: '24px', background: '#f5f5f5', minHeight: '100vh' }}>
+      className="contract-management-container space-y-6">
 
       {/* 页面头部 */}
-      <div className="page-header" style={{ marginBottom: '24px' }}>
-        <div className="header-content" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <Title level={2} style={{ margin: 0 }}>
-              <FileCheck className="inline-block mr-2" />
-              合同管理
-            </Title>
-            <Text type="secondary">
-              合同创建、签署、项目生成和管理
-            </Text>
-          </div>
-          <Space>
-            <Button
-              type="primary"
-              icon={<Plus size={16} />}
-              onClick={handleCreateContract}>
-
-              创建合同
-            </Button>
-            <Button
-              icon={<Upload size={16} />}>
-
-              批量导入
-            </Button>
-            <Button
-              icon={<Download size={16} />}>
-
-              导出报表
-            </Button>
-          </Space>
+      <div className="flex items-center justify-between">
+        <div>
+          <Title level={2} className="!mb-1 text-white">
+            <FileCheck className="inline-block mr-2" />
+            合同管理
+          </Title>
+          <Text className="text-slate-400">
+            合同创建、签署、项目生成和管理
+          </Text>
         </div>
+        <Space>
+          <Button
+            type="primary"
+            icon={<Plus size={16} />}
+            onClick={handleCreateContract}>
+
+            创建合同
+          </Button>
+          <Button
+            icon={<Upload size={16} />}>
+
+            批量导入
+          </Button>
+          <Button
+            icon={<Download size={16} />}>
+
+            导出报表
+          </Button>
+        </Space>
       </div>
 
       {/* 搜索和过滤器 */}
-      <Card className="mb-4">
+      <Card className="bg-surface-1/50 border-border">
         <Row gutter={[16, 16]}>
           <Col xs={24} md={12}>
             <Input
@@ -431,7 +428,7 @@ const ContractManagement = () => {
         activeKey={activeTab}
         onChange={setActiveTab}
         type="card"
-        style={{ marginBottom: '24px' }}>
+        className="contract-tabs">
 
         <TabPane
           tab={
@@ -443,7 +440,7 @@ const ContractManagement = () => {
           key="overview">
 
           <ContractOverview
-            data={mockData}
+            data={contracts}
             loading={loading}
             onNavigate={(type, value) => {
               setActiveTab('contracts');

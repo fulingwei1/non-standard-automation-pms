@@ -34,7 +34,7 @@ def list_role_templates(
     templates = (
         db.query(RoleTemplate)
         .filter(RoleTemplate.is_active == True)
-        .order_by(RoleTemplate.sort_order)
+        .order_by(RoleTemplate.level)
         .offset(skip)
         .limit(limit)
         .all()
@@ -53,9 +53,11 @@ def list_role_templates(
                     "template_name": t.template_name,
                     "description": t.description,
                     "data_scope": t.data_scope,
-                    "permission_ids": t.permission_ids or [],
+                    "role_type": t.role_type,
+                    "scope_type": t.scope_type,
+                    "level": t.level,
+                    "permission_snapshot": t.permission_snapshot,
                     "is_active": t.is_active,
-                    "sort_order": t.sort_order,
                 }
                 for t in templates
             ],
@@ -87,9 +89,11 @@ def get_role_template(
             "template_name": template.template_name,
             "description": template.description,
             "data_scope": template.data_scope,
-            "permission_ids": template.permission_ids or [],
+            "role_type": template.role_type,
+            "scope_type": template.scope_type,
+            "level": template.level,
+            "permission_snapshot": template.permission_snapshot,
             "is_active": template.is_active,
-            "sort_order": template.sort_order,
         }
     )
 

@@ -288,7 +288,7 @@ class ShortageDetail(Base, TimestampMixin):
     # 采购信息
     purchase_order_id = Column(Integer, ForeignKey('purchase_orders.id'), comment='关联采购订单ID')
     purchase_order_no = Column(String(50), comment='关联采购订单号')
-    supplier_id = Column(Integer, ForeignKey('suppliers.id'), comment='供应商ID')
+    supplier_id = Column(Integer, ForeignKey('vendors.id'), comment='供应商ID')
     supplier_name = Column(String(200), comment='供应商名称')
 
     # 状态
@@ -308,7 +308,7 @@ class ShortageDetail(Base, TimestampMixin):
     bom_item = relationship('BomItem')
     material = relationship('Material')
     purchase_order = relationship('PurchaseOrder')
-    supplier = relationship('Supplier')
+    # supplier = relationship('Supplier')  # 已禁用 - Supplier 是废弃模型
     handler = relationship('User', foreign_keys=[handler_id])
 
     __table_args__ = (

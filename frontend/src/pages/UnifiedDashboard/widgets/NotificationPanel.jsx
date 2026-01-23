@@ -18,7 +18,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
-import api from '../../../services/api';
+import { notificationApi } from '../../../services/api';
 import { cn } from '../../../lib/utils';
 
 // 通知类型图标映射
@@ -32,11 +32,11 @@ const typeIcons = {
 
 // 通知类型颜色映射
 const typeColors = {
-  alert: 'text-red-500 bg-red-50',
-  warning: 'text-yellow-500 bg-yellow-50',
-  info: 'text-blue-500 bg-blue-50',
-  success: 'text-green-500 bg-green-50',
-  default: 'text-gray-500 bg-gray-50',
+  alert: 'text-red-400 bg-red-500/20',
+  warning: 'text-yellow-400 bg-yellow-500/20',
+  info: 'text-blue-400 bg-blue-500/20',
+  success: 'text-green-400 bg-green-500/20',
+  default: 'text-slate-400 bg-slate-500/20',
 };
 
 // 默认通知数据
@@ -90,8 +90,8 @@ function NotificationItem({ notification, index, onClick }) {
       onClick={() => onClick?.(notification)}
       className={cn(
         'flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors',
-        'hover:bg-muted/50',
-        !notification.read && 'bg-primary/5'
+        'hover:bg-white/5',
+        !notification.read && 'bg-primary/10'
       )}
     >
       {/* 类型图标 */}
@@ -157,9 +157,11 @@ export default function NotificationPanel({ filter, limit = 5, data }) {
         // 否则尝试从 API 获取
         try {
           const params = filter ? { type: filter } : {};
-          const response = await api.get('/notifications', { params });
-          if (response.data?.items) {
-            const items = response.data.items.slice(0, limit);
+          const response = await notificationApi.list(params);
+          const payload = response.data || response;
+
+          if (payload?.items) {
+            const items = payload.items.slice(0, limit);
             setNotifications(items);
             setUnreadCount(items.filter(n => !n.read).length);
             return;
@@ -216,7 +218,7 @@ export default function NotificationPanel({ filter, limit = 5, data }) {
         {loading ? (
           <div className="space-y-2">
             {[...Array(limit)].map((_, i) => (
-              <div key={i} className="h-16 bg-muted/50 rounded-lg animate-pulse" />
+              <div key={i} className="h-16 bg-white/5 rounded-lg animate-pulse" />
             ))}
           </div>
         ) : notifications.length === 0 ? (

@@ -19,7 +19,8 @@ import {
   ToggleRight,
   CheckSquare,
   Square,
-  UserCog } from
+  UserCog,
+  Info } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -36,9 +37,18 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogBody,
   DialogFooter } from
 "../components/ui/dialog";
 import { Label } from "../components/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow } from
+"../components/ui/table";
 import {
   Select,
   SelectContent,
@@ -96,6 +106,7 @@ export default function UserManagement() {
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
+  const [totalUsers, setTotalUsers] = useState(0); // 保存总用户数
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterRole, setFilterRole] = useState("");
@@ -103,9 +114,14 @@ export default function UserManagement() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [_showRoleDialog, setShowRoleDialog] = useState(false);
-  const [_showPermissionDialog, _setShowPermissionDialog] = useState(false);
+  const [showPermissionDialog, setShowPermissionDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [_selectedRole, _setSelectedRole] = useState(null);
+  const [availableRoles, setAvailableRoles] = useState([]);
+  const [selectedRoles, setSelectedRoles] = useState([]);
+  const [selectedUserIds, setSelectedUserIds] = useState([]);
+  const [showBulkDialog, setShowBulkDialog] = useState(false);
+  const [bulkSelectedRoles, setBulkSelectedRoles] = useState([]);
   const [newUser, setNewUser] = useState({
     username: "",
     email: "",
@@ -126,6 +142,8 @@ export default function UserManagement() {
     setLoading(true);
     try {
       const params = {
+        page: 1,
+        page_size: 100, // 增加每页显示数量
         search: searchQuery,
         status: filterStatus || undefined,
         role: filterRole || undefined,
@@ -135,6 +153,7 @@ export default function UserManagement() {
       const response = await userApi.list(params);
       const data = response.data || response;
       setUsers(data.items || data || []);
+      setTotalUsers(data.total || 0); // 保存总用户数
     } catch (error) {
       console.error("Failed to fetch users:", error);
       toast.error("获取用户列表失败");
@@ -218,6 +237,181 @@ export default function UserManagement() {
       console.error("Failed to toggle user status:", error);
       toast.error("更改用户状态失败");
     }
+  };
+
+  // Permission management handlers
+  const openPermissionDialog = async (user) => {
+    setSelectedUser(user);
+    try {
+      const response = await roleApi.list({ page_size: 100 });
+      const allRoles = response.data?.items || response.data || [];
+      setAvailableRoles(allRoles);
+
+      // Get user's current roles
+      const userResponse = await userApi.get(user.id);
+      const userRoles = userResponse.data?.roles || [];
+      setSelectedRoles(userRoles.map(r => r.id));
+    } catch (error) {
+      console.error("Failed to load roles:", error);
+      toast.error("加载角色列表失败");
+    }
+    setShowPermissionDialog(true);
+  };
+
+  const handleRoleToggle = (roleId) => {
+    setSelectedRoles(prev =>
+      prev.includes(roleId)
+        ? prev.filter(id => id !== roleId)
+        : [...prev, roleId]
+    );
+  };
+
+  const handleSavePermissions = async () => {
+    if (!selectedUser) return;
+
+    try {
+      await userApi.assignRoles(selectedUser.id, { role_ids: selectedRoles });
+      toast.success("用户权限已更新");
+      setShowPermissionDialog(false);
+      fetchUsers();
+    } catch (error) {
+      console.error("Failed to update user permissions:", error);
+      toast.error("更新用户权限失败");
+    }
+  };
+
+  // 快速角色模板
+  const applyRoleTemplate = (templateType) => {
+    const roleMap = {};
+    availableRoles.forEach(role => {
+      roleMap[role.role_code] = role.id;
+    });
+
+    let targetRoleIds = [];
+
+    switch (templateType) {
+      case 'presales':
+        // 售前技术包：销售总监 + 售前相关角色
+        if (roleMap['SALES_DIR']) targetRoleIds.push(roleMap['SALES_DIR']);
+        if (roleMap['SALES']) targetRoleIds.push(roleMap['SALES']);
+        if (roleMap['ENGINEER']) targetRoleIds.push(roleMap['ENGINEER']);
+        if (roleMap['TECHNICAL_DIRECTOR']) targetRoleIds.push(roleMap['TECHNICAL_DIRECTOR']);
+        break;
+      case 'project':
+        // 项目管理包：项目经理 + 工程师角色
+        if (roleMap['PROJECT_MANAGER']) targetRoleIds.push(roleMap['PROJECT_MANAGER']);
+        if (roleMap['ENGINEER']) targetRoleIds.push(roleMap['ENGINEER']);
+        if (roleMap['TECHNICAL_DIRECTOR']) targetRoleIds.push(roleMap['TECHNICAL_DIRECTOR']);
+        break;
+      case 'sales':
+        // 销售管理包：销售总监 + 销售角色
+        if (roleMap['SALES_DIR']) targetRoleIds.push(roleMap['SALES_DIR']);
+        if (roleMap['SALES']) targetRoleIds.push(roleMap['SALES']);
+        if (roleMap['SALES_SUPPORT']) targetRoleIds.push(roleMap['SALES_SUPPORT']);
+        break;
+      case 'admin':
+        // 全部权限：选择所有角色
+        targetRoleIds = availableRoles.map(r => r.id);
+        break;
+    }
+
+    setSelectedRoles(targetRoleIds);
+    toast.success(`已应用${templateType === 'presales' ? '售前技术' :
+                        templateType === 'project' ? '项目管理' :
+                        templateType === 'sales' ? '销售管理' : '全部'}模板`);
+  };
+
+  // 批量操作
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedUserIds(users.map(u => u.id));
+    } else {
+      setSelectedUserIds([]);
+    }
+  };
+
+  const handleSelectUser = (userId) => {
+    setSelectedUserIds(prev =>
+      prev.includes(userId)
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
+  };
+
+  const openBulkPermissionDialog = async () => {
+    if (selectedUserIds.length === 0) {
+      toast.error("请先选择用户");
+      return;
+    }
+    try {
+      const response = await roleApi.list({ page_size: 100 });
+      const allRoles = response.data?.items || response.data || [];
+      setAvailableRoles(allRoles);
+      setBulkSelectedRoles([]);
+      setShowBulkDialog(true);
+    } catch (error) {
+      console.error("Failed to load roles:", error);
+      toast.error("加载角色列表失败");
+    }
+  };
+
+  const handleBulkRoleToggle = (roleId) => {
+    setBulkSelectedRoles(prev =>
+      prev.includes(roleId)
+        ? prev.filter(id => id !== roleId)
+        : [...prev, roleId]
+    );
+  };
+
+  const handleBulkSavePermissions = async () => {
+    try {
+      await Promise.all(
+        selectedUserIds.map(userId =>
+          userApi.assignRoles(userId, { role_ids: bulkSelectedRoles })
+        )
+      );
+      toast.success(`已为 ${selectedUserIds.length} 个用户更新权限`);
+      setShowBulkDialog(false);
+      setSelectedUserIds([]);
+      fetchUsers();
+    } catch (error) {
+      console.error("Failed to update bulk permissions:", error);
+      toast.error("批量更新权限失败");
+    }
+  };
+
+  // 批量快速角色模板
+  const applyBulkRoleTemplate = (templateType) => {
+    const roleMap = {};
+    availableRoles.forEach(role => {
+      roleMap[role.role_code] = role.id;
+    });
+
+    let targetRoleIds = [];
+
+    switch (templateType) {
+      case 'presales':
+        if (roleMap['SALES_DIR']) targetRoleIds.push(roleMap['SALES_DIR']);
+        if (roleMap['SALES']) targetRoleIds.push(roleMap['SALES']);
+        if (roleMap['ENGINEER']) targetRoleIds.push(roleMap['ENGINEER']);
+        if (roleMap['TECHNICAL_DIRECTOR']) targetRoleIds.push(roleMap['TECHNICAL_DIRECTOR']);
+        break;
+      case 'project':
+        if (roleMap['PROJECT_MANAGER']) targetRoleIds.push(roleMap['PROJECT_MANAGER']);
+        if (roleMap['ENGINEER']) targetRoleIds.push(roleMap['ENGINEER']);
+        if (roleMap['TECHNICAL_DIRECTOR']) targetRoleIds.push(roleMap['TECHNICAL_DIRECTOR']);
+        break;
+      case 'sales':
+        if (roleMap['SALES_DIR']) targetRoleIds.push(roleMap['SALES_DIR']);
+        if (roleMap['SALES']) targetRoleIds.push(roleMap['SALES']);
+        if (roleMap['SALES_SUPPORT']) targetRoleIds.push(roleMap['SALES_SUPPORT']);
+        break;
+    }
+
+    setBulkSelectedRoles(targetRoleIds);
+    toast.success(`已应用${templateType === 'presales' ? '售前技术' :
+                        templateType === 'project' ? '项目管理' :
+                        templateType === 'sales' ? '销售管理' : '全部'}模板`);
   };
 
   const handleSyncFromEmployees = async () => {
@@ -322,178 +516,190 @@ export default function UserManagement() {
       <UserManagementOverview
         users={users}
         roles={roles}
+        totalUsers={totalUsers}
         onQuickAction={handleQuickAction} />
 
-
       {/* Filters Section */}
-      <Card variants={fadeIn}>
-        <CardHeader>
-          <CardTitle>用户列表</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="搜索用户..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10" />
+      <motion.div variants={fadeIn} className="flex items-center justify-between gap-4">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Input
+            placeholder="搜索用户..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10" />
+        </div>
+        <div className="flex gap-2">
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="状态" />
+            </SelectTrigger>
+            <SelectContent>
+              {USER_STATUS_FILTER_OPTIONS.map((option) =>
+              <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+              </SelectItem>
+              )}
+            </SelectContent>
+          </Select>
 
+          <Select value={filterRole} onValueChange={setFilterRole}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="角色" />
+            </SelectTrigger>
+            <SelectContent>
+              {ROLE_FILTER_OPTIONS.map((option) =>
+              <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+              </SelectItem>
+              )}
+            </SelectContent>
+          </Select>
+
+          <Select value={filterDepartment} onValueChange={setFilterDepartment}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="部门" />
+            </SelectTrigger>
+            <SelectContent>
+              {DEPARTMENT_FILTER_OPTIONS.map((option) =>
+              <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+              </SelectItem>
+              )}
+            </SelectContent>
+          </Select>
+        </div>
+      </motion.div>
+
+      {/* Users List */}
+      <motion.div variants={fadeIn}>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>用户列表</CardTitle>
+              {selectedUserIds.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-slate-400">已选择 {selectedUserIds.length} 个用户</span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={openBulkPermissionDialog}
+                    className="bg-blue-600 hover:bg-blue-700 text-white border-blue-600">
+                    <Key className="w-4 h-4 mr-1" />
+                    批量分配权限
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedUserIds([])}>
+                    取消选择
+                  </Button>
+                </div>
+              )}
             </div>
-            
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger>
-                <SelectValue placeholder="状态" />
-              </SelectTrigger>
-              <SelectContent>
-                {USER_STATUS_FILTER_OPTIONS.map((option) =>
-                <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                </SelectItem>
-                )}
-              </SelectContent>
-            </Select>
-
-            <Select value={filterRole} onValueChange={setFilterRole}>
-              <SelectTrigger>
-                <SelectValue placeholder="角色" />
-              </SelectTrigger>
-              <SelectContent>
-                {ROLE_FILTER_OPTIONS.map((option) =>
-                <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                </SelectItem>
-                )}
-              </SelectContent>
-            </Select>
-
-            <Select value={filterDepartment} onValueChange={setFilterDepartment}>
-              <SelectTrigger>
-                <SelectValue placeholder="部门" />
-              </SelectTrigger>
-              <SelectContent>
-                {DEPARTMENT_FILTER_OPTIONS.map((option) =>
-                <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                </SelectItem>
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Users Table */}
-          <div className="rounded-md border">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b bg-gray-50">
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    用户
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    邮箱
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    角色
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    部门
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    状态
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    操作
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {loading ?
-                <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center">
-                      加载中...
-                    </td>
-                </tr> :
-                users.length === 0 ?
-                <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center">
-                      暂无用户
-                    </td>
-                </tr> :
-
-                users.map((user) =>
-                <motion.tr
-                  key={user.id}
-                  variants={fadeIn}
-                  className="hover:bg-gray-50">
-
-                      <td className="px-4 py-4">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10">
-                            <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                              <Users className="h-6 w-6 text-gray-600" />
-                            </div>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="text-center py-8 text-slate-400">加载中...</div>
+            ) : users.length === 0 ? (
+              <div className="text-center py-8 text-slate-400">暂无用户数据</div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-12">
+                      <input
+                        type="checkbox"
+                        checked={selectedUserIds.length === users.length && users.length > 0}
+                        onChange={handleSelectAll}
+                        className="w-4 h-4 rounded border-slate-600 bg-slate-800"
+                      />
+                    </TableHead>
+                    <TableHead>用户</TableHead>
+                    <TableHead>邮箱</TableHead>
+                    <TableHead>角色</TableHead>
+                    <TableHead>部门</TableHead>
+                    <TableHead>状态</TableHead>
+                    <TableHead className="text-right">操作</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {users.map((user) => (
+                    <TableRow
+                      key={user.id}
+                      className={selectedUserIds.includes(user.id) ? "bg-blue-500/10" : ""}>
+                      <TableCell>
+                        <input
+                          type="checkbox"
+                          checked={selectedUserIds.includes(user.id)}
+                          onChange={() => handleSelectUser(user.id)}
+                          className="w-4 h-4 rounded border-slate-600 bg-slate-800"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
+                            <Users className="h-5 w-5 text-slate-600" />
                           </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">
-                              {user.full_name || user.username}
-                            </div>
-                            <div className="text-sm text-gray-500">{user.phone}</div>
+                          <div>
+                            <div className="font-medium">{user.full_name || user.username}</div>
+                            <div className="text-sm text-slate-500">{user.phone}</div>
                           </div>
                         </div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="text-sm text-gray-900">{user.email}</div>
-                      </td>
-                      <td className="px-4 py-4">
-                        {getRoleBadge(user.role)}
-                      </td>
-                      <td className="px-4 py-4">
+                      </TableCell>
+                      <TableCell>{user.email}</TableCell>
+                      <TableCell>{getRoleBadge(user.role)}</TableCell>
+                      <TableCell>
                         <Badge variant="outline">
                           {USER_DEPARTMENT_LABELS[user.department] || user.department}
                         </Badge>
-                      </td>
-                      <td className="px-4 py-4">
-                        {getStatusBadge(user.status)}
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="flex space-x-2">
+                      </TableCell>
+                      <TableCell>{getStatusBadge(user.status)}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1">
                           <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openEditDialog(user)}>
-
-                            <Edit3 className="h-4 w-4" />
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openEditDialog(user)}
+                            title="编辑">
+                            <Edit3 className="w-4 h-4" />
                           </Button>
                           <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleToggleUserStatus(user)}>
-
-                            {user.status === USER_STATUS.ACTIVE ?
-                        <ToggleRight className="h-4 w-4 text-green-600" /> :
-
-                        <ToggleLeft className="h-4 w-4 text-gray-600" />
-                        }
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openPermissionDialog(user)}
+                            title="管理权限"
+                            className="text-blue-600 hover:text-blue-700">
+                            <Key className="w-4 h-4" />
                           </Button>
                           <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteUser(user.id)}
-                        className="text-red-600 hover:text-red-800">
-
-                            <Trash2 className="h-4 w-4" />
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleToggleUserStatus(user)}
+                            title={user.status === USER_STATUS.ACTIVE ? '停用' : '启用'}>
+                            {user.status === USER_STATUS.ACTIVE ? (
+                              <ToggleRight className="w-4 h-4 text-green-600" />
+                            ) : (
+                              <ToggleLeft className="w-4 h-4 text-slate-400" />
+                            )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteUser(user.id)}
+                            title="删除">
+                            <Trash2 className="w-4 h-4 text-red-500" />
                           </Button>
                         </div>
-                      </td>
-                </motion.tr>
-                )
-                }
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+        </motion.div>
 
       {/* Create User Dialog */}
       <AnimatePresence>
@@ -508,7 +714,8 @@ export default function UserManagement() {
                 <DialogHeader>
                   <DialogTitle>新建用户</DialogTitle>
                 </DialogHeader>
-                <div className="grid grid-cols-2 gap-4">
+                <DialogBody>
+                  <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="username">用户名</Label>
                     <Input
@@ -621,7 +828,8 @@ export default function UserManagement() {
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
+                  </div>
+                </DialogBody>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
                     取消
@@ -647,7 +855,8 @@ export default function UserManagement() {
                 <DialogHeader>
                   <DialogTitle>编辑用户</DialogTitle>
                 </DialogHeader>
-                <div className="grid grid-cols-2 gap-4">
+                <DialogBody>
+                  <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="edit-username">用户名</Label>
                     <Input
@@ -749,7 +958,8 @@ export default function UserManagement() {
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
+                  </div>
+                </DialogBody>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setShowEditDialog(false)}>
                     取消
@@ -758,6 +968,240 @@ export default function UserManagement() {
                 </DialogFooter>
               </DialogContent>
             </motion.div>
+        </Dialog>
+        }
+
+        {/* Permission Management Dialog */}
+        {showPermissionDialog && selectedUser &&
+        <Dialog open={showPermissionDialog} onOpenChange={setShowPermissionDialog}>
+          <DialogContent className="sm:max-w-[600px] bg-slate-900 border-slate-700 text-white">
+            <DialogHeader>
+              <DialogTitle>管理用户权限 - {selectedUser.username}</DialogTitle>
+            </DialogHeader>
+            <DialogBody>
+              <div className="space-y-4">
+                {/* 快速模板 */}
+                <div>
+                  <Label className="text-sm text-slate-300 mb-2 block">快速角色模板</Label>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => applyRoleTemplate('presales')}
+                      className="text-xs">
+                      售前技术包
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => applyRoleTemplate('project')}
+                      className="text-xs">
+                      项目管理包
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => applyRoleTemplate('sales')}
+                      className="text-xs">
+                      销售管理包
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => applyRoleTemplate('admin')}
+                      className="text-xs">
+                      全部权限
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedRoles([])}
+                      className="text-xs text-red-400 hover:text-red-300">
+                      清空
+                    </Button>
+                  </div>
+                </div>
+
+                <p className="text-sm text-slate-400">为用户分配角色以管理其权限。用户将拥有所选角色的所有权限。</p>
+
+                <div className="max-h-[400px] overflow-y-auto space-y-2">
+                  {availableRoles.length === 0 ? (
+                    <div className="text-center py-8 text-slate-500">
+                      加载角色中...
+                    </div>
+                  ) : (
+                    availableRoles.map((role) => (
+                      <div
+                        key={role.id}
+                        className={cn(
+                          "flex items-center justify-between p-3 rounded-lg border transition-colors",
+                          selectedRoles.includes(role.id)
+                            ? "bg-blue-500/20 border-blue-500/50"
+                            : "bg-slate-800 border-slate-700 hover:border-slate-600"
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Shield className={cn(
+                            "w-5 h-5",
+                            selectedRoles.includes(role.id) ? "text-blue-400" : "text-slate-500"
+                          )} />
+                          <div>
+                            <div className="font-medium">{role.role_name || role.name}</div>
+                            <div className="text-xs text-slate-400">
+                              {role.description || role.role_code}
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleRoleToggle(role.id)}
+                          className={cn(
+                            "w-12 h-6 rounded-full transition-colors relative",
+                            selectedRoles.includes(role.id)
+                              ? "bg-blue-600"
+                              : "bg-slate-700"
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "absolute top-1 w-4 h-4 rounded-full bg-white transition-transform",
+                              selectedRoles.includes(role.id) ? "translate-x-7" : "translate-x-1"
+                            )}
+                          />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 text-sm text-slate-400 pt-2 border-t border-slate-700">
+                  <Info className="w-4 h-4" />
+                  <span>已选择 {selectedRoles.length} 个角色</span>
+                </div>
+              </div>
+            </DialogBody>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowPermissionDialog(false)}>
+                取消
+              </Button>
+              <Button onClick={handleSavePermissions} className="bg-blue-600 hover:bg-blue-700">
+                保存权限
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        }
+
+        {/* Bulk Permission Dialog */}
+        {showBulkDialog &&
+        <Dialog open={showBulkDialog} onOpenChange={setShowBulkDialog}>
+          <DialogContent className="sm:max-w-[600px] bg-slate-900 border-slate-700 text-white">
+            <DialogHeader>
+              <DialogTitle>批量分配权限 - {selectedUserIds.length} 个用户</DialogTitle>
+            </DialogHeader>
+            <DialogBody>
+              <div className="space-y-4">
+                <p className="text-sm text-slate-400">为选中的 {selectedUserIds.length} 个用户分配相同的角色权限。</p>
+
+                {/* 快速模板 */}
+                <div>
+                  <Label className="text-sm text-slate-300 mb-2 block">快速角色模板</Label>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => applyBulkRoleTemplate('presales')}
+                      className="text-xs">
+                      售前技术包
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => applyBulkRoleTemplate('project')}
+                      className="text-xs">
+                      项目管理包
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => applyBulkRoleTemplate('sales')}
+                      className="text-xs">
+                      销售管理包
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setBulkSelectedRoles(availableRoles.map(r => r.id))}
+                      className="text-xs">
+                      全部权限
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setBulkSelectedRoles([])}
+                      className="text-xs text-red-400 hover:text-red-300">
+                      清空
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="max-h-[400px] overflow-y-auto space-y-2">
+                  {availableRoles.map((role) => (
+                    <div
+                      key={role.id}
+                      className={cn(
+                        "flex items-center justify-between p-3 rounded-lg border transition-colors",
+                        bulkSelectedRoles.includes(role.id)
+                          ? "bg-blue-500/20 border-blue-500/50"
+                          : "bg-slate-800 border-slate-700 hover:border-slate-600"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Shield className={cn(
+                          "w-5 h-5",
+                          bulkSelectedRoles.includes(role.id) ? "text-blue-400" : "text-slate-500"
+                        )} />
+                        <div>
+                          <div className="font-medium">{role.role_name || role.name}</div>
+                          <div className="text-xs text-slate-400">
+                            {role.description || role.role_code}
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleBulkRoleToggle(role.id)}
+                        className={cn(
+                          "w-12 h-6 rounded-full transition-colors relative",
+                          bulkSelectedRoles.includes(role.id)
+                            ? "bg-blue-600"
+                            : "bg-slate-700"
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "absolute top-1 w-4 h-4 rounded-full bg-white transition-transform",
+                            bulkSelectedRoles.includes(role.id) ? "translate-x-7" : "translate-x-1"
+                          )}
+                        />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-2 text-sm text-slate-400 pt-2 border-t border-slate-700">
+                  <Info className="w-4 h-4" />
+                  <span>已选择 {bulkSelectedRoles.length} 个角色，将应用到 {selectedUserIds.length} 个用户</span>
+                </div>
+              </div>
+            </DialogBody>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowBulkDialog(false)}>
+                取消
+              </Button>
+              <Button onClick={handleBulkSavePermissions} className="bg-blue-600 hover:bg-blue-700">
+                批量保存
+              </Button>
+            </DialogFooter>
+          </DialogContent>
         </Dialog>
         }
       </AnimatePresence>

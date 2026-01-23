@@ -11,7 +11,8 @@ from typing import Any, Dict, List, Optional, Tuple
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models.material import BomItem, Material, Supplier
+from app.models.material import BomItem, Material
+from app.models.vendor import Vendor
 from app.models.project import Project
 from app.models.sales import Quote, QuoteItem, QuoteVersion
 

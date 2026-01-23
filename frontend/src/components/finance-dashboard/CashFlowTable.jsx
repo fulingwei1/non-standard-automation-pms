@@ -248,12 +248,12 @@ const CashFlowDetailTable = ({
 
           </div>
 
-          <Select value={selectedType} onValueChange={setSelectedType}>
+          <Select value={selectedType || '__all__'} onValueChange={(value) => setSelectedType(value === '__all__' ? '' : value)}>
             <SelectTrigger className="w-32 bg-slate-800 border-slate-700 text-white">
               <SelectValue placeholder="全部类型" />
             </SelectTrigger>
             <SelectContent className="bg-slate-800">
-              <SelectItem value="">全部类型</SelectItem>
+              <SelectItem value="__all__">全部类型</SelectItem>
               <SelectItem value="operating">经营活动</SelectItem>
               <SelectItem value="investing">投资活动</SelectItem>
               <SelectItem value="financing">筹资活动</SelectItem>

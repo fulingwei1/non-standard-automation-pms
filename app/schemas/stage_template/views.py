@@ -9,10 +9,12 @@
 阶段模板 Schema 定义
 """
 
-from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
+
+from app.schemas.stage_template.progress import StageProgress
+from app.schemas.stage_template.definitions import StageDefinitionResponse
 
 
 

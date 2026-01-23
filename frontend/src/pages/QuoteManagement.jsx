@@ -6,10 +6,21 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
+import { DollarSign, PieChart, TrendingDown, TrendingUp } from "lucide-react";
 import { PageHeader } from "../components/layout";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
-import { cn as _cn } from "../lib/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "../components/ui/select";
+import { formatCurrency, formatPercent } from "../lib/utils";
+import { handleApiError } from "../utils/apiErrorHandler";
 
 // Import refactored components
 import {
@@ -24,11 +35,54 @@ import {
   quoteApi,
   opportunityApi,
   customerApi,
-  salesTemplateApi as _salesTemplateApi } from
+  purchaseApi } from
 "../services/api";
 
 // Import utilities
 import { fadeIn, staggerContainer } from "../lib/animations";
+
+const DEFAULT_COST_INSIGHTS = {
+  totalCost: 1280000,
+  orderCount: 18,
+  averageOrderCost: 71000,
+  costSavings: 93000,
+  savingsRate: 7.6,
+  categories: [
+    { name: "核心材料", amount: 520000 },
+    { name: "外协加工", amount: 280000 },
+    { name: "系统集成", amount: 210000 },
+    { name: "安装调试", amount: 135000 }
+  ],
+  suppliers: [
+    { name: "华东自动化", amount: 310000 },
+    { name: "苏南精工", amount: 265000 },
+    { name: "易联智采", amount: 188000 },
+    { name: "鸿泰机电", amount: 142000 }
+  ],
+  trend: [
+    { month: "2024-10", amount: 410000, orders: 6 },
+    { month: "2024-11", amount: 368000, orders: 5 },
+    { month: "2024-12", amount: 295000, orders: 4 },
+    { month: "2025-01", amount: 210000, orders: 3 }
+  ]
+};
+
+const EMPTY_COST_INSIGHTS = {
+  totalCost: 0,
+  orderCount: 0,
+  averageOrderCost: 0,
+  costSavings: 0,
+  savingsRate: 0,
+  categories: [],
+  suppliers: [],
+  trend: []
+};
+
+const COST_RANGE_LABELS = {
+  month: "本月",
+  quarter: "本季度",
+  year: "本年度"
+};
 
 export default function QuoteManagement() {
   // 状态管理
@@ -57,21 +111,29 @@ export default function QuoteManagement() {
   });
   const [sortBy, setSortBy] = useState("created_desc");
   const [timeRange, setTimeRange] = useState("month");
+  const [costTimeRange, setCostTimeRange] = useState("month");
+  const [costInsights, setCostInsights] = useState(DEFAULT_COST_INSIGHTS);
+  const [costLoading, setCostLoading] = useState(false);
 
   // 获取报价列表
   const fetchQuotes = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await quoteApi.getQuotes({
-        ...filters,
-        search: searchTerm,
-        sort: sortBy,
-        timeRange
-      });
-      const quotesData = response.data || [];
-      setQuotes(quotesData);
+      // 映射前端参数到后端API期望的参数格式
+      const apiParams = {
+        keyword: searchTerm || undefined,  // 前端用search，后端用keyword
+        status: filters.status !== 'all' ? filters.status : undefined,
+        customer_id: filters.customer_id !== 'all' ? filters.customer_id : undefined,
+        // 注意：后端不支持 type, priority, opportunity_id, sort, timeRange 等参数
+        // 这些参数在前端本地过滤使用
+      };
+      const response = await quoteApi.getQuotes(apiParams);
+      // 处理分页响应：如果返回 {items, total, ...} 格式，提取 items
+      const quotesData = response.data?.items || response.data || [];
+      setQuotes(Array.isArray(quotesData) ? quotesData : []);
     } catch (error) {
-      console.error('Failed to fetch quotes:', error);
+      const { useMockData } = handleApiError(error, '获取报价列表');
+
       // 使用模拟数据
       const mockQuotes = [
       {
@@ -184,7 +246,7 @@ export default function QuoteManagement() {
     } finally {
       setLoading(false);
     }
-  }, [filters, searchTerm, sortBy, timeRange]);
+  }, [filters, searchTerm]);
 
   // 获取统计数据
   const fetchStats = useCallback(async () => {
@@ -192,7 +254,7 @@ export default function QuoteManagement() {
       const response = await quoteApi.getStats({ timeRange });
       setStats(response.data || DEFAULT_QUOTE_STATS);
     } catch (error) {
-      console.error('Failed to fetch stats:', error);
+      handleApiError(error, '获取统计数据');
       // 使用模拟数据
       setStats({
         total: 25,
@@ -222,7 +284,7 @@ export default function QuoteManagement() {
       const response = await opportunityApi.getOpportunities();
       setOpportunities(response.data || []);
     } catch (error) {
-      console.error('Failed to fetch opportunities:', error);
+      handleApiError(error, '获取商机列表');
       // 使用模拟数据
       setOpportunities([
       { id: "OPP001", title: "ERP系统升级项目", customer_id: "CUST001" },
@@ -238,7 +300,7 @@ export default function QuoteManagement() {
       const response = await customerApi.getCustomers();
       setCustomers(response.data || []);
     } catch (error) {
-      console.error('Failed to fetch customers:', error);
+      handleApiError(error, '获取客户列表');
       // 使用模拟数据
       setCustomers([
       { id: "CUST001", name: "ABC科技有限公司" },
@@ -297,6 +359,126 @@ export default function QuoteManagement() {
     setShowCreateDialog(true);
   }, []);
 
+  const loadCostInsights = useCallback(async () => {
+    const now = new Date();
+    let startDate;
+    if (costTimeRange === "quarter") {
+      startDate = new Date(
+        now.getFullYear(),
+        Math.floor(now.getMonth() / 3) * 3,
+        1,
+      );
+    } else if (costTimeRange === "year") {
+      startDate = new Date(now.getFullYear(), 0, 1);
+    } else {
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    }
+    const endDate = now.toISOString().split("T")[0];
+    const startDateStr = startDate.toISOString().split("T")[0];
+
+    try {
+      setCostLoading(true);
+      const response = await purchaseApi.orders.list({
+        page: 1,
+        page_size: 500,
+        start_date: startDateStr,
+        end_date: endDate,
+      });
+      const orders = response.data?.items || response.data || [];
+
+      let totalCost = 0;
+      const categories = new Map();
+      const suppliers = new Map();
+      const monthlyTrend = new Map();
+
+      orders.forEach((order) => {
+        const amount = parseFloat(order.total_amount || 0);
+        totalCost += amount;
+        const supplier =
+          order.supplier_name || order.supplier?.name || "未知供应商";
+        suppliers.set(supplier, (suppliers.get(supplier) || 0) + amount);
+
+        const dateValue = order.order_date || order.created_at;
+        if (dateValue) {
+          const date = new Date(dateValue);
+          const monthKey = `${date.getFullYear()}-${String(
+            date.getMonth() + 1,
+          ).padStart(2, "0")}`;
+          const entry = monthlyTrend.get(monthKey) || { amount: 0, orders: 0 };
+          entry.amount += amount;
+          entry.orders += 1;
+          monthlyTrend.set(monthKey, entry);
+        }
+
+        order.items?.forEach((item) => {
+          const category = item.material_category || item.category || "其他";
+          const itemAmount = parseFloat(
+            item.amount || item.unit_price * item.quantity || 0,
+          );
+          categories.set(category, (categories.get(category) || 0) + itemAmount);
+        });
+      });
+
+      const avgOrderCost = orders.length
+        ? totalCost / orders.length
+        : 0;
+
+      const trendArray = Array.from(monthlyTrend.entries()).sort(([a], [b]) =>
+        a.localeCompare(b),
+      );
+      let savings = 0;
+      let savingsRate = 0;
+      if (trendArray.length >= 2) {
+        const latest = trendArray[trendArray.length - 1][1];
+        const previous = trendArray[trendArray.length - 2][1];
+        const latestAvg =
+          latest.orders > 0 ? latest.amount / latest.orders : 0;
+        const previousAvg =
+          previous.orders > 0 ? previous.amount / previous.orders : 0;
+        if (previousAvg > 0 && latestAvg < previousAvg) {
+          savings = (previousAvg - latestAvg) * latest.orders;
+          savingsRate = ((previousAvg - latestAvg) / previousAvg) * 100;
+        }
+      }
+
+      const topCategories = Array.from(categories.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 4)
+        .map(([name, amount]) => ({ name, amount }));
+
+      const topSuppliers = Array.from(suppliers.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 4)
+        .map(([name, amount]) => ({ name, amount }));
+
+      const trendList = trendArray.map(([month, values]) => ({
+        month,
+        amount: values.amount,
+        orders: values.orders
+      }));
+
+      setCostInsights({
+        totalCost,
+        orderCount: orders.length,
+        averageOrderCost: avgOrderCost,
+        costSavings: Math.max(0, savings),
+        savingsRate: Math.max(0, savingsRate),
+        categories: topCategories,
+        suppliers: topSuppliers,
+        trend: trendList
+      });
+    } catch (error) {
+      const { useMockData } = handleApiError(error, "加载成本洞察");
+      setCostInsights(useMockData ? DEFAULT_COST_INSIGHTS : EMPTY_COST_INSIGHTS);
+    } finally {
+      setCostLoading(false);
+    }
+  }, [costTimeRange]);
+
+  useEffect(() => {
+    loadCostInsights();
+  }, [loadCostInsights]);
+
   // 处理筛选变化
   const handleFilterChange = useCallback((newFilters) => {
     setFilters(newFilters);
@@ -329,12 +511,20 @@ export default function QuoteManagement() {
   // 当筛选条件变化时重新获取数据
   useEffect(() => {
     fetchQuotes();
-  }, [filters, searchTerm, sortBy]);
+  }, [filters, searchTerm]);  // 移除 sortBy，因为后端API不支持此参数
 
   // 当时间范围变化时重新获取统计数据
   useEffect(() => {
     fetchStats();
   }, [timeRange]);
+
+  const topSupplier = (costInsights?.suppliers || [])[0];
+  const trendItems = (costInsights?.trend || []).slice(-4);
+  const categories = costInsights?.categories || [];
+  const suppliers = costInsights?.suppliers || [];
+  const totalCostForRatio =
+    costInsights?.totalCost ||
+    categories.reduce((sum, item) => sum + (item.amount || 0), 0);
 
   return (
     <motion.div
@@ -379,6 +569,199 @@ export default function QuoteManagement() {
           timeRange={timeRange}
           onTimeRangeChange={setTimeRange} />
 
+
+        {/* 成本洞察 */}
+        <motion.div variants={fadeIn} className="grid gap-6 xl:grid-cols-3">
+          <Card className="xl:col-span-2 bg-slate-900/60 border-slate-800 text-white">
+            <CardHeader className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <CardTitle className="text-lg">成本报价洞察</CardTitle>
+                <p className="text-sm text-slate-400 mt-1">
+                  自动汇总采购成本，辅助报价策略
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Badge variant="outline" className="text-xs border-slate-700 text-slate-300">
+                  {COST_RANGE_LABELS[costTimeRange]}
+                </Badge>
+                <Select value={costTimeRange} onValueChange={setCostTimeRange}>
+                  <SelectTrigger className="w-[130px] border-slate-700">
+                    <SelectValue placeholder="选择周期" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-900 border-slate-700 text-white">
+                    <SelectItem value="month">本月</SelectItem>
+                    <SelectItem value="quarter">本季度</SelectItem>
+                    <SelectItem value="year">本年度</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {costLoading ? (
+                <div className="space-y-4 animate-pulse">
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    {[...Array(4)].map((_, idx) => (
+                      <div key={idx} className="h-24 rounded-xl bg-slate-800" />
+                    ))}
+                  </div>
+                  <div className="h-32 rounded-xl bg-slate-800" />
+                </div>
+              ) : (
+                <>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <CostMetricCard
+                      label="采购总额"
+                      value={formatCurrency(costInsights.totalCost || 0)}
+                      description={`${costInsights.orderCount || 0} 笔订单`}
+                      icon={DollarSign}
+                    />
+                    <CostMetricCard
+                      label="平均单笔金额"
+                      value={formatCurrency(costInsights.averageOrderCost || 0)}
+                      description="实时均价"
+                      icon={PieChart}
+                    />
+                    <CostMetricCard
+                      label="成本节约"
+                      value={formatCurrency(costInsights.costSavings || 0)}
+                      description={`节约率 ${formatPercent(costInsights.savingsRate || 0)}`}
+                      icon={TrendingDown}
+                    />
+                    <CostMetricCard
+                      label="核心供应商"
+                      value={topSupplier?.name || "暂无数据"}
+                      description={
+                        topSupplier ? formatCurrency(topSupplier.amount || 0) : "等待真实数据"
+                      }
+                      icon={TrendingUp}
+                    />
+                  </div>
+
+                  <div className="mt-6">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-slate-300">采购趋势</p>
+                      <span className="text-xs text-slate-500">
+                        最近 {trendItems.length || 0} 期
+                      </span>
+                    </div>
+                    {trendItems.length === 0 ? (
+                      <div className="text-sm text-slate-500 mt-4">
+                        暂无趋势数据
+                      </div>
+                    ) : (
+                      <div className="mt-4 space-y-3">
+                        {trendItems.map((item) => (
+                          <div
+                            key={item.month}
+                            className="flex items-center justify-between rounded-lg border border-slate-800 px-4 py-3"
+                          >
+                            <div>
+                              <p className="text-sm font-medium text-white">
+                                {item.month}
+                              </p>
+                              <p className="text-xs text-slate-500 mt-1">
+                                {item.orders || 0} 笔订单
+                              </p>
+                            </div>
+                            <span className="text-base font-semibold text-emerald-400">
+                              {formatCurrency(item.amount || 0)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="bg-slate-900/60 border-slate-800 text-white">
+            <CardHeader>
+              <CardTitle className="text-lg">成本结构与供应商</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {costLoading ? (
+                <div className="space-y-4 animate-pulse">
+                  {[...Array(4)].map((_, idx) => (
+                    <div key={idx} className="h-14 rounded-lg bg-slate-800" />
+                  ))}
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-sm text-slate-300">成本构成</p>
+                      <Badge variant="secondary" className="bg-blue-500/10 text-blue-300">
+                        TOP 分类
+                      </Badge>
+                    </div>
+                    {categories.length === 0 ? (
+                      <p className="text-sm text-slate-500">暂无成本分类数据</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {categories.map((cat) => {
+                          const percent = totalCostForRatio
+                            ? Math.round((cat.amount / totalCostForRatio) * 100)
+                            : 0;
+                          return (
+                            <div key={cat.name} className="space-y-1">
+                              <div className="flex items-center justify-between text-sm">
+                                <span>{cat.name}</span>
+                                <span className="text-slate-300">
+                                  {formatCurrency(cat.amount || 0)}
+                                </span>
+                              </div>
+                              <div className="h-2 rounded-full bg-slate-800 overflow-hidden">
+                                <div
+                                  className="h-full bg-blue-500"
+                                  style={{ width: `${Math.min(Math.max(percent, 3), 100)}%` }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-sm text-slate-300">优选供应商</p>
+                      <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-300">
+                        TOP 供应商
+                      </Badge>
+                    </div>
+                    {suppliers.length === 0 ? (
+                      <p className="text-sm text-slate-500">暂无供应商数据</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {suppliers.map((supplier, index) => (
+                          <div
+                            key={supplier.name}
+                            className="flex items-center justify-between rounded-lg border border-slate-800 px-3 py-2"
+                          >
+                            <div>
+                              <p className="text-sm text-white font-medium">
+                                {supplier.name}
+                              </p>
+                              <p className="text-xs text-slate-500 mt-1">
+                                采购额 {formatCurrency(supplier.amount || 0)}
+                              </p>
+                            </div>
+                            <Badge variant="outline" className="border-slate-700 text-slate-300">
+                              TOP {index + 1}
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* 报价列表管理 */}
         <QuoteListManager
@@ -562,4 +945,17 @@ export default function QuoteManagement() {
       </Dialog>
     </motion.div>);
 
+}
+
+function CostMetricCard({ label, value, description, icon: Icon }) {
+  return (
+    <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 space-y-2">
+      <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-slate-400">
+        {Icon && <Icon className="h-4 w-4 text-slate-300" />}
+        {label}
+      </div>
+      <div className="text-2xl font-semibold text-white">{value}</div>
+      {description && <p className="text-xs text-slate-500">{description}</p>}
+    </div>
+  );
 }

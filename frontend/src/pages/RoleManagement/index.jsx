@@ -10,7 +10,7 @@
  * - 角色模板快速创建
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
     Plus,
@@ -26,6 +26,9 @@ import {
     Check,
     FileText,
     ArrowRight,
+    CheckSquare,
+    Square,
+    Filter,
 } from 'lucide-react';
 import { PageHeader } from '../../components/layout';
 import {
@@ -119,6 +122,16 @@ export default function RoleManagement() {
         description: '',
     });
 
+    // 权限管理状态
+    const [selectedPermissionIds, setSelectedPermissionIds] = useState([]);
+    const [inheritedPermissionIds, setInheritedPermissionIds] = useState([]);
+    const [permissionSearch, setPermissionSearch] = useState('');
+    const [permissionModuleFilter, setPermissionModuleFilter] = useState('all');
+    const [activeEditTab, setActiveEditTab] = useState('basic');
+
+    // 使用 roleData 中的权限数据
+    const allPermissions = roleData.permissions;
+
     // 处理函数
     const handleCreateChange = (field, value) => {
         setCreateForm({ ...createForm, [field]: value });
@@ -151,6 +164,7 @@ export default function RoleManagement() {
     };
 
     const handleEditSubmit = async () => {
+        // 先更新基本信息
         const result = await roleData.updateRole(editForm.id, {
             role_name: editForm.role_name,
             description: editForm.description,
@@ -158,11 +172,82 @@ export default function RoleManagement() {
             parent_id: editForm.parent_id || null,
         });
 
-        if (result.success) {
-            setShowEditDialog(false);
-        } else {
+        if (!result.success) {
             alert('更新失败: ' + result.error);
+            return;
         }
+
+        // 然后更新权限
+        const permResult = await roleData.assignPermissions(editForm.id, selectedPermissionIds);
+        if (!permResult.success) {
+            alert('权限更新失败: ' + permResult.error);
+            return;
+        }
+
+        setShowEditDialog(false);
+    };
+
+    // 权限选择处理
+    const handleTogglePermission = (permissionId) => {
+        setSelectedPermissionIds(prev =>
+            prev.includes(permissionId)
+                ? prev.filter(id => id !== permissionId)
+                : [...prev, permissionId]
+        );
+    };
+
+    const handleToggleAllPermissions = () => {
+        const filteredPermissions = getFilteredPermissions();
+        const allSelected = filteredPermissions.every(p => selectedPermissionIds.includes(p.id));
+        if (allSelected) {
+            // 取消选择所有筛选的权限
+            setSelectedPermissionIds(prev =>
+                prev.filter(id => !filteredPermissions.some(p => p.id === id))
+            );
+        } else {
+            // 选择所有筛选的权限
+            const newIds = [...new Set([...selectedPermissionIds, ...filteredPermissions.map(p => p.id)])];
+            setSelectedPermissionIds(newIds);
+        }
+    };
+
+    // 获取筛选后的权限
+    const getFilteredPermissions = () => {
+        let filtered = allPermissions;
+
+        if (permissionSearch) {
+            filtered = filtered.filter(p =>
+                (p.perm_code || p.permission_code || '')?.toLowerCase().includes(permissionSearch.toLowerCase()) ||
+                (p.perm_name || p.permission_name || '')?.toLowerCase().includes(permissionSearch.toLowerCase())
+            );
+        }
+
+        if (permissionModuleFilter !== 'all') {
+            filtered = filtered.filter(p => p.module === permissionModuleFilter);
+        }
+
+        // 排序：已授予权限在前，未授予权限在后
+        return filtered.sort((a, b) => {
+            const aGranted = selectedPermissionIds.includes(a.id);
+            const bGranted = selectedPermissionIds.includes(b.id);
+
+            if (aGranted && !bGranted) return -1;
+            if (!aGranted && bGranted) return 1;
+
+            // 同类型下，按模块排序
+            if (a.module !== b.module) {
+                return (a.module || '').localeCompare(b.module || '');
+            }
+
+            // 同模块下，按权限码排序
+            return ((a.perm_code || a.permission_code || '')).localeCompare((b.perm_code || b.permission_code || ''));
+        });
+    };
+
+    // 获取所有模块
+    const getAllModules = () => {
+        const modules = new Set(allPermissions.map(p => p.module).filter(Boolean));
+        return Array.from(modules).sort();
     };
 
     const handleViewDetail = async (id) => {
@@ -186,6 +271,13 @@ export default function RoleManagement() {
                 data_scope: role.data_scope || 'OWN',
                 parent_id: role.parent_id,
             });
+
+            // 加载角色的权限
+            const roleDetail = await roleData.getRoleDetail(id);
+            setSelectedPermissionIds(roleDetail.direct_permissions?.map(p => p.id) || []);
+            setInheritedPermissionIds(roleDetail.inherited_permissions?.map(p => p.id) || []);
+
+            setActiveEditTab('basic');
             setShowEditDialog(true);
         } catch (error) {
             console.error('Failed to load role for edit:', error);
@@ -469,7 +561,7 @@ export default function RoleManagement() {
                                         <SelectValue placeholder="选择父角色（可选）" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="">无（顶级角色）</SelectItem>
+                                        <SelectItem value="__none__">无（顶级角色）</SelectItem>
                                         {roleData.roles.filter(r => r.is_active).map((role) => (
                                             <SelectItem key={role.id} value={role.id.toString()}>
                                                 {role.role_name}
@@ -518,76 +610,240 @@ export default function RoleManagement() {
 
             {/* 编辑角色对话框 */}
             <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-                <DialogContent className="max-w-lg">
-                    <DialogHeader>
-                        <DialogTitle>编辑角色</DialogTitle>
+                <DialogContent className="max-w-6xl w-[95vw] h-[90vh] bg-slate-900 border-slate-700 text-white p-0 overflow-hidden flex flex-col">
+                    <DialogHeader className="px-6 py-4 border-b border-slate-700 shrink-0">
+                        <DialogTitle>编辑角色 - {editForm.role_name}</DialogTitle>
                     </DialogHeader>
-                    <DialogBody>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="text-sm font-medium mb-2 block">角色编码</label>
-                                <Input value={editForm.role_code} disabled className="bg-slate-50" />
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium mb-2 block">角色名称</label>
-                                <Input
-                                    value={editForm.role_name}
-                                    onChange={(e) => handleEditChange('role_name', e.target.value)}
-                                />
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium mb-2 block">继承自</label>
-                                <Select
-                                    value={editForm.parent_id?.toString() || ''}
-                                    onValueChange={(v) => handleEditChange('parent_id', v ? parseInt(v) : null)}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="选择父角色（可选）" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="">无（顶级角色）</SelectItem>
-                                        {roleData.roles
-                                            .filter(r => r.is_active && r.id !== editForm.id)
-                                            .map((role) => (
-                                                <SelectItem key={role.id} value={role.id.toString()}>
-                                                    {role.role_name}
+                    <DialogBody className="flex-1 overflow-y-auto px-6">
+                        <Tabs value={activeEditTab} onValueChange={setActiveEditTab} className="w-full h-full flex flex-col">
+                            <TabsList className="grid w-full grid-cols-2 shrink-0">
+                                <TabsTrigger value="basic">基本信息</TabsTrigger>
+                                <TabsTrigger value="permissions">
+                                    权限管理
+                                    <Badge variant="secondary" className="ml-2">
+                                        {selectedPermissionIds.length}
+                                    </Badge>
+                                </TabsTrigger>
+                            </TabsList>
+
+                            <TabsContent value="basic" className="mt-6 space-y-4">
+                                <div>
+                                    <label className="text-sm font-medium mb-2 block">角色编码</label>
+                                    <Input value={editForm.role_code} disabled className="bg-slate-800 border-slate-700" />
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium mb-2 block">角色名称</label>
+                                    <Input
+                                        value={editForm.role_name}
+                                        onChange={(e) => handleEditChange('role_name', e.target.value)}
+                                        className="bg-slate-800 border-slate-700"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium mb-2 block">继承自</label>
+                                    <Select
+                                        value={editForm.parent_id?.toString() || ''}
+                                        onValueChange={(v) => handleEditChange('parent_id', v ? parseInt(v) : null)}
+                                    >
+                                        <SelectTrigger className="bg-slate-800 border-slate-700">
+                                            <SelectValue placeholder="选择父角色（可选）" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="__none__">无（顶级角色）</SelectItem>
+                                            {roleData.roles
+                                                .filter(r => r.is_active && r.id !== editForm.id)
+                                                .map((role) => (
+                                                    <SelectItem key={role.id} value={role.id.toString()}>
+                                                        {role.role_name}
+                                                    </SelectItem>
+                                                ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium mb-2 block">数据权限范围</label>
+                                    <Select
+                                        value={editForm.data_scope}
+                                        onValueChange={(v) => handleEditChange('data_scope', v)}
+                                    >
+                                        <SelectTrigger className="bg-slate-800 border-slate-700">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {Object.entries(DATA_SCOPE_MAP).map(([key, config]) => (
+                                                <SelectItem key={key} value={key}>
+                                                    {config.label}
                                                 </SelectItem>
                                             ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium mb-2 block">数据权限范围</label>
-                                <Select
-                                    value={editForm.data_scope}
-                                    onValueChange={(v) => handleEditChange('data_scope', v)}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {Object.entries(DATA_SCOPE_MAP).map(([key, config]) => (
-                                            <SelectItem key={key} value={key}>
-                                                {config.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium mb-2 block">描述</label>
-                                <Input
-                                    value={editForm.description}
-                                    onChange={(e) => handleEditChange('description', e.target.value)}
-                                />
-                            </div>
-                        </div>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium mb-2 block">描述</label>
+                                    <Input
+                                        value={editForm.description}
+                                        onChange={(e) => handleEditChange('description', e.target.value)}
+                                        className="bg-slate-800 border-slate-700"
+                                    />
+                                </div>
+                            </TabsContent>
+
+                            <TabsContent value="permissions" className="mt-6 flex-1 overflow-hidden flex flex-col">
+                                <div className="space-y-4 h-full flex flex-col">
+                                    {/* 搜索和筛选 */}
+                                    <div className="flex items-center gap-4 shrink-0">
+                                        <div className="relative flex-1">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                            <Input
+                                                placeholder="搜索权限编码或名称..."
+                                                value={permissionSearch}
+                                                onChange={(e) => setPermissionSearch(e.target.value)}
+                                                className="pl-9 bg-slate-800 border-slate-700"
+                                            />
+                                        </div>
+                                        <Select
+                                            value={permissionModuleFilter}
+                                            onValueChange={setPermissionModuleFilter}
+                                        >
+                                            <SelectTrigger className="w-40 bg-slate-800 border-slate-700">
+                                                <SelectValue placeholder="模块" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">全部模块</SelectItem>
+                                                {getAllModules().map(module => (
+                                                    <SelectItem key={module} value={module}>
+                                                        {module}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={handleToggleAllPermissions}
+                                            className="shrink-0"
+                                        >
+                                            {getFilteredPermissions().length > 0 && getFilteredPermissions().every(p => selectedPermissionIds.includes(p.id))
+                                                ? '取消全选'
+                                                : '全选'}
+                                        </Button>
+                                        <div className="text-sm text-slate-400">
+                                            已选: {selectedPermissionIds.length} / 总数: {allPermissions.length}
+                                        </div>
+                                    </div>
+
+                                    {/* 权限表格 */}
+                                    <div className="flex-1 border border-slate-700 rounded-lg overflow-hidden flex flex-col">
+                                        {allPermissions.length === 0 ? (
+                                            <div className="flex-1 flex items-center justify-center text-slate-400">
+                                                加载权限中...
+                                            </div>
+                                        ) : getFilteredPermissions().length === 0 ? (
+                                            <div className="flex-1 flex items-center justify-center text-slate-400">
+                                                没有找到匹配的权限
+                                            </div>
+                                        ) : (
+                                            <div className="flex-1 overflow-auto">
+                                                <Table>
+                                                    <TableHeader className="sticky top-0 bg-slate-800 z-10">
+                                                        <TableRow className="hover:bg-slate-800">
+                                                            <TableHead className="w-12">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={getFilteredPermissions().length > 0 && getFilteredPermissions().every(p => selectedPermissionIds.includes(p.id))}
+                                                                    onChange={handleToggleAllPermissions}
+                                                                    className="w-4 h-4"
+                                                                />
+                                                            </TableHead>
+                                                            <TableHead>权限编码</TableHead>
+                                                            <TableHead>权限名称</TableHead>
+                                                            <TableHead>功能描述</TableHead>
+                                                            <TableHead>模块</TableHead>
+                                                            <TableHead className="text-right">操作</TableHead>
+                                                        </TableRow>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                        {getFilteredPermissions().map((permission) => {
+                                                            const isInherited = inheritedPermissionIds.includes(permission.id);
+                                                            const isDirectSelected = selectedPermissionIds.includes(permission.id);
+
+                                                            return (
+                                                            <TableRow
+                                                                key={permission.id}
+                                                                className={
+                                                                    isInherited ? 'bg-purple-500/5 opacity-75' :
+                                                                    isDirectSelected ? 'bg-blue-500/10' : ''
+                                                                }
+                                                            >
+                                                                <TableCell>
+                                                                    {isInherited ? (
+                                                                        <div className="flex items-center justify-center w-6 h-6 text-purple-400" title="继承权限">
+                                                                            <CheckSquare className="w-4 h-4" />
+                                                                        </div>
+                                                                    ) : (
+                                                                        <button
+                                                                            onClick={() => handleTogglePermission(permission.id)}
+                                                                            className="flex items-center justify-center w-6 h-6 rounded border border-slate-600 hover:border-blue-500 transition-colors"
+                                                                        >
+                                                                            {isDirectSelected ? (
+                                                                                <CheckSquare className="w-4 h-4 text-blue-500" />
+                                                                            ) : (
+                                                                                <Square className="w-4 h-4 text-slate-500" />
+                                                                            )}
+                                                                        </button>
+                                                                    )}
+                                                                </TableCell>
+                                                                <TableCell className="font-mono text-sm">
+                                                                    {permission.perm_code || permission.permission_code}
+                                                                    {isInherited && (
+                                                                        <Badge variant="outline" className="ml-2 text-xs text-purple-400 border-purple-500/30">
+                                                                            继承
+                                                                        </Badge>
+                                                                    )}
+                                                                </TableCell>
+                                                                <TableCell className={isInherited ? 'text-slate-500' : ''}>
+                                                                    {permission.perm_name || permission.permission_name}
+                                                                </TableCell>
+                                                                <TableCell className="text-sm text-slate-400 max-w-xs truncate" title={permission.description}>
+                                                                    {permission.description || '-'}
+                                                                </TableCell>
+                                                                <TableCell>
+                                                                    <Badge variant="outline">{permission.module || '-'}</Badge>
+                                                                </TableCell>
+                                                                <TableCell className="text-right">
+                                                                    {isInherited ? (
+                                                                        <span className="text-xs text-slate-500">来自父角色</span>
+                                                                    ) : (
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="sm"
+                                                                            onClick={() => handleTogglePermission(permission.id)}
+                                                                            className={isDirectSelected
+                                                                                ? 'text-red-400 hover:text-red-300'
+                                                                                : 'text-blue-400 hover:text-blue-300'}
+                                                                        >
+                                                                            {isDirectSelected ? '移除' : '添加'}
+                                                                        </Button>
+                                                                    )}
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        );})}
+                                                    </TableBody>
+                                                </Table>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </TabsContent>
+                        </Tabs>
                     </DialogBody>
-                    <DialogFooter>
+                    <DialogFooter className="px-6 py-4 border-t border-slate-700 shrink-0">
                         <Button variant="outline" onClick={() => setShowEditDialog(false)}>
                             取消
                         </Button>
-                        <Button onClick={handleEditSubmit}>保存</Button>
+                        <Button onClick={handleEditSubmit} className="bg-blue-600 hover:bg-blue-700">
+                            保存
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

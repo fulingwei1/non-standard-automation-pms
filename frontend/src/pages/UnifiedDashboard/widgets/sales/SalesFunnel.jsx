@@ -10,9 +10,7 @@ import { cn } from '../../../../lib/utils';
 const defaultFunnelData = [
   { stage: '线索', count: 150, value: '¥15,000,000', color: 'bg-blue-500' },
   { stage: '商机', count: 80, value: '¥8,000,000', color: 'bg-cyan-500' },
-  { stage: '方案', count: 45, value: '¥4,500,000', color: 'bg-green-500' },
-  { stage: '报价', count: 30, value: '¥3,000,000', color: 'bg-yellow-500' },
-  { stage: '合同', count: 15, value: '¥1,500,000', color: 'bg-orange-500' },
+  { stage: '客户', count: 45, value: '¥4,500,000', color: 'bg-green-500' },
 ];
 
 export default function SalesFunnel({ view, data }) {

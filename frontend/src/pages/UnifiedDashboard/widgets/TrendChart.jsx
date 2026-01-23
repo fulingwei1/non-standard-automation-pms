@@ -142,7 +142,7 @@ export default function TrendChart({ type = 'revenue', data }) {
       </CardHeader>
       <CardContent>
         {loading ? (
-          <div className="h-32 bg-muted/50 rounded-lg animate-pulse" />
+          <div className="h-32 bg-white/5 rounded-lg animate-pulse" />
         ) : (
           <div>
             {/* 当前值和变化 */}
@@ -151,9 +151,9 @@ export default function TrendChart({ type = 'revenue', data }) {
                 <p className="text-2xl font-bold">{trendData?.current}</p>
                 <div className={cn(
                   'flex items-center text-sm',
-                  isPositive && 'text-green-600',
-                  isNegative && 'text-red-600',
-                  !isPositive && !isNegative && 'text-muted-foreground'
+                  isPositive && 'text-emerald-400',
+                  isNegative && 'text-red-400',
+                  !isPositive && !isNegative && 'text-slate-400'
                 )}>
                   {isPositive ? (
                     <TrendingUp className="h-4 w-4 mr-1" />

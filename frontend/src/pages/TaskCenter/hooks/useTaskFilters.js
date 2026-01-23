@@ -34,7 +34,7 @@ export function useTaskFilters() {
                 return false;
             }
             // 搜索过滤
-            if (searchQuery && !task.title.toLowerCase().includes(searchQuery.toLowerCase())) {
+            if (searchQuery && !(task.title || "").toLowerCase().includes(searchQuery.toLowerCase())) {
                 return false;
             }
             return true;

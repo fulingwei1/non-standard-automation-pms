@@ -27,7 +27,7 @@ class MaterialArrival(Base, TimestampMixin):
     expected_qty = Column(Numeric(10, 4), nullable=False, comment='预期到货数量')
 
     # 供应商信息
-    supplier_id = Column(Integer, ForeignKey('suppliers.id'), nullable=True, comment='供应商ID')
+    supplier_id = Column(Integer, ForeignKey('vendors.id'), nullable=True, comment='供应商ID')
     supplier_name = Column(String(200), comment='供应商名称')
 
     # 时间信息
@@ -51,7 +51,7 @@ class MaterialArrival(Base, TimestampMixin):
     # 关系
     shortage_report = relationship('ShortageReport')
     material = relationship('Material')
-    supplier = relationship('Supplier')
+    # supplier = relationship('Supplier')  # 已禁用 - Supplier 是废弃模型
     follow_ups = relationship('ArrivalFollowUp', back_populates='arrival', lazy='dynamic')
 
     __table_args__ = (

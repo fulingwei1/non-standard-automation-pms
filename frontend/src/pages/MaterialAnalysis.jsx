@@ -223,10 +223,11 @@ export default function MaterialAnalysis() {
     let filtered = projectMaterials;
 
     if (searchQuery) {
+      const searchLower = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (p) =>
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.id.toLowerCase().includes(searchQuery.toLowerCase())
+        (p.name || "").toLowerCase().includes(searchLower) ||
+        (p.id || "").toLowerCase().includes(searchLower)
       );
     }
 

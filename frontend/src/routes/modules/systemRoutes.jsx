@@ -1,6 +1,8 @@
 import { Route, Navigate } from "react-router-dom";
 
 import NotificationCenter from "../../pages/NotificationCenter";
+import StageTemplateManagement from "../../pages/StageTemplateManagement";
+import StageTemplateEditor from "../../pages/StageTemplateEditor";
 import Timesheet from "../../pages/Timesheet";
 import TimesheetDashboard from "../../pages/TimesheetDashboard";
 import TimesheetBatchOperations from "../../pages/TimesheetBatchOperations";
@@ -197,6 +199,8 @@ export function SystemRoutes() {
       <Route path="/settings" element={<Settings />} />
 
       {/* System Management */}
+      <Route path="/stage-templates" element={<StageTemplateManagement />} />
+      <Route path="/stage-templates/:templateId/edit" element={<StageTemplateEditor />} />
       <Route path="/user-management" element={<UserManagement />} />
       <Route path="/role-management" element={<RoleManagement />} />
       <Route path="/permission-management" element={<PermissionManagement />} />

@@ -11,7 +11,8 @@ import {
   ChevronRight,
   Key,
   FileText,
-  Settings } from
+  Settings,
+  AlertCircle } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -244,11 +245,74 @@ export default function PermissionManagement() {
     return colors[action?.toLowerCase()] || "bg-gray-500/10 text-gray-400";
   };
 
+  // 统计权限使用情况
+  const [permissionUsageStats, setPermissionUsageStats] = useState({
+    mostUsed: [],
+    unused: []
+  });
+
+  // 计算权限使用统计
+  useEffect(() => {
+    if (permissions.length === 0 || roles.length === 0) return;
+
+    const calculatePermissionUsage = async () => {
+      const usageMap = {};
+
+      // 为每个权限统计拥有它的角色数
+      for (const permission of permissions) {
+        let roleCount = 0;
+        const rolesWithPermission = [];
+
+        for (const role of roles) {
+          try {
+            const roleDetail = await roleApi.get(role.id);
+            const rolePermissions = roleDetail.data?.permissions || [];
+
+            if (rolePermissions.includes(permission.permission_name) ||
+                rolePermissions.includes(permission.permission_code)) {
+              roleCount++;
+              rolesWithPermission.push(role);
+            }
+          } catch (error) {
+            // 忽略错误，继续处理
+          }
+        }
+
+        usageMap[permission.permission_code] = {
+          permission,
+          roleCount,
+          roles: rolesWithPermission
+        };
+      }
+
+      // 找出使用最多的权限（前10）
+      const mostUsed = Object.values(usageMap)
+        .filter(item => item.roleCount > 0)
+        .sort((a, b) => b.roleCount - a.roleCount)
+        .slice(0, 10)
+        .map(item => ({
+          ...item.permission,
+          roleCount: item.roleCount,
+          roleNames: item.roles.map(r => r.role_name).join(', ')
+        }));
+
+      // 找出未使用的权限
+      const unused = Object.values(usageMap)
+        .filter(item => item.roleCount === 0)
+        .map(item => item.permission);
+
+      setPermissionUsageStats({ mostUsed, unused });
+    };
+
+    calculatePermissionUsage();
+  }, [permissions, roles]);
+
   // 统计信息
   const stats = {
     total: permissions.length,
     modules: modules.length,
-    active: permissions.filter((p) => p.is_active !== false).length // 兼容is_active可能不存在的情况
+    active: permissions.filter((p) => p.is_active !== false).length,
+    unused: permissionUsageStats.unused.length
   };
 
   return (
@@ -320,6 +384,111 @@ export default function PermissionManagement() {
             </CardContent>
           </Card>
         </motion.div>
+      </div>
+
+      {/* 权限使用统计 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* 最常用权限 */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <Users className="h-4 w-4 text-blue-400" />
+              最常用权限 (TOP 10)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {permissionUsageStats.mostUsed.length > 0 ? (
+              <div className="space-y-2">
+                {permissionUsageStats.mostUsed.map((perm, index) => (
+                  <div
+                    key={perm.permission_code}
+                    className="flex items-center justify-between p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800 transition-colors"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-slate-500 w-4">{index + 1}</span>
+                        <span className="font-medium text-white text-sm truncate">
+                          {perm.permission_code}
+                        </span>
+                        <Badge
+                          className={cn("text-xs", getActionColor(perm.action))}
+                        >
+                          {perm.action || '-'}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-slate-500 ml-6 truncate">
+                        {perm.permission_name}
+                      </p>
+                    </div>
+                    <div className="text-right ml-2">
+                      <div className="text-lg font-bold text-blue-400">{perm.roleCount}</div>
+                      <div className="text-xs text-slate-500">个角色</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-slate-500 py-4 text-sm">
+                暂无数据
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* 未使用的权限 */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <AlertCircle className="h-4 w-4 text-amber-400" />
+              未分配的权限 ({stats.unused})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {permissionUsageStats.unused.length > 0 ? (
+              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                {permissionUsageStats.unused.slice(0, 20).map((perm) => (
+                  <div
+                    key={perm.permission_code}
+                    className="flex items-center justify-between p-2 rounded-lg bg-slate-800/50 border border-amber-500/20"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-white text-sm truncate">
+                          {perm.permission_code}
+                        </span>
+                        <Badge
+                          className={cn("text-xs", getActionColor(perm.action))}
+                        >
+                          {perm.action || '-'}
+                        </Badge>
+                        <Badge variant="outline" className="text-xs border-amber-500/30 text-amber-400">
+                          未使用
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-slate-500 truncate">
+                        {perm.permission_name || '-'}
+                      </p>
+                      {perm.module && (
+                        <p className="text-xs text-slate-600">
+                          模块: {perm.module}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {permissionUsageStats.unused.length > 20 && (
+                  <div className="text-center text-xs text-slate-500 pt-2">
+                    还有 {permissionUsageStats.unused.length - 20} 个未分配权限...
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center text-slate-500 py-4 text-sm">
+                ✅ 所有权限都已分配
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* 搜索和筛选 */}
@@ -449,11 +618,24 @@ export default function PermissionManagement() {
                 {expandedModules[module] !== false &&
             <CardContent>
                     <div className="space-y-2">
-                      {perms.map((permission) =>
-                <div
-                  key={permission.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50 hover:bg-slate-800 transition-colors">
+                      {perms.map((permission) => {
+                        // 从缓存的统计中获取使用次数
+                        const usageInfo = permissionUsageStats.mostUsed.find(
+                          p => p.permission_code === permission.permission_code
+                        );
+                        const roleCount = usageInfo?.roleCount || 0;
+                        const isUnused = permissionUsageStats.unused.some(
+                          p => p.permission_code === permission.permission_code
+                        );
 
+                        return (
+                          <div
+                            key={permission.id}
+                            className={cn(
+                              "flex items-center justify-between p-3 rounded-lg transition-colors",
+                              "bg-slate-800/50 hover:bg-slate-800",
+                              isUnused && "border border-amber-500/20 bg-amber-500/5"
+                            )}>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                               <Key className="h-4 w-4 text-slate-400" />
@@ -461,52 +643,71 @@ export default function PermissionManagement() {
                                 {permission.permission_code}
                               </span>
                               {permission.action &&
-                      <Badge
-                        className={cn(
-                          "text-xs",
-                          getActionColor(permission.action)
-                        )}>
-
+                                <Badge
+                                  className={cn(
+                                    "text-xs",
+                                    getActionColor(permission.action)
+                                  )}>
                                   {permission.action}
-                      </Badge>
-                      }
+                                </Badge>
+                              }
                               {permission.is_active === false &&
-                      <Badge
-                        variant="destructive"
-                        className="text-xs">
-
+                                <Badge
+                                  variant="destructive"
+                                  className="text-xs">
                                   已禁用
-                      </Badge>
-                      }
+                                </Badge>
+                              }
+                              {isUnused &&
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs border-amber-500/30 text-amber-400">
+                                  未使用
+                                </Badge>
+                              }
                             </div>
                             <p className="text-sm text-slate-400 ml-6">
                               {permission.permission_name}
                             </p>
                             {permission.description &&
-                    <p className="text-xs text-slate-500 ml-6 mt-1">
+                              <p className="text-xs text-slate-500 ml-6 mt-1">
                                 {permission.description}
-                    </p>
-                    }
+                              </p>
+                            }
                             {permission.resource &&
-                    <div className="flex items-center gap-2 mt-2 ml-6">
+                              <div className="flex items-center gap-2 mt-2 ml-6">
                                 <FileText className="h-3 w-3 text-slate-500" />
                                 <span className="text-xs text-slate-500">
                                   资源: {permission.resource}
                                 </span>
-                    </div>
-                    }
+                              </div>
+                            }
                           </div>
-                          <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleViewDetail(permission)}
-                    className="ml-4">
-
-                            <Eye className="h-4 w-4 mr-1" />
-                            详情
-                          </Button>
-                </div>
-                )}
+                          <div className="flex items-center gap-3 ml-4">
+                            {/* 使用次数 */}
+                            <div className="text-right">
+                              <div className={cn(
+                                "text-lg font-bold",
+                                roleCount > 0 ? "text-blue-400" : "text-slate-500"
+                              )}>
+                                {roleCount}
+                              </div>
+                              <div className="text-xs text-slate-500">
+                                个角色
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleViewDetail(permission)}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              详情
+                            </Button>
+                          </div>
+                        </div>
+                        );
+                      })}
                     </div>
             </CardContent>
             }

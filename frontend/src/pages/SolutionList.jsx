@@ -419,13 +419,18 @@ export default function SolutionList() {
 
   // 筛选方案
   const filteredSolutions = solutions.filter((solution) => {
+    const searchLower = searchTerm.toLowerCase();
+    const name = (solution.name || "").toLowerCase();
+    const customer = (solution.customer || "").toLowerCase();
+    const code = (solution.code || "").toLowerCase();
+    const tags = solution.tags || [];
+
     const matchesSearch =
-    solution.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    solution.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    solution.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    solution.tags.some((tag) =>
-    tag.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    name.includes(searchLower) ||
+    customer.includes(searchLower) ||
+    code.includes(searchLower) ||
+    tags.some((tag) => (tag || "").toLowerCase().includes(searchLower));
+
     return matchesSearch;
   });
 

@@ -40,6 +40,7 @@ import {
 const UserManagementOverview = ({
   users = [],
   roles = [],
+  totalUsers: propTotalUsers,
   onQuickAction
 }) => {
   const [stats, setStats] = useState({
@@ -62,12 +63,15 @@ const UserManagementOverview = ({
       const departmentStatsData = getDepartmentDistributionStats(users);
       const newUsersCount = getMonthlyNewUsers(users);
 
+      // 使用传入的总用户数，如果没有则使用当前加载的用户数
+      const actualTotalUsers = propTotalUsers || users.length;
+
       // 模拟上个月的用户数量来计算增长率
-      const previousMonthUsers = users.length - newUsersCount;
-      const growthRate = calculateUserGrowthRate(users.length, previousMonthUsers);
+      const previousMonthUsers = actualTotalUsers - newUsersCount;
+      const growthRate = calculateUserGrowthRate(actualTotalUsers, previousMonthUsers);
 
       setStats({
-        totalUsers: statusStats.total,
+        totalUsers: actualTotalUsers, // 使用实际总用户数
         activeUsers: statusStats.active,
         inactiveUsers: statusStats.inactive,
         suspendedUsers: statusStats.suspended,
@@ -79,7 +83,7 @@ const UserManagementOverview = ({
       setRoleStats(roleStatsData);
       setDepartmentStats(departmentStatsData);
     }
-  }, [users]);
+  }, [users, propTotalUsers]);
 
   const getTopRoles = () => {
     return Object.entries(roleStats).
@@ -219,26 +223,26 @@ const UserManagementOverview = ({
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
                 <div className="flex items-center space-x-2">
-                  <AlertCircle className="h-4 w-4 text-yellow-600" />
-                  <span className="text-sm font-medium">待激活用户</span>
+                  <AlertCircle className="h-4 w-4 text-yellow-400" />
+                  <span className="text-sm font-medium text-slate-200">待激活用户</span>
                 </div>
                 <Badge variant="secondary">{stats.pendingUsers}</Badge>
               </div>
-              
-              <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+
+              <div className="flex items-center justify-between p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
                 <div className="flex items-center space-x-2">
-                  <UserX className="h-4 w-4 text-red-600" />
-                  <span className="text-sm font-medium">暂停用户</span>
+                  <UserX className="h-4 w-4 text-red-400" />
+                  <span className="text-sm font-medium text-slate-200">暂停用户</span>
                 </div>
                 <Badge variant="destructive">{stats.suspendedUsers}</Badge>
               </div>
-              
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+
+              <div className="flex items-center justify-between p-3 bg-slate-500/10 border border-slate-500/20 rounded-lg">
                 <div className="flex items-center space-x-2">
-                  <UserX className="h-4 w-4 text-gray-600" />
-                  <span className="text-sm font-medium">非活跃用户</span>
+                  <UserX className="h-4 w-4 text-slate-400" />
+                  <span className="text-sm font-medium text-slate-200">非活跃用户</span>
                 </div>
                 <Badge variant="outline">{stats.inactiveUsers}</Badge>
               </div>

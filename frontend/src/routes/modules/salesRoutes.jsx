@@ -26,7 +26,6 @@ import RequirementFreezeManagement from "../../pages/RequirementFreezeManagement
 import AIClarificationChat from "../../pages/AIClarificationChat";
 import QuoteManagement from "../../pages/QuoteManagement";
 import QuoteCostManagement from "../../pages/QuoteCostManagement";
-import QuoteCostAnalysis from "../../pages/QuoteCostAnalysis";
 import CostTemplateManagement from "../../pages/CostTemplateManagement";
 import PurchaseMaterialCostManagement from "../../pages/PurchaseMaterialCostManagement";
 import FinancialCostUpload from "../../pages/FinancialCostUpload";
@@ -102,14 +101,11 @@ export function SalesRoutes() {
       />
       <Route path="/cost-quotes/quotes" element={<QuoteManagement />} />
       <Route path="/cost-quotes/quotes/:id/cost" element={<QuoteCostManagement />} />
-      <Route path="/cost-quotes/quotes/:id/cost-analysis" element={<QuoteCostAnalysis />} />
       <Route path="/cost-quotes/material-costs" element={<PurchaseMaterialCostManagement />} />
       <Route path="/cost-quotes/financial-costs" element={<FinancialCostUpload />} />
-      <Route path="/cost-quotes/cost-analysis" element={<QuoteCostAnalysis />} />
       <Route path="/cost-quotes/templates" element={<SalesTemplateCenter />} />
       <Route path="/sales/quotes" element={<QuoteManagement />} />
       <Route path="/sales/quotes/:id/cost" element={<QuoteCostManagement />} />
-      <Route path="/sales/quotes/:id/cost-analysis" element={<QuoteCostAnalysis />} />
       <Route path="/sales/cost-templates" element={<CostTemplateManagement />} />
       <Route path="/sales/purchase-material-costs" element={<PurchaseMaterialCostManagement />} />
       <Route path="/financial-costs" element={<FinancialCostUpload />} />

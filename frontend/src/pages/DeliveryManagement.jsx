@@ -99,9 +99,10 @@ const DeliveryManagement = () => {
   // 过滤数据
   const filteredDeliveries = useMemo(() => {
     return deliveries.filter((delivery) => {
-      const matchesSearch = !searchText ||
-      delivery.orderNumber.toLowerCase().includes(searchText.toLowerCase()) ||
-      delivery.customerName?.toLowerCase().includes(searchText.toLowerCase());
+      const searchLower = (searchText || "").toLowerCase();
+    const matchesSearch = !searchText ||
+      (delivery.orderNumber || "").toLowerCase().includes(searchLower) ||
+      (delivery.customerName || "").toLowerCase().includes(searchLower);
 
       return matchesSearch;
     });

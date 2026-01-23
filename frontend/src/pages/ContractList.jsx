@@ -116,13 +116,12 @@ export default function ContractList() {
   // Filter contracts
   const filteredContracts = useMemo(() => {
     return contracts.filter((contract) => {
-      const matchesSearch =
+      const searchLower = (searchTerm || "").toLowerCase();
+    const matchesSearch =
       !searchTerm ||
-      contract.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contract.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (contract.customerShort || "").
-      toLowerCase().
-      includes(searchTerm.toLowerCase());
+      (contract.name || "").toLowerCase().includes(searchLower) ||
+      (contract.id || "").toLowerCase().includes(searchLower) ||
+      (contract.customerShort || "").toLowerCase().includes(searchLower);
 
       const matchesStatus =
       selectedStatus === "all" || contract.status === selectedStatus;

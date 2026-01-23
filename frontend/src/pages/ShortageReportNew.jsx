@@ -97,10 +97,8 @@ export default function ShortageReportNew() {
         const keyword = searchKeyword.toLowerCase();
         filteredMaterials = materialList.filter(
           (m) =>
-            (m.material_code &&
-              m.material_code.toLowerCase().includes(keyword)) ||
-            (m.material_name &&
-              m.material_name.toLowerCase().includes(keyword)),
+            ((m.material_code || "").toLowerCase().includes(keyword)) ||
+            ((m.material_name || "").toLowerCase().includes(keyword)),
         );
       }
 

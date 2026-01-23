@@ -8,7 +8,7 @@ import { Clock, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent } from '../../../components/ui/card';
 import { Progress } from '../../../components/ui/progress';
 import { cn, formatDate } from '../../../lib/utils';
-import { useAuth } from '../../../contexts/AuthContext';
+import { useAuth } from '../../../context/AuthContext';
 
 export default function WelcomeCard() {
   const { user } = useAuth();
@@ -57,7 +57,7 @@ export default function WelcomeCard() {
   const statusInfo = getStatusInfo(todayOverview.currentStatus);
 
   return (
-    <Card className="bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0 shadow-lg">
+    <Card className="bg-gradient-to-r from-violet-900/90 to-indigo-900/90 text-white border-0 shadow-lg">
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div>

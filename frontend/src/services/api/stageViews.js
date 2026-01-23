@@ -21,7 +21,7 @@ export const stageViewsApi = {
      * @param {number} params.skip - 分页偏移
      * @param {number} params.limit - 分页大小
      */
-    get: (params) => api.get("/project-stages/views/pipeline", { params }),
+    get: (params) => api.get("/projects/project-stages/views/pipeline", { params }),
   },
 
   // ==================== 时间轴视图 ====================
@@ -33,7 +33,7 @@ export const stageViewsApi = {
      * @param {boolean} params.include_nodes - 是否包含节点详情
      */
     get: (projectId, params) =>
-      api.get(`/project-stages/${projectId}/views/timeline`, { params }),
+      api.get(`/projects/project-stages/${projectId}/views/timeline`, { params }),
   },
 
   // ==================== 分解树视图 ====================
@@ -45,7 +45,7 @@ export const stageViewsApi = {
      * @param {boolean} params.include_tasks - 是否包含子任务
      */
     get: (projectId, params) =>
-      api.get(`/project-stages/${projectId}/views/tree`, { params }),
+      api.get(`/projects/project-stages/${projectId}/views/tree`, { params }),
   },
 
   // ==================== 阶段状态管理 ====================
@@ -54,13 +54,13 @@ export const stageViewsApi = {
      * 获取项目阶段进度
      */
     getProgress: (projectId) =>
-      api.get(`/project-stages/${projectId}/progress`),
+      api.get(`/projects/project-stages/${projectId}/progress`),
 
     /**
      * 获取阶段详情
      */
     getDetail: (stageInstanceId) =>
-      api.get(`/project-stages/stages/${stageInstanceId}`),
+      api.get(`/projects/project-stages/stages/${stageInstanceId}`),
 
     /**
      * 更新阶段状态
@@ -70,13 +70,13 @@ export const stageViewsApi = {
      * @param {string} data.remark - 备注
      */
     updateStatus: (stageInstanceId, data) =>
-      api.put(`/project-stages/stages/${stageInstanceId}/status`, data),
+      api.put(`/projects/project-stages/stages/${stageInstanceId}/status`, data),
 
     /**
      * 开始阶段
      */
     start: (stageInstanceId, actualStartDate) =>
-      api.post(`/project-stages/stages/${stageInstanceId}/start`, null, {
+      api.post(`/projects/project-stages/stages/${stageInstanceId}/start`, null, {
         params: actualStartDate ? { actual_start_date: actualStartDate } : {},
       }),
 
@@ -84,7 +84,7 @@ export const stageViewsApi = {
      * 完成阶段
      */
     complete: (stageInstanceId, actualEndDate, autoStartNext = true) =>
-      api.post(`/project-stages/stages/${stageInstanceId}/complete`, null, {
+      api.post(`/projects/project-stages/stages/${stageInstanceId}/complete`, null, {
         params: {
           actual_end_date: actualEndDate,
           auto_start_next: autoStartNext
@@ -95,7 +95,7 @@ export const stageViewsApi = {
      * 跳过阶段
      */
     skip: (stageInstanceId, reason) =>
-      api.post(`/project-stages/stages/${stageInstanceId}/skip`, null, {
+      api.post(`/projects/project-stages/stages/${stageInstanceId}/skip`, null, {
         params: reason ? { reason } : {},
       }),
 
@@ -107,7 +107,7 @@ export const stageViewsApi = {
      * @param {string} data.review_notes - 评审记录
      */
     submitReview: (stageInstanceId, data) =>
-      api.post(`/project-stages/stages/${stageInstanceId}/review`, data),
+      api.post(`/projects/project-stages/stages/${stageInstanceId}/review`, data),
   },
 
   // ==================== 节点管理 ====================
@@ -116,19 +116,19 @@ export const stageViewsApi = {
      * 开始节点
      */
     start: (nodeInstanceId) =>
-      api.post(`/project-stages/nodes/${nodeInstanceId}/start`),
+      api.post(`/projects/project-stages/nodes/${nodeInstanceId}/start`),
 
     /**
      * 完成节点
      */
     complete: (nodeInstanceId, data) =>
-      api.post(`/project-stages/nodes/${nodeInstanceId}/complete`, data),
+      api.post(`/projects/project-stages/nodes/${nodeInstanceId}/complete`, data),
 
     /**
      * 跳过节点
      */
     skip: (nodeInstanceId, reason) =>
-      api.post(`/project-stages/nodes/${nodeInstanceId}/skip`, null, {
+      api.post(`/projects/project-stages/nodes/${nodeInstanceId}/skip`, null, {
         params: reason ? { reason } : {},
       }),
 
@@ -136,13 +136,13 @@ export const stageViewsApi = {
      * 分配节点负责人
      */
     assign: (nodeInstanceId, data) =>
-      api.put(`/project-stages/nodes/${nodeInstanceId}/assign`, data),
+      api.put(`/projects/project-stages/nodes/${nodeInstanceId}/assign`, data),
 
     /**
      * 更新节点计划日期
      */
     updatePlannedDate: (nodeInstanceId, plannedDate) =>
-      api.put(`/project-stages/nodes/${nodeInstanceId}/planned-date`, null, {
+      api.put(`/projects/project-stages/nodes/${nodeInstanceId}/planned-date`, null, {
         params: { planned_date: plannedDate },
       }),
   },
@@ -163,6 +163,6 @@ export const stageViewsApi = {
      * 初始化项目阶段
      */
     initializeProject: (projectId, data) =>
-      api.post(`/project-stages/${projectId}/stages/initialize`, data),
+      api.post(`/projects/project-stages/${projectId}/stages/initialize`, data),
   },
 };

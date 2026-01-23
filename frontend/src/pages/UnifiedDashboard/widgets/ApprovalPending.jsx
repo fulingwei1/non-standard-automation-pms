@@ -82,13 +82,13 @@ function ApprovalItem({ approval, index, onClick }) {
       onClick={() => onClick?.(approval)}
       className={cn(
         'flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors',
-        'hover:bg-muted/50',
-        approval.urgent && 'bg-orange-50/50'
+        'hover:bg-white/5',
+        approval.urgent && 'bg-orange-500/10'
       )}
     >
       {/* 类型图标 */}
-      <div className="p-2 rounded-md bg-muted">
-        <Icon className="h-4 w-4 text-muted-foreground" />
+      <div className="p-2 rounded-md bg-white/5">
+        <Icon className="h-4 w-4 text-slate-400" />
       </div>
 
       {/* 审批内容 */}
@@ -108,7 +108,7 @@ function ApprovalItem({ approval, index, onClick }) {
         </div>
       </div>
 
-      <ChevronRight className="h-4 w-4 text-muted-foreground mt-1" />
+      <ChevronRight className="h-4 w-4 text-slate-500 mt-1" />
     </motion.div>
   );
 }
@@ -184,7 +184,7 @@ export default function ApprovalPending({ limit = 5, data }) {
         {loading ? (
           <div className="space-y-2">
             {[...Array(limit)].map((_, i) => (
-              <div key={i} className="h-14 bg-muted/50 rounded-lg animate-pulse" />
+              <div key={i} className="h-14 bg-white/5 rounded-lg animate-pulse" />
             ))}
           </div>
         ) : approvals.length === 0 ? (

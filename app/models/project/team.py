@@ -13,7 +13,6 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
-    UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
 
@@ -77,7 +76,7 @@ class ProjectMember(Base, TimestampMixin):
 
     # 关系
     project = relationship("Project", back_populates="members")
-    user = relationship("User", foreign_keys=[user_id])
+    user = relationship("User", foreign_keys=[user_id], back_populates="project_memberships")
     role_type = relationship("ProjectRoleType", foreign_keys=[role_type_id])
     machine = relationship("Machine", foreign_keys=[machine_id])
     lead = relationship("ProjectMember", remote_side=[id], foreign_keys=[lead_member_id])

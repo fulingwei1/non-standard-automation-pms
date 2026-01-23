@@ -404,10 +404,11 @@ export default function MaterialTracking() {
 
   const filteredMaterials = useMemo(() => {
     return materials.filter((m) => {
-      const matchSearch =
-      m.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      m.code.toLowerCase().includes(searchText.toLowerCase()) ||
-      m.supplier.toLowerCase().includes(searchText.toLowerCase());
+      const searchLower = (searchText || "").toLowerCase();
+    const matchSearch =
+      (m.name || "").toLowerCase().includes(searchLower) ||
+      (m.code || "").toLowerCase().includes(searchLower) ||
+      (m.supplier || "").toLowerCase().includes(searchLower);
 
       const matchStatus = filterStatus === "all" || m.status === filterStatus;
 

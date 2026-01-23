@@ -56,7 +56,7 @@ export const roleApi = {
   update: (id, data) => api.put(`/roles/${id}`, data),
   delete: (id) => api.delete(`/roles/${id}`),
   assignPermissions: (id, permissionIds) =>
-    api.put(`/roles/${id}/permissions`, permissionIds),
+    api.put(`/roles/${id}/permissions`, { permission_ids: permissionIds }),
   permissions: (params) => api.get("/roles/permissions", { params }),
   // 菜单配置相关
   getNavGroups: (id) => api.get(`/roles/${id}/nav-groups`),

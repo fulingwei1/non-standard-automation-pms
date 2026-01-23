@@ -20,10 +20,11 @@ from . import batch, data_scope, inheritance, permissions, role_crud, role_detai
 router = APIRouter()
 
 # 聚合所有子路由
+# 重要：特殊路径（不含路径参数的）必须放在动态路径（含{role_id}等）之前
+router.include_router(inheritance.router, tags=["角色管理"])
 router.include_router(role_crud.router, tags=["角色管理"])
 router.include_router(permissions.router, tags=["角色管理"])
 router.include_router(role_detail.router, tags=["角色管理"])
-router.include_router(inheritance.router, tags=["角色管理"])
 router.include_router(data_scope.router, tags=["角色管理"])
 router.include_router(batch.router, tags=["角色管理"])
 

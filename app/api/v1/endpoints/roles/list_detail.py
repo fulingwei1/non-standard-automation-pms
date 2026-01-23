@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.user import Permission, Role, User
+from app.models.user import Role, User
 from app.schemas.auth import PermissionResponse, RoleResponse
 from app.schemas.common import PaginatedResponse
 
@@ -121,6 +121,7 @@ def read_roles(
                     if role.is_active is not None
                     else True,
                     permissions=permissions,
+                    permission_count=len(permissions),  # 添加权限计数
                     created_at=role.created_at,
                     updated_at=role.updated_at,
                 )

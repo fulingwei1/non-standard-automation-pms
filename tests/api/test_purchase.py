@@ -18,7 +18,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models.material import Supplier
+from app.models.vendor import Vendor
 from app.models.project import Project
 from app.models.purchase import PurchaseOrder, PurchaseRequest
 
@@ -50,7 +50,7 @@ class TestPurchaseOrderCRUD:
         if not admin_token:
             pytest.skip("Admin token not available")
 
-        supplier = db_session.query(Supplier).first()
+        supplier = db_session.query(Vendor).filter(Vendor.vendor_type == "MATERIAL").first()
         if not supplier:
             pytest.skip("No supplier available for testing")
 
@@ -207,7 +207,7 @@ class TestPurchaseOrderFilters:
         if not admin_token:
             pytest.skip("Admin token not available")
 
-        supplier = db_session.query(Supplier).first()
+        supplier = db_session.query(Vendor).filter(Vendor.vendor_type == "MATERIAL").first()
         if not supplier:
             pytest.skip("No supplier available for testing")
 
@@ -330,7 +330,7 @@ class TestPurchaseOrderApproval:
             pytest.skip("Admin token not available")
 
         # 创建一个没有明细的订单
-        supplier = db_session.query(Supplier).first()
+        supplier = db_session.query(Vendor).filter(Vendor.vendor_type == "MATERIAL").first()
         if not supplier:
             pytest.skip("No supplier available for testing")
 

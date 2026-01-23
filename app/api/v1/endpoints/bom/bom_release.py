@@ -12,7 +12,8 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.material import BomHeader, Supplier
+from app.models.material import BomHeader
+from app.models.vendor import Vendor
 from app.models.project import Machine, Project
 from app.models.user import User
 from app.schemas.common import ResponseModel
@@ -102,7 +103,7 @@ def release_bom(
                 supplier_name = "未指定供应商"
                 if supplier_id and supplier_id != 0:
                     supplier = (
-                        db.query(Supplier).filter(Supplier.id == supplier_id).first()
+                        db.query(Vendor).filter(Vendor.id == supplier_id, Vendor.vendor_type == 'MATERIAL').first()
                     )
                     if supplier:
                         supplier_name = supplier.supplier_name

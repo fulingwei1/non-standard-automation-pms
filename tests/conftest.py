@@ -96,7 +96,7 @@ def _init_test_database() -> None:
         TemplateCheckItem,
     )
     from app.models.base import get_session, init_db
-    from app.models.material import Supplier
+    from app.models.vendor import Vendor
 
     init_db(drop_all=True)
 
@@ -123,13 +123,15 @@ def _init_test_database() -> None:
         db.add(customer)
         db.flush()
 
-        supplier = Supplier(
+        from app.models.vendor import Vendor
+        supplier = Vendor(
             supplier_code="SUP-TEST",
             supplier_name="测试供应商",
-            supplier_type="VENDOR",
+            vendor_type="MATERIAL",
             contact_person="供应商联系人",
             contact_phone="13900000000",
             status="ACTIVE",
+            created_by=admin.id,
         )
         db.add(supplier)
         db.flush()

@@ -101,9 +101,9 @@ function StatItem({ stat, index }) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="flex items-center gap-3 p-3 rounded-lg bg-muted/50"
+      className="flex items-center gap-3 p-3 rounded-lg bg-white/5"
     >
-      <div className="p-2 rounded-md bg-primary/10">
+      <div className="p-2 rounded-md bg-primary/20">
         <Icon className="h-4 w-4 text-primary" />
       </div>
       <div className="flex-1 min-w-0">
@@ -113,8 +113,8 @@ function StatItem({ stat, index }) {
       {stat.trend !== 0 && (
         <div className={cn(
           'flex items-center text-xs',
-          isPositive && 'text-green-600',
-          isNegative && 'text-red-600'
+          isPositive && 'text-emerald-400',
+          isNegative && 'text-red-400'
         )}>
           {isPositive ? (
             <TrendingUp className="h-3 w-3 mr-1" />
@@ -186,7 +186,7 @@ export default function StatsCard({ type = 'sales', metrics, data }) {
         {loading ? (
           <div className="grid grid-cols-2 gap-2">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-16 bg-muted/50 rounded-lg animate-pulse" />
+              <div key={i} className="h-16 bg-white/5 rounded-lg animate-pulse" />
             ))}
           </div>
         ) : (

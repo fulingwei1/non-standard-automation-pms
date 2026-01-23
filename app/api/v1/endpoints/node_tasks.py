@@ -59,6 +59,34 @@ def create_task(
         raise HTTPException(status_code=400, detail=str(e))
 
 
+# ==================== 用户任务查询 ====================
+# 注意：固定路径必须在参数化路径之前，否则会被参数化路径匹配
+
+
+@router.get("/my-tasks", response_model=List[NodeTaskResponse])
+def get_my_tasks(
+    project_id: Optional[int] = Query(None, description="项目ID筛选"),
+    status: Optional[str] = Query(None, description="状态筛选"),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_user),
+) -> Any:
+    """获取当前用户的任务列表"""
+    service = NodeTaskService(db)
+    return service.get_user_tasks(current_user.id, project_id, status)
+
+
+@router.get("/user/{user_id}", response_model=List[NodeTaskResponse])
+def get_user_tasks(
+    user_id: int,
+    project_id: Optional[int] = Query(None, description="项目ID筛选"),
+    status: Optional[str] = Query(None, description="状态筛选"),
+    db: Session = Depends(deps.get_db),
+) -> Any:
+    """获取用户的任务列表（跨节点）"""
+    service = NodeTaskService(db)
+    return service.get_user_tasks(user_id, project_id, status)
+
+
 @router.get("/{task_id}", response_model=NodeTaskResponse)
 def get_task(
     task_id: int,
@@ -259,30 +287,3 @@ def set_task_priority(
         return task
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
-# ==================== 用户任务查询 ====================
-
-
-@router.get("/user/{user_id}", response_model=List[NodeTaskResponse])
-def get_user_tasks(
-    user_id: int,
-    project_id: Optional[int] = Query(None, description="项目ID筛选"),
-    status: Optional[str] = Query(None, description="状态筛选"),
-    db: Session = Depends(deps.get_db),
-) -> Any:
-    """获取用户的任务列表（跨节点）"""
-    service = NodeTaskService(db)
-    return service.get_user_tasks(user_id, project_id, status)
-
-
-@router.get("/my-tasks", response_model=List[NodeTaskResponse])
-def get_my_tasks(
-    project_id: Optional[int] = Query(None, description="项目ID筛选"),
-    status: Optional[str] = Query(None, description="状态筛选"),
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_user),
-) -> Any:
-    """获取当前用户的任务列表"""
-    service = NodeTaskService(db)
-    return service.get_user_tasks(current_user.id, project_id, status)

@@ -13,7 +13,8 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_active_user, get_db
 from app.core.config import settings
-from app.models.material import BomHeader, Supplier
+from app.models.material import BomHeader
+from app.models.vendor import Vendor
 from app.models.purchase import (
     PurchaseOrder,
     PurchaseOrderItem,
@@ -93,7 +94,7 @@ def create_purchase_order(
     supplier_id = payload.get("supplier_id")
     if not supplier_id:
         raise HTTPException(status_code=422, detail="supplier_id 必填")
-    supplier = db.query(Supplier).filter(Supplier.id == supplier_id).first()
+    supplier = db.query(Vendor).filter(Vendor.id == supplier_id, Vendor.vendor_type == 'MATERIAL').first()
     if not supplier:
         raise HTTPException(status_code=404, detail="供应商不存在")
 

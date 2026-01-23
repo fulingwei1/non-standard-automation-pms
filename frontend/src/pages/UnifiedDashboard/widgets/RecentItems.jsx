@@ -51,17 +51,17 @@ function RecentItem({ item, index, onClick }) {
       onClick={() => onClick?.(item)}
       className={cn(
         'flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors',
-        'hover:bg-muted/50'
+        'hover:bg-white/5'
       )}
     >
-      <div className="p-2 rounded-md bg-muted">
-        <Icon className="h-4 w-4 text-muted-foreground" />
+      <div className="p-2 rounded-md bg-white/5">
+        <Icon className="h-4 w-4 text-slate-400" />
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{item.title}</p>
         <p className="text-xs text-muted-foreground">{item.time}</p>
       </div>
-      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+      <ChevronRight className="h-4 w-4 text-slate-500" />
     </motion.div>
   );
 }
@@ -119,7 +119,7 @@ export default function RecentItems({ type, limit = 5, data }) {
         {loading ? (
           <div className="space-y-2">
             {[...Array(limit)].map((_, i) => (
-              <div key={i} className="h-12 bg-muted/50 rounded-lg animate-pulse" />
+              <div key={i} className="h-12 bg-white/5 rounded-lg animate-pulse" />
             ))}
           </div>
         ) : items.length === 0 ? (

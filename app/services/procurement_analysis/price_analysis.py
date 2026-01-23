@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.models.material import Material, MaterialCategory
 from app.models.purchase import PurchaseOrder, PurchaseOrderItem
-from app.models.material import Supplier
+from app.models.vendor import Vendor
 
 
 class PriceAnalyzer:
@@ -35,14 +35,14 @@ class PriceAnalyzer:
             PurchaseOrderItem.material_name,
             PurchaseOrderItem.unit_price,
             PurchaseOrder.order_date,
-            Supplier.supplier_name,
-            Supplier.id.label('supplier_id'),
+            Vendor.supplier_name,
+            Vendor.id.label('supplier_id'),
             MaterialCategory.category_name,
             Material.standard_price
         ).join(
             PurchaseOrder, PurchaseOrderItem.order_id == PurchaseOrder.id
         ).join(
-            Supplier, PurchaseOrder.supplier_id == Supplier.id
+            Vendor, PurchaseOrder.supplier_id == Vendor.id
         ).outerjoin(
             Material, Material.material_code == PurchaseOrderItem.material_code
         ).outerjoin(

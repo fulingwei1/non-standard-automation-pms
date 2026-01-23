@@ -672,10 +672,11 @@ export default function PresalesTasks() {
     const matchesType = selectedType === "all" || task.type === selectedType;
     const matchesStatus =
     selectedStatus === "all" || task.status === selectedStatus;
+    const searchLower = (searchTerm || "").toLowerCase();
     const matchesSearch =
-    task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    task.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    task.description.toLowerCase().includes(searchTerm.toLowerCase());
+    (task.title || "").toLowerCase().includes(searchLower) ||
+    (task.customer || "").toLowerCase().includes(searchLower) ||
+    (task.description || "").toLowerCase().includes(searchLower);
     return matchesType && matchesStatus && matchesSearch;
   });
 

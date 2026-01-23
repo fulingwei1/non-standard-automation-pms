@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { PageHeader } from "../components/layout";
 import { Card, CardContent } from "../components/ui/card";
 import { formatDate } from "../lib/utils";
-import { ecnApi, projectApi } from "../services/api";
+import { ecnApi, projectApi, memberApi, machineApi } from "../services/api";
 import {
   ECNBatchActions,
   ECNCreateDialog,
@@ -28,6 +28,8 @@ export default function ECNManagement() {
   const [loading, setLoading] = useState(true);
   const [ecns, setEcns] = useState([]);
   const [projects, setProjects] = useState([]);
+  const [userProjects, setUserProjects] = useState([]); // 用户参与的项目
+  const [userMachines, setUserMachines] = useState([]); // 用户参与项目的设备
 
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filterProject, setFilterProject] = useState("");
@@ -50,9 +52,68 @@ export default function ECNManagement() {
   const fetchProjects = async () => {
     try {
       const res = await projectApi.list({ page_size: 1000 });
-      setProjects(res.data?.items || res.data || []);
+      const allProjects = res.data?.items || res.data || [];
+      setProjects(allProjects);
+
+      // 获取用户参与的项目
+      await fetchUserProjects(allProjects);
     } catch (error) {
       console.error("Failed to fetch projects:", error);
+    }
+  };
+
+  // 获取当前用户参与的项目及其设备
+  const fetchUserProjects = async (allProjects) => {
+    try {
+      const userStr = localStorage.getItem("user");
+      if (!userStr) return;
+
+      const user = JSON.parse(userStr);
+      const userId = user?.id;
+      if (!userId) return;
+
+      // 获取每个项目的成员，筛选出用户参与的项目
+      const userProjectIds = [];
+      for (const project of allProjects) {
+        try {
+          const membersRes = await memberApi.list({ project_id: project.id });
+          const members = membersRes.data?.items || membersRes.data || [];
+          const isMember = members.some(m => m.user_id === userId);
+          if (isMember) {
+            userProjectIds.push(project.id);
+          }
+        } catch (error) {
+          // 忽略单个项目的成员获取失败
+        }
+      }
+
+      // 筛选用户参与的项目
+      const filteredProjects = allProjects.filter(p => userProjectIds.includes(p.id));
+      setUserProjects(filteredProjects);
+
+      // 获取这些项目的设备
+      await fetchUserMachines(filteredProjects);
+    } catch (error) {
+      console.error("Failed to fetch user projects:", error);
+    }
+  };
+
+  // 获取用户参与项目的设备
+  const fetchUserMachines = async (projects) => {
+    try {
+      const allMachines = [];
+      for (const project of projects) {
+        try {
+          const machinesRes = await projectApi.getMachines(project.id);
+          const machines = machinesRes.data?.items || machinesRes.data || [];
+          allMachines.push(...machines);
+        } catch (error) {
+          // 忽略单个项目的设备获取失败
+        }
+      }
+      setUserMachines(allMachines);
+    } catch (error) {
+      console.error("Failed to fetch user machines:", error);
     }
   };
 
@@ -260,7 +321,8 @@ export default function ECNManagement() {
       <ECNCreateDialog
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
-        projects={projects}
+        projects={userProjects.length > 0 ? userProjects : projects}
+        machines={userMachines}
         onCreateECN={handleCreateECN}
       />
     </div>

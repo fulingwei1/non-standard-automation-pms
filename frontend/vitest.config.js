@@ -11,6 +11,10 @@ export default mergeConfig(
       setupFiles: ["./src/test/setupTests.js"],
       css: true,
       include: ["src/**/*.{test,spec}.{js,jsx,ts,tsx}"],
+      // 支持.tsx文件中的JSX语法
+      transformMode: {
+        web: [/\.[jt]sx?$/],
+      },
       exclude: [...configDefaults.exclude, "e2e/**"],
       coverage: {
         provider: "v8",

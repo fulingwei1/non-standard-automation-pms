@@ -156,7 +156,8 @@ const CustomerSatisfaction = () => {
   // 过滤数据
   const filteredSurveys = useMemo(() => {
     return surveys.filter((survey) => {
-      const matchesSearch = survey.title.toLowerCase().includes(searchText.toLowerCase());
+      const searchLower = (searchText || "").toLowerCase();
+    const matchesSearch = (survey.title || "").toLowerCase().includes(searchLower);
       const matchesType = !filters.surveyType || survey.type === filters.surveyType;
       const matchesStatus = !filters.status || survey.status === filters.status;
 

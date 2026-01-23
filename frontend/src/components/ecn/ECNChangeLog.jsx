@@ -33,7 +33,7 @@ export function ECNChangeLog({
   loading: _loading
 }) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState("");
+  const [filterType, setFilterType] = useState("__all__");
   const [filterDateRange, setFilterDateRange] = useState("all");
 
   const filteredLogs = logs.filter((log) => {
@@ -139,7 +139,7 @@ export function ECNChangeLog({
                 <SelectValue placeholder="日志类型" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部类型</SelectItem>
+                <SelectItem value="__all__">全部类型</SelectItem>
                 {Object.entries(logTypeConfigs).map(([key, config]) =>
                 <SelectItem key={key} value={key}>
                     {config.icon} {config.label}

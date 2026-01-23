@@ -24,10 +24,10 @@ import { cn } from '../../../lib/utils';
 
 // 优先级颜色映射
 const priorityColors = {
-  high: 'bg-red-100 text-red-700 border-red-200',
-  medium: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-  low: 'bg-green-100 text-green-700 border-green-200',
-  normal: 'bg-blue-100 text-blue-700 border-blue-200',
+  high: 'bg-red-500/20 text-red-400 border-red-500/30',
+  medium: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+  low: 'bg-green-500/20 text-green-400 border-green-500/30',
+  normal: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
 };
 
 // 默认任务数据
@@ -81,8 +81,8 @@ function TaskItem({ task, index, onClick }) {
       onClick={() => onClick?.(task)}
       className={cn(
         'flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors',
-        'hover:bg-muted/50',
-        isOverdue && 'bg-red-50/50'
+        'hover:bg-white/5',
+        isOverdue && 'bg-red-500/10'
       )}
     >
       {/* 状态图标 */}
@@ -159,7 +159,7 @@ export default function TaskList({ filter, limit = 5, data }) {
         // 否则尝试从 API 获取
         try {
           const params = filter ? { filter } : {};
-          const response = await api.get('/tasks/my-tasks', { params });
+          const response = await api.get('/node-tasks/my-tasks', { params });
           if (response.data?.items) {
             setTasks(response.data.items.slice(0, limit));
             return;
@@ -208,7 +208,7 @@ export default function TaskList({ filter, limit = 5, data }) {
         {loading ? (
           <div className="space-y-2">
             {[...Array(limit)].map((_, i) => (
-              <div key={i} className="h-14 bg-muted/50 rounded-lg animate-pulse" />
+              <div key={i} className="h-14 bg-white/5 rounded-lg animate-pulse" />
             ))}
           </div>
         ) : tasks.length === 0 ? (

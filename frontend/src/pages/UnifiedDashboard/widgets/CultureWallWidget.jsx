@@ -60,9 +60,9 @@ export default function CultureWallWidget() {
 
   return (
     <Card className="border shadow-sm overflow-hidden">
-      <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 border-b pb-3">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Megaphone className="w-5 h-5 text-orange-500" />
+      <CardHeader className="bg-gradient-to-r from-amber-900/30 to-orange-900/30 border-b border-white/10 pb-3">
+        <CardTitle className="text-lg flex items-center gap-2 text-white">
+          <Megaphone className="w-5 h-5 text-orange-400" />
           企业文化墙
         </CardTitle>
       </CardHeader>
@@ -70,8 +70,8 @@ export default function CultureWallWidget() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* 左侧：核心价值观 */}
           <div className="space-y-3">
-            <h4 className="font-medium text-sm text-gray-600 flex items-center gap-1">
-              <Star className="w-4 h-4 text-amber-500" />
+            <h4 className="font-medium text-sm text-slate-400 flex items-center gap-1">
+              <Star className="w-4 h-4 text-amber-400" />
               核心价值观
             </h4>
             <div className="grid grid-cols-2 gap-2">
@@ -80,11 +80,11 @@ export default function CultureWallWidget() {
                 return (
                   <div
                     key={index}
-                    className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-2 text-center hover:shadow-sm transition-shadow"
+                    className="bg-gradient-to-br from-indigo-900/40 to-violet-900/40 rounded-lg p-2 text-center hover:shadow-sm hover:shadow-primary/10 transition-shadow border border-white/5"
                   >
-                    <IconComponent className="w-5 h-5 mx-auto text-indigo-500 mb-1" />
-                    <div className="text-xs font-medium text-gray-800">{value.title}</div>
-                    <div className="text-xs text-gray-500 mt-0.5">{value.desc}</div>
+                    <IconComponent className="w-5 h-5 mx-auto text-indigo-400 mb-1" />
+                    <div className="text-xs font-medium text-slate-200">{value.title}</div>
+                    <div className="text-xs text-slate-500 mt-0.5">{value.desc}</div>
                   </div>
                 );
               })}
@@ -95,25 +95,25 @@ export default function CultureWallWidget() {
           <div className="space-y-3">
             {/* 近期公告 */}
             <div>
-              <h4 className="font-medium text-sm text-gray-600 flex items-center gap-1 mb-2">
-                <Megaphone className="w-4 h-4 text-orange-500" />
+              <h4 className="font-medium text-sm text-slate-400 flex items-center gap-1 mb-2">
+                <Megaphone className="w-4 h-4 text-orange-400" />
                 近期公告
               </h4>
               <div className="space-y-1.5">
                 {cultureData.announcements.slice(0, 3).map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between text-sm hover:bg-gray-50 rounded px-2 py-1 cursor-pointer group"
+                    className="flex items-center justify-between text-sm hover:bg-white/5 rounded px-2 py-1 cursor-pointer group"
                   >
                     <div className="flex items-center gap-2 truncate">
                       {item.isNew && (
-                        <span className="bg-red-500 text-white text-xs px-1 rounded">NEW</span>
+                        <span className="bg-red-500/80 text-white text-xs px-1 rounded">NEW</span>
                       )}
-                      <span className="truncate text-gray-700 group-hover:text-blue-600">
+                      <span className="truncate text-slate-300 group-hover:text-primary">
                         {item.title}
                       </span>
                     </div>
-                    <span className="text-xs text-gray-400 flex-shrink-0">{item.date}</span>
+                    <span className="text-xs text-slate-500 flex-shrink-0">{item.date}</span>
                   </div>
                 ))}
               </div>
@@ -121,18 +121,18 @@ export default function CultureWallWidget() {
 
             {/* 荣誉展示 */}
             <div>
-              <h4 className="font-medium text-sm text-gray-600 flex items-center gap-1 mb-2">
-                <Award className="w-4 h-4 text-yellow-500" />
+              <h4 className="font-medium text-sm text-slate-400 flex items-center gap-1 mb-2">
+                <Award className="w-4 h-4 text-yellow-400" />
                 荣誉展示
               </h4>
               <div className="space-y-1.5">
                 {cultureData.honors.map((honor) => (
                   <div
                     key={honor.id}
-                    className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded px-2 py-1.5"
+                    className="bg-gradient-to-r from-yellow-900/20 to-amber-900/20 rounded px-2 py-1.5 border border-white/5"
                   >
-                    <div className="text-sm font-medium text-gray-800">{honor.title}</div>
-                    <div className="text-xs text-gray-500">{honor.source}</div>
+                    <div className="text-sm font-medium text-slate-200">{honor.title}</div>
+                    <div className="text-xs text-slate-500">{honor.source}</div>
                   </div>
                 ))}
               </div>
@@ -141,11 +141,11 @@ export default function CultureWallWidget() {
 
           {/* 右侧：员工风采轮播 */}
           <div className="space-y-3">
-            <h4 className="font-medium text-sm text-gray-600 flex items-center gap-1">
-              <Users className="w-4 h-4 text-green-500" />
+            <h4 className="font-medium text-sm text-slate-400 flex items-center gap-1">
+              <Users className="w-4 h-4 text-emerald-400" />
               员工风采
             </h4>
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-3 min-h-[120px] relative">
+            <div className="bg-gradient-to-br from-emerald-900/30 to-green-900/30 rounded-lg p-3 min-h-[120px] relative border border-white/5">
               {cultureData.employeeHighlights.map((employee, index) => (
                 <div
                   key={employee.id}
@@ -155,15 +155,15 @@ export default function CultureWallWidget() {
                   )}
                 >
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-10 h-10 bg-green-200 rounded-full flex items-center justify-center text-green-700 font-medium">
+                    <div className="w-10 h-10 bg-emerald-700/50 rounded-full flex items-center justify-center text-emerald-300 font-medium border border-emerald-500/30">
                       {employee.name.charAt(0)}
                     </div>
                     <div>
-                      <div className="font-medium text-gray-800">{employee.name}</div>
-                      <div className="text-xs text-gray-500">{employee.dept}</div>
+                      <div className="font-medium text-slate-200">{employee.name}</div>
+                      <div className="text-xs text-slate-500">{employee.dept}</div>
                     </div>
                   </div>
-                  <div className="text-sm text-gray-600 bg-white/60 rounded p-2">
+                  <div className="text-sm text-slate-300 bg-white/5 rounded p-2 border border-white/5">
                     {employee.achievement}
                   </div>
                 </div>
@@ -176,13 +176,13 @@ export default function CultureWallWidget() {
                     onClick={() => setCurrentHighlight(index)}
                     className={cn(
                       'w-1.5 h-1.5 rounded-full transition-colors',
-                      index === currentHighlight ? 'bg-green-500' : 'bg-green-200'
+                      index === currentHighlight ? 'bg-emerald-400' : 'bg-emerald-800'
                     )}
                   />
                 ))}
               </div>
             </div>
-            <button className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 justify-end w-full">
+            <button className="text-xs text-primary hover:text-primary-light flex items-center gap-1 justify-end w-full">
               查看更多员工故事 <ChevronRight className="w-3 h-3" />
             </button>
           </div>

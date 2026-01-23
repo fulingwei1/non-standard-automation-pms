@@ -8,7 +8,8 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.material import Material, MaterialSupplier, Supplier
+from app.models.material import Material, MaterialSupplier
+from app.models.vendor import Vendor
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.material import (
@@ -34,29 +35,29 @@ def read_suppliers(
     """
     获取供应商列表（支持分页、搜索、筛选）
     """
-    query = db.query(Supplier)
+    query = db.query(Vendor).filter(Vendor.vendor_type == 'MATERIAL')
 
     # 关键词搜索
     if keyword:
         query = query.filter(
             or_(
-                Supplier.supplier_name.contains(keyword),
-                Supplier.supplier_code.contains(keyword),
-                Supplier.supplier_short_name.contains(keyword),
+                Vendor.supplier_name.contains(keyword),
+                Vendor.supplier_code.contains(keyword),
+                Vendor.supplier_short_name.contains(keyword),
             )
         )
 
     # 供应商类型筛选
     if supplier_type:
-        query = query.filter(Supplier.supplier_type == supplier_type)
+        query = query.filter(Vendor.supplier_type == supplier_type)
 
     # 状态筛选
     if status:
-        query = query.filter(Supplier.status == status)
+        query = query.filter(Vendor.status == status)
 
     # 等级筛选
     if supplier_level:
-        query = query.filter(Supplier.supplier_level == supplier_level)
+        query = query.filter(Vendor.supplier_level == supplier_level)
 
     # 总数 - 使用独立的查询避免连接问题
     total = query.count()
@@ -66,26 +67,26 @@ def read_suppliers(
     page_size_int = max(1, int(page_size))
 
     # 重新构建查询对象以避免 SQLite 连接问题
-    suppliers_query = db.query(Supplier)
+    suppliers_query = db.query(Vendor).filter(Vendor.vendor_type == 'MATERIAL')
 
     # 重新应用所有筛选条件
     if keyword:
         suppliers_query = suppliers_query.filter(
             or_(
-                Supplier.supplier_name.contains(keyword),
-                Supplier.supplier_code.contains(keyword),
-                Supplier.supplier_short_name.contains(keyword),
+                Vendor.supplier_name.contains(keyword),
+                Vendor.supplier_code.contains(keyword),
+                Vendor.supplier_short_name.contains(keyword),
             )
         )
     if supplier_type:
-        suppliers_query = suppliers_query.filter(Supplier.supplier_type == supplier_type)
+        suppliers_query = suppliers_query.filter(Vendor.supplier_type == supplier_type)
     if status:
-        suppliers_query = suppliers_query.filter(Supplier.status == status)
+        suppliers_query = suppliers_query.filter(Vendor.status == status)
     if supplier_level:
-        suppliers_query = suppliers_query.filter(Supplier.supplier_level == supplier_level)
+        suppliers_query = suppliers_query.filter(Vendor.supplier_level == supplier_level)
 
     # 应用排序和分页
-    suppliers_query = suppliers_query.order_by(desc(Supplier.created_at))
+    suppliers_query = suppliers_query.order_by(desc(Vendor.created_at))
     if offset > 0:
         suppliers_query = suppliers_query.offset(offset)
     suppliers = suppliers_query.limit(page_size_int).all()
@@ -134,7 +135,7 @@ def read_supplier(
     """
     获取供应商详情
     """
-    supplier = db.query(Supplier).filter(Supplier.id == supplier_id).first()
+    supplier = db.query(Vendor).filter(Vendor.id == supplier_id, Vendor.vendor_type == 'MATERIAL').first()
     if not supplier:
         raise HTTPException(status_code=404, detail="供应商不存在")
     return supplier
@@ -152,8 +153,8 @@ def create_supplier(
     """
     # 检查供应商编码是否已存在
     supplier = (
-        db.query(Supplier)
-        .filter(Supplier.supplier_code == supplier_in.supplier_code)
+        db.query(Vendor).filter(Vendor.vendor_type == 'MATERIAL')
+        .filter(Vendor.supplier_code == supplier_in.supplier_code)
         .first()
     )
     if supplier:
@@ -162,7 +163,7 @@ def create_supplier(
             detail="该供应商编码已存在",
         )
 
-    supplier = Supplier(**supplier_in.model_dump())
+    supplier = Vendor(**supplier_in.model_dump(), vendor_type='MATERIAL')
     supplier.created_by = current_user.id
     db.add(supplier)
     db.commit()
@@ -181,7 +182,7 @@ def update_supplier(
     """
     更新供应商信息
     """
-    supplier = db.query(Supplier).filter(Supplier.id == supplier_id).first()
+    supplier = db.query(Vendor).filter(Vendor.id == supplier_id, Vendor.vendor_type == 'MATERIAL').first()
     if not supplier:
         raise HTTPException(status_code=404, detail="供应商不存在")
 
@@ -208,7 +209,7 @@ def update_supplier_rating(
     """
     更新供应商评级
     """
-    supplier = db.query(Supplier).filter(Supplier.id == supplier_id).first()
+    supplier = db.query(Vendor).filter(Vendor.id == supplier_id, Vendor.vendor_type == 'MATERIAL').first()
     if not supplier:
         raise HTTPException(status_code=404, detail="供应商不存在")
 
@@ -261,7 +262,7 @@ def get_supplier_materials(
     """
     获取供应商的物料列表
     """
-    supplier = db.query(Supplier).filter(Supplier.id == supplier_id).first()
+    supplier = db.query(Vendor).filter(Vendor.id == supplier_id, Vendor.vendor_type == 'MATERIAL').first()
     if not supplier:
         raise HTTPException(status_code=404, detail="供应商不存在")
 

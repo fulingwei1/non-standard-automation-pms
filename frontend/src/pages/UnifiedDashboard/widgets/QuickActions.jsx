@@ -76,7 +76,7 @@ function ActionButton({ action, index, onClick }) {
     >
       <Button
         variant="outline"
-        className="flex flex-col items-center justify-center h-20 w-full gap-2 hover:bg-muted/50"
+        className="flex flex-col items-center justify-center h-20 w-full gap-2 hover:bg-white/5"
         onClick={() => onClick(action)}
       >
         <div className={cn('p-2 rounded-md', action.color)}>

@@ -41,6 +41,11 @@ export function ECNCreateDialog({
   const [formData, setFormData] = useState(defaultECNForm);
   const [errors, setErrors] = useState({});
 
+  // 根据选择的项目过滤设备
+  const filteredMachines = formData.project_id
+    ? machines.filter(m => m.project_id === formData.project_id)
+    : machines;
+
   // 重置表单
   const resetForm = () => {
     setFormData(defaultECNForm);
@@ -53,6 +58,19 @@ export function ECNCreateDialog({
       resetForm();
     }
   }, [open]);
+
+  // 项目变化时，清空设备选择（如果设备不属于新项目）
+  useEffect(() => {
+    if (formData.project_id && formData.machine_id) {
+      const machineInProject = machines.find(
+        m => m.id === formData.machine_id && m.project_id === formData.project_id
+      );
+      if (!machineInProject) {
+        setFormData(prev => ({ ...prev, machine_id: null }));
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.project_id]);
 
   // 表单验证
   const validateForm = () => {
@@ -228,8 +246,8 @@ export function ECNCreateDialog({
                         <SelectValue placeholder="选择设备（可选）" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">无关联设备</SelectItem>
-                        {machines.map((machine) => (
+                        <SelectItem value="__none__">无关联设备</SelectItem>
+                        {filteredMachines.map((machine) => (
                           <SelectItem key={machine.id} value={machine.id.toString()}>
                             {machine.machine_name}
                           </SelectItem>

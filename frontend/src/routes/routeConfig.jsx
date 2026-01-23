@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import {
   DashboardRoutes,
   ProjectRoutes,
@@ -10,7 +10,9 @@ import {
   PresalesRoutes,
   PMORoutes,
   SystemRoutes,
-  StrategyRoutes
+  StrategyRoutes,
+  WarehouseRoutes,
+  QualityRoutes
 } from "./modules";
 
 export function AppRoutes() {
@@ -27,6 +29,10 @@ export function AppRoutes() {
       {PMORoutes()}
       {SystemRoutes()}
       {StrategyRoutes()}
+      {WarehouseRoutes()}
+      {QualityRoutes()}
+      {/* Catch-all route for unmatched paths */}
+      <Route path="*" element={<Navigate to="/workstation/management" replace />} />
     </Routes>
   );
 }

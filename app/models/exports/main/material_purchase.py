@@ -11,6 +11,7 @@ from ...material import (
     MaterialSupplier,
     Supplier,
 )
+from ...vendor import Vendor
 from ...purchase import (
     GoodsReceipt,
     GoodsReceiptItem,
@@ -46,6 +47,7 @@ __all__ = [
     "Material",
     "MaterialCategory",
     "Supplier",
+    "Vendor",
     "MaterialSupplier",
     "BomHeader",
     "BomItem",

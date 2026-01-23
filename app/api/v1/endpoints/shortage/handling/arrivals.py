@@ -29,7 +29,8 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.material import Material, Supplier
+from app.models.material import Material
+from app.models.vendor import Vendor
 from app.models.purchase import PurchaseOrder
 from app.models.shortage import ArrivalFollowUp, MaterialArrival, ShortageReport
 from app.models.user import User
@@ -167,7 +168,7 @@ def create_arrival(
     # 如果提供了供应商ID，验证供应商存在
     supplier = None
     if arrival_in.supplier_id:
-        supplier = db.query(Supplier).filter(Supplier.id == arrival_in.supplier_id).first()
+        supplier = db.query(Vendor).filter(Vendor.id == arrival_in.supplier_id, Vendor.vendor_type == 'MATERIAL').first()
         if not supplier:
             raise HTTPException(status_code=404, detail="供应商不存在")
 

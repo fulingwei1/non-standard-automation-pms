@@ -3,6 +3,8 @@
 项目核心模型 - Project 和 Machine
 """
 
+from datetime import date
+
 from sqlalchemy import (
     Boolean,
     Column,
@@ -31,9 +33,12 @@ class Project(Base, TimestampMixin):
     project_name = Column(String(200), nullable=False, comment="项目名称")
     short_name = Column(String(50), comment="项目简称")
     customer_id = Column(Integer, ForeignKey("customers.id"), comment="客户ID")
-    customer_name = Column(String(200), comment="客户名称（冗余）")
-    customer_contact = Column(String(100), comment="客户联系人")
-    customer_phone = Column(String(50), comment="联系电话")
+    # ⚠️ 冗余字段：优先通过 customer 关联获取
+    # 保留原因：现有代码兼容性，避免大量 JOIN 查询
+    # 建议：新代码使用 project.customer.customer_name
+    customer_name = Column(String(200), comment="客户名称（冗余，建议使用 customer.name）")
+    customer_contact = Column(String(100), comment="客户联系人（冗余，建议使用 customer.contact_person）")
+    customer_phone = Column(String(50), comment="联系电话（冗余，建议使用 customer.contact_phone）")
     contract_no = Column(String(100), comment="合同编号（内部编号）")
     customer_contract_no = Column(String(100), comment="客户合同编号（外部编号）")
 
@@ -65,8 +70,10 @@ class Project(Base, TimestampMixin):
 
     # 人员
     pm_id = Column(Integer, ForeignKey("users.id"), comment="项目经理ID")
-    pm_name = Column(String(50), comment="项目经理姓名")
-    dept_id = Column(Integer, ForeignKey("departments.id"), comment="所属部门")
+    # ⚠️ 冗余字段：应通过 pm 关联获取
+    pm_name = Column(String(50), comment="项目经理姓名（冗余，建议使用 pm.real_name）")
+    # ⚠️ 命名不一致：dept_id 应改为 department_id 以保持一致性
+    dept_id = Column(Integer, ForeignKey("departments.id"), comment="所属部门（建议重命名为 department_id）")
 
     # 优先级与标签
     priority = Column(String(20), default="NORMAL", comment="优先级")
@@ -164,6 +171,12 @@ class Project(Base, TimestampMixin):
     node_instances = relationship(
         "ProjectNodeInstance", back_populates="project", lazy="dynamic"
     )
+    # 扩展模型关系（一对一）
+    financial_info = relationship("ProjectFinancial", back_populates="project", uselist=False)
+    erp_info = relationship("ProjectERP", back_populates="project", uselist=False)
+    warranty_info = relationship("ProjectWarranty", back_populates="project", uselist=False)
+    implementation_info = relationship("ProjectImplementation", back_populates="project", uselist=False)
+    presale_info = relationship("ProjectPresale", back_populates="project", uselist=False)
 
     __table_args__ = (
         Index("idx_projects_code", "project_code"),
@@ -187,6 +200,172 @@ class Project(Base, TimestampMixin):
         Index("idx_projects_outcome", "outcome"),  # 线索结果
         Index("idx_projects_salesperson", "salesperson_id"),  # 销售人员
     )
+
+    # ========================================================================
+    # 便捷属性方法 - 推荐使用这些方法访问关联数据，而非冗余字段
+    # ========================================================================
+
+    @property
+    def customer_info(self) -> dict:
+        """
+        获取客户完整信息（替代 customer_name, customer_contact, customer_phone 冗余字段）
+
+        返回: dict 或 None
+        """
+        if self.customer:
+            return {
+                'id': self.customer.id,
+                'code': self.customer.customer_code,
+                'name': self.customer.customer_name,
+                'contact': self.customer.contact_person,
+                'phone': self.customer.contact_phone,
+                'email': self.customer.contact_email,
+            }
+        return None
+
+    @property
+    def pm_info(self) -> dict:
+        """
+        获取项目经理信息（替代 pm_name 冗余字段）
+
+        返回: dict 或 None
+        """
+        if self.manager:
+            return {
+                'id': self.manager.id,
+                'username': self.manager.username,
+                'name': self.manager.real_name,
+                'email': self.manager.email,
+                'phone': self.manager.phone,
+            }
+        return None
+
+    @property
+    def department_info(self) -> dict:
+        """
+        获取部门信息
+
+        返回: dict 或 None
+        """
+        if self.department:
+            return {
+                'id': self.department.id,
+                'code': self.department.dept_code,
+                'name': self.department.dept_name,
+                'manager_id': self.department.manager_id,
+            }
+        return None
+
+    @property
+    def is_overdue(self) -> bool:
+        """
+        判断项目是否逾期
+
+        返回: bool
+        """
+        if not self.planned_end_date:
+            return False
+        if self.actual_end_date:
+            return self.actual_end_date > self.planned_end_date
+        return date.today() > self.planned_end_date and self.stage not in ['S9', 'CLOSED']
+
+    # ========================================================================
+    # 扩展模型便捷属性 - 透明访问拆分的扩展表数据
+    # ========================================================================
+
+    @property
+    def is_over_budget(self) -> bool:
+        """
+        是否超预算（通过财务扩展表）
+
+        返回: bool
+        """
+        if self.financial_info:
+            return self.financial_info.is_over_budget
+        return self.actual_cost > self.budget_amount
+
+    @property
+    def cost_variance(self) -> float:
+        """
+        成本差异（预算 - 实际）
+
+        返回: float
+        """
+        if self.financial_info:
+            return self.financial_info.cost_variance
+        return float(self.budget_amount - self.actual_cost)
+
+    @property
+    def is_erp_synced(self) -> bool:
+        """
+        ERP是否已同步成功
+
+        返回: bool
+        """
+        if self.erp_info:
+            return self.erp_info.is_synced
+        return self.erp_synced
+
+    @property
+    def warranty_remaining_days(self) -> int:
+        """
+        质保剩余天数
+
+        返回: int
+        """
+        if self.warranty_info:
+            return self.warranty_info.remaining_days
+        return 0
+
+    @property
+    def is_warranty_expired(self) -> bool:
+        """
+        质保是否已过期
+
+        返回: bool
+        """
+        if self.warranty_info:
+            return self.warranty_info.is_expired
+        return False
+
+    @property
+    def implementation_contact_info(self) -> dict:
+        """
+        获取实施现场联系人信息
+
+        返回: dict
+        """
+        if self.implementation_info:
+            return self.implementation_info.contact_info
+        return {}
+
+    @property
+    def presale_outcome_display(self) -> str:
+        """
+        获取售前结果显示名称
+
+        返回: str
+        """
+        if self.presale_info:
+            return self.presale_info.outcome_display
+        outcome_map = {
+            "PENDING": "进行中",
+            "WON": "中标",
+            "LOST": "丢标",
+            "ABANDONED": "已放弃",
+        }
+        return outcome_map.get(self.outcome, self.outcome)
+
+    @property
+    def presale_win_rate_pct(self) -> float:
+        """
+        预测中标率百分比
+
+        返回: float
+        """
+        if self.presale_info:
+            return self.presale_info.predicted_win_rate_pct
+        return float(self.predicted_win_rate * 100) if self.predicted_win_rate else 0
 
     def __repr__(self):
         return f"<Project {self.project_code}>"
@@ -245,6 +424,64 @@ class Machine(Base, TimestampMixin):
         Index("idx_machines_stage", "stage"),
         Index("idx_machines_project_code", "project_id", "machine_code", unique=True),
     )
+
+    # ========================================================================
+    # 便捷属性方法
+    # ========================================================================
+
+    @property
+    def display_name(self) -> str:
+        """获取设备显示名称（编码+名称）"""
+        return f"{self.machine_code} - {self.machine_name}"
+
+    @property
+    def is_fat_completed(self) -> bool:
+        """FAT 是否已完成"""
+        return self.fat_result in ['PASSED', 'FAILED']
+
+    @property
+    def is_sat_completed(self) -> bool:
+        """SAT 是否已完成"""
+        return self.sat_result in ['PASSED', 'FAILED']
+
+    @property
+    def is_shipped(self) -> bool:
+        """是否已发货"""
+        return self.ship_date is not None
+
+    @property
+    def days_since_ship(self) -> int:
+        """发货天数"""
+        if not self.ship_date:
+            return 0
+        return (date.today() - self.ship_date).days
+
+    @property
+    def production_stage_name(self) -> str:
+        """获取生产阶段中文名称"""
+        stage_names = {
+            'S1': '需求进入',
+            'S2': '方案设计',
+            'S3': '采购备料',
+            'S4': '加工制造',
+            'S5': '装配调试',
+            'S6': '出厂验收',
+            'S7': '包装发运',
+            'S8': '现场安装',
+            'S9': '质保结项',
+        }
+        return stage_names.get(self.stage, self.stage)
+
+    @property
+    def health_level_name(self) -> str:
+        """获取健康度中文名称"""
+        health_names = {
+            'H1': '正常',
+            'H2': '有风险',
+            'H3': '阻塞',
+            'H4': '已完结',
+        }
+        return health_names.get(self.health, self.health)
 
     def __repr__(self):
         return f"<Machine {self.machine_code}>"

@@ -7,15 +7,38 @@ import { useRoleFilter } from "../hooks/useRoleFilter";
 import { projectApi } from "../services/api";
 import { PageHeader } from "../components/layout/PageHeader";
 import { BoardColumn, BoardFilters, ProjectCard } from "../components/board";
-import { Card, Skeleton, ApiIntegrationError } from "../components/ui";
+import { Card, Skeleton, ApiIntegrationError, Badge, Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui";
 import {
   Layers,
   AlertCircle,
   TrendingUp,
   Clock,
   ChevronLeft,
-  ChevronRight } from
-"lucide-react";
+  ChevronRight,
+  ArrowLeft,
+  RefreshCw,
+  Calendar,
+  GitBranch,
+} from "lucide-react";
+
+// 导入阶段视图组件
+import {
+  PipelineView,
+  TimelineView,
+  TreeView,
+  StatisticsCards,
+  ProgressOverviewCard,
+  CategoryStatsCard,
+  CurrentStageDistributionCard,
+} from "../pages/ProjectStageView/components";
+
+// 导入阶段视图常量和hooks
+import {
+  VIEW_TYPES,
+  STAGE_CATEGORIES,
+  HEALTH_STATUS,
+} from "../pages/ProjectStageView/constants";
+import { useStageViews, useStageActions } from "../pages/ProjectStageView/hooks";
 
 // 从 localStorage 获取用户信息
 const getStoredUser = () => {
@@ -51,6 +74,18 @@ export default function ProjectBoard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [collapsedStages, setCollapsedStages] = useState({});
 
+  // 阶段视图筛选状态
+  const [templateFilter, setTemplateFilter] = useState("all");
+  const [groupByTemplate, setGroupByTemplate] = useState(true);
+
+  // 新增：阶段视图相关状态
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
+  const [detailViewMode, setDetailViewMode] = useState(VIEW_TYPES.PIPELINE);
+
+  // 使用阶段视图Hook
+  const stageViewsHook = useStageViews(VIEW_TYPES.PIPELINE);
+  const stageActions = useStageActions();
+
   // 使用角色筛选 Hook
   const {
     relevantStages: _relevantStages,
@@ -82,6 +117,22 @@ export default function ProjectBoard() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // 当切换到阶段视图模式时，加载对应的数据
+  useEffect(() => {
+    if (viewMode === "pipeline") {
+      // 应用当前筛选条件
+      stageViewsHook.updateFilters({
+        category: null, // 可以根据需要映射statusFilter
+        healthStatus: healthFilter !== "all" ? healthFilter : null,
+        templateId: templateFilter !== "all" ? templateFilter : null,
+        groupByTemplate: groupByTemplate,
+        search: searchQuery,
+      });
+      stageViewsHook.loadPipelineData();
+    }
+    // timeline和tree视图在选择项目后才加载数据
+  }, [viewMode, healthFilter, searchQuery, templateFilter, groupByTemplate]);
 
   // 筛选后的项目
   const filteredProjects = useMemo(() => {
@@ -154,7 +205,30 @@ export default function ProjectBoard() {
 
   // 处理项目点击
   const handleProjectClick = (project) => {
-    navigate(`/projects/${project.id}`);
+    // 选中项目并显示详情视图（带三个标签页）
+    setSelectedProjectId(project.id);
+    setDetailViewMode(VIEW_TYPES.PIPELINE); // 默认显示流水线视图
+
+    // 加载时间轴和分解树数据
+    stageViewsHook.loadTimelineData(project.id);
+    stageViewsHook.loadTreeData(project.id);
+  };
+
+  // 处理返回项目列表
+  const handleBackToProjects = () => {
+    setSelectedProjectId(null);
+  };
+
+  // 处理详情视图切换
+  const handleDetailViewChange = (viewType) => {
+    setDetailViewMode(viewType);
+    if (selectedProjectId) {
+      if (viewType === VIEW_TYPES.TIMELINE) {
+        stageViewsHook.loadTimelineData(selectedProjectId);
+      } else if (viewType === VIEW_TYPES.TREE) {
+        stageViewsHook.loadTreeData(selectedProjectId);
+      }
+    }
   };
 
   // 滚动看板
@@ -197,7 +271,12 @@ export default function ProjectBoard() {
         onSearchChange={setSearchQuery}
         onRefresh={fetchData}
         isLoading={loading}
-        stats={stats} />
+        stats={stats}
+        templateFilter={templateFilter}
+        onTemplateFilterChange={setTemplateFilter}
+        groupByTemplate={groupByTemplate}
+        onGroupByTemplateChange={setGroupByTemplate}
+        availableTemplates={stageViewsHook.data?.available_templates || []} />
 
 
       {/* 错误状态 */}
@@ -279,7 +358,125 @@ export default function ProjectBoard() {
         projects={filteredProjects}
         onProjectClick={handleProjectClick}
         isProjectRelevant={isProjectRelevant} />
+      }
 
+      {/* ========== 新增：阶段视图模式 ========== */}
+
+      {/* 流水线视图 - 多项目阶段全景 */}
+      {!loading && !error && viewMode === "pipeline" && !selectedProjectId &&
+      <PipelineView
+        data={stageViewsHook.pipelineData}
+        loading={stageViewsHook.loading}
+        onSelectProject={(projectId, viewType) => {
+          setSelectedProjectId(projectId);
+          setDetailViewMode(VIEW_TYPES[viewType.toUpperCase()] || VIEW_TYPES.TIMELINE);
+        }}
+      />
+      }
+
+      {/* 时间轴视图 - 单项目甘特图 */}
+      {!loading && !error && viewMode === "timeline" && !selectedProjectId &&
+      <div className="bg-surface-1 rounded-lg border border-white/10 p-6 text-center">
+        <Layers className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-white mb-2">请选择项目查看时间轴</h3>
+        <p className="text-slate-400">时间轴视图用于查看单个项目的详细阶段进度</p>
+      </div>
+      }
+
+      {/* 分解树视图 - 阶段/节点/任务分解 */}
+      {!loading && !error && viewMode === "tree" && !selectedProjectId &&
+      <div className="bg-surface-1 rounded-lg border border-white/10 p-6 text-center">
+        <GitBranch className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-white mb-2">请选择项目查看分解树</h3>
+        <p className="text-slate-400">分解树视图用于查看项目的完整阶段和任务结构</p>
+      </div>
+      }
+
+      {/* ========== 选中项目后的详情视图 ========== */}
+
+      {/* 项目详情视图 - 带三视图切换标签 */}
+      {selectedProjectId &&
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="space-y-4">
+        {/* 详情视图头部 */}
+        <Card className="bg-surface-1 border-white/10">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={handleBackToProjects}
+                  className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  返回项目列表
+                </button>
+                <div className="h-6 w-px bg-white/10" />
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-primary/20 text-primary">
+                    {selectedProjectId}
+                  </Badge>
+                </div>
+              </div>
+              <button
+                onClick={stageViewsHook.refresh}
+                disabled={stageViewsHook.loading}
+                className="text-slate-400 hover:text-white transition-colors"
+              >
+                <RefreshCw className={cn("w-4 h-4", stageViewsHook.loading && "animate-spin")} />
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 视图切换标签 */}
+        <Tabs value={detailViewMode} onValueChange={handleDetailViewChange}>
+          <TabsList className="bg-surface-1 border border-white/10">
+            <TabsTrigger value={VIEW_TYPES.PIPELINE} className="data-[state=active]:bg-blue-500">
+              <Layers className="w-4 h-4 mr-2" />
+              流水线视图
+            </TabsTrigger>
+            <TabsTrigger value={VIEW_TYPES.TIMELINE} className="data-[state=active]:bg-green-500">
+              <Calendar className="w-4 h-4 mr-2" />
+              时间轴视图
+            </TabsTrigger>
+            <TabsTrigger value={VIEW_TYPES.TREE} className="data-[state=active]:bg-purple-500">
+              <GitBranch className="w-4 h-4 mr-2" />
+              分解树视图
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value={VIEW_TYPES.PIPELINE} className="mt-4">
+            <PipelineView
+              data={{
+                ...stageViewsHook.pipelineData,
+                projects: stageViewsHook.pipelineData?.projects?.filter(p => p.project_id === selectedProjectId) || [],
+              }}
+              loading={stageViewsHook.loading}
+              onSelectProject={() => {}}
+            />
+          </TabsContent>
+
+          <TabsContent value={VIEW_TYPES.TIMELINE} className="mt-4">
+            <TimelineView
+              data={stageViewsHook.timelineData}
+              loading={stageViewsHook.loading}
+              stageActions={stageActions}
+              onRefresh={stageViewsHook.refresh}
+            />
+          </TabsContent>
+
+          <TabsContent value={VIEW_TYPES.TREE} className="mt-4">
+            <TreeView
+              data={stageViewsHook.treeData}
+              loading={stageViewsHook.loading}
+              stageActions={stageActions}
+              onRefresh={stageViewsHook.refresh}
+            />
+          </TabsContent>
+        </Tabs>
+      </motion.div>
       }
 
       {/* 空状态 */}

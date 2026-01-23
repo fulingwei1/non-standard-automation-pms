@@ -45,15 +45,17 @@ class TestValidateRequiredCheckItemsIntegration:
             created_by=1,
         )
         db_session.add(project)
+        db_session.flush()  # 确保 project.id 生成
 
         machine = Machine(
-            project_id=project.id,
+            project_id=project.id,  # 必须设置 project_id
             machine_code="M-001",
             machine_name="测试设备",
             machine_type="TEST",
             status="TESTING",
         )
         db_session.add(machine)
+        db_session.flush()  # 确保 machine.id 生成
 
         order = AcceptanceOrder(
             order_no="AO-TEST-001",
@@ -69,6 +71,8 @@ class TestValidateRequiredCheckItemsIntegration:
         # 创建已完成的必检项
         item = AcceptanceOrderItem(
             order_id=order.id,
+            category_code="CAT1",
+            category_name="分类1",
             item_code="ITEM-001",
             item_name="检查项1",
             is_required=True,
@@ -95,6 +99,7 @@ class TestValidateRequiredCheckItemsIntegration:
             created_by=1,
         )
         db_session.add(project)
+        db_session.flush()  # 确保 project.id 生成
 
         machine = Machine(
             project_id=project.id,
@@ -104,6 +109,7 @@ class TestValidateRequiredCheckItemsIntegration:
             status="TESTING",
         )
         db_session.add(machine)
+        db_session.flush()  # 确保 machine.id 生成
 
         order = AcceptanceOrder(
             order_no="AO-TEST-002",
@@ -120,6 +126,8 @@ class TestValidateRequiredCheckItemsIntegration:
         for i in range(2):
             item = AcceptanceOrderItem(
                 order_id=order.id,
+                category_code="CAT1",
+                category_name="分类1",
                 item_code=f"ITEM-00{i}",
                 item_name=f"检查项{i}",
                 is_required=True,
@@ -148,6 +156,7 @@ class TestValidateRequiredCheckItemsIntegration:
             created_by=1,
         )
         db_session.add(project)
+        db_session.flush()  # 确保 project.id 生成
 
         machine = Machine(
             project_id=project.id,
@@ -157,6 +166,7 @@ class TestValidateRequiredCheckItemsIntegration:
             status="TESTING",
         )
         db_session.add(machine)
+        db_session.flush()  # 确保 machine.id 生成
 
         order = AcceptanceOrder(
             order_no="AO-TEST-003",
@@ -172,6 +182,8 @@ class TestValidateRequiredCheckItemsIntegration:
         # 创建1个必检项（已完成）和1个非必检项（未完成）
         required_item = AcceptanceOrderItem(
             order_id=order.id,
+            category_code="CAT1",
+            category_name="分类1",
             item_code="ITEM-001",
             item_name="必检项",
             is_required=True,
@@ -179,6 +191,8 @@ class TestValidateRequiredCheckItemsIntegration:
         )
         optional_item = AcceptanceOrderItem(
             order_id=order.id,
+            category_code="CAT1",
+            category_name="分类1",
             item_code="ITEM-002",
             item_name="非必检项",
             is_required=False,
@@ -203,6 +217,7 @@ class TestValidateRequiredCheckItemsIntegration:
             created_by=1,
         )
         db_session.add(project)
+        db_session.flush()  # 确保 project.id 生成
 
         machine = Machine(
             project_id=project.id,
@@ -212,6 +227,7 @@ class TestValidateRequiredCheckItemsIntegration:
             status="TESTING",
         )
         db_session.add(machine)
+        db_session.flush()  # 确保 machine.id 生成
 
         order = AcceptanceOrder(
             order_no="AO-TEST-004",
@@ -247,6 +263,7 @@ class TestUpdateAcceptanceOrderStatusIntegration:
             created_by=1,
         )
         db_session.add(project)
+        db_session.flush()  # 确保 project.id 生成
 
         machine = Machine(
             project_id=project.id,
@@ -256,6 +273,7 @@ class TestUpdateAcceptanceOrderStatusIntegration:
             status="TESTING",
         )
         db_session.add(machine)
+        db_session.flush()  # 确保 machine.id 生成
 
         order = AcceptanceOrder(
             order_no="AO-TEST-010",
@@ -298,6 +316,7 @@ class TestUpdateAcceptanceOrderStatusIntegration:
             created_by=1,
         )
         db_session.add(project)
+        db_session.flush()  # 确保 project.id 生成
 
         machine = Machine(
             project_id=project.id,
@@ -307,6 +326,7 @@ class TestUpdateAcceptanceOrderStatusIntegration:
             status="TESTING",
         )
         db_session.add(machine)
+        db_session.flush()  # 确保 machine.id 生成
 
         order = AcceptanceOrder(
             order_no="AO-TEST-011",
@@ -348,6 +368,7 @@ class TestUpdateAcceptanceOrderStatusIntegration:
             created_by=1,
         )
         db_session.add(project)
+        db_session.flush()  # 确保 project.id 生成
 
         machine = Machine(
             project_id=project.id,
@@ -357,6 +378,7 @@ class TestUpdateAcceptanceOrderStatusIntegration:
             status="TESTING",
         )
         db_session.add(machine)
+        db_session.flush()  # 确保 machine.id 生成
 
         order = AcceptanceOrder(
             order_no="AO-TEST-012",
@@ -460,6 +482,7 @@ class TestHandleAcceptanceStatusTransitionIntegration:
             created_by=1,
         )
         db_session.add(project)
+        db_session.flush()  # 确保 project.id 生成
 
         machine = Machine(
             project_id=project.id,
@@ -469,6 +492,7 @@ class TestHandleAcceptanceStatusTransitionIntegration:
             status="TESTING",
         )
         db_session.add(machine)
+        db_session.flush()  # 确保 machine.id 生成
 
         order = AcceptanceOrder(
             order_no="AO-TEST-020",
@@ -480,9 +504,12 @@ class TestHandleAcceptanceStatusTransitionIntegration:
             created_by=1,
         )
         db_session.add(order)
+        db_session.flush()  # 确保 order.id 生成
 
         # 创建验收问题（未解决）
+        from datetime import datetime
         issue = AcceptanceIssue(
+            issue_no=f"AI-{datetime.now().strftime('%Y%m%d%H%M%S')}",
             order_id=order.id,
             issue_type="FUNCTION",
             severity="MEDIUM",
@@ -520,6 +547,7 @@ class TestHandleAcceptanceStatusTransitionIntegration:
             created_by=1,
         )
         db_session.add(project)
+        db_session.flush()  # 确保 project.id 生成
 
         machine = Machine(
             project_id=project.id,
@@ -529,6 +557,7 @@ class TestHandleAcceptanceStatusTransitionIntegration:
             status="TESTING",
         )
         db_session.add(machine)
+        db_session.flush()  # 确保 machine.id 生成
 
         order = AcceptanceOrder(
             order_no="AO-TEST-021",
@@ -540,10 +569,14 @@ class TestHandleAcceptanceStatusTransitionIntegration:
             created_by=1,
         )
         db_session.add(order)
+        db_session.flush()  # 确保 order.id 生成
 
         # 创建多个验收问题（未解决）
+        from datetime import datetime
+        base_time = datetime.now().strftime('%Y%m%d%H%M%S')
         issues = [
             AcceptanceIssue(
+                issue_no=f"AI-{base_time}-{i}",
                 order_id=order.id,
                 issue_type="FUNCTION",
                 severity="HIGH",
@@ -590,6 +623,7 @@ class TestTriggerWarrantyPeriodIntegration:
             created_by=1,
         )
         db_session.add(project)
+        db_session.flush()  # 确保 project.id 生成
 
         machine = Machine(
             project_id=project.id,
@@ -599,6 +633,7 @@ class TestTriggerWarrantyPeriodIntegration:
             status="INSTALLATION",
         )
         db_session.add(machine)
+        db_session.flush()  # 确保 machine.id 生成
 
         order = AcceptanceOrder(
             order_no="AO-TEST-030",
@@ -637,6 +672,7 @@ class TestTriggerWarrantyPeriodIntegration:
             created_by=1,
         )
         db_session.add(project)
+        db_session.flush()  # 确保 project.id 生成
 
         machine = Machine(
             project_id=project.id,
@@ -646,6 +682,7 @@ class TestTriggerWarrantyPeriodIntegration:
             status="TESTING",
         )
         db_session.add(machine)
+        db_session.flush()  # 确保 machine.id 生成
 
         order = AcceptanceOrder(
             order_no="AO-TEST-031",
@@ -684,6 +721,7 @@ class TestTriggerWarrantyPeriodIntegration:
             created_by=1,
         )
         db_session.add(project)
+        db_session.flush()  # 确保 project.id 生成
 
         # 创建3个设备
         machines = [
@@ -697,6 +735,7 @@ class TestTriggerWarrantyPeriodIntegration:
             for i in range(3)
         ]
         db_session.add_all(machines)
+        db_session.flush()  # 确保 machine.id 生成
 
         order = AcceptanceOrder(
             order_no="AO-TEST-032",
@@ -741,6 +780,7 @@ class TestTriggerBonusCalculationIntegration:
             created_by=1,
         )
         db_session.add(project)
+        db_session.flush()  # 确保 project.id 生成
 
         machine = Machine(
             project_id=project.id,
@@ -750,6 +790,7 @@ class TestTriggerBonusCalculationIntegration:
             status="TESTING",
         )
         db_session.add(machine)
+        db_session.flush()  # 确保 machine.id 生成
 
         order = AcceptanceOrder(
             order_no="AO-TEST-040",
@@ -791,6 +832,7 @@ class TestTriggerBonusCalculationIntegration:
             created_by=1,
         )
         db_session.add(project)
+        db_session.flush()  # 确保 project.id 生成
 
         machine = Machine(
             project_id=project.id,
@@ -800,6 +842,7 @@ class TestTriggerBonusCalculationIntegration:
             status="INSTALLATION",
         )
         db_session.add(machine)
+        db_session.flush()  # 确保 machine.id 生成
 
         order = AcceptanceOrder(
             order_no="AO-TEST-041",
@@ -842,6 +885,7 @@ class TestTriggerBonusCalculationIntegration:
             created_by=1,
         )
         db_session.add(project)
+        db_session.flush()  # 确保 project.id 生成
 
         machine = Machine(
             project_id=project.id,
@@ -851,6 +895,7 @@ class TestTriggerBonusCalculationIntegration:
             status="TESTING",
         )
         db_session.add(machine)
+        db_session.flush()  # 确保 machine.id 生成
 
         order = AcceptanceOrder(
             order_no="AO-TEST-042",
@@ -895,6 +940,7 @@ class TestHandleProgressIntegrationIntegration:
             created_by=1,
         )
         db_session.add(project)
+        db_session.flush()  # 确保 project.id 生成
 
         machine = Machine(
             project_id=project.id,
@@ -904,6 +950,7 @@ class TestHandleProgressIntegrationIntegration:
             status="TESTING",
         )
         db_session.add(machine)
+        db_session.flush()  # 确保 machine.id 生成
 
         order = AcceptanceOrder(
             order_no="AO-TEST-050",
@@ -950,6 +997,7 @@ class TestHandleProgressIntegrationIntegration:
             created_by=1,
         )
         db_session.add(project)
+        db_session.flush()  # 确保 project.id 生成
 
         machine = Machine(
             project_id=project.id,
@@ -959,6 +1007,7 @@ class TestHandleProgressIntegrationIntegration:
             status="TESTING",
         )
         db_session.add(machine)
+        db_session.flush()  # 确保 machine.id 生成
 
         order = AcceptanceOrder(
             order_no="AO-TEST-051",
@@ -1016,6 +1065,7 @@ class TestCompleteAcceptanceWorkflow:
             created_by=1,
         )
         db_session.add(project)
+        db_session.flush()  # 确保 project.id 生成
 
         machine = Machine(
             project_id=project.id,
@@ -1025,6 +1075,7 @@ class TestCompleteAcceptanceWorkflow:
             status="TESTING",
         )
         db_session.add(machine)
+        db_session.flush()  # 确保 machine.id 生成
 
         # 创建验收单
         order = AcceptanceOrder(
@@ -1039,11 +1090,14 @@ class TestCompleteAcceptanceWorkflow:
             created_by=1,
         )
         db_session.add(order)
+        db_session.flush()  # 确保 order.id 生成
 
         # 创建已完成的检查项
         for i in range(2):
             item = AcceptanceOrderItem(
                 order_id=order.id,
+                category_code="CAT1",
+                category_name="分类1",
                 item_code=f"ITEM-10{i}",
                 item_name=f"检查项{i}",
                 is_required=True,

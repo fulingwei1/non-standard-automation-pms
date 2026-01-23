@@ -39,12 +39,12 @@ class EcnAffectedMaterial(Base, TimestampMixin):
     # 变更前
     old_quantity = Column(Numeric(10, 4), comment='原数量')
     old_specification = Column(String(500), comment='原规格')
-    old_supplier_id = Column(Integer, ForeignKey('suppliers.id'), comment='原供应商')
+    old_supplier_id = Column(Integer, ForeignKey('vendors.id'), comment='原供应商')
 
     # 变更后
     new_quantity = Column(Numeric(10, 4), comment='新数量')
     new_specification = Column(String(500), comment='新规格')
-    new_supplier_id = Column(Integer, ForeignKey('suppliers.id'), comment='新供应商')
+    new_supplier_id = Column(Integer, ForeignKey('vendors.id'), comment='新供应商')
 
     # 影响
     cost_impact = Column(Numeric(12, 2), default=0, comment='成本影响')

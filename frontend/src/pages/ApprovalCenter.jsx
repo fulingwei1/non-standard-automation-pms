@@ -196,10 +196,11 @@ const ApprovalCenter = () => {
   // 过滤数据
   const filteredApprovals = useMemo(() => {
     return approvals.filter((approval) => {
-      const matchesSearch =
+      const searchLower = (searchText || "").toLowerCase();
+    const matchesSearch =
         !searchText ||
-        approval.title.toLowerCase().includes(searchText.toLowerCase()) ||
-        approval.initiator?.toLowerCase().includes(searchText.toLowerCase());
+        (approval.title || "").toLowerCase().includes(searchLower) ||
+        (approval.initiator || "").toLowerCase().includes(searchLower);
       const matchesType = filterType === "all" || approval.type === filterType;
       const matchesStatus = filterStatus === "all" || approval.status === filterStatus;
       const matchesPriority = filterPriority === "all" || approval.priority === filterPriority;

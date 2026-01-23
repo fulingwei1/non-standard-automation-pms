@@ -592,8 +592,8 @@ export default function EngineerWorkstation() {
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         return (
-          task.titleCn.toLowerCase().includes(query) ||
-          task.projectName.toLowerCase().includes(query));
+          (task.titleCn || "").toLowerCase().includes(query) ||
+          (task.projectName || "").toLowerCase().includes(query));
 
       }
       return true;

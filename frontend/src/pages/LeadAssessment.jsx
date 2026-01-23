@@ -197,10 +197,11 @@ const LeadAssessment = () => {
   // 过滤数据
   const filteredLeads = useMemo(() => {
     return leads.filter((lead) => {
+      const searchLower = searchText.toLowerCase();
       const matchesSearch = !searchText ||
-      lead.companyName.toLowerCase().includes(searchText.toLowerCase()) ||
-      lead.contactPerson?.toLowerCase().includes(searchText.toLowerCase()) ||
-      lead.phone?.includes(searchText);
+      (lead.companyName || "").toLowerCase().includes(searchLower) ||
+      (lead.contactPerson || "").toLowerCase().includes(searchLower) ||
+      (lead.phone || "").includes(searchText);
 
       const matchesSource = !filters.source || lead.source === filters.source;
       const matchesStatus = !filters.status || lead.status === filters.status;

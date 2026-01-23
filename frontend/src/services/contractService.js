@@ -7,7 +7,7 @@ import apiClient from './apiClient';
  * @returns {Promise<Object>} 合同列表
  */
 export const getContracts = async (params = {}) => {
-  const response = await apiClient.get('/contracts', { params });
+  const response = await apiClient.get('/sales/contracts', { params });
   return response.data;
 };
 
@@ -17,7 +17,7 @@ export const getContracts = async (params = {}) => {
  * @returns {Promise<Object>} 合同详情
  */
 export const getContractDetail = async (contractId) => {
-  const response = await apiClient.get(`/contracts/${contractId}`);
+  const response = await apiClient.get(`/sales/contracts/${contractId}`);
   return response.data;
 };
 
@@ -27,7 +27,7 @@ export const getContractDetail = async (contractId) => {
  * @returns {Promise<Object>} 创建的合同
  */
 export const createContract = async (data) => {
-  const response = await apiClient.post('/contracts', data);
+  const response = await apiClient.post('/sales/contracts', data);
   return response.data;
 };
 
@@ -38,7 +38,7 @@ export const createContract = async (data) => {
  * @returns {Promise<Object>} 更新的合同
  */
 export const updateContract = async (contractId, data) => {
-  const response = await apiClient.put(`/contracts/${contractId}`, data);
+  const response = await apiClient.put(`/sales/contracts/${contractId}`, data);
   return response.data;
 };
 
@@ -48,7 +48,7 @@ export const updateContract = async (contractId, data) => {
  * @returns {Promise<Object>} 删除结果
  */
 export const deleteContract = async (contractId) => {
-  const response = await apiClient.delete(`/contracts/${contractId}`);
+  const response = await apiClient.delete(`/sales/contracts/${contractId}`);
   return response.data;
 };
 
@@ -59,7 +59,7 @@ export const deleteContract = async (contractId) => {
  * @returns {Promise<Object>} 历史记录
  */
 export const getContractHistory = async (contractId, params = {}) => {
-  const response = await apiClient.get(`/contracts/${contractId}/history`, { params });
+  const response = await apiClient.get(`/sales/contracts/${contractId}/history`, { params });
   return response.data;
 };
 

@@ -333,12 +333,12 @@ const AlertCenterOverview = ({
                 const levelConfig = getAlertLevelConfig(alert.alert_level);
 
                 return (
-                  <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                  <div key={index} className="flex items-center justify-between p-2 bg-slate-500/10 border border-slate-500/20 rounded">
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">
+                      <div className="text-sm font-medium truncate text-slate-200">
                         {alert.title || alert.alert_type}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-slate-500">
                         {alert.timeDisplay}
                       </div>
                     </div>
@@ -356,7 +356,7 @@ const AlertCenterOverview = ({
 
               })}
               {advancedStats.priorityAlerts.length === 0 &&
-              <div className="text-center text-gray-500 py-4">
+              <div className="text-center text-slate-500 py-4">
                   暂无紧急预警
               </div>
               }
@@ -493,18 +493,18 @@ const AlertCenterOverview = ({
 
       {/* SLA提醒 */}
       {(advancedStats.slaCompliance.response < 90 || advancedStats.slaCompliance.resolution < 85) &&
-      <Card className="border-red-200 bg-red-50">
+      <Card className="border-red-500/30 bg-red-500/10">
           <CardContent className="pt-6">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5" />
+              <AlertTriangle className="h-5 w-5 text-red-400 mt-0.5" />
               <div className="space-y-1">
                 {advancedStats.slaCompliance.response < 90 &&
-              <p className="text-sm text-red-800">
+              <p className="text-sm text-red-300">
                     响应时间SLA达标率偏低 ({advancedStats.slaCompliance.response}%)，建议加强响应时效管理
               </p>
               }
                 {advancedStats.slaCompliance.resolution < 85 &&
-              <p className="text-sm text-red-800">
+              <p className="text-sm text-red-300">
                     解决时间SLA达标率偏低 ({advancedStats.slaCompliance.resolution}%)，请关注解决效率提升
               </p>
               }

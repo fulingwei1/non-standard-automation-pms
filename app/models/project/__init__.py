@@ -12,6 +12,15 @@ from .customer import Customer
 # 项目文档和模板
 from .document import ProjectDocument, ProjectTemplate, ProjectTemplateVersion
 
+# 项目扩展模型（表拆分）
+from .extensions import (
+    ProjectERP,
+    ProjectFinancial,
+    ProjectImplementation,
+    ProjectPresale,
+    ProjectWarranty,
+)
+
 # 项目财务
 from .financial import (
     FinancialProjectCost,
@@ -61,4 +70,10 @@ __all__ = [
     "ResourceConflict",
     "AssignmentStatusEnum",
     "ConflictSeverityEnum",
+    # 项目扩展模型
+    "ProjectFinancial",
+    "ProjectERP",
+    "ProjectWarranty",
+    "ProjectImplementation",
+    "ProjectPresale",
 ]

@@ -132,7 +132,7 @@ export function EmployeeManager({
                 <SelectValue placeholder="员工状态" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部状态</SelectItem>
+                <SelectItem value="__all__">全部状态</SelectItem>
                 {Object.entries(employeeStatusConfigs).map(([key, config]) =>
                 <SelectItem key={key} value={key}>
                     {config.icon} {config.label}
@@ -145,7 +145,7 @@ export function EmployeeManager({
                 <SelectValue placeholder="部门" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部部门</SelectItem>
+                <SelectItem value="__all__">全部部门</SelectItem>
                 {Object.entries(departmentConfigs).map(([key, config]) =>
                 <SelectItem key={key} value={key}>
                     {config.icon} {config.label}

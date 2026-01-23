@@ -79,10 +79,23 @@ const MyPerformance = () => {
   usePerformanceData(fallbackData);
 
   // 获取当前用户信息
-  const currentUser = JSON.parse(
+  const rawUser = JSON.parse(
     localStorage.getItem("user") ||
-    '{"name":"用户","department":"未知部门","position":"未知职位"}'
+      '{"name":"用户","department":"未知部门","position":"未知职位"}',
   );
+  const displayName =
+    rawUser.real_name ||
+    rawUser.username ||
+    rawUser.name ||
+    "用户";
+  const department =
+    rawUser.department ||
+    rawUser.department_name ||
+    "未知部门";
+  const position =
+    rawUser.position ||
+    rawUser.role ||
+    "未知职位";
 
   // 使用加载的数据或fallback到mock
   const currentData = performanceData || fallbackData;
@@ -122,15 +135,15 @@ const MyPerformance = () => {
             <div className="flex items-center gap-4">
               <div className="h-16 w-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
                 <span className="text-white font-bold text-2xl">
-                  {currentUser.name.charAt(0)}
+                  {displayName.charAt(0)}
                 </span>
               </div>
               <div className="flex-1">
                 <h2 className="text-xl font-bold text-white mb-1">
-                  {currentUser.name}
+                  {displayName}
                 </h2>
                 <p className="text-slate-400">
-                  {currentUser.department} · {currentUser.position}
+                  {department} · {position}
                 </p>
               </div>
             </div>

@@ -136,11 +136,12 @@ export function usePaymentManagement() {
         let filtered = payments;
 
         if (searchTerm) {
+            const searchLower = searchTerm.toLowerCase();
             filtered = filtered.filter(
                 (payment) =>
-                    payment.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    payment.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    payment.contractNo.toLowerCase().includes(searchTerm.toLowerCase())
+                    (payment.projectName || "").toLowerCase().includes(searchLower) ||
+                    (payment.customerName || "").toLowerCase().includes(searchLower) ||
+                    (payment.contractNo || "").toLowerCase().includes(searchLower)
             );
         }
 

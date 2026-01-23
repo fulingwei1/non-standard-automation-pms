@@ -12,7 +12,8 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.material import Material, MaterialCategory, Supplier
+from app.models.material import Material, MaterialCategory
+from app.models.vendor import Vendor
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.material import (
@@ -164,7 +165,7 @@ def create_material(
 
     # 检查默认供应商是否存在
     if material_data.get('default_supplier_id'):
-        supplier = db.query(Supplier).filter(Supplier.id == material_data['default_supplier_id']).first()
+        supplier = db.query(Vendor).filter(Vendor.id == material_data['default_supplier_id'], Vendor.vendor_type == 'MATERIAL').first()
         if not supplier:
             raise HTTPException(status_code=400, detail="默认供应商不存在")
 
@@ -198,7 +199,7 @@ def update_material(
 
     # 检查默认供应商是否存在
     if material_in.default_supplier_id is not None:
-        supplier = db.query(Supplier).filter(Supplier.id == material_in.default_supplier_id).first()
+        supplier = db.query(Vendor).filter(Vendor.id == material_in.default_supplier_id, Vendor.vendor_type == 'MATERIAL').first()
         if not supplier:
             raise HTTPException(status_code=400, detail="默认供应商不存在")
 

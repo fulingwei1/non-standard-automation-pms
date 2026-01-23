@@ -72,6 +72,7 @@ __all__ = [
     "Material",
     "MaterialCategory",
     "Supplier",
+    "Vendor",
     "MaterialSupplier",
     "BomHeader",
     "BomItem",

@@ -18,14 +18,15 @@ from .templates import router as templates_router
 
 router = APIRouter()
 
-# 角色列表与详情（含权限列表）
-router.include_router(list_detail_router, tags=["角色查询"])
-
-# 角色CRUD和权限分配
+# 重要：特殊路径（不含路径参数的）必须放在动态路径（含{role_id}等）之前
+# 角色CRUD和权限分配（包含特殊路径如inheritance-tree，必须在list_detail之前）
 router.include_router(crud_router, tags=["角色管理"])
+
+# 角色模板管理（特殊路径）
+router.include_router(templates_router, prefix="/templates", tags=["角色模板"])
+
+# 角色列表与详情（含路径参数{role_id}，必须放在最后）
+router.include_router(list_detail_router, tags=["角色查询"])
 
 # 导航菜单配置
 router.include_router(nav_config_router, tags=["导航配置"])
-
-# 角色模板管理
-router.include_router(templates_router, prefix="/templates", tags=["角色模板"])

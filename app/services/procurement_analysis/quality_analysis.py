@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.models.material import Supplier
+from app.models.vendor import Vendor
 from app.models.purchase import GoodsReceipt, GoodsReceiptItem, PurchaseOrder
 
 
@@ -29,8 +29,8 @@ class QualityAnalyzer:
         """
         # 查询收货明细
         query = db.query(
-            Supplier.id.label('supplier_id'),
-            Supplier.supplier_name,
+            Vendor.id.label('supplier_id'),
+            Vendor.supplier_name,
             GoodsReceiptItem.material_code,
             GoodsReceiptItem.material_name,
             func.sum(GoodsReceiptItem.qualified_qty).label('total_qualified'),
@@ -42,7 +42,9 @@ class QualityAnalyzer:
         ).join(
             PurchaseOrder, GoodsReceipt.order_id == PurchaseOrder.id
         ).join(
-            Supplier, PurchaseOrder.supplier_id == Supplier.id
+            Vendor, PurchaseOrder.supplier_id == Vendor.id
+        ).filter(
+            Vendor.vendor_type == 'MATERIAL'
         ).filter(
             GoodsReceipt.receipt_date >= start_date,
             GoodsReceipt.receipt_date <= end_date

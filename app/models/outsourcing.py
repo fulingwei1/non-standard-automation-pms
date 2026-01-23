@@ -22,56 +22,66 @@ from .base import Base, TimestampMixin
 
 
 class OutsourcingVendor(Base, TimestampMixin):
-    """外协商表"""
-    __tablename__ = 'outsourcing_vendors'
+    """
+    外协商表（兼容层）
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    vendor_code = Column(String(50), unique=True, nullable=False, comment='外协商编码')
-    vendor_name = Column(String(200), nullable=False, comment='外协商名称')
-    vendor_short_name = Column(String(50), comment='简称')
-    vendor_type = Column(String(20), nullable=False, comment='外协商类型')
+    注意：此表已合并到 vendors 表中。
+    为了向后兼容，保留此模型指向 outsourcing_vendors_view 视图。
+    新代码应使用 app.models.vendor.Vendor 代替。
+
+    迁移路径：
+    1. 运行 migrations/20250122_merge_vendors_sqlite.sql
+    2. 将代码中的 OutsourcingVendor 替换为 Vendor
+    3. 添加 vendor_type='OUTSOURCING' 过滤条件
+    """
+    __tablename__ = 'outsourcing_vendors_view'
+
+    id = Column(Integer, primary_key=True)
+    vendor_code = Column(String(50), nullable=False)
+    vendor_name = Column(String(200), nullable=False)
+    vendor_short_name = Column(String(50))
+    vendor_type = Column(String(20))
 
     # 联系信息
-    contact_person = Column(String(50), comment='联系人')
-    contact_phone = Column(String(30), comment='联系电话')
-    contact_email = Column(String(100), comment='邮箱')
-    address = Column(String(500), comment='地址')
+    contact_person = Column(String(50))
+    contact_phone = Column(String(30))
+    contact_email = Column(String(100))
+    address = Column(String(500))
 
     # 资质信息
-    business_license = Column(String(100), comment='营业执照号')
-    qualification = Column(JSON, comment='资质认证')
-    capabilities = Column(JSON, comment='加工能力')
+    business_license = Column(String(100))
+    qualification = Column(JSON)
+    capabilities = Column(JSON)
 
     # 评价
-    quality_rating = Column(Numeric(3, 2), default=0, comment='质量评分')
-    delivery_rating = Column(Numeric(3, 2), default=0, comment='交期评分')
-    service_rating = Column(Numeric(3, 2), default=0, comment='服务评分')
-    overall_rating = Column(Numeric(3, 2), default=0, comment='综合评分')
+    quality_rating = Column(Numeric(3, 2))
+    delivery_rating = Column(Numeric(3, 2))
+    service_rating = Column(Numeric(3, 2))
+    overall_rating = Column(Numeric(3, 2))
 
     # 状态
-    status = Column(String(20), default='ACTIVE', comment='状态')
-    cooperation_start = Column(Date, comment='合作开始日期')
-    last_order_date = Column(Date, comment='最后订单日期')
+    status = Column(String(20))
+    cooperation_start = Column(Date)
+    last_order_date = Column(Date)
 
     # 银行信息
-    bank_name = Column(String(100), comment='开户行')
-    bank_account = Column(String(50), comment='银行账号')
-    tax_number = Column(String(50), comment='税号')
+    bank_name = Column(String(100))
+    bank_account = Column(String(50))
+    tax_number = Column(String(50))
 
-    remark = Column(Text, comment='备注')
-    created_by = Column(Integer, ForeignKey('users.id'), comment='创建人')
+    remark = Column(Text)
+    created_by = Column(Integer)
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
 
-    # 关系
-    orders = relationship('OutsourcingOrder', back_populates='vendor', lazy='dynamic')
-    evaluations = relationship('OutsourcingEvaluation', back_populates='vendor', lazy='dynamic')
+    # 关系 - 注意：视图不支持关系，暂时禁用
+    # TODO: 迁移到 Vendor 模型后移除此兼容层
 
-    __table_args__ = (
-        Index('idx_vendor_type', 'vendor_type'),
-        Index('idx_vendor_status', 'status'),
-    )
+    # 注意：视图不支持索引定义，索引已在 vendors 表中定义
+    # __table_args__ = ()  # 视图不需要索引
 
     def __repr__(self):
-        return f'<OutsourcingVendor {self.vendor_code}>'
+        return f'<OutsourcingVendor {self.vendor_code} (deprecated, use Vendor instead)>'
 
 
 class OutsourcingOrder(Base, TimestampMixin):
@@ -80,7 +90,7 @@ class OutsourcingOrder(Base, TimestampMixin):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     order_no = Column(String(50), unique=True, nullable=False, comment='外协订单号')
-    vendor_id = Column(Integer, ForeignKey('outsourcing_vendors.id'), nullable=False, comment='外协商ID')
+    vendor_id = Column(Integer, ForeignKey('vendors.id'), nullable=False, comment='外协商ID')
     project_id = Column(Integer, ForeignKey('projects.id'), nullable=False, comment='项目ID')
     machine_id = Column(Integer, ForeignKey('machines.id'), comment='设备ID')
 
@@ -115,7 +125,7 @@ class OutsourcingOrder(Base, TimestampMixin):
     created_by = Column(Integer, ForeignKey('users.id'), comment='创建人')
 
     # 关系
-    vendor = relationship('OutsourcingVendor', back_populates='orders')
+    vendor = relationship('Vendor', back_populates='outsourcing_orders')
     project = relationship('Project')
     machine = relationship('Machine')
     items = relationship('OutsourcingOrderItem', back_populates='order', lazy='dynamic')
@@ -191,7 +201,7 @@ class OutsourcingDelivery(Base, TimestampMixin):
     id = Column(Integer, primary_key=True, autoincrement=True)
     delivery_no = Column(String(50), unique=True, nullable=False, comment='交付单号')
     order_id = Column(Integer, ForeignKey('outsourcing_orders.id'), nullable=False, comment='外协订单ID')
-    vendor_id = Column(Integer, ForeignKey('outsourcing_vendors.id'), nullable=False, comment='外协商ID')
+    vendor_id = Column(Integer, ForeignKey('vendors.id'), nullable=False, comment='外协商ID')
 
     # 交付信息
     delivery_date = Column(Date, nullable=False, comment='交付日期')
@@ -213,7 +223,7 @@ class OutsourcingDelivery(Base, TimestampMixin):
 
     # 关系
     order = relationship('OutsourcingOrder', back_populates='deliveries')
-    vendor = relationship('OutsourcingVendor')
+    vendor = relationship('Vendor', foreign_keys=[vendor_id])
     items = relationship('OutsourcingDeliveryItem', back_populates='delivery', lazy='dynamic')
 
     __table_args__ = (
@@ -314,7 +324,7 @@ class OutsourcingPayment(Base, TimestampMixin):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     payment_no = Column(String(50), unique=True, nullable=False, comment='付款单号')
-    vendor_id = Column(Integer, ForeignKey('outsourcing_vendors.id'), nullable=False, comment='外协商ID')
+    vendor_id = Column(Integer, ForeignKey('vendors.id'), nullable=False, comment='外协商ID')
     order_id = Column(Integer, ForeignKey('outsourcing_orders.id'), comment='外协订单ID')
 
     # 付款信息
@@ -337,7 +347,7 @@ class OutsourcingPayment(Base, TimestampMixin):
     created_by = Column(Integer, ForeignKey('users.id'), comment='创建人')
 
     # 关系
-    vendor = relationship('OutsourcingVendor')
+    vendor = relationship('Vendor', foreign_keys=[vendor_id])
     order = relationship('OutsourcingOrder')
 
     __table_args__ = (
@@ -355,7 +365,7 @@ class OutsourcingEvaluation(Base, TimestampMixin):
     __tablename__ = 'outsourcing_evaluations'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    vendor_id = Column(Integer, ForeignKey('outsourcing_vendors.id'), nullable=False, comment='外协商ID')
+    vendor_id = Column(Integer, ForeignKey('vendors.id'), nullable=False, comment='外协商ID')
     order_id = Column(Integer, ForeignKey('outsourcing_orders.id'), comment='关联订单')
     eval_period = Column(String(20), comment='评价周期')
 
@@ -376,7 +386,7 @@ class OutsourcingEvaluation(Base, TimestampMixin):
     evaluated_at = Column(DateTime, comment='评价时间')
 
     # 关系
-    vendor = relationship('OutsourcingVendor', back_populates='evaluations')
+    vendor = relationship('Vendor', foreign_keys=[vendor_id], back_populates='outsourcing_evaluations')
 
     __table_args__ = (
         Index('idx_os_eval_vendor', 'vendor_id'),

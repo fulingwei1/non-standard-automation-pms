@@ -319,3 +319,83 @@ export function StrategyProtectedRoute({ children }) {
     </ProtectedRoute>
   );
 }
+
+/**
+ * Warehouse-specific protected route
+ * Wrapper for ProtectedRoute with warehouse permission check
+ *
+ * 仓储模块访问控制：
+ * - 仓储管理员/仓储经理：完整访问
+ * - 超级管理员/系统管理员：完整访问
+ */
+export function WarehouseProtectedRoute({ children }) {
+  const userStr = localStorage.getItem("user");
+  let isSuperuser = false;
+  let role = null;
+
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr);
+      isSuperuser = user.is_superuser === true || user.isSuperuser === true;
+      role = user.role;
+    } catch {
+      // ignore
+    }
+  }
+
+  // 仓储角色权限检查
+  const warehouseRoles = ['WAREHOUSE', 'WAREHOUSE_MGR', 'WAREHOUSE', 'WAREHOUSE_MGR'];
+  const hasWarehouseAccess = (userRole) => {
+    const upperRole = userRole?.toUpperCase();
+    return warehouseRoles.includes(upperRole) || isSuperuser;
+  };
+
+  return (
+    <ProtectedRoute
+      checkPermission={(userRole) => hasWarehouseAccess({ role: userRole })}
+      permissionName="仓储管理模块"
+    >
+      {children}
+    </ProtectedRoute>
+  );
+}
+
+/**
+ * Quality-specific protected route
+ * Wrapper for ProtectedRoute with quality permission check
+ *
+ * 质量模块访问控制：
+ * - 质量工程师/质量主管：完整访问
+ * - 超级管理员/系统管理员：完整访问
+ */
+export function QualityProtectedRoute({ children }) {
+  const userStr = localStorage.getItem("user");
+  let isSuperuser = false;
+  let role = null;
+
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr);
+      isSuperuser = user.is_superuser === true || user.isSuperuser === true;
+      role = user.role;
+    } catch {
+      // ignore
+    }
+  }
+
+  // 质量角色权限检查
+  const qualityRoles = ['QA', 'QA_MGR'];
+  const hasQualityAccess = (userRole) => {
+    const upperRole = userRole?.toUpperCase();
+    return qualityRoles.includes(upperRole) || isSuperuser;
+  };
+
+  return (
+    <ProtectedRoute
+      checkPermission={(userRole) => hasQualityAccess({ role: userRole })}
+      permissionName="质量管理模块"
+    >
+      {children}
+    </ProtectedRoute>
+  );
+}

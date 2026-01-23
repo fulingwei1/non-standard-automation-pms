@@ -11,7 +11,8 @@ import pandas as pd
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from app.models.material import Material, Supplier
+from app.models.material import Material
+from app.models.vendor import Vendor
 
 from .base import ImportBase
 
@@ -83,15 +84,17 @@ class MaterialImporter(ImportBase):
                 # 查找或创建供应商
                 default_supplier_id = None
                 if supplier_name:
-                    supplier = db.query(Supplier).filter(
-                        Supplier.supplier_name == supplier_name
+                    supplier = db.query(Vendor).filter(
+                        Vendor.supplier_name == supplier_name,
+                        Vendor.vendor_type == 'MATERIAL'
                     ).first()
                     if not supplier:
                         # 自动创建供应商
                         supplier_code = f"SUP{datetime.now().strftime('%Y%m%d%H%M%S')}{index:03d}"
-                        supplier = Supplier(
+                        supplier = Vendor(
                             supplier_code=supplier_code,
                             supplier_name=supplier_name,
+                            vendor_type='MATERIAL',
                             status='ACTIVE'
                         )
                         db.add(supplier)

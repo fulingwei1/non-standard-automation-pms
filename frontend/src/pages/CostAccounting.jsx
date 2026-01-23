@@ -122,11 +122,12 @@ export default function CostAccounting() {
   // Filter costs
   const filteredCosts = useMemo(() => {
     return mockCosts.filter((cost) => {
-      const matchesSearch =
+      const searchLower = (searchTerm || "").toLowerCase();
+    const matchesSearch =
       !searchTerm ||
-      cost.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cost.sourceNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cost.description.toLowerCase().includes(searchTerm.toLowerCase());
+      (cost.projectName || "").toLowerCase().includes(searchLower) ||
+      (cost.sourceNo || "").toLowerCase().includes(searchLower) ||
+      (cost.description || "").toLowerCase().includes(searchLower);
 
       const matchesProject =
       selectedProject === "all" || cost.projectId === selectedProject;

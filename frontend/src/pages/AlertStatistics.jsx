@@ -153,9 +153,10 @@ const AlertStatistics = () => {
   // 过滤数据
   const filteredAlerts = useMemo(() => {
     return alerts.filter((alert) => {
-      const matchesSearch = !searchText ||
-      alert.title.toLowerCase().includes(searchText.toLowerCase()) ||
-      alert.description?.toLowerCase().includes(searchText.toLowerCase());
+      const searchLower = (searchText || "").toLowerCase();
+    const matchesSearch = !searchText ||
+      (alert.title || "").toLowerCase().includes(searchLower) ||
+      (alert.description || "").toLowerCase().includes(searchLower);
 
       const matchesType = !filters.type || alert.type === filters.type;
       const matchesLevel = !filters.level || alert.level === filters.level;

@@ -250,12 +250,12 @@ export const OpportunityFilters = ({
   const renderSelectFilter = (title, options, key) =>
   <div className="space-y-2">
       <div className="text-sm font-medium">{title}</div>
-      <Select value={filters[key] || ''} onValueChange={(value) => setRangeFilter(key, value || undefined)}>
+      <Select value={filters[key] || '__all__'} onValueChange={(value) => setRangeFilter(key, value === '__all__' ? undefined : value)}>
         <SelectTrigger>
           <SelectValue placeholder="选择..." />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">全部</SelectItem>
+          <SelectItem value="__all__">全部</SelectItem>
           {options.map(({ value, label }) =>
         <SelectItem key={value} value={value}>
               {label}

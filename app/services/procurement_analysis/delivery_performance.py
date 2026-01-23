@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.material import Supplier
+from app.models.vendor import Vendor
 from app.models.purchase import GoodsReceipt, PurchaseOrder
 
 
@@ -28,9 +28,9 @@ class DeliveryPerformanceAnalyzer:
         """
         # 查询收货单和订单
         query = db.query(
-            Supplier.id.label('supplier_id'),
-            Supplier.supplier_name,
-            Supplier.supplier_code,
+            Vendor.id.label('supplier_id'),
+            Vendor.supplier_name,
+            Vendor.supplier_code,
             GoodsReceipt.id.label('receipt_id'),
             GoodsReceipt.receipt_date,
             GoodsReceipt.receipt_no,
@@ -40,7 +40,7 @@ class DeliveryPerformanceAnalyzer:
         ).join(
             PurchaseOrder, GoodsReceipt.order_id == PurchaseOrder.id
         ).join(
-            Supplier, GoodsReceipt.supplier_id == Supplier.id
+            Vendor, GoodsReceipt.supplier_id == Vendor.id
         ).filter(
             GoodsReceipt.receipt_date >= start_date,
             GoodsReceipt.receipt_date <= end_date
@@ -49,7 +49,7 @@ class DeliveryPerformanceAnalyzer:
         )
 
         if supplier_id:
-            query = query.filter(Supplier.id == supplier_id)
+            query = query.filter(Vendor.id == supplier_id)
 
         results = query.all()
 

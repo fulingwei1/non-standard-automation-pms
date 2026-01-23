@@ -94,11 +94,12 @@ export default function QuotationList() {
   // Filter quotations
   const filteredQuotations = useMemo(() => {
     return mockQuotations.filter((quote) => {
-      const matchesSearch =
+      const searchLower = (searchTerm || "").toLowerCase();
+    const matchesSearch =
       !searchTerm ||
-      quote.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      quote.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      quote.customerShort.toLowerCase().includes(searchTerm.toLowerCase());
+      (quote.name || "").toLowerCase().includes(searchLower) ||
+      (quote.id || "").toLowerCase().includes(searchLower) ||
+      (quote.customerShort || "").toLowerCase().includes(searchLower);
 
       const matchesStatus =
       selectedStatus === "all" || quote.status === selectedStatus;

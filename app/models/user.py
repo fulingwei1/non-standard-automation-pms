@@ -59,6 +59,47 @@ class User(Base, TimestampMixin):
     )
     # 上下级关系
     manager = relationship("User", remote_side=[id], foreign_keys=[reporting_to], backref="subordinates")
+    # 项目成员关系（补充缺失的反向关系）
+    project_memberships = relationship("ProjectMember", back_populates="user", foreign_keys="ProjectMember.user_id")
+
+    # ========================================================================
+    # 便捷属性方法
+    # ========================================================================
+
+    @property
+    def display_name(self) -> str:
+        """获取用户显示名称（优先使用真实姓名）"""
+        return self.real_name or self.username
+
+    @property
+    def full_info(self) -> dict:
+        """获取用户完整信息"""
+        return {
+            'id': self.id,
+            'username': self.username,
+            'real_name': self.real_name,
+            'employee_no': self.employee_no,
+            'department': self.department,
+            'position': self.position,
+            'email': self.email,
+            'phone': self.phone,
+            'avatar': self.avatar,
+        }
+
+    @property
+    def is_manager(self) -> bool:
+        """是否是管理者（有下属）"""
+        return hasattr(self, 'subordinates') and list(self.subordinates)
+
+    @property
+    def role_codes(self) -> list:
+        """获取用户所有角色编码"""
+        return [r.role.role_code for r in self.roles.all()] if self.roles else []
+
+    @property
+    def has_sufficient_credits(self) -> bool:
+        """是否有足够的积分（假设阈值为10）"""
+        return self.solution_credits >= 10
 
     def __repr__(self):
         return f"<User {self.username}>"
@@ -156,13 +197,15 @@ class RoleTemplate(Base, TimestampMixin):
     __tablename__ = "role_templates"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    template_code = Column(String(50), unique=True, nullable=False, comment="模板编码")
-    template_name = Column(String(100), nullable=False, comment="模板名称")
+    template_code = Column(String(30), unique=True, nullable=False, comment="模板编码")
+    template_name = Column(String(50), nullable=False, comment="模板名称")
+    role_type = Column(String(20), nullable=False, default="BUSINESS", comment="角色类型")
+    scope_type = Column(String(20), default="GLOBAL", comment="范围类型")
+    data_scope = Column(String(20), default="PROJECT", comment="数据权限范围")
+    level = Column(Integer, default=2, comment="层级")
     description = Column(Text, comment="模板描述")
-    data_scope = Column(String(20), default="OWN", comment="数据权限范围")
-    permission_ids = Column(JSON, comment="权限ID数组")
+    permission_snapshot = Column(Text, comment="权限快照")
     is_active = Column(Boolean, default=True, comment="是否启用")
-    sort_order = Column(Integer, default=0, comment="排序")
 
     def __repr__(self):
         return f"<RoleTemplate {self.template_code}>"
