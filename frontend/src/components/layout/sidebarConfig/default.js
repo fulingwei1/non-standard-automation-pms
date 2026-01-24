@@ -95,7 +95,7 @@ export const defaultNavGroups = [
       { name: "供应商管理", path: "/suppliers", icon: "Building2", permission: "supplier:read", permissionLabel: "供应商管理" },
       { name: "BOM管理", path: "/bom", icon: "Layers", permission: "bom:read", permissionLabel: "BOM管理" },
       { name: "物料管理", path: "/materials", icon: "Package", permission: "material:read", permissionLabel: "物料管理" },
-      { name: "物料需求汇总", path: "/material-demands", icon: "List", permission: "material:demand:read", permissionLabel: "物料需求" },
+      { name: "物料需求", path: "/material-demands", icon: "List", permission: "material:demand:read", permissionLabel: "物料需求" },
       { name: "收货管理", path: "/purchases/receipts", icon: "Truck", permission: "purchase:receipt:read", permissionLabel: "收货管理" },
       { name: "齐套与缺料", path: "/material-analysis", icon: "Boxes", permission: "material:analysis:read", permissionLabel: "齐套与缺料" },
       { name: "采购分析", path: "/procurement-analysis", icon: "BarChart3", permission: "purchase:analysis:read", permissionLabel: "采购分析" },
