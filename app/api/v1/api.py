@@ -4,6 +4,7 @@ from app.api.v1.endpoints import (  # projects,  # 已拆分为projects包; cost
     acceptance,
     admin_stats,
     advantage_products,
+    dashboard_unified,
     dashboard_stats,
     alerts,
     audits,
@@ -224,6 +225,7 @@ api_router.include_router(
     project_contributions.router, prefix="", tags=["project-contributions"]
 )
 api_router.include_router(admin_stats.router, prefix="", tags=["admin-stats"])
+api_router.include_router(dashboard_unified.router, prefix="", tags=["dashboard-unified"])
 api_router.include_router(dashboard_stats.router, prefix="", tags=["dashboard-stats"])
 api_router.include_router(hr_management.router, prefix="/hr", tags=["hr-management"])
 api_router.include_router(

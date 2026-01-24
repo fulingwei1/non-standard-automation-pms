@@ -946,7 +946,6 @@ from tests.factories import (
     ProjectWithCustomerFactory,
     PurchaseOrderFactory,
     QuoteFactory,
-    SupplierFactory,
     UserFactory,
     create_complete_project_setup,
 )

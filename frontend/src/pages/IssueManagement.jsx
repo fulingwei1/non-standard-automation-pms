@@ -36,6 +36,9 @@ export default function IssueManagement() {
   const [selectedIssue, setSelectedIssue] = useState(null);
   const [selectedIssues, setSelectedIssues] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [statsError, setStatsError] = useState(null);
+  const [emptyHint, setEmptyHint] = useState(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
 
@@ -70,6 +73,8 @@ export default function IssueManagement() {
   const fetchIssues = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
+      setEmptyHint(null);
       // 过滤掉值为 "all" 的参数，后端不接受 "all" 作为筛选值
       const apiParams = {};
       if (filters.status && filters.status !== "all") {apiParams.status = filters.status;}
@@ -81,8 +86,15 @@ export default function IssueManagement() {
       const response = await issueApi.getIssues(apiParams);
       // API 返回 {items: [...], total, page, page_size, pages}
       const rawData = response.data?.items || response.data || [];
+      const dataItems = Array.isArray(rawData) ? rawData : [];
+      const hasActiveFilters = Object.values(filters).some(
+        (value) => value && value !== "all"
+      );
+      if (dataItems.length === 0 && !searchTerm && !hasActiveFilters) {
+        setEmptyHint("数据库暂无问题数据");
+      }
       // 映射 API 字段名到前端期望的字段名
-      const issuesData = rawData.map((issue) => ({
+      const issuesData = dataItems.map((issue) => ({
         ...issue,
         // 兼容字段映射
         id: issue.issue_no || issue.id,
@@ -99,50 +111,17 @@ export default function IssueManagement() {
       setFilteredIssues(issuesData);
     } catch (error) {
       console.error('Failed to fetch issues:', error);
-      // 使用模拟数据
-      const mockIssues = [
-      {
-        id: "ISS-001",
-        title: "系统登录页面无法正常显示",
-        description: "用户反馈登录页面在Chrome浏览器中显示异常，部分按钮无法点击",
-        status: "OPEN",
-        severity: "MAJOR",
-        priority: "HIGH",
-        category: "TECHNICAL",
-        assignee: "张三",
-        createdAt: "2024-01-14T10:00:00Z",
-        updatedAt: "2024-01-14T10:00:00Z",
-        dueDate: "2024-01-17T10:00:00Z"
-      },
-      {
-        id: "ISS-002",
-        title: "数据库连接超时",
-        description: "高峰期数据库连接超时，影响用户体验",
-        status: "PROCESSING",
-        severity: "CRITICAL",
-        priority: "URGENT",
-        category: "TECHNICAL",
-        assignee: "李四",
-        createdAt: "2024-01-13T15:30:00Z",
-        updatedAt: "2024-01-14T09:15:00Z",
-        dueDate: "2024-01-15T15:30:00Z"
-      },
-      {
-        id: "ISS-003",
-        title: "报表生成速度缓慢",
-        description: "月度报表生成需要超过5分钟时间",
-        status: "RESOLVED",
-        severity: "MINOR",
-        priority: "MEDIUM",
-        category: "PERFORMANCE",
-        assignee: "王五",
-        createdAt: "2024-01-12T08:00:00Z",
-        updatedAt: "2024-01-14T11:20:00Z",
-        dueDate: "2024-01-19T08:00:00Z"
-      }];
-
-      setIssues(mockIssues);
-      setFilteredIssues(mockIssues);
+      const status = error.response?.status;
+      const detail = error.response?.data?.detail;
+      const message = error.response?.data?.message;
+      const apiMessage =
+        typeof detail === "string"
+          ? detail
+          : detail?.message || message || error.message;
+      setError(status ? `API错误 (${status}): ${apiMessage}` : `API错误: ${apiMessage}`);
+      setIssues([]);
+      setFilteredIssues([]);
+      setEmptyHint(null);
     } finally {
       setLoading(false);
     }
@@ -151,6 +130,7 @@ export default function IssueManagement() {
   // 获取统计数据
   const fetchStats = useCallback(async () => {
     try {
+      setStatsError(null);
       const response = await issueApi.getStats({ timeRange });
       const apiStats = response.data || {};
       // 映射 snake_case 到 camelCase
@@ -173,38 +153,15 @@ export default function IssueManagement() {
       });
     } catch (error) {
       console.error('Failed to fetch stats:', error);
-      // 使用模拟数据
-      setStats({
-        total: 25,
-        open: 8,
-        processing: 6,
-        resolved: 7,
-        closed: 4,
-        blocking: 2,
-        overdue: 3,
-        byStatus: {
-          OPEN: 8,
-          PROCESSING: 6,
-          RESOLVED: 7,
-          CLOSED: 4
-        },
-        bySeverity: {
-          CRITICAL: 2,
-          MAJOR: 8,
-          MINOR: 12,
-          TRIVIAL: 3
-        },
-        byCategory: {
-          TECHNICAL: 10,
-          PERFORMANCE: 5,
-          UI: 6,
-          PROCESS: 4
-        },
-        createdToday: 3,
-        resolvedToday: 2,
-        avgResolutionTime: 48.5,
-        slaCompliance: 85.2
-      });
+      const status = error.response?.status;
+      const detail = error.response?.data?.detail;
+      const message = error.response?.data?.message;
+      const apiMessage =
+        typeof detail === "string"
+          ? detail
+          : detail?.message || message || error.message;
+      setStatsError(status ? `API错误 (${status}): ${apiMessage}` : `API错误: ${apiMessage}`);
+      setStats(DEFAULT_ISSUE_STATS);
     }
   }, [timeRange]);
 
@@ -330,6 +287,17 @@ export default function IssueManagement() {
 
 
       <motion.div variants={fadeIn} className="space-y-6">
+        {(error || statsError) && (
+          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
+            {error && <div>问题列表加载失败：{error}</div>}
+            {statsError && <div>统计数据加载失败：{statsError}</div>}
+          </div>
+        )}
+        {emptyHint && !error && (
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200">
+            {emptyHint}
+          </div>
+        )}
         {/* 统计概览 */}
         <IssueStatsOverview
           stats={stats}

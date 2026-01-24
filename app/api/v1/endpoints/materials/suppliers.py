@@ -149,7 +149,7 @@ def get_material_suppliers(
 
     result = []
     for ms in material_suppliers:
-        supplier = ms.supplier
+        supplier = ms.vendor
         result.append({
             "id": supplier.id,
             "supplier_code": supplier.supplier_code,

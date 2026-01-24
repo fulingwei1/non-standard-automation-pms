@@ -3,7 +3,7 @@
 项目评价模块 Schema 定义
 """
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
@@ -15,7 +15,7 @@ from app.schemas.common import PageParams, PaginatedResponse, ResponseModel
 
 class ProjectEvaluationBase(BaseModel):
     """项目评价基础模型"""
-    project_id: int = Field(..., description="项目ID")
+    project_id: Optional[int] = Field(None, description="项目ID（可选，通常从路径中获取）")
     novelty_score: Decimal = Field(..., ge=1, le=10, description="项目新旧得分（1-10分）")
     new_tech_score: Decimal = Field(..., ge=1, le=10, description="新技术得分（1-10分）")
     difficulty_score: Decimal = Field(..., ge=1, le=10, description="项目难度得分（1-10分）")
@@ -54,8 +54,8 @@ class ProjectEvaluationResponse(ProjectEvaluationBase):
     evaluator_name: Optional[str] = None
     evaluation_date: date
     status: str
-    created_at: str
-    updated_at: str
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True

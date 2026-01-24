@@ -27,7 +27,6 @@ from ...outsourcing import (
     OutsourcingOrderItem,
     OutsourcingPayment,
     OutsourcingProgress,
-    OutsourcingVendor,
 )
 
 __all__ = [
@@ -45,7 +44,6 @@ __all__ = [
     "MaterialRequisition",
     "MaterialRequisitionItem",
     "ProductionDailyReport",
-    "OutsourcingVendor",
     "OutsourcingOrder",
     "OutsourcingOrderItem",
     "OutsourcingDelivery",

@@ -32,13 +32,16 @@ def print_outsourcing_order(
     外协订单打印
     返回订单的打印数据（包含订单信息、明细、供应商信息等）
     """
-    from app.models.outsourcing import OutsourcingVendor
+    from app.models.vendor import Vendor
 
     order = db.query(OutsourcingOrder).filter(OutsourcingOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="外协订单不存在")
 
-    vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == order.vendor_id).first()
+    vendor = db.query(Vendor).filter(
+        Vendor.id == order.vendor_id,
+        Vendor.vendor_type == 'OUTSOURCING'
+    ).first()
     project = db.query(Project).filter(Project.id == order.project_id).first()
     machine = None
     if order.machine_id:
@@ -112,7 +115,7 @@ def print_outsourcing_order(
             "created_at": order.created_at.isoformat() if order.created_at else None,
         },
         "vendor": {
-            "vendor_name": vendor.vendor_name if vendor else None,
+            "vendor_name": vendor.supplier_name if vendor else None,
             "contact_person": vendor.contact_person if vendor else None,
             "contact_phone": vendor.contact_phone if vendor else None,
             "address": vendor.address if vendor else None,

@@ -82,8 +82,8 @@ export const defaultNavGroups = [
   {
     label: "研发管理",
     items: [
-      { name: "研发项目列表", path: "/rd-projects", icon: "Briefcase", permission: "rd:project:read", permissionLabel: "研发项目" },
-      { name: "研发成本管理", path: "/rd-cost", icon: "DollarSign", permission: "rd:cost:read", permissionLabel: "研发成本" }
+      { name: "研发项目", path: "/rd-projects", icon: "Briefcase", permission: "rd:project:read", permissionLabel: "研发项目" },
+      { name: "研发成本", path: "/rd-cost", icon: "DollarSign", permission: "rd:cost:read", permissionLabel: "研发成本" }
     ]
   },
   // 8. 采购管理

@@ -23,7 +23,8 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.outsourcing import OutsourcingOrder, OutsourcingVendor
+from app.models.outsourcing import OutsourcingOrder
+from app.models.vendor import Vendor
 from app.models.project import Machine, Project, ProjectPaymentPlan
 from app.models.rd_project import RdCost, RdCostType, RdProject
 from app.models.report_center import (

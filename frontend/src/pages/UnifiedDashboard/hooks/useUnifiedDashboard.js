@@ -37,8 +37,9 @@ export function useUnifiedDashboard(roleCode) {
     try {
       // 尝试从后端获取工作台数据
       // 后端会根据角色返回对应的数据
-      const response = await api.get(`/dashboard/unified/${roleCode}`);
-      setWidgetData(response.data || {});
+      const response = await api.get(`/dashboard/unified/${encodeURIComponent(roleCode)}`);
+      const payload = response.data;
+      setWidgetData(payload?.data ?? payload ?? {});
     } catch (err) {
       console.warn('Dashboard API not available, using default data:', err.message);
       // API 不可用时使用空数据，组件自行加载

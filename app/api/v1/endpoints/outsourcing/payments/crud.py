@@ -13,7 +13,8 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.outsourcing import OutsourcingOrder, OutsourcingPayment, OutsourcingVendor
+from app.models.outsourcing import OutsourcingOrder, OutsourcingPayment
+from app.models.vendor import Vendor
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.outsourcing import (
@@ -70,8 +71,11 @@ def read_outsourcing_payments(
     for payment in payments:
         vendor_name = None
         if payment.vendor_id:
-            vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == payment.vendor_id).first()
-            vendor_name = vendor.vendor_name if vendor else None
+            vendor = db.query(Vendor).filter(
+                Vendor.id == payment.vendor_id,
+                Vendor.vendor_type == 'OUTSOURCING'
+            ).first()
+            vendor_name = vendor.supplier_name if vendor else None
 
         order_no = None
         if payment.order_id:
@@ -126,7 +130,10 @@ def create_outsourcing_payment(
     创建外协付款记录
     """
     # 验证外协商是否存在
-    vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == payment_in.vendor_id).first()
+    vendor = db.query(Vendor).filter(
+        Vendor.id == payment_in.vendor_id,
+        Vendor.vendor_type == 'OUTSOURCING'
+    ).first()
     if not vendor:
         raise HTTPException(status_code=404, detail="外协商不存在")
 
@@ -174,7 +181,7 @@ def create_outsourcing_payment(
     db.refresh(payment)
 
     # 构建响应
-    vendor_name = vendor.vendor_name
+    vendor_name = vendor.supplier_name
     order_no = None
     if payment.order_id:
         order = db.query(OutsourcingOrder).filter(OutsourcingOrder.id == payment.order_id).first()

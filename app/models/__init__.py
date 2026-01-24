@@ -51,7 +51,6 @@ __all__ = [
     # Material
     "Material",
     "MaterialCategory",
-    "Supplier",
     "Vendor",
     "MaterialSupplier",
     "BomHeader",
@@ -103,7 +102,6 @@ __all__ = [
     "IssueTemplate",
     "SolutionTemplate",
     # Outsourcing
-    "OutsourcingVendor",
     "OutsourcingOrder",
     "OutsourcingOrderItem",
     "OutsourcingDelivery",

@@ -33,8 +33,8 @@ from app.models.outsourcing import (
     OutsourcingOrderItem,
     OutsourcingPayment,
     OutsourcingProgress,
-    OutsourcingVendor,
 )
+from app.models.vendor import Vendor
 from app.models.project import Machine, Project
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
@@ -128,33 +128,33 @@ def read_vendors(
     """
     获取外协商列表
     """
-    query = db.query(OutsourcingVendor)
+    query = db.query(Vendor).filter(Vendor.vendor_type == 'OUTSOURCING')
 
     if keyword:
         query = query.filter(
             or_(
-                OutsourcingVendor.vendor_code.like(f"%{keyword}%"),
-                OutsourcingVendor.vendor_name.like(f"%{keyword}%"),
+                Vendor.supplier_code.like(f"%{keyword}%"),
+                Vendor.supplier_name.like(f"%{keyword}%"),
             )
         )
 
     if vendor_type:
-        query = query.filter(OutsourcingVendor.vendor_type == vendor_type)
+        query = query.filter(Vendor.supplier_type == vendor_type)
 
     if status:
-        query = query.filter(OutsourcingVendor.status == status)
+        query = query.filter(Vendor.status == status)
 
     total = query.count()
     offset = (page - 1) * page_size
-    vendors = query.order_by(OutsourcingVendor.created_at).offset(offset).limit(page_size).all()
+    vendors = query.order_by(Vendor.created_at).offset(offset).limit(page_size).all()
 
     items = []
     for vendor in vendors:
         items.append(VendorResponse(
             id=vendor.id,
-            vendor_code=vendor.vendor_code,
-            vendor_name=vendor.vendor_name,
-            vendor_short_name=vendor.vendor_short_name,
+            vendor_code=vendor.supplier_code,
+            vendor_name=vendor.supplier_name,
+            vendor_short_name=vendor.supplier_short_name,
             vendor_type=vendor.vendor_type,
             contact_person=vendor.contact_person,
             contact_phone=vendor.contact_phone,
@@ -187,15 +187,18 @@ def read_vendor(
     """
     获取外协商详情
     """
-    vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == vendor_id).first()
+    vendor = db.query(Vendor).filter(
+        Vendor.id == vendor_id,
+        Vendor.vendor_type == 'OUTSOURCING'
+    ).first()
     if not vendor:
         raise HTTPException(status_code=404, detail="外协商不存在")
 
     return VendorResponse(
         id=vendor.id,
-        vendor_code=vendor.vendor_code,
-        vendor_name=vendor.vendor_name,
-        vendor_short_name=vendor.vendor_short_name,
+        vendor_code=vendor.supplier_code,
+        vendor_name=vendor.supplier_name,
+        vendor_short_name=vendor.supplier_short_name,
         vendor_type=vendor.vendor_type,
         contact_person=vendor.contact_person,
         contact_phone=vendor.contact_phone,
@@ -222,15 +225,19 @@ def create_vendor(
     创建外协商
     """
     # 检查编码是否已存在
-    existing = db.query(OutsourcingVendor).filter(OutsourcingVendor.vendor_code == vendor_in.vendor_code).first()
+    existing = db.query(Vendor).filter(
+        Vendor.supplier_code == vendor_in.vendor_code,
+        Vendor.vendor_type == 'OUTSOURCING'
+    ).first()
     if existing:
         raise HTTPException(status_code=400, detail="外协商编码已存在")
 
-    vendor = OutsourcingVendor(
-        vendor_code=vendor_in.vendor_code,
-        vendor_name=vendor_in.vendor_name,
-        vendor_short_name=vendor_in.vendor_short_name,
-        vendor_type=vendor_in.vendor_type,
+    vendor = Vendor(
+        supplier_code=vendor_in.vendor_code,
+        supplier_name=vendor_in.vendor_name,
+        supplier_short_name=vendor_in.vendor_short_name,
+        vendor_type='OUTSOURCING',
+        supplier_type=vendor_in.vendor_type,
         contact_person=vendor_in.contact_person,
         contact_phone=vendor_in.contact_phone,
         contact_email=vendor_in.contact_email,
@@ -264,7 +271,10 @@ def update_vendor(
     """
     更新外协商
     """
-    vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == vendor_id).first()
+    vendor = db.query(Vendor).filter(
+        Vendor.id == vendor_id,
+        Vendor.vendor_type == 'OUTSOURCING'
+    ).first()
     if not vendor:
         raise HTTPException(status_code=404, detail="外协商不存在")
 
@@ -294,7 +304,10 @@ def create_vendor_evaluation(
     """
     外协商评价
     """
-    vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == vendor_id).first()
+    vendor = db.query(Vendor).filter(
+        Vendor.id == vendor_id,
+        Vendor.vendor_type == 'OUTSOURCING'
+    ).first()
     if not vendor:
         raise HTTPException(status_code=404, detail="外协商不存在")
 

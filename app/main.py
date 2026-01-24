@@ -13,6 +13,14 @@ from app.core.logging_config import setup_logging
 from app.core.exception_handlers import setup_exception_handlers
 from app.api.v1.api import api_router
 
+# 导入统一响应格式（确保可用）
+from app.core.schemas.response import (
+    SuccessResponse,
+    ErrorResponse,
+    PaginatedResponse,
+    ListResponse,
+)
+
 # 配置日志
 setup_logging()
 

@@ -33,8 +33,8 @@ from app.models.outsourcing import (
     OutsourcingOrderItem,
     OutsourcingPayment,
     OutsourcingProgress,
-    OutsourcingVendor,
 )
+from app.models.vendor import Vendor
 from app.models.project import Machine, Project
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
@@ -145,7 +145,10 @@ def read_outsourcing_deliveries(
 
     items = []
     for delivery in deliveries:
-        vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == delivery.vendor_id).first()
+        vendor = db.query(Vendor).filter(
+            Vendor.id == delivery.vendor_id,
+            Vendor.vendor_type == 'OUTSOURCING'
+        ).first()
         order = db.query(OutsourcingOrder).filter(OutsourcingOrder.id == delivery.order_id).first()
 
         items.append(OutsourcingDeliveryResponse(
@@ -153,7 +156,7 @@ def read_outsourcing_deliveries(
             delivery_no=delivery.delivery_no,
             order_id=delivery.order_id,
             order_no=order.order_no if order else None,
-            vendor_name=vendor.vendor_name if vendor else None,
+            vendor_name=vendor.supplier_name if vendor else None,
             delivery_date=delivery.delivery_date,
             delivery_type=delivery.delivery_type,
             status=delivery.status,
@@ -189,7 +192,10 @@ def create_outsourcing_delivery(
     if order.status not in ["APPROVED", "IN_PROGRESS"]:
         raise HTTPException(status_code=400, detail="只能为已审批或进行中的订单创建交付记录")
 
-    vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == order.vendor_id).first()
+        vendor = db.query(Vendor).filter(
+            Vendor.id == order.vendor_id,
+            Vendor.vendor_type == 'OUTSOURCING'
+        ).first()
     if not vendor:
         raise HTTPException(status_code=404, detail="外协商不存在")
 

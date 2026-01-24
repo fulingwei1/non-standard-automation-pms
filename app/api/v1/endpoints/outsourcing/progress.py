@@ -33,7 +33,6 @@ from app.models.outsourcing import (
     OutsourcingOrderItem,
     OutsourcingPayment,
     OutsourcingProgress,
-    OutsourcingVendor,
 )
 from app.models.project import Machine, Project
 from app.models.user import User

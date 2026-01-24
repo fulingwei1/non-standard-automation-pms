@@ -21,69 +21,6 @@ from sqlalchemy.orm import relationship
 from .base import Base, TimestampMixin
 
 
-class OutsourcingVendor(Base, TimestampMixin):
-    """
-    外协商表（兼容层）
-
-    注意：此表已合并到 vendors 表中。
-    为了向后兼容，保留此模型指向 outsourcing_vendors_view 视图。
-    新代码应使用 app.models.vendor.Vendor 代替。
-
-    迁移路径：
-    1. 运行 migrations/20250122_merge_vendors_sqlite.sql
-    2. 将代码中的 OutsourcingVendor 替换为 Vendor
-    3. 添加 vendor_type='OUTSOURCING' 过滤条件
-    """
-    __tablename__ = 'outsourcing_vendors_view'
-
-    id = Column(Integer, primary_key=True)
-    vendor_code = Column(String(50), nullable=False)
-    vendor_name = Column(String(200), nullable=False)
-    vendor_short_name = Column(String(50))
-    vendor_type = Column(String(20))
-
-    # 联系信息
-    contact_person = Column(String(50))
-    contact_phone = Column(String(30))
-    contact_email = Column(String(100))
-    address = Column(String(500))
-
-    # 资质信息
-    business_license = Column(String(100))
-    qualification = Column(JSON)
-    capabilities = Column(JSON)
-
-    # 评价
-    quality_rating = Column(Numeric(3, 2))
-    delivery_rating = Column(Numeric(3, 2))
-    service_rating = Column(Numeric(3, 2))
-    overall_rating = Column(Numeric(3, 2))
-
-    # 状态
-    status = Column(String(20))
-    cooperation_start = Column(Date)
-    last_order_date = Column(Date)
-
-    # 银行信息
-    bank_name = Column(String(100))
-    bank_account = Column(String(50))
-    tax_number = Column(String(50))
-
-    remark = Column(Text)
-    created_by = Column(Integer)
-    created_at = Column(DateTime)
-    updated_at = Column(DateTime)
-
-    # 关系 - 注意：视图不支持关系，暂时禁用
-    # TODO: 迁移到 Vendor 模型后移除此兼容层
-
-    # 注意：视图不支持索引定义，索引已在 vendors 表中定义
-    # __table_args__ = ()  # 视图不需要索引
-
-    def __repr__(self):
-        return f'<OutsourcingVendor {self.vendor_code} (deprecated, use Vendor instead)>'
-
-
 class OutsourcingOrder(Base, TimestampMixin):
     """外协订单表"""
     __tablename__ = 'outsourcing_orders'

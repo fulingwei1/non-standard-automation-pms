@@ -71,7 +71,6 @@ __all__ = [
     # Material (from material_purchase)
     "Material",
     "MaterialCategory",
-    "Supplier",
     "Vendor",
     "MaterialSupplier",
     "BomHeader",
@@ -154,7 +153,6 @@ __all__ = [
     "MaterialRequisition",
     "MaterialRequisitionItem",
     "ProductionDailyReport",
-    "OutsourcingVendor",
     "OutsourcingOrder",
     "OutsourcingOrderItem",
     "OutsourcingDelivery",

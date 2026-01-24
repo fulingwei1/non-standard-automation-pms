@@ -16,7 +16,6 @@ from app.models.outsourcing import (
     OutsourcingOrder,
     OutsourcingOrderItem,
     OutsourcingPayment,
-    OutsourcingVendor,
 )
 from app.models.user import User
 from app.schemas.common import ResponseModel
@@ -36,7 +35,11 @@ def get_vendor_statement(
     外协对账单
     生成指定供应商的对账单，包含订单、交付、付款等明细
     """
-    vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == vendor_id).first()
+    from app.models.vendor import Vendor
+    vendor = db.query(Vendor).filter(
+        Vendor.id == vendor_id,
+        Vendor.vendor_type == 'OUTSOURCING'
+    ).first()
     if not vendor:
         raise HTTPException(status_code=404, detail="外协供应商不存在")
 
@@ -112,8 +115,8 @@ def get_vendor_statement(
         message="success",
         data={
             "vendor_id": vendor_id,
-            "vendor_name": vendor.vendor_name,
-            "vendor_code": vendor.vendor_code,
+            "vendor_name": vendor.supplier_name,
+            "vendor_code": vendor.supplier_code,
             "period": {
                 "start_date": start_date.isoformat() if start_date else None,
                 "end_date": end_date.isoformat() if end_date else None

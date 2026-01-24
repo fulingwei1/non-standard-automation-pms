@@ -49,7 +49,22 @@ export function Header({ sidebarCollapsed = false, user, onLogout }) {
 
   const roleInfo = useMemo(() => {
     if (!currentUser) {return null;}
-    return getRoleInfo(currentUser.role || "admin");
+    const hasUser =
+      currentUser?.id ||
+      currentUser?.username ||
+      currentUser?.real_name ||
+      currentUser?.name;
+    if (!hasUser) {
+      return getRoleInfo("unknown");
+    }
+    const role =
+      currentUser.role ||
+      currentUser.role_code ||
+      currentUser.role_name ||
+      (Array.isArray(currentUser.roles) && currentUser.roles.length > 0
+        ? currentUser.roles[0]
+        : "unknown");
+    return getRoleInfo(role);
   }, [currentUser]);
 
   const displayName = currentUser?.real_name || currentUser?.name || currentUser?.username || "用户";

@@ -33,8 +33,8 @@ from app.models.outsourcing import (
     OutsourcingOrderItem,
     OutsourcingPayment,
     OutsourcingProgress,
-    OutsourcingVendor,
 )
+from app.models.vendor import Vendor
 from app.models.project import Machine, Project
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
@@ -158,13 +158,16 @@ def read_outsourcing_orders(
 
     items = []
     for order in orders:
-        vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == order.vendor_id).first()
+        vendor = db.query(Vendor).filter(
+            Vendor.id == order.vendor_id,
+            Vendor.vendor_type == 'OUTSOURCING'
+        ).first()
         project = db.query(Project).filter(Project.id == order.project_id).first()
 
         items.append(OutsourcingOrderListResponse(
             id=order.id,
             order_no=order.order_no,
-            vendor_name=vendor.vendor_name if vendor else None,
+            vendor_name=vendor.supplier_name if vendor else None,
             project_name=project.project_name if project else None,
             order_type=order.order_type,
             order_title=order.order_title,
@@ -266,7 +269,10 @@ def create_outsourcing_order(
     创建外协订单
     """
     # 验证外协商
-    vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == order_in.vendor_id).first()
+    vendor = db.query(Vendor).filter(
+        Vendor.id == order_in.vendor_id,
+        Vendor.vendor_type == 'OUTSOURCING'
+    ).first()
     if not vendor:
         raise HTTPException(status_code=404, detail="外协商不存在")
 

@@ -9,7 +9,6 @@ from ...material import (
     MaterialCategory,
     MaterialShortage,
     MaterialSupplier,
-    Supplier,
 )
 from ...vendor import Vendor
 from ...purchase import (
@@ -46,7 +45,6 @@ from ...assembly_kit import (
 __all__ = [
     "Material",
     "MaterialCategory",
-    "Supplier",
     "Vendor",
     "MaterialSupplier",
     "BomHeader",

@@ -157,25 +157,5 @@ def complete_project_milestone(
     return milestone
 
 
-@router.delete("/{milestone_id}", status_code=200)
-def delete_project_milestone(
-    project_id: int = Path(..., description="项目ID"),
-    milestone_id: int = Path(..., description="里程碑ID"),
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("milestone:delete")),
-) -> Any:
-    """删除项目里程碑"""
-    check_project_access_or_raise(db, current_user, project_id)
-
-    milestone = db.query(ProjectMilestone).filter(
-        ProjectMilestone.id == milestone_id,
-        ProjectMilestone.project_id == project_id,
-    ).first()
-
-    if not milestone:
-        raise HTTPException(status_code=404, detail="里程碑不存在")
-
-    db.delete(milestone)
-    db.commit()
-
-    return ResponseModel(code=200, message="里程碑已删除")
+# 注意：删除端点已由CRUD基类提供，此处不再重复定义
+# 删除功能请使用: DELETE /projects/{project_id}/milestones/{milestone_id}

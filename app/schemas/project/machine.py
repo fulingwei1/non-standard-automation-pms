@@ -18,7 +18,7 @@ class MachineCreate(BaseModel):
 
     machine_code: Optional[str] = Field(None, max_length=50, description="设备编码（可选，不提供则自动生成）")
     machine_name: str = Field(max_length=200, description="设备名称")
-    project_id: int = Field(description="项目ID")
+    project_id: Optional[int] = Field(None, description="项目ID（可选，通常从路径中获取）")
     machine_no: Optional[int] = 1
     machine_type: Optional[str] = None
     specification: Optional[str] = None

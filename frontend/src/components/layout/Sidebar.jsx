@@ -66,7 +66,31 @@ export function Sidebar({ collapsed = false, onToggle, onLogout, user }) {
     }
   }, [user]);
 
-  const role = useMemo(() => currentUser?.role || "admin", [currentUser]);
+  const role = useMemo(() => {
+    const hasUser =
+      currentUser?.id ||
+      currentUser?.username ||
+      currentUser?.real_name ||
+      currentUser?.name;
+    if (!hasUser) {
+      return "unknown";
+    }
+    if (currentUser?.role) {
+      return currentUser.role;
+    }
+    if (currentUser?.role_code || currentUser?.role_name) {
+      return currentUser.role_code || currentUser.role_name;
+    }
+    const roles = currentUser?.roles;
+    if (Array.isArray(roles) && roles.length > 0) {
+      const firstRole = roles[0];
+      if (typeof firstRole === "string") {
+        return firstRole;
+      }
+      return firstRole?.role_code || firstRole?.role_name || firstRole?.name;
+    }
+    return "unknown";
+  }, [currentUser]);
   const isSuperuser = useMemo(
     () =>
       currentUser?.is_superuser === true || currentUser?.isSuperuser === true,

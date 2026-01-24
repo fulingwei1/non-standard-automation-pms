@@ -31,7 +31,7 @@ from app.core.security import get_password_hash
 from app.models.base import get_session
 from app.models.budget import ProjectBudget, ProjectBudgetItem
 from app.models.project.financial import ProjectCost
-from app.models.material import BomHeader, BomItem, Material, MaterialCategory, Supplier
+from app.models.material import BomHeader, BomItem, Material, MaterialCategory
 from app.models.acceptance import AcceptanceOrder, AcceptanceTemplate, AcceptanceIssue
 from app.models.organization import Department, Employee
 from app.models.project import (
@@ -343,20 +343,21 @@ class MaterialCategoryFactory(BaseFactory):
     is_active = True
 
 
-class SupplierFactory(BaseFactory):
-    """供应商工厂"""
-
-    class Meta:
-        model = Supplier
-
-    supplier_code = factory.Sequence(lambda n: f"SUP{n:05d}")
-    supplier_name = factory.Sequence(lambda n: f"测试供应商{n}")
-    supplier_short_name = factory.Sequence(lambda n: f"供应商{n}")
-    supplier_type = "STANDARD"
-    contact_person = factory.Sequence(lambda n: f"供应商联系人{n}")
-    contact_phone = factory.LazyFunction(
-        lambda: f"137{random.randint(10000000, 99999999)}"
-    )
+# Supplier模型已废弃，使用Vendor代替
+# class SupplierFactory(BaseFactory):
+#     """供应商工厂"""
+#
+#     class Meta:
+#         model = Supplier
+#
+#     supplier_code = factory.Sequence(lambda n: f"SUP{n:05d}")
+#     supplier_name = factory.Sequence(lambda n: f"测试供应商{n}")
+#     supplier_short_name = factory.Sequence(lambda n: f"供应商{n}")
+#     supplier_type = "STANDARD"
+#     contact_person = factory.Sequence(lambda n: f"供应商联系人{n}")
+#     contact_phone = factory.LazyFunction(
+#         lambda: f"137{random.randint(10000000, 99999999)}"
+#     )
     status = "APPROVED"
 
 
@@ -692,8 +693,18 @@ def create_complete_project_setup():
         customer_id=customer.id, customer_name=customer.customer_name
     )
 
-    # 创建供应商
-    supplier = SupplierFactory()
+    # 创建供应商（Supplier已废弃，使用Vendor代替）
+    # supplier = SupplierFactory()  # 已废弃
+    from app.models.vendor import Vendor
+    supplier = Vendor(
+        supplier_code=f"SUP{random.randint(10000, 99999)}",
+        supplier_name="测试供应商",
+        vendor_type="STANDARD",
+        status="ACTIVE"
+    )
+    db_session.add(supplier)
+    db_session.commit()
+    db_session.refresh(supplier)
 
     # 创建物料
     materials = MaterialFactory.create_batch(5)

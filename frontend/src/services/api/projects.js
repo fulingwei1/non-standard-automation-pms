@@ -49,6 +49,7 @@ export const projectContributionApi = {
 export const projectApi = {
   list: (params = {}) =>
     api.get("/projects/", { params: { page: 1, ...params } }),
+  getBoard: (params) => api.get("/projects/board", { params }),
   get: (id) => api.get(`/projects/${id}`),
   create: (data) => api.post("/projects/", data),
   update: (id, data) => api.put(`/projects/${id}`, data),

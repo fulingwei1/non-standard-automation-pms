@@ -23,7 +23,8 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.outsourcing import OutsourcingOrder, OutsourcingVendor
+from app.models.outsourcing import OutsourcingOrder
+from app.models.vendor import Vendor
 from app.models.project import Machine, Project, ProjectPaymentPlan
 from app.models.rd_project import RdCost, RdCostType, RdProject
 from app.models.report_center import (
@@ -265,11 +266,14 @@ def get_supplier_performance(
     for order in orders:
         vendor_id = order.vendor_id
         if vendor_id not in vendor_stats:
-            vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == vendor_id).first()
+            vendor = db.query(Vendor).filter(
+                Vendor.id == vendor_id,
+                Vendor.vendor_type == 'OUTSOURCING'
+            ).first()
             vendor_stats[vendor_id] = {
                 "vendor_id": vendor_id,
-                "vendor_name": vendor.vendor_name if vendor else None,
-                "vendor_code": vendor.vendor_code if vendor else None,
+                "vendor_name": vendor.supplier_name if vendor else None,
+                "vendor_code": vendor.supplier_code if vendor else None,
                 "total_orders": 0,
                 "total_amount": Decimal("0"),
                 "on_time_deliveries": 0,

@@ -16,7 +16,7 @@ from ..common import TimestampSchema
 class ProjectCostCreate(BaseModel):
     """创建成本记录"""
 
-    project_id: int
+    project_id: Optional[int] = Field(None, description="项目ID（可选，通常从路径中获取）")
     machine_id: Optional[int] = None
     cost_type: str = Field(max_length=50)
     cost_category: str = Field(max_length=50)
