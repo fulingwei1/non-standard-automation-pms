@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-项目工作日志查询
+项目工作日志查询（使用统一统计服务）
 
 提供项目相关工作日志的只读视图
 工作日志本身属于用户，这里只展示提及了该项目的日志
@@ -17,6 +17,7 @@ from app.core import security
 from app.models.user import User
 from app.models.work_log import WorkLog, WorkLogMention
 from app.schemas.common import ResponseModel
+from app.services.project_statistics_service import WorkLogStatisticsService
 from app.utils.permission_helpers import check_project_access_or_raise
 
 router = APIRouter()
@@ -95,38 +96,13 @@ def get_project_work_log_summary(
     current_user: User = Depends(security.require_permission("project:read")),
 ) -> Any:
     """
-    获取项目工作日志汇总
+    获取项目工作日志汇总（使用统一统计服务）
 
     统计最近N天内该项目被提及的日志数量和参与人数
     """
-    from datetime import timedelta
-
-    from sqlalchemy import func
-
     check_project_access_or_raise(db, current_user, project_id)
-
-    start_date = date.today() - timedelta(days=days)
-
-    # 查询统计
-    stats = (
-        db.query(
-            func.count(func.distinct(WorkLog.id)).label("log_count"),
-            func.count(func.distinct(WorkLog.user_id)).label("contributor_count"),
-        )
-        .join(WorkLogMention, WorkLog.id == WorkLogMention.work_log_id)
-        .filter(
-            WorkLogMention.mention_type == "PROJECT",
-            WorkLogMention.mention_id == project_id,
-            WorkLog.work_date >= start_date,
-        )
-        .first()
-    )
-
-    return ResponseModel(
-        data={
-            "project_id": project_id,
-            "period_days": days,
-            "log_count": stats.log_count if stats else 0,
-            "contributor_count": stats.contributor_count if stats else 0,
-        }
-    )
+    
+    service = WorkLogStatisticsService(db)
+    summary = service.get_summary(project_id, days=days)
+    
+    return ResponseModel(data=summary)
