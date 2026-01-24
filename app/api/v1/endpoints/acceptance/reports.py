@@ -11,7 +11,7 @@
 
 from fastapi import APIRouter
 
-from . import bonus_trigger, report_generation, signatures, signed_documents
+from . import bonus_trigger, report_generation, report_generation_unified, signatures, signed_documents
 
 router = APIRouter()
 
