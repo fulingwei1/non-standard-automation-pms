@@ -1,0 +1,111 @@
+# 工时报表 - HR月度加班工资报表
+# 报告代码: TIMESHEET_HR_MONTHLY
+
+meta:
+  name: HR月度加班工资报表
+  code: TIMESHEET_HR_MONTHLY
+  description: HR部门月度加班工资汇总报表，包含员工加班工时和加班工资计算
+  version: "1.0"
+
+permissions:
+  roles:
+    - HR
+    - ADMIN
+    - DEPARTMENT_MANAGER
+  data_scope: department
+
+parameters:
+  - name: year
+    type: integer
+    required: true
+    description: 年份
+  - name: month
+    type: integer
+    required: true
+    description: 月份（1-12）
+  - name: department_id
+    type: integer
+    required: false
+    description: 部门ID（可选）
+
+cache:
+  enabled: true
+  ttl: 3600
+  key_pattern: "report:TIMESHEET_HR:{year}:{month}:{department_id}"
+
+schedule:
+  enabled: false
+
+data_sources:
+  hr_report_data:
+    type: service
+    method: TimesheetAggregationService.generate_hr_report
+    args:
+      year: "{{ params.year }}"
+      month: "{{ params.month }}"
+      department_id: "{{ params.department_id }}"
+
+sections:
+  - id: summary
+    title: 加班工资汇总
+    type: metrics
+    items:
+      - label: 统计月份
+        value: "{{ params.year }}年{{ params.month }}月"
+      - label: 参与人数
+        value: "{{ hr_report_data | length }}"
+      - label: 总加班工时
+        value: "{{ hr_report_data | sum(attribute='overtime_hours') | round_num(2) }}"
+      - label: 总加班工资
+        value: "{{ hr_report_data | sum(attribute='total_overtime_pay') | round_num(2) }}"
+
+  - id: detail_list
+    title: 员工加班明细
+    type: table
+    source: hr_report_data
+    columns:
+      - field: user_name
+        label: 员工姓名
+      - field: department_name
+        label: 部门
+      - field: normal_hours
+        label: 正常工时
+        format: number
+      - field: overtime_hours
+        label: 工作日加班
+        format: number
+      - field: weekend_hours
+        label: 周末加班
+        format: number
+      - field: holiday_hours
+        label: 节假日加班
+        format: number
+      - field: overtime_pay
+        label: 工作日加班工资
+        format: currency
+      - field: weekend_pay
+        label: 周末加班工资
+        format: currency
+      - field: holiday_pay
+        label: 节假日加班工资
+        format: currency
+      - field: total_overtime_pay
+        label: 合计加班工资
+        format: currency
+
+exports:
+  json:
+    enabled: true
+  pdf:
+    enabled: true
+    template: timesheet_hr_monthly.html
+    orientation: landscape
+  excel:
+    enabled: true
+    sheets:
+      - name: 汇总
+        section: summary
+      - name: 明细
+        section: detail_list
+  word:
+    enabled: false

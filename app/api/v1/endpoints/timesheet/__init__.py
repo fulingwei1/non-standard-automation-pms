@@ -13,6 +13,7 @@ from .monthly import router as monthly_router
 from .pending import router as pending_router
 from .records import router as records_router
 from .reports import router as reports_router
+from .reports_unified import router as reports_unified_router
 from .statistics import router as statistics_router
 from .weekly import router as weekly_router
 
@@ -25,6 +26,7 @@ router.include_router(monthly_router)
 router.include_router(pending_router)
 router.include_router(statistics_router)
 router.include_router(reports_router)
+router.include_router(reports_unified_router)  # 统一报表框架版本
 
 # ---------------------------------------------------------------------------
 # Compatibility routes (pytest expects these flat paths)

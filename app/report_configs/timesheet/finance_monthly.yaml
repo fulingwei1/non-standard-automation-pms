@@ -1,0 +1,99 @@
+# 工时报表 - 财务报表（项目成本核算）
+# 报告代码: TIMESHEET_FINANCE_MONTHLY
+
+meta:
+  name: 财务报表（项目成本核算）
+  code: TIMESHEET_FINANCE_MONTHLY
+  description: 财务部门月度项目成本核算报表，包含项目工时成本和人工成本
+  version: "1.0"
+
+permissions:
+  roles:
+    - FINANCE
+    - ADMIN
+    - PROJECT_MANAGER
+  data_scope: project
+
+parameters:
+  - name: year
+    type: integer
+    required: true
+    description: 年份
+  - name: month
+    type: integer
+    required: true
+    description: 月份（1-12）
+  - name: project_id
+    type: integer
+    required: false
+    description: 项目ID（可选）
+
+cache:
+  enabled: true
+  ttl: 3600
+  key_pattern: "report:TIMESHEET_FINANCE:{year}:{month}:{project_id}"
+
+schedule:
+  enabled: false
+
+data_sources:
+  finance_report_data:
+    type: service
+    method: TimesheetAggregationService.generate_finance_report
+    args:
+      year: "{{ params.year }}"
+      month: "{{ params.month }}"
+      project_id: "{{ params.project_id }}"
+
+sections:
+  - id: summary
+    title: 项目成本汇总
+    type: metrics
+    items:
+      - label: 统计月份
+        value: "{{ params.year }}年{{ params.month }}月"
+      - label: 项目数量
+        value: "{{ finance_report_data | length }}"
+      - label: 总工时
+        value: "{{ finance_report_data | sum(attribute='total_hours') | round_num(2) }}"
+      - label: 总人工成本
+        value: "{{ finance_report_data | sum(attribute='total_cost') | round_num(2) }}"
+
+  - id: detail_list
+    title: 项目成本明细
+    type: table
+    source: finance_report_data
+    columns:
+      - field: project_code
+        label: 项目编码
+      - field: project_name
+        label: 项目名称
+      - field: total_hours
+        label: 总工时
+        format: number
+      - field: labor_cost
+        label: 人工成本
+        format: currency
+      - field: overhead_cost
+        label: 间接成本
+        format: currency
+      - field: total_cost
+        label: 总成本
+        format: currency
+
+exports:
+  json:
+    enabled: true
+  pdf:
+    enabled: true
+    template: timesheet_finance_monthly.html
+    orientation: landscape
+  excel:
+    enabled: true
+    sheets:
+      - name: 汇总
+        section: summary
+      - name: 明细
+        section: detail_list
+  word:
+    enabled: false
