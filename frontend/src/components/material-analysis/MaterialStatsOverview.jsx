@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Package,
@@ -30,6 +30,7 @@ import {
   calculateReadinessRate,
   calculateAnalysisScore as _calculateAnalysisScore } from
 "./materialAnalysisConstants";
+import { purchaseApi } from "../../services/api";
 import { cn } from "../../lib/utils";
 
 /**
@@ -44,7 +45,9 @@ export function MaterialStatsOverview({
   onRefresh
 }) {
   const [trendData, setTrendData] = useState([]);
-  const [trendPeriod, setTrendPeriod] = useState('weekly');
+  const [trendPeriod, setTrendPeriod] = useState("weekly");
+  const [trendLoading, setTrendLoading] = useState(false);
+  const [trendError, setTrendError] = useState("");
   const [lastRefreshTime, setLastRefreshTime] = useState(new Date());
 
   // 计算总体统计数据
@@ -161,36 +164,75 @@ export function MaterialStatsOverview({
     return risks;
   }, [projects]);
 
+  const loadTrendData = useCallback(async () => {
+    setTrendLoading(true);
+    setTrendError("");
+    try {
+      const groupBy = trendPeriod === "monthly" ? "month" : "day";
+      const now = new Date();
+      const endDate = now.toISOString().split("T")[0];
+      let startDate = endDate;
+
+      if (trendPeriod === "daily") {
+        startDate = new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0];
+      } else if (trendPeriod === "weekly") {
+        startDate = new Date(now.getTime() - 55 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0];
+      } else {
+        const date = new Date(now);
+        date.setMonth(date.getMonth() - 11);
+        startDate = date.toISOString().split("T")[0];
+      }
+
+      const response = await purchaseApi.kitRate.trend({
+        group_by: groupBy,
+        start_date: startDate,
+        end_date: endDate
+      });
+      const trendResponse = response?.data?.data || response?.data || {};
+      const trendItems = trendResponse.trend_data || [];
+      const normalized = trendItems.map((item) => ({
+        label: item.date || "",
+        value: Number(item.kit_rate || 0)
+      }));
+      setTrendData(normalized);
+    } catch (error) {
+      console.error("加载趋势数据失败:", error);
+      const status = error.response?.status;
+      const detail = error.response?.data?.detail;
+      const message = error.response?.data?.message;
+      const apiMessage =
+        typeof detail === "string"
+          ? detail
+          : detail?.message || message || error.message;
+      setTrendError(
+        status
+          ? `趋势数据加载失败 (${status}): ${apiMessage}`
+          : `趋势数据加载失败: ${apiMessage}`
+      );
+      setTrendData([]);
+    } finally {
+      setTrendLoading(false);
+      setLastRefreshTime(new Date());
+    }
+  }, [trendPeriod]);
+
   // 性能趋势数据
   useEffect(() => {
-    const loadTrendData = async () => {
-      try {
-        // 模拟趋势数据 - 实际应从API获取
-        const days = trendPeriod === 'daily' ? 7 : trendPeriod === 'weekly' ? 8 : 12;
-        const mockTrend = Array.from({ length: days }, (_, i) => ({
-          date: new Date(Date.now() - (days - i - 1) * 24 * 60 * 60 * 1000).toLocaleDateString(),
-          readinessRate: Math.floor(Math.random() * 15) + 80,
-          onTimeDelivery: Math.floor(Math.random() * 20) + 75,
-          qualityRate: Math.floor(Math.random() * 10) + 90
-        }));
-        setTrendData(mockTrend);
-      } catch (error) {
-        console.error('加载趋势数据失败:', error);
-      }
-    };
-
     loadTrendData();
-  }, [trendPeriod]);
+  }, [loadTrendData]);
 
   // 自动刷新
   useEffect(() => {
     const interval = setInterval(() => {
-      setLastRefreshTime(new Date());
-      if (onRefresh) {onRefresh();}
+      loadTrendData();
     }, refreshInterval);
 
     return () => clearInterval(interval);
-  }, [refreshInterval, onRefresh]);
+  }, [refreshInterval, loadTrendData]);
 
   // 关键指标卡片
   const MetricCard = ({ title, value, icon: Icon, trend, trendValue, color, description }) =>
@@ -392,7 +434,7 @@ export function MaterialStatsOverview({
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-white">
               <Activity className="w-5 h-5" />
-              性能趋势
+              齐套率趋势
             </CardTitle>
             <div className="flex items-center gap-2">
               <select
@@ -407,7 +449,10 @@ export function MaterialStatsOverview({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onRefresh && onRefresh()}
+                onClick={() => {
+                  loadTrendData();
+                  if (onRefresh) {onRefresh();}
+                }}
                 className="flex items-center gap-2">
 
                 <RefreshCw className="w-4 h-4" />
@@ -418,12 +463,21 @@ export function MaterialStatsOverview({
         </CardHeader>
         <CardContent>
           <div className="h-80">
-            <SimpleLineChart
-              data={trendData}
-              xAxisKey="date"
-              yAxisKeys={['readinessRate', 'onTimeDelivery', 'qualityRate']}
-              colors={['#3b82f6', '#10b981', '#8b5cf6']}
-              labels={['齐套率', '准时交付', '质量合格']} />
+            {trendLoading ? (
+              <div className="h-full flex items-center justify-center text-sm text-slate-400">
+                正在加载趋势数据...
+              </div>
+            ) : trendError ? (
+              <div className="h-full flex items-center justify-center text-sm text-red-400">
+                {trendError}
+              </div>
+            ) : trendData.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-sm text-slate-400">
+                暂无趋势数据
+              </div>
+            ) : (
+              <SimpleLineChart data={trendData} color="text-blue-400" />
+            )}
 
           </div>
           <div className="flex items-center justify-between mt-4 text-xs text-slate-400">

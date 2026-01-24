@@ -103,4 +103,7 @@ class ApplyTemplateRequest(BaseModel):
     report_name: str
     project_id: Optional[int] = None
     department_id: Optional[int] = None
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+    filters: Optional[Dict[str, Any]] = Field(default=None, description="过滤条件")
     customizations: Optional[Dict[str, Any]] = Field(default={}, description="自定义配置")

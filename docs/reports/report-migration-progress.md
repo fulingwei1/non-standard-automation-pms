@@ -13,7 +13,7 @@
 | **工时报表** | ✅ 完成 | ✅ | ✅ | ✅ | ⏳ |
 | **会议报表** | ⏳ 待开始 | ✅ | ⏳ | ⏳ | ⏳ |
 | **项目报表** | ⏳ 待开始 | ✅ | ⏳ | ⏳ | ⏳ |
-| **模板报表** | ⏳ 待开始 | ⏳ | ⏳ | ⏳ | ⏳ |
+| **模板报表** | ✅ 完成 | ✅* | ✅ | ✅ | ⏳ |
 
 ---
 
@@ -84,16 +84,25 @@ POST /api/v1/acceptance-orders/{order_id}/report-unified?report_type=FAT&format=
 2. 更新项目报表API端点
 3. 测试验证
 
-### 5. 模板报表
+### 5. 模板报表 (TemplateReportAdapter)
 
-**状态**: ⏳ 待开始
+**状态**: ✅ 完成
 
-**下一步**:
-1. 分析模板报表服务
-2. 创建适配器
-3. 创建YAML配置
-4. 更新API端点
-5. 测试验证
+**完成内容**:
+- ✅ 创建 `TemplateReportAdapter` 适配器
+- ✅ 支持从数据库模板转换为统一报表框架格式
+- ✅ 支持优先使用YAML配置（如果存在）
+- ✅ 更新模板应用API端点使用统一框架
+- ⏳ 测试验证（待完成）
+
+**文件**:
+- `app/services/report_framework/adapters/template.py`
+- `app/api/v1/endpoints/report_center/templates.py` (已更新)
+
+**特点**:
+- 模板报表使用数据库中的ReportTemplate配置
+- 适配器支持动态转换为统一报表框架格式
+- 如果报表类型已有YAML配置，优先使用YAML配置
 
 ---
 

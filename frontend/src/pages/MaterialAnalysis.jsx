@@ -2,11 +2,9 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Search,
-  Filter,
   Download,
   RefreshCw,
   AlertTriangle,
-  TrendingUp,
   BarChart3 } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
@@ -18,12 +16,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { cn } from "../lib/utils";
 import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
-import { projectApi, bomApi, purchaseApi, assemblyKitApi as _assemblyKitApi } from "../services/api";
+import { purchaseApi } from "../services/api";
 import {
-  MaterialStatsOverview,
-  MATERIAL_STATUS,
-  getMaterialStatus,
-  calculateReadinessRate } from
+  MaterialStatsOverview } from
 "../components/material-analysis";
 
 /**
@@ -34,12 +29,38 @@ export default function MaterialAnalysis() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [projectMaterials, setProjectMaterials] = useState([]);
+  const [detailMap, setDetailMap] = useState({});
+  const [detailLoading, setDetailLoading] = useState({});
+  const [detailError, setDetailError] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [_trendData, setTrendData] = useState([]);
-  const [trendPeriod, _setTrendPeriod] = useState("weekly");
-  const [_loadingTrend, setLoadingTrend] = useState(false);
-  const [_refreshKey, setRefreshKey] = useState(0);
+
+  const detailStatusMap = {
+    fulfilled: {
+      label: "已齐套",
+      borderColor: "border-emerald-500/30",
+      textColor: "text-emerald-400"
+    },
+    partial: {
+      label: "部分齐套",
+      borderColor: "border-amber-500/30",
+      textColor: "text-amber-400"
+    },
+    shortage: {
+      label: "缺料",
+      borderColor: "border-red-500/30",
+      textColor: "text-red-400"
+    },
+  };
+
+  const getDetailStatus = (status) => {
+    const key = String(status || "").toLowerCase();
+    return detailStatusMap[key] || {
+      label: status || "未知",
+      borderColor: "border-slate-500/30",
+      textColor: "text-slate-400"
+    };
+  };
 
   // 加载项目材料数据
   const loadProjectMaterials = useCallback(async () => {
@@ -48,175 +69,95 @@ export default function MaterialAnalysis() {
       setError("");
       const projectMaterialsData = [];
 
-      // 获取所有项目
-      const projectsResponse = await projectApi.list({
-        is_active: true,
-        page_size: 1000
+      const kitRateResponse = await purchaseApi.kitRate.dashboard();
+      const kitRateData = kitRateResponse?.data?.data || kitRateResponse?.data || {};
+      const kitRateProjects = kitRateData.projects || [];
+      kitRateProjects.forEach((project) => {
+        const totalItems = project.total_items || 0;
+        const fulfilledItems = project.fulfilled_items || 0;
+        const shortageItems = project.shortage_items || 0;
+        const inTransitItems = project.in_transit_items || Math.max(
+          0,
+          totalItems - fulfilledItems - shortageItems
+        );
+        const stats = {
+          total: totalItems,
+          arrived: fulfilledItems,
+          inTransit: inTransitItems,
+          delayed: 0,
+          notOrdered: shortageItems,
+        };
+        const readyRate =
+          totalItems > 0 ? Math.round(Number(project.kit_rate || 0)) : 100;
+        const criticalMaterials = [];
+
+        const planAssemblyDate = project.planned_end_date || "";
+        const daysUntilAssembly = planAssemblyDate ?
+        Math.max(
+          0,
+          Math.ceil(
+            (new Date(planAssemblyDate) - new Date()) / (
+            1000 * 60 * 60 * 24)
+          )
+        ) :
+        0;
+
+        projectMaterialsData.push({
+          projectId: project.project_id,
+          id: project.project_code || project.project_id?.toString(),
+          name: project.project_name || "",
+          planAssemblyDate: planAssemblyDate ? planAssemblyDate.split("T")[0] : "",
+          daysUntilAssembly,
+          materialStats: stats,
+          readyRate,
+          criticalMaterials
+        });
       });
-      const projects = projectsResponse.data?.items || projectsResponse.data?.results || projectsResponse.data || [];
-
-      for (const project of projects) {
-        try {
-          // 获取BOM数据
-          const bomResponse = await bomApi.list({
-            project: project.id,
-            page_size: 1000
-          });
-          const bomItems = bomResponse.data?.items || bomResponse.data?.results || bomResponse.data || [];
-
-          // 获取采购订单数据
-          const purchaseResponse = await purchaseApi.orders.list({
-            project_id: project.id,
-            limit: 100
-          });
-          const purchaseOrders = purchaseResponse.data?.data || purchaseResponse.data?.items || purchaseResponse.data?.results || purchaseResponse.data || [];
-
-          // 计算材料统计
-          let stats = {
-            total: 0,
-            arrived: 0,
-            inTransit: 0,
-            delayed: 0,
-            notOrdered: 0
-          };
-
-          bomItems.forEach((item) => {
-            const totalQty = item.quantity || 0;
-            stats.total += totalQty;
-
-            // 查找对应的采购订单
-            const relatedOrders = purchaseOrders.filter(
-              (order) => order.material_item === item.id
-            );
-
-            if (relatedOrders.length === 0) {
-              stats.notOrdered += totalQty;
-            } else {
-              let arrivedQty = 0;
-              let inTransitQty = 0;
-              let delayedQty = 0;
-
-              relatedOrders.forEach((order) => {
-                const orderQty = order.quantity || 0;
-                const status = order.status;
-
-                if (status === "delivered") {
-                  arrivedQty += orderQty;
-                } else if (status === "in_transit") {
-                  // 检查是否延期
-                  const deliveryDate = new Date(order.expected_delivery_date);
-                  const today = new Date();
-                  if (deliveryDate < today) {
-                    delayedQty += orderQty;
-                  } else {
-                    inTransitQty += orderQty;
-                  }
-                }
-              });
-
-              const minQty = Math.min(
-                arrivedQty + inTransitQty + delayedQty,
-                totalQty
-              );
-              stats.arrived += Math.min(arrivedQty, minQty);
-              stats.inTransit += Math.min(inTransitQty, minQty - arrivedQty);
-              stats.delayed += Math.min(delayedQty, minQty - arrivedQty - inTransitQty);
-            }
-          });
-
-          // 计算齐套率
-          const readyRate = calculateReadinessRate(stats.arrived, stats.total);
-
-          // 识别关键材料
-          const criticalMaterials = bomItems.
-          filter((item) => item.is_critical).
-          map((item) => ({
-            ...item,
-            status: getItemStatus(item, purchaseOrders)
-          }));
-
-          // 计算计划装配日期
-          const planAssemblyDate = project.planned_end_date || "";
-          const daysUntilAssembly = planAssemblyDate ?
-          Math.max(
-            0,
-            Math.ceil(
-              (new Date(planAssemblyDate) - new Date()) / (
-              1000 * 60 * 60 * 24)
-            )
-          ) :
-          0;
-
-          projectMaterialsData.push({
-            id: project.project_code || project.id?.toString(),
-            name: project.project_name || "",
-            planAssemblyDate: planAssemblyDate.split("T")[0] || "",
-            daysUntilAssembly,
-            materialStats: stats,
-            readyRate,
-            criticalMaterials
-          });
-        } catch (fallbackErr) {
-          console.error(
-            `Failed to calculate materials for project ${project.id}:`,
-            fallbackErr
-          );
-        }
-      }
 
       setProjectMaterials(projectMaterialsData);
     } catch (err) {
       console.error("Failed to load project materials:", err);
-      setError("加载物料数据失败");
+      const status = err.response?.status;
+      const detail = err.response?.data?.detail;
+      const message = err.response?.data?.message;
+      const apiMessage =
+        typeof detail === "string"
+          ? detail
+          : detail?.message || message || err.message;
+      setError(status ? `加载物料数据失败 (${status}): ${apiMessage}` : `加载物料数据失败: ${apiMessage}`);
       setProjectMaterials([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // 获取材料状态
-  const getItemStatus = (item, orders) => {
-    const relatedOrders = orders.filter((order) => order.material_item === item.id);
-    if (relatedOrders.length === 0) {return "not_ordered";}
+  const loadProjectDetail = useCallback(async (projectId) => {
+    if (!projectId) {return;}
+    if (detailLoading[projectId]) {return;}
 
-    const hasDelivered = relatedOrders.some((order) => order.status === "delivered");
-    const hasInTransit = relatedOrders.some((order) => order.status === "in_transit");
-    const hasDelayed = relatedOrders.some(
-      (order) =>
-      order.status === "in_transit" &&
-      new Date(order.expected_delivery_date) < new Date()
-    );
+    setDetailLoading((prev) => ({ ...prev, [projectId]: true }));
+    setDetailError((prev) => ({ ...prev, [projectId]: "" }));
 
-    if (hasDelivered) {return "arrived";}
-    if (hasDelayed) {return "delayed";}
-    if (hasInTransit) {return "in_transit";}
-    return "not_ordered";
-  };
-
-  // 加载趋势数据
-  const loadTrendData = useCallback(async () => {
     try {
-      setLoadingTrend(true);
-      const response = await purchaseApi.kitRate.trend({
-        group_by: trendPeriod
-      });
-      const trendResponse = response.data || {};
-      setTrendData(trendResponse.trend_data || []);
+      const response = await purchaseApi.kitRate.getProjectMaterialStatus(projectId);
+      const data = response?.data?.data || response?.data || {};
+      setDetailMap((prev) => ({ ...prev, [projectId]: data }));
     } catch (err) {
-      console.error("Failed to load trend data:", err);
-      // 使用模拟数据
-      const days = trendPeriod === "daily" ? 7 : trendPeriod === "weekly" ? 8 : 12;
-      const mockTrend = Array.from({ length: days }, (_, i) => ({
-        period: new Date(Date.now() - (days - i - 1) * 24 * 60 * 60 * 1000).toLocaleDateString(),
-        kit_rate: Math.floor(Math.random() * 20) + 75,
-        on_time_rate: Math.floor(Math.random() * 25) + 70,
-        quality_rate: Math.floor(Math.random() * 10) + 90
-      }));
-      setTrendData(mockTrend);
+      const status = err.response?.status;
+      const detail = err.response?.data?.detail;
+      const message = err.response?.data?.message;
+      const apiMessage =
+        typeof detail === "string"
+          ? detail
+          : detail?.message || message || err.message;
+      const errorText = status
+        ? `加载物料明细失败 (${status}): ${apiMessage}`
+        : `加载物料明细失败: ${apiMessage}`;
+      setDetailError((prev) => ({ ...prev, [projectId]: errorText }));
     } finally {
-      setLoadingTrend(false);
+      setDetailLoading((prev) => ({ ...prev, [projectId]: false }));
     }
-  }, [trendPeriod]);
+  }, [detailLoading]);
 
   // 过滤后的项目
   const filteredProjects = useMemo(() => {
@@ -266,14 +207,21 @@ export default function MaterialAnalysis() {
   // 初始化
   useEffect(() => {
     loadProjectMaterials();
-    loadTrendData();
-  }, [loadProjectMaterials, loadTrendData]);
+  }, [loadProjectMaterials]);
 
   // 项目卡片组件
   function ProjectMaterialCard({ project }) {
     const [expanded, setExpanded] = useState(false);
     const stats = project.materialStats;
     const isAtRisk = project.readyRate < 80 || stats.delayed > 5;
+    const detailData = detailMap[project.projectId];
+    const detailIsLoading = detailLoading[project.projectId];
+    const detailErrorText = detailError[project.projectId];
+    const materialList = detailData?.materials || [];
+    const shortageMaterials = [...materialList]
+    .filter((material) => (material.shortage_qty || 0) > 0)
+    .sort((a, b) => (b.shortage_qty || 0) - (a.shortage_qty || 0))
+    .slice(0, 8);
 
     return (
       <motion.div
@@ -346,7 +294,13 @@ export default function MaterialAnalysis() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setExpanded(!expanded)}>
+              onClick={() => {
+                const nextExpanded = !expanded;
+                setExpanded(nextExpanded);
+                if (nextExpanded && !detailData) {
+                  loadProjectDetail(project.projectId);
+                }
+              }}>
 
               {expanded ? "收起" : "详情"}
             </Button>
@@ -359,29 +313,58 @@ export default function MaterialAnalysis() {
             exit={{ height: 0, opacity: 0 }}
             className="mt-4 pt-4 border-t border-slate-700">
 
-              <h4 className="text-sm font-medium text-white mb-3">关键物料</h4>
-              <div className="space-y-2">
-                {project.criticalMaterials.map((material, index) =>
-              <div
-                key={index}
-                className="flex items-center justify-between p-2 bg-slate-900/50 rounded">
-
-                    <span className="text-sm text-slate-300">
-                      {material.name || material.part_number}
-                    </span>
-                    <Badge
-                  variant="outline"
-                  className={cn(
-                    "border",
-                    getMaterialStatus(material.status).borderColor,
-                    getMaterialStatus(material.status).textColor
-                  )}>
-
-                      {getMaterialStatus(material.status).label}
-                    </Badge>
-              </div>
+              <h4 className="text-sm font-medium text-white mb-3">缺料明细</h4>
+              {detailIsLoading && (
+                <div className="text-sm text-slate-400">正在加载物料明细...</div>
               )}
-              </div>
+              {!detailIsLoading && detailErrorText && (
+                <div className="text-sm text-red-400">{detailErrorText}</div>
+              )}
+              {!detailIsLoading && !detailErrorText && !detailData && (
+                <div className="text-sm text-slate-400">暂无明细数据</div>
+              )}
+              {!detailIsLoading && !detailErrorText && detailData && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-4 text-sm text-slate-300">
+                    <div>物料项数: {detailData.summary?.total_materials || 0}</div>
+                    <div>缺料合计: {detailData.summary?.total_shortage_qty || 0}</div>
+                  </div>
+                  {shortageMaterials.length === 0 ? (
+                    <div className="text-sm text-slate-400">暂无缺料明细</div>
+                  ) : (
+                    <div className="space-y-2">
+                      {shortageMaterials.map((material) => {
+                        const status = getDetailStatus(material.status);
+                        return (
+                          <div
+                            key={material.material_code || material.material_id}
+                            className="flex items-center justify-between p-2 bg-slate-900/50 rounded"
+                          >
+                            <div>
+                              <div className="text-sm text-slate-200">
+                                {material.material_name || material.material_code}
+                              </div>
+                              <div className="text-xs text-slate-500">
+                                缺料 {material.shortage_qty || 0}
+                              </div>
+                            </div>
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                "border",
+                                status.borderColor,
+                                status.textColor
+                              )}
+                            >
+                              {status.label}
+                            </Badge>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
           </motion.div>
           }
         </div>
@@ -442,8 +425,8 @@ export default function MaterialAnalysis() {
       className="space-y-6">
 
       <PageHeader
-        title="材料分析"
-        description="项目材料齐套性分析、风险评估和性能监控"
+        title="齐套缺料"
+        description="项目齐套缺料分析、风险评估和性能监控"
         actions={
         <div className="flex items-center gap-3">
             <Button variant="outline" onClick={() => loadProjectMaterials()}>
@@ -469,7 +452,7 @@ export default function MaterialAnalysis() {
             projects={filteredProjects}
             materials={[]}
             loading={loading}
-            onRefresh={() => setRefreshKey((prev) => prev + 1)} />
+            onRefresh={loadProjectMaterials} />
 
         </TabsContent>
 

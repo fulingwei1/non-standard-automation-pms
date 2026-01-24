@@ -434,7 +434,11 @@ class ReportEngine:
         """渲染表格数据"""
         if not section.source:
             return []
-        return context.get(section.source, [])
+
+        data = self._get_context_value(context, section.source)
+        if isinstance(data, list):
+            return data
+        return []
 
     def _render_chart(
         self,
@@ -445,7 +449,7 @@ class ReportEngine:
         if not section.source:
             return []
 
-        data = context.get(section.source, [])
+        data = self._get_context_value(context, section.source)
         if isinstance(data, list):
             return data
 
@@ -457,3 +461,35 @@ class ReportEngine:
             ]
 
         return []
+
+    def _get_context_value(
+        self,
+        context: Dict[str, Any],
+        key: Optional[str],
+    ) -> Any:
+        """
+        支持点号访问的上下文取值
+
+        Args:
+            context: 数据上下文
+            key: 访问路径（支持a.b.c）
+
+        Returns:
+            对应的数据
+        """
+        if not key:
+            return None
+
+        if key in context:
+            return context[key]
+
+        if "." not in key:
+            return context.get(key)
+
+        current: Any = context
+        for part in key.split("."):
+            if isinstance(current, dict):
+                current = current.get(part)
+            else:
+                return None
+        return current

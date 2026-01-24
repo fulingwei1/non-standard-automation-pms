@@ -16,11 +16,9 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.material import BomItem
 from app.models.project import Machine, Project
+from app.services.kit_rate import KitRateService
 from app.models.user import User
-
-from .utils import calculate_kit_rate
 
 router = APIRouter()
 
@@ -150,24 +148,19 @@ def get_unified_kit_rates(
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
 
-    # 获取BOM
+    service = KitRateService(db)
     bom_items = []
     if machine_id:
         machine = db.query(Machine).filter(Machine.id == machine_id).first()
         if not machine:
             raise HTTPException(status_code=404, detail="机台不存在")
-        if machine.bom_id:
-            bom_items = db.query(BomItem).filter(BomItem.bom_id == machine.bom_id).all()
+        bom_items = service.list_bom_items_for_machine(machine_id)
     else:
         # 项目级：获取所有机台的BOM
-        machines = db.query(Machine).filter(Machine.project_id == project_id).all()
-        for machine in machines:
-            if machine.bom_id:
-                items = db.query(BomItem).filter(BomItem.bom_id == machine.bom_id).all()
-                bom_items.extend(items)
+        bom_items = service.list_bom_items_for_project(project_id)
 
     # 1. 按数量计算的齐套率
-    quantity_result = calculate_kit_rate(db, bom_items, calculate_by="quantity")
+    quantity_result = service.calculate_kit_rate(bom_items, calculate_by="quantity")
     quantity_kit_rate = {
         "method": "quantity_based",
         "description": "按数量比例计算的齐套率",
@@ -176,7 +169,7 @@ def get_unified_kit_rates(
     }
 
     # 2. 按金额计算的齐套率
-    amount_result = calculate_kit_rate(db, bom_items, calculate_by="amount")
+    amount_result = service.calculate_kit_rate(bom_items, calculate_by="amount")
     amount_kit_rate = {
         "method": "amount_based",
         "description": "按金额比例计算的齐套率",
@@ -204,7 +197,7 @@ def get_unified_kit_rates(
 
     return {
         "project_id": project_id,
-        "project_no": project.project_no,
+        "project_no": project.project_code,
         "project_name": project.project_name,
         "machine_id": machine_id,
         "calculation_methods": {
@@ -248,22 +241,17 @@ def compare_project_kit_rates(
             continue
 
         # 获取项目所有机台的BOM
-        machines = db.query(Machine).filter(Machine.project_id == project_id).all()
-        bom_items = []
-        for machine in machines:
-            if machine.bom_id:
-                items = db.query(BomItem).filter(BomItem.bom_id == machine.bom_id).all()
-                bom_items.extend(items)
+        bom_items = service.list_bom_items_for_project(project_id)
 
         # 按数量计算的齐套率
-        quantity_result = calculate_kit_rate(db, bom_items, calculate_by="quantity")
+        quantity_result = service.calculate_kit_rate(bom_items, calculate_by="quantity")
 
         # 按阶段计算的齐套率
         stage_result = _get_stage_kit_rate(db, project_id)
 
         results.append({
             "project_id": project_id,
-            "project_no": project.project_no,
+            "project_no": project.project_code,
             "project_name": project.project_name,
             "quantity_kit_rate": quantity_result.get("kit_rate", 0),
             "stage_kit_rate": stage_result.get("overall_kit_rate") if stage_result.get("available") else None,

@@ -10,6 +10,7 @@
 核心功能：多角色视角报表、智能生成、导出分享
 """
 
+import json
 import os
 from datetime import date, datetime, timedelta
 from decimal import Decimal
@@ -51,6 +52,8 @@ from app.schemas.report_center import (
     ReportTypeResponse,
     RoleReportMatrixResponse,
 )
+from app.services.report_framework import ConfigError, ReportEngine
+from app.services.report_framework.engine import ParameterError, PermissionError
 
 router = APIRouter()
 
@@ -122,8 +125,6 @@ def apply_report_template(
     """
     应用报表模板（套用模板）
     """
-    from app.services.template_report_service import template_report_service
-
     template = db.query(ReportTemplate).filter(ReportTemplate.id == apply_in.template_id).first()
     if not template:
         raise HTTPException(status_code=404, detail="模板不存在")
@@ -138,21 +139,35 @@ def apply_report_template(
     # 生成报表编码
     report_code = f"RPT-{datetime.now().strftime('%y%m%d%H%M%S')}"
 
-    # 根据模板配置生成报表数据
-    report_data = template_report_service.generate_from_template(
-        db,
-        template,
-        apply_in.project_id,
-        apply_in.department_id,
-        apply_in.start_date,
-        apply_in.end_date,
-        apply_in.filters
-    )
+    filters_payload = apply_in.filters or apply_in.customizations or {}
 
-    # 如果有错误，返回错误信息
-    if "error" in report_data:
-        raise HTTPException(status_code=400, detail=report_data["error"])
+    # 使用模板报表适配器生成报表
+    from app.services.report_framework.adapters.template import TemplateReportAdapter
+    
+    adapter = TemplateReportAdapter(db)
+    
+    try:
+        result = adapter.generate(
+            params={
+                "template_id": template.id,
+                "project_id": apply_in.project_id,
+                "department_id": apply_in.department_id,
+                "start_date": apply_in.start_date,
+                "end_date": apply_in.end_date,
+                "filters": filters_payload,
+            },
+            format="json",
+            user=current_user,
+            skip_cache=False,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"生成报表失败: {e}")
 
+    # 提取报表数据
+    report_data = result.data if hasattr(result, "data") else result
+    
     generation = ReportGeneration(
         template_id=template.id,
         report_type=template.report_type,
@@ -178,6 +193,5 @@ def apply_report_template(
         generated_at=generation.generated_at or datetime.now(),
         data=generation.report_data or {}
     )
-
 
 
