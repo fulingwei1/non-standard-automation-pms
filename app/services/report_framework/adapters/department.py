@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-项目报表适配器
+部门报表适配器
 
-将项目报表数据生成器适配到统一报表框架
+将部门报表数据生成器适配到统一报表框架
 """
 
 from datetime import date, timedelta
@@ -12,11 +12,11 @@ from sqlalchemy.orm import Session
 
 from app.models.user import User
 from app.services.report_framework.adapters.base import BaseReportAdapter
-from app.services.report_framework.generators import ProjectReportGenerator
+from app.services.report_framework.generators import DeptReportGenerator
 
 
-class ProjectReportAdapter(BaseReportAdapter):
-    """项目报表适配器"""
+class DeptReportAdapter(BaseReportAdapter):
+    """部门报表适配器"""
 
     def __init__(self, db: Session, report_type: str = "weekly"):
         """
@@ -32,8 +32,8 @@ class ProjectReportAdapter(BaseReportAdapter):
     def get_report_code(self) -> str:
         """返回报表代码"""
         if self.report_type == "monthly":
-            return "PROJECT_MONTHLY"
-        return "PROJECT_WEEKLY"
+            return "DEPT_MONTHLY"
+        return "DEPT_WEEKLY"
 
     def generate_data(
         self,
@@ -41,18 +41,18 @@ class ProjectReportAdapter(BaseReportAdapter):
         user: Optional[User] = None,
     ) -> Dict[str, Any]:
         """
-        生成项目报表数据
+        生成部门报表数据
 
         Args:
-            params: 报表参数（project_id, start_date, end_date）
+            params: 报表参数（department_id, start_date, end_date）
             user: 当前用户
 
         Returns:
             报表数据字典
         """
-        project_id = params.get("project_id")
-        if not project_id:
-            raise ValueError("project_id 参数是必需的")
+        department_id = params.get("department_id")
+        if not department_id:
+            raise ValueError("department_id 参数是必需的")
 
         # 处理日期参数
         start_date = params.get("start_date")
@@ -73,30 +73,30 @@ class ProjectReportAdapter(BaseReportAdapter):
 
         # 使用统一生成器
         if self.report_type == "monthly":
-            data = ProjectReportGenerator.generate_monthly(
-                self.db, project_id, start_date, end_date
+            data = DeptReportGenerator.generate_monthly(
+                self.db, department_id, start_date, end_date
             )
         else:
-            data = ProjectReportGenerator.generate_weekly(
-                self.db, project_id, start_date, end_date
+            data = DeptReportGenerator.generate_weekly(
+                self.db, department_id, start_date, end_date
             )
 
         # 添加报表元信息
-        data["title"] = f"项目{'月' if self.report_type == 'monthly' else '周'}报"
+        data["title"] = f"部门{'月' if self.report_type == 'monthly' else '周'}报"
         data["report_type"] = self.get_report_code()
 
         return data
 
 
-class ProjectWeeklyAdapter(ProjectReportAdapter):
-    """项目周报适配器"""
+class DeptWeeklyAdapter(DeptReportAdapter):
+    """部门周报适配器"""
 
     def __init__(self, db: Session):
         super().__init__(db, report_type="weekly")
 
 
-class ProjectMonthlyAdapter(ProjectReportAdapter):
-    """项目月报适配器"""
+class DeptMonthlyAdapter(DeptReportAdapter):
+    """部门月报适配器"""
 
     def __init__(self, db: Session):
         super().__init__(db, report_type="monthly")
