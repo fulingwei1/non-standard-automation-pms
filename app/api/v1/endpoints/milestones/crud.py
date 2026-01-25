@@ -31,8 +31,10 @@ def read_milestones(
 
     Retrieve milestones.
     """
-    from app.services.data_scope_service import DataScopeService
-    from app.utils.permission_helpers import check_project_access_or_raise
+    from app.utils.permission_helpers import (
+        check_project_access_or_raise,
+        filter_by_project_access,
+    )
 
     query = db.query(ProjectMilestone)
 
@@ -41,32 +43,10 @@ def read_milestones(
         check_project_access_or_raise(db, current_user, project_id)
         query = query.filter(ProjectMilestone.project_id == project_id)
     else:
-        # 如果没有指定project_id，需要根据用户权限过滤项目
-        user_project_ids = DataScopeService.get_user_project_ids(db, current_user.id)
-        if not current_user.is_superuser:
-            # 获取用户数据权限范围
-            data_scope = DataScopeService.get_user_data_scope(db, current_user)
-            if data_scope == "OWN":
-                # OWN权限：只能看自己创建或负责的项目
-                user_managed_projects = db.query(Project.id).filter(
-                    (Project.created_by == current_user.id) | (Project.pm_id == current_user.id)
-                ).all()
-                user_project_ids = user_project_ids | {p[0] for p in user_managed_projects}
-            elif data_scope == "DEPT":
-                # DEPT权限：同部门项目
-                from app.models.organization import Department
-                if current_user.department:
-                    dept = db.query(Department).filter(Department.dept_name == current_user.department).first()
-                    if dept:
-                        dept_projects = db.query(Project.id).filter(Project.dept_id == dept.id).all()
-                        user_project_ids = user_project_ids | {p[0] for p in dept_projects}
-            # ALL和PROJECT权限已经在user_project_ids中处理了
-
-        if user_project_ids:
-            query = query.filter(ProjectMilestone.project_id.in_(user_project_ids))
-        elif not current_user.is_superuser:
-            # 没有权限访问任何项目，返回空结果
-            query = query.filter(ProjectMilestone.id == -1)
+        # 根据用户权限过滤项目
+        query = filter_by_project_access(
+            db, query, current_user, ProjectMilestone.project_id
+        )
 
     if status:
         query = query.filter(ProjectMilestone.status == status)

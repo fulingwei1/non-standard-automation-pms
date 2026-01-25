@@ -33,36 +33,22 @@ def read_members(
     """
     Retrieve project members.
     """
+    from app.utils.permission_helpers import (
+        check_project_access_or_raise,
+        filter_by_project_access,
+    )
+
     query = db.query(ProjectMember)
 
     # 如果指定了project_id，检查访问权限
     if project_id:
-        from app.utils.permission_helpers import check_project_access_or_raise
         check_project_access_or_raise(db, current_user, project_id)
         query = query.filter(ProjectMember.project_id == project_id)
     else:
-        # 如果没有指定project_id，根据用户权限过滤项目
-        from app.services.data_scope_service import DataScopeService
-        user_project_ids = DataScopeService.get_user_project_ids(db, current_user.id)
-        if not current_user.is_superuser:
-            data_scope = DataScopeService.get_user_data_scope(db, current_user)
-            if data_scope == "OWN":
-                user_managed_projects = db.query(Project.id).filter(
-                    (Project.created_by == current_user.id) | (Project.pm_id == current_user.id)
-                ).all()
-                user_project_ids = user_project_ids | {p[0] for p in user_managed_projects}
-            elif data_scope == "DEPT":
-                from app.models.organization import Department
-                if current_user.department:
-                    dept = db.query(Department).filter(Department.dept_name == current_user.department).first()
-                    if dept:
-                        dept_projects = db.query(Project.id).filter(Project.dept_id == dept.id).all()
-                        user_project_ids = user_project_ids | {p[0] for p in dept_projects}
-
-        if user_project_ids:
-            query = query.filter(ProjectMember.project_id.in_(user_project_ids))
-        elif not current_user.is_superuser:
-            query = query.filter(ProjectMember.id == -1)
+        # 根据用户权限过滤项目
+        query = filter_by_project_access(
+            db, query, current_user, ProjectMember.project_id
+        )
 
     members = query.offset(skip).limit(limit).all()
 
