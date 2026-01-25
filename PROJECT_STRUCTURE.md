@@ -45,7 +45,7 @@ non-standard-automation-pm/
 ├── STARTUP.md             # 启动指南
 ├── DEPLOYMENT_GUIDE.md    # 部署指南
 ├── requirements.txt       # Python依赖
-└── package.json           # Node.js依赖
+└── frontend/package.json  # 前端 Node.js 依赖
 ```
 
 ## 主要目录说明
@@ -88,7 +88,7 @@ non-standard-automation-pm/
 - `STARTUP.md` - 启动指南
 - `DEPLOYMENT_GUIDE.md` - 部署指南
 - `requirements.txt` - Python依赖
-- `package.json` - Node.js依赖
+- `frontend/package.json` - 前端 Node.js 依赖
 - `pytest.ini` - pytest配置
 - `docker-compose.yml` - Docker配置
 - `vercel.json` - Vercel部署配置
