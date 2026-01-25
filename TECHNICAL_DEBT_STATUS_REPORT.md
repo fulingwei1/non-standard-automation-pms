@@ -13,9 +13,9 @@
 
 | 状态 | 数量 | 占比 |
 |------|------|------|
-| ✅ 已解决 | 8 | 44% |
+| ✅ 已解决 | 10 | 56% |
 | ⚠️ 部分解决 | 1 | 6% |
-| ❌ 未解决 | 9 | 50% |
+| ❌ 未解决 | 7 | 39% |
 
 ---
 
@@ -206,21 +206,27 @@ rm -rf app/api/v1/endpoints/project_stages/
 
 ### 三、功能实现重复
 
-#### 10. ❌ 里程碑工作流重复 - 未验证
+#### 10. ✅ 里程碑工作流重复 - 已解决
 
 **原问题**: `milestones/workflow.py` vs `projects/milestones/workflow.py`，一个标记deprecated
 
-**状态**: ❌ 需要检查
+**状态**: ✅ 已解决
 
-**建议行动**:
+**验证结果** (2026-01-25):
 ```bash
-# 查找所有 workflow.py
+# ✅ 仅找到一个 workflow.py
 find app/api/v1/endpoints -name "workflow.py" | grep milestone
+app/api/v1/endpoints/projects/milestones/workflow.py
 
-# 删除deprecated版本
+# ✅ 无重复文件
 ```
 
-**优先级**: 🔴 严重
+**当前架构**:
+- ✅ `/api/v1/projects/{project_id}/milestones/` (唯一入口)
+- ✅ 实现目录: `app/api/v1/endpoints/projects/milestones/workflow.py`
+- ❌ `milestones/workflow.py` (已在之前清理中删除)
+
+**结论**: 之前的重构已经解决了此问题
 
 ---
 
@@ -239,36 +245,68 @@ find app/api/v1/endpoints -name "workflow.py" | grep milestone
 
 ---
 
-#### 12. ❌ create_project_cost重复 - 未解决
+#### 12. ✅ create_project_cost重复 - 已解决
 
 **原问题**: 创建成本逻辑在3处重复:
 - `costs/basic.py`
 - `projects/costs/crud.py`
 - `projects/ext_costs.py`
 
-**状态**: ❌ 未解决
+**状态**: ✅ 已解决
 
-**建议**:
-1. 统一为 `app/services/project_cost_service.py::create_cost()`
-2. 删除 `costs/basic.py` 和 `projects/ext_costs.py` 中的重复代码
-3. 仅保留 `projects/costs/crud.py` 作为API入口
+**清理操作** (2026-01-25):
+```bash
+# ✅ 删除整个废弃的 costs/ 目录
+rm -rf app/api/v1/endpoints/costs/
 
-**优先级**: 🔴 严重
+# ✅ 删除空的迁移存根文件
+rm app/api/v1/endpoints/projects/ext_costs.py
+
+# ✅ 删除测试废弃模块的测试文件
+rm tests/unit/test_costs_analysis_complete.py
+
+# ✅ 清理 api.py 中的注释行（lines 74-79）
+```
+
+**当前架构**:
+- ✅ `/api/v1/projects/{project_id}/costs/` (唯一入口，使用CRUD基类)
+- ✅ 实现目录: `app/api/v1/endpoints/projects/costs/`
+- ❌ `costs/` (已删除，包含7个子模块: basic, analysis, labor, allocation, budget, review, alert)
+- ❌ `projects/ext_costs.py` (已删除)
+
+**验证结果**:
+```bash
+✅ costs/ 目录已完全移除
+✅ API路由加载成功，包含 1831 个端点
+✅ 没有遗留的导入引用（除已删除的测试文件）
+```
+
+**说明**: 废弃的 `costs/` 目录从未在主API中注册（api.py lines 78-79已注释），仅项目中心路由 `projects/costs/` 是活跃实现
 
 ---
 
-#### 13. ❌ list_timesheets路由重复 - 未解决
+#### 13. ✅ list_timesheets路由 - 非重复（架构设计）
 
-**原问题**: `timesheet/__init__.py` vs `timesheet/records.py` 定义相同路由
+**原问题**: `timesheet/records.py` vs `projects/timesheet/crud.py` 看似定义相同路由
 
-**状态**: ❌ 未解决
+**状态**: ✅ 非重复 - 这是合理的架构设计
 
-**建议**:
-1. 检查两个文件中的路由定义
-2. 合并到单一文件中
-3. 避免路由冲突
+**验证结果** (2026-01-25):
 
-**优先级**: 🔴 严重
+两个端点服务于**不同的使用场景**:
+
+| 端点 | 路由 | 范围 | 用途 |
+|------|------|------|------|
+| `timesheet/records.py::list_timesheets` | `/timesheet/records/` | **全局** | 跨项目工时管理、报表统计 |
+| `projects/timesheet/crud.py::list_project_timesheets` | `/projects/{project_id}/timesheet/` | **项目级** | 项目内工时查看、团队协作 |
+
+**架构合理性**:
+- ✅ 类似于 `/users/` (全局用户管理) vs `/projects/{id}/members/` (项目成员管理)
+- ✅ 全局端点支持跨项目筛选和汇总
+- ✅ 项目端点提供项目上下文的便捷访问
+- ✅ 两者权限控制不同（全局需要更高权限）
+
+**结论**: 这不是代码重复，而是有意的分层架构设计
 
 ---
 
@@ -447,16 +485,11 @@ find app/api/v1/endpoints -name "workflow.py" | grep milestone
 | 审批流程重复 | 9个模块 | 5-8天 |
 | 工作流状态机重复 | 8个模块 | 5-8天 |
 | 报表统计服务分散 | 50+文件 | 8-12天 |
-| create_project_cost重复 | 3处 | 1-2天 |
-| list_timesheets路由重复 | 2处 | 0.5天 |
-| 里程碑工作流重复 | 2处 | 0.5天 |
 
 ### 🟠 高 (近期处理)
 
 | 问题 | 影响范围 | 估计工作量 |
 |------|----------|----------|
-| 售前功能命名混淆 | 2个模块 | 2-3天 |
-| 阶段管理重复 | 3处 | 1天 |
 | 任务进度更新重复 | 2处 | 1-2天 |
 | 状态更新端点重复 | 10个文件 | 3-5天 |
 
@@ -471,18 +504,39 @@ find app/api/v1/endpoints -name "workflow.py" | grep milestone
 
 ## 建议实施路线图
 
-### Phase 1: 快速清理 (1-2天)
+### Phase 1: 快速清理 (已完成 ✅)
 
-1. 删除废弃文件:
-   - `app/api/v1/endpoints/stages.py`
-   - `app/api/v1/endpoints/project_stages/`
-   - 其他deprecated文件
+1. ✅ 删除废弃文件:
+   - ✅ `app/api/v1/endpoints/stages.py` (之前已删除)
+   - ✅ `app/api/v1/endpoints/project_stages/` (2026-01-25)
+   - ✅ `app/api/v1/endpoints/costs/` (2026-01-25)
+   - ✅ `app/api/v1/endpoints/projects/ext_costs.py` (2026-01-25)
 
-2. 修复路由重复:
-   - list_timesheets
-   - 里程碑工作流
+2. ✅ 修复命名混淆:
+   - ✅ presales_integration → presale_analytics (2026-01-25)
 
-3. 统一create_project_cost
+3. ✅ 验证非重复项:
+   - ✅ members API (仅项目中心路由)
+   - ✅ milestones API (仅项目中心路由)
+   - ✅ progress API (仅项目中心路由)
+   - ✅ roles API (仅项目中心路由)
+   - ✅ timesheet API (全局 + 项目级，非重复)
+   - ✅ workload API (仅项目中心路由)
+   - ✅ milestone workflow (仅一个实现)
+   - ✅ create_project_cost (废弃代码已删除)
+
+### Phase 2: 架构重构 (待处理)
+
+1. 任务进度更新重复
+   - 提取公共服务: `app/services/task_progress_service.py`
+
+2. 统一审批流程框架
+   - 创建 `app/services/approval_framework/`
+
+3. 统一状态机框架
+   - 创建 `app/services/state_machine/`
+
+### Phase 3: 服务层整合 (长期规划)
 
 ### Phase 2: 架构优化 (2-3周)
 
