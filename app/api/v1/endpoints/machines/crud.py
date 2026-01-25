@@ -1,6 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-机台基本 CRUD 端点
+机台全局 CRUD 端点
+
+⚠️ 大部分端点已废弃，请使用项目中心端点：
+    /api/v1/projects/{project_id}/machines/
+
+本文件保留的非废弃端点：
+- PUT /{machine_id}/progress - 更新机台进度
+- GET /{machine_id}/bom - 获取机台BOM
+- GET /projects/{project_id}/summary - 获取项目机台汇总
+- POST /projects/{project_id}/recalculate - 重新计算聚合数据
 """
 
 from decimal import Decimal
@@ -26,11 +35,15 @@ from app.schemas.project import (
 router = APIRouter()
 
 
-@router.get("/", response_model=PaginatedResponse[MachineResponse])
+# ============================================================
+# 已废弃的端点 - 请使用项目中心端点
+# ============================================================
+
+@router.get("/", response_model=PaginatedResponse[MachineResponse], deprecated=True)
 def read_machines(
     db: Session = Depends(deps.get_db),
     page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     stage: Optional[str] = Query(None, description="设备阶段筛选"),
     status: Optional[str] = Query(None, description="设备状态筛选"),
@@ -38,12 +51,20 @@ def read_machines(
     current_user: User = Depends(security.require_permission("machine:read")),
 ) -> Any:
     """
-    获取机台列表（支持分页、筛选）
+    ⚠️ Deprecated: 请使用 GET /projects/{project_id}/machines/
+
+    获取机台列表
     """
+    from app.utils.permission_helpers import filter_by_project_access
+
     query = db.query(Machine)
 
+    # 数据权限过滤
     if project_id:
         query = query.filter(Machine.project_id == project_id)
+    else:
+        query = filter_by_project_access(db, query, current_user, Machine.project_id)
+
     if stage:
         query = query.filter(Machine.stage == stage)
     if status:
@@ -64,25 +85,7 @@ def read_machines(
     )
 
 
-@router.get("/projects/{project_id}/machines", response_model=List[MachineResponse])
-def get_project_machines(
-    *,
-    db: Session = Depends(deps.get_db),
-    project_id: int,
-    current_user: User = Depends(security.require_permission("machine:read")),
-) -> Any:
-    """
-    获取项目的机台列表
-    """
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
-
-    machines = db.query(Machine).filter(Machine.project_id == project_id).order_by(Machine.machine_no).all()
-    return machines
-
-
-@router.post("/", response_model=MachineResponse)
+@router.post("/", response_model=MachineResponse, deprecated=True)
 def create_machine(
     *,
     db: Session = Depends(deps.get_db),
@@ -90,113 +93,39 @@ def create_machine(
     current_user: User = Depends(security.require_permission("machine:create")),
 ) -> Any:
     """
+    ⚠️ Deprecated: 请使用 POST /projects/{project_id}/machines/
+
     创建机台
-
-    机台编码自动生成格式：{项目编码}-PN{序号}
-    例如：PJ250712001-PN001
     """
     from app.services.machine_service import MachineService, ProjectAggregationService
+    from app.utils.permission_helpers import check_project_access_or_raise
 
-    # 检查项目是否存在
-    project = db.query(Project).filter(Project.id == machine_in.project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project_id = machine_in.project_id
+    if not project_id:
+        raise HTTPException(status_code=400, detail="project_id 是必需的")
 
-    # 准备机台数据
+    check_project_access_or_raise(db, current_user, project_id, "您没有权限在该项目中创建机台")
+
     machine_data = machine_in.model_dump()
     machine_service = MachineService(db)
 
-    # 自动生成机台编码（如果未提供）
-    if not machine_data.get("machine_code"):
-        machine_code, machine_no = machine_service.generate_machine_code(machine_in.project_id)
-        machine_data["machine_code"] = machine_code
-        machine_data["machine_no"] = machine_no
-    else:
-        # 检查机台编码是否已存在
-        existing = (
-            db.query(Machine)
-            .filter(
-                Machine.project_id == machine_in.project_id,
-                Machine.machine_code == machine_in.machine_code,
-            )
-            .first()
-        )
-        if existing:
-            raise HTTPException(
-                status_code=400,
-                detail="该机台编码已在此项目中存在",
-            )
-
-    machine = Machine(**machine_data)
-    db.add(machine)
-    db.commit()
-    db.refresh(machine)
-
-    # 更新项目聚合数据
-    aggregation_service = ProjectAggregationService(db)
-    aggregation_service.update_project_aggregation(machine_in.project_id)
-
-    return machine
-
-
-@router.post("/projects/{project_id}/machines", response_model=MachineResponse)
-def create_project_machine(
-    *,
-    db: Session = Depends(deps.get_db),
-    project_id: int,
-    machine_in: MachineCreate,
-    current_user: User = Depends(security.require_permission("machine:read")),
-) -> Any:
-    """
-    为项目创建机台
-
-    机台编码自动生成格式：{项目编码}-PN{序号}
-    """
-    from app.services.machine_service import MachineService, ProjectAggregationService
-
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
-
-    # 准备机台数据
-    machine_data = machine_in.model_dump()
-    machine_data['project_id'] = project_id
-    machine_service = MachineService(db)
-
-    # 自动生成机台编码（如果未提供）
     if not machine_data.get("machine_code"):
         machine_code, machine_no = machine_service.generate_machine_code(project_id)
         machine_data["machine_code"] = machine_code
         machine_data["machine_no"] = machine_no
-    else:
-        # 检查机台编码是否已存在
-        existing = (
-            db.query(Machine)
-            .filter(
-                Machine.project_id == project_id,
-                Machine.machine_code == machine_in.machine_code,
-            )
-            .first()
-        )
-        if existing:
-            raise HTTPException(
-                status_code=400,
-                detail="该机台编码已在此项目中存在",
-            )
 
     machine = Machine(**machine_data)
     db.add(machine)
     db.commit()
     db.refresh(machine)
 
-    # 更新项目聚合数据
     aggregation_service = ProjectAggregationService(db)
     aggregation_service.update_project_aggregation(project_id)
 
     return machine
 
 
-@router.get("/{machine_id}", response_model=MachineResponse)
+@router.get("/{machine_id}", response_model=MachineResponse, deprecated=True)
 def read_machine(
     *,
     db: Session = Depends(deps.get_db),
@@ -204,15 +133,17 @@ def read_machine(
     current_user: User = Depends(security.require_permission("machine:read")),
 ) -> Any:
     """
-    Get machine by ID.
+    ⚠️ Deprecated: 请使用 GET /projects/{project_id}/machines/{machine_id}
+
+    获取机台详情
     """
     machine = db.query(Machine).filter(Machine.id == machine_id).first()
     if not machine:
-        raise HTTPException(status_code=404, detail="Machine not found")
+        raise HTTPException(status_code=404, detail="机台不存在")
     return machine
 
 
-@router.put("/{machine_id}", response_model=MachineResponse)
+@router.put("/{machine_id}", response_model=MachineResponse, deprecated=True)
 def update_machine(
     *,
     db: Session = Depends(deps.get_db),
@@ -221,11 +152,9 @@ def update_machine(
     current_user: User = Depends(security.require_permission("machine:update")),
 ) -> Any:
     """
-    更新机台信息
+    ⚠️ Deprecated: 请使用 PUT /projects/{project_id}/machines/{machine_id}
 
-    - 阶段变更会验证是否合法（只能向前推进）
-    - 状态变更会验证是否在有效范围内
-    - 更新后自动重新计算项目的聚合数据
+    更新机台信息
     """
     from app.services.machine_service import (
         MachineService,
@@ -241,31 +170,18 @@ def update_machine(
     update_data = machine_in.model_dump(exclude_unset=True)
     machine_service = MachineService(db)
 
-    # 验证阶段变更是否合法
     if "stage" in update_data:
         new_stage = update_data["stage"]
         if new_stage not in VALID_STAGES:
-            raise HTTPException(
-                status_code=400,
-                detail=f"无效的阶段值: {new_stage}，有效值为 S1-S9"
-            )
-
-        is_valid, error_msg = machine_service.validate_stage_transition(
-            machine.stage, new_stage
-        )
+            raise HTTPException(status_code=400, detail=f"无效的阶段值: {new_stage}")
+        is_valid, error_msg = machine_service.validate_stage_transition(machine.stage, new_stage)
         if not is_valid:
             raise HTTPException(status_code=400, detail=error_msg)
 
-    # 验证健康度是否有效
     if "health" in update_data:
-        new_health = update_data["health"]
-        if new_health not in VALID_HEALTH:
-            raise HTTPException(
-                status_code=400,
-                detail=f"无效的健康度: {new_health}，有效值为 H1-H4"
-            )
+        if update_data["health"] not in VALID_HEALTH:
+            raise HTTPException(status_code=400, detail=f"无效的健康度: {update_data['health']}")
 
-    # 应用更新
     for field, value in update_data.items():
         if hasattr(machine, field):
             setattr(machine, field, value)
@@ -274,12 +190,44 @@ def update_machine(
     db.commit()
     db.refresh(machine)
 
-    # 更新项目聚合数据
     aggregation_service = ProjectAggregationService(db)
     aggregation_service.update_project_aggregation(machine.project_id)
 
     return machine
 
+
+@router.delete("/{machine_id}", status_code=200, deprecated=True)
+def delete_machine(
+    *,
+    db: Session = Depends(deps.get_db),
+    machine_id: int,
+    current_user: User = Depends(security.require_permission("machine:delete")),
+) -> Any:
+    """
+    ⚠️ Deprecated: 请使用 DELETE /projects/{project_id}/machines/{machine_id}
+
+    删除机台
+    """
+    machine = db.query(Machine).filter(Machine.id == machine_id).first()
+    if not machine:
+        raise HTTPException(status_code=404, detail="机台不存在")
+
+    bom_count = db.query(BomHeader).filter(BomHeader.machine_id == machine_id).count()
+    if bom_count > 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"机台下存在 {bom_count} 个BOM，无法删除。"
+        )
+
+    db.delete(machine)
+    db.commit()
+
+    return ResponseModel(code=200, message="机台已删除")
+
+
+# ============================================================
+# 以下端点仍然有效（项目中心端点中没有的功能）
+# ============================================================
 
 @router.put("/{machine_id}/progress", response_model=MachineResponse)
 def update_machine_progress(
@@ -305,7 +253,6 @@ def update_machine_progress(
     db.commit()
     db.refresh(machine)
 
-    # 更新项目聚合数据
     aggregation_service = ProjectAggregationService(db)
     aggregation_service.update_project_aggregation(machine.project_id)
 
@@ -321,14 +268,13 @@ def get_machine_bom(
 ) -> Any:
     """
     获取机台的BOM列表
-    注意：实际的BOM列表API在 /api/v1/bom/machines/{machine_id}/bom
-    这里提供快捷访问
+
+    注意：完整BOM API在 /api/v1/bom/machines/{machine_id}/bom
     """
     machine = db.query(Machine).filter(Machine.id == machine_id).first()
     if not machine:
         raise HTTPException(status_code=404, detail="机台不存在")
 
-    # 通过BOM API获取，这里返回提示信息
     bom_headers = (
         db.query(BomHeader)
         .filter(BomHeader.machine_id == machine_id)
@@ -336,9 +282,8 @@ def get_machine_bom(
         .all()
     )
 
-    result = []
-    for bom in bom_headers:
-        result.append({
+    return [
+        {
             "id": bom.id,
             "bom_no": bom.bom_no,
             "bom_name": bom.bom_name,
@@ -347,37 +292,9 @@ def get_machine_bom(
             "status": bom.status,
             "total_items": bom.total_items,
             "total_amount": float(bom.total_amount) if bom.total_amount else 0,
-        })
-
-    return result
-
-
-@router.delete("/{machine_id}", status_code=200)
-def delete_machine(
-    *,
-    db: Session = Depends(deps.get_db),
-    machine_id: int,
-    current_user: User = Depends(security.require_permission("machine:delete")),
-) -> Any:
-    """
-    删除机台
-    """
-    machine = db.query(Machine).filter(Machine.id == machine_id).first()
-    if not machine:
-        raise HTTPException(status_code=404, detail="机台不存在")
-
-    # 检查是否有关联的BOM
-    bom_count = db.query(BomHeader).filter(BomHeader.machine_id == machine_id).count()
-    if bom_count > 0:
-        raise HTTPException(
-            status_code=400,
-            detail=f"机台下存在 {bom_count} 个BOM，无法删除。请先删除或转移BOM。"
-        )
-
-    db.delete(machine)
-    db.commit()
-
-    return ResponseModel(code=200, message="机台已删除")
+        }
+        for bom in bom_headers
+    ]
 
 
 @router.get("/projects/{project_id}/summary")
@@ -390,16 +307,12 @@ def get_project_machine_summary(
     """
     获取项目机台汇总信息
 
-    返回：
-    - total_machines: 机台总数
-    - stage_distribution: 阶段分布
-    - health_distribution: 健康度分布
-    - avg_progress: 平均进度
-    - completed_count: 已完成数量（S9）
-    - at_risk_count: 有风险数量（H2）
-    - blocked_count: 阻塞数量（H3）
+    返回阶段分布、健康度分布、平均进度等汇总数据
     """
     from app.services.machine_service import ProjectAggregationService
+    from app.utils.permission_helpers import check_project_access_or_raise
+
+    check_project_access_or_raise(db, current_user, project_id)
 
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
@@ -433,10 +346,12 @@ def recalculate_project_aggregation(
     """
     重新计算项目聚合数据
 
-    当项目的进度、阶段或健康度与机台不一致时，
-    可以调用此接口强制重新计算。
+    当项目的进度、阶段或健康度与机台不一致时，可调用此接口强制重新计算
     """
     from app.services.machine_service import ProjectAggregationService
+    from app.utils.permission_helpers import check_project_access_or_raise
+
+    check_project_access_or_raise(db, current_user, project_id)
 
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:

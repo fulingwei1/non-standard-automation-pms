@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-项目成员 CRUD 端点
+项目成员全局 CRUD 端点
+
+⚠️ 所有端点已废弃，请使用项目中心端点：
+    /api/v1/projects/{project_id}/members/
 """
 
 from typing import Any, List, Optional
@@ -22,7 +25,14 @@ from app.schemas.project import (
 router = APIRouter()
 
 
-@router.get("/", response_model=List[ProjectMemberResponse])
+def _enrich_member(member: ProjectMember) -> ProjectMember:
+    """填充成员的用户信息"""
+    member.username = member.user.username if member.user else "Unknown"
+    member.real_name = member.user.real_name if member.user else "Unknown"
+    return member
+
+
+@router.get("/", response_model=List[ProjectMemberResponse], deprecated=True)
 def read_members(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
@@ -31,7 +41,9 @@ def read_members(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
-    Retrieve project members.
+    ⚠️ Deprecated: 请使用 GET /projects/{project_id}/members/
+
+    获取项目成员列表
     """
     from app.utils.permission_helpers import (
         check_project_access_or_raise,
@@ -40,51 +52,23 @@ def read_members(
 
     query = db.query(ProjectMember)
 
-    # 如果指定了project_id，检查访问权限
     if project_id:
         check_project_access_or_raise(db, current_user, project_id)
         query = query.filter(ProjectMember.project_id == project_id)
     else:
-        # 根据用户权限过滤项目
         query = filter_by_project_access(
             db, query, current_user, ProjectMember.project_id
         )
 
     members = query.offset(skip).limit(limit).all()
 
-    # Map user info
     for m in members:
-        m.username = m.user.username if m.user else "Unknown"
-        m.real_name = m.user.real_name if m.user else "Unknown"
+        _enrich_member(m)
 
     return members
 
 
-@router.get("/projects/{project_id}/members", response_model=List[ProjectMemberResponse])
-def get_project_members(
-    *,
-    db: Session = Depends(deps.get_db),
-    project_id: int,
-    current_user: User = Depends(security.get_current_active_user),
-) -> Any:
-    """
-    获取项目的成员列表
-    """
-    # 检查项目访问权限
-    from app.utils.permission_helpers import check_project_access_or_raise
-    check_project_access_or_raise(db, current_user, project_id)
-
-    members = db.query(ProjectMember).filter(ProjectMember.project_id == project_id).all()
-
-    # 补充用户信息
-    for m in members:
-        m.username = m.user.username if m.user else "Unknown"
-        m.real_name = m.user.real_name if m.user else "Unknown"
-
-    return members
-
-
-@router.post("/", response_model=ProjectMemberResponse)
+@router.post("/", response_model=ProjectMemberResponse, deprecated=True)
 def add_member(
     *,
     db: Session = Depends(deps.get_db),
@@ -92,63 +76,24 @@ def add_member(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
+    ⚠️ Deprecated: 请使用 POST /projects/{project_id}/members/
+
     添加项目成员
     """
-    # Check project exists
-    project = db.query(Project).filter(Project.id == member_in.project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
-
-    # Check user exists
-    user = db.query(User).filter(User.id == member_in.user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="用户不存在")
-
-    # Check if already a member
-    member = (
-        db.query(ProjectMember)
-        .filter(
-            ProjectMember.project_id == member_in.project_id,
-            ProjectMember.user_id == member_in.user_id,
-        )
-        .first()
-    )
-    if member:
-        raise HTTPException(
-            status_code=400,
-            detail="该用户已是项目成员",
-        )
-
-    member = ProjectMember(**member_in.model_dump())
-    db.add(member)
-    db.commit()
-    db.refresh(member)
-
-    member.username = user.username
-    member.real_name = user.real_name
-    return member
-
-
-@router.post("/projects/{project_id}/members", response_model=ProjectMemberResponse)
-def add_project_member(
-    *,
-    db: Session = Depends(deps.get_db),
-    project_id: int,
-    member_in: ProjectMemberCreate,
-    current_user: User = Depends(security.get_current_active_user),
-) -> Any:
-    """
-    为项目添加成员
-    """
-    # 检查项目访问权限
     from app.utils.permission_helpers import check_project_access_or_raise
-    check_project_access_or_raise(db, current_user, project_id, "您没有权限在该项目中添加成员")
+
+    project_id = member_in.project_id
+    if not project_id:
+        raise HTTPException(status_code=400, detail="project_id 是必需的")
+
+    check_project_access_or_raise(
+        db, current_user, project_id, "您没有权限在该项目中添加成员"
+    )
 
     user = db.query(User).filter(User.id == member_in.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="用户不存在")
 
-    # 检查是否已经是成员
     existing = (
         db.query(ProjectMember)
         .filter(
@@ -158,25 +103,17 @@ def add_project_member(
         .first()
     )
     if existing:
-        raise HTTPException(
-            status_code=400,
-            detail="该用户已是项目成员",
-        )
+        raise HTTPException(status_code=400, detail="该用户已是项目成员")
 
-    member_data = member_in.model_dump()
-    member_data['project_id'] = project_id
-
-    member = ProjectMember(**member_data)
+    member = ProjectMember(**member_in.model_dump())
     db.add(member)
     db.commit()
     db.refresh(member)
 
-    member.username = user.username
-    member.real_name = user.real_name
-    return member
+    return _enrich_member(member)
 
 
-@router.put("/project-members/{member_id}", response_model=ProjectMemberResponse)
+@router.put("/project-members/{member_id}", response_model=ProjectMemberResponse, deprecated=True)
 def update_project_member(
     *,
     db: Session = Depends(deps.get_db),
@@ -185,6 +122,8 @@ def update_project_member(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
+    ⚠️ Deprecated: 请使用 PUT /projects/{project_id}/members/{member_id}
+
     更新项目成员角色和分配信息
     """
     member = db.query(ProjectMember).filter(ProjectMember.id == member_id).first()
@@ -200,14 +139,10 @@ def update_project_member(
     db.commit()
     db.refresh(member)
 
-    # 补充用户信息
-    member.username = member.user.username if member.user else "Unknown"
-    member.real_name = member.user.real_name if member.user else "Unknown"
-
-    return member
+    return _enrich_member(member)
 
 
-@router.delete("/{member_id}", status_code=200)
+@router.delete("/{member_id}", status_code=200, deprecated=True)
 def remove_member(
     *,
     db: Session = Depends(deps.get_db),
@@ -215,6 +150,8 @@ def remove_member(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
+    ⚠️ Deprecated: 请使用 DELETE /projects/{project_id}/members/{member_id}
+
     移除项目成员
     """
     member = db.query(ProjectMember).filter(ProjectMember.id == member_id).first()
