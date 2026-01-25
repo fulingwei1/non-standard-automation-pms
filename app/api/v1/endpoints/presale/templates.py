@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
+from app.utils.pagination import PaginationParams, create_paginated_response
 from app.models.presale import (
     PresaleSolution,
     PresaleSolutionCost,
@@ -58,8 +58,7 @@ router = APIRouter(
 @router.get("/presale/templates", response_model=PaginatedResponse)
 def read_templates(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(),
     keyword: Optional[str] = Query(None, description="关键词搜索（模板名称）"),
     industry: Optional[str] = Query(None, description="行业筛选"),
     test_type: Optional[str] = Query(None, description="测试类型筛选"),
@@ -84,8 +83,7 @@ def read_templates(
         query = query.filter(PresaleSolutionTemplate.is_active == is_active)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    templates = query.order_by(desc(PresaleSolutionTemplate.created_at)).offset(offset).limit(page_size).all()
+    templates = query.order_by(desc(PresaleSolutionTemplate.created_at)).offset(pagination.offset).limit(pagination.page_size).all()
 
     items = []
     for template in templates:
@@ -102,13 +100,7 @@ def read_templates(
             updated_at=template.updated_at,
         ))
 
-    return PaginatedResponse(
-        items=items,
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
-    )
+    return create_paginated_response(items, total, pagination)
 
 
 @router.post("/presale/templates", response_model=TemplateResponse, status_code=status.HTTP_201_CREATED)
