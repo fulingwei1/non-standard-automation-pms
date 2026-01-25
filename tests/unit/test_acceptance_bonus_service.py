@@ -80,7 +80,8 @@ class TestCalculateSalesBonus:
 
         assert result is None
 
-    def test_calculate_sales_bonus_successfully(self):
+    @patch("app.services.acceptance_bonus_service.Contract")
+    def test_calculate_sales_bonus_successfully(self, mock_contract_class):
         """测试成功计算销售奖金"""
         mock_db = MagicMock(spec=Session)
 
@@ -88,10 +89,12 @@ class TestCalculateSalesBonus:
         mock_project.id = 1
         mock_project.contract_no = "CT-001"
 
-        mock_contract = Mock(spec=Contract)
+        mock_contract = Mock()
         mock_contract.id = 10
         mock_contract.contract_amount = Decimal("100000")
 
+        # 设置 Contract.contract_no 为可比较的 Mock
+        mock_contract_class.contract_no = MagicMock()
         mock_db.query.return_value.filter.return_value.first.return_value = (
             mock_contract
         )
@@ -395,7 +398,8 @@ class TestCalculateProjectBonus:
 class TestIntegration:
     """集成测试"""
 
-    def test_get_and_calculate_sales_bonus(self):
+    @patch("app.services.acceptance_bonus_service.Contract")
+    def test_get_and_calculate_sales_bonus(self, mock_contract_class):
         """测试获取规则并计算销售奖金的完整流程"""
         mock_db = MagicMock(spec=Session)
 
@@ -419,10 +423,12 @@ class TestIntegration:
         mock_project.id = 1
         mock_project.contract_no = "CT-001"
 
-        mock_contract = Mock(spec=Contract)
+        mock_contract = Mock()
         mock_contract.id = 10
         mock_contract.contract_amount = Decimal("200000")
 
+        # 设置 Contract.contract_no 为可比较的 Mock
+        mock_contract_class.contract_no = MagicMock()
         mock_db.query.return_value.filter.return_value.first.return_value = (
             mock_contract
         )
@@ -433,8 +439,9 @@ class TestIntegration:
         assert result is not None
         assert result.total_bonus_amount == Decimal("10000")  # 200000 * 5%
 
+    @patch("app.services.acceptance_bonus_service.Contract")
     @patch("app.services.acceptance_bonus_service.ProjectEvaluationService")
-    def test_multiple_bonus_types(self, mock_eval_service_class):
+    def test_multiple_bonus_types(self, mock_eval_service_class, mock_contract_class):
         """测试计算多种类型奖金"""
         mock_db = MagicMock(spec=Session)
 
@@ -451,10 +458,12 @@ class TestIntegration:
         mock_eval_service_class.return_value = mock_eval_service
 
         # Sales bonus
-        mock_contract = Mock(spec=Contract)
+        mock_contract = Mock()
         mock_contract.id = 10
         mock_contract.contract_amount = Decimal("100000")
 
+        # 设置 Contract.contract_no 为可比较的 Mock
+        mock_contract_class.contract_no = MagicMock()
         mock_db.query.return_value.filter.return_value.first.return_value = (
             mock_contract
         )
