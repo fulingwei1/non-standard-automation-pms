@@ -66,37 +66,11 @@ from app.schemas.pmo import (
 # Included without extra prefix; decorators already include `/pmo/...` paths.
 router = APIRouter(tags=["pmo-phases"])
 
+# 使用统一的编码生成工具
+from app.utils.domain_codes import pmo as pmo_codes
 
-def generate_initiation_no(db: Session) -> str:
-    """生成立项申请编号：INIT-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_init = (
-        db.query(PmoProjectInitiation)
-        .filter(PmoProjectInitiation.application_no.like(f"INIT-{today}-%"))
-        .order_by(desc(PmoProjectInitiation.application_no))
-        .first()
-    )
-    if max_init:
-        seq = int(max_init.application_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"INIT-{today}-{seq:03d}"
-
-
-def generate_risk_no(db: Session) -> str:
-    """生成风险编号：RISK-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_risk = (
-        db.query(PmoProjectRisk)
-        .filter(PmoProjectRisk.risk_no.like(f"RISK-{today}-%"))
-        .order_by(desc(PmoProjectRisk.risk_no))
-        .first()
-    )
-    if max_risk:
-        seq = int(max_risk.risk_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"RISK-{today}-{seq:03d}"
+generate_initiation_no = pmo_codes.generate_initiation_no
+generate_risk_no = pmo_codes.generate_risk_no
 
 # 共 5 个路由
 

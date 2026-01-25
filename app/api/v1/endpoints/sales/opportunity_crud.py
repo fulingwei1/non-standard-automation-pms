@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
+from app.utils.pagination import PaginationParams, create_paginated_response
 from app.models.enums import OpportunityStageEnum
 from app.models.project import Customer
 from app.models.sales import Opportunity, OpportunityRequirement
@@ -37,8 +37,7 @@ router = APIRouter()
 @router.get("/opportunities", response_model=PaginatedResponse[OpportunityResponse])
 def read_opportunities(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(),
     keyword: Optional[str] = Query(None, description="关键词搜索"),
     stage: Optional[str] = Query(None, description="阶段筛选"),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
@@ -72,7 +71,6 @@ def read_opportunities(
         query = query.filter(Opportunity.owner_id == owner_id)
 
     total = query.count()
-    offset = (page - 1) * page_size
     # 使用 eager loading 避免 N+1 查询
     # 默认按优先级排序，如果没有优先级则按创建时间排序
     opportunities = query.options(
@@ -82,7 +80,7 @@ def read_opportunities(
     ).order_by(
         desc(Opportunity.priority_score).nullslast(),
         desc(Opportunity.created_at)
-    ).offset(offset).limit(page_size).all()
+    ).offset(pagination.offset).limit(pagination.page_size).all()
 
     opp_responses = []
     for opp in opportunities:
@@ -98,13 +96,7 @@ def read_opportunities(
             opp_dict["requirement"] = OpportunityRequirementResponse(**{c.name: getattr(req, c.name) for c in req.__table__.columns})
         opp_responses.append(OpportunityResponse(**opp_dict))
 
-    return PaginatedResponse(
-        items=opp_responses,
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
-    )
+    return create_paginated_response(opp_responses, total, pagination)
 
 
 @router.post("/opportunities", response_model=OpportunityResponse, status_code=201)

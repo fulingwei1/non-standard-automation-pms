@@ -6,8 +6,9 @@
 复杂逻辑通过覆盖端点实现
 """
 
+from decimal import Decimal
 from typing import Any, Dict
-from fastapi import APIRouter, Depends, HTTPException, Path, Body
+from fastapi import APIRouter, Depends, HTTPException, Path, Body, Query
 from sqlalchemy.orm import Session
 
 from app.api.v1.core.project_crud_base import create_project_crud_router
@@ -216,17 +217,17 @@ def delete_project_machine(
     """删除项目机台（覆盖基类端点，添加BOM检查逻辑）"""
     from app.models.material import BomHeader
     from app.utils.permission_helpers import check_project_access_or_raise
-    
+
     check_project_access_or_raise(db, current_user, project_id)
-    
+
     machine = db.query(Machine).filter(
         Machine.id == machine_id,
         Machine.project_id == project_id,
     ).first()
-    
+
     if not machine:
         raise HTTPException(status_code=404, detail="机台不存在")
-    
+
     # 检查是否有关联的BOM
     bom_count = db.query(BomHeader).filter(BomHeader.machine_id == machine_id).count()
     if bom_count > 0:
@@ -234,9 +235,170 @@ def delete_project_machine(
             status_code=400,
             detail=f"机台下存在 {bom_count} 个BOM，无法删除。请先删除或转移BOM。",
         )
-    
+
     db.delete(machine)
     db.commit()
+
+
+# ============================================================
+# 扩展端点（从全局端点迁移）
+# ============================================================
+
+@router.put("/{machine_id}/progress", response_model=MachineResponse)
+def update_machine_progress(
+    project_id: int = Path(..., description="项目ID"),
+    machine_id: int = Path(..., description="机台ID"),
+    progress_pct: Decimal = Query(..., ge=0, le=100, description="进度百分比（0-100）"),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("machine:update")),
+) -> Any:
+    """
+    更新机台进度
+
+    更新后自动重新计算项目的聚合进度
+    """
+    from app.services.machine_service import ProjectAggregationService
+    from app.utils.permission_helpers import check_project_access_or_raise
+
+    check_project_access_or_raise(db, current_user, project_id)
+
+    machine = db.query(Machine).filter(
+        Machine.id == machine_id,
+        Machine.project_id == project_id,
+    ).first()
+    if not machine:
+        raise HTTPException(status_code=404, detail="机台不存在")
+
+    machine.progress_pct = progress_pct
+    db.add(machine)
+    db.commit()
+    db.refresh(machine)
+
+    aggregation_service = ProjectAggregationService(db)
+    aggregation_service.update_project_aggregation(project_id)
+
+    return machine
+
+
+@router.get("/{machine_id}/bom")
+def get_machine_bom(
+    project_id: int = Path(..., description="项目ID"),
+    machine_id: int = Path(..., description="机台ID"),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("machine:read")),
+) -> Any:
+    """
+    获取机台的BOM列表
+
+    注意：完整BOM API在 /api/v1/bom/
+    """
+    from sqlalchemy import desc
+    from app.models.material import BomHeader
+    from app.utils.permission_helpers import check_project_access_or_raise
+
+    check_project_access_or_raise(db, current_user, project_id)
+
+    machine = db.query(Machine).filter(
+        Machine.id == machine_id,
+        Machine.project_id == project_id,
+    ).first()
+    if not machine:
+        raise HTTPException(status_code=404, detail="机台不存在")
+
+    bom_headers = (
+        db.query(BomHeader)
+        .filter(BomHeader.machine_id == machine_id)
+        .order_by(desc(BomHeader.created_at))
+        .all()
+    )
+
+    return [
+        {
+            "id": bom.id,
+            "bom_no": bom.bom_no,
+            "bom_name": bom.bom_name,
+            "version": bom.version,
+            "is_latest": bom.is_latest,
+            "status": bom.status,
+            "total_items": bom.total_items,
+            "total_amount": float(bom.total_amount) if bom.total_amount else 0,
+        }
+        for bom in bom_headers
+    ]
+
+
+@router.get("/summary")
+def get_project_machine_summary(
+    project_id: int = Path(..., description="项目ID"),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("machine:read")),
+) -> Any:
+    """
+    获取项目机台汇总信息
+
+    返回阶段分布、健康度分布、平均进度等汇总数据
+    """
+    from app.services.machine_service import ProjectAggregationService
+    from app.utils.permission_helpers import check_project_access_or_raise
+
+    check_project_access_or_raise(db, current_user, project_id)
+
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="项目不存在")
+
+    aggregation_service = ProjectAggregationService(db)
+    summary = aggregation_service.get_project_machine_summary(project_id)
+
+    return {
+        "code": 200,
+        "message": "获取成功",
+        "data": {
+            "project_id": project_id,
+            "project_code": project.project_code,
+            "project_name": project.project_name,
+            "project_stage": project.stage,
+            "project_health": project.health,
+            "project_progress": float(project.progress_pct or 0),
+            **summary,
+        }
+    }
+
+
+@router.post("/recalculate")
+def recalculate_project_aggregation(
+    project_id: int = Path(..., description="项目ID"),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("machine:update")),
+) -> Any:
+    """
+    重新计算项目聚合数据
+
+    当项目的进度、阶段或健康度与机台不一致时，可调用此接口强制重新计算
+    """
+    from app.services.machine_service import ProjectAggregationService
+    from app.utils.permission_helpers import check_project_access_or_raise
+
+    check_project_access_or_raise(db, current_user, project_id)
+
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="项目不存在")
+
+    aggregation_service = ProjectAggregationService(db)
+    updated_project = aggregation_service.update_project_aggregation(project_id)
+
+    return {
+        "code": 200,
+        "message": "重新计算完成",
+        "data": {
+            "project_id": updated_project.id,
+            "project_code": updated_project.project_code,
+            "stage": updated_project.stage,
+            "health": updated_project.health,
+            "progress_pct": float(updated_project.progress_pct or 0),
+        }
+    }
 
 
 # 从基类router中复制其他端点（列表、详情），排除已覆盖的端点
