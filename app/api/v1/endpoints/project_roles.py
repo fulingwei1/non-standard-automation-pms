@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-项目角色类型与负责人管理 API
+项目角色全局端点 - 兼容层
 
-已拆分为模块化结构，详见 project_roles/ 目录：
-- role_types.py: 角色类型字典管理
-- role_configs.py: 项目角色配置管理
-- leads.py: 项目负责人管理
-- team_members.py: 团队成员管理
-- overview.py: 项目角色概览
+⚠️ 已废弃 (DEPRECATED)
+此模块已废弃，请使用项目中心端点。
+
+详见 project_roles/__init__.py
 """
 
 from .project_roles import router
