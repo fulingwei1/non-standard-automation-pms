@@ -181,6 +181,7 @@ def get_me(
                 permission_codes.add(permission.permission_code)
 
     # 构建响应数据（避免直接修改ORM对象）
+    is_superuser = db_user.is_superuser or security.is_system_admin(db_user)
     user_data = {
         "id": db_user.id,
         "username": db_user.username,
@@ -192,7 +193,7 @@ def get_me(
         "position": db_user.position,
         "avatar": db_user.avatar,
         "is_active": db_user.is_active,
-        "is_superuser": db_user.is_superuser,
+        "is_superuser": is_superuser,
         "last_login_at": db_user.last_login_at,
         "roles": role_names,
         "permissions": sorted(permission_codes),

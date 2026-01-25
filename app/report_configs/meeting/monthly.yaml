@@ -24,6 +24,14 @@ parameters:
     type: integer
     required: true
     description: 报告月份
+  - name: start_date
+    type: date
+    required: false
+    description: 报告开始日期（自动计算）
+  - name: end_date
+    type: date
+    required: false
+    description: 报告结束日期（自动计算）
   - name: rhythm_level
     type: string
     required: false
@@ -39,8 +47,8 @@ schedule:
   enabled: true
   cron: "0 9 1 * *"
   params:
-    year: "{{ last_month_year() }}"
-    month: "{{ last_month() }}"
+    year: "{{ last_month_start().year }}"
+    month: "{{ last_month_start().month }}"
 
 data_sources:
   # 本月会议列表
@@ -55,6 +63,7 @@ data_sources:
       LEFT JOIN departments d ON sm.department_id = d.id
       WHERE sm.meeting_date >= :start_date
         AND sm.meeting_date <= :end_date
+        AND (:rhythm_level IS NULL OR sm.rhythm_level = :rhythm_level)
       ORDER BY sm.meeting_date DESC
 
   # 会议统计
@@ -72,6 +81,7 @@ data_sources:
       FROM strategic_meetings
       WHERE meeting_date >= :start_date
         AND meeting_date <= :end_date
+        AND (:rhythm_level IS NULL OR rhythm_level = :rhythm_level)
 
   # 行动项列表
   action_items:
@@ -85,6 +95,7 @@ data_sources:
       LEFT JOIN users u ON mai.assignee_id = u.id
       WHERE sm.meeting_date >= :start_date
         AND sm.meeting_date <= :end_date
+        AND (:rhythm_level IS NULL OR sm.rhythm_level = :rhythm_level)
       ORDER BY mai.due_date
 
   # 行动项统计
@@ -100,6 +111,7 @@ data_sources:
       LEFT JOIN strategic_meetings sm ON mai.meeting_id = sm.id
       WHERE sm.meeting_date >= :start_date
         AND sm.meeting_date <= :end_date
+        AND (:rhythm_level IS NULL OR sm.rhythm_level = :rhythm_level)
 
   # 关键决策
   key_decisions:
@@ -113,6 +125,7 @@ data_sources:
       WHERE sm.meeting_date >= :start_date
         AND sm.meeting_date <= :end_date
         AND md.is_key_decision = 1
+        AND (:rhythm_level IS NULL OR sm.rhythm_level = :rhythm_level)
       ORDER BY sm.meeting_date DESC
       LIMIT 20
 
@@ -126,6 +139,7 @@ data_sources:
       FROM strategic_meetings
       WHERE meeting_date >= DATE(:start_date, '-1 month')
         AND meeting_date < :start_date
+        AND (:rhythm_level IS NULL OR rhythm_level = :rhythm_level)
 
   prev_action_item_stats:
     type: query
@@ -137,6 +151,7 @@ data_sources:
       LEFT JOIN strategic_meetings sm ON mai.meeting_id = sm.id
       WHERE sm.meeting_date >= DATE(:start_date, '-1 month')
         AND sm.meeting_date < :start_date
+        AND (:rhythm_level IS NULL OR sm.rhythm_level = :rhythm_level)
 
 sections:
   - id: report_header

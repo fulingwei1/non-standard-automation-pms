@@ -10,124 +10,42 @@
 核心功能：周工时表、批量填报、审批流程
 """
 
-from calendar import monthrange
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
-from sqlalchemy import and_, case, desc, extract, func, or_
+from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
-from app.models.organization import Department, Employee
 from app.models.project import Project
-from app.models.rd_project import RdProject
 from app.models.timesheet import (
-    OvertimeApplication,
     Timesheet,
-    TimesheetApprovalLog,
-    TimesheetBatch,
-    TimesheetRule,
-    TimesheetSummary,
 )
 from app.models.user import User
-from app.schemas.common import PaginatedResponse, ResponseModel
+from app.schemas.common import ResponseModel
 from app.schemas.timesheet import (
-    MonthSummaryResponse,
-    TimesheetBatchCreate,
-    TimesheetCreate,
-    TimesheetListResponse,
     TimesheetResponse,
-    TimesheetStatisticsResponse,
-    TimesheetUpdate,
     WeekTimesheetResponse,
 )
 
 router = APIRouter()
 
 
-def check_timesheet_approval_permission(
-    db: Session,
-    timesheet: Timesheet,
-    current_user: User
-) -> bool:
-    """
-    检查用户是否有权审批指定的工时记录
-
-    审批权限规则：
-    1. 超级管理员可以审批所有工时
-    2. 项目经理可以审批其项目的工时
-    3. 研发项目负责人可以审批其研发项目的工时
-    4. 部门经理可以审批其部门成员的工时
-
-    Args:
-        db: 数据库会话
-        timesheet: 工时记录
-        current_user: 当前用户
-
-    Returns:
-        bool: 是否有审批权限
-    """
-    # 1. 超级管理员可以审批所有工时
-    if hasattr(current_user, 'is_superuser') and current_user.is_superuser:
-        return True
-
-    # 2. 检查是否是项目经理（非标项目）
-    if timesheet.project_id:
-        project = db.query(Project).filter(Project.id == timesheet.project_id).first()
-        if project and project.pm_id == current_user.id:
-            return True
-
-    # 3. 检查是否是研发项目负责人
-    if timesheet.rd_project_id:
-        rd_project = db.query(RdProject).filter(RdProject.id == timesheet.rd_project_id).first()
-        if rd_project and rd_project.project_manager_id == current_user.id:
-            return True
-
-    # 4. 检查是否是部门经理
-    if timesheet.department_id:
-        department = db.query(Department).filter(Department.id == timesheet.department_id).first()
-        if department and department.manager_id:
-            # 需要通过 employee_id 关联到 user
-            # 查找当前用户对应的 employee
-            if hasattr(current_user, 'employee_id') and current_user.employee_id:
-                if department.manager_id == current_user.employee_id:
-                    return True
-
-    # 5. 如果工时记录有提交人的部门信息，检查当前用户是否是该部门经理
-    if timesheet.user_id:
-        # 获取工时提交人
-        timesheet_user = db.query(User).filter(User.id == timesheet.user_id).first()
-        if timesheet_user and hasattr(timesheet_user, 'employee_id') and timesheet_user.employee_id:
-            # 获取提交人的员工信息
-            employee = db.query(Employee).filter(Employee.id == timesheet_user.employee_id).first()
-            if employee and employee.department:
-                # 查找该部门
-                dept = db.query(Department).filter(Department.dept_name == employee.department).first()
-                if dept and dept.manager_id:
-                    # 检查当前用户是否是该部门经理
-                    if hasattr(current_user, 'employee_id') and current_user.employee_id == dept.manager_id:
-                        return True
-
-    return False
-
-
-
 from fastapi import APIRouter
 
-router = APIRouter(
-    prefix="/timesheets",
-    tags=["timesheets"]
-)
+router = APIRouter(prefix="/timesheets", tags=["timesheets"])
 
 # 共 1 个路由
 
 # ==================== 周工时表 ====================
 
-@router.get("/week", response_model=WeekTimesheetResponse, status_code=status.HTTP_200_OK)
+
+@router.get(
+    "/week", response_model=WeekTimesheetResponse, status_code=status.HTTP_200_OK
+)
 def get_week_timesheet(
     *,
     db: Session = Depends(deps.get_db),
@@ -138,12 +56,25 @@ def get_week_timesheet(
     """
     获取周工时表（按周展示）
     """
+    from app.core.permissions.timesheet import (
+        is_timesheet_admin,
+        get_user_manageable_dimensions,
+    )
+
+    # 获取目标用户ID
     target_user_id = user_id or current_user.id
 
     # 权限检查
     if target_user_id != current_user.id:
-        if not hasattr(current_user, 'is_superuser') or not current_user.is_superuser:
-            raise HTTPException(status_code=403, detail="无权查看其他用户的工时")
+        dims = get_user_manageable_dimensions(db, current_user)
+        if not dims["is_admin"] and target_user_id not in dims["subordinate_user_ids"]:
+            # 检查是否属于我管理的部门
+            target_user = db.query(User).filter(User.id == target_user_id).first()
+            if (
+                not target_user
+                or target_user.department_id not in dims["department_ids"]
+            ):
+                raise HTTPException(status_code=403, detail="无权查看其他用户的工时")
 
     # 计算周开始日期
     if not week_start:
@@ -153,11 +84,16 @@ def get_week_timesheet(
     week_end = week_start + timedelta(days=6)
 
     # 查询该周的工时记录
-    timesheets = db.query(Timesheet).filter(
-        Timesheet.user_id == target_user_id,
-        Timesheet.work_date >= week_start,
-        Timesheet.work_date <= week_end
-    ).order_by(Timesheet.work_date).all()
+    timesheets = (
+        db.query(Timesheet)
+        .filter(
+            Timesheet.user_id == target_user_id,
+            Timesheet.work_date >= week_start,
+            Timesheet.work_date <= week_end,
+        )
+        .order_by(Timesheet.work_date)
+        .all()
+    )
 
     # 按日期统计
     by_date = {}
@@ -189,25 +125,27 @@ def get_week_timesheet(
         if ts.project_id:
             project = db.query(Project).filter(Project.id == ts.project_id).first()
 
-        items.append(TimesheetResponse(
-            id=ts.id,
-            user_id=ts.user_id,
-            user_name=user.real_name or user.username if user else None,
-            project_id=ts.project_id,
-            rd_project_id=ts.rd_project_id,
-            project_name=project.project_name if project else None,
-            task_id=ts.task_id,
-            task_name=None,
-            work_date=ts.work_date,
-            work_hours=ts.hours or Decimal("0"),
-            work_type=ts.overtime_type or "NORMAL",
-            description=ts.work_content,
-            status=ts.status or "DRAFT",
-            approved_by=ts.approver_id,
-            approved_at=ts.approve_time,
-            created_at=ts.created_at,
-            updated_at=ts.updated_at
-        ))
+        items.append(
+            TimesheetResponse(
+                id=ts.id,
+                user_id=ts.user_id,
+                user_name=user.real_name or user.username if user else None,
+                project_id=ts.project_id,
+                rd_project_id=ts.rd_project_id,
+                project_name=project.project_name if project else None,
+                task_id=ts.task_id,
+                task_name=None,
+                work_date=ts.work_date,
+                work_hours=ts.hours or Decimal("0"),
+                work_type=ts.overtime_type or "NORMAL",
+                description=ts.work_content,
+                status=ts.status or "DRAFT",
+                approved_by=ts.approver_id,
+                approved_at=ts.approve_time,
+                created_at=ts.created_at,
+                updated_at=ts.updated_at,
+            )
+        )
 
     return WeekTimesheetResponse(
         week_start=week_start,
@@ -215,11 +153,13 @@ def get_week_timesheet(
         total_hours=total_hours,
         by_date=by_date,
         by_project=by_project,
-        timesheets=items
+        timesheets=items,
     )
 
 
-@router.post("/week/submit", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.post(
+    "/week/submit", response_model=ResponseModel, status_code=status.HTTP_200_OK
+)
 def submit_week_timesheet(
     *,
     db: Session = Depends(deps.get_db),
@@ -233,29 +173,27 @@ def submit_week_timesheet(
     week_end = week_start + timedelta(days=6)
 
     # 查询该周所有草稿状态的工时记录
-    timesheets = db.query(Timesheet).filter(
-        and_(
-            Timesheet.user_id == current_user.id,
-            Timesheet.work_date >= week_start,
-            Timesheet.work_date <= week_end,
-            Timesheet.status == 'DRAFT'
+    timesheets = (
+        db.query(Timesheet)
+        .filter(
+            and_(
+                Timesheet.user_id == current_user.id,
+                Timesheet.work_date >= week_start,
+                Timesheet.work_date <= week_end,
+                Timesheet.status == "DRAFT",
+            )
         )
-    ).all()
+        .all()
+    )
 
     if not timesheets:
-        return ResponseModel(
-            code=200,
-            message="没有需要提交的工时记录"
-        )
+        return ResponseModel(code=200, message="没有需要提交的工时记录")
 
     # 更新状态为待审批
     for ts in timesheets:
-        ts.status = 'PENDING'
+        ts.status = "PENDING"
         ts.submitted_at = datetime.now()
 
     db.commit()
 
-    return ResponseModel(
-        code=200,
-        message=f"已提交 {len(timesheets)} 条工时记录"
-    )
+    return ResponseModel(code=200, message=f"已提交 {len(timesheets)} 条工时记录")

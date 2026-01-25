@@ -18,7 +18,7 @@ from app.models.issue import Issue
 from app.models.progress import Task
 from app.models.user import User
 from app.schemas.issue import IssueListResponse, IssueResponse
-from app.services.data_scope_service import DataScopeService
+from app.services.data_scope import DataScopeService
 
 router = APIRouter()
 

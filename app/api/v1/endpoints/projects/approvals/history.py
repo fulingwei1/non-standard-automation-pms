@@ -28,7 +28,7 @@ router = APIRouter()
 
 
 @router.get(
-    "/{project_id}/approval/history",
+    "/approval/history",
     response_model=ApprovalHistoryResponse,
     status_code=status.HTTP_200_OK,
 )

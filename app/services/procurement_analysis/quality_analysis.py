@@ -53,10 +53,10 @@ class QualityAnalyzer:
         )
 
         if supplier_id:
-            query = query.filter(Supplier.id == supplier_id)
+            query = query.filter(Vendor.id == supplier_id)
 
         results = query.group_by(
-            Supplier.id, Supplier.supplier_name,
+            Vendor.id, Vendor.supplier_name,
             GoodsReceiptItem.material_code, GoodsReceiptItem.material_name
         ).all()
 

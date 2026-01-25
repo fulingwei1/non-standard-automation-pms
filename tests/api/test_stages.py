@@ -3,6 +3,7 @@
 项目阶段管理模块 API 测试
 
 测试阶段和状态的 CRUD 操作
+Updated for unified response format
 """
 
 import uuid
@@ -11,6 +12,10 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
+from tests.helpers.response_helpers import (
+    assert_success_response,
+    assert_list_response,
+)
 
 
 def _auth_headers(token: str) -> dict:
@@ -51,8 +56,11 @@ class TestStageCRUD:
         )
 
         assert response.status_code == 200
-        data = response.json()
-        assert isinstance(data, list)
+        response_data = response.json()
+        # 使用统一响应格式辅助函数提取列表
+        list_data = assert_list_response(response_data)
+        assert "items" in list_data
+        assert isinstance(list_data["items"], list)
 
     def test_list_project_stages(self, client: TestClient, admin_token: str):
         """测试获取项目的阶段列表"""
@@ -70,8 +78,11 @@ class TestStageCRUD:
         )
 
         assert response.status_code == 200
-        data = response.json()
-        assert isinstance(data, list)
+        response_data = response.json()
+        # 使用统一响应格式辅助函数提取列表
+        list_data = assert_list_response(response_data)
+        assert "items" in list_data
+        assert isinstance(list_data["items"], list)
 
     def test_create_stage(self, client: TestClient, admin_token: str):
         """测试创建阶段"""
@@ -121,11 +132,14 @@ class TestStageCRUD:
         if list_response.status_code != 200:
             pytest.skip("Failed to get stages list")
 
-        data = list_response.json()
-        if not data:
+        response_data = list_response.json()
+        # 兼容新旧响应格式
+        list_data = assert_list_response(response_data)
+        items = list_data["items"]
+        if not items:
             pytest.skip("No stages available for testing")
 
-        stage_id = data[0]["id"]
+        stage_id = items[0]["id"]
 
         response = client.get(
             f"{settings.API_V1_PREFIX}/stages/{stage_id}",
@@ -133,7 +147,9 @@ class TestStageCRUD:
         )
 
         assert response.status_code == 200
-        result = response.json()
+        response_data = response.json()
+        # 使用统一响应格式辅助函数提取数据
+        result = assert_success_response(response_data)
         assert result["id"] == stage_id
 
     def test_get_stage_not_found(self, client: TestClient, admin_token: str):
@@ -165,11 +181,14 @@ class TestStageCRUD:
         if list_response.status_code != 200:
             pytest.skip("Failed to get stages list")
 
-        data = list_response.json()
-        if not data:
+        response_data = list_response.json()
+        # 兼容新旧响应格式
+        list_data = assert_list_response(response_data)
+        items = list_data["items"]
+        if not items:
             pytest.skip("No stages available for testing")
 
-        stage_id = data[0]["id"]
+        stage_id = items[0]["id"]
 
         update_data = {
             "stage_name": f"更新阶段-{uuid.uuid4().hex[:4]}",
@@ -207,8 +226,11 @@ class TestStatusCRUD:
             pytest.skip("Validation error - endpoint requires additional parameters")
 
         assert response.status_code == 200
-        data = response.json()
-        assert isinstance(data, list)
+        response_data = response.json()
+        # 使用统一响应格式辅助函数提取列表
+        list_data = assert_list_response(response_data)
+        assert "items" in list_data
+        assert isinstance(list_data["items"], list)
 
     def test_list_stage_statuses(self, client: TestClient, admin_token: str):
         """测试获取阶段的状态列表"""
@@ -226,11 +248,14 @@ class TestStatusCRUD:
         if list_response.status_code != 200:
             pytest.skip("Failed to get stages list")
 
-        data = list_response.json()
-        if not data:
+        response_data = list_response.json()
+        # 兼容新旧响应格式
+        list_data = assert_list_response(response_data)
+        items = list_data["items"]
+        if not items:
             pytest.skip("No stages available for testing")
 
-        stage_id = data[0]["id"]
+        stage_id = items[0]["id"]
 
         try:
             response = client.get(
@@ -265,11 +290,14 @@ class TestStatusCRUD:
         if list_response.status_code != 200:
             pytest.skip("Failed to get stages list")
 
-        data = list_response.json()
-        if not data:
+        response_data = list_response.json()
+        # 兼容新旧响应格式
+        list_data = assert_list_response(response_data)
+        items = list_data["items"]
+        if not items:
             pytest.skip("No stages available for testing")
 
-        stage_id = data[0]["id"]
+        stage_id = items[0]["id"]
 
         status_data = {
             "status_code": f"ST{uuid.uuid4().hex[:4].upper()}",

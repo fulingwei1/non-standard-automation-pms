@@ -44,7 +44,7 @@ from ..performance import (
     PerformanceIndicator,
     PerformanceTarget,
 )
-from ..permission_v2 import (
+from ..permission import (
     PermissionV2,
     RolePermissionV2,
     RoleV2,

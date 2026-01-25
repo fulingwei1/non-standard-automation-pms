@@ -5,7 +5,7 @@
 
 from fastapi import APIRouter
 
-from .approval import router as approval_router
+from ..approvals import router as approval_router
 from .monthly import router as monthly_router
 from .pending import router as pending_router
 from .records import router as records_router

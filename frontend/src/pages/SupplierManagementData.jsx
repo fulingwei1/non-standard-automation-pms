@@ -104,9 +104,10 @@ export default function SupplierManagementData() {
       }
 
       const response = await supplierApi.list(params);
-      const data = response.data;
-      setSuppliers(data.items || []);
-      setTotal(data.total || 0);
+      // 使用统一响应格式处理
+      const paginatedData = response.formatted || response.data;
+      setSuppliers(paginatedData.items || []);
+      setTotal(paginatedData.total || 0);
     } catch (error) {
       console.error("加载供应商列表失败:", error);
       alert(

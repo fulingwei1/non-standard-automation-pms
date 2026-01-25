@@ -30,7 +30,7 @@ import {
   calculateReadinessRate,
   calculateAnalysisScore as _calculateAnalysisScore } from
 "./materialAnalysisConstants";
-import { purchaseApi } from "../../services/api";
+import { api, purchaseApi } from "../../services/api";
 import { cn } from "../../lib/utils";
 
 /**
@@ -49,6 +49,8 @@ export function MaterialStatsOverview({
   const [trendLoading, setTrendLoading] = useState(false);
   const [trendError, setTrendError] = useState("");
   const [lastRefreshTime, setLastRefreshTime] = useState(new Date());
+  const [procurementSummary, setProcurementSummary] = useState(null);
+  const [procurementSummaryError, setProcurementSummaryError] = useState("");
 
   // 计算总体统计数据
   const overallStats = useMemo(() => {
@@ -58,10 +60,8 @@ export function MaterialStatsOverview({
         totalMaterials: 0,
         readyRate: 100,
         onTimeDelivery: 0,
-        qualityRate: 0,
         riskCount: 0,
-        criticalMaterials: 0,
-        materialCost: 0
+        criticalMaterials: 0
       };
     }
 
@@ -104,10 +104,8 @@ export function MaterialStatsOverview({
       totalMaterials: stats.totalMaterials,
       readyRate,
       onTimeDelivery,
-      qualityRate: 95, // 模拟数据，实际应从质量系统获取
       riskCount,
-      criticalMaterials,
-      materialCost: Math.round(stats.totalMaterials * 1500) // 模拟成本
+      criticalMaterials
     };
   }, [projects]);
 
@@ -129,6 +127,29 @@ export function MaterialStatsOverview({
       color: getMaterialStatus(status).color.replace('bg-', '#').replace('500', '')
     }));
   }, [projects]);
+
+  const loadProcurementSummary = useCallback(async () => {
+    setProcurementSummaryError("");
+    try {
+      const response = await api.get("/procurement-analysis/overview");
+      const data = response?.data?.data || response?.data || {};
+      setProcurementSummary(data.procurement_summary || null);
+    } catch (error) {
+      console.error("加载采购汇总数据失败:", error);
+      const status = error.response?.status;
+      const detail = error.response?.data?.detail;
+      const message = error.response?.data?.message;
+      const apiMessage =
+        typeof detail === "string"
+          ? detail
+          : detail?.message || message || error.message;
+      setProcurementSummaryError(
+        status
+          ? `采购汇总数据加载失败 (${status}): ${apiMessage}`
+          : `采购汇总数据加载失败: ${apiMessage}`
+      );
+    }
+  }, []);
 
   // 材料类型分布数据
   const typeDistribution = useMemo(() => {
@@ -225,14 +246,25 @@ export function MaterialStatsOverview({
     loadTrendData();
   }, [loadTrendData]);
 
+  useEffect(() => {
+    loadProcurementSummary();
+  }, [loadProcurementSummary]);
+
   // 自动刷新
   useEffect(() => {
     const interval = setInterval(() => {
       loadTrendData();
+      loadProcurementSummary();
     }, refreshInterval);
 
     return () => clearInterval(interval);
-  }, [refreshInterval, loadTrendData]);
+  }, [refreshInterval, loadTrendData, loadProcurementSummary]);
+
+  const qualityRateValue = procurementSummary?.avg_quality_rate ?? null;
+  const hasQualityRate = qualityRateValue !== null && qualityRateValue !== undefined && qualityRateValue > 0;
+  const onTimeDeliveryRate = procurementSummary?.avg_on_time_rate ?? null;
+  const hasOnTimeRate = onTimeDeliveryRate !== null && onTimeDeliveryRate !== undefined && onTimeDeliveryRate > 0;
+  const onTimeDeliveryValue = hasOnTimeRate ? onTimeDeliveryRate : overallStats.onTimeDelivery;
 
   // 关键指标卡片
   const MetricCard = ({ title, value, icon: Icon, trend, trendValue, color, description }) =>
@@ -304,22 +336,24 @@ export function MaterialStatsOverview({
         
         <MetricCard
           title="准时交付"
-          value={`${overallStats.onTimeDelivery}%`}
+          value={`${onTimeDeliveryValue}%`}
           icon={Truck}
-          trend={overallStats.onTimeDelivery >= 85 ? 'up' : 'down'}
-          trendValue={Math.abs(overallStats.onTimeDelivery - 85)}
+          trend={onTimeDeliveryValue >= 85 ? 'up' : 'down'}
+          trendValue={Math.abs(onTimeDeliveryValue - 85)}
           color="bg-green-500"
           description="准时交付率" />
 
         
         <MetricCard
           title="质量合格率"
-          value={`${overallStats.qualityRate}%`}
+          value={hasQualityRate ? `${qualityRateValue}%` : "--"}
           icon={CheckCircle2}
-          trend="up"
-          trendValue="2.5"
           color="bg-purple-500"
-          description="材料检验合格率" />
+          description={
+            hasQualityRate === false
+              ? procurementSummaryError || "暂无质检数据"
+              : "材料检验合格率"
+          } />
 
         
         <MetricCard

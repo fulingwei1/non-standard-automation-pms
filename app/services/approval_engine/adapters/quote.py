@@ -76,14 +76,24 @@ class QuoteApprovalAdapter(ApprovalAdapter):
                 if gross_margin <= Decimal("1"):
                     gross_margin = gross_margin * 100
 
-            data.update({
-                "version_no": version.version_no,
-                "total_price": float(version.total_price) if version.total_price else 0,
-                "cost_total": float(version.cost_total) if version.cost_total else 0,
-                "gross_margin": float(gross_margin) if gross_margin is not None else None,
-                "lead_time_days": version.lead_time_days,
-                "delivery_date": version.delivery_date.isoformat() if version.delivery_date else None,
-            })
+            data.update(
+                {
+                    "version_no": version.version_no,
+                    "total_price": float(version.total_price)
+                    if version.total_price
+                    else 0,
+                    "cost_total": float(version.cost_total)
+                    if version.cost_total
+                    else 0,
+                    "gross_margin": float(gross_margin)
+                    if gross_margin is not None
+                    else None,
+                    "lead_time_days": version.lead_time_days,
+                    "delivery_date": version.delivery_date.isoformat()
+                    if version.delivery_date
+                    else None,
+                }
+            )
 
         return data
 
@@ -158,12 +168,7 @@ class QuoteApprovalAdapter(ApprovalAdapter):
         return " | ".join(parts)
 
     def validate_submit(self, entity_id: int) -> tuple[bool, str]:
-        """
-        验证是否可以提交审批
-
-        Returns:
-            (是否可提交, 错误信息)
-        """
+        """验证是否可以提交审批"""
         quote = self.get_entity(entity_id)
         if not quote:
             return False, "报价不存在"
@@ -182,3 +187,177 @@ class QuoteApprovalAdapter(ApprovalAdapter):
                 return False, "报价未添加任何版本，无法提交审批"
 
         return True, ""
+
+    # ========== 高级方法：使用 WorkflowEngine ========== #
+
+    def submit_for_approval(
+        self,
+        quote_version,
+        initiator_id: int,
+        title: Optional[str] = None,
+        summary: Optional[str] = None,
+        urgency: str = "NORMAL",
+        cc_user_ids: Optional[List[int]] = None,
+    ) -> ApprovalInstance:
+        """
+        提交报价审批到统一审批引擎
+
+        Args:
+            quote_version: 报价版本
+            initiator_id: 发起人ID
+            title: 审批标题
+            summary: 审批摘要
+            urgency: 紧急程度
+            cc_user_ids: 抄送人ID列表
+
+        Returns:
+            创建的ApprovalInstance
+        """
+        # 检查是否已经提交
+        if quote_version.approval_instance_id:
+            logger.warning(f"报价版本 {quote_version.quote_code} 已经提交审批")
+            return (
+                self.db.query(ApprovalInstance)
+                .filter(ApprovalInstance.id == quote_version.approval_instance_id)
+                .first()
+            )
+
+        # 构建表单数据
+        form_data = {
+            "quote_id": quote_version.quote_id,
+            "quote_version_id": quote_version.id,
+            "quote_code": quote_version.quote_code if quote_version else "",
+            "quote_total": float(quote_version.quote_total)
+            if quote_version and quote_version.quote_total
+            else 0,
+            "margin_percent": float(quote_version.margin_percent)
+            if quote_version and quote_version.margin_percent
+            else 0,
+            "status": quote_version.status if quote_version else "DRAFT",
+        }
+
+        # 创建审批实例
+        approval_data = ApprovalInstanceCreate(
+            template_code="SALES_QUOTE",
+            entity_type="QUOTE",
+            entity_id=quote_version.id,
+            form_data=form_data,
+            title=title
+            or f"报价审批 - {quote_version.quote_code if quote_version else ''}",
+            summary=summary
+            or f"报价审批：{quote_version.quote_code if quote_version else ''}",
+            urgency=urgency,
+            cc_user_ids=cc_user_ids,
+        )
+
+        # 使用统一引擎创建实例
+        from app.services.approval_engine.workflow_engine import WorkflowEngine
+
+        workflow_engine = WorkflowEngine(self.db)
+
+        instance = workflow_engine.create_instance(
+            flow_code="SALES_QUOTE",
+            business_type="SALES_QUOTE",
+            business_id=quote_version.id,
+            business_title=quote_version.quote_code if quote_version else "",
+            submitted_by=initiator_id,
+            config={"quote": form_data},
+        )
+
+        # 更新报价版本，关联审批实例
+        quote_version.approval_instance_id = instance.id
+        quote_version.approval_status = instance.status
+        self.db.add(quote_version)
+        self.db.commit()
+
+        logger.info(
+            f"报价 {quote_version.quote_code} 已提交审批，实例ID: {instance.id}"
+        )
+
+        return instance
+
+    def create_quote_approval(
+        self,
+        instance: ApprovalInstance,
+        task: ApprovalTask,
+    ) -> Optional[QuoteApproval]:
+        """创建报价审批记录"""
+        from app.models.sales.quotes import QuoteApproval
+
+        # 检查是否已存在
+        existing = (
+            self.db.query(QuoteApproval)
+            .filter(
+                QuoteApproval.quote_version_id == instance.entity_id,
+                QuoteApproval.approval_level == task.node_order,
+            )
+            .first()
+        )
+
+        if existing:
+            return existing
+
+        # 获取审批人
+        approver = (
+            self.db.query(User).filter(User.id == task.assignee_id).first()
+            if task.assignee_id
+            else None
+        )
+
+        # 创建新记录
+        approval = QuoteApproval(
+            quote_version_id=instance.entity_id,
+            approval_level=task.node_order,
+            approval_role=task.node_name or "",
+            approver_id=task.assignee_id,
+            approver_name=approver.real_name if approver else "",
+            approval_result=None,  # 待审批
+            status="PENDING",
+        )
+
+        self.db.add(approval)
+        return approval
+
+    def update_quote_approval_from_action(
+        self,
+        task: ApprovalTask,
+        action: str,
+        comment: Optional[str] = None,
+    ) -> Optional[QuoteApproval]:
+        """更新报价审批记录"""
+        approval_level = task.node_order
+        approval = (
+            self.db.query(QuoteApproval)
+            .filter(
+                QuoteApproval.quote_version_id == task.instance.entity_id,
+                QuoteApproval.approval_level == approval_level,
+            )
+            .first()
+        )
+
+        if not approval:
+            logger.warning(
+                f"未找到报价审批记录: entity_id={task.instance.entity_id}, level={approval_level}"
+            )
+            return None
+
+        # 更新审批结果
+        if action == "APPROVE":
+            approval.approval_result = "APPROVED"
+            approval.approval_opinion = comment
+            approval.status = "APPROVED"
+            approval.approved_at = datetime.now()
+        elif action == "REJECT":
+            approval.approval_result = "REJECTED"
+            approval.approval_opinion = comment
+            approval.status = "REJECTED"
+            approval.approved_at = datetime.now()
+
+        self.db.add(approval)
+        self.db.commit()
+
+        logger.info(
+            f"报价审批记录已更新: entity_id={approval.quote_version_id}, level={approval_level}, action={action}"
+        )
+
+        return approval

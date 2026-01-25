@@ -2,10 +2,16 @@
 """
 Integration tests for Materials API
 Covers: app/api/v1/endpoints/materials.py
+Updated for unified response format
 """
 
 import pytest
 from datetime import date
+
+from tests.helpers.response_helpers import (
+    assert_success_response,
+    assert_paginated_response,
+)
 
 
 class TestMaterialsAPI:
@@ -18,8 +24,11 @@ class TestMaterialsAPI:
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert response.status_code == 200
-        data = response.json()
-        assert "items" in data or isinstance(data, list)
+        response_data = response.json()
+        # 使用统一响应格式辅助函数验证分页响应
+        paginated_data = assert_paginated_response(response_data)
+        assert "items" in paginated_data
+        assert "total" in paginated_data
 
     def test_list_materials_with_pagination(self, client, admin_token):
         """测试分页参数"""
@@ -45,6 +54,10 @@ class TestMaterialsAPI:
         )
         # 可能返回200或404（如果物料不存在）
         assert response.status_code in [200, 404]
+        if response.status_code == 200:
+            response_data = response.json()
+            # 使用统一响应格式辅助函数提取数据
+            assert_success_response(response_data)
 
     def test_create_material(self, client, admin_token):
         """测试创建物料"""
@@ -63,6 +76,10 @@ class TestMaterialsAPI:
         )
         
         assert response.status_code in [201, 422]
+        if response.status_code == 201:
+            response_data = response.json()
+            # 使用统一响应格式辅助函数提取数据
+            assert_success_response(response_data, expected_code=201)
 
     def test_update_material(self, client, admin_token):
         """测试更新物料"""
@@ -77,6 +94,10 @@ class TestMaterialsAPI:
         )
         
         assert response.status_code in [200, 404, 422]
+        if response.status_code == 200:
+            response_data = response.json()
+            # 使用统一响应格式辅助函数提取数据
+            assert_success_response(response_data)
 
     def test_delete_material(self, client, admin_token):
         """测试删除物料"""
@@ -86,6 +107,11 @@ class TestMaterialsAPI:
         )
         
         assert response.status_code in [200, 404]
+        if response.status_code == 200:
+            response_data = response.json()
+            # 删除操作返回SuccessResponse格式
+            if "success" in response_data:
+                assert response_data["success"] is True
 
     def test_search_materials_by_name(self, client, admin_token):
         """测试按名称搜索"""

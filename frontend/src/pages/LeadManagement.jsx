@@ -4,11 +4,9 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import { PageHeader } from "../components/layout";
 import { Button } from "../components/ui";
-import { staggerContainer } from "../lib/animations";
 import { leadApi, customerApi } from "../services/api";
 import {
   LeadStatsCards,
@@ -26,6 +24,7 @@ import {
 export default function LeadManagement() {
   const [leads, setLeads] = useState([]);
   const [customers, setCustomers] = useState([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -87,7 +86,7 @@ export default function LeadManagement() {
   // 加载客户列表
   const loadCustomers = async () => {
     try {
-      const response = await customerApi.list({ page: 1, page_size: 100 });
+      const response = await customerApi.list({ page: 1, page_size: 200 });
       if (response.data && response.data.items) {
         setCustomers(response.data.items);
       }
@@ -149,15 +148,82 @@ export default function LeadManagement() {
     return {
       total: total,
       new: leads.filter((l) => l.status === "NEW").length,
-      qualifying: leads.filter((l) => l.status === "QUALIFYING").length,
+      qualifying: leads.filter((l) => l.status === "QUALIFIED" || l.status === "QUALIFYING").length,
       converted: leads.filter((l) => l.status === "CONVERTED").length,
     };
   }, [leads, total]);
 
+  const normalizeCustomerName = (value) =>
+    String(value || "")
+      .toLowerCase()
+      .replace(/[\s\-_/,，。.]/g, "");
+
+  const exactCustomerMatch = useMemo(() => {
+    const normalized = normalizeCustomerName(formData.customer_name);
+    if (!normalized) {
+      return null;
+    }
+    return customers.find(
+      (customer) =>
+        normalizeCustomerName(customer.customer_name) === normalized
+    );
+  }, [customers, formData.customer_name]);
+
+  const similarCustomers = useMemo(() => {
+    const normalized = normalizeCustomerName(formData.customer_name);
+    if (!normalized || exactCustomerMatch) {
+      return [];
+    }
+    return customers
+      .filter((customer) => {
+        const candidate = normalizeCustomerName(customer.customer_name);
+        return candidate && (candidate.includes(normalized) || normalized.includes(candidate));
+      })
+      .slice(0, 5);
+  }, [customers, formData.customer_name, exactCustomerMatch]);
+
+  const handleSelectCustomer = (customer) => {
+    if (!customer) {
+      setSelectedCustomerId("");
+      return;
+    }
+    setSelectedCustomerId(String(customer.id));
+    setFormData((prev) => ({
+      ...prev,
+      customer_name: customer.customer_name || "",
+      industry: prev.industry || customer.industry || "",
+    }));
+  };
+
+  const handleCustomerNameChange = (value) => {
+    setSelectedCustomerId("");
+    setFormData({ ...formData, customer_name: value });
+  };
+
   // 创建线索
   const handleCreate = async () => {
     try {
-      await leadApi.create(formData);
+      const customerName = formData.customer_name.trim();
+      if (!customerName) {
+        alert("请输入客户名称");
+        return;
+      }
+      if (!exactCustomerMatch && similarCustomers.length === 0) {
+        const shouldCreate = window.confirm(
+          "未找到相似客户，是否新建该客户？"
+        );
+        if (!shouldCreate) {
+          return;
+        }
+        await customerApi.create({
+          customer_name: customerName,
+          industry: formData.industry || undefined,
+          contact_person: formData.contact_name || undefined,
+          contact_phone: formData.contact_phone || undefined,
+        });
+        await loadCustomers();
+      }
+      await leadApi.create({ ...formData, customer_name: customerName });
       setShowCreateDialog(false);
       setFormData({
         customer_name: "",
@@ -168,6 +234,7 @@ export default function LeadManagement() {
         demand_summary: "",
         status: "NEW",
       });
+      setSelectedCustomerId("");
       loadLeads();
     } catch (error) {
       console.error("创建线索失败:", error);
@@ -267,12 +334,7 @@ export default function LeadManagement() {
   };
 
   return (
-    <motion.div
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
-      className="space-y-6 p-6"
-    >
+    <div className="space-y-6 p-6">
       <PageHeader
         title="线索管理"
         description="管理销售线索，跟进潜在客户需求"
@@ -354,6 +416,12 @@ export default function LeadManagement() {
         setFormData={setFormData}
         statusConfig={statusConfig}
         onCreate={handleCreate}
+        customers={customers}
+        selectedCustomerId={selectedCustomerId}
+        onSelectCustomer={handleSelectCustomer}
+        onCustomerNameChange={handleCustomerNameChange}
+        similarCustomers={similarCustomers}
+        hasExactCustomerMatch={!!exactCustomerMatch}
       />
 
       {/* 编辑线索对话框 */}
@@ -392,6 +460,6 @@ export default function LeadManagement() {
         setData={setFollowUpData}
         onSave={handleAddFollowUp}
       />
-    </motion.div>
+    </div>
   );
 }

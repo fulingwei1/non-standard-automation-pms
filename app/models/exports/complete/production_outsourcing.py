@@ -2,6 +2,7 @@
 """
 完整模型导出 - 生产和外协相关
 """
+
 # 生产管理
 from ...production import (
     Equipment,
@@ -30,7 +31,6 @@ from ...outsourcing import (
     OutsourcingOrderItem,
     OutsourcingPayment,
     OutsourcingProgress,
-    OutsourcingVendor,
 )
 
 __all__ = [
@@ -50,7 +50,6 @@ __all__ = [
     "MaterialRequisitionItem",
     "ProductionDailyReport",
     # Outsourcing
-    "OutsourcingVendor",
     "OutsourcingOrder",
     "OutsourcingOrderItem",
     "OutsourcingDelivery",

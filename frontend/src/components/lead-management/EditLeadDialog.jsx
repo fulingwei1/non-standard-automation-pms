@@ -83,11 +83,13 @@ export default function EditLeadDialog({
                 }
                 className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
               >
-                {Object.entries(statusConfig).map(([key, config]) => (
-                  <option key={key} value={key}>
-                    {config.label}
-                  </option>
-                ))}
+                {["NEW", "CONTACTED", "QUALIFIED", "LOST", "CONVERTED"].map(
+                  (key) => (
+                    <option key={key} value={key}>
+                      {statusConfig[key]?.label || key}
+                    </option>
+                  )
+                )}
               </select>
             </div>
           </div>

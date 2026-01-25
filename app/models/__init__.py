@@ -13,7 +13,9 @@
 但原有的导入方式仍然有效（推荐）：
     from app.models import Project, Material, User
 """
-from .exports.main import *
+
+# Import models from complete directory instead of deprecated main
+from .exports.complete import *
 
 __all__ = [
     # Base

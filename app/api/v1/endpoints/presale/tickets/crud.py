@@ -10,8 +10,10 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.core.sales_permissions import can_manage_sales_opportunity
 from app.core.config import settings
 from app.models.presale import PresaleSupportTicket
+from app.models.sales import Opportunity
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.presale import TicketCreate, TicketResponse
@@ -48,7 +50,12 @@ def read_tickets(
         )
 
     if status:
-        query = query.filter(PresaleSupportTicket.status == status)
+        if "," in status:
+            status_values = [item.strip() for item in status.split(",") if item.strip()]
+            if status_values:
+                query = query.filter(PresaleSupportTicket.status.in_(status_values))
+        else:
+            query = query.filter(PresaleSupportTicket.status == status)
 
     if ticket_type:
         query = query.filter(PresaleSupportTicket.ticket_type == ticket_type)
@@ -89,6 +96,19 @@ def create_ticket(
     """
     from datetime import datetime
 
+    if ticket_in.ticket_type == 'SOLUTION_REVIEW':
+        if not ticket_in.opportunity_id:
+            raise HTTPException(status_code=400, detail="方案评审必须关联商机")
+        opportunity = db.query(Opportunity).filter(Opportunity.id == ticket_in.opportunity_id).first()
+        if not opportunity:
+            raise HTTPException(status_code=404, detail="商机不存在")
+        gate_status = (opportunity.gate_status or "").upper()
+        if gate_status not in {"PASS", "PASSED"}:
+            raise HTTPException(status_code=400, detail="商机阶段门未通过，无法申请评审")
+        if not can_manage_sales_opportunity(db, current_user, opportunity):
+            raise HTTPException(status_code=403, detail="无权限为该商机申请评审")
+
+    ticket_status = 'REVIEW' if ticket_in.ticket_type == 'SOLUTION_REVIEW' else 'PENDING'
     ticket = PresaleSupportTicket(
         ticket_no=generate_ticket_no(db),
         title=ticket_in.title,
@@ -105,7 +125,7 @@ def create_ticket(
         apply_time=datetime.now(),
         expected_date=ticket_in.expected_date,
         deadline=ticket_in.deadline,
-        status='PENDING',
+        status=ticket_status,
         created_by=current_user.id
     )
 

@@ -62,7 +62,7 @@ def get_project_statistics(
 
     返回项目总数、合同总金额，以及按阶段、健康度、类型的分组统计
     """
-    from app.services.data_scope_service import DataScopeService
+    from app.services.data_scope import DataScopeService
 
     query = db.query(Project).filter(Project.is_active == True)
 

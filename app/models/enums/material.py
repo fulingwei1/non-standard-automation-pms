@@ -4,6 +4,8 @@
 """
 from enum import Enum
 
+from app.models.performance.enums import PerformanceLevelEnum
+
 
 class MaterialTypeEnum(str, Enum):
     STANDARD = "STANDARD"
@@ -36,13 +38,6 @@ class SupplierLevelEnum(str, Enum):
     APPROVED = "APPROVED"
     TRIAL = "TRIAL"
     BLOCKED = "BLOCKED"
-
-
-class PerformanceLevelEnum(str, Enum):
-    EXCELLENT = "EXCELLENT"
-    GOOD = "GOOD"
-    AVERAGE = "AVERAGE"
-    POOR = "POOR"
 
 
 class ShortageAlertLevelEnum(str, Enum):

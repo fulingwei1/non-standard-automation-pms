@@ -14,6 +14,7 @@ from .meetings import router as meetings_router
 from .metrics import router as metrics_router
 from .report_configs import router as report_configs_router
 from .reports import router as reports_router
+from .reports_unified import router as reports_unified_router
 
 router = APIRouter()
 
@@ -26,5 +27,6 @@ router.include_router(integrations_router)
 router.include_router(report_configs_router)
 router.include_router(metrics_router)
 router.include_router(reports_router)
+router.include_router(reports_unified_router)
 
 __all__ = ['router']

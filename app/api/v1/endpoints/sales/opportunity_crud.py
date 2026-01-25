@@ -78,6 +78,7 @@ def read_opportunities(
     opportunities = query.options(
         joinedload(Opportunity.customer),
         joinedload(Opportunity.owner),
+        joinedload(Opportunity.updater),
         joinedload(Opportunity.requirements)
     ).order_by(
         desc(Opportunity.priority_score).nullslast(),
@@ -92,6 +93,7 @@ def read_opportunities(
             **{c.name: getattr(opp, c.name) for c in opp.__table__.columns},
             "customer_name": opp.customer.customer_name if opp.customer else None,
             "owner_name": opp.owner.real_name if opp.owner else None,
+            "updated_by_name": opp.updater.real_name if opp.updater else None,
             "requirement": None,
         }
         if req:
@@ -137,12 +139,15 @@ def create_opportunity(
         raise HTTPException(status_code=404, detail="客户不存在")
 
     opportunity = Opportunity(**opp_data)
+    opportunity.updated_by = current_user.id
     db.add(opportunity)
     db.flush()
 
     # 创建需求信息
     if opp_in.requirement:
-        req_data = opp_in.requirement.model_dump()
+        valid_req_fields = {c.name for c in OpportunityRequirement.__table__.columns}
+        req_data = opp_in.requirement.model_dump(exclude_unset=True)
+        req_data = {k: v for k, v in req_data.items() if k in valid_req_fields}
         req_data["opportunity_id"] = opportunity.id
         requirement = OpportunityRequirement(**req_data)
         db.add(requirement)
@@ -155,6 +160,7 @@ def create_opportunity(
         **{c.name: getattr(opportunity, c.name) for c in opportunity.__table__.columns},
         "customer_name": customer.customer_name,
         "owner_name": opportunity.owner.real_name if opportunity.owner else None,
+        "updated_by_name": opportunity.updater.real_name if opportunity.updater else None,
         "requirement": None,
     }
     if req:
@@ -176,6 +182,7 @@ def read_opportunity(
     opportunity = db.query(Opportunity).options(
         joinedload(Opportunity.customer),
         joinedload(Opportunity.owner),
+        joinedload(Opportunity.updater),
         joinedload(Opportunity.requirements)
     ).filter(Opportunity.id == opp_id).first()
 
@@ -187,6 +194,7 @@ def read_opportunity(
         **{c.name: getattr(opportunity, c.name) for c in opportunity.__table__.columns},
         "customer_name": opportunity.customer.customer_name if opportunity.customer else None,
         "owner_name": opportunity.owner.real_name if opportunity.owner else None,
+        "updated_by_name": opportunity.updater.real_name if opportunity.updater else None,
         "requirement": None,
     }
     if req:
@@ -220,9 +228,26 @@ def update_opportunity(
     ):
         raise HTTPException(status_code=403, detail="您没有权限编辑此商机")
 
-    update_data = opp_in.model_dump(exclude_unset=True)
+    update_data = opp_in.model_dump(exclude_unset=True, exclude={"requirement"})
     for field, value in update_data.items():
         setattr(opportunity, field, value)
+    opportunity.updated_by = current_user.id
+
+    if opp_in.requirement is not None:
+        valid_req_fields = {c.name for c in OpportunityRequirement.__table__.columns}
+        req_data = opp_in.requirement.model_dump(exclude_unset=True)
+        req_data = {k: v for k, v in req_data.items() if k in valid_req_fields}
+        if req_data:
+            req = db.query(OpportunityRequirement).filter(
+                OpportunityRequirement.opportunity_id == opportunity.id
+            ).first()
+            if req:
+                for field, value in req_data.items():
+                    setattr(req, field, value)
+            else:
+                req_data["opportunity_id"] = opportunity.id
+                requirement = OpportunityRequirement(**req_data)
+                db.add(requirement)
 
     db.commit()
     db.refresh(opportunity)
@@ -232,6 +257,7 @@ def update_opportunity(
         **{c.name: getattr(opportunity, c.name) for c in opportunity.__table__.columns},
         "customer_name": opportunity.customer.customer_name if opportunity.customer else None,
         "owner_name": opportunity.owner.real_name if opportunity.owner else None,
+        "updated_by_name": opportunity.updater.real_name if opportunity.updater else None,
         "requirement": None,
     }
     if req:

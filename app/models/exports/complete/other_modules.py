@@ -101,7 +101,7 @@ from ...pmo import (
 )
 
 # 权限系统V2
-from ...permission_v2 import (
+from ...permission import (
     DataScopeRule,
     MenuPermission,
     MenuType,

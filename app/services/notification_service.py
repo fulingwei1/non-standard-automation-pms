@@ -5,7 +5,6 @@
 """
 
 import logging
-import os
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
@@ -19,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 class NotificationChannel(str, Enum):
     """通知渠道"""
+
     EMAIL = "email"
     SMS = "sms"
     WECHAT = "wechat"
@@ -28,6 +28,7 @@ class NotificationChannel(str, Enum):
 
 class NotificationPriority(str, Enum):
     """通知优先级"""
+
     LOW = "low"
     NORMAL = "normal"
     HIGH = "high"
@@ -36,6 +37,7 @@ class NotificationPriority(str, Enum):
 
 class NotificationType(str, Enum):
     """通知类型"""
+
     TASK_ASSIGNED = "task_assigned"  # 任务分配
     TASK_UPDATED = "task_updated"  # 任务更新
     TASK_COMPLETED = "task_completed"  # 任务完成
@@ -81,7 +83,7 @@ class NotificationService:
         priority: NotificationPriority = NotificationPriority.NORMAL,
         channels: Optional[List[NotificationChannel]] = None,
         data: Optional[Dict[str, Any]] = None,
-        link: Optional[str] = None
+        link: Optional[str] = None,
     ) -> bool:
         """发送通知"""
         if channels is None:
@@ -93,7 +95,14 @@ class NotificationService:
         if NotificationChannel.WEB in channels:
             try:
                 self._save_web_notification(
-                    db, recipient_id, notification_type, title, content, priority, data, link
+                    db,
+                    recipient_id,
+                    notification_type,
+                    title,
+                    content,
+                    priority,
+                    data,
+                    link,
                 )
             except Exception as e:
                 logger.error(f"保存站内通知失败: {e}")
@@ -135,7 +144,7 @@ class NotificationService:
         content: str,
         priority: NotificationPriority,
         data: Optional[Dict[str, Any]],
-        link: Optional[str]
+        link: Optional[str],
     ):
         """保存站内通知"""
         # 尝试导入 WebNotification 模型
@@ -150,7 +159,7 @@ class NotificationService:
                 priority=priority.value,
                 link=link,
                 data=data or {},
-                is_read=False
+                is_read=False,
             )
 
             db.add(notification)
@@ -165,7 +174,7 @@ class NotificationService:
         recipient_id: int,
         notification_type: NotificationType,
         title: str,
-        content: str
+        content: str,
     ):
         """发送邮件通知"""
         if not settings.EMAIL_ENABLED:
@@ -188,7 +197,7 @@ class NotificationService:
         notification_type: NotificationType,
         title: str,
         content: str,
-        data: Optional[Dict[str, Any]]
+        data: Optional[Dict[str, Any]],
     ):
         """发送企业微信通知"""
         if not settings.WECHAT_ENABLED:
@@ -208,7 +217,7 @@ class NotificationService:
         notification_type: NotificationType,
         title: str,
         content: str,
-        data: Optional[Dict[str, Any]]
+        data: Optional[Dict[str, Any]],
     ):
         """发送 Webhook 通知（如钉钉、飞书等）"""
         if not settings.WECHAT_WEBHOOK_URL:
@@ -217,18 +226,11 @@ class NotificationService:
         import requests
 
         # 构造 Webhook 消息
-        message = {
-            "msgtype": "text",
-            "text": {
-                "content": f"【{title}】\n{content}"
-            }
-        }
+        message = {"msgtype": "text", "text": {"content": f"【{title}】\n{content}"}}
 
         try:
             response = requests.post(
-                settings.WECHAT_WEBHOOK_URL,
-                json=message,
-                timeout=10
+                settings.WECHAT_WEBHOOK_URL, json=message, timeout=10
             )
             if response.status_code != 200:
                 logger.error(f"Webhook 通知失败: {response.status_code}")
@@ -242,7 +244,7 @@ class NotificationService:
         task_name: str,
         project_name: str,
         task_id: int,
-        due_date: Optional[datetime] = None
+        due_date: Optional[datetime] = None,
     ):
         """发送任务分配通知"""
         title = "新任务分配"
@@ -261,15 +263,11 @@ class NotificationService:
             title=title,
             content=content,
             priority=NotificationPriority.NORMAL,
-            link=f"/tasks/{task_id}"
+            link=f"/tasks/{task_id}",
         )
 
     def send_task_completed_notification(
-        self,
-        db: Session,
-        task_owner_id: int,
-        task_name: str,
-        project_name: str
+        self, db: Session, task_owner_id: int, task_name: str, project_name: str
     ):
         """发送任务完成通知"""
         title = "任务已完成"
@@ -284,7 +282,7 @@ class NotificationService:
             notification_type=NotificationType.TASK_COMPLETED,
             title=title,
             content=content,
-            priority=NotificationPriority.NORMAL
+            priority=NotificationPriority.NORMAL,
         )
 
     def send_deadline_reminder(
@@ -293,16 +291,24 @@ class NotificationService:
         recipient_id: int,
         task_name: str,
         due_date: datetime,
-        days_remaining: int
+        days_remaining: int,
     ):
         """发送截止日期提醒"""
         title = "任务截止提醒"
-        urgency = "紧急" if days_remaining <= 1 else ("即将到期" if days_remaining <= 3 else "提醒")
+        urgency = (
+            "紧急"
+            if days_remaining <= 1
+            else ("即将到期" if days_remaining <= 3 else "提醒")
+        )
         content = f"任务「{task_name}」{urgency}\n"
         content += f"截止日期：{due_date.strftime('%Y-%m-%d')}\n"
         content += f"剩余天数：{days_remaining} 天"
 
-        priority = NotificationPriority.URGENT if days_remaining <= 1 else NotificationPriority.HIGH
+        priority = (
+            NotificationPriority.URGENT
+            if days_remaining <= 1
+            else NotificationPriority.HIGH
+        )
 
         self.send_notification(
             db=db,
@@ -310,9 +316,44 @@ class NotificationService:
             notification_type=NotificationType.DEADLINE_REMINDER,
             title=title,
             content=content,
-            priority=priority
+            priority=priority,
         )
 
 
 # 创建单例
 notification_service = NotificationService()
+
+
+class AlertNotificationService:
+    """预警通知服务（使用统一的NotificationService）"""
+
+    def __init__(self, db: Session):
+        self.db = db
+        self.service = notification_service
+
+    @staticmethod
+    def create_alert_notification(
+        db: Session, alert: "Alert", notify_channel: str, status: str = "pending"
+    ) -> "AlertNotification":
+        """创建预警通知记录（向后兼容）"""
+        return NotificationService.create_alert_notification(
+            db, alert, notify_channel, status
+        )
+
+    def send_alert_notification(
+        self, alert: "Alert", user: Optional["User"] = None
+    ) -> bool:
+        """发送预警通知"""
+        try:
+            if user is None:
+                user = alert.assignee
+            result = self.service.send_alert(
+                recipient_id=user.id if user else 0,
+                alert_id=alert.id,
+                alert_title=alert.title or "预警通知",
+                alert_level=alert.severity or "NORMAL",
+            )
+            return result.get("success", False)
+        except Exception as e:
+            logger.error(f"发送预警通知失败: {e}")
+            return False

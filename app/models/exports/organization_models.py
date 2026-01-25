@@ -12,7 +12,7 @@ from ..organization import (
     HrTransaction,
     SalaryRecord,
 )
-from ..organization_v2 import (
+from ..organization import (
     AssignmentType,
     EmployeeOrgAssignment,
     JobLevel,

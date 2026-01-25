@@ -130,7 +130,9 @@ export default function DepartmentManagement() {
     setLoading(true);
     try {
       const response = await orgApi.departments({ skip: 0, limit: 1000 });
-      setDepartments(response.data || []);
+      // 使用统一响应格式处理
+      const listData = response.formatted || response.data;
+      setDepartments(listData?.items || listData || []);
     } catch (error) {
       console.error("加载部门列表失败:", error);
       alert(
@@ -146,7 +148,9 @@ export default function DepartmentManagement() {
     setLoading(true);
     try {
       const response = await orgApi.departmentTree({ is_active: true });
-      setDepartmentTree(response.data || []);
+      // 使用统一响应格式处理
+      const listData = response.formatted || response.data;
+      setDepartmentTree(listData?.items || listData || []);
     } catch (error) {
       console.error("加载部门树失败:", error);
       alert(
@@ -239,7 +243,8 @@ export default function DepartmentManagement() {
   const handleEdit = async (id) => {
     try {
       const response = await orgApi.getDepartment(id);
-      setEditDepartment(response.data);
+      // 使用统一响应格式处理
+      setEditDepartment(response.formatted || response.data);
       setShowEditDialog(true);
     } catch (error) {
       alert(

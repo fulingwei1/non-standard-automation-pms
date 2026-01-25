@@ -114,41 +114,41 @@ sections:
     type: metrics
     items:
       - label: 验收单号
-        value: "{{ acceptance_order[0].order_no if acceptance_order else '-' }}"
+        value: "{{ acceptance_order[0].order_no if acceptance_order|length > 0 else '-' }}"
       - label: 验收类型
-        value: "{{ acceptance_order[0].acceptance_type if acceptance_order else '-' }}"
+        value: "{{ acceptance_order[0].acceptance_type if acceptance_order|length > 0 else '-' }}"
       - label: 验收状态
-        value: "{{ acceptance_order[0].status if acceptance_order else '-' }}"
+        value: "{{ acceptance_order[0].status if acceptance_order|length > 0 else '-' }}"
 
   - id: project_info
     title: 项目信息
     type: metrics
     items:
       - label: 项目名称
-        value: "{{ acceptance_order[0].project_name if acceptance_order else '-' }}"
+        value: "{{ acceptance_order[0].project_name if acceptance_order|length > 0 else '-' }}"
       - label: 项目编号
-        value: "{{ acceptance_order[0].project_code if acceptance_order else '-' }}"
+        value: "{{ acceptance_order[0].project_code if acceptance_order|length > 0 else '-' }}"
       - label: 客户名称
-        value: "{{ acceptance_order[0].customer_name if acceptance_order else '-' }}"
+        value: "{{ acceptance_order[0].customer_name if acceptance_order|length > 0 else '-' }}"
       - label: 机台名称
-        value: "{{ acceptance_order[0].machine_name if acceptance_order else '-' }}"
+        value: "{{ acceptance_order[0].machine_name if acceptance_order|length > 0 else '-' }}"
       - label: 机台编号
-        value: "{{ acceptance_order[0].machine_code if acceptance_order else '-' }}"
+        value: "{{ acceptance_order[0].machine_code if acceptance_order|length > 0 else '-' }}"
 
   - id: acceptance_result
     title: 验收结果
     type: metrics
     items:
       - label: 计划开始日期
-        value: "{{ acceptance_order[0].planned_start_date if acceptance_order else '-' }}"
+        value: "{{ acceptance_order[0].planned_start_date if acceptance_order|length > 0 else '-' }}"
       - label: 计划结束日期
-        value: "{{ acceptance_order[0].planned_end_date if acceptance_order else '-' }}"
+        value: "{{ acceptance_order[0].planned_end_date if acceptance_order|length > 0 else '-' }}"
       - label: 实际开始日期
-        value: "{{ acceptance_order[0].actual_start_date if acceptance_order else '-' }}"
+        value: "{{ acceptance_order[0].actual_start_date if acceptance_order|length > 0 else '-' }}"
       - label: 实际结束日期
-        value: "{{ acceptance_order[0].actual_end_date if acceptance_order else '-' }}"
+        value: "{{ acceptance_order[0].actual_end_date if acceptance_order|length > 0 else '-' }}"
       - label: 合格率
-        value: "{{ (acceptance_order[0].pass_rate or 0) | percentage(1) }}"
+        value: "{{ (acceptance_order[0].pass_rate or 0) | percentage(1) if acceptance_order|length > 0 else '0%' }}"
 
   - id: check_item_summary
     title: 检查项统计
@@ -163,7 +163,7 @@ sections:
       - label: 不适用项
         value: "{{ item_stats[0].na_items if item_stats else 0 }}"
       - label: 检查通过率
-        value: "{{ ((item_stats[0].passed_items or 0) / (item_stats[0].total_items or 1) * 100) | round_num(1) }}%"
+        value: "{{ ((item_stats[0].passed_items or 0) / (item_stats[0].total_items or 1) * 100) | round_num(1) if item_stats|length > 0 else 0 }}%"
 
   - id: issue_summary
     title: 问题统计

@@ -3,6 +3,7 @@
 角色管理模块 API 测试
 
 测试角色的 CRUD 操作、权限分配和导航配置
+Updated for unified response format
 """
 
 import uuid
@@ -11,6 +12,12 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
+from tests.helpers.response_helpers import (
+    assert_success_response,
+    assert_list_response,
+    extract_data,
+    extract_items,
+)
 
 
 def _auth_headers(token: str) -> dict:
@@ -32,8 +39,10 @@ class TestRoleCRUD:
         )
 
         assert response.status_code == 200
-        data = response.json()
-        assert "items" in data or "roles" in data or isinstance(data, list)
+        response_data = response.json()
+        # 使用统一响应格式辅助函数验证列表响应
+        list_data = assert_list_response(response_data)
+        assert "items" in list_data
 
     def test_list_permissions(self, client: TestClient, admin_token: str):
         """测试获取权限列表"""
@@ -77,6 +86,9 @@ class TestRoleCRUD:
             pytest.skip("Role code already exists")
 
         assert response.status_code == 201, response.text
+        response_data = response.json()
+        # 使用统一响应格式辅助函数提取数据
+        assert_success_response(response_data, expected_code=201)
 
     def test_get_role_by_id(self, client: TestClient, admin_token: str):
         """测试根据 ID 获取角色"""
@@ -94,10 +106,10 @@ class TestRoleCRUD:
         if list_response.status_code != 200:
             pytest.skip("Failed to get roles list")
 
-        data = list_response.json()
-        items = data.get("items", data.get("roles", data))
-        if isinstance(items, dict):
-            items = items.get("items", [])
+        response_data = list_response.json()
+        # 使用统一响应格式辅助函数提取items
+        list_data = assert_list_response(response_data)
+        items = list_data["items"]
         if not items:
             pytest.skip("No roles available for testing")
 
@@ -109,7 +121,9 @@ class TestRoleCRUD:
         )
 
         assert response.status_code == 200
-        data = response.json()
+        response_data = response.json()
+        # 使用统一响应格式辅助函数提取数据
+        data = assert_success_response(response_data)
         assert data["id"] == role_id
 
     def test_get_role_not_found(self, client: TestClient, admin_token: str):
@@ -141,10 +155,10 @@ class TestRoleCRUD:
         if list_response.status_code != 200:
             pytest.skip("Failed to get roles list")
 
-        data = list_response.json()
-        items = data.get("items", data.get("roles", data))
-        if isinstance(items, dict):
-            items = items.get("items", [])
+        response_data = list_response.json()
+        # 使用统一响应格式辅助函数提取items
+        list_data = assert_list_response(response_data)
+        items = list_data["items"]
         if not items:
             pytest.skip("No roles available for testing")
 
@@ -166,6 +180,9 @@ class TestRoleCRUD:
             pytest.skip("Validation error")
 
         assert response.status_code == 200, response.text
+        response_data = response.json()
+        # 使用统一响应格式辅助函数提取数据
+        assert_success_response(response_data)
 
 
 class TestRolePermissions:
@@ -187,10 +204,10 @@ class TestRolePermissions:
         if list_response.status_code != 200:
             pytest.skip("Failed to get roles list")
 
-        data = list_response.json()
-        items = data.get("items", data.get("roles", data))
-        if isinstance(items, dict):
-            items = items.get("items", [])
+        response_data = list_response.json()
+        # 使用统一响应格式辅助函数提取items
+        list_data = assert_list_response(response_data)
+        items = list_data["items"]
         if not items:
             pytest.skip("No roles available for testing")
 
@@ -214,6 +231,9 @@ class TestRolePermissions:
             pytest.skip("Permission not found")
 
         assert response.status_code == 200, response.text
+        response_data = response.json()
+        # 使用统一响应格式辅助函数提取数据
+        assert_success_response(response_data)
 
 
 class TestRoleNavigation:
@@ -261,10 +281,10 @@ class TestRoleNavigation:
         if list_response.status_code != 200:
             pytest.skip("Failed to get roles list")
 
-        data = list_response.json()
-        items = data.get("items", data.get("roles", data))
-        if isinstance(items, dict):
-            items = items.get("items", [])
+        response_data = list_response.json()
+        # 使用统一响应格式辅助函数提取items
+        list_data = assert_list_response(response_data)
+        items = list_data["items"]
         if not items:
             pytest.skip("No roles available for testing")
 

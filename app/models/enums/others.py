@@ -36,6 +36,11 @@ class MeetingTypeEnum(str, Enum):
     MONTHLY = "MONTHLY"
     DEMO = "DEMO"
     RETROSPECTIVE = "RETROSPECTIVE"
+    MILESTONE_REVIEW = "MILESTONE_REVIEW"
+    CHANGE_REVIEW = "CHANGE_REVIEW"
+    RISK_REVIEW = "RISK_REVIEW"
+    CLOSURE = "CLOSURE"
+    OTHER = "OTHER"
 
 
 class ReviewConclusionEnum(str, Enum):

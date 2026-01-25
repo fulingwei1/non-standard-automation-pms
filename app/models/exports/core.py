@@ -30,7 +30,7 @@ from ..project import (
 )
 
 # 权限V2
-from ..permission_v2 import (
+from ..permission import (
     DataScopeRule,
     MenuPermission,
     MenuType,

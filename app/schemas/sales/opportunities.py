@@ -18,13 +18,14 @@ class OpportunityRequirementCreate(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     opportunity_id: Optional[int] = Field(default=None, description="机会ID")
-    requirement_type: str = Field(description="需求类型")
-    requirement_desc: str = Field(description="需求描述")
-    specification: Optional[str] = Field(default=None, description="规格要求")
-    quantity: Optional[int] = Field(default=None, description="数量")
-    priority: Optional[str] = Field(default="MEDIUM", description="优先级")
-    expected_delivery_date: Optional[date] = Field(default=None, description="期望交付日期")
-    budget: Optional[Decimal] = Field(default=None, description="预算")
+    product_object: Optional[str] = Field(default=None, description="产品对象")
+    ct_seconds: Optional[int] = Field(default=None, description="节拍(秒)")
+    interface_desc: Optional[str] = Field(default=None, description="接口/通信协议")
+    site_constraints: Optional[str] = Field(default=None, description="现场约束")
+    acceptance_criteria: Optional[str] = Field(default=None, description="验收依据")
+    safety_requirement: Optional[str] = Field(default=None, description="安全要求")
+    attachments: Optional[str] = Field(default=None, description="需求附件")
+    extra_json: Optional[str] = Field(default=None, description="其他补充(JSON)")
 
 
 class OpportunityRequirementResponse(TimestampSchema):
@@ -103,6 +104,9 @@ class OpportunityUpdate(BaseModel):
     risk_level: Optional[str] = Field(default=None, description="风险等级")
     owner_id: Optional[int] = Field(default=None, description="负责人ID")
     requirement_maturity: Optional[int] = Field(default=None, description="需求成熟度(1-5)")
+    priority_score: Optional[int] = Field(default=None, description="优先级得分")
+    assessment_status: Optional[str] = Field(default=None, description="技术评估状态")
+    requirement: Optional["OpportunityRequirementCreate"] = Field(default=None, description="需求详情")
 
 
 class OpportunityResponse(TimestampSchema):
@@ -132,6 +136,8 @@ class OpportunityResponse(TimestampSchema):
     score: Optional[int] = Field(default=None, description="评分")
     risk_level: Optional[str] = Field(default=None, description="风险等级")
     owner_id: Optional[int] = Field(default=None, description="负责人ID")
+    updated_by: Optional[int] = Field(default=None, description="最后更新人ID")
+    updated_by_name: Optional[str] = Field(default=None, description="最后更新人姓名")
     gate_status: Optional[str] = Field(default=None, description="阶段门状态")
     gate_passed_at: Optional[datetime] = Field(default=None, description="阶段门通过时间")
     assessment_id: Optional[int] = Field(default=None, description="技术评估ID")

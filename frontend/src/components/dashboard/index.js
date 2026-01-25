@@ -5,6 +5,7 @@
 
 export { default as DashboardStatCard } from "./DashboardStatCard";
 export { default as DashboardLayout } from "./DashboardLayout";
+export { BaseDashboard, default as BaseDashboardDefault } from "./BaseDashboard";
 export { useDashboardData, useMultipleDashboardData } from "./useDashboardData";
 export { default as LazyChart, createLazyChart } from "./LazyChart";
 export { default as VirtualizedList } from "./VirtualizedList";

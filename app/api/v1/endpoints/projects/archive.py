@@ -177,7 +177,7 @@ def get_archived_projects(
     query = db.query(Project).filter(Project.is_archived == True)
 
     # 应用数据权限过滤
-    from app.services.data_scope_service import DataScopeService
+    from app.services.data_scope import DataScopeService
     query = DataScopeService.filter_projects_by_scope(db, query, current_user)
 
     if keyword:
@@ -239,7 +239,7 @@ def batch_archive_projects(
     success_count = 0
     failed_projects = []
 
-    from app.services.data_scope_service import DataScopeService
+    from app.services.data_scope import DataScopeService
     query = db.query(Project).filter(Project.id.in_(project_ids))
     query = DataScopeService.filter_projects_by_scope(db, query, current_user)
     accessible_project_ids = {p.id for p in query.all()}

@@ -9,8 +9,8 @@ from ...material import (
     Material,
     MaterialCategory,
     MaterialSupplier,
-    Supplier,
 )
+from ...vendor import Vendor
 
 # 采购管理
 from ...purchase import (
@@ -52,7 +52,7 @@ __all__ = [
     # Material
     "Material",
     "MaterialCategory",
-    "Supplier",
+    "Vendor",
     "MaterialSupplier",
     "BomHeader",
     "BomItem",

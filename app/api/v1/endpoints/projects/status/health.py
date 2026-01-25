@@ -107,7 +107,7 @@ def batch_calculate_project_health(
     """
     批量计算项目健康度
     """
-    from app.services.data_scope_service import DataScopeService
+    from app.services.data_scope import DataScopeService
     from app.services.health_calculator import HealthCalculator
 
     query = db.query(Project).filter(Project.id.in_(project_ids))

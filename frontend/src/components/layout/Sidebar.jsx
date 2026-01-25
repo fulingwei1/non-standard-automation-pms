@@ -117,9 +117,10 @@ export function Sidebar({ collapsed = false, onToggle, onLogout, user }) {
       setMenuLoading(true);
       try {
         const response = await roleApi.getMyNavGroups();
-        const data = response.data;
+        // 使用统一响应格式处理
+        const data = response.formatted || response.data;
         // Only use dynamic menu if it has content
-        if (data.nav_groups && data.nav_groups.length > 0) {
+        if (data?.nav_groups && data.nav_groups.length > 0) {
           setDynamicNavGroups(data.nav_groups);
         }
       } catch (error) {

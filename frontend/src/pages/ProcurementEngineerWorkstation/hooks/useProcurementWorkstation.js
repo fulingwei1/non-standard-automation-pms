@@ -14,7 +14,9 @@ export function useProcurementWorkstation() {
         try {
             setLoading(true);
             const response = await purchaseApi.getMyOrders({ page_size: 50 });
-            setOrders(response.data?.items || response.data || []);
+            // 使用统一响应格式处理
+            const paginatedData = response.formatted || response.data;
+            setOrders(paginatedData?.items || paginatedData || []);
         } catch (err) {
             setError(err.message);
         } finally {
@@ -25,7 +27,9 @@ export function useProcurementWorkstation() {
     const loadSuppliers = useCallback(async () => {
         try {
             const response = await supplierApi.list({ page_size: 100 });
-            setSuppliers(response.data?.items || response.data || []);
+            // 使用统一响应格式处理
+            const paginatedData = response.formatted || response.data;
+            setSuppliers(paginatedData?.items || paginatedData || []);
         } catch (err) {
             console.error('Failed to load suppliers:', err);
         }

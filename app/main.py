@@ -12,14 +12,10 @@ from app.core.csrf import CSRFMiddleware
 from app.core.logging_config import setup_logging
 from app.core.exception_handlers import setup_exception_handlers
 from app.api.v1.api import api_router
+from app.middleware.audit import AuditMiddleware
+from app.core.middleware.auth_middleware import GlobalAuthMiddleware
 
 # 导入统一响应格式（确保可用）
-from app.core.schemas.response import (
-    SuccessResponse,
-    ErrorResponse,
-    PaginatedResponse,
-    ListResponse,
-)
 
 # 配置日志
 setup_logging()
@@ -63,6 +59,13 @@ setup_security_headers(app)
 # CSRF防护中间件
 app.add_middleware(CSRFMiddleware)
 
+# 审计日志中间件
+app.add_middleware(AuditMiddleware)
+
+# 全局认证中间件 - 默认拒绝策略（最后添加，最先执行）
+# 注意：FastAPI中间件是后进先出(LIFO)，后添加的先执行
+app.add_middleware(GlobalAuthMiddleware)
+
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
 # 初始化进度跟踪定时任务调度器（如果启用）
@@ -84,10 +87,22 @@ try:
         # 初始化基础数据（预置模板等）
         try:
             from app.utils.init_data import init_all_data
+
             init_all_data()
         except Exception as e:
             import logging
+
             logging.getLogger(__name__).error(f"基础数据初始化失败: {e}")
+
+        # 初始化状态流转引擎处理器
+        try:
+            from app.services.status_handlers import register_all_handlers
+
+            register_all_handlers()
+        except Exception as e:
+            import logging
+
+            logging.getLogger(__name__).error(f"状态处理器注册失败: {e}")
 
         enable_scheduler = os.getenv("ENABLE_SCHEDULER", "true").lower() == "true"
         if enable_scheduler:

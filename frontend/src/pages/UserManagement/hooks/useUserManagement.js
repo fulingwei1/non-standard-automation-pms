@@ -20,9 +20,10 @@ export function useUserManagement() {
             if (filters.keyword) params.keyword = filters.keyword;
 
             const response = await userApi.list(params);
-            const data = response.data || response;
-            setUsers(data.items || data || []);
-            if (data.total) setPagination(prev => ({ ...prev, total: data.total }));
+            // 使用统一响应格式处理（API拦截器自动处理，添加formatted字段）
+            const paginatedData = response.formatted || response.data;
+            setUsers(paginatedData?.items || paginatedData || []);
+            if (paginatedData?.total) setPagination(prev => ({ ...prev, total: paginatedData.total }));
         } catch (err) {
             setError(err.message);
         } finally {

@@ -21,7 +21,7 @@ from app.schemas.issue import (
     IssueResponse,
     IssueUpdate,
 )
-from app.services.data_scope_service import DataScopeService
+from app.services.data_scope import DataScopeService
 
 from .utils import create_blocking_issue_alert, close_blocking_issue_alerts, generate_issue_no
 

@@ -5,7 +5,7 @@
 
 from fastapi import APIRouter
 
-from .approvals import router as approvals_router
+from ...approvals import router as approvals_router
 from .basic import router as basic_router
 from .export import router as export_router
 from .legacy import router as legacy_router

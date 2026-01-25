@@ -41,7 +41,8 @@ class TestUsersCRUDAPI:
         )
 
         if self.helper.assert_success(response):
-            result = response.get("data", {})
+            # 统一响应格式：分页响应直接包含items和total
+            result = response.get("data", response)
             items = result.get("items", [])
             total = result.get("total", 0)
             self.helper.print_success(f"获取到 {len(items)} 个用户，总计 {total} 个")
@@ -65,6 +66,7 @@ class TestUsersCRUDAPI:
         response = self.helper.post("/users/", user_data, resource_type="user")
 
         if self.helper.assert_success(response):
+            # 统一响应格式：data字段包含用户对象
             result = response.get("data", {})
             user_id = result.get("id")
             if user_id:

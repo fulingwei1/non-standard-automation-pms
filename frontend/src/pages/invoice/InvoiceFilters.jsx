@@ -5,7 +5,7 @@
 import { Search } from "lucide-react";
 import { Card, CardContent, Button, Input } from "../../components/ui";
 import { cn } from "../../lib/utils";
-import { statusConfig, paymentStatusConfig } from "./constants";
+import { statusConfig, paymentStatusConfig } from "../../lib/constants/finance";
 
 export default function InvoiceFilters({
   searchText,

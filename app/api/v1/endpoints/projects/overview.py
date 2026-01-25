@@ -32,7 +32,7 @@ def get_projects_overview(
     """
     query = db.query(Project).filter(Project.is_active == True)
 
-    from app.services.data_scope_service import DataScopeService
+    from app.services.data_scope import DataScopeService
     query = DataScopeService.filter_projects_by_scope(db, query, current_user)
 
     projects = query.all()
@@ -78,7 +78,7 @@ def get_project_dashboard(
     """
     query = db.query(Project).filter(Project.is_active == True, Project.is_archived == False)
 
-    from app.services.data_scope_service import DataScopeService
+    from app.services.data_scope import DataScopeService
     query = DataScopeService.filter_projects_by_scope(db, query, current_user)
 
     projects = query.all()
@@ -154,7 +154,7 @@ def get_in_production_summary(
         Project.stage.in_(['S5', 'S6'])
     )
 
-    from app.services.data_scope_service import DataScopeService
+    from app.services.data_scope import DataScopeService
     query = DataScopeService.filter_projects_by_scope(db, query, current_user)
 
     projects = query.all()

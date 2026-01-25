@@ -191,12 +191,15 @@ def run_acceptance_flow() -> Dict[str, any]:
             machine_payload = {
                 "machine_code": f"ACPT-MC-{suffix}",
                 "machine_name": "验收测试产线",
-                "project_id": created["project_id"],
                 "machine_no": 1,
                 "machine_type": "装配线",
                 "specification": "测试工位",
             }
-            machine_resp = client.post("/api/v1/machines/", json=machine_payload, headers=headers)
+            machine_resp = client.post(
+                f"/api/v1/projects/{created['project_id']}/machines",
+                json=machine_payload,
+                headers=headers
+            )
             machine_resp.raise_for_status()
             machine = machine_resp.json()
             created["machine_id"] = machine["id"]

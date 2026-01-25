@@ -20,7 +20,7 @@ from app.schemas.data_import_export import (
     ExportProjectDetailRequest,
     ExportProjectListRequest,
 )
-from app.services.data_scope_service import DataScopeService
+from app.services.data_scope import DataScopeService
 
 router = APIRouter()
 

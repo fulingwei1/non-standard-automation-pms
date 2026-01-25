@@ -8,7 +8,7 @@ from sqlalchemy import ForeignKey, Index, Integer, Numeric, String, Text
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base, TimestampMixin
-from app.models.enums import IssueStatusEnum, SeverityEnum
+from app.models.enums import IssueStatusEnum, IssueTypeEnum, SeverityEnum
 
 
 class IssueCategoryEnum(str):
@@ -21,17 +21,6 @@ class IssueCategoryEnum(str):
     RESOURCE = 'RESOURCE'        # 资源问题
     SCHEDULE = 'SCHEDULE'        # 进度问题
     CUSTOMER = 'CUSTOMER'        # 客户问题
-    OTHER = 'OTHER'              # 其他
-
-
-class IssueTypeEnum(str):
-    """问题类型"""
-    DEFECT = 'DEFECT'            # 缺陷
-    DEVIATION = 'DEVIATION'      # 偏差
-    RISK = 'RISK'                # 风险
-    BLOCKER = 'BLOCKER'          # 阻塞
-    SUGGESTION = 'SUGGESTION'    # 建议
-    QUESTION = 'QUESTION'        # 疑问
     OTHER = 'OTHER'              # 其他
 
 
@@ -331,4 +320,3 @@ class IssueTemplate(Base, TimestampMixin):
 
     def __repr__(self):
         return f'<IssueTemplate {self.template_code}: {self.template_name}>'
-

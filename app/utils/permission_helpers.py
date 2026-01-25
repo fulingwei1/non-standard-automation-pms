@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.models.project import Project
 from app.models.user import User
-from app.services.data_scope_service import DataScopeService
+from app.services.data_scope import DataScopeService
 
 
 def check_project_access_or_raise(

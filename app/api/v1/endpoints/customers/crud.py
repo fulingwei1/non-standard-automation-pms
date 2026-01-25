@@ -5,17 +5,20 @@
 
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import desc, or_
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.project import Customer, Project
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
-from app.schemas.project import CustomerCreate, CustomerResponse, CustomerUpdate
+from app.schemas.project.customer import (
+    CustomerCreate,
+    CustomerResponse,
+    CustomerUpdate,
+)
+from app.services.customer_service import CustomerService
 
 router = APIRouter()
 
@@ -24,7 +27,12 @@ router = APIRouter()
 def read_customers(
     db: Session = Depends(deps.get_db),
     page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    page_size: int = Query(
+        settings.DEFAULT_PAGE_SIZE,
+        ge=1,
+        le=settings.MAX_PAGE_SIZE,
+        description="每页数量",
+    ),
     keyword: Optional[str] = Query(None, description="关键词搜索（客户名称/编码）"),
     industry: Optional[str] = Query(None, description="行业筛选"),
     is_active: Optional[bool] = Query(None, description="是否启用"),
@@ -33,39 +41,15 @@ def read_customers(
     """
     获取客户列表（支持分页、搜索、筛选）
     """
-    query = db.query(Customer)
-
-    # 关键词搜索
-    if keyword:
-        query = query.filter(
-            or_(
-                Customer.customer_name.contains(keyword),
-                Customer.customer_code.contains(keyword),
-            )
-        )
-
-    # 行业筛选
-    if industry:
-        query = query.filter(Customer.industry == industry)
-
-    # 启用状态筛选
-    if is_active is not None:
-        query = query.filter(Customer.is_active == is_active)
-
-    # 总数
-    total = query.count()
-
-    # 分页
-    offset = (page - 1) * page_size
-    customers = query.order_by(desc(Customer.created_at)).offset(offset).limit(page_size).all()
-
-    return PaginatedResponse(
-        items=customers,
-        total=total,
+    service = CustomerService(db)
+    result = service.list_customers(
         page=page,
         page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        keyword=keyword,
+        industry=industry,
+        status="ACTIVE" if is_active is True else None,
     )
+    return PaginatedResponse(**result)
 
 
 @router.post("/", response_model=CustomerResponse)
@@ -80,30 +64,13 @@ def create_customer(
 
     如果未提供客户编码，系统将自动生成 CUS-xxxxxxx 格式的编码
     """
-    from app.utils.number_generator import generate_customer_code
+    service = CustomerService(db)
+    if not customer_in.customer_code:
+        customer_in.customer_code = service.generate_code()
 
-    # 如果没有提供客户编码，自动生成
-    customer_data = customer_in.model_dump()
-    if not customer_data.get('customer_code'):
-        customer_data['customer_code'] = generate_customer_code(db)
-
-    # 检查客户编码是否已存在
-    customer = (
-        db.query(Customer)
-        .filter(Customer.customer_code == customer_data['customer_code'])
-        .first()
+    return service.create(
+        customer_in, check_unique={"customer_code": customer_in.customer_code}
     )
-    if customer:
-        raise HTTPException(
-            status_code=400,
-            detail="该客户编码已存在",
-        )
-
-    customer = Customer(**customer_data)
-    db.add(customer)
-    db.commit()
-    db.refresh(customer)
-    return customer
 
 
 @router.get("/{customer_id}", response_model=CustomerResponse)
@@ -116,10 +83,8 @@ def read_customer(
     """
     Get customer by ID.
     """
-    customer = db.query(Customer).filter(Customer.id == customer_id).first()
-    if not customer:
-        raise HTTPException(status_code=404, detail="Customer not found")
-    return customer
+    service = CustomerService(db)
+    return service.get(customer_id)
 
 
 @router.put("/{customer_id}", response_model=CustomerResponse)
@@ -136,53 +101,13 @@ def update_customer(
 
     支持自动同步客户信息到关联的项目和合同
     """
-    import logging
-    logger = logging.getLogger(__name__)
+    service = CustomerService(db)
+    # 自动同步逻辑可以在 service._after_update 中处理，或者在这里显式调用
+    # 为了保持透明度，我们在 service 中增加相关的处理
+    if hasattr(service, "set_auto_sync"):
+        service.set_auto_sync(auto_sync)
 
-    customer = db.query(Customer).filter(Customer.id == customer_id).first()
-    if not customer:
-        raise HTTPException(status_code=404, detail="客户不存在")
-
-    # 记录需要同步的字段
-    update_data = customer_in.model_dump(exclude_unset=True)
-    sync_fields = ["customer_name", "contact_person", "contact_phone"]
-    has_sync_fields = any(field in update_data for field in sync_fields)
-
-    # 更新客户信息
-    for field, value in update_data.items():
-        setattr(customer, field, value)
-
-    db.add(customer)
-    db.flush()  # 先flush，确保customer对象已更新
-
-    # 如果启用了自动同步，且更新了需要同步的字段，则自动同步
-    if auto_sync and has_sync_fields:
-        try:
-            from app.services.data_sync_service import DataSyncService
-            sync_service = DataSyncService(db)
-
-            # 同步到项目
-            project_sync_result = sync_service.sync_customer_to_projects(customer_id)
-            if project_sync_result.get("success") and project_sync_result.get("updated_count", 0) > 0:
-                logger.info(
-                    f"客户 {customer_id} 信息已自动同步到 {project_sync_result.get('updated_count')} 个项目: "
-                    f"{', '.join(project_sync_result.get('updated_fields', []))}"
-                )
-
-            # 同步到合同
-            contract_sync_result = sync_service.sync_customer_to_contracts(customer_id)
-            if contract_sync_result.get("success") and contract_sync_result.get("updated_count", 0) > 0:
-                logger.info(
-                    f"客户 {customer_id} 信息已自动同步到 {contract_sync_result.get('updated_count')} 个合同: "
-                    f"{', '.join(contract_sync_result.get('updated_fields', []))}"
-                )
-        except Exception as e:
-            # 同步失败不影响客户更新，只记录错误日志
-            logger.error(f"客户信息自动同步失败: {str(e)}", exc_info=True)
-
-    db.commit()
-    db.refresh(customer)
-    return customer
+    return service.update(customer_id, customer_in)
 
 
 @router.delete("/{customer_id}", status_code=200)
@@ -193,23 +118,8 @@ def delete_customer(
     current_user: User = Depends(security.require_permission("customer:delete")),
 ) -> Any:
     """
-    删除客户（软删除）
+    删除客户（建议使用软删除）
     """
-    customer = db.query(Customer).filter(Customer.id == customer_id).first()
-    if not customer:
-        raise HTTPException(status_code=404, detail="客户不存在")
-
-    # 检查是否有关联项目
-    project_count = db.query(Project).filter(Project.customer_id == customer_id).count()
-    if project_count > 0:
-        raise HTTPException(
-            status_code=400,
-            detail=f"该客户下还有 {project_count} 个项目，无法删除"
-        )
-
-    # 软删除：设置为非激活状态
-    customer.is_active = False
-    db.add(customer)
-    db.commit()
-
+    service = CustomerService(db)
+    service.delete(customer_id, soft_delete=True)
     return ResponseModel(code=200, message="客户已删除")
