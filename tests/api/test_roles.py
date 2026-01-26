@@ -299,3 +299,228 @@ class TestRoleNavigation:
         )
 
         assert response.status_code == 200
+
+
+class TestRoleHierarchy:
+    """角色层级管理测试"""
+
+    def test_get_hierarchy_tree(self, client: TestClient, admin_token: str):
+        """测试获取角色层级树"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/roles/hierarchy/tree",
+            headers=headers
+        )
+
+        assert response.status_code == 200
+        response_data = response.json()
+        data = assert_success_response(response_data)
+        assert isinstance(data, list)
+
+    def test_get_role_ancestors(self, client: TestClient, admin_token: str):
+        """测试获取角色祖先链"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+
+        # 先获取角色列表
+        list_response = client.get(
+            f"{settings.API_V1_PREFIX}/roles/",
+            headers=headers
+        )
+
+        if list_response.status_code != 200:
+            pytest.skip("Failed to get roles list")
+
+        response_data = list_response.json()
+        list_data = assert_list_response(response_data)
+        items = list_data["items"]
+        if not items:
+            pytest.skip("No roles available for testing")
+
+        role_id = items[0]["id"]
+
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/roles/{role_id}/ancestors",
+            headers=headers
+        )
+
+        assert response.status_code == 200
+        response_data = response.json()
+        data = assert_success_response(response_data)
+        assert "role_id" in data
+        assert "ancestors" in data
+        assert isinstance(data["ancestors"], list)
+
+    def test_get_role_ancestors_not_found(self, client: TestClient, admin_token: str):
+        """测试获取不存在角色的祖先链"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/roles/99999/ancestors",
+            headers=headers
+        )
+
+        assert response.status_code == 404
+
+    def test_get_role_descendants(self, client: TestClient, admin_token: str):
+        """测试获取角色子孙"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+
+        # 先获取角色列表
+        list_response = client.get(
+            f"{settings.API_V1_PREFIX}/roles/",
+            headers=headers
+        )
+
+        if list_response.status_code != 200:
+            pytest.skip("Failed to get roles list")
+
+        response_data = list_response.json()
+        list_data = assert_list_response(response_data)
+        items = list_data["items"]
+        if not items:
+            pytest.skip("No roles available for testing")
+
+        role_id = items[0]["id"]
+
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/roles/{role_id}/descendants",
+            headers=headers
+        )
+
+        assert response.status_code == 200
+        response_data = response.json()
+        data = assert_success_response(response_data)
+        assert "role_id" in data
+        assert "descendants" in data
+        assert isinstance(data["descendants"], list)
+
+    def test_get_role_descendants_not_found(self, client: TestClient, admin_token: str):
+        """测试获取不存在角色的子孙"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/roles/99999/descendants",
+            headers=headers
+        )
+
+        assert response.status_code == 404
+
+    def test_update_role_parent(self, client: TestClient, admin_token: str):
+        """测试更新角色父级"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+
+        # 先获取角色列表
+        list_response = client.get(
+            f"{settings.API_V1_PREFIX}/roles/",
+            headers=headers
+        )
+
+        if list_response.status_code != 200:
+            pytest.skip("Failed to get roles list")
+
+        response_data = list_response.json()
+        list_data = assert_list_response(response_data)
+        items = list_data["items"]
+        if len(items) < 2:
+            pytest.skip("Need at least 2 roles for testing")
+
+        # 找一个非系统角色
+        non_system_role = None
+        for item in items:
+            if not item.get("is_system", False):
+                non_system_role = item
+                break
+
+        if not non_system_role:
+            pytest.skip("No non-system role available for testing")
+
+        role_id = non_system_role["id"]
+
+        # 设置为顶级角色（parent_id = null）
+        response = client.put(
+            f"{settings.API_V1_PREFIX}/roles/{role_id}/parent",
+            headers=headers
+        )
+
+        if response.status_code == 403:
+            pytest.skip("User does not have permission")
+        if response.status_code == 400:
+            pytest.skip("System role cannot be modified")
+
+        assert response.status_code == 200, response.text
+        response_data = response.json()
+        data = assert_success_response(response_data)
+        assert data["role_id"] == role_id
+
+    def test_update_role_parent_not_found(self, client: TestClient, admin_token: str):
+        """测试更新不存在角色的父级"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        response = client.put(
+            f"{settings.API_V1_PREFIX}/roles/99999/parent",
+            headers=headers
+        )
+
+        assert response.status_code == 404
+
+    def test_update_role_parent_invalid_parent(self, client: TestClient, admin_token: str):
+        """测试设置不存在的父角色"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+
+        # 先获取角色���表
+        list_response = client.get(
+            f"{settings.API_V1_PREFIX}/roles/",
+            headers=headers
+        )
+
+        if list_response.status_code != 200:
+            pytest.skip("Failed to get roles list")
+
+        response_data = list_response.json()
+        list_data = assert_list_response(response_data)
+        items = list_data["items"]
+        if not items:
+            pytest.skip("No roles available for testing")
+
+        # 找一个非系统角色
+        non_system_role = None
+        for item in items:
+            if not item.get("is_system", False):
+                non_system_role = item
+                break
+
+        if not non_system_role:
+            pytest.skip("No non-system role available for testing")
+
+        role_id = non_system_role["id"]
+
+        response = client.put(
+            f"{settings.API_V1_PREFIX}/roles/{role_id}/parent?parent_id=99999",
+            headers=headers
+        )
+
+        if response.status_code == 403:
+            pytest.skip("User does not have permission")
+
+        assert response.status_code == 400
