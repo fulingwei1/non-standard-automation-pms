@@ -330,3 +330,186 @@ def update_role_nav_groups(
     db.commit()
 
     return ResponseModel(code=200, message="导航配置更新成功")
+
+
+# ============================================================
+# 角色层级管理 API
+# ============================================================
+
+@router.get("/hierarchy/tree", response_model=ResponseModel)
+def get_role_hierarchy_tree(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """获取角色层级树"""
+    roles = db.query(Role).filter(Role.is_active == True).order_by(Role.sort_order).all()
+
+    # 构建树形结构
+    role_map = {r.id: {
+        "id": r.id,
+        "role_code": r.role_code,
+        "role_name": r.role_name,
+        "parent_id": r.parent_id,
+        "data_scope": r.data_scope,
+        "children": []
+    } for r in roles}
+
+    tree = []
+    for role in roles:
+        node = role_map[role.id]
+        if role.parent_id and role.parent_id in role_map:
+            role_map[role.parent_id]["children"].append(node)
+        else:
+            tree.append(node)
+
+    return ResponseModel(code=200, message="获取成功", data=tree)
+
+
+@router.put("/{role_id}/parent", response_model=ResponseModel)
+def update_role_parent(
+    role_id: int,
+    parent_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role_management_permission),
+):
+    """
+    修改角色的父角色（层级关系）
+
+    - parent_id 为 null 时，将角色设为顶级角色
+    - 不允许形成循环引用
+    """
+    role = db.query(Role).filter(Role.id == role_id).first()
+    if not role:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="角色不存在")
+
+    if role.is_system:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="系统预置角色不允许修改层级"
+        )
+
+    # 检查父角色是否存在
+    if parent_id is not None:
+        parent_role = db.query(Role).filter(Role.id == parent_id).first()
+        if not parent_role:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="父角色不存在"
+            )
+
+        # 检查是否形成循环引用
+        if _would_create_cycle(db, role_id, parent_id):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="不能将子角色设为父角色（会形成循环引用）"
+            )
+
+    role.parent_id = parent_id
+    db.commit()
+
+    return ResponseModel(
+        code=200,
+        message="角色层级更新成功",
+        data={
+            "role_id": role_id,
+            "parent_id": parent_id,
+            "role_code": role.role_code,
+            "role_name": role.role_name
+        }
+    )
+
+
+def _would_create_cycle(db: Session, role_id: int, new_parent_id: int) -> bool:
+    """检查设置新父角色是否会形成循环引用"""
+    current_id = new_parent_id
+    visited = {role_id}  # 包含当前角色
+
+    while current_id is not None:
+        if current_id in visited:
+            return True
+        visited.add(current_id)
+
+        parent_role = db.query(Role).filter(Role.id == current_id).first()
+        if parent_role:
+            current_id = parent_role.parent_id
+        else:
+            break
+
+    return False
+
+
+@router.get("/{role_id}/ancestors", response_model=ResponseModel)
+def get_role_ancestors(
+    role_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """获取角色的所有祖先角色（继承链）"""
+    role = db.query(Role).filter(Role.id == role_id).first()
+    if not role:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="角色不存在")
+
+    ancestors = []
+    current = role
+
+    while current.parent_id is not None:
+        parent = db.query(Role).filter(Role.id == current.parent_id).first()
+        if parent:
+            ancestors.append({
+                "id": parent.id,
+                "role_code": parent.role_code,
+                "role_name": parent.role_name,
+                "data_scope": parent.data_scope,
+            })
+            current = parent
+        else:
+            break
+
+    return ResponseModel(
+        code=200,
+        message="获取成功",
+        data={
+            "role_id": role_id,
+            "role_code": role.role_code,
+            "ancestors": ancestors
+        }
+    )
+
+
+@router.get("/{role_id}/descendants", response_model=ResponseModel)
+def get_role_descendants(
+    role_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """获取角色的所有子孙角色"""
+    role = db.query(Role).filter(Role.id == role_id).first()
+    if not role:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="角色不存在")
+
+    descendants = []
+    _collect_descendants(db, role_id, descendants)
+
+    return ResponseModel(
+        code=200,
+        message="获取成功",
+        data={
+            "role_id": role_id,
+            "role_code": role.role_code,
+            "descendants": descendants
+        }
+    )
+
+
+def _collect_descendants(db: Session, parent_id: int, result: list):
+    """递归收集所有子孙角色"""
+    children = db.query(Role).filter(Role.parent_id == parent_id, Role.is_active == True).all()
+    for child in children:
+        result.append({
+            "id": child.id,
+            "role_code": child.role_code,
+            "role_name": child.role_name,
+            "parent_id": child.parent_id,
+            "data_scope": child.data_scope,
+        })
+        _collect_descendants(db, child.id, result)
