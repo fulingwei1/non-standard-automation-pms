@@ -1,0 +1,295 @@
+# 销售月报配置
+# 报告代码: SALES_MONTHLY
+
+meta:
+  name: 销售月报
+  code: SALES_MONTHLY
+  description: 销售部门月度业绩统计，包含合同、订单、回款、开票和投标情况
+  version: "1.0"
+
+permissions:
+  roles:
+    - SALES
+    - SALES_MANAGER
+    - FINANCE
+    - ADMIN
+  data_scope: company
+
+parameters:
+  - name: start_date
+    type: date
+    required: true
+    description: 月度开始日期
+  - name: end_date
+    type: date
+    required: true
+    description: 月度结束日期
+
+cache:
+  enabled: true
+  ttl: 3600
+  key_pattern: "report:SALES_MONTHLY:{start_date}"
+
+schedule:
+  enabled: true
+  cron: "0 9 1 * *"
+  params:
+    start_date: "{{ this_month_start() }}"
+    end_date: "{{ this_month_end() }}"
+
+data_sources:
+  # 新签合同
+  new_contracts:
+    type: query
+    sql: |
+      SELECT c.*, cu.name as customer_name
+      FROM contracts c
+      LEFT JOIN customers cu ON c.customer_id = cu.id
+      WHERE c.signed_date >= :start_date
+        AND c.signed_date <= :end_date
+        AND c.status IN ('SIGNED', 'EXECUTING')
+      ORDER BY c.signed_date DESC
+
+  # 合同统计
+  contract_stats:
+    type: query
+    sql: |
+      SELECT
+        COUNT(CASE WHEN signed_date >= :start_date AND signed_date <= :end_date
+                   AND status IN ('SIGNED', 'EXECUTING') THEN 1 END) as new_count,
+        COALESCE(SUM(CASE WHEN signed_date >= :start_date AND signed_date <= :end_date
+                          AND status IN ('SIGNED', 'EXECUTING') THEN contract_amount END), 0) as new_amount,
+        COUNT(CASE WHEN status IN ('SIGNED', 'EXECUTING') THEN 1 END) as active_count,
+        COUNT(CASE WHEN status = 'COMPLETED' THEN 1 END) as completed_count
+      FROM contracts
+
+  # 新增订单
+  new_orders:
+    type: query
+    sql: |
+      SELECT so.*, cu.name as customer_name
+      FROM sales_orders so
+      LEFT JOIN customers cu ON so.customer_id = cu.id
+      WHERE DATE(so.created_at) >= :start_date
+        AND DATE(so.created_at) <= :end_date
+      ORDER BY so.created_at DESC
+      LIMIT 20
+
+  # 订单统计
+  order_stats:
+    type: query
+    sql: |
+      SELECT
+        COUNT(*) as new_count,
+        COALESCE(SUM(order_amount), 0) as new_amount
+      FROM sales_orders
+      WHERE DATE(created_at) >= :start_date
+        AND DATE(created_at) <= :end_date
+
+  # 回款统计
+  receipt_stats:
+    type: query
+    sql: |
+      SELECT
+        COALESCE(SUM(planned_amount), 0) as planned_amount,
+        COALESCE(SUM(CASE WHEN actual_amount > 0 THEN actual_amount ELSE 0 END), 0) as actual_amount,
+        COALESCE(SUM(CASE WHEN planned_date < :end_date AND status IN ('PENDING', 'PARTIAL', 'INVOICED')
+                          THEN planned_amount - COALESCE(actual_amount, 0) END), 0) as overdue_amount
+      FROM project_payment_plans
+      WHERE planned_date >= :start_date
+        AND planned_date <= :end_date
+
+  # 开票统计
+  invoice_stats:
+    type: query
+    sql: |
+      SELECT
+        COUNT(*) as invoice_count,
+        COALESCE(SUM(invoice_amount), 0) as invoice_amount
+      FROM invoices
+      WHERE DATE(issue_date) >= :start_date
+        AND DATE(issue_date) <= :end_date
+        AND status = 'ISSUED'
+
+  # 投标统计
+  bidding_stats:
+    type: query
+    sql: |
+      SELECT
+        COUNT(CASE WHEN DATE(created_at) >= :start_date AND DATE(created_at) <= :end_date THEN 1 END) as new_bidding,
+        COUNT(CASE WHEN result_date >= :start_date AND result_date <= :end_date AND bid_result = 'won' THEN 1 END) as won_bidding,
+        COUNT(*) as total_bidding
+      FROM bidding_projects
+
+  # 本月开票明细
+  invoice_list:
+    type: query
+    sql: |
+      SELECT i.*, c.contract_name, cu.name as customer_name
+      FROM invoices i
+      LEFT JOIN contracts c ON i.contract_id = c.id
+      LEFT JOIN customers cu ON c.customer_id = cu.id
+      WHERE DATE(i.issue_date) >= :start_date
+        AND DATE(i.issue_date) <= :end_date
+      ORDER BY i.issue_date DESC
+      LIMIT 20
+
+  # 回款明细
+  receipt_list:
+    type: query
+    sql: |
+      SELECT pp.*, p.project_name, c.name as customer_name
+      FROM project_payment_plans pp
+      LEFT JOIN projects p ON pp.project_id = p.id
+      LEFT JOIN customers c ON p.customer_id = c.id
+      WHERE pp.planned_date >= :start_date
+        AND pp.planned_date <= :end_date
+        AND pp.actual_amount > 0
+      ORDER BY pp.actual_date DESC
+      LIMIT 20
+
+sections:
+  - id: overview
+    title: 月度概览
+    type: metrics
+    items:
+      - label: 统计周期
+        value: "{{ params.start_date }} ~ {{ params.end_date }}"
+
+  - id: contract_summary
+    title: 合同统计
+    type: metrics
+    items:
+      - label: 本月新签合同
+        value: "{{ contract_stats[0].new_count if contract_stats else 0 }}"
+      - label: 新签金额
+        value: "{{ (contract_stats[0].new_amount or 0) | currency }}"
+      - label: 执行中合同
+        value: "{{ contract_stats[0].active_count if contract_stats else 0 }}"
+      - label: 已完成合同
+        value: "{{ contract_stats[0].completed_count if contract_stats else 0 }}"
+
+  - id: order_summary
+    title: 订单统计
+    type: metrics
+    items:
+      - label: 本月新增订单
+        value: "{{ order_stats[0].new_count if order_stats else 0 }}"
+      - label: 订单金额
+        value: "{{ (order_stats[0].new_amount or 0) | currency }}"
+
+  - id: receipt_summary
+    title: 回款统计
+    type: metrics
+    items:
+      - label: 计划回款
+        value: "{{ (receipt_stats[0].planned_amount or 0) | currency }}"
+      - label: 实际回款
+        value: "{{ (receipt_stats[0].actual_amount or 0) | currency }}"
+      - label: 回款完成率
+        value: "{{ ((receipt_stats[0].actual_amount or 0) / (receipt_stats[0].planned_amount or 1) * 100) | round_num(1) }}%"
+      - label: 逾期金额
+        value: "{{ (receipt_stats[0].overdue_amount or 0) | currency }}"
+
+  - id: invoice_summary
+    title: 开票统计
+    type: metrics
+    items:
+      - label: 本月开票数
+        value: "{{ invoice_stats[0].invoice_count if invoice_stats else 0 }}"
+      - label: 开票金额
+        value: "{{ (invoice_stats[0].invoice_amount or 0) | currency }}"
+
+  - id: bidding_summary
+    title: 投标统计
+    type: metrics
+    items:
+      - label: 本月新增投标
+        value: "{{ bidding_stats[0].new_bidding if bidding_stats else 0 }}"
+      - label: 本月中标
+        value: "{{ bidding_stats[0].won_bidding if bidding_stats else 0 }}"
+      - label: 中标率
+        value: "{{ ((bidding_stats[0].won_bidding or 0) / (bidding_stats[0].total_bidding or 1) * 100) | round_num(1) }}%"
+
+  - id: contract_list
+    title: 本月新签合同
+    type: table
+    source: new_contracts
+    columns:
+      - field: contract_code
+        label: 合同编号
+      - field: contract_name
+        label: 合同名称
+      - field: customer_name
+        label: 客户
+      - field: contract_amount
+        label: 合同金额
+        format: currency
+      - field: signed_date
+        label: 签约日期
+        format: date
+
+  - id: receipt_detail
+    title: 本月回款明细
+    type: table
+    source: receipt_list
+    columns:
+      - field: project_name
+        label: 项目名称
+      - field: customer_name
+        label: 客户
+      - field: planned_amount
+        label: 计划金额
+        format: currency
+      - field: actual_amount
+        label: 实际金额
+        format: currency
+      - field: actual_date
+        label: 回款日期
+        format: date
+
+  - id: invoice_detail
+    title: 本月开票明细
+    type: table
+    source: invoice_list
+    columns:
+      - field: invoice_no
+        label: 发票号
+      - field: contract_name
+        label: 合同名称
+      - field: customer_name
+        label: 客户
+      - field: invoice_amount
+        label: 发票金额
+        format: currency
+      - field: issue_date
+        label: 开票日期
+        format: date
+
+  - id: receipt_chart
+    title: 回款完成情况
+    type: chart
+    chart_type: bar
+    source: receipt_stats
+    label_field: category
+    value_field: amount
+
+exports:
+  json:
+    enabled: true
+  pdf:
+    enabled: true
+    orientation: portrait
+  excel:
+    enabled: true
+    sheets:
+      - name: 统计概览
+        section: contract_summary
+      - name: 新签合同
+        section: contract_list
+      - name: 回款明细
+        section: receipt_detail
+      - name: 开票明细
+        section: invoice_detail
+  word:
+    enabled: true

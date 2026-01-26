@@ -204,9 +204,10 @@ const CustomerServiceDashboard = () => {
   // 过滤数据
   const filteredTickets = useMemo(() => {
     return tickets.filter((ticket) => {
-      const matchesSearch = !searchText ||
-      ticket.title.toLowerCase().includes(searchText.toLowerCase()) ||
-      ticket.customerName?.toLowerCase().includes(searchText.toLowerCase());
+      const searchLower = (searchText || "").toLowerCase();
+    const matchesSearch = !searchText ||
+      (ticket.title || "").toLowerCase().includes(searchLower) ||
+      (ticket.customerName || "").toLowerCase().includes(searchLower);
 
       const matchesStatus = !filters.status || ticket.status === filters.status;
       const matchesPriority = !filters.priority || ticket.priority === filters.priority;

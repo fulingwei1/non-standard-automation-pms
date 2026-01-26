@@ -634,10 +634,11 @@ export default function RequirementSurvey() {
       selectedStatus === "all" || survey.status === selectedStatus;
     const matchesMethod =
       selectedMethod === "all" || survey.method === selectedMethod;
+    const searchLower = searchTerm.toLowerCase();
     const matchesSearch =
-      survey.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      survey.opportunity.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      survey.code.toLowerCase().includes(searchTerm.toLowerCase());
+      (survey.customer || "").toLowerCase().includes(searchLower) ||
+      (survey.opportunity || "").toLowerCase().includes(searchLower) ||
+      (survey.code || "").toLowerCase().includes(searchLower);
     return matchesStatus && matchesMethod && matchesSearch;
   });
 

@@ -26,7 +26,7 @@ from app.schemas.issue import (
     IssueStatisticsSnapshotListResponse,
     IssueStatisticsSnapshotResponse,
 )
-from app.services.data_scope_service import DataScopeService
+from app.services.data_scope import DataScopeService
 from app.services.issue_cost_service import IssueCostService
 
 router = APIRouter()

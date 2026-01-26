@@ -16,6 +16,7 @@ from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
 from ..models.base import get_db
+from ..common.context import set_audit_context
 from ..models.user import User
 from ..utils.redis_client import get_redis_client
 from .config import settings
@@ -41,6 +42,7 @@ __all__ = [
     "get_current_user",
     "get_current_active_user",
     "get_current_active_superuser",
+    "is_system_admin",
     "check_permission",
     "require_permission",
     "revoke_token",
@@ -218,6 +220,10 @@ async def get_current_user(
         user = db.query(User).filter(User.id == user_id).first()
         if user is None:
             raise credentials_exception
+
+        # 将操作人ID设置到上下文中，用于审计日志
+        set_audit_context(operator_id=user.id)
+
         return user
     except Exception as e:
         logger.error(f"ORM查询用户失败: {e}", exc_info=True)
@@ -264,17 +270,104 @@ async def get_current_active_superuser(
     current_user: User = Depends(get_current_active_user),
 ) -> User:
     """获取当前超级管理员用户"""
-    if not current_user.is_superuser:
+    if not (current_user.is_superuser or is_system_admin(current_user)):
         raise HTTPException(status_code=403, detail="需要管理员权限")
     return current_user
 
 
+def _load_user_permissions_from_db(user_id: int, db: Session) -> set:
+    """从数据库加载用户权限（含继承）"""
+    from sqlalchemy import text
+
+    # 查询用户直接拥有的权限 + 通过角色继承链获得的权限
+    sql = """
+        WITH RECURSIVE role_tree AS (
+            -- 用户直接拥有的角色
+            SELECT r.id, r.parent_id
+            FROM roles r
+            JOIN user_roles ur ON ur.role_id = r.id
+            WHERE ur.user_id = :user_id
+
+            UNION ALL
+
+            -- 递归获取父角色
+            SELECT r.id, r.parent_id
+            FROM roles r
+            JOIN role_tree rt ON r.id = rt.parent_id
+        )
+        SELECT DISTINCT p.perm_code
+        FROM role_tree rt
+        JOIN role_permissions rp ON rt.id = rp.role_id
+        JOIN permissions p ON rp.permission_id = p.id
+    """
+    result = db.execute(text(sql), {"user_id": user_id})
+    return {row[0] for row in result.fetchall()}
+
+
+def is_system_admin(user: User) -> bool:
+    """
+    判断用户是否为系统管理员角色
+
+    允许系统管理员在不显式设置 is_superuser 的情况下拥有全权限。
+    """
+    roles = getattr(user, "roles", None)
+    if not roles:
+        return False
+
+    if hasattr(roles, "all"):
+        roles = roles.all()
+
+    admin_role_codes = {"admin", "super_admin", "system_admin"}
+    admin_role_names = {"系统管理员", "超级管理员", "管理员"}
+
+    for user_role in roles or []:
+        role = getattr(user_role, "role", user_role)
+        role_code = (getattr(role, "role_code", "") or "").lower()
+        role_name = getattr(role, "role_name", "") or ""
+        if role_code in admin_role_codes:
+            return True
+        if role_name in admin_role_names:
+            return True
+
+    return False
+
+
 def check_permission(user: User, permission_code: str, db: Session = None) -> bool:
-    """检查用户权限"""
-    if user.is_superuser:
+    """
+    检查用户权限（带缓存）
+
+    优先从缓存获取用户权限列表，缓存不存在时从数据库加载并缓存。
+    """
+    if user.is_superuser or is_system_admin(user):
         return True
 
-    # 使用SQL查询避免ORM关系错误
+    # 尝试使用缓存
+    try:
+        from ..services.permission_cache_service import get_permission_cache_service
+
+        cache_service = get_permission_cache_service()
+
+        # 从缓存获取用户权限
+        cached_permissions = cache_service.get_user_permissions(user.id)
+
+        if cached_permissions is not None:
+            # 缓存命中
+            logger.debug(f"Permission cache hit for user {user.id}")
+            return permission_code in cached_permissions
+
+        # 缓存未命中，从数据库加载
+        if db is not None:
+            permissions = _load_user_permissions_from_db(user.id, db)
+            # 写入缓存
+            cache_service.set_user_permissions(user.id, permissions)
+            logger.debug(
+                f"Permission cache miss for user {user.id}, loaded {len(permissions)} permissions"
+            )
+            return permission_code in permissions
+    except Exception as e:
+        logger.warning(f"Permission cache failed, fallback to DB: {e}")
+
+    # 降级：直接查询数据库
     try:
         from sqlalchemy import text
 

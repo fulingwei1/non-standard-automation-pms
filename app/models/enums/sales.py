@@ -2,6 +2,7 @@
 """
 销售相关枚举
 """
+
 from enum import Enum
 
 
@@ -96,9 +97,11 @@ class EvaluationDecisionEnum(str, Enum):
 
 
 class WinProbabilityLevelEnum(str, Enum):
+    VERY_HIGH = "VERY_HIGH"
     HIGH = "HIGH"
     MEDIUM = "MEDIUM"
     LOW = "LOW"
+    VERY_LOW = "VERY_LOW"
 
 
 class LeadOutcomeEnum(str, Enum):
@@ -115,3 +118,11 @@ class LossReasonEnum(str, Enum):
     BUDGET = "BUDGET"
     NO_DECISION = "NO_DECISION"
     OTHER = "OTHER"
+
+
+class ProductMatchTypeEnum(str, Enum):
+    """产品匹配类型枚举"""
+
+    ADVANTAGE = "ADVANTAGE"
+    NEW = "NEW"
+    UNKNOWN = "UNKNOWN"

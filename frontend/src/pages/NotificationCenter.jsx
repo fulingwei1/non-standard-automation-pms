@@ -37,7 +37,6 @@ const notificationTypes = [
 { value: "alert", label: "预警", icon: AlertTriangle },
 { value: "task", label: "任务", icon: FileText },
 { value: "material", label: "物料", icon: Package },
-{ value: "approval", label: "审批", icon: Users },
 { value: "system", label: "系统", icon: Info },
 { value: "milestone", label: "里程碑", icon: Calendar }];
 
@@ -47,7 +46,6 @@ const getNotificationIcon = (type) => {
     alert: AlertTriangle,
     task: FileText,
     material: Package,
-    approval: Users,
     system: Info,
     milestone: Calendar
   };
@@ -62,7 +60,6 @@ const getNotificationColor = (type, priority) => {
     alert: "text-amber-400 bg-amber-400/10",
     task: "text-blue-400 bg-blue-400/10",
     material: "text-emerald-400 bg-emerald-400/10",
-    approval: "text-purple-400 bg-purple-400/10",
     system: "text-slate-400 bg-slate-400/10",
     milestone: "text-cyan-400 bg-cyan-400/10"
   };
@@ -187,7 +184,6 @@ export default function NotificationCenter() {
       ALERT: "alert",
       TASK: "task",
       MATERIAL: "material",
-      APPROVAL: "approval",
       SYSTEM: "system",
       MILESTONE: "milestone"
     };

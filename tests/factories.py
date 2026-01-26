@@ -2,7 +2,7 @@
 """
 测试数据工厂
 
-使用 factory_boy 创建测试数据，确保测试数据的一致性和可重复性。
+使用 factory 创建测试数据，确保测试数据的一致性和可重复性。
 
 使用示例：
     from tests.factories import UserFactory, ProjectFactory
@@ -30,14 +30,20 @@ from factory.alchemy import SQLAlchemyModelFactory
 from app.core.security import get_password_hash
 from app.models.base import get_session
 from app.models.budget import ProjectBudget, ProjectBudgetItem
-from app.models.material import BomHeader, BomItem, Material, MaterialCategory, Supplier
+from app.models.project.financial import ProjectCost
+from app.models.material import BomHeader, BomItem, Material, MaterialCategory
+from app.models.acceptance import AcceptanceOrder, AcceptanceTemplate, AcceptanceIssue
 from app.models.organization import Department, Employee
 from app.models.project import (
     Customer,
     Machine,
     Project,
+    ProjectMember,
     ProjectMilestone,
+    ProjectPaymentPlan,
     ProjectStage,
+    ProjectTemplate,
+    ProjectTemplateVersion,
 )
 from app.models.purchase import PurchaseOrder, PurchaseRequest
 from app.models.sales import (
@@ -49,7 +55,6 @@ from app.models.sales import (
     Quote,
 )
 from app.models.ecn import Ecn
-from app.models.acceptance import AcceptanceOrder, AcceptanceTemplate
 from app.models.user import Role, User
 
 # ============== 基础配置 ==============
@@ -259,6 +264,69 @@ class ProjectMilestoneFactory(BaseFactory):
     status = "PENDING"
 
 
+class ProjectTemplateFactory(BaseFactory):
+    """项目模板工厂"""
+
+    class Meta:
+        model = ProjectTemplate
+
+    template_code = factory.Sequence(lambda n: f"TPL{n:05d}")
+    template_name = factory.Sequence(lambda n: f"测试模板{n}")
+    project_type = "NEW"
+    product_category = "ICT"
+    industry = "电子"
+    default_stage = "S1"
+    default_status = "ST01"
+    default_health = "H1"
+    is_active = True
+    usage_count = 0
+
+
+class ProjectTemplateVersionFactory(BaseFactory):
+    """项目模板版本工厂"""
+
+    class Meta:
+        model = ProjectTemplateVersion
+
+    version_no = factory.Sequence(lambda n: f"V{n}")
+    status = "DRAFT"
+    template_config = "{}"
+    release_notes = factory.Sequence(lambda n: f"版本说明{n}")
+
+
+class ProjectPaymentPlanFactory(BaseFactory):
+    """项目付款计划工厂"""
+
+    class Meta:
+        model = ProjectPaymentPlan
+
+    payment_no = factory.Sequence(lambda n: n)
+    payment_name = factory.Sequence(lambda n: f"第{n}期款项")
+    payment_type = "ADVANCE"
+    payment_ratio = Decimal("30.00")
+    planned_amount = factory.LazyFunction(
+        lambda: Decimal(str(random.uniform(10000, 100000)))
+    )
+    actual_amount = Decimal("0.00")
+    planned_date = factory.LazyFunction(lambda: date.today() + timedelta(days=30))
+    status = "PENDING"
+
+
+class ProjectMemberFactory(BaseFactory):
+    """项目成员工厂"""
+
+    class Meta:
+        model = ProjectMember
+
+    role_code = "ENGINEER"
+    allocation_pct = Decimal("100.00")
+    start_date = factory.LazyFunction(lambda: date.today())
+    end_date = factory.LazyFunction(lambda: date.today() + timedelta(days=90))
+    commitment_level = "FULL"
+    reporting_to_pm = True
+    is_active = True
+
+
 # ============== 物料与BOM ==============
 
 
@@ -275,20 +343,21 @@ class MaterialCategoryFactory(BaseFactory):
     is_active = True
 
 
-class SupplierFactory(BaseFactory):
-    """供应商工厂"""
-
-    class Meta:
-        model = Supplier
-
-    supplier_code = factory.Sequence(lambda n: f"SUP{n:05d}")
-    supplier_name = factory.Sequence(lambda n: f"测试供应商{n}")
-    supplier_short_name = factory.Sequence(lambda n: f"供应商{n}")
-    supplier_type = "STANDARD"
-    contact_person = factory.Sequence(lambda n: f"供应商联系人{n}")
-    contact_phone = factory.LazyFunction(
-        lambda: f"137{random.randint(10000000, 99999999)}"
-    )
+# Supplier模型已废弃，使用Vendor代替
+# class SupplierFactory(BaseFactory):
+#     """供应商工厂"""
+#
+#     class Meta:
+#         model = Supplier
+#
+#     supplier_code = factory.Sequence(lambda n: f"SUP{n:05d}")
+#     supplier_name = factory.Sequence(lambda n: f"测试供应商{n}")
+#     supplier_short_name = factory.Sequence(lambda n: f"供应商{n}")
+#     supplier_type = "STANDARD"
+#     contact_person = factory.Sequence(lambda n: f"供应商联系人{n}")
+#     contact_phone = factory.LazyFunction(
+#         lambda: f"137{random.randint(10000000, 99999999)}"
+#     )
     status = "APPROVED"
 
 
@@ -624,8 +693,18 @@ def create_complete_project_setup():
         customer_id=customer.id, customer_name=customer.customer_name
     )
 
-    # 创建供应商
-    supplier = SupplierFactory()
+    # 创建供应商（Supplier已废弃，使用Vendor代替）
+    # supplier = SupplierFactory()  # 已废弃
+    from app.models.vendor import Vendor
+    supplier = Vendor(
+        supplier_code=f"SUP{random.randint(10000, 99999)}",
+        supplier_name="测试供应商",
+        vendor_type="STANDARD",
+        status="ACTIVE"
+    )
+    db_session.add(supplier)
+    db_session.commit()
+    db_session.refresh(supplier)
 
     # 创建物料
     materials = MaterialFactory.create_batch(5)
@@ -639,4 +718,88 @@ def create_complete_project_setup():
         "supplier": supplier,
         "materials": materials,
         "bom": bom,
+    }
+
+
+# ============== 缺失的Factory类 ==============
+
+
+class BudgetFactory(ProjectBudgetFactory):
+    """预算工厂别名（用于向后兼容）"""
+
+    pass
+
+
+class AcceptanceIssueFactory(BaseFactory):
+    """验收问题工厂"""
+
+    class Meta:
+        model = AcceptanceIssue
+
+    issue_no = factory.Sequence(lambda n: f"ISS{n:05d}")
+    issue_title = factory.Sequence(lambda n: f"测试问题{n}")
+    issue_type = "FUNCTIONAL"
+    severity = "NORMAL"
+    description = factory.Sequence(lambda n: f"测试问题描述{n}")
+    status = "OPEN"
+
+
+class ProjectCostFactory(BaseFactory):
+    """项目成本工厂"""
+
+    class Meta:
+        model = ProjectCost
+
+    cost_no = factory.Sequence(lambda n: f"CST{n:05d}")
+    cost_type = "MATERIAL"
+    description = factory.Sequence(lambda n: f"测试成本{n}")
+    budget_amount = factory.LazyFunction(
+        lambda: Decimal(str(random.uniform(10000, 100000)))
+    )
+    actual_amount = factory.LazyFunction(
+        lambda: Decimal(str(random.uniform(10000, 100000)))
+    )
+    cost_date = factory.LazyFunction(lambda: date.today())
+    status = "PENDING"
+
+
+# ============================================================================
+# 服务测试辅助函数（非 Factory 类）
+# ============================================================================
+
+def create_mock_timesheet_data():
+    """创建模拟工时数据（用于服务测试）"""
+    return {
+        'user_id': 1,
+        'user_name': '测试用户',
+        'normal_hours': 160.0,
+        'overtime_hours': 10.0,
+        'weekend_hours': 8.0,
+        'holiday_hours': 4.0,
+    }
+
+
+def create_mock_project_data():
+    """创建模拟项目数据（用于服务测试）"""
+    return {
+        'id': 1,
+        'project_code': 'PJ260101001',
+        'project_name': '测试项目',
+        'customer_id': 1,
+        'customer_name': '测试客户',
+        'stage': 'S1',
+        'status': 'ST01',
+        'health': 'H1',
+    }
+
+
+def create_mock_user_data():
+    """创建模拟用户数据（用于服务测试）"""
+    return {
+        'id': 1,
+        'username': 'test_user',
+        'real_name': '测试用户',
+        'department': '测试部门',
+        'department_id': 1,
+        'is_active': True,
     }

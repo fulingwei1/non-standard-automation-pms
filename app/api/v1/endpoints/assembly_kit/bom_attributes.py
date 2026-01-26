@@ -221,7 +221,7 @@ async def auto_assign_assembly_attrs(
         raise HTTPException(status_code=404, detail="BOM不存在")
 
     # 获取BOM明细
-    bom_items = db.query(BomItem).filter(BomItem.bom_header_id == bom_id).all()
+    bom_items = db.query(BomItem).filter(BomItem.bom_id == bom_id).all()
 
     assigned_count = 0
     skipped_count = 0
@@ -298,7 +298,7 @@ async def get_assembly_attr_recommendations(
         raise HTTPException(status_code=404, detail="BOM不存在")
 
     # 获取BOM明细
-    bom_items = db.query(BomItem).filter(BomItem.bom_header_id == bom_id).all()
+    bom_items = db.query(BomItem).filter(BomItem.bom_id == bom_id).all()
 
     # 批量推荐
     recommendations = AssemblyAttrRecommender.batch_recommend(db, bom_id, bom_items)
@@ -348,7 +348,7 @@ async def smart_recommend_assembly_attrs(
         raise HTTPException(status_code=404, detail="BOM不存在")
 
     # 获取BOM明细
-    bom_items = db.query(BomItem).filter(BomItem.bom_header_id == bom_id).all()
+    bom_items = db.query(BomItem).filter(BomItem.bom_id == bom_id).all()
 
     # 批量推荐
     recommendations = AssemblyAttrRecommender.batch_recommend(db, bom_id, bom_items)
@@ -441,7 +441,7 @@ async def apply_assembly_template(
     # stage_config格式: {"category_code": {"stage": "MECH", "blocking": true, "postpone": false}}
     stage_config = template.stage_config
 
-    bom_items = db.query(BomItem).filter(BomItem.bom_header_id == bom_id).all()
+    bom_items = db.query(BomItem).filter(BomItem.bom_id == bom_id).all()
     applied_count = 0
 
     for bom_item in bom_items:
@@ -491,6 +491,5 @@ async def apply_assembly_template(
         message=f"模板套用完成，应用 {applied_count} 条配置",
         data={"applied": applied_count}
     )
-
 
 

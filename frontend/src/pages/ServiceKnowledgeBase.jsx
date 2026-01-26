@@ -212,10 +212,10 @@ export default function ServiceKnowledgeBase() {
       const query = searchQuery.toLowerCase();
       result = result.filter(
         (article) =>
-        article.title.toLowerCase().includes(query) ||
-        article.content.toLowerCase().includes(query) ||
-        article.tags.some((tag) => tag.toLowerCase().includes(query)) ||
-        article.article_no.toLowerCase().includes(query)
+        (article.title || "").toLowerCase().includes(query) ||
+        (article.content || "").toLowerCase().includes(query) ||
+        (article.tags || []).some((tag) => (tag || "").toLowerCase().includes(query)) ||
+        (article.article_no || "").toLowerCase().includes(query)
       );
     }
 

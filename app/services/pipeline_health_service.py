@@ -304,14 +304,15 @@ class PipelineHealthService:
         if not invoice:
             raise ValueError(f"发票 {invoice_id} 不存在")
 
-        total_amount = float(invoice.invoice_amount or 0)
+        # 使用 total_amount 或 amount（优先使用 total_amount）
+        total_amount = float(invoice.total_amount or invoice.amount or 0)
         paid_amount = float(invoice.paid_amount or 0)
 
         # H4: 已完全回款
         if paid_amount >= total_amount:
             return {
                 'invoice_id': invoice_id,
-                'invoice_no': invoice.invoice_no,
+                'invoice_code': invoice.invoice_code,
                 'health_status': 'H4',
                 'health_score': 0,
                 'risk_factors': [],
@@ -319,7 +320,7 @@ class PipelineHealthService:
             }
 
         unpaid_amount = total_amount - paid_amount
-        due_date = invoice.due_date or invoice.invoice_date
+        due_date = invoice.due_date or invoice.issue_date
         days_overdue = (date.today() - due_date).days if due_date else 0
 
         thresholds = self.HEALTH_THRESHOLDS['PAYMENT']
@@ -343,7 +344,7 @@ class PipelineHealthService:
 
         return {
             'invoice_id': invoice_id,
-            'invoice_no': invoice.invoice_no,
+            'invoice_code': invoice.invoice_code,
             'health_status': health_status,
             'health_score': health_score,
             'risk_factors': risk_factors,

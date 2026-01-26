@@ -8,3 +8,6 @@ export { HRRoutes } from "./hrRoutes";
 export { PresalesRoutes } from "./presalesRoutes";
 export { PMORoutes } from "./pmoRoutes";
 export { SystemRoutes } from "./systemRoutes";
+export { StrategyRoutes } from "./strategyRoutes";
+export { WarehouseRoutes } from "./warehouseRoutes";
+export { QualityRoutes } from "./qualityRoutes";

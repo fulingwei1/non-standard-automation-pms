@@ -19,20 +19,27 @@ echo -e "${BLUE}========================================${NC}"
 # 切换到项目根目录
 cd "$(dirname "$0")"
 
+# 检查Python环境
+echo -e "\n${YELLOW}[1/4] 检查Python环境...${NC}"
+PYTHON_BIN=${PYTHON_BIN:-python3}
+if ! command -v "$PYTHON_BIN" &> /dev/null; then
+    echo -e "${RED}错误: 未找到 ${PYTHON_BIN}，请先安装 Python 3${NC}"
+    exit 1
+fi
+PYTHON_VERSION=$("$PYTHON_BIN" -V 2>&1 | awk '{print $2}')
+if [[ "$PYTHON_VERSION" == 3.14* ]]; then
+    echo -e "${RED}错误: 当前Python版本为 $PYTHON_VERSION，已知存在兼容性问题。${NC}"
+    echo -e "${YELLOW}请安装并使用 Python 3.10-3.13，例如：PYTHON_BIN=python3.13 ./start.sh${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✓ Python环境正常 (${PYTHON_BIN} ${PYTHON_VERSION})${NC}"
+
 # 检查数据库
 if [ ! -f "data/app.db" ]; then
     echo -e "\n${YELLOW}⚠ 数据库文件不存在，正在初始化...${NC}"
-    python3 init_db.py
+    "$PYTHON_BIN" init_db.py
     echo -e "${GREEN}✓ 数据库初始化完成${NC}"
 fi
-
-# 检查Python环境
-echo -e "\n${YELLOW}[1/4] 检查Python环境...${NC}"
-if ! command -v python3 &> /dev/null; then
-    echo -e "${RED}错误: 未找到 python3，请先安装 Python 3${NC}"
-    exit 1
-fi
-echo -e "${GREEN}✓ Python环境正常${NC}"
 
 # 检查Node.js和pnpm
 echo -e "\n${YELLOW}[2/4] 检查Node.js和pnpm环境...${NC}"
@@ -70,7 +77,7 @@ echo -e "${BLUE}后端日志将输出到: logs/backend.log${NC}"
 #   python3 -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 BACKEND_HOST=${BACKEND_HOST:-127.0.0.1}
 BACKEND_PORT=${BACKEND_PORT:-8000}
-nohup python3 -m uvicorn app.main:app --host "$BACKEND_HOST" --port "$BACKEND_PORT" > logs/backend.log 2>&1 &
+nohup "$PYTHON_BIN" -m uvicorn app.main:app --host "$BACKEND_HOST" --port "$BACKEND_PORT" > logs/backend.log 2>&1 &
 BACKEND_PID=$!
 echo $BACKEND_PID > logs/backend.pid
 echo -e "${GREEN}✓ 后端服务已启动 (PID: $BACKEND_PID)${NC}"

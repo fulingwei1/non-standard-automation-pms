@@ -34,11 +34,14 @@ export function CreateMachineDialog({ open, onOpenChange, formData, onFormChange
                 <DialogBody>
                     <div className="space-y-4">
                         <div>
-                            <label className="text-sm font-medium mb-2 block">机台编码 *</label>
+                            <label className="text-sm font-medium mb-2 block">
+                                机台编码
+                                <span className="text-muted-foreground ml-2 text-xs">（留空则自动生成）</span>
+                            </label>
                             <Input
                                 value={formData.machine_code}
                                 onChange={(e) => handleChange('machine_code', e.target.value)}
-                                placeholder="请输入机台编码"
+                                placeholder="自动生成，如 PJ250712001-PN001"
                             />
                         </div>
                         <div>

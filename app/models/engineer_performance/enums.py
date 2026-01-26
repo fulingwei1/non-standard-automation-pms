@@ -4,6 +4,9 @@
 """
 from enum import Enum
 
+from app.models.enums.acceptance import IssueStatusEnum
+from app.models.enums.stage import ReviewResultEnum
+
 
 class EngineerJobTypeEnum(str, Enum):
     """工程师岗位类型"""
@@ -39,27 +42,12 @@ class ContributionStatusEnum(str, Enum):
     REJECTED = 'rejected'        # 已拒绝
 
 
-class ReviewResultEnum(str, Enum):
-    """评审结果"""
-    PASSED = 'passed'            # 通过
-    REJECTED = 'rejected'        # 驳回
-    CONDITIONAL = 'conditional'  # 有条件通过
-
-
 class IssueSeverityEnum(str, Enum):
     """问题严重程度"""
     CRITICAL = 'critical'        # 致命
     MAJOR = 'major'              # 严重
     NORMAL = 'normal'            # 一般
     MINOR = 'minor'              # 轻微
-
-
-class IssueStatusEnum(str, Enum):
-    """问题状态"""
-    OPEN = 'open'                # 待处理
-    IN_PROGRESS = 'in_progress'  # 处理中
-    RESOLVED = 'resolved'        # 已解决
-    CLOSED = 'closed'            # 已关闭
 
 
 class BugFoundStageEnum(str, Enum):

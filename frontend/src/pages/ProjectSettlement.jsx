@@ -109,18 +109,13 @@ export default function ProjectSettlement() {
   // Filter settlements
   const filteredSettlements = useMemo(() => {
     return settlements.filter((settlement) => {
-      const matchesSearch =
+      const searchLower = (searchTerm || "").toLowerCase();
+    const matchesSearch =
       !searchTerm ||
-      settlement.settlementNo.
-      toLowerCase().
-      includes(searchTerm.toLowerCase()) ||
-      settlement.projectName.
-      toLowerCase().
-      includes(searchTerm.toLowerCase()) ||
-      settlement.customerName.
-      toLowerCase().
-      includes(searchTerm.toLowerCase()) ||
-      settlement.contractNo.toLowerCase().includes(searchTerm.toLowerCase());
+      (settlement.settlementNo || "").toLowerCase().includes(searchLower) ||
+      (settlement.projectName || "").toLowerCase().includes(searchLower) ||
+      (settlement.customerName || "").toLowerCase().includes(searchLower) ||
+      (settlement.contractNo || "").toLowerCase().includes(searchLower);
 
       const matchesStatus =
       selectedStatus === "all" || settlement.status === selectedStatus;

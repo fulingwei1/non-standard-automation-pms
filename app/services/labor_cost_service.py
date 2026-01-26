@@ -4,16 +4,14 @@
 负责从工时记录自动计算项目人工成本
 """
 
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 from typing import Dict, List, Optional
 
-from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
-from app.models.project import Project, ProjectCost
+from app.models.project import Project
 from app.models.timesheet import Timesheet
-from app.models.user import User
 
 
 class LaborCostService:
@@ -59,12 +57,12 @@ class LaborCostService:
         Returns:
             计算结果字典，包含创建的成本记录数量、总成本等
         """
-        from app.services.labor_cost_calculation_service import (
+        from app.services.labor_cost.utils import (
             delete_existing_costs,
             group_timesheets_by_user,
-            process_user_costs,
             query_approved_timesheets,
         )
+        from app.services.labor_cost_calculation_service import process_user_costs
 
         project = db.query(Project).filter(Project.id == project_id).first()
         if not project:

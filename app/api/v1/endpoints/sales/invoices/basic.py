@@ -4,7 +4,6 @@
 """
 
 import logging
-from datetime import datetime
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -15,7 +14,6 @@ from app.api import deps
 from app.core import security
 from app.core.config import settings
 from app.models.enums import (
-    ApprovalRecordStatusEnum,
     InvoiceStatusEnum,
     WorkflowTypeEnum,
 )
@@ -23,7 +21,7 @@ from app.models.sales import Contract, Invoice
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.sales import InvoiceCreate, InvoiceResponse
-from app.services.approval_workflow_service import ApprovalWorkflowService
+from app.services.approval_engine import ApprovalEngineService as ApprovalWorkflowService
 
 from ..utils import generate_invoice_code
 
@@ -77,6 +75,7 @@ def read_invoices(
 
         invoice_dict = {
             **{c.name: getattr(invoice, c.name) for c in invoice.__table__.columns},
+            "invoice_amount": invoice.amount,  # 映射 amount -> invoice_amount
             "contract_code": invoice.contract.contract_code if invoice.contract else None,
             "customer_name": customer_name,
         }
@@ -113,6 +112,7 @@ def read_invoice(
     customer = contract.customer if contract else None
     invoice_dict = {
         **{c.name: getattr(invoice, c.name) for c in invoice.__table__.columns},
+        "invoice_amount": invoice.amount,  # 映射 amount -> invoice_amount
         "contract_code": contract.contract_code if contract else None,
         "project_code": project.project_code if project else None,
         "project_name": project.project_name if project else None,

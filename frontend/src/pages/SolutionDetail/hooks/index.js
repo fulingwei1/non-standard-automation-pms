@@ -1,1 +1,1 @@
-export { useSolutionData } from './useSolutionData';
+export * from './useSolutionDetail';

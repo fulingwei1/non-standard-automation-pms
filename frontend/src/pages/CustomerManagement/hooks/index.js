@@ -1,1 +1,1 @@
-export { useCustomerData } from './useCustomerData';
+export * from './useCustomerManagement';

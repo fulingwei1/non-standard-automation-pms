@@ -2,9 +2,16 @@
 """
 Integration tests for Customers API
 Covers: app/api/v1/endpoints/customers/
+Updated for unified response format
 """
 
 from datetime import date
+
+from tests.helpers.response_helpers import (
+    assert_success_response,
+    assert_paginated_response,
+    extract_items,
+)
 
 
 class TestCustomersAPI:
@@ -47,8 +54,11 @@ class TestCustomersAPI:
             headers={"Authorization": f"Bearer {admin_token}"},
         )
         assert response.status_code == 200
-        data = response.json()
-        for item in data["items"]:
+        response_data = response.json()
+        # 使用统一响应格式辅助函数提取items
+        paginated_data = assert_paginated_response(response_data)
+        items = paginated_data["items"]
+        for item in items:
             if item.get("customer_name"):
                 assert "测试" in item["customer_name"] or "测试" in item.get(
                     "customer_code", ""
@@ -61,7 +71,9 @@ class TestCustomersAPI:
             headers={"Authorization": f"Bearer {admin_token}"},
         )
         assert response.status_code == 200
-        data = response.json()
+        response_data = response.json()
+        # 使用统一响应格式辅助函数提取数据
+        data = assert_success_response(response_data)
         assert data["id"] == test_customer.id
         assert data["customer_name"] == test_customer.customer_name
 
@@ -91,8 +103,10 @@ class TestCustomersAPI:
             json=customer_data,
             headers={"Authorization": f"Bearer {admin_token}"},
         )
-        assert response.status_code == 200
-        data = response.json()
+        assert response.status_code in [200, 201]
+        response_data = response.json()
+        # 使用统一响应格式辅助函数提取数据
+        data = assert_success_response(response_data, expected_code=response.status_code)
         assert data["customer_name"] == customer_data["customer_name"]
         assert "id" in data
 
@@ -104,8 +118,10 @@ class TestCustomersAPI:
             json=customer_data,
             headers={"Authorization": f"Bearer {admin_token}"},
         )
-        assert response.status_code == 200
-        data = response.json()
+        assert response.status_code in [200, 201]
+        response_data = response.json()
+        # 使用统一响应格式辅助函数提取数据
+        data = assert_success_response(response_data, expected_code=response.status_code)
         assert data["customer_name"] == customer_data["customer_name"]
         assert data["customer_code"] is not None
         assert data["customer_code"].startswith("CUS-")
@@ -149,7 +165,9 @@ class TestCustomersAPI:
             headers={"Authorization": f"Bearer {admin_token}"},
         )
         assert response.status_code == 200
-        data = response.json()
+        response_data = response.json()
+        # 使用统一响应格式辅助函数提取数据
+        data = assert_success_response(response_data)
         assert data["customer_name"] == update_data["customer_name"]
         assert data["contact_person"] == update_data["contact_person"]
 

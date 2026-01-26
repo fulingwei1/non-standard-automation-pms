@@ -129,11 +129,11 @@ export default function ServiceRecord() {
       const query = searchQuery.toLowerCase();
       result = result.filter(
         (record) =>
-        record.record_no && record.record_no.toLowerCase().includes(query) ||
-        record.project_name && record.project_name.toLowerCase().includes(query) ||
-        record.customer_name && record.customer_name.toLowerCase().includes(query) ||
-        record.service_location && record.service_location.toLowerCase().includes(query) ||
-        record.service_engineer && record.service_engineer.toLowerCase().includes(query)
+        (record.record_no || "").toLowerCase().includes(query) ||
+        (record.project_name || "").toLowerCase().includes(query) ||
+        (record.customer_name || "").toLowerCase().includes(query) ||
+        (record.service_location || "").toLowerCase().includes(query) ||
+        (record.service_engineer || "").toLowerCase().includes(query)
       );
     }
 

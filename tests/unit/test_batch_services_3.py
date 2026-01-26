@@ -11,12 +11,12 @@ from unittest.mock import Mock, patch
 from sqlalchemy.orm import Query, Session
 
 # Import services to test
-from app.services.data_scope_service import DataScopeService
+from app.services.data_scope import DataScopeService
 from app.services.project_evaluation_service import ProjectEvaluationService
 from app.services.spec_match_service import (
     calculate_match_statistics,
 )
-from app.services.lead_priority_scoring_service import LeadPriorityScoringService
+from app.services.lead_priority_scoring import LeadPriorityScoringService
 from app.services.staff_matching.matching import MatchingEngine
 from app.services.staff_matching.score_calculators import (
     SkillScoreCalculator,
@@ -337,10 +337,10 @@ class TestLeadPriorityScoringService:
         with pytest.raises(ValueError, match="线索 1 不存在"):
             service.calculate_lead_priority(1)
 
-    @patch("app.services.lead_priority_scoring_service.date")
+    @patch("app.services.lead_priority_scoring.date")
     def test_determine_priority_level_p1(self, mock_date):
         """Test determining priority level P1"""
-        from app.services.lead_priority_scoring_service import (
+        from app.services.lead_priority_scoring import (
             LeadPriorityScoringService,
         )
 
@@ -350,10 +350,10 @@ class TestLeadPriorityScoringService:
 
         assert level == "P1"
 
-    @patch("app.services.lead_priority_scoring_service.date")
+    @patch("app.services.lead_priority_scoring.date")
     def test_determine_priority_level_p2(self, mock_date):
         """Test determining priority level P2"""
-        from app.services.lead_priority_scoring_service import (
+        from app.services.lead_priority_scoring import (
             LeadPriorityScoringService,
         )
 
@@ -363,10 +363,10 @@ class TestLeadPriorityScoringService:
 
         assert level == "P2"
 
-    @patch("app.services.lead_priority_scoring_service.date")
+    @patch("app.services.lead_priority_scoring.date")
     def test_determine_importance_level_high(self, mock_date):
         """Test determining importance level HIGH"""
-        from app.services.lead_priority_scoring_service import (
+        from app.services.lead_priority_scoring import (
             LeadPriorityScoringService,
         )
 
@@ -376,10 +376,10 @@ class TestLeadPriorityScoringService:
 
         assert level == "HIGH"
 
-    @patch("app.services.lead_priority_scoring_service.date")
+    @patch("app.services.lead_priority_scoring.date")
     def test_determine_urgency_level_high(self, mock_date):
         """Test determining urgency level HIGH"""
-        from app.services.lead_priority_scoring_service import (
+        from app.services.lead_priority_scoring import (
             LeadPriorityScoringService,
         )
 

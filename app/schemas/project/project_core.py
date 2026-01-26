@@ -23,6 +23,8 @@ class ProjectCreate(BaseModel):
     short_name: Optional[str] = Field(default=None, max_length=50)
     customer_id: Optional[int] = None
     contract_no: Optional[str] = None
+    customer_contract_no: Optional[str] = None
+    lead_id: Optional[int] = None
     project_type: Optional[str] = None
     machine_count: int = Field(
         default=1, ge=1
@@ -34,6 +36,8 @@ class ProjectCreate(BaseModel):
     budget_amount: Optional[Decimal] = Field(default=0)
     pm_id: Optional[int] = None
     description: Optional[str] = None
+    # 阶段模板
+    stage_template_id: Optional[int] = Field(default=None, description="阶段模板ID")
 
 
 class ProjectUpdate(BaseModel):
@@ -43,6 +47,8 @@ class ProjectUpdate(BaseModel):
     short_name: Optional[str] = None
     customer_id: Optional[int] = None
     contract_no: Optional[str] = None
+    customer_contract_no: Optional[str] = None
+    lead_id: Optional[int] = None
     project_type: Optional[str] = None
     project_category: Optional[str] = None
     stage: Optional[str] = None
@@ -59,9 +65,14 @@ class ProjectUpdate(BaseModel):
     actual_cost: Optional[Decimal] = None
     pm_id: Optional[int] = None
     description: Optional[str] = None
+    # 阶段模板
+    stage_template_id: Optional[int] = Field(default=None, description="阶段模板ID")
     # 销售关联
+    lead_id: Optional[int] = None
     opportunity_id: Optional[int] = None
     contract_id: Optional[int] = None
+    contract_no: Optional[str] = None
+    customer_contract_no: Optional[str] = None
     # ERP集成
     erp_synced: Optional[bool] = None
     erp_order_no: Optional[str] = None
@@ -106,9 +117,14 @@ class ProjectResponse(TimestampSchema):
     pm_id: Optional[int] = None
     pm_name: Optional[str] = None
     is_active: bool = True
+    # 阶段模板
+    stage_template_id: Optional[int] = None
     # 销售关联
+    lead_id: Optional[int] = None
     opportunity_id: Optional[int] = None
     contract_id: Optional[int] = None
+    contract_no: Optional[str] = None
+    customer_contract_no: Optional[str] = None
     # ERP集成
     erp_synced: bool = False
     erp_sync_time: Optional[datetime] = None
@@ -143,6 +159,10 @@ class ProjectListResponse(BaseSchema):
     health: str
     progress_pct: Decimal
     pm_name: Optional[str] = None
+    # 筛选所需的ID字段
+    pm_id: Optional[int] = None
+    sales_id: Optional[int] = None  # 对应 salesperson_id
+    te_id: Optional[int] = None  # 技术负责人ID（如有）
 
     class Config:
         from_attributes = True
@@ -162,7 +182,7 @@ class ProjectDetailResponse(ProjectResponse):
 class ProjectMemberCreate(BaseModel):
     """添加项目成员"""
 
-    project_id: int
+    project_id: Optional[int] = Field(None, description="项目ID（可选，通常从路径中获取）")
     user_id: int
     role_code: str = Field(max_length=50)
     allocation_pct: Decimal = Field(default=100, ge=0, le=100)

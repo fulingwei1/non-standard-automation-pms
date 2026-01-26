@@ -46,6 +46,11 @@ pip3 install fastapi "uvicorn[standard]" sqlalchemy pydantic pydantic-settings "
 python3 init_db.py
 ```
 
+如需直接运行脚本本体：
+```bash
+python3 scripts/init_db.py
+```
+
 该脚本会自动执行 `migrations/` 目录下的所有 SQL 迁移脚本，并创建 `data/app.db`。
 
 ### 3. 启动应用
@@ -54,6 +59,11 @@ python3 init_db.py
 
 ```bash
 ./start.sh
+```
+
+如需指定 Python 版本（例如 3.13）：
+```bash
+PYTHON_BIN=python3.13 ./start.sh
 ```
 
 **方式二：直接运行**
@@ -93,7 +103,7 @@ uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ├── templates/             # 模板文件
 ├── uploads/               # 文件上传目录
 ├── requirements.txt       # Python 依赖
-├── init_db.py            # 数据库初始化脚本
+├── init_db.py            # 数据库初始化入口（调用 scripts/init_db.py）
 └── start.sh              # 启动脚本
 ```
 

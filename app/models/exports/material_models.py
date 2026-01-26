@@ -8,9 +8,10 @@ from ..material import (
     BomItem,
     Material,
     MaterialCategory,
+    MaterialShortage,
     MaterialSupplier,
-    Supplier,
 )
+from ..vendor import Vendor
 from ..purchase import (
     GoodsReceipt,
     GoodsReceiptItem,
@@ -19,10 +20,7 @@ from ..purchase import (
     PurchaseRequest,
     PurchaseRequestItem,
 )
-from ..shortage import (
-    MaterialShortage,
-    MaterialShortageAlert,
-    MaterialShortagePlan,
+from ..assembly_kit import (
     ShortageAlertRule,
     ShortageDetail,
 )
@@ -31,7 +29,7 @@ __all__ = [
     # Material
     'Material',
     'MaterialCategory',
-    'Supplier',
+    'Vendor',
     'MaterialSupplier',
     # BOM
     'BomHeader',
@@ -45,8 +43,6 @@ __all__ = [
     'GoodsReceiptItem',
     # Shortage
     'MaterialShortage',
-    'MaterialShortagePlan',
-    'MaterialShortageAlert',
     'ShortageAlertRule',
     'ShortageDetail',
 ]

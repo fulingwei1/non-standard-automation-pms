@@ -73,7 +73,7 @@ class Material(Base, TimestampMixin):
     # 采购参数
     lead_time_days = Column(Integer, default=0, comment='采购周期(天)')
     min_order_qty = Column(Numeric(10, 4), default=1, comment='最小订购量')
-    default_supplier_id = Column(Integer, ForeignKey('suppliers.id'), comment='默认供应商')
+    default_supplier_id = Column(Integer, ForeignKey('vendors.id'), comment='默认供应商')
 
     # 状态
     is_active = Column(Boolean, default=True, comment='是否启用')
@@ -84,7 +84,8 @@ class Material(Base, TimestampMixin):
 
     # 关系
     category = relationship('MaterialCategory', back_populates='materials')
-    default_supplier = relationship('Supplier', foreign_keys=[default_supplier_id])
+    # default_supplier 关系已禁用 - Supplier 模型是废弃的兼容层
+    # TODO: 迁移到 Vendor 模型
     suppliers = relationship('MaterialSupplier', back_populates='material', lazy='dynamic')
     bom_items = relationship('BomItem', back_populates='material', lazy='dynamic')
 
@@ -97,67 +98,13 @@ class Material(Base, TimestampMixin):
         return f'<Material {self.material_code}>'
 
 
-class Supplier(Base, TimestampMixin):
-    """供应商表"""
-    __tablename__ = 'suppliers'
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    supplier_code = Column(String(50), unique=True, nullable=False, comment='供应商编码')
-    supplier_name = Column(String(200), nullable=False, comment='供应商名称')
-    supplier_short_name = Column(String(50), comment='简称')
-    supplier_type = Column(String(20), comment='供应商类型')
-
-    # 联系信息
-    contact_person = Column(String(50), comment='联系人')
-    contact_phone = Column(String(30), comment='联系电话')
-    contact_email = Column(String(100), comment='邮箱')
-    address = Column(String(500), comment='地址')
-
-    # 资质
-    business_license = Column(String(100), comment='营业执照号')
-    qualification = Column(Text, comment='资质认证JSON')
-
-    # 评价
-    quality_rating = Column(Numeric(3, 2), default=0, comment='质量评分')
-    delivery_rating = Column(Numeric(3, 2), default=0, comment='交期评分')
-    service_rating = Column(Numeric(3, 2), default=0, comment='服务评分')
-    overall_rating = Column(Numeric(3, 2), default=0, comment='综合评分')
-    supplier_level = Column(String(1), default='B', comment='供应商等级')
-
-    # 状态
-    status = Column(String(20), default='ACTIVE', comment='状态')
-    cooperation_start = Column(Date, comment='合作开始日期')
-    last_order_date = Column(Date, comment='最后订单日期')
-
-    # 财务信息
-    bank_name = Column(String(100), comment='开户行')
-    bank_account = Column(String(50), comment='银行账号')
-    tax_number = Column(String(50), comment='税号')
-    payment_terms = Column(String(50), comment='付款条款')
-
-    remark = Column(Text, comment='备注')
-    created_by = Column(Integer, ForeignKey('users.id'), comment='创建人')
-
-    # 关系
-    materials = relationship('MaterialSupplier', back_populates='supplier', lazy='dynamic')
-    purchase_orders = relationship('PurchaseOrder', back_populates='supplier', lazy='dynamic')
-
-    __table_args__ = (
-        Index('idx_supplier_type', 'supplier_type'),
-        Index('idx_supplier_status', 'status'),
-    )
-
-    def __repr__(self):
-        return f'<Supplier {self.supplier_code}>'
-
-
 class MaterialSupplier(Base, TimestampMixin):
     """物料供应商关联表"""
     __tablename__ = 'material_suppliers'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     material_id = Column(Integer, ForeignKey('materials.id'), nullable=False, comment='物料ID')
-    supplier_id = Column(Integer, ForeignKey('suppliers.id'), nullable=False, comment='供应商ID')
+    supplier_id = Column(Integer, ForeignKey('vendors.id'), nullable=False, comment='供应商ID')
 
     # 供应信息
     supplier_material_code = Column(String(100), comment='供应商物料编码')
@@ -178,7 +125,7 @@ class MaterialSupplier(Base, TimestampMixin):
 
     # 关系
     material = relationship('Material', back_populates='suppliers')
-    supplier = relationship('Supplier', back_populates='materials')
+    vendor = relationship('Vendor', back_populates='materials')
 
     __table_args__ = (
         Index('idx_ms_material', 'material_id'),
@@ -252,7 +199,7 @@ class BomItem(Base, TimestampMixin):
 
     # 来源
     source_type = Column(String(20), default='PURCHASE', comment='来源类型')
-    supplier_id = Column(Integer, ForeignKey('suppliers.id'), comment='供应商ID')
+    supplier_id = Column(Integer, ForeignKey('vendors.id'), comment='供应商ID')
 
     # 采购状态
     required_date = Column(Date, comment='需求日期')

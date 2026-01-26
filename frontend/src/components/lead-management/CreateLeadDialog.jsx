@@ -11,6 +11,7 @@ import {
   Label,
   Textarea,
 } from "../../components/ui";
+import { sourceOptions } from "./leadManagementConstants";
 
 export default function CreateLeadDialog({
   open,
@@ -19,6 +20,12 @@ export default function CreateLeadDialog({
   setFormData,
   statusConfig,
   onCreate,
+  customers = [],
+  selectedCustomerId = "",
+  onSelectCustomer,
+  onCustomerNameChange,
+  similarCustomers = [],
+  hasExactCustomerMatch = false,
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -31,23 +38,68 @@ export default function CreateLeadDialog({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>客户名称 *</Label>
+              <select
+                value={selectedCustomerId}
+                onChange={(e) => {
+                  const customer = customers.find(
+                    (item) => String(item.id) === e.target.value
+                  );
+                  if (customer) {
+                    onSelectCustomer?.(customer);
+                  } else {
+                    onSelectCustomer?.(null);
+                  }
+                }}
+                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
+              >
+                <option value="">选择已有客户</option>
+                {customers.map((customer) => (
+                  <option key={customer.id} value={customer.id}>
+                    {customer.customer_name}
+                  </option>
+                ))}
+              </select>
               <Input
                 value={formData.customer_name}
                 onChange={(e) =>
-                  setFormData({ ...formData, customer_name: e.target.value })
+                  onCustomerNameChange?.(e.target.value)
                 }
-                placeholder="请输入客户名称"
+                placeholder="或输入新客户名称"
               />
+              {similarCustomers.length > 0 && !hasExactCustomerMatch && (
+                <div className="mt-2 text-xs text-slate-400">
+                  相似客户：
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {similarCustomers.map((customer) => (
+                      <button
+                        key={customer.id}
+                        type="button"
+                        onClick={() => onSelectCustomer?.(customer)}
+                        className="px-2 py-1 rounded border border-slate-700 text-slate-200 hover:border-blue-500"
+                      >
+                        {customer.customer_name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             <div>
               <Label>来源</Label>
-              <Input
+              <select
                 value={formData.source}
                 onChange={(e) =>
                   setFormData({ ...formData, source: e.target.value })
                 }
-                placeholder="展会/转介绍/网络等"
-              />
+                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
+              >
+                <option value="">请选择来源</option>
+                {sourceOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <Label>行业</Label>
@@ -88,11 +140,13 @@ export default function CreateLeadDialog({
                 }
                 className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
               >
-                {Object.entries(statusConfig).map(([key, config]) => (
-                  <option key={key} value={key}>
-                    {config.label}
-                  </option>
-                ))}
+                {["NEW", "CONTACTED", "QUALIFIED", "LOST", "CONVERTED"].map(
+                  (key) => (
+                    <option key={key} value={key}>
+                      {statusConfig[key]?.label || key}
+                    </option>
+                  )
+                )}
               </select>
             </div>
           </div>

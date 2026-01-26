@@ -4,394 +4,18 @@
 
 导出所有ORM模型供外部使用
 
-注意：此文件包含所有模型的导出（762行）。
+注意：此文件包含所有模型的导出。
 如需按业务域分组导入，可以使用可选的分组导出模块（app/models/exports/）：
-    from app.models.exports.project_models import Project, Task
-    from app.models.exports.material_models import Material, BomHeader
+    from app.models.exports.main.project_related import Project, Task
+    from app.models.exports.main.material_purchase import Material, BomHeader
     # 等等...
 
 但原有的导入方式仍然有效（推荐）：
     from app.models import Project, Material, User
 """
 
-from .acceptance import (
-    AcceptanceIssue,
-    AcceptanceOrder,
-    AcceptanceOrderItem,
-    AcceptanceReport,
-    AcceptanceSignature,
-    AcceptanceTemplate,
-    IssueFollowUp,
-    TemplateCategory,
-    TemplateCheckItem,
-)
-from .alert import (
-    AlertNotification,
-    AlertRecord,
-    AlertRule,
-    AlertRuleTemplate,
-    AlertStatistics,
-    AlertSubscription,
-    ExceptionAction,
-    ExceptionEscalation,
-    ExceptionEvent,
-    ProjectHealthSnapshot,
-)
-from .assembly_kit import (
-    AssemblyStage,
-    AssemblyTemplate,
-    BomItemAssemblyAttrs,
-    CategoryStageMapping,
-    MaterialReadiness,
-    SchedulingSuggestion,
-    ShortageAlertRule,
-    ShortageDetail,
-)
-from .base import Base, TimestampMixin, get_engine, get_session, init_db
-from .bonus import (
-    BonusAllocationSheet,
-    BonusCalculation,
-    BonusDistribution,
-    BonusRule,
-    TeamBonusAllocation,
-)
-from .budget import ProjectBudget, ProjectBudgetItem, ProjectCostAllocationRule
-from .business_support import (
-    AcceptanceTracking,
-    AcceptanceTrackingRecord,
-    BiddingDocument,
-    BiddingProject,
-    ContractReview,
-    ContractSealRecord,
-    CustomerSupplierRegistration,
-    DeliveryOrder,
-    DocumentArchive,
-    InvoiceRequest,
-    PaymentReminder,
-    Reconciliation,
-    SalesOrder,
-    SalesOrderItem,
-)
-from .culture_wall import CultureWallContent, CultureWallReadRecord, PersonalGoal
-from .culture_wall_config import CultureWallConfig
-from .ecn import (
-    Ecn,
-    EcnAffectedMaterial,
-    EcnAffectedOrder,
-    EcnApproval,
-    EcnApprovalMatrix,
-    EcnBomImpact,
-    EcnEvaluation,
-    EcnLog,
-    EcnResponsibility,
-    EcnSolutionTemplate,
-    EcnTask,
-    EcnType,
-)
-from .enums import *
-from .finance import (
-    EquityStructure,
-    FundingRecord,
-    FundingRound,
-    FundingUsage,
-    Investor,
-)
-from .hourly_rate import HourlyRateConfig
-from .installation_dispatch import (
-    InstallationDispatchOrder,
-    InstallationDispatchPriorityEnum,
-    InstallationDispatchStatusEnum,
-    InstallationDispatchTaskTypeEnum,
-)
-from .issue import (
-    Issue,
-    IssueFollowUpRecord,
-    IssueStatisticsSnapshot,
-    IssueTemplate,
-    SolutionTemplate,
-)
-from .management_rhythm import (
-    ManagementRhythmConfig,
-    MeetingActionItem,
-    MeetingReport,
-    MeetingReportConfig,
-    ReportMetricDefinition,
-    RhythmDashboardSnapshot,
-    StrategicMeeting,
-)
-from .material import (
-    BomHeader,
-    BomItem,
-    Material,
-    MaterialCategory,
-    MaterialShortage,
-    MaterialSupplier,
-    Supplier,
-)
-from .notification import Notification, NotificationSettings
-from .organization import (
-    ContractReminder,
-    Department,
-    Employee,
-    EmployeeContract,
-    EmployeeHrProfile,
-    HrTransaction,
-    SalaryRecord,
-)
-
-# Organization V2 - 灵活组织架构
-from .organization_v2 import (
-    AssignmentType,
-    EmployeeOrgAssignment,
-    JobLevel,
-    JobLevelCategory,
-    OrganizationUnit,
-    OrganizationUnitType,
-    Position,
-    PositionCategory,
-    PositionRole,
-)
-from .outsourcing import (
-    OutsourcingDelivery,
-    OutsourcingDeliveryItem,
-    OutsourcingEvaluation,
-    OutsourcingInspection,
-    OutsourcingOrder,
-    OutsourcingOrderItem,
-    OutsourcingPayment,
-    OutsourcingProgress,
-    OutsourcingVendor,
-)
-from .performance import (  # New Performance System
-    EvaluationWeightConfig,
-    MonthlyWorkSummary,
-    PerformanceAdjustmentHistory,
-    PerformanceAppeal,
-    PerformanceEvaluation,
-    PerformanceEvaluationRecord,
-    PerformanceIndicator,
-    PerformancePeriod,
-    PerformanceRankingSnapshot,
-    PerformanceResult,
-    ProjectContribution,
-)
-
-# Permission V2 - 灵活权限系统
-from .permission_v2 import (
-    DataScopeRule,
-    MenuPermission,
-    MenuType,
-    PermissionGroup,
-    PermissionType,
-    ResourceType,
-    RoleDataScope,
-    RoleMenu,
-    ScopeType,
-)
-from .pipeline_analysis import (
-    AccountabilityRecord,
-    PipelineBreakRecord,
-    PipelineHealthSnapshot,
-)
-from .pmo import (
-    PmoChangeRequest,
-    PmoMeeting,
-    PmoProjectClosure,
-    PmoProjectCost,
-    PmoProjectInitiation,
-    PmoProjectPhase,
-    PmoProjectRisk,
-    PmoResourceAllocation,
-)
-from .presale import (
-    PresaleCustomerTechProfile,
-    PresaleSolution,
-    PresaleSolutionCost,
-    PresaleSolutionTemplate,
-    PresaleSupportTicket,
-    PresaleTenderRecord,
-    PresaleTicketDeliverable,
-    PresaleTicketProgress,
-    PresaleWorkload,
-)
-from .presale_expense import PresaleExpense
-from .production import (
-    Equipment,
-    EquipmentMaintenance,
-    MaterialRequisition,
-    MaterialRequisitionItem,
-    ProcessDict,
-    ProductionDailyReport,
-    ProductionException,
-    ProductionPlan,
-    Worker,
-    WorkerSkill,
-    WorkOrder,
-    WorkReport,
-    Workshop,
-    Workstation,
-)
-from .progress import (
-    BaselineTask,
-    ProgressLog,
-    ProgressReport,
-    ScheduleBaseline,
-    Task,
-    TaskDependency,
-    WbsTemplate,
-    WbsTemplateTask,
-)
-from .project import (
-    Customer,
-    FinancialProjectCost,
-    Machine,
-    Project,
-    ProjectCost,
-    ProjectDocument,
-    ProjectMember,
-    ProjectMemberContribution,
-    ProjectMilestone,
-    ProjectPaymentPlan,
-    ProjectStage,
-    ProjectStatus,
-    ProjectStatusLog,
-    ProjectTemplate,
-    ProjectTemplateVersion,
-)
-from .project_evaluation import ProjectEvaluation, ProjectEvaluationDimension
-from .project_review import ProjectBestPractice, ProjectLesson, ProjectReview
-from .project_role import (
-    ProjectRoleCodeEnum,
-    ProjectRoleConfig,
-    ProjectRoleType,
-    RoleCategoryEnum,
-)
-from .purchase import (
-    GoodsReceipt,
-    GoodsReceiptItem,
-    PurchaseOrder,
-    PurchaseOrderItem,
-    PurchaseRequest,
-    PurchaseRequestItem,
-)
-from .qualification import (
-    EmployeeQualification,
-    PositionCompetencyModel,
-    QualificationAssessment,
-    QualificationLevel,
-)
-from .rd_project import (
-    RdCost,
-    RdCostAllocationRule,
-    RdCostType,
-    RdProject,
-    RdProjectCategory,
-    RdReportRecord,
-)
-from .report_center import (
-    DataExportTask,
-    DataImportTask,
-    ImportTemplate,
-    ReportDefinition,
-    ReportGeneration,
-    ReportSubscription,
-    ReportTemplate,
-)
-from .sales import (  # Technical Assessment; Approval Workflow
-    AIClarification,
-    ApprovalHistory,
-    ApprovalRecord,
-    ApprovalWorkflow,
-    ApprovalWorkflowStep,
-    Contract,
-    ContractAmendment,
-    ContractApproval,
-    ContractDeliverable,
-    ContractTemplate,
-    ContractTemplateVersion,
-    CpqRuleSet,
-    FailureCase,
-    Invoice,
-    InvoiceApproval,
-    Lead,
-    LeadFollowUp,
-    LeadRequirementDetail,
-    OpenItem,
-    Opportunity,
-    OpportunityRequirement,
-    PurchaseMaterialCost,
-    Quote,
-    QuoteApproval,
-    QuoteCostApproval,
-    QuoteCostHistory,
-    QuoteCostTemplate,
-    QuoteItem,
-    QuoteTemplate,
-    QuoteTemplateVersion,
-    QuoteVersion,
-    ReceivableDispute,
-    RequirementFreeze,
-    SalesTarget,
-    ScoringRule,
-    TechnicalAssessment,
-)
-from .scheduler_config import SchedulerTaskConfig
-from .service import (
-    CustomerCommunication,
-    CustomerSatisfaction,
-    KnowledgeBase,
-    ServiceRecord,
-    ServiceTicket,
-    ServiceTicketCcUser,
-    ServiceTicketProject,
-)
-from .shortage import (
-    AlertHandleLog,
-    ArrivalFollowUp,
-    KitCheck,
-    MaterialArrival,
-    MaterialRequirement,
-    MaterialSubstitution,
-    MaterialTransfer,
-    ShortageAlert,
-    ShortageDailyReport,
-    ShortageReport,
-    WorkOrderBom,
-)
-from .sla import SLAMonitor, SLAPolicy, SLAStatusEnum
-from .staff_matching import (
-    HrAIMatchingLog,
-    HrEmployeeProfile,
-    HrEmployeeTagEvaluation,
-    HrProjectPerformance,
-    HrTagDict,
-    MesProjectStaffingNeed,
-)
-from .task_center import (
-    JobDutyTemplate,
-    TaskComment,
-    TaskOperationLog,
-    TaskReminder,
-    TaskUnified,
-)
-from .technical_review import (
-    ReviewChecklistRecord,
-    ReviewIssue,
-    ReviewMaterial,
-    ReviewParticipant,
-    TechnicalReview,
-)
-from .technical_spec import SpecMatchRecord, TechnicalSpecRequirement
-from .timesheet import (
-    OvertimeApplication,
-    Timesheet,
-    TimesheetApprovalLog,
-    TimesheetBatch,
-    TimesheetRule,
-    TimesheetSummary,
-)
-from .user import Permission, PermissionAudit, Role, RolePermission, User, UserRole
-from .work_log import WorkLog, WorkLogConfig, WorkLogMention
+# Import models from complete directory instead of deprecated main
+from .exports.complete import *
 
 __all__ = [
     # Base
@@ -429,7 +53,7 @@ __all__ = [
     # Material
     "Material",
     "MaterialCategory",
-    "Supplier",
+    "Vendor",
     "MaterialSupplier",
     "BomHeader",
     "BomItem",
@@ -445,7 +69,7 @@ __all__ = [
     "KitCheck",
     "AlertHandleLog",
     "ShortageDailyReport",
-    "ShortageAlert",
+    # ShortageAlert 已废弃 - 使用 AlertRecord.target_type='SHORTAGE'
     # Purchase
     "PurchaseOrder",
     "PurchaseOrderItem",
@@ -480,7 +104,6 @@ __all__ = [
     "IssueTemplate",
     "SolutionTemplate",
     # Outsourcing
-    "OutsourcingVendor",
     "OutsourcingOrder",
     "OutsourcingOrderItem",
     "OutsourcingDelivery",
@@ -570,6 +193,13 @@ __all__ = [
     "DataImportTask",
     "DataExportTask",
     "ImportTemplate",
+    # Stage Template
+    "StageTemplate",
+    "StageDefinition",
+    "NodeDefinition",
+    "ProjectStageInstance",
+    "ProjectNodeInstance",
+    "NodeTask",
     # Technical Spec
     "TechnicalSpecRequirement",
     "SpecMatchRecord",
@@ -648,6 +278,10 @@ __all__ = [
     "CustomerCommunication",
     "CustomerSatisfaction",
     "KnowledgeBase",
+    # Pitfall
+    "Pitfall",
+    "PitfallRecommendation",
+    "PitfallLearningProgress",
     # SLA
     "SLAPolicy",
     "SLAMonitor",
@@ -768,4 +402,31 @@ __all__ = [
     "MenuType",
     "PermissionType",
     "ResourceType",
+    # Unified Approval System - 统一审批系统
+    "ApprovalTemplate",
+    "ApprovalTemplateVersion",
+    "ApprovalFlowDefinition",
+    "ApprovalNodeDefinition",
+    "ApprovalRoutingRule",
+    "ApprovalInstance",
+    "ApprovalTask",
+    "ApprovalCarbonCopy",
+    "ApprovalCountersignResult",
+    "ApprovalActionLog",
+    "ApprovalComment",
+    "ApprovalDelegate",
+    "ApprovalDelegateLog",
+    # Strategy Management - BEM 战略管理
+    "Strategy",
+    "CSF",
+    "KPI",
+    "KPIHistory",
+    "KPIDataSource",
+    "AnnualKeyWork",
+    "AnnualKeyWorkProjectLink",
+    "DepartmentObjective",
+    "PersonalKPI",
+    "StrategyReview",
+    "StrategyCalendarEvent",
+    "StrategyComparison",
 ]

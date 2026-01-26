@@ -9,7 +9,21 @@ from contextlib import contextmanager
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import Column, DateTime, Integer, create_engine, event, inspect, text
+from sqlalchemy import (
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    create_engine,
+    event,
+    inspect,
+    text,
+)
+
+FK = ForeignKey  # 别名，简化代码
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -100,6 +114,100 @@ class TimestampMixin:
         nullable=False,
         comment="更新时间",
     )
+
+
+class FinancialAmountMixin:
+    """
+    财务金额混入类 - 消除金额字段重复
+
+    用于：采购订单、外协订单、BOM表头、订单明细等涉及金额的表
+    """
+
+    total_amount = Column(Numeric(14, 2), default=0, comment="总金额")
+    tax_rate = Column(Numeric(5, 2), default=13, comment="税率(%)")
+    tax_amount = Column(Numeric(14, 2), default=0, comment="税额")
+    amount_with_tax = Column(Numeric(14, 2), default=0, comment="含税金额")
+    paid_amount = Column(Numeric(14, 2), default=0, comment="已付金额")
+
+
+class ApprovalWorkflowMixin:
+    """
+    审批流程混入类 - 消除审批字段重复
+
+    用于：采购订单、采购申请、BOM表头等需要审批的表
+    """
+
+    submitted_at = Column(DateTime, comment="提交时间")
+    approved_by = Column(Integer, FK("users.id"), comment="审批人")
+    approved_at = Column(DateTime, comment="审批时间")
+    approval_note = Column(Text, comment="审批意见")
+
+
+class QualityInspectionMixin:
+    """
+    质检字段混入类 - 消除质检字段重复
+
+    用于：收货单明细、外协交付明细、外协质检记录等
+    """
+
+    inspect_qty = Column(Numeric(10, 4), default=0, comment="送检数量")
+    qualified_qty = Column(Numeric(10, 4), default=0, comment="合格数量")
+    rejected_qty = Column(Numeric(10, 4), default=0, comment="不合格数量")
+    inspect_result = Column(String(20), comment="质检结果")
+    inspect_note = Column(Text, comment="质检说明")
+
+
+class OrderItemMixin:
+    """
+    订单明细混入类 - 消除明细字段重复
+
+    用于：采购订单明细、外协订单明细、BOM明细、采购申请明细
+    """
+
+    material_id = Column(Integer, FK("materials.id"), comment="物料ID")
+    material_code = Column(String(50), comment="物料编码")
+    material_name = Column(String(200), comment="物料名称")
+    specification = Column(String(500), comment="规格型号")
+    unit = Column(String(20), default="件", comment="单位")
+    quantity = Column(Numeric(10, 4), comment="数量")
+    unit_price = Column(Numeric(12, 4), default=0, comment="单价")
+    amount = Column(Numeric(14, 2), default=0, comment="金额")
+
+
+class VendorBaseMixin:
+    """
+    供应商/外协商基础混入类 - 消除供应商字段重复
+
+    用于：suppliers, outsourcing_vendors（未来合并为vendors）
+    """
+
+    # 基本信息
+    supplier_code = Column(String(50), comment="供应商编码")
+    supplier_name = Column(String(200), comment="供应商名称")
+    supplier_short_name = Column(String(50), comment="简称")
+    supplier_type = Column(String(20), comment="供应商类型")
+
+    # 联系信息
+    contact_person = Column(String(50), comment="联系人")
+    contact_phone = Column(String(30), comment="联系电话")
+    contact_email = Column(String(100), comment="邮箱")
+    address = Column(String(500), comment="地址")
+
+    # 财务信息
+    bank_name = Column(String(100), comment="开户行")
+    bank_account = Column(String(50), comment="银行账号")
+    tax_number = Column(String(50), comment="税号")
+
+    # 评价字段
+    quality_rating = Column(Numeric(3, 2), default=0, comment="质量评分")
+    delivery_rating = Column(Numeric(3, 2), default=0, comment="交期评分")
+    service_rating = Column(Numeric(3, 2), default=0, comment="服务评分")
+    overall_rating = Column(Numeric(3, 2), default=0, comment="综合评分")
+
+    # 状态
+    status = Column(String(20), default="ACTIVE", comment="状态")
+    cooperation_start = Column(DateTime, comment="合作开始日期")
+    last_order_date = Column(DateTime, comment="最后订单日期")
 
 
 def get_database_url() -> str:

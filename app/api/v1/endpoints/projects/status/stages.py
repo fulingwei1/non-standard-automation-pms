@@ -5,7 +5,6 @@
 包含阶段初始化、阶段推进、阶段门校验、状态历史等
 """
 
-from datetime import datetime
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
@@ -15,7 +14,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.project import Project, ProjectStage, ProjectStatusLog
+from app.models.project import ProjectStage, ProjectStatusLog
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.project import StageAdvanceRequest
@@ -168,6 +167,20 @@ def advance_project_stage(
     generate_cost_review_report(
         db, project_id, advance_request.target_stage, new_status, current_user.id
     )
+
+    # 创建阶段切换时的齐套率快照
+    try:
+        from app.utils.scheduled_tasks import create_stage_change_snapshot
+        create_stage_change_snapshot(
+            db=db,
+            project_id=project_id,
+            from_stage=old_stage,
+            to_stage=advance_request.target_stage,
+        )
+    except Exception as e:
+        # 快照失败不影响阶段推进
+        import logging
+        logging.getLogger(__name__).warning(f"创建阶段切换快照失败: {e}")
 
     db.commit()
     db.refresh(project)

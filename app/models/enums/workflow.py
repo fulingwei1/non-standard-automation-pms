@@ -2,6 +2,7 @@
 """
 审批和工作流相关枚举
 """
+
 from enum import Enum
 
 
@@ -56,11 +57,14 @@ class EcnSourceTypeEnum(str, Enum):
 
 
 class EcnStatusEnum(str, Enum):
+    """ECN状态枚举"""
+
     DRAFT = "DRAFT"
     PENDING_REVIEW = "PENDING_REVIEW"
     APPROVED = "APPROVED"
     REJECTED = "REJECTED"
     IMPLEMENTED = "IMPLEMENTED"
+    COMPLETED = "COMPLETED"
     CANCELLED = "CANCELLED"
 
 
@@ -98,6 +102,7 @@ class ApprovalActionEnum(str, Enum):
     SUBMIT = "SUBMIT"
     APPROVE = "APPROVE"
     REJECT = "REJECT"
+    RETURN = "RETURN"
     WITHDRAW = "WITHDRAW"
     DELEGATE = "DELEGATE"
 
@@ -107,3 +112,13 @@ class NotifyChannelEnum(str, Enum):
     SMS = "SMS"
     WEB = "WEB"
     MOBILE_APP = "MOBILE_APP"
+
+
+class EcnChangeTypeEnum(str, Enum):
+    """ECN变更类型枚举（兼容层，值与EcnTypeEnum一致）"""
+
+    DESIGN = "DESIGN_CHANGE"
+    MATERIAL = "MATERIAL_CHANGE"
+    PROCESS = "PROCESS_CHANGE"
+    SPEC = "SPEC_CHANGE"
+    PLAN = "PLAN_CHANGE"

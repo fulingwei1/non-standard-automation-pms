@@ -15,6 +15,7 @@
  ├── sync.py           # 数据同步/ERP (新)
  ├── extended.py       # 扩展功能（复盘、分析等）
  ├── gate_checks.py    # 阶段门校验
+ ├── milestones/       # 项目里程碑（新迁移）
  └── utils.py          # 工具函数
 """
 
@@ -32,6 +33,21 @@ from . import (
     sync,
     templates,
 )
+
+# === 项目模块整合：迁移的子模块路由 ===
+from .approvals import router as approvals_router
+from .costs import router as costs_router
+from .evaluations import router as evaluations_router
+from .machines import router as machines_router
+from .members import router as members_router
+from .milestones import router as milestones_router
+from .progress import router as progress_router
+from .resource_plan import router as resource_plan_router
+from .roles import router as roles_router
+from .stages import router as stages_router
+from .timesheet import router as timesheet_router
+from .work_logs import router as work_logs_router
+from .workload import router as workload_router
 
 # Export gate check functions for use by stage_advance_service
 from .gate_checks import check_gate, check_gate_detailed
@@ -60,6 +76,11 @@ router.include_router(archive.router, tags=["projects-archive"])
 # 概览和仪表盘路由
 router.include_router(overview.router, tags=["projects-overview"])
 
+# 流水线视图路由 (跨项目)
+from .pipeline import router as pipeline_router
+
+router.include_router(pipeline_router, tags=["projects-pipeline"])
+
 # 数据同步路由（合同同步、ERP集成）
 router.include_router(sync.router, tags=["projects-sync"])
 
@@ -77,3 +98,96 @@ router.include_router(payment_plans.router, tags=["projects-payment-plans"])
 
 # 扩展功能路由（复盘、经验教训、高级分析等）
 router.include_router(extended.router, tags=["projects-extended"])
+
+# === 项目模块整合：迁移的子模块路由 ===
+
+# 里程碑路由（项目内操作）
+router.include_router(
+    milestones_router,
+    prefix="/{project_id}/milestones",
+    tags=["projects-milestones"],
+)
+
+# 机台路由（项目内操作）
+router.include_router(
+    machines_router,
+    prefix="/{project_id}/machines",
+    tags=["projects-machines"],
+)
+
+# 资源计划路由（项目内操作）
+router.include_router(
+    resource_plan_router,
+    prefix="/{project_id}/resource-plan",
+    tags=["projects-resource-plan"],
+)
+
+# 成员路由（项目内操作）
+router.include_router(
+    members_router,
+    prefix="/{project_id}/members",
+    tags=["projects-members"],
+)
+
+# 成本路由（项目内操作）
+router.include_router(
+    costs_router,
+    prefix="/{project_id}/costs",
+    tags=["projects-costs"],
+)
+
+# 工作日志路由（项目内操作）
+router.include_router(
+    work_logs_router,
+    prefix="/{project_id}/work-logs",
+    tags=["projects-work-logs"],
+)
+
+# 角色路由（项目内操作）
+router.include_router(
+    roles_router,
+    prefix="/{project_id}/roles",
+    tags=["projects-roles"],
+)
+
+# 评价路由（项目内操作）
+router.include_router(
+    evaluations_router,
+    prefix="/{project_id}/evaluations",
+    tags=["projects-evaluations"],
+)
+
+# 进度路由（项目内操作）
+router.include_router(
+    progress_router,
+    prefix="/{project_id}/progress",
+    tags=["projects-progress"],
+)
+
+# 阶段路由（项目内操作）
+router.include_router(
+    stages_router,
+    prefix="/{project_id}/stages",
+    tags=["projects-stages"],
+)
+
+# 工时路由（项目内操作）
+router.include_router(
+    timesheet_router,
+    prefix="/{project_id}/timesheet",
+    tags=["projects-timesheet"],
+)
+
+# 工作量路由（项目内操作）
+router.include_router(
+    workload_router,
+    prefix="/{project_id}/workload",
+    tags=["projects-workload"],
+)
+
+# 审批路由（项目内操作）
+router.include_router(
+    approvals_router,
+    prefix="/{project_id}/approvals",
+    tags=["projects-approvals"],
+)

@@ -12,6 +12,15 @@ from .customer import Customer
 # 项目文档和模板
 from .document import ProjectDocument, ProjectTemplate, ProjectTemplateVersion
 
+# 项目扩展模型（表拆分）
+from .extensions import (
+    ProjectERP,
+    ProjectFinancial,
+    ProjectImplementation,
+    ProjectPresale,
+    ProjectWarranty,
+)
+
 # 项目财务
 from .financial import (
     FinancialProjectCost,
@@ -25,6 +34,14 @@ from .lifecycle import ProjectStage, ProjectStatus, ProjectStatusLog
 
 # 项目团队
 from .team import ProjectMember, ProjectMemberContribution
+
+# 资源计划
+from .resource_plan import (
+    AssignmentStatusEnum,
+    ConflictSeverityEnum,
+    ProjectStageResourcePlan,
+    ResourceConflict,
+)
 
 __all__ = [
     # 客户相关
@@ -48,4 +65,15 @@ __all__ = [
     "ProjectDocument",
     "ProjectTemplate",
     "ProjectTemplateVersion",
+    # 资源计划
+    "ProjectStageResourcePlan",
+    "ResourceConflict",
+    "AssignmentStatusEnum",
+    "ConflictSeverityEnum",
+    # 项目扩展模型
+    "ProjectFinancial",
+    "ProjectERP",
+    "ProjectWarranty",
+    "ProjectImplementation",
+    "ProjectPresale",
 ]

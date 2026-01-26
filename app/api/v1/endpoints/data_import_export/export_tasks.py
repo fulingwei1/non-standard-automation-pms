@@ -18,7 +18,7 @@ from app.models.progress import Task
 from app.models.project import Project
 from app.models.user import User
 from app.schemas.data_import_export import ExportTaskListRequest
-from app.services.data_scope_service import DataScopeService
+from app.services.data_scope import DataScopeService
 
 router = APIRouter()
 

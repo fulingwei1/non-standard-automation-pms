@@ -317,7 +317,7 @@ export function UserFilters({
                 <SelectValue placeholder="选择状态" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部状态</SelectItem>
+                <SelectItem value="__all__">全部状态</SelectItem>
                 {Object.entries(userStatusConfigs).map(([key, config]) =>
               <SelectItem key={key} value={key}>
                     <div className="flex items-center gap-2">
@@ -338,7 +338,7 @@ export function UserFilters({
                 <SelectValue placeholder="选择类型" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部类型</SelectItem>
+                <SelectItem value="__all__">全部类型</SelectItem>
                 {Object.entries(userTypeConfigs).map(([key, config]) =>
               <SelectItem key={key} value={key}>
                     <div className="flex items-center gap-2">
@@ -359,7 +359,7 @@ export function UserFilters({
                 <SelectValue placeholder="选择部门" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部部门</SelectItem>
+                <SelectItem value="__all__">全部部门</SelectItem>
                 {Object.entries(departmentConfigs).map(([key, config]) =>
               <SelectItem key={key} value={key}>
                     <div className="flex items-center gap-2">
@@ -380,7 +380,7 @@ export function UserFilters({
                 <SelectValue placeholder="选择角色" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部角色</SelectItem>
+                <SelectItem value="__all__">全部角色</SelectItem>
                 {Object.entries(userRoleConfigs).map(([key, config]) =>
               <SelectItem key={key} value={key}>
                     <div className="flex items-center gap-2">

@@ -26,7 +26,7 @@ class PurchaseOrder(Base, TimestampMixin):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     order_no = Column(String(50), unique=True, nullable=False, comment='订单编号')
-    supplier_id = Column(Integer, ForeignKey('suppliers.id'), nullable=False, comment='供应商ID')
+    supplier_id = Column(Integer, ForeignKey('vendors.id'), nullable=False, comment='供应商ID')
     project_id = Column(Integer, ForeignKey('projects.id'), comment='项目ID')
     source_request_id = Column(Integer, ForeignKey('purchase_requests.id'), comment='来源采购申请ID')
 
@@ -71,7 +71,7 @@ class PurchaseOrder(Base, TimestampMixin):
     created_by = Column(Integer, ForeignKey('users.id'), comment='创建人')
 
     # 关系
-    supplier = relationship('Supplier', back_populates='purchase_orders')
+    vendor = relationship('Vendor', back_populates='purchase_orders')
     project = relationship('Project')
     source_request = relationship('PurchaseRequest', back_populates='orders')
     items = relationship('PurchaseOrderItem', back_populates='order', lazy='dynamic')
@@ -144,7 +144,7 @@ class GoodsReceipt(Base, TimestampMixin):
     id = Column(Integer, primary_key=True, autoincrement=True)
     receipt_no = Column(String(50), unique=True, nullable=False, comment='收货单号')
     order_id = Column(Integer, ForeignKey('purchase_orders.id'), nullable=False, comment='采购订单ID')
-    supplier_id = Column(Integer, ForeignKey('suppliers.id'), nullable=False, comment='供应商ID')
+    supplier_id = Column(Integer, ForeignKey('vendors.id'), nullable=False, comment='供应商ID')
 
     # 收货信息
     receipt_date = Column(Date, nullable=False, comment='收货日期')
@@ -172,7 +172,7 @@ class GoodsReceipt(Base, TimestampMixin):
 
     # 关系
     order = relationship('PurchaseOrder', back_populates='receipts')
-    supplier = relationship('Supplier')
+    # supplier = relationship('Supplier')  # 已禁用 - Supplier 是废弃模型
     items = relationship('GoodsReceiptItem', back_populates='receipt', lazy='dynamic')
 
     __table_args__ = (
@@ -232,7 +232,7 @@ class PurchaseRequest(Base, TimestampMixin):
     request_no = Column(String(50), unique=True, nullable=False, comment='申请单号')
     project_id = Column(Integer, ForeignKey('projects.id'), comment='项目ID')
     machine_id = Column(Integer, ForeignKey('machines.id'), comment='设备ID')
-    supplier_id = Column(Integer, ForeignKey('suppliers.id'), comment='供应商ID')
+    supplier_id = Column(Integer, ForeignKey('vendors.id'), comment='供应商ID')
 
     # 申请信息
     request_type = Column(String(20), default='NORMAL', comment='申请类型')
@@ -266,7 +266,7 @@ class PurchaseRequest(Base, TimestampMixin):
     # 关系
     project = relationship('Project')
     machine = relationship('Machine')
-    supplier = relationship('Supplier')
+    # supplier = relationship('Supplier')  # 已禁用 - Supplier 是废弃模型
     items = relationship('PurchaseRequestItem', back_populates='request', lazy='dynamic', cascade='all, delete-orphan')
     approver = relationship('User', foreign_keys=[approved_by])
     requester = relationship('User', foreign_keys=[requested_by])

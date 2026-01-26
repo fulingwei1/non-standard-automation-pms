@@ -99,8 +99,34 @@ from .sales import (
     LossReasonEnum,
     OpportunityStageEnum,
     PresalesLeadStatusEnum,
+    ProductMatchTypeEnum,
     QuoteStatusEnum,
     WinProbabilityLevelEnum,
+)
+
+# 阶段模板相关
+from .stage import (
+    CompletionMethodEnum,
+    NodeTypeEnum,
+    ReviewResultEnum,
+    StageCategoryEnum,
+    StageStatusEnum,
+    TemplateProjectTypeEnum,
+)
+
+# 战略管理相关
+from .strategy import (
+    BSCDimensionEnum,
+    CSFDerivationMethodEnum,
+    DataSourceTypeEnum,
+    HealthLevelEnum,
+    IPOOCTypeEnum,
+    ObjectiveLevelEnum,
+    StrategyReviewTypeEnum,
+    StrategyEventTypeEnum,
+    StrategyStatusEnum,
+    VOCSourceEnum,
+    WorkStatusEnum,
 )
 
 # 审批和工作流
@@ -111,6 +137,7 @@ from .workflow import (
     BonusDistributionStatusEnum,
     BonusTypeEnum,
     ChangeScopeEnum,
+    EcnChangeTypeEnum,
     EcnSourceTypeEnum,
     EcnStatusEnum,
     EcnTypeEnum,
@@ -119,6 +146,17 @@ from .workflow import (
     PriorityEnum,
     TeamBonusAllocationMethodEnum,
     WorkflowTypeEnum,
+)
+
+# 踩坑库相关
+from .pitfall import (
+    PitfallEquipmentType,
+    PitfallProblemType,
+    PitfallSensitiveReason,
+    PitfallSourceType,
+    PitfallStage,
+    PitfallStatus,
+    RecommendationTriggerType,
 )
 
 __all__ = [
@@ -160,6 +198,7 @@ __all__ = [
     "DisputeReasonCodeEnum",
     "PresalesLeadStatusEnum",
     "EvaluationDecisionEnum",
+    "ProductMatchTypeEnum",
     "WinProbabilityLevelEnum",
     "LeadOutcomeEnum",
     "LossReasonEnum",
@@ -170,6 +209,7 @@ __all__ = [
     "PaymentMethodEnum",
     "TeamBonusAllocationMethodEnum",
     "EcnTypeEnum",
+    "EcnChangeTypeEnum",
     "EcnSourceTypeEnum",
     "EcnStatusEnum",
     "PriorityEnum",
@@ -222,4 +262,31 @@ __all__ = [
     "AlertLevelEnum",
     "AlertStatusEnum",
     "AlertRuleTypeEnum",
+    # 阶段模板相关
+    "NodeTypeEnum",
+    "CompletionMethodEnum",
+    "StageStatusEnum",
+    "StageCategoryEnum",
+    "ReviewResultEnum",
+    "TemplateProjectTypeEnum",
+    # 战略管理相关
+    "StrategyStatusEnum",
+    "BSCDimensionEnum",
+    "IPOOCTypeEnum",
+    "VOCSourceEnum",
+    "CSFDerivationMethodEnum",
+    "WorkStatusEnum",
+    "StrategyEventTypeEnum",
+    "DataSourceTypeEnum",
+    "HealthLevelEnum",
+    "ObjectiveLevelEnum",
+    "StrategyReviewTypeEnum",
+    # 踩坑库相关
+    "PitfallStage",
+    "PitfallEquipmentType",
+    "PitfallProblemType",
+    "PitfallSourceType",
+    "PitfallStatus",
+    "PitfallSensitiveReason",
+    "RecommendationTriggerType",
 ]

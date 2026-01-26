@@ -105,7 +105,7 @@ def daily_spec_match_check():
 
                 for bom in bom_headers:
                     bom_items = db.query(BomItem).filter(
-                        BomItem.bom_header_id == bom.id
+                        BomItem.bom_id == bom.id
                     ).all()
 
                     for item in bom_items:

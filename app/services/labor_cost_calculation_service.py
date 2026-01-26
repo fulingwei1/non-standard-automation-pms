@@ -11,7 +11,8 @@ from sqlalchemy.orm import Session
 
 from app.models.project import Project, ProjectCost
 from app.models.timesheet import Timesheet
-from app.services.labor_cost_service import LaborCostService
+
+# LaborCostService 延迟导入，避免循环依赖
 
 
 def query_approved_timesheets(
@@ -201,11 +202,14 @@ def process_user_costs(
     Returns:
         Tuple[List[ProjectCost], Decimal]: (创建的成本记录列表, 总成本)
     """
+    # 延迟导入，避免循环依赖
+    from app.services.labor_cost_service import LaborCostService
+
     created_costs = []
     total_cost = Decimal("0")
 
     for user_id, user_data in user_costs.items():
-        # 获取用户时薪
+        # 获取用户时���
         work_date = user_data.get("work_date") or end_date or date.today()
         hourly_rate = LaborCostService.get_user_hourly_rate(db, user_id, work_date)
 

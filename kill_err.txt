@@ -1,1 +1,0 @@
-zsh:kill:2: kill 61191 failed: operation not permitted

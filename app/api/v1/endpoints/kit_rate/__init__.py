@@ -7,6 +7,7 @@
 - machine: 机台级齐套率、物料状态
 - project: 项目级齐套率、物料汇总、缺料清单
 - dashboard: 齐套看板、趋势分析
+- unified: 统一齐套率查询（整合三种计算方式）
 """
 
 from fastapi import APIRouter
@@ -14,8 +15,12 @@ from fastapi import APIRouter
 from .dashboard import router as dashboard_router
 from .machine import router as machine_router
 from .project import router as project_router
+from .unified import router as unified_router
 
 router = APIRouter()
+
+# 统一齐套率查询（推荐使用）
+router.include_router(unified_router, tags=["统一齐套率"])
 
 # 机台级齐套率
 router.include_router(machine_router, tags=["机台齐套率"])

@@ -37,12 +37,17 @@ def get_receivables_aging(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
-    应收账龄分析
+    应收账龄分析（已集成数据权限过滤）
     """
+    from app.core.sales_permissions import filter_sales_finance_data_by_scope
+
     query = db.query(Invoice).filter(
         Invoice.status == "ISSUED",
         Invoice.payment_status.in_(["PENDING", "PARTIAL"])
     )
+
+    # 应用数据权限过滤（发票使用财务数据权限）
+    query = filter_sales_finance_data_by_scope(query, current_user, db, Invoice, "created_by")
 
     if customer_id:
         query = query.join(Contract).filter(Contract.customer_id == customer_id)
@@ -125,8 +130,10 @@ def get_overdue_receivables(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
-    逾期应收列表
+    逾期应收列表（已集成数据权限过滤）
     """
+    from app.core.sales_permissions import filter_sales_finance_data_by_scope
+
     today = date.today()
 
     query = db.query(Invoice).filter(
@@ -135,6 +142,9 @@ def get_overdue_receivables(
         Invoice.due_date.isnot(None),
         Invoice.due_date < today
     )
+
+    # 应用数据权限过滤（发票使用财务数据权限）
+    query = filter_sales_finance_data_by_scope(query, current_user, db, Invoice, "created_by")
 
     if customer_id:
         query = query.join(Contract).filter(Contract.customer_id == customer_id)
@@ -188,9 +198,14 @@ def get_receivables_summary(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
-    应收账款统计
+    应收账款统计（已集成数据权限过滤）
     """
+    from app.core.sales_permissions import filter_sales_finance_data_by_scope
+
     query = db.query(Invoice).filter(Invoice.status == "ISSUED")
+
+    # 应用数据权限过滤（发票使用财务数据权限）
+    query = filter_sales_finance_data_by_scope(query, current_user, db, Invoice, "created_by")
 
     if customer_id:
         query = query.join(Contract).filter(Contract.customer_id == customer_id)

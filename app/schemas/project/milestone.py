@@ -15,7 +15,7 @@ from ..common import TimestampSchema
 class MilestoneCreate(BaseModel):
     """创建里程碑"""
 
-    project_id: int = Field(description="项目ID")
+    project_id: Optional[int] = Field(None, description="项目ID（可选，通常从路径中获取）")
     machine_id: Optional[int] = None
     milestone_code: str = Field(max_length=50, description="里程碑编码")
     milestone_name: str = Field(max_length=200, description="里程碑名称")

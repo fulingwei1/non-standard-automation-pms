@@ -12,12 +12,25 @@ export function diagnoseLogin() {
 
   // 1. 通过前端代理检查后端服务（避免直接访问 8000 触发 CORS/跨域误判）
   console.log("1️⃣ 检查后端服务（通过前端代理 /api）...");
-  fetch("/api/v1/health")
+  // 健康检查端点不在 /api/v1 前缀下，需要在 vite.config.js 中添加额外代理
+  // 临时方案：直接检查 API 根路径
+  fetch("/api/v1/projects/")
     .then(async (res) => {
       const text = await res.text();
+      // 401 = 需要认证，说明后端正常；404 = 可能是路由问题
+      if (res.status === 401 || res.status === 422) {
+        console.log("✅ 后端服务正常 (需要认证是预期的)");
+        info.push("后端服务运行正常（通过代理）");
+        return;
+      }
+      if (res.status === 404) {
+        console.warn("⚠️ API路由可能未配置:", res.status, text);
+        warnings.push("API返回404，请检查路由配置");
+        return;
+      }
       if (!res.ok) {
-        console.error("❌ 后端健康检查失败:", res.status, text);
-        issues.push(`后端健康检查失败（通过代理 /api），HTTP ${res.status}`);
+        console.error("❌ 后端检查失败:", res.status, text);
+        issues.push(`后端返回错误状态: ${res.status}`);
         return;
       }
       try {

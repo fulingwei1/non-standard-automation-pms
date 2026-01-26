@@ -1,1 +1,1 @@
-export { useProjectClosureData } from './useProjectClosureData';
+export * from './useProjectClosureManagement';

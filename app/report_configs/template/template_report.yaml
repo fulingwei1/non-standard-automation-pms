@@ -1,0 +1,133 @@
+# 模板报表配置
+# 报告代码: TEMPLATE_REPORT
+
+meta:
+  name: 模板报表
+  code: TEMPLATE_REPORT
+  description: 基于模板的通用报表
+  version: "1.0"
+
+permissions:
+  roles:
+    - PROJECT_MANAGER
+    - DEPARTMENT_MANAGER
+    - ADMIN
+    - REPORT_VIEWER
+  data_scope: project
+
+parameters:
+  - name: template_id
+    type: integer
+    required: true
+    description: 模板ID
+  - name: project_id
+    type: integer
+    required: false
+    description: 项目ID（部分模板需要）
+  - name: department_id
+    type: integer
+    required: false
+    description: 部门ID（部分模板需要）
+  - name: start_date
+    type: date
+    required: false
+    description: 开始日期
+  - name: end_date
+    type: date
+    required: false
+    description: 结束日期
+  - name: filters
+    type: string
+    required: false
+    default: "{}"
+    description: 过滤条件(JSON字符串)
+
+data_sources:
+  template_context:
+    type: service
+    method: TemplateReportDataService.build_context
+    args:
+      template_id: "{{ params.template_id }}"
+      project_id: "{{ params.project_id }}"
+      department_id: "{{ params.department_id }}"
+      start_date: "{{ params.start_date }}"
+      end_date: "{{ params.end_date }}"
+      filters: "{{ params.filters }}"
+
+sections:
+  - id: report_info
+    title: 报表信息
+    type: metrics
+    items:
+      - label: 模板名称
+        value: "{{ template_context.template_info.template_name }}"
+      - label: 报表类型
+        value: "{{ template_context.template_info.report_type }}"
+      - label: 模板编码
+        value: "{{ template_context.template_info.template_code }}"
+      - label: 时间范围
+        value: "{{ template_context.template_info.period_start }} ~ {{ template_context.template_info.period_end }}"
+
+  - id: key_metrics
+    title: 核心指标
+    type: table
+    source: template_context.metrics_list
+    columns:
+      - field: label
+        label: 指标
+      - field: value
+        label: 数值
+
+  - id: sections_overview
+    title: 区块概览
+    type: table
+    source: template_context.sections_overview
+    columns:
+      - field: section_id
+        label: 区块ID
+      - field: title
+        label: 标题
+      - field: section_type
+        label: 类型
+      - field: item_count
+        label: 条目数
+      - field: has_summary
+        label: 包含汇总
+
+  - id: section_details
+    title: 区块数据
+    type: table
+    source: template_context.section_rows
+    columns:
+      - field: section_id
+        label: 区块ID
+      - field: section_title
+        label: 区块名称
+      - field: section_type
+        label: 类型
+      - field: row_index
+        label: 行号
+      - field: data_preview
+        label: 数据预览
+
+  - id: charts_overview
+    title: 图表概览
+    type: table
+    source: template_context.charts_overview
+    columns:
+      - field: chart_title
+        label: 图表标题
+      - field: chart_type
+        label: 类型
+      - field: data_points
+        label: 数据点数
+
+exports:
+  json:
+    enabled: true
+  pdf:
+    enabled: false
+  excel:
+    enabled: false
+  word:
+    enabled: false

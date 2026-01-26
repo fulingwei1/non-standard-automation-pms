@@ -8,9 +8,9 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy.orm import Session
 
-from app.models.machine import Machine
-from app.models.material import BomHeader, BomItem
+from app.models.material import BomItem
 from app.models.project import Project
+from app.services.kit_rate import KitRateService
 
 
 def calculate_date_range(today: date) -> Tuple[date, date]:
@@ -40,21 +40,8 @@ def get_project_bom_items(
     Returns:
         List[BomItem]: BOM物料项列表
     """
-    machines = db.query(Machine).filter(Machine.project_id == project_id).all()
-    all_bom_items = []
-
-    for machine in machines:
-        bom = (
-            db.query(BomHeader)
-            .filter(BomHeader.machine_id == machine.id)
-            .filter(BomHeader.is_latest == True)
-            .first()
-        )
-        if bom:
-            bom_items = db.query(BomItem).filter(BomItem.bom_id == bom.id).all()
-            all_bom_items.extend(bom_items)
-
-    return all_bom_items
+    service = KitRateService(db)
+    return service.list_bom_items_for_project(project_id)
 
 
 def calculate_project_kit_statistics(
@@ -68,12 +55,9 @@ def calculate_project_kit_statistics(
         Optional[Dict[str, Any]]: 统计结果字典，如果计算失败返回None
     """
     try:
-        from app.api.v1.endpoints.kit_rate import calculate_kit_rate
-
+        service = KitRateService(db)
         all_bom_items = get_project_bom_items(db, project.id)
-
-        # 计算齐套率
-        kit_data = calculate_kit_rate(db, all_bom_items, "quantity")
+        kit_data = service.calculate_kit_rate(all_bom_items, "quantity")
 
         return {
             "project_id": project.id,
@@ -104,8 +88,8 @@ def calculate_workshop_kit_statistics(
     Returns:
         List[Dict[str, Any]]: 车间统计列表
     """
-    from app.api.v1.endpoints.kit_rate import calculate_kit_rate
     from app.models.production import Workshop
+    service = KitRateService(db)
 
     workshops = db.query(Workshop).all()
     if workshop_id:
@@ -127,7 +111,7 @@ def calculate_workshop_kit_statistics(
         for project in workshop_projects:
             try:
                 all_bom_items = get_project_bom_items(db, project.id)
-                kit_data = calculate_kit_rate(db, all_bom_items, "quantity")
+                kit_data = service.calculate_kit_rate(all_bom_items, "quantity")
 
                 total_kit_rate += kit_data.get("kit_rate", 0.0)
                 project_count += 1
@@ -166,10 +150,9 @@ def calculate_daily_kit_statistics(
     Returns:
         List[Dict[str, Any]]: 日期统计列表
     """
-    from app.api.v1.endpoints.kit_rate import calculate_kit_rate
-
     statistics = []
     current = start_date
+    service = KitRateService(db)
 
     while current <= end_date:
         # 简化处理：使用当前数据，实际应该从历史记录表查询
@@ -179,7 +162,7 @@ def calculate_daily_kit_statistics(
         for project in projects:
             try:
                 all_bom_items = get_project_bom_items(db, project.id)
-                kit_data = calculate_kit_rate(db, all_bom_items, "quantity")
+                kit_data = service.calculate_kit_rate(all_bom_items, "quantity")
 
                 total_kit_rate += kit_data.get("kit_rate", 0.0)
                 project_count += 1

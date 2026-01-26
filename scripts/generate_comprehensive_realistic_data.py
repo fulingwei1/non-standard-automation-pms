@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # 临时解决方案：不设置material_id字段
 from app.models.alert import AlertRecord, AlertRule, ExceptionEvent
 from app.models.base import get_db_session
-from app.models.material import Material, MaterialCategory, Supplier
+from app.models.material import Material, MaterialCategory
 from app.models.organization import Department, Employee
 from app.models.production import (
     Equipment,

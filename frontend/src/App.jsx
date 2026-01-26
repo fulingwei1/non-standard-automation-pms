@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -11,6 +11,8 @@ import zhCN from "antd/locale/zh_CN";
 import ErrorBoundary from "./components/common/ErrorBoundary";
 import { MainLayout } from "./components/layout/MainLayout";
 import { AppRoutes } from "./routes/routeConfig";
+import { PermissionProvider } from "./context/PermissionContext";
+import { AuthProvider } from "./context/AuthContext";
 
 // Pages
 import Login from "./pages/Login";
@@ -110,12 +112,18 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(
     !!localStorage.getItem("token")
   );
+  // 使用 ref 来跟踪上一次的 token 值，避免不必要的状态更新
+  const lastTokenRef = useRef(localStorage.getItem("token"));
 
   // 监听 localStorage 中 token 的变化，同步认证状态
   useEffect(() => {
     const checkAuth = () => {
       const token = localStorage.getItem("token");
-      setIsAuthenticated(!!token);
+      // 只有当 token 实际发生变化时才更新状态
+      if (token !== lastTokenRef.current) {
+        lastTokenRef.current = token;
+        setIsAuthenticated(!!token);
+      }
     };
 
     // 初始检查
@@ -124,26 +132,25 @@ function App() {
     // 监听 storage 事件（跨标签页同步）
     window.addEventListener("storage", checkAuth);
 
-    // 定期检查（防止其他代码直接修改 localStorage）
-    const interval = setInterval(checkAuth, 1000);
-
     return () => {
       window.removeEventListener("storage", checkAuth);
-      clearInterval(interval);
     };
-  }, []);
+  }, []); // 空依赖数组，只在挂载时执行一次
 
   const handleLogout = () => {
     // 清理所有登录相关的数据
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    lastTokenRef.current = null;
     setIsAuthenticated(false);
     // 跳转到登录页
     window.location.href = "/login";
   };
 
   const handleLoginSuccess = () => {
-    setIsAuthenticated(true);
+    const token = localStorage.getItem("token");
+    lastTokenRef.current = token;
+    setIsAuthenticated(!!token);
     // 登录成功后，跳转逻辑由 ProtectedRoute 处理
     // 不需要在这里手动跳转，避免页面重新加载导致的闪退
     // ProtectedRoute 会在根路径 '/' 时自动跳转到对应的 dashboard
@@ -170,13 +177,20 @@ function App() {
             <Route path="*" element={<Navigate to="/login" replace />} /> : (
 
             /* 已认证时，显示主应用 */
-            <Route
-              path="*"
-              element={
-              <MainLayout onLogout={handleLogout}>
-                    <AppRoutes />
-              </MainLayout>
-              } />)
+            <>
+              <Route
+                path="*"
+                element={
+                <AuthProvider>
+                  <PermissionProvider>
+                    <MainLayout onLogout={handleLogout}>
+                        <AppRoutes />
+                    </MainLayout>
+                  </PermissionProvider>
+                </AuthProvider>
+                }
+              />
+            </>)
 
             }
           </Routes>

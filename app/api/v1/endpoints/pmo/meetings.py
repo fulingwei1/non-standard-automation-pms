@@ -31,6 +31,7 @@ from app.models.pmo import (
 from app.models.project import Customer, Project
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.utils.pagination import PaginationParams, create_paginated_response
 from app.schemas.pmo import (
     ClosureCreate,
     ClosureLessonsRequest,
@@ -66,37 +67,11 @@ from app.schemas.pmo import (
 # Included without extra prefix; decorators already include `/pmo/...` paths.
 router = APIRouter(tags=["pmo-meetings"])
 
+# 使用统一的编码生成工具
+from app.utils.domain_codes import pmo as pmo_codes
 
-def generate_initiation_no(db: Session) -> str:
-    """生成立项申请编号：INIT-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_init = (
-        db.query(PmoProjectInitiation)
-        .filter(PmoProjectInitiation.application_no.like(f"INIT-{today}-%"))
-        .order_by(desc(PmoProjectInitiation.application_no))
-        .first()
-    )
-    if max_init:
-        seq = int(max_init.application_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"INIT-{today}-{seq:03d}"
-
-
-def generate_risk_no(db: Session) -> str:
-    """生成风险编号：RISK-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_risk = (
-        db.query(PmoProjectRisk)
-        .filter(PmoProjectRisk.risk_no.like(f"RISK-{today}-%"))
-        .order_by(desc(PmoProjectRisk.risk_no))
-        .first()
-    )
-    if max_risk:
-        seq = int(max_risk.risk_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"RISK-{today}-{seq:03d}"
+generate_initiation_no = pmo_codes.generate_initiation_no
+generate_risk_no = pmo_codes.generate_risk_no
 
 # 共 6 个路由
 
@@ -105,8 +80,7 @@ def generate_risk_no(db: Session) -> str:
 @router.get("/pmo/meetings", response_model=PaginatedResponse)
 def read_meetings(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     meeting_type: Optional[str] = Query(None, description="会议类型筛选"),
     status: Optional[str] = Query(None, description="状态筛选"),
@@ -131,8 +105,7 @@ def read_meetings(
         query = query.filter(PmoMeeting.meeting_name.like(f"%{keyword}%"))
 
     total = query.count()
-    offset = (page - 1) * page_size
-    meetings = query.order_by(desc(PmoMeeting.meeting_date), desc(PmoMeeting.created_at)).offset(offset).limit(page_size).all()
+    meetings = query.order_by(desc(PmoMeeting.meeting_date), desc(PmoMeeting.created_at)).offset(pagination.offset).limit(pagination.page_size).all()
 
     items = []
     for meeting in meetings:
@@ -159,13 +132,7 @@ def read_meetings(
             updated_at=meeting.updated_at,
         ))
 
-    return PaginatedResponse(
-        items=items,
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
-    )
+    return create_paginated_response(items, total, pagination)
 
 
 @router.post("/pmo/meetings", response_model=MeetingResponse, status_code=status.HTTP_201_CREATED)

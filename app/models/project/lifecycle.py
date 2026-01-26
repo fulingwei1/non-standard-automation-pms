@@ -13,7 +13,6 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
-    UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
 
@@ -21,7 +20,26 @@ from ..base import Base, TimestampMixin
 
 
 class ProjectStage(Base, TimestampMixin):
-    """项目阶段表（项目相关）"""
+    """
+    项目阶段表（项目相关）
+
+    管理项目的9个生命周期阶段（S1-S9）：
+    - S1: 需求进入
+    - S2: 方案设计
+    - S3: 采购备料
+    - S4: 加工制造
+    - S5: 装配调试
+    - S6: 出厂验收 (FAT)
+    - S7: 包装发运
+    - S8: 现场安装 (SAT)
+    - S9: 质保结项
+
+    每个阶段包含：
+    - 计划与实际时间
+    - 进度百分比
+    - 门控条件和必需交付物
+    - 默认工期
+    """
 
     __tablename__ = "project_stages"
 
@@ -65,6 +83,25 @@ class ProjectStage(Base, TimestampMixin):
         Index("idx_stage_project", "project_id"),
         Index("idx_stage_project_code", "project_id", "stage_code", unique=True),
     )
+
+    @property
+    def is_completed(self) -> bool:
+        """阶段是否已完成"""
+        return self.actual_end_date is not None
+
+    @property
+    def is_overdue(self) -> bool:
+        """阶段是否逾期"""
+        if not self.planned_end_date or self.actual_end_date:
+            return False
+        return self.actual_end_date > self.planned_end_date
+
+    @property
+    def duration_days(self) -> int:
+        """实际持续天数"""
+        if self.actual_start_date and self.actual_end_date:
+            return (self.actual_end_date - self.actual_start_date).days
+        return 0
 
     def __repr__(self):
         return f"<ProjectStage {self.stage_code}>"

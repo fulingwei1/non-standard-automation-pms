@@ -1,8 +1,5 @@
 import { Route } from "react-router-dom";
 
-import ProductionDashboard from "../../pages/ProductionDashboard";
-import ProductionManagerDashboard from "../../pages/ProductionManagerDashboard";
-import ManufacturingDirectorDashboard from "../../pages/ManufacturingDirectorDashboard";
 import WorkOrderManagement from "../../pages/WorkOrderManagement";
 import WorkOrderDetail from "../../pages/WorkOrderDetail";
 import DispatchManagement from "../../pages/DispatchManagement";
@@ -14,7 +11,6 @@ import MaterialRequisitionDetail from "../../pages/MaterialRequisitionDetail";
 import ProductionExceptionList from "../../pages/ProductionExceptionList";
 import WorkshopManagement from "../../pages/WorkshopManagement";
 import WorkerManagement from "../../pages/WorkerManagement";
-import WorkerWorkstation from "../../pages/WorkerWorkstation";
 import OutsourcingOrderList from "../../pages/OutsourcingOrderList";
 import OutsourcingOrderDetail from "../../pages/OutsourcingOrderDetail";
 import AcceptanceOrderList from "../../pages/AcceptanceOrderList";
@@ -29,15 +25,6 @@ import WorkshopTaskBoard from "../../pages/WorkshopTaskBoard";
 export function ProductionRoutes() {
   return (
     <>
-      <Route path="/production-dashboard" element={<ProductionDashboard />} />
-      <Route
-        path="/production-manager-dashboard"
-        element={<ProductionManagerDashboard />}
-      />
-      <Route
-        path="/manufacturing-director-dashboard"
-        element={<ManufacturingDirectorDashboard />}
-      />
       <Route path="/work-orders" element={<WorkOrderManagement />} />
       <Route path="/work-orders/:id" element={<WorkOrderDetail />} />
       <Route path="/dispatch-management" element={<DispatchManagement />} />
@@ -61,7 +48,6 @@ export function ProductionRoutes() {
       />
       <Route path="/workshops" element={<WorkshopManagement />} />
       <Route path="/workers" element={<WorkerManagement />} />
-      <Route path="/worker-workstation" element={<WorkerWorkstation />} />
       <Route path="/outsourcing-orders" element={<OutsourcingOrderList />} />
       <Route
         path="/outsourcing-orders/:id"

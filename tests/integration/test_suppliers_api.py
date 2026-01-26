@@ -2,10 +2,17 @@
 """
 Integration tests for Suppliers API
 Covers: app/api/v1/endpoints/suppliers.py
+Updated for unified response format
 """
 
 from datetime import date
 from decimal import Decimal
+
+from tests.helpers.response_helpers import (
+    assert_success_response,
+    assert_paginated_response,
+    extract_data,
+)
 
 
 class TestSuppliersAPI:
@@ -56,7 +63,9 @@ class TestSuppliersAPI:
             headers={"Authorization": f"Bearer {admin_token}"},
         )
         assert response.status_code == 200
-        data = response.json()
+        response_data = response.json()
+        # 使用统一响应格式辅助函数提取数据
+        data = assert_success_response(response_data)
         assert data["id"] == test_supplier.id
         assert data["supplier_name"] == test_supplier.supplier_name
 
@@ -85,8 +94,10 @@ class TestSuppliersAPI:
             json=supplier_data,
             headers={"Authorization": f"Bearer {admin_token}"},
         )
-        assert response.status_code == 200
-        data = response.json()
+        assert response.status_code in [200, 201]
+        response_data = response.json()
+        # 使用统一响应格式辅助函数提取数据
+        data = assert_success_response(response_data, expected_code=response.status_code)
         assert data["supplier_name"] == supplier_data["supplier_name"]
         assert "id" in data
 
@@ -127,7 +138,9 @@ class TestSuppliersAPI:
             headers={"Authorization": f"Bearer {admin_token}"},
         )
         assert response.status_code == 200
-        data = response.json()
+        response_data = response.json()
+        # 使用统一响应格式辅助函数提取数据
+        data = assert_success_response(response_data)
         assert data["supplier_name"] == update_data["supplier_name"]
 
     def test_update_supplier_not_found(self, client, admin_token):
@@ -152,7 +165,9 @@ class TestSuppliersAPI:
             headers={"Authorization": f"Bearer {admin_token}"},
         )
         assert response.status_code == 200
-        data = response.json()
+        response_data = response.json()
+        # 使用统一响应格式辅助函数提取数据
+        data = assert_success_response(response_data)
         assert data["quality_rating"] == Decimal("4.5")
         assert data["delivery_rating"] == Decimal("4.0")
         assert data["service_rating"] == Decimal("4.2")
@@ -165,7 +180,9 @@ class TestSuppliersAPI:
             headers={"Authorization": f"Bearer {admin_token}"},
         )
         assert response.status_code == 200
-        data = response.json()
+        response_data = response.json()
+        # 使用统一响应格式辅助函数提取数据
+        data = assert_success_response(response_data)
         assert data["quality_rating"] == Decimal("3.5")
 
     def test_delete_supplier(self, client, admin_token, db_session):
@@ -189,6 +206,10 @@ class TestSuppliersAPI:
             headers={"Authorization": f"Bearer {admin_token}"},
         )
         assert response.status_code == 200
+        # 删除操作返回SuccessResponse格式
+        response_data = response.json()
+        if "success" in response_data:
+            assert response_data["success"] is True
 
     def test_delete_supplier_not_found(self, client, admin_token):
         """测试删除不存在的供应商"""

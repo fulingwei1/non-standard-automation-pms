@@ -213,10 +213,11 @@ const KnowledgeBase = () => {
   // 过滤数据
   const filteredDocuments = useMemo(() => {
     return documents.filter((doc) => {
-      const matchesSearch = !searchText ||
-      doc.title.toLowerCase().includes(searchText.toLowerCase()) ||
-      doc.description?.toLowerCase().includes(searchText.toLowerCase()) ||
-      doc.tags?.some((tag) => tag.toLowerCase().includes(searchText.toLowerCase()));
+      const searchLower = (searchText || "").toLowerCase();
+    const matchesSearch = !searchText ||
+      (doc.title || "").toLowerCase().includes(searchLower) ||
+      (doc.description || "").toLowerCase().includes(searchLower) ||
+      (doc.tags || []).some((tag) => (tag || "").toLowerCase().includes(searchLower));
 
       const matchesType = !filters.type || doc.type === filters.type;
       const matchesCategory = !filters.category || doc.category === filters.category;

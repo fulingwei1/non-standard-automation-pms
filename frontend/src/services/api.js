@@ -26,5 +26,8 @@ export * from "./api/projectRoles.js";
 export * from "./api/projects.js";
 export * from "./api/sales.js";
 export * from "./api/service.js";
+export * from "./api/stageTemplates.js";
+export * from "./api/stageViews.js";
 export * from "./api/taskCenter.js";
 export * from "./api/workload.js";
+export * from "./api/strategy.js";

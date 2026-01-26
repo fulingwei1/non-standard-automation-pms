@@ -27,7 +27,7 @@ from app.schemas.sales import (
     ApprovalStartRequest,
     ApprovalStatusResponse,
 )
-from app.services.approval_workflow_service import ApprovalWorkflowService
+from app.services.approval_engine import ApprovalEngineService as ApprovalWorkflowService
 
 logger = logging.getLogger(__name__)
 

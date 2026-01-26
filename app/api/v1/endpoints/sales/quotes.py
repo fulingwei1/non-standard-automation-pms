@@ -9,9 +9,8 @@ nested `version` object and expects endpoints:
 - POST /sales/quotes/{quote_id}/approve
 """
 
-from datetime import date, datetime, timedelta
-from decimal import Decimal
-from typing import Any, List, Optional
+from datetime import date, datetime
+from typing import Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -40,7 +39,7 @@ def read_quotes(
     end_date: Optional[date] = Query(None, description="结束日期"),
     current_user: User = Depends(deps.get_current_active_user)
 ):
-    """获取报价列表"""
+    """获取报价列表（已集成数据权限过滤）"""
     service = QuotesService(db)
     return service.get_quotes(
         page=page,
@@ -49,7 +48,8 @@ def read_quotes(
         status=status,
         customer_id=customer_id,
         start_date=start_date,
-        end_date=end_date
+        end_date=end_date,
+        current_user=current_user
     )
 
 

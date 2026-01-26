@@ -1,237 +1,56 @@
 /**
  * Sidebar工具函数
- * 包含导航过滤和角色匹配逻辑
+ *
+ * 统一菜单策略：所有用户看到相同的菜单结构，通过权限控制功能开放
+ * - 有权限的菜单项正常显示
+ * - 无权限的菜单项灰显，鼠标悬停显示"需要XX权限"
  */
 
-import {
-  getNavForRole,
-  hasProcurementAccess
-} from "../../lib/roleConfig";
-import {
-  defaultNavGroups,
-  engineerNavGroups,
-  pmoDirectorNavGroups,
-  pmcNavGroups,
-  buyerNavGroups,
-  productionManagerNavGroups,
-  assemblerNavGroups,
-  salesNavGroups,
-  businessSupportNavGroups,
-  procurementNavGroups,
-  procurementManagerNavGroups,
-  presalesNavGroups,
-  manufacturingDirectorNavGroups,
-  customerServiceManagerNavGroups,
-  customerServiceEngineerNavGroups,
-  teamLeaderNavGroups,
-  financeManagerNavGroups
-} from "./sidebarConfig";
+import { defaultNavGroups } from "./sidebarConfig";
 
-// Filter navigation items based on role permissions
+/**
+ * 过滤导航组（保留组级别的 roles 过滤）
+ * 注意：菜单项级别的权限在 NavGroup 组件中通过 checkPermission 处理
+ */
 export function filterNavItemsByRole(navGroups, role, isSuperuser = false) {
   // 超级管理员可以看到所有菜单
   if (isSuperuser) {
     return navGroups;
   }
 
-  const hasAccess = hasProcurementAccess(role, isSuperuser);
-
-  // Paths that require procurement access (采购订单 and 齐套分析)
-  const procurementPaths = ["/purchases", "/materials", "/material-analysis"];
-
   return navGroups
     .map((group) => {
-      // Check if group has role restrictions (e.g., system management groups)
+      // 检查组级别的角色限制（如系统管理模块）
       if (group.roles && group.roles.length > 0) {
-        // Check if current role is in allowed roles
         const roleMatches = group.roles.some((allowedRole) => {
-          // Direct match
-          if (role === allowedRole) {return true;}
-          // super_admin can access admin modules
-          if (role === "super_admin" && allowedRole === "admin") {return true;}
-          // Chinese role name support
-          if (
-            role === "管理员" &&
-            (allowedRole === "admin" || allowedRole === "super_admin")
-          )
-            {return true;}
-          if (
-            (role === "admin" || role === "super_admin") &&
-            allowedRole === "admin"
-          )
-            {return true;}
+          if (role === allowedRole) return true;
+          if (role === "super_admin" && allowedRole === "admin") return true;
+          if (role === "管理员" && (allowedRole === "admin" || allowedRole === "super_admin")) return true;
+          if ((role === "admin" || role === "super_admin") && allowedRole === "admin") return true;
           return false;
         });
         if (!roleMatches) {
-          return null; // Filter out this group
+          return null; // 过滤掉整个组
         }
       }
 
-      // Filter items in all groups
-      return {
-        ...group,
-        items: group.items.filter((item) => {
-          // Filter 采购订单 and 齐套分析 based on role
-          // These paths should only be visible to roles with procurement access
-          if (procurementPaths.includes(item.path)) {
-            return hasAccess;
-          }
-          // Show all other items
-          return true;
-        })
-      };
+      // 过滤空的 items（如财务管理目前是空的）
+      if (!group.items || group.items.length === 0) {
+        return null;
+      }
+
+      return group;
     })
-    .filter((group) => {
-      // Remove groups that are null or have no items after filtering
-      return group && group.items && group.items.length > 0;
-    });
+    .filter((group) => group !== null);
 }
 
-// Get navigation groups based on user role
+/**
+ * 获取导航组 - 统一返回 defaultNavGroups
+ *
+ * 所有角色使用相同的菜单结构，权限由 NavGroup/NavItem 组件根据 permission 字段控制
+ */
 export function getNavGroupsForRole(role, isSuperuser = false) {
-  // 超级管理员使用默认导航组（包含所有菜单）
-  if (
-    isSuperuser ||
-    role === "super_admin" ||
-    role === "admin" ||
-    role === "管理员" ||
-    role === "系统管理员"
-  ) {
-    return defaultNavGroups;
-  }
-
-  let navGroups;
-
-  switch (role) {
-    case "chairman":
-    case "董事长":
-      navGroups = getNavForRole("chairman");
-      break;
-    case "gm":
-    case "总经理":
-      navGroups = getNavForRole("gm");
-      break;
-    case "assembler":
-    case "assembler_mechanic":
-    case "assembler_electrician":
-    case "装配技工":
-    case "装配钳工":
-    case "装配电工":
-      navGroups = assemblerNavGroups;
-      break;
-    case "sales_director":
-    case "销售总监":
-      // 使用 roleConfig 中的配置，确保不包含问题管理
-      navGroups = getNavForRole("sales_director");
-      break;
-    case "sales_manager":
-    case "销售经理":
-      // 使用 roleConfig 中的配置，确保不包含问题管理
-      navGroups = getNavForRole("sales_manager");
-      break;
-    case "sales":
-    case "销售工程师":
-      navGroups = salesNavGroups;
-      break;
-    case "business_support":
-    case "商务支持":
-    case "商务支持专员":
-      navGroups = businessSupportNavGroups;
-      break;
-    case "procurement":
-    case "采购工程师":
-    case "采购专员":
-      navGroups = procurementNavGroups;
-      break;
-    case "procurement_manager":
-    case "procurement_engineer":
-    case "采购部经理":
-      navGroups = procurementManagerNavGroups;
-      break;
-    case "presales":
-    case "售前技术工程师":
-      navGroups = presalesNavGroups;
-      break;
-    case "me_engineer":
-    case "ee_engineer":
-    case "sw_engineer":
-    case "te_engineer":
-    case "rd_engineer":
-    case "机械工程师":
-    case "电气工程师":
-    case "软件工程师":
-    case "测试工程师":
-    case "研发工程师":
-      navGroups = engineerNavGroups;
-      break;
-    case "tech_dev_manager":
-    case "me_dept_manager":
-    case "me_mgr":
-    case "te_dept_manager":
-    case "ee_dept_manager":
-    case "ee_mgr":
-    case "技术开发部经理":
-    case "机械部经理":
-    case "测试部经理":
-    case "电气部经理":
-      navGroups = getNavForRole("dept_manager");
-      break;
-    case "presales_manager":
-    case "售前经理":
-      navGroups = presalesNavGroups;
-      break;
-    case "finance_manager":
-    case "财务经理":
-      navGroups = financeManagerNavGroups;
-      break;
-    case "hr_manager":
-    case "人事经理":
-      navGroups = getNavForRole("hr_manager");
-      break;
-    case "PMO_DIR":
-    case "项目管理部总监":
-      navGroups = pmoDirectorNavGroups;
-      break;
-    case "pmc":
-    case "pm":
-    case "project_dept_manager":
-    case "项目经理":
-    case "项目部经理":
-      navGroups = pmcNavGroups;
-      break;
-    case "buyer":
-      navGroups = buyerNavGroups;
-      break;
-    case "dept_manager":
-      navGroups = getNavForRole("dept_manager");
-      break;
-    case "production_manager":
-    case "生产部经理":
-    case "电机生产部经理":
-      navGroups = productionManagerNavGroups;
-      break;
-    case "manufacturing_director":
-    case "制造总监":
-      navGroups = manufacturingDirectorNavGroups;
-      break;
-    case "customer_service_manager":
-    case "客服部经理":
-      navGroups = customerServiceManagerNavGroups;
-      break;
-    case "customer_service_engineer":
-    case "客服工程师":
-      navGroups = customerServiceEngineerNavGroups;
-      break;
-    case "te_leader":
-    case "me_leader":
-    case "ee_leader":
-      navGroups = teamLeaderNavGroups;
-      break;
-    default:
-      navGroups = defaultNavGroups;
-  }
-
-  // Filter navigation items based on role permissions
-  // Note: isSuperuser is already handled in getNavGroupsForRole, but we pass it here for consistency
-  return navGroups;
+  // 所有角色都使用统一的菜单结构
+  // 权限控制在组件层面通过 checkPermission 实现
+  return defaultNavGroups;
 }

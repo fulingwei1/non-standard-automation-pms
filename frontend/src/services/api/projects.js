@@ -49,6 +49,7 @@ export const projectContributionApi = {
 export const projectApi = {
   list: (params = {}) =>
     api.get("/projects/", { params: { page: 1, ...params } }),
+  getBoard: (params) => api.get("/projects/board", { params }),
   get: (id) => api.get(`/projects/${id}`),
   create: (data) => api.post("/projects/", data),
   update: (id, data) => api.put(`/projects/${id}`, data),
@@ -88,9 +89,13 @@ export const machineApi = {
   create: (data) => api.post("/machines/", data),
   update: (id, data) => api.put(`/machines/${id}`, data),
   delete: (id) => api.delete(`/machines/${id}`),
+  updateProgress: (id, progress) => api.put(`/machines/${id}/progress?progress_pct=${progress}`),
   getBom: (id) => api.get(`/machines/${id}/bom`),
   getServiceHistory: (id, params) =>
     api.get(`/machines/${id}/service-history`, { params }),
+  // 汇总视图
+  getSummary: (projectId) => api.get(`/machines/projects/${projectId}/summary`),
+  recalculate: (projectId) => api.post(`/machines/projects/${projectId}/recalculate`),
   // 文档管理
   uploadDocument: (machineId, formData) =>
     api.post(`/machines/${machineId}/documents/upload`, formData, {
@@ -157,15 +162,50 @@ export const memberApi = {
 };
 
 export const costApi = {
-  list: (params) => api.get("/costs/", { params }),
-  get: (id) => api.get(`/costs/${id}`),
-  create: (data) => api.post("/costs/", data),
-  update: (id, data) => api.put(`/costs/${id}`, data),
-  delete: (id) => api.delete(`/costs/${id}`),
+  // 项目成本管理 - 使用项目中心路由
+  list: (projectId, params) =>
+    api.get(`/projects/${projectId}/costs`, { params }),
+  get: (projectId, costId) =>
+    api.get(`/projects/${projectId}/costs/${costId}`),
+  create: (projectId, data) =>
+    api.post(`/projects/${projectId}/costs`, data),
+  update: (projectId, costId, data) =>
+    api.put(`/projects/${projectId}/costs/${costId}`, data),
+  delete: (projectId, costId) =>
+    api.delete(`/projects/${projectId}/costs/${costId}`),
+  // 兼容旧接口（已废弃，请使用上面的接口）
   getProjectCosts: (projectId, params) =>
-    api.get(`/costs/projects/${projectId}/costs`, { params }),
+    api.get(`/projects/${projectId}/costs`, { params }),
   getProjectSummary: (projectId) =>
-    api.get(`/costs/projects/${projectId}/costs/summary`),
+    api.get(`/projects/${projectId}/costs/summary`),
+  // 成本分析
+  getCostAnalysis: (projectId, compareProjectId) =>
+    api.get(`/projects/${projectId}/costs/cost-analysis`, {
+      params: compareProjectId ? { compare_project_id: compareProjectId } : {},
+    }),
+  getRevenueDetail: (projectId) =>
+    api.get(`/projects/${projectId}/costs/revenue-detail`),
+  getProfitAnalysis: (projectId) =>
+    api.get(`/projects/${projectId}/costs/profit-analysis`),
+  // 人工成本计算
+  calculateLaborCost: (projectId, params) =>
+    api.post(`/projects/${projectId}/costs/calculate-labor-cost`, null, {
+      params,
+    }),
+  // 预算分析
+  getBudgetExecution: (projectId) =>
+    api.get(`/projects/${projectId}/costs/execution`),
+  getBudgetTrend: (projectId, params) =>
+    api.get(`/projects/${projectId}/costs/trend`, { params }),
+  // 成本复盘
+  generateCostReview: (projectId) =>
+    api.post(`/projects/${projectId}/costs/generate-cost-review`),
+  // 成本预警
+  checkBudgetAlert: (projectId) =>
+    api.post(`/projects/${projectId}/costs/check-budget-alert`),
+  // 成本分摊
+  allocateCost: (projectId, costId, data) =>
+    api.post(`/projects/${projectId}/costs/${costId}/allocate`, data),
 };
 
 export const settlementApi = {

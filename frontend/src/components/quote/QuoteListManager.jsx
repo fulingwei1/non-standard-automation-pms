@@ -73,9 +73,12 @@ export const QuoteListManager = ({
   loading = false,
   className = ""
 }) => {
+  // 确保 quotes 是数组
+  const safeQuotes = Array.isArray(quotes) ? quotes : [];
+
   // 过滤后的 quotes
   const filteredQuotes = useMemo(() => {
-    return quotes.filter((quote) => {
+    return safeQuotes.filter((quote) => {
       // 搜索过滤
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
@@ -130,7 +133,7 @@ export const QuoteListManager = ({
 
       return true;
     });
-  }, [quotes, searchTerm, filters]);
+  }, [safeQuotes, searchTerm, filters]);
 
   // 排序后的 quotes
   const sortedQuotes = useMemo(() => {

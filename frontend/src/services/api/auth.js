@@ -54,8 +54,9 @@ export const roleApi = {
   get: (id) => api.get(`/roles/${id}`),
   create: (data) => api.post("/roles/", data),
   update: (id, data) => api.put(`/roles/${id}`, data),
+  delete: (id) => api.delete(`/roles/${id}`),
   assignPermissions: (id, permissionIds) =>
-    api.put(`/roles/${id}/permissions`, permissionIds),
+    api.put(`/roles/${id}/permissions`, { permission_ids: permissionIds }),
   permissions: (params) => api.get("/roles/permissions", { params }),
   // 菜单配置相关
   getNavGroups: (id) => api.get(`/roles/${id}/nav-groups`),
@@ -63,4 +64,24 @@ export const roleApi = {
     api.put(`/roles/${id}/nav-groups`, navGroups),
   getMyNavGroups: () => api.get("/roles/my/nav-groups"),
   getAllConfig: () => api.get("/roles/config/all"),
+  // 角色继承相关
+  getDetail: (id) => api.get(`/roles/${id}/detail`),
+  getInheritanceTree: () => api.get("/roles/inheritance-tree"),
+  compare: (roleIds) => api.post("/roles/compare", roleIds),
+  // 角色模板相关
+  listTemplates: (params) => api.get("/roles/templates/", { params }),
+  getTemplate: (id) => api.get(`/roles/templates/${id}`),
+  createTemplate: (data) => api.post("/roles/templates/", data),
+  updateTemplate: (id, data) => api.put(`/roles/templates/${id}`, data),
+  deleteTemplate: (id) => api.delete(`/roles/templates/${id}`),
+  createFromTemplate: (templateId, data) =>
+    api.post(`/roles/templates/${templateId}/create-role`, null, { params: data }),
+};
+
+// 权限矩阵 API
+export const permissionApi = {
+  getMatrix: () => api.get("/permissions/matrix"),
+  getDependencies: () => api.get("/permissions/dependencies"),
+  getByRole: (roleId, includeInherited = true) =>
+    api.get(`/permissions/by-role/${roleId}`, { params: { include_inherited: includeInherited } }),
 };

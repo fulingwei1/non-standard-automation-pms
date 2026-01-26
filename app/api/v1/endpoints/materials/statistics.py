@@ -12,7 +12,8 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.material import Material, MaterialCategory, Supplier
+from app.models.material import Material, MaterialCategory
+from app.models.vendor import Vendor
 from app.models.shortage import MaterialSubstitution
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
@@ -241,7 +242,7 @@ def search_materials(
         # 获取供应商名称
         supplier_name = None
         if material.default_supplier_id:
-            supplier = db.query(Supplier).filter(Supplier.id == material.default_supplier_id).first()
+            supplier = db.query(Vendor).filter(Vendor.id == material.default_supplier_id, Vendor.vendor_type == 'MATERIAL').first()
             supplier_name = supplier.supplier_name if supplier else None
 
         items.append(MaterialSearchResponse(

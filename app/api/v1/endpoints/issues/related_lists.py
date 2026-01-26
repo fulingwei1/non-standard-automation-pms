@@ -9,7 +9,7 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import desc
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
 from app.core import security
@@ -18,7 +18,7 @@ from app.models.issue import Issue
 from app.models.progress import Task
 from app.models.user import User
 from app.schemas.issue import IssueListResponse, IssueResponse
-from app.services.data_scope_service import DataScopeService
+from app.services.data_scope import DataScopeService
 
 router = APIRouter()
 
@@ -74,6 +74,8 @@ def _build_issue_list_response(
             project_name=issue.project.project_name if issue.project else None,
             machine_code=issue.machine.machine_code if issue.machine else None,
             machine_name=issue.machine.machine_name if issue.machine else None,
+            service_ticket_id=issue.service_ticket_id,
+            service_ticket_no=issue.service_ticket.ticket_no if issue.service_ticket else None,
         ))
 
     return IssueListResponse(
@@ -95,7 +97,9 @@ def get_project_issues(
     status: Optional[str] = Query(None, description="状态筛选"),
 ) -> Any:
     """获取项目下的所有问题"""
-    query = db.query(Issue).filter(
+    query = db.query(Issue).options(
+        joinedload(Issue.service_ticket)
+    ).filter(
         Issue.project_id == project_id,
         Issue.status != 'DELETED'
     )
@@ -120,7 +124,9 @@ def get_machine_issues(
     status: Optional[str] = Query(None, description="状态筛选"),
 ) -> Any:
     """获取机台下的所有问题"""
-    query = db.query(Issue).filter(
+    query = db.query(Issue).options(
+        joinedload(Issue.service_ticket)
+    ).filter(
         Issue.machine_id == machine_id,
         Issue.status != 'DELETED'
     )
@@ -150,7 +156,9 @@ def get_task_issues(
     if not task:
         raise HTTPException(status_code=404, detail="任务不存在")
 
-    query = db.query(Issue).filter(
+    query = db.query(Issue).options(
+        joinedload(Issue.service_ticket)
+    ).filter(
         Issue.task_id == task_id,
         Issue.status != 'DELETED'
     )

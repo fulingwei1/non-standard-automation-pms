@@ -122,7 +122,20 @@ class ProjectPaymentPlan(Base, TimestampMixin):
 
 
 class ProjectCost(Base, TimestampMixin):
-    """项目成本表"""
+    """
+    项目成本表（通用成本聚合）
+
+    用途：自动从业务模块聚合成本记录
+    - 采购成本（从 purchase_orders 聚合）
+    - 外协成本（从 outsourcing_orders 聚合）
+    - BOM 成本（从 bom_headers 聚合）
+
+    与 FinancialProjectCost 的区别：
+    - 此表存储业务系统自动产生的成本
+    - FinancialProjectCost 存储财务部手工录入的非物料成本
+
+    数据流向：业务模块 -> source_type/source_id -> ProjectCost -> 项目成本统计
+    """
 
     __tablename__ = "project_costs"
 
@@ -134,10 +147,10 @@ class ProjectCost(Base, TimestampMixin):
     cost_type = Column(String(50), nullable=False, comment="成本类型")
     cost_category = Column(String(50), nullable=False, comment="成本分类")
 
-    # 来源
-    source_module = Column(String(50), comment="来源模块")
+    # 来源追溯
+    source_module = Column(String(50), comment="来源模块 (purchase/outsourcing/bom)")
     source_type = Column(String(50), comment="来源类型")
-    source_id = Column(Integer, comment="来源ID")
+    source_id = Column(Integer, comment="来源业务ID")
     source_no = Column(String(100), comment="来源单号")
 
     # 金额
@@ -158,11 +171,29 @@ class ProjectCost(Base, TimestampMixin):
         Index("idx_project_costs_project", "project_id"),
         Index("idx_project_costs_type", "cost_type"),
         Index("idx_project_costs_date", "cost_date"),
+        Index("idx_project_costs_source", "source_type", "source_id"),
     )
 
 
 class FinancialProjectCost(Base, TimestampMixin):
-    """财务历史项目成本表（财务部维护的非物料成本）"""
+    """
+    财务项目成本表（财务部手工录入）
+
+    用途：财务部录入的非物料成本
+    - 人工费用（工时 × 时薪）
+    - 差旅费用（交通、住宿、餐补）
+    - 招待费用（客户招待、商务宴请）
+    - 其他费用（认证、培训、咨询等）
+
+    与 ProjectCost 的区别：
+    - 此表存储财务部手工录入的成本
+    - ProjectCost 存储业务系统自动产生的成本（采购、外协等）
+
+    特点：
+    - 支持批量上传（upload_batch_no）
+    - 需要财务核实（is_verified）
+    - 包含详细的人工费、差旅费等字段
+    """
 
     __tablename__ = "financial_project_costs"
 
@@ -228,7 +259,7 @@ class FinancialProjectCost(Base, TimestampMixin):
         Index("idx_financial_cost_date", "cost_date"),
         Index("idx_financial_cost_month", "cost_month"),
         Index("idx_financial_cost_upload_batch", "upload_batch_no"),
-        {"comment": "财务历史项目成本表"}
+        {"comment": "财务项目成本表（财务部手工录入）"}
     )
 
     def __repr__(self):

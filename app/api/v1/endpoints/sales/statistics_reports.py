@@ -3,6 +3,7 @@
 销售统计 - 报表功能
 
 包含销售漏斗报表、赢输分析、销售业绩、客户贡献、O2C管道等报表
+已集成数据权限过滤：不同角色看到不同范围的统计数据
 """
 
 from datetime import date as date_type, datetime
@@ -13,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.core.sales_permissions import filter_sales_data_by_scope, filter_sales_finance_data_by_scope
 from app.models.sales import Contract, Invoice, Lead, Opportunity, Quote
 from app.models.user import User
 from app.schemas.common import ResponseModel
@@ -30,10 +32,10 @@ def get_sales_funnel_report(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
-    销售漏斗报表
+    销售漏斗报表（已集成数据权限过滤）
     """
     from .statistics_core import get_sales_funnel
-    # 复用已有的统计逻辑
+    # 复用已有的统计逻辑（已包含数据权限过滤）
     return get_sales_funnel(db, start_date, end_date, current_user)
 
 
@@ -45,9 +47,11 @@ def get_win_loss_analysis(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
-    赢单/丢单分析
+    赢单/丢单分析（已集成数据权限过滤）
     """
     query = db.query(Opportunity)
+    # 应用数据权限过滤
+    query = filter_sales_data_by_scope(query, current_user, db, Opportunity, "owner_id")
 
     if start_date:
         query = query.filter(Opportunity.created_at >= datetime.combine(start_date, datetime.min.time()))
@@ -93,11 +97,16 @@ def get_sales_performance(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
-    销售业绩统计
+    销售业绩统计（已集成数据权限过滤）
     """
     query_opps = db.query(Opportunity)
     query_contracts = db.query(Contract)
     query_invoices = db.query(Invoice)
+
+    # 应用数据权限过滤
+    query_opps = filter_sales_data_by_scope(query_opps, current_user, db, Opportunity, "owner_id")
+    query_contracts = filter_sales_data_by_scope(query_contracts, current_user, db, Contract, "owner_id")
+    query_invoices = filter_sales_finance_data_by_scope(query_invoices, current_user, db, Invoice, "created_by")
 
     if start_date:
         query_opps = query_opps.filter(Opportunity.created_at >= datetime.combine(start_date, datetime.min.time()))
@@ -144,9 +153,11 @@ def get_customer_contribution(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
-    客户贡献分析
+    客户贡献分析（已集成数据权限过滤）
     """
     query_contracts = db.query(Contract).filter(Contract.status == "SIGNED")
+    # 应用数据权限过滤
+    query_contracts = filter_sales_data_by_scope(query_contracts, current_user, db, Contract, "owner_id")
 
     if start_date:
         query_contracts = query_contracts.filter(Contract.created_at >= datetime.combine(start_date, datetime.min.time()))
@@ -192,13 +203,13 @@ def get_o2c_pipeline(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
-    O2C流程全链路统计
+    O2C流程全链路统计（已集成数据权限过滤）
     """
-    from datetime import timedelta
     today = date_type.today()
 
     # 线索统计
     query_leads = db.query(Lead)
+    query_leads = filter_sales_data_by_scope(query_leads, current_user, db, Lead, "owner_id")
     if start_date:
         query_leads = query_leads.filter(Lead.created_at >= datetime.combine(start_date, datetime.min.time()))
     if end_date:
@@ -209,6 +220,7 @@ def get_o2c_pipeline(
 
     # 商机统计
     query_opps = db.query(Opportunity)
+    query_opps = filter_sales_data_by_scope(query_opps, current_user, db, Opportunity, "owner_id")
     if start_date:
         query_opps = query_opps.filter(Opportunity.created_at >= datetime.combine(start_date, datetime.min.time()))
     if end_date:
@@ -221,6 +233,7 @@ def get_o2c_pipeline(
 
     # 报价统计
     query_quotes = db.query(Quote)
+    query_quotes = filter_sales_data_by_scope(query_quotes, current_user, db, Quote, "owner_id")
     if start_date:
         query_quotes = query_quotes.filter(Quote.created_at >= datetime.combine(start_date, datetime.min.time()))
     if end_date:
@@ -232,6 +245,7 @@ def get_o2c_pipeline(
 
     # 合同统计
     query_contracts = db.query(Contract)
+    query_contracts = filter_sales_data_by_scope(query_contracts, current_user, db, Contract, "owner_id")
     if start_date:
         query_contracts = query_contracts.filter(Contract.created_at >= datetime.combine(start_date, datetime.min.time()))
     if end_date:
@@ -241,8 +255,9 @@ def get_o2c_pipeline(
     signed_contracts = query_contracts.filter(Contract.status == "SIGNED").all()
     signed_amount = sum([float(c.contract_amount or 0) for c in signed_contracts])
 
-    # 发票统计
+    # 发票统计（使用财务数据权限）
     query_invoices = db.query(Invoice)
+    query_invoices = filter_sales_finance_data_by_scope(query_invoices, current_user, db, Invoice, "created_by")
     if start_date:
         query_invoices = query_invoices.filter(Invoice.created_at >= datetime.combine(start_date, datetime.min.time()))
     if end_date:

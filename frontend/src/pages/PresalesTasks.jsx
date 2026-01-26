@@ -4,7 +4,7 @@
  */
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   ListTodo,
   Search,
@@ -549,7 +549,8 @@ function TaskDetailPanel({ task, onClose, onUpdate }) {
 
 }
 
-export default function PresalesTasks() {
+export default function PresalesTasks({ embedded = false } = {}) {
+  const location = useLocation();
   const [viewMode, setViewMode] = useState("list"); // 'list', 'kanban'
   const [selectedType, setSelectedType] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
@@ -562,14 +563,21 @@ export default function PresalesTasks() {
   // Map backend ticket type to frontend type
   const mapTicketType = (backendType) => {
     const typeMap = {
+      SOLUTION: "solution",
       SOLUTION_DESIGN: "solution",
+      SOLUTION_REVIEW: "review",
+      QUOTATION: "costing",
       COST_ESTIMATE: "costing",
       COST_SUPPORT: "costing",
-      TECHNICAL_EXCHANGE: "exchange",
-      REQUIREMENT_RESEARCH: "survey",
+      TENDER: "bidding",
       TENDER_SUPPORT: "bidding",
-      SOLUTION_REVIEW: "review",
-      FEASIBILITY_ASSESSMENT: "survey"
+      MEETING: "exchange",
+      TECHNICAL_EXCHANGE: "exchange",
+      SURVEY: "survey",
+      REQUIREMENT_RESEARCH: "survey",
+      FEASIBILITY_ASSESSMENT: "survey",
+      CONSULT: "survey",
+      SITE_VISIT: "survey"
     };
     return typeMap[backendType] || "solution";
   };
@@ -580,8 +588,12 @@ export default function PresalesTasks() {
       PENDING: "pending",
       ACCEPTED: "in_progress",
       IN_PROGRESS: "in_progress",
+      PROCESSING: "in_progress",
+      REVIEW: "reviewing",
       REVIEWING: "reviewing",
-      COMPLETED: "completed"
+      COMPLETED: "completed",
+      CLOSED: "completed",
+      CANCELLED: "completed"
     };
     return statusMap[backendStatus] || "pending";
   };
@@ -609,9 +621,9 @@ export default function PresalesTasks() {
       if (selectedStatus !== "all") {
         const statusMap = {
           pending: "PENDING",
-          in_progress: "IN_PROGRESS,ACCEPTED",
-          reviewing: "REVIEWING",
-          completed: "COMPLETED"
+          in_progress: "ACCEPTED,IN_PROGRESS,PROCESSING",
+          reviewing: "REVIEW",
+          completed: "COMPLETED,CLOSED,CANCELLED"
         };
         params.status = statusMap[selectedStatus] || selectedStatus;
       }
@@ -662,6 +674,18 @@ export default function PresalesTasks() {
     }
   }, [selectedStatus, searchTerm]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const type = params.get("type");
+    const status = params.get("status");
+    if (type) {
+      setSelectedType(type);
+    }
+    if (status) {
+      setSelectedStatus(status);
+    }
+  }, [location.search]);
+
   // Load tasks when filters change
   useEffect(() => {
     loadTasks();
@@ -672,10 +696,11 @@ export default function PresalesTasks() {
     const matchesType = selectedType === "all" || task.type === selectedType;
     const matchesStatus =
     selectedStatus === "all" || task.status === selectedStatus;
+    const searchLower = (searchTerm || "").toLowerCase();
     const matchesSearch =
-    task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    task.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    task.description.toLowerCase().includes(searchTerm.toLowerCase());
+    (task.title || "").toLowerCase().includes(searchLower) ||
+    (task.customer || "").toLowerCase().includes(searchLower) ||
+    (task.description || "").toLowerCase().includes(searchLower);
     return matchesType && matchesStatus && matchesSearch;
   });
 
@@ -693,17 +718,19 @@ export default function PresalesTasks() {
       className="space-y-6">
 
       {/* 页面头部 */}
-      <PageHeader
-        title="技术任务中心"
-        description="管理技术支持请求、方案设计、投标任务"
-        actions={
-        <motion.div variants={fadeIn} className="flex gap-2">
-            <Button className="flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              新建任务
-            </Button>
-        </motion.div>
-        } />
+      {!embedded && (
+        <PageHeader
+          title="技术任务中心"
+          description="管理技术支持请求、方案设计、投标任务"
+          actions={
+          <motion.div variants={fadeIn} className="flex gap-2">
+              <Button className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                新建任务
+              </Button>
+          </motion.div>
+          } />
+      )}
 
 
       {/* 工具栏 */}

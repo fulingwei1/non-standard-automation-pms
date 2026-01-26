@@ -1,0 +1,17 @@
+# -*- coding: utf-8 -*-
+"""
+项目执行阶段定义 (S09-S20)
+
+包含项目正式立项、详细方案设计、详细设计、采购与外协、机械装配、电气装配、
+软件开发与调试、整机联调、内部验收、出厂发运、现场安装调试、客户验收等阶段
+
+注意：此文件已拆分为多个模块文件，位于 execution/ 目录下
+此文件仅用于向后兼容，重新导出所有阶段
+"""
+
+from typing import Any, Dict, List
+
+# 从拆分后的模块重新导出
+from .execution import EXECUTION_STAGES
+
+__all__ = ["EXECUTION_STAGES"]

@@ -102,7 +102,9 @@ class EmployeeHrProfileCreate(BaseModel):
     dept_level1: Optional[str] = Field(None, max_length=50, description="一级部门")
     dept_level2: Optional[str] = Field(None, max_length=50, description="二级部门")
     dept_level3: Optional[str] = Field(None, max_length=50, description="三级部门")
-    direct_supervisor: Optional[str] = Field(None, max_length=50, description="直接上级")
+    direct_supervisor: Optional[str] = Field(
+        None, max_length=50, description="直接上级"
+    )
     position: Optional[str] = Field(None, max_length=100, description="职务")
     job_level: Optional[str] = Field(None, max_length=50, description="级别")
     # 入职相关
@@ -124,8 +126,12 @@ class EmployeeHrProfileCreate(BaseModel):
     # 联系地址
     home_address: Optional[str] = Field(None, max_length=200, description="家庭住址")
     current_address: Optional[str] = Field(None, max_length=200, description="目前住址")
-    emergency_contact: Optional[str] = Field(None, max_length=50, description="紧急联系人")
-    emergency_phone: Optional[str] = Field(None, max_length=20, description="紧急联系电话")
+    emergency_contact: Optional[str] = Field(
+        None, max_length=50, description="紧急联系人"
+    )
+    emergency_phone: Optional[str] = Field(
+        None, max_length=20, description="紧急联系电话"
+    )
     # 教育背景
     graduate_school: Optional[str] = Field(None, max_length=100, description="毕业院校")
     graduate_date: Optional[str] = Field(None, max_length=20, description="毕业时间")
@@ -140,7 +146,9 @@ class EmployeeHrProfileCreate(BaseModel):
     housing_fund_no: Optional[str] = Field(None, max_length=50, description="公积金号")
     # 离职信息
     resignation_date: Optional[date] = Field(None, description="离职日期")
-    old_department: Optional[str] = Field(None, max_length=100, description="部门（旧）")
+    old_department: Optional[str] = Field(
+        None, max_length=100, description="部门（旧）"
+    )
 
 
 class EmployeeHrProfileUpdate(BaseModel):
@@ -260,7 +268,9 @@ class HrTransactionCreate(BaseModel):
     """创建人事事务"""
 
     employee_id: int = Field(description="员工ID")
-    transaction_type: str = Field(description="事务类型: onboarding, resignation, confirmation, transfer, promotion, salary_adjustment")
+    transaction_type: str = Field(
+        description="事务类型: onboarding, resignation, confirmation, transfer, promotion, salary_adjustment"
+    )
     transaction_date: date = Field(description="事务生效日期")
 
     # 入职相关
@@ -355,7 +365,9 @@ class EmployeeContractCreate(BaseModel):
 
     employee_id: int = Field(description="员工ID")
     contract_no: Optional[str] = Field(None, max_length=50, description="合同编号")
-    contract_type: str = Field(description="合同类型: fixed_term, indefinite, project, intern, labor_dispatch")
+    contract_type: str = Field(
+        description="合同类型: fixed_term, indefinite, project, intern, labor_dispatch"
+    )
     start_date: date = Field(description="合同开始日期")
     end_date: Optional[date] = Field(None, description="合同结束日期")
     duration_months: Optional[int] = Field(None, description="合同期限(月)")
@@ -439,6 +451,195 @@ class ContractReminderResponse(TimestampSchema):
     status: str
     handle_action: Optional[str] = None
     handle_remark: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+# ==================== 组织单元 (Org Units) Schema ====================
+
+
+class OrganizationUnitCreate(BaseModel):
+    """创建组织单元"""
+
+    unit_code: str = Field(max_length=50, description="组织编码")
+    unit_name: str = Field(max_length=100, description="组织名称")
+    unit_type: str = Field(description="类型: COMPANY/BUSINESS_UNIT/DEPARTMENT/TEAM")
+    parent_id: Optional[int] = None
+    manager_id: Optional[int] = None
+    sort_order: int = 0
+    description: Optional[str] = None
+
+
+class OrganizationUnitUpdate(BaseModel):
+    """更新组织单元"""
+
+    unit_name: Optional[str] = None
+    unit_type: Optional[str] = None
+    parent_id: Optional[int] = None
+    manager_id: Optional[int] = None
+    sort_order: Optional[int] = None
+    description: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class OrganizationUnitResponse(TimestampSchema):
+    """组织单元响应"""
+
+    id: int
+    unit_code: str
+    unit_name: str
+    unit_type: str
+    parent_id: Optional[int] = None
+    manager_id: Optional[int] = None
+    level: int
+    path: Optional[str] = None
+    sort_order: int
+    is_active: bool
+
+    # 额外字段便于前端使用
+    manager_name: Optional[str] = None
+    parent_name: Optional[str] = None
+    children: Optional[list] = None
+
+    class Config:
+        from_attributes = True
+
+
+# ==================== 岗位 (Positions) Schema ====================
+
+
+class PositionCreate(BaseModel):
+    """创建岗位"""
+
+    position_code: str = Field(max_length=50, description="岗位编码")
+    position_name: str = Field(max_length=100, description="岗位名称")
+    position_category: str = Field(
+        description="类别: MANAGEMENT/TECHNICAL/SUPPORT/SALES/PRODUCTION"
+    )
+    org_unit_id: Optional[int] = None
+    description: Optional[str] = None
+    responsibilities: Optional[dict] = None
+    sort_order: int = 0
+
+
+class PositionUpdate(BaseModel):
+    """更新岗位"""
+
+    position_name: Optional[str] = None
+    position_category: Optional[str] = None
+    org_unit_id: Optional[int] = None
+    description: Optional[str] = None
+    responsibilities: Optional[dict] = None
+    is_active: Optional[bool] = None
+    sort_order: Optional[int] = None
+
+
+class PositionResponse(TimestampSchema):
+    """岗位响应"""
+
+    id: int
+    position_code: str
+    position_name: str
+    position_category: str
+    org_unit_id: Optional[int] = None
+    org_unit_name: Optional[str] = None
+    description: Optional[str] = None
+    responsibilities: Optional[dict] = None
+    is_active: bool
+    sort_order: int
+
+    class Config:
+        from_attributes = True
+
+
+# ==================== 职级 (Job Levels) Schema ====================
+
+
+class JobLevelCreate(BaseModel):
+    """创建职级"""
+
+    level_code: str = Field(max_length=20, description="职级编码")
+    level_name: str = Field(max_length=50, description="职级名称")
+    level_category: str = Field(description="序列: P/M/T")
+    level_rank: int = Field(description="职级数值")
+    description: Optional[str] = None
+    sort_order: int = 0
+
+
+class JobLevelUpdate(BaseModel):
+    """更新职级"""
+
+    level_name: Optional[str] = None
+    level_category: Optional[str] = None
+    level_rank: Optional[int] = None
+    description: Optional[str] = None
+    is_active: Optional[bool] = None
+    sort_order: Optional[int] = None
+
+
+class JobLevelResponse(TimestampSchema):
+    """职级响应"""
+
+    id: int
+    level_code: str
+    level_name: str
+    level_category: str
+    level_rank: int
+    description: Optional[str] = None
+    is_active: bool
+    sort_order: int
+
+    class Config:
+        from_attributes = True
+
+
+# ==================== 员工分配 (Employee Assignments) Schema ====================
+
+
+class EmployeeOrgAssignmentCreate(BaseModel):
+    """创建员工组织分配"""
+
+    employee_id: int
+    org_unit_id: int
+    position_id: Optional[int] = None
+    job_level_id: Optional[int] = None
+    is_primary: bool = True
+    assignment_type: str = "PERMANENT"
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+
+
+class EmployeeOrgAssignmentUpdate(BaseModel):
+    """更新员工组织分配"""
+
+    org_unit_id: Optional[int] = None
+    position_id: Optional[int] = None
+    job_level_id: Optional[int] = None
+    is_primary: Optional[bool] = None
+    assignment_type: Optional[str] = None
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+    is_active: Optional[bool] = None
+
+
+class EmployeeOrgAssignmentResponse(TimestampSchema):
+    """员工组织分配响应"""
+
+    id: int
+    employee_id: int
+    employee_name: Optional[str] = None
+    org_unit_id: int
+    org_unit_name: Optional[str] = None
+    position_id: Optional[int] = None
+    position_name: Optional[str] = None
+    job_level_id: Optional[int] = None
+    job_level_name: Optional[str] = None
+    is_primary: bool
+    assignment_type: str
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+    is_active: bool
 
     class Config:
         from_attributes = True

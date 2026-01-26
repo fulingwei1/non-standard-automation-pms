@@ -21,7 +21,7 @@ import {
   defaultFormData,
   defaultIssueData,
   defaultPaymentData
-} from "./constants";
+} from "../../lib/constants/finance";
 import {
   CreateInvoiceDialog,
   EditInvoiceDialog,
@@ -224,10 +224,11 @@ export default function InvoiceManagement() {
 
   const filteredInvoices = useMemo(() => {
     return invoices.filter((invoice) => {
-      const matchSearch =
-        invoice.id.toLowerCase().includes(searchText.toLowerCase()) ||
-        invoice.projectName.toLowerCase().includes(searchText.toLowerCase()) ||
-        invoice.customerName.toLowerCase().includes(searchText.toLowerCase());
+      const searchLower = (searchText || "").toLowerCase();
+    const matchSearch =
+        (invoice.id || "").toLowerCase().includes(searchLower) ||
+        (invoice.projectName || "").toLowerCase().includes(searchLower) ||
+        (invoice.customerName || "").toLowerCase().includes(searchLower);
 
       const matchStatus =
         filterStatus === "all" || invoice.status === filterStatus;

@@ -33,8 +33,8 @@ from app.models.outsourcing import (
     OutsourcingOrderItem,
     OutsourcingPayment,
     OutsourcingProgress,
-    OutsourcingVendor,
 )
+from app.models.vendor import Vendor
 from app.models.project import Machine, Project
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
@@ -61,53 +61,12 @@ from app.schemas.outsourcing import (
 
 router = APIRouter()
 
+# 使用统一的编码生成工具
+from app.utils.domain_codes import outsourcing as outsourcing_codes
 
-def generate_order_no(db: Session) -> str:
-    """生成外协订单号：OS-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_order = (
-        db.query(OutsourcingOrder)
-        .filter(OutsourcingOrder.order_no.like(f"OS-{today}-%"))
-        .order_by(desc(OutsourcingOrder.order_no))
-        .first()
-    )
-    if max_order:
-        seq = int(max_order.order_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"OS-{today}-{seq:03d}"
-
-
-def generate_delivery_no(db: Session) -> str:
-    """生成交付单号：DL-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_delivery = (
-        db.query(OutsourcingDelivery)
-        .filter(OutsourcingDelivery.delivery_no.like(f"DL-{today}-%"))
-        .order_by(desc(OutsourcingDelivery.delivery_no))
-        .first()
-    )
-    if max_delivery:
-        seq = int(max_delivery.delivery_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"DL-{today}-{seq:03d}"
-
-
-def generate_inspection_no(db: Session) -> str:
-    """生成质检单号：IQ-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_inspection = (
-        db.query(OutsourcingInspection)
-        .filter(OutsourcingInspection.inspection_no.like(f"IQ-{today}-%"))
-        .order_by(desc(OutsourcingInspection.inspection_no))
-        .first()
-    )
-    if max_inspection:
-        seq = int(max_inspection.inspection_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"IQ-{today}-{seq:03d}"
+generate_order_no = outsourcing_codes.generate_order_no
+generate_delivery_no = outsourcing_codes.generate_delivery_no
+generate_inspection_no = outsourcing_codes.generate_inspection_no
 
 
 # NOTE: keep flat routes (no extra prefix) to preserve the original API paths.
@@ -145,7 +104,10 @@ def read_outsourcing_deliveries(
 
     items = []
     for delivery in deliveries:
-        vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == delivery.vendor_id).first()
+        vendor = db.query(Vendor).filter(
+            Vendor.id == delivery.vendor_id,
+            Vendor.vendor_type == 'OUTSOURCING'
+        ).first()
         order = db.query(OutsourcingOrder).filter(OutsourcingOrder.id == delivery.order_id).first()
 
         items.append(OutsourcingDeliveryResponse(
@@ -153,7 +115,7 @@ def read_outsourcing_deliveries(
             delivery_no=delivery.delivery_no,
             order_id=delivery.order_id,
             order_no=order.order_no if order else None,
-            vendor_name=vendor.vendor_name if vendor else None,
+            vendor_name=vendor.supplier_name if vendor else None,
             delivery_date=delivery.delivery_date,
             delivery_type=delivery.delivery_type,
             status=delivery.status,
@@ -189,7 +151,10 @@ def create_outsourcing_delivery(
     if order.status not in ["APPROVED", "IN_PROGRESS"]:
         raise HTTPException(status_code=400, detail="只能为已审批或进行中的订单创建交付记录")
 
-    vendor = db.query(OutsourcingVendor).filter(OutsourcingVendor.id == order.vendor_id).first()
+        vendor = db.query(Vendor).filter(
+            Vendor.id == order.vendor_id,
+            Vendor.vendor_type == 'OUTSOURCING'
+        ).first()
     if not vendor:
         raise HTTPException(status_code=404, detail="外协商不存在")
 

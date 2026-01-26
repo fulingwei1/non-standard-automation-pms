@@ -7,7 +7,7 @@
 
 import logging
 from decimal import Decimal
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import desc
@@ -37,10 +37,18 @@ from app.schemas.acceptance import (
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
 
+from app.services.data_scope_service import DataScopeConfig, DataScopeService
+
 from .utils import generate_order_no, validate_acceptance_rules, validate_edit_rules
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+# 验收单数据权限配置
+ACCEPTANCE_DATA_SCOPE_CONFIG = DataScopeConfig(
+    owner_field="created_by",
+    project_field="project_id",
+)
 
 
 @router.get("/acceptance-orders", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
@@ -56,9 +64,14 @@ def read_acceptance_orders(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
-    获取验收单列表
+    获取验收单列表（按数据权限过滤）
     """
     query = db.query(AcceptanceOrder)
+
+    # 应用数据权限过滤
+    query = DataScopeService.filter_by_scope(
+        db, query, AcceptanceOrder, current_user, ACCEPTANCE_DATA_SCOPE_CONFIG
+    )
 
     if keyword:
         query = query.filter(AcceptanceOrder.order_no.like(f"%{keyword}%"))

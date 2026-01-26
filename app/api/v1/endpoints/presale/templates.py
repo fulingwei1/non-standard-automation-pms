@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
+from app.utils.pagination import PaginationParams, create_paginated_response
 from app.models.presale import (
     PresaleSolution,
     PresaleSolutionCost,
@@ -36,54 +36,12 @@ from app.schemas.presale import (
 
 router = APIRouter()
 
+# 使用统一的编码生成工具
+from app.utils.domain_codes import presale as presale_codes
 
-def generate_ticket_no(db: Session) -> str:
-    """生成工单编号：TICKET-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_ticket = (
-        db.query(PresaleSupportTicket)
-        .filter(PresaleSupportTicket.ticket_no.like(f"TICKET-{today}-%"))
-        .order_by(desc(PresaleSupportTicket.ticket_no))
-        .first()
-    )
-    if max_ticket:
-        seq = int(max_ticket.ticket_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"TICKET-{today}-{seq:03d}"
-
-
-def generate_solution_no(db: Session) -> str:
-    """生成方案编号：SOL-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_solution = (
-        db.query(PresaleSolution)
-        .filter(PresaleSolution.solution_no.like(f"SOL-{today}-%"))
-        .order_by(desc(PresaleSolution.solution_no))
-        .first()
-    )
-    if max_solution:
-        seq = int(max_solution.solution_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"SOL-{today}-{seq:03d}"
-
-
-def generate_tender_no(db: Session) -> str:
-    """生成投标编号：TENDER-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_tender = (
-        db.query(PresaleTenderRecord)
-        .filter(PresaleTenderRecord.tender_no.like(f"TENDER-{today}-%"))
-        .order_by(desc(PresaleTenderRecord.tender_no))
-        .first()
-    )
-    if max_tender:
-        seq = int(max_tender.tender_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"TENDER-{today}-{seq:03d}"
-
+generate_ticket_no = presale_codes.generate_ticket_no
+generate_solution_no = presale_codes.generate_solution_no
+generate_tender_no = presale_codes.generate_tender_no
 
 
 from fastapi import APIRouter
@@ -100,8 +58,7 @@ router = APIRouter(
 @router.get("/presale/templates", response_model=PaginatedResponse)
 def read_templates(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(),
     keyword: Optional[str] = Query(None, description="关键词搜索（模板名称）"),
     industry: Optional[str] = Query(None, description="行业筛选"),
     test_type: Optional[str] = Query(None, description="测试类型筛选"),
@@ -126,8 +83,7 @@ def read_templates(
         query = query.filter(PresaleSolutionTemplate.is_active == is_active)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    templates = query.order_by(desc(PresaleSolutionTemplate.created_at)).offset(offset).limit(page_size).all()
+    templates = query.order_by(desc(PresaleSolutionTemplate.created_at)).offset(pagination.offset).limit(pagination.page_size).all()
 
     items = []
     for template in templates:
@@ -144,13 +100,7 @@ def read_templates(
             updated_at=template.updated_at,
         ))
 
-    return PaginatedResponse(
-        items=items,
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
-    )
+    return create_paginated_response(items, total, pagination)
 
 
 @router.post("/presale/templates", response_model=TemplateResponse, status_code=status.HTTP_201_CREATED)

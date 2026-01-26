@@ -270,13 +270,12 @@ export default function CustomerList() {
   // Filter customers
   const filteredCustomers = useMemo(() => {
     return mockCustomers.filter((customer) => {
-      const matchesSearch =
+      const searchLower = (searchTerm || "").toLowerCase();
+    const matchesSearch =
         !searchTerm ||
-        customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        customer.shortName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        customer.contactPerson
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase());
+        (customer.name || "").toLowerCase().includes(searchLower) ||
+        (customer.shortName || "").toLowerCase().includes(searchLower) ||
+        (customer.contactPerson || "").toLowerCase().includes(searchLower);
 
       const matchesGrade =
         selectedGrade === "all" || customer.grade === selectedGrade;

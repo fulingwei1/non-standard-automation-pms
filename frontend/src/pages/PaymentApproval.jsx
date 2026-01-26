@@ -88,12 +88,13 @@ export default function PaymentApproval() {
   // Filter payments
   const filteredPayments = useMemo(() => {
     return pendingPayments.filter((payment) => {
-      const matchesSearch =
+      const searchLower = searchTerm?.toLowerCase() || "";
+    const matchesSearch =
       !searchTerm ||
-      payment.orderNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.projectName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.supplier?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.submitter.toLowerCase().includes(searchTerm.toLowerCase());
+      (payment.orderNo || "").toLowerCase().includes(searchLower) ||
+      (payment.projectName || "").toLowerCase().includes(searchLower) ||
+      (payment.supplier || "").toLowerCase().includes(searchLower) ||
+      (payment.submitter || "").toLowerCase().includes(searchLower);
 
       const matchesType =
       selectedType === "all" || payment.type === selectedType;

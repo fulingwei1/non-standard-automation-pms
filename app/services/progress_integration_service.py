@@ -5,20 +5,20 @@
 """
 
 import json
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-from sqlalchemy import and_, or_
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models.acceptance import AcceptanceOrder
+from app.models.alert import AlertRecord
 from app.models.ecn import Ecn
 from app.models.enums import IssueStatusEnum, IssueTypeEnum, SeverityEnum
 from app.models.issue import Issue
-from app.models.progress import Task, TaskDependency
+from app.models.progress import Task
 from app.models.project import ProjectMilestone
-from app.models.shortage import ShortageAlert
 
 
 class ProgressIntegrationService:
@@ -29,12 +29,12 @@ class ProgressIntegrationService:
 
     # ==================== 缺料联动 ====================
 
-    def handle_shortage_alert_created(self, alert: ShortageAlert) -> List[Task]:
+    def handle_shortage_alert_created(self, alert: AlertRecord) -> List[Task]:
         """
         处理缺料预警创建，自动阻塞相关任务
 
         Args:
-            alert: 缺料预警对象
+            alert: 预警记录对象 (target_type='SHORTAGE')
 
         Returns:
             List[Task]: 被阻塞的任务列表
@@ -43,6 +43,17 @@ class ProgressIntegrationService:
 
         if not alert.project_id:
             return blocked_tasks
+
+        # 从 alert_data JSON 提取缺料特定字段
+        alert_data = {}
+        if alert.alert_data:
+            try:
+                alert_data = json.loads(alert.alert_data) if isinstance(alert.alert_data, str) else alert.alert_data
+            except (json.JSONDecodeError, TypeError):
+                alert_data = {}
+
+        impact_type = alert_data.get('impact_type', 'none')
+        estimated_delay_days = alert_data.get('estimated_delay_days', 0)
 
         # 查找可能受影响的任务（装配、调试相关任务）
         affected_stages = ['S5', 'S6']  # 装配调试、出厂验收阶段
@@ -58,33 +69,34 @@ class ProgressIntegrationService:
             )
         ).all()
 
-        # 如果缺料预警级别较高（level3/level4）或影响类型为stop/delivery，阻塞任务
-        if alert.alert_level in ['level3', 'level4'] or alert.impact_type in ['stop', 'delivery']:
+        # 如果缺料预警级别较高（CRITICAL/URGENT）或影响类型为stop/delivery，阻塞任务
+        high_levels = ['level3', 'level4', 'CRITICAL', 'URGENT']
+        if alert.alert_level in high_levels or impact_type in ['stop', 'delivery']:
             for task in tasks:
                 if task.status != 'BLOCKED':
                     task.status = 'BLOCKED'
-                    task.block_reason = f"缺料预警：{alert.material_name}（{alert.alert_no}），预计延迟{alert.estimated_delay_days}天"
+                    task.block_reason = f"缺料预警：{alert.target_name}（{alert.alert_no}），预计延迟{estimated_delay_days}天"
                     self.db.add(task)
                     blocked_tasks.append(task)
 
         # 如果预计延迟天数 > 0，调整任务计划结束日期
-        if alert.estimated_delay_days and alert.estimated_delay_days > 0:
+        if estimated_delay_days and estimated_delay_days > 0:
             for task in tasks:
                 if task.plan_end:
                     # 延迟计划结束日期
-                    new_plan_end = task.plan_end + timedelta(days=alert.estimated_delay_days)
+                    new_plan_end = task.plan_end + timedelta(days=estimated_delay_days)
                     task.plan_end = new_plan_end
                     self.db.add(task)
 
         self.db.commit()
         return blocked_tasks
 
-    def handle_shortage_alert_resolved(self, alert: ShortageAlert) -> List[Task]:
+    def handle_shortage_alert_resolved(self, alert: AlertRecord) -> List[Task]:
         """
         处理缺料预警解决，自动解除相关任务阻塞
 
         Args:
-            alert: 缺料预警对象
+            alert: 预警记录对象 (target_type='SHORTAGE')
 
         Returns:
             List[Task]: 被解除阻塞的任务列表
@@ -94,8 +106,8 @@ class ProgressIntegrationService:
         if not alert.project_id:
             return unblocked_tasks
 
-        alert_no = getattr(alert, 'alert_no', None) or f"ALERT-{alert.id}"
-        material_code = getattr(alert, 'material_code', None) or ''
+        alert_no = alert.alert_no or f"ALERT-{alert.id}"
+        target_no = alert.target_no or ''
 
         # 查找因该缺料预警而阻塞的任务
         tasks = self.db.query(Task).filter(
@@ -103,20 +115,18 @@ class ProgressIntegrationService:
             Task.status == 'BLOCKED',
             or_(
                 Task.block_reason.like(f'%{alert_no}%'),
-                Task.block_reason.like(f'%{material_code}%')
+                Task.block_reason.like(f'%{target_no}%')
             )
         ).all()
 
         for task in tasks:
-            # 检查是否还有其他阻塞原因
-            other_alerts = self.db.query(ShortageAlert).filter(
-                ShortageAlert.project_id == alert.project_id,
-                ShortageAlert.status.in_(['pending', 'handling']),
-                or_(
-                    ShortageAlert.alert_level.in_(['level3', 'level4', 'L3', 'L4', 'CRITICAL']),
-                    ShortageAlert.impact_type.in_(['stop', 'delivery'])
-                ),
-                ShortageAlert.id != alert.id
+            # 检查是否还有其他阻塞原因（使用统一的 AlertRecord 表）
+            other_alerts = self.db.query(AlertRecord).filter(
+                AlertRecord.target_type == 'SHORTAGE',
+                AlertRecord.project_id == alert.project_id,
+                AlertRecord.status.in_(['PENDING', 'PROCESSING', 'pending', 'handling']),
+                AlertRecord.alert_level.in_(['level3', 'level4', 'CRITICAL', 'URGENT']),
+                AlertRecord.id != alert.id
             ).count()
 
             if other_alerts == 0:

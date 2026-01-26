@@ -131,6 +131,7 @@ class Opportunity(Base, TimestampMixin):
     score = Column(Integer, default=0, comment="评分")
     risk_level = Column(String(10), comment="风险等级")
     owner_id = Column(Integer, ForeignKey("users.id"), comment="负责人ID")
+    updated_by = Column(Integer, ForeignKey("users.id"), comment="最后更新人ID")
     gate_status = Column(String(20), default=GateStatusEnum.PENDING, comment="阶段门状态")
     gate_passed_at = Column(DateTime, comment="阶段门通过时间")
 
@@ -146,6 +147,7 @@ class Opportunity(Base, TimestampMixin):
     lead = relationship("Lead", back_populates="opportunities")
     customer = relationship("Customer", foreign_keys=[customer_id])
     owner = relationship("User", foreign_keys=[owner_id])
+    updater = relationship("User", foreign_keys=[updated_by])
     requirements = relationship("OpportunityRequirement", back_populates="opportunity", cascade="all, delete-orphan")
     quotes = relationship("Quote", back_populates="opportunity")
     contracts = relationship("Contract", back_populates="opportunity")

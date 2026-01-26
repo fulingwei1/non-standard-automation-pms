@@ -25,6 +25,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base, TimestampMixin
+from app.models.enums import ApprovalActionEnum
 
 # ==================== 枚举定义 ====================
 
@@ -43,13 +44,6 @@ class OvertimeTypeEnum(str, Enum):
     OVERTIME = 'OVERTIME'    # 加班
     WEEKEND = 'WEEKEND'      # 周末加班
     HOLIDAY = 'HOLIDAY'      # 节假日加班
-
-
-class ApprovalActionEnum(str, Enum):
-    """审批动作"""
-    APPROVE = 'APPROVE'  # 批准
-    REJECT = 'REJECT'    # 驳回
-    RETURN = 'RETURN'    # 退回修改
 
 
 # ==================== 工时记录 ====================
@@ -327,4 +321,3 @@ class TimesheetRule(Base, TimestampMixin):
         Index('idx_rule_code', 'rule_code'),
         {'comment': '工时填报规则表'}
     )
-

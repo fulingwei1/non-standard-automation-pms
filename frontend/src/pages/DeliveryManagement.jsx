@@ -77,42 +77,17 @@ const DeliveryManagement = () => {
   const [searchText, setSearchText] = useState('');
   const [_filters, _setFilters] = useState({});
 
-  // 模拟数据
-  const mockData = {
-    deliveries: [
-    {
-      id: 1,
-      orderNumber: 'ORD202401001',
-      customerName: '智能制造科技有限公司',
-      deliveryAddress: '北京市海淀区中关村科技园',
-      status: 'preparing',
-      priority: 'high',
-      shippingMethod: 'express',
-      packageType: 'standard',
-      scheduledDate: '2024-01-20',
-      actualDate: null,
-      trackingNumber: null,
-      totalWeight: 150,
-      totalVolume: 2.5,
-      itemCount: 5,
-      createdDate: '2024-01-18',
-      notes: '包含易碎品，需要小心搬运'
-    }
-    // 更多模拟数据...
-    ]
-  };
-
   // 数据加载
   useEffect(() => {
     loadData();
   }, [activeTab]);
 
   const loadData = async () => {
-    setLoading(true);
+     setLoading(true);
     try {
-      // 模拟API调用
+      // 调用真实 API
       setTimeout(() => {
-        setDeliveries(mockData.deliveries);
+        setDeliveries(deliveries);
         setLoading(false);
       }, 1000);
     } catch (_error) {
@@ -124,9 +99,10 @@ const DeliveryManagement = () => {
   // 过滤数据
   const filteredDeliveries = useMemo(() => {
     return deliveries.filter((delivery) => {
-      const matchesSearch = !searchText ||
-      delivery.orderNumber.toLowerCase().includes(searchText.toLowerCase()) ||
-      delivery.customerName?.toLowerCase().includes(searchText.toLowerCase());
+      const searchLower = (searchText || "").toLowerCase();
+    const matchesSearch = !searchText ||
+      (delivery.orderNumber || "").toLowerCase().includes(searchLower) ||
+      (delivery.customerName || "").toLowerCase().includes(searchLower);
 
       return matchesSearch;
     });
@@ -141,7 +117,7 @@ const DeliveryManagement = () => {
           交付概览
     </span>,
 
-    content: <DeliveryOverview data={mockData} loading={loading} />
+     content: <DeliveryOverview data={deliveries} loading={loading} />
   },
   {
     key: 'plan',

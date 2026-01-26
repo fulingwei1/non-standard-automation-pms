@@ -24,7 +24,6 @@ from app.models.material import (
     Material,
     MaterialCategory,
     MaterialSupplier,
-    Supplier,
 )
 from app.models.organization import Department, Employee
 from app.models.progress import Task

@@ -21,7 +21,7 @@ from app.schemas.issue import (
     IssueResponse,
     IssueUpdate,
 )
-from app.services.data_scope_service import DataScopeService
+from app.services.data_scope import DataScopeService
 
 from .utils import create_blocking_issue_alert, close_blocking_issue_alerts, generate_issue_no
 
@@ -30,7 +30,11 @@ router = APIRouter()
 
 def _get_scoped_issue(db: Session, current_user: User, issue_id: int) -> Optional[Issue]:
     """获取带权限范围的问题"""
-    query = db.query(Issue).filter(Issue.id == issue_id)
+    query = db.query(Issue).options(
+        joinedload(Issue.project),
+        joinedload(Issue.machine),
+        joinedload(Issue.service_ticket)
+    ).filter(Issue.id == issue_id)
     query = DataScopeService.filter_issues_by_scope(db, query, current_user)
     return query.first()
 
@@ -84,6 +88,8 @@ def build_issue_response(issue: Issue) -> IssueResponse:
         project_name=issue.project.project_name if issue.project else None,
         machine_code=issue.machine.machine_code if issue.machine else None,
         machine_name=issue.machine.machine_name if issue.machine else None,
+        service_ticket_id=issue.service_ticket_id,
+        service_ticket_no=issue.service_ticket.ticket_no if issue.service_ticket else None,
     )
 
 
@@ -105,6 +111,7 @@ def list_issues(
     root_cause: Optional[str] = Query(None, description="问题原因"),
     is_blocking: Optional[bool] = Query(None, description="是否阻塞"),
     is_overdue: Optional[bool] = Query(None, description="是否逾期"),
+    service_ticket_id: Optional[int] = Query(None, description="关联服务工单ID"),
     keyword: Optional[str] = Query(None, description="关键词搜索"),
     search: Optional[str] = Query(None, description="关键词搜索（兼容search参数）"),
     page: int = Query(1, ge=1, description="页码"),
@@ -130,7 +137,7 @@ def list_issues(
     root_cause = _normalize_str_filter(root_cause)
     keyword = _normalize_str_filter(keyword) or _normalize_str_filter(search)
 
-    query = db.query(Issue)
+    query = db.query(Issue).options(joinedload(Issue.service_ticket))
 
     # 排除已删除的问题
     query = query.filter(Issue.status != 'DELETED')
@@ -173,6 +180,8 @@ def list_issues(
                 Issue.status.in_(['OPEN', 'PROCESSING'])
             )
         )
+    if service_ticket_id:
+        query = query.filter(Issue.service_ticket_id == service_ticket_id)
     if keyword:
         query = query.filter(
             or_(
@@ -210,14 +219,7 @@ def get_issue(
     current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """获取问题详情"""
-    query = db.query(Issue).options(
-        joinedload(Issue.project),
-        joinedload(Issue.machine)
-    ).filter(Issue.id == issue_id)
-
-    # 数据权限过滤
-    query = DataScopeService.filter_issues_by_scope(db, query, current_user)
-    issue = query.first()
+    issue = _get_scoped_issue(db, current_user, issue_id)
     if not issue:
         raise HTTPException(status_code=404, detail="问题不存在")
 
@@ -250,6 +252,16 @@ def create_issue(
         if engineer:
             responsible_engineer_name = engineer.real_name or engineer.username
 
+    # 验证服务工单是否存在（如果指定了 service_ticket_id）
+    if issue_in.service_ticket_id:
+        from app.models.service import ServiceTicket
+        ticket = db.query(ServiceTicket).filter(ServiceTicket.id == issue_in.service_ticket_id).first()
+        if not ticket:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"服务工单不存在 (ID: {issue_in.service_ticket_id})"
+            )
+
     # 创建问题
     issue = Issue(
         issue_no=issue_no,
@@ -259,6 +271,7 @@ def create_issue(
         task_id=issue_in.task_id,
         acceptance_order_id=issue_in.acceptance_order_id,
         related_issue_id=issue_in.related_issue_id,
+        service_ticket_id=issue_in.service_ticket_id,
         issue_type=issue_in.issue_type,
         severity=issue_in.severity,
         priority=issue_in.priority,
@@ -301,6 +314,16 @@ def update_issue(
     issue = _get_scoped_issue(db, current_user, issue_id)
     if not issue:
         raise HTTPException(status_code=404, detail="问题不存在")
+
+    # 验证服务工单是否存在（如果指定了 service_ticket_id）
+    if issue_in.service_ticket_id is not None:
+        from app.models.service import ServiceTicket
+        ticket = db.query(ServiceTicket).filter(ServiceTicket.id == issue_in.service_ticket_id).first()
+        if not ticket:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"服务工单不存在 (ID: {issue_in.service_ticket_id})"
+            )
 
     # 记录阻塞状态变化
     old_is_blocking = issue.is_blocking

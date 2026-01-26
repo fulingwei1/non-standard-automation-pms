@@ -499,7 +499,7 @@ export default function CustomerCommunication() {
                 <SelectValue placeholder="客户" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部客户</SelectItem>
+                <SelectItem value="__all__">全部客户</SelectItem>
                 {customers.map((customer) =>
                 <SelectItem key={customer.id} value={customer.id}>
                     {customer.name}
@@ -782,7 +782,7 @@ export default function CustomerCommunication() {
                   <SelectValue placeholder="选择满意度" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600">
-                  <SelectItem value="" className="text-white">未评分</SelectItem>
+                  <SelectItem value="__none__" className="text-white">未评分</SelectItem>
                   {Object.entries(CUSTOMER_SATISFACTION).map(([_key, value]) =>
                   <SelectItem key={value} value={value.toString()} className="text-white">
                       {CUSTOMER_SATISFACTION_LABELS[value]}

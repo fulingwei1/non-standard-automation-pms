@@ -85,9 +85,10 @@ export default function PerformanceIndicators() {
   const filteredIndicators = indicators.filter((indicator) => {
     const matchesCategory =
     selectedCategory === "ALL" || indicator.category === selectedCategory;
+    const searchLower = searchQuery.toLowerCase();
     const matchesSearch =
-    indicator.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    indicator.code.toLowerCase().includes(searchQuery.toLowerCase());
+    (indicator.name || "").toLowerCase().includes(searchLower) ||
+    (indicator.code || "").toLowerCase().includes(searchLower);
     return matchesCategory && matchesSearch;
   });
 

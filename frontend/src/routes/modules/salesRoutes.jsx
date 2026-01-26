@@ -1,15 +1,11 @@
 import { Route } from "react-router-dom";
 import { FinanceProtectedRoute } from "../../components/common/ProtectedRoute";
 
-import SalesWorkstation from "../../pages/SalesWorkstation";
-import SalesDirectorWorkstation from "../../pages/SalesDirectorWorkstation";
-import SalesManagerWorkstation from "../../pages/SalesManagerWorkstation";
 import SalesReports from "../../pages/SalesReports";
 import SalesTeam from "../../pages/SalesTeam";
 import SalesTarget from "../../pages/SalesTarget";
 import CpqConfigurator from "../../pages/CpqConfigurator";
 import ContractApproval from "../../pages/ContractApproval";
-import BusinessSupportWorkstation from "../../pages/BusinessSupportWorkstation";
 import CustomerList from "../../pages/CustomerList";
 import OpportunityBoard from "../../pages/OpportunityBoard";
 import LeadAssessment from "../../pages/LeadAssessment";
@@ -28,16 +24,14 @@ import LeadRequirementDetail from "../../pages/LeadRequirementDetail";
 import OpenItemsManagement from "../../pages/OpenItemsManagement";
 import RequirementFreezeManagement from "../../pages/RequirementFreezeManagement";
 import AIClarificationChat from "../../pages/AIClarificationChat";
-import QuoteManagement from "../../pages/QuoteManagement";
+import QuoteManagementCenter from "../../pages/QuoteManagementCenter";
 import QuoteCostManagement from "../../pages/QuoteCostManagement";
-import QuoteCostAnalysis from "../../pages/QuoteCostAnalysis";
 import CostTemplateManagement from "../../pages/CostTemplateManagement";
 import PurchaseMaterialCostManagement from "../../pages/PurchaseMaterialCostManagement";
 import FinancialCostUpload from "../../pages/FinancialCostUpload";
 import ContractManagement from "../../pages/ContractManagement";
 import ReceivableManagement from "../../pages/ReceivableManagement";
 import SalesStatistics from "../../pages/SalesStatistics";
-import SalesTemplateCenter from "../../pages/SalesTemplateCenter";
 import LossAnalysis from "../../pages/LossAnalysis";
 import PresaleExpenseManagement from "../../pages/PresaleExpenseManagement";
 import LeadPriorityManagement from "../../pages/LeadPriorityManagement";
@@ -51,25 +45,12 @@ import InformationGapAnalysis from "../../pages/InformationGapAnalysis";
 export function SalesRoutes() {
   return (
     <>
-      <Route path="/sales-dashboard" element={<SalesWorkstation />} />
-      <Route
-        path="/sales-director-dashboard"
-        element={<SalesDirectorWorkstation />}
-      />
-      <Route
-        path="/sales-manager-dashboard"
-        element={<SalesManagerWorkstation />}
-      />
       <Route path="/sales-reports" element={<SalesReports />} />
       <Route path="/sales-team" element={<SalesTeam />} />
       <Route path="/sales/team" element={<SalesTeam />} />
       <Route path="/sales/team/ranking" element={<SalesTeam />} />
       <Route path="/sales/targets" element={<SalesTarget />} />
       <Route path="/contract-approval" element={<ContractApproval />} />
-      <Route
-        path="/business-support"
-        element={<BusinessSupportWorkstation />}
-      />
       <Route path="/customers" element={<CustomerList />} />
       <Route path="/opportunities" element={<OpportunityBoard />} />
       <Route path="/lead-assessment" element={<LeadAssessment />} />
@@ -117,23 +98,20 @@ export function SalesRoutes() {
         path="/sales/:sourceType/:sourceId/ai-clarifications"
         element={<AIClarificationChat />}
       />
-      <Route path="/cost-quotes/quotes" element={<QuoteManagement />} />
+      <Route path="/cost-quotes/quotes" element={<QuoteManagementCenter />} />
       <Route path="/cost-quotes/quotes/:id/cost" element={<QuoteCostManagement />} />
-      <Route path="/cost-quotes/quotes/:id/cost-analysis" element={<QuoteCostAnalysis />} />
       <Route path="/cost-quotes/material-costs" element={<PurchaseMaterialCostManagement />} />
       <Route path="/cost-quotes/financial-costs" element={<FinancialCostUpload />} />
-      <Route path="/cost-quotes/cost-analysis" element={<QuoteCostAnalysis />} />
-      <Route path="/cost-quotes/templates" element={<SalesTemplateCenter />} />
-      <Route path="/sales/quotes" element={<QuoteManagement />} />
+      <Route path="/cost-quotes/templates" element={<QuoteManagementCenter />} />
+      <Route path="/sales/quotes" element={<QuoteManagementCenter />} />
       <Route path="/sales/quotes/:id/cost" element={<QuoteCostManagement />} />
-      <Route path="/sales/quotes/:id/cost-analysis" element={<QuoteCostAnalysis />} />
       <Route path="/sales/cost-templates" element={<CostTemplateManagement />} />
       <Route path="/sales/purchase-material-costs" element={<PurchaseMaterialCostManagement />} />
       <Route path="/financial-costs" element={<FinancialCostUpload />} />
       <Route path="/sales/contracts" element={<ContractManagement />} />
       <Route path="/sales/receivables" element={<ReceivableManagement />} />
       <Route path="/sales/statistics" element={<SalesStatistics />} />
-      <Route path="/sales/templates" element={<SalesTemplateCenter />} />
+      <Route path="/sales/templates" element={<QuoteManagementCenter />} />
       <Route path="/sales/cpq" element={<CpqConfigurator />} />
       <Route path="/sales/loss-analysis" element={<LossAnalysis />} />
       <Route path="/sales/presale-expenses" element={<PresaleExpenseManagement />} />

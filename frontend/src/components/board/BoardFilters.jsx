@@ -12,6 +12,10 @@ import {
   User,
   Users,
   RefreshCw,
+  Layers,
+  Calendar,
+  GitBranch,
+  Copy,
 } from "lucide-react";
 /**
  * 看板筛选器组件
@@ -37,6 +41,12 @@ const BoardFilters = memo(function BoardFilters({
   isLoading = false,
   // 统计信息
   stats = {},
+  // 模板筛选（阶段视图专用）
+  templateFilter = "all",
+  onTemplateFilterChange,
+  groupByTemplate = true,
+  onGroupByTemplateChange,
+  availableTemplates = [],
 }) {
   return (
     <div className="flex flex-col gap-4 mb-6">
@@ -79,6 +89,44 @@ const BoardFilters = memo(function BoardFilters({
           >
             <List className="w-4 h-4" />
             <span>列表</span>
+          </button>
+          {/* 新增阶段视图模式 */}
+          <div className="w-px h-6 bg-white/10 mx-1" />
+          <button
+            onClick={() => onViewModeChange?.("pipeline")}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-all",
+              viewMode === "pipeline"
+                ? "bg-blue-500 text-white"
+                : "text-slate-400 hover:text-white hover:bg-white/10",
+            )}
+          >
+            <Layers className="w-4 h-4" />
+            <span>流水线</span>
+          </button>
+          <button
+            onClick={() => onViewModeChange?.("timeline")}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-all",
+              viewMode === "timeline"
+                ? "bg-green-500 text-white"
+                : "text-slate-400 hover:text-white hover:bg-white/10",
+            )}
+          >
+            <Calendar className="w-4 h-4" />
+            <span>时间轴</span>
+          </button>
+          <button
+            onClick={() => onViewModeChange?.("tree")}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-all",
+              viewMode === "tree"
+                ? "bg-purple-500 text-white"
+                : "text-slate-400 hover:text-white hover:bg-white/10",
+            )}
+          >
+            <GitBranch className="w-4 h-4" />
+            <span>分解树</span>
           </button>
         </div>
         {/* 智能筛选切换 */}
@@ -217,6 +265,59 @@ const BoardFilters = memo(function BoardFilters({
           )}
         </div>
       </div>
+      {/* 第三行：模板筛选（仅阶段视图显示） */}
+      {(viewMode === "pipeline" || viewMode === "timeline" || viewMode === "tree") && (
+        <div className="flex flex-wrap items-center gap-4">
+          {/* 按模板分组切换 */}
+          <div className="flex items-center gap-2">
+            <Copy className="w-4 h-4 text-slate-500" />
+            <button
+              onClick={() => onGroupByTemplateChange?.(!groupByTemplate)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-all",
+                groupByTemplate
+                  ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                  : "text-slate-400 hover:text-white hover:bg-white/5",
+              )}
+            >
+              按模板分组
+            </button>
+          </div>
+          {/* 模板筛选 */}
+          {availableTemplates && availableTemplates.length > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500">模板:</span>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => onTemplateFilterChange?.("all")}
+                  className={cn(
+                    "px-2 py-1 rounded text-xs transition-all",
+                    templateFilter === "all"
+                      ? "bg-white/10 text-white"
+                      : "text-slate-400 hover:text-white hover:bg-white/5",
+                  )}
+                >
+                  全部
+                </button>
+                {availableTemplates.map((template) => (
+                  <button
+                    key={template.id}
+                    onClick={() => onTemplateFilterChange?.(template.id)}
+                    className={cn(
+                      "px-2 py-1 rounded text-xs transition-all",
+                      templateFilter === template.id
+                        ? "bg-purple-500/20 text-purple-400"
+                        : "text-slate-400 hover:text-white hover:bg-white/5",
+                    )}
+                  >
+                    {template.name || template.code}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 });

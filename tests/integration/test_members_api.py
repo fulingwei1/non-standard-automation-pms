@@ -2,7 +2,14 @@
 """
 Integration tests for Members API
 Covers: app/api/v1/endpoints/members/
+Updated for unified response format
 """
+
+from tests.helpers.response_helpers import (
+    assert_success_response,
+    assert_list_response,
+    extract_items,
+)
 
 
 
@@ -33,8 +40,11 @@ class TestMembersAPI:
             headers={"Authorization": f"Bearer {admin_token}"},
         )
         assert response.status_code == 200
-        data = response.json()
-        for member in data:
+        response_data = response.json()
+        # 使用统一响应格式辅助函数提取列表
+        list_data = assert_list_response(response_data)
+        items = list_data["items"]
+        for member in items:
             if member.get("project_id"):
                 assert member["project_id"] == test_project.id
 
@@ -69,8 +79,10 @@ class TestMembersAPI:
             json=member_data,
             headers={"Authorization": f"Bearer {admin_token}"},
         )
-        assert response.status_code == 200
-        data = response.json()
+        assert response.status_code in [200, 201]
+        response_data = response.json()
+        # 使用统一响应格式辅助函数提取数据
+        data = assert_success_response(response_data, expected_code=response.status_code)
         assert data["project_id"] == member_data["project_id"]
         assert data["user_id"] == member_data["user_id"]
 

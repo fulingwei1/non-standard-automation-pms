@@ -132,11 +132,12 @@ export default function ContractApproval() {
     const approvals =
     activeTab === "pending" ? pendingApprovals : approvalHistory;
     if (!searchTerm) {return approvals;}
+    const searchLower = (searchTerm || "").toLowerCase();
     return approvals.filter(
       (item) =>
-      item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.submitter.toLowerCase().includes(searchTerm.toLowerCase())
+      (item.title || "").toLowerCase().includes(searchLower) ||
+      (item.customerName || "").toLowerCase().includes(searchLower) ||
+      (item.submitter || "").toLowerCase().includes(searchLower)
     );
   }, [searchTerm, activeTab, pendingApprovals, approvalHistory]);
 

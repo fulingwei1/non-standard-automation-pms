@@ -343,10 +343,11 @@ export default function SupplierManagement() {
 
   const filteredSuppliers = useMemo(() => {
     return suppliers.filter((s) => {
+      const searchLower = searchText.toLowerCase();
       const matchSearch =
-      s.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      s.category.toLowerCase().includes(searchText.toLowerCase()) ||
-      s.contactPerson.toLowerCase().includes(searchText.toLowerCase());
+      (s.name || "").toLowerCase().includes(searchLower) ||
+      (s.category || "").toLowerCase().includes(searchLower) ||
+      (s.contactPerson || "").toLowerCase().includes(searchLower);
 
       const matchLevel = filterLevel === "all" || s.level === filterLevel;
 

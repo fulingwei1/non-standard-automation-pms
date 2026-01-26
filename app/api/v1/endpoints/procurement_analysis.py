@@ -4,8 +4,7 @@
 提供采购成本趋势、物料价格波动、供应商交期准时率等分析
 """
 
-from datetime import date, datetime, timedelta
-from decimal import Decimal
+from datetime import date, timedelta
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -15,12 +14,13 @@ from app.api import deps
 from app.core import security
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.services.procurement_analysis_service import procurement_analysis_service
+from app.services.procurement_analysis import procurement_analysis_service
 
 router = APIRouter()
 
 
 # ==================== 采购成本趋势分析 ====================
+
 
 @router.get("/cost-trend", response_model=ResponseModel)
 def get_procurement_cost_trend(
@@ -52,17 +52,14 @@ def get_procurement_cost_trend(
         end_date=end_date,
         group_by=group_by,
         category_id=category_id,
-        project_id=project_id
+        project_id=project_id,
     )
 
-    return ResponseModel(
-        code=200,
-        message="success",
-        data=data
-    )
+    return ResponseModel(code=200, message="success", data=data)
 
 
 # ==================== 物料价格波动监控 ====================
+
 
 @router.get("/price-fluctuation", response_model=ResponseModel)
 def get_material_price_fluctuation(
@@ -94,17 +91,14 @@ def get_material_price_fluctuation(
         category_id=category_id,
         start_date=start_date,
         end_date=end_date,
-        limit=limit
+        limit=limit,
     )
 
-    return ResponseModel(
-        code=200,
-        message="success",
-        data=data
-    )
+    return ResponseModel(code=200, message="success", data=data)
 
 
 # ==================== 供应商交期准时率 ====================
+
 
 @router.get("/delivery-performance", response_model=ResponseModel)
 def get_supplier_delivery_performance(
@@ -129,20 +123,14 @@ def get_supplier_delivery_performance(
         end_date = date.today()
 
     data = procurement_analysis_service.get_delivery_performance_data(
-        db=db,
-        start_date=start_date,
-        end_date=end_date,
-        supplier_id=supplier_id
+        db=db, start_date=start_date, end_date=end_date, supplier_id=supplier_id
     )
 
-    return ResponseModel(
-        code=200,
-        message="success",
-        data=data
-    )
+    return ResponseModel(code=200, message="success", data=data)
 
 
 # ==================== 采购申请处理时效 ====================
+
 
 @router.get("/request-efficiency", response_model=ResponseModel)
 def get_procurement_request_efficiency(
@@ -166,19 +154,14 @@ def get_procurement_request_efficiency(
         end_date = date.today()
 
     data = procurement_analysis_service.get_request_efficiency_data(
-        db=db,
-        start_date=start_date,
-        end_date=end_date
+        db=db, start_date=start_date, end_date=end_date
     )
 
-    return ResponseModel(
-        code=200,
-        message="success",
-        data=data
-    )
+    return ResponseModel(code=200, message="success", data=data)
 
 
 # ==================== 物料质量合格率统计 ====================
+
 
 @router.get("/quality-rate", response_model=ResponseModel)
 def get_material_quality_rate(
@@ -203,20 +186,14 @@ def get_material_quality_rate(
         end_date = date.today()
 
     data = procurement_analysis_service.get_quality_rate_data(
-        db=db,
-        start_date=start_date,
-        end_date=end_date,
-        supplier_id=supplier_id
+        db=db, start_date=start_date, end_date=end_date, supplier_id=supplier_id
     )
 
-    return ResponseModel(
-        code=200,
-        message="success",
-        data=data
-    )
+    return ResponseModel(code=200, message="success", data=data)
 
 
 # ==================== 采购分析概览 ====================
+
 
 @router.get("/overview", response_model=ResponseModel)
 def get_procurement_overview(
@@ -251,15 +228,17 @@ def get_procurement_overview(
         message="success",
         data={
             "procurement_summary": {
-                "quarter_amount": cost_trend['summary']['total_amount'],
-                "quarter_orders": cost_trend['summary']['total_orders'],
-                "avg_on_time_rate": delivery_performance['summary']['avg_on_time_rate'],
-                "avg_quality_rate": quality_rate['summary']['avg_pass_rate'],
-                "delayed_orders_count": delivery_performance['summary']['total_delayed_orders']
+                "quarter_amount": cost_trend["summary"]["total_amount"],
+                "quarter_orders": cost_trend["summary"]["total_orders"],
+                "avg_on_time_rate": delivery_performance["summary"]["avg_on_time_rate"],
+                "avg_quality_rate": quality_rate["summary"]["avg_pass_rate"],
+                "delayed_orders_count": delivery_performance["summary"][
+                    "total_delayed_orders"
+                ],
             },
             "period": {
                 "start_date": last_quarter.isoformat(),
-                "end_date": today.isoformat()
-            }
-        }
+                "end_date": today.isoformat(),
+            },
+        },
     )

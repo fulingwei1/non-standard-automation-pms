@@ -1,19 +1,12 @@
 # -*- coding: utf-8 -*-
 """
 模型导出聚合
+
+注意：此文件已不再使用，所有模型导出已迁移到 complete.py
+保留此文件以避免破坏现有代码的导入路径
 """
 
-from .acceptance_models import *
-from .alert_models import *
-from .business_models import *
-from .ecn_models import *
-from .material_models import *
-from .organization_models import *
-from .other_models import *
-from .production_models import *
-from .project_models import *
+# 不再导入其他模块，避免循环导入和模型不匹配问题
+# 所有模型导出请使用 complete.py 或直接从 app.models 导入
 
-__all__ = (
-    # 从各个模块导入所有导出
-    # 这里不重复列出，由各个子模块的 __all__ 控制
-)
+__all__ = []

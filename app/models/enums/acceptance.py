@@ -33,8 +33,11 @@ class CheckItemResultEnum(str, Enum):
 
 class IssueTypeEnum(str, Enum):
     DEFECT = "DEFECT"
+    DEVIATION = "DEVIATION"
     RISK = "RISK"
     BLOCKER = "BLOCKER"
+    SUGGESTION = "SUGGESTION"
+    QUESTION = "QUESTION"
     OTHER = "OTHER"
 
 

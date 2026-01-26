@@ -144,7 +144,9 @@ export function PermissionProvider({ children }) {
     } else {
       setIsLoading(false);
     }
-  }, [loadPermissions]);
+    // 只在组件挂载时执行一次
+     
+  }, []);
 
   // 监听登录/登出事件
   useEffect(() => {
@@ -162,7 +164,9 @@ export function PermissionProvider({ children }) {
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, [loadPermissions, clearPermissions]);
+    // 依赖项可能导致无限循环，这里故意不包含loadPermissions和clearPermissions
+     
+  }, []);
 
   // 上下文值
   const contextValue = {

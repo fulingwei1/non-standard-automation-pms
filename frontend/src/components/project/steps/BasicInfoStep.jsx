@@ -7,7 +7,7 @@ import {
   FormTextarea,
   FormSelect,
 } from "../../ui";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, Layers } from "lucide-react";
 
 const PROJECT_TYPES = [
   { value: "FIXED_PRICE", label: "固定价格" },
@@ -22,6 +22,7 @@ export const BasicInfoStep = ({
   formData,
   setFormData,
   recommendedTemplates = [],
+  stageTemplates = [],
   currentStep,
   initialData,
   validatingCode,
@@ -31,6 +32,66 @@ export const BasicInfoStep = ({
 }) => {
   return (
     <div className="space-y-4">
+      {/* 阶段模板选择 */}
+      {stageTemplates.length > 0 && (
+        <Card className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-blue-500/20">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Layers className="h-4 w-4 text-blue-400" />
+              <span className="text-sm font-medium text-blue-300">
+                阶段模板 <span className="text-red-400">*</span>
+              </span>
+            </div>
+            <p className="text-xs text-slate-400 mb-3">
+              选择项目生命周期模板，决定项目将经历哪些阶段
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {stageTemplates.map((template) => (
+                <div
+                  key={template.id}
+                  className={`flex items-start p-3 rounded-lg cursor-pointer transition-all ${
+                    formData.stage_template_id === template.id
+                      ? "bg-blue-500/20 border border-blue-500/50 ring-1 ring-blue-500/30"
+                      : "bg-white/5 hover:bg-white/10 border border-transparent"
+                  }`}
+                  onClick={() =>
+                    setFormData({ ...formData, stage_template_id: template.id })
+                  }
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-white">
+                        {template.template_name}
+                      </span>
+                      {template.is_default && (
+                        <span className="px-1.5 py-0.5 text-xs bg-green-500/20 text-green-400 rounded">
+                          默认
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-slate-400 mt-1">
+                      {template.template_code} · {template.stage_count || 0} 个阶段
+                    </div>
+                    {template.description && (
+                      <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                        {template.description}
+                      </p>
+                    )}
+                  </div>
+                  {formData.stage_template_id === template.id && (
+                    <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center ml-2 shrink-0">
+                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* 模板推荐 */}
       {recommendedTemplates.length > 0 && currentStep === 0 && (
         <Card className="bg-gradient-to-r from-violet-500/10 to-indigo-500/10 border-violet-500/20">

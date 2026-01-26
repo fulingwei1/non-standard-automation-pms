@@ -13,7 +13,8 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.core.config import settings
-from app.models.material import Material, MaterialSupplier, Supplier
+from app.models.material import Material, MaterialSupplier
+from app.models.vendor import Vendor
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.material import SupplierResponse
@@ -36,29 +37,29 @@ def get_suppliers(
     获取供应商列表（支持分页、搜索、筛选）
     此路由作为 /suppliers 的快捷方式，用于物料管理模块中获取供应商列表
     """
-    query = db.query(Supplier)
+    query = db.query(Vendor).filter(Vendor.vendor_type == 'MATERIAL')
 
     # 关键词搜索
     if keyword:
         query = query.filter(
             or_(
-                Supplier.supplier_name.contains(keyword),
-                Supplier.supplier_code.contains(keyword),
-                Supplier.supplier_short_name.contains(keyword),
+                Vendor.supplier_name.contains(keyword),
+                Vendor.supplier_code.contains(keyword),
+                Vendor.supplier_short_name.contains(keyword),
             )
         )
 
     # 供应商类型筛选
     if supplier_type:
-        query = query.filter(Supplier.supplier_type == supplier_type)
+        query = query.filter(Vendor.supplier_type == supplier_type)
 
     # 状态筛选
     if status:
-        query = query.filter(Supplier.status == status)
+        query = query.filter(Vendor.status == status)
 
     # 等级筛选
     if supplier_level:
-        query = query.filter(Supplier.supplier_level == supplier_level)
+        query = query.filter(Vendor.supplier_level == supplier_level)
 
     # 总数 - 使用独立的查询避免连接问题
     total = query.count()
@@ -68,26 +69,26 @@ def get_suppliers(
     page_size_int = max(1, int(page_size))
 
     # 重新构建查询对象以避免 SQLite 连接问题
-    suppliers_query = db.query(Supplier)
+    suppliers_query = db.query(Vendor).filter(Vendor.vendor_type == 'MATERIAL')
 
     # 重新应用所有筛选条件
     if keyword:
         suppliers_query = suppliers_query.filter(
             or_(
-                Supplier.supplier_name.contains(keyword),
-                Supplier.supplier_code.contains(keyword),
-                Supplier.supplier_short_name.contains(keyword),
+                Vendor.supplier_name.contains(keyword),
+                Vendor.supplier_code.contains(keyword),
+                Vendor.supplier_short_name.contains(keyword),
             )
         )
     if supplier_type:
-        suppliers_query = suppliers_query.filter(Supplier.supplier_type == supplier_type)
+        suppliers_query = suppliers_query.filter(Vendor.supplier_type == supplier_type)
     if status:
-        suppliers_query = suppliers_query.filter(Supplier.status == status)
+        suppliers_query = suppliers_query.filter(Vendor.status == status)
     if supplier_level:
-        suppliers_query = suppliers_query.filter(Supplier.supplier_level == supplier_level)
+        suppliers_query = suppliers_query.filter(Vendor.supplier_level == supplier_level)
 
     # 应用排序和分页
-    suppliers_query = suppliers_query.order_by(desc(Supplier.created_at))
+    suppliers_query = suppliers_query.order_by(desc(Vendor.created_at))
     if offset > 0:
         suppliers_query = suppliers_query.offset(offset)
     suppliers = suppliers_query.limit(page_size_int).all()
@@ -148,7 +149,7 @@ def get_material_suppliers(
 
     result = []
     for ms in material_suppliers:
-        supplier = ms.supplier
+        supplier = ms.vendor
         result.append({
             "id": supplier.id,
             "supplier_code": supplier.supplier_code,

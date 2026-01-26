@@ -2,9 +2,15 @@
 """
 Integration tests for Milestones API
 Covers: app/api/v1/endpoints/milestones.py
+Updated for unified response format
 """
 
 from datetime import date, timedelta
+
+from tests.helpers.response_helpers import (
+    assert_success_response,
+    assert_list_response,
+)
 
 
 class TestMilestonesAPI:
@@ -16,8 +22,10 @@ class TestMilestonesAPI:
             "/api/v1/milestones/", headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert response.status_code == 200
-        data = response.json()
-        assert "items" in data or isinstance(data, list)
+        response_data = response.json()
+        # 使用统一响应格式辅助函数提取列表
+        list_data = assert_list_response(response_data)
+        assert "items" in list_data
 
     def test_list_milestones_with_pagination(self, client, admin_token):
         """测试分页参数"""
@@ -56,7 +64,9 @@ class TestMilestonesAPI:
             headers={"Authorization": f"Bearer {admin_token}"},
         )
         assert response.status_code == 200
-        data = response.json()
+        response_data = response.json()
+        # 使用统一响应格式辅助函数提取数据
+        data = assert_success_response(response_data)
         assert data["id"] == milestone.id
 
     def test_get_milestone_not_found(self, client, admin_token):
@@ -82,8 +92,10 @@ class TestMilestonesAPI:
             json=milestone_data,
             headers={"Authorization": f"Bearer {admin_token}"},
         )
-        assert response.status_code == 200
-        data = response.json()
+        assert response.status_code in [200, 201]
+        response_data = response.json()
+        # 使用统一响应格式辅助函数提取数据
+        data = assert_success_response(response_data, expected_code=response.status_code)
         assert data["milestone_name"] == milestone_data["milestone_name"]
 
     def test_create_milestone_duplicate_code(self, client, admin_token, test_project):

@@ -3,6 +3,7 @@
  * Features: 每日工作日志提交，@提及项目/设备/人员，自动关联到项目进展
  */
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FileText,
   AtSign,
@@ -15,6 +16,7 @@ import {
   Clock,
   Briefcase,
   RefreshCw,
+  ChevronRight,
 } from "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -36,16 +38,10 @@ import {
 
 import { Textarea } from "../components/ui/textarea";
 import { cn, formatDate } from "../lib/utils";
-import { workLogApi } from "../services/api";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "../components/ui/dialog";
-
+import { getStatusBadge, getLevelColor } from "../utils/monthlySummaryUtils";
+import { workLogApi, performanceApi } from "../services/api";
 export default function WorkLog() {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [workLogs, setWorkLogs] = useState([]);
   const [mentionOptions, setMentionOptions] = useState({
@@ -76,6 +72,12 @@ export default function WorkLog() {
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
 
+  // 月度总结
+  const [monthlyHistory, setMonthlyHistory] = useState([]);
+  const [monthlyLoading, setMonthlyLoading] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [selectedSummary, setSelectedSummary] = useState(null);
+
   // AI分析相关
   const [aiAnalysis, setAiAnalysis] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
@@ -88,6 +90,10 @@ export default function WorkLog() {
     fetchWorkLogs();
     fetchSuggestedProjects();
   }, [page, filterStartDate, filterEndDate]);
+
+  useEffect(() => {
+    fetchMonthlyHistory();
+  }, []);
 
   // 当工作内容变化时，自动触发AI分析（防抖）
   useEffect(() => {
@@ -125,6 +131,52 @@ export default function WorkLog() {
     } catch (error) {
       console.error("Failed to fetch suggested projects:", error);
     }
+  };
+
+  const fetchMonthlyHistory = async () => {
+    try {
+      setMonthlyLoading(true);
+      const res = await performanceApi.getMonthlySummaryHistory();
+      const list = res.data?.data || res.data || [];
+      setMonthlyHistory(list);
+      if (list.length > 0) {
+        const initialPeriod = list[0].period;
+        setSelectedMonth(initialPeriod);
+        setSelectedSummary(list[0]);
+      } else {
+        setSelectedSummary(null);
+      }
+    } catch (error) {
+      console.error("Failed to fetch monthly summaries:", error);
+      setMonthlyHistory([]);
+      setSelectedSummary(null);
+    } finally {
+      setMonthlyLoading(false);
+    }
+  };
+
+  const handleSelectMonth = (period) => {
+    if (!period || period === "__none__") {
+      setSelectedMonth("");
+      setSelectedSummary(null);
+      return;
+    }
+    setSelectedMonth(period);
+    const summary = monthlyHistory.find((item) => item.period === period);
+    setSelectedSummary(summary || null);
+  };
+
+  const formatPeriodLabel = (period) => {
+    if (!period || period === "__none__") {
+      return "请选择月份";
+    }
+    const [year, month] = period.split("-");
+    return `${year}年${month}月`;
+  };
+
+  const getSubmitDate = (summary) => {
+    if (!summary) return "—";
+    return summary.submit_date || summary.submitDate || "—";
   };
 
   const handleAiAnalyze = async () => {
@@ -846,6 +898,176 @@ export default function WorkLog() {
                   </Button>
                 </div>
               )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* 月度总结 */}
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <CardTitle>月度总结</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                按月份查看总结状态、得分与各类点评
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/personal/monthly-summary")}
+            >
+              去填写月度总结
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-4 items-end mb-6">
+            <div className="flex-1 min-w-[220px]">
+              <label className="block text-xs text-gray-500 mb-1">
+                选择月份
+              </label>
+              <Select
+                value={selectedMonth || "__none__"}
+                onValueChange={handleSelectMonth}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="请选择月份" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">请选择月份</SelectItem>
+                  {monthlyHistory.map((record) => (
+                    <SelectItem key={record.id || record.period} value={record.period}>
+                      {formatPeriodLabel(record.period)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button variant="outline" onClick={fetchMonthlyHistory}>
+              <RefreshCw className={cn("h-4 w-4 mr-2", monthlyLoading && "animate-spin")} />
+              刷新
+            </Button>
+          </div>
+
+          {monthlyLoading ? (
+            <div className="text-center py-10 text-muted-foreground">
+              正在加载月度总结...
+            </div>
+          ) : monthlyHistory.length === 0 ? (
+            <div className="text-center py-10 text-muted-foreground">
+              暂无月度总结记录，点击右上角按钮前往填写。
+            </div>
+          ) : selectedSummary ? (
+            <>
+              <div className="grid gap-4 md:grid-cols-3 mb-6">
+                <div className="p-4 border rounded-lg">
+                  <p className="text-xs text-gray-500 mb-2">月份</p>
+                  <p className="text-xl font-semibold">
+                    {formatPeriodLabel(selectedSummary.period)}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    提交时间：{getSubmitDate(selectedSummary)}
+                  </p>
+                </div>
+                <div className="p-4 border rounded-lg">
+                  <p className="text-xs text-gray-500 mb-2">状态</p>
+                  <span
+                    className={cn(
+                      "inline-flex px-3 py-1 rounded-full text-sm font-medium",
+                      getStatusBadge(selectedSummary.status).color,
+                    )}
+                  >
+                    {getStatusBadge(selectedSummary.status).label}
+                  </span>
+                </div>
+                <div className="p-4 border rounded-lg">
+                  <p className="text-xs text-gray-500 mb-2">综合得分</p>
+                  <p
+                    className={cn(
+                      "text-2xl font-semibold",
+                      getLevelColor(selectedSummary.level),
+                    )}
+                  >
+                    {(selectedSummary.score ?? selectedSummary.final_score) || "--"}
+                    {selectedSummary.level && (
+                      <span className="text-base ml-2">
+                        ({selectedSummary.level}级)
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="border rounded-lg p-4">
+                  <p className="text-xs text-gray-500 mb-1">部门经理评分</p>
+                  <p className="text-2xl font-semibold text-blue-500">
+                    {selectedSummary.dept_score ?? selectedSummary.deptScore ?? "--"}
+                  </p>
+                </div>
+                <div className="border rounded-lg p-4">
+                  <p className="text-xs text-gray-500 mb-2">项目经理评分</p>
+                  {(selectedSummary.project_scores ||
+                    selectedSummary.projectScores ||
+                    []
+                  ).length === 0 ? (
+                    <p className="text-sm text-muted-foreground">暂无项目评分</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {(selectedSummary.project_scores ||
+                        selectedSummary.projectScores ||
+                        []
+                      ).map((ps, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between text-sm"
+                        >
+                          <span className="text-gray-600">
+                            {ps.project_name || ps.projectName || `项目${idx + 1}`}
+                          </span>
+                          <span className="font-medium text-purple-500">
+                            {ps.score}
+                            {ps.weight ? `（权重${ps.weight}%）` : ""}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-6 space-y-4">
+                {[
+                  {
+                    label: "本月亮点",
+                    value: selectedSummary.highlights || selectedSummary.highlightsText,
+                  },
+                  {
+                    label: "存在问题",
+                    value: selectedSummary.problems || selectedSummary.problemText,
+                  },
+                  {
+                    label: "下月计划",
+                    value: selectedSummary.next_month_plan || selectedSummary.nextMonthPlan,
+                  },
+                ]
+                  .filter((item) => item.value)
+                  .map((item) => (
+                    <div key={item.label} className="border rounded-lg p-4">
+                      <p className="text-xs text-gray-500 mb-1">{item.label}</p>
+                      <p className="text-sm text-gray-700 whitespace-pre-line">
+                        {item.value}
+                      </p>
+                    </div>
+                  ))}
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-10 text-muted-foreground">
+              请选择要查看的月份
             </div>
           )}
         </CardContent>

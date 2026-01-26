@@ -17,12 +17,9 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy.orm import Session
 
 from app.models.project import Project, ProjectStatusLog
-from app.services.status_handlers import (
-    ContractStatusHandler,
-    MaterialStatusHandler,
-    AcceptanceStatusHandler,
-    ECNStatusHandler,
-)
+
+# 处理器延迟导入，避免循环依赖
+# from app.services.status_handlers import ...
 
 
 class StatusTransitionService:
@@ -30,6 +27,13 @@ class StatusTransitionService:
 
     def __init__(self, db: Session):
         self.db = db
+
+        # 延迟导入处理器，避免循环依赖
+        from app.services.status_handlers.contract_handler import ContractStatusHandler
+        from app.services.status_handlers.material_handler import MaterialStatusHandler
+        from app.services.status_handlers.acceptance_handler import AcceptanceStatusHandler
+        from app.services.status_handlers.ecn_handler import ECNStatusHandler
+
         # 初始化各个处理器
         self.contract_handler = ContractStatusHandler(db, self)
         self.material_handler = MaterialStatusHandler(db, self)

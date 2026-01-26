@@ -8,18 +8,21 @@ from decimal import Decimal
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from app.schemas.common import PaginatedResponse
 from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_active_user, get_db
-from app.core.config import settings
-from app.models.material import BomHeader, Supplier
+from app.utils.pagination import PaginationParams, create_paginated_response
+from app.models.material import BomHeader
+from app.models.vendor import Vendor
 from app.models.purchase import (
     PurchaseOrder,
     PurchaseOrderItem,
 )
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.data_scope_service import DataScopeConfig, DataScopeService
 
 from .utils import (
     decimal_value,
@@ -30,19 +33,31 @@ from .utils import (
 
 router = APIRouter()
 
+# 采购订单数据权限配置
+PO_DATA_SCOPE_CONFIG = DataScopeConfig(
+    owner_field="created_by",
+    additional_owner_fields=["approved_by"],
+    project_field="project_id",
+)
+
 
 @router.get("/")
 def list_purchase_orders(
     db: Session = Depends(get_db),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE),
+    pagination: PaginationParams = Depends(),
     keyword: Optional[str] = Query(None),
     supplier_id: Optional[int] = Query(None),
     status: Optional[str] = Query(None),
     current_user: User = Depends(get_current_active_user),
 ):
-    """获取采购订单列表"""
+    """获取采购订单列表（按数据权限过滤）"""
     query = db.query(PurchaseOrder)
+
+    # 应用数据权限过滤
+    query = DataScopeService.filter_by_scope(
+        db, query, PurchaseOrder, current_user, PO_DATA_SCOPE_CONFIG
+    )
+
     if keyword:
         query = query.filter(
             or_(
@@ -56,17 +71,11 @@ def list_purchase_orders(
         query = query.filter(PurchaseOrder.status == status)
 
     total = query.count()
-    offset = (page - 1) * page_size
     orders = (
-        query.order_by(desc(PurchaseOrder.created_at)).offset(offset).limit(page_size).all()
+        query.order_by(desc(PurchaseOrder.created_at)).offset(pagination.offset).limit(pagination.page_size).all()
     )
-    return {
-        "items": [serialize_purchase_order(o, include_items=False) for o in orders],
-        "total": total,
-        "page": page,
-        "page_size": page_size,
-        "pages": (total + page_size - 1) // page_size,
-    }
+    items = [serialize_purchase_order(o, include_items=False) for o in orders]
+    return create_paginated_response(items, total, pagination)
 
 
 @router.post("/")
@@ -79,7 +88,7 @@ def create_purchase_order(
     supplier_id = payload.get("supplier_id")
     if not supplier_id:
         raise HTTPException(status_code=422, detail="supplier_id 必填")
-    supplier = db.query(Supplier).filter(Supplier.id == supplier_id).first()
+    supplier = db.query(Vendor).filter(Vendor.id == supplier_id, Vendor.vendor_type == 'MATERIAL').first()
     if not supplier:
         raise HTTPException(status_code=404, detail="供应商不存在")
 

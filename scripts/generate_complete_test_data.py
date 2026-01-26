@@ -20,7 +20,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.models.acceptance import AcceptanceOrder, AcceptanceOrderItem
 from app.models.base import get_db_session
-from app.models.material import Material, MaterialCategory, MaterialSupplier, Supplier
+from app.models.material import Material, MaterialCategory, MaterialSupplier
+from app.models.vendor import Vendor
 from app.models.organization import Department, Employee
 from app.models.progress import Task
 from app.models.project import (
@@ -226,17 +227,18 @@ def create_suppliers(db):
     for idx, sup_data in enumerate(SUPPLIERS, 1):
         supplier_code = f"SUP{idx:03d}"
         # 检查是否已存在
-        supplier = db.query(Supplier).filter(Supplier.supplier_code == supplier_code).first()
+        supplier = db.query(Vendor).filter(Vendor.supplier_code == supplier_code).first()
         if supplier:
             suppliers.append(supplier)
             continue
 
         # 只使用数据库表中存在的字段
-        supplier = Supplier(
+        supplier = Vendor(
             supplier_code=f"SUP{idx:03d}",
             supplier_name=sup_data["name"],
             supplier_short_name=sup_data["name"][:6],
             supplier_type=sup_data["type"],
+            vendor_type="MATERIAL",
             contact_person=f"联系人{idx}",
             contact_phone=f"0755-8888{idx:04d}",
             contact_email=f"contact{idx}@supplier.com",
@@ -539,7 +541,7 @@ def create_purchase_orders(db, project, bom_materials, suppliers, users):
 
     purchase_orders = []
     for supplier_id, items in supplier_items.items():
-        supplier = db.query(Supplier).filter(Supplier.id == supplier_id).first()
+        supplier = db.query(Vendor).filter(Vendor.id == supplier_id).first()
         if not supplier:
             continue
 

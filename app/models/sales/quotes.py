@@ -4,8 +4,6 @@
 """
 
 from datetime import datetime
-from decimal import Decimal
-from typing import Optional
 
 from sqlalchemy import (
     JSON,
@@ -268,7 +266,7 @@ class PurchaseMaterialCost(Base, TimestampMixin):
     currency = Column(String(10), default="CNY", comment="币种")
 
     # 供应商信息
-    supplier_id = Column(Integer, ForeignKey("suppliers.id"), comment="供应商ID")
+    supplier_id = Column(Integer, ForeignKey("vendors.id"), comment="供应商ID")
     supplier_name = Column(String(200), comment="供应商名称")
 
     # 采购信息
@@ -293,7 +291,7 @@ class PurchaseMaterialCost(Base, TimestampMixin):
     submitted_by = Column(Integer, ForeignKey("users.id"), comment="提交人ID（采购部）")
 
     # 关系
-    supplier = relationship("Supplier", foreign_keys=[supplier_id])
+    # supplier = relationship("Supplier", foreign_keys=[supplier_id])  # 已禁用 - Supplier 是废弃模型
     submitter = relationship("User", foreign_keys=[submitted_by])
 
     __table_args__ = (

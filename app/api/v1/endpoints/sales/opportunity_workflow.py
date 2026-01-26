@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.core.sales_permissions import can_set_opportunity_gate
 from app.models.sales import Opportunity, OpportunityRequirement
 from app.models.user import User
 from app.schemas.common import ResponseModel
@@ -46,6 +47,9 @@ def submit_opportunity_gate(
     if not opportunity:
         raise HTTPException(status_code=404, detail="商机不存在")
 
+    if not can_set_opportunity_gate(db, current_user, opportunity):
+        raise HTTPException(status_code=403, detail="无权限设置商机阶段门")
+
     # 根据阶段门类型进行验证
     validation_errors = []
     if gate_type == "G2":
@@ -62,6 +66,7 @@ def submit_opportunity_gate(
     opportunity.gate_status = gate_request.gate_status
     if gate_request.gate_status == "PASS":
         opportunity.gate_passed_at = datetime.now()
+    opportunity.updated_by = current_user.id
 
     db.commit()
 
@@ -92,6 +97,7 @@ def update_opportunity_stage(
         raise HTTPException(status_code=400, detail=f"无效的阶段，必须是: {', '.join(valid_stages)}")
 
     opportunity.stage = stage
+    opportunity.updated_by = current_user.id
     db.commit()
     db.refresh(opportunity)
 
@@ -100,6 +106,7 @@ def update_opportunity_stage(
         **{c.name: getattr(opportunity, c.name) for c in opportunity.__table__.columns},
         "customer_name": opportunity.customer.customer_name if opportunity.customer else None,
         "owner_name": opportunity.owner.real_name if opportunity.owner else None,
+        "updated_by_name": opportunity.updater.real_name if opportunity.updater else None,
         "requirement": None,
     }
     if req:
@@ -134,6 +141,7 @@ def update_opportunity_score(
         opportunity.risk_level = "MEDIUM"
     else:
         opportunity.risk_level = "HIGH"
+    opportunity.updated_by = current_user.id
 
     db.commit()
     db.refresh(opportunity)
@@ -143,6 +151,7 @@ def update_opportunity_score(
         **{c.name: getattr(opportunity, c.name) for c in opportunity.__table__.columns},
         "customer_name": opportunity.customer.customer_name if opportunity.customer else None,
         "owner_name": opportunity.owner.real_name if opportunity.owner else None,
+        "updated_by_name": opportunity.updater.real_name if opportunity.updater else None,
         "requirement": None,
     }
     if req:
@@ -168,6 +177,7 @@ def win_opportunity(
     opportunity.stage = "WON"
     opportunity.gate_status = "PASS"
     opportunity.gate_passed_at = datetime.now()
+    opportunity.updated_by = current_user.id
     db.commit()
     db.refresh(opportunity)
 
@@ -176,6 +186,7 @@ def win_opportunity(
         **{c.name: getattr(opportunity, c.name) for c in opportunity.__table__.columns},
         "customer_name": opportunity.customer.customer_name if opportunity.customer else None,
         "owner_name": opportunity.owner.real_name if opportunity.owner else None,
+        "updated_by_name": opportunity.updater.real_name if opportunity.updater else None,
         "requirement": None,
     }
     if req:
@@ -203,6 +214,7 @@ def lose_opportunity(
     if lose_reason:
         opportunity.lose_reason = lose_reason
     opportunity.lost_at = datetime.now()
+    opportunity.updated_by = current_user.id
     db.commit()
     db.refresh(opportunity)
 
@@ -211,6 +223,7 @@ def lose_opportunity(
         **{c.name: getattr(opportunity, c.name) for c in opportunity.__table__.columns},
         "customer_name": opportunity.customer.customer_name if opportunity.customer else None,
         "owner_name": opportunity.owner.real_name if opportunity.owner else None,
+        "updated_by_name": opportunity.updater.real_name if opportunity.updater else None,
         "requirement": None,
     }
     if req:

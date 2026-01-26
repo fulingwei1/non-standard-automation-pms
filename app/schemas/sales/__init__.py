@@ -46,6 +46,7 @@ from .contracts import (
     ContractUpdate,
 )
 from .cost_templates import (
+    CostMatchSuggestion,
     MaterialCostMatchRequest,
     MaterialCostMatchResponse,
     MaterialCostUpdateReminderResponse,
@@ -105,6 +106,22 @@ from .quotes import (
     QuoteUpdate,
     QuoteVersionCreate,
     QuoteVersionResponse,
+)
+from .team import (
+    SalesTeamCreate,
+    SalesTeamUpdate,
+    SalesTeamResponse,
+    SalesTeamListResponse,
+    SalesTeamMemberInfo,
+    TeamMemberAddRequest,
+    TeamMemberUpdateRequest,
+    TeamMemberBatchAddRequest,
+    TeamPerformanceSnapshotResponse,
+    TeamPKCreateRequest,
+    TeamPKUpdateRequest,
+    TeamPKResponse,
+    TeamRankingItem,
+    TeamRankingResponse,
 )
 
 __all__ = [
@@ -171,6 +188,7 @@ __all__ = [
     "MaterialCostMatchResponse",
     "MaterialCostUpdateReminderResponse",
     "MaterialCostUpdateReminderUpdate",
+    "CostMatchSuggestion",
     # 发票相关
     "InvoiceCreate",
     "InvoiceUpdate",
@@ -204,4 +222,19 @@ __all__ = [
     "FailureCaseResponse",
     "OpenItemCreate",
     "OpenItemResponse",
+    # 团队管理相关
+    "SalesTeamCreate",
+    "SalesTeamUpdate",
+    "SalesTeamResponse",
+    "SalesTeamListResponse",
+    "SalesTeamMemberInfo",
+    "TeamMemberAddRequest",
+    "TeamMemberUpdateRequest",
+    "TeamMemberBatchAddRequest",
+    "TeamPerformanceSnapshotResponse",
+    "TeamPKCreateRequest",
+    "TeamPKUpdateRequest",
+    "TeamPKResponse",
+    "TeamRankingItem",
+    "TeamRankingResponse",
 ]

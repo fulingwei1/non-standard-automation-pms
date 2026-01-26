@@ -1,16 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   BarChart3,
-  TrendingUp,
-  TrendingDown,
   Users,
   Package,
   DollarSign,
   Clock,
   AlertTriangle,
   CheckCircle2,
-  Calendar,
   Target,
   Activity,
   Zap,
@@ -30,114 +27,80 @@ import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
+import api, { alertApi, projectApi } from "../services/api";
 
-// Mock dashboard data
-const dashboardData = {
-  kpis: [
-    {
-      label: "在制项目",
-      value: 12,
-      change: 2,
-      changePercent: "+20%",
-      trend: "up",
-      icon: Package,
-      color: "text-blue-400",
-      bgColor: "bg-blue-500/10",
-    },
-    {
-      label: "本月产值",
-      value: "¥2,680万",
-      change: 180,
-      changePercent: "+7.2%",
-      trend: "up",
-      icon: DollarSign,
-      color: "text-emerald-400",
-      bgColor: "bg-emerald-500/10",
-    },
-    {
-      label: "交付准时率",
-      value: "87%",
-      change: -3,
-      changePercent: "-3%",
-      trend: "down",
-      icon: Clock,
-      color: "text-amber-400",
-      bgColor: "bg-amber-500/10",
-    },
-    {
-      label: "工程师利用率",
-      value: "85%",
-      change: 5,
-      changePercent: "+5%",
-      trend: "up",
-      icon: Users,
-      color: "text-purple-400",
-      bgColor: "bg-purple-500/10",
-    },
-  ],
+const DEFAULT_DASHBOARD_DATA = {
+  kpis: [],
   projectHealth: {
-    healthy: 7,
-    atRisk: 3,
-    blocked: 2,
-    total: 12,
+    healthy: 0,
+    atRisk: 0,
+    blocked: 0,
+    total: 0,
   },
-  monthlyTrend: [
-    { month: "8月", revenue: 2100, projects: 8 },
-    { month: "9月", revenue: 2350, projects: 10 },
-    { month: "10月", revenue: 2200, projects: 9 },
-    { month: "11月", revenue: 2500, projects: 11 },
-    { month: "12月", revenue: 2450, projects: 10 },
-    { month: "1月", revenue: 2680, projects: 12 },
-  ],
-  departmentPerformance: [
-    { name: "机械设计部", utilization: 92, projects: 8, onTime: 85 },
-    { name: "电气设计部", utilization: 88, projects: 6, onTime: 90 },
-    { name: "软件开发部", utilization: 78, projects: 4, onTime: 95 },
-    { name: "测试调试部", utilization: 85, projects: 5, onTime: 80 },
-  ],
-  alerts: [
-    {
-      type: "urgent",
-      message: "ICT测试设备(PJ250106003)关键物料延期",
-      time: "10分钟前",
-    },
-    {
-      type: "warning",
-      message: "BMS老化设备(PJ250108001)进度落后3天",
-      time: "1小时前",
-    },
-    {
-      type: "info",
-      message: "EOL测试设备(PJ250105002)设计评审通过",
-      time: "2小时前",
-    },
-  ],
-  topProjects: [
-    {
-      id: "PJ250108001",
-      name: "BMS老化测试设备",
-      customer: "宁德时代",
-      value: 580,
-      progress: 65,
-      health: "H2",
-    },
-    {
-      id: "PJ250105002",
-      name: "EOL功能测试设备",
-      customer: "比亚迪",
-      value: 420,
-      progress: 45,
-      health: "H1",
-    },
-    {
-      id: "PJ250106003",
-      name: "ICT测试设备",
-      customer: "华为",
-      value: 380,
-      progress: 30,
-      health: "H3",
-    },
-  ],
+  monthlyTrend: [],
+  departmentPerformance: [],
+  alerts: [],
+  topProjects: [],
+};
+
+const formatTimeAgo = (value) => {
+  if (!value) {return "";}
+  const target = new Date(value);
+  if (Number.isNaN(target.getTime())) {return value;}
+  const diff = Date.now() - target.getTime();
+  const minute = 60 * 1000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+  if (diff < minute) {return "刚刚";}
+  if (diff < hour) {return `${Math.max(1, Math.floor(diff / minute))}分钟前`;}
+  if (diff < day) {return `${Math.floor(diff / hour)}小时前`;}
+  if (diff < 30 * day) {return `${Math.floor(diff / day)}天前`;}
+  return target.toLocaleDateString("zh-CN");
+};
+
+const formatAmountInWan = (value) => {
+  const amount = Number(value || 0);
+  if (amount <= 0) {return "¥0";}
+  const wan = amount / 10000;
+  if (wan >= 1) {
+    return `¥${wan.toFixed(wan >= 100 ? 0 : 1)}万`;
+  }
+  return `¥${amount.toFixed(2)}`;
+};
+
+const buildDateRange = (range) => {
+  const end = new Date();
+  const start = new Date(end);
+  const days = range === "week" ? 7 : range === "quarter" ? 90 : 30;
+  start.setDate(end.getDate() - days + 1);
+  const toISODate = (date) => date.toISOString().slice(0, 10);
+  return { start_date: toISODate(start), end_date: toISODate(end) };
+};
+
+const buildMonthlyTrend = (projects, months = 6) => {
+  const now = new Date();
+  const buckets = [];
+  for (let i = months - 1; i >= 0; i -= 1) {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    buckets.push({ key, label: `${date.getMonth() + 1}月`, amount: 0 });
+  }
+  const bucketMap = new Map(buckets.map((bucket) => [bucket.key, bucket]));
+  projects.forEach((project) => {
+    const dateValue = project.planned_end_date || project.contract_date;
+    if (!dateValue) {return;}
+    const date = new Date(dateValue);
+    if (Number.isNaN(date.getTime())) {return;}
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    const bucket = bucketMap.get(key);
+    if (bucket) {
+      bucket.amount += Number(project.contract_amount || 0);
+    }
+  });
+  return buckets.map((bucket) => ({
+    month: bucket.label,
+    revenue: Math.round(bucket.amount / 10000),
+  }));
 };
 
 function KpiCard({ kpi }) {
@@ -173,9 +136,10 @@ function KpiCard({ kpi }) {
 
 function HealthDonut({ data }) {
   const total = data.total;
-  const healthyPercent = (data.healthy / total) * 100;
-  const atRiskPercent = (data.atRisk / total) * 100;
-  const blockedPercent = (data.blocked / total) * 100;
+  const safeTotal = total > 0 ? total : 1;
+  const healthyPercent = total > 0 ? (data.healthy / safeTotal) * 100 : 0;
+  const atRiskPercent = total > 0 ? (data.atRisk / safeTotal) * 100 : 0;
+  const blockedPercent = total > 0 ? (data.blocked / safeTotal) * 100 : 0;
 
   return (
     <div className="flex items-center gap-6">
@@ -256,7 +220,14 @@ function HealthDonut({ data }) {
 }
 
 function MiniBarChart({ data }) {
-  const maxValue = Math.max(...data.map((d) => d.revenue));
+  if (!data || data.length === 0) {
+    return <div className="text-sm text-slate-400">暂无产值数据</div>;
+  }
+  const maxValue = Math.max(...data.map((d) => d.revenue), 0);
+  if (maxValue === 0) {
+    return <div className="text-sm text-slate-400">暂无产值数据</div>;
+  }
+  const safeMax = maxValue;
 
   return (
     <div className="flex items-end gap-2 h-32">
@@ -268,7 +239,7 @@ function MiniBarChart({ data }) {
             </span>
             <div
               className="w-full bg-gradient-to-t from-accent/50 to-accent rounded-t-sm transition-all hover:from-accent/70"
-              style={{ height: `${(item.revenue / maxValue) * 80}px` }}
+              style={{ height: `${(item.revenue / safeMax) * 80}px` }}
             />
           </div>
           <span className="text-xs text-slate-500">{item.month}</span>
@@ -280,6 +251,232 @@ function MiniBarChart({ data }) {
 
 export default function OperationDashboard() {
   const [timeRange, setTimeRange] = useState("month");
+  const [dashboardData, setDashboardData] = useState(DEFAULT_DASHBOARD_DATA);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadDashboard = async () => {
+      setLoading(true);
+      setError(null);
+
+      const rangeParams = buildDateRange(timeRange);
+      const results = await Promise.allSettled([
+        api.get("/report-center/bi/dashboard/executive"),
+        api.get("/report-center/bi/delivery-rate", { params: rangeParams }),
+        api.get("/report-center/bi/utilization", { params: rangeParams }),
+        alertApi.list({ page: 1, page_size: 5, status: "PENDING" }),
+        projectApi.getBoard(),
+      ]);
+
+      const errors = [];
+      const unwrap = (response) => response?.data?.data ?? response?.data ?? response;
+      const errorMessage = (err) => {
+        const status = err?.response?.status;
+        const detail = err?.response?.data?.detail;
+        const message = err?.response?.data?.message;
+        const fallback = err?.message || "请求失败";
+        const apiMessage =
+          typeof detail === "string"
+            ? detail
+            : detail?.message || message || fallback;
+        return status ? `(${status}) ${apiMessage}` : apiMessage;
+      };
+
+      let executiveData = {};
+      let deliveryData = {};
+      let utilizationData = {};
+      let alertData = {};
+      let projectBoardData = {};
+
+      if (results[0].status === "fulfilled") {
+        executiveData = unwrap(results[0].value);
+      } else {
+        errors.push(`决策数据：${errorMessage(results[0].reason)}`);
+      }
+
+      if (results[1].status === "fulfilled") {
+        deliveryData = unwrap(results[1].value);
+      } else {
+        errors.push(`交付准时率：${errorMessage(results[1].reason)}`);
+      }
+
+      if (results[2].status === "fulfilled") {
+        utilizationData = unwrap(results[2].value);
+      } else {
+        errors.push(`人员利用率：${errorMessage(results[2].reason)}`);
+      }
+
+      if (results[3].status === "fulfilled") {
+        alertData = results[3].value?.data || {};
+      } else {
+        errors.push(`预警列表：${errorMessage(results[3].reason)}`);
+      }
+
+      if (results[4].status === "fulfilled") {
+        projectBoardData = unwrap(results[4].value);
+      } else {
+        errors.push(`项目看板：${errorMessage(results[4].reason)}`);
+      }
+
+      const summary = executiveData?.summary || {};
+      const monthly = executiveData?.monthly || {};
+      const deliveryRate = Number(deliveryData?.on_time_rate || 0);
+      const utilizationRate = Number(utilizationData?.avg_utilization_rate || 0);
+
+      const boardProjects = projectBoardData?.board
+        ? Object.values(projectBoardData.board).flatMap(
+          (stage) => stage?.projects || []
+        )
+        : [];
+
+      const healthSource = boardProjects.length
+        ? boardProjects.reduce((acc, project) => {
+          const health = project?.health || "H1";
+          acc[health] = (acc[health] || 0) + 1;
+          return acc;
+        }, {})
+        : executiveData?.health_distribution || {};
+
+      const healthyCount = Number(healthSource?.H1 || 0) + Number(healthSource?.H4 || 0);
+      const atRiskCount = Number(healthSource?.H2 || 0);
+      const blockedCount = Number(healthSource?.H3 || 0);
+
+      const kpis = [
+        {
+          label: "在制项目",
+          value: Number(summary.active_projects || 0),
+          change: 0,
+          changePercent: "0%",
+          trend: "up",
+          icon: Package,
+          color: "text-blue-400",
+          bgColor: "bg-blue-500/10",
+        },
+        {
+          label: "本月产值",
+          value: formatAmountInWan(monthly.contract_amount || 0),
+          change: 0,
+          changePercent: "0%",
+          trend: "up",
+          icon: DollarSign,
+          color: "text-emerald-400",
+          bgColor: "bg-emerald-500/10",
+        },
+        {
+          label: "交付准时率",
+          value: `${deliveryRate.toFixed(0)}%`,
+          change: 0,
+          changePercent: "0%",
+          trend: deliveryRate >= 0 ? "up" : "down",
+          icon: Clock,
+          color: "text-amber-400",
+          bgColor: "bg-amber-500/10",
+        },
+        {
+          label: "工程师利用率",
+          value: `${utilizationRate.toFixed(0)}%`,
+          change: 0,
+          changePercent: "0%",
+          trend: utilizationRate >= 0 ? "up" : "down",
+          icon: Users,
+          color: "text-purple-400",
+          bgColor: "bg-purple-500/10",
+        },
+      ];
+
+      const topProjects = [...boardProjects]
+        .sort((a, b) => Number(b.contract_amount || 0) - Number(a.contract_amount || 0))
+        .slice(0, 5)
+        .map((project) => ({
+          id: project.project_code || project.id,
+          name: project.project_name || "-",
+          customer: project.customer_name || "-",
+          value: Math.round(Number(project.contract_amount || 0) / 10000),
+          progress: Math.round(Number(project.progress_pct || 0)),
+          health: project.health || "H1",
+        }));
+
+      const alerts = (alertData.items || [])
+        .slice(0, 3)
+        .map((alert) => {
+          const level = (alert.alert_level || "").toUpperCase();
+          const type =
+            level === "CRITICAL" || level === "HIGH"
+              ? "urgent"
+              : level === "MAJOR" || level === "MEDIUM"
+                ? "warning"
+                : "info";
+          return {
+            type,
+            message: alert.alert_title || alert.alert_content || "预警触发",
+            time: formatTimeAgo(alert.triggered_at),
+          };
+        });
+
+      const utilizationList = utilizationData?.utilization_list || [];
+      const deptUtilization = {};
+      utilizationList.forEach((entry) => {
+        const dept = entry.department || "未分配";
+        if (!deptUtilization[dept]) {
+          deptUtilization[dept] = { total: 0, count: 0 };
+        }
+        deptUtilization[dept].total += Number(entry.utilization_rate || 0);
+        deptUtilization[dept].count += 1;
+      });
+
+      const userDeptMap = new Map(
+        utilizationList.map((entry) => [entry.user_id, entry.department || "未分配"])
+      );
+      const deptProjectCounts = {};
+      boardProjects.forEach((project) => {
+        const dept = userDeptMap.get(project.pm_id) || "未分配";
+        deptProjectCounts[dept] = (deptProjectCounts[dept] || 0) + 1;
+      });
+
+      const departmentNames = new Set([
+        ...Object.keys(deptUtilization),
+        ...Object.keys(deptProjectCounts),
+      ]);
+      const departmentPerformance = Array.from(departmentNames).map((name) => {
+        const util = deptUtilization[name];
+        const avgUtilization = util ? util.total / util.count : 0;
+        return {
+          name,
+          utilization: Math.round(avgUtilization),
+          projects: deptProjectCounts[name] || 0,
+          onTime: null,
+        };
+      });
+
+      const monthlyTrend = buildMonthlyTrend(boardProjects, 6);
+
+      if (!cancelled) {
+        setDashboardData({
+          kpis,
+          projectHealth: {
+            healthy: healthyCount,
+            atRisk: atRiskCount,
+            blocked: blockedCount,
+            total: healthyCount + atRiskCount + blockedCount,
+          },
+          monthlyTrend,
+          departmentPerformance,
+          alerts,
+          topProjects,
+        });
+        setError(errors.length ? errors.join("；") : null);
+        setLoading(false);
+      }
+    };
+
+    loadDashboard();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [timeRange]);
 
   return (
     <motion.div
@@ -310,6 +507,15 @@ export default function OperationDashboard() {
           </div>
         }
       />
+
+      {error && (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
+          运营大屏数据加载失败：{error}
+        </div>
+      )}
+      {loading && (
+        <div className="text-sm text-slate-400">数据加载中...</div>
+      )}
 
       {/* KPI Cards */}
       <motion.div
@@ -368,40 +574,49 @@ export default function OperationDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {dashboardData.departmentPerformance.map((dept, index) => (
-              <div key={index} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-white">{dept.name}</span>
-                  <div className="flex items-center gap-4 text-xs">
-                    <span className="text-slate-400">{dept.projects} 项目</span>
-                    <span
-                      className={cn(
-                        dept.onTime >= 90
-                          ? "text-emerald-400"
-                          : dept.onTime >= 80
+            {dashboardData.departmentPerformance.length === 0 ? (
+              <div className="text-sm text-slate-400">暂无部门绩效数据</div>
+            ) : (
+              dashboardData.departmentPerformance.map((dept, index) => {
+                const onTimeValue = Number.isFinite(dept.onTime) ? dept.onTime : null;
+                return (
+                  <div key={index} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-white">{dept.name}</span>
+                      <div className="flex items-center gap-4 text-xs">
+                        <span className="text-slate-400">{dept.projects} 项目</span>
+                        <span
+                          className={cn(
+                            onTimeValue === null
+                              ? "text-slate-400"
+                              : onTimeValue >= 90
+                                ? "text-emerald-400"
+                                : onTimeValue >= 80
+                                  ? "text-amber-400"
+                                  : "text-red-400",
+                          )}
+                        >
+                          准时率 {onTimeValue === null ? "--" : `${onTimeValue}%`}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Progress value={dept.utilization} className="h-2 flex-1" />
+                      <span
+                        className={cn(
+                          "text-xs font-medium w-10 text-right",
+                          dept.utilization >= 90
                             ? "text-amber-400"
-                            : "text-red-400",
-                      )}
-                    >
-                      准时率 {dept.onTime}%
-                    </span>
+                            : "text-emerald-400",
+                        )}
+                      >
+                        {dept.utilization}%
+                      </span>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Progress value={dept.utilization} className="h-2 flex-1" />
-                  <span
-                    className={cn(
-                      "text-xs font-medium w-10 text-right",
-                      dept.utilization >= 90
-                        ? "text-amber-400"
-                        : "text-emerald-400",
-                    )}
-                  >
-                    {dept.utilization}%
-                  </span>
-                </div>
-              </div>
-            ))}
+                );
+              })
+            )}
           </CardContent>
         </Card>
 
@@ -414,42 +629,46 @@ export default function OperationDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {dashboardData.alerts.map((alert, index) => (
-              <div
-                key={index}
-                className={cn(
-                  "p-3 rounded-lg flex items-start gap-3",
-                  alert.type === "urgent"
-                    ? "bg-red-500/10"
-                    : alert.type === "warning"
-                      ? "bg-amber-500/10"
-                      : "bg-blue-500/10",
-                )}
-              >
-                {alert.type === "urgent" ? (
-                  <Zap className="w-4 h-4 text-red-400 mt-0.5" />
-                ) : alert.type === "warning" ? (
-                  <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5" />
-                ) : (
-                  <CheckCircle2 className="w-4 h-4 text-blue-400 mt-0.5" />
-                )}
-                <div className="flex-1 min-w-0">
-                  <p
-                    className={cn(
-                      "text-sm",
-                      alert.type === "urgent"
-                        ? "text-red-300"
-                        : alert.type === "warning"
-                          ? "text-amber-300"
-                          : "text-blue-300",
-                    )}
-                  >
-                    {alert.message}
-                  </p>
-                  <p className="text-xs text-slate-500 mt-1">{alert.time}</p>
+            {dashboardData.alerts.length === 0 ? (
+              <div className="text-sm text-slate-400">暂无预警数据</div>
+            ) : (
+              dashboardData.alerts.map((alert, index) => (
+                <div
+                  key={index}
+                  className={cn(
+                    "p-3 rounded-lg flex items-start gap-3",
+                    alert.type === "urgent"
+                      ? "bg-red-500/10"
+                      : alert.type === "warning"
+                        ? "bg-amber-500/10"
+                        : "bg-blue-500/10",
+                  )}
+                >
+                  {alert.type === "urgent" ? (
+                    <Zap className="w-4 h-4 text-red-400 mt-0.5" />
+                  ) : alert.type === "warning" ? (
+                    <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5" />
+                  ) : (
+                    <CheckCircle2 className="w-4 h-4 text-blue-400 mt-0.5" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className={cn(
+                        "text-sm",
+                        alert.type === "urgent"
+                          ? "text-red-300"
+                          : alert.type === "warning"
+                            ? "text-amber-300"
+                            : "text-blue-300",
+                      )}
+                    >
+                      {alert.message}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">{alert.time}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </CardContent>
         </Card>
       </motion.div>
@@ -466,77 +685,81 @@ export default function OperationDashboard() {
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left p-3 text-slate-400 font-medium">
-                      项目编号
-                    </th>
-                    <th className="text-left p-3 text-slate-400 font-medium">
-                      项目名称
-                    </th>
-                    <th className="text-left p-3 text-slate-400 font-medium">
-                      客户
-                    </th>
-                    <th className="text-right p-3 text-slate-400 font-medium">
-                      合同金额
-                    </th>
-                    <th className="text-center p-3 text-slate-400 font-medium">
-                      进度
-                    </th>
-                    <th className="text-center p-3 text-slate-400 font-medium">
-                      状态
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dashboardData.topProjects.map((project) => (
-                    <tr
-                      key={project.id}
-                      className="border-b border-border/50 hover:bg-surface-2/30"
-                    >
-                      <td className="p-3">
-                        <span className="font-mono text-accent">
-                          {project.id}
-                        </span>
-                      </td>
-                      <td className="p-3 text-white">{project.name}</td>
-                      <td className="p-3 text-slate-400">{project.customer}</td>
-                      <td className="p-3 text-right text-white font-medium">
-                        ¥{project.value}万
-                      </td>
-                      <td className="p-3">
-                        <div className="flex items-center gap-2">
-                          <Progress
-                            value={project.progress}
-                            className="h-1.5 w-20"
-                          />
-                          <span className="text-xs text-slate-400">
-                            {project.progress}%
-                          </span>
-                        </div>
-                      </td>
-                      <td className="p-3 text-center">
-                        <Badge
-                          className={cn(
-                            project.health === "H1"
-                              ? "bg-emerald-500/20 text-emerald-400"
-                              : project.health === "H2"
-                                ? "bg-amber-500/20 text-amber-400"
-                                : "bg-red-500/20 text-red-400",
-                          )}
-                        >
-                          {project.health === "H1"
-                            ? "正常"
-                            : project.health === "H2"
-                              ? "风险"
-                              : "阻塞"}
-                        </Badge>
-                      </td>
+              {dashboardData.topProjects.length === 0 ? (
+                <div className="text-sm text-slate-400 py-6 text-center">暂无重点项目</div>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left p-3 text-slate-400 font-medium">
+                        项目编号
+                      </th>
+                      <th className="text-left p-3 text-slate-400 font-medium">
+                        项目名称
+                      </th>
+                      <th className="text-left p-3 text-slate-400 font-medium">
+                        客户
+                      </th>
+                      <th className="text-right p-3 text-slate-400 font-medium">
+                        合同金额
+                      </th>
+                      <th className="text-center p-3 text-slate-400 font-medium">
+                        进度
+                      </th>
+                      <th className="text-center p-3 text-slate-400 font-medium">
+                        状态
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {dashboardData.topProjects.map((project) => (
+                      <tr
+                        key={project.id}
+                        className="border-b border-border/50 hover:bg-surface-2/30"
+                      >
+                        <td className="p-3">
+                          <span className="font-mono text-accent">
+                            {project.id}
+                          </span>
+                        </td>
+                        <td className="p-3 text-white">{project.name}</td>
+                        <td className="p-3 text-slate-400">{project.customer}</td>
+                        <td className="p-3 text-right text-white font-medium">
+                          ¥{project.value}万
+                        </td>
+                        <td className="p-3">
+                          <div className="flex items-center gap-2">
+                            <Progress
+                              value={project.progress}
+                              className="h-1.5 w-20"
+                            />
+                            <span className="text-xs text-slate-400">
+                              {project.progress}%
+                            </span>
+                          </div>
+                        </td>
+                        <td className="p-3 text-center">
+                          <Badge
+                            className={cn(
+                              project.health === "H1"
+                                ? "bg-emerald-500/20 text-emerald-400"
+                                : project.health === "H2"
+                                  ? "bg-amber-500/20 text-amber-400"
+                                  : "bg-red-500/20 text-red-400",
+                            )}
+                          >
+                            {project.health === "H1"
+                              ? "正常"
+                              : project.health === "H2"
+                                ? "风险"
+                                : "阻塞"}
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           </CardContent>
         </Card>

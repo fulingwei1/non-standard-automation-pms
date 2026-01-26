@@ -1,0 +1,113 @@
+# 工时报表 - 项目工时统计报表
+# 报告代码: TIMESHEET_PROJECT
+
+meta:
+  name: 项目工时统计报表
+  code: TIMESHEET_PROJECT
+  description: 项目工时统计报表，包含项目工时明细和汇总
+  version: "1.0"
+
+permissions:
+  roles:
+    - PROJECT_MANAGER
+    - ADMIN
+    - FINANCE
+  data_scope: project
+
+parameters:
+  - name: project_id
+    type: integer
+    required: true
+    description: 项目ID
+  - name: start_date
+    type: date
+    required: false
+    description: 开始日期（可选）
+  - name: end_date
+    type: date
+    required: false
+    description: 结束日期（可选）
+
+cache:
+  enabled: true
+  ttl: 1800
+  key_pattern: "report:TIMESHEET_PROJECT:{project_id}:{start_date}:{end_date}"
+
+schedule:
+  enabled: false
+
+data_sources:
+  project_report_data:
+    type: service
+    method: TimesheetAggregationService.generate_project_report
+    args:
+      project_id: "{{ params.project_id }}"
+      start_date: "{{ params.start_date }}"
+      end_date: "{{ params.end_date }}"
+
+sections:
+  - id: summary
+    title: 项目工时汇总
+    type: metrics
+    items:
+      - label: 项目名称
+        value: "{{ project_report_data.project_name }}"
+      - label: 统计期间
+        value: "{{ project_report_data.start_date }} 至 {{ project_report_data.end_date }}"
+      - label: 总工时
+        value: "{{ project_report_data.total_hours | round_num(2) }}"
+      - label: 参与人数
+        value: "{{ project_report_data.participants | length }}"
+      - label: 总成本
+        value: "{{ project_report_data.total_cost | round_num(2) }}"
+
+  - id: by_user
+    title: 按人员统计
+    type: table
+    source: project_report_data.by_user
+    columns:
+      - field: user_name
+        label: 姓名
+      - field: total_hours
+        label: 总工时
+        format: number
+      - field: days
+        label: 工作天数
+        format: number
+      - field: avg_daily_hours
+        label: 日均工时
+        format: number
+
+  - id: by_date
+    title: 按日期统计
+    type: table
+    source: project_report_data.by_date
+    columns:
+      - field: work_date
+        label: 日期
+        format: date
+      - field: total_hours
+        label: 总工时
+        format: number
+      - field: participants
+        label: 参与人数
+        format: number
+
+exports:
+  json:
+    enabled: true
+  pdf:
+    enabled: true
+    template: timesheet_project.html
+    orientation: portrait
+  excel:
+    enabled: true
+    sheets:
+      - name: 汇总
+        section: summary
+      - name: 按人员
+        section: by_user
+      - name: 按日期
+        section: by_date
+  word:
+    enabled: false

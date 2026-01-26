@@ -1,0 +1,93 @@
+# 工时报表 - 研发报表（研发费用核算）
+# 报告代码: TIMESHEET_RD_MONTHLY
+
+meta:
+  name: 研发报表（研发费用核算）
+  code: TIMESHEET_RD_MONTHLY
+  description: 研发部门月度研发费用核算报表，包含研发项目工时成本和费用
+  version: "1.0"
+
+permissions:
+  roles:
+    - RD_MANAGER
+    - ADMIN
+    - FINANCE
+  data_scope: project
+
+parameters:
+  - name: year
+    type: integer
+    required: true
+    description: 年份
+  - name: month
+    type: integer
+    required: true
+    description: 月份（1-12）
+  - name: rd_project_id
+    type: integer
+    required: false
+    description: 研发项目ID（可选）
+
+cache:
+  enabled: true
+  ttl: 3600
+  key_pattern: "report:TIMESHEET_RD:{year}:{month}:{rd_project_id}"
+
+schedule:
+  enabled: false
+
+data_sources:
+  rd_report_data:
+    type: service
+    method: TimesheetAggregationService.generate_rd_report
+    args:
+      year: "{{ params.year }}"
+      month: "{{ params.month }}"
+      rd_project_id: "{{ params.rd_project_id }}"
+
+sections:
+  - id: summary
+    title: 研发费用汇总
+    type: metrics
+    items:
+      - label: 统计月份
+        value: "{{ params.year }}年{{ params.month }}月"
+      - label: 项目数量
+        value: "{{ rd_report_data | length }}"
+      - label: 总工时
+        value: "{{ rd_report_data | sum(attribute='total_hours') | round_num(2) }}"
+      - label: 总费用
+        value: "{{ rd_report_data | sum(attribute='total_cost') | round_num(2) }}"
+
+  - id: detail_list
+    title: 研发项目费用明细
+    type: table
+    source: rd_report_data
+    columns:
+      - field: rd_project_code
+        label: 项目编码
+      - field: rd_project_name
+        label: 项目名称
+      - field: total_hours
+        label: 总工时
+        format: number
+      - field: total_cost
+        label: 总费用
+        format: currency
+
+exports:
+  json:
+    enabled: true
+  pdf:
+    enabled: true
+    template: timesheet_rd_monthly.html
+    orientation: landscape
+  excel:
+    enabled: true
+    sheets:
+      - name: 汇总
+        section: summary
+      - name: 明细
+        section: detail_list
+  word:
+    enabled: false

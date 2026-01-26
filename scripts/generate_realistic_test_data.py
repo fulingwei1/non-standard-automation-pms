@@ -27,7 +27,6 @@ from app.models.material import (
     Material,
     MaterialCategory,
     MaterialSupplier,
-    Supplier,
 )
 from app.models.organization import Department, Employee
 from app.models.progress import Task
@@ -41,6 +40,7 @@ from app.models.project import (
 from app.models.purchase import GoodsReceipt, PurchaseOrder, PurchaseOrderItem
 from app.models.sales import Contract, Invoice, Lead, Opportunity, Quote, QuoteItem
 from app.models.user import Role, User, UserRole
+from app.models.vendor import Vendor
 
 
 def generate_customer_data(db):
@@ -651,10 +651,11 @@ def generate_material_data(db):
     ]
 
     for sup_data in supplier_data:
-        supplier = Supplier(
+        supplier = Vendor(
             supplier_code=sup_data["code"],
             supplier_name=sup_data["name"],
             supplier_type=sup_data["type"],
+            vendor_type="MATERIAL",
             contact_person=sup_data["contact"],
             contact_phone=sup_data["phone"],
             status="ACTIVE"

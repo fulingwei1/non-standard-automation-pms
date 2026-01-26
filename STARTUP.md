@@ -8,6 +8,11 @@
 ./start.sh
 ```
 
+如需指定 Python 版本（例如 3.13）：
+```bash
+PYTHON_BIN=python3.13 ./start.sh
+```
+
 该脚本会：
 1. 检查Python和Node.js环境
 2. 自动初始化数据库（如果不存在）
@@ -99,6 +104,11 @@ pnpm dev
 
 ```bash
 python3 init_db.py
+```
+
+如需直接运行脚本本体：
+```bash
+python3 scripts/init_db.py
 ```
 
 ### 前端依赖安装失败

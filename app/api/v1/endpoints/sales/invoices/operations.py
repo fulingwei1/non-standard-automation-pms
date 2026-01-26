@@ -22,7 +22,7 @@ from app.models.sales import Invoice
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.sales import InvoiceIssueRequest
-from app.services.approval_workflow_service import ApprovalWorkflowService
+from app.services.approval_engine import ApprovalEngineService as ApprovalWorkflowService
 
 logger = logging.getLogger(__name__)
 

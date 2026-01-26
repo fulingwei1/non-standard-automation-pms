@@ -6,7 +6,7 @@
 import logging
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import desc
@@ -38,10 +38,13 @@ def list_purchase_requests(
     db: Session = Depends(get_db),
     page: int = Query(1, ge=1),
     page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE),
+    status: Optional[str] = Query(None, description="按状态筛选: DRAFT, SUBMITTED, APPROVED, REJECTED"),
     current_user: User = Depends(get_current_active_user),
 ):
     """获取采购申请列表"""
     query = db.query(PurchaseRequest)
+    if status:
+        query = query.filter(PurchaseRequest.status == status)
     total = query.count()
     offset = (page - 1) * page_size
     requests = query.order_by(desc(PurchaseRequest.created_at)).offset(offset).limit(page_size).all()

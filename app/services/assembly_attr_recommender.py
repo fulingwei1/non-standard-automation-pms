@@ -17,7 +17,7 @@ from app.models import (
     CategoryStageMapping,
     Material,
     MaterialCategory,
-    Supplier,
+    Vendor,
 )
 
 
@@ -301,8 +301,9 @@ class AssemblyAttrRecommender:
         if not material.default_supplier_id:
             return None
 
-        supplier = db.query(Supplier).filter(
-            Supplier.id == material.default_supplier_id
+        supplier = db.query(Vendor).filter(
+            Vendor.id == material.default_supplier_id,
+            Vendor.vendor_type == 'MATERIAL'
         ).first()
 
         if not supplier or not supplier.supplier_type:

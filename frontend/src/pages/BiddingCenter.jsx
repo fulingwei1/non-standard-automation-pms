@@ -749,10 +749,15 @@ export default function BiddingCenter() {
 
   // 筛选投标
   const filteredBiddings = biddings.filter((bidding) => {
+    const searchLower = searchTerm.toLowerCase();
+    const name = (bidding.name || "").toLowerCase();
+    const customer = (bidding.customer || "").toLowerCase();
+    const code = (bidding.code || "").toLowerCase();
+
     return (
-      bidding.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      bidding.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      bidding.code.toLowerCase().includes(searchTerm.toLowerCase()));
+      name.includes(searchLower) ||
+      customer.includes(searchLower) ||
+      code.includes(searchLower));
 
   });
 

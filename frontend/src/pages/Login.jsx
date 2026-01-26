@@ -139,12 +139,25 @@ export default function Login({ onLoginSuccess }) {const _errorCode_1 = null;
               总经理: "gm",
               GM: "gm",
               GeneralManager: "gm",
+              常务副总: "vice_chairman",
+              副总经理: "vice_chairman",
+              董秘: "dongmi",
+              董事长: "chairman",
+              Chairman: "chairman",
               项目经理: "pm",
               PM: "pm",
               ProjectManager: "pm",
+              项目管理部总监: "project_dept_manager",
+              PMC: "pmc",
+              PMC主管: "pmc",
               销售总监: "sales_director",
               SALES_DIR: "sales_director",
               SalesDirector: "sales_director",
+              营销中心总监: "sales_director",
+              销售经理: "sales_manager",
+              SalesManager: "sales_manager",
+              销售工程师: "sales",
+              SalesEngineer: "sales",
               生产部经理: "production_manager",
               电机生产部经理: "production_manager",
               ProductionManager: "production_manager",
@@ -163,7 +176,9 @@ export default function Login({ onLoginSuccess }) {const _errorCode_1 = null;
               PROCUREMENT_ENGINEER: "procurement_engineer",
               采购员: "buyer",
               Buyer: "buyer",
-              BUYER: "buyer"
+              BUYER: "buyer",
+              客服主管: "customer_service_manager",
+              CustomerServiceManager: "customer_service_manager",
             };
 
             // 先尝试精确匹配
@@ -174,6 +189,14 @@ export default function Login({ onLoginSuccess }) {const _errorCode_1 = null;
               (key) => key.toLowerCase() === roleName.toLowerCase()
             ) || (
             // 智能匹配：如果角色名称包含特定关键词，映射到对应角色
+            roleName.includes("董事长") ?
+            "chairman" :
+            roleName.includes("常务") && roleName.includes("副总") ?
+            "vice_chairman" :
+            roleName.includes("总经理") && roleName.includes("副") ?
+            "vice_chairman" :
+            roleName.includes("董秘") ?
+            "dongmi" :
             roleName.includes("总经理") ||
             roleName.includes("GeneralManager") ||
             roleName === "GM" ?
@@ -199,6 +222,14 @@ export default function Login({ onLoginSuccess }) {const _errorCode_1 = null;
           } else if (userData.is_superuser) {
             // 如果没有角色信息但 is_superuser 为 true，默认使用 super_admin
             userRole = "super_admin";
+          } else {
+            // 用户没有分配角色且不是超级管理员，显示警告
+            logger.warn("[Login] 用户没有分配角色:", userData.username);
+            // 清除 token
+            localStorage.removeItem("token");
+            setError("您的账号尚未分配角色，请联系管理员进行角色配置");
+            setLoading(false);
+            return;
           }
 
           const frontendUser = {
@@ -227,21 +258,29 @@ export default function Login({ onLoginSuccess }) {const _errorCode_1 = null;
           return;
         }
       } catch (userErr) {
-        logger.warn("获取用户信息失败，使用备用信息:", userErr);
-        // 如果获取用户信息失败，创建基本用户信息（默认为管理员）
-        const fallbackUser = {
-          id: 1,
-          username: username,
-          name: username,
-          role: "admin",
-          is_superuser: true,
-          isSuperuser: true,
-          department: "系统",
-          roles: ["系统管理员"]
-        };
+        logger.error("获取用户信息失败:", userErr);
+        // 清除已保存的 token，因为无法获取用户信息
+        localStorage.removeItem("token");
 
-        localStorage.setItem("user", JSON.stringify(fallbackUser));
-        onLoginSuccess();
+        // 根据错误类型给出不同提示
+        let userErrMessage = "获取用户信息失败，请重新登录";
+
+        if (userErr.response?.status === 500) {
+          // 服务器内部错误，可能是数据库问题或角色未配置
+          userErrMessage = "系统错误：无法加载用户角色信息，请联系管理员检查账号配置";
+        } else if (userErr.response?.status === 401) {
+          // Token 无效
+          userErrMessage = "登录凭证已过期，请重新登录";
+        } else if (userErr.response?.status === 404) {
+          // 用户不存在
+          userErrMessage = "用户账号不存在或已被删除，请联系管理员";
+        } else if (!userErr.response) {
+          // 网络错误
+          userErrMessage = "网络连接失败，请检查网络后重试";
+        }
+
+        setError(userErrMessage);
+        setLoading(false);
         return;
       }
 
@@ -605,7 +644,7 @@ export default function Login({ onLoginSuccess }) {const _errorCode_1 = null;
               </div>
 
               {/* Demo Accounts */}
-              <div className="mt-4 grid grid-cols-3 gap-2">
+              <div className="mt-4 grid grid-cols-4 gap-2">
                 {/* 郑汝才 - 常务副总 */}
                 <motion.button
                   type="button"
@@ -655,6 +694,32 @@ export default function Login({ onLoginSuccess }) {const _errorCode_1 = null;
                   <div className="text-left min-w-0">
                     <p className="font-medium text-gray-900 truncate">骆奕兴</p>
                     <p className="text-xs text-gray-500">副总经理</p>
+                  </div>
+                </motion.button>
+
+                {/* 符凌维 - 副总经理（董秘） */}
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    setUsername('fulingwei');
+                    setPassword('123456');
+                  }}
+                  className={cn(
+                    "flex items-center gap-1.5 p-2.5 rounded-lg",
+                    "bg-gradient-to-br from-violet-50 to-violet-100",
+                    "border border-violet-200 hover:border-violet-300",
+                    "transition-all duration-200",
+                    "group text-xs"
+                  )}>
+
+                  <div className="p-1.5 rounded-lg bg-violet-100 group-hover:bg-violet-200 transition-colors flex-shrink-0">
+                    <Shield className="h-3.5 w-3.5 text-violet-600" />
+                  </div>
+                  <div className="text-left min-w-0">
+                    <p className="font-medium text-gray-900 truncate">符凌维</p>
+                    <p className="text-xs text-gray-500">副总经理（董秘）</p>
                   </div>
                 </motion.button>
 

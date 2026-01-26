@@ -1,102 +1,117 @@
 # -*- coding: utf-8 -*-
 """
-Tests for notification_dispatcher
-Covers: app/services/notification_dispatcher.py
+Tests for notification_dispatcher service
 """
 
-from unittest.mock import MagicMock, patch
-
 import pytest
+from datetime import datetime
+from unittest.mock import patch, Mock
 from sqlalchemy.orm import Session
 
-from app.services.notification_dispatcher import NotificationDispatcher
-
-
-@pytest.fixture
-def notification_dispatcher(db_session: Session):
-    """Create notification_dispatcher instance."""
-    return NotificationDispatcher(db_session)
+from app.models.alert import AlertNotification, AlertRecord
+from app.models.user import User
 
 
 class TestNotificationDispatcher:
-    """Test suite for NotificationDispatcher."""
+    """Test suite for NotificationDispatcher class."""
 
-    def test_init(self, db_session: Session):
-        """Test service initialization."""
-        service = NotificationDispatcher(db_session)
-        assert service.db is db_session
-        assert service.logger is not None
-        assert service.system_handler is not None
+    @pytest.fixture
+    def db_session(self):
+        return Mock(spec=Session)
 
-    def test_retry_schedule_config(self):
-        """验证重试调度配置。"""
-        assert NotificationDispatcher.RETRY_SCHEDULE == [5, 15, 30, 60]
-        assert len(NotificationDispatcher.RETRY_SCHEDULE) == 4
+    @pytest.fixture
+    def mock_alert(self):
+        alert = Mock(spec=AlertRecord)
+        alert.id = 1
+        alert.alert_level = "WARNING"
+        alert.message = "Test alert"
+        return alert
 
-    def test_system_handler_initialized(self, notification_dispatcher):
-        """验证系统通知处理器已初始化。"""
-        assert notification_dispatcher.system_handler is not None
+    @pytest.fixture
+    def mock_notification(self):
+        notification = Mock(spec=AlertNotification)
+        notification.id = 1
+        notification.notify_channel = "SYSTEM"
+        notification.notify_target = "user_1"
+        notification.status = "PENDING"
+        notification.retry_count = 0
+        notification.next_retry_at = None
+        return notification
 
-    def test_dispatch_alert_notification(self, notification_dispatcher):
-        """测试预警通知派发。"""
-        mock_alert = MagicMock()
-        mock_alert.id = 1
-        mock_alert.alert_level = "WARNING"
-        mock_alert.message = "测试预警消息"
-        mock_alert.target_type = "PROJECT"
-        mock_alert.target_id = 1
+    @pytest.fixture
+    def mock_user(self):
+        user = Mock(spec=User)
+        user.id = 1
+        user.username = "testuser"
+        user.email = "test@example.com"
+        return user
 
-        with patch.object(notification_dispatcher.system_handler, 'send') as mock_send:
-            mock_send.return_value = True
+    def test_init_dispatcher(self, db_session):
+        from app.services.notification_dispatcher import NotificationDispatcher
 
-            # 调用派发方法
-            notification_dispatcher.system_handler.send(mock_alert)
-            mock_send.assert_called_once()
+        dispatcher = NotificationDispatcher(db_session)
 
-    def test_dispatch_with_multiple_channels(self, notification_dispatcher):
-        """测试多渠道派发。"""
-        mock_alert = MagicMock()
-        mock_alert.id = 1
-        mock_alert.channels = ["SYSTEM", "EMAIL"]
+        assert dispatcher.db == db_session
 
-        with patch.object(notification_dispatcher, 'dispatch_to_channel') as mock_dispatch:
-            mock_dispatch.return_value = True
+    def test_compute_next_retry_schedule(self, db_session):
+        from app.services.notification_dispatcher import NotificationDispatcher
 
-            for channel in mock_alert.channels:
-                notification_dispatcher.dispatch_to_channel(mock_alert, channel)
+        dispatcher = NotificationDispatcher(db_session)
 
-            assert mock_dispatch.call_count == 2
+        result_0 = dispatcher._compute_next_retry(0)
+        assert isinstance(result_0, datetime)
 
-    def test_retry_on_failure(self, notification_dispatcher):
-        """测试失败重试机制。"""
-        mock_alert = MagicMock()
-        mock_alert.id = 1
-        mock_alert.retry_count = 0
+    def test_dispatch_system_channel_success(
+        self, db_session, mock_notification, mock_alert, mock_user
+    ):
+        from app.services.notification_dispatcher import NotificationDispatcher
 
-        # 模拟第一次失败，第二次成功
-        with patch.object(notification_dispatcher, 'send_notification') as mock_send:
-            mock_send.side_effect = [False, True]
+        dispatcher = NotificationDispatcher(db_session)
+        mock_notification.notify_channel = "SYSTEM"
 
-            # 第一次调用失败
-            result1 = notification_dispatcher.send_notification(mock_alert)
-            assert result1 is False
+        result = dispatcher.dispatch(mock_notification, mock_alert, mock_user)
 
-            # 第二次调用成功
-            result2 = notification_dispatcher.send_notification(mock_alert)
-            assert result2 is True
+        assert result is True
 
-    def test_get_retry_delay(self, notification_dispatcher):
-        """测试获取重试延迟时间。"""
-        schedule = NotificationDispatcher.RETRY_SCHEDULE
+    def test_dispatch_email_channel_success(
+        self, db_session, mock_notification, mock_alert, mock_user
+    ):
+        from app.services.notification_dispatcher import NotificationDispatcher
 
-        # 第一次重试延迟 5 秒
-        assert schedule[0] == 5
-        # 第二次重试延迟 15 秒
-        assert schedule[1] == 15
-        # 最后一次重试延迟 60 秒
-        assert schedule[-1] == 60
+        dispatcher = NotificationDispatcher(db_session)
+        mock_notification.notify_channel = "EMAIL"
 
-    def test_logger_initialized(self, notification_dispatcher):
-        """验证日志记录器已初始化。"""
-        assert notification_dispatcher.logger is not None
-        assert notification_dispatcher.logger.name is not None
+        result = dispatcher.dispatch(mock_notification, mock_alert, mock_user)
+
+        assert result is True
+
+    def test_dispatch_unsupported_channel(
+        self, db_session, mock_notification, mock_alert, mock_user
+    ):
+        from app.services.notification_dispatcher import NotificationDispatcher
+
+        dispatcher = NotificationDispatcher(db_session)
+        mock_notification.notify_channel = "UNSUPPORTED"
+
+        result = dispatcher.dispatch(mock_notification, mock_alert, mock_user)
+
+        assert result is False
+        assert mock_notification.status == "FAILED"
+        assert mock_notification.error_message is not None
+
+    def test_dispatch_with_exception(
+        self, db_session, mock_notification, mock_alert, mock_user
+    ):
+        from app.services.notification_dispatcher import NotificationDispatcher
+
+        dispatcher = NotificationDispatcher(db_session)
+        mock_notification.notify_channel = "EMAIL"
+
+        with patch.object(
+            dispatcher.email_handler, "send", side_effect=Exception("Test error")
+        ):
+            result = dispatcher.dispatch(mock_notification, mock_alert, mock_user)
+
+        assert result is False
+        assert mock_notification.status == "FAILED"
+        assert mock_notification.retry_count == 1

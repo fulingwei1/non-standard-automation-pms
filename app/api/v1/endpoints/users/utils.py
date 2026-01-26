@@ -3,6 +3,7 @@
 用户管理 - 辅助工具函数
 """
 
+import logging
 from typing import List, Optional
 
 from fastapi import HTTPException
@@ -11,6 +12,8 @@ from sqlalchemy.orm import Session
 from app.models.organization import Employee
 from app.models.user import Role, User, UserRole
 from app.schemas.auth import UserCreate, UserResponse
+
+logger = logging.getLogger(__name__)
 
 
 def get_role_names(user: User) -> List[str]:
@@ -97,12 +100,24 @@ def prepare_employee_for_new_user(db: Session, user_in: UserCreate) -> Employee:
 
 
 def replace_user_roles(db: Session, user_id: int, role_ids: Optional[List[int]]) -> None:
-    """替换用户角色"""
+    """
+    替换用户角色
+
+    角色变更后会自动使用户权限缓存失效，确保新权限即时生效。
+    """
     if role_ids is None:
         return
 
+    # 获取旧的角色 ID 列表（用于缓存失效）
+    old_user_roles = db.query(UserRole).filter(UserRole.user_id == user_id).all()
+    old_role_ids = [ur.role_id for ur in old_user_roles]
+
+    # 删除旧的角色关联
     db.query(UserRole).filter(UserRole.user_id == user_id).delete()
+
     if not role_ids:
+        # 角色被清空，失效缓存
+        _invalidate_user_cache(user_id, old_role_ids, [])
         return
 
     unique_ids = list(dict.fromkeys(role_ids))
@@ -112,3 +127,17 @@ def replace_user_roles(db: Session, user_id: int, role_ids: Optional[List[int]])
 
     for role_id in unique_ids:
         db.add(UserRole(user_id=user_id, role_id=role_id))
+
+    # 角色变更，使用户权限缓存失效
+    _invalidate_user_cache(user_id, old_role_ids, unique_ids)
+
+
+def _invalidate_user_cache(user_id: int, old_role_ids: List[int], new_role_ids: List[int]) -> None:
+    """使用户权限缓存失效"""
+    try:
+        from app.services.permission_cache_service import get_permission_cache_service
+        cache_service = get_permission_cache_service()
+        cache_service.invalidate_user_role_change(user_id, old_role_ids, new_role_ids)
+        logger.debug(f"User permission cache invalidated: user_id={user_id}")
+    except Exception as e:
+        logger.warning(f"Failed to invalidate user cache: {e}")

@@ -96,9 +96,10 @@ export default function AdministrativeApprovals() {
 
   const filteredApprovals = useMemo(() => {
     return approvals.filter((approval) => {
-      const matchSearch =
-      approval.title.toLowerCase().includes(searchText.toLowerCase()) ||
-      approval.applicant.toLowerCase().includes(searchText.toLowerCase());
+      const searchLower = (searchText || "").toLowerCase();
+    const matchSearch =
+      (approval.title || "").toLowerCase().includes(searchLower) ||
+      (approval.applicant || "").toLowerCase().includes(searchLower);
       const matchType = typeFilter === "all" || approval.type === typeFilter;
       const matchPriority =
       priorityFilter === "all" || approval.priority === priorityFilter;

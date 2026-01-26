@@ -3,6 +3,7 @@
 用户管理模块 API 测试
 
 测试用户的 CRUD 操作、角色分配和密码重置
+Updated for unified response format
 """
 
 import uuid
@@ -11,6 +12,12 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
+from tests.helpers.response_helpers import (
+    assert_success_response,
+    assert_paginated_response,
+    extract_data,
+    extract_items,
+)
 
 
 def _auth_headers(token: str) -> dict:
@@ -33,8 +40,10 @@ class TestUserCRUD:
         )
 
         assert response.status_code == 200
-        data = response.json()
-        assert "items" in data or "users" in data or isinstance(data, list)
+        response_data = response.json()
+        # 使用统一响应格式辅助函数验证分页响应
+        paginated_data = assert_paginated_response(response_data)
+        assert "items" in paginated_data
 
     def test_list_users_with_keyword(self, client: TestClient, admin_token: str):
         """测试关键词搜索用户"""
@@ -79,6 +88,10 @@ class TestUserCRUD:
             pytest.skip("Username already exists or validation error")
 
         assert response.status_code in [200, 201], response.text
+        if response.status_code in [200, 201]:
+            response_data = response.json()
+            # 使用统一响应格式辅助函数提取数据
+            assert_success_response(response_data, expected_code=response.status_code)
 
     def test_get_user_by_id(self, client: TestClient, admin_token: str):
         """测试根据 ID 获取用户"""
@@ -96,10 +109,10 @@ class TestUserCRUD:
         if list_response.status_code != 200:
             pytest.skip("Failed to get users list")
 
-        data = list_response.json()
-        items = data.get("items", data.get("users", data))
-        if isinstance(items, dict):
-            items = items.get("items", [])
+        response_data = list_response.json()
+        # 使用统一响应格式辅助函数提取items
+        paginated_data = assert_paginated_response(response_data)
+        items = paginated_data["items"]
         if not items:
             pytest.skip("No users available for testing")
 
@@ -111,7 +124,9 @@ class TestUserCRUD:
         )
 
         assert response.status_code == 200
-        data = response.json()
+        response_data = response.json()
+        # 使用统一响应格式辅助函数提取数据
+        data = assert_success_response(response_data)
         assert data["id"] == user_id
 
     def test_get_user_not_found(self, client: TestClient, admin_token: str):
@@ -143,10 +158,10 @@ class TestUserCRUD:
         if list_response.status_code != 200:
             pytest.skip("Failed to get users list")
 
-        data = list_response.json()
-        items = data.get("items", data.get("users", data))
-        if isinstance(items, dict):
-            items = items.get("items", [])
+        response_data = list_response.json()
+        # 使用统一响应格式辅助函数提取items
+        paginated_data = assert_paginated_response(response_data)
+        items = paginated_data["items"]
         if not items:
             pytest.skip("No users available for testing")
 
@@ -187,10 +202,10 @@ class TestUserRoles:
         if list_response.status_code != 200:
             pytest.skip("Failed to get users list")
 
-        data = list_response.json()
-        items = data.get("items", data.get("users", data))
-        if isinstance(items, dict):
-            items = items.get("items", [])
+        response_data = list_response.json()
+        # 使用统一响应格式辅助函数提取items
+        paginated_data = assert_paginated_response(response_data)
+        items = paginated_data["items"]
         if not items:
             pytest.skip("No users available for testing")
 
@@ -235,10 +250,10 @@ class TestUserOperations:
         if list_response.status_code != 200:
             pytest.skip("Failed to get users list")
 
-        data = list_response.json()
-        items = data.get("items", data.get("users", data))
-        if isinstance(items, dict):
-            items = items.get("items", [])
+        response_data = list_response.json()
+        # 使用统一响应格式辅助函数提取items
+        paginated_data = assert_paginated_response(response_data)
+        items = paginated_data["items"]
         if not items:
             pytest.skip("No users available for testing")
 
@@ -281,10 +296,10 @@ class TestUserOperations:
         if list_response.status_code != 200:
             pytest.skip("Failed to get users list")
 
-        data = list_response.json()
-        items = data.get("items", data.get("users", data))
-        if isinstance(items, dict):
-            items = items.get("items", [])
+        response_data = list_response.json()
+        # 使用统一响应格式辅助函数提取items
+        paginated_data = assert_paginated_response(response_data)
+        items = paginated_data["items"]
         if not items:
             pytest.skip("No users available for testing")
 
