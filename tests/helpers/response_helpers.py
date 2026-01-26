@@ -5,7 +5,7 @@ API响应测试辅助函数
 用于处理统一响应格式的测试断言
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 
 def extract_data(response_data: Dict[str, Any]) -> Any:
@@ -67,24 +67,29 @@ def extract_items(response_data: Dict[str, Any]) -> List[Any]:
 def assert_success_response(response_data: Dict[str, Any], expected_code: int = 200) -> Dict[str, Any]:
     """
     断言成功响应格式
-    
+
     Args:
         response_data: API响应数据
         expected_code: 期望的状态码
-    
+
     Returns:
         提取的数据对象
-    
+
     Raises:
         AssertionError: 如果响应格式不正确
     """
-    # 如果是新格式
+    # 如果是SuccessResponse格式（有success字段）
     if "success" in response_data:
         assert response_data["success"] is True, f"响应应该成功，但 success={response_data.get('success')}"
         assert response_data["code"] == expected_code, f"期望状态码 {expected_code}，实际 {response_data.get('code')}"
         assert "data" in response_data, "响应应该包含data字段"
         return response_data["data"]
-    
+
+    # 如果是ResponseModel格式（有code字段但没有success字段）
+    if "code" in response_data and "data" in response_data:
+        assert response_data["code"] == expected_code, f"期望状态码 {expected_code}，实际 {response_data.get('code')}"
+        return response_data["data"]
+
     # 如果是旧格式，直接返回（向后兼容）
     return response_data
 
@@ -124,34 +129,42 @@ def assert_paginated_response(response_data: Dict[str, Any]) -> Dict[str, Any]:
 def assert_list_response(response_data: Dict[str, Any]) -> Dict[str, Any]:
     """
     断言列表响应格式（无分页）
-    
+
     Args:
         response_data: API响应数据
-    
+
     Returns:
         包含items和total的字典
-    
+
     Raises:
         AssertionError: 如果响应格式不正确
     """
     # 如果直接是列表（旧格式）
     if isinstance(response_data, list):
         return {"items": response_data, "total": len(response_data)}
-    
+
     # 如果是新格式（ListResponse）
     if "items" in response_data and "total" in response_data:
         return response_data
-    
-    # 如果是SuccessResponse包装的ListResponse
+
+    # 如果是SuccessResponse包装的ListResponse（有success字段）
     if "success" in response_data and "data" in response_data:
         data = response_data["data"]
         if isinstance(data, dict) and "items" in data:
             return data
         if isinstance(data, list):
             return {"items": data, "total": len(data)}
-    
+
+    # 如果是ResponseModel包装的ListResponse（有code字段）
+    if "code" in response_data and "data" in response_data:
+        data = response_data["data"]
+        if isinstance(data, dict) and "items" in data:
+            return data
+        if isinstance(data, list):
+            return {"items": data, "total": len(data)}
+
     # 如果是旧格式字典，尝试兼容
     if isinstance(response_data, dict):
         return response_data
-    
+
     raise AssertionError(f"无法识别列表响应格式: {response_data}")

@@ -15,8 +15,6 @@ from app.core.config import settings
 from tests.helpers.response_helpers import (
     assert_success_response,
     assert_list_response,
-    extract_data,
-    extract_items,
 )
 
 
@@ -56,7 +54,12 @@ class TestRoleCRUD:
         )
 
         assert response.status_code == 200
-        data = response.json()
+        response_data = response.json()
+        # 支持两种响应格式：直接列表或 ResponseModel 包装
+        if isinstance(response_data, dict) and "data" in response_data:
+            data = response_data["data"]
+        else:
+            data = response_data
         assert isinstance(data, list)
 
     def test_create_role(self, client: TestClient, admin_token: str):

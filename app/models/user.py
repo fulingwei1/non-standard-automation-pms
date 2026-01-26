@@ -24,6 +24,10 @@ class User(Base, TimestampMixin):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    # 多租户支持
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
+    is_tenant_admin = Column(Boolean, default=False, comment="是否租户管理员")
+
     employee_id = Column(
         Integer, ForeignKey("employees.id"), nullable=False, comment="员工ID"
     )
@@ -50,6 +54,7 @@ class User(Base, TimestampMixin):
     credits_updated_at = Column(DateTime, comment="积分最后变动时间")
 
     # 关系
+    tenant = relationship("Tenant", back_populates="users")
     roles = relationship("UserRole", back_populates="user", lazy="dynamic")
     created_projects = relationship(
         "Project", back_populates="creator", foreign_keys="Project.created_by"
@@ -111,6 +116,10 @@ class Role(Base, TimestampMixin):
     __tablename__ = "roles"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    # 多租户支持
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
+    source_template_id = Column(Integer, ForeignKey("role_templates.id"), nullable=True, comment="来源模板ID")
+
     role_code = Column(String(50), unique=True, nullable=False, comment="角色编码")
     role_name = Column(String(100), nullable=False, comment="角色名称")
     description = Column(Text, comment="角色描述")
@@ -124,6 +133,7 @@ class Role(Base, TimestampMixin):
     ui_config = Column(JSON, comment="UI配置（JSON对象，包含导航、权限等前端配置）")
 
     # 关系
+    tenant = relationship("Tenant", back_populates="roles")
     users = relationship("UserRole", back_populates="role", lazy="dynamic")
     permissions = relationship("RolePermission", back_populates="role", lazy="dynamic")
     parent = relationship("Role", remote_side=[id], backref="children")

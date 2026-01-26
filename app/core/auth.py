@@ -221,8 +221,8 @@ async def get_current_user(
         if user is None:
             raise credentials_exception
 
-        # 将操作人ID设置到上下文中，用于审计日志
-        set_audit_context(operator_id=user.id)
+        # 将操作人ID和租户ID设置到上下文中，用于审计日志和数据隔离
+        set_audit_context(operator_id=user.id, tenant_id=user.tenant_id)
 
         return user
     except Exception as e:

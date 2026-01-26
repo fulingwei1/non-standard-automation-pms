@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 请求上下文模块
-使用 ContextVar 存储当前请求的用户、IP 和用户代理
+使用 ContextVar 存储当前请求的用户、IP、用户代理和租户信息
 """
 
 from contextvars import ContextVar
@@ -19,12 +19,16 @@ user_agent_ctx: ContextVar[Optional[str]] = ContextVar("user_agent", default=Non
 # 附加详情
 audit_detail_ctx: ContextVar[Dict[str, Any]] = ContextVar("audit_detail", default={})
 
+# 租户ID（多租户隔离）
+tenant_id_ctx: ContextVar[Optional[int]] = ContextVar("tenant_id", default=None)
+
 
 def set_audit_context(
     operator_id: Optional[int] = None,
     client_ip: Optional[str] = None,
     user_agent: Optional[str] = None,
     detail: Optional[Dict[str, Any]] = None,
+    tenant_id: Optional[int] = None,
 ):
     """设置审计上下文"""
     if operator_id is not None:
@@ -35,6 +39,8 @@ def set_audit_context(
         user_agent_ctx.set(user_agent)
     if detail is not None:
         audit_detail_ctx.set(detail)
+    if tenant_id is not None:
+        tenant_id_ctx.set(tenant_id)
 
 
 def get_audit_context() -> Dict[str, Any]:
@@ -44,6 +50,7 @@ def get_audit_context() -> Dict[str, Any]:
         "client_ip": client_ip_ctx.get(),
         "user_agent": user_agent_ctx.get(),
         "detail": audit_detail_ctx.get(),
+        "tenant_id": tenant_id_ctx.get(),
     }
 
 
@@ -53,3 +60,14 @@ def clear_audit_context():
     client_ip_ctx.set(None)
     user_agent_ctx.set(None)
     audit_detail_ctx.set({})
+    tenant_id_ctx.set(None)
+
+
+def get_current_tenant_id() -> Optional[int]:
+    """获取当前租户ID"""
+    return tenant_id_ctx.get()
+
+
+def set_current_tenant_id(tenant_id: Optional[int]):
+    """设置当前租户ID"""
+    tenant_id_ctx.set(tenant_id)
