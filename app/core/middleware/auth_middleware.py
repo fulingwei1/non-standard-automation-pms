@@ -48,6 +48,7 @@ class GlobalAuthMiddleware(BaseHTTPMiddleware):
         "/docs",
         "/redoc",
         "/openapi.json",
+        "/api/v1/openapi.json",  # 实际配置的OpenAPI路径
     ]
 
     # 白名单前缀：以这些开头的路径都允许

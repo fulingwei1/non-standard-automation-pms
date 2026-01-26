@@ -56,8 +56,12 @@ base_router = create_project_crud_router(
     },
 )
 
-# 创建新的router，先添加覆盖的端点，再添加基类的其他端点
+# 创建新的router
 router = APIRouter()
+
+# 先包含 base_router（包含所有 CRUD 端点）
+# 然后我们会覆盖 GET / 和 GET /{id} 端点
+router.include_router(base_router)
 
 
 def enrich_timesheet_response(ts: Timesheet, db: Session, project: Project) -> TimesheetResponse:

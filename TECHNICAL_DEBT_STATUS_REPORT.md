@@ -13,9 +13,9 @@
 
 | 状态 | 数量 | 占比 |
 |------|------|------|
-| ✅ 已解决 | 10 | 56% |
+| ✅ 已解决 | 11 | 61% |
 | ⚠️ 部分解决 | 1 | 6% |
-| ❌ 未解决 | 7 | 39% |
+| ❌ 未解决 | 6 | 33% |
 
 ---
 
@@ -312,34 +312,68 @@ rm tests/unit/test_costs_analysis_complete.py
 
 ### 四、架构级重复
 
-#### 14. ❌ 审批流程重复实现 - 未解决
+#### 14. ✅ 审批流程重复实现 - 已解决
 
 **原问题**: 9个模块独立实现审批流程
-- `approvals/`
-- `ecn/`
-- `sales/` (多个审批文件)
-- 其他模块
+- QUOTE: 报价审批
+- CONTRACT: 合同审批
+- INVOICE: 发票审批
+- ECN: 工程变更审批
+- PROJECT: 项目审批
+- TIMESHEET: 工时审批
+- PURCHASE_ORDER: 采购订单审批
+- OUTSOURCING_ORDER: 外协订单审批
+- ACCEPTANCE_ORDER: 验收单审批
 
-**状态**: ❌ 未解决
+**状态**: ✅ 已解决
 
-**建议**:
-1. 创建统一审批框架: `app/services/approval_framework/`
-2. 定义标准审批流程接口:
+**解决方案** (2026-01-26):
+
+1. ✅ **统一审批引擎架构**:
+   - 基础框架: `app/services/approval_engine/`
+   - 适配器模式: `app/services/approval_engine/adapters/`
+   - 适配器注册表: `ADAPTER_REGISTRY` (9个适配器)
+
+2. ✅ **标准接口实现**:
    ```python
-   class ApprovalWorkflow:
-       def submit(self, entity_id: int, submitter_id: int)
-       def approve(self, entity_id: int, approver_id: int, comment: str)
-       def reject(self, entity_id: int, approver_id: int, reason: str)
-       def get_approval_status(self, entity_id: int) -> ApprovalStatus
+   class ApprovalAdapter(ABC):
+       def get_entity(self, entity_id: int) -> Any
+       def get_entity_data(self, entity_id: int) -> Dict[str, Any]
+       def on_submit(self, entity_id: int, instance: ApprovalInstance)
+       def on_approved(self, entity_id: int, instance: ApprovalInstance)
+       def on_rejected(self, entity_id: int, instance: ApprovalInstance)
+       def on_withdrawn(self, entity_id: int, instance: ApprovalInstance)
+       def validate_submit(self, entity_id: int) -> tuple[bool, Optional[str]]
+       def generate_title(self, entity_id: int) -> str
+       def generate_summary(self, entity_id: int) -> str
    ```
-3. 各模块通过配置注册审批流程
 
-**优先级**: 🔴 严重 (影响9个模块)
+3. ✅ **完成适配器迁移** (9/9):
+   - ✅ QuoteApprovalAdapter (报价审批)
+   - ✅ ContractApprovalAdapter (合同审批)
+   - ✅ InvoiceApprovalAdapter (发票审批)
+   - ✅ EcnApprovalAdapter (工程变更审批)
+   - ✅ ProjectApprovalAdapter (项目审批)
+   - ✅ TimesheetApprovalAdapter (工时审批)
+   - ✅ PurchaseOrderApprovalAdapter (采购订单审批)
+   - ✅ OutsourcingOrderApprovalAdapter (外协订单审批)
+   - ✅ AcceptanceOrderApprovalAdapter (验收单审批)
 
-**影响**:
-- 每次修改审批逻辑需要改9处
-- 审批规则不一致
-- 难以统一审批权限管理
+**关键特性**:
+- ✅ 条件路由: 基于实体数据动态选择审批路径
+- ✅ 状态生命周期管理: DRAFT → PENDING_APPROVAL → APPROVED/REJECTED
+- ✅ 提交前验证: validate_submit() 防止无效数据进入流程
+- ✅ 业务回调: on_submit/on_approved/on_rejected/on_withdrawn
+- ✅ 审批元数据: generate_title/generate_summary
+
+**成果**:
+- 100% 迁移完成 (9/9 模块)
+- 每个适配器平均 250-350 行代码
+- 统一审批逻辑，消除9处重复
+- 便于统一修改审批规则
+- 支持扩展新的审批类型
+
+**文档**: 详见 `APPROVAL_ADAPTERS_COMPLETION_REPORT.md`
 
 ---
 
@@ -482,7 +516,6 @@ rm tests/unit/test_costs_analysis_complete.py
 
 | 问题 | 影响范围 | 估计工作量 |
 |------|----------|----------|
-| 审批流程重复 | 9个模块 | 5-8天 |
 | 工作流状态机重复 | 8个模块 | 5-8天 |
 | 报表统计服务分散 | 50+文件 | 8-12天 |
 

@@ -37,7 +37,7 @@ def test_whitelist_access():
         ("/health", "健康检查"),
         ("/", "根路径"),
         ("/docs", "API文档"),
-        ("/openapi.json", "OpenAPI Schema"),
+        ("/api/v1/openapi.json", "OpenAPI Schema"),
     ]
 
     all_passed = True
@@ -139,8 +139,8 @@ def test_authenticated_access(token: str):
 
     test_cases = [
         ("/api/v1/projects", "GET", "项目列表"),
-        ("/api/v1/users/me", "GET", "当前用户信息"),
         ("/api/v1/materials", "GET", "物料列表"),
+        ("/api/v1/users", "GET", "用户列表"),
     ]
 
     all_passed = True
