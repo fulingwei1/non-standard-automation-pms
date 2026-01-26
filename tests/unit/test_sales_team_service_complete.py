@@ -3,20 +3,13 @@
 Tests for sales_team_service service
 Covers: app/services/sales_team_service.py
 Coverage Target: 0% → 70%+
-File Size: 200 lines
 """
-
-import pytest
-
-# Skip entire module - test method signatures don't match current API
-pytestmark = pytest.mark.skip(
-    reason="Test method signatures don't match current SalesTeamService API"
-)
 
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
+import pytest
 from sqlalchemy.orm import Session
 
 from app.services.sales_team_service import SalesTeamService
@@ -28,405 +21,355 @@ def sales_team_service(db_session: Session):
     return SalesTeamService(db_session)
 
 
-@pytest.fixture
-def mock_user(db_session: Session):
-    """Create mock user."""
-    user = MagicMock()
-    user.id = 1
-    user.username = "test_user"
-    return user
+@pytest.mark.unit
+class TestSalesTeamServiceInit:
+    """测试服务初始化"""
+
+    def test_init_with_session(self, db_session: Session):
+        """测试使用 session 初始化服务"""
+        service = SalesTeamService(db_session)
+        assert service.db is db_session
 
 
-@pytest.fixture
-def mock_period_start():
-    """Return period start date for this month."""
-    today = date.today()
-    return date(today.year, today.month, 1)
+@pytest.mark.unit
+class TestParsePeriodValue:
+    """测试周期值解析"""
+
+    def test_parse_monthly_period(self):
+        """测试解析月度周期"""
+        start, end = SalesTeamService.parse_period_value("2024-01", "MONTHLY")
+
+        assert start == date(2024, 1, 1)
+        assert end == date(2024, 1, 31)
+
+    def test_parse_monthly_period_december(self):
+        """测试解析12月份"""
+        start, end = SalesTeamService.parse_period_value("2024-12", "MONTHLY")
+
+        assert start == date(2024, 12, 1)
+        assert end == date(2024, 12, 31)
+
+    def test_parse_monthly_period_february_leap_year(self):
+        """测试解析闰年2月"""
+        start, end = SalesTeamService.parse_period_value("2024-02", "MONTHLY")
+
+        assert start == date(2024, 2, 1)
+        assert end == date(2024, 2, 29)  # 2024 是闰年
+
+    def test_parse_quarterly_q1(self):
+        """测试解析第一季度"""
+        start, end = SalesTeamService.parse_period_value("2024-Q1", "QUARTERLY")
+
+        assert start == date(2024, 1, 1)
+        assert end == date(2024, 3, 31)
+
+    def test_parse_quarterly_q2(self):
+        """测试解析第二季度"""
+        start, end = SalesTeamService.parse_period_value("2024-Q2", "QUARTERLY")
+
+        assert start == date(2024, 4, 1)
+        assert end == date(2024, 6, 30)
+
+    def test_parse_quarterly_q3(self):
+        """测试解析第三季度"""
+        start, end = SalesTeamService.parse_period_value("2024-Q3", "QUARTERLY")
+
+        assert start == date(2024, 7, 1)
+        assert end == date(2024, 9, 30)
+
+    def test_parse_quarterly_q4(self):
+        """测试解析第四季度"""
+        start, end = SalesTeamService.parse_period_value("2024-Q4", "QUARTERLY")
+
+        assert start == date(2024, 10, 1)
+        assert end == date(2024, 12, 31)
+
+    def test_parse_yearly_period(self):
+        """测试解析年度周期"""
+        start, end = SalesTeamService.parse_period_value("2024", "YEARLY")
+
+        assert start == date(2024, 1, 1)
+        assert end == date(2024, 12, 31)
+
+    def test_parse_invalid_monthly_format(self):
+        """测试解析无效的月度格式"""
+        start, end = SalesTeamService.parse_period_value("invalid", "MONTHLY")
+
+        assert start is None
+        assert end is None
+
+    def test_parse_unknown_period_type(self):
+        """测试解析未知的周期类型"""
+        start, end = SalesTeamService.parse_period_value("2024-01", "UNKNOWN")
+
+        assert start is None
+        assert end is None
 
 
-@pytest.fixture
-def mock_period_end():
-    """Return period end date for this month."""
-    today = date.today()
-    if today.month == 12:
-        return date(today.year, today.month, 31)
-    else:
-        # Get last day of month
-        import calendar
-
-        _, last_day = calendar.monthrange(today.year, today.month)
-        return date(today.year, today.month, last_day)
-
-
+@pytest.mark.unit
 class TestCalculateTargetPerformance:
-    """Test suite for calculate_target_performance."""
+    """测试目标完成率计算"""
 
-    def test_calculate_target_performance_lead_count_basic(
-        self,
-        sales_team_service: SalesTeamService,
-        mock_user,
-        mock_period_start,
-        mock_period_end,
+    def test_calculate_lead_count_target_empty(
+        self, sales_team_service: SalesTeamService
     ):
-        """Test target performance calculation with basic lead count."""
-        target = MagicMock()
+        """测试线索数量目标 - 空数据库"""
+        target = Mock()
         target.target_type = "LEAD_COUNT"
         target.target_value = Decimal("10")
-        target.start_date = mock_period_start
-        target.end_date = mock_period_end
-        target.user_id = mock_user.id
+        target.period_value = "2024-01"
+        target.target_period = "MONTHLY"
+        target.user_id = 99999  # 不存在的用户
 
-        result = sales_team_service.calculate_target_performance(target)
+        actual, rate = sales_team_service.calculate_target_performance(target)
 
-        assert result == (Decimal("10"), 100.0)
+        assert actual == Decimal("0")
+        assert rate == 0.0
 
-    def test_calculate_target_performance_lead_count_with_period_overlap(
-        self,
-        sales_team_service: SalesTeamService,
-        mock_user,
-        mock_period_start,
-        mock_period_end,
+    def test_calculate_opportunity_count_target_empty(
+        self, sales_team_service: SalesTeamService
     ):
-        """Test target performance when period overlaps target period."""
-        target = MagicMock()
-        target.target_type = "LEAD_COUNT"
-        target.target_value = Decimal("10")
-        target.start_date = mock_period_start - timedelta(days=5)  # Before period
-        target.end_date = mock_period_end + timedelta(days=5)  # After period
-        target.user_id = mock_user.id
-
-        # Mock period queries to return leads in target period
-
-        # Create leads in target period
-        leads = []
-        for i in range(int(target.target_value)):
-            lead = MagicMock()
-            lead.created_at = datetime.combine(
-                mock_period_start, datetime.min.time()
-            ) + timedelta(days=i)
-            leads.append(lead)
-
-        # Mock query to return filtered leads
-        mock_query = MagicMock()
-        mock_query.filter.return_value.filter.return_value = leads
-        mock_query.filter.return_value.all.return_value = leads
-
-        with patch.object(sales_team_service.db.query, return_value=mock_query):
-            result = sales_team_service.calculate_target_performance(target)
-
-        # Should count only leads in target period
-        assert result == (Decimal("10"), 100.0)
-
-    def test_calculate_target_performance_opportunity_count_basic(
-        self,
-        sales_team_service: SalesTeamService,
-        mock_user,
-        mock_period_start,
-        mock_period_end,
-    ):
-        """Test target performance with basic opportunity count."""
-        target = MagicMock()
+        """测试商机数量目标 - 空数据库"""
+        target = Mock()
         target.target_type = "OPPORTUNITY_COUNT"
         target.target_value = Decimal("5")
-        target.start_date = mock_period_start
-        target.end_date = mock_period_end
-        target.user_id = mock_user.id
+        target.period_value = "2024-01"
+        target.target_period = "MONTHLY"
+        target.user_id = 99999
 
-        result = sales_team_service.calculate_target_performance(target)
+        actual, rate = sales_team_service.calculate_target_performance(target)
 
-        assert result == (Decimal("5"), 100.0)
+        assert actual == Decimal("0")
+        assert rate == 0.0
 
-    def test_calculate_target_performance_contract_amount_basic(
-        self,
-        sales_team_service: SalesTeamService,
-        mock_user,
-        mock_period_start,
-        mock_period_end,
+    def test_calculate_contract_amount_target_empty(
+        self, sales_team_service: SalesTeamService
     ):
-        """Test target performance with basic contract amount."""
-        target = MagicMock()
+        """测试合同金额目标 - 空数据库"""
+        target = Mock()
         target.target_type = "CONTRACT_AMOUNT"
         target.target_value = Decimal("100000")
-        target.start_date = mock_period_start
-        target.end_date = mock_period_end
-        target.user_id = mock_user.id
+        target.period_value = "2024-01"
+        target.target_period = "MONTHLY"
+        target.user_id = 99999
 
-        # Mock contracts in period
-        contracts = []
-        for i in range(1):
-            contract = MagicMock()
-            contract.created_at = datetime.combine(
-                mock_period_start, datetime.min.time()
-            )
-            contract.contract_amount = Decimal("100000")
-            contracts.append(contract)
+        actual, rate = sales_team_service.calculate_target_performance(target)
 
-        # Mock query to return filtered contracts
-        mock_query = MagicMock()
-        mock_query.filter.return_value.filter.return_value = contracts
-        mock_query.filter.return_value.all.return_value = contracts
+        assert actual == Decimal("0")
+        assert rate == 0.0
 
-        with patch.object(sales_team_service.db.query, return_value=mock_query):
-            result = sales_team_service.calculate_target_performance(target)
-
-        assert result == (Decimal("100000"), 100.0)
-
-    def test_calculate_target_performance_collection_amount_basic(
-        self,
-        sales_team_service: SalesTeamService,
-        mock_user,
-        mock_period_start,
-        mock_period_end,
+    def test_calculate_collection_amount_target_empty(
+        self, sales_team_service: SalesTeamService
     ):
-        """Test target performance with basic collection amount."""
-        target = MagicMock()
+        """测试回款金额目标 - 空数据库"""
+        target = Mock()
         target.target_type = "COLLECTION_AMOUNT"
         target.target_value = Decimal("50000")
-        target.start_date = mock_period_start
-        target.end_date = mock_period_end
-        target.user_id = mock_user.id
+        target.period_value = "2024-01"
+        target.target_period = "MONTHLY"
+        target.user_id = 99999
 
-        # Mock invoices in period
-        invoices = []
-        for i in range(1):
-            invoice = MagicMock()
-            invoice.invoice_date = datetime.combine(
-                mock_period_start, datetime.min.time()
-            )
-            invoice.amount = Decimal("50000")
-            invoices.append(invoice)
+        actual, rate = sales_team_service.calculate_target_performance(target)
 
-        # Mock query to return filtered invoices
-        mock_query = MagicMock()
-        mock_query.join.return_value.join.return_value = invoices
-        mock_query.join.return_value.all.return_value = invoices
+        assert actual == Decimal("0")
+        assert rate == 0.0
 
-        with patch.object(sales_team_service.db.query, return_value=mock_query):
-            result = sales_team_service.calculate_target_performance(target)
-
-        assert result == (Decimal("50000"), 100.0)
-
-    def test_calculate_target_performance_with_invoices(
-        self,
-        sales_team_service: SalesTeamService,
-        mock_user,
-        mock_period_start,
-        mock_period_end,
+    def test_calculate_zero_target_value(
+        self, sales_team_service: SalesTeamService
     ):
-        """Test target performance when multiple invoices."""
-        target = MagicMock()
-        target.target_type = "COLLECTION_AMOUNT"
-        target.target_value = Decimal("100000")
-        target.start_date = mock_period_start
-        target.end_date = mock_period_end
-        target.user_id = mock_user.id
-
-        # Mock invoices - some in period, some outside
-        invoices = []
-        for i in range(1, 5):
-            invoice = MagicMock()
-            invoice.invoice_date = datetime.combine(
-                mock_period_start + timedelta(days=i), datetime.min.time()
-            )
-            invoice.amount = Decimal("20000")
-            invoices.append(invoice)
-
-        # Mock query
-        mock_query = MagicMock()
-        mock_query.join.return_value.join.return_value = invoices
-        mock_query.join.return_value.all.return_value = invoices
-
-        with patch.object(sales_team_service.db.query, return_value=mock_query):
-            result = sales_team_service.calculate_target_performance(target)
-
-        # Should count all invoices (sum = 100000)
-        assert result == (Decimal("100000"), 100.0)
-
-    def test_calculate_target_performance_zero_target_value(
-        self,
-        sales_team_service: SalesTeamService,
-        mock_user,
-        mock_period_start,
-        mock_period_end,
-    ):
-        """Test target performance when target value is zero."""
-        target = MagicMock()
+        """测试目标值为零时的处理"""
+        target = Mock()
         target.target_type = "LEAD_COUNT"
         target.target_value = Decimal("0")
-        target.start_date = mock_period_start
-        target.end_date = mock_period_end
-        target.user_id = mock_user.id
+        target.period_value = "2024-01"
+        target.target_period = "MONTHLY"
+        target.user_id = 99999
 
-        with patch.object(sales_team_service.db.query):
-            result = sales_team_service.calculate_target_performance(target)
+        actual, rate = sales_team_service.calculate_target_performance(target)
 
-        # Should handle zero gracefully
-        assert result == (Decimal("0"), 0.0)
+        assert actual == Decimal("0")
+        assert rate == 0.0
 
-    def test_calculate_target_performance_no_target_type(
-        self,
-        sales_team_service: SalesTeamService,
-        mock_user,
-        mock_period_start,
-        mock_period_end,
+    def test_calculate_unknown_target_type(
+        self, sales_team_service: SalesTeamService
     ):
-        """Test target performance when target type is None."""
-        target = MagicMock()
-        target.target_type = None  # No target type set
+        """测试未知目标类型"""
+        target = Mock()
+        target.target_type = "UNKNOWN_TYPE"
         target.target_value = Decimal("100")
-        target.start_date = mock_period_start
-        target.end_date = mock_period_end
-        target.user_id = mock_user.id
+        target.period_value = "2024-01"
+        target.target_period = "MONTHLY"
+        target.user_id = 99999
 
-        result = sales_team_service.calculate_target_performance(target)
+        actual, rate = sales_team_service.calculate_target_performance(target)
 
-        # Should handle gracefully
-        assert result == (Decimal("100"), 0.0)
-
-
-class TestCalculateTargetPerformanceEdgeCases:
-    """Test edge cases and error handling."""
-
-    def test_period_end_before_start(
-        self,
-        sales_team_service: SalesTeamService,
-        mock_user,
-        mock_period_start,
-    ):
-        """Test when period end is before period start (invalid)."""
-        target = MagicMock()
-        target.target_type = "LEAD_COUNT"
-        target.target_value = Decimal("10")
-        target.start_date = mock_period_end  # End before start!
-        target.end_date = mock_period_start - timedelta(days=1)
-        target.user_id = mock_user.id
-
-        result = sales_team_service.calculate_target_performance(target)
-
-        # Should handle gracefully
-        assert result == (Decimal("0"), 0.0)
-
-    def test_period_dates_outside_range(
-        self,
-        sales_team_service: SalesTeamService,
-        mock_user,
-        mock_period_start,
-        mock_period_end,
-    ):
-        """Test when period dates are outside current period."""
-        future_start = mock_period_start + timedelta(days=30)
-        future_end = mock_period_end + timedelta(days=30)
-
-        target = MagicMock()
-        target.target_type = "LEAD_COUNT"
-        target.target_value = Decimal("10")
-        target.start_date = future_start
-        target.end_date = future_end
-        target.user_id = mock_user.id
-
-        result = sales_team_service.calculate_target_performance(target)
-
-        # Should handle gracefully
-        assert result == (Decimal("0"), 0.0)
-
-    def test_parse_period_value_invalid_format(
-        self,
-        sales_team_service: SalesTeamService,
-    ):
-        """Test parsing invalid period value format."""
-        target = MagicMock()
-        target.target_type = "LEAD_COUNT"
-        target.target_value = Decimal("10")
-        target.period_value = "2026Q1"  # Wrong format
-        target.start_date = mock_period_start
-        target.end_date = mock_period_end
-        target.user_id = mock_user.id
-
-        result = sales_team_service.calculate_target_performance(target)
-
-        # Should parse as Q1 (first quarter)
-        actual_value, completion_rate = result
-        assert actual_value is not None
-        assert completion_rate is not None
-
-    def test_parse_period_value_month_format(
-        self,
-        sales_team_service: SalesTeamService,
-    ):
-        """Test parsing period value as month format."""
-        target = MagicMock()
-        target.target_type = "LEAD_COUNT"
-        target.target_value = Decimal("10")
-        target.period_value = "2026-01"  # Month format
-        target.start_date = mock_period_start
-        target.end_date = mock_period_end
-        target.user_id = mock_user.id
-
-        result = sales_team_service.calculate_target_performance(target)
-
-        # Should parse correctly
-        assert result == (Decimal("10"), 100.0)
-
-    def test_parse_period_value_year_format(
-        self,
-        sales_team_service: SalesTeamService,
-    ):
-        """Test parsing period value as year format."""
-        target = MagicMock()
-        target.target_type = "LEAD_COUNT"
-        target.target_value = Decimal("10")
-        target.period_value = "2026"  # Year format
-        target.start_date = mock_period_start
-        target.end_date = mock_period_end
-        target.user_id = mock_user.id
-
-        result = sales_team_service.calculate_target_performance(target)
-
-        # Should parse correctly
-        assert result == (Decimal("10"), 100.0)
+        # 未知类型应返回 0
+        assert actual == Decimal("0")
+        assert rate == 0.0
 
 
-class TestSalesTeamServiceHelperMethods:
-    """Test helper methods in SalesTeamService."""
+@pytest.mark.unit
+class TestBuildPersonalTargetMap:
+    """测试个人目标映射构建"""
 
-    def test_parse_period_value_quarter(self, sales_team_service: SalesTeamService):
-        """Test parsing quarterly period value."""
-        # Q1
-        result = sales_team_service.parse_period_value("2026Q1")
-        assert result == ("2026-01-01", "2026-03-31")
-
-        # Q2
-        result = sales_team_service.parse_period_value("2026Q2")
-        assert result == ("2026-04-01", "2026-06-30")
-
-        # Q3
-        result = sales_team_service.parse_period_value("2026Q3")
-        assert result == ("2026-07-01", "2026-09-30")
-
-        # Q4
-        result = sales_team_service.parse_period_value("2026Q4")
-        assert result == ("2026-10-01", "2026-12-31")
-
-    def test_parse_period_value_month(self, sales_team_service: SalesTeamService):
-        """Test parsing monthly period value."""
-        result = sales_team_service.parse_period_value("2026-01")
-        assert result == ("2026-01-01", "2026-01-31")
-
-    def test_parse_period_value_year(self, sales_team_service: SalesTeamService):
-        """Test parsing yearly period value."""
-        result = sales_team_service.parse_period_value("2026")
-        assert result == ("2026-01-01", "2026-12-31")
-
-    def test_parse_period_value_invalid_format(
+    def test_build_personal_target_map_empty_user_ids(
         self, sales_team_service: SalesTeamService
     ):
-        """Test parsing invalid period value format."""
-        result = sales_team_service.parse_period_value("invalid")
-        assert result is None
+        """测试空用户 ID 列表"""
+        result = sales_team_service.build_personal_target_map([], "2024-01", "2024")
 
-    def test_parse_period_value_empty_string(
+        assert result == {}
+
+    def test_build_personal_target_map_no_period_values(
         self, sales_team_service: SalesTeamService
     ):
-        """Test parsing empty period value."""
-        result = sales_team_service.parse_period_value("")
-        assert result is None
+        """测试没有周期值"""
+        result = sales_team_service.build_personal_target_map([1, 2, 3], None, None)
+
+        assert result == {}
+
+    def test_build_personal_target_map_no_targets(
+        self, sales_team_service: SalesTeamService
+    ):
+        """测试没有目标数据"""
+        result = sales_team_service.build_personal_target_map([99999], "2024-01", None)
+
+        assert result == {}
+
+
+@pytest.mark.unit
+class TestGetFollowupStatisticsMap:
+    """测试跟进统计映射"""
+
+    def test_get_followup_statistics_empty_user_ids(
+        self, sales_team_service: SalesTeamService
+    ):
+        """测试空用户 ID 列表"""
+        result = sales_team_service.get_followup_statistics_map([], None, None)
+
+        assert result == {}
+
+    def test_get_followup_statistics_no_data(
+        self, sales_team_service: SalesTeamService
+    ):
+        """测试无跟进数据"""
+        result = sales_team_service.get_followup_statistics_map(
+            [99999],
+            datetime(2024, 1, 1),
+            datetime(2024, 12, 31),
+        )
+
+        assert result == {}
+
+
+@pytest.mark.unit
+class TestGetLeadQualityStatsMap:
+    """测试线索质量统计映射"""
+
+    def test_get_lead_quality_stats_empty_user_ids(
+        self, sales_team_service: SalesTeamService
+    ):
+        """测试空用户 ID 列表"""
+        result = sales_team_service.get_lead_quality_stats_map([], None, None)
+
+        assert result == {}
+
+    def test_get_lead_quality_stats_no_data(
+        self, sales_team_service: SalesTeamService
+    ):
+        """测试无线索数据"""
+        result = sales_team_service.get_lead_quality_stats_map(
+            [99999],
+            datetime(2024, 1, 1),
+            datetime(2024, 12, 31),
+        )
+
+        assert result == {}
+
+
+@pytest.mark.unit
+class TestGetOpportunityStatsMap:
+    """测试商机统计映射"""
+
+    def test_get_opportunity_stats_empty_user_ids(
+        self, sales_team_service: SalesTeamService
+    ):
+        """测试空用户 ID 列表"""
+        result = sales_team_service.get_opportunity_stats_map([], None, None)
+
+        assert result == {}
+
+    def test_get_opportunity_stats_no_data(
+        self, sales_team_service: SalesTeamService
+    ):
+        """测试无商机数据"""
+        result = sales_team_service.get_opportunity_stats_map(
+            [99999],
+            datetime(2024, 1, 1),
+            datetime(2024, 12, 31),
+        )
+
+        assert result == {}
+
+
+@pytest.mark.unit
+class TestGetRecentFollowups:
+    """测试最近跟进记录"""
+
+    def test_get_recent_followups_empty_user_ids(
+        self, sales_team_service: SalesTeamService
+    ):
+        """测试空用户 ID 列表"""
+        result = sales_team_service.get_recent_followups([])
+
+        assert result == {}
+
+    def test_get_recent_followups_with_limit(
+        self, sales_team_service: SalesTeamService
+    ):
+        """测试带限制的最近跟进"""
+        result = sales_team_service.get_recent_followups([99999], limit=5)
+
+        assert isinstance(result, dict)
+
+
+@pytest.mark.unit
+class TestGetCustomerDistribution:
+    """测试客户分布统计"""
+
+    def test_get_customer_distribution_empty_user_ids(
+        self, sales_team_service: SalesTeamService
+    ):
+        """测试空用户 ID 列表"""
+        result = sales_team_service.get_customer_distribution([])
+
+        assert result == {}
+
+    def test_get_customer_distribution_no_data(
+        self, sales_team_service: SalesTeamService
+    ):
+        """测试无客户数据"""
+        result = sales_team_service.get_customer_distribution([99999])
+
+        assert isinstance(result, dict)
+
+
+@pytest.mark.unit
+class TestGetTeamStatistics:
+    """测试团队统计"""
+
+    def test_get_team_statistics_empty_user_ids(
+        self, sales_team_service: SalesTeamService
+    ):
+        """测试空用户 ID 列表"""
+        result = sales_team_service.get_team_statistics([])
+
+        assert result == {}
+
+    def test_get_team_statistics_no_data(
+        self, sales_team_service: SalesTeamService
+    ):
+        """测试无团队数据"""
+        result = sales_team_service.get_team_statistics([99999])
+
+        assert isinstance(result, dict)
