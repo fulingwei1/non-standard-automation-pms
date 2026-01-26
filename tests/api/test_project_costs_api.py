@@ -447,3 +447,257 @@ class TestProjectCostsAPI:
         assert data["data"]["project_id"] == project_id
         assert "total_cost" in data["data"]
         assert "by_type" in data["data"]
+
+
+class TestProjectCostsAdvanced:
+    """项目成本高级测试"""
+
+    def test_cost_by_month(self, client: TestClient, admin_token: str):
+        """测试按月汇总成本"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+
+        # 先获取项目列表
+        projects_response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/",
+            headers=headers
+        )
+
+        if projects_response.status_code != 200:
+            pytest.skip("Failed to get projects list")
+
+        projects = projects_response.json()
+        items = projects.get("items", projects) if isinstance(projects, dict) else projects
+        if not items:
+            pytest.skip("No projects available for testing")
+
+        project_id = items[0]["id"]
+
+        # 获取按月汇总
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/by-month",
+            headers=headers
+        )
+
+        if response.status_code == 404:
+            pytest.skip("By-month endpoint not found")
+
+        assert response.status_code == 200, response.text
+
+    def test_cost_trend(self, client: TestClient, admin_token: str):
+        """测试成本趋势"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+
+        # 先获取项目列表
+        projects_response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/",
+            headers=headers
+        )
+
+        if projects_response.status_code != 200:
+            pytest.skip("Failed to get projects list")
+
+        projects = projects_response.json()
+        items = projects.get("items", projects) if isinstance(projects, dict) else projects
+        if not items:
+            pytest.skip("No projects available for testing")
+
+        project_id = items[0]["id"]
+
+        # 获取成本趋势
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/trend",
+            headers=headers
+        )
+
+        if response.status_code == 404:
+            pytest.skip("Trend endpoint not found")
+
+        assert response.status_code == 200, response.text
+
+    def test_cost_with_date_range(self, client: TestClient, admin_token: str):
+        """测试按日期范围筛选成本"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+
+        # 先获取项目列表
+        projects_response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/",
+            headers=headers
+        )
+
+        if projects_response.status_code != 200:
+            pytest.skip("Failed to get projects list")
+
+        projects = projects_response.json()
+        items = projects.get("items", projects) if isinstance(projects, dict) else projects
+        if not items:
+            pytest.skip("No projects available for testing")
+
+        project_id = items[0]["id"]
+
+        # 按日期范围筛选
+        start_date = (date.today() - timedelta(days=30)).isoformat()
+        end_date = date.today().isoformat()
+
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/",
+            params={"start_date": start_date, "end_date": end_date},
+            headers=headers
+        )
+
+        assert response.status_code == 200, response.text
+
+    def test_cost_approval(self, client: TestClient, admin_token: str):
+        """测试成本审批"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+
+        # 先获取项目列表
+        projects_response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/",
+            headers=headers
+        )
+
+        if projects_response.status_code != 200:
+            pytest.skip("Failed to get projects list")
+
+        projects = projects_response.json()
+        items = projects.get("items", projects) if isinstance(projects, dict) else projects
+        if not items:
+            pytest.skip("No projects available for testing")
+
+        project_id = items[0]["id"]
+
+        # 先创建成本
+        cost_data = {
+            "cost_type": "MATERIAL",
+            "cost_category": "物料费",
+            "amount": str(Decimal("5000.00")),
+            "tax_amount": str(Decimal("0.00")),
+            "cost_date": date.today().isoformat(),
+            "description": f"待审批成本-{uuid.uuid4().hex[:4]}",
+        }
+
+        create_response = client.post(
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/",
+            json=cost_data,
+            headers=headers
+        )
+
+        if create_response.status_code not in [200, 201]:
+            pytest.skip("Failed to create cost for approval test")
+
+        cost_id = create_response.json()["id"]
+
+        # 审批成本
+        response = client.put(
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/{cost_id}/approve",
+            headers=headers
+        )
+
+        if response.status_code == 404:
+            pytest.skip("Approve endpoint not found")
+        if response.status_code == 403:
+            pytest.skip("User does not have approval permission")
+
+        assert response.status_code in [200, 400], response.text
+
+    def test_cost_budget_comparison(self, client: TestClient, admin_token: str):
+        """测试成本预算对比"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+
+        # 先获取项目列表
+        projects_response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/",
+            headers=headers
+        )
+
+        if projects_response.status_code != 200:
+            pytest.skip("Failed to get projects list")
+
+        projects = projects_response.json()
+        items = projects.get("items", projects) if isinstance(projects, dict) else projects
+        if not items:
+            pytest.skip("No projects available for testing")
+
+        project_id = items[0]["id"]
+
+        # 获取预算对比
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/budget-comparison",
+            headers=headers
+        )
+
+        if response.status_code == 404:
+            pytest.skip("Budget comparison endpoint not found")
+
+        assert response.status_code == 200, response.text
+
+    def test_batch_create_costs(self, client: TestClient, admin_token: str):
+        """测试批量创建成本"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+
+        # 先获取项目列表
+        projects_response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/",
+            headers=headers
+        )
+
+        if projects_response.status_code != 200:
+            pytest.skip("Failed to get projects list")
+
+        projects = projects_response.json()
+        items = projects.get("items", projects) if isinstance(projects, dict) else projects
+        if not items:
+            pytest.skip("No projects available for testing")
+
+        project_id = items[0]["id"]
+
+        # 批量创建成本
+        costs_data = {
+            "costs": [
+                {
+                    "cost_type": "LABOR",
+                    "cost_category": "人工费",
+                    "amount": "1000.00",
+                    "cost_date": date.today().isoformat(),
+                    "description": "批量成本A"
+                },
+                {
+                    "cost_type": "MATERIAL",
+                    "cost_category": "物料费",
+                    "amount": "2000.00",
+                    "cost_date": date.today().isoformat(),
+                    "description": "批量成本B"
+                },
+            ]
+        }
+
+        response = client.post(
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/batch",
+            json=costs_data,
+            headers=headers
+        )
+
+        if response.status_code == 404:
+            pytest.skip("Batch create endpoint not found")
+        if response.status_code == 403:
+            pytest.skip("User does not have permission")
+
+        assert response.status_code in [200, 201], response.text

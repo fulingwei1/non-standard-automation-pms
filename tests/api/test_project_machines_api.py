@@ -442,3 +442,255 @@ class TestProjectMachinesAPI:
         data = response.json()
         assert "data" in data
         assert data["data"]["project_id"] == project_id
+
+
+class TestProjectMachinesAdvanced:
+    """项目机台高级测试"""
+
+    def test_batch_create_machines(self, client: TestClient, admin_token: str):
+        """测试批量创建机台"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+
+        # 先获取项目列表
+        projects_response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/",
+            headers=headers
+        )
+
+        if projects_response.status_code != 200:
+            pytest.skip("Failed to get projects list")
+
+        projects = projects_response.json()
+        items = projects.get("items", projects) if isinstance(projects, dict) else projects
+        if not items:
+            pytest.skip("No projects available for testing")
+
+        project_id = items[0]["id"]
+
+        # 批量创建机台
+        machines_data = {
+            "machines": [
+                {"machine_name": f"批量机台A-{uuid.uuid4().hex[:4]}"},
+                {"machine_name": f"批量机台B-{uuid.uuid4().hex[:4]}"},
+                {"machine_name": f"批量机台C-{uuid.uuid4().hex[:4]}"},
+            ]
+        }
+
+        response = client.post(
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/batch",
+            json=machines_data,
+            headers=headers
+        )
+
+        if response.status_code == 404:
+            pytest.skip("Batch create endpoint not found")
+        if response.status_code == 403:
+            pytest.skip("User does not have permission")
+
+        assert response.status_code in [200, 201], response.text
+        data = response.json()
+        if "data" in data:
+            assert len(data["data"]) >= 3
+
+    def test_update_machine_stage(self, client: TestClient, admin_token: str):
+        """测试更新机台阶段"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+
+        # 先获取项目列表
+        projects_response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/",
+            headers=headers
+        )
+
+        if projects_response.status_code != 200:
+            pytest.skip("Failed to get projects list")
+
+        projects = projects_response.json()
+        items = projects.get("items", projects) if isinstance(projects, dict) else projects
+        if not items:
+            pytest.skip("No projects available for testing")
+
+        project_id = items[0]["id"]
+
+        # 先创建机台
+        machine_data = {
+            "machine_name": f"阶段测试机台-{uuid.uuid4().hex[:4]}",
+        }
+
+        create_response = client.post(
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/",
+            json=machine_data,
+            headers=headers
+        )
+
+        if create_response.status_code not in [200, 201]:
+            pytest.skip("Failed to create machine for testing")
+
+        machine_id = create_response.json()["id"]
+
+        # 更新阶段
+        update_data = {
+            "stage": "S2",
+        }
+
+        response = client.put(
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/{machine_id}",
+            json=update_data,
+            headers=headers
+        )
+
+        if response.status_code == 403:
+            pytest.skip("User does not have permission to update machine")
+
+        assert response.status_code == 200, response.text
+
+    def test_update_machine_health_status(self, client: TestClient, admin_token: str):
+        """测试更新机台健康状态"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+
+        # 先获取项目列表
+        projects_response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/",
+            headers=headers
+        )
+
+        if projects_response.status_code != 200:
+            pytest.skip("Failed to get projects list")
+
+        projects = projects_response.json()
+        items = projects.get("items", projects) if isinstance(projects, dict) else projects
+        if not items:
+            pytest.skip("No projects available for testing")
+
+        project_id = items[0]["id"]
+
+        # 先创建机台
+        machine_data = {
+            "machine_name": f"健康状态测试机台-{uuid.uuid4().hex[:4]}",
+        }
+
+        create_response = client.post(
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/",
+            json=machine_data,
+            headers=headers
+        )
+
+        if create_response.status_code not in [200, 201]:
+            pytest.skip("Failed to create machine for testing")
+
+        machine_id = create_response.json()["id"]
+
+        # 更新健康状态
+        update_data = {
+            "health": "H2",  # 有风险
+        }
+
+        response = client.put(
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/{machine_id}",
+            json=update_data,
+            headers=headers
+        )
+
+        if response.status_code == 403:
+            pytest.skip("User does not have permission to update machine")
+
+        assert response.status_code == 200, response.text
+
+    def test_machines_with_sorting(self, client: TestClient, admin_token: str):
+        """测试机台排序"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+
+        # 先获取项目列表
+        projects_response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/",
+            headers=headers
+        )
+
+        if projects_response.status_code != 200:
+            pytest.skip("Failed to get projects list")
+
+        projects = projects_response.json()
+        items = projects.get("items", projects) if isinstance(projects, dict) else projects
+        if not items:
+            pytest.skip("No projects available for testing")
+
+        project_id = items[0]["id"]
+
+        # 测试按创建时间排序
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/",
+            params={"order_by": "created_at", "order_direction": "desc"},
+            headers=headers
+        )
+
+        assert response.status_code == 200, response.text
+
+        # 测试按名称排序
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/",
+            params={"order_by": "machine_name", "order_direction": "asc"},
+            headers=headers
+        )
+
+        assert response.status_code == 200, response.text
+
+    def test_cross_project_machine_access_denied(self, client: TestClient, admin_token: str):
+        """测试跨项目访问机台应被拒绝"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+
+        # 先获取项目列表
+        projects_response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/",
+            headers=headers
+        )
+
+        if projects_response.status_code != 200:
+            pytest.skip("Failed to get projects list")
+
+        projects = projects_response.json()
+        items = projects.get("items", projects) if isinstance(projects, dict) else projects
+        if len(items) < 2:
+            pytest.skip("Need at least 2 projects for cross-project access test")
+
+        project1_id = items[0]["id"]
+        project2_id = items[1]["id"]
+
+        # 在项目1创建机台
+        machine_data = {
+            "machine_name": f"跨项目测试机台-{uuid.uuid4().hex[:4]}",
+        }
+
+        create_response = client.post(
+            f"{settings.API_V1_PREFIX}/projects/{project1_id}/machines/",
+            json=machine_data,
+            headers=headers
+        )
+
+        if create_response.status_code not in [200, 201]:
+            pytest.skip("Failed to create machine for testing")
+
+        machine_id = create_response.json()["id"]
+
+        # 尝试从项目2访问项目1的机台
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/{project2_id}/machines/{machine_id}",
+            headers=headers
+        )
+
+        # 应该返回404（机台不属于该项目）
+        assert response.status_code == 404

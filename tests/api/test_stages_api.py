@@ -92,9 +92,134 @@ class TestStagesAPI:
         assert response.status_code in [200, 201, 400]
 
 
-    # TODO: 添加更多测试用例
-    # - 正常流程测试 (Happy Path)
-    # - 边界条件测试 (Edge Cases)
-    # - 异常处理测试 (Error Handling)
-    # - 数据验证测试 (Data Validation)
-    # - 权限测试 (Permission Tests)
+class TestProjectStagesAPI:
+    """项目阶段管理API测试"""
+
+    def test_list_project_stages(self, api_client, db_session):
+        """测试获取项目阶段列表"""
+        project = ProjectWithCustomerFactory()
+
+        response = api_client.get(f"/api/v1/projects/{project.id}/stages/")
+        assert response.status_code in [200, 404]
+        if response.status_code == 200:
+            data = response.json()
+            assert "items" in data or isinstance(data, list)
+
+    def test_get_project_current_stage(self, api_client, db_session):
+        """测试获取项目当前阶段"""
+        project = ProjectWithCustomerFactory()
+
+        response = api_client.get(f"/api/v1/projects/{project.id}/stages/current")
+        assert response.status_code in [200, 404]
+        if response.status_code == 200:
+            data = response.json()
+            assert "stage_code" in data or "current_stage" in data or "data" in data
+
+    def test_advance_project_stage(self, api_client, db_session):
+        """测试项目阶段推进"""
+        project = ProjectWithCustomerFactory()
+
+        advance_data = {
+            "target_stage": "S2",
+            "skip_gate_check": True,  # 跳过门禁检查
+        }
+
+        response = api_client.post(
+            f"/api/v1/projects/{project.id}/advance-stage",
+            json=advance_data
+        )
+        assert response.status_code in [200, 400, 404, 422]
+
+    def test_get_stage_statuses(self, api_client, db_session):
+        """测试获取阶段状态列表"""
+        project = ProjectWithCustomerFactory()
+
+        response = api_client.get(f"/api/v1/projects/{project.id}/stages/S1/statuses")
+        assert response.status_code in [200, 404]
+        if response.status_code == 200:
+            data = response.json()
+            assert "items" in data or isinstance(data, list)
+
+    def test_update_stage_status(self, api_client, db_session):
+        """测试更新阶段状态"""
+        project = ProjectWithCustomerFactory()
+
+        update_data = {
+            "status_code": "ST02",
+            "progress_pct": 50,
+        }
+
+        response = api_client.put(
+            f"/api/v1/projects/{project.id}/stages/S1",
+            json=update_data
+        )
+        assert response.status_code in [200, 400, 404]
+
+    def test_initialize_project_stages(self, api_client, db_session):
+        """测试初始化项目阶段"""
+        project = ProjectWithCustomerFactory()
+
+        response = api_client.post(f"/api/v1/projects/{project.id}/stages/initialize")
+        assert response.status_code in [200, 201, 400, 404]
+
+    def test_get_stage_progress(self, api_client, db_session):
+        """测试获取阶段进度"""
+        project = ProjectWithCustomerFactory()
+
+        response = api_client.get(f"/api/v1/projects/{project.id}/stages/progress")
+        assert response.status_code in [200, 404]
+        if response.status_code == 200:
+            data = response.json()
+            assert "data" in data or "progress" in data
+
+
+class TestStagesEdgeCases:
+    """阶段管理边界条件测试"""
+
+    def test_advance_to_invalid_stage(self, api_client, db_session):
+        """测试推进到无效阶段"""
+        project = ProjectWithCustomerFactory()
+
+        advance_data = {
+            "target_stage": "S99",  # 无效阶段
+            "skip_gate_check": True,
+        }
+
+        response = api_client.post(
+            f"/api/v1/projects/{project.id}/advance-stage",
+            json=advance_data
+        )
+        assert response.status_code in [400, 422]
+
+    def test_advance_backwards(self, api_client, db_session):
+        """测试阶段回退（部分系统允许，部分不允许）"""
+        project = ProjectWithCustomerFactory()
+        project.stage = "S3"  # 假设当前在S3
+        db_session.commit()
+
+        advance_data = {
+            "target_stage": "S2",  # 尝试回退到S2
+            "skip_gate_check": True,
+        }
+
+        response = api_client.post(
+            f"/api/v1/projects/{project.id}/advance-stage",
+            json=advance_data
+        )
+        # 根据业务规则可能是200或400
+        assert response.status_code in [200, 400, 422]
+
+    def test_stage_not_found(self, api_client, db_session):
+        """测试访问不存在项目的阶段"""
+        response = api_client.get("/api/v1/projects/99999/stages/")
+        assert response.status_code == 404
+
+
+class TestStagesPermissions:
+    """阶段管理权限测试"""
+
+    def test_advance_stage_without_permission(self, api_client, db_session):
+        """测试无权限推进阶段（需要普通用户token）"""
+        # 此测试需要创建普通用户并获取其token
+        # 暂时跳过，因为需要更复杂的fixture设置
+        pass

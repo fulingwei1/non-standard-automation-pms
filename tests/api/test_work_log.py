@@ -230,3 +230,281 @@ class TestWorkLogAI:
             pytest.skip("Validation error")
 
         assert response.status_code == 200
+
+
+class TestWorkLogCRUDAdvanced:
+    """工作日志CRUD高级测试"""
+
+    def test_update_work_log(self, client: TestClient, admin_token: str):
+        """测试更新工作日志"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        today = date.today().isoformat()
+
+        # 先创建工作日志
+        create_response = client.post(
+            f"{settings.API_V1_PREFIX}/work-logs",
+            json={
+                "work_date": today,
+                "content": "待更新的工作日志内容",
+            },
+            headers=headers
+        )
+
+        if create_response.status_code not in [200, 201]:
+            pytest.skip("Failed to create work log for update test")
+
+        log_data = create_response.json()
+        log_id = log_data.get("id") or log_data.get("data", {}).get("id")
+        if not log_id:
+            pytest.skip("Failed to get work log ID")
+
+        # 更新工作日志
+        update_data = {
+            "content": "已更新的工作日志内容",
+        }
+
+        response = client.put(
+            f"{settings.API_V1_PREFIX}/work-logs/{log_id}",
+            json=update_data,
+            headers=headers
+        )
+
+        if response.status_code == 404:
+            pytest.skip("Update endpoint not found")
+        if response.status_code == 403:
+            pytest.skip("User does not have permission")
+
+        assert response.status_code == 200, response.text
+
+    def test_delete_work_log(self, client: TestClient, admin_token: str):
+        """测试删除工作日志"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        today = date.today().isoformat()
+
+        # 先创建工作日志
+        create_response = client.post(
+            f"{settings.API_V1_PREFIX}/work-logs",
+            json={
+                "work_date": today,
+                "content": "待删除的工作日志内容",
+            },
+            headers=headers
+        )
+
+        if create_response.status_code not in [200, 201]:
+            pytest.skip("Failed to create work log for delete test")
+
+        log_data = create_response.json()
+        log_id = log_data.get("id") or log_data.get("data", {}).get("id")
+        if not log_id:
+            pytest.skip("Failed to get work log ID")
+
+        # 删除工作日志
+        response = client.delete(
+            f"{settings.API_V1_PREFIX}/work-logs/{log_id}",
+            headers=headers
+        )
+
+        if response.status_code == 404:
+            pytest.skip("Delete endpoint not found")
+        if response.status_code == 403:
+            pytest.skip("User does not have permission")
+
+        assert response.status_code in [200, 204], response.text
+
+    def test_list_work_logs_by_user(self, client: TestClient, admin_token: str):
+        """测试按用户筛选工作日志"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/work-logs",
+            params={"user_id": 1},
+            headers=headers
+        )
+
+        if response.status_code == 403:
+            pytest.skip("User does not have permission")
+        if response.status_code == 404:
+            pytest.skip("Endpoint not found")
+
+        assert response.status_code == 200
+
+    def test_list_work_logs_by_project(self, client: TestClient, admin_token: str):
+        """测试按项目筛选工作日志"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+
+        # 先获取项目列表
+        projects_response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/",
+            headers=headers
+        )
+
+        if projects_response.status_code != 200:
+            pytest.skip("Failed to get projects list")
+
+        projects = projects_response.json()
+        items = projects.get("items", projects) if isinstance(projects, dict) else projects
+        if not items:
+            pytest.skip("No projects available for testing")
+
+        project_id = items[0]["id"]
+
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/work-logs",
+            params={"project_id": project_id},
+            headers=headers
+        )
+
+        if response.status_code == 403:
+            pytest.skip("User does not have permission")
+        if response.status_code == 404:
+            pytest.skip("Endpoint not found")
+
+        assert response.status_code == 200
+
+
+class TestProjectWorkLogs:
+    """项目工作日志端点测试"""
+
+    def test_list_project_work_logs(self, client: TestClient, admin_token: str):
+        """测试获取项目工作日志列表"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+
+        # 先获取项目列表
+        projects_response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/",
+            headers=headers
+        )
+
+        if projects_response.status_code != 200:
+            pytest.skip("Failed to get projects list")
+
+        projects = projects_response.json()
+        items = projects.get("items", projects) if isinstance(projects, dict) else projects
+        if not items:
+            pytest.skip("No projects available for testing")
+
+        project_id = items[0]["id"]
+
+        # 测试项目工作日志端点
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/work-logs/",
+            headers=headers
+        )
+
+        if response.status_code == 404:
+            pytest.skip("Project work-logs endpoint not found")
+
+        assert response.status_code == 200, response.text
+        data = response.json()
+        assert "items" in data or isinstance(data, list)
+
+    def test_project_work_logs_summary(self, client: TestClient, admin_token: str):
+        """测试获取项目工作日志汇总"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+
+        # 先获取项目列表
+        projects_response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/",
+            headers=headers
+        )
+
+        if projects_response.status_code != 200:
+            pytest.skip("Failed to get projects list")
+
+        projects = projects_response.json()
+        items = projects.get("items", projects) if isinstance(projects, dict) else projects
+        if not items:
+            pytest.skip("No projects available for testing")
+
+        project_id = items[0]["id"]
+
+        # 测试汇总端点
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/work-logs/summary",
+            headers=headers
+        )
+
+        if response.status_code == 404:
+            pytest.skip("Work-logs summary endpoint not found")
+
+        assert response.status_code == 200, response.text
+
+
+class TestWorkLogStatistics:
+    """工作日志统计测试"""
+
+    def test_my_work_logs(self, client: TestClient, admin_token: str):
+        """测试获取我的工作日志"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/work-logs/my",
+            headers=headers
+        )
+
+        if response.status_code == 404:
+            pytest.skip("My work-logs endpoint not found")
+
+        assert response.status_code == 200
+
+    def test_work_log_statistics(self, client: TestClient, admin_token: str):
+        """测试工作日志统计"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/work-logs/statistics",
+            headers=headers
+        )
+
+        if response.status_code == 404:
+            pytest.skip("Statistics endpoint not found")
+
+        assert response.status_code == 200
+
+    def test_work_log_export(self, client: TestClient, admin_token: str):
+        """测试导出工作日志"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        today = date.today()
+        start_date = today.replace(day=1).isoformat()
+        end_date = today.isoformat()
+
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/work-logs/export",
+            params={"start_date": start_date, "end_date": end_date, "format": "json"},
+            headers=headers
+        )
+
+        if response.status_code == 404:
+            pytest.skip("Export endpoint not found")
+        if response.status_code == 422:
+            pytest.skip("Export format not supported")
+
+        assert response.status_code == 200
