@@ -179,20 +179,35 @@ class ApprovalRouterService:
             elif op == "not_in":
                 return actual not in expected if expected else True
             elif op == "between":
-                if actual is None or not isinstance(expected, (list, tuple)) or len(expected) != 2:
+                if (
+                    actual is None
+                    or not isinstance(expected, (list, tuple))
+                    or len(expected) != 2
+                ):
                     return False
                 return expected[0] <= actual <= expected[1]
             elif op == "contains":
                 return expected in str(actual) if actual is not None else False
             elif op == "starts_with":
-                return str(actual).startswith(str(expected)) if actual is not None else False
+                return (
+                    str(actual).startswith(str(expected))
+                    if actual is not None
+                    else False
+                )
             elif op == "ends_with":
-                return str(actual).endswith(str(expected)) if actual is not None else False
+                return (
+                    str(actual).endswith(str(expected)) if actual is not None else False
+                )
             elif op == "is_null":
                 return (actual is None) == expected
             elif op == "regex":
                 import re
-                return bool(re.match(expected, str(actual))) if actual is not None else False
+
+                return (
+                    bool(re.match(expected, str(actual)))
+                    if actual is not None
+                    else False
+                )
             else:
                 return False
         except (TypeError, ValueError):
@@ -284,7 +299,7 @@ class ApprovalRouterService:
             .join(UserRole, User.id == UserRole.user_id)
             .join(Role, UserRole.role_id == Role.id)
             .filter(
-                Role.code.in_(role_codes),
+                Role.role_code.in_(role_codes),
                 User.is_active == True,
             )
             .all()
@@ -297,7 +312,11 @@ class ApprovalRouterService:
         from app.models.organization import Department
 
         initiator = context.get("initiator", {})
-        dept_id = initiator.get("dept_id") if isinstance(initiator, dict) else getattr(initiator, "dept_id", None)
+        dept_id = (
+            initiator.get("dept_id")
+            if isinstance(initiator, dict)
+            else getattr(initiator, "dept_id", None)
+        )
 
         if not dept_id:
             return []
@@ -313,14 +332,18 @@ class ApprovalRouterService:
         from app.models.user import User
 
         initiator = context.get("initiator", {})
-        user_id = initiator.get("id") if isinstance(initiator, dict) else getattr(initiator, "id", None)
+        user_id = (
+            initiator.get("id")
+            if isinstance(initiator, dict)
+            else getattr(initiator, "id", None)
+        )
 
         if not user_id:
             return []
 
         user = self.db.query(User).filter(User.id == user_id).first()
-        if user and user.manager_id:
-            return [user.manager_id]
+        if user and user.reporting_to:
+            return [user.reporting_to]
 
         return []
 
@@ -340,7 +363,7 @@ class ApprovalRouterService:
         depts = (
             self.db.query(Department)
             .filter(
-                Department.name.in_(dept_names),
+                Department.dept_name.in_(dept_names),
                 Department.is_active == True,
             )
             .all()

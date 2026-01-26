@@ -21,7 +21,7 @@ import {
   defaultFormData,
   defaultIssueData,
   defaultPaymentData
-} from "./constants";
+} from "../../lib/constants/finance";
 import {
   CreateInvoiceDialog,
   EditInvoiceDialog,

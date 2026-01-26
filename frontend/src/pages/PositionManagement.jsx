@@ -117,7 +117,9 @@ export default function PositionManagement() {
   const loadRoles = useCallback(async () => {
     try {
       const response = await roleApi.list({ page: 1, page_size: 100 });
-      setRoles(response.data?.items || []);
+      // 使用统一响应格式处理
+      const listData = response.formatted || response.data;
+      setRoles(listData?.items || listData || []);
     } catch (error) {
       console.error("加载角色列表失败:", error);
     }
@@ -127,7 +129,9 @@ export default function PositionManagement() {
   const loadOrgUnits = useCallback(async () => {
     try {
       const response = await organizationApi.listOrgUnits({ limit: 100 });
-      setOrgUnits(response.data?.items || response.data || []);
+      // 使用统一响应格式处理
+      const listData = response.formatted || response.data;
+      setOrgUnits(listData?.items || listData || []);
     } catch (error) {
       console.error("加载组织单元失败:", error);
     }

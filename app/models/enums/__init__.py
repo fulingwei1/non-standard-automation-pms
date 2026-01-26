@@ -122,7 +122,7 @@ from .strategy import (
     HealthLevelEnum,
     IPOOCTypeEnum,
     ObjectiveLevelEnum,
-    ReviewTypeEnum as StrategyReviewTypeEnum,
+    StrategyReviewTypeEnum,
     StrategyEventTypeEnum,
     StrategyStatusEnum,
     VOCSourceEnum,

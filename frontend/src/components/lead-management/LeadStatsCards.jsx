@@ -42,7 +42,9 @@ export default function LeadStatsCards({ stats, leads = [] }) {
   const extendedStats = React.useMemo(() => {
     const total = leads.length || stats.total || 0;
     const converted = leads.filter((l) => l.status === "CONVERTED").length || stats.converted || 0;
-    const qualified = leads.filter((l) => l.status === "QUALIFYING" || l.status === "CONVERTED").length;
+    const qualified = leads.filter((l) =>
+      ["QUALIFIED", "QUALIFYING", "CONVERTED"].includes(l.status)
+    ).length;
 
     // 计算平均评分
     const scores = leads.filter((l) => l.priority_score != null).map((l) => l.priority_score);

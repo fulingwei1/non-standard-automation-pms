@@ -108,12 +108,10 @@ class ApprovalDelegateService:
         from app.models.user import User
 
         delegate_user = (
-            self.db.query(User)
-            .filter(User.id == delegate_config.delegate_id)
-            .first()
+            self.db.query(User).filter(User.id == delegate_config.delegate_id).first()
         )
         if delegate_user:
-            task.assignee_name = delegate_user.name
+            task.assignee_name = delegate_user.real_name or delegate_user.username
 
         # 记录代理日志
         log = ApprovalDelegateLog(
@@ -372,9 +370,7 @@ class ApprovalDelegateService:
         ).update({"is_active": False}, synchronize_session=False)
 
     def _send_delegate_notification(
-        self,
-        log: ApprovalDelegateLog,
-        config: ApprovalDelegate
+        self, log: ApprovalDelegateLog, config: ApprovalDelegate
     ):
         """
         发送代理审批完成通知给原审批人
@@ -421,5 +417,6 @@ class ApprovalDelegateService:
 
         except Exception as e:
             import logging
+
             logger = logging.getLogger(__name__)
             logger.error(f"发送代理审批通知失败: {e}")

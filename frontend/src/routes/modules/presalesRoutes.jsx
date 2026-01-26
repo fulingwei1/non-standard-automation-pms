@@ -2,8 +2,7 @@ import { Route } from "react-router-dom";
 
 import PresalesWorkstation from "../../pages/PresalesWorkstation";
 import PresalesManagerWorkstation from "../../pages/PresalesManagerWorkstation";
-import PresalesTasks from "../../pages/PresalesTasks";
-import SolutionList from "../../pages/SolutionList";
+import PresalesReviewCenter from "../../pages/PresalesReviewCenter";
 import SolutionDetail from "../../pages/SolutionDetail";
 import RequirementSurvey from "../../pages/RequirementSurvey";
 import BiddingCenter from "../../pages/BiddingCenter";
@@ -17,8 +16,8 @@ export function PresalesRoutes() {
         path="/presales-manager-dashboard"
         element={<PresalesManagerWorkstation />}
       />
-      <Route path="/presales-tasks" element={<PresalesTasks />} />
-      <Route path="/solutions" element={<SolutionList />} />
+      <Route path="/presales-tasks" element={<PresalesReviewCenter />} />
+      <Route path="/solutions" element={<PresalesReviewCenter />} />
       <Route path="/solutions/:id" element={<SolutionDetail />} />
       <Route path="/requirement-survey" element={<RequirementSurvey />} />
       <Route path="/bidding" element={<BiddingCenter />} />

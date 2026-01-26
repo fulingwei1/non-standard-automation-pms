@@ -12,13 +12,13 @@ from typing import Any, Dict, List, Optional, Set
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.models.organization_v2 import (
+from app.models.organization import (
     EmployeeOrgAssignment,
     OrganizationUnit,
     Position,
     PositionRole,
 )
-from app.models.permission_v2 import (
+from app.models.permission import (
     DataScopeRule,
     MenuPermission,
     RoleDataScope,

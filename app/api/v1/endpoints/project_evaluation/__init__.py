@@ -1,30 +1,30 @@
 # -*- coding: utf-8 -*-
 """
-项目评价模块
+项目评价全局端点 - 兼容层
 
-拆分自原 project_evaluation.py (560行)，按功能域分为：
-- statistics: 评价统计
-- evaluations: 项目评价 CRUD
-- dimensions: 评价维度配置
+⚠️ 已废弃 (DEPRECATED)
+此模块已废弃，所有功能已迁移到项目中心端点。
 
-IMPORTANT: 路由顺序很重要！
-静态路由（如 /evaluations/statistics, /dimensions/weights/summary）必须在
-参数化路由（如 /evaluations/{eval_id}, /dimensions/{dim_id}）之前定义。
+请使用：
+    /api/v1/projects/{project_id}/evaluations/
+
+迁移指南：
+    GET  /evaluations?project_id={id}    -> GET  /projects/{id}/evaluations/
+    POST /evaluations                     -> POST /projects/{id}/evaluations/
+    GET  /evaluations/{eval_id}           -> GET  /projects/{id}/evaluations/{eval_id}
+    PUT  /evaluations/{eval_id}/confirm   -> PUT  /projects/{id}/evaluations/{eval_id}/confirm
+    GET  /evaluations/statistics          -> GET  /projects/{id}/evaluations/statistics
+
+评价维度配置请使用 /api/v1/evaluation-dimensions/ (如有需要)
+
+此模块将在未来版本中移除。
 """
 
 from fastapi import APIRouter
 
-from .dimensions import router as dimensions_router
-from .evaluations import router as evaluations_router
-from .statistics import router as statistics_router
-
 router = APIRouter()
 
-# 统计路由（/evaluations/statistics 必须在 evaluations 之前，避免与 /{eval_id} 冲突）
-router.include_router(statistics_router, tags=["评价统计"])
+# 此路由已完全废弃，不再提供任何端点
+# 请使用 /api/v1/projects/{project_id}/evaluations/
 
-# 项目评价 CRUD（包含 /evaluations 和 /evaluations/{eval_id}）
-router.include_router(evaluations_router, tags=["项目评价"])
-
-# 维度配置（内部已处理 /dimensions/weights/summary 在 /{dim_id} 之前）
-router.include_router(dimensions_router, tags=["评价维度"])
+__all__ = ["router"]

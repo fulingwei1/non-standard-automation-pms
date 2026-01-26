@@ -455,3 +455,15 @@ class AlertSubscription(Base, TimestampMixin):
 
     def __repr__(self):
         return f'<AlertSubscription user_id={self.user_id} alert_type={self.alert_type}>'
+
+
+__all__ = [
+    'AlertRuleTemplate',
+    'AlertRule',
+    'AlertRecord',
+    'AlertNotification',
+    'AlertStatistics',
+    'ProjectHealthSnapshot',
+    'AlertSubscription',
+]
+

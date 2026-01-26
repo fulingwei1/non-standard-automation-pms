@@ -39,7 +39,7 @@ const tabs = [
 { key: "cpq", label: "CPQ规则", icon: Sparkles }];
 
 
-export default function SalesTemplateCenter() {
+export default function SalesTemplateCenter({ embedded = false } = {}) {
   const [activeTab, setActiveTab] = useState("quote");
   const [quoteTemplates, setQuoteTemplates] = useState([]);
   const [contractTemplates, setContractTemplates] = useState([]);
@@ -392,9 +392,11 @@ export default function SalesTemplateCenter() {
       animate="visible"
       className="space-y-6">
 
-      <PageHeader
-        title="模板与 CPQ 中心"
-        description="管理报价/合同模板与配置化定价资产，提高交付复用与预测准确性。" />
+      {!embedded && (
+        <PageHeader
+          title="模板与 CPQ 中心"
+          description="管理报价/合同模板与配置化定价资产，提高交付复用与预测准确性。" />
+      )}
 
       <div className="flex gap-2">
         {tabs.map((tab) => {

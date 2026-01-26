@@ -57,7 +57,7 @@ class ApprovalProcessMixin:
             task_id=task.id,
             node_id=task.node_id,
             operator_id=approver_id,
-            operator_name=approver.name if approver else None,
+            operator_name=approver.real_name or approver.username if approver else None,
             action="APPROVE",
             comment=comment,
             attachments=attachments,
@@ -115,7 +115,7 @@ class ApprovalProcessMixin:
             task_id=task.id,
             node_id=task.node_id,
             operator_id=approver_id,
-            operator_name=approver.name if approver else None,
+            operator_name=approver.real_name or approver.username if approver else None,
             action="REJECT",
             comment=comment,
             attachments=attachments,
@@ -135,7 +135,9 @@ class ApprovalProcessMixin:
             # 通知发起人
             self.notify.notify_rejected(
                 instance,
-                rejector_name=approver.name if approver else None,
+                rejector_name=approver.real_name or approver.username
+                if approver
+                else None,
                 reject_comment=comment,
             )
         elif reject_to == "PREV":
@@ -204,7 +206,7 @@ class ApprovalProcessMixin:
             task_id=task.id,
             node_id=task.node_id,
             operator_id=approver_id,
-            operator_name=approver.name if approver else None,
+            operator_name=approver.real_name or approver.username if approver else None,
             action="RETURN",
             comment=comment,
             action_detail={"return_to_node_id": target_node_id},
@@ -265,8 +267,7 @@ class ApprovalProcessMixin:
             node_id=node.id,
             task_type=task.task_type,
             task_order=task.task_order,
-            assignee_id=to_user_id,
-            assignee_name=to_user.name,
+            assignee_name=to_user.real_name or to_user.username,
             assignee_type="TRANSFERRED",
             original_assignee_id=from_user_id,
             status="PENDING",
@@ -282,7 +283,9 @@ class ApprovalProcessMixin:
             task_id=task.id,
             node_id=task.node_id,
             operator_id=from_user_id,
-            operator_name=from_user.name if from_user else None,
+            operator_name=from_user.real_name or from_user.username
+            if from_user
+            else None,
             action="TRANSFER",
             comment=comment,
             action_detail={"from_user_id": from_user_id, "to_user_id": to_user_id},
@@ -292,7 +295,9 @@ class ApprovalProcessMixin:
         self.notify.notify_transferred(
             new_task,
             from_user_id=from_user_id,
-            from_user_name=from_user.name if from_user else None,
+            from_user_name=from_user.real_name or from_user.username
+            if from_user
+            else None,
         )
 
         self.db.commit()
@@ -342,7 +347,7 @@ class ApprovalProcessMixin:
                 task_type="APPROVAL",
                 task_order=task.task_order,
                 assignee_id=approver_id,
-                assignee_name=approver.name,
+                assignee_name=approver.real_name or approver.username,
                 assignee_type=assignee_type,
                 status="PENDING" if position == "BEFORE" else "SKIPPED",
                 due_at=task.due_at,
@@ -362,8 +367,10 @@ class ApprovalProcessMixin:
             task_id=task.id,
             node_id=task.node_id,
             operator_id=operator_id,
-            operator_name=operator.name if operator else None,
-            action="ADD_APPROVER_BEFORE" if position == "BEFORE" else "ADD_APPROVER_AFTER",
+            operator_name=operator.real_name or operator.username if operator else None,
+            action="ADD_APPROVER_BEFORE"
+            if position == "BEFORE"
+            else "ADD_APPROVER_AFTER",
             comment=comment,
             action_detail={"approver_ids": approver_ids, "position": position},
         )
@@ -373,7 +380,9 @@ class ApprovalProcessMixin:
             if new_task.status == "PENDING":
                 self.notify.notify_add_approver(
                     new_task,
-                    added_by_name=operator.name if operator else None,
+                    added_by_name=operator.real_name or operator.username
+                    if operator
+                    else None,
                     position=position,
                 )
 

@@ -7,7 +7,7 @@ import { ChevronRight } from "lucide-react";
 import { Card, CardContent, Button, Badge, Progress } from "../../../components/ui";
 import { cn } from "../../../lib/utils";
 import { fadeIn } from "../../../lib/animations";
-import { getHealthConfig } from "../constants";
+import { getHealthConfig } from "../../../lib/constants/strategy";
 
 export function DimensionCard({ dimension: _dimension, config, data }) {
   const Icon = config.icon;

@@ -29,6 +29,8 @@ __all__ = [
     "has_sales_approval_access",
     "check_sales_approval_permission",
     "require_sales_approval_permission",
+    "can_manage_sales_opportunity",
+    "can_set_opportunity_gate",
 ]
 
 
@@ -52,7 +54,7 @@ def get_sales_data_scope(user: User, db: Session) -> str:
         return "ALL"
 
     # 使用 DataScopeService 获取用户的数据权限范围
-    from app.services.data_scope_service import DataScopeService
+    from app.services.data_scope import DataScopeService
 
     db_scope = DataScopeService.get_user_data_scope(db, user)
 
@@ -104,7 +106,7 @@ def filter_sales_data_by_scope(
     """
 
     from app.models.organization import Department
-    from app.services.data_scope_service import DataScopeService
+    from app.services.data_scope import DataScopeService
 
     scope = get_sales_data_scope(user, db)
     owner_field = getattr(model_class, owner_field_name, None)
@@ -177,7 +179,7 @@ def filter_sales_finance_data_by_scope(
     财务角色可以看到所有发票和收款数据，其他角色按数据权限范围过滤。
     """
     from app.models.organization import Department
-    from app.services.data_scope_service import DataScopeService
+    from app.services.data_scope import DataScopeService
 
     scope = get_sales_data_scope(user, db)
     owner_field = getattr(model_class, owner_field_name, None)
@@ -186,7 +188,52 @@ def filter_sales_finance_data_by_scope(
         # 全部可见 或 财务专用：可以看到所有发票和收款数据
         return query
 
-    elif scope == "DEPT":
+
+def can_manage_sales_opportunity(db: Session, user: User, opportunity) -> bool:
+    """
+    判断用户是否可以管理指定商机（自身/团队/部门/全部）。
+    """
+    if user.is_superuser:
+        return True
+
+    if getattr(opportunity, "owner_id", None) == user.id:
+        return True
+
+    scope = get_sales_data_scope(user, db)
+    if scope == "ALL":
+        return True
+
+    owner_id = getattr(opportunity, "owner_id", None)
+    if not owner_id:
+        return False
+
+    if scope == "DEPT":
+        if not user.department:
+            return False
+        owner = db.query(User).filter(User.id == owner_id).first()
+        return owner is not None and owner.department == user.department
+
+    if scope == "TEAM":
+        from app.services.data_scope.user_scope import UserScopeService
+
+        subordinate_ids = UserScopeService.get_subordinate_ids(db, user.id)
+        return owner_id in subordinate_ids
+
+    return False
+
+
+def can_set_opportunity_gate(db: Session, user: User, opportunity) -> bool:
+    """
+    判断用户是否可以设置商机阶段门（经理/总监级别）。
+    """
+    if user.is_superuser:
+        return True
+
+    scope = get_sales_data_scope(user, db)
+    if scope in {"ALL", "DEPT", "TEAM"}:
+        return can_manage_sales_opportunity(db, user, opportunity)
+
+    if scope == "DEPT":
         # 部门可见
         if user.department and owner_field is not None:
             dept = (

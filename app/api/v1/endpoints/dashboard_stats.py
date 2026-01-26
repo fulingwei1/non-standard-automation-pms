@@ -82,7 +82,7 @@ def get_production_stats(db: Session, current_user: User) -> dict:
 def get_pmo_stats(db: Session, current_user: User) -> dict:
     """获取PMO统计数据"""
     # 应用数据权限过滤
-    from app.services.data_scope_service import DataScopeService
+    from app.services.data_scope import DataScopeService
     query = db.query(Project).filter(Project.is_active == True)
     query = DataScopeService.filter_projects_by_scope(db, query, current_user)
 

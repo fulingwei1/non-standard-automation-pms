@@ -5,12 +5,11 @@
 
 from fastapi import APIRouter
 
-from . import approval, crud, statistics
+from . import crud, statistics
 
 # 创建主路由
 router = APIRouter()
 
 # 聚合所有子模块的路由
 router.include_router(crud.router)
-router.include_router(approval.router)
 router.include_router(statistics.router)

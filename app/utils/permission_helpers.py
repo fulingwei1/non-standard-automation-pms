@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.models.project import Project
 from app.models.user import User
-from app.services.data_scope_service import DataScopeService
+from app.services.data_scope import DataScopeService
 
 
 def check_project_access_or_raise(
@@ -72,6 +72,49 @@ def filter_projects_by_scope(
         过滤后的查询对象
     """
     return DataScopeService.filter_projects_by_scope(db, query, user, project_ids)
+
+
+def get_accessible_project_ids(db: Session, user: User) -> set:
+    """
+    获取用户有权限访问的所有项目ID
+
+    这是最常用的权限过滤方法，用于过滤与项目关联的资源。
+
+    Args:
+        db: 数据库会话
+        user: 当前用户
+
+    Returns:
+        用户可访问的项目ID集合
+
+    Example:
+        project_ids = get_accessible_project_ids(db, current_user)
+        query = query.filter(ProjectMember.project_id.in_(project_ids))
+    """
+    return DataScopeService.get_accessible_project_ids(db, user)
+
+
+def filter_by_project_access(db: Session, query, user: User, project_id_column):
+    """
+    根据用户数据权限过滤与项目关联的资源查询
+
+    用于过滤 ProjectMember、ProjectMilestone、Timesheet 等
+    通过 project_id 关联到项目的资源。
+
+    Args:
+        db: 数据库会话
+        query: 查询对象
+        user: 当前用户
+        project_id_column: 资源表的 project_id 列
+
+    Returns:
+        过滤后的查询对象
+
+    Example:
+        query = db.query(ProjectMember)
+        query = filter_by_project_access(db, query, user, ProjectMember.project_id)
+    """
+    return DataScopeService.filter_related_by_project(db, query, user, project_id_column)
 
 
 

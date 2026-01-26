@@ -16,7 +16,7 @@ from app.core import security
 from app.models.issue import Issue, IssueFollowUpRecord
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.services.data_scope_service import DataScopeService
+from app.services.data_scope import DataScopeService
 
 router = APIRouter()
 

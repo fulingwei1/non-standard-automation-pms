@@ -34,6 +34,21 @@ from . import (
     templates,
 )
 
+# === 项目模块整合：迁移的子模块路由 ===
+from .approvals import router as approvals_router
+from .costs import router as costs_router
+from .evaluations import router as evaluations_router
+from .machines import router as machines_router
+from .members import router as members_router
+from .milestones import router as milestones_router
+from .progress import router as progress_router
+from .resource_plan import router as resource_plan_router
+from .roles import router as roles_router
+from .stages import router as stages_router
+from .timesheet import router as timesheet_router
+from .work_logs import router as work_logs_router
+from .workload import router as workload_router
+
 # Export gate check functions for use by stage_advance_service
 from .gate_checks import check_gate, check_gate_detailed
 
@@ -61,6 +76,11 @@ router.include_router(archive.router, tags=["projects-archive"])
 # 概览和仪表盘路由
 router.include_router(overview.router, tags=["projects-overview"])
 
+# 流水线视图路由 (跨项目)
+from .pipeline import router as pipeline_router
+
+router.include_router(pipeline_router, tags=["projects-pipeline"])
+
 # 数据同步路由（合同同步、ERP集成）
 router.include_router(sync.router, tags=["projects-sync"])
 
@@ -80,18 +100,6 @@ router.include_router(payment_plans.router, tags=["projects-payment-plans"])
 router.include_router(extended.router, tags=["projects-extended"])
 
 # === 项目模块整合：迁移的子模块路由 ===
-from .costs import router as costs_router
-from .evaluations import router as evaluations_router
-from .machines import router as machines_router
-from .members import router as members_router
-from .milestones import router as milestones_router
-from .progress import router as progress_router
-from .resource_plan import router as resource_plan_router
-from .roles import router as roles_router
-from .stages import router as stages_router
-from .timesheet import router as timesheet_router
-from .work_logs import router as work_logs_router
-from .workload import router as workload_router
 
 # 里程碑路由（项目内操作）
 router.include_router(
@@ -175,4 +183,11 @@ router.include_router(
     workload_router,
     prefix="/{project_id}/workload",
     tags=["projects-workload"],
+)
+
+# 审批路由（项目内操作）
+router.include_router(
+    approvals_router,
+    prefix="/{project_id}/approvals",
+    tags=["projects-approvals"],
 )

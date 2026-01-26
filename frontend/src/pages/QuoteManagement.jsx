@@ -84,7 +84,7 @@ const COST_RANGE_LABELS = {
   year: "本年度"
 };
 
-export default function QuoteManagement() {
+export default function QuoteManagement({ embedded = false } = {}) {
   // 状态管理
   const [quotes, setQuotes] = useState([]);
   const [opportunities, setOpportunities] = useState([]);
@@ -533,29 +533,31 @@ export default function QuoteManagement() {
       variants={staggerContainer}
       className="space-y-6">
 
-      <PageHeader
-        title="报价管理"
-        subtitle="管理销售报价，支持多版本管理和审批流程"
-        breadcrumbs={[
-        { label: "销售管理", href: "/sales" },
-        { label: "报价管理", href: "/quotes" }]
-        }
-        actions={
-        <div className="flex items-center gap-3">
-            <Button
-            variant="outline"
-            onClick={() => window.location.href = "/quote-analytics"}>
+      {!embedded && (
+        <PageHeader
+          title="报价管理"
+          subtitle="管理销售报价，支持多版本管理和审批流程"
+          breadcrumbs={[
+          { label: "销售管理", href: "/sales" },
+          { label: "报价管理", href: "/quotes" }]
+          }
+          actions={
+          <div className="flex items-center gap-3">
+              <Button
+              variant="outline"
+              onClick={() => window.location.href = "/quote-analytics"}>
 
-              数据分析
-            </Button>
-            <Button
-            onClick={handleQuoteCreate}
-            className="bg-blue-600 hover:bg-blue-700 text-white">
+                数据分析
+              </Button>
+              <Button
+              onClick={handleQuoteCreate}
+              className="bg-blue-600 hover:bg-blue-700 text-white">
 
-              新建报价
-            </Button>
-        </div>
-        } />
+                新建报价
+              </Button>
+          </div>
+          } />
+      )}
 
 
       <motion.div variants={fadeIn} className="space-y-6">

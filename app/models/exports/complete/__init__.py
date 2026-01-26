@@ -4,6 +4,7 @@
 
 聚合所有业务域的模型导出，保持向后兼容
 """
+
 from .approval_ecn_acceptance import *
 from .base_enums import *
 from .material_purchase import *
@@ -72,7 +73,7 @@ __all__ = [
     # Material (from material_purchase)
     "Material",
     "MaterialCategory",
-    "Supplier",
+    "Vendor",
     "MaterialSupplier",
     "BomHeader",
     "BomItem",
@@ -92,7 +93,6 @@ __all__ = [
     "KitCheck",
     "AlertHandleLog",
     "ShortageDailyReport",
-    "ShortageAlert",
     "AssemblyStage",
     "AssemblyTemplate",
     "CategoryStageMapping",
@@ -154,7 +154,6 @@ __all__ = [
     "MaterialRequisition",
     "MaterialRequisitionItem",
     "ProductionDailyReport",
-    "OutsourcingVendor",
     "OutsourcingOrder",
     "OutsourcingOrderItem",
     "OutsourcingDelivery",

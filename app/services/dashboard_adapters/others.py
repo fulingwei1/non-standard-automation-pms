@@ -1,0 +1,338 @@
+# -*- coding: utf-8 -*-
+"""
+人员匹配和齐套率 Dashboard 适配器
+"""
+
+from datetime import datetime
+from typing import List
+
+from sqlalchemy import func
+
+from app.models.staff_matching import HrAIMatchingLog, MesProjectStaffingNeed
+from app.schemas.dashboard import (
+    DashboardStatCard,
+    DashboardWidget,
+    DetailedDashboardResponse,
+)
+from app.services.dashboard_adapter import DashboardAdapter, register_dashboard
+
+
+@register_dashboard
+class StaffMatchingDashboardAdapter(DashboardAdapter):
+    """人员匹配工作台适配器"""
+
+    @property
+    def module_id(self) -> str:
+        return "staff_matching"
+
+    @property
+    def module_name(self) -> str:
+        return "人员匹配"
+
+    @property
+    def supported_roles(self) -> List[str]:
+        return ["hr", "pmo", "admin"]
+
+    def get_stats(self) -> List[DashboardStatCard]:
+        """获取统计卡片"""
+        # 需求统计
+        open_needs = (
+            self.db.query(func.count(MesProjectStaffingNeed.id))
+            .filter(MesProjectStaffingNeed.status == "OPEN")
+            .scalar()
+            or 0
+        )
+
+        matching_needs = (
+            self.db.query(func.count(MesProjectStaffingNeed.id))
+            .filter(MesProjectStaffingNeed.status == "MATCHING")
+            .scalar()
+            or 0
+        )
+
+        filled_needs = (
+            self.db.query(func.count(MesProjectStaffingNeed.id))
+            .filter(MesProjectStaffingNeed.status == "FILLED")
+            .scalar()
+            or 0
+        )
+
+        # 匹配统计
+        total_requests = (
+            self.db.query(func.count(func.distinct(HrAIMatchingLog.request_id))).scalar()
+            or 0
+        )
+        total_matched = self.db.query(func.count(HrAIMatchingLog.id)).scalar() or 0
+        accepted = (
+            self.db.query(func.count(HrAIMatchingLog.id))
+            .filter(HrAIMatchingLog.is_accepted == True)
+            .scalar()
+            or 0
+        )
+        rejected = (
+            self.db.query(func.count(HrAIMatchingLog.id))
+            .filter(HrAIMatchingLog.is_accepted == False)
+            .scalar()
+            or 0
+        )
+
+        avg_score = (
+            self.db.query(func.avg(HrAIMatchingLog.total_score))
+            .filter(HrAIMatchingLog.is_accepted == True)
+            .scalar()
+        )
+
+        success_rate = (accepted / total_matched * 100) if total_matched > 0 else 0
+
+        # 统计总人数需求
+        total_headcount_needed = (
+            self.db.query(func.sum(MesProjectStaffingNeed.headcount))
+            .filter(MesProjectStaffingNeed.status.in_(["OPEN", "MATCHING", "FILLED"]))
+            .scalar()
+            or 0
+        )
+
+        # 统计已填充人数
+        total_headcount_filled = (
+            self.db.query(func.sum(MesProjectStaffingNeed.filled_headcount))
+            .filter(MesProjectStaffingNeed.status.in_(["OPEN", "MATCHING", "FILLED"]))
+            .scalar()
+            or 0
+        )
+
+        return [
+            DashboardStatCard(
+                key="open_needs",
+                label="待匹配需求",
+                value=open_needs,
+                unit="个",
+                icon="need",
+                color="blue",
+            ),
+            DashboardStatCard(
+                key="matching_needs",
+                label="匹配中",
+                value=matching_needs,
+                unit="个",
+                icon="matching",
+                color="orange",
+            ),
+            DashboardStatCard(
+                key="filled_needs",
+                label="已填充",
+                value=filled_needs,
+                unit="个",
+                icon="filled",
+                color="green",
+            ),
+            DashboardStatCard(
+                key="total_headcount",
+                label="总需求人数",
+                value=int(total_headcount_needed),
+                unit="人",
+                icon="people",
+                color="cyan",
+            ),
+            DashboardStatCard(
+                key="filled_headcount",
+                label="已填充人数",
+                value=int(total_headcount_filled),
+                unit="人",
+                icon="filled-people",
+                color="purple",
+            ),
+            DashboardStatCard(
+                key="success_rate",
+                label="匹配成功率",
+                value=f"{success_rate:.1f}%",
+                icon="success",
+                color="green",
+            ),
+        ]
+
+    def get_widgets(self) -> List[DashboardWidget]:
+        """获取Widget列表"""
+        # 最近匹配
+        recent_logs = (
+            self.db.query(HrAIMatchingLog)
+            .order_by(HrAIMatchingLog.matching_time.desc())
+            .limit(10)
+            .all()
+        )
+
+        recent_matches = []
+        for log in recent_logs:
+            recent_matches.append(
+                {
+                    "id": log.id,
+                    "request_id": log.request_id,
+                    "project_id": log.project_id,
+                    "total_score": log.total_score,
+                    "is_accepted": log.is_accepted,
+                    "matching_time": log.matching_time,
+                    "project_name": log.project.name if log.project else None,
+                    "employee_name": log.candidate.name if log.candidate else None,
+                }
+            )
+
+        # 按优先级统计
+        priority_counts = (
+            self.db.query(
+                MesProjectStaffingNeed.priority,
+                func.count(MesProjectStaffingNeed.id),
+            )
+            .filter(MesProjectStaffingNeed.status.in_(["OPEN", "MATCHING"]))
+            .group_by(MesProjectStaffingNeed.priority)
+            .all()
+        )
+
+        needs_by_priority = {p: c for p, c in priority_counts}
+
+        return [
+            DashboardWidget(
+                widget_id="recent_matches",
+                widget_type="list",
+                title="最近匹配记录",
+                data=recent_matches,
+                order=1,
+                span=16,
+            ),
+            DashboardWidget(
+                widget_id="priority_distribution",
+                widget_type="chart",
+                title="需求优先级分布",
+                data=needs_by_priority,
+                order=2,
+                span=8,
+            ),
+        ]
+
+    def get_detailed_data(self) -> DetailedDashboardResponse:
+        """获取详细数据"""
+        stats_cards = self.get_stats()
+        summary = {card.key: card.value for card in stats_cards}
+
+        # 按状态详细统计
+        by_status = {}
+        for status in ["OPEN", "MATCHING", "FILLED", "CANCELLED"]:
+            count = (
+                self.db.query(MesProjectStaffingNeed)
+                .filter(MesProjectStaffingNeed.status == status)
+                .count()
+            )
+            by_status[status] = count
+
+        details = {"by_status": by_status}
+
+        return DetailedDashboardResponse(
+            module=self.module_id,
+            module_name=self.module_name,
+            summary=summary,
+            details=details,
+            generated_at=datetime.now(),
+        )
+
+
+@register_dashboard
+class KitRateDashboardAdapter(DashboardAdapter):
+    """齐套率工作台适配器"""
+
+    @property
+    def module_id(self) -> str:
+        return "kit_rate"
+
+    @property
+    def module_name(self) -> str:
+        return "齐套率"
+
+    @property
+    def supported_roles(self) -> List[str]:
+        return ["procurement", "production", "pmo", "admin"]
+
+    def get_stats(self) -> List[DashboardStatCard]:
+        """获取统计卡片"""
+        from app.services.kit_rate import KitRateService
+
+        service = KitRateService(self.db)
+        dashboard_data = service.get_dashboard(None)
+
+        # 从service返回的数据中提取统计信息
+        data = dashboard_data.get("data", {})
+        overall_stats = data.get("overall_stats", {})
+
+        return [
+            DashboardStatCard(
+                key="total_projects",
+                label="项目总数",
+                value=overall_stats.get("total_projects", 0),
+                unit="个",
+                icon="project",
+                color="blue",
+            ),
+            DashboardStatCard(
+                key="avg_kit_rate",
+                label="平均齐套率",
+                value=f"{overall_stats.get('avg_kit_rate', 0):.1f}%",
+                icon="rate",
+                color="green",
+            ),
+            DashboardStatCard(
+                key="can_start_count",
+                label="可开工项目",
+                value=overall_stats.get("can_start_count", 0),
+                unit="个",
+                icon="start",
+                color="cyan",
+            ),
+            DashboardStatCard(
+                key="shortage_count",
+                label="缺料项目",
+                value=overall_stats.get("shortage_count", 0),
+                unit="个",
+                icon="shortage",
+                color="red",
+            ),
+        ]
+
+    def get_widgets(self) -> List[DashboardWidget]:
+        """获取Widget列表"""
+        from app.services.kit_rate import KitRateService
+
+        service = KitRateService(self.db)
+        dashboard_data = service.get_dashboard(None)
+
+        data = dashboard_data.get("data", {})
+        project_list = data.get("project_list", [])
+
+        return [
+            DashboardWidget(
+                widget_id="project_list",
+                widget_type="table",
+                title="项目齐套情况",
+                data=project_list[:10],  # 只显示前10个
+                order=1,
+                span=24,
+            )
+        ]
+
+    def get_detailed_data(self) -> DetailedDashboardResponse:
+        """获取详细数据"""
+        from app.services.kit_rate import KitRateService
+
+        service = KitRateService(self.db)
+        dashboard_data = service.get_dashboard(None)
+
+        data = dashboard_data.get("data", {})
+        overall_stats = data.get("overall_stats", {})
+        project_list = data.get("project_list", [])
+
+        summary = overall_stats
+        details = {"project_list": project_list}
+
+        return DetailedDashboardResponse(
+            module=self.module_id,
+            module_name=self.module_name,
+            summary=summary,
+            details=details,
+            generated_at=datetime.now(),
+        )

@@ -25,14 +25,12 @@ from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.ecn import (
     EcnCreate,
-    EcnListResponse,
     EcnResponse,
     EcnSubmit,
     EcnUpdate,
 )
 from app.services.ecn_auto_assign_service import auto_assign_evaluation
 from app.services.ecn_notification import (
-    notify_ecn_submitted,
     notify_evaluation_assigned,
 )
 
@@ -45,7 +43,12 @@ router = APIRouter()
 def read_ecns(
     db: Session = Depends(deps.get_db),
     page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    page_size: int = Query(
+        settings.DEFAULT_PAGE_SIZE,
+        ge=1,
+        le=settings.MAX_PAGE_SIZE,
+        description="每页数量",
+    ),
     keyword: Optional[str] = Query(None, description="关键词搜索（ECN编号/标题）"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     machine_id: Optional[int] = Query(None, description="机台ID筛选"),
@@ -99,11 +102,13 @@ def read_ecns(
         total=total,
         page=page,
         page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        pages=(total + page_size - 1) // page_size,
     )
 
 
-@router.get("/ecns/{ecn_id}", response_model=EcnResponse, status_code=status.HTTP_200_OK)
+@router.get(
+    "/ecns/{ecn_id}", response_model=EcnResponse, status_code=status.HTTP_200_OK
+)
 def read_ecn(
     ecn_id: int,
     db: Session = Depends(deps.get_db),
@@ -170,7 +175,9 @@ def create_ecn(
     return build_ecn_response(db, ecn)
 
 
-@router.put("/ecns/{ecn_id}", response_model=EcnResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/ecns/{ecn_id}", response_model=EcnResponse, status_code=status.HTTP_200_OK
+)
 def update_ecn(
     *,
     db: Session = Depends(deps.get_db),
@@ -199,7 +206,9 @@ def update_ecn(
     return build_ecn_response(db, ecn)
 
 
-@router.put("/ecns/{ecn_id}/submit", response_model=EcnResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/ecns/{ecn_id}/submit", response_model=EcnResponse, status_code=status.HTTP_200_OK
+)
 def submit_ecn(
     *,
     db: Session = Depends(deps.get_db),
@@ -229,23 +238,21 @@ def submit_ecn(
         old_status="DRAFT",
         new_status="SUBMITTED",
         log_content=submit_in.remark or "提交ECN申请",
-        created_by=current_user.id
+        created_by=current_user.id,
     )
     db.add(log)
 
     # 自动触发评估流程：根据ECN类型获取需要评估的部门
-    ecn_type_config = db.query(EcnType).filter(EcnType.type_code == ecn.ecn_type).first()
+    ecn_type_config = (
+        db.query(EcnType).filter(EcnType.type_code == ecn.ecn_type).first()
+    )
     if ecn_type_config and ecn_type_config.required_depts:
         ecn.status = "EVALUATING"
         preferred_evaluators = submit_in.preferred_evaluators or {}
 
         for dept in ecn_type_config.required_depts:
             # 创建评估记录（待评估）
-            evaluation = EcnEvaluation(
-                ecn_id=ecn_id,
-                eval_dept=dept,
-                status="PENDING"
-            )
+            evaluation = EcnEvaluation(ecn_id=ecn_id, eval_dept=dept, status="PENDING")
             db.add(evaluation)
 
             # 分配评估任务：优先使用手动指定，否则自动分配
@@ -256,13 +263,19 @@ def submit_ecn(
                 if dept in preferred_evaluators:
                     evaluator_id = preferred_evaluators[dept]
                     # 验证用户是否存在且属于该部门
-                    evaluator = db.query(User).filter(
-                        User.id == evaluator_id,
-                        User.department == dept,
-                        User.is_active == True
-                    ).first()
+                    evaluator = (
+                        db.query(User)
+                        .filter(
+                            User.id == evaluator_id,
+                            User.department == dept,
+                            User.is_active == True,
+                        )
+                        .first()
+                    )
                     if not evaluator:
-                        evaluator_id = None  # 如果用户不存在或不属于该部门，使用自动分配
+                        evaluator_id = (
+                            None  # 如果用户不存在或不属于该部门，使用自动分配
+                        )
 
                 # 2. 如果没有手动指定或手动指定无效，则自动分配
                 if not evaluator_id:
@@ -283,7 +296,9 @@ def submit_ecn(
     return build_ecn_response(db, ecn)
 
 
-@router.put("/ecns/{ecn_id}/cancel", response_model=EcnResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/ecns/{ecn_id}/cancel", response_model=EcnResponse, status_code=status.HTTP_200_OK
+)
 def cancel_ecn(
     *,
     db: Session = Depends(deps.get_db),
@@ -312,7 +327,7 @@ def cancel_ecn(
         old_status=old_status,
         new_status="CANCELLED",
         log_content=cancel_reason or "取消ECN",
-        created_by=current_user.id
+        created_by=current_user.id,
     )
     db.add(log)
 

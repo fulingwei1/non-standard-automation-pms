@@ -3,11 +3,9 @@
 Notification dispatcher for alert channels (system/WeChat/email).
 Provides simple retry and logging helpers.
 
-This module acts as a coordinator, delegating to specialized handlers:
-- SystemNotificationHandler: In-app notifications
-- EmailNotificationHandler: Email notifications
-- WeChatNotificationHandler: Enterprise WeChat notifications
-- SMSNotificationHandler: SMS notifications
+This module acts as a coordinator, delegating to the unified NotificationService.
+
+BACKWARD COMPATIBILITY: This module maintains the same interface while using the new unified service.
 """
 
 import logging
@@ -18,12 +16,6 @@ from sqlalchemy.orm import Session
 
 from app.models.alert import AlertNotification, AlertRecord
 from app.models.user import User
-from app.services.notification_handlers import (
-    SystemNotificationHandler,
-    EmailNotificationHandler,
-    WeChatNotificationHandler,
-    SMSNotificationHandler,
-)
 from app.services.notification_utils import (
     resolve_channels,
     resolve_recipients,

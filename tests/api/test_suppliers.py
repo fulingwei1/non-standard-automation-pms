@@ -106,7 +106,12 @@ class TestSupplierCRUD:
         )
 
         assert response.status_code == 200
-        data = response.json()
+        response_data = response.json()
+        # 兼容新旧响应格式
+        if "success" in response_data and "data" in response_data:
+            data = response_data["data"]
+        else:
+            data = response_data
         assert data["id"] == supplier_id
 
     def test_get_supplier_not_found(self, client: TestClient, admin_token: str):

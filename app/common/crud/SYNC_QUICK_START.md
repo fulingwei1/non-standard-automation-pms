@@ -4,9 +4,119 @@
 
 ---
 
-## 一、快速开始（5分钟）
+## 一、推荐：BaseCRUDService + QueryParams（新）
 
-### 1.1 创建Service类
+> ✅ 默认集成分页/筛选/搜索/排序  
+> ✅ 自动转换为响应Schema  
+> ✅ 支持统一的钩子、批量操作、软删除
+
+### 1.1 定义Service（仅需继承 + 声明字段）
+
+```python
+from sqlalchemy.orm import Session
+
+from app.common.crud import BaseCRUDService
+from app.models.project import ProjectMilestone
+from app.schemas.project import (
+    MilestoneCreate,
+    MilestoneUpdate,
+    MilestoneResponse,
+)
+
+
+class MilestoneService(
+    BaseCRUDService[ProjectMilestone, MilestoneCreate, MilestoneUpdate, MilestoneResponse]
+):
+    """推荐用法：所有CRUD服务继承该基类"""
+
+    # 声明一次即可，全局复用
+    search_fields = ("milestone_name", "description")
+    allowed_sort_fields = ("planned_date", "created_at")
+    default_sort_field = "planned_date"
+    unique_fields = ("milestone_code",)
+
+    def __init__(self, db: Session):
+        super().__init__(
+            model=ProjectMilestone,
+            db=db,
+            response_schema=MilestoneResponse,
+            resource_name="里程碑",
+            default_filters={"is_archived": False},
+        )
+```
+
+### 1.2 API层直接复用 QueryParams
+
+```python
+from fastapi import APIRouter, Depends, Path
+from sqlalchemy.orm import Session
+
+from app.api.dependencies import get_db, get_current_user
+from app.common.crud import QueryParams
+from app.schemas.common import PaginatedResponse, ResponseModel
+from app.schemas.project import MilestoneResponse
+from app.services.project.milestone import MilestoneService
+
+router = APIRouter()
+
+
+@router.get("/", response_model=ResponseModel[PaginatedResponse[MilestoneResponse]])
+def list_milestones(
+    project_id: int = Path(..., description="项目ID"),
+    params: QueryParams = Depends(QueryParams),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    service = MilestoneService(db)
+    result = service.list(
+        params,
+        extra_filters={"project_id": project_id},
+    )
+    return ResponseModel(
+        data=PaginatedResponse(
+            items=result.items,
+            total=result.total,
+            page=params.page,
+            page_size=params.page_size,
+            pages=result.pages,
+        )
+    )
+```
+
+### 1.3 创建/更新示例
+
+```python
+@router.post("/", response_model=ResponseModel[MilestoneResponse])
+def create_milestone(
+    project_id: int,
+    payload: MilestoneCreate,
+    db: Session = Depends(get_db),
+):
+    service = MilestoneService(db)
+    data = payload.model_copy(update={"project_id": project_id})
+    created = service.create(data)
+    return ResponseModel(data=created)
+
+
+@router.put("/{milestone_id}", response_model=ResponseModel[MilestoneResponse])
+def update_milestone(
+    milestone_id: int,
+    payload: MilestoneUpdate,
+    db: Session = Depends(get_db),
+):
+    service = MilestoneService(db)
+    return ResponseModel(data=service.update(milestone_id, payload))
+```
+
+> 🔁 `service.list()` 返回 `PaginatedResult`，可直接 `.items/.total/.pages`。  
+> 🔒 `unique_fields` 或 `service.create(..., check_unique=("milestone_code",))` 自动执行唯一性校验。  
+> 🧱 钩子：`_before_create/_after_create/_before_list` 等用于插入业务逻辑。
+
+---
+
+## 二、兼容：SyncBaseService（旧版）
+
+### 2.1 创建Service类
 
 ```python
 from app.common.crud.sync_service import SyncBaseService
@@ -36,7 +146,7 @@ class MilestoneService(
         return MilestoneResponse.model_validate(obj)
 ```
 
-### 1.2 在API中使用
+### 2.2 在API中使用
 
 ```python
 from fastapi import APIRouter, Depends, Query, Path
@@ -167,9 +277,9 @@ def delete_milestone(
 
 ---
 
-## 二、核心功能
+## 三、核心功能
 
-### 2.1 Service基类提供的方法
+### 3.1 Service基类提供的方法
 
 | 方法 | 说明 | 示例 |
 |------|------|------|
@@ -180,7 +290,7 @@ def delete_milestone(
 | `delete(id)` | 删除对象 | `service.delete(1)` |
 | `count(filters)` | 统计数量 | `service.count(filters={"status": "ACTIVE"})` |
 
-### 2.2 筛选条件支持
+### 3.2 筛选条件支持
 
 ```python
 # 精确匹配

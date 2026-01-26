@@ -10,9 +10,9 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.material import MaterialCategory
 from app.models.user import User
 from app.schemas.material import MaterialCategoryResponse
+from app.services.material_category_service import MaterialCategoryService
 
 router = APIRouter()
 
@@ -20,44 +20,14 @@ router = APIRouter()
 @router.get("/categories/", response_model=List[MaterialCategoryResponse])
 def read_material_categories(
     db: Session = Depends(deps.get_db),
-    parent_id: Optional[int] = Query(None, description="父分类ID，为空则返回顶级分类"),
+    parent_id: Optional[int] = Query(
+        None, description="父分类ID，为空则返回顶级分类树"
+    ),
     is_active: Optional[bool] = Query(None, description="是否启用"),
     current_user: User = Depends(security.require_procurement_access()),
 ) -> Any:
-    """获取物料分类列表"""
-    query = db.query(MaterialCategory)
-
-    # 父分类筛选
-    if parent_id is None:
-        query = query.filter(MaterialCategory.parent_id.is_(None))
-    else:
-        query = query.filter(MaterialCategory.parent_id == parent_id)
-
-    # 启用状态筛选
-    if is_active is not None:
-        query = query.filter(MaterialCategory.is_active == is_active)
-
-    categories = query.order_by(MaterialCategory.sort_order, MaterialCategory.category_code).all()
-
-    # 构建树形结构
-    def build_tree(category_list, parent_id=None):
-        result = []
-        for cat in category_list:
-            if (parent_id is None and cat.parent_id is None) or (parent_id and cat.parent_id == parent_id):
-                children = build_tree(category_list, cat.id)
-                item = MaterialCategoryResponse(
-                    id=cat.id,
-                    category_code=cat.category_code,
-                    category_name=cat.category_name,
-                    parent_id=cat.parent_id,
-                    level=cat.level,
-                    full_path=cat.full_path,
-                    is_active=cat.is_active,
-                    children=children,
-                    created_at=cat.created_at,
-                    updated_at=cat.updated_at,
-                )
-                result.append(item)
-        return result
-
-    return build_tree(categories)
+    """获取物料分类列表（树形结构）"""
+    service = MaterialCategoryService(db)
+    # 如果指定了 is_active，建议在 service 中增加过滤，或者简单在这里处理
+    # 目前 get_tree 默认获取所有。
+    return service.get_tree(parent_id)

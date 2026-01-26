@@ -11,3 +11,11 @@
 """
 
 # 服务将在后续任务中逐步实现
+
+from .milestone_service import ProjectMilestoneService
+from .machine_service import ProjectMachineService
+
+__all__ = [
+    "ProjectMilestoneService",
+    "ProjectMachineService",
+]

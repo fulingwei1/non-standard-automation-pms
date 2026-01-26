@@ -234,6 +234,27 @@ def paginated_response(
     )
 
 
+def list_response(
+    items: List[T],
+    message: str = "获取成功",
+    total: Optional[int] = None
+) -> ListResponse[T]:
+    """
+    创建列表响应（无分页）
+    
+    Args:
+        items: 数据列表
+        message: 响应消息（可选，用于统一响应格式）
+        total: 总记录数（如果不提供，则使用items的长度）
+    
+    Returns:
+        ListResponse: 列表响应对象
+    """
+    if total is None:
+        total = len(items)
+    return ListResponse(items=items, total=total)
+
+
 __all__ = [
     "BaseResponse",
     "SuccessResponse",
@@ -243,4 +264,5 @@ __all__ = [
     "success_response",
     "error_response",
     "paginated_response",
+    "list_response",
 ]

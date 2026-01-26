@@ -20,7 +20,7 @@ from app.core import security
 from app.models.issue import Issue
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.services.data_scope_service import DataScopeService
+from app.services.data_scope import DataScopeService
 
 from .utils import generate_issue_no
 

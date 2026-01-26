@@ -57,11 +57,14 @@ class EcnSourceTypeEnum(str, Enum):
 
 
 class EcnStatusEnum(str, Enum):
+    """ECN状态枚举"""
+
     DRAFT = "DRAFT"
     PENDING_REVIEW = "PENDING_REVIEW"
     APPROVED = "APPROVED"
     REJECTED = "REJECTED"
     IMPLEMENTED = "IMPLEMENTED"
+    COMPLETED = "COMPLETED"
     CANCELLED = "CANCELLED"
 
 
@@ -99,6 +102,7 @@ class ApprovalActionEnum(str, Enum):
     SUBMIT = "SUBMIT"
     APPROVE = "APPROVE"
     REJECT = "REJECT"
+    RETURN = "RETURN"
     WITHDRAW = "WITHDRAW"
     DELEGATE = "DELEGATE"
 

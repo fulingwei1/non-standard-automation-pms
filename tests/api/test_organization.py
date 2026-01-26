@@ -3,6 +3,7 @@
 组织架构模块 API 测试
 
 测试部门和员工的 CRUD 操作
+Updated for unified response format
 """
 
 import uuid
@@ -11,6 +12,13 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
+from tests.helpers.response_helpers import (
+    assert_success_response,
+    assert_list_response,
+    assert_paginated_response,
+    extract_data,
+    extract_items,
+)
 
 
 def _auth_headers(token: str) -> dict:
@@ -36,8 +44,11 @@ class TestDepartmentCRUD:
         )
 
         assert response.status_code == 200
-        data = response.json()
-        assert isinstance(data, list)
+        response_data = response.json()
+        # 使用统一响应格式辅助函数验证列表响应
+        list_data = assert_list_response(response_data)
+        assert "items" in list_data
+        assert isinstance(list_data["items"], list)
 
     def test_list_departments_filter_active(self, client: TestClient, admin_token: str):
         """测试按启用状态筛选部门"""
@@ -52,8 +63,11 @@ class TestDepartmentCRUD:
         )
 
         assert response.status_code == 200
-        data = response.json()
-        assert isinstance(data, list)
+        response_data = response.json()
+        # 使用统一响应格式辅助函数验证列表响应
+        list_data = assert_list_response(response_data)
+        assert "items" in list_data
+        assert isinstance(list_data["items"], list)
         # 所有返回的部门都应该是启用的
         for dept in data:
             assert dept.get("is_active", True) == True
@@ -70,8 +84,11 @@ class TestDepartmentCRUD:
         )
 
         assert response.status_code == 200
-        data = response.json()
-        assert isinstance(data, list)
+        response_data = response.json()
+        # 使用统一响应格式辅助函数验证列表响应
+        list_data = assert_list_response(response_data)
+        assert "items" in list_data
+        assert isinstance(list_data["items"], list)
 
     def test_create_department(self, client: TestClient, admin_token: str):
         """测试创建部门"""
@@ -97,7 +114,9 @@ class TestDepartmentCRUD:
             pytest.skip("User does not have permission to create department")
 
         assert response.status_code in [200, 201], response.text
-        data = response.json()
+        response_data = response.json()
+        # 使用统一响应格式辅助函数提取数据
+        data = assert_success_response(response_data, expected_code=response.status_code)
         assert data["dept_code"] == dept_data["dept_code"]
         assert data["dept_name"] == dept_data["dept_name"]
         return data["id"]
@@ -126,7 +145,9 @@ class TestDepartmentCRUD:
         )
 
         assert response.status_code == 200
-        data = response.json()
+        response_data = response.json()
+        # 使用统一响应格式辅助函数提取数据
+        data = assert_success_response(response_data)
         assert data["id"] == dept_id
 
     def test_get_department_not_found(self, client: TestClient, admin_token: str):
@@ -155,10 +176,17 @@ class TestDepartmentCRUD:
             headers=headers
         )
 
-        if list_response.status_code != 200 or not list_response.json():
+        if list_response.status_code != 200:
+            pytest.skip("Failed to get departments list")
+        
+        response_data = list_response.json()
+        # 使用统一响应格式辅助函数提取items
+        list_data = assert_list_response(response_data)
+        items = list_data["items"]
+        if not items:
             pytest.skip("No departments available for testing")
 
-        dept = list_response.json()[0]
+        dept = items[0]
         dept_id = dept["id"]
 
         update_data = {
@@ -175,6 +203,9 @@ class TestDepartmentCRUD:
             pytest.skip("User does not have permission to update department")
 
         assert response.status_code == 200, response.text
+        response_data = response.json()
+        # 使用统一响应格式辅助函数提取数据
+        assert_success_response(response_data)
 
     def test_get_department_users(self, client: TestClient, admin_token: str):
         """测试获取部门下的用户"""
@@ -219,8 +250,11 @@ class TestEmployeeCRUD:
         )
 
         assert response.status_code == 200
-        data = response.json()
-        assert isinstance(data, list)
+        response_data = response.json()
+        # 使用统一响应格式辅助函数验证列表响应
+        list_data = assert_list_response(response_data)
+        assert "items" in list_data
+        assert isinstance(list_data["items"], list)
 
     def test_create_employee(self, client: TestClient, admin_token: str):
         """测试创建员工"""
@@ -312,6 +346,9 @@ class TestEmployeeCRUD:
             pytest.skip("User does not have permission to update employee")
 
         assert response.status_code == 200, response.text
+        response_data = response.json()
+        # 使用统一响应格式辅助函数提取数据
+        assert_success_response(response_data)
 
 
 class TestHrProfiles:

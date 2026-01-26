@@ -38,6 +38,7 @@ from app.models.vendor import Vendor
 from app.models.project import Machine, Project
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.utils.pagination import PaginationParams, create_paginated_response
 from app.schemas.outsourcing import (
     OutsourcingDeliveryCreate,
     OutsourcingDeliveryResponse,
@@ -61,53 +62,12 @@ from app.schemas.outsourcing import (
 
 router = APIRouter()
 
+# 使用统一的编码生成工具
+from app.utils.domain_codes import outsourcing as outsourcing_codes
 
-def generate_order_no(db: Session) -> str:
-    """生成外协订单号：OS-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_order = (
-        db.query(OutsourcingOrder)
-        .filter(OutsourcingOrder.order_no.like(f"OS-{today}-%"))
-        .order_by(desc(OutsourcingOrder.order_no))
-        .first()
-    )
-    if max_order:
-        seq = int(max_order.order_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"OS-{today}-{seq:03d}"
-
-
-def generate_delivery_no(db: Session) -> str:
-    """生成交付单号：DL-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_delivery = (
-        db.query(OutsourcingDelivery)
-        .filter(OutsourcingDelivery.delivery_no.like(f"DL-{today}-%"))
-        .order_by(desc(OutsourcingDelivery.delivery_no))
-        .first()
-    )
-    if max_delivery:
-        seq = int(max_delivery.delivery_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"DL-{today}-{seq:03d}"
-
-
-def generate_inspection_no(db: Session) -> str:
-    """生成质检单号：IQ-yymmdd-xxx"""
-    today = datetime.now().strftime("%y%m%d")
-    max_inspection = (
-        db.query(OutsourcingInspection)
-        .filter(OutsourcingInspection.inspection_no.like(f"IQ-{today}-%"))
-        .order_by(desc(OutsourcingInspection.inspection_no))
-        .first()
-    )
-    if max_inspection:
-        seq = int(max_inspection.inspection_no.split("-")[-1]) + 1
-    else:
-        seq = 1
-    return f"IQ-{today}-{seq:03d}"
+generate_order_no = outsourcing_codes.generate_order_no
+generate_delivery_no = outsourcing_codes.generate_delivery_no
+generate_inspection_no = outsourcing_codes.generate_inspection_no
 
 
 # NOTE: keep flat routes (no extra prefix) to preserve the original API paths.
@@ -118,8 +78,7 @@ def generate_inspection_no(db: Session) -> str:
 @router.get("/outsourcing-orders", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
 def read_outsourcing_orders(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(),
     keyword: Optional[str] = Query(None, description="关键词搜索（订单号/标题）"),
     vendor_id: Optional[int] = Query(None, description="外协商ID筛选"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
@@ -153,8 +112,7 @@ def read_outsourcing_orders(
         query = query.filter(OutsourcingOrder.status == status)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    orders = query.order_by(desc(OutsourcingOrder.created_at)).offset(offset).limit(page_size).all()
+    orders = query.order_by(desc(OutsourcingOrder.created_at)).offset(pagination.offset).limit(pagination.page_size).all()
 
     items = []
     for order in orders:
@@ -178,13 +136,7 @@ def read_outsourcing_orders(
             created_at=order.created_at
         ))
 
-    return PaginatedResponse(
-        items=items,
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
-    )
+    return create_paginated_response(items, total, pagination)
 
 
 @router.get("/outsourcing-orders/{order_id}", response_model=OutsourcingOrderResponse, status_code=status.HTTP_200_OK)

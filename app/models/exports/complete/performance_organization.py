@@ -17,7 +17,7 @@ from ...organization import (
 )
 
 # 组织架构V2
-from ...organization_v2 import (
+from ...organization import (
     AssignmentType,
     EmployeeOrgAssignment,
     JobLevel,

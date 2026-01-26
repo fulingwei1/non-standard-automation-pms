@@ -23,7 +23,7 @@ from app.schemas.project import (
     Customer360Summary,
 )
 from app.services.customer_360_service import Customer360Service
-from app.services.data_scope_service import DataScopeService
+from app.services.data_scope import DataScopeService
 
 router = APIRouter()
 

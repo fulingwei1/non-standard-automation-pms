@@ -14,14 +14,10 @@ from app.models.project import ProjectMember
 from app.models.user import User
 
 from .base import create_ecn_notification
-from .utils import find_users_by_department
 
 
 def notify_task_assigned(
-    db: Session,
-    ecn: Ecn,
-    task: EcnTask,
-    assignee_id: Optional[int] = None
+    db: Session, ecn: Ecn, task: EcnTask, assignee_id: Optional[int] = None
 ) -> None:
     """
     通知执行任务分配
@@ -66,18 +62,22 @@ def notify_task_assigned(
             "task_name": task.task_name,
             "task_type": task.task_type,
             "task_dept": task.task_dept,
-            "planned_end": task.planned_end.isoformat() if task.planned_end else None
-        }
+            "planned_end": task.planned_end.isoformat() if task.planned_end else None,
+        },
     )
 
     # 抄送项目相关人员（如果ECN关联了项目，且执行人员不是项目成员）
     if ecn.project_id:
         # 查找项目成员（排除执行人员，避免重复通知）
-        project_members = db.query(ProjectMember).filter(
-            ProjectMember.project_id == ecn.project_id,
-            ProjectMember.is_active == True,
-            ~ProjectMember.user_id.in_(assignee_ids)
-        ).all()
+        project_members = (
+            db.query(ProjectMember)
+            .filter(
+                ProjectMember.project_id == ecn.project_id,
+                ProjectMember.is_active == True,
+                ~ProjectMember.user_id.in_(assignee_ids),
+            )
+            .all()
+        )
 
         project_user_ids = [pm.user_id for pm in project_members]
 
@@ -106,19 +106,17 @@ def notify_task_assigned(
                         "task_type": task.task_type,
                         "task_dept": task.task_dept,
                         "assignee_ids": assignee_ids,
-                        "planned_end": task.planned_end.isoformat() if task.planned_end else None,
-                        "is_cc": True  # 标记为抄送
-                    }
+                        "planned_end": task.planned_end.isoformat()
+                        if task.planned_end
+                        else None,
+                        "is_cc": True,  # 标记为抄送
+                    },
                 )
 
     db.commit()
 
 
-def notify_task_completed(
-    db: Session,
-    ecn: Ecn,
-    task: EcnTask
-) -> None:
+def notify_task_completed(db: Session, ecn: Ecn, task: EcnTask) -> None:
     """
     通知执行任务完成
     通知ECN申请人、项目相关人员和其他相关人员
@@ -139,18 +137,22 @@ def notify_task_completed(
             extra_data={
                 "ecn_no": ecn.ecn_no,
                 "task_id": task.id,
-                "task_name": task.task_name
-            }
+                "task_name": task.task_name,
+            },
         )
 
     # 抄送项目相关人员（如果ECN关联了项目）
     if ecn.project_id:
         # 查找项目成员（排除申请人，避免重复通知）
-        project_members = db.query(ProjectMember).filter(
-            ProjectMember.project_id == ecn.project_id,
-            ProjectMember.is_active == True,
-            ProjectMember.user_id != ecn.applicant_id
-        ).all()
+        project_members = (
+            db.query(ProjectMember)
+            .filter(
+                ProjectMember.project_id == ecn.project_id,
+                ProjectMember.is_active == True,
+                ProjectMember.user_id != ecn.applicant_id,
+            )
+            .all()
+        )
 
         project_user_ids = [pm.user_id for pm in project_members]
 
@@ -171,8 +173,8 @@ def notify_task_completed(
                         "ecn_no": ecn.ecn_no,
                         "task_id": task.id,
                         "task_name": task.task_name,
-                        "is_cc": True  # 标记为抄送
-                    }
+                        "is_cc": True,  # 标记为抄送
+                    },
                 )
 
     db.commit()

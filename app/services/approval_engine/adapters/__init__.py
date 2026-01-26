@@ -11,6 +11,9 @@
 - ECN: 工程变更审批
 - PROJECT: 项目审批
 - TIMESHEET: 工时审批
+- PURCHASE_ORDER: 采购订单审批
+- OUTSOURCING_ORDER: 外协订单审批
+- ACCEPTANCE_ORDER: 验收单审批
 """
 
 from .base import ApprovalAdapter
@@ -20,6 +23,9 @@ from .invoice import InvoiceApprovalAdapter
 from .project import ProjectApprovalAdapter
 from .quote import QuoteApprovalAdapter
 from .timesheet import TimesheetApprovalAdapter
+from .purchase import PurchaseOrderApprovalAdapter
+from .outsourcing import OutsourcingOrderApprovalAdapter
+from .acceptance import AcceptanceOrderApprovalAdapter
 
 __all__ = [
     "ApprovalAdapter",
@@ -29,10 +35,13 @@ __all__ = [
     "EcnApprovalAdapter",
     "ProjectApprovalAdapter",
     "TimesheetApprovalAdapter",
+    "PurchaseOrderApprovalAdapter",
+    "OutsourcingOrderApprovalAdapter",
+    "AcceptanceOrderApprovalAdapter",
 ]
 
 
-# 适配器注册表
+# 适配器注册���
 ADAPTER_REGISTRY = {
     "QUOTE": QuoteApprovalAdapter,
     "CONTRACT": ContractApprovalAdapter,
@@ -40,6 +49,9 @@ ADAPTER_REGISTRY = {
     "ECN": EcnApprovalAdapter,
     "PROJECT": ProjectApprovalAdapter,
     "TIMESHEET": TimesheetApprovalAdapter,
+    "PURCHASE_ORDER": PurchaseOrderApprovalAdapter,
+    "OUTSOURCING_ORDER": OutsourcingOrderApprovalAdapter,
+    "ACCEPTANCE_ORDER": AcceptanceOrderApprovalAdapter,
 }
 
 

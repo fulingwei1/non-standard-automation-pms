@@ -182,16 +182,51 @@ export default function ECNDetail() {
     toast.success("评估创建成功");
   };
 
-  const handleApprove = (_approvalData) => {
-    // Implement approval logic
-    setEcn((prev) => ({ ...prev, status: "APPROVED" }));
-    toast.success("ECN已批准");
+  const handleApprove = async (approvalData) => {
+    try {
+      // 使用新的统一审批API
+      if (approvals.length > 0 && approvals[0].id) {
+        const { approveApproval } = await import("../services/api/approval.js");
+        await approveApproval(approvals[0].id, approvalData.comment || "");
+        toast.success("ECN已批准");
+        // 刷新ECN数据
+        await loadECN();
+      } else {
+        setEcn((prev) => ({ ...prev, status: "APPROVED" }));
+        toast.success("ECN已批准");
+      }
+    } catch (error) {
+      console.error("Approval failed:", error);
+      toast.error("审批失败: " + (error.response?.data?.detail || error.message));
+    }
   };
 
-  const handleReject = (_rejectionData) => {
-    // Implement rejection logic
-    setEcn((prev) => ({ ...prev, status: "REJECTED" }));
-    toast.success("ECN已驳回");
+  const handleReject = async (rejectionData) => {
+    try {
+      // 使用新的统一审批API
+      if (approvals.length > 0 && approvals[0].id) {
+        const { rejectApproval } = await import("../services/api/approval.js");
+        await rejectApproval(approvals[0].id, rejectionData.comment || "");
+        toast.success("ECN已驳回");
+        // 刷新ECN数据
+        await loadECN();
+      } else {
+        setEcn((prev) => ({ ...prev, status: "REJECTED" }));
+        toast.success("ECN已驳回");
+      }
+    } catch (error) {
+      console.error("Rejection failed:", error);
+      toast.error("驳回失败: " + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const handleRefreshApprovals = async () => {
+    try {
+      const approvalResponse = await ecnApi.getApprovals(id);
+      setApprovals(approvalResponse.data?.items || []);
+    } catch (error) {
+      console.error("Failed to refresh approvals:", error);
+    }
   };
 
   const handleCreateTask = (taskData) => {
@@ -331,8 +366,11 @@ export default function ECNDetail() {
               onApprove={handleApprove}
               onReject={handleReject}
               currentUser={currentUser}
-              loading={loading} />
-
+              loading={loading}
+              approvalInstance={approvals.length > 0 ? approvals[0] : null}
+              onRefreshApprovals={handleRefreshApprovals}
+            />
+ 
           </TabsContent>
 
           {/* 执行任务 */}

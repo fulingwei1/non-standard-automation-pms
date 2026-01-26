@@ -85,7 +85,7 @@ class ObjectiveLevelEnum(str, Enum):
     PERSONAL = "PERSONAL"       # 个人级
 
 
-class ReviewTypeEnum(str, Enum):
+class StrategyReviewTypeEnum(str, Enum):
     """审视类型"""
     ANNUAL = "ANNUAL"           # 年度审视
     QUARTERLY = "QUARTERLY"     # 季度审视

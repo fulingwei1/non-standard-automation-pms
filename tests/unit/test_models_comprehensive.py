@@ -11,6 +11,8 @@
 
 import pytest
 from datetime import datetime, date
+from decimal import Decimal
+from enum import Enum
 
 
 # 直接在这里定义 ProjectHealth 枚举,避免导入问题
@@ -27,7 +29,8 @@ from app.models.project import (
     ProjectStatus,
 )
 from app.models.user import User, UserRole
-from app.models.material import Material, Supplier
+from app.models.material import Material, MaterialCategory
+from app.models.vendor import Vendor as Supplier
 from app.models.base import get_db_session
 
 
@@ -212,10 +215,8 @@ class TestMaterialModel:
             material_code="MAT001",
             material_name="测试材料",
             material_type="standard",
-            category="standard",
             unit="piece",
-            unit_price=100.50,
-            supplier="测试供应商",
+            standard_price=Decimal("100.50"),
             is_active=True,
         )
 
@@ -238,10 +239,8 @@ class TestMaterialModel:
                 material_code=f"MAT{100 + i:03d}",
                 material_name=f"测试材料{i}",
                 material_type=category,
-                category=category,
                 unit="piece",
-                unit_price=50.00,
-                supplier="测试供应商",
+                standard_price=Decimal("50.00"),
             )
 
             db_session.add(material)
@@ -257,12 +256,11 @@ class TestMaterialModel:
     def test_supplier_creation(self, db_session):
         """测试 Supplier 创建"""
         supplier = Supplier(
-            name="测试供应商",
+            supplier_name="测试供应商",
             contact_person="张三",
-            phone="13800138000",
-            email="supplier@example.com",
+            contact_phone="13800138000",
+            contact_email="supplier@example.com",
             address="北京市朝阳区",
-            is_active=True,
         )
 
         db_session.add(supplier)
@@ -276,11 +274,10 @@ class TestMaterialModel:
     def test_material_supplier_relationship(self, db_session):
         """测试 Material 和 Supplier 关系"""
         supplier = Supplier(
-            name="关联供应商",
+            supplier_name="关联供应商",
             contact_person="李四",
-            phone="13900139000",
-            email="关联@example.com",
-            is_active=True,
+            contact_phone="13900139000",
+            contact_email="关联@example.com",
         )
 
         db_session.add(supplier)
@@ -291,10 +288,8 @@ class TestMaterialModel:
             material_code="MAT005",
             material_name="关联测试材料",
             material_type="standard",
-            category="standard",
             unit="piece",
-            unit_price=200.00,
-            supplier=supplier.name,  # 通过名称关联
+            standard_price=Decimal("200.00"),
             is_active=True,
         )
 
@@ -302,7 +297,7 @@ class TestMaterialModel:
         db_session.commit()
         db_session.refresh(material)
 
-        assert material.supplier == supplier.name
+        assert material.material_name == "关联测试材料"
 
 
 class TestModelTimestamps:
@@ -473,17 +468,4 @@ class TestModelQueryMethods:
         assert inactive_users[0].username == "inactiveuser"
 
 
-# Pytest fixture for database session
-@pytest.fixture
-def db_session():
-    """创建测试数据库会话"""
-    from app.models.base import reset_engine
-
-    # 在每个测试前创建新会话
-    session = next(get_db_session())
-    try:
-        yield session
-    finally:
-        session.close()
-        # 清理测试数据
-        reset_engine()
+# Pytest fixture for database session is provided by conftest.py

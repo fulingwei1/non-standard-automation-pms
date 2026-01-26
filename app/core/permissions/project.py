@@ -23,7 +23,7 @@ def check_project_access(project_id: int, current_user: User, db: Session) -> bo
         True: 有权限
         False: 无权限
     """
-    from app.services.data_scope_service import DataScopeService
+    from app.services.data_scope import DataScopeService
 
     return DataScopeService.check_project_access(db, current_user, project_id)
 

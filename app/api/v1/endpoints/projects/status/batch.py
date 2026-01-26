@@ -27,7 +27,7 @@ router = APIRouter()
 
 def _get_accessible_project_ids(db: Session, project_ids: list, current_user: User) -> set:
     """获取用户有权限访问的项目ID集合"""
-    from app.services.data_scope_service import DataScopeService
+    from app.services.data_scope import DataScopeService
     query = db.query(Project).filter(Project.id.in_(project_ids))
     query = DataScopeService.filter_projects_by_scope(db, query, current_user)
     return {p.id for p in query.all()}

@@ -1,4 +1,5 @@
 import axios from "axios";
+import { formatResponse } from "../../utils/responseFormatter.js";
 
 const api = axios.create({
   baseURL: "/api/v1",
@@ -67,9 +68,25 @@ api.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-// Response interceptor for handling common errors
+// Response interceptor for handling unified response format
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // 自动处理统一响应格式
+    // 对于成功响应，自动提取data字段（如果存在）
+    if (response.data && typeof response.data === 'object') {
+      // 如果是新格式（有success字段），自动提取data
+      if ('success' in response.data && 'data' in response.data) {
+        // 保留原始响应结构，但添加formatted字段方便使用
+        response.formatted = response.data.data;
+      } else {
+        // 旧格式，直接使用
+        response.formatted = response.data;
+      }
+    } else {
+      response.formatted = response.data;
+    }
+    return response;
+  },
   (error) => {
     try {
       const method = error?.config?.method?.toUpperCase?.() || "?"

@@ -87,3 +87,52 @@ def update_employee(
     db.commit()
     db.refresh(employee)
     return employee
+
+
+@router.get("/{emp_id}/assignments", response_model=List[Any])
+def get_employee_assignments(
+    *,
+    db: Session = Depends(deps.get_db),
+    emp_id: int,
+) -> Any:
+    """Get employee organization assignments."""
+    from app.models.organization import EmployeeOrgAssignment
+
+    limit = 100
+    query = db.query(EmployeeOrgAssignment).filter(
+        EmployeeOrgAssignment.employee_id == emp_id
+    )
+    assignments = query.limit(limit).all()
+
+    # 补充关联名称
+    result = []
+    for a in assignments:
+        # Pydantic model will handle basic mapping, but we might need extra fields
+        # Ideally schema handles from_attributes=True and relation access
+        # But let's check schema definition basically
+        # The response model EmployeeOrgAssignmentResponse expects:
+        # employee_name, org_unit_name, position_name, job_level_name
+        # These are not on the model directly, usually computed or properties
+        # We can simple attach them here if needed or let Pydantic try if models have them
+        # Let's manually populate to be safe as previously done in assignments.py
+        a_dict = {
+            "id": a.id,
+            "employee_id": a.employee_id,
+            "org_unit_id": a.org_unit_id,
+            "position_id": a.position_id,
+            "job_level_id": a.job_level_id,
+            "is_primary": a.is_primary,
+            "assignment_type": a.assignment_type,
+            "start_date": a.start_date,
+            "end_date": a.end_date,
+            "is_active": a.is_active,
+            "created_at": a.created_at,
+            "updated_at": a.updated_at,
+            "employee_name": a.employee.name if a.employee else None,
+            "org_unit_name": a.org_unit.unit_name if a.org_unit else None,
+            "position_name": a.position.position_name if a.position else None,
+            "job_level_name": a.job_level.level_name if a.job_level else None,
+        }
+        result.append(a_dict)
+
+    return result

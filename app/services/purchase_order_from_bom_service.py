@@ -150,7 +150,7 @@ def build_order_items(
 
 
 def create_order_preview(
-    supplier: Supplier,
+    supplier: Vendor,
     supplier_id: int,
     bom: BomHeader,
     target_project_id: int,
