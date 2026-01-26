@@ -247,9 +247,10 @@ class ProjectStageFactory(BaseFactory):
     class Meta:
         model = ProjectStage
 
+    project = factory.SubFactory("tests.factories.ProjectWithCustomerFactory")
     stage_code = factory.Sequence(lambda n: f"S{n}")
     stage_name = factory.Sequence(lambda n: f"阶段{n}")
-    sort_order = factory.Sequence(lambda n: n)
+    stage_order = factory.Sequence(lambda n: n)
     is_active = True
 
 

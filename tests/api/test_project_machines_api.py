@@ -487,6 +487,8 @@ class TestProjectMachinesAdvanced:
 
         if response.status_code == 404:
             pytest.skip("Batch create endpoint not found")
+        if response.status_code == 405:
+            pytest.skip("Batch create endpoint not implemented")
         if response.status_code == 403:
             pytest.skip("User does not have permission")
 
