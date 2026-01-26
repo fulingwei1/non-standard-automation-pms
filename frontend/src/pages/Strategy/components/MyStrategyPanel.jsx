@@ -24,7 +24,7 @@ import {
 } from "../../../components/ui";
 import { cn } from "../../../lib/utils";
 import { fadeIn, staggerContainer } from "../../../lib/animations";
-import { getHealthConfig, ANNUAL_WORK_STATUS } from "../constants";
+import { getHealthConfig, ANNUAL_WORK_STATUS } from "../../../lib/constants/strategy";
 
 export function MyStrategyPanel({ myStrategy }) {
   if (!myStrategy) {

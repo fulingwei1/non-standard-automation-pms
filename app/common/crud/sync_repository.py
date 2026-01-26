@@ -4,11 +4,14 @@
 适配当前项目使用的同步Session
 """
 
+from __future__ import annotations
+
 from typing import Generic, TypeVar, Type, Optional, List, Dict, Any
 from sqlalchemy.orm import Session, joinedload
 from pydantic import BaseModel
 
 from app.common.crud.sync_filters import SyncQueryBuilder
+from app.common.crud.types import SortOrder
 from app.common.crud.exceptions import NotFoundError, AlreadyExistsError
 
 ModelType = TypeVar("ModelType")
@@ -100,7 +103,7 @@ class SyncBaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType])
         keyword: Optional[str] = None,
         keyword_fields: Optional[List[str]] = None,
         order_by: Optional[str] = None,
-        order_direction: str = "asc",
+        order_direction: str | SortOrder = "asc",
         load_relationships: Optional[List[str]] = None
     ) -> tuple[List[ModelType], int]:
         """

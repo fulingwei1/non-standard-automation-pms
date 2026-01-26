@@ -20,11 +20,12 @@ from sqlalchemy.orm import Session
 
 # Import models
 from app.models.project.core import Project, Machine
-from app.models.material import Material, Supplier, BomHeader, BomItem
+from app.models.material import Material, BomHeader, BomItem
+from app.models.vendor import Vendor as Supplier, Vendor as OutsourcingVendor
 from app.models.purchase import PurchaseOrder, PurchaseOrderItem
 from app.models.ecn import Ecn, EcnEvaluation, EcnTask
 from app.models.acceptance import AcceptanceOrder, AcceptanceOrderItem
-from app.models.outsourcing import OutsourcingOrder, OutsourcingVendor
+from app.models.outsourcing import OutsourcingOrder
 from app.models.alert import AlertRecord, AlertRule
 
 
@@ -480,6 +481,7 @@ class TestSupplierModel:
             contact_phone=test_supplier_data["contact_phone"],
             status=test_supplier_data["status"],
             created_by=test_supplier_data["created_by"],
+            vendor_type="MATERIAL",
         )
         db_session.add(supplier)
         db_session.commit()
@@ -880,7 +882,7 @@ class TestBomItemModel:
             item_no=7,
             material_code="MTL-REPR-001",
             material_name="repr测试",
-            quantity=1.0
+            quantity=1.0,
         )
         db_session.add(bom)
         db_session.commit()
@@ -1043,7 +1045,9 @@ class TestPurchaseOrderItemModel:
     """采购订单明细模型测试"""
 
     @pytest.fixture
-    def test_po_for_items(self, db_session: Session, test_supplier, test_project_with_customer):
+    def test_po_for_items(
+        self, db_session: Session, test_supplier, test_project_with_customer
+    ):
         """创建测试采购订单"""
         timestamp = datetime.now().timestamp()
         po = PurchaseOrder(
@@ -1198,7 +1202,7 @@ class TestPurchaseOrderItemModel:
             item_no=7,
             material_code="MTL-REPR-001",
             material_name="repr测试",
-            quantity=1.0
+            quantity=1.0,
         )
         db_session.add(item)
         db_session.commit()
@@ -1388,7 +1392,7 @@ class TestEcnModel:
             source_type="INTERNAL",
             project_id=1,
             change_reason="测试",
-            change_description="测试描述"
+            change_description="测试描述",
         )
         db_session.add(ecn)
         db_session.commit()
@@ -1401,7 +1405,9 @@ class TestEcnEvaluationModel:
     """ECN评估模型测试"""
 
     @pytest.fixture
-    def test_ecn_for_ecn_evaluation(self, db_session: Session, test_project_with_customer, test_user):
+    def test_ecn_for_ecn_evaluation(
+        self, db_session: Session, test_project_with_customer, test_user
+    ):
         """创建测试ECN"""
         timestamp = datetime.now().timestamp()
         ecn = Ecn(
@@ -1445,7 +1451,9 @@ class TestEcnEvaluationModel:
         assert ecn_evaluation.id is not None
         assert ecn_evaluation.ecn_id == test_ecn_evaluation_data["ecn_id"]
         assert ecn_evaluation.eval_dept == "工程部"
-        assert ecn_evaluation.evaluator_id == test_ecn_evaluation_data["ecn_evaluator_id"]
+        assert (
+            ecn_evaluation.evaluator_id == test_ecn_evaluation_data["ecn_evaluator_id"]
+        )
 
     def test_ecn_evaluation_required_fields(
         self, db_session: Session, test_ecn_for_ecn_evaluation, test_user
@@ -1517,14 +1525,18 @@ class TestEcnEvaluationModel:
         db_session.commit()
 
         assert ecn_evaluation.evaluator_id == test_user.id
-        assert ecn_evaluation.evaluator_name == (test_user.real_name or test_user.username)
+        assert ecn_evaluation.evaluator_name == (
+            test_user.real_name or test_user.username
+        )
 
     def test_ecn_evaluation_repr(
         self, db_session: Session, test_ecn_for_ecn_evaluation, test_user
     ):
         """测试ECN评估字符串表示"""
         ecn_evaluation = EcnEvaluation(
-            ecn_id=test_ecn_for_ecn_evaluation.id, eval_dept="工程部", evaluator_id=test_user.id
+            ecn_id=test_ecn_for_ecn_evaluation.id,
+            eval_dept="工程部",
+            evaluator_id=test_user.id,
         )
         db_session.add(ecn_evaluation)
         db_session.commit()
@@ -1538,7 +1550,9 @@ class TestEcnTaskModel:
     """ECN任务模型测试"""
 
     @pytest.fixture
-    def test_ecn_for_task(self, db_session: Session, test_project_with_customer, test_user):
+    def test_ecn_for_task(
+        self, db_session: Session, test_project_with_customer, test_user
+    ):
         """创建测试ECN"""
         timestamp = datetime.now().timestamp()
         ecn = Ecn(
@@ -1681,7 +1695,9 @@ class TestAcceptanceOrderModel:
     """验收订单模型测试"""
 
     @pytest.fixture
-    def test_machine_for_acceptance(self, db_session: Session, test_project_with_customer):
+    def test_machine_for_acceptance(
+        self, db_session: Session, test_project_with_customer
+    ):
         """创建测试设备"""
         timestamp = datetime.now().timestamp()
         machine = Machine(
@@ -1871,11 +1887,7 @@ class TestAcceptanceOrderModel:
 
     def test_acceptance_order_repr(self, db_session: Session):
         """测试验收订单字符串表示"""
-        order = AcceptanceOrder(
-            order_no="APRE001",
-            project_id=1,
-            acceptance_type="FAT"
-        )
+        order = AcceptanceOrder(order_no="APRE001", project_id=1, acceptance_type="FAT")
         db_session.add(order)
         db_session.commit()
 
@@ -1887,7 +1899,9 @@ class TestAcceptanceOrderItemModel:
     """验收订单明细模型测试"""
 
     @pytest.fixture
-    def test_machine_for_acceptance_item(self, db_session: Session, test_project_with_customer):
+    def test_machine_for_acceptance_item(
+        self, db_session: Session, test_project_with_customer
+    ):
         """创建测试设备"""
         timestamp = datetime.now().timestamp()
         machine = Machine(
@@ -1903,7 +1917,10 @@ class TestAcceptanceOrderItemModel:
 
     @pytest.fixture
     def test_acceptance_order_for_items(
-        self, db_session: Session, test_project_with_customer, test_machine_for_acceptance_item
+        self,
+        db_session: Session,
+        test_project_with_customer,
+        test_machine_for_acceptance_item,
     ):
         """创建测试验收订单"""
         timestamp = datetime.now().timestamp()
@@ -2056,12 +2073,13 @@ class TestOutsourcingOrderModel:
         """创建测试外协供应商"""
         timestamp = datetime.now().timestamp()
         vendor = OutsourcingVendor(
-            vendor_code=f"OUTVEND{timestamp}",
-            vendor_name="测试外协供应商",
-            vendor_type="MACHINING",
+            supplier_code=f"OUTVEND{timestamp}",
+            supplier_name="测试外协供应商",
+            supplier_type="MACHINING",
             contact_person="张三",
             contact_phone="13800138000",
             status="ACTIVE",
+            vendor_type="OUTSOURCING",
         )
         db_session.add(vendor)
         db_session.commit()
@@ -2370,7 +2388,9 @@ class TestAlertRuleModel:
 
 
 @pytest.mark.unit
-@pytest.mark.skip(reason="SQLite does not properly handle BigInteger autoincrement for AlertRecord.id")
+@pytest.mark.skip(
+    reason="SQLite does not properly handle BigInteger autoincrement for AlertRecord.id"
+)
 class TestAlertRecordModel:
     """预警记录模型测试"""
 
@@ -2394,7 +2414,9 @@ class TestAlertRecordModel:
         return rule
 
     @pytest.fixture
-    def test_alert_record_data(self, test_alert_rule_for_record, test_project_with_customer):
+    def test_alert_record_data(
+        self, test_alert_rule_for_record, test_project_with_customer
+    ):
         """测试预警记录数据"""
         timestamp = datetime.now().timestamp()
         return {
@@ -2431,7 +2453,9 @@ class TestAlertRecordModel:
         assert record.target_type == "PROJECT"
         assert record.alert_level == "WARNING"
 
-    def test_alert_record_required_fields(self, db_session: Session, test_alert_rule_for_record):
+    def test_alert_record_required_fields(
+        self, db_session: Session, test_alert_rule_for_record
+    ):
         """测试预警记录必填字段"""
         timestamp = datetime.now().timestamp()
         record = AlertRecord(
@@ -2453,7 +2477,9 @@ class TestAlertRecordModel:
         assert record.target_no == "PJ250708001"
         assert record.alert_title == "测试必填"
 
-    def test_alert_record_trigger_info(self, db_session: Session, test_alert_rule_for_record):
+    def test_alert_record_trigger_info(
+        self, db_session: Session, test_alert_rule_for_record
+    ):
         """测试预警记录触发信息"""
         timestamp = datetime.now()
         record = AlertRecord(
@@ -2504,7 +2530,9 @@ class TestAlertRecordModel:
         assert record.status == "RESOLVED"
         assert record.resolution_note == "已解决"
 
-    def test_alert_record_handling(self, db_session: Session, test_alert_rule_for_record):
+    def test_alert_record_handling(
+        self, db_session: Session, test_alert_rule_for_record
+    ):
         """测试预警记录处理"""
         timestamp = datetime.now().timestamp()
         record = AlertRecord(

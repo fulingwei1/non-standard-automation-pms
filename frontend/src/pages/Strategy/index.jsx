@@ -40,7 +40,7 @@ import { QuickStatsPanel } from "./components/QuickStatsPanel";
 import { ExecutionStatusPanel } from "./components/ExecutionStatusPanel";
 import { MyStrategyPanel } from "./components/MyStrategyPanel";
 import { MultiYearTrendChart } from "./components/MultiYearTrendChart";
-import { BSC_DIMENSIONS, STRATEGY_STATUS } from "./constants";
+import { BSC_DIMENSIONS, STRATEGY_STATUS } from "../../lib/constants/strategy";
 
 export default function StrategyDashboard() {
   const {

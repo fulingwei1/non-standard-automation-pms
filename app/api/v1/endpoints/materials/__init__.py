@@ -13,13 +13,16 @@ from fastapi import APIRouter
 
 from .categories import router as categories_router
 from .crud import router as crud_router
+from .crud_refactored import router as crud_refactored_router
 from .statistics import router as statistics_router
 from .suppliers import router as suppliers_router
 
 router = APIRouter()
 
-# 物料CRUD
-router.include_router(crud_router, tags=["物料管理"])
+# 物料CRUD（使用重构后的端点，使用通用CRUD路由生成器和统一响应格式）
+router.include_router(crud_refactored_router, tags=["物料管理"])
+# 原crud端点已重构，保留注释供参考：
+# router.include_router(crud_router, tags=["物料管理"])
 
 # 物料分类
 router.include_router(categories_router, tags=["物料分类"])

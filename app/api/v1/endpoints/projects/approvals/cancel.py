@@ -34,7 +34,7 @@ ENTITY_TYPE_PROJECT = "PROJECT"
 
 
 @router.post(
-    "/{project_id}/approval/cancel",
+    "/approval/cancel",
     response_model=ApprovalStatusResponse,
     status_code=status.HTTP_200_OK,
 )

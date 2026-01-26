@@ -37,7 +37,10 @@ def calculate_available_qty(
         return (Decimal(0), Decimal(0), Decimal(0), Decimal(0))
 
     # 库存数量(简化处理，实际应从库存表获取)
-    stock_qty = getattr(material, 'stock_qty', Decimal(0)) or Decimal(0)
+    raw_stock = getattr(material, "stock_qty", None)
+    if raw_stock is None:
+        raw_stock = getattr(material, "current_stock", Decimal(0))
+    stock_qty = Decimal(raw_stock or 0)
 
     # 已分配数量(简化处理)
     allocated_qty = Decimal(0)
@@ -136,7 +139,10 @@ def determine_alert_level(
     for rule in rules:
         if rule.only_blocking and not is_blocking:
             continue
-        if shortage_rate < (rule.min_shortage_rate or 0):
+        min_rate = getattr(rule, "min_shortage_rate", None)
+        if min_rate is None:
+            min_rate = 0
+        if shortage_rate < (min_rate or 0):
             continue
         if days_to_required <= rule.days_before_required:
             return rule.alert_level

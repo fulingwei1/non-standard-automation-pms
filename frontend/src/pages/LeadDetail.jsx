@@ -56,9 +56,12 @@ import { cn as _cn, formatDate } from "../lib/utils";
 import { leadApi, customerApi } from "../services/api";
 const statusConfigs = {
   NEW: { label: "待跟进", color: "bg-blue-500" },
-  QUALIFYING: { label: "资格评估中", color: "bg-amber-500" },
-  INVALID: { label: "无效", color: "bg-red-500" },
-  CONVERTED: { label: "已转商机", color: "bg-emerald-500" }
+  CONTACTED: { label: "已联系", color: "bg-sky-500" },
+  QUALIFIED: { label: "已合格", color: "bg-amber-500" },
+  LOST: { label: "已丢失", color: "bg-red-500" },
+  CONVERTED: { label: "已转商机", color: "bg-emerald-500" },
+  QUALIFYING: { label: "已合格", color: "bg-amber-500" },
+  INVALID: { label: "已丢失", color: "bg-red-500" }
 };
 const followUpTypeConfigs = {
   CALL: { label: "电话", color: "bg-blue-500" },

@@ -21,7 +21,7 @@ import {
 } from "../../../components/ui";
 import { cn } from "../../../lib/utils";
 import { fadeIn, staggerContainer } from "../../../lib/animations";
-import { BSC_DIMENSIONS } from "../constants";
+import { BSC_DIMENSIONS } from "../../../lib/constants/strategy";
 
 export function ExecutionStatusPanel({ executionStats }) {
   if (!executionStats) {

@@ -1,0 +1,139 @@
+# -*- coding: utf-8 -*-
+"""
+员工组织分配管理端点
+"""
+
+from typing import Any, List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.orm import Session
+
+from app.api import deps
+from app.core import security
+from app.models.organization import EmployeeOrgAssignment
+from app.models.user import User
+from app.schemas.organization import (
+    EmployeeOrgAssignmentCreate,
+    EmployeeOrgAssignmentResponse,
+    EmployeeOrgAssignmentUpdate,
+)
+
+router = APIRouter()
+
+
+@router.get("/", response_model=List[EmployeeOrgAssignmentResponse])
+def list_assignments(
+    db: Session = Depends(deps.get_db),
+    skip: int = 0,
+    limit: int = 100,
+    employee_id: Optional[int] = Query(None, description="员工ID"),
+    org_unit_id: Optional[int] = Query(None, description="组织单元ID"),
+    is_active: Optional[bool] = Query(None, description="是否有效"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """获取员工组织分配列表"""
+    query = db.query(EmployeeOrgAssignment)
+    if employee_id:
+        query = query.filter(EmployeeOrgAssignment.employee_id == employee_id)
+    if org_unit_id:
+        query = query.filter(EmployeeOrgAssignment.org_unit_id == org_unit_id)
+    if is_active is not None:
+        query = query.filter(EmployeeOrgAssignment.is_active.is_(is_active))
+
+    assignments = query.offset(skip).limit(limit).all()
+
+    # 补充关联名称
+    for a in assignments:
+        if a.employee:
+            a.employee_name = a.employee.name
+        if a.org_unit:
+            a.org_unit_name = a.org_unit.unit_name
+        if a.position:
+            a.position_name = a.position.position_name
+        if a.job_level:
+            a.job_level_name = a.job_level.level_name
+
+    return assignments
+
+
+@router.post("/", response_model=EmployeeOrgAssignmentResponse)
+def create_assignment(
+    *,
+    db: Session = Depends(deps.get_db),
+    assign_in: EmployeeOrgAssignmentCreate,
+    current_user: User = Depends(security.get_current_active_superuser),
+) -> Any:
+    """创建员工组织分配"""
+    # 检查主归属冲突
+    if assign_in.is_primary:
+        existing_primary = (
+            db.query(EmployeeOrgAssignment)
+            .filter(
+                EmployeeOrgAssignment.employee_id == assign_in.employee_id,
+                EmployeeOrgAssignment.is_primary.is_(True),
+                EmployeeOrgAssignment.is_active.is_(True),
+            )
+            .first()
+        )
+        if existing_primary:
+            # 将原主归属设置为非主归属
+            existing_primary.is_primary = False
+            db.add(existing_primary)
+
+    assign = EmployeeOrgAssignment(**assign_in.model_dump())
+    db.add(assign)
+    db.commit()
+    db.refresh(assign)
+    return assign
+
+
+@router.put("/{id}", response_model=EmployeeOrgAssignmentResponse)
+def update_assignment(
+    *,
+    db: Session = Depends(deps.get_db),
+    id: int,
+    assign_in: EmployeeOrgAssignmentUpdate,
+    current_user: User = Depends(security.get_current_active_superuser),
+) -> Any:
+    """更新员工组织分配"""
+    assign = (
+        db.query(EmployeeOrgAssignment).filter(EmployeeOrgAssignment.id == id).first()
+    )
+    if not assign:
+        raise HTTPException(status_code=404, detail="分配记录不存在")
+
+    update_data = assign_in.model_dump(exclude_unset=True)
+
+    # 如果要设置为主要归属，需要处理冲突
+    if update_data.get("is_primary") is True:
+        db.query(EmployeeOrgAssignment).filter(
+            EmployeeOrgAssignment.employee_id == assign.employee_id,
+            EmployeeOrgAssignment.id != id,
+            EmployeeOrgAssignment.is_primary.is_(True),
+        ).update({"is_primary": False})
+
+    for field, value in update_data.items():
+        setattr(assign, field, value)
+
+    db.add(assign)
+    db.commit()
+    db.refresh(assign)
+    return assign
+
+
+@router.delete("/{id}")
+def delete_assignment(
+    id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_superuser),
+) -> Any:
+    """删除员工组织分配"""
+    assign = (
+        db.query(EmployeeOrgAssignment).filter(EmployeeOrgAssignment.id == id).first()
+    )
+    if not assign:
+        raise HTTPException(status_code=404, detail="分配记录不存在")
+
+    db.delete(assign)
+    db.commit()
+    return {"message": "Success"}

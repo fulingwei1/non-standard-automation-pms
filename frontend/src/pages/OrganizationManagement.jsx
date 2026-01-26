@@ -211,15 +211,20 @@ export default function OrganizationManagement() {
     setLoading(true);
     try {
       const response = await organizationApi.getOrgTree({ is_active: true });
-      setOrgTree(response.data || []);
+      // 使用统一响应格式处理
+      const listData = response.formatted || response.data;
+      setOrgTree(listData?.items || listData || []);
     } catch (error) {
       console.error("加载组织树失败:", error);
       // 如果新 API 不可用，尝试使用旧的部门树 API
       try {
         const { orgApi } = await import("../services/api");
         const fallbackResponse = await orgApi.departmentTree({ is_active: true });
+        // 使用统一响应格式处理
+        const fallbackData = fallbackResponse.formatted || fallbackResponse.data;
+        const fallbackItems = fallbackData?.items || fallbackData || [];
         // 转换旧数据格式
-        const convertedData = (fallbackResponse.data || []).map(dept => ({
+        const convertedData = fallbackItems.map(dept => ({
           id: dept.id,
           unit_code: dept.dept_code,
           unit_name: dept.dept_name,
@@ -254,7 +259,9 @@ export default function OrganizationManagement() {
       if (filterType !== "all") {params.unit_type = filterType;}
 
       const response = await organizationApi.listOrgUnits(params);
-      setOrgList(response.data?.items || response.data || []);
+      // 使用统一响应格式处理
+      const listData = response.formatted || response.data;
+      setOrgList(listData?.items || listData || []);
     } catch (error) {
       console.error("加载组织列表失败:", error);
     } finally {

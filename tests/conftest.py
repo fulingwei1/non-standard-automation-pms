@@ -124,6 +124,7 @@ def _init_test_database() -> None:
         db.flush()
 
         from app.models.vendor import Vendor
+
         supplier = Vendor(
             supplier_code="SUP-TEST",
             supplier_name="测试供应商",
@@ -547,18 +548,6 @@ def _get_or_create_employee(
     db.add(employee)
     db.flush()
     return employee
-    db.flush()
-
-    # Update employee fields using query instead of direct assignment
-    db.query(Employee).filter(Employee.id == employee.id).update(
-        {
-            "is_active": True,
-            "employment_status": "active",
-            "department": department,
-            "role": role,
-        }
-    )
-    return employee
 
 
 def _get_or_create_user(
@@ -691,7 +680,7 @@ def pm_user(db_session: Session) -> User:
         department="项目管理部",
         employee_role="PM",
     )
-    pm_role = _ensure_role(db_session, "PM", "项目经理")
+    pm_role = _ensure_role(db_session, "PROJECT_MANAGER", "项目经理")
     _ensure_role_permissions(db_session, pm_role, ENGINEER_PERMISSION_SPECS)
     _assign_role_to_user(db_session, user, pm_role)
     return user
@@ -907,6 +896,12 @@ def pm_auth_headers(client: TestClient, pm_user: User) -> Dict[str, str]:
     assert response.status_code == 200, "PM login failed"
     token = response.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture(scope="function")
+def admin_auth_headers(client: TestClient, admin_token: str) -> Dict[str, str]:
+    """Return Admin Bearer Token"""
+    return {"Authorization": f"Bearer {admin_token}"}
 
 
 @pytest.fixture(scope="function")

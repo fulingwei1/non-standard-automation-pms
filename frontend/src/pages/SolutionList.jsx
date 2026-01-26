@@ -298,7 +298,7 @@ function SolutionTableRow({ solution, onView }) {
 
 }
 
-export default function SolutionList() {
+export default function SolutionList({ embedded = false } = {}) {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState("grid"); // 'grid', 'list'
   const [selectedStatus, setSelectedStatus] = useState("all");
@@ -446,21 +446,23 @@ export default function SolutionList() {
       className="space-y-6">
 
       {/* 页面头部 */}
-      <PageHeader
-        title="方案中心"
-        description="管理技术方案、版本控制、协作评审"
-        actions={
-        <motion.div variants={fadeIn} className="flex gap-2">
-            <Button variant="outline" className="flex items-center gap-2">
-              <History className="w-4 h-4" />
-              历史方案
-            </Button>
-            <Button className="flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              新建方案
-            </Button>
-        </motion.div>
-        } />
+      {!embedded && (
+        <PageHeader
+          title="方案中心"
+          description="管理技术方案、版本控制、协作评审"
+          actions={
+          <motion.div variants={fadeIn} className="flex gap-2">
+              <Button variant="outline" className="flex items-center gap-2">
+                <History className="w-4 h-4" />
+                历史方案
+              </Button>
+              <Button className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                新建方案
+              </Button>
+          </motion.div>
+          } />
+      )}
 
 
       {/* 统计卡片 */}

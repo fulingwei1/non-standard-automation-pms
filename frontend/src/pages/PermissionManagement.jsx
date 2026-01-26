@@ -141,7 +141,9 @@ export default function PermissionManagement() {
   const loadRoles = async () => {
     try {
       const response = await roleApi.list({ page_size: 1000 });
-      setRoles(response.data.items || []);
+      // 使用统一响应格式处理
+      const listData = response.formatted || response.data;
+      setRoles(listData?.items || listData || []);
     } catch (error) {
       console.error("加载角色列表失败:", error);
     }

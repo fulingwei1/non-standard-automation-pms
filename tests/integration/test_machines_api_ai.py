@@ -77,7 +77,15 @@ class TestMachinesCRUDAPI:
             "health": "H1",
         }
 
-        response = self.helper.post("/machines", machine_data, resource_type="machine")
+        # 注意：独立的 /machines 路由已删除，需要使用项目子路由
+        # 此测试需要先创建项目，然后使用 /projects/{project_id}/machines
+        if not self.test_project_id:
+            pytest.skip("需要项目ID才能创建机台")
+        response = self.helper.post(
+            f"/projects/{self.test_project_id}/machines",
+            machine_data,
+            resource_type="machine"
+        )
 
         if self.helper.assert_success(response):
             result = response.get("data", {})
@@ -104,7 +112,7 @@ class TestMachinesCRUDAPI:
         }
 
         response = self.helper.post(
-            f"/machines/projects/{self.test_project_id}/machines",
+            f"/projects/{self.test_project_id}/machines",
             machine_data,
             resource_type=f"machine_project_{self.test_project_id}",
         )
@@ -124,8 +132,11 @@ class TestMachinesCRUDAPI:
         """测试获取机台列表"""
         self.helper.print_info("测试获取机台列表...")
 
+        # 注意：独立的 /machines 路由已删除，需要使用项目子路由
+        if not self.test_project_id:
+            pytest.skip("需要项目ID才能获取机台列表")
         response = self.helper.get(
-            "/machines",
+            f"/projects/{self.test_project_id}/machines",
             params={
                 "page": 1,
                 "page_size": 20,
@@ -149,7 +160,7 @@ class TestMachinesCRUDAPI:
         self.helper.print_info(f"测试获取项目机台列表 (ID: {self.test_project_id})...")
 
         response = self.helper.get(
-            f"/machines/projects/{self.test_project_id}/machines",
+            f"/projects/{self.test_project_id}/machines",
             resource_type=f"project_machines_{self.test_project_id}",
         )
 
@@ -167,8 +178,13 @@ class TestMachinesCRUDAPI:
         machine_id = self.tracked_resources[0][1]
         self.helper.print_info(f"测试获取机台详情 (ID: {machine_id})...")
 
+        # 注意：需要项目ID才能访问机台详情
+        # 先获取机台详情以获取项目ID，或使用项目子路由
+        if not self.test_project_id:
+            pytest.skip("需要项目ID才能获取机台详情")
         response = self.helper.get(
-            f"/machines/{machine_id}", resource_type=f"machine_{machine_id}"
+            f"/projects/{self.test_project_id}/machines/{machine_id}",
+            resource_type=f"machine_{machine_id}"
         )
 
         result = self.helper.assert_success(response)
@@ -192,8 +208,11 @@ class TestMachinesCRUDAPI:
             "health": "H2",
         }
 
+        # 注意：需要项目ID才能更新机台
+        if not self.test_project_id:
+            pytest.skip("需要项目ID才能更新机台")
         response = self.helper.put(
-            f"/machines/{machine_id}",
+            f"/projects/{self.test_project_id}/machines/{machine_id}",
             update_data,
             resource_type=f"machine_{machine_id}_update",
         )
@@ -218,9 +237,11 @@ class TestMachinesCRUDAPI:
             "notes": "加工制造进行中",
         }
 
+        # 注意：需要项目ID才能更新机台进度
+        if not self.test_project_id:
+            pytest.skip("需要项目ID才能更新机台进度")
         response = self.helper.put(
-            f"/machines/{machine_id}/progress",
-            progress_data,
+            f"/projects/{self.test_project_id}/machines/{machine_id}/progress?progress_pct=50",
             resource_type=f"machine_{machine_id}_progress",
         )
 
@@ -237,8 +258,12 @@ class TestMachinesCRUDAPI:
         machine_id = self.tracked_resources[0][1]
         self.helper.print_info(f"测试获取机台BOM (ID: {machine_id})...")
 
+        # 注意：需要项目ID才能获取机台BOM
+        if not self.test_project_id:
+            pytest.skip("需要项目ID才能获取机台BOM")
         response = self.helper.get(
-            f"/machines/{machine_id}/bom", resource_type=f"machine_{machine_id}_bom"
+            f"/projects/{self.test_project_id}/machines/{machine_id}/bom",
+            resource_type=f"machine_{machine_id}_bom"
         )
 
         if self.helper.assert_success(response):
@@ -255,7 +280,7 @@ class TestMachinesCRUDAPI:
         self.helper.print_info(f"测试获取项目机台汇总 (ID: {self.test_project_id})...")
 
         response = self.helper.get(
-            f"/machines/projects/{self.test_project_id}/summary",
+            f"/projects/{self.test_project_id}/machines/summary",
             resource_type=f"project_machines_summary_{self.test_project_id}",
         )
 
@@ -272,7 +297,7 @@ class TestMachinesCRUDAPI:
         self.helper.print_info(f"测试重新计算项目机台数据 (ID: {self.test_project_id})...")
 
         response = self.helper.post(
-            f"/machines/projects/{self.test_project_id}/recalculate",
+            f"/projects/{self.test_project_id}/machines/recalculate",
             resource_type=f"project_machines_recalc_{self.test_project_id}",
         )
 

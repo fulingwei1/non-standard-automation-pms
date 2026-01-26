@@ -135,7 +135,7 @@ def analyze_bom_item(
             days_to_required = (bom_item.required_date - check_date).days
 
         # 导入 determine_alert_level 函数
-        from app.api.v1.endpoints.assembly_kit import determine_alert_level
+        from app.api.v1.endpoints.assembly_kit.kit_analysis.utils import determine_alert_level
         alert_level = determine_alert_level(db, is_blocking, shortage_rate, days_to_required)
 
         # 获取预计到货日期（从采购订单）
@@ -144,8 +144,8 @@ def analyze_bom_item(
         return {
             "bom_item_id": bom_item.id,
             "material_id": material.id,
-            "material_code": material.code,
-            "material_name": material.name,
+            "material_code": material.material_code,
+            "material_name": material.material_name,
             "assembly_stage": stage_code,
             "is_blocking": is_blocking,
             "required_qty": required_qty,

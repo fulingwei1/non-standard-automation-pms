@@ -16,6 +16,7 @@ from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
 from ..models.base import get_db
+from ..common.context import set_audit_context
 from ..models.user import User
 from ..utils.redis_client import get_redis_client
 from .config import settings
@@ -41,6 +42,7 @@ __all__ = [
     "get_current_user",
     "get_current_active_user",
     "get_current_active_superuser",
+    "is_system_admin",
     "check_permission",
     "require_permission",
     "revoke_token",
@@ -218,6 +220,10 @@ async def get_current_user(
         user = db.query(User).filter(User.id == user_id).first()
         if user is None:
             raise credentials_exception
+
+        # 将操作人ID设置到上下文中，用于审计日志
+        set_audit_context(operator_id=user.id)
+
         return user
     except Exception as e:
         logger.error(f"ORM查询用户失败: {e}", exc_info=True)
@@ -264,7 +270,7 @@ async def get_current_active_superuser(
     current_user: User = Depends(get_current_active_user),
 ) -> User:
     """获取当前超级管理员用户"""
-    if not current_user.is_superuser:
+    if not (current_user.is_superuser or is_system_admin(current_user)):
         raise HTTPException(status_code=403, detail="需要管理员权限")
     return current_user
 
@@ -298,18 +304,47 @@ def _load_user_permissions_from_db(user_id: int, db: Session) -> set:
     return {row[0] for row in result.fetchall()}
 
 
+def is_system_admin(user: User) -> bool:
+    """
+    判断用户是否为系统管理员角色
+
+    允许系统管理员在不显式设置 is_superuser 的情况下拥有全权限。
+    """
+    roles = getattr(user, "roles", None)
+    if not roles:
+        return False
+
+    if hasattr(roles, "all"):
+        roles = roles.all()
+
+    admin_role_codes = {"admin", "super_admin", "system_admin"}
+    admin_role_names = {"系统管理员", "超级管理员", "管理员"}
+
+    for user_role in roles or []:
+        role = getattr(user_role, "role", user_role)
+        role_code = (getattr(role, "role_code", "") or "").lower()
+        role_name = getattr(role, "role_name", "") or ""
+        if role_code in admin_role_codes:
+            return True
+        if role_name in admin_role_names:
+            return True
+
+    return False
+
+
 def check_permission(user: User, permission_code: str, db: Session = None) -> bool:
     """
     检查用户权限（带缓存）
 
     优先从缓存获取用户权限列表，缓存不存在时从数据库加载并缓存。
     """
-    if user.is_superuser:
+    if user.is_superuser or is_system_admin(user):
         return True
 
     # 尝试使用缓存
     try:
         from ..services.permission_cache_service import get_permission_cache_service
+
         cache_service = get_permission_cache_service()
 
         # 从缓存获取用户权限
@@ -325,7 +360,9 @@ def check_permission(user: User, permission_code: str, db: Session = None) -> bo
             permissions = _load_user_permissions_from_db(user.id, db)
             # 写入缓存
             cache_service.set_user_permissions(user.id, permissions)
-            logger.debug(f"Permission cache miss for user {user.id}, loaded {len(permissions)} permissions")
+            logger.debug(
+                f"Permission cache miss for user {user.id}, loaded {len(permissions)} permissions"
+            )
             return permission_code in permissions
     except Exception as e:
         logger.warning(f"Permission cache failed, fallback to DB: {e}")

@@ -4,9 +4,13 @@
 支持筛选、排序、分页、关键词搜索
 """
 
+from __future__ import annotations
+
 from typing import Any, Dict, List, Optional, Type, TypeVar
 from sqlalchemy import and_, or_, func, asc, desc
 from sqlalchemy.orm import Query, Session
+
+from app.common.crud.types import SortOrder
 
 ModelType = TypeVar("ModelType")
 
@@ -25,7 +29,7 @@ class SyncQueryBuilder:
         keyword: Optional[str] = None,
         keyword_fields: Optional[List[str]] = None,
         order_by: Optional[str] = None,
-        order_direction: str = "asc"
+        order_direction: str | SortOrder = "asc"
     ) -> tuple[Query, Query]:
         """
         构建列表查询（同步版本）
@@ -78,10 +82,16 @@ class SyncQueryBuilder:
             count_query = count_query.filter(where_clause)
         
         # 应用排序
+        direction = (
+            order_direction.value
+            if isinstance(order_direction, SortOrder)
+            else str(order_direction or "asc").lower()
+        )
+
         if order_by:
             order_field = getattr(model, order_by, None)
             if order_field:
-                if order_direction.lower() == "desc":
+                if direction == "desc":
                     query = query.order_by(desc(order_field))
                 else:
                     query = query.order_by(asc(order_field))

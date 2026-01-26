@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import (  # projects,  # 已拆分为projects包; costs,  # 已拆分为costs包; progress,  # 已拆分为progress包; shortage_alerts,  # 已拆分为shortage_alerts包; shortage,  # 已拆分为shortage包; sales,  # 已拆分为sales包; production,  # 已拆分为production包; ecn,  # 已拆分为ecn包; outsourcing,  # 已拆分为outsourcing包; task_center,  # 已拆分为task_center包; pmo,  # 已拆分为pmo包; presale,  # 已拆分为presale包; timesheet,  # 已拆分为timesheet包; data_import_export,  # 已拆分为data_import_export包; report_center,  # 已拆分为report_center包; performance,  # 已拆分为performance包; business_support,  # 已拆分为business_support包; service,  # 已拆分为service包; rd_project,  # 已拆分为rd_project包; bonus,  # 已拆分为bonus包; assembly_kit,  # 已拆分为assembly_kit包; management_rhythm,  # 已拆分为management_rhythm包
+from app.api.v1.endpoints import (  # projects,  # 已拆分为projects包; costs,  # 已拆分为costs包; shortage_alerts,  # 已拆分为shortage_alerts包; shortage,  # 已拆分为shortage包; sales,  # 已拆分为sales包; production,  # 已拆分为production包; ecn,  # 已拆分为ecn包; outsourcing,  # 已拆分为outsourcing包; task_center,  # 已拆分为task_center包; pmo,  # 已拆分为pmo包; presale,  # 已拆分为presale包; timesheet,  # 已拆分为timesheet包; data_import_export,  # 已拆分为data_import_export包; report_center,  # 已拆分为report_center包; performance,  # 已拆分为performance包; business_support,  # 已拆分为business_support包; service,  # 已拆分为service包; rd_project,  # 已拆分为rd_project包; bonus,  # 已拆分为bonus包; assembly_kit,  # 已拆分为assembly_kit包; management_rhythm,  # 已拆分为management_rhythm包
     acceptance,
     admin_stats,
     advantage_products,
@@ -23,14 +23,10 @@ from app.api.v1.endpoints import (  # projects,  # 已拆分为projects包; cost
     itr,
     kit_check,
     kit_rate,
-    machines,
     material_demands,
     materials,
-    members,
-    milestones,
     notifications,
     organization,
-    presales_integration,
     procurement_analysis,
     project_contributions,
     project_evaluation,
@@ -38,41 +34,47 @@ from app.api.v1.endpoints import (  # projects,  # 已拆分为projects包; cost
     project_workspace,
     purchase,
     qualification,
-    roles,
     scheduler,
     sla,
     solution_credits,
     staff_matching,
-    stages,
-    suppliers,
     technical_review,
     technical_spec,
     users,
     work_log,
-    workload,
 )
 
+# 导入suppliers端点
+
+from app.api.v1.endpoints.suppliers import router as suppliers_router
+
+# 统一审批路由
+from app.api.v1.endpoints.approvals import router as approvals_router
+
 api_router = APIRouter()
+
+api_router.include_router(approvals_router, tags=["approvals"])
 # 项目模块已拆分为子模块，从projects包导入
 from app.api.v1.endpoints.projects import router as projects_router
 
 api_router.include_router(projects_router, prefix="/projects", tags=["projects"])
 api_router.include_router(customers.router, prefix="/customers", tags=["customers"])
-api_router.include_router(suppliers.router, prefix="/suppliers", tags=["suppliers"])
-api_router.include_router(machines.router, prefix="/machines", tags=["machines"])
-api_router.include_router(milestones.router, prefix="/milestones", tags=["milestones"])
-api_router.include_router(members.router, prefix="/members", tags=["members"])
-api_router.include_router(stages.router, prefix="/stages", tags=["stages"])
+# 使用重构后的suppliers端点（使用通用CRUD路由生成器和统一响应格式）
+api_router.include_router(suppliers_router, prefix="/suppliers", tags=["suppliers"])
+# 原suppliers端点已重构，保留注释供参考：
+# api_router.include_router(suppliers.router, prefix="/suppliers", tags=["suppliers"])
+# 机器管理已迁移至项目子路由 /projects/{project_id}/machines/，删除独立的 /machines 路由
+# api_router.include_router(machines.router, prefix="/machines", tags=["machines"])
+# 使用重构后的端点（使用统一响应格式）
+
+# 原stages端点已重构，保留注释供参考：
+# api_router.include_router(stages.router, prefix="/stages", tags=["stages"])
 api_router.include_router(organization.router, prefix="/org", tags=["organization"])
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
-# 成本管理模块已拆分为costs包
-from app.api.v1.endpoints.costs import router as costs_router
-
-api_router.include_router(costs_router, prefix="/costs", tags=["costs"])
 api_router.include_router(budget.router, prefix="/budgets", tags=["budgets"])
 api_router.include_router(documents.router, prefix="/documents", tags=["documents"])
 api_router.include_router(users.router, prefix="/users", tags=["users"])
-api_router.include_router(roles.router, prefix="/roles", tags=["roles"])
+
 api_router.include_router(audits.router, prefix="/audits", tags=["audits"])
 api_router.include_router(issues.router, prefix="/issues", tags=["issues"])
 api_router.include_router(
@@ -86,10 +88,7 @@ api_router.include_router(purchase.router, prefix="/purchase-orders", tags=["pur
 api_router.include_router(bom.router, prefix="/bom", tags=["bom"])
 api_router.include_router(kit_rate.router, prefix="", tags=["kit-rate"])
 api_router.include_router(kit_check.router, prefix="", tags=["kit-check"])
-# 进度模块已拆分为子模块，从progress包导入
-from app.api.v1.endpoints.progress import router as progress_router
 
-api_router.include_router(progress_router, prefix="/progress", tags=["progress"])
 # 缺料管理模块（三层架构重构）
 # 结构: detection（预警检测）-> handling（问题处理）-> analytics（统计报表）
 from app.api.v1.endpoints.shortage import router as shortage_router
@@ -121,7 +120,7 @@ api_router.include_router(material_demands.router, prefix="", tags=["material-de
 from app.api.v1.endpoints.task_center import router as task_center_router
 
 api_router.include_router(task_center_router, prefix="", tags=["task-center"])
-api_router.include_router(workload.router, prefix="", tags=["workload"])
+
 # 工时管理模块已拆分为timesheet包
 from app.api.v1.endpoints.timesheet import router as timesheet_router
 
@@ -225,11 +224,16 @@ api_router.include_router(
     project_contributions.router, prefix="", tags=["project-contributions"]
 )
 api_router.include_router(admin_stats.router, prefix="", tags=["admin-stats"])
-api_router.include_router(dashboard_unified.router, prefix="", tags=["dashboard-unified"])
+api_router.include_router(
+    dashboard_unified.router, prefix="", tags=["dashboard-unified"]
+)
 api_router.include_router(dashboard_stats.router, prefix="", tags=["dashboard-stats"])
 api_router.include_router(hr_management.router, prefix="/hr", tags=["hr-management"])
+# 售前数据分析模块（从 presales_integration 重命名）
+from app.api.v1.endpoints.presale_analytics import router as presale_analytics_router
+
 api_router.include_router(
-    presales_integration.router, prefix="/presales", tags=["presales-integration"]
+    presale_analytics_router, prefix="/presale-analytics", tags=["presale-analytics"]
 )
 api_router.include_router(
     advantage_products.router, prefix="/advantage-products", tags=["advantage-products"]
@@ -258,22 +262,15 @@ api_router.include_router(
 )
 
 # 阶段模板管理模块
-from app.api.v1.endpoints import stage_templates, project_stages, node_tasks
+from app.api.v1.endpoints import stage_templates, node_tasks
 
 api_router.include_router(
     stage_templates.router, prefix="/stage-templates", tags=["stage-templates"]
 )
-api_router.include_router(
-    project_stages.router, prefix="/projects", tags=["project-stages"]
-)
-api_router.include_router(
-    node_tasks.router, prefix="/node-tasks", tags=["node-tasks"]
-)
-
-# 统一审批系统
-from app.api.v1.endpoints.approvals import router as approvals_router
-
-api_router.include_router(approvals_router, tags=["approvals"])
+# api_router.include_router(
+#     project_stages.router, prefix="/projects", tags=["project-stages"]
+# )
+api_router.include_router(node_tasks.router, prefix="/node-tasks", tags=["node-tasks"])
 
 # 战略管理模块
 from app.api.v1.endpoints.strategy import router as strategy_router
@@ -289,5 +286,7 @@ api_router.include_router(reports_router, tags=["reports"])
 from app.api.v1.endpoints import my, departments, analytics
 
 api_router.include_router(my.router, prefix="/my", tags=["my"])
-api_router.include_router(departments.router, prefix="/departments", tags=["departments"])
+api_router.include_router(
+    departments.router, prefix="/departments", tags=["departments"]
+)
 api_router.include_router(analytics.router, prefix="/analytics", tags=["analytics"])

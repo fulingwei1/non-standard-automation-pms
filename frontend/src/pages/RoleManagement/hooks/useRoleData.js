@@ -29,8 +29,9 @@ export function useRoleData() {
                 page_size: 100,
                 keyword: searchKeyword || undefined,
             });
-            const data = response.data || response;
-            setRoles(data.items || data || []);
+            // 使用统一响应格式处理
+            const listData = response.formatted || response.data;
+            setRoles(listData?.items || listData || []);
         } catch (error) {
             console.error('Failed to load roles:', error);
             setRoles([]);
@@ -43,8 +44,9 @@ export function useRoleData() {
     const loadPermissions = useCallback(async () => {
         try {
             const response = await roleApi.permissions();
-            const data = response.data || response;
-            setPermissions(data.items || data || []);
+            // 使用统一响应格式处理
+            const listData = response.formatted || response.data;
+            setPermissions(listData?.items || listData || []);
         } catch (error) {
             console.error('Failed to load permissions:', error);
         }
@@ -76,8 +78,9 @@ export function useRoleData() {
     const loadTemplates = useCallback(async () => {
         try {
             const response = await roleApi.listTemplates();
-            const data = response.data || response;
-            setTemplates(data.data?.items || []);
+            // 使用统一响应格式处理
+            const listData = response.formatted || response.data;
+            setTemplates(listData?.items || listData || []);
         } catch (error) {
             console.error('Failed to load templates:', error);
         }

@@ -151,9 +151,10 @@ export default function UserManagement() {
       };
 
       const response = await userApi.list(params);
-      const data = response.data || response;
-      setUsers(data.items || data || []);
-      setTotalUsers(data.total || 0); // 保存总用户数
+      // 使用统一响应格式处理（API拦截器自动处理，添加formatted字段）
+      const paginatedData = response.formatted || response.data;
+      setUsers(paginatedData?.items || paginatedData || []);
+      setTotalUsers(paginatedData?.total || 0); // 保存总用户数
     } catch (error) {
       console.error("Failed to fetch users:", error);
       toast.error("获取用户列表失败");
@@ -165,8 +166,9 @@ export default function UserManagement() {
   const fetchRoles = async () => {
     try {
       const response = await roleApi.list({ page: 1, page_size: 100 });
-      const data = response.data || response;
-      setRoles(data.items || data || []);
+      // 使用统一响应格式处理
+      const listData = response.formatted || response.data;
+      setRoles(listData?.items || listData || []);
     } catch (error) {
       console.error("Failed to fetch roles:", error);
       toast.error("获取角色列表失败");
@@ -244,12 +246,16 @@ export default function UserManagement() {
     setSelectedUser(user);
     try {
       const response = await roleApi.list({ page_size: 100 });
-      const allRoles = response.data?.items || response.data || [];
+      // 使用统一响应格式处理
+      const listData = response.formatted || response.data;
+      const allRoles = listData?.items || listData || [];
       setAvailableRoles(allRoles);
 
       // Get user's current roles
       const userResponse = await userApi.get(user.id);
-      const userRoles = userResponse.data?.roles || [];
+      // 使用统一响应格式处理
+      const userData = userResponse.formatted || userResponse.data;
+      const userRoles = userData?.roles || [];
       setSelectedRoles(userRoles.map(r => r.id));
     } catch (error) {
       console.error("Failed to load roles:", error);

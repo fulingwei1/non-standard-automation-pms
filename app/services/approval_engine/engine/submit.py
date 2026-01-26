@@ -82,8 +82,8 @@ class ApprovalSubmitMixin:
             "form_data": form_data,
             "initiator": {
                 "id": initiator.id,
-                "name": initiator.name,
-                "dept_id": initiator.department_id,
+                "name": initiator.real_name or initiator.username,
+                "dept_id": None,  # User model uses department string, not ID
             },
             "entity": {"type": entity_type, "id": entity_id},
         }
@@ -102,9 +102,9 @@ class ApprovalSubmitMixin:
 
         # 6. 确定标题和摘要
         if adapter:
-            if not title and hasattr(adapter, 'generate_title'):
+            if not title and hasattr(adapter, "generate_title"):
                 title = adapter.generate_title(entity_id)
-            if not summary and hasattr(adapter, 'generate_summary'):
+            if not summary and hasattr(adapter, "generate_summary"):
                 summary = adapter.generate_summary(entity_id)
 
         # 7. 创建审批实例
@@ -116,12 +116,13 @@ class ApprovalSubmitMixin:
             entity_type=entity_type,
             entity_id=entity_id,
             initiator_id=initiator_id,
-            initiator_name=initiator.name,
-            initiator_dept_id=initiator.department_id,
+            initiator_name=initiator.real_name or initiator.username,
+            initiator_dept_id=None,
             form_data=form_data,
             status="PENDING",
             urgency=urgency,
-            title=title or f"{template.template_name} - {initiator.name}",
+            title=title
+            or f"{template.template_name} - {initiator.real_name or initiator.username}",
             summary=summary,
             submitted_at=datetime.now(),
         )
@@ -136,7 +137,7 @@ class ApprovalSubmitMixin:
         self._log_action(
             instance_id=instance.id,
             operator_id=initiator_id,
-            operator_name=initiator.name,
+            operator_name=initiator.real_name or initiator.username,
             action="SUBMIT",
             comment=None,
         )
@@ -190,7 +191,9 @@ class ApprovalSubmitMixin:
             entity_type=entity_type,
             entity_id=entity_id,
             initiator_id=initiator_id,
-            initiator_name=initiator.name if initiator else None,
+            initiator_name=initiator.real_name or initiator.username
+            if initiator
+            else None,
             form_data=form_data,
             status="DRAFT",
             title=title,

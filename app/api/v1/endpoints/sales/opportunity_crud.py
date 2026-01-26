@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
+from app.utils.pagination import PaginationParams, create_paginated_response
 from app.models.enums import OpportunityStageEnum
 from app.models.project import Customer
 from app.models.sales import Opportunity, OpportunityRequirement
@@ -37,8 +37,7 @@ router = APIRouter()
 @router.get("/opportunities", response_model=PaginatedResponse[OpportunityResponse])
 def read_opportunities(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(),
     keyword: Optional[str] = Query(None, description="关键词搜索"),
     stage: Optional[str] = Query(None, description="阶段筛选"),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
@@ -72,17 +71,17 @@ def read_opportunities(
         query = query.filter(Opportunity.owner_id == owner_id)
 
     total = query.count()
-    offset = (page - 1) * page_size
     # 使用 eager loading 避免 N+1 查询
     # 默认按优先级排序，如果没有优先级则按创建时间排序
     opportunities = query.options(
         joinedload(Opportunity.customer),
         joinedload(Opportunity.owner),
+        joinedload(Opportunity.updater),
         joinedload(Opportunity.requirements)
     ).order_by(
         desc(Opportunity.priority_score).nullslast(),
         desc(Opportunity.created_at)
-    ).offset(offset).limit(page_size).all()
+    ).offset(pagination.offset).limit(pagination.page_size).all()
 
     opp_responses = []
     for opp in opportunities:
@@ -92,19 +91,14 @@ def read_opportunities(
             **{c.name: getattr(opp, c.name) for c in opp.__table__.columns},
             "customer_name": opp.customer.customer_name if opp.customer else None,
             "owner_name": opp.owner.real_name if opp.owner else None,
+            "updated_by_name": opp.updater.real_name if opp.updater else None,
             "requirement": None,
         }
         if req:
             opp_dict["requirement"] = OpportunityRequirementResponse(**{c.name: getattr(req, c.name) for c in req.__table__.columns})
         opp_responses.append(OpportunityResponse(**opp_dict))
 
-    return PaginatedResponse(
-        items=opp_responses,
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
-    )
+    return create_paginated_response(opp_responses, total, pagination)
 
 
 @router.post("/opportunities", response_model=OpportunityResponse, status_code=201)
@@ -137,12 +131,15 @@ def create_opportunity(
         raise HTTPException(status_code=404, detail="客户不存在")
 
     opportunity = Opportunity(**opp_data)
+    opportunity.updated_by = current_user.id
     db.add(opportunity)
     db.flush()
 
     # 创建需求信息
     if opp_in.requirement:
-        req_data = opp_in.requirement.model_dump()
+        valid_req_fields = {c.name for c in OpportunityRequirement.__table__.columns}
+        req_data = opp_in.requirement.model_dump(exclude_unset=True)
+        req_data = {k: v for k, v in req_data.items() if k in valid_req_fields}
         req_data["opportunity_id"] = opportunity.id
         requirement = OpportunityRequirement(**req_data)
         db.add(requirement)
@@ -155,6 +152,7 @@ def create_opportunity(
         **{c.name: getattr(opportunity, c.name) for c in opportunity.__table__.columns},
         "customer_name": customer.customer_name,
         "owner_name": opportunity.owner.real_name if opportunity.owner else None,
+        "updated_by_name": opportunity.updater.real_name if opportunity.updater else None,
         "requirement": None,
     }
     if req:
@@ -176,6 +174,7 @@ def read_opportunity(
     opportunity = db.query(Opportunity).options(
         joinedload(Opportunity.customer),
         joinedload(Opportunity.owner),
+        joinedload(Opportunity.updater),
         joinedload(Opportunity.requirements)
     ).filter(Opportunity.id == opp_id).first()
 
@@ -187,6 +186,7 @@ def read_opportunity(
         **{c.name: getattr(opportunity, c.name) for c in opportunity.__table__.columns},
         "customer_name": opportunity.customer.customer_name if opportunity.customer else None,
         "owner_name": opportunity.owner.real_name if opportunity.owner else None,
+        "updated_by_name": opportunity.updater.real_name if opportunity.updater else None,
         "requirement": None,
     }
     if req:
@@ -220,9 +220,26 @@ def update_opportunity(
     ):
         raise HTTPException(status_code=403, detail="您没有权限编辑此商机")
 
-    update_data = opp_in.model_dump(exclude_unset=True)
+    update_data = opp_in.model_dump(exclude_unset=True, exclude={"requirement"})
     for field, value in update_data.items():
         setattr(opportunity, field, value)
+    opportunity.updated_by = current_user.id
+
+    if opp_in.requirement is not None:
+        valid_req_fields = {c.name for c in OpportunityRequirement.__table__.columns}
+        req_data = opp_in.requirement.model_dump(exclude_unset=True)
+        req_data = {k: v for k, v in req_data.items() if k in valid_req_fields}
+        if req_data:
+            req = db.query(OpportunityRequirement).filter(
+                OpportunityRequirement.opportunity_id == opportunity.id
+            ).first()
+            if req:
+                for field, value in req_data.items():
+                    setattr(req, field, value)
+            else:
+                req_data["opportunity_id"] = opportunity.id
+                requirement = OpportunityRequirement(**req_data)
+                db.add(requirement)
 
     db.commit()
     db.refresh(opportunity)
@@ -232,6 +249,7 @@ def update_opportunity(
         **{c.name: getattr(opportunity, c.name) for c in opportunity.__table__.columns},
         "customer_name": opportunity.customer.customer_name if opportunity.customer else None,
         "owner_name": opportunity.owner.real_name if opportunity.owner else None,
+        "updated_by_name": opportunity.updater.real_name if opportunity.updater else None,
         "requirement": None,
     }
     if req:

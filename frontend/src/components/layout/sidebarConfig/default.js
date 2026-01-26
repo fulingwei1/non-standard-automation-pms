@@ -51,18 +51,17 @@ export const defaultNavGroups = [
   {
     label: "售前技术",
     items: [
-      { name: "技术评审", path: "/presales-tasks", icon: "ListTodo", permission: "presales:task:read", permissionLabel: "技术评审" },
-      { name: "方案中心", path: "/solutions", icon: "FileText", permission: "presales:solution:read", permissionLabel: "方案查看" },
-      { name: "成本报价", path: "/cost-quotes/quotes", icon: "Calculator", permission: "sales:quote:read", permissionLabel: "成本报价" },
-      { name: "报价模板", path: "/cost-quotes/templates", icon: "Layers", permission: "sales:quote:read", permissionLabel: "报价模板" }
+      { name: "方案评审", path: "/presales-tasks", icon: "ListTodo", permission: "presales:task:read", permissionLabel: "方案评审" },
+      { name: "项目立项", path: "/pmo/initiations", icon: "FileText", permission: "project:initiation:read", permissionLabel: "立项管理" },
+      { name: "报价管理", path: "/cost-quotes/quotes", icon: "Calculator", permission: "sales:quote:read", permissionLabel: "报价管理" }
     ]
   },
   // 5. 项目管理
   {
     label: "项目管理",
     items: [
-      { name: "项目立项", path: "/pmo/initiations", icon: "FileText", permission: "project:initiation:read", permissionLabel: "立项管理" },
       { name: "项目列表", path: "/projects", icon: "List", permission: "project:project:read", permissionLabel: "项目列表" },
+      { name: "预算管理", path: "/budgets", icon: "CreditCard", permission: "budget:read", permissionLabel: "预算管理" },
       { name: "项目看板", path: "/board", icon: "Kanban", permission: "project:project:read", permissionLabel: "项目看板" },
       { name: "项目结项", path: "/pmo/closure", icon: "CheckCircle2", permission: "project:close", permissionLabel: "项目结项" },
       { name: "项目复盘", path: "/projects/reviews", icon: "FileText", permission: "project_review:read", permissionLabel: "项目复盘" }
@@ -98,8 +97,7 @@ export const defaultNavGroups = [
       { name: "物料需求", path: "/material-demands", icon: "List", permission: "material:demand:read", permissionLabel: "物料需求" },
       { name: "收货管理", path: "/purchases/receipts", icon: "Truck", permission: "purchase:receipt:read", permissionLabel: "收货管理" },
       { name: "齐套缺料", path: "/material-analysis", icon: "Boxes", permission: "material:analysis:read", permissionLabel: "齐套缺料" },
-      { name: "采购分析", path: "/procurement-analysis", icon: "BarChart3", permission: "purchase:analysis:read", permissionLabel: "采购分析" },
-      { name: "预算管理", path: "/budgets", icon: "CreditCard", permission: "budget:read", permissionLabel: "预算管理" }
+      { name: "采购分析", path: "/procurement-analysis", icon: "BarChart3", permission: "purchase:analysis:read", permissionLabel: "采购分析" }
     ]
   },
   // 9. 生产管理

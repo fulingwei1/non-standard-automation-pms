@@ -98,7 +98,9 @@ export default function MaterialList() {
       {params.supplier_id = filterSupplier;}
       if (searchKeyword) {params.search = searchKeyword;}
       const res = await materialApi.list(params);
-      const materialList = res.data?.items || res.data || [];
+      // 使用统一响应格式处理
+      const paginatedData = res.formatted || res.data;
+      const materialList = paginatedData?.items || paginatedData || [];
       setMaterials(materialList);
     } catch (error) {
       console.error("物料列表 API 调用失败:", error);
@@ -111,7 +113,9 @@ export default function MaterialList() {
   const fetchCategories = async () => {
     try {
       const res = await materialApi.categories.list();
-      setCategories(res.data?.items || res.data || []);
+      // 使用统一响应格式处理
+      const listData = res.formatted || res.data;
+      setCategories(listData?.items || listData || []);
     } catch (error) {
       console.error("物料分类 API 调用失败:", error);
       // 分类失败不影响主数据加载，只记录错误
@@ -121,7 +125,9 @@ export default function MaterialList() {
   const fetchSuppliers = async () => {
     try {
       const res = await supplierApi.list({ page_size: 1000 });
-      setSuppliers(res.data?.items || res.data || []);
+      // 使用统一响应格式处理
+      const paginatedData = res.formatted || res.data;
+      setSuppliers(paginatedData?.items || paginatedData || []);
     } catch (error) {
       console.error("供应商 API 调用失败:", error);
       // 供应商失败不影响主数据加载，只记录错误
@@ -155,7 +161,8 @@ export default function MaterialList() {
   const handleViewDetail = async (materialId) => {
     try {
       const res = await materialApi.get(materialId);
-      setSelectedMaterial(res.data || res);
+      // 使用统一响应格式处理
+      setSelectedMaterial(res.formatted || res.data || res);
       setShowDetailDialog(true);
     } catch (error) {
       console.error("Failed to fetch material detail:", error);

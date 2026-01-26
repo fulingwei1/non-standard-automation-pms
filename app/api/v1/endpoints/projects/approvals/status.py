@@ -34,7 +34,7 @@ ENTITY_TYPE_PROJECT = "PROJECT"
 
 
 @router.get(
-    "/{project_id}/approval/status",
+    "/approval/status",
     response_model=ApprovalStatusResponse,
     status_code=status.HTTP_200_OK,
 )

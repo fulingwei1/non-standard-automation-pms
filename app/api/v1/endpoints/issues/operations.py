@@ -22,7 +22,7 @@ from app.schemas.issue import (
     IssueListResponse,
     IssueResponse,
 )
-from app.services.data_scope_service import DataScopeService
+from app.services.data_scope import DataScopeService
 
 from .utils import generate_issue_no
 

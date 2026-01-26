@@ -1,6 +1,6 @@
 /**
- * ECN Approval Flow Component
- * ECN 审批流程可视化组件
+ * ECN Approval Flow Component - Updated with Unified Approval System
+ * ECN 审批流程可视化组件 - 已更新为统一审批系统
  */
 
 import { Badge } from "../../components/ui/badge";
@@ -22,14 +22,24 @@ import {
   AlertTriangle,
   User,
   Calendar,
-  MessageSquare } from
+  MessageSquare,
+  UserPlus } from
 "lucide-react";
 import {
   approvalStatusConfigs,
   getStatusConfig as _getStatusConfig,
   formatStatus } from
 "./ecnConstants";
-import { cn, formatDate } from "../../lib/utils";import { useState } from "react";import { toast } from "sonner";
+import { cn, formatDate } from "../../lib/utils";
+import { useState } from "react";
+import { toast } from "sonner";
+import {
+  approveApproval,
+  rejectApproval,
+  delegateApproval,
+  APPROVAL_STATUS,
+  getStatusConfig
+} from "../../services/api/approval.js";
 
 export function ECNApprovalFlow({
   approvals,
@@ -37,13 +47,21 @@ export function ECNApprovalFlow({
   onApprove,
   onReject,
   currentUser,
-  loading: _loading
+  loading: _loading,
+  approvalInstance = null,
+  onRefreshApprovals = () => {}
 }) {
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
+  const [showDelegateDialog, setShowDelegateDialog] = useState(false);
   const [approvalForm, setApprovalForm] = useState({
-    action: "", // "approve" or "reject"
+    action: "", // "approve", "reject", or "delegate"
     comment: ""
   });
+  const [delegateForm, setDelegateForm] = useState({
+    delegate_to_id: null,
+    comment: ""
+  });
+  const [submitting, setSubmitting] = useState(false);
 
   const statusOrder = [
   "SUBMITTED",
@@ -73,37 +91,90 @@ export function ECNApprovalFlow({
     }
   };
 
-  const handleApproval = () => {
+  const handleApproval = async () => {
     if (!approvalForm.action || !approvalForm.comment.trim()) {
       toast.warning("请填写审批意见");
       return;
     }
 
-    if (approvalForm.action === "approve") {
-      onApprove({
-        ecn_id: ecn.id,
-        comment: approvalForm.comment,
-        approved_by: currentUser.name,
-        approved_time: new Date().toISOString()
-      });
-    } else {
-      onReject({
-        ecn_id: ecn.id,
-        comment: approvalForm.comment,
-        rejected_by: currentUser.name,
-        rejected_time: new Date().toISOString()
-      });
-    }
+    try {
+      setSubmitting(true);
 
-    setApprovalForm({ action: "", comment: "" });
-    setShowApprovalDialog(false);
+      if (approvalInstance) {
+        if (approvalForm.action === "approve") {
+          await approveApproval(approvalInstance.id, approvalForm.comment);
+          toast.success("审批已批准");
+        } else if (approvalForm.action === "reject") {
+          await rejectApproval(approvalInstance.id, approvalForm.comment);
+          toast.success("审批已驳回");
+        }
+      } else {
+        if (onApprove && approvalForm.action === "approve") {
+          await onApprove({
+            ecn_id: ecn.id,
+            comment: approvalForm.comment,
+            approved_by: currentUser.name,
+            approved_time: new Date().toISOString()
+          });
+        } else if (onReject && approvalForm.action === "reject") {
+          await onReject({
+            ecn_id: ecn.id,
+            comment: approvalForm.comment,
+            rejected_by: currentUser.name,
+            rejected_time: new Date().toISOString()
+          });
+        }
+      }
+
+      await onRefreshApprovals();
+    } catch (error) {
+      console.error("Approval failed:", error);
+      toast.error("审批失败: " + (error.response?.data?.detail || error.message));
+    } finally {
+      setSubmitting(false);
+      setApprovalForm({ action: "", comment: "" });
+      setShowApprovalDialog(false);
+    }
   };
 
   const canApprove = () => {
-    // 检查当前用户是否有审批权限
+    if (approvalInstance) {
+      return approvalInstance.status === APPROVAL_STATUS.PENDING &&
+             currentUser && (
+               currentUser.role === "MANAGER" || currentUser.role === "DIRECTOR");
+    }
     return ecn.status === "PENDING_APPROVAL" &&
-    currentUser && (
-    currentUser.role === "MANAGER" || currentUser.role === "DIRECTOR");
+           currentUser && (
+             currentUser.role === "MANAGER" || currentUser.role === "DIRECTOR");
+  };
+
+  const handleDelegate = async () => {
+    if (!delegateForm.delegate_to_id || !delegateForm.comment.trim()) {
+      toast.warning("请选择被委托人并填写委托说明");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      if (approvalInstance) {
+        await delegateApproval(
+          approvalInstance.id,
+          delegateForm.delegate_to_id,
+          delegateForm.comment
+        );
+        toast.success("审批已委托");
+      }
+
+      await onRefreshApprovals();
+    } catch (error) {
+      console.error("Delegate failed:", error);
+      toast.error("委托失败: " + (error.response?.data?.detail || error.message));
+    } finally {
+      setSubmitting(false);
+      setDelegateForm({ delegate_to_id: null, comment: "" });
+      setShowDelegateDialog(false);
+    }
   };
 
   return (
@@ -240,8 +311,16 @@ export function ECNApprovalFlow({
                           setShowApprovalDialog(true);
                         }}
                         className="border-red-500 text-red-400 hover:bg-red-500 hover:text-white">
-
+ 
                             驳回
+                          </Button>
+                          <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowDelegateDialog(true)}
+                        className="border-blue-500 text-blue-400 hover:bg-blue-500 hover:text-white">
+ 
+                            委托
                           </Button>
                           <Button
                         size="sm"
@@ -250,7 +329,7 @@ export function ECNApprovalFlow({
                           setShowApprovalDialog(true);
                         }}
                         className="bg-green-600 hover:bg-green-700">
-
+ 
                             批准
                           </Button>
                         </div>
@@ -278,31 +357,82 @@ export function ECNApprovalFlow({
               <Textarea
                 value={approvalForm.comment}
                 onChange={(e) =>
-                setApprovalForm({ ...approvalForm, comment: e.target.value })
+                  setApprovalForm({ ...approvalForm, comment: e.target.value })
                 }
                 placeholder={approvalForm.action === "approve" ?
                 "请输入批准理由..." :
                 "请输入驳回理由..."
                 }
                 rows={4} />
-
+ 
             </div>
           </DialogBody>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowApprovalDialog(false)}>
-
+              onClick={() => setShowApprovalDialog(false)}
+              disabled={submitting}>
+ 
               取消
             </Button>
             <Button
               onClick={handleApproval}
+              disabled={submitting}
               className={approvalForm.action === "approve" ?
               "bg-green-600 hover:bg-green-700" :
               "bg-red-600 hover:bg-red-700"
               }>
+ 
+              {submitting ? "提交中..." : (approvalForm.action === "approve" ? "批准" : "驳回")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-              {approvalForm.action === "approve" ? "批准" : "驳回"}
+      {/* 委托审批对话框 */}
+      <Dialog open={showDelegateDialog} onOpenChange={setShowDelegateDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>委托审批</DialogTitle>
+          </DialogHeader>
+          <DialogBody className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">被委托人 *</label>
+              <select
+                value={delegateForm.delegate_to_id || ""}
+                onChange={(e) =>
+                  setDelegateForm({ ...delegateForm, delegate_to_id: Number(e.target.value) })
+                }
+                className="w-full px-3 py-2 border border-slate-600 rounded-lg bg-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">请选择被委托人...</option>
+                <option value="8">王经理</option>
+                <option value="9">李总监</option>
+                <option value="10">张经理</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">委托说明 *</label>
+              <Textarea
+                value={delegateForm.comment}
+                onChange={(e) =>
+                  setDelegateForm({ ...delegateForm, comment: e.target.value })
+                }
+                placeholder="请输入委托说明..."
+                rows={3} />
+            </div>
+          </DialogBody>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDelegateDialog(false)}
+              disabled={submitting}>
+              取消
+            </Button>
+            <Button
+              onClick={handleDelegate}
+              disabled={submitting}
+              className="bg-blue-600 hover:bg-blue-700">
+              {submitting ? "提交中..." : "委托"}
             </Button>
           </DialogFooter>
         </DialogContent>

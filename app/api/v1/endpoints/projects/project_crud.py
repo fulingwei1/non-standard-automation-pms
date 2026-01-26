@@ -98,7 +98,7 @@ def read_projects(
         query = query.filter(Project.is_active == is_active)
 
     # 应用数据权限过滤
-    from app.services.data_scope_service import DataScopeService
+    from app.services.data_scope import DataScopeService
     query = DataScopeService.filter_projects_by_scope(db, query, current_user)
 
     # 使用selectinload优化关联查询

@@ -43,6 +43,8 @@ class DataScopeService:
     # 项目过滤方法
     filter_projects_by_scope = staticmethod(ProjectFilterService.filter_projects_by_scope)
     check_project_access = staticmethod(ProjectFilterService.check_project_access)
+    get_accessible_project_ids = staticmethod(ProjectFilterService.get_accessible_project_ids)
+    filter_related_by_project = staticmethod(ProjectFilterService.filter_related_by_project)
     _filter_own_projects = staticmethod(ProjectFilterService._filter_own_projects)
 
     # 问题过滤方法

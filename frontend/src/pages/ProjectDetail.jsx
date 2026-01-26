@@ -99,7 +99,7 @@ export default function ProjectDetail() {
       stageApi.list({ project_id: id }),
       milestoneApi.list({ project_id: id }),
       memberApi.list({ project_id: id }),
-      costApi.list({ project_id: id }),
+      costApi.list(id, {}),
       documentApi.list({ project_id: id })]
       );
 

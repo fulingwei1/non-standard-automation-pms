@@ -6,7 +6,12 @@
 from datetime import datetime
 from typing import Dict, List, Optional
 
-from app.models.approval import ApprovalCarbonCopy, ApprovalComment, ApprovalInstance, ApprovalTask
+from app.models.approval import (
+    ApprovalCarbonCopy,
+    ApprovalComment,
+    ApprovalInstance,
+    ApprovalTask,
+)
 from app.models.user import User
 
 from .core import ApprovalEngineCore
@@ -55,7 +60,7 @@ class ApprovalActionsMixin:
         self._log_action(
             instance_id=instance.id,
             operator_id=operator_id,
-            operator_name=operator.name if operator else None,
+            operator_name=operator.real_name or operator.username if operator else None,
             action="ADD_CC",
             action_detail={"cc_user_ids": cc_user_ids},
         )
@@ -122,7 +127,9 @@ class ApprovalActionsMixin:
         self._log_action(
             instance_id=instance.id,
             operator_id=initiator_id,
-            operator_name=initiator.name if initiator else None,
+            operator_name=initiator.real_name or initiator.username
+            if initiator
+            else None,
             action="WITHDRAW",
             comment=comment,
             before_status=old_status,
@@ -184,7 +191,7 @@ class ApprovalActionsMixin:
         self._log_action(
             instance_id=instance.id,
             operator_id=operator_id,
-            operator_name=operator.name if operator else None,
+            operator_name=operator.real_name or operator.username if operator else None,
             action="TERMINATE",
             comment=comment,
             before_status=old_status,
@@ -209,11 +216,7 @@ class ApprovalActionsMixin:
         Returns:
             是否成功
         """
-        task = (
-            self.db.query(ApprovalTask)
-            .filter(ApprovalTask.id == task_id)
-            .first()
-        )
+        task = self.db.query(ApprovalTask).filter(ApprovalTask.id == task_id).first()
 
         if not task:
             raise ValueError(f"任务不存在: {task_id}")
@@ -232,7 +235,7 @@ class ApprovalActionsMixin:
             instance_id=task.instance_id,
             task_id=task.id,
             operator_id=reminder_id,
-            operator_name=reminder.name if reminder else None,
+            operator_name=reminder.real_name or reminder.username if reminder else None,
             action="REMIND",
         )
 
@@ -240,7 +243,7 @@ class ApprovalActionsMixin:
         self.notify.notify_remind(
             task,
             reminder_id=reminder_id,
-            reminder_name=reminder.name if reminder else None,
+            reminder_name=reminder.real_name or reminder.username if reminder else None,
         )
 
         self.db.commit()
@@ -276,7 +279,7 @@ class ApprovalActionsMixin:
         comment = ApprovalComment(
             instance_id=instance_id,
             user_id=user_id,
-            user_name=user.name if user else None,
+            user_name=user.real_name or user.username if user else None,
             content=content,
             parent_id=parent_id,
             reply_to_user_id=reply_to_user_id,
@@ -290,7 +293,7 @@ class ApprovalActionsMixin:
         self._log_action(
             instance_id=instance_id,
             operator_id=user_id,
-            operator_name=user.name if user else None,
+            operator_name=user.real_name or user.username if user else None,
             action="COMMENT",
             comment=content,
         )
@@ -304,7 +307,7 @@ class ApprovalActionsMixin:
         if instance and mentioned_user_ids:
             self.notify.notify_comment(
                 instance,
-                commenter_name=user.name if user else "匿名",
+                commenter_name=user.real_name or user.username if user else "匿名",
                 comment_content=content,
                 mentioned_user_ids=mentioned_user_ids,
             )

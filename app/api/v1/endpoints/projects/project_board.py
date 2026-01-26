@@ -34,7 +34,7 @@ def get_project_board(
     query = db.query(Project).filter(Project.is_active == True)
 
     # 应用数据权限过滤
-    from app.services.data_scope_service import DataScopeService
+    from app.services.data_scope import DataScopeService
     query = DataScopeService.filter_projects_by_scope(db, query, current_user)
 
     if project_type:

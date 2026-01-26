@@ -10,20 +10,11 @@ from typing import Dict, Optional
 from sqlalchemy.orm import Session
 
 from app.models.task_center import TaskOperationLog, TaskUnified
-from app.utils.number_generator import generate_sequential_no
 
+# 使用统一的编码生成工具
+from app.utils.domain_codes import task_center as task_center_codes
 
-def generate_task_code(db: Session) -> str:
-    """生成任务编号：TASK-yymmdd-xxx"""
-    return generate_sequential_no(
-        db=db,
-        model_class=TaskUnified,
-        no_field='task_code',
-        prefix='TASK',
-        date_format='%y%m%d',
-        separator='-',
-        seq_length=3
-    )
+generate_task_code = task_center_codes.generate_task_code
 
 
 def log_task_operation(

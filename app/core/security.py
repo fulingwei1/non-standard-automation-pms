@@ -13,13 +13,13 @@
 from .auth import (
     check_permission,
     create_access_token,
-    get_current_active_superuser,
     get_current_active_user,
+    get_current_active_superuser,
     get_current_user,
     get_password_hash,
+    is_system_admin,
     is_token_revoked,
     oauth2_scheme,
-    pwd_context,
     require_permission,
     revoke_token,
     verify_password,
@@ -27,9 +27,12 @@ from .auth import (
 
 # 从权限模块导入
 from .permissions import (
-    RD_PROJECT_ROLES,
-    check_project_access,
-    check_timesheet_approval_permission,
+    check_sales_create_permission,
+    check_sales_delete_permission,
+    check_sales_edit_permission,
+    filter_sales_data_by_scope,
+    filter_sales_finance_data_by_scope,
+    get_sales_data_scope,
     has_finance_access,
     has_hr_access,
     has_machine_document_permission,
@@ -37,6 +40,8 @@ from .permissions import (
     has_procurement_access,
     has_production_access,
     has_rd_project_access,
+    has_sales_approval_access,
+    has_sales_assessment_access,
     has_scheduler_admin_access,
     has_shortage_report_access,
     has_timesheet_approval_access,
@@ -46,27 +51,14 @@ from .permissions import (
     require_production_access,
     require_project_access,
     require_rd_project_access,
-    require_scheduler_admin_access,
-    require_shortage_report_access,
-    require_timesheet_approval_access,
-)
-
-# 从销售权限模块导入
-from .sales_permissions import (
-    check_sales_approval_permission,
-    check_sales_create_permission,
-    check_sales_delete_permission,
-    check_sales_edit_permission,
-    filter_sales_data_by_scope,
-    filter_sales_finance_data_by_scope,
-    get_sales_data_scope,
-    has_sales_approval_access,
-    has_sales_assessment_access,
     require_sales_approval_permission,
     require_sales_assessment_access,
     require_sales_create_permission,
     require_sales_delete_permission,
     require_sales_edit_permission,
+    require_scheduler_admin_access,
+    require_shortage_report_access,
+    require_timesheet_approval_access,
 )
 
 __all__ = [
@@ -76,8 +68,10 @@ __all__ = [
     "create_access_token",
     "get_current_user",
     "get_current_active_user",
+    "get_current_active_superuser",
     "check_permission",
     "require_permission",
+    "is_system_admin",
     "oauth2_scheme",
     "revoke_token",
     "is_token_revoked",

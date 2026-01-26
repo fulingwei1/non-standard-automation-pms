@@ -8,11 +8,12 @@ from decimal import Decimal
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from app.schemas.common import PaginatedResponse
 from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_active_user, get_db
-from app.core.config import settings
+from app.utils.pagination import PaginationParams, create_paginated_response
 from app.models.material import BomHeader
 from app.models.vendor import Vendor
 from app.models.purchase import (
@@ -43,8 +44,7 @@ PO_DATA_SCOPE_CONFIG = DataScopeConfig(
 @router.get("/")
 def list_purchase_orders(
     db: Session = Depends(get_db),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE),
+    pagination: PaginationParams = Depends(),
     keyword: Optional[str] = Query(None),
     supplier_id: Optional[int] = Query(None),
     status: Optional[str] = Query(None),
@@ -71,17 +71,11 @@ def list_purchase_orders(
         query = query.filter(PurchaseOrder.status == status)
 
     total = query.count()
-    offset = (page - 1) * page_size
     orders = (
-        query.order_by(desc(PurchaseOrder.created_at)).offset(offset).limit(page_size).all()
+        query.order_by(desc(PurchaseOrder.created_at)).offset(pagination.offset).limit(pagination.page_size).all()
     )
-    return {
-        "items": [serialize_purchase_order(o, include_items=False) for o in orders],
-        "total": total,
-        "page": page,
-        "page_size": page_size,
-        "pages": (total + page_size - 1) // page_size,
-    }
+    items = [serialize_purchase_order(o, include_items=False) for o in orders]
+    return create_paginated_response(items, total, pagination)
 
 
 @router.post("/")

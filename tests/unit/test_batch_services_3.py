@@ -11,7 +11,7 @@ from unittest.mock import Mock, patch
 from sqlalchemy.orm import Query, Session
 
 # Import services to test
-from app.services.data_scope_service import DataScopeService
+from app.services.data_scope import DataScopeService
 from app.services.project_evaluation_service import ProjectEvaluationService
 from app.services.spec_match_service import (
     calculate_match_statistics,

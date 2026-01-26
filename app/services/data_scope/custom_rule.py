@@ -24,7 +24,7 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import and_, or_, text
 from sqlalchemy.orm import Query, Session
 
-from app.models.permission_v2 import DataScopeRule, RoleDataScope
+from app.models.permission import DataScopeRule, RoleDataScope
 from app.models.user import User
 
 logger = logging.getLogger(__name__)

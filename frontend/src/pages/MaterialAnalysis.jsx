@@ -32,6 +32,10 @@ export default function MaterialAnalysis() {
   const [detailMap, setDetailMap] = useState({});
   const [detailLoading, setDetailLoading] = useState({});
   const [detailError, setDetailError] = useState({});
+  const [stageKitMap, setStageKitMap] = useState({});
+  const [stageKitLoading, setStageKitLoading] = useState({});
+  const [stageKitError, setStageKitError] = useState({});
+  const [activeTab, setActiveTab] = useState("overview");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
 
@@ -159,6 +163,34 @@ export default function MaterialAnalysis() {
     }
   }, [detailLoading]);
 
+  const loadStageKitRate = useCallback(async (projectId) => {
+    if (!projectId) {return;}
+    if (stageKitLoading[projectId]) {return;}
+
+    setStageKitLoading((prev) => ({ ...prev, [projectId]: true }));
+    setStageKitError((prev) => ({ ...prev, [projectId]: "" }));
+
+    try {
+      const response = await purchaseApi.kitRate.unified(projectId);
+      const data = response?.data?.data || response?.data || {};
+      setStageKitMap((prev) => ({ ...prev, [projectId]: data }));
+    } catch (err) {
+      const status = err.response?.status;
+      const detail = err.response?.data?.detail;
+      const message = err.response?.data?.message;
+      const apiMessage =
+        typeof detail === "string"
+          ? detail
+          : detail?.message || message || err.message;
+      const errorText = status
+        ? `加载工艺齐套率失败 (${status}): ${apiMessage}`
+        : `加载工艺齐套率失败: ${apiMessage}`;
+      setStageKitError((prev) => ({ ...prev, [projectId]: errorText }));
+    } finally {
+      setStageKitLoading((prev) => ({ ...prev, [projectId]: false }));
+    }
+  }, [stageKitLoading]);
+
   // 过滤后的项目
   const filteredProjects = useMemo(() => {
     let filtered = projectMaterials;
@@ -218,6 +250,11 @@ export default function MaterialAnalysis() {
     const detailIsLoading = detailLoading[project.projectId];
     const detailErrorText = detailError[project.projectId];
     const materialList = detailData?.materials || [];
+    const stageKitData = stageKitMap[project.projectId];
+    const stageIsLoading = stageKitLoading[project.projectId];
+    const stageErrorText = stageKitError[project.projectId];
+    const stageBased = stageKitData?.calculation_methods?.stage_based;
+    const stageRates = stageBased?.stages || [];
     const shortageMaterials = [...materialList]
     .filter((material) => (material.shortage_qty || 0) > 0)
     .sort((a, b) => (b.shortage_qty || 0) - (a.shortage_qty || 0))
@@ -300,6 +337,9 @@ export default function MaterialAnalysis() {
                 if (nextExpanded && !detailData) {
                   loadProjectDetail(project.projectId);
                 }
+                if (nextExpanded && !stageKitData) {
+                  loadStageKitRate(project.projectId);
+                }
               }}>
 
               {expanded ? "收起" : "详情"}
@@ -365,6 +405,48 @@ export default function MaterialAnalysis() {
                   )}
                 </div>
               )}
+
+              <div className="mt-6">
+                <h4 className="text-sm font-medium text-white mb-3">工艺齐套率</h4>
+                {stageIsLoading && (
+                  <div className="text-sm text-slate-400">正在加载工艺齐套率...</div>
+                )}
+                {!stageIsLoading && stageErrorText && (
+                  <div className="text-sm text-red-400">{stageErrorText}</div>
+                )}
+                {!stageIsLoading && !stageErrorText && !stageBased?.available && (
+                  <div className="text-sm text-slate-400">
+                    {stageBased?.message || "暂无工艺齐套数据"}
+                  </div>
+                )}
+                {!stageIsLoading && !stageErrorText && stageBased?.available && (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-4 text-sm text-slate-300">
+                      <div>整体齐套率: {stageBased.overall_kit_rate}%</div>
+                      <div>阻塞缺料: {stageBased.blocking_shortage_count || 0}</div>
+                    </div>
+                    {stageRates.length === 0 ? (
+                      <div className="text-sm text-slate-400">暂无阶段明细</div>
+                    ) : (
+                      <div className="grid gap-2 md:grid-cols-2">
+                        {stageRates.map((stage) => (
+                          <div
+                            key={stage.stage_code}
+                            className="flex items-center justify-between p-2 bg-slate-900/50 rounded"
+                          >
+                            <div className="text-sm text-slate-200">
+                              {stage.stage_name || stage.stage_code}
+                            </div>
+                            <Badge variant="outline" className="border-slate-600 text-slate-200">
+                              {stage.kit_rate}%
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
           </motion.div>
           }
         </div>
@@ -441,7 +523,7 @@ export default function MaterialAnalysis() {
         } />
 
 
-      <Tabs defaultValue="overview" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="overview">统计概览</TabsTrigger>
           <TabsTrigger value="details">项目详情</TabsTrigger>

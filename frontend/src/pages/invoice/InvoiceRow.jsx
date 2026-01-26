@@ -8,7 +8,7 @@ import { FileText, Send, Download, X, DollarSign, Edit } from "lucide-react";
 import { Button, Badge } from "../../components/ui";
 import { cn, formatCurrency } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
-import { statusConfig, paymentStatusConfig } from "./constants";
+import { statusConfig, paymentStatusConfig } from "../../lib/constants/finance";
 
 export default function InvoiceRow({
   invoice,

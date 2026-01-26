@@ -10,124 +10,43 @@
 核心功能：周工时表、批量填报、审批流程
 """
 
-from calendar import monthrange
-from datetime import date, datetime, timedelta
+from datetime import date
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
-from sqlalchemy import and_, case, desc, extract, func, or_
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
-from app.models.organization import Department, Employee
+from app.models.organization import Department
 from app.models.project import Project
-from app.models.rd_project import RdProject
 from app.models.timesheet import (
-    OvertimeApplication,
     Timesheet,
-    TimesheetApprovalLog,
-    TimesheetBatch,
-    TimesheetRule,
-    TimesheetSummary,
 )
 from app.models.user import User
-from app.schemas.common import PaginatedResponse, ResponseModel
+from app.schemas.common import ResponseModel
 from app.schemas.timesheet import (
-    MonthSummaryResponse,
-    TimesheetBatchCreate,
-    TimesheetCreate,
-    TimesheetListResponse,
-    TimesheetResponse,
     TimesheetStatisticsResponse,
-    TimesheetUpdate,
-    WeekTimesheetResponse,
 )
 
 router = APIRouter()
 
 
-def check_timesheet_approval_permission(
-    db: Session,
-    timesheet: Timesheet,
-    current_user: User
-) -> bool:
-    """
-    检查用户是否有权审批指定的工时记录
-
-    审批权限规则：
-    1. 超级管理员可以审批所有工时
-    2. 项目经理可以审批其项目的工时
-    3. 研发项目负责人可以审批其研发项目的工时
-    4. 部门经理可以审批其部门成员的工时
-
-    Args:
-        db: 数据库会话
-        timesheet: 工时记录
-        current_user: 当前用户
-
-    Returns:
-        bool: 是否有审批权限
-    """
-    # 1. 超级管理员可以审批所有工时
-    if hasattr(current_user, 'is_superuser') and current_user.is_superuser:
-        return True
-
-    # 2. 检查是否是项目经理（非标项目）
-    if timesheet.project_id:
-        project = db.query(Project).filter(Project.id == timesheet.project_id).first()
-        if project and project.pm_id == current_user.id:
-            return True
-
-    # 3. 检查是否是研发项目负责人
-    if timesheet.rd_project_id:
-        rd_project = db.query(RdProject).filter(RdProject.id == timesheet.rd_project_id).first()
-        if rd_project and rd_project.project_manager_id == current_user.id:
-            return True
-
-    # 4. 检查是否是部门经理
-    if timesheet.department_id:
-        department = db.query(Department).filter(Department.id == timesheet.department_id).first()
-        if department and department.manager_id:
-            # 需要通过 employee_id 关联到 user
-            # 查找当前用户对应的 employee
-            if hasattr(current_user, 'employee_id') and current_user.employee_id:
-                if department.manager_id == current_user.employee_id:
-                    return True
-
-    # 5. 如果工时记录有提交人的部门信息，检查当前用户是否是该部门经理
-    if timesheet.user_id:
-        # 获取工时提交人
-        timesheet_user = db.query(User).filter(User.id == timesheet.user_id).first()
-        if timesheet_user and hasattr(timesheet_user, 'employee_id') and timesheet_user.employee_id:
-            # 获取提交人的员工信息
-            employee = db.query(Employee).filter(Employee.id == timesheet_user.employee_id).first()
-            if employee and employee.department:
-                # 查找该部门
-                dept = db.query(Department).filter(Department.dept_name == employee.department).first()
-                if dept and dept.manager_id:
-                    # 检查当前用户是否是该部门经理
-                    if hasattr(current_user, 'employee_id') and current_user.employee_id == dept.manager_id:
-                        return True
-
-    return False
-
-
-
 from fastapi import APIRouter
 
-router = APIRouter(
-    prefix="/timesheet/statistics",
-    tags=["statistics"]
-)
+router = APIRouter(prefix="/timesheet/statistics", tags=["statistics"])
 
 # 共 3 个路由
 
 # ==================== 工时统计分析 ====================
 
-@router.get("/statistics", response_model=TimesheetStatisticsResponse, status_code=status.HTTP_200_OK)
+
+@router.get(
+    "/statistics",
+    response_model=TimesheetStatisticsResponse,
+    status_code=status.HTTP_200_OK,
+)
 def get_timesheet_statistics(
     *,
     db: Session = Depends(deps.get_db),
@@ -140,14 +59,12 @@ def get_timesheet_statistics(
     """
     工时统计分析（多维统计）
     """
-    query = db.query(Timesheet).filter(Timesheet.status == "APPROVED")
+    from app.core.permissions.timesheet import apply_timesheet_access_filter
 
-    # 权限控制
-    if not hasattr(current_user, 'is_superuser') or not current_user.is_superuser:
-        if user_id and user_id != current_user.id:
-            raise HTTPException(status_code=403, detail="无权查看其他用户的统计")
-        query = query.filter(Timesheet.user_id == current_user.id)
-    elif user_id:
+    query = db.query(Timesheet).filter(Timesheet.status == "APPROVED")
+    query = apply_timesheet_access_filter(query, db, current_user)
+
+    if user_id:
         query = query.filter(Timesheet.user_id == user_id)
 
     if project_id:
@@ -208,7 +125,7 @@ def get_timesheet_statistics(
         by_user=by_user,
         by_project=by_project,
         by_date=by_date,
-        by_work_type=by_work_type
+        by_work_type=by_work_type,
     )
 
 
@@ -224,8 +141,7 @@ def get_my_timesheet_summary(
     我的工时汇总（个人统计）
     """
     query = db.query(Timesheet).filter(
-        Timesheet.user_id == current_user.id,
-        Timesheet.status == 'APPROVED'
+        Timesheet.user_id == current_user.id, Timesheet.status == "APPROVED"
     )
 
     if start_date:
@@ -257,13 +173,13 @@ def get_my_timesheet_summary(
 
         if project_name not in by_project:
             by_project[project_name] = {
-                'project_id': ts.project_id,
-                'project_name': project_name,
-                'total_hours': Decimal(0),
-                'days': 0
+                "project_id": ts.project_id,
+                "project_name": project_name,
+                "total_hours": Decimal(0),
+                "days": 0,
             }
-        by_project[project_name]['total_hours'] += hours
-        by_project[project_name]['days'] += 1
+        by_project[project_name]["total_hours"] += hours
+        by_project[project_name]["days"] += 1
 
         # 按日期统计
         date_str = ts.work_date.isoformat()
@@ -286,16 +202,28 @@ def get_my_timesheet_summary(
             "total_hours": float(total_hours),
             "billable_hours": float(billable_hours),
             "non_billable_hours": float(total_hours - billable_hours),
-            "by_project": {k: {'project_id': v['project_id'], 'project_name': v['project_name'], 'total_hours': float(v['total_hours']), 'days': v['days']} for k, v in by_project.items()},
+            "by_project": {
+                k: {
+                    "project_id": v["project_id"],
+                    "project_name": v["project_name"],
+                    "total_hours": float(v["total_hours"]),
+                    "days": v["days"],
+                }
+                for k, v in by_project.items()
+            },
             "by_date": {k: float(v) for k, v in by_date.items()},
             "by_work_type": {k: float(v) for k, v in by_work_type.items()},
             "start_date": start_date.isoformat() if start_date else None,
             "end_date": end_date.isoformat() if end_date else None,
-        }
+        },
     )
 
 
-@router.get("/departments/{dept_id}/timesheet-summary", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.get(
+    "/departments/{dept_id}/timesheet-summary",
+    response_model=ResponseModel,
+    status_code=status.HTTP_200_OK,
+)
 def get_department_timesheet_summary(
     *,
     db: Session = Depends(deps.get_db),
@@ -328,13 +256,12 @@ def get_department_timesheet_summary(
                 "by_user": [],
                 "by_project": {},
                 "by_date": {},
-            }
+            },
         )
 
     # 查询部门成员的工时记录
     query = db.query(Timesheet).filter(
-        Timesheet.user_id.in_(user_ids),
-        Timesheet.status == 'APPROVED'
+        Timesheet.user_id.in_(user_ids), Timesheet.status == "APPROVED"
     )
 
     if start_date:
@@ -361,13 +288,13 @@ def get_department_timesheet_summary(
         user_name = user.real_name or user.username if user else f"用户{ts.user_id}"
         if user_name not in by_user:
             by_user[user_name] = {
-                'user_id': ts.user_id,
-                'user_name': user_name,
-                'total_hours': Decimal(0),
-                'days': 0
+                "user_id": ts.user_id,
+                "user_name": user_name,
+                "total_hours": Decimal(0),
+                "days": 0,
             }
-        by_user[user_name]['total_hours'] += hours
-        by_user[user_name]['days'] += 1
+        by_user[user_name]["total_hours"] += hours
+        by_user[user_name]["days"] += 1
 
         # 按项目统计
         project_name = "未分配项目"
@@ -377,13 +304,13 @@ def get_department_timesheet_summary(
 
         if project_name not in by_project:
             by_project[project_name] = {
-                'project_id': ts.project_id,
-                'project_name': project_name,
-                'total_hours': Decimal(0),
-                'participants': set()
+                "project_id": ts.project_id,
+                "project_name": project_name,
+                "total_hours": Decimal(0),
+                "participants": set(),
             }
-        by_project[project_name]['total_hours'] += hours
-        by_project[project_name]['participants'].add(ts.user_id)
+        by_project[project_name]["total_hours"] += hours
+        by_project[project_name]["participants"].add(ts.user_id)
 
         # 按日期统计
         date_str = ts.work_date.isoformat()
@@ -393,8 +320,8 @@ def get_department_timesheet_summary(
 
     # 转换participants为数量
     for proj_name, proj_data in by_project.items():
-        proj_data['participant_count'] = len(proj_data['participants'])
-        del proj_data['participants']
+        proj_data["participant_count"] = len(proj_data["participants"])
+        del proj_data["participants"]
 
     return ResponseModel(
         code=200,
@@ -404,13 +331,15 @@ def get_department_timesheet_summary(
             "department_name": department.dept_name,
             "total_hours": float(total_hours),
             "total_participants": len(participants),
-            "by_user": [{**v, 'total_hours': float(v['total_hours'])} for v in by_user.values()],
-            "by_project": {k: {**v, 'total_hours': float(v['total_hours'])} for k, v in by_project.items()},
+            "by_user": [
+                {**v, "total_hours": float(v["total_hours"])} for v in by_user.values()
+            ],
+            "by_project": {
+                k: {**v, "total_hours": float(v["total_hours"])}
+                for k, v in by_project.items()
+            },
             "by_date": {k: float(v) for k, v in by_date.items()},
             "start_date": start_date.isoformat() if start_date else None,
             "end_date": end_date.isoformat() if end_date else None,
-        }
+        },
     )
-
-
-

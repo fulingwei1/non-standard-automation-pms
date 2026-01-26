@@ -10,9 +10,11 @@ from app.common.crud.service import BaseService
 from app.common.crud.filters import QueryBuilder
 
 # 同步版本（当前项目使用）
+from app.common.crud.base_crud_service import BaseCRUDService
 from app.common.crud.sync_repository import SyncBaseRepository
 from app.common.crud.sync_service import SyncBaseService
 from app.common.crud.sync_filters import SyncQueryBuilder
+from app.common.crud.types import QueryParams, PaginatedResult, SortOrder
 
 from app.common.crud.exceptions import (
     CRUDException,
@@ -32,6 +34,10 @@ __all__ = [
     "SyncBaseRepository",
     "SyncBaseService",
     "SyncQueryBuilder",
+    "BaseCRUDService",
+    "QueryParams",
+    "PaginatedResult",
+    "SortOrder",
     # 异常类
     "CRUDException",
     "NotFoundError",

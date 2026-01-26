@@ -19,6 +19,9 @@ class PerformanceLevelEnum(str, Enum):
     GOOD = 'GOOD'                        # 良好 (B)
     QUALIFIED = 'QUALIFIED'              # 合格 (C)
     NEEDS_IMPROVEMENT = 'NEEDS_IMPROVEMENT'  # 待改进 (D)
+    # 兼容物料模块历史值
+    AVERAGE = 'AVERAGE'
+    POOR = 'POOR'
 
 
 class IndicatorTypeEnum(str, Enum):

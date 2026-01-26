@@ -14,7 +14,7 @@ from app.api import deps
 from app.core import security
 from app.models.user import User
 from app.schemas.common import ResponseModel
-# from app.services.procurement_analysis_service import procurement_analysis_service  # TODO: Service file doesn't exist
+from app.services.procurement_analysis import procurement_analysis_service
 
 router = APIRouter()
 

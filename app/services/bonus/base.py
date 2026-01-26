@@ -102,6 +102,8 @@ class BonusCalculatorBase:
             PerformanceLevelEnum.GOOD: Decimal('1.2'),
             PerformanceLevelEnum.QUALIFIED: Decimal('1.0'),
             PerformanceLevelEnum.NEEDS_IMPROVEMENT: Decimal('0.8'),
+            PerformanceLevelEnum.AVERAGE: Decimal('1.0'),
+            PerformanceLevelEnum.POOR: Decimal('0.8'),
         }
         return coefficients.get(level, Decimal('1.0'))
 

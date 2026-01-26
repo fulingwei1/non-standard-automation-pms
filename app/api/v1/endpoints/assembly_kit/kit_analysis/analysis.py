@@ -64,7 +64,7 @@ async def execute_kit_analysis(
     check_date = request.check_date or date.today()
 
     # 获取BOM物料及装配属性
-    bom_items = db.query(BomItem).filter(BomItem.bom_header_id == request.bom_id).all()
+    bom_items = db.query(BomItem).filter(BomItem.bom_id == request.bom_id).all()
 
     if not bom_items:
         raise HTTPException(status_code=400, detail="BOM无物料明细")
@@ -113,7 +113,7 @@ async def execute_kit_analysis(
         project_id=request.project_id,
         machine_id=request.machine_id,
         bom_id=request.bom_id,
-        planned_start_date=request.planned_start_date or project.planned_start_date,
+        planned_start_date=getattr(request, "planned_start_date", None) or project.planned_start_date,
         overall_kit_rate=round(overall_kit_rate, 2),
         blocking_kit_rate=round(blocking_kit_rate, 2),
         stage_kit_rates=json.dumps({s.stage_code: {"kit_rate": float(s.kit_rate), "blocking_rate": float(s.blocking_rate), "can_start": s.can_start} for s in stage_kit_rates}),

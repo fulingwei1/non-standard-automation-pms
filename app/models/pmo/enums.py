@@ -4,6 +4,8 @@ PMO模型 - 枚举定义
 """
 from enum import Enum
 
+from app.models.enums import MeetingTypeEnum
+
 
 class ProjectLevelEnum(str, Enum):
     """项目级别"""
@@ -99,17 +101,6 @@ class RiskStatusEnum(str, Enum):
     RESPONDING = 'RESPONDING'  # 应对中
     MONITORING = 'MONITORING'  # 监控中
     CLOSED = 'CLOSED'          # 已关闭
-
-
-class MeetingTypeEnum(str, Enum):
-    """会议类型"""
-    KICKOFF = 'KICKOFF'              # 启动会
-    WEEKLY = 'WEEKLY'                # 周例会
-    MILESTONE_REVIEW = 'MILESTONE_REVIEW'  # 里程碑评审
-    CHANGE_REVIEW = 'CHANGE_REVIEW'  # 变更评审
-    RISK_REVIEW = 'RISK_REVIEW'      # 风险评审
-    CLOSURE = 'CLOSURE'              # 结项会
-    OTHER = 'OTHER'                  # 其他
 
 
 class ResourceAllocationStatusEnum(str, Enum):

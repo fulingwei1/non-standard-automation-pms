@@ -10,8 +10,8 @@ from ..material import (
     MaterialCategory,
     MaterialShortage,
     MaterialSupplier,
-    Supplier,
 )
+from ..vendor import Vendor
 from ..purchase import (
     GoodsReceipt,
     GoodsReceiptItem,
@@ -29,7 +29,7 @@ __all__ = [
     # Material
     'Material',
     'MaterialCategory',
-    'Supplier',
+    'Vendor',
     'MaterialSupplier',
     # BOM
     'BomHeader',

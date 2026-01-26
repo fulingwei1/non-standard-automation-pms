@@ -1,16 +1,20 @@
 # -*- coding: utf-8 -*-
 """
-审批通知服务 - 发送通知
-
+审批通知服务（使用统一NotificationService）
 提供统一的通知发送入口和站内通知保存功能
+
+BACKWARD COMPATIBILITY: 此模块现在使用unified_notification_service进行通知发送
 """
 
 import logging
 from typing import Any, Dict
 
+
 from app.models.notification import Notification
 
 logger = logging.getLogger(__name__)
+
+# 导入统一通知服务
 
 
 class SendNotificationMixin:
@@ -57,7 +61,9 @@ class SendNotificationMixin:
         if prefs.get("wechat_enabled"):
             self._queue_wechat_notification(notification)
 
-        logger.info(f"审批通知已发送: type={notification.get('type')}, receiver={receiver_id}")
+        logger.info(
+            f"审批通知已发送: type={notification.get('type')}, receiver={receiver_id}"
+        )
 
     def _save_system_notification(self, notification: Dict[str, Any]):
         """保存站内通知到数据库"""
@@ -88,7 +94,9 @@ class SendNotificationMixin:
 
             db_notification = Notification(
                 user_id=notification["receiver_id"],
-                notification_type=type_mapping.get(notification.get("type"), "APPROVAL_PENDING"),
+                notification_type=type_mapping.get(
+                    notification.get("type"), "APPROVAL_PENDING"
+                ),
                 source_type="approval",
                 source_id=notification.get("instance_id"),
                 title=notification.get("title", "审批通知"),

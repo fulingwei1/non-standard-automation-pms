@@ -7,7 +7,7 @@ import { TrendingUp, TrendingDown, Minus, BarChart3, Calendar } from "lucide-rea
 import { Card, CardContent, CardHeader, CardTitle, Badge } from "../../../components/ui";
 import { cn } from "../../../lib/utils";
 import { fadeIn, staggerContainer } from "../../../lib/animations";
-import { CHART_COLORS } from "../constants";
+import { CHART_COLORS } from "../../../lib/constants/strategy";
 
 export function MultiYearTrendChart({ trendData }) {
   if (!trendData || !trendData.years || trendData.years.length === 0) {

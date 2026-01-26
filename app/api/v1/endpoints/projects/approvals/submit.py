@@ -12,8 +12,7 @@
 """
 
 import logging
-from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -22,16 +21,12 @@ from app.api import deps
 from app.core import security
 from app.models.project import Project
 from app.models.sales.workflow import (
-    ApprovalHistory,
     ApprovalRecord,
     ApprovalWorkflow,
     ApprovalWorkflowStep,
 )
 from app.models.user import User
 from app.schemas.sales.contracts import (
-    ApprovalActionRequest,
-    ApprovalHistoryResponse,
-    ApprovalRecordResponse,
     ApprovalStartRequest,
     ApprovalStatusResponse,
 )
@@ -44,9 +39,8 @@ router = APIRouter()
 ENTITY_TYPE_PROJECT = "PROJECT"
 
 
-
 @router.post(
-    "/{project_id}/approval/submit",
+    "/approval/submit",
     response_model=ApprovalStatusResponse,
     status_code=status.HTTP_200_OK,
 )
@@ -142,5 +136,3 @@ def submit_project_approval(
         status="PENDING",
         progress=0,
     )
-
-
