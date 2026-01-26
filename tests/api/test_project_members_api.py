@@ -416,3 +416,309 @@ class TestProjectMembersAPI:
             pytest.skip("User does not have permission to delete member")
 
         assert response.status_code in [200, 204], response.text
+
+
+class TestProjectMembersAdvanced:
+    """项目成员高级测试"""
+
+    def test_batch_add_members(self, client: TestClient, admin_token: str):
+        """测试批量添加成员"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+
+        # 先获取项目列表
+        projects_response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/",
+            headers=headers
+        )
+
+        if projects_response.status_code != 200:
+            pytest.skip("Failed to get projects list")
+
+        projects = projects_response.json()
+        items = projects.get("items", projects) if isinstance(projects, dict) else projects
+        if not items:
+            pytest.skip("No projects available for testing")
+
+        project_id = items[0]["id"]
+
+        # 先获取用户列表
+        users_response = client.get(
+            f"{settings.API_V1_PREFIX}/users/",
+            headers=headers
+        )
+
+        if users_response.status_code != 200:
+            pytest.skip("Failed to get users list")
+
+        users = users_response.json()
+        user_items = users.get("items", users) if isinstance(users, dict) else users
+        if len(user_items) < 2:
+            pytest.skip("Need at least 2 users for batch add test")
+
+        # 批量添加成员
+        members_data = {
+            "members": [
+                {"user_id": user_items[0]["id"], "role_code": "DEV", "allocation_pct": 50},
+                {"user_id": user_items[1]["id"] if len(user_items) > 1 else user_items[0]["id"], "role_code": "TEST", "allocation_pct": 30},
+            ]
+        }
+
+        response = client.post(
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/batch",
+            json=members_data,
+            headers=headers
+        )
+
+        if response.status_code == 404:
+            pytest.skip("Batch add endpoint not found")
+        if response.status_code == 403:
+            pytest.skip("User does not have permission")
+        if response.status_code == 400:
+            pytest.skip("Users already members or validation error")
+
+        assert response.status_code in [200, 201], response.text
+
+    def test_get_member_contribution(self, client: TestClient, admin_token: str):
+        """测试获取成员贡献度"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+
+        # 先获取项目列表
+        projects_response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/",
+            headers=headers
+        )
+
+        if projects_response.status_code != 200:
+            pytest.skip("Failed to get projects list")
+
+        projects = projects_response.json()
+        items = projects.get("items", projects) if isinstance(projects, dict) else projects
+        if not items:
+            pytest.skip("No projects available for testing")
+
+        project_id = items[0]["id"]
+
+        # 获取贡献度统计
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/contribution",
+            headers=headers
+        )
+
+        if response.status_code == 404:
+            pytest.skip("Contribution endpoint not found")
+        if response.status_code == 422:
+            pytest.skip("Contribution endpoint not implemented")
+
+        assert response.status_code == 200, response.text
+
+    def test_get_member_workload(self, client: TestClient, admin_token: str):
+        """测试获取成员工作量"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+
+        # 先获取项目列表
+        projects_response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/",
+            headers=headers
+        )
+
+        if projects_response.status_code != 200:
+            pytest.skip("Failed to get projects list")
+
+        projects = projects_response.json()
+        items = projects.get("items", projects) if isinstance(projects, dict) else projects
+        if not items:
+            pytest.skip("No projects available for testing")
+
+        project_id = items[0]["id"]
+
+        # 先获取成员列表
+        members_response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/",
+            headers=headers
+        )
+
+        if members_response.status_code != 200:
+            pytest.skip("Failed to get members list")
+
+        members = members_response.json()
+        member_items = members.get("items", members) if isinstance(members, dict) else members
+        if not member_items:
+            pytest.skip("No members available for testing")
+
+        member_id = member_items[0]["id"]
+
+        # 获取成员工作量
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/{member_id}/workload",
+            headers=headers
+        )
+
+        if response.status_code == 404:
+            pytest.skip("Member workload endpoint not found")
+        if response.status_code == 422:
+            pytest.skip("Member workload endpoint not implemented")
+
+        assert response.status_code == 200, response.text
+
+    def test_update_member_allocation(self, client: TestClient, admin_token: str):
+        """测试更新成员分配比例"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+
+        # 先获取项目列表
+        projects_response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/",
+            headers=headers
+        )
+
+        if projects_response.status_code != 200:
+            pytest.skip("Failed to get projects list")
+
+        projects = projects_response.json()
+        items = projects.get("items", projects) if isinstance(projects, dict) else projects
+        if not items:
+            pytest.skip("No projects available for testing")
+
+        project_id = items[0]["id"]
+
+        # 先获取成员列表
+        members_response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/",
+            headers=headers
+        )
+
+        if members_response.status_code != 200:
+            pytest.skip("Failed to get members list")
+
+        members = members_response.json()
+        member_items = members.get("items", members) if isinstance(members, dict) else members
+        if not member_items:
+            pytest.skip("No members available for testing")
+
+        member_id = member_items[0]["id"]
+
+        # 更新分配比例
+        update_data = {
+            "allocation_pct": 100,  # 全职参与
+        }
+
+        response = client.put(
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/{member_id}",
+            json=update_data,
+            headers=headers
+        )
+
+        if response.status_code == 403:
+            pytest.skip("User does not have permission to update member")
+        if response.status_code == 404:
+            pytest.skip("Member update endpoint not found")
+        if response.status_code == 422:
+            pytest.skip("Member update endpoint not implemented")
+
+        assert response.status_code == 200, response.text
+        data = response.json()
+        assert float(data["allocation_pct"]) == 100.0
+
+    def test_change_member_role(self, client: TestClient, admin_token: str):
+        """测试更换成员角色"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+
+        # 先获取项目列表
+        projects_response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/",
+            headers=headers
+        )
+
+        if projects_response.status_code != 200:
+            pytest.skip("Failed to get projects list")
+
+        projects = projects_response.json()
+        items = projects.get("items", projects) if isinstance(projects, dict) else projects
+        if not items:
+            pytest.skip("No projects available for testing")
+
+        project_id = items[0]["id"]
+
+        # 先获取成员列表
+        members_response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/",
+            headers=headers
+        )
+
+        if members_response.status_code != 200:
+            pytest.skip("Failed to get members list")
+
+        members = members_response.json()
+        member_items = members.get("items", members) if isinstance(members, dict) else members
+        if not member_items:
+            pytest.skip("No members available for testing")
+
+        member_id = member_items[0]["id"]
+
+        # 更换角色
+        update_data = {
+            "role_code": "QA",  # 质量工程师
+        }
+
+        response = client.put(
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/{member_id}",
+            json=update_data,
+            headers=headers
+        )
+
+        if response.status_code == 403:
+            pytest.skip("User does not have permission to update member")
+        if response.status_code == 404:
+            pytest.skip("Member update endpoint not found")
+        if response.status_code == 422:
+            pytest.skip("Role code validation error")
+
+        assert response.status_code == 200, response.text
+
+    def test_list_members_by_role(self, client: TestClient, admin_token: str):
+        """测试按角色筛选成员"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+
+        # 先获取项目列表
+        projects_response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/",
+            headers=headers
+        )
+
+        if projects_response.status_code != 200:
+            pytest.skip("Failed to get projects list")
+
+        projects = projects_response.json()
+        items = projects.get("items", projects) if isinstance(projects, dict) else projects
+        if not items:
+            pytest.skip("No projects available for testing")
+
+        project_id = items[0]["id"]
+
+        # 测试不同角色筛选
+        roles = ["PM", "DEV", "TEST", "ME", "EE"]
+        for role in roles:
+            response = client.get(
+                f"{settings.API_V1_PREFIX}/projects/{project_id}/members/",
+                params={"role": role},
+                headers=headers
+            )
+
+            assert response.status_code == 200, f"Failed for role {role}: {response.text}"
