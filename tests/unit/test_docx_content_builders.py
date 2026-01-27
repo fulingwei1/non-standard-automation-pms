@@ -46,15 +46,15 @@ class TestSetupDocumentFormatting:
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
-        setup_document_formatting(mock_document)
+            setup_document_formatting(mock_document)
 
-        # 验证边距设置
-        assert len(mock_document.sections) > 0
-        section = mock_document.sections[0]
-        assert hasattr(section, 'top_margin')
-        assert hasattr(section, 'bottom_margin')
-        assert hasattr(section, 'left_margin')
-        assert hasattr(section, 'right_margin')
+            # 验证边距设置
+            assert len(mock_document.sections) > 0
+            section = mock_document.sections[0]
+            assert hasattr(section, 'top_margin')
+            assert hasattr(section, 'bottom_margin')
+            assert hasattr(section, 'left_margin')
+            assert hasattr(section, 'right_margin')
 
     def test_setup_document_formatting_docx_not_available(self):
         """测试 docx 库未安装时"""
@@ -63,7 +63,7 @@ class TestSetupDocumentFormatting:
             setup_document_formatting(mock_doc)
             # 应该直接返回，不执行任何操作（不访问sections属性）
             # 验证函数正常返回，没有抛出异常
-            assert True  # 如果函数正常返回，测试通过
+        assert True  # 如果函数正常返回，测试通过
 
 
 class TestAddDocumentHeader:
@@ -74,31 +74,31 @@ class TestAddDocumentHeader:
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
-        add_document_header(
+            add_document_header(
             mock_document,
             report_title="测试报表",
             period_info="2024年1月"
-        )
+            )
 
-        # 验证调用了 add_heading
-        assert mock_document.add_heading.called
-        # 验证调用了 add_paragraph
-        assert mock_document.add_paragraph.called
+            # 验证调用了 add_heading
+            assert mock_document.add_heading.called
+            # 验证调用了 add_paragraph
+            assert mock_document.add_paragraph.called
 
     def test_add_document_header_with_rhythm_level(self, mock_document):
         """测试带节律层级的标题添加"""
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
-        add_document_header(
+            add_document_header(
             mock_document,
             report_title="测试报表",
             period_info="2024年1月",
             rhythm_level="公司级"
-        )
+            )
 
-        # 应该调用了更多次 add_paragraph（包含节律层级）
-        assert mock_document.add_paragraph.call_count >= 2
+            # 应该调用了更多次 add_paragraph（包含节律层级）
+            assert mock_document.add_paragraph.call_count >= 2
 
 
 class TestAddSummarySection:
@@ -109,7 +109,7 @@ class TestAddSummarySection:
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
-        summary = {
+            summary = {
             'total_meetings': 10,
             'completed_meetings': 8,
             'completion_rate': '80%',
@@ -117,24 +117,24 @@ class TestAddSummarySection:
             'completed_action_items': 15,
             'overdue_action_items': 2,
             'action_completion_rate': '75%'
-        }
+            }
 
-        add_summary_section(mock_document, summary)
+            add_summary_section(mock_document, summary)
 
-        # 验证调用了 add_heading
-        assert mock_document.add_heading.called
-        # 验证调用了 add_table
-        assert mock_document.add_table.called
+            # 验证调用了 add_heading
+            assert mock_document.add_heading.called
+            # 验证调用了 add_table
+            assert mock_document.add_table.called
 
     def test_add_summary_section_empty(self, mock_document):
         """测试空摘要数据"""
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
-        add_summary_section(mock_document, {})
+            add_summary_section(mock_document, {})
 
-        # 应该仍然创建表格
-        assert mock_document.add_table.called
+            # 应该仍然创建表格
+            assert mock_document.add_table.called
 
 
 class TestAddComparisonSection:
@@ -145,56 +145,56 @@ class TestAddComparisonSection:
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
-        comparison_data = {
+            comparison_data = {
             'previous_period': '2023-12',
             'current_period': '2024-01',
             'meetings_comparison': {
-                'current': 10,
-                'previous': 8,
-                'change': 2,
-                'change_rate': '+25%'
+            'current': 10,
+            'previous': 8,
+            'change': 2,
+            'change_rate': '+25%'
             },
             'completed_meetings_comparison': {
-                'current': 8,
-                'previous': 6,
-                'change': 2,
-                'change_rate': '+33%'
+            'current': 8,
+            'previous': 6,
+            'change': 2,
+            'change_rate': '+33%'
             },
             'action_items_comparison': {
-                'current': 20,
-                'previous': 18,
-                'change': 2,
-                'change_rate': '+11%'
+            'current': 20,
+            'previous': 18,
+            'change': 2,
+            'change_rate': '+11%'
             },
             'completed_action_items_comparison': {
-                'current': 15,
-                'previous': 12,
-                'change': 3,
-                'change_rate': '+25%'
+            'current': 15,
+            'previous': 12,
+            'change': 3,
+            'change_rate': '+25%'
             },
             'completion_rate_comparison': {
-                'current': '80%',
-                'previous': '75%',
-                'change': '+5%',
-                'change_value': 5
+            'current': '80%',
+            'previous': '75%',
+            'change': '+5%',
+            'change_value': 5
             }
-        }
+            }
 
-        add_comparison_section(mock_document, comparison_data)
+            add_comparison_section(mock_document, comparison_data)
 
-        # 验证调用了 add_heading 和 add_table
-        assert mock_document.add_heading.called
-        assert mock_document.add_table.called
+            # 验证调用了 add_heading 和 add_table
+            assert mock_document.add_heading.called
+            assert mock_document.add_table.called
 
     def test_add_comparison_section_empty(self, mock_document):
         """测试空对比数据"""
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
-        add_comparison_section(mock_document, {})
+            add_comparison_section(mock_document, {})
 
-        # 应该添加"无对比数据"提示
-        assert mock_document.add_paragraph.called
+            # 应该添加"无对比数据"提示
+            assert mock_document.add_paragraph.called
 
 
 class TestAddLevelStatisticsSection:
@@ -208,16 +208,16 @@ class TestAddLevelStatisticsSection:
         def format_rhythm_level(level):
             return f"层级{level}"
 
-        by_level = {
+            by_level = {
             'LEVEL1': {'total': 5, 'completed': 4},
             'LEVEL2': {'total': 3, 'completed': 2}
-        }
+            }
 
-        add_level_statistics_section(mock_document, by_level, format_rhythm_level)
+            add_level_statistics_section(mock_document, by_level, format_rhythm_level)
 
-        # 验证调用了 add_heading 和 add_table
-        assert mock_document.add_heading.called
-        assert mock_document.add_table.called
+            # 验证调用了 add_heading 和 add_table
+            assert mock_document.add_heading.called
+            assert mock_document.add_table.called
 
     def test_add_level_statistics_section_empty(self, mock_document):
         """测试空层级数据"""
@@ -227,10 +227,10 @@ class TestAddLevelStatisticsSection:
         def format_rhythm_level(level):
             return level
 
-        add_level_statistics_section(mock_document, {}, format_rhythm_level)
+            add_level_statistics_section(mock_document, {}, format_rhythm_level)
 
-        # 应该添加"无层级统计数据"提示
-        assert mock_document.add_paragraph.called
+            # 应该添加"无层级统计数据"提示
+            assert mock_document.add_paragraph.called
 
 
 class TestAddActionItemsSection:
@@ -241,18 +241,18 @@ class TestAddActionItemsSection:
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
-        action_summary = {
+            action_summary = {
             'total': 20,
             'completed': 15,
             'overdue': 2,
             'in_progress': 3
-        }
+            }
 
-        add_action_items_section(mock_document, action_summary)
+            add_action_items_section(mock_document, action_summary)
 
-        # 验证调用了 add_heading 和 add_table
-        assert mock_document.add_heading.called
-        assert mock_document.add_table.called
+            # 验证调用了 add_heading 和 add_table
+            assert mock_document.add_heading.called
+            assert mock_document.add_table.called
 
 
 class TestAddKeyDecisionsSection:
@@ -263,43 +263,43 @@ class TestAddKeyDecisionsSection:
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
-        key_decisions = [
+            key_decisions = [
             "决策1：推进项目A",
             "决策2：暂停项目B",
             "决策3：增加预算"
-        ]
+            ]
 
-        add_key_decisions_section(mock_document, key_decisions)
+            add_key_decisions_section(mock_document, key_decisions)
 
-        # 验证调用了 add_heading 和 add_paragraph
-        assert mock_document.add_heading.called
-        assert mock_document.add_paragraph.called
+            # 验证调用了 add_heading 和 add_paragraph
+            assert mock_document.add_heading.called
+            assert mock_document.add_paragraph.called
 
     def test_add_key_decisions_section_with_dicts(self, mock_document):
         """测试字典格式的决策列表"""
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
-        key_decisions = [
+            key_decisions = [
             {'decision': '决策1：推进项目A', 'maker': '张三'},
             {'decision': '决策2：暂停项目B', 'maker': '李四'}
-        ]
+            ]
 
-        add_key_decisions_section(mock_document, key_decisions)
+            add_key_decisions_section(mock_document, key_decisions)
 
-        # 验证调用了 add_heading 和 add_paragraph
-        assert mock_document.add_heading.called
-        assert mock_document.add_paragraph.called
+            # 验证调用了 add_heading 和 add_paragraph
+            assert mock_document.add_heading.called
+            assert mock_document.add_paragraph.called
 
     def test_add_key_decisions_section_empty(self, mock_document):
         """测试空决策列表"""
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
-        add_key_decisions_section(mock_document, [])
+            add_key_decisions_section(mock_document, [])
 
-        # 应该添加"无关键决策记录"提示
-        assert mock_document.add_paragraph.called
+            # 应该添加"无关键决策记录"提示
+            assert mock_document.add_paragraph.called
 
 
 class TestAddStrategicStructuresSection:
@@ -310,26 +310,26 @@ class TestAddStrategicStructuresSection:
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
-        strategic_structures = [
+            strategic_structures = [
             {'meeting_name': '战略会议1', 'meeting_date': '2024-01-15'},
             {'meeting_name': '战略会议2', 'meeting_date': '2024-01-20'}
-        ]
+            ]
 
-        add_strategic_structures_section(mock_document, strategic_structures)
+            add_strategic_structures_section(mock_document, strategic_structures)
 
-        # 验证调用了 add_heading 和 add_paragraph
-        assert mock_document.add_heading.called
-        assert mock_document.add_paragraph.called
+            # 验证调用了 add_heading 和 add_paragraph
+            assert mock_document.add_heading.called
+            assert mock_document.add_paragraph.called
 
     def test_add_strategic_structures_section_empty(self, mock_document):
         """测试空战略结构数据"""
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
-        add_strategic_structures_section(mock_document, [])
+            add_strategic_structures_section(mock_document, [])
 
-        # 应该添加"无战略结构记录"提示
-        assert mock_document.add_paragraph.called
+            # 应该添加"无战略结构记录"提示
+            assert mock_document.add_paragraph.called
 
 
 class TestAddMeetingsListSection:
@@ -349,36 +349,36 @@ class TestAddMeetingsListSection:
         def format_status(status):
             return f"状态{status}"
 
-        meetings = [
+            meetings = [
             {
-                'meeting_name': '会议1',
-                'meeting_date': '2024-01-15 10:00:00',
-                'rhythm_level': 'LEVEL1',
-                'cycle_type': 'WEEKLY',
-                'status': 'COMPLETED',
-                'action_items_count': 5
+            'meeting_name': '会议1',
+            'meeting_date': '2024-01-15 10:00:00',
+            'rhythm_level': 'LEVEL1',
+            'cycle_type': 'WEEKLY',
+            'status': 'COMPLETED',
+            'action_items_count': 5
             },
             {
-                'meeting_name': '会议2',
-                'meeting_date': '2024-01-20 14:00:00',
-                'rhythm_level': 'LEVEL2',
-                'cycle_type': 'MONTHLY',
-                'status': 'PENDING',
-                'action_items_count': 3
+            'meeting_name': '会议2',
+            'meeting_date': '2024-01-20 14:00:00',
+            'rhythm_level': 'LEVEL2',
+            'cycle_type': 'MONTHLY',
+            'status': 'PENDING',
+            'action_items_count': 3
             }
-        ]
+            ]
 
-        add_meetings_list_section(
+            add_meetings_list_section(
             mock_document,
             meetings,
             format_rhythm_level,
             format_cycle_type,
             format_status
-        )
+            )
 
-        # 验证调用了 add_heading 和 add_table
-        assert mock_document.add_heading.called
-        assert mock_document.add_table.called
+            # 验证调用了 add_heading 和 add_table
+            assert mock_document.add_heading.called
+            assert mock_document.add_table.called
 
     def test_add_meetings_list_section_empty(self, mock_document):
         """测试空会议列表"""
@@ -394,16 +394,16 @@ class TestAddMeetingsListSection:
         def format_status(status):
             return status
 
-        add_meetings_list_section(
+            add_meetings_list_section(
             mock_document,
             [],
             format_rhythm_level,
             format_cycle_type,
             format_status
-        )
+            )
 
-        # 应该添加"无会议记录"提示
-        assert mock_document.add_paragraph.called
+            # 应该添加"无会议记录"提示
+            assert mock_document.add_paragraph.called
 
 
 class TestAddDocumentFooter:
@@ -414,22 +414,22 @@ class TestAddDocumentFooter:
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
-        add_document_footer(mock_document)
+            add_document_footer(mock_document)
 
-        # 验证调用了 add_paragraph
-        assert mock_document.add_paragraph.called
+            # 验证调用了 add_paragraph
+            assert mock_document.add_paragraph.called
 
     def test_add_document_footer_contains_timestamp(self, mock_document):
         """测试页脚包含时间戳"""
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
-        mock_para = MagicMock()
-        mock_run = MagicMock()
-        mock_para.add_run.return_value = mock_run
-        mock_document.add_paragraph.return_value = mock_para
+            mock_para = MagicMock()
+            mock_run = MagicMock()
+            mock_para.add_run.return_value = mock_run
+            mock_document.add_paragraph.return_value = mock_para
 
-        add_document_footer(mock_document)
+            add_document_footer(mock_document)
 
-        # 验证调用了 add_run（用于添加时间戳文本）
-        assert mock_para.add_run.called
+            # 验证调用了 add_run（用于添加时间戳文本）
+            assert mock_para.add_run.called

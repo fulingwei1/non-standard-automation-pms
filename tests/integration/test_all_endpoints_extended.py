@@ -34,19 +34,23 @@ from app.models.material import (
     BomHeader,
     MaterialCategory,
 )
-from app.models.vendor import Vendor as Supplier
 from app.models.purchase import PurchaseOrder
 from app.models.ecn import Ecn
 from app.models.acceptance import (
     AcceptanceOrder,
     AcceptanceTemplate,
 )
-from app.models.outsourcing import OutsourcingOrder
-from app.models.vendor import Vendor as OutsourcingVendor
-from app.models.alert import AlertRecord, AlertRule
+from app.models.outsourcing import (
+    OutsourcingOrder,
+)
+from app.models.alert import AlertRule, AlertRecord
 from app.models.issue import Issue
-from app.models.project import Machine, Project
-from app.models.shortage import ShortageReport
+from app.models.project import Project, Machine
+from app.models.vendor import Vendor
+
+# Vendor 模型替代了历史上的 Supplier/OutsourcingVendor，这里保持别名兼容
+Supplier = Vendor
+OutsourcingVendor = Vendor
 
 
 # ============================================================================

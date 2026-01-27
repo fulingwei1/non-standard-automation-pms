@@ -45,33 +45,33 @@ class TestCreateInstance:
 
         # Mock 实例编号生成
         with patch.object(
-            WorkflowEngine,
-            "_generate_instance_no",
-            return_value="AP2501250001",
+        WorkflowEngine,
+        "_generate_instance_no",
+        return_value="AP2501250001",
         ):
             # Mock 节点查询
-            mock_node = MagicMock()
-            mock_node.id = 1
-            mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_node
+        mock_node = MagicMock()
+        mock_node.id = 1
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_node
 
             # Mock 保存
-            mock_db.add = MagicMock()
-            mock_db.commit = MagicMock()
+        mock_db.add = MagicMock()
+        mock_db.commit = MagicMock()
 
-            engine = WorkflowEngine(mock_db)
+        engine = WorkflowEngine(mock_db)
 
-            result = engine.create_instance(
-                flow_code="ECN_FLOW",
-                business_type="ECN",
-                business_id=100,
-                business_title="测试变更",
-                submitted_by=1,
-            )
+        result = engine.create_instance(
+        flow_code="ECN_FLOW",
+        business_type="ECN",
+        business_id=100,
+        business_title="测试变更",
+        submitted_by=1,
+        )
 
-            assert result.instance_no == "AP2501250001"
-            assert result.flow_id == 1
-            assert result.business_type == "ECN"
-            assert result.business_id == 100
+        assert result.instance_no == "AP2501250001"
+        assert result.flow_id == 1
+        assert result.business_type == "ECN"
+        assert result.business_id == 100
 
     def test_create_instance_flow_not_found(self):
         """测试流程不存在"""
@@ -82,11 +82,11 @@ class TestCreateInstance:
 
         with pytest.raises(ValueError, match="审批流程 .* 不存在或未启用"):
             engine.create_instance(
-                flow_code="NON_EXIST",
-                business_type="ECN",
-                business_id=100,
-                business_title="测试",
-                submitted_by=1,
+            flow_code="NON_EXIST",
+            business_type="ECN",
+            business_id=100,
+            business_title="测试",
+            submitted_by=1,
             )
 
 
@@ -234,14 +234,14 @@ class TestSubmitApproval:
         with patch.object(engine, "_update_instance_status"):
             with patch.object(engine, "_get_approver_name", return_value="张三"):
                 result = engine.submit_approval(
-                    instance=mock_instance,
-                    approver_id=5,
-                    decision=ApprovalDecision.APPROVE,
-                    comment="同意",
+                instance=mock_instance,
+                approver_id=5,
+                decision=ApprovalDecision.APPROVE,
+                comment="同意",
                 )
 
-        assert result.decision == ApprovalDecision.APPROVE
-        assert result.comment == "同意"
+                assert result.decision == ApprovalDecision.APPROVE
+                assert result.comment == "同意"
 
     def test_submit_reject(self):
         """测试驳回审批"""
@@ -267,14 +267,14 @@ class TestSubmitApproval:
         with patch.object(engine, "_update_instance_status"):
             with patch.object(engine, "_get_approver_name", return_value="李四"):
                 result = engine.submit_approval(
-                    instance=mock_instance,
-                    approver_id=6,
-                    decision=ApprovalDecision.REJECT,
-                    comment="需要修改",
+                instance=mock_instance,
+                approver_id=6,
+                decision=ApprovalDecision.REJECT,
+                comment="需要修改",
                 )
 
-        assert result.decision == ApprovalDecision.REJECT
-        assert result.comment == "需要修改"
+                assert result.decision == ApprovalDecision.REJECT
+                assert result.comment == "需要修改"
 
 
 @pytest.mark.unit
@@ -297,7 +297,7 @@ class TestUpdateInstanceStatus:
 
         engine = WorkflowEngine(mock_db)
         engine._update_instance_status(
-            mock_instance, ApprovalStatus.APPROVED, completed_nodes=2
+        mock_instance, ApprovalStatus.APPROVED, completed_nodes=2
         )
 
         assert mock_instance.status == ApprovalStatus.APPROVED
@@ -526,8 +526,8 @@ class TestWorkflowEngineIntegration:
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_flow
         mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [
-            mock_node1,
-            mock_node2,
+        mock_node1,
+        mock_node2,
         ]
 
         # Mock 保存操作
@@ -538,19 +538,19 @@ class TestWorkflowEngineIntegration:
 
         # 创建实例
         with patch.object(
-            WorkflowEngine,
-            "_generate_instance_no",
-            return_value="AP2501250001",
+        WorkflowEngine,
+        "_generate_instance_no",
+        return_value="AP2501250001",
         ):
-            instance = engine.create_instance(
-                flow_code="ECN_FLOW",
-                business_type="ECN",
-                business_id=100,
-                business_title="测试",
-                submitted_by=1,
-            )
+        instance = engine.create_instance(
+        flow_code="ECN_FLOW",
+        business_type="ECN",
+        business_id=100,
+        business_title="测试",
+        submitted_by=1,
+        )
 
-            assert instance.status == ApprovalStatus.PENDING
+        assert instance.status == ApprovalStatus.PENDING
 
     def test_multi_level_approval_flow(self):
         """测试多级审批流程"""
@@ -578,9 +578,9 @@ class TestWorkflowEngineIntegration:
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_node1
         mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.first.side_effect = [
-            mock_node2,
-            mock_node3,
-            None,
+        mock_node2,
+        mock_node3,
+        None,
         ]
 
         mock_record = MagicMock()
@@ -595,14 +595,14 @@ class TestWorkflowEngineIntegration:
         with patch.object(engine, "_update_instance_status"):
             with patch.object(engine, "_get_approver_name", return_value="张三"):
                 engine.submit_approval(
-                    instance=mock_instance,
-                    approver_id=5,
-                    decision=ApprovalDecision.APPROVE,
-                    comment="通过",
+                instance=mock_instance,
+                approver_id=5,
+                decision=ApprovalDecision.APPROVE,
+                comment="通过",
                 )
 
-        assert mock_instance.current_node_id == 11
-        assert mock_instance.completed_nodes == 1
+                assert mock_instance.current_node_id == 11
+                assert mock_instance.completed_nodes == 1
 
 
 @pytest.mark.unit
@@ -638,10 +638,10 @@ class TestEdgeCases:
         try:
             result = engine.evaluate_node_conditions(mock_node, mock_instance)
             # 如果没有抛出异常，应该返回False
-            assert result is False
+        assert result is False
         except Exception:
             # 抛出异常也是合理的行为
-            pass
+        pass
 
     def test_concurrent_approval_requests(self):
         """测试并发审批请求"""
@@ -664,18 +664,18 @@ class TestEdgeCases:
         with patch.object(engine, "_update_instance_status"):
             with patch.object(engine, "_get_approver_name", return_value="张三"):
                 engine.submit_approval(
-                    instance=mock_instance,
-                    approver_id=5,
-                    decision=ApprovalDecision.APPROVE,
-                    comment="同意",
+                instance=mock_instance,
+                approver_id=5,
+                decision=ApprovalDecision.APPROVE,
+                comment="同意",
                 )
 
-        with patch.object(engine, "_update_instance_status"):
-            with patch.object(engine, "_get_approver_name", return_value="李四"):
-                # 第二个审批应该能看到已经更新后的状态
-                engine.submit_approval(
-                    instance=mock_instance,
-                    approver_id=6,
-                    decision=ApprovalDecision.APPROVE,
-                    comment="同意",
-                )
+                with patch.object(engine, "_update_instance_status"):
+                    with patch.object(engine, "_get_approver_name", return_value="李四"):
+                        # 第二个审批应该能看到已经更新后的状态
+                        engine.submit_approval(
+                        instance=mock_instance,
+                        approver_id=6,
+                        decision=ApprovalDecision.APPROVE,
+                        comment="同意",
+                        )

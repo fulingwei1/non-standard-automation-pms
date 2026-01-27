@@ -144,11 +144,11 @@ class TestAutoExtractKnowledge:
         db = create_mock_db_session()
         project = create_mock_project()
         ticket = create_mock_ticket(
-            problem_desc="详细问题描述",
-            root_cause="根本原因分析",
-            solution="解决步骤",
-            preventive_action="预防措施",
-            project=project,
+        problem_desc="详细问题描述",
+        root_cause="根本原因分析",
+        solution="解决步骤",
+        preventive_action="预防措施",
+        project=project,
         )
         db.query.return_value.filter.return_value.first.return_value = None
         mock_gen_no.return_value = "KB250712-001"
@@ -280,9 +280,9 @@ class TestCreateSolutionTemplate:
         """测试缺少值时使用默认值"""
         db = create_mock_db_session()
         ticket = create_mock_ticket(
-            assigned_to_id=None,
-            assigned_to_name=None,
-            preventive_action=None,
+        assigned_to_id=None,
+        assigned_to_name=None,
+        preventive_action=None,
         )
         db.query.return_value.filter.return_value.first.return_value = None
 
@@ -313,8 +313,8 @@ class TestRecommendKnowledge:
         db = create_mock_db_session()
         ticket = create_mock_ticket(problem_type="SOFTWARE")
         articles = [
-            create_mock_knowledge_article(article_id=1, title="文章1"),
-            create_mock_knowledge_article(article_id=2, title="文章2"),
+        create_mock_knowledge_article(article_id=1, title="文章1"),
+        create_mock_knowledge_article(article_id=2, title="文章2"),
         ]
         db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = articles
 
@@ -344,15 +344,15 @@ class TestRecommendKnowledge:
         db = create_mock_db_session()
         ticket = create_mock_ticket()
         article = create_mock_knowledge_article(
-            article_id=1,
-            article_no="KB250712-001",
-            title="测试文章",
-            category="软件问题",
-            view_count=100,
-            like_count=50,
+        article_id=1,
+        article_no="KB250712-001",
+        title="测试文章",
+        category="软件问题",
+        view_count=100,
+        like_count=50,
         )
         db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
-            article
+        article
         ]
 
         result = recommend_knowledge_for_ticket(db, ticket)

@@ -70,10 +70,10 @@ class TestGetLogLevel:
         """测试没有环境变量时默认为 INFO"""
         if "LOG_LEVEL" in os.environ:
             del os.environ["LOG_LEVEL"]
-        from app.utils.logger import _get_log_level
+            from app.utils.logger import _get_log_level
 
-        level = _get_log_level()
-        assert level == logging.INFO
+            level = _get_log_level()
+            assert level == logging.INFO
 
 
 class TestGetLogger:
@@ -132,13 +132,13 @@ class TestLogErrorWithContext:
         class TestError(Exception):
             pass
 
-        error = TestError("Test error")
-        context = {"user_id": 123, "item_id": 456}
+            error = TestError("Test error")
+            context = {"user_id": 123, "item_id": 456}
 
-        log_error_with_context(logger, "Test message", error, context)
+            log_error_with_context(logger, "Test message", error, context)
 
-        # 只测试函数不抛出异常，实际日志内容需要检查日志输出
-        assert True
+            # 只测试函数不抛出异常，实际日志内容需要检查日志输出
+            assert True
 
     def test_log_error_without_context(self):
         """测试记录不带上下文的错误"""
@@ -149,10 +149,10 @@ class TestLogErrorWithContext:
         class TestError(Exception):
             pass
 
-        error = TestError("Test error")
-        log_error_with_context(logger, "Test message", error)
+            error = TestError("Test error")
+            log_error_with_context(logger, "Test message", error)
 
-        assert True
+            assert True
 
     def test_log_error_with_none_error(self):
         """测试错误为 None 时不抛出异常"""
@@ -171,13 +171,13 @@ class TestLogErrorWithContext:
         class TestError(Exception):
             pass
 
-        error = TestError("Test error")
-        context = {"key": "value"}
+            error = TestError("Test error")
+            context = {"key": "value"}
 
-        # 这个测试需要实际的日志记录来验证 extra 字段
-        # 这里只测试函数执行不抛出异常
-        log_error_with_context(logger, "Test message", error, context)
-        assert True
+            # 这个测试需要实际的日志记录来验证 extra 字段
+            # 这里只测试函数执行不抛出异常
+            log_error_with_context(logger, "Test message", error, context)
+            assert True
 
 
 class TestLogWarningWithContext:

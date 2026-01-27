@@ -20,7 +20,10 @@ from app.main import app
 from app.models.material import Material
 from app.models.project import Customer, Project
 from app.models.purchase import PurchaseOrder, PurchaseOrderItem
-from app.models.vendor import Vendor as Supplier
+from app.models.vendor import Vendor
+
+# Vendor 模型替代了历史上的 Supplier，这里保持别名兼容
+Supplier = Vendor
 
 
 @pytest.mark.api

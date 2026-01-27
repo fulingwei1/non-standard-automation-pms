@@ -22,8 +22,8 @@ class TestGetExcelStyles:
     def test_get_excel_styles_with_openpyxl(self):
         """Test getting styles when openpyxl is available."""
         from app.services.project_export_service import (
-            get_excel_styles,
-            OPENPYXL_AVAILABLE,
+        get_excel_styles,
+        OPENPYXL_AVAILABLE,
         )
 
         if OPENPYXL_AVAILABLE:
@@ -167,47 +167,47 @@ class TestAddProjectInfoSheet:
     def test_add_project_info_sheet_with_openpyxl(self):
         """Test adding sheet with openpyxl available."""
         from app.services.project_export_service import (
-            add_project_info_sheet,
-            OPENPYXL_AVAILABLE,
+        add_project_info_sheet,
+        OPENPYXL_AVAILABLE,
         )
 
         if not OPENPYXL_AVAILABLE:
             pytest.skip("openpyxl not available")
 
-        ws = MagicMock()
-        ws.merge_cells = MagicMock()
-        ws.__setitem__ = MagicMock()
-        ws.column_dimensions = {}
+            ws = MagicMock()
+            ws.merge_cells = MagicMock()
+            ws.__setitem__ = MagicMock()
+            ws.column_dimensions = {}
 
-        project = MagicMock(spec=Project)
-        project.project_code = "PJ001"
-        project.project_name = "测试项目"
-        project.customer_name = "客户A"
-        project.contract_no = "CT001"
-        project.contract_amount = 50000.0
-        project.pm_name = "张三"
-        project.project_type = "NEW"
-        project.stage = "S1"
-        project.status = "ST01"
-        project.health = "H1"
-        project.progress_pct = 10.0
-        project.planned_start_date = date(2025, 1, 1)
-        project.planned_end_date = date(2025, 3, 31)
-        project.actual_start_date = None
-        project.actual_end_date = None
+            project = MagicMock(spec=Project)
+            project.project_code = "PJ001"
+            project.project_name = "测试项目"
+            project.customer_name = "客户A"
+            project.contract_no = "CT001"
+            project.contract_amount = 50000.0
+            project.pm_name = "张三"
+            project.project_type = "NEW"
+            project.stage = "S1"
+            project.status = "ST01"
+            project.health = "H1"
+            project.progress_pct = 10.0
+            project.planned_start_date = date(2025, 1, 1)
+            project.planned_end_date = date(2025, 3, 31)
+            project.actual_start_date = None
+            project.actual_end_date = None
 
-        styles = {
+            styles = {
             "title_font": MagicMock(),
             "border": MagicMock(),
-        }
+            }
 
-        mock_cell = MagicMock()
-        ws.cell = MagicMock(return_value=mock_cell)
+            mock_cell = MagicMock()
+            ws.cell = MagicMock(return_value=mock_cell)
 
-        add_project_info_sheet(ws, project, styles)
+            add_project_info_sheet(ws, project, styles)
 
-        assert ws.merge_cells.called
-        ws.__setitem__.assert_any_call("A1")
+            assert ws.merge_cells.called
+            ws.__setitem__.assert_any_call("A1")
 
 
 class TestCreateProjectDetailExcel:
@@ -224,23 +224,23 @@ class TestCreateProjectDetailExcel:
         with patch("app.services.project_export_service.OPENPYXL_AVAILABLE", False):
             with pytest.raises(ImportError, match="Excel处理库未安装"):
                 create_project_detail_excel(
-                    db_session, project, include_tasks=False, include_costs=False
+                db_session, project, include_tasks=False, include_costs=False
                 )
 
     def test_create_project_detail_excel_basic(self):
         """Test creating basic Excel (no tasks, no costs)."""
         from app.services.project_export_service import (
-            create_project_detail_excel,
-            OPENPYXL_AVAILABLE,
+        create_project_detail_excel,
+        OPENPYXL_AVAILABLE,
         )
 
         if not OPENPYXL_AVAILABLE:
             pytest.skip("openpyxl not available")
 
-        db_session = MagicMock()
-        project = MagicMock()
-        project.id = 1
-        project.project_name = "Test Project"
+            db_session = MagicMock()
+            project = MagicMock()
+            project.id = 1
+            project.project_name = "Test Project"
 
         def mock_query_side_effect(model):
             query_mock = MagicMock()
@@ -249,29 +249,29 @@ class TestCreateProjectDetailExcel:
             query_mock.all = MagicMock(return_value=[])
             return query_mock
 
-        db_session.query = Mock(side_effect=mock_query_side_effect)
+            db_session.query = Mock(side_effect=mock_query_side_effect)
 
-        result = create_project_detail_excel(
+            result = create_project_detail_excel(
             db_session, project, include_tasks=False, include_costs=False
-        )
+            )
 
-        assert isinstance(result, BytesIO)
-        assert result.tell() > 0
+            assert isinstance(result, BytesIO)
+            assert result.tell() > 0
 
     def test_create_project_detail_excel_with_tasks(self):
         """Test creating Excel with tasks."""
         from app.services.project_export_service import (
-            create_project_detail_excel,
-            OPENPYXL_AVAILABLE,
+        create_project_detail_excel,
+        OPENPYXL_AVAILABLE,
         )
 
         if not OPENPYXL_AVAILABLE:
             pytest.skip("openpyxl not available")
 
-        db_session = MagicMock()
-        project = MagicMock()
-        project.id = 1
-        project.project_name = "Test Project"
+            db_session = MagicMock()
+            project = MagicMock()
+            project.id = 1
+            project.project_name = "Test Project"
 
         def mock_query_side_effect(model):
             query_mock = MagicMock()
@@ -280,29 +280,29 @@ class TestCreateProjectDetailExcel:
             query_mock.all = MagicMock(return_value=[])
             return query_mock
 
-        db_session.query = Mock(side_effect=mock_query_side_effect)
+            db_session.query = Mock(side_effect=mock_query_side_effect)
 
-        result = create_project_detail_excel(
+            result = create_project_detail_excel(
             db_session, project, include_tasks=True, include_costs=False
-        )
+            )
 
-        assert isinstance(result, BytesIO)
-        assert result.tell() > 0
+            assert isinstance(result, BytesIO)
+            assert result.tell() > 0
 
     def test_create_project_detail_excel_with_costs(self):
         """Test creating Excel with costs."""
         from app.services.project_export_service import (
-            create_project_detail_excel,
-            OPENPYXL_AVAILABLE,
+        create_project_detail_excel,
+        OPENPYXL_AVAILABLE,
         )
 
         if not OPENPYXL_AVAILABLE:
             pytest.skip("openpyxl not available")
 
-        db_session = MagicMock()
-        project = MagicMock()
-        project.id = 1
-        project.project_name = "Test Project"
+            db_session = MagicMock()
+            project = MagicMock()
+            project.id = 1
+            project.project_name = "Test Project"
 
         def mock_query_side_effect(model):
             query_mock = MagicMock()
@@ -311,29 +311,29 @@ class TestCreateProjectDetailExcel:
             query_mock.all = MagicMock(return_value=[])
             return query_mock
 
-        db_session.query = Mock(side_effect=mock_query_side_effect)
+            db_session.query = Mock(side_effect=mock_query_side_effect)
 
-        result = create_project_detail_excel(
+            result = create_project_detail_excel(
             db_session, project, include_tasks=False, include_costs=True
-        )
+            )
 
-        assert isinstance(result, BytesIO)
-        assert result.tell() > 0
+            assert isinstance(result, BytesIO)
+            assert result.tell() > 0
 
     def test_create_project_detail_excel_complete(self):
         """Test creating complete Excel with tasks and costs."""
         from app.services.project_export_service import (
-            create_project_detail_excel,
-            OPENPYXL_AVAILABLE,
+        create_project_detail_excel,
+        OPENPYXL_AVAILABLE,
         )
 
         if not OPENPYXL_AVAILABLE:
             pytest.skip("openpyxl not available")
 
-        db_session = MagicMock()
-        project = MagicMock()
-        project.id = 1
-        project.project_name = "Test Project"
+            db_session = MagicMock()
+            project = MagicMock()
+            project.id = 1
+            project.project_name = "Test Project"
 
         def mock_query_side_effect(model):
             query_mock = MagicMock()
@@ -342,14 +342,14 @@ class TestCreateProjectDetailExcel:
             query_mock.all = MagicMock(return_value=[])
             return query_mock
 
-        db_session.query = Mock(side_effect=mock_query_side_effect)
+            db_session.query = Mock(side_effect=mock_query_side_effect)
 
-        result = create_project_detail_excel(
+            result = create_project_detail_excel(
             db_session, project, include_tasks=True, include_costs=True
-        )
+            )
 
-        assert isinstance(result, BytesIO)
-        assert result.tell() > 0
+            assert isinstance(result, BytesIO)
+            assert result.tell() > 0
 
 
 class TestAddTasksSheet:

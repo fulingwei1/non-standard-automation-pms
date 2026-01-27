@@ -40,23 +40,23 @@ class TestInvoiceAutoService:
         db_session.flush()
 
         template = AcceptanceTemplate(
-            template_code="AT-TEST",
-            template_name="测试模板",
-            acceptance_type="FAT",
-            is_system=True,
-            is_active=True
+        template_code="AT-TEST",
+        template_name="测试模板",
+        acceptance_type="FAT",
+        is_system=True,
+        is_active=True
         )
         db_session.add(template)
         db_session.flush()
 
         order = AcceptanceOrder(
-            order_no="AO-TEST",
-            project_id=project.id,
-            acceptance_type="FAT",
-            template_id=template.id,
-            overall_result="FAILED",
-            status="COMPLETED",
-            planned_date=date.today()
+        order_no="AO-TEST",
+        project_id=project.id,
+        acceptance_type="FAT",
+        template_id=template.id,
+        overall_result="FAILED",
+        status="COMPLETED",
+        planned_date=date.today()
         )
         db_session.add(order)
         db_session.commit()
@@ -77,23 +77,23 @@ class TestInvoiceAutoService:
         db_session.flush()
 
         template = AcceptanceTemplate(
-            template_code="AT-TEST2",
-            template_name="测试模板2",
-            acceptance_type="OTHER",
-            is_system=True,
-            is_active=True
+        template_code="AT-TEST2",
+        template_name="测试模板2",
+        acceptance_type="OTHER",
+        is_system=True,
+        is_active=True
         )
         db_session.add(template)
         db_session.flush()
 
         order = AcceptanceOrder(
-            order_no="AO-TEST2",
-            project_id=project.id,
-            acceptance_type="OTHER",
-            template_id=template.id,
-            overall_result="PASSED",
-            status="COMPLETED",
-            planned_date=date.today()
+        order_no="AO-TEST2",
+        project_id=project.id,
+        acceptance_type="OTHER",
+        template_id=template.id,
+        overall_result="PASSED",
+        status="COMPLETED",
+        planned_date=date.today()
         )
         db_session.add(order)
         db_session.commit()
@@ -114,23 +114,23 @@ class TestInvoiceAutoService:
         db_session.flush()
 
         template = AcceptanceTemplate(
-            template_code="AT-TEST3",
-            template_name="测试模板3",
-            acceptance_type="FAT",
-            is_system=True,
-            is_active=True
+        template_code="AT-TEST3",
+        template_name="测试模板3",
+        acceptance_type="FAT",
+        is_system=True,
+        is_active=True
         )
         db_session.add(template)
         db_session.flush()
 
         order = AcceptanceOrder(
-            order_no="AO-TEST3",
-            project_id=project.id,
-            acceptance_type="FAT",
-            template_id=template.id,
-            overall_result="PASSED",
-            status="COMPLETED",
-            planned_date=date.today()
+        order_no="AO-TEST3",
+        project_id=project.id,
+        acceptance_type="FAT",
+        template_id=template.id,
+        overall_result="PASSED",
+        status="COMPLETED",
+        planned_date=date.today()
         )
         db_session.add(order)
         db_session.commit()
@@ -147,12 +147,12 @@ class TestInvoiceAutoService:
         service = InvoiceAutoService(db_session)
         
         plan = ProjectPaymentPlan(
-            project_id=1,
-            payment_no=1,
-            payment_name="首付款",
-            payment_type="ADVANCE",
-            planned_amount=Decimal("10000.00"),
-            contract_id=None
+        project_id=1,
+        payment_no=1,
+        payment_name="首付款",
+        payment_type="ADVANCE",
+        planned_amount=Decimal("10000.00"),
+        contract_id=None
         )
 
         result = service._check_deliverables_complete(plan)
@@ -167,23 +167,23 @@ class TestInvoiceAutoService:
         db_session.flush()
 
         template = AcceptanceTemplate(
-            template_code="AT-TEST4",
-            template_name="测试模板4",
-            acceptance_type="FAT",
-            is_system=True,
-            is_active=True
+        template_code="AT-TEST4",
+        template_name="测试模板4",
+        acceptance_type="FAT",
+        is_system=True,
+        is_active=True
         )
         db_session.add(template)
         db_session.flush()
 
         order = AcceptanceOrder(
-            order_no="AO-TEST4",
-            project_id=project.id,
-            acceptance_type="FAT",
-            template_id=template.id,
-            overall_result="PASSED",
-            status="COMPLETED",
-            planned_date=date.today()
+        order_no="AO-TEST4",
+        project_id=project.id,
+        acceptance_type="FAT",
+        template_id=template.id,
+        overall_result="PASSED",
+        status="COMPLETED",
+        planned_date=date.today()
         )
         db_session.add(order)
         db_session.commit()
@@ -203,37 +203,37 @@ class TestInvoiceAutoService:
         db_session.flush()
 
         template = AcceptanceTemplate(
-            template_code="AT-TEST5",
-            template_name="测试模板5",
-            acceptance_type="FAT",
-            is_system=True,
-            is_active=True
+        template_code="AT-TEST5",
+        template_name="测试模板5",
+        acceptance_type="FAT",
+        is_system=True,
+        is_active=True
         )
         db_session.add(template)
         db_session.flush()
 
         order = AcceptanceOrder(
-            order_no="AO-TEST5",
-            project_id=project.id,
-            acceptance_type="FAT",
-            template_id=template.id,
-            overall_result="PASSED",
-            status="COMPLETED",
-            planned_date=date.today()
+        order_no="AO-TEST5",
+        project_id=project.id,
+        acceptance_type="FAT",
+        template_id=template.id,
+        overall_result="PASSED",
+        status="COMPLETED",
+        planned_date=date.today()
         )
         db_session.add(order)
         db_session.flush()
 
         # 创建阻塞问题
         issue = AcceptanceIssue(
-            issue_no="ISSUE-001",
-            order_id=order.id,
-            issue_type="DEFECT",
-            severity="CRITICAL",
-            title="阻塞问题",
-            description="这是一个阻塞验收的问题",
-            is_blocking=True,
-            status="OPEN"
+        issue_no="ISSUE-001",
+        order_id=order.id,
+        issue_type="DEFECT",
+        severity="CRITICAL",
+        title="阻塞问题",
+        description="这是一个阻塞验收的问题",
+        is_blocking=True,
+        status="OPEN"
         )
         db_session.add(issue)
         db_session.commit()

@@ -104,7 +104,7 @@ def test_acceptance_report_save_report_file_fallback():
         mock_join.return_value = "/uploads/reports/test.txt"
 
         result = save_report_file(
-            mock_content, "TEST001", "FAT", True, mock_order, mock_db, Mock()
+        mock_content, "TEST001", "FAT", True, mock_order, mock_db, Mock()
         )
 
         assert result is not None
@@ -188,19 +188,19 @@ def test_approval_workflow_approve_step():
         if hasattr(condition, "left") and hasattr(condition.left, "table"):
             if condition.left.table.__name__ == "approval_record":
                 result.first.return_value = mock_record
-            elif condition.left.table.__name__ == "approval_workflow_step":
-                result.first.return_value = mock_step
-        return result
+        elif condition.left.table.__name__ == "approval_workflow_step":
+            result.first.return_value = mock_step
+            return result
 
-    mock_db.query.return_value.filter = mock_filter
-    mock_db.commit = Mock()
-    mock_db.refresh = Mock()
+            mock_db.query.return_value.filter = mock_filter
+            mock_db.commit = Mock()
+            mock_db.refresh = Mock()
 
-    service = ApprovalWorkflowService(mock_db)
-    with patch.object(service, "_validate_approver", return_value=True):
-        service.approve_step(1, 1, "Approved")
+            service = ApprovalWorkflowService(mock_db)
+            with patch.object(service, "_validate_approver", return_value=True):
+                service.approve_step(1, 1, "Approved")
 
-    assert mock_db.commit.called
+                assert mock_db.commit.called
 
 
 def test_approval_workflow_reject_step():
@@ -307,21 +307,21 @@ def test_bom_analysis_check_obsolete_risk():
         result = Mock()
         if model.__name__ == "ecn":
             result.filter.return_value.first.return_value = mock_ecn
-        return result
+            return result
 
-    mock_db.query.side_effect = mock_ecn_query
+            mock_db.query.side_effect = mock_ecn_query
 
-    # Mock affected materials and material queries
-    mock_db.query.return_value.filter.return_value.all.return_value = [
-        mock_affected_mat
-    ]
-    mock_db.query.return_value.filter.return_value.first.return_value = mock_material
+            # Mock affected materials and material queries
+            mock_db.query.return_value.filter.return_value.all.return_value = [
+            mock_affected_mat
+            ]
+            mock_db.query.return_value.filter.return_value.first.return_value = mock_material
 
-    service = EcnBomAnalysisService(mock_db)
-    with patch("app.services.ecn_bom_analysis_service.Decimal", Decimal):
-        result = service.check_obsolete_material_risk(1)
+            service = EcnBomAnalysisService(mock_db)
+            with patch("app.services.ecn_bom_analysis_service.Decimal", Decimal):
+                result = service.check_obsolete_material_risk(1)
 
-    assert "has_obsolete_risk" in result
+                assert "has_obsolete_risk" in result
 
 
 def test_bom_analysis_calculate_cost_impact():
@@ -376,16 +376,16 @@ def test_bom_analysis_calculate_schedule_impact():
         result = Mock()
         if model.__name__ == "material":
             result.filter.return_value.first.return_value = mock_material
-        return result
+            return result
 
-    mock_db.query.side_effect = mock_material_query
+            mock_db.query.side_effect = mock_material_query
 
-    service = EcnBomAnalysisService(mock_db)
-    result = service._calculate_schedule_impact(
-        [mock_affected_mat], [mock_bom_item], set([1])
-    )
+            service = EcnBomAnalysisService(mock_db)
+            result = service._calculate_schedule_impact(
+            [mock_affected_mat], [mock_bom_item], set([1])
+            )
 
-    assert result == 5
+            assert result == 5
 
 
 def test_bom_analysis_get_impact_description():
@@ -542,7 +542,7 @@ def test_notification_send_web(mock_settings):
 
         service = NotificationService()
         result = service.send_notification(
-            mock_db, 1, NotificationType.TASK_ASSIGNED, "Test", "Content"
+        mock_db, 1, NotificationType.TASK_ASSIGNED, "Test", "Content"
         )
 
     assert mock_db.add.called or result
@@ -582,7 +582,7 @@ def test_notification_send_deadline_reminder(mock_settings):
     service = NotificationService()
     with patch.object(service, "send_notification") as mock_send:
         service.send_deadline_reminder(
-            mock_db, 1, "Task1", date(2025, 2, 1), days_remaining=1
+        mock_db, 1, "Task1", date(2025, 2, 1), days_remaining=1
         )
 
         call_args = mock_send.call_args[1]
@@ -668,19 +668,19 @@ def test_progress_handle_shortage_alert_resolved():
         result = Mock()
         if model.__name__ == "shortage_alert":
             result.filter.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = [
-                mock_task
+            mock_task
             ]
-        return result
+            return result
 
-    mock_db.query.side_effect = mock_query_chain
+            mock_db.query.side_effect = mock_query_chain
 
-    mock_db.add = Mock()
-    mock_db.commit = Mock()
+            mock_db.add = Mock()
+            mock_db.commit = Mock()
 
-    service = ProgressIntegrationService(mock_db)
-    service.handle_shortage_alert_resolved(mock_alert)
+            service = ProgressIntegrationService(mock_db)
+            service.handle_shortage_alert_resolved(mock_alert)
 
-    assert mock_task.status == "IN_PROGRESS"
+            assert mock_task.status == "IN_PROGRESS"
 
 
 def test_progress_check_milestone_completion():
@@ -728,18 +728,18 @@ def test_progress_handle_acceptance_failed():
         result = Mock()
         if model.__name__ == "project_milestone":
             result.filter.return_value.filter.return_value.all.return_value = [
-                mock_milestone
+            mock_milestone
             ]
-        return result
+            return result
 
-    mock_db.query.side_effect = mock_query_chain
-    mock_db.add = Mock()
-    mock_db.commit = Mock()
+            mock_db.query.side_effect = mock_query_chain
+            mock_db.add = Mock()
+            mock_db.commit = Mock()
 
-    service = ProgressIntegrationService(mock_db)
-    service.handle_acceptance_failed(mock_acceptance)
+            service = ProgressIntegrationService(mock_db)
+            service.handle_acceptance_failed(mock_acceptance)
 
-    assert mock_milestone.status == "BLOCKED"
+            assert mock_milestone.status == "BLOCKED"
 
 
 def test_progress_handle_acceptance_passed():
@@ -767,21 +767,21 @@ def test_progress_handle_acceptance_passed():
         result = Mock()
         if model.__name__ == "project_milestone":
             result.filter.return_value.filter.return_value.all.return_value = [
-                mock_milestone
+            mock_milestone
             ]
-        return result
+            return result
 
-    mock_db.query.side_effect = mock_query_chain
-    mock_db.add = Mock()
-    mock_db.commit = Mock()
+            mock_db.query.side_effect = mock_query_chain
+            mock_db.add = Mock()
+            mock_db.commit = Mock()
 
-    service = ProgressIntegrationService(mock_db)
-    service.handle_acceptance_passed(mock_acceptance)
+            service = ProgressIntegrationService(mock_db)
+            service.handle_acceptance_passed(mock_acceptance)
 
-    assert mock_milestone.status == "IN_PROGRESS"
+            assert mock_milestone.status == "IN_PROGRESS"
 
 
-# ==================== purchase_order_from_bom_service.py Tests ====================
+            # ==================== purchase_order_from_bom_service.py Tests ====================
 
 
 def test_purchase_get_purchase_items_from_bom():
@@ -857,7 +857,7 @@ def test_purchase_group_items_by_supplier():
         mock_determine.side_effect = [1, 1, 2]
 
         result = group_items_by_supplier(
-            mock_db, [mock_item1, mock_item2, mock_item3], None
+        mock_db, [mock_item1, mock_item2, mock_item3], None
         )
 
     assert 1 in result
@@ -1046,16 +1046,16 @@ def test_technical_assessment_calculate_scores():
 
     rules_config = {
         "evaluation_criteria": {
-            "tech_maturity": {
-                "field": "tech_maturity",
-                "max_points": 10,
-                "options": [{"value": 4, "points": 8}, {"value": 3, "points": 6}],
-            },
-            "process_difficulty": {
-                "field": "process_difficulty",
-                "max_points": 10,
-                "options": [{"value": 3, "points": 7}],
-            },
+        "tech_maturity": {
+        "field": "tech_maturity",
+        "max_points": 10,
+        "options": [{"value": 4, "points": 8}, {"value": 3, "points": 6}],
+        },
+        "process_difficulty": {
+        "field": "process_difficulty",
+        "max_points": 10,
+        "options": [{"value": 3, "points": 7}],
+        },
         },
         "scales": {"score_levels": {}},
     }
@@ -1083,15 +1083,15 @@ def test_technical_assessment_check_veto_rules():
 
     rules_config = {
         "veto_rules": [
-            {
-                "name": "Block Rule",
-                "reason": "Value is blocked",
-                "condition": {
-                    "field": "test_field",
-                    "operator": "==",
-                    "value": "blocked_value",
-                },
-            }
+        {
+        "name": "Block Rule",
+        "reason": "Value is blocked",
+        "condition": {
+        "field": "test_field",
+        "operator": "==",
+        "value": "blocked_value",
+        },
+        }
         ]
     }
 
@@ -1111,11 +1111,11 @@ def test_technical_assessment_generate_decision():
 
     rules_config = {
         "scales": {
-            "decision_thresholds": [
-                {"min_score": 80, "decision": "推荐立项"},
-                {"min_score": 60, "decision": "有条件立项"},
-                {"min_score": 40, "decision": "暂缓"},
-            ]
+        "decision_thresholds": [
+        {"min_score": 80, "decision": "推荐立项"},
+        {"min_score": 60, "decision": "有条件立项"},
+        {"min_score": 40, "decision": "暂缓"},
+        ]
         }
     }
 
@@ -1225,29 +1225,29 @@ def test_template_generate_from_template_project_weekly():
             result.filter.return_value.first.return_value = mock_project
         elif model.__name__ == "project_milestone":
             result.filter.return_value.filter.return_value.all.return_value = [
-                mock_milestone
+            mock_milestone
             ]
         elif model.__name__ == "timesheet":
             result.filter.return_value.filter.return_value.all.return_value = [
-                mock_timesheet
+            mock_timesheet
             ]
         elif model.__name__ == "machine":
             result.filter.return_value.all.return_value = [mock_machine]
-        return result
+            return result
 
-    mock_db.query.side_effect = mock_query
+            mock_db.query.side_effect = mock_query
 
-    result = TemplateReportService.generate_from_template(
-        mock_db,
-        mock_template,
-        project_id=1,
-        start_date=date(2025, 2, 1),
-        end_date=date(2025, 2, 28),
-    )
+            result = TemplateReportService.generate_from_template(
+            mock_db,
+            mock_template,
+            project_id=1,
+            start_date=date(2025, 2, 1),
+            end_date=date(2025, 2, 28),
+            )
 
-    assert result["template_code"] == "PW001"
-    assert "summary" in result
-    assert "sections" in result
+            assert result["template_code"] == "PW001"
+            assert "summary" in result
+            assert "sections" in result
 
 
 def test_template_generate_from_template_dept_weekly():
@@ -1292,29 +1292,29 @@ def test_template_generate_from_template_dept_weekly():
             result.filter.return_value.first.return_value = mock_dept
         elif model.__name__ == "user":
             result.filter.return_value.filter.return_value.all.return_value = [
-                mock_user1,
-                mock_user2,
+            mock_user1,
+            mock_user2,
             ]
         elif model.__name__ == "timesheet":
             result.filter.return_value.filter.return_value.filter.return_value.all.return_value = [
-                mock_timesheet
+            mock_timesheet
             ]
         elif model.__name__ == "project":
             result.filter.return_value.first.return_value = mock_project
-        return result
+            return result
 
-    mock_db.query.side_effect = mock_query
+            mock_db.query.side_effect = mock_query
 
-    result = TemplateReportService.generate_from_template(
-        mock_db,
-        mock_template,
-        department_id=1,
-        start_date=date(2025, 2, 1),
-        end_date=date(2025, 2, 7),
-    )
+            result = TemplateReportService.generate_from_template(
+            mock_db,
+            mock_template,
+            department_id=1,
+            start_date=date(2025, 2, 1),
+            end_date=date(2025, 2, 7),
+            )
 
-    assert result["summary"]["department_name"] == "Engineering"
-    assert result["summary"]["member_count"] == 2
+            assert result["summary"]["department_name"] == "Engineering"
+            assert result["summary"]["member_count"] == 2
 
 
 def test_template_generate_workload_analysis():
@@ -1359,29 +1359,29 @@ def test_template_generate_workload_analysis():
             result.filter.return_value.first.return_value = mock_dept
         elif model.__name__ == "user":
             result.filter.return_value.filter.return_value.all.return_value = [
-                mock_user1,
-                mock_user2,
+            mock_user1,
+            mock_user2,
             ]
         elif model.__name__ == "timesheet":
             result.filter.return_value.filter.return_value.all.return_value = [
-                mock_timesheet1,
-                mock_timesheet2,
+            mock_timesheet1,
+            mock_timesheet2,
             ]
-        return result
+            return result
 
-    mock_db.query.side_effect = mock_query
+            mock_db.query.side_effect = mock_query
 
-    result = TemplateReportService.generate_from_template(
-        mock_db,
-        mock_template,
-        department_id=1,
-        start_date=date(2025, 2, 1),
-        end_date=date(2025, 2, 28),
-    )
+            result = TemplateReportService.generate_from_template(
+            mock_db,
+            mock_template,
+            department_id=1,
+            start_date=date(2025, 2, 1),
+            end_date=date(2025, 2, 28),
+            )
 
-    assert result["summary"]["scope"] == "Engineering"
-    assert "workload" in result["sections"]
-    assert "metrics" in result
+            assert result["summary"]["scope"] == "Engineering"
+            assert "workload" in result["sections"]
+            assert "metrics" in result
 
 
 def test_template_generate_cost_analysis():
@@ -1411,22 +1411,22 @@ def test_template_generate_cost_analysis():
             result.filter.return_value.all.return_value = [mock_project]
         elif model.__name__ == "timesheet":
             result.filter.return_value.filter.return_value.all.return_value = [
-                mock_timesheet
+            mock_timesheet
             ]
-        return result
+            return result
 
-    mock_db.query.side_effect = mock_query
+            mock_db.query.side_effect = mock_query
 
-    result = TemplateReportService.generate_from_template(
-        mock_db,
-        mock_template,
-        project_id=1,
-        start_date=date(2025, 2, 1),
-        end_date=date(2025, 2, 28),
-    )
+            result = TemplateReportService.generate_from_template(
+            mock_db,
+            mock_template,
+            project_id=1,
+            start_date=date(2025, 2, 1),
+            end_date=date(2025, 2, 28),
+            )
 
-    assert result["summary"]["project_count"] == 1
-    assert "cost_breakdown" in result["sections"]
+            assert result["summary"]["project_count"] == 1
+            assert "cost_breakdown" in result["sections"]
 
 
 def test_template_generate_company_monthly():
@@ -1473,21 +1473,21 @@ def test_template_generate_company_monthly():
             result.all.return_value = [mock_dept]
         elif model.__name__ == "user":
             result.filter.return_value.filter.return_value.all.return_value = [
-                mock_user
+            mock_user
             ]
         elif model.__name__ == "timesheet":
             result.filter.return_value.filter.return_value.all.return_value = [
-                mock_timesheet
+            mock_timesheet
             ]
-        return result
+            return result
 
-    mock_db.query.side_effect = mock_query
+            mock_db.query.side_effect = mock_query
 
-    result = TemplateReportService.generate_from_template(
-        mock_db, mock_template, start_date=date(2025, 2, 1), end_date=date(2025, 2, 28)
-    )
+            result = TemplateReportService.generate_from_template(
+            mock_db, mock_template, start_date=date(2025, 2, 1), end_date=date(2025, 2, 28)
+            )
 
-    assert result["summary"]["total_projects"] == 2
-    assert "project_status" in result["sections"]
-    assert "health_status" in result["sections"]
-    assert "department_hours" in result["sections"]
+            assert result["summary"]["total_projects"] == 2
+            assert "project_status" in result["sections"]
+            assert "health_status" in result["sections"]
+            assert "department_hours" in result["sections"]

@@ -119,9 +119,9 @@ class TestProgressIntegrationService:
         except Exception:
             pass
         
-        # 需要先创建一个 AlertRule
-        from app.models.alert import AlertRule
-        rule = AlertRule(
+            # 需要先创建一个 AlertRule
+            from app.models.alert import AlertRule
+            rule = AlertRule(
             rule_code="TEST_SHORTAGE_RULE2",
             rule_name="测试缺料规则2",
             rule_type="SHORTAGE",
@@ -129,11 +129,11 @@ class TestProgressIntegrationService:
             condition_type="THRESHOLD",
             alert_level="level1",
             is_enabled=True
-        )
-        db_session.add(rule)
-        db_session.flush()
+            )
+            db_session.add(rule)
+            db_session.flush()
 
-        alert = AlertRecord(
+            alert = AlertRecord(
             alert_no="ALERT002",
             rule_id=rule.id,
             target_type="SHORTAGE",
@@ -144,15 +144,15 @@ class TestProgressIntegrationService:
             alert_title="缺料预警",
             alert_content="无项目关联测试",
             status="PENDING"
-        )
-        db_session.add(alert)
-        db_session.flush()  # flush 以生成 id
-        db_session.refresh(alert)
+            )
+            db_session.add(alert)
+            db_session.flush()  # flush 以生成 id
+            db_session.refresh(alert)
 
-        result = progress_integration_service.handle_shortage_alert_created(alert)
+            result = progress_integration_service.handle_shortage_alert_created(alert)
 
-        assert isinstance(result, list)
-        assert len(result) == 0
+            assert isinstance(result, list)
+            assert len(result) == 0
 
     def test_handle_shortage_alert_created_high_level(self, progress_integration_service, test_shortage_alert, test_task):
         """测试处理缺料预警创建 - 高级别预警"""
@@ -172,9 +172,9 @@ class TestProgressIntegrationService:
         except Exception:
             pass
         
-        # 需要先创建一个 AlertRule
-        from app.models.alert import AlertRule
-        rule = AlertRule(
+            # 需要先创建一个 AlertRule
+            from app.models.alert import AlertRule
+            rule = AlertRule(
             rule_code="TEST_SHORTAGE_RULE3",
             rule_name="测试缺料规则3",
             rule_type="SHORTAGE",
@@ -182,11 +182,11 @@ class TestProgressIntegrationService:
             condition_type="THRESHOLD",
             alert_level="level1",
             is_enabled=True
-        )
-        db_session.add(rule)
-        db_session.flush()
+            )
+            db_session.add(rule)
+            db_session.flush()
 
-        alert = AlertRecord(
+            alert = AlertRecord(
             alert_no="ALERT003",
             rule_id=rule.id,
             target_type="SHORTAGE",
@@ -197,14 +197,14 @@ class TestProgressIntegrationService:
             alert_title="缺料预警",
             alert_content="无项目测试",
             status="RESOLVED"
-        )
-        db_session.add(alert)
-        db_session.flush()  # 先 flush 确保 id 生成
-        db_session.refresh(alert)
+            )
+            db_session.add(alert)
+            db_session.flush()  # 先 flush 确保 id 生成
+            db_session.refresh(alert)
 
-        result = progress_integration_service.handle_shortage_alert_resolved(alert)
+            result = progress_integration_service.handle_shortage_alert_resolved(alert)
 
-        assert isinstance(result, list)
+            assert isinstance(result, list)
 
     def test_handle_shortage_alert_resolved_success(self, progress_integration_service, test_shortage_alert, test_task):
         """测试处理缺料预警解决 - 成功场景"""
@@ -226,19 +226,19 @@ class TestProgressIntegrationService:
         except Exception:
             pass
         
-        # 需要先创建一个项目，因为 Ecn.project_id 不能为 NULL
-        project = Project(
+            # 需要先创建一个项目，因为 Ecn.project_id 不能为 NULL
+            project = Project(
             project_code="PJ-ECN-TEST",
             project_name="ECN测试项目",
             stage="S2",
             status="ST05",
             health="H1",
             created_by=1,
-        )
-        db_session.add(project)
-        db_session.flush()
+            )
+            db_session.add(project)
+            db_session.flush()
         
-        ecn = Ecn(
+            ecn = Ecn(
             ecn_no="ECN001",
             ecn_title="测试ECN标题",
             ecn_type="DESIGN",
@@ -248,18 +248,18 @@ class TestProgressIntegrationService:
             change_description="测试变更描述",
             status="APPROVED",
             created_by=1,
-        )
-        db_session.add(ecn)
-        db_session.flush()  # 确保 ecn.id 生成
-        db_session.refresh(ecn)
+            )
+            db_session.add(ecn)
+            db_session.flush()  # 确保 ecn.id 生成
+            db_session.refresh(ecn)
         
-        result = progress_integration_service.handle_ecn_approved(ecn)
+            result = progress_integration_service.handle_ecn_approved(ecn)
         
-        # handle_ecn_approved 返回 Dict，不是 list
-        assert isinstance(result, dict)
-        assert 'adjusted_tasks' in result
-        assert 'created_tasks' in result
-        assert 'affected_milestones' in result
+            # handle_ecn_approved 返回 Dict，不是 list
+            assert isinstance(result, dict)
+            assert 'adjusted_tasks' in result
+            assert 'created_tasks' in result
+            assert 'affected_milestones' in result
 
     def test_check_milestone_completion_requirements_not_found(self, progress_integration_service):
         """测试检查里程碑完成要求 - 里程碑不存在"""
@@ -271,16 +271,16 @@ class TestProgressIntegrationService:
         # 由于里程碑不存在，查询会返回 None，方法会抛出异常或返回错误
         # 根据实际实现，可能需要先查询里程碑
         milestone = progress_integration_service.db.query(ProjectMilestone).filter(
-            ProjectMilestone.id == 99999
+        ProjectMilestone.id == 99999
         ).first()
         
         if milestone is None:
             # 如果方法会处理 None 的情况，直接测试
             # 否则需要创建测试数据
-            result = progress_integration_service.check_milestone_completion_requirements(fake_milestone)
+        result = progress_integration_service.check_milestone_completion_requirements(fake_milestone)
             # 方法应该能处理不存在的里程碑或返回错误信息
-            assert isinstance(result, tuple)
-            assert len(result) == 2
+        assert isinstance(result, tuple)
+        assert len(result) == 2
 
     def test_handle_acceptance_failed_not_found(self, progress_integration_service, db_session):
         """测试处理验收失败 - 验收单不存在"""
@@ -288,11 +288,11 @@ class TestProgressIntegrationService:
         
         # 创建一个不存在的验收单对象
         fake_order = AcceptanceOrder(
-            id=99999,
-            order_no="AO-FAKE",
-            project_id=1,
-            acceptance_type="FAT",
-            overall_result="FAILED"
+        id=99999,
+        order_no="AO-FAKE",
+        project_id=1,
+        acceptance_type="FAT",
+        overall_result="FAILED"
         )
         
         # 方法接受 AcceptanceOrder 对象，即使不存在也会处理
@@ -307,11 +307,11 @@ class TestProgressIntegrationService:
         
         # 创建一个不存在的验收单对象
         fake_order = AcceptanceOrder(
-            id=99999,
-            order_no="AO-FAKE",
-            project_id=1,
-            acceptance_type="FAT",
-            overall_result="PASSED"
+        id=99999,
+        order_no="AO-FAKE",
+        project_id=1,
+        acceptance_type="FAT",
+        overall_result="PASSED"
         )
         
         # 方法接受 AcceptanceOrder 对象，即使不存在也会处理

@@ -48,13 +48,13 @@ class TestLogger:
             level = _get_log_level()
             assert level == logging.DEBUG
 
-        with patch.dict(os.environ, {"LOG_LEVEL": "ERROR"}):
-            level = _get_log_level()
-            assert level == logging.ERROR
+            with patch.dict(os.environ, {"LOG_LEVEL": "ERROR"}):
+                level = _get_log_level()
+                assert level == logging.ERROR
 
-        with patch.dict(os.environ, {"LOG_LEVEL": "INVALID"}):
-            level = _get_log_level()
-            assert level == logging.INFO  # Default
+                with patch.dict(os.environ, {"LOG_LEVEL": "INVALID"}):
+                    level = _get_log_level()
+                    assert level == logging.INFO  # Default
 
     def test_log_error_with_context(self):
         """Test log_error_with_context"""
@@ -65,10 +65,10 @@ class TestLogger:
         
         with patch.object(logger, 'error') as mock_error:
             log_error_with_context(
-                logger,
-                "Test error message",
-                error,
-                context={"user_id": 123, "project_id": 456}
+            logger,
+            "Test error message",
+            error,
+            context={"user_id": 123, "project_id": 456}
             )
             
             mock_error.assert_called_once()
@@ -85,9 +85,9 @@ class TestLogger:
         
         with patch.object(logger, 'warning') as mock_warning:
             log_warning_with_context(
-                logger,
-                "Test warning",
-                context={"item_id": 789}
+            logger,
+            "Test warning",
+            context={"item_id": 789}
             )
             
             mock_warning.assert_called_once()
@@ -103,9 +103,9 @@ class TestLogger:
         
         with patch.object(logger, 'info') as mock_info:
             log_info_with_context(
-                logger,
-                "Test info",
-                context={"action": "create"}
+            logger,
+            "Test info",
+            context={"action": "create"}
             )
             
             mock_info.assert_called_once()
@@ -114,9 +114,9 @@ class TestLogger:
             assert call_args[1]['extra']['action'] == "create"
 
 
-# ============================================================================
-# Tests for project_utils.py
-# ============================================================================
+            # ============================================================================
+            # Tests for project_utils.py
+            # ============================================================================
 
 class TestProjectUtils:
     """Test project utilities"""
@@ -127,10 +127,10 @@ class TestProjectUtils:
         
         # Create a test project to ensure sequence exists
         project = Project(
-            project_code="PJ250101001",
-            project_name="Test Project",
-            customer_id=1,
-            contract_amount=100000.00
+        project_code="PJ250101001",
+        project_name="Test Project",
+        customer_id=1,
+        contract_amount=100000.00
         )
         db_session.add(project)
         db_session.commit()
@@ -150,10 +150,10 @@ class TestProjectUtils:
         
         # Create a test project
         project = Project(
-            project_code="PJ250101002",
-            project_name="Test Project 2",
-            customer_id=1,
-            contract_amount=100000.00
+        project_code="PJ250101002",
+        project_name="Test Project 2",
+        customer_id=1,
+        contract_amount=100000.00
         )
         db_session.add(project)
         db_session.flush()
@@ -163,7 +163,7 @@ class TestProjectUtils:
         
         # Verify stages created
         stages = db_session.query(ProjectStage).filter(
-            ProjectStage.project_id == project.id
+        ProjectStage.project_id == project.id
         ).order_by(ProjectStage.stage_order).all()
         
         assert len(stages) == 9  # S1-S9
@@ -175,7 +175,7 @@ class TestProjectUtils:
         
         # Verify statuses created for S1
         s1_statuses = db_session.query(ProjectStatus).filter(
-            ProjectStatus.stage_id == stages[0].id
+        ProjectStatus.stage_id == stages[0].id
         ).order_by(ProjectStatus.status_order).all()
         
         assert len(s1_statuses) == 2  # ST01, ST02
@@ -212,11 +212,11 @@ class TestCacheDecorator:
         def test_func(param1: str):
             return {"data": "fresh"}
         
-        result = test_func(param1="value")
+            result = test_func(param1="value")
         
-        assert result["data"] == "cached"
-        assert result["_from_cache"] is True
-        mock_service.get.assert_called_once()
+            assert result["data"] == "cached"
+            assert result["_from_cache"] is True
+            mock_service.get.assert_called_once()
 
     @patch('app.utils.cache_decorator.get_cache_service')
     def test_cache_response_miss(self, mock_get_cache):
@@ -231,11 +231,11 @@ class TestCacheDecorator:
         def test_func(param1: str):
             return {"data": "fresh"}
         
-        result = test_func(param1="value")
+            result = test_func(param1="value")
         
-        assert result["data"] == "fresh"
-        assert result["_from_cache"] is False
-        mock_service.set.assert_called_once()
+            assert result["data"] == "fresh"
+            assert result["_from_cache"] is False
+            mock_service.set.assert_called_once()
 
     @patch('app.utils.cache_decorator.get_cache_service')
     def test_cache_project_detail(self, mock_get_cache):
@@ -250,10 +250,10 @@ class TestCacheDecorator:
         def get_project(project_id: int):
             return {"id": project_id, "name": "fresh"}
         
-        result = get_project(project_id=1)
+            result = get_project(project_id=1)
         
-        assert result["name"] == "cached"
-        assert result["_from_cache"] is True
+            assert result["name"] == "cached"
+            assert result["_from_cache"] is True
 
     @patch('app.utils.cache_decorator.get_cache_service')
     def test_cache_project_list(self, mock_get_cache):
@@ -268,10 +268,10 @@ class TestCacheDecorator:
         def list_projects(filters: dict):
             return {"items": [{"id": 1, "name": "fresh"}]}
         
-        result = list_projects(filters={"status": "active"})
+            result = list_projects(filters={"status": "active"})
         
-        assert result["_from_cache"] is True
-        mock_service.get_project_list.assert_called_once()
+            assert result["_from_cache"] is True
+            mock_service.get_project_list.assert_called_once()
 
     def test_log_query_time_fast_query(self):
         """Test log_query_time decorator with fast query"""
@@ -281,10 +281,10 @@ class TestCacheDecorator:
         def fast_func():
             return "result"
         
-        with patch('app.utils.cache_decorator.logger') as mock_logger:
-            result = fast_func()
-            assert result == "result"
-            mock_logger.warning.assert_not_called()
+            with patch('app.utils.cache_decorator.logger') as mock_logger:
+                result = fast_func()
+                assert result == "result"
+                mock_logger.warning.assert_not_called()
 
     def test_log_query_time_slow_query(self):
         """Test log_query_time decorator with slow query"""
@@ -295,10 +295,10 @@ class TestCacheDecorator:
             time.sleep(0.2)
             return "result"
         
-        with patch('app.utils.cache_decorator.logger') as mock_logger:
-            result = slow_func()
-            assert result == "result"
-            mock_logger.warning.assert_called_once()
+            with patch('app.utils.cache_decorator.logger') as mock_logger:
+                result = slow_func()
+                assert result == "result"
+                mock_logger.warning.assert_called_once()
 
     def test_query_stats(self):
         """Test QueryStats class"""
@@ -331,16 +331,16 @@ class TestCacheDecorator:
         def test_func(param: str):
             return f"result_{param}"
         
-        result = test_func("test")
+            result = test_func("test")
         
-        assert result == "result_test"
-        assert len(query_stats.queries) == 1
-        assert query_stats.queries[0]["function"] == "test_func"
+            assert result == "result_test"
+            assert len(query_stats.queries) == 1
+            assert query_stats.queries[0]["function"] == "test_func"
 
 
-# ============================================================================
-# Tests for wechat_client.py
-# ============================================================================
+            # ============================================================================
+            # Tests for wechat_client.py
+            # ============================================================================
 
 class TestWeChatTokenCache:
     """Test WeChatTokenCache"""
@@ -411,9 +411,9 @@ class TestWeChatClient:
         from app.utils.wechat_client import WeChatClient
         
         client = WeChatClient(
-            corp_id="test_corp",
-            agent_id="test_agent",
-            secret="test_secret"
+        corp_id="test_corp",
+        agent_id="test_agent",
+        secret="test_secret"
         )
         
         assert client.corp_id == "test_corp"
@@ -441,9 +441,9 @@ class TestWeChatClient:
         
         mock_response = MagicMock()
         mock_response.json.return_value = {
-            "errcode": 0,
-            "access_token": "test_token",
-            "expires_in": 7200
+        "errcode": 0,
+        "access_token": "test_token",
+        "expires_in": 7200
         }
         mock_response.raise_for_status.return_value = None
         mock_get.return_value = mock_response
@@ -451,9 +451,9 @@ class TestWeChatClient:
         mock_cache_get.return_value = None
         
         client = WeChatClient(
-            corp_id="test_corp",
-            agent_id="test_agent",
-            secret="test_secret"
+        corp_id="test_corp",
+        agent_id="test_agent",
+        secret="test_secret"
         )
         
         token = client.get_access_token()
@@ -470,9 +470,9 @@ class TestWeChatClient:
         mock_cache_get.return_value = "cached_token"
         
         client = WeChatClient(
-            corp_id="test_corp",
-            agent_id="test_agent",
-            secret="test_secret"
+        corp_id="test_corp",
+        agent_id="test_agent",
+        secret="test_secret"
         )
         
         token = client.get_access_token()
@@ -494,14 +494,14 @@ class TestWeChatClient:
         mock_post.return_value = mock_response
         
         client = WeChatClient(
-            corp_id="test_corp",
-            agent_id="test_agent",
-            secret="test_secret"
+        corp_id="test_corp",
+        agent_id="test_agent",
+        secret="test_secret"
         )
         
         result = client.send_message(
-            user_ids=["user1", "user2"],
-            message={"msgtype": "text", "text": {"content": "test"}}
+        user_ids=["user1", "user2"],
+        message={"msgtype": "text", "text": {"content": "test"}}
         )
         
         assert result is True
@@ -513,9 +513,9 @@ class TestWeChatClient:
         from app.utils.wechat_client import WeChatClient
         
         client = WeChatClient(
-            corp_id="test_corp",
-            agent_id="test_agent",
-            secret="test_secret"
+        corp_id="test_corp",
+        agent_id="test_agent",
+        secret="test_secret"
         )
         
         result = client.send_message(user_ids=[], message={"msgtype": "text"})
@@ -531,9 +531,9 @@ class TestWeChatClient:
         mock_send.return_value = True
         
         client = WeChatClient(
-            corp_id="test_corp",
-            agent_id="test_agent",
-            secret="test_secret"
+        corp_id="test_corp",
+        agent_id="test_agent",
+        secret="test_secret"
         )
         
         result = client.send_text_message(["user1"], "test content")
@@ -594,22 +594,22 @@ class TestAlertEscalationTask:
         
         mock_engine_instance = MagicMock()
         mock_engine_instance.RESPONSE_TIMEOUT = {
-            AlertLevelEnum.INFO.value: 8,
-            AlertLevelEnum.WARNING.value: 4,
+        AlertLevelEnum.INFO.value: 8,
+        AlertLevelEnum.WARNING.value: 4,
         }
         mock_engine_instance.level_priority.return_value = 2
         mock_engine.return_value = mock_engine_instance
         
         # Create test alert
         alert = AlertRecord(
-            id=1,
-            alert_no="ALERT001",
-            alert_level=AlertLevelEnum.INFO.value,
-            status=AlertStatusEnum.PENDING.value,
-            is_escalated=False,
-            triggered_at=datetime.now() - timedelta(hours=10),
-            alert_title="Test Alert",
-            alert_content="Test content"
+        id=1,
+        alert_no="ALERT001",
+        alert_level=AlertLevelEnum.INFO.value,
+        status=AlertStatusEnum.PENDING.value,
+        is_escalated=False,
+        triggered_at=datetime.now() - timedelta(hours=10),
+        alert_title="Test Alert",
+        alert_content="Test content"
         )
         
         mock_db.query.return_value.filter.return_value.all.return_value = [alert]

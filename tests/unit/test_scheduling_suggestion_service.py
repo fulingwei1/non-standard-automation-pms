@@ -28,22 +28,22 @@ class TestSchedulingSuggestionService:
         db_session.flush()
 
         project = Project(
-            project_code="PJ-SCHEDULE",
-            project_name="测试排产项目",
-            customer_id=customer.id,
-            stage="S4",
-            status="ST01",
-            health="H1",
-            priority="P1",
-            contract_amount=Decimal("200000.00"),
-            planned_end_date=date.today() + timedelta(days=10)
+        project_code="PJ-SCHEDULE",
+        project_name="测试排产项目",
+        customer_id=customer.id,
+        stage="S4",
+        status="ST01",
+        health="H1",
+        priority="P1",
+        contract_amount=Decimal("200000.00"),
+        planned_end_date=date.today() + timedelta(days=10)
         )
         db_session.add(project)
         db_session.flush()
 
         result = SchedulingSuggestionService.calculate_priority_score(
-            db_session,
-            project
+        db_session,
+        project
         )
 
         assert isinstance(result, dict)
@@ -60,33 +60,33 @@ class TestSchedulingSuggestionService:
         db_session.flush()
 
         project = Project(
-            project_code="PJ-SCHEDULE2",
-            project_name="测试排产项目2",
-            customer_id=customer.id,
-            stage="S4",
-            status="ST01",
-            health="H1",
-            priority="P2",
-            contract_amount=Decimal("150000.00"),
-            planned_end_date=date.today() + timedelta(days=20)
+        project_code="PJ-SCHEDULE2",
+        project_name="测试排产项目2",
+        customer_id=customer.id,
+        stage="S4",
+        status="ST01",
+        health="H1",
+        priority="P2",
+        contract_amount=Decimal("150000.00"),
+        planned_end_date=date.today() + timedelta(days=20)
         )
         db_session.add(project)
         db_session.flush()
 
         from datetime import datetime
         readiness = MaterialReadiness(
-            readiness_no=f"READY-{project.id}-{datetime.now().strftime('%Y%m%d%H%M%S')}",
-            project_id=project.id,
-            blocking_kit_rate=Decimal("80.0"),
-            analysis_time=datetime.now()
+        readiness_no=f"READY-{project.id}-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+        project_id=project.id,
+        blocking_kit_rate=Decimal("80.0"),
+        analysis_time=datetime.now()
         )
         db_session.add(readiness)
         db_session.flush()
 
         result = SchedulingSuggestionService.calculate_priority_score(
-            db_session,
-            project,
-            readiness=readiness
+        db_session,
+        project,
+        readiness=readiness
         )
 
         assert isinstance(result, dict)
@@ -101,21 +101,21 @@ class TestSchedulingSuggestionService:
         db_session.flush()
 
         project = Project(
-            project_code="PJ-SCHEDULE3",
-            project_name="测试排产项目3",
-            customer_id=customer.id,
-            stage="S4",
-            status="ST01",
-            health="H1",
-            priority="P3",
-            planned_end_date=None
+        project_code="PJ-SCHEDULE3",
+        project_name="测试排产项目3",
+        customer_id=customer.id,
+        stage="S4",
+        status="ST01",
+        health="H1",
+        priority="P3",
+        planned_end_date=None
         )
         db_session.add(project)
         db_session.commit()
 
         result = SchedulingSuggestionService.calculate_priority_score(
-            db_session,
-            project
+        db_session,
+        project
         )
 
         assert isinstance(result, dict)
@@ -125,12 +125,12 @@ class TestSchedulingSuggestionService:
     def test_calculate_deadline_pressure_urgent(self, db_session):
         """测试计算交期压力 - 紧急（7天内）"""
         project = Project(
-            project_code="PJ-URGENT",
-            project_name="紧急项目",
-            stage="S4",
-            status="ST01",
-            health="H1",
-            planned_end_date=date.today() + timedelta(days=5)
+        project_code="PJ-URGENT",
+        project_name="紧急项目",
+        stage="S4",
+        status="ST01",
+        health="H1",
+        planned_end_date=date.today() + timedelta(days=5)
         )
 
         score = SchedulingSuggestionService._calculate_deadline_pressure(project)
@@ -139,12 +139,12 @@ class TestSchedulingSuggestionService:
     def test_calculate_deadline_pressure_normal(self, db_session):
         """测试计算交期压力 - 正常（30-60天）"""
         project = Project(
-            project_code="PJ-NORMAL",
-            project_name="正常项目",
-            stage="S4",
-            status="ST01",
-            health="H1",
-            planned_end_date=date.today() + timedelta(days=45)
+        project_code="PJ-NORMAL",
+        project_name="正常项目",
+        stage="S4",
+        status="ST01",
+        health="H1",
+        planned_end_date=date.today() + timedelta(days=45)
         )
 
         score = SchedulingSuggestionService._calculate_deadline_pressure(project)
@@ -153,12 +153,12 @@ class TestSchedulingSuggestionService:
     def test_calculate_deadline_pressure_far(self, db_session):
         """测试计算交期压力 - 较远（>60天）"""
         project = Project(
-            project_code="PJ-FAR",
-            project_name="远期项目",
-            stage="S4",
-            status="ST01",
-            health="H1",
-            planned_end_date=date.today() + timedelta(days=90)
+        project_code="PJ-FAR",
+        project_name="远期项目",
+        stage="S4",
+        status="ST01",
+        health="H1",
+        planned_end_date=date.today() + timedelta(days=90)
         )
 
         score = SchedulingSuggestionService._calculate_deadline_pressure(project)
@@ -167,12 +167,12 @@ class TestSchedulingSuggestionService:
     def test_calculate_contract_amount_score_high(self, db_session):
         """测试计算合同金额分数 - 高金额"""
         project = Project(
-            project_code="PJ-HIGH",
-            project_name="高金额项目",
-            stage="S4",
-            status="ST01",
-            health="H1",
-            contract_amount=Decimal("600000.00")
+        project_code="PJ-HIGH",
+        project_name="高金额项目",
+        stage="S4",
+        status="ST01",
+        health="H1",
+        contract_amount=Decimal("600000.00")
         )
 
         score = SchedulingSuggestionService._calculate_contract_amount_score(project)
@@ -181,12 +181,12 @@ class TestSchedulingSuggestionService:
     def test_calculate_contract_amount_score_medium(self, db_session):
         """测试计算合同金额分数 - 中等金额"""
         project = Project(
-            project_code="PJ-MEDIUM",
-            project_name="中等金额项目",
-            stage="S4",
-            status="ST01",
-            health="H1",
-            contract_amount=Decimal("150000.00")
+        project_code="PJ-MEDIUM",
+        project_name="中等金额项目",
+        stage="S4",
+        status="ST01",
+        health="H1",
+        contract_amount=Decimal("150000.00")
         )
 
         score = SchedulingSuggestionService._calculate_contract_amount_score(project)
@@ -196,12 +196,12 @@ class TestSchedulingSuggestionService:
     def test_calculate_contract_amount_score_low(self, db_session):
         """测试计算合同金额分数 - 低金额"""
         project = Project(
-            project_code="PJ-LOW",
-            project_name="低金额项目",
-            stage="S4",
-            status="ST01",
-            health="H1",
-            contract_amount=Decimal("50000.00")
+        project_code="PJ-LOW",
+        project_name="低金额项目",
+        stage="S4",
+        status="ST01",
+        health="H1",
+        contract_amount=Decimal("50000.00")
         )
 
         score = SchedulingSuggestionService._calculate_contract_amount_score(project)
@@ -210,12 +210,12 @@ class TestSchedulingSuggestionService:
     def test_calculate_contract_amount_score_no_amount(self, db_session):
         """测试计算合同金额分数 - 无金额"""
         project = Project(
-            project_code="PJ-NO-AMOUNT",
-            project_name="无金额项目",
-            stage="S4",
-            status="ST01",
-            health="H1",
-            contract_amount=None
+        project_code="PJ-NO-AMOUNT",
+        project_name="无金额项目",
+        stage="S4",
+        status="ST01",
+        health="H1",
+        contract_amount=None
         )
 
         score = SchedulingSuggestionService._calculate_contract_amount_score(project)
@@ -228,17 +228,17 @@ class TestSchedulingSuggestionService:
 
         for priority, expected_score in zip(priorities, expected_scores):
             project = Project(
-                project_code=f"PJ-{priority}",
-                project_name=f"测试项目{priority}",
-                stage="S4",
-                status="ST01",
-                health="H1",
-                priority=priority
+            project_code=f"PJ-{priority}",
+            project_name=f"测试项目{priority}",
+            stage="S4",
+            status="ST01",
+            health="H1",
+            priority=priority
             )
 
             result = SchedulingSuggestionService.calculate_priority_score(
-                db_session,
-                project
+            db_session,
+            project
             )
 
             assert result["factors"]["priority"]["score"] == expected_score
@@ -252,20 +252,20 @@ class TestSchedulingSuggestionService:
         # 测试 HIGH/MEDIUM/LOW 格式
         for priority, expected in [('HIGH', 30), ('MEDIUM', 18), ('LOW', 6)]:
             project = Project(
-                project_code=f"PJ-{priority}",
-                project_name=f"测试项目{priority}",
-                customer_id=customer.id,
-                stage="S4",
-                status="ST01",
-                health="H1",
-                priority=priority
+            project_code=f"PJ-{priority}",
+            project_name=f"测试项目{priority}",
+            customer_id=customer.id,
+            stage="S4",
+            status="ST01",
+            health="H1",
+            priority=priority
             )
             db_session.add(project)
             db_session.flush()
 
             result = SchedulingSuggestionService.calculate_priority_score(
-                db_session,
-                project
+            db_session,
+            project
             )
 
             assert result["factors"]["priority"]["score"] == expected

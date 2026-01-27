@@ -44,7 +44,7 @@ class TestGetUserHourlyRate:
         """测试指定工作日期获取时薪"""
         work_date = date.today() - timedelta(days=30)
         rate = HourlyRateService.get_user_hourly_rate(
-            db_session, user_id=test_user.id, work_date=work_date
+        db_session, user_id=test_user.id, work_date=work_date
         )
         assert isinstance(rate, Decimal)
 
@@ -52,7 +52,7 @@ class TestGetUserHourlyRate:
         """测试未来日期获取时薪"""
         future_date = date.today() + timedelta(days=365)
         rate = HourlyRateService.get_user_hourly_rate(
-            db_session, user_id=test_user.id, work_date=future_date
+        db_session, user_id=test_user.id, work_date=future_date
         )
         assert isinstance(rate, Decimal)
 
@@ -73,7 +73,7 @@ class TestGetUsersHourlyRates:
     def test_get_rates_single_user(self, db_session: Session, test_user):
         """测试单个用户"""
         rates = HourlyRateService.get_users_hourly_rates(
-            db_session, user_ids=[test_user.id]
+        db_session, user_ids=[test_user.id]
         )
         assert test_user.id in rates
         assert isinstance(rates[test_user.id], Decimal)
@@ -81,7 +81,7 @@ class TestGetUsersHourlyRates:
     def test_get_rates_multiple_users(self, db_session: Session, test_user, test_pm_user):
         """测试多个用户"""
         rates = HourlyRateService.get_users_hourly_rates(
-            db_session, user_ids=[test_user.id, test_pm_user.id]
+        db_session, user_ids=[test_user.id, test_pm_user.id]
         )
         assert len(rates) == 2
         assert test_user.id in rates
@@ -90,7 +90,7 @@ class TestGetUsersHourlyRates:
     def test_get_rates_with_invalid_user(self, db_session: Session, test_user):
         """测试包含无效用户ID"""
         rates = HourlyRateService.get_users_hourly_rates(
-            db_session, user_ids=[test_user.id, 99999]
+        db_session, user_ids=[test_user.id, 99999]
         )
         assert len(rates) == 2
         assert rates[99999] == HourlyRateService.DEFAULT_HOURLY_RATE
@@ -99,7 +99,7 @@ class TestGetUsersHourlyRates:
         """测试指定工作日期批量获取"""
         work_date = date.today() - timedelta(days=30)
         rates = HourlyRateService.get_users_hourly_rates(
-            db_session, user_ids=[test_user.id], work_date=work_date
+        db_session, user_ids=[test_user.id], work_date=work_date
         )
         assert test_user.id in rates
 
@@ -115,7 +115,7 @@ class TestGetHourlyRateHistory:
     def test_get_history_by_user(self, db_session: Session, test_user):
         """测试按用户筛选历史"""
         history = HourlyRateService.get_hourly_rate_history(
-            db_session, user_id=test_user.id
+        db_session, user_id=test_user.id
         )
         assert isinstance(history, list)
 
@@ -134,7 +134,7 @@ class TestGetHourlyRateHistory:
         start_date = date.today() - timedelta(days=365)
         end_date = date.today()
         history = HourlyRateService.get_hourly_rate_history(
-            db_session, start_date=start_date, end_date=end_date
+        db_session, start_date=start_date, end_date=end_date
         )
         assert isinstance(history, list)
 

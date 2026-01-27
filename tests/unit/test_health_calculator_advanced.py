@@ -28,13 +28,13 @@ class TestHealthCalculatorEdgeCases:
         """项目缺少计划结束日期时不应出错"""
         # 创建项目（无计划结束日期）
         project = Project(
-            project_code="PJ-EDGE-001",
-            project_name="边缘测试项目",
-            stage="S2",
-            status="ST01",
-            health="H1",
-            actual_start_date=date.today(),
-            created_by=1,
+        project_code="PJ-EDGE-001",
+        project_name="边缘测试项目",
+        stage="S2",
+        status="ST01",
+        health="H1",
+        actual_start_date=date.today(),
+        created_by=1,
         )
         db_session.add(project)
         db_session.commit()
@@ -50,15 +50,15 @@ class TestHealthCalculatorEdgeCases:
         """项目缺少实际开始日期"""
         # 创建项目（无实际开始日期）
         project = Project(
-            project_code="PJ-EDGE-002",
-            project_name="边缘测试项目",
-            stage="S2",
-            status="ST01",
-            health="H1",
-            planned_start_date=date.today() - timedelta(days=30),
-            planned_end_date=date.today() + timedelta(days=30),
-            progress_pct=Decimal("50.00"),
-            created_by=1,
+        project_code="PJ-EDGE-002",
+        project_name="边缘测试项目",
+        stage="S2",
+        status="ST01",
+        health="H1",
+        planned_start_date=date.today() - timedelta(days=30),
+        planned_end_date=date.today() + timedelta(days=30),
+        progress_pct=Decimal("50.00"),
+        created_by=1,
         )
         db_session.add(project)
         db_session.commit()
@@ -74,24 +74,24 @@ class TestHealthCalculatorEdgeCases:
         """多个风险因素同时存在（阻塞应优先）"""
         # 创建项目
         project = Project(
-            project_code="PJ-EDGE-003",
-            project_name="边缘测试项目",
-            stage="S6",
-            status="ST01",
-            health="H1",
-            planned_start_date=date.today() - timedelta(days=30),
-            planned_end_date=date.today() + timedelta(days=30),
-            progress_pct=Decimal("30.00"),  # 进度落后
-            created_by=1,
+        project_code="PJ-EDGE-003",
+        project_name="边缘测试项目",
+        stage="S6",
+        status="ST01",
+        health="H1",
+        planned_start_date=date.today() - timedelta(days=30),
+        planned_end_date=date.today() + timedelta(days=30),
+        progress_pct=Decimal("30.00"),  # 进度落后
+        created_by=1,
         )
         db_session.add(project)
 
         # 创建阻塞任务
         blocked_task = Task(
-            project_id=project.id,
-            task_code="TASK-001",
-            title="阻塞任务",
-            status="BLOCKED",
+        project_id=project.id,
+        task_code="TASK-001",
+        title="阻塞任务",
+        status="BLOCKED",
         )
         db_session.add(blocked_task)
         db_session.commit()
@@ -107,15 +107,15 @@ class TestHealthCalculatorEdgeCases:
         """阻塞状态下的其他风险不应影响结果"""
         # 创建项目
         project = Project(
-            project_code="PJ-EDGE-004",
-            project_name="边缘测试项目",
-            stage="S6",
-            status="ST14",  # 缺料阻塞状态
-            health="H1",
-            planned_start_date=date.today() - timedelta(days=30),
-            planned_end_date=date.today() + timedelta(days=30),
-            progress_pct=Decimal("10.00"),  # 严重进度落后
-            created_by=1,
+        project_code="PJ-EDGE-004",
+        project_name="边缘测试项目",
+        stage="S6",
+        status="ST14",  # 缺料阻塞状态
+        health="H1",
+        planned_start_date=date.today() - timedelta(days=30),
+        planned_end_date=date.today() + timedelta(days=30),
+        progress_pct=Decimal("10.00"),  # 严重进度落后
+        created_by=1,
         )
         db_session.add(project)
         db_session.commit()
@@ -131,25 +131,25 @@ class TestHealthCalculatorEdgeCases:
         """已完结状态优先级最高（忽略其他风险）"""
         # 创建已完结项目
         project = Project(
-            project_code="PJ-EDGE-005",
-            project_name="边缘测试项目",
-            stage="S9",
-            status="ST30",  # 已结项
-            health="H1",
-            planned_start_date=date.today() - timedelta(days=30),
-            planned_end_date=date.today() + timedelta(days=30),
-            progress_pct=Decimal("10.00"),  # 进度落后
-            created_by=1,
+        project_code="PJ-EDGE-005",
+        project_name="边缘测试项目",
+        stage="S9",
+        status="ST30",  # 已结项
+        health="H1",
+        planned_start_date=date.today() - timedelta(days=30),
+        planned_end_date=date.today() + timedelta(days=30),
+        progress_pct=Decimal("10.00"),  # 进度落后
+        created_by=1,
         )
         db_session.add(project)
 
         # 创建逾期里程碑
         milestone = ProjectMilestone(
-            project_id=project.id,
-            milestone_name="测试里程碑",
-            planned_date=date.today() - timedelta(days=1),
-            status="IN_PROGRESS",
-            is_key=True,
+        project_id=project.id,
+        milestone_name="测试里程碑",
+        planned_date=date.today() - timedelta(days=1),
+        status="IN_PROGRESS",
+        is_key=True,
         )
         db_session.add(milestone)
         db_session.commit()
@@ -165,15 +165,15 @@ class TestHealthCalculatorEdgeCases:
         """进度偏差正好等于阈值时的边界处理"""
         # 创建项目（进度正好落后阈值10%）
         project = Project(
-            project_code="PJ-EDGE-006",
-            project_name="边缘测试项目",
-            stage="S2",
-            status="ST01",
-            health="H1",
-            planned_start_date=date.today() - timedelta(days=30),
-            planned_end_date=date.today() + timedelta(days=30),
-            progress_pct=Decimal("30.00"),  # 30%完成，应达到50%（落后10%）
-            created_by=1,
+        project_code="PJ-EDGE-006",
+        project_name="边缘测试项目",
+        stage="S2",
+        status="ST01",
+        health="H1",
+        planned_start_date=date.today() - timedelta(days=30),
+        planned_end_date=date.today() + timedelta(days=30),
+        progress_pct=Decimal("30.00"),  # 30%完成，应达到50%（落后10%）
+        created_by=1,
         )
         db_session.add(project)
         db_session.commit()
@@ -189,15 +189,15 @@ class TestHealthCalculatorEdgeCases:
         """进度偏差超过阈值"""
         # 创建项目（进度落后11%）
         project = Project(
-            project_code="PJ-EDGE-007",
-            project_name="边缘测试项目",
-            stage="S2",
-            status="ST01",
-            health="H1",
-            planned_start_date=date.today() - timedelta(days=30),
-            planned_end_date=date.today() + timedelta(days=30),
-            progress_pct=Decimal("29.00"),  # 29%完成，应达到50%（落后11%）
-            created_by=1,
+        project_code="PJ-EDGE-007",
+        project_name="边缘测试项目",
+        stage="S2",
+        status="ST01",
+        health="H1",
+        planned_start_date=date.today() - timedelta(days=30),
+        planned_end_date=date.today() + timedelta(days=30),
+        progress_pct=Decimal("29.00"),  # 29%完成，应达到50%（落后11%）
+        created_by=1,
         )
         db_session.add(project)
         db_session.commit()
@@ -213,15 +213,15 @@ class TestHealthCalculatorEdgeCases:
         """所有H2风险因素都存在"""
         # 创建项目
         project = Project(
-            project_code="PJ-EDGE-008",
-            project_name="边缘测试项目",
-            stage="S6",
-            status="ST22",  # FAT整改中（风险状态）
-            health="H1",
-            planned_start_date=date.today() - timedelta(days=30),
-            planned_end_date=date.today() + timedelta(days=6),  # 6天后到期（临近）
-            progress_pct=Decimal("25.00"),  # 进度落后
-            created_by=1,
+        project_code="PJ-EDGE-008",
+        project_name="边缘测试项目",
+        stage="S6",
+        status="ST22",  # FAT整改中（风险状态）
+        health="H1",
+        planned_start_date=date.today() - timedelta(days=30),
+        planned_end_date=date.today() + timedelta(days=6),  # 6天后到期（临近）
+        progress_pct=Decimal("25.00"),  # 进度落后
+        created_by=1,
         )
         db_session.add(project)
         db_session.commit()
@@ -237,23 +237,23 @@ class TestHealthCalculatorEdgeCases:
         """只有阻塞问题（没有阻塞状态）"""
         # 创建项目
         project = Project(
-            project_code="PJ-EDGE-009",
-            project_name="边缘测试项目",
-            stage="S6",
-            status="ST01",
-            health="H1",
-            created_by=1,
+        project_code="PJ-EDGE-009",
+        project_name="边缘测试项目",
+        stage="S6",
+        status="ST01",
+        health="H1",
+        created_by=1,
         )
         db_session.add(project)
 
         # 创建阻塞问题
         blocking_issue = Issue(
-            project_id=project.id,
-            issue_type=IssueTypeEnum.BLOCKER,
-            priority="HIGH",
-            title="阻塞问题",
-            description="阻塞了项目进度",
-            status=IssueStatusEnum.OPEN.value,
+        project_id=project.id,
+        issue_type=IssueTypeEnum.BLOCKER,
+        priority="HIGH",
+        title="阻塞问题",
+        description="阻塞了项目进度",
+        status=IssueStatusEnum.OPEN.value,
         )
         db_session.add(blocking_issue)
         db_session.commit()
@@ -286,12 +286,12 @@ class TestHealthCalculatorBatchProcessing:
         """批量计算单个项目"""
         # 创建项目
         project = Project(
-            project_code="PJ-BATCH-001",
-            project_name="批量测试项目",
-            stage="S2",
-            status="ST01",
-            health="H1",
-            created_by=1,
+        project_code="PJ-BATCH-001",
+        project_name="批量测试项目",
+        stage="S2",
+        status="ST01",
+        health="H1",
+        created_by=1,
         )
         db_session.add(project)
         db_session.commit()
@@ -311,35 +311,35 @@ class TestHealthCalculatorBatchProcessing:
         projects = []
         for i in range(3):
             project = Project(
-                project_code=f"PJ-BATCH-{i + 2:03d}",
-                project_name=f"批量测试项目{i}",
-                stage="S2" if i != 1 else "S6",
-                status="ST01" if i != 1 else "ST14",  # 第2个是阻塞状态
-                health="H1",
-                created_by=1,
+            project_code=f"PJ-BATCH-{i + 2:03d}",
+            project_name=f"批量测试项目{i}",
+            stage="S2" if i != 1 else "S6",
+            status="ST01" if i != 1 else "ST14",  # 第2个是阻塞状态
+            health="H1",
+            created_by=1,
             )
             db_session.add(project)
             projects.append(project)
 
-        db_session.commit()
+            db_session.commit()
 
-        # 获取项目ID列表
-        project_ids = [p.id for p in projects]
+            # 获取项目ID列表
+            project_ids = [p.id for p in projects]
 
-        # 批量计算
-        calculator = HealthCalculator(db_session)
-        result = calculator.batch_calculate(project_ids=project_ids, batch_size=100)
+            # 批量计算
+            calculator = HealthCalculator(db_session)
+            result = calculator.batch_calculate(project_ids=project_ids, batch_size=100)
 
-        # 验证结果
-        assert result["total"] == 3
-        # 第2个项目（阻塞状态）应更新
-        assert result["updated"] == 1
-        # 其他2个项目应未改变
-        assert result["unchanged"] == 2
-        # 验证更新的项目ID是第2个
-        updated_project_id = result["details"][1]["project_id"]
-        assert updated_project_id == projects[1].id
-        assert result["details"][1]["new_health"] == ProjectHealthEnum.H3.value
+            # 验证结果
+            assert result["total"] == 3
+            # 第2个项目（阻塞状态）应更新
+            assert result["updated"] == 1
+            # 其他2个项目应未改变
+            assert result["unchanged"] == 2
+            # 验证更新的项目ID是第2个
+            updated_project_id = result["details"][1]["project_id"]
+            assert updated_project_id == projects[1].id
+            assert result["details"][1]["new_health"] == ProjectHealthEnum.H3.value
 
     def test_batch_calculate_with_batch_size(self, db_session: Session):
         """测试批量大小参数"""
@@ -347,39 +347,39 @@ class TestHealthCalculatorBatchProcessing:
         projects = []
         for i in range(10):
             project = Project(
-                project_code=f"PJ-BATCH-{i + 10:03d}",
-                project_name=f"批量测试项目{i}",
-                stage="S2",
-                status="ST01",
-                health="H1",
-                created_by=1,
+            project_code=f"PJ-BATCH-{i + 10:03d}",
+            project_name=f"批量测试项目{i}",
+            stage="S2",
+            status="ST01",
+            health="H1",
+            created_by=1,
             )
             db_session.add(project)
             projects.append(project)
 
-        db_session.commit()
+            db_session.commit()
 
-        # 批量计算（批量大小=3）
-        calculator = HealthCalculator(db_session)
-        project_ids = [p.id for p in projects]
-        result = calculator.batch_calculate(project_ids=project_ids, batch_size=3)
+            # 批量计算（批量大小=3）
+            calculator = HealthCalculator(db_session)
+            project_ids = [p.id for p in projects]
+            result = calculator.batch_calculate(project_ids=project_ids, batch_size=3)
 
-        # 验证结果
-        assert result["total"] == 10
+            # 验证结果
+            assert result["total"] == 10
 
     def test_batch_calculate_auto_save_true(self, db_session: Session):
         """批量计算时自动保存到数据库"""
         # 创建项目（会从H1变为H2）
         project = Project(
-            project_code="PJ-BATCH-SAVE",
-            project_name="批量保存测试项目",
-            stage="S2",
-            status="ST01",
-            health="H1",
-            planned_start_date=date.today() - timedelta(days=30),
-            planned_end_date=date.today() + timedelta(days=30),
-            progress_pct=Decimal("25.00"),  # 进度落后，会变成H2
-            created_by=1,
+        project_code="PJ-BATCH-SAVE",
+        project_name="批量保存测试项目",
+        stage="S2",
+        status="ST01",
+        health="H1",
+        planned_start_date=date.today() - timedelta(days=30),
+        planned_end_date=date.today() + timedelta(days=30),
+        progress_pct=Decimal("25.00"),  # 进度落后，会变成H2
+        created_by=1,
         )
         db_session.add(project)
         db_session.commit()
@@ -399,12 +399,12 @@ class TestHealthCalculatorBatchProcessing:
         """批量计算时的数据库错误处理"""
         # 创建项目
         project = Project(
-            project_code="PJ-BATCH-ERR",
-            project_name="批量错误测试项目",
-            stage="S2",
-            status="ST01",
-            health="H1",
-            created_by=1,
+        project_code="PJ-BATCH-ERR",
+        project_name="批量错误测试项目",
+        stage="S2",
+        status="ST01",
+        health="H1",
+        created_by=1,
         )
         db_session.add(project)
         db_session.commit()
@@ -426,15 +426,15 @@ class TestHealthCalculatorStatusLog:
         """健康度变化时创建状态日志"""
         # 创建项目（会从H1变为H2）
         project = Project(
-            project_code="PJ-LOG-001",
-            project_name="状态日志测试项目",
-            stage="S2",
-            status="ST01",
-            health="H1",
-            planned_start_date=date.today() - timedelta(days=30),
-            planned_end_date=date.today() + timedelta(days=30),
-            progress_pct=Decimal("20.00"),  # 进度落后
-            created_by=1,
+        project_code="PJ-LOG-001",
+        project_name="状态日志测试项目",
+        stage="S2",
+        status="ST01",
+        health="H1",
+        planned_start_date=date.today() - timedelta(days=30),
+        planned_end_date=date.today() + timedelta(days=30),
+        progress_pct=Decimal("20.00"),  # 进度落后
+        created_by=1,
         )
         db_session.add(project)
         db_session.commit()
@@ -452,12 +452,12 @@ class TestHealthCalculatorStatusLog:
 
         # 验证数据库中的状态日志
         status_logs = (
-            db_session.query(ProjectStatusLog)
-            .filter(
-                ProjectStatusLog.project_id == project.id,
-                ProjectStatusLog.change_type == "HEALTH_AUTO_CALCULATED",
-            )
-            .all()
+        db_session.query(ProjectStatusLog)
+        .filter(
+        ProjectStatusLog.project_id == project.id,
+        ProjectStatusLog.change_type == "HEALTH_AUTO_CALCULATED",
+        )
+        .all()
         )
 
         assert len(status_logs) > 0
@@ -472,12 +472,12 @@ class TestHealthCalculatorStatusLog:
         """健康度无变化时不创建状态日志"""
         # 创建项目
         project = Project(
-            project_code="PJ-LOG-002",
-            project_name="状态日志测试项目",
-            stage="S2",
-            status="ST01",
-            health="H1",
-            created_by=1,
+        project_code="PJ-LOG-002",
+        project_name="状态日志测试项目",
+        stage="S2",
+        status="ST01",
+        health="H1",
+        created_by=1,
         )
         db_session.add(project)
         db_session.commit()
@@ -495,12 +495,12 @@ class TestHealthCalculatorStatusLog:
 
         # 验证数据库中没有新的状态日志
         status_logs = (
-            db_session.query(ProjectStatusLog)
-            .filter(
-                ProjectStatusLog.project_id == project.id,
-                ProjectStatusLog.change_type == "HEALTH_AUTO_CALCULATED",
-            )
-            .all()
+        db_session.query(ProjectStatusLog)
+        .filter(
+        ProjectStatusLog.project_id == project.id,
+        ProjectStatusLog.change_type == "HEALTH_AUTO_CALCULATED",
+        )
+        .all()
         )
 
         assert len(status_logs) == 0
@@ -509,12 +509,12 @@ class TestHealthCalculatorStatusLog:
         """多次健康度变化创建多条日志"""
         # 创建项目
         project = Project(
-            project_code="PJ-LOG-003",
-            project_name="状态日志测试项目",
-            stage="S2",
-            status="ST01",
-            health="H1",
-            created_by=1,
+        project_code="PJ-LOG-003",
+        project_name="状态日志测试项目",
+        stage="S2",
+        status="ST01",
+        health="H1",
+        created_by=1,
         )
         db_session.add(project)
         db_session.commit()
@@ -541,12 +541,12 @@ class TestHealthCalculatorStatusLog:
 
         # 验证有2条状态日志
         status_logs = (
-            db_session.query(ProjectStatusLog)
-            .filter(
-                ProjectStatusLog.project_id == project.id,
-                ProjectStatusLog.change_type == "HEALTH_AUTO_CALCULATED",
-            )
-            .all()
+        db_session.query(ProjectStatusLog)
+        .filter(
+        ProjectStatusLog.project_id == project.id,
+        ProjectStatusLog.change_type == "HEALTH_AUTO_CALCULATED",
+        )
+        .all()
         )
 
         assert len(status_logs) == 2
@@ -555,15 +555,15 @@ class TestHealthCalculatorStatusLog:
         """auto_save=False时不更新数据库"""
         # 创建项目
         project = Project(
-            project_code="PJ-SAVE-001",
-            project_name="保存测试项目",
-            stage="S2",
-            status="ST01",
-            health="H1",
-            planned_start_date=date.today() - timedelta(days=30),
-            planned_end_date=date.today() + timedelta(days=30),
-            progress_pct=Decimal("20.00"),
-            created_by=1,
+        project_code="PJ-SAVE-001",
+        project_name="保存测试项目",
+        stage="S2",
+        status="ST01",
+        health="H1",
+        planned_start_date=date.today() - timedelta(days=30),
+        planned_end_date=date.today() + timedelta(days=30),
+        progress_pct=Decimal("20.00"),
+        created_by=1,
         )
         db_session.add(project)
         db_session.commit()
@@ -591,34 +591,34 @@ class TestHealthCalculatorAlertIntegration:
         """严重缺料预警触发H3"""
         # 创建预警规则
         alert_rule = AlertRule(
-            rule_code="MAT-SHORT-CRIT",
-            rule_name="严重缺料预警",
-            rule_type="MATERIAL_SHORTAGE",
-            alert_level=AlertLevelEnum.CRITICAL.value,
-            is_active=True,
+        rule_code="MAT-SHORT-CRIT",
+        rule_name="严重缺料预警",
+        rule_type="MATERIAL_SHORTAGE",
+        alert_level=AlertLevelEnum.CRITICAL.value,
+        is_active=True,
         )
         db_session.add(alert_rule)
         db_session.commit()
 
         # 创建项目
         project = Project(
-            project_code="PJ-ALERT-001",
-            project_name="预警测试项目",
-            stage="S3",
-            status="ST01",
-            health="H1",
-            created_by=1,
+        project_code="PJ-ALERT-001",
+        project_name="预警测试项目",
+        stage="S3",
+        status="ST01",
+        health="H1",
+        created_by=1,
         )
         db_session.add(project)
 
         # 创建严重缺料预警
         alert = AlertRecord(
-            project_id=project.id,
-            rule_id=alert_rule.id,
-            alert_level=AlertLevelEnum.CRITICAL.value,
-            status="PENDING",  # 未处理
-            alert_title="严重缺料",
-            alert_content="关键物料短缺",
+        project_id=project.id,
+        rule_id=alert_rule.id,
+        alert_level=AlertLevelEnum.CRITICAL.value,
+        status="PENDING",  # 未处理
+        alert_title="严重缺料",
+        alert_content="关键物料短缺",
         )
         db_session.add(alert)
         db_session.commit()
@@ -634,34 +634,34 @@ class TestHealthCalculatorAlertIntegration:
         """警告级缺料预警触发H2"""
         # 创建预警规则
         alert_rule = AlertRule(
-            rule_code="MAT-SHORT-WARN",
-            rule_name="缺料预警",
-            rule_type="MATERIAL_SHORTAGE",
-            alert_level=AlertLevelEnum.WARNING.value,
-            is_active=True,
+        rule_code="MAT-SHORT-WARN",
+        rule_name="缺料预警",
+        rule_type="MATERIAL_SHORTAGE",
+        alert_level=AlertLevelEnum.WARNING.value,
+        is_active=True,
         )
         db_session.add(alert_rule)
         db_session.commit()
 
         # 创建项目
         project = Project(
-            project_code="PJ-ALERT-002",
-            project_name="预警测试项目",
-            stage="S3",
-            status="ST01",
-            health="H1",
-            created_by=1,
+        project_code="PJ-ALERT-002",
+        project_name="预警测试项目",
+        stage="S3",
+        status="ST01",
+        health="H1",
+        created_by=1,
         )
         db_session.add(project)
 
         # 创建警告级缺料预警
         alert = AlertRecord(
-            project_id=project.id,
-            rule_id=alert_rule.id,
-            alert_level=AlertLevelEnum.WARNING.value,
-            status="PENDING",
-            alert_title="缺料",
-            alert_content="物料短缺",
+        project_id=project.id,
+        rule_id=alert_rule.id,
+        alert_level=AlertLevelEnum.WARNING.value,
+        status="PENDING",
+        alert_title="缺料",
+        alert_content="物料短缺",
         )
         db_session.add(alert)
         db_session.commit()
@@ -677,34 +677,34 @@ class TestHealthCalculatorAlertIntegration:
         """已解决的预警不影响健康度"""
         # 创建预警规则
         alert_rule = AlertRule(
-            rule_code="MAT-SHORT-RES",
-            rule_name="缺料预警",
-            rule_type="MATERIAL_SHORTAGE",
-            alert_level=AlertLevelEnum.CRITICAL.value,
-            is_active=True,
+        rule_code="MAT-SHORT-RES",
+        rule_name="缺料预警",
+        rule_type="MATERIAL_SHORTAGE",
+        alert_level=AlertLevelEnum.CRITICAL.value,
+        is_active=True,
         )
         db_session.add(alert_rule)
         db_session.commit()
 
         # 创建项目
         project = Project(
-            project_code="PJ-ALERT-003",
-            project_name="预警测试项目",
-            stage="S3",
-            status="ST01",
-            health="H1",
-            created_by=1,
+        project_code="PJ-ALERT-003",
+        project_name="预警测试项目",
+        stage="S3",
+        status="ST01",
+        health="H1",
+        created_by=1,
         )
         db_session.add(project)
 
         # 创建已解决的严重预警
         alert = AlertRecord(
-            project_id=project.id,
-            rule_id=alert_rule.id,
-            alert_level=AlertLevelEnum.CRITICAL.value,
-            status="RESOLVED",  # 已解决
-            alert_title="缺料",
-            alert_content="已解决",
+        project_id=project.id,
+        rule_id=alert_rule.id,
+        alert_level=AlertLevelEnum.CRITICAL.value,
+        status="RESOLVED",  # 已解决
+        alert_title="缺料",
+        alert_content="已解决",
         )
         db_session.add(alert)
         db_session.commit()

@@ -76,7 +76,7 @@ class TestNotifyApproved:
         extra_context = {"custom_field": "value"}
 
         service.notify_approved(
-            mock_instance, mock_node, mock_task, extra_context=extra_context
+        mock_instance, mock_node, mock_task, extra_context=extra_context
         )
 
         assert mock_db.add.call_count >= 1
@@ -102,11 +102,11 @@ class TestNotifyRejected:
         rejector_name = "张经理"
 
         service.notify_rejected(
-            mock_instance,
-            mock_node,
-            mock_task,
-            rejector_name=rejector_name,
-            extra_context=None,
+        mock_instance,
+        mock_node,
+        mock_task,
+        rejector_name=rejector_name,
+        extra_context=None,
         )
 
         assert mock_db.add.call_count >= 1
@@ -152,7 +152,7 @@ class TestNotifyTimeoutWarning:
         mock_task.assignee_id = 50
 
         service.notify_timeout_warning(
-            mock_instance, mock_task, hours_remaining=24, extra_context=None
+        mock_instance, mock_task, hours_remaining=24, extra_context=None
         )
 
         assert mock_db.add.call_count >= 1
@@ -168,11 +168,11 @@ class TestGenerateDedupKey:
         service = ApprovalNotifyService(db=mock_db)
 
         notification = {
-            "instance_id": 1,
-            "node_id": 10,
-            "task_id": 100,
-            "type": "APPROVED",
-            "recipient_id": 50,
+        "instance_id": 1,
+        "node_id": 10,
+        "task_id": 100,
+        "type": "APPROVED",
+        "recipient_id": 50,
         }
 
         key = service._generate_dedup_key(notification)
@@ -186,10 +186,10 @@ class TestGenerateDedupKey:
         service = ApprovalNotifyService(db=mock_db)
 
         with patch.object(
-            service, "_check_user_preferences", return_value={"dedup_window_hours": 1}
+        service, "_check_user_preferences", return_value={"dedup_window_hours": 1}
         ):
-            is_dup = service._is_duplicate("1:10:100:APPROVED:50")
-            assert is_dup is True
+        is_dup = service._is_duplicate("1:10:100:APPROVED:50")
+        assert is_dup is True
 
     def test_is_duplicate_false(self):
         """测试重复检测-无重复"""
@@ -197,10 +197,10 @@ class TestGenerateDedupKey:
         service = ApprovalNotifyService(db=mock_db)
 
         with patch.object(
-            service, "_check_user_preferences", return_value={"dedup_window_hours": 0}
+        service, "_check_user_preferences", return_value={"dedup_window_hours": 0}
         ):
-            is_dup = service._is_duplicate("1:10:100:APPROVED:50")
-            assert is_dup is False
+        is_dup = service._is_duplicate("1:10:100:APPROVED:50")
+        assert is_dup is False
 
 
 @pytest.mark.unit
@@ -213,11 +213,11 @@ class TestNotifyServiceIntegration:
         service = ApprovalNotifyService(db=mock_db)
 
         methods = [
-            "notify_pending",
-            "notify_approved",
-            "notify_rejected",
-            "notify_cc",
-            "notify_timeout_warning",
+        "notify_pending",
+        "notify_approved",
+        "notify_rejected",
+        "notify_cc",
+        "notify_timeout_warning",
         ]
 
         for method in methods:

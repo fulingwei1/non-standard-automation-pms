@@ -170,9 +170,9 @@ class TestUserScopeService:
         mock_db = MagicMock(spec=Session)
 
         mock_db.query.return_value.filter.return_value.all.return_value = [
-            (1,),
-            (2,),
-            (3,),
+        (1,),
+        (2,),
+        (3,),
         ]
 
         result = UserScopeService.get_user_project_ids(mock_db, user_id=100)
@@ -194,8 +194,8 @@ class TestUserScopeService:
         mock_db = MagicMock(spec=Session)
 
         mock_db.query.return_value.filter.return_value.all.return_value = [
-            (10,),
-            (20,),
+        (10,),
+        (20,),
         ]
 
         result = UserScopeService.get_subordinate_ids(mock_db, user_id=1)
@@ -225,7 +225,7 @@ class TestProjectFilterService:
         mock_user.is_superuser = True
 
         result = ProjectFilterService.filter_projects_by_scope(
-            mock_db, mock_query, mock_user
+        mock_db, mock_query, mock_user
         )
 
         assert result == mock_query
@@ -243,7 +243,7 @@ class TestProjectFilterService:
         mock_get_scope.return_value = DataScopeEnum.ALL.value
 
         result = ProjectFilterService.filter_projects_by_scope(
-            mock_db, mock_query, mock_user
+        mock_db, mock_query, mock_user
         )
 
         assert result == mock_query
@@ -268,7 +268,7 @@ class TestProjectFilterService:
         mock_db.query.return_value.filter.return_value.first.return_value = mock_dept
 
         result = ProjectFilterService.filter_projects_by_scope(
-            mock_db, mock_query, mock_user
+        mock_db, mock_query, mock_user
         )
 
         mock_query.filter.assert_called()
@@ -291,7 +291,7 @@ class TestProjectFilterService:
         mock_get_subordinates.return_value = {10, 20}
 
         result = ProjectFilterService.filter_projects_by_scope(
-            mock_db, mock_query, mock_user
+        mock_db, mock_query, mock_user
         )
 
         mock_query.filter.assert_called()
@@ -312,7 +312,7 @@ class TestProjectFilterService:
         mock_get_projects.return_value = {1, 2, 3}
 
         result = ProjectFilterService.filter_projects_by_scope(
-            mock_db, mock_query, mock_user
+        mock_db, mock_query, mock_user
         )
 
         mock_query.filter.assert_called()
@@ -335,7 +335,7 @@ class TestProjectFilterService:
         mock_get_projects.return_value = set()  # 无项目
 
         result = ProjectFilterService.filter_projects_by_scope(
-            mock_db, mock_query, mock_user
+        mock_db, mock_query, mock_user
         )
 
         # 应该过滤为永不匹配的条件
@@ -355,7 +355,7 @@ class TestProjectFilterService:
         mock_get_scope.return_value = DataScopeEnum.OWN.value
 
         result = ProjectFilterService.filter_projects_by_scope(
-            mock_db, mock_query, mock_user
+        mock_db, mock_query, mock_user
         )
 
         mock_query.filter.assert_called()
@@ -419,8 +419,8 @@ class TestCheckProjectAccess:
         mock_dept.id = 10
 
         mock_db.query.return_value.filter.return_value.first.side_effect = [
-            mock_project,
-            mock_dept,
+        mock_project,
+        mock_dept,
         ]
 
         result = ProjectFilterService.check_project_access(mock_db, mock_user, 1)
@@ -445,8 +445,8 @@ class TestCheckProjectAccess:
         mock_dept.id = 10
 
         mock_db.query.return_value.filter.return_value.first.side_effect = [
-            mock_project,
-            mock_dept,
+        mock_project,
+        mock_dept,
         ]
 
         result = ProjectFilterService.check_project_access(mock_db, mock_user, 1)

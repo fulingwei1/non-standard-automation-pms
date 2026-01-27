@@ -188,10 +188,10 @@ class TestAnalyzeBomImpact:
             mock_filter = MagicMock()
             call_count[0] += 1
             if call_count[0] == 1:  # ECN query
-                mock_filter.first.return_value = ecn
-            elif call_count[0] == 2:  # Affected materials
-                mock_filter.all.return_value = []
-            return mock_filter
+            mock_filter.first.return_value = ecn
+        elif call_count[0] == 2:  # Affected materials
+        mock_filter.all.return_value = []
+        return mock_filter
 
         db.query.return_value.filter.side_effect = filter_side_effect
 
@@ -212,12 +212,12 @@ class TestAnalyzeBomImpact:
             mock_filter = MagicMock()
             call_count[0] += 1
             if call_count[0] == 1:  # ECN query
-                mock_filter.first.return_value = ecn
-            elif call_count[0] == 2:  # Affected materials
-                mock_filter.all.return_value = [affected_mat]
-            elif call_count[0] == 3:  # Machine query
-                mock_filter.first.return_value = None
-            return mock_filter
+            mock_filter.first.return_value = ecn
+        elif call_count[0] == 2:  # Affected materials
+        mock_filter.all.return_value = [affected_mat]
+        elif call_count[0] == 3:  # Machine query
+        mock_filter.first.return_value = None
+        return mock_filter
 
         db.query.return_value.filter.side_effect = filter_side_effect
 
@@ -238,14 +238,14 @@ class TestAnalyzeBomImpact:
             mock_filter = MagicMock()
             call_count[0] += 1
             if call_count[0] == 1:  # ECN query
-                mock_filter.first.return_value = ecn
-            elif call_count[0] == 2:  # Affected materials
-                mock_filter.all.return_value = [affected_mat]
-            elif call_count[0] == 3:  # Machine query
-                mock_filter.first.return_value = machine
-            elif call_count[0] == 4:  # BOM headers
-                mock_filter.all.return_value = []
-            return mock_filter
+            mock_filter.first.return_value = ecn
+        elif call_count[0] == 2:  # Affected materials
+        mock_filter.all.return_value = [affected_mat]
+        elif call_count[0] == 3:  # Machine query
+        mock_filter.first.return_value = machine
+        elif call_count[0] == 4:  # BOM headers
+        mock_filter.all.return_value = []
+        return mock_filter
 
         db.query.return_value.filter.side_effect = filter_side_effect
 
@@ -305,9 +305,9 @@ class TestGetImpactDescription:
         db = create_mock_db_session()
         service = EcnBomAnalysisService(db)
         affected_mat = create_mock_affected_material(
-            change_type="UPDATE",
-            old_quantity=10,
-            new_quantity=20
+        change_type="UPDATE",
+        old_quantity=10,
+        new_quantity=20
         )
 
         result = service._get_impact_description(affected_mat)
@@ -321,9 +321,9 @@ class TestGetImpactDescription:
         db = create_mock_db_session()
         service = EcnBomAnalysisService(db)
         affected_mat = create_mock_affected_material(
-            change_type="UPDATE",
-            old_specification="规格A",
-            new_specification="规格B"
+        change_type="UPDATE",
+        old_specification="规格A",
+        new_specification="规格B"
         )
 
         result = service._get_impact_description(affected_mat)
@@ -341,8 +341,8 @@ class TestCalculateObsoleteRiskLevel:
         service = EcnBomAnalysisService(db)
 
         result = service._calculate_obsolete_risk_level(
-            obsolete_qty=Decimal(1000),
-            obsolete_cost=Decimal(150000)
+        obsolete_qty=Decimal(1000),
+        obsolete_cost=Decimal(150000)
         )
 
         assert result == "CRITICAL"
@@ -353,8 +353,8 @@ class TestCalculateObsoleteRiskLevel:
         service = EcnBomAnalysisService(db)
 
         result = service._calculate_obsolete_risk_level(
-            obsolete_qty=Decimal(500),
-            obsolete_cost=Decimal(75000)
+        obsolete_qty=Decimal(500),
+        obsolete_cost=Decimal(75000)
         )
 
         assert result == "HIGH"
@@ -365,8 +365,8 @@ class TestCalculateObsoleteRiskLevel:
         service = EcnBomAnalysisService(db)
 
         result = service._calculate_obsolete_risk_level(
-            obsolete_qty=Decimal(200),
-            obsolete_cost=Decimal(25000)
+        obsolete_qty=Decimal(200),
+        obsolete_cost=Decimal(25000)
         )
 
         assert result == "MEDIUM"
@@ -377,8 +377,8 @@ class TestCalculateObsoleteRiskLevel:
         service = EcnBomAnalysisService(db)
 
         result = service._calculate_obsolete_risk_level(
-            obsolete_qty=Decimal(50),
-            obsolete_cost=Decimal(5000)
+        obsolete_qty=Decimal(50),
+        obsolete_cost=Decimal(5000)
         )
 
         assert result == "LOW"
@@ -389,8 +389,8 @@ class TestCalculateObsoleteRiskLevel:
         service = EcnBomAnalysisService(db)
 
         result = service._calculate_obsolete_risk_level(
-            obsolete_qty=Decimal(100),
-            obsolete_cost=Decimal(100000)
+        obsolete_qty=Decimal(100),
+        obsolete_cost=Decimal(100000)
         )
 
         assert result == "CRITICAL"
@@ -401,8 +401,8 @@ class TestCalculateObsoleteRiskLevel:
         service = EcnBomAnalysisService(db)
 
         result = service._calculate_obsolete_risk_level(
-            obsolete_qty=Decimal(100),
-            obsolete_cost=Decimal(50000)
+        obsolete_qty=Decimal(100),
+        obsolete_cost=Decimal(50000)
         )
 
         assert result == "HIGH"
@@ -413,8 +413,8 @@ class TestCalculateObsoleteRiskLevel:
         service = EcnBomAnalysisService(db)
 
         result = service._calculate_obsolete_risk_level(
-            obsolete_qty=Decimal(100),
-            obsolete_cost=Decimal(10000)
+        obsolete_qty=Decimal(100),
+        obsolete_cost=Decimal(10000)
         )
 
         assert result == "MEDIUM"
@@ -444,11 +444,11 @@ class TestCheckObsoleteMaterialRisk:
             mock_filter = MagicMock()
             call_count[0] += 1
             if call_count[0] == 1:  # ECN query
-                mock_filter.first.return_value = ecn
-            else:  # Affected materials with DELETE/REPLACE
-                mock_filter.in_.return_value = mock_filter
-                mock_filter.all.return_value = []
-            return mock_filter
+            mock_filter.first.return_value = ecn
+        else:  # Affected materials with DELETE/REPLACE
+        mock_filter.in_.return_value = mock_filter
+        mock_filter.all.return_value = []
+        return mock_filter
 
         db.query.return_value.filter.side_effect = filter_side_effect
 
@@ -469,18 +469,18 @@ class TestCheckObsoleteMaterialRisk:
             mock_filter = MagicMock()
             call_count[0] += 1
             if call_count[0] == 1:  # ECN query
-                mock_filter.first.return_value = ecn
-            else:
-                mock_filter.in_.return_value = mock_filter
-                mock_filter.all.return_value = [affected_mat]
+            mock_filter.first.return_value = ecn
+        else:
+            mock_filter.in_.return_value = mock_filter
+            mock_filter.all.return_value = [affected_mat]
             return mock_filter
 
-        db.query.return_value.filter.side_effect = filter_side_effect
+            db.query.return_value.filter.side_effect = filter_side_effect
 
-        service = EcnBomAnalysisService(db)
-        result = service.check_obsolete_material_risk(ecn_id=1)
+            service = EcnBomAnalysisService(db)
+            result = service.check_obsolete_material_risk(ecn_id=1)
 
-        assert result["has_obsolete_risk"] is False
+            assert result["has_obsolete_risk"] is False
 
 
 @pytest.mark.unit
@@ -493,8 +493,8 @@ class TestAnalyzeCascadeImpact:
         service = EcnBomAnalysisService(db)
 
         bom_items = [
-            create_mock_bom_item(item_id=1, parent_item_id=None),
-            create_mock_bom_item(item_id=2, parent_item_id=None)
+        create_mock_bom_item(item_id=1, parent_item_id=None),
+        create_mock_bom_item(item_id=2, parent_item_id=None)
         ]
         affected_item_ids = {1}
 
@@ -560,8 +560,8 @@ class TestCalculateCostImpact:
         service = EcnBomAnalysisService(db)
 
         affected_materials = [
-            create_mock_affected_material(cost_impact=1000),
-            create_mock_affected_material(cost_impact=2000)
+        create_mock_affected_material(cost_impact=1000),
+        create_mock_affected_material(cost_impact=2000)
         ]
         bom_items = []
         affected_item_ids = set()
@@ -576,11 +576,11 @@ class TestCalculateCostImpact:
         service = EcnBomAnalysisService(db)
 
         affected_materials = [
-            create_mock_affected_material(
-                material_code="M001",
-                change_type="DELETE",
-                cost_impact=None
-            )
+        create_mock_affected_material(
+        material_code="M001",
+        change_type="DELETE",
+        cost_impact=None
+        )
         ]
         bom_items = [create_mock_bom_item(item_id=1, material_code="M001", amount=5000)]
         affected_item_ids = {1}
@@ -615,10 +615,10 @@ class TestCalculateScheduleImpact:
         service = EcnBomAnalysisService(db)
 
         affected_materials = [
-            create_mock_affected_material(
-                material_code="M001",
-                change_type="UPDATE"
-            )
+        create_mock_affected_material(
+        material_code="M001",
+        change_type="UPDATE"
+        )
         ]
         bom_items = [create_mock_bom_item(item_id=1, material_code="M001", material_id=1)]
         affected_item_ids = {1}
@@ -632,8 +632,8 @@ class TestCalculateScheduleImpact:
         db = create_mock_db_session()
 
         materials = [
-            create_mock_material(material_id=1, lead_time_days=14),
-            create_mock_material(material_id=2, lead_time_days=28)
+        create_mock_material(material_id=1, lead_time_days=14),
+        create_mock_material(material_id=2, lead_time_days=28)
         ]
 
         call_count = [0]
@@ -644,23 +644,23 @@ class TestCalculateScheduleImpact:
             call_count[0] += 1
             return mock_filter
 
-        db.query.return_value.filter.side_effect = filter_side_effect
+            db.query.return_value.filter.side_effect = filter_side_effect
 
-        service = EcnBomAnalysisService(db)
+            service = EcnBomAnalysisService(db)
 
-        affected_materials = [
+            affected_materials = [
             create_mock_affected_material(material_code="M001", change_type="UPDATE"),
             create_mock_affected_material(material_code="M002", change_type="ADD")
-        ]
-        bom_items = [
+            ]
+            bom_items = [
             create_mock_bom_item(item_id=1, material_code="M001", material_id=1),
             create_mock_bom_item(item_id=2, material_code="M002", material_id=2)
-        ]
-        affected_item_ids = {1, 2}
+            ]
+            affected_item_ids = {1, 2}
 
-        result = service._calculate_schedule_impact(affected_materials, bom_items, affected_item_ids)
+            result = service._calculate_schedule_impact(affected_materials, bom_items, affected_item_ids)
 
-        assert result == 28
+            assert result == 28
 
 
 @pytest.mark.unit
@@ -675,14 +675,14 @@ class TestSaveBomImpact:
         service = EcnBomAnalysisService(db)
 
         service._save_bom_impact(
-            ecn_id=1,
-            bom_version_id=1,
-            machine_id=1,
-            project_id=1,
-            affected_item_count=5,
-            total_cost_impact=Decimal(10000),
-            schedule_impact_days=14,
-            impact_analysis={"test": "data"}
+        ecn_id=1,
+        bom_version_id=1,
+        machine_id=1,
+        project_id=1,
+        affected_item_count=5,
+        total_cost_impact=Decimal(10000),
+        schedule_impact_days=14,
+        impact_analysis={"test": "data"}
         )
 
         db.add.assert_called_once()
@@ -697,14 +697,14 @@ class TestSaveBomImpact:
         service = EcnBomAnalysisService(db)
 
         service._save_bom_impact(
-            ecn_id=1,
-            bom_version_id=1,
-            machine_id=1,
-            project_id=1,
-            affected_item_count=10,
-            total_cost_impact=Decimal(20000),
-            schedule_impact_days=21,
-            impact_analysis={"updated": "data"}
+        ecn_id=1,
+        bom_version_id=1,
+        machine_id=1,
+        project_id=1,
+        affected_item_count=10,
+        total_cost_impact=Decimal(20000),
+        schedule_impact_days=21,
+        impact_analysis={"updated": "data"}
         )
 
         assert existing.affected_item_count == 10

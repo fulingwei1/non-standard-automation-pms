@@ -30,7 +30,6 @@ from app.api.v1.endpoints import (  # projects,  # 已拆分为projects包; cost
     procurement_analysis,
     project_contributions,
     project_evaluation,
-    project_roles,
     project_workspace,
     purchase,
     qualification,
@@ -201,9 +200,16 @@ api_router.include_router(assembly_kit_router, prefix="", tags=["assembly-kit"])
 api_router.include_router(
     staff_matching.router, prefix="/staff-matching", tags=["staff-matching"]
 )
-api_router.include_router(
-    project_roles.router, prefix="/project-roles", tags=["project-roles"]
-)
+# 租户管理模块（仅超级管理员可访问）
+from app.api.v1.endpoints.tenants import router as tenants_router
+
+api_router.include_router(tenants_router, tags=["tenants"])
+
+# 系统角色管理模块（替代废弃的 project_roles）
+from app.api.v1.endpoints.roles import router as roles_router
+
+api_router.include_router(roles_router, tags=["roles"])
+
 # 管理节律模块已拆分为management_rhythm包
 from app.api.v1.endpoints.management_rhythm import router as management_rhythm_router
 

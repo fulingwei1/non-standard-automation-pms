@@ -85,8 +85,8 @@ class TestEmployeeImportService:
     def test_get_department_name(self):
         """测试获取部门名称"""
         row = pd.Series({
-            "一级部门": "技术部",
-            "二级部门": "研发组"
+        "一级部门": "技术部",
+        "二级部门": "研发组"
         })
         dept_cols = ["一级部门", "二级部门"]
         dept_name = get_department_name(row, dept_cols)
@@ -140,26 +140,26 @@ class TestEmployeeImportService:
         df = pd.DataFrame({"部门": ["技术部"]})
 
         with pytest.raises(Exception):  # HTTPException
-            import_employees_from_dataframe(db_session, df, evaluator_id=1)
+        import_employees_from_dataframe(db_session, df, evaluator_id=1)
 
     def test_import_employees_from_dataframe_success(self, db_session):
         """测试导入员工 - 成功场景"""
         # 创建标签字典
         tag = HrTagDict(
-            tag_code="TAG-PLC",
-            tag_name="PLC编程",
-            tag_type="SKILL",
-            is_active=True
+        tag_code="TAG-PLC",
+        tag_name="PLC编程",
+        tag_type="SKILL",
+        is_active=True
         )
         db_session.add(tag)
         db_session.commit()
 
         df = pd.DataFrame({
-            "姓名": ["张三", "李四"],
-            "部门": ["技术部", "销售部"],
-            "职务": ["PLC工程师", "销售"],
-            "手机": ["13812345678", "13912345678"],
-            "在职离职状态": ["在职", "在职"]
+        "姓名": ["张三", "李四"],
+        "部门": ["技术部", "销售部"],
+        "职务": ["PLC工程师", "销售"],
+        "手机": ["13812345678", "13912345678"],
+        "在职离职状态": ["在职", "在职"]
         })
 
         result = import_employees_from_dataframe(db_session, df, evaluator_id=1)
@@ -173,16 +173,16 @@ class TestEmployeeImportService:
         """测试导入员工 - 更新现有员工"""
         # 创建现有员工
         existing_employee = EmployeeFactory(
-            name="张三",
-            department="技术部"
+        name="张三",
+        department="技术部"
         )
         db_session.add(existing_employee)
         db_session.commit()
 
         df = pd.DataFrame({
-            "姓名": ["张三"],
-            "部门": ["技术部"],
-            "手机": ["13899999999"]
+        "姓名": ["张三"],
+        "部门": ["技术部"],
+        "手机": ["13899999999"]
         })
 
         result = import_employees_from_dataframe(db_session, df, evaluator_id=1)
@@ -192,8 +192,8 @@ class TestEmployeeImportService:
     def test_import_employees_from_dataframe_skip_empty_name(self, db_session):
         """测试导入员工 - 跳过空姓名"""
         df = pd.DataFrame({
-            "姓名": ["", "   ", None],
-            "部门": ["技术部", "销售部", "财务部"]
+        "姓名": ["", "   ", None],
+        "部门": ["技术部", "销售部", "财务部"]
         })
 
         result = import_employees_from_dataframe(db_session, df, evaluator_id=1)

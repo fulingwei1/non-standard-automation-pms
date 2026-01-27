@@ -132,10 +132,13 @@ class RemindersMixin:
 
         # 使用通知服务发送提醒
         try:
-            from app.services.notification_service import NotificationService
-            from app.models.enums import NotificationPriority, NotificationType
+            from app.services.notification_service import (
+                NotificationService,
+                NotificationPriority,
+                NotificationType,
+            )
 
-            notification_service = NotificationService()
+            notification_service = NotificationService(db)
             for reminder in reminders:
                 try:
                     # 确定通知优先级

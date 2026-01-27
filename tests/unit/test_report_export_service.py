@@ -34,24 +34,24 @@ class TestReportExportService:
             service = ReportExportService(export_dir=tmpdir)
 
             # 准备测试数据（符合实际API）
-            data = {
-                "details": [
-                    {"name": "项目A", "progress": 50, "status": "进行中"},
-                    {"name": "项目B", "progress": 100, "status": "已完成"},
-                ]
-            }
+        data = {
+        "details": [
+        {"name": "项目A", "progress": 50, "status": "进行中"},
+        {"name": "项目B", "progress": 100, "status": "已完成"},
+        ]
+        }
 
             # 调用导出方法
-            result = service.export_to_excel(
-                data=data,
-                filename="test_report",
-                title="项目报表"
-            )
+        result = service.export_to_excel(
+        data=data,
+        filename="test_report",
+        title="项目报表"
+        )
 
             # 验证文件生成
-            assert result is not None
-            assert os.path.exists(result)
-            assert result.endswith(".xlsx")
+        assert result is not None
+        assert os.path.exists(result)
+        assert result.endswith(".xlsx")
 
     def test_export_to_csv_basic(self):
         """测试基本的 CSV 导出。"""
@@ -59,15 +59,15 @@ class TestReportExportService:
             service = ReportExportService(export_dir=tmpdir)
 
             data = {
-                "details": [
-                    {"name": "测试1", "value": 100},
-                    {"name": "测试2", "value": 200},
-                ]
+            "details": [
+            {"name": "测试1", "value": 100},
+            {"name": "测试2", "value": 200},
+            ]
             }
 
             result = service.export_to_csv(
-                data=data,
-                filename="test_report"
+            data=data,
+            filename="test_report"
             )
 
             assert result is not None
@@ -80,9 +80,9 @@ class TestReportExportService:
             service = ReportExportService(export_dir=tmpdir)
 
             result = service.export_to_excel(
-                data={},
-                filename="empty_report",
-                title="空报表"
+            data={},
+            filename="empty_report",
+            title="空报表"
             )
 
             assert result is not None
@@ -94,24 +94,24 @@ class TestReportExportService:
             service = ReportExportService(export_dir=tmpdir)
 
             sheets = [
-                {
-                    "name": "Sheet1",
-                    "title": "报表1",
-                    "headers": ["列1", "列2"],
-                    "rows": [["值1", "值2"]]
-                },
-                {
-                    "name": "Sheet2",
-                    "title": "报表2",
-                    "headers": ["列A", "列B"],
-                    "rows": [["值A", "值B"]]
-                }
+            {
+            "name": "Sheet1",
+            "title": "报表1",
+            "headers": ["列1", "列2"],
+            "rows": [["值1", "值2"]]
+            },
+            {
+            "name": "Sheet2",
+            "title": "报表2",
+            "headers": ["列A", "列B"],
+            "rows": [["值A", "值B"]]
+            }
             ]
 
             result = service.export_to_excel(
-                data={},
-                filename="multisheet_report",
-                sheets=sheets
+            data={},
+            filename="multisheet_report",
+            sheets=sheets
             )
 
             assert result is not None
@@ -123,17 +123,17 @@ class TestReportExportService:
             service = ReportExportService(export_dir=tmpdir)
 
             data = {
-                "title": "测试报表",
-                "summary": {"总计": 100},
-                "details": [
-                    {"name": "项目A", "value": 50},
-                    {"name": "项目B", "value": 50}
-                ]
+            "title": "测试报表",
+            "summary": {"总计": 100},
+            "details": [
+            {"name": "项目A", "value": 50},
+            {"name": "项目B", "value": 50}
+            ]
             }
 
             result = service.export_to_pdf(
-                data=data,
-                filename="test_report"
+            data=data,
+            filename="test_report"
             )
 
             assert result is not None
@@ -146,15 +146,15 @@ class TestReportExportService:
             service = ReportExportService(export_dir=tmpdir)
 
             data = {
-                "details": [
-                    {"name": "测试,项目", "value": "100,000"},
-                    {"name": "测试\"项目", "value": 200}
-                ]
+            "details": [
+            {"name": "测试,项目", "value": "100,000"},
+            {"name": "测试\"项目", "value": 200}
+            ]
             }
 
             result = service.export_to_csv(
-                data=data,
-                filename="special_chars_report"
+            data=data,
+            filename="special_chars_report"
             )
 
             assert result is not None
@@ -166,16 +166,16 @@ class TestReportExportService:
             service = ReportExportService(export_dir=tmpdir)
 
             data = {
-                "details": [
-                    {"name": "项目A", "value": 50},
-                ]
+            "details": [
+            {"name": "项目A", "value": 50},
+            ]
             }
 
             result = service.export_to_pdf(
-                data=data,
-                filename="landscape_report",
-                title="横向报表",
-                landscape_mode=True
+            data=data,
+            filename="landscape_report",
+            title="横向报表",
+            landscape_mode=True
             )
 
             assert result is not None
@@ -187,13 +187,13 @@ class TestReportExportService:
             service = ReportExportService(export_dir=tmpdir)
 
             data = [
-                {"name": "测试1", "value": 100},
-                {"name": "测试2", "value": 200},
+            {"name": "测试1", "value": 100},
+            {"name": "测试2", "value": 200},
             ]
 
             result = service.export_to_csv(
-                data=data,
-                filename="list_report"
+            data=data,
+            filename="list_report"
             )
 
             assert result is not None
@@ -205,16 +205,16 @@ class TestReportExportService:
             service = ReportExportService(export_dir=tmpdir)
 
             # 测试各种类型的值
-            from decimal import Decimal
-            from datetime import date, datetime
+        from decimal import Decimal
+        from datetime import date, datetime
 
-            assert service._format_value(100) == 100
-            assert service._format_value(100.5) == 100.5
-            assert service._format_value("测试") == "测试"
-            assert service._format_value(None) == ""
-            assert service._format_value(Decimal("100.50")) == 100.50
-            assert isinstance(service._format_value(date(2024, 1, 15)), str)
-            assert isinstance(service._format_value(datetime(2024, 1, 15, 10, 30)), str)
+        assert service._format_value(100) == 100
+        assert service._format_value(100.5) == 100.5
+        assert service._format_value("测试") == "测试"
+        assert service._format_value(None) == ""
+        assert service._format_value(Decimal("100.50")) == 100.50
+        assert isinstance(service._format_value(date(2024, 1, 15)), str)
+        assert isinstance(service._format_value(datetime(2024, 1, 15, 10, 30)), str)
 
 
 class TestReportGenerator:
@@ -225,18 +225,18 @@ class TestReportGenerator:
         from app.services.report_export_service import ReportGenerator
 
         projects = [
-            {
-                "project_code": "PJ001",
-                "project_name": "项目A",
-                "status": "EXECUTING",
-                "progress": 50
-            },
-            {
-                "project_code": "PJ002",
-                "project_name": "项目B",
-                "status": "COMPLETED",
-                "progress": 100
-            }
+        {
+        "project_code": "PJ001",
+        "project_name": "项目A",
+        "status": "EXECUTING",
+        "progress": 50
+        },
+        {
+        "project_code": "PJ002",
+        "project_name": "项目B",
+        "status": "COMPLETED",
+        "progress": 100
+        }
         ]
 
         result = ReportGenerator.generate_project_report(projects)
@@ -254,18 +254,18 @@ class TestReportGenerator:
         from app.services.report_export_service import ReportGenerator
 
         financial_data = [
-            {
-                "category": "收入",
-                "revenue": 100000,
-                "cost": 0,
-                "date": "2024-01-15"
-            },
-            {
-                "category": "支出",
-                "revenue": 0,
-                "cost": 50000,
-                "date": "2024-01-20"
-            }
+        {
+        "category": "收入",
+        "revenue": 100000,
+        "cost": 0,
+        "date": "2024-01-15"
+        },
+        {
+        "category": "支出",
+        "revenue": 0,
+        "cost": 50000,
+        "date": "2024-01-20"
+        }
         ]
 
         result = ReportGenerator.generate_financial_report(financial_data)
@@ -283,21 +283,21 @@ class TestReportGenerator:
         from app.services.report_export_service import ReportGenerator
 
         utilization_data = [
-            {
-                "resource": "人员A",
-                "rate": 80.5,
-                "period": "2024-01"
-            },
-            {
-                "resource": "人员B",
-                "rate": 65.0,
-                "period": "2024-01"
-            },
-            {
-                "resource": "人员C",
-                "rate": 90.0,
-                "period": "2024-01"
-            }
+        {
+        "resource": "人员A",
+        "rate": 80.5,
+        "period": "2024-01"
+        },
+        {
+        "resource": "人员B",
+        "rate": 65.0,
+        "period": "2024-01"
+        },
+        {
+        "resource": "人员C",
+        "rate": 90.0,
+        "period": "2024-01"
+        }
         ]
 
         result = ReportGenerator.generate_utilization_report(utilization_data)

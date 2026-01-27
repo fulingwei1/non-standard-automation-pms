@@ -14,44 +14,38 @@ class TestCheckEvaluationOverdue:
 
     def test_no_overdue_evaluations(self, db_session):
         """测试无超时评估"""
-        try:
-            from app.services.ecn_scheduler import check_evaluation_overdue
+        from app.services.ecn_scheduler import check_evaluation_overdue
 
-            alerts = check_evaluation_overdue(db_session)
-            assert isinstance(alerts, list)
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        alerts = check_evaluation_overdue(db_session)
+        assert isinstance(alerts, list)
 
     def test_alert_structure(self, db_session):
         """测试提醒结构"""
-        try:
-            from app.services.ecn_scheduler import check_evaluation_overdue
-            from app.models.ecn import Ecn, EcnEvaluation
+        from app.services.ecn_scheduler import check_evaluation_overdue
+        from app.models.ecn import Ecn, EcnEvaluation
 
             # 创建超时评估
-            ecn = Ecn(ecn_no="ECN001", ecn_title="测试ECN")
-            db_session.add(ecn)
-            db_session.flush()
+        ecn = Ecn(ecn_no="ECN001", ecn_title="测试ECN")
+        db_session.add(ecn)
+        db_session.flush()
 
-            eval = EcnEvaluation(
-                ecn_id=ecn.id,
-                eval_dept="研发部",
-                status="PENDING",
-                created_at=datetime.now() - timedelta(days=5)
-            )
-            db_session.add(eval)
-            db_session.flush()
+        eval = EcnEvaluation(
+        ecn_id=ecn.id,
+        eval_dept="研发部",
+        status="PENDING",
+        created_at=datetime.now() - timedelta(days=5)
+        )
+        db_session.add(eval)
+        db_session.flush()
 
-            alerts = check_evaluation_overdue(db_session)
+        alerts = check_evaluation_overdue(db_session)
 
-            if alerts:
-                alert = alerts[0]
-                assert "type" in alert
-                assert alert["type"] == "EVALUATION_OVERDUE"
-                assert "ecn_id" in alert
-                assert "overdue_days" in alert
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        if alerts:
+            alert = alerts[0]
+            assert "type" in alert
+            assert alert["type"] == "EVALUATION_OVERDUE"
+            assert "ecn_id" in alert
+            assert "overdue_days" in alert
 
 
 class TestCheckApprovalOverdue:
@@ -59,40 +53,34 @@ class TestCheckApprovalOverdue:
 
     def test_no_overdue_approvals(self, db_session):
         """测试无超时审批"""
-        try:
-            from app.services.ecn_scheduler import check_approval_overdue
+        from app.services.ecn_scheduler import check_approval_overdue
 
-            alerts = check_approval_overdue(db_session)
-            assert isinstance(alerts, list)
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        alerts = check_approval_overdue(db_session)
+        assert isinstance(alerts, list)
 
     def test_approval_alert_type(self, db_session):
         """测试审批提醒类型"""
-        try:
-            from app.services.ecn_scheduler import check_approval_overdue
-            from app.models.ecn import Ecn, EcnApproval
+        from app.services.ecn_scheduler import check_approval_overdue
+        from app.models.ecn import Ecn, EcnApproval
 
-            ecn = Ecn(ecn_no="ECN002", ecn_title="测试ECN")
-            db_session.add(ecn)
-            db_session.flush()
+        ecn = Ecn(ecn_no="ECN002", ecn_title="测试ECN")
+        db_session.add(ecn)
+        db_session.flush()
 
-            approval = EcnApproval(
-                ecn_id=ecn.id,
-                approval_level=1,
-                approval_role="部门经理",
-                status="PENDING",
-                due_date=datetime.now() - timedelta(days=2)
-            )
-            db_session.add(approval)
-            db_session.flush()
+        approval = EcnApproval(
+        ecn_id=ecn.id,
+        approval_level=1,
+        approval_role="部门经理",
+        status="PENDING",
+        due_date=datetime.now() - timedelta(days=2)
+        )
+        db_session.add(approval)
+        db_session.flush()
 
-            alerts = check_approval_overdue(db_session)
+        alerts = check_approval_overdue(db_session)
 
-            if alerts:
-                assert alerts[0]["type"] == "APPROVAL_OVERDUE"
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        if alerts:
+            assert alerts[0]["type"] == "APPROVAL_OVERDUE"
 
 
 class TestCheckTaskOverdue:
@@ -100,39 +88,33 @@ class TestCheckTaskOverdue:
 
     def test_no_overdue_tasks(self, db_session):
         """测试无超时任务"""
-        try:
-            from app.services.ecn_scheduler import check_task_overdue
+        from app.services.ecn_scheduler import check_task_overdue
 
-            alerts = check_task_overdue(db_session)
-            assert isinstance(alerts, list)
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        alerts = check_task_overdue(db_session)
+        assert isinstance(alerts, list)
 
     def test_task_alert_type(self, db_session):
         """测试任务提醒类型"""
-        try:
-            from app.services.ecn_scheduler import check_task_overdue
-            from app.models.ecn import Ecn, EcnTask
+        from app.services.ecn_scheduler import check_task_overdue
+        from app.models.ecn import Ecn, EcnTask
 
-            ecn = Ecn(ecn_no="ECN003", ecn_title="测试ECN")
-            db_session.add(ecn)
-            db_session.flush()
+        ecn = Ecn(ecn_no="ECN003", ecn_title="测试ECN")
+        db_session.add(ecn)
+        db_session.flush()
 
-            task = EcnTask(
-                ecn_id=ecn.id,
-                task_name="测试任务",
-                status="IN_PROGRESS",
-                planned_end=(datetime.now() - timedelta(days=3)).date()
-            )
-            db_session.add(task)
-            db_session.flush()
+        task = EcnTask(
+        ecn_id=ecn.id,
+        task_name="测试任务",
+        status="IN_PROGRESS",
+        planned_end=(datetime.now() - timedelta(days=3)).date()
+        )
+        db_session.add(task)
+        db_session.flush()
 
-            alerts = check_task_overdue(db_session)
+        alerts = check_task_overdue(db_session)
 
-            if alerts:
-                assert alerts[0]["type"] == "TASK_OVERDUE"
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        if alerts:
+            assert alerts[0]["type"] == "TASK_OVERDUE"
 
 
 class TestCheckAllOverdue:
@@ -140,19 +122,16 @@ class TestCheckAllOverdue:
 
     def test_check_all_returns_list(self):
         """测试返回列表"""
-        try:
-            from app.services.ecn_scheduler import check_all_overdue
+        from app.services.ecn_scheduler import check_all_overdue
 
-            with patch('app.services.ecn_scheduler.get_db_session') as mock_db:
-                mock_session = MagicMock()
-                mock_db.return_value.__enter__ = MagicMock(return_value=mock_session)
-                mock_db.return_value.__exit__ = MagicMock(return_value=False)
-                mock_session.query.return_value.filter.return_value.all.return_value = []
+        with patch('app.services.ecn_scheduler.get_db_session') as mock_db:
+            mock_session = MagicMock()
+            mock_db.return_value.__enter__ = MagicMock(return_value=mock_session)
+            mock_db.return_value.__exit__ = MagicMock(return_value=False)
+            mock_session.query.return_value.filter.return_value.all.return_value = []
 
-                alerts = check_all_overdue()
-                assert isinstance(alerts, list)
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+            alerts = check_all_overdue()
+            assert isinstance(alerts, list)
 
 
 class TestSendOverdueNotifications:
@@ -160,13 +139,10 @@ class TestSendOverdueNotifications:
 
     def test_empty_alerts_no_action(self):
         """测试空提醒不执行操作"""
-        try:
-            from app.services.ecn_scheduler import send_overdue_notifications
+        from app.services.ecn_scheduler import send_overdue_notifications
 
             # 空列表不应报错
-            send_overdue_notifications([])
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        send_overdue_notifications([])
 
     def test_notification_by_alert_type(self):
         """测试按类型发送通知"""
@@ -174,10 +150,10 @@ class TestSendOverdueNotifications:
 
         for alert_type in alert_types:
             alert = {
-                "type": alert_type,
-                "ecn_id": 1,
-                "ecn_no": "ECN001",
-                "message": "测试消息"
+            "type": alert_type,
+            "ecn_id": 1,
+            "ecn_no": "ECN001",
+            "message": "测试消息"
             }
             assert alert["type"] in alert_types
 
@@ -187,31 +163,25 @@ class TestRunEcnScheduler:
 
     def test_scheduler_handles_exception(self):
         """测试调度器异常处理"""
-        try:
-            from app.services.ecn_scheduler import run_ecn_scheduler
+        from app.services.ecn_scheduler import run_ecn_scheduler
 
-            with patch('app.services.ecn_scheduler.check_all_overdue') as mock_check:
-                mock_check.side_effect = Exception("测试异常")
+        with patch('app.services.ecn_scheduler.check_all_overdue') as mock_check:
+            mock_check.side_effect = Exception("测试异常")
 
                 # 不应抛出异常
-                run_ecn_scheduler()
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        run_ecn_scheduler()
 
     def test_scheduler_with_alerts(self):
         """测试有提醒时的调度器"""
-        try:
-            from app.services.ecn_scheduler import run_ecn_scheduler
+        from app.services.ecn_scheduler import run_ecn_scheduler
 
-            with patch('app.services.ecn_scheduler.check_all_overdue') as mock_check:
-                with patch('app.services.ecn_scheduler.send_overdue_notifications') as mock_send:
-                    mock_check.return_value = [{"type": "TEST", "message": "test"}]
+        with patch('app.services.ecn_scheduler.check_all_overdue') as mock_check:
+            with patch('app.services.ecn_scheduler.send_overdue_notifications') as mock_send:
+                mock_check.return_value = [{"type": "TEST", "message": "test"}]
 
-                    run_ecn_scheduler()
+                run_ecn_scheduler()
 
-                    mock_send.assert_called_once()
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+                mock_send.assert_called_once()
 
 
 class TestOverdueDaysCalculation:

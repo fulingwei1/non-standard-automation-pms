@@ -60,7 +60,7 @@ class TestUserPermissionsCache:
             service = PermissionCacheService()
             result = service.get_user_permissions(99999)
             # 未缓存时应返回None
-            assert result is None
+        assert result is None
         except Exception as e:
             pytest.skip(f"缓存服务初始化失败: {e}")
 
@@ -71,16 +71,16 @@ class TestUserPermissionsCache:
             permissions = {"read", "write", "delete"}
 
             # 设置缓存
-            result = service.set_user_permissions(12345, permissions)
-            assert result is True
+        result = service.set_user_permissions(12345, permissions)
+        assert result is True
 
             # 获取缓存
-            cached = service.get_user_permissions(12345)
-            if cached is not None:
-                assert cached == permissions
+        cached = service.get_user_permissions(12345)
+        if cached is not None:
+            assert cached == permissions
 
             # 清理
-            service.invalidate_user_permissions(12345)
+        service.invalidate_user_permissions(12345)
         except Exception as e:
             pytest.skip(f"缓存服务操作失败: {e}")
 
@@ -111,22 +111,22 @@ class TestRolePermissionsCache:
         try:
             service = PermissionCacheService()
             data = {
-                "role_id": 12345,
-                "permissions": ["read", "write"],
-                "inherited": ["view"]
+            "role_id": 12345,
+            "permissions": ["read", "write"],
+            "inherited": ["view"]
             }
 
             # 设置缓存
-            result = service.set_role_permissions(12345, data)
-            assert result is True
+        result = service.set_role_permissions(12345, data)
+        assert result is True
 
             # 获取缓存
-            cached = service.get_role_permissions(12345)
-            if cached is not None:
-                assert cached["role_id"] == 12345
+        cached = service.get_role_permissions(12345)
+        if cached is not None:
+            assert cached["role_id"] == 12345
 
             # 清理
-            service.invalidate_role_permissions(12345)
+        service.invalidate_role_permissions(12345)
         except Exception as e:
             pytest.skip(f"缓存服务操作失败: {e}")
 
@@ -159,11 +159,11 @@ class TestUserRolesCache:
             role_ids = [1, 2, 3]
 
             # 设置缓存
-            result = service.set_user_role_ids(12345, role_ids)
-            assert result is True
+        result = service.set_user_role_ids(12345, role_ids)
+        assert result is True
 
             # 清理
-            service.invalidate_user_permissions(12345)
+        service.invalidate_user_permissions(12345)
         except Exception as e:
             pytest.skip(f"缓存服务操作失败: {e}")
 
@@ -200,8 +200,8 @@ class TestBatchInvalidation:
         try:
             service = PermissionCacheService()
             count = service.invalidate_role_and_users(
-                role_id=99999,
-                user_ids=[1, 2, 3]
+            role_id=99999,
+            user_ids=[1, 2, 3]
             )
             assert isinstance(count, int)
             assert count >= 0
@@ -213,9 +213,9 @@ class TestBatchInvalidation:
         try:
             service = PermissionCacheService()
             count = service.invalidate_user_role_change(
-                user_id=99999,
-                old_role_ids=[1, 2],
-                new_role_ids=[2, 3]
+            user_id=99999,
+            old_role_ids=[1, 2],
+            new_role_ids=[2, 3]
             )
             assert isinstance(count, int)
             assert count >= 0

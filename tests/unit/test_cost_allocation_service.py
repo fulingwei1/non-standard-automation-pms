@@ -32,8 +32,8 @@ class TestQueryAllocatableCosts:
         mock_query = MagicMock()
         mock_query.filter.return_value = mock_query
         mock_query.all.return_value = [
-            MagicMock(id=1, status="APPROVED", is_allocated=False),
-            MagicMock(id=2, status="APPROVED", is_allocated=False),
+        MagicMock(id=1, status="APPROVED", is_allocated=False),
+        MagicMock(id=2, status="APPROVED", is_allocated=False),
         ]
         mock_db.query.return_value = mock_query
 
@@ -51,7 +51,7 @@ class TestQueryAllocatableCosts:
         mock_query = MagicMock()
         mock_query.filter.return_value = mock_query
         mock_query.all.return_value = [
-            MagicMock(id=1, status="APPROVED", is_allocated=False),
+        MagicMock(id=1, status="APPROVED", is_allocated=False),
         ]
         mock_db.query.return_value = mock_query
 
@@ -70,7 +70,7 @@ class TestQueryAllocatableCosts:
         mock_query = MagicMock()
         mock_query.filter.return_value = mock_query
         mock_query.all.return_value = [
-            MagicMock(id=1, status="APPROVED", is_allocated=False),
+        MagicMock(id=1, status="APPROVED", is_allocated=False),
         ]
         mock_db.query.return_value = mock_query
 
@@ -105,8 +105,8 @@ class TestGetTargetProjectIds:
         mock_project1 = MagicMock(id=1, status="APPROVED")
         mock_project2 = MagicMock(id=2, status="IN_PROGRESS")
         mock_query.filter.return_value.all.return_value = [
-            mock_project1,
-            mock_project2,
+        mock_project1,
+        mock_project2,
         ]
         mock_db.query.return_value = mock_query
 
@@ -133,8 +133,8 @@ class TestCalculateAllocationRatesByHours:
 
         mock_query = MagicMock()
         mock_query.filter.side_effect = [
-            MagicMock(first=mock_project1),
-            MagicMock(first=mock_project2),
+        MagicMock(first=mock_project1),
+        MagicMock(first=mock_project2),
         ]
         mock_db.query.return_value = mock_query
 
@@ -161,9 +161,9 @@ class TestCalculateAllocationRatesByHours:
 
         mock_query = MagicMock()
         mock_query.filter.side_effect = [
-            MagicMock(first=mock_project1),
-            MagicMock(first=mock_project2),
-            MagicMock(first=mock_project3),
+        MagicMock(first=mock_project1),
+        MagicMock(first=mock_project2),
+        MagicMock(first=mock_project3),
         ]
         mock_db.query.return_value = mock_query
 
@@ -189,9 +189,9 @@ class TestCalculateAllocationRatesByHours:
 
         mock_query = MagicMock()
         mock_query.filter.side_effect = [
-            MagicMock(first=mock_project1),
-            MagicMock(first=None),  # Project 2 doesn't exist
-            MagicMock(first=mock_project3),
+        MagicMock(first=mock_project1),
+        MagicMock(first=None),  # Project 2 doesn't exist
+        MagicMock(first=mock_project3),
         ]
         mock_db.query.return_value = mock_query
 
@@ -221,8 +221,8 @@ class TestCalculateAllocationRatesByHeadcount:
 
         mock_query = MagicMock()
         mock_query.filter.side_effect = [
-            MagicMock(first=mock_project1),
-            MagicMock(first=mock_project2),
+        MagicMock(first=mock_project1),
+        MagicMock(first=mock_project2),
         ]
         mock_db.query.return_value = mock_query
 
@@ -246,8 +246,8 @@ class TestCalculateAllocationRatesByHeadcount:
 
         mock_query = MagicMock()
         mock_query.filter.side_effect = [
-            MagicMock(first=mock_project1),
-            MagicMock(first=mock_project2),
+        MagicMock(first=mock_project1),
+        MagicMock(first=mock_project2),
         ]
         mock_db.query.return_value = mock_query
 
@@ -270,12 +270,12 @@ class TestCalculateAllocationRates:
 
         # Mock the helper function
         with patch(
-            "app.services.cost_allocation_service.calculate_allocation_rates_by_hours",
-            return_value={1: 50.0, 2: 50.0},
+        "app.services.cost_allocation_service.calculate_allocation_rates_by_hours",
+        return_value={1: 50.0, 2: 50.0},
         ):
-            result = calculate_allocation_rates(mock_db, mock_rule, target_project_ids)
+        result = calculate_allocation_rates(mock_db, mock_rule, target_project_ids)
 
-            assert result == {1: 50.0, 2: 50.0}
+        assert result == {1: 50.0, 2: 50.0}
 
     def test_calculate_by_revenue_basis(self):
         """测试按收入分摊（使用平均分摊）"""
@@ -299,12 +299,12 @@ class TestCalculateAllocationRates:
         target_project_ids = [1, 2]
 
         with patch(
-            "app.services.cost_allocation_service.calculate_allocation_rates_by_headcount",
-            return_value={1: 40.0, 2: 60.0},
+        "app.services.cost_allocation_service.calculate_allocation_rates_by_headcount",
+        return_value={1: 40.0, 2: 60.0},
         ):
-            result = calculate_allocation_rates(mock_db, mock_rule, target_project_ids)
+        result = calculate_allocation_rates(mock_db, mock_rule, target_project_ids)
 
-            assert result == {1: 40.0, 2: 60.0}
+        assert result == {1: 40.0, 2: 60.0}
 
     def test_calculate_with_unknown_basis(self):
         """测试未知分摊依据时使用平均分摊"""
@@ -343,12 +343,12 @@ class TestCreateAllocatedCost:
         mock_db.query.return_value = mock_query
 
         result = create_allocated_cost(
-            mock_db,
-            mock_cost,
-            project_id=1,
-            rate=25.0,
-            rule_id=10,
-            generate_cost_no=lambda db: "ALLOC001",
+        mock_db,
+        mock_cost,
+        project_id=1,
+        rate=25.0,
+        rule_id=10,
+        generate_cost_no=lambda db: "ALLOC001",
         )
 
         # Verify the allocated cost properties
@@ -356,7 +356,7 @@ class TestCreateAllocatedCost:
         assert result.rd_project_id == 1
         assert result.cost_type_id == 1
         assert result.cost_amount == pytest.approx(
-            Decimal("250"), rel=0.01
+        Decimal("250"), rel=0.01
         )  # 1000 * 25% / 100
         assert result.source_type == "ALLOCATED"
         assert result.source_id == mock_cost.id
@@ -390,12 +390,12 @@ class TestCreateAllocatedCost:
         mock_db.query.return_value = mock_query
 
         result = create_allocated_cost(
-            mock_db,
-            mock_cost,
-            project_id=1,
-            rate=25.0,
-            rule_id=10,
-            generate_cost_no=lambda db: "ALLOC001",
+        mock_db,
+        mock_cost,
+        project_id=1,
+        rate=25.0,
+        rule_id=10,
+        generate_cost_no=lambda db: "ALLOC001",
         )
 
         # Allocated amount: 1000 * 25% = 250
@@ -420,12 +420,12 @@ class TestCreateAllocatedCost:
         mock_db.query.return_value = mock_query
 
         result = create_allocated_cost(
-            mock_db,
-            mock_cost,
-            project_id=1,
-            rate=25.0,
-            rule_id=10,
-            generate_cost_no=lambda db: "ALLOC001",
+        mock_db,
+        mock_cost,
+        project_id=1,
+        rate=25.0,
+        rule_id=10,
+        generate_cost_no=lambda db: "ALLOC001",
         )
 
         # Should still create the cost, just won't update project total
@@ -451,12 +451,12 @@ class TestCreateAllocatedCost:
         mock_db.query.return_value = mock_query
 
         result = create_allocated_cost(
-            mock_db,
-            mock_cost,
-            project_id=1,
-            rate=0.0,
-            rule_id=10,
-            generate_cost_no=lambda db: "ALLOC001",
+        mock_db,
+        mock_cost,
+        project_id=1,
+        rate=0.0,
+        rule_id=10,
+        generate_cost_no=lambda db: "ALLOC001",
         )
 
         assert result.cost_amount == Decimal("0")

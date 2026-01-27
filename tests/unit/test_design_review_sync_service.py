@@ -14,13 +14,10 @@ class TestDesignReviewSyncServiceInit:
 
     def test_init_with_db_session(self, db_session):
         """测试使用数据库会话初始化"""
-        try:
-            from app.services.design_review_sync_service import DesignReviewSyncService
+        from app.services.design_review_sync_service import DesignReviewSyncService
 
-            service = DesignReviewSyncService(db_session)
-            assert service.db == db_session
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        service = DesignReviewSyncService(db_session)
+        assert service.db == db_session
 
 
 class TestSyncFromTechnicalReview:
@@ -28,35 +25,29 @@ class TestSyncFromTechnicalReview:
 
     def test_review_not_found(self, db_session):
         """测试评审不存在"""
-        try:
-            from app.services.design_review_sync_service import DesignReviewSyncService
+        from app.services.design_review_sync_service import DesignReviewSyncService
 
-            service = DesignReviewSyncService(db_session)
-            result = service.sync_from_technical_review(99999)
+        service = DesignReviewSyncService(db_session)
+        result = service.sync_from_technical_review(99999)
 
-            assert result is None
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert result is None
 
     def test_review_not_completed(self, db_session):
         """测试评审未完成"""
-        try:
-            from app.services.design_review_sync_service import DesignReviewSyncService
-            from app.models.technical_review import TechnicalReview
+        from app.services.design_review_sync_service import DesignReviewSyncService
+        from app.models.technical_review import TechnicalReview
 
-            review = TechnicalReview(
-                review_no="TR001",
-                status="IN_PROGRESS"
-            )
-            db_session.add(review)
-            db_session.flush()
+        review = TechnicalReview(
+        review_no="TR001",
+        status="IN_PROGRESS"
+        )
+        db_session.add(review)
+        db_session.flush()
 
-            service = DesignReviewSyncService(db_session)
-            result = service.sync_from_technical_review(review.id)
+        service = DesignReviewSyncService(db_session)
+        result = service.sync_from_technical_review(review.id)
 
-            assert result is None
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert result is None
 
 
 class TestSyncAllCompletedReviews:
@@ -64,48 +55,39 @@ class TestSyncAllCompletedReviews:
 
     def test_no_reviews(self, db_session):
         """测试无评审"""
-        try:
-            from app.services.design_review_sync_service import DesignReviewSyncService
+        from app.services.design_review_sync_service import DesignReviewSyncService
 
-            service = DesignReviewSyncService(db_session)
-            result = service.sync_all_completed_reviews()
+        service = DesignReviewSyncService(db_session)
+        result = service.sync_all_completed_reviews()
 
-            assert result['total_reviews'] == 0
-            assert result['synced_count'] == 0
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert result['total_reviews'] == 0
+        assert result['synced_count'] == 0
 
     def test_with_date_filter(self, db_session):
         """测试带日期过滤"""
-        try:
-            from app.services.design_review_sync_service import DesignReviewSyncService
+        from app.services.design_review_sync_service import DesignReviewSyncService
 
-            service = DesignReviewSyncService(db_session)
-            result = service.sync_all_completed_reviews(
-                start_date=date(2025, 1, 1),
-                end_date=date(2025, 12, 31)
-            )
+        service = DesignReviewSyncService(db_session)
+        result = service.sync_all_completed_reviews(
+        start_date=date(2025, 1, 1),
+        end_date=date(2025, 12, 31)
+        )
 
-            assert 'total_reviews' in result
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert 'total_reviews' in result
 
     def test_stats_structure(self, db_session):
         """测试统计结构"""
-        try:
-            from app.services.design_review_sync_service import DesignReviewSyncService
+        from app.services.design_review_sync_service import DesignReviewSyncService
 
-            service = DesignReviewSyncService(db_session)
-            result = service.sync_all_completed_reviews()
+        service = DesignReviewSyncService(db_session)
+        result = service.sync_all_completed_reviews()
 
-            expected_fields = [
-                'total_reviews', 'synced_count', 'skipped_count',
-                'error_count', 'errors'
-            ]
-            for field in expected_fields:
-                assert field in result
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        expected_fields = [
+        'total_reviews', 'synced_count', 'skipped_count',
+        'error_count', 'errors'
+        ]
+        for field in expected_fields:
+            assert field in result
 
 
 class TestReviewResultMapping:
@@ -123,8 +105,8 @@ class TestReviewResultMapping:
         elif conclusion == 'PASS_WITH_CONDITION':
             review_result = 'PASSED_WITH_CONDITION'
 
-        assert review_result == 'PASSED'
-        assert is_first_pass is True
+            assert review_result == 'PASSED'
+            assert is_first_pass is True
 
     def test_pass_with_condition(self):
         """测试有条件通过"""
@@ -139,8 +121,8 @@ class TestReviewResultMapping:
             review_result = 'PASSED_WITH_CONDITION'
             is_first_pass = False
 
-        assert review_result == 'PASSED_WITH_CONDITION'
-        assert is_first_pass is False
+            assert review_result == 'PASSED_WITH_CONDITION'
+            assert is_first_pass is False
 
     def test_reject_result(self):
         """测试拒绝结果"""
@@ -155,8 +137,8 @@ class TestReviewResultMapping:
         elif conclusion == 'REJECT':
             review_result = 'REJECTED'
 
-        assert review_result == 'REJECTED'
-        assert is_first_pass is False
+            assert review_result == 'REJECTED'
+            assert is_first_pass is False
 
 
 class TestDesignNameGeneration:

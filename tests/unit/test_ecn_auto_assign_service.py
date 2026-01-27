@@ -150,8 +150,8 @@ class TestFindUsersByDepartment:
         """测试成功查找部门用户"""
         db = MagicMock(spec=Session)
         mock_users = [
-            MockUser(1, "研发部", "工程师"),
-            MockUser(2, "研发部", "高级工程师"),
+        MockUser(1, "研发部", "工程师"),
+        MockUser(2, "研发部", "高级工程师"),
         ]
         db.query.return_value.filter.return_value.all.return_value = mock_users
 
@@ -193,16 +193,16 @@ class TestFindUsersByRole:
             mock_result = MagicMock()
             return mock_result
 
-        db.query.return_value.filter.return_value.first.return_value = mock_role
-        db.query.return_value.filter.return_value.all.side_effect = [
+            db.query.return_value.filter.return_value.first.return_value = mock_role
+            db.query.return_value.filter.return_value.all.side_effect = [
             mock_user_roles,
             mock_users,
-        ]
+            ]
 
-        result = find_users_by_role(db, "项目经理")
+            result = find_users_by_role(db, "项目经理")
 
-        # 检查返回的用户
-        assert db.query.called
+            # 检查返回的用户
+            assert db.query.called
 
     def test_find_users_by_role_no_role(self):
         """测试角色不存在"""
@@ -263,9 +263,9 @@ class TestAutoAssignEvaluation:
         evaluation = MockEcnEvaluation(1, 1, eval_dept="研发部")
 
         mock_users = [
-            MockUser(1, "研发部", "工程师"),
-            MockUser(2, "研发部", "部门负责人"),
-            MockUser(3, "研发部", "经理"),
+        MockUser(1, "研发部", "工程师"),
+        MockUser(2, "研发部", "部门负责人"),
+        MockUser(3, "研发部", "经理"),
         ]
         db.query.return_value.filter.return_value.all.return_value = mock_users
 
@@ -280,8 +280,8 @@ class TestAutoAssignEvaluation:
         evaluation = MockEcnEvaluation(1, 1, eval_dept="研发部")
 
         mock_users = [
-            MockUser(1, "研发部", "工程师"),
-            MockUser(2, "研发部", "经理"),
+        MockUser(1, "研发部", "工程师"),
+        MockUser(2, "研发部", "经理"),
         ]
         db.query.return_value.filter.return_value.all.return_value = mock_users
 
@@ -296,8 +296,8 @@ class TestAutoAssignEvaluation:
         evaluation = MockEcnEvaluation(1, 1, eval_dept="研发部")
 
         mock_users = [
-            MockUser(1, "研发部", "工程师"),
-            MockUser(2, "研发部", "主管"),
+        MockUser(1, "研发部", "工程师"),
+        MockUser(2, "研发部", "主管"),
         ]
         db.query.return_value.filter.return_value.all.return_value = mock_users
 
@@ -312,8 +312,8 @@ class TestAutoAssignEvaluation:
         evaluation = MockEcnEvaluation(1, 1, eval_dept="研发部")
 
         mock_users = [
-            MockUser(1, "研发部", "工程师"),
-            MockUser(2, "研发部", "高级工程师"),
+        MockUser(1, "研发部", "工程师"),
+        MockUser(2, "研发部", "高级工程师"),
         ]
         db.query.return_value.filter.return_value.all.return_value = mock_users
 
@@ -329,20 +329,20 @@ class TestAutoAssignEvaluation:
 
         # 项目成员
         mock_project_members = [
-            MockProjectMember(1, 100),
-            MockProjectMember(2, 100),
+        MockProjectMember(1, 100),
+        MockProjectMember(2, 100),
         ]
 
         # 项目成员中属于该部门的用户
         mock_project_dept_users = [
-            MockUser(1, "研发部", "工程师"),
-            MockUser(2, "研发部", "部门负责人"),
+        MockUser(1, "研发部", "工程师"),
+        MockUser(2, "研发部", "部门负责人"),
         ]
 
         # 设置查询链
         db.query.return_value.filter.return_value.all.side_effect = [
-            mock_project_members,  # 第一次查询项目成员
-            mock_project_dept_users,  # 第二次查询项目中部门用户
+        mock_project_members,  # 第一次查询项目成员
+        mock_project_dept_users,  # 第二次查询项目中部门用户
         ]
 
         result = auto_assign_evaluation(db, ecn, evaluation)
@@ -391,14 +391,14 @@ class TestAutoAssignApproval:
         mock_role = MockRole(1, "审批员")
         mock_user_roles = [MockUserRole(1, 1), MockUserRole(2, 1)]
         mock_users = [
-            MockUser(1, position="普通审批员"),
-            MockUser(2, position="审批负责人"),
+        MockUser(1, position="普通审批员"),
+        MockUser(2, position="审批负责人"),
         ]
 
         db.query.return_value.filter.return_value.first.return_value = mock_role
         db.query.return_value.filter.return_value.all.side_effect = [
-            mock_user_roles,
-            mock_users,
+        mock_user_roles,
+        mock_users,
         ]
 
         result = auto_assign_approval(db, ecn, approval)
@@ -432,8 +432,8 @@ class TestAutoAssignTask:
         task = MockEcnTask(1, 1, task_dept="生产部")
 
         mock_users = [
-            MockUser(1, "生产部", "操作员"),
-            MockUser(2, "生产部", "生产负责人"),
+        MockUser(1, "生产部", "操作员"),
+        MockUser(2, "生产部", "生产负责人"),
         ]
         db.query.return_value.filter.return_value.all.return_value = mock_users
 
@@ -539,10 +539,10 @@ class TestEcnAutoAssignIntegration:
         evaluation = MockEcnEvaluation(1, 1, eval_dept="测试部")
 
         mock_users = [
-            MockUser(1, "测试部", "测试工程师"),
-            MockUser(2, "测试部", "测试主管"),
-            MockUser(3, "测试部", "测试经理"),
-            MockUser(4, "测试部", "测试负责人"),
+        MockUser(1, "测试部", "测试工程师"),
+        MockUser(2, "测试部", "测试主管"),
+        MockUser(3, "测试部", "测试经理"),
+        MockUser(4, "测试部", "测试负责人"),
         ]
         db.query.return_value.filter.return_value.all.return_value = mock_users
 
@@ -557,9 +557,9 @@ class TestEcnAutoAssignIntegration:
         evaluation = MockEcnEvaluation(1, 1, eval_dept="测试部")
 
         mock_users = [
-            MockUser(1, "测试部", "测试工程师"),
-            MockUser(2, "测试部", "测试主管"),
-            MockUser(3, "测试部", "测试经理"),
+        MockUser(1, "测试部", "测试工程师"),
+        MockUser(2, "测试部", "测试主管"),
+        MockUser(3, "测试部", "测试经理"),
         ]
         db.query.return_value.filter.return_value.all.return_value = mock_users
 

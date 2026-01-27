@@ -14,13 +14,10 @@ class TestPerformanceIntegrationServiceConstants:
 
     def test_default_weights(self):
         """测试默认权重配置"""
-        try:
-            from app.services.performance_integration_service import PerformanceIntegrationService
+        from app.services.performance_integration_service import PerformanceIntegrationService
 
-            assert PerformanceIntegrationService.DEFAULT_BASE_PERFORMANCE_WEIGHT == 0.70
-            assert PerformanceIntegrationService.DEFAULT_QUALIFICATION_WEIGHT == 0.30
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert PerformanceIntegrationService.DEFAULT_BASE_PERFORMANCE_WEIGHT == 0.70
+        assert PerformanceIntegrationService.DEFAULT_QUALIFICATION_WEIGHT == 0.30
 
 
 class TestGetQualificationWeightConfig:
@@ -28,29 +25,23 @@ class TestGetQualificationWeightConfig:
 
     def test_get_default_weights(self):
         """测试获取默认权重"""
-        try:
-            from app.services.performance_integration_service import PerformanceIntegrationService
+        from app.services.performance_integration_service import PerformanceIntegrationService
 
-            config = PerformanceIntegrationService.get_qualification_weight_config()
+        config = PerformanceIntegrationService.get_qualification_weight_config()
 
-            assert 'base_weight' in config
-            assert 'qualification_weight' in config
-            assert config['base_weight'] == 0.70
-            assert config['qualification_weight'] == 0.30
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert 'base_weight' in config
+        assert 'qualification_weight' in config
+        assert config['base_weight'] == 0.70
+        assert config['qualification_weight'] == 0.30
 
     def test_weights_sum_to_one(self):
         """测试权重之和为1"""
-        try:
-            from app.services.performance_integration_service import PerformanceIntegrationService
+        from app.services.performance_integration_service import PerformanceIntegrationService
 
-            config = PerformanceIntegrationService.get_qualification_weight_config()
-            total = config['base_weight'] + config['qualification_weight']
+        config = PerformanceIntegrationService.get_qualification_weight_config()
+        total = config['base_weight'] + config['qualification_weight']
 
-            assert total == 1.0
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert total == 1.0
 
 
 class TestCalculateIntegratedScore:
@@ -58,87 +49,75 @@ class TestCalculateIntegratedScore:
 
     def test_no_base_score(self, db_session):
         """测试无基础绩效得分"""
-        try:
-            from app.services.performance_integration_service import PerformanceIntegrationService
+        from app.services.performance_integration_service import PerformanceIntegrationService
 
-            result = PerformanceIntegrationService.calculate_integrated_score(
-                db_session, 99999, '2025-01'
-            )
+        result = PerformanceIntegrationService.calculate_integrated_score(
+        db_session, 99999, '2025-01'
+        )
 
-            assert result is None
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert result is None
 
     def test_with_qualification_data(self, db_session):
         """测试带任职资格数据"""
-        try:
-            from app.services.performance_integration_service import PerformanceIntegrationService
+        from app.services.performance_integration_service import PerformanceIntegrationService
 
-            with patch.object(
-                PerformanceIntegrationService, '_get_base_performance_score',
-                return_value=Decimal('85.0')
-            ), patch.object(
-                PerformanceIntegrationService, '_get_qualification_score',
-                return_value={'score': 90.0, 'level_code': 'P3', 'level_name': '高级'}
-            ):
-                result = PerformanceIntegrationService.calculate_integrated_score(
-                    db_session, 1, '2025-01'
-                )
+        with patch.object(
+        PerformanceIntegrationService, '_get_base_performance_score',
+        return_value=Decimal('85.0')
+        ), patch.object(
+        PerformanceIntegrationService, '_get_qualification_score',
+        return_value={'score': 90.0, 'level_code': 'P3', 'level_name': '高级'}
+        ):
+        result = PerformanceIntegrationService.calculate_integrated_score(
+        db_session, 1, '2025-01'
+        )
 
-                assert result is not None
-                assert 'base_score' in result
-                assert 'qualification_score' in result
-                assert 'integrated_score' in result
-                assert result['base_score'] == 85.0
-                assert result['qualification_score'] == 90.0
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert result is not None
+        assert 'base_score' in result
+        assert 'qualification_score' in result
+        assert 'integrated_score' in result
+        assert result['base_score'] == 85.0
+        assert result['qualification_score'] == 90.0
 
     def test_without_qualification_data(self, db_session):
         """测试无任职资格数据"""
-        try:
-            from app.services.performance_integration_service import PerformanceIntegrationService
+        from app.services.performance_integration_service import PerformanceIntegrationService
 
-            with patch.object(
-                PerformanceIntegrationService, '_get_base_performance_score',
-                return_value=Decimal('80.0')
-            ), patch.object(
-                PerformanceIntegrationService, '_get_qualification_score',
-                return_value=None
-            ):
-                result = PerformanceIntegrationService.calculate_integrated_score(
-                    db_session, 1, '2025-01'
-                )
+        with patch.object(
+        PerformanceIntegrationService, '_get_base_performance_score',
+        return_value=Decimal('80.0')
+        ), patch.object(
+        PerformanceIntegrationService, '_get_qualification_score',
+        return_value=None
+        ):
+        result = PerformanceIntegrationService.calculate_integrated_score(
+        db_session, 1, '2025-01'
+        )
 
-                assert result is not None
-                assert result['qualification_score'] == 0.0
-                assert result['integrated_score'] == 80.0  # 只使用基础绩效
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert result is not None
+        assert result['qualification_score'] == 0.0
+        assert result['integrated_score'] == 80.0  # 只使用基础绩效
 
     def test_integrated_score_calculation(self, db_session):
         """测试融合得分计算公式"""
-        try:
-            from app.services.performance_integration_service import PerformanceIntegrationService
+        from app.services.performance_integration_service import PerformanceIntegrationService
 
-            base_score = Decimal('80.0')
-            qual_score = 90.0
-            expected = 80.0 * 0.70 + 90.0 * 0.30  # 56 + 27 = 83
+        base_score = Decimal('80.0')
+        qual_score = 90.0
+        expected = 80.0 * 0.70 + 90.0 * 0.30  # 56 + 27 = 83
 
-            with patch.object(
-                PerformanceIntegrationService, '_get_base_performance_score',
-                return_value=base_score
-            ), patch.object(
-                PerformanceIntegrationService, '_get_qualification_score',
-                return_value={'score': qual_score, 'level_code': 'P2'}
-            ):
-                result = PerformanceIntegrationService.calculate_integrated_score(
-                    db_session, 1, '2025-01'
-                )
+        with patch.object(
+        PerformanceIntegrationService, '_get_base_performance_score',
+        return_value=base_score
+        ), patch.object(
+        PerformanceIntegrationService, '_get_qualification_score',
+        return_value={'score': qual_score, 'level_code': 'P2'}
+        ):
+        result = PerformanceIntegrationService.calculate_integrated_score(
+        db_session, 1, '2025-01'
+        )
 
-                assert result['integrated_score'] == expected
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert result['integrated_score'] == expected
 
 
 class TestGetBasePerformanceScore:
@@ -146,16 +125,13 @@ class TestGetBasePerformanceScore:
 
     def test_no_summary(self, db_session):
         """测试无工作总结"""
-        try:
-            from app.services.performance_integration_service import PerformanceIntegrationService
+        from app.services.performance_integration_service import PerformanceIntegrationService
 
-            result = PerformanceIntegrationService._get_base_performance_score(
-                db_session, 99999, '2025-01'
-            )
+        result = PerformanceIntegrationService._get_base_performance_score(
+        db_session, 99999, '2025-01'
+        )
 
-            assert result is None
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert result is None
 
 
 class TestGetQualificationScore:
@@ -163,16 +139,13 @@ class TestGetQualificationScore:
 
     def test_no_user(self, db_session):
         """测试用户不存在"""
-        try:
-            from app.services.performance_integration_service import PerformanceIntegrationService
+        from app.services.performance_integration_service import PerformanceIntegrationService
 
-            result = PerformanceIntegrationService._get_qualification_score(
-                db_session, 99999
-            )
+        result = PerformanceIntegrationService._get_qualification_score(
+        db_session, 99999
+        )
 
-            assert result is None
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert result is None
 
 
 class TestUpdateQualificationInEvaluation:
@@ -180,15 +153,12 @@ class TestUpdateQualificationInEvaluation:
 
     def test_evaluation_not_found(self, db_session):
         """测试评价记录不存在"""
-        try:
-            from app.services.performance_integration_service import PerformanceIntegrationService
+        from app.services.performance_integration_service import PerformanceIntegrationService
 
-            with pytest.raises(ValueError, match="评价记录.*不存在"):
-                PerformanceIntegrationService.update_qualification_in_evaluation(
-                    db_session, 99999, {'level_id': 1}
-                )
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        with pytest.raises(ValueError, match="评价记录.*不存在"):
+            PerformanceIntegrationService.update_qualification_in_evaluation(
+            db_session, 99999, {'level_id': 1}
+            )
 
 
 class TestGetIntegratedPerformanceForPeriod:
@@ -196,31 +166,25 @@ class TestGetIntegratedPerformanceForPeriod:
 
     def test_with_period_id(self, db_session):
         """测试指定周期ID"""
-        try:
-            from app.services.performance_integration_service import PerformanceIntegrationService
+        from app.services.performance_integration_service import PerformanceIntegrationService
 
-            result = PerformanceIntegrationService.get_integrated_performance_for_period(
-                db_session, 1, period_id=99999
-            )
+        result = PerformanceIntegrationService.get_integrated_performance_for_period(
+        db_session, 1, period_id=99999
+        )
 
             # 周期不存在应返回None
-            assert result is None
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert result is None
 
     def test_without_period_id(self, db_session):
         """测试不指定周期ID（使用最新）"""
-        try:
-            from app.services.performance_integration_service import PerformanceIntegrationService
+        from app.services.performance_integration_service import PerformanceIntegrationService
 
-            result = PerformanceIntegrationService.get_integrated_performance_for_period(
-                db_session, 1, period_id=None
-            )
+        result = PerformanceIntegrationService.get_integrated_performance_for_period(
+        db_session, 1, period_id=None
+        )
 
             # 无已完成周期应返回None
-            assert result is None
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert result is None
 
 
 class TestResultStructure:
@@ -228,36 +192,33 @@ class TestResultStructure:
 
     def test_full_result_structure(self, db_session):
         """测试完整结果结构"""
-        try:
-            from app.services.performance_integration_service import PerformanceIntegrationService
+        from app.services.performance_integration_service import PerformanceIntegrationService
 
-            with patch.object(
-                PerformanceIntegrationService, '_get_base_performance_score',
-                return_value=Decimal('85.0')
-            ), patch.object(
-                PerformanceIntegrationService, '_get_qualification_score',
-                return_value={'score': 90.0, 'level_code': 'P3', 'level_name': '高级'}
-            ):
-                result = PerformanceIntegrationService.calculate_integrated_score(
-                    db_session, 1, '2025-01'
-                )
+        with patch.object(
+        PerformanceIntegrationService, '_get_base_performance_score',
+        return_value=Decimal('85.0')
+        ), patch.object(
+        PerformanceIntegrationService, '_get_qualification_score',
+        return_value={'score': 90.0, 'level_code': 'P3', 'level_name': '高级'}
+        ):
+        result = PerformanceIntegrationService.calculate_integrated_score(
+        db_session, 1, '2025-01'
+        )
 
                 # 检查顶层字段
-                assert 'base_score' in result
-                assert 'qualification_score' in result
-                assert 'integrated_score' in result
-                assert 'base_weight' in result
-                assert 'qualification_weight' in result
-                assert 'qualification_level' in result
-                assert 'details' in result
+        assert 'base_score' in result
+        assert 'qualification_score' in result
+        assert 'integrated_score' in result
+        assert 'base_weight' in result
+        assert 'qualification_weight' in result
+        assert 'qualification_level' in result
+        assert 'details' in result
 
                 # 检查details字段
-                details = result['details']
-                assert 'base_performance' in details
-                assert 'qualification' in details
-                assert 'calculation' in details
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        details = result['details']
+        assert 'base_performance' in details
+        assert 'qualification' in details
+        assert 'calculation' in details
 
 
 # pytest fixtures

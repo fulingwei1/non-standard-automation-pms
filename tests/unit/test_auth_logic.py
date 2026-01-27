@@ -95,9 +95,9 @@ class TestTokenGeneration:
     def test_create_token_with_full_data(self):
         """测试使用完整数据创建 token"""
         data = {
-            "user_id": 1,
-            "username": "test_user",
-            "is_superuser": False,
+        "user_id": 1,
+        "username": "test_user",
+        "is_superuser": False,
         }
         token = create_access_token(data)
 
@@ -123,9 +123,9 @@ class TestTokenGeneration:
 
         # 解码 token
         payload = jwt.decode(
-            token,
-            settings.SECRET_KEY,
-            algorithms=[settings.ALGORITHM],
+        token,
+        settings.SECRET_KEY,
+        algorithms=[settings.ALGORITHM],
         )
 
         # Token payload 包含用户信息，没有 "sub" 字段
@@ -173,10 +173,10 @@ class TestPermissionLogic:
     def test_superuser_has_all_permissions(self):
         """测试超级管理员拥有所有权限"""
         superuser = {
-            "id": 1,
-            "username": "admin",
-            "is_superuser": True,
-            "roles": [],
+        "id": 1,
+        "username": "admin",
+        "is_superuser": True,
+        "roles": [],
         }
 
         # 超级管理员应该有所有权限
@@ -187,10 +187,10 @@ class TestPermissionLogic:
     def test_superuser_bypasses_permission_check(self):
         """超级管理员绕过权限检查"""
         superuser = {
-            "id": 1,
-            "username": "admin",
-            "is_superuser": True,
-            "roles": [],
+        "id": 1,
+        "username": "admin",
+        "is_superuser": True,
+        "roles": [],
         }
 
         assert check_permission(superuser, "nonexistent_permission") is True
@@ -198,10 +198,10 @@ class TestPermissionLogic:
     def test_normal_user_with_permission(self):
         """有权限的普通用户"""
         user_with_perm = {
-            "id": 1,
-            "username": "test_user",
-            "is_superuser": False,
-            "roles": ["project:read"],
+        "id": 1,
+        "username": "test_user",
+        "is_superuser": False,
+        "roles": ["project:read"],
         }
 
         assert check_permission(user_with_perm, "project:read") is True
@@ -210,10 +210,10 @@ class TestPermissionLogic:
     def test_normal_user_without_permission(self):
         """无权限的普通用户"""
         user_without_perm = {
-            "id": 1,
-            "username": "test_user",
-            "is_superuser": False,
-            "roles": [],
+        "id": 1,
+        "username": "test_user",
+        "is_superuser": False,
+        "roles": [],
         }
 
         assert check_permission(user_without_perm, "project:read") is False
@@ -222,10 +222,10 @@ class TestPermissionLogic:
     def test_user_with_no_roles(self):
         """没有角色的用户"""
         user_no_roles = {
-            "id": 1,
-            "username": "test_user",
-            "is_superuser": False,
-            "roles": [],
+        "id": 1,
+        "username": "test_user",
+        "is_superuser": False,
+        "roles": [],
         }
 
         assert check_permission(user_no_roles, "project:read") is False
@@ -238,11 +238,11 @@ class TestUserCreation:
     def test_create_user_with_required_fields(self):
         """测试创建用户时必填字段"""
         user_data = {
-            "username": "test_user_001",
-            "password": "test_password",
-            "email": "test@example.com",
-            "real_name": "测试用户",
-            "is_active": True,
+        "username": "test_user_001",
+        "password": "test_password",
+        "email": "test@example.com",
+        "real_name": "测试用户",
+        "is_active": True,
         }
 
         # 在这个测试中我们只验证数据结构,不涉及数据库
@@ -253,10 +253,10 @@ class TestUserCreation:
     def test_superuser_creation(self):
         """测试创建超级用户"""
         superuser_data = {
-            "username": "super_user_001",
-            "password": "test_password",
-            "is_superuser": True,
-            "is_active": True,
+        "username": "super_user_001",
+        "password": "test_password",
+        "is_superuser": True,
+        "is_active": True,
         }
 
         assert superuser_data["is_superuser"] is True
@@ -264,9 +264,9 @@ class TestUserCreation:
     def test_user_status_defaults(self):
         """测试用户状态的默认值"""
         user_data = {
-            "username": "test_user_002",
-            "password": "test_password",
-            "email": "test2@example.com",
+        "username": "test_user_002",
+        "password": "test_password",
+        "email": "test2@example.com",
         }
 
         assert user_data.get("is_active", True) is True
@@ -310,11 +310,11 @@ class TestTokenEdgeCases:
             token = create_access_token(user_data)
             tokens.append(token)
 
-        threads = [threading.Thread(target=create_token_worker) for _ in range(10)]
+            threads = [threading.Thread(target=create_token_worker) for _ in range(10)]
 
-        for t in threads:
-            t.start()
-        for t in threads:
-            t.join()
+            for t in threads:
+                t.start()
+                for t in threads:
+                    t.join()
 
-        assert len(tokens) == 10
+                    assert len(tokens) == 10

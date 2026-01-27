@@ -45,6 +45,25 @@ class MessageResponse(BaseModel):
     message: str = Field(description="消息内容")
 
 
+class BatchOperationResponse(BaseModel):
+    """通用批量操作响应"""
+    success_count: int = Field(description="成功数量")
+    failed_count: int = Field(description="失败数量")
+    failed_items: List[Dict[str, Any]] = Field(default=[], description="失败项详情", alias="failed_tasks")
+    
+    class Config:
+        populate_by_name = True  # 允许同时使用字段名和别名
+        json_schema_extra = {
+            "example": {
+                "success_count": 5,
+                "failed_count": 1,
+                "failed_items": [
+                    {"id": 123, "reason": "实体不存在或无访问权限"}
+                ]
+            }
+        }
+
+
 class StatusUpdate(BaseModel):
     """状态更新"""
     status: str = Field(description="新状态")

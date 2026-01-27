@@ -35,26 +35,26 @@ def test_build_context_with_mocked_report(db_session):
         "report_type": template.report_type,
         "period": {"start_date": "2026-01-01", "end_date": "2026-01-31"},
         "metrics": {
-            "total_hours": 120.5,
-            "active_members": 8,
+        "total_hours": 120.5,
+        "active_members": 8,
         },
         "sections": {
-            "milestones": {
-                "title": "里程碑",
-                "type": "table",
-                "data": [
-                    {"name": "M1", "status": "COMPLETED"},
-                    {"name": "M2", "status": "IN_PROGRESS"},
-                ],
-            },
-            "timesheet": {
-                "title": "工时汇总",
-                "type": "summary",
-                "data": {"total": 120},
-            },
+        "milestones": {
+        "title": "里程碑",
+        "type": "table",
+        "data": [
+        {"name": "M1", "status": "COMPLETED"},
+        {"name": "M2", "status": "IN_PROGRESS"},
+        ],
+        },
+        "timesheet": {
+        "title": "工时汇总",
+        "type": "summary",
+        "data": {"total": 120},
+        },
         },
         "charts": [
-            {"title": "趋势", "type": "line", "data": [{"week": 1, "value": 10}]},
+        {"title": "趋势", "type": "line", "data": [{"week": 1, "value": 10}]},
         ],
     }
 
@@ -67,10 +67,10 @@ def test_build_context_with_mocked_report(db_session):
         return_value=fake_report,
     ):
         context = service.build_context(
-            template_id=template.id,
-            project_id=1,
-            start_date=date(2026, 1, 1),
-            end_date=date(2026, 1, 15),
+        template_id=template.id,
+        project_id=1,
+        start_date=date(2026, 1, 1),
+        end_date=date(2026, 1, 15),
         )
 
     assert context["template_info"]["template_id"] == template.id

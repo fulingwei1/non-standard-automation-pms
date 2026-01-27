@@ -15,20 +15,17 @@ class TestOptimizeEstimatedReadyDate:
 
     def test_no_blocking_shortages(self, db_session):
         """测试无阻塞物料"""
-        try:
-            from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
+        from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
 
-            readiness = MagicMock()
-            readiness.id = 1
-            readiness.estimated_ready_date = date.today() + timedelta(days=10)
+        readiness = MagicMock()
+        readiness.id = 1
+        readiness.estimated_ready_date = date.today() + timedelta(days=10)
 
-            result = AssemblyKitOptimizer.optimize_estimated_ready_date(
-                db_session, readiness
-            )
+        result = AssemblyKitOptimizer.optimize_estimated_ready_date(
+        db_session, readiness
+        )
 
-            assert result == readiness.estimated_ready_date
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert result == readiness.estimated_ready_date
 
 
 class TestOptimizeByPurchaseOrder:
@@ -36,35 +33,29 @@ class TestOptimizeByPurchaseOrder:
 
     def test_no_material_id(self, db_session):
         """测试无物料ID"""
-        try:
-            from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
+        from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
 
-            shortage = MagicMock()
-            shortage.material_id = None
+        shortage = MagicMock()
+        shortage.material_id = None
 
-            result = AssemblyKitOptimizer._optimize_by_purchase_order(
-                db_session, shortage
-            )
+        result = AssemblyKitOptimizer._optimize_by_purchase_order(
+        db_session, shortage
+        )
 
-            assert result is None
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert result is None
 
     def test_no_purchase_orders(self, db_session):
         """测试无采购订单"""
-        try:
-            from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
+        from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
 
-            shortage = MagicMock()
-            shortage.material_id = 99999
+        shortage = MagicMock()
+        shortage.material_id = 99999
 
-            result = AssemblyKitOptimizer._optimize_by_purchase_order(
-                db_session, shortage
-            )
+        result = AssemblyKitOptimizer._optimize_by_purchase_order(
+        db_session, shortage
+        )
 
-            assert result is None
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert result is None
 
 
 class TestOptimizeBySubstitute:
@@ -72,36 +63,30 @@ class TestOptimizeBySubstitute:
 
     def test_no_material_id(self, db_session):
         """测试无物料ID"""
-        try:
-            from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
+        from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
 
-            shortage = MagicMock()
-            shortage.material_id = None
+        shortage = MagicMock()
+        shortage.material_id = None
 
-            result = AssemblyKitOptimizer._optimize_by_substitute(
-                db_session, shortage
-            )
+        result = AssemblyKitOptimizer._optimize_by_substitute(
+        db_session, shortage
+        )
 
-            assert result is None
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert result is None
 
     def test_no_bom_item(self, db_session):
         """测试无BOM项"""
-        try:
-            from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
+        from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
 
-            shortage = MagicMock()
-            shortage.material_id = 1
-            shortage.bom_item_id = 99999
+        shortage = MagicMock()
+        shortage.material_id = 1
+        shortage.bom_item_id = 99999
 
-            result = AssemblyKitOptimizer._optimize_by_substitute(
-                db_session, shortage
-            )
+        result = AssemblyKitOptimizer._optimize_by_substitute(
+        db_session, shortage
+        )
 
-            assert result is None
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert result is None
 
 
 class TestGenerateOptimizationSuggestions:
@@ -109,19 +94,16 @@ class TestGenerateOptimizationSuggestions:
 
     def test_no_blocking_shortages(self, db_session):
         """测试无阻塞物料"""
-        try:
-            from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
+        from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
 
-            readiness = MagicMock()
-            readiness.id = 99999
+        readiness = MagicMock()
+        readiness.id = 99999
 
-            suggestions = AssemblyKitOptimizer.generate_optimization_suggestions(
-                db_session, readiness
-            )
+        suggestions = AssemblyKitOptimizer.generate_optimization_suggestions(
+        db_session, readiness
+        )
 
-            assert isinstance(suggestions, list)
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert isinstance(suggestions, list)
 
 
 class TestSuggestExpeditePurchase:
@@ -129,19 +111,16 @@ class TestSuggestExpeditePurchase:
 
     def test_no_material_id(self, db_session):
         """测试无物料ID"""
-        try:
-            from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
+        from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
 
-            shortage = MagicMock()
-            shortage.material_id = None
+        shortage = MagicMock()
+        shortage.material_id = None
 
-            result = AssemblyKitOptimizer._suggest_expedite_purchase(
-                db_session, shortage
-            )
+        result = AssemblyKitOptimizer._suggest_expedite_purchase(
+        db_session, shortage
+        )
 
-            assert result is None
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert result is None
 
 
 class TestSuggestSubstitute:
@@ -149,19 +128,16 @@ class TestSuggestSubstitute:
 
     def test_no_bom_item(self, db_session):
         """测试无BOM项"""
-        try:
-            from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
+        from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
 
-            shortage = MagicMock()
-            shortage.bom_item_id = 99999
+        shortage = MagicMock()
+        shortage.bom_item_id = 99999
 
-            result = AssemblyKitOptimizer._suggest_substitute(
-                db_session, shortage
-            )
+        result = AssemblyKitOptimizer._suggest_substitute(
+        db_session, shortage
+        )
 
-            assert result is None
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert result is None
 
 
 class TestSuggestPriorityAdjustment:
@@ -169,37 +145,31 @@ class TestSuggestPriorityAdjustment:
 
     def test_no_material_id(self, db_session):
         """测试无物料ID"""
-        try:
-            from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
+        from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
 
-            shortage = MagicMock()
-            shortage.material_id = None
-            shortage.purchase_order_id = None
+        shortage = MagicMock()
+        shortage.material_id = None
+        shortage.purchase_order_id = None
 
-            result = AssemblyKitOptimizer._suggest_priority_adjustment(
-                db_session, shortage
-            )
+        result = AssemblyKitOptimizer._suggest_priority_adjustment(
+        db_session, shortage
+        )
 
-            assert result is None
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert result is None
 
     def test_no_purchase_order(self, db_session):
         """测试无采购订单"""
-        try:
-            from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
+        from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
 
-            shortage = MagicMock()
-            shortage.material_id = 1
-            shortage.purchase_order_id = 99999
+        shortage = MagicMock()
+        shortage.material_id = 1
+        shortage.purchase_order_id = 99999
 
-            result = AssemblyKitOptimizer._suggest_priority_adjustment(
-                db_session, shortage
-            )
+        result = AssemblyKitOptimizer._suggest_priority_adjustment(
+        db_session, shortage
+        )
 
-            assert result is None
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert result is None
 
 
 class TestSuggestionStructure:
@@ -208,15 +178,15 @@ class TestSuggestionStructure:
     def test_expedite_purchase_structure(self):
         """测试加急采购建议结构"""
         suggestion = {
-            'type': 'EXPEDITE_PURCHASE',
-            'material_code': 'MAT001',
-            'material_name': '测试物料',
-            'purchase_order_no': 'PO001',
-            'current_promised_date': '2025-02-15',
-            'required_date': '2025-02-01',
-            'delay_days': 14,
-            'suggestion': '建议将采购订单提前',
-            'priority': 'HIGH'
+        'type': 'EXPEDITE_PURCHASE',
+        'material_code': 'MAT001',
+        'material_name': '测试物料',
+        'purchase_order_no': 'PO001',
+        'current_promised_date': '2025-02-15',
+        'required_date': '2025-02-01',
+        'delay_days': 14,
+        'suggestion': '建议将采购订单提前',
+        'priority': 'HIGH'
         }
 
         assert suggestion['type'] == 'EXPEDITE_PURCHASE'
@@ -226,15 +196,15 @@ class TestSuggestionStructure:
     def test_substitute_structure(self):
         """测试替代物料建议结构"""
         suggestion = {
-            'type': 'USE_SUBSTITUTE',
-            'material_code': 'MAT001',
-            'material_name': '测试物料',
-            'shortage_qty': 10.0,
-            'substitutes': [
-                {'material_code': 'MAT002', 'material_name': '替代物料', 'available_qty': 15.0}
-            ],
-            'suggestion': '建议使用替代物料',
-            'priority': 'HIGH'
+        'type': 'USE_SUBSTITUTE',
+        'material_code': 'MAT001',
+        'material_name': '测试物料',
+        'shortage_qty': 10.0,
+        'substitutes': [
+        {'material_code': 'MAT002', 'material_name': '替代物料', 'available_qty': 15.0}
+        ],
+        'suggestion': '建议使用替代物料',
+        'priority': 'HIGH'
         }
 
         assert suggestion['type'] == 'USE_SUBSTITUTE'
@@ -243,13 +213,13 @@ class TestSuggestionStructure:
     def test_priority_adjustment_structure(self):
         """测试优先级调整建议结构"""
         suggestion = {
-            'type': 'ADJUST_PRIORITY',
-            'material_code': 'MAT001',
-            'material_name': '测试物料',
-            'purchase_order_no': 'PO001',
-            'days_until_required': 5,
-            'suggestion': '建议提高采购优先级',
-            'priority': 'MEDIUM'
+        'type': 'ADJUST_PRIORITY',
+        'material_code': 'MAT001',
+        'material_name': '测试物料',
+        'purchase_order_no': 'PO001',
+        'days_until_required': 5,
+        'suggestion': '建议提高采购优先级',
+        'priority': 'MEDIUM'
         }
 
         assert suggestion['type'] == 'ADJUST_PRIORITY'
@@ -296,10 +266,10 @@ class TestDateCalculations:
         if optimized < date.today():
             optimized = None
 
-        assert optimized is None
+            assert optimized is None
 
 
-# pytest fixtures
+            # pytest fixtures
 @pytest.fixture
 def db_session():
     """创建测试数据库会话"""

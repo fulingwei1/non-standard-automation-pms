@@ -128,9 +128,9 @@ class TestGetItrDashboardData:
         end_date = datetime(2024, 12, 31)
 
         result = get_itr_dashboard_data(
-            db_session,
-            start_date=start_date,
-            end_date=end_date
+        db_session,
+        start_date=start_date,
+        end_date=end_date
         )
         assert 'tickets' in result
         assert isinstance(result['tickets']['total'], int)

@@ -34,8 +34,8 @@ class TestAssemblyAttrRecommendation:
             assert service.db == db_session
 
 
-    # TODO: 添加更多测试用例
-    # - 正常流程测试 (Happy Path)
-    # - 边界条件测试 (Edge Cases)
-    # - 异常处理测试 (Error Handling)
-    # - 数据验证测试 (Data Validation)
+            # TODO: 添加更多测试用例
+            # - 正常流程测试 (Happy Path)
+            # - 边界条件测试 (Edge Cases)
+            # - 异常处理测试 (Error Handling)
+            # - 数据验证测试 (Data Validation)

@@ -31,9 +31,11 @@ def export_report(
     current_user: User = Depends(security.require_permission("report:export")),
 ) -> Any:
     """
-    导出报表（xlsx/pdf/csv）
+    导出报表（xlsx/pdf/csv）（使用统一报表框架）
     """
-    from app.services.report_export_service import report_export_service
+    from fastapi.responses import StreamingResponse
+
+    from app.services.report_framework.engine import ReportEngine
 
     generation = db.query(ReportGeneration).filter(ReportGeneration.id == export_in.report_id).first()
     if not generation:
@@ -45,30 +47,116 @@ def export_report(
     filename = f"report_{generation.id}"
 
     try:
-        export_format = export_in.export_format.upper()
+        export_format = export_in.export_format.upper().lower()  # 转换为小写以匹配统一框架
 
-        if export_format == 'XLSX':
-            filepath = report_export_service.export_to_excel(
-                data=report_data,
-                filename=filename,
-                title=report_title
+        # 如果报表有对应的报表代码，使用统一报表框架导出
+        # 否则使用旧服务（向后兼容）
+        report_code = getattr(generation, 'report_code', None)
+        
+        if report_code:
+            # 使用统一报表框架导出
+            engine = ReportEngine(db)
+            result = engine.generate(
+                report_code=report_code,
+                params=report_data.get("params", {}),
+                format=export_format,
+                user=current_user,
+                skip_cache=True,
             )
-        elif export_format == 'PDF':
-            filepath = report_export_service.export_to_pdf(
-                data=report_data,
-                filename=filename,
-                title=report_title
-            )
-        elif export_format == 'CSV':
-            filepath = report_export_service.export_to_csv(
-                data=report_data,
-                filename=filename
-            )
-        else:
-            raise HTTPException(status_code=400, detail=f"不支持的导出格式: {export_format}")
+            
+            # 获取文件流
+            file_stream = result.data.get("file_stream")
+            if file_stream:
+                # 返回文件流
+                return StreamingResponse(
+                    file_stream,
+                    media_type=result.content_type,
+                    headers={
+                        "Content-Disposition": f"attachment; filename={filename}.{export_format}"
+                    }
+                )
+        
+        # 如果没有报表代码或统一框架导出失败，使用统一报表框架的渲染器
+        try:
+            if export_format == 'xlsx':
+                from app.services.report_framework.renderers.excel_renderer import ExcelRenderer
+                renderer = ExcelRenderer()
+                # 将report_data转换为sections格式
+                sections = []
+                if isinstance(report_data, dict):
+                    if 'summary' in report_data:
+                        sections.append({
+                            "id": "summary",
+                            "title": "汇总",
+                            "type": "metrics",
+                            "items": [{"label": k, "value": v} for k, v in report_data['summary'].items()]
+                        })
+                    if 'details' in report_data:
+                        sections.append({
+                            "id": "details",
+                            "title": "明细",
+                            "type": "table",
+                            "source": report_data['details']
+                        })
+                else:
+                    sections = [{"id": "data", "title": report_title, "type": "table", "source": report_data}]
+                metadata = {"code": f"REPORT_{generation.id}", "name": report_title}
+                result = renderer.render(sections, metadata)
+                filepath = result.file_path or ""
+            elif export_format == 'pdf':
+                from app.services.report_framework.renderers.pdf_renderer import PdfRenderer
+                renderer = PdfRenderer()
+                sections = []
+                if isinstance(report_data, dict):
+                    if 'summary' in report_data:
+                        sections.append({
+                            "id": "summary",
+                            "title": "汇总",
+                            "type": "metrics",
+                            "items": [{"label": k, "value": v} for k, v in report_data['summary'].items()]
+                        })
+                    if 'details' in report_data:
+                        sections.append({
+                            "id": "details",
+                            "title": "明细",
+                            "type": "table",
+                            "source": report_data['details']
+                        })
+                else:
+                    sections = [{"id": "data", "title": report_title, "type": "table", "source": report_data}]
+                metadata = {"code": f"REPORT_{generation.id}", "name": report_title}
+                result = renderer.render(sections, metadata)
+                filepath = result.file_path or ""
+            elif export_format == 'csv':
+                # CSV导出暂时使用简单实现
+                import csv
+                import os
+                from datetime import datetime
+                csv_dir = os.path.join(settings.UPLOAD_DIR, "exports")
+                os.makedirs(csv_dir, exist_ok=True)
+                csv_filename = f"{filename}_{datetime.now().strftime('%Y%m%d%H%M%S')}.csv"
+                csv_path = os.path.join(csv_dir, csv_filename)
+                
+                # 写入CSV
+                with open(csv_path, 'w', newline='', encoding='utf-8') as f:
+                    if isinstance(report_data, dict) and 'details' in report_data:
+                        if report_data['details']:
+                            writer = csv.DictWriter(f, fieldnames=report_data['details'][0].keys())
+                            writer.writeheader()
+                            writer.writerows(report_data['details'])
+                    else:
+                        writer = csv.writer(f)
+                        writer.writerow([report_title])
+                        writer.writerow([str(report_data)])
+                
+                filepath = os.path.join("exports", csv_filename)
+            else:
+                raise HTTPException(status_code=400, detail=f"不支持的导出格式: {export_format}")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"导出失败: {str(e)}")
 
         # 更新导出记录
-        generation.export_format = export_format
+        generation.export_format = export_format.upper()
         generation.export_path = filepath
         generation.exported_at = datetime.now()
         db.add(generation)
@@ -80,7 +168,7 @@ def export_report(
             message="导出成功",
             data={
                 "report_id": generation.id,
-                "format": export_format,
+                "format": export_format.upper(),
                 "file_path": filepath,
                 "download_url": f"/api/v1/reports/download/{generation.id}"
             }
@@ -102,120 +190,62 @@ def export_direct(
     current_user: User = Depends(security.require_permission("report:read")),
 ) -> Any:
     """
-    直接导出报表（不需要先生成报表记录）
+    直接导出报表（不需要先生成报表记录）（使用统一报表框架）
     """
-    from app.services.report_export_service import (
-        ReportGenerator,
-        report_export_service,
-    )
+    from fastapi.responses import StreamingResponse
 
-    # 根据报表类型生成数据
-    report_data = {}
-    report_title = ""
+    from app.services.report_framework.engine import ReportEngine
 
-    if report_type == 'PROJECT_LIST':
-        # 项目列表报表
-        query = db.query(Project)
-        if project_id:
-            query = query.filter(Project.id == project_id)
-        projects = query.all()
+    # 根据报表类型映射到报表代码
+    report_code_map = {
+        'PROJECT_LIST': 'PROJECT_LIST',
+        'HEALTH_DISTRIBUTION': 'PROJECT_HEALTH_DISTRIBUTION',
+        'UTILIZATION': 'TIMESHEET_UTILIZATION',
+    }
 
-        project_list = []
-        for p in projects:
-            project_list.append({
-                "项目编码": p.project_code,
-                "项目名称": p.project_name,
-                "客户": p.customer_name if hasattr(p, 'customer_name') else '',
-                "阶段": p.stage,
-                "健康度": p.health,
-                "状态": p.status,
-                "计划开始": str(p.planned_start_date) if p.planned_start_date else '',
-                "计划结束": str(p.planned_end_date) if p.planned_end_date else '',
-            })
-
-        report_data = ReportGenerator.generate_project_report(project_list)
-        report_title = "项目列表报表"
-
-    elif report_type == 'HEALTH_DISTRIBUTION':
-        # 健康度分布报表
-        health_stats = db.query(
-            Project.health,
-            func.count(Project.id).label('count')
-        ).filter(Project.status != "CANCELLED").group_by(Project.health).all()
-
-        health_list = []
-        for stat in health_stats:
-            health_list.append({
-                "健康度": stat.health or "H4",
-                "项目数量": stat.count
-            })
-
-        report_data = {"details": health_list}
-        report_title = "项目健康度分布报表"
-
-    elif report_type == 'UTILIZATION':
-        # 人员利用率报表
-        if not start_date:
-            start_date = date.today() - timedelta(days=30)
-        if not end_date:
-            end_date = date.today()
-
-        timesheets = db.query(Timesheet).filter(
-            Timesheet.work_date >= start_date,
-            Timesheet.work_date <= end_date,
-            Timesheet.status == "APPROVED"
-        ).all()
-
-        user_hours = {}
-        for ts in timesheets:
-            if ts.user_id not in user_hours:
-                user_hours[ts.user_id] = 0
-            user_hours[ts.user_id] += float(ts.hours or 0)
-
-        work_days = sum(1 for d in range((end_date - start_date).days + 1)
-                       if (start_date + timedelta(days=d)).weekday() < 5)
-        standard_hours = work_days * 8
-
-        util_list = []
-        for user_id, hours in user_hours.items():
-            user = db.query(User).filter(User.id == user_id).first()
-            if user:
-                rate = (hours / standard_hours * 100) if standard_hours > 0 else 0
-                util_list.append({
-                    "姓名": user.real_name or user.username,
-                    "部门": user.department or '',
-                    "工时(小时)": round(hours, 1),
-                    "标准工时": standard_hours,
-                    "利用率": f"{rate:.1f}%"
-                })
-
-        report_data = ReportGenerator.generate_utilization_report(util_list)
-        report_title = f"人员利用率报表 ({start_date} ~ {end_date})"
-
-    else:
+    report_code = report_code_map.get(report_type)
+    if not report_code:
         raise HTTPException(status_code=400, detail=f"不支持的报表类型: {report_type}")
 
-    # 导出文件
     try:
-        filename = f"{report_type.lower()}_{datetime.now().strftime('%Y%m%d')}"
-        export_fmt = export_format.upper()
+        # 使用统一报表框架生成和导出
+        engine = ReportEngine(db)
+        params = {}
+        if start_date:
+            params['start_date'] = start_date.isoformat()
+        if end_date:
+            params['end_date'] = end_date.isoformat()
+        if project_id:
+            params['project_id'] = project_id
+        if department_id:
+            params['department_id'] = department_id
 
-        if export_fmt == 'XLSX':
-            filepath = report_export_service.export_to_excel(report_data, filename, report_title)
-        elif export_fmt == 'PDF':
-            filepath = report_export_service.export_to_pdf(report_data, filename, report_title)
-        elif export_fmt == 'CSV':
-            filepath = report_export_service.export_to_csv(report_data, filename)
-        else:
-            raise HTTPException(status_code=400, detail=f"不支持的导出格式: {export_format}")
+        result = engine.generate(
+            report_code=report_code,
+            params=params,
+            format=export_format.lower(),
+            user=current_user,
+            skip_cache=True,
+        )
 
+        # 如果返回文件流，直接返回
+        if result.data.get("file_stream"):
+            filename = f"{report_type.lower()}_{datetime.now().strftime('%Y%m%d')}.{export_format.lower()}"
+            return StreamingResponse(
+                result.data.get("file_stream"),
+                media_type=result.content_type,
+                headers={"Content-Disposition": f"attachment; filename={filename}"},
+            )
+
+        # 否则返回文件路径
+        filepath = result.data.get("file_path", "")
         return ResponseModel(
             code=200,
             message="导出成功",
             data={
                 "file_path": filepath,
                 "report_type": report_type,
-                "format": export_fmt
+                "format": export_format.upper()
             }
         )
     except Exception as e:

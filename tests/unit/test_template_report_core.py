@@ -41,11 +41,11 @@ class TestGenerateFromTemplate:
             mock_mixin._generate_project_weekly.return_value = {"test": "data"}
 
             result = service.generate_from_template(
-                db=service.db,
-                template=template,
-                project_id=10,
-                start_date=date(2026, 1, 1),
-                end_date=date(2026, 1, 7),
+            db=service.db,
+            template=template,
+            project_id=10,
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 1, 7),
             )
 
             assert result is not None
@@ -61,11 +61,11 @@ class TestGenerateFromTemplate:
             mock_mixin._generate_project_monthly.return_value = {"test": "data"}
 
             result = service.generate_from_template(
-                db=service.db,
-                template=template,
-                project_id=10,
-                start_date=date(2026, 1, 1),
-                end_date=date(2026, 1, 31),
+            db=service.db,
+            template=template,
+            project_id=10,
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 1, 31),
             )
 
             assert result is not None
@@ -81,7 +81,7 @@ class TestGenerateFromTemplate:
             expected_start = today - timedelta(days=30)
 
             result = service.generate_from_template(
-                db=service.db, template=template, project_id=10
+            db=service.db, template=template, project_id=10
             )
 
             assert result is not None
@@ -96,14 +96,14 @@ class TestGenerateFromTemplate:
             filters = {"custom_field": "test_value"}
 
             result = service.generate_from_template(
-                db=service.db, template=template, project_id=10, filters=filters
+            db=service.db, template=template, project_id=10, filters=filters
             )
 
             assert result is not None
             mock_mixin._generate_project_weekly.assert_called_once_with(
-                start_date=date(2026, 1, 1),
-                end_date=date(2026, 1, 7),
-                sections_config={},
-                metrics_config={},
-                filters=filters,
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 1, 7),
+            sections_config={},
+            metrics_config={},
+            filters=filters,
             )

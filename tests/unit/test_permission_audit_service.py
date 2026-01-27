@@ -55,12 +55,12 @@ class TestLogAudit:
         """测试基本审计日志记录"""
         try:
             result = PermissionAuditService.log_audit(
-                db=db_session,
-                operator_id=1,
-                action="TEST_ACTION",
-                target_type="test",
-                target_id=1,
-                detail={"test": "data"}
+            db=db_session,
+            operator_id=1,
+            action="TEST_ACTION",
+            target_type="test",
+            target_id=1,
+            detail={"test": "data"}
             )
             assert result is not None
             assert result.operator_id == 1
@@ -69,19 +69,19 @@ class TestLogAudit:
             assert result.target_id == 1
         except Exception as e:
             # 如果PermissionAudit表不存在，跳过测试
-            pytest.skip(f"审计表可能不存在: {e}")
+        pytest.skip(f"审计表可能不存在: {e}")
 
     def test_log_audit_with_ip_and_agent(self, db_session: Session):
         """测试带IP和UserAgent的审计日志"""
         try:
             result = PermissionAuditService.log_audit(
-                db=db_session,
-                operator_id=1,
-                action="TEST_ACTION",
-                target_type="test",
-                target_id=1,
-                ip_address="192.168.1.1",
-                user_agent="TestBrowser/1.0"
+            db=db_session,
+            operator_id=1,
+            action="TEST_ACTION",
+            target_type="test",
+            target_id=1,
+            ip_address="192.168.1.1",
+            user_agent="TestBrowser/1.0"
             )
             assert result is not None
             assert result.ip_address == "192.168.1.1"
@@ -97,11 +97,11 @@ class TestLogUserRoleAssignment:
         """测试记录用户角色分配"""
         try:
             PermissionAuditService.log_user_role_assignment(
-                db=db_session,
-                operator_id=1,
-                user_id=2,
-                role_ids=[1, 2, 3],
-                ip_address="192.168.1.1"
+            db=db_session,
+            operator_id=1,
+            user_id=2,
+            role_ids=[1, 2, 3],
+            ip_address="192.168.1.1"
             )
             # 如果没有抛出异常，说明成功
         except Exception as e:
@@ -115,11 +115,11 @@ class TestLogRolePermissionAssignment:
         """测试记录角色权限分配"""
         try:
             PermissionAuditService.log_role_permission_assignment(
-                db=db_session,
-                operator_id=1,
-                role_id=1,
-                permission_ids=[1, 2, 3],
-                ip_address="192.168.1.1"
+            db=db_session,
+            operator_id=1,
+            role_id=1,
+            permission_ids=[1, 2, 3],
+            ip_address="192.168.1.1"
             )
             # 如果没有抛出异常，说明成功
         except Exception as e:
@@ -133,11 +133,11 @@ class TestLogUserOperation:
         """测试记录用户操作"""
         try:
             PermissionAuditService.log_user_operation(
-                db=db_session,
-                operator_id=1,
-                user_id=2,
-                action=PermissionAuditService.ACTION_USER_UPDATED,
-                changes={"name": {"old": "旧名称", "new": "新名称"}}
+            db=db_session,
+            operator_id=1,
+            user_id=2,
+            action=PermissionAuditService.ACTION_USER_UPDATED,
+            changes={"name": {"old": "旧名称", "new": "新名称"}}
             )
             # 如果没有抛出异常，说明成功
         except Exception as e:
@@ -151,11 +151,11 @@ class TestLogRoleOperation:
         """测试记录角色操作"""
         try:
             PermissionAuditService.log_role_operation(
-                db=db_session,
-                operator_id=1,
-                role_id=1,
-                action=PermissionAuditService.ACTION_ROLE_UPDATED,
-                changes={"name": {"old": "旧角色", "new": "新角色"}}
+            db=db_session,
+            operator_id=1,
+            role_id=1,
+            action=PermissionAuditService.ACTION_ROLE_UPDATED,
+            changes={"name": {"old": "旧角色", "new": "新角色"}}
             )
             # 如果没有抛出异常，说明成功
         except Exception as e:

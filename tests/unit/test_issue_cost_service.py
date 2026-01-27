@@ -34,7 +34,7 @@ class TestGetIssueRelatedCosts:
 
         mock_session = MagicMock()
         mock_session.query.return_value.filter.return_value.all.return_value = [
-            mock_cost
+        mock_cost
         ]
 
         result = IssueCostService.get_issue_related_costs(mock_session, "ISSUE-001")
@@ -54,8 +54,8 @@ class TestGetIssueRelatedCosts:
 
         mock_session = MagicMock()
         mock_session.query.return_value.filter.return_value.all.return_value = [
-            mock_cost1,
-            mock_cost2,
+        mock_cost1,
+        mock_cost2,
         ]
 
         result = IssueCostService.get_issue_related_costs(mock_session, "ISSUE-001")
@@ -75,8 +75,8 @@ class TestGetIssueRelatedCosts:
 
         mock_session = MagicMock()
         mock_session.query.return_value.filter.return_value.all.return_value = [
-            mock_cost1,
-            mock_cost2,
+        mock_cost1,
+        mock_cost2,
         ]
 
         result = IssueCostService.get_issue_related_costs(mock_session, "ISSUE-001")
@@ -96,8 +96,8 @@ class TestGetIssueRelatedCosts:
 
         mock_session = MagicMock()
         mock_session.query.return_value.filter.return_value.all.return_value = [
-            mock_cost1,
-            mock_cost2,
+        mock_cost1,
+        mock_cost2,
         ]
 
         result = IssueCostService.get_issue_related_costs(mock_session, "ISSUE-001")
@@ -128,7 +128,7 @@ class TestGetIssueRelatedHours:
 
         mock_session = MagicMock()
         mock_session.query.return_value.filter.return_value.all.return_value = [
-            mock_timesheet
+        mock_timesheet
         ]
 
         result = IssueCostService.get_issue_related_hours(mock_session, "ISSUE-001")
@@ -150,8 +150,8 @@ class TestGetIssueRelatedHours:
 
         mock_session = MagicMock()
         mock_session.query.return_value.filter.return_value.all.return_value = [
-            mock_timesheet1,
-            mock_timesheet2,
+        mock_timesheet1,
+        mock_timesheet2,
         ]
 
         result = IssueCostService.get_issue_related_hours(mock_session, "ISSUE-001")
@@ -173,8 +173,8 @@ class TestGetIssueRelatedHours:
 
         mock_session = MagicMock()
         mock_session.query.return_value.filter.return_value.all.return_value = [
-            mock_timesheet1,
-            mock_timesheet2,
+        mock_timesheet1,
+        mock_timesheet2,
         ]
 
         result = IssueCostService.get_issue_related_hours(mock_session, "ISSUE-001")
@@ -191,7 +191,7 @@ class TestGetIssueRelatedHours:
 
         mock_session = MagicMock()
         mock_session.query.return_value.filter.return_value.all.return_value = [
-            mock_timesheet
+        mock_timesheet
         ]
 
         result = IssueCostService.get_issue_related_hours(mock_session, "ISSUE-001")
@@ -216,10 +216,10 @@ class TestGetIssueCostSummary:
         mock_timesheet.work_content = "ISSUE-001"
 
         mock_session.query.return_value.filter.return_value.all.return_value = [
-            mock_cost
+        mock_cost
         ]
         mock_session.query.return_value.filter.return_value.all.return_value = [
-            mock_timesheet
+        mock_timesheet
         ]
 
         result = IssueCostService.get_issue_cost_summary(mock_session, "ISSUE-001")

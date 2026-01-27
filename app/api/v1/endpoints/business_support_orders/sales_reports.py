@@ -346,57 +346,83 @@ async def get_sales_weekly_report(
 @router.get("/reports/sales-monthly", response_model=ResponseModel[SalesReportResponse], summary="获取销售月报")
 async def get_sales_monthly_report(
     month: Optional[str] = Query(None, description="月份（YYYY-MM格式），不提供则使用当前月份"),
+    format: str = Query("json", description="格式：json/pdf/excel"),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
-    """获取销售月报"""
-    from app.services.sales_monthly_report_service import (
-        calculate_bidding_statistics,
-        calculate_contract_statistics,
-        calculate_invoice_statistics,
-        calculate_month_range,
-        calculate_order_statistics,
-        calculate_receipt_statistics,
-        parse_month_string,
-    )
+    """获取销售月报（使用统一报表框架）"""
+    from fastapi.responses import StreamingResponse
+
+    from app.services.report_framework import ConfigError
+    from app.services.report_framework.engine import ParameterError, PermissionError, ReportEngine
 
     try:
-        # 解析月份并计算日期范围
-        year, month_num = parse_month_string(month)
-        month_start, month_end = calculate_month_range(year, month_num)
-        month_str = f"{year}-{month_num:02d}"
-
-        # 计算各项统计
-        contract_stats = calculate_contract_statistics(db, month_start, month_end)
-        order_stats = calculate_order_statistics(db, month_start, month_end)
-        receipt_stats = calculate_receipt_statistics(db, month_start, month_end)
-        invoice_stats = calculate_invoice_statistics(db, month_start, month_end)
-        bidding_stats = calculate_bidding_statistics(db, month_start, month_end)
-
-        return ResponseModel(
-            code=200,
-            message="获取销售月报成功",
-            data=SalesReportResponse(
-                report_date=month_str,
-                report_type="monthly",
-                new_contracts_count=contract_stats["new_contracts_count"],
-                new_contracts_amount=contract_stats["new_contracts_amount"],
-                active_contracts_count=contract_stats["active_contracts"],
-                completed_contracts_count=contract_stats["completed_contracts"],
-                new_orders_count=order_stats["new_orders_count"],
-                new_orders_amount=order_stats["new_orders_amount"],
-                planned_receipt_amount=receipt_stats["planned_receipt_amount"],
-                actual_receipt_amount=receipt_stats["actual_receipt_amount"],
-                receipt_completion_rate=receipt_stats["receipt_completion_rate"],
-                overdue_amount=receipt_stats["overdue_amount"],
-                invoices_count=invoice_stats["invoices_count"],
-                invoices_amount=invoice_stats["invoices_amount"],
-                invoice_rate=invoice_stats["invoice_rate"],
-                new_bidding_count=bidding_stats["new_bidding"],
-                won_bidding_count=bidding_stats["won_bidding"],
-                bidding_win_rate=bidding_stats["bidding_win_rate"]
-            )
+        engine = ReportEngine(db)
+        result = engine.generate(
+            report_code="SALES_MONTHLY",
+            params={
+                "month": month,
+            },
+            format=format,
+            user=current_user,
+            skip_cache=False,
         )
+
+        if format == "excel":
+            month_str = month or f"{date.today().year}-{date.today().month:02d}"
+            filename = f"销售月报_{month_str}.xlsx"
+            return StreamingResponse(
+                result.data.get("file_stream"),
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                headers={"Content-Disposition": f"attachment; filename={filename}"},
+            )
+        elif format == "pdf":
+            month_str = month or f"{date.today().year}-{date.today().month:02d}"
+            filename = f"销售月报_{month_str}.pdf"
+            return StreamingResponse(
+                result.data.get("file_stream"),
+                media_type="application/pdf",
+                headers={"Content-Disposition": f"attachment; filename={filename}"},
+            )
+        else:
+            # JSON格式，转换为SalesReportResponse格式以保持向后兼容
+            sales_data = result.data.get("sales_data", {})
+            contract_stats = sales_data.get("contract_statistics", {})
+            order_stats = sales_data.get("order_statistics", {})
+            receipt_stats = sales_data.get("receipt_statistics", {})
+            invoice_stats = sales_data.get("invoice_statistics", {})
+            bidding_stats = sales_data.get("bidding_statistics", {})
+
+            return ResponseModel(
+                code=200,
+                message="获取销售月报成功",
+                data=SalesReportResponse(
+                    report_date=sales_data.get("report_date", ""),
+                    report_type="monthly",
+                    new_contracts_count=contract_stats.get("new_contracts_count", 0),
+                    new_contracts_amount=contract_stats.get("new_contracts_amount", 0),
+                    active_contracts_count=contract_stats.get("active_contracts", 0),
+                    completed_contracts_count=contract_stats.get("completed_contracts", 0),
+                    new_orders_count=order_stats.get("new_orders_count", 0),
+                    new_orders_amount=order_stats.get("new_orders_amount", 0),
+                    planned_receipt_amount=receipt_stats.get("planned_receipt_amount", 0),
+                    actual_receipt_amount=receipt_stats.get("actual_receipt_amount", 0),
+                    receipt_completion_rate=receipt_stats.get("receipt_completion_rate", 0),
+                    overdue_amount=receipt_stats.get("overdue_amount", 0),
+                    invoices_count=invoice_stats.get("invoices_count", 0),
+                    invoices_amount=invoice_stats.get("invoices_amount", 0),
+                    invoice_rate=invoice_stats.get("invoice_rate", 0),
+                    new_bidding_count=bidding_stats.get("new_bidding", 0),
+                    won_bidding_count=bidding_stats.get("won_bidding", 0),
+                    bidding_win_rate=bidding_stats.get("bidding_win_rate", 0)
+                )
+            )
+    except ConfigError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ParameterError as e:
+        raise HTTPException(status_code=422, detail=str(e))
     except HTTPException:
         raise
     except Exception as e:

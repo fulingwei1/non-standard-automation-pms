@@ -79,7 +79,7 @@ class TestCalculateLeadScore:
         self, lead_priority_scoring_service, create_lead
     ):
         score, details = lead_priority_scoring_service.calculate_lead_score(
-            create_lead.id
+        create_lead.id
         )
 
         assert isinstance(score, int)
@@ -89,7 +89,7 @@ class TestCalculateLeadScore:
         self, lead_priority_scoring_service, create_lead, create_followup
     ):
         score, details = lead_priority_scoring_service.calculate_lead_score(
-            create_lead.id
+        create_lead.id
         )
 
         assert isinstance(score, int)
@@ -100,16 +100,16 @@ class TestCalculateLeadScore:
 
         user = UserFactory()
         lead = Lead(
-            owner_id=user.id,
-            lead_name="已转换线索",
-            status="CONVERTED",
-            customer_type="POTENTIAL",
-            expected_value=Decimal("100000"),
-            source="ONLINE",
-            product_interest="测试产品",
-            contact_person="测试联系人",
-            contact_phone="13800000000",
-            converted_at=datetime.now(),
+        owner_id=user.id,
+        lead_name="已转换线索",
+        status="CONVERTED",
+        customer_type="POTENTIAL",
+        expected_value=Decimal("100000"),
+        source="ONLINE",
+        product_interest="测试产品",
+        contact_person="测试联系人",
+        contact_phone="13800000000",
+        converted_at=datetime.now(),
         )
         db_session.add(lead)
         db_session.commit()
@@ -124,16 +124,16 @@ class TestCalculateLeadScore:
 
         user = UserFactory()
         lead = Lead(
-            owner_id=user.id,
-            lead_name="已丢失线索",
-            status="LOST",
-            customer_type="POTENTIAL",
-            expected_value=Decimal("100000"),
-            source="ONLINE",
-            product_interest="测试产品",
-            contact_person="测试联系人",
-            contact_phone="13800000000",
-            lost_reason="预算不足",
+        owner_id=user.id,
+        lead_name="已丢失线索",
+        status="LOST",
+        customer_type="POTENTIAL",
+        expected_value=Decimal("100000"),
+        source="ONLINE",
+        product_interest="测试产品",
+        contact_person="测试联系人",
+        contact_phone="13800000000",
+        lost_reason="预算不足",
         )
         db_session.add(lead)
         db_session.commit()
@@ -147,7 +147,7 @@ class TestCalculateLeadScore:
 class TestGetPriorityLevel:
     def test_get_priority_level_high(self, lead_priority_scoring_service, create_lead):
         score, details = lead_priority_scoring_service.calculate_lead_score(
-            create_lead.id
+        create_lead.id
         )
         level = lead_priority_scoring_service.get_priority_level(score)
 
@@ -158,16 +158,16 @@ class TestGetPriorityLevel:
 
         user = UserFactory()
         lead = Lead(
-            owner_id=user.id,
-            lead_name="中等优先级线索",
-            status="NEW",
-            customer_type="POTENTIAL",
-            expected_value=Decimal("50000"),
-            source="REFERRAL",
-            product_interest="测试产品",
-            contact_person="测试联系人",
-            contact_phone="13800000000",
-            days_since_last_followup=15,
+        owner_id=user.id,
+        lead_name="中等优先级线索",
+        status="NEW",
+        customer_type="POTENTIAL",
+        expected_value=Decimal("50000"),
+        source="REFERRAL",
+        product_interest="测试产品",
+        contact_person="测试联系人",
+        contact_phone="13800000000",
+        days_since_last_followup=15,
         )
         db_session.add(lead)
         db_session.commit()
@@ -183,16 +183,16 @@ class TestGetPriorityLevel:
 
         user = UserFactory()
         lead = Lead(
-            owner_id=user.id,
-            lead_name="低优先级线索",
-            status="NEW",
-            customer_type="POTENTIAL",
-            expected_value=Decimal("10000"),
-            source="COLD_CALL",
-            product_interest="测试产品",
-            contact_person="测试联系人",
-            contact_phone="13800000000",
-            days_since_last_followup=30,
+        owner_id=user.id,
+        lead_name="低优先级线索",
+        status="NEW",
+        customer_type="POTENTIAL",
+        expected_value=Decimal("10000"),
+        source="COLD_CALL",
+        product_interest="测试产品",
+        contact_person="测试联系人",
+        contact_phone="13800000000",
+        days_since_last_followup=30,
         )
         db_session.add(lead)
         db_session.commit()
@@ -218,23 +218,23 @@ class TestBatchCalculation:
         leads = []
         for i, user in enumerate([user1, user2, user3]):
             lead = LeadFactory(
-                owner_id=user.id,
-                lead_name=f"测试线索{i}",
-                status="NEW" if i < 2 else "NEGOTIATING",
-                customer_type="POTENTIAL",
-                expected_value=Decimal("100000") * (i + 1),
+            owner_id=user.id,
+            lead_name=f"测试线索{i}",
+            status="NEW" if i < 2 else "NEGOTIATING",
+            customer_type="POTENTIAL",
+            expected_value=Decimal("100000") * (i + 1),
             )
             db_session.add(lead)
             leads.append(lead)
-        db_session.commit()
+            db_session.commit()
 
-        results = lead_priority_scoring_service.batch_calculate_scores(
+            results = lead_priority_scoring_service.batch_calculate_scores(
             [l.id for l in leads]
-        )
+            )
 
-        assert len(results) == 3
-        assert all("score" in r for r in results)
-        assert all("priority_level" in r for r in results)
+            assert len(results) == 3
+            assert all("score" in r for r in results)
+            assert all("priority_level" in r for r in results)
 
     def test_batch_calculate_empty_list(self, lead_priority_scoring_service):
         results = lead_priority_scoring_service.batch_calculate_scores([])
@@ -247,11 +247,11 @@ class TestEdgeCases:
 
         user = UserFactory()
         lead = Lead(
-            owner_id=user.id,
-            lead_name="线索无期望值",
-            status="NEW",
-            customer_type="POTENTIAL",
-            source="ONLINE",
+        owner_id=user.id,
+        lead_name="线索无期望值",
+        status="NEW",
+        customer_type="POTENTIAL",
+        source="ONLINE",
         )
         db_session.add(lead)
         db_session.commit()

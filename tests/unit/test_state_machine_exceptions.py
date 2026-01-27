@@ -23,14 +23,14 @@ class TestStateMachineException:
         """测试异常可以被抛出"""
         with pytest.raises(StateMachineException) as exc_info:
             raise StateMachineException("Test message")
-        assert str(exc_info.value) == "Test message"
+            assert str(exc_info.value) == "Test message"
 
     def test_exception_with_custom_message(self):
         """测试带自定义消息的异常"""
         msg = "Custom error message"
         with pytest.raises(StateMachineException) as exc_info:
             raise StateMachineException(msg)
-        assert msg in str(exc_info.value)
+            assert msg in str(exc_info.value)
 
 
 class TestStateTransitionError:
@@ -44,7 +44,7 @@ class TestStateTransitionError:
         """测试错误可以被抛出"""
         with pytest.raises(StateTransitionError) as exc_info:
             raise StateTransitionError("Transition failed")
-        assert "Transition failed" in str(exc_info.value)
+            assert "Transition failed" in str(exc_info.value)
 
     def test_error_inheritance_chain(self):
         """测试异常继承链"""
@@ -63,10 +63,10 @@ class TestInvalidStateTransitionError:
         """测试错误可以被抛出"""
         with pytest.raises(InvalidStateTransitionError) as exc_info:
             raise InvalidStateTransitionError(
-                "DRAFT", "COMPLETED", "Invalid transition"
+            "DRAFT", "COMPLETED", "Invalid transition"
             )
-        assert "DRAFT" in str(exc_info.value)
-        assert "COMPLETED" in str(exc_info.value)
+            assert "DRAFT" in str(exc_info.value)
+            assert "COMPLETED" in str(exc_info.value)
 
     def test_error_with_states_in_message(self):
         """测试错误消息包含状态信息"""
@@ -75,10 +75,10 @@ class TestInvalidStateTransitionError:
         msg = "Cannot transition"
         with pytest.raises(InvalidStateTransitionError) as exc_info:
             raise InvalidStateTransitionError(from_state, to_state, msg)
-        error_msg = str(exc_info.value)
-        assert from_state in error_msg
-        assert to_state in error_msg
-        assert msg in error_msg
+            error_msg = str(exc_info.value)
+            assert from_state in error_msg
+            assert to_state in error_msg
+            assert msg in error_msg
 
 
 class TestStateMachineValidationError:
@@ -92,7 +92,7 @@ class TestStateMachineValidationError:
         """测试错误可以被抛出"""
         with pytest.raises(StateMachineValidationError) as exc_info:
             raise StateMachineValidationError("Validation failed")
-        assert "Validation failed" in str(exc_info.value)
+            assert "Validation failed" in str(exc_info.value)
 
     def test_error_inheritance_chain(self):
         """测试异常继承链"""
@@ -122,8 +122,8 @@ class TestExceptionInteractions:
         with pytest.raises(InvalidStateTransitionError) as exc_info:
             raise InvalidStateTransitionError(from_state, to_state, reason)
 
-        error_str = str(exc_info.value)
-        # 验证所有关键信息都在消息中
-        assert from_state in error_str
-        assert to_state in error_str
-        assert reason in error_str
+            error_str = str(exc_info.value)
+            # 验证所有关键信息都在消息中
+            assert from_state in error_str
+            assert to_state in error_str
+            assert reason in error_str

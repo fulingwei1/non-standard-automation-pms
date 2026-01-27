@@ -68,8 +68,8 @@ class TestRequireProjectAccess:
         with pytest.raises(HTTPException) as exc_info:
             checker(project_id=1, current_user=user, db=db)
 
-        assert exc_info.value.status_code == 403
-        assert "没有权限访问该项目" in str(exc_info.value.detail)
+            assert exc_info.value.status_code == 403
+            assert "没有权限访问该项目" in str(exc_info.value.detail)
 
     @patch("app.core.permissions.project.check_project_access")
     def test_returns_user_when_has_access(self, mock_check):

@@ -93,37 +93,37 @@ class TestPresetTemplateData:
 
         for template in PRESET_TEMPLATES:
             # 验证模板字段
-            for field in required_template_fields:
-                assert field in template, f"模板 {template.get('template_code')} 缺少字段: {field}"
+        for field in required_template_fields:
+            assert field in template, f"模板 {template.get('template_code')} 缺少字段: {field}"
 
             # 验证阶段字段
-            for stage in template["stages"]:
-                for field in required_stage_fields:
-                    assert field in stage, f"阶段 {stage.get('stage_code')} 缺少字段: {field}"
+        for stage in template["stages"]:
+            for field in required_stage_fields:
+                assert field in stage, f"阶段 {stage.get('stage_code')} 缺少字段: {field}"
 
                 # 验证节点字段
-                for node in stage.get("nodes", []):
-                    for field in required_node_fields:
-                        assert field in node, f"节点 {node.get('node_code')} 缺少字段: {field}"
+        for node in stage.get("nodes", []):
+            for field in required_node_fields:
+                assert field in node, f"节点 {node.get('node_code')} 缺少字段: {field}"
 
     def test_node_dependency_references_valid(self):
         """测试节点依赖引用有效性"""
         for template in PRESET_TEMPLATES:
             # 收集所有节点编码
-            all_node_codes = set()
-            for stage in template["stages"]:
-                for node in stage.get("nodes", []):
-                    all_node_codes.add(node["node_code"])
+        all_node_codes = set()
+        for stage in template["stages"]:
+            for node in stage.get("nodes", []):
+                all_node_codes.add(node["node_code"])
 
-            # 验证依赖引用
-            for stage in template["stages"]:
-                for node in stage.get("nodes", []):
-                    deps = node.get("dependency_node_codes", [])
-                    for dep_code in deps:
-                        assert dep_code in all_node_codes, (
+                # 验证依赖引用
+                for stage in template["stages"]:
+                    for node in stage.get("nodes", []):
+                        deps = node.get("dependency_node_codes", [])
+                        for dep_code in deps:
+                            assert dep_code in all_node_codes, (
                             f"模板 {template['template_code']} 节点 {node['node_code']} "
                             f"引用了不存在的依赖: {dep_code}"
-                        )
+                            )
 
 
 @pytest.mark.unit
@@ -135,11 +135,11 @@ class TestStageTemplateService:
         service = StageTemplateService(db_session)
 
         template = service.create_template(
-            template_code="TEST_TPL_001",
-            template_name="测试模板",
-            description="用于测试的模板",
-            project_type="NEW",
-            is_default=False,
+        template_code="TEST_TPL_001",
+        template_name="测试模板",
+        description="用于测试的模板",
+        project_type="NEW",
+        is_default=False,
         )
         db_session.flush()
 
@@ -153,17 +153,17 @@ class TestStageTemplateService:
         service = StageTemplateService(db_session)
 
         service.create_template(
-            template_code="TEST_TPL_DUP",
-            template_name="模板1",
-            project_type="NEW",
+        template_code="TEST_TPL_DUP",
+        template_name="模板1",
+        project_type="NEW",
         )
         db_session.flush()
 
         with pytest.raises(ValueError, match="模板编码.*已存在"):
             service.create_template(
-                template_code="TEST_TPL_DUP",
-                template_name="模板2",
-                project_type="NEW",
+            template_code="TEST_TPL_DUP",
+            template_name="模板2",
+            project_type="NEW",
             )
 
     def test_add_stage_to_template(self, db_session: Session):
@@ -171,20 +171,20 @@ class TestStageTemplateService:
         service = StageTemplateService(db_session)
 
         template = service.create_template(
-            template_code="TEST_TPL_STAGE",
-            template_name="测试模板",
-            project_type="NEW",
+        template_code="TEST_TPL_STAGE",
+        template_name="测试模板",
+        project_type="NEW",
         )
         db_session.flush()
 
         stage = service.add_stage(
-            template_id=template.id,
-            stage_code="S1",
-            stage_name="需求进入",
-            sequence=0,
-            estimated_days=7,
-            description="接收客户需求",
-            is_required=True,
+        template_id=template.id,
+        stage_code="S1",
+        stage_name="需求进入",
+        sequence=0,
+        estimated_days=7,
+        description="接收客户需求",
+        is_required=True,
         )
         db_session.flush()
 
@@ -197,28 +197,28 @@ class TestStageTemplateService:
         service = StageTemplateService(db_session)
 
         template = service.create_template(
-            template_code="TEST_TPL_NODE",
-            template_name="测试模板",
-            project_type="NEW",
+        template_code="TEST_TPL_NODE",
+        template_name="测试模板",
+        project_type="NEW",
         )
         stage = service.add_stage(
-            template_id=template.id,
-            stage_code="S1",
-            stage_name="需求进入",
-            sequence=0,
+        template_id=template.id,
+        stage_code="S1",
+        stage_name="需求进入",
+        sequence=0,
         )
         db_session.flush()
 
         node = service.add_node(
-            stage_definition_id=stage.id,
-            node_code="S1N01",
-            node_name="需求接收登记",
-            node_type="TASK",
-            sequence=0,
-            estimated_days=1,
-            completion_method="MANUAL",
-            is_required=True,
-            description="登记客户需求基本信息",
+        stage_definition_id=stage.id,
+        node_code="S1N01",
+        node_name="需求接收登记",
+        node_type="TASK",
+        sequence=0,
+        estimated_days=1,
+        completion_method="MANUAL",
+        is_required=True,
+        description="登记客户需求基本信息",
         )
         db_session.flush()
 
@@ -239,7 +239,7 @@ class TestStageTemplateService:
 
         # 验证阶段和节点已创建
         stages = db_session.query(StageDefinition).filter(
-            StageDefinition.template_id == template.id
+        StageDefinition.template_id == template.id
         ).all()
         assert len(stages) == 4
 
@@ -258,7 +258,7 @@ class TestStageTemplateService:
 
         # 检查节点依赖关系
         nodes_with_deps = db_session.query(NodeDefinition).filter(
-            NodeDefinition.dependency_node_ids.isnot(None)
+        NodeDefinition.dependency_node_ids.isnot(None)
         ).all()
 
         # 标准模板中有多个节点有依赖
@@ -289,9 +289,9 @@ class TestStageTemplateService:
 
         # 复制
         copied = service.copy_template(
-            source_template_id=original.id,
-            new_code="TPL_QUICK_COPY",
-            new_name="快速模板副本",
+        source_template_id=original.id,
+        new_code="TPL_QUICK_COPY",
+        new_name="快速模板副本",
         )
         db_session.flush()
 
@@ -310,16 +310,16 @@ class TestStageTemplateService:
 
         # 创建两个同类型模板
         tpl1 = service.create_template(
-            template_code="TPL_DEFAULT_1",
-            template_name="模板1",
-            project_type="NEW",
-            is_default=True,
+        template_code="TPL_DEFAULT_1",
+        template_name="模板1",
+        project_type="NEW",
+        is_default=True,
         )
         tpl2 = service.create_template(
-            template_code="TPL_DEFAULT_2",
-            template_name="模板2",
-            project_type="NEW",
-            is_default=False,
+        template_code="TPL_DEFAULT_2",
+        template_name="模板2",
+        project_type="NEW",
+        is_default=False,
         )
         db_session.flush()
 
@@ -339,9 +339,9 @@ class TestStageTemplateService:
         service = StageTemplateService(db_session)
 
         template = service.create_template(
-            template_code="TPL_TO_DELETE",
-            template_name="待删除模板",
-            project_type="NEW",
+        template_code="TPL_TO_DELETE",
+        template_name="待删除模板",
+        project_type="NEW",
         )
         db_session.flush()
         template_id = template.id
@@ -353,7 +353,7 @@ class TestStageTemplateService:
 
         # 验证已删除（硬删除）
         deleted = db_session.query(StageTemplate).filter(
-            StageTemplate.id == template_id
+        StageTemplate.id == template_id
         ).first()
         assert deleted is None
 
@@ -363,14 +363,14 @@ class TestStageTemplateService:
 
         # 创建几个模板
         service.create_template(
-            template_code="TPL_LIST_1",
-            template_name="列表模板1",
-            project_type="NEW",
+        template_code="TPL_LIST_1",
+        template_name="列表模板1",
+        project_type="NEW",
         )
         service.create_template(
-            template_code="TPL_LIST_2",
-            template_name="列表模板2",
-            project_type="REPEAT",
+        template_code="TPL_LIST_2",
+        template_name="列表模板2",
+        project_type="REPEAT",
         )
         db_session.flush()
 
@@ -420,6 +420,6 @@ class TestInitPresetTemplates:
         # 验证数据库中只有4个预置模板
         preset_codes = [t["template_code"] for t in PRESET_TEMPLATES]
         count = db_session.query(StageTemplate).filter(
-            StageTemplate.template_code.in_(preset_codes)
+        StageTemplate.template_code.in_(preset_codes)
         ).count()
         assert count == 4

@@ -94,10 +94,10 @@ class TestOvertimeCalculationService:
             mock_service.get_user_hourly_rate.return_value = Decimal("100.00")
             
             result = overtime_calculation_service.calculate_overtime_pay(
-                user_id=test_user.id,
-                work_date=date.today(),
-                hours=Decimal("8.0"),
-                overtime_type="NORMAL"
+            user_id=test_user.id,
+            work_date=date.today(),
+            hours=Decimal("8.0"),
+            overtime_type="NORMAL"
             )
             
             assert result == Decimal("0")  # 正常工时不计算加班工资
@@ -108,14 +108,14 @@ class TestOvertimeCalculationService:
             mock_service.get_user_hourly_rate.return_value = Decimal("100.00")
             
             result = overtime_calculation_service.calculate_overtime_pay(
-                user_id=test_user.id,
-                work_date=date.today(),
-                hours=Decimal("2.0"),
-                overtime_type="OVERTIME"
+            user_id=test_user.id,
+            work_date=date.today(),
+            hours=Decimal("2.0"),
+            overtime_type="OVERTIME"
             )
             
             # 2小时 * 100元/小时 * (1.5 - 1) = 100元
-            assert result == Decimal("100.00")
+        assert result == Decimal("100.00")
 
     def test_calculate_overtime_pay_weekend(self, overtime_calculation_service, test_user):
         """测试计算加班工资 - 周末加班"""
@@ -123,14 +123,14 @@ class TestOvertimeCalculationService:
             mock_service.get_user_hourly_rate.return_value = Decimal("100.00")
             
             result = overtime_calculation_service.calculate_overtime_pay(
-                user_id=test_user.id,
-                work_date=date.today(),
-                hours=Decimal("4.0"),
-                overtime_type="WEEKEND"
+            user_id=test_user.id,
+            work_date=date.today(),
+            hours=Decimal("4.0"),
+            overtime_type="WEEKEND"
             )
             
             # 4小时 * 100元/小时 * (2.0 - 1) = 400元
-            assert result == Decimal("400.00")
+        assert result == Decimal("400.00")
 
     def test_calculate_overtime_pay_holiday(self, overtime_calculation_service, test_user):
         """测试计算加班工资 - 节假日加班"""
@@ -138,14 +138,14 @@ class TestOvertimeCalculationService:
             mock_service.get_user_hourly_rate.return_value = Decimal("100.00")
             
             result = overtime_calculation_service.calculate_overtime_pay(
-                user_id=test_user.id,
-                work_date=date.today(),
-                hours=Decimal("3.0"),
-                overtime_type="HOLIDAY"
+            user_id=test_user.id,
+            work_date=date.today(),
+            hours=Decimal("3.0"),
+            overtime_type="HOLIDAY"
             )
             
             # 3小时 * 100元/小时 * (3.0 - 1) = 600元
-            assert result == Decimal("600.00")
+        assert result == Decimal("600.00")
 
     def test_calculate_overtime_pay_invalid_type(self, overtime_calculation_service, test_user):
         """测试计算加班工资 - 无效类型"""
@@ -153,10 +153,10 @@ class TestOvertimeCalculationService:
             mock_service.get_user_hourly_rate.return_value = Decimal("100.00")
             
             result = overtime_calculation_service.calculate_overtime_pay(
-                user_id=test_user.id,
-                work_date=date.today(),
-                hours=Decimal("2.0"),
-                overtime_type="INVALID"
+            user_id=test_user.id,
+            work_date=date.today(),
+            hours=Decimal("2.0"),
+            overtime_type="INVALID"
             )
             
             assert result == Decimal("0")
@@ -164,9 +164,9 @@ class TestOvertimeCalculationService:
     def test_calculate_user_monthly_overtime_pay_user_not_found(self, overtime_calculation_service):
         """测试计算用户月度加班工资 - 用户不存在"""
         result = overtime_calculation_service.calculate_user_monthly_overtime_pay(
-            user_id=99999,
-            year=2024,
-            month=1
+        user_id=99999,
+        year=2024,
+        month=1
         )
         
         assert 'error' in result
@@ -178,9 +178,9 @@ class TestOvertimeCalculationService:
             mock_service.get_user_hourly_rate.return_value = Decimal("100.00")
             
             result = overtime_calculation_service.calculate_user_monthly_overtime_pay(
-                user_id=test_user.id,
-                year=date.today().year,
-                month=date.today().month
+            user_id=test_user.id,
+            year=date.today().year,
+            month=date.today().month
             )
             
             assert result is not None
@@ -197,9 +197,9 @@ class TestOvertimeCalculationService:
             mock_service.get_user_hourly_rate.return_value = Decimal("100.00")
             
             result = overtime_calculation_service.calculate_user_monthly_overtime_pay(
-                user_id=test_user.id,
-                year=2024,
-                month=1
+            user_id=test_user.id,
+            year=2024,
+            month=1
             )
             
             assert result is not None
@@ -209,8 +209,8 @@ class TestOvertimeCalculationService:
     def test_get_overtime_statistics_no_department(self, overtime_calculation_service):
         """测试获取加班统计 - 无部门筛选"""
         result = overtime_calculation_service.get_overtime_statistics(
-            year=date.today().year,
-            month=date.today().month
+        year=date.today().year,
+        month=date.today().month
         )
         
         assert result is not None
@@ -225,17 +225,17 @@ class TestOvertimeCalculationService:
         """测试获取加班统计 - 指定部门"""
         # 创建部门
         department = Department(
-            department_name="测试部门",
-            department_code="DEPT001"
+        department_name="测试部门",
+        department_code="DEPT001"
         )
         db_session.add(department)
         db_session.commit()
         db_session.refresh(department)
         
         result = overtime_calculation_service.get_overtime_statistics(
-            year=date.today().year,
-            month=date.today().month,
-            department_id=department.id
+        year=date.today().year,
+        month=date.today().month,
+        department_id=department.id
         )
         
         assert result is not None
@@ -244,8 +244,8 @@ class TestOvertimeCalculationService:
     def test_get_overtime_statistics_december(self, overtime_calculation_service):
         """测试获取加班统计 - 12月（跨年边界）"""
         result = overtime_calculation_service.get_overtime_statistics(
-            year=2024,
-            month=12
+        year=2024,
+        month=12
         )
         
         assert result is not None

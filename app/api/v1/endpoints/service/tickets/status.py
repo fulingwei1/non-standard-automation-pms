@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 服务工单管理 - 状态管理
+
+使用统一状态更新服务重构
 """
+import logging
 from datetime import datetime
 from typing import Any
 
@@ -13,9 +16,11 @@ from app.core import security
 from app.models.service import ServiceTicket
 from app.models.user import User
 from app.schemas.service import ServiceTicketClose, ServiceTicketResponse
+from app.services.status_update_service import StatusUpdateService
 
 from fastapi import APIRouter
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -29,48 +34,61 @@ def update_service_ticket_status(
 ) -> Any:
     """
     更新工单状态
+
+    使用统一状态更新服务，支持：
+    - 状态值验证
+    - 自动时间戳记录
+    - 历史记录
+    - SLA监控同步
     """
     ticket = db.query(ServiceTicket).filter(ServiceTicket.id == ticket_id).first()
     if not ticket:
         raise HTTPException(status_code=404, detail="服务工单不存在")
 
-    if status not in ["PENDING", "IN_PROGRESS", "RESOLVED", "CLOSED"]:
-        raise HTTPException(status_code=400, detail="无效的状态值")
+    # 创建历史记录回调
+    def history_callback(entity, old_status, new_status, operator, reason):
+        """记录状态变更到时间线"""
+        if not entity.timeline:
+            entity.timeline = []
+        entity.timeline.append({
+            "type": "STATUS_CHANGE",
+            "timestamp": datetime.now().isoformat(),
+            "user": operator.real_name or operator.username,
+            "description": f"状态变更：{old_status} → {new_status}",
+        })
 
-    old_status = ticket.status
-    ticket.status = status
+    # 创建更新后回调（同步SLA监控）
+    def after_update_callback(entity, old_status, new_status, operator):
+        """状态更新后同步SLA监控"""
+        try:
+            from app.services.sla_service import sync_ticket_to_sla_monitor
+            sync_ticket_to_sla_monitor(db, entity)
+        except Exception as e:
+            logger.error(f"同步SLA监控状态失败: {e}", exc_info=True)
 
-    # 如果状态变为已解决或已关闭，记录解决时间
-    if status in ["RESOLVED", "CLOSED"] and not ticket.resolved_time:
-        ticket.resolved_time = datetime.now()
+    # 使用统一状态更新服务
+    service = StatusUpdateService(db)
+    result = service.update_status(
+        entity=ticket,
+        new_status=status,
+        operator=current_user,
+        valid_statuses=["PENDING", "IN_PROGRESS", "RESOLVED", "CLOSED"],
+        timestamp_fields={
+            "RESOLVED": "resolved_time",
+            "CLOSED": "resolved_time",
+            "IN_PROGRESS": "response_time",
+        },
+        history_callback=history_callback,
+        after_update_callback=after_update_callback,
+    )
 
-    # 如果状态变为处理中，记录响应时间（如果还没有）
-    if status == "IN_PROGRESS" and not ticket.response_time:
-        ticket.response_time = datetime.now()
+    if not result.success:
+        raise HTTPException(
+            status_code=400,
+            detail="; ".join(result.errors) if result.errors else "状态更新失败",
+        )
 
-    # 更新时间线
-    if not ticket.timeline:
-        ticket.timeline = []
-    ticket.timeline.append({
-        "type": "STATUS_CHANGE",
-        "timestamp": datetime.now().isoformat(),
-        "user": current_user.real_name or current_user.username,
-        "description": f"状态变更：{old_status} → {status}",
-    })
-
-    db.add(ticket)
-    db.commit()
-    db.refresh(ticket)
-
-    # 同步SLA监控状态
-    try:
-        from app.services.sla_service import sync_ticket_to_sla_monitor
-        sync_ticket_to_sla_monitor(db, ticket)
-    except Exception as e:
-        import logging
-        logging.error(f"同步SLA监控状态失败: {e}")
-
-    return ticket
+    return result.entity
 
 
 @router.put("/{ticket_id}/close", response_model=ServiceTicketResponse, status_code=status.HTTP_200_OK)
@@ -83,6 +101,13 @@ def close_service_ticket(
 ) -> Any:
     """
     关闭服务工单
+
+    使用统一状态更新服务，支持：
+    - 状态验证（不能重复关闭）
+    - 自动记录解决时间
+    - 历史记录
+    - SLA监控同步
+    - 知识自动提取
     """
     ticket = db.query(ServiceTicket).filter(ServiceTicket.id == ticket_id).first()
     if not ticket:
@@ -91,44 +116,62 @@ def close_service_ticket(
     if ticket.status == "CLOSED":
         raise HTTPException(status_code=400, detail="工单已关闭")
 
+    # 更新关闭相关字段
     ticket.solution = close_in.solution
     ticket.root_cause = close_in.root_cause
     ticket.preventive_action = close_in.preventive_action
     ticket.satisfaction = close_in.satisfaction
     ticket.feedback = close_in.feedback
-    ticket.resolved_time = datetime.now()
-    ticket.status = "CLOSED"
 
-    # 更新时间线
-    if not ticket.timeline:
-        ticket.timeline = []
-    ticket.timeline.append({
-        "type": "CLOSED",
-        "timestamp": datetime.now().isoformat(),
-        "user": current_user.real_name or current_user.username,
-        "description": "工单已关闭",
-    })
+    # 创建历史记录回调
+    def history_callback(entity, old_status, new_status, operator, reason):
+        """记录关闭操作到时间线"""
+        if not entity.timeline:
+            entity.timeline = []
+        entity.timeline.append({
+            "type": "CLOSED",
+            "timestamp": datetime.now().isoformat(),
+            "user": operator.real_name or operator.username,
+            "description": "工单已关闭",
+        })
 
-    db.add(ticket)
-    db.commit()
-    db.refresh(ticket)
+    # 创建更新后回调（同步SLA和提取知识）
+    def after_update_callback(entity, old_status, new_status, operator):
+        """状态更新后同步SLA监控和提取知识"""
+        # 同步SLA监控状态
+        try:
+            from app.services.sla_service import sync_ticket_to_sla_monitor
+            sync_ticket_to_sla_monitor(db, entity)
+        except Exception as e:
+            logger.error(f"同步SLA监控状态失败: {e}", exc_info=True)
 
-    # 同步SLA监控状态
-    try:
-        from app.services.sla_service import sync_ticket_to_sla_monitor
-        sync_ticket_to_sla_monitor(db, ticket)
-    except Exception as e:
-        import logging
-        logging.error(f"同步SLA监控状态失败: {e}")
+        # 自动提取知识
+        try:
+            from app.services.knowledge_extraction_service import (
+                auto_extract_knowledge_from_ticket,
+            )
+            auto_extract_knowledge_from_ticket(db, entity, auto_publish=True)
+        except Exception as e:
+            logger.error(f"自动提取知识失败: {e}", exc_info=True)
 
-    # 自动提取知识
-    try:
-        from app.services.knowledge_extraction_service import (
-            auto_extract_knowledge_from_ticket,
+    # 使用统一状态更新服务
+    service = StatusUpdateService(db)
+    result = service.update_status(
+        entity=ticket,
+        new_status="CLOSED",
+        operator=current_user,
+        valid_statuses=["CLOSED"],  # 只允许关闭状态
+        timestamp_fields={
+            "CLOSED": "resolved_time",
+        },
+        history_callback=history_callback,
+        after_update_callback=after_update_callback,
+    )
+
+    if not result.success:
+        raise HTTPException(
+            status_code=400,
+            detail="; ".join(result.errors) if result.errors else "关闭工单失败",
         )
-        auto_extract_knowledge_from_ticket(db, ticket, auto_publish=True)
-    except Exception as e:
-        import logging
-        logging.error(f"自动提取知识失败: {e}")
 
-    return ticket
+    return result.entity

@@ -191,16 +191,16 @@ class TestEvaluateConditions:
         service = ApprovalRouterService(db=mock_db)
 
         conditions = {
-            "operator": "AND",
-            "items": [
-                {"field": "form.amount", "op": ">", "value": 1000},
-                {"field": "entity.status", "op": "==", "value": "APPROVED"},
-            ],
+        "operator": "AND",
+        "items": [
+        {"field": "form.amount", "op": ">", "value": 1000},
+        {"field": "entity.status", "op": "==", "value": "APPROVED"},
+        ],
         }
 
         context = {
-            "form": {"amount": 5000},
-            "entity": {"status": "APPROVED"},
+        "form": {"amount": 5000},
+        "entity": {"status": "APPROVED"},
         }
 
         result = service._evaluate_conditions(conditions, context)
@@ -212,14 +212,14 @@ class TestEvaluateConditions:
         service = ApprovalRouterService(db=mock_db)
 
         conditions = {
-            "operator": "AND",
-            "items": [
-                {"field": "form.amount", "op": ">", "value": 1000},
-            ],
+        "operator": "AND",
+        "items": [
+        {"field": "form.amount", "op": ">", "value": 1000},
+        ],
         }
 
         context = {
-            "form": {"amount": 500},
+        "form": {"amount": 500},
         }
 
         result = service._evaluate_conditions(conditions, context)
@@ -231,15 +231,15 @@ class TestEvaluateConditions:
         service = ApprovalRouterService(db=mock_db)
 
         conditions = {
-            "operator": "OR",
-            "items": [
-                {"field": "form.amount", "op": ">", "value": 1000},
-                {"field": "form.amount", "op": "<", "value": 1000},
-            ],
+        "operator": "OR",
+        "items": [
+        {"field": "form.amount", "op": ">", "value": 1000},
+        {"field": "form.amount", "op": "<", "value": 1000},
+        ],
         }
 
         context = {
-            "form": {"amount": 500},
+        "form": {"amount": 500},
         }
 
         result = service._evaluate_conditions(conditions, context)
@@ -251,15 +251,15 @@ class TestEvaluateConditions:
         service = ApprovalRouterService(db=mock_db)
 
         conditions = {
-            "operator": "OR",
-            "items": [
-                {"field": "form.amount", "op": ">", "value": 10000},
-                {"field": "form.amount", "op": "<", "value": 0},
-            ],
+        "operator": "OR",
+        "items": [
+        {"field": "form.amount", "op": ">", "value": 10000},
+        {"field": "form.amount", "op": "<", "value": 0},
+        ],
         }
 
         context = {
-            "form": {"amount": 500},
+        "form": {"amount": 500},
         }
 
         result = service._evaluate_conditions(conditions, context)
@@ -271,12 +271,12 @@ class TestEvaluateConditions:
         service = ApprovalRouterService(db=mock_db)
 
         conditions = {
-            "operator": "AND",
-            "items": [],
+        "operator": "AND",
+        "items": [],
         }
 
         context = {
-            "form": {"amount": 5000},
+        "form": {"amount": 5000},
         }
 
         result = service._evaluate_conditions(conditions, context)
@@ -363,22 +363,22 @@ class TestResolveApprovers:
         service = ApprovalRouterService(db=mock_db)
 
         class MockInitiator:
-            def __init__(self):
-                self.id = 1
+        def __init__(self):
+            self.id = 1
 
-            def get(self, key, default=None):
-                if key == "id":
-                    return self.id
+        def get(self, key, default=None):
+            if key == "id":
+                return self.id
                 return default
 
-        node = MagicMock()
-        node.approver_type = "INITIATOR"
-        node.approver_config = {}
+                node = MagicMock()
+                node.approver_type = "INITIATOR"
+                node.approver_config = {}
 
-        context = {"initiator": MockInitiator()}
+                context = {"initiator": MockInitiator()}
 
-        result = service.resolve_approvers(node, context)
-        assert result == [1]
+                result = service.resolve_approvers(node, context)
+                assert result == [1]
 
     def test_resolve_approvers_unknown_type(self):
         """测试未知类型返回空列表"""

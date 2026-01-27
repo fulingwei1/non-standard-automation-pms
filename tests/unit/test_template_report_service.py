@@ -90,17 +90,17 @@ class TestTemplateReportService:
         
         with patch('app.services.template_report.project_reports.ProjectReportMixin._generate_project_weekly') as mock_gen:
             mock_gen.return_value = {
-                'summary': {'project_name': '测试项目'},
-                'sections': {},
-                'metrics': {}
+            'summary': {'project_name': '测试项目'},
+            'sections': {},
+            'metrics': {}
             }
             
             result = TemplateReportCore.generate_from_template(
-                db=db_session,
-                template=test_template,
-                project_id=test_project.id,
-                start_date=date.today() - timedelta(days=7),
-                end_date=date.today()
+            db=db_session,
+            template=test_template,
+            project_id=test_project.id,
+            start_date=date.today() - timedelta(days=7),
+            end_date=date.today()
             )
             
             assert result is not None
@@ -119,15 +119,15 @@ class TestTemplateReportService:
         
         with patch('app.services.template_report.project_reports.ProjectReportMixin._generate_project_monthly') as mock_gen:
             mock_gen.return_value = {
-                'summary': {'project_name': '测试项目'},
-                'sections': {},
-                'metrics': {}
+            'summary': {'project_name': '测试项目'},
+            'sections': {},
+            'metrics': {}
             }
             
             result = TemplateReportCore.generate_from_template(
-                db=db_session,
-                template=test_template,
-                project_id=test_project.id
+            db=db_session,
+            template=test_template,
+            project_id=test_project.id
             )
             
             assert result is not None
@@ -143,15 +143,15 @@ class TestTemplateReportService:
         
         with patch('app.services.template_report.dept_reports.DeptReportMixin._generate_dept_weekly') as mock_gen:
             mock_gen.return_value = {
-                'summary': {'department_name': '测试部门'},
-                'sections': {},
-                'metrics': {}
+            'summary': {'department_name': '测试部门'},
+            'sections': {},
+            'metrics': {}
             }
             
             result = TemplateReportCore.generate_from_template(
-                db=db_session,
-                template=test_template,
-                department_id=1
+            db=db_session,
+            template=test_template,
+            department_id=1
             )
             
             assert result is not None
@@ -167,15 +167,15 @@ class TestTemplateReportService:
         
         with patch('app.services.template_report.dept_reports.DeptReportMixin._generate_dept_monthly') as mock_gen:
             mock_gen.return_value = {
-                'summary': {'department_name': '测试部门'},
-                'sections': {},
-                'metrics': {}
+            'summary': {'department_name': '测试部门'},
+            'sections': {},
+            'metrics': {}
             }
             
             result = TemplateReportCore.generate_from_template(
-                db=db_session,
-                template=test_template,
-                department_id=1
+            db=db_session,
+            template=test_template,
+            department_id=1
             )
             
             assert result is not None
@@ -191,15 +191,15 @@ class TestTemplateReportService:
         
         with patch('app.services.template_report.analysis_reports.AnalysisReportMixin._generate_workload_analysis') as mock_gen:
             mock_gen.return_value = {
-                'summary': {},
-                'sections': {},
-                'metrics': {}
+            'summary': {},
+            'sections': {},
+            'metrics': {}
             }
             
             result = TemplateReportCore.generate_from_template(
-                db=db_session,
-                template=test_template,
-                department_id=1
+            db=db_session,
+            template=test_template,
+            department_id=1
             )
             
             assert result is not None
@@ -215,15 +215,15 @@ class TestTemplateReportService:
         
         with patch('app.services.template_report.analysis_reports.AnalysisReportMixin._generate_cost_analysis') as mock_gen:
             mock_gen.return_value = {
-                'summary': {},
-                'sections': {},
-                'metrics': {}
+            'summary': {},
+            'sections': {},
+            'metrics': {}
             }
             
             result = TemplateReportCore.generate_from_template(
-                db=db_session,
-                template=test_template,
-                project_id=test_project.id
+            db=db_session,
+            template=test_template,
+            project_id=test_project.id
             )
             
             assert result is not None
@@ -239,14 +239,14 @@ class TestTemplateReportService:
         
         with patch('app.services.template_report.company_reports.CompanyReportMixin._generate_company_monthly') as mock_gen:
             mock_gen.return_value = {
-                'summary': {},
-                'sections': {},
-                'metrics': {}
+            'summary': {},
+            'sections': {},
+            'metrics': {}
             }
             
             result = TemplateReportCore.generate_from_template(
-                db=db_session,
-                template=test_template
+            db=db_session,
+            template=test_template
             )
             
             assert result is not None
@@ -262,15 +262,15 @@ class TestTemplateReportService:
         
         with patch('app.services.template_report.generic_report.GenericReportMixin._generate_generic_report') as mock_gen:
             mock_gen.return_value = {
-                'report_type': 'CUSTOM_TYPE',
-                'sections': {},
-                'metrics': {},
-                'message': '该报表类型待扩展'
+            'report_type': 'CUSTOM_TYPE',
+            'sections': {},
+            'metrics': {},
+            'message': '该报表类型待扩展'
             }
             
             result = TemplateReportCore.generate_from_template(
-                db=db_session,
-                template=test_template
+            db=db_session,
+            template=test_template
             )
             
             assert result is not None
@@ -283,15 +283,15 @@ class TestTemplateReportService:
         
         with patch('app.services.template_report.project_reports.ProjectReportMixin._generate_project_weekly') as mock_gen:
             mock_gen.return_value = {
-                'summary': {},
-                'sections': {},
-                'metrics': {}
+            'summary': {},
+            'sections': {},
+            'metrics': {}
             }
             
             result = TemplateReportCore.generate_from_template(
-                db=db_session,
-                template=test_template,
-                project_id=test_project.id
+            db=db_session,
+            template=test_template,
+            project_id=test_project.id
             )
             
             assert result is not None
@@ -299,9 +299,9 @@ class TestTemplateReportService:
             assert 'start_date' in result['period']
             assert 'end_date' in result['period']
             # 验证默认日期范围是30天
-            start = date.fromisoformat(result['period']['start_date'])
-            end = date.fromisoformat(result['period']['end_date'])
-            assert (end - start).days == 30
+        start = date.fromisoformat(result['period']['start_date'])
+        end = date.fromisoformat(result['period']['end_date'])
+        assert (end - start).days == 30
 
     def test_generate_from_template_custom_dates(self, db_session, test_template, test_project):
         """测试生成报表 - 自定义日期范围"""
@@ -312,17 +312,17 @@ class TestTemplateReportService:
         
         with patch('app.services.template_report.project_reports.ProjectReportMixin._generate_project_weekly') as mock_gen:
             mock_gen.return_value = {
-                'summary': {},
-                'sections': {},
-                'metrics': {}
+            'summary': {},
+            'sections': {},
+            'metrics': {}
             }
             
             result = TemplateReportCore.generate_from_template(
-                db=db_session,
-                template=test_template,
-                project_id=test_project.id,
-                start_date=start_date,
-                end_date=end_date
+            db=db_session,
+            template=test_template,
+            project_id=test_project.id,
+            start_date=start_date,
+            end_date=end_date
             )
             
             assert result is not None
@@ -337,16 +337,16 @@ class TestTemplateReportService:
         
         with patch('app.services.template_report.project_reports.ProjectReportMixin._generate_project_weekly') as mock_gen:
             mock_gen.return_value = {
-                'summary': {},
-                'sections': {},
-                'metrics': {}
+            'summary': {},
+            'sections': {},
+            'metrics': {}
             }
             
             result = TemplateReportCore.generate_from_template(
-                db=db_session,
-                template=test_template,
-                project_id=test_project.id,
-                filters=filters
+            db=db_session,
+            template=test_template,
+            project_id=test_project.id,
+            filters=filters
             )
             
             assert result is not None
@@ -357,23 +357,23 @@ class TestTemplateReportService:
         from app.services.template_report.core import TemplateReportCore
         
         test_template.sections = {
-            'summary': True,
-            'milestones': True,
-            'tasks': False
+        'summary': True,
+        'milestones': True,
+        'tasks': False
         }
         db_session.commit()
         
         with patch('app.services.template_report.project_reports.ProjectReportMixin._generate_project_weekly') as mock_gen:
             mock_gen.return_value = {
-                'summary': {},
-                'sections': {},
-                'metrics': {}
+            'summary': {},
+            'sections': {},
+            'metrics': {}
             }
             
             result = TemplateReportCore.generate_from_template(
-                db=db_session,
-                template=test_template,
-                project_id=test_project.id
+            db=db_session,
+            template=test_template,
+            project_id=test_project.id
             )
             
             assert result is not None
@@ -384,23 +384,23 @@ class TestTemplateReportService:
         from app.services.template_report.core import TemplateReportCore
         
         test_template.metrics_config = {
-            'progress': True,
-            'cost': True,
-            'quality': False
+        'progress': True,
+        'cost': True,
+        'quality': False
         }
         db_session.commit()
         
         with patch('app.services.template_report.project_reports.ProjectReportMixin._generate_project_weekly') as mock_gen:
             mock_gen.return_value = {
-                'summary': {},
-                'sections': {},
-                'metrics': {}
+            'summary': {},
+            'sections': {},
+            'metrics': {}
             }
             
             result = TemplateReportCore.generate_from_template(
-                db=db_session,
-                template=test_template,
-                project_id=test_project.id
+            db=db_session,
+            template=test_template,
+            project_id=test_project.id
             )
             
             assert result is not None
@@ -415,15 +415,15 @@ class TestTemplateReportService:
         
         with patch('app.services.template_report.project_reports.ProjectReportMixin._generate_project_weekly') as mock_gen:
             mock_gen.return_value = {
-                'summary': {},
-                'sections': {},
-                'metrics': {}
+            'summary': {},
+            'sections': {},
+            'metrics': {}
             }
             
             result = TemplateReportCore.generate_from_template(
-                db=db_session,
-                template=test_template,
-                project_id=test_project.id
+            db=db_session,
+            template=test_template,
+            project_id=test_project.id
             )
             
             assert result is not None
@@ -438,15 +438,15 @@ class TestTemplateReportService:
         
         with patch('app.services.template_report.project_reports.ProjectReportMixin._generate_project_weekly') as mock_gen:
             mock_gen.return_value = {
-                'summary': {},
-                'sections': {},
-                'metrics': {}
+            'summary': {},
+            'sections': {},
+            'metrics': {}
             }
             
             result = TemplateReportCore.generate_from_template(
-                db=db_session,
-                template=test_template,
-                project_id=test_project.id
+            db=db_session,
+            template=test_template,
+            project_id=test_project.id
             )
             
             assert result is not None

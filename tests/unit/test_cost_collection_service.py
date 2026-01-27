@@ -159,8 +159,8 @@ class TestCostCollectionService:
     def test_collect_from_purchase_order_not_found(self, db_session):
         """测试从采购订单归集成本 - 订单不存在"""
         result = CostCollectionService.collect_from_purchase_order(
-            db=db_session,
-            order_id=99999
+        db=db_session,
+        order_id=99999
         )
         
         assert result is None
@@ -170,28 +170,28 @@ class TestCostCollectionService:
         from app.models.material import Supplier
         
         supplier = Supplier(
-            supplier_code="SUP001",
-            supplier_name="测试供应商"
+        supplier_code="SUP001",
+        supplier_name="测试供应商"
         )
         db_session.add(supplier)
         db_session.commit()
         
         order = PurchaseOrder(
-            order_no="PO002",
-            supplier_id=supplier.id,
-            project_id=None,  # 无关联项目
-            order_type="NORMAL",
-            order_title="测试订单",
-            order_date=date.today(),
-            total_amount=Decimal('1000.00'),
-            status="APPROVED"
+        order_no="PO002",
+        supplier_id=supplier.id,
+        project_id=None,  # 无关联项目
+        order_type="NORMAL",
+        order_title="测试订单",
+        order_date=date.today(),
+        total_amount=Decimal('1000.00'),
+        status="APPROVED"
         )
         db_session.add(order)
         db_session.commit()
         
         result = CostCollectionService.collect_from_purchase_order(
-            db=db_session,
-            order_id=order.id
+        db=db_session,
+        order_id=order.id
         )
         
         assert result is None
@@ -200,10 +200,10 @@ class TestCostCollectionService:
         """测试从采购订单归集成本 - 成功场景"""
         with patch('app.services.cost_alert_service.CostAlertService') as mock_alert:
             result = CostCollectionService.collect_from_purchase_order(
-                db=db_session,
-                order_id=test_purchase_order.id,
-                created_by=test_project.created_by,
-                cost_date=date.today()
+            db=db_session,
+            order_id=test_purchase_order.id,
+            created_by=test_project.created_by,
+            cost_date=date.today()
             )
             
             assert result is not None
@@ -217,15 +217,15 @@ class TestCostCollectionService:
         """测试从采购订单归集成本 - 已存在成本记录"""
         # 先创建成本记录
         existing_cost = ProjectCost(
-            project_id=test_project.id,
-            cost_type="MATERIAL",
-            cost_category="PURCHASE",
-            source_module="PURCHASE",
-            source_type="PURCHASE_ORDER",
-            source_id=test_purchase_order.id,
-            source_no=test_purchase_order.order_no,
-            amount=Decimal('5000.00'),
-            cost_date=date.today()
+        project_id=test_project.id,
+        cost_type="MATERIAL",
+        cost_category="PURCHASE",
+        source_module="PURCHASE",
+        source_type="PURCHASE_ORDER",
+        source_id=test_purchase_order.id,
+        source_no=test_purchase_order.order_no,
+        amount=Decimal('5000.00'),
+        cost_date=date.today()
         )
         db_session.add(existing_cost)
         db_session.commit()
@@ -236,8 +236,8 @@ class TestCostCollectionService:
         
         with patch('app.services.cost_alert_service.CostAlertService') as mock_alert:
             result = CostCollectionService.collect_from_purchase_order(
-                db=db_session,
-                order_id=test_purchase_order.id
+            db=db_session,
+            order_id=test_purchase_order.id
             )
             
             assert result is not None
@@ -247,8 +247,8 @@ class TestCostCollectionService:
     def test_collect_from_outsourcing_order_not_found(self, db_session):
         """测试从外协订单归集成本 - 订单不存在"""
         result = CostCollectionService.collect_from_outsourcing_order(
-            db=db_session,
-            order_id=99999
+        db=db_session,
+        order_id=99999
         )
         
         assert result is None
@@ -264,10 +264,10 @@ class TestCostCollectionService:
         """测试从外协订单归集成本 - 成功场景"""
         with patch('app.services.cost_alert_service.CostAlertService') as mock_alert:
             result = CostCollectionService.collect_from_outsourcing_order(
-                db=db_session,
-                order_id=test_outsourcing_order.id,
-                created_by=test_project.created_by,
-                cost_date=date.today()
+            db=db_session,
+            order_id=test_outsourcing_order.id,
+            created_by=test_project.created_by,
+            cost_date=date.today()
             )
             
             assert result is not None
@@ -280,8 +280,8 @@ class TestCostCollectionService:
     def test_collect_from_ecn_not_found(self, db_session):
         """测试从ECN归集成本 - ECN不存在"""
         result = CostCollectionService.collect_from_ecn(
-            db=db_session,
-            ecn_id=99999
+        db=db_session,
+        ecn_id=99999
         )
         
         assert result is None
@@ -289,22 +289,22 @@ class TestCostCollectionService:
     def test_collect_from_ecn_no_cost_impact(self, db_session, test_project):
         """测试从ECN归集成本 - 无成本影响"""
         ecn = Ecn(
-            ecn_no="ECN002",
-            ecn_title="测试ECN2",
-            ecn_type="DESIGN_CHANGE",
-            source_type="INTERNAL",
-            project_id=test_project.id,
-            change_reason="测试原因",
-            change_description="测试描述",
-            cost_impact=Decimal('0'),  # 无成本影响
-            status="APPROVED"
+        ecn_no="ECN002",
+        ecn_title="测试ECN2",
+        ecn_type="DESIGN_CHANGE",
+        source_type="INTERNAL",
+        project_id=test_project.id,
+        change_reason="测试原因",
+        change_description="测试描述",
+        cost_impact=Decimal('0'),  # 无成本影响
+        status="APPROVED"
         )
         db_session.add(ecn)
         db_session.commit()
         
         result = CostCollectionService.collect_from_ecn(
-            db=db_session,
-            ecn_id=ecn.id
+        db=db_session,
+        ecn_id=ecn.id
         )
         
         assert result is None
@@ -320,10 +320,10 @@ class TestCostCollectionService:
         """测试从ECN归集成本 - 成功场景"""
         with patch('app.services.cost_alert_service.CostAlertService') as mock_alert:
             result = CostCollectionService.collect_from_ecn(
-                db=db_session,
-                ecn_id=test_ecn.id,
-                created_by=test_project.created_by,
-                cost_date=date.today()
+            db=db_session,
+            ecn_id=test_ecn.id,
+            created_by=test_project.created_by,
+            cost_date=date.today()
             )
             
             assert result is not None
@@ -337,15 +337,15 @@ class TestCostCollectionService:
         """测试从ECN归集成本 - 已存在成本记录"""
         # 先创建成本记录
         existing_cost = ProjectCost(
-            project_id=test_project.id,
-            cost_type="CHANGE",
-            cost_category="ECN",
-            source_module="ECN",
-            source_type="ECN",
-            source_id=test_ecn.id,
-            source_no=test_ecn.ecn_no,
-            amount=Decimal('1000.00'),
-            cost_date=date.today()
+        project_id=test_project.id,
+        cost_type="CHANGE",
+        cost_category="ECN",
+        source_module="ECN",
+        source_type="ECN",
+        source_id=test_ecn.id,
+        source_no=test_ecn.ecn_no,
+        amount=Decimal('1000.00'),
+        cost_date=date.today()
         )
         db_session.add(existing_cost)
         db_session.commit()
@@ -356,8 +356,8 @@ class TestCostCollectionService:
         
         with patch('app.services.cost_alert_service.CostAlertService') as mock_alert:
             result = CostCollectionService.collect_from_ecn(
-                db=db_session,
-                ecn_id=test_ecn.id
+            db=db_session,
+            ecn_id=test_ecn.id
             )
             
             assert result is not None
@@ -367,10 +367,10 @@ class TestCostCollectionService:
     def test_remove_cost_from_source_not_found(self, db_session):
         """测试删除成本记录 - 记录不存在"""
         result = CostCollectionService.remove_cost_from_source(
-            db=db_session,
-            source_module="PURCHASE",
-            source_type="PURCHASE_ORDER",
-            source_id=99999
+        db=db_session,
+        source_module="PURCHASE",
+        source_type="PURCHASE_ORDER",
+        source_id=99999
         )
         
         assert result is False
@@ -379,15 +379,15 @@ class TestCostCollectionService:
         """测试删除成本记录 - 成功场景"""
         # 先创建成本记录
         cost = ProjectCost(
-            project_id=test_project.id,
-            cost_type="MATERIAL",
-            cost_category="PURCHASE",
-            source_module="PURCHASE",
-            source_type="PURCHASE_ORDER",
-            source_id=test_purchase_order.id,
-            source_no=test_purchase_order.order_no,
-            amount=Decimal('10000.00'),
-            cost_date=date.today()
+        project_id=test_project.id,
+        cost_type="MATERIAL",
+        cost_category="PURCHASE",
+        source_module="PURCHASE",
+        source_type="PURCHASE_ORDER",
+        source_id=test_purchase_order.id,
+        source_no=test_purchase_order.order_no,
+        amount=Decimal('10000.00'),
+        cost_date=date.today()
         )
         db_session.add(cost)
         db_session.commit()
@@ -400,10 +400,10 @@ class TestCostCollectionService:
         cost_amount_before = float(cost.amount)
         
         result = CostCollectionService.remove_cost_from_source(
-            db=db_session,
-            source_module="PURCHASE",
-            source_type="PURCHASE_ORDER",
-            source_id=test_purchase_order.id
+        db=db_session,
+        source_module="PURCHASE",
+        source_type="PURCHASE_ORDER",
+        source_id=test_purchase_order.id
         )
         
         assert result is True
@@ -424,8 +424,8 @@ class TestCostCollectionService:
         """测试从BOM归集成本 - BOM不存在"""
         with pytest.raises(ValueError, match="BOM不存在"):
             CostCollectionService.collect_from_bom(
-                db=db_session,
-                bom_id=99999
+            db=db_session,
+            bom_id=99999
             )
 
     def test_collect_from_bom_no_project(self, db_session, test_project):
@@ -438,19 +438,19 @@ class TestCostCollectionService:
     def test_collect_from_bom_not_released(self, db_session, test_project):
         """测试从BOM归集成本 - BOM未发布"""
         bom = BomHeader(
-            bom_no="BOM003",
-            bom_name="测试BOM3",
-            project_id=test_project.id,
-            version="1.0",
-            status="DRAFT"  # 未发布
+        bom_no="BOM003",
+        bom_name="测试BOM3",
+        project_id=test_project.id,
+        version="1.0",
+        status="DRAFT"  # 未发布
         )
         db_session.add(bom)
         db_session.commit()
         
         with pytest.raises(ValueError, match="只有已发布的BOM才能归集成本"):
             CostCollectionService.collect_from_bom(
-                db=db_session,
-                bom_id=bom.id
+            db=db_session,
+            bom_id=bom.id
             )
 
     def test_collect_from_bom_zero_amount(self, db_session, test_bom):
@@ -460,8 +460,8 @@ class TestCostCollectionService:
         db_session.commit()
         
         result = CostCollectionService.collect_from_bom(
-            db=db_session,
-            bom_id=test_bom.id
+        db=db_session,
+        bom_id=test_bom.id
         )
         
         assert result is None
@@ -470,24 +470,24 @@ class TestCostCollectionService:
         """测试从BOM归集成本 - 成功场景"""
         # 创建BOM明细
         bom_item = BomItem(
-            bom_id=test_bom.id,
-            item_no=1,
-            material_code="MAT001",
-            material_name="测试物料",
-            unit="件",
-            quantity=Decimal('10.0'),
-            unit_price=Decimal('100.0'),
-            amount=Decimal('1000.0')
+        bom_id=test_bom.id,
+        item_no=1,
+        material_code="MAT001",
+        material_name="测试物料",
+        unit="件",
+        quantity=Decimal('10.0'),
+        unit_price=Decimal('100.0'),
+        amount=Decimal('1000.0')
         )
         db_session.add(bom_item)
         db_session.commit()
         
         with patch('app.services.cost_alert_service.CostAlertService') as mock_alert:
             result = CostCollectionService.collect_from_bom(
-                db=db_session,
-                bom_id=test_bom.id,
-                created_by=test_project.created_by,
-                cost_date=date.today()
+            db=db_session,
+            bom_id=test_bom.id,
+            created_by=test_project.created_by,
+            cost_date=date.today()
             )
             
             assert result is not None
@@ -500,29 +500,29 @@ class TestCostCollectionService:
         """测试从BOM归集成本 - 已存在成本记录"""
         # 创建BOM明细（用于计算总成本）
         bom_item = BomItem(
-            bom_id=test_bom.id,
-            item_no=1,
-            material_code="MAT001",
-            material_name="测试物料",
-            unit="件",
-            quantity=Decimal('10.0'),
-            unit_price=Decimal('100.0'),
-            amount=Decimal('1000.0')
+        bom_id=test_bom.id,
+        item_no=1,
+        material_code="MAT001",
+        material_name="测试物料",
+        unit="件",
+        quantity=Decimal('10.0'),
+        unit_price=Decimal('100.0'),
+        amount=Decimal('1000.0')
         )
         db_session.add(bom_item)
         db_session.commit()
         
         # 先创建成本记录
         existing_cost = ProjectCost(
-            project_id=test_project.id,
-            cost_type="MATERIAL",
-            cost_category="BOM",
-            source_module="BOM",
-            source_type="BOM_COST",
-            source_id=test_bom.id,
-            source_no=test_bom.bom_no,
-            amount=Decimal('5000.00'),
-            cost_date=date.today()
+        project_id=test_project.id,
+        cost_type="MATERIAL",
+        cost_category="BOM",
+        source_module="BOM",
+        source_type="BOM_COST",
+        source_id=test_bom.id,
+        source_no=test_bom.bom_no,
+        amount=Decimal('5000.00'),
+        cost_date=date.today()
         )
         db_session.add(existing_cost)
         db_session.commit()
@@ -533,8 +533,8 @@ class TestCostCollectionService:
         
         with patch('app.services.cost_alert_service.CostAlertService') as mock_alert:
             result = CostCollectionService.collect_from_bom(
-                db=db_session,
-                bom_id=test_bom.id
+            db=db_session,
+            bom_id=test_bom.id
             )
             
             assert result is not None
@@ -545,14 +545,14 @@ class TestCostCollectionService:
         """测试从BOM归集成本 - 使用BOM表头的总金额"""
         # 创建BOM明细（金额为0，但表头有total_amount）
         bom_item = BomItem(
-            bom_id=test_bom.id,
-            item_no=1,
-            material_code="MAT001",
-            material_name="测试物料",
-            unit="件",
-            quantity=Decimal('10.0'),
-            unit_price=Decimal('0.0'),  # 单价为0
-            amount=Decimal('0.0')  # 金额为0
+        bom_id=test_bom.id,
+        item_no=1,
+        material_code="MAT001",
+        material_name="测试物料",
+        unit="件",
+        quantity=Decimal('10.0'),
+        unit_price=Decimal('0.0'),  # 单价为0
+        amount=Decimal('0.0')  # 金额为0
         )
         db_session.add(bom_item)
         db_session.commit()
@@ -568,10 +568,10 @@ class TestCostCollectionService:
         
         with patch('app.services.cost_alert_service.CostAlertService') as mock_alert:
             result = CostCollectionService.collect_from_bom(
-                db=db_session,
-                bom_id=test_bom.id
+            db=db_session,
+            bom_id=test_bom.id
             )
             
             assert result is not None
             # 应该使用BOM表头的total_amount（因为表头total_amount > 0）
-            assert result.amount == Decimal('15000.00')
+        assert result.amount == Decimal('15000.00')

@@ -16,7 +16,9 @@ class TestOrganizationAPI:
         )
         assert response.status_code == 200
         data = response.json()
-        assert isinstance(data, list)
+        # 统一响应格式: {"items": [...], "total": N}
+        assert isinstance(data, dict)
+        assert "items" in data
 
     def test_list_departments_with_tree(self, client, admin_token):
         """测试获取部门树形结构"""
@@ -132,8 +134,9 @@ class TestOrganizationAPITree:
         )
         assert response.status_code == 200
         data = response.json()
-        # Tree should have children or be flat list
-        assert isinstance(data, list)
+        # 统一响应格式: {"items": [...], "total": N}
+        assert isinstance(data, dict)
+        assert "items" in data
 
     def test_employees_by_department(self, client, admin_token):
         """测试按部门获取员工"""

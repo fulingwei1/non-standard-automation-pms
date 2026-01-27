@@ -254,9 +254,9 @@ class TestGetFollowupStatisticsMap:
     ):
         """测试无跟进数据"""
         result = sales_team_service.get_followup_statistics_map(
-            [99999],
-            datetime(2024, 1, 1),
-            datetime(2024, 12, 31),
+        [99999],
+        datetime(2024, 1, 1),
+        datetime(2024, 12, 31),
         )
 
         assert result == {}
@@ -279,9 +279,9 @@ class TestGetLeadQualityStatsMap:
     ):
         """测试无线索数据"""
         result = sales_team_service.get_lead_quality_stats_map(
-            [99999],
-            datetime(2024, 1, 1),
-            datetime(2024, 12, 31),
+        [99999],
+        datetime(2024, 1, 1),
+        datetime(2024, 12, 31),
         )
 
         assert result == {}
@@ -304,9 +304,9 @@ class TestGetOpportunityStatsMap:
     ):
         """测试无商机数据"""
         result = sales_team_service.get_opportunity_stats_map(
-            [99999],
-            datetime(2024, 1, 1),
-            datetime(2024, 12, 31),
+        [99999],
+        datetime(2024, 1, 1),
+        datetime(2024, 12, 31),
         )
 
         assert result == {}

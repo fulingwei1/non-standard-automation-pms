@@ -25,19 +25,19 @@ class TestListBudgets:
     def test_list_budgets_by_project(self, db_session: Session, test_project):
         """按项目列出预算"""
         BudgetFactory.create(
-            project=test_project,
-            status="DRAFT",
-            total_amount=200000,
+        project=test_project,
+        status="DRAFT",
+        total_amount=200000,
         )
         BudgetFactory.create(
-            project=test_project, status="APPROVED", total_amount=100000
+        project=test_project, status="APPROVED", total_amount=100000
         )
         db_session.commit()
 
         from app.api.v1.endpoints.budget import budgets
 
         response = budgets.list_budgets(
-            project_id=test_project.id, db_session=db_session, skip=0, limit=10
+        project_id=test_project.id, db_session=db_session, skip=0, limit=10
         )
         assert len(response.items) == 2
 
@@ -47,18 +47,18 @@ class TestListBudgets:
         """按状态过滤预算"""
         BudgetFactory.create(project=test_project, status="DRAFT", total_amount=200000)
         BudgetFactory.create(
-            project=test_project, status="APPROVED", total_amount=100000
+        project=test_project, status="APPROVED", total_amount=100000
         )
         db_session.commit()
 
         from app.api.v1.endpoints.budget import budgets
 
         response = budgets.list_budgets(
-            project_id=test_project.id,
-            status="APPROVED",
-            db_session=db_session,
-            skip=0,
-            limit=10,
+        project_id=test_project.id,
+        status="APPROVED",
+        db_session=db_session,
+        skip=0,
+        limit=10,
         )
         assert len(response.items) == 1
         assert response.items[0].status == "APPROVED"
@@ -81,7 +81,7 @@ class TestGetBudget:
 
         with pytest.raises(Exception) as exc_info:
             budgets.get_budget(budget_id=99999, db_session=db_session)
-        assert "不存在" in str(exc_info.value)
+            assert "不存在" in str(exc_info.value)
 
 
 class TestCreateBudget:
@@ -92,11 +92,11 @@ class TestCreateBudget:
         from app.api.v1.endpoints.budget import budgets
 
         response = budgets.create_budget(
-            project_id=test_project.id,
-            total_amount=200000,
-            currency="CNY",
-            created_by_id=test_user.id,
-            db_session=db_session,
+        project_id=test_project.id,
+        total_amount=200000,
+        currency="CNY",
+        created_by_id=test_user.id,
+        db_session=db_session,
         )
         assert response.project_id == test_project.id
         assert response.total_amount == 200000
@@ -111,10 +111,10 @@ class TestUpdateBudget:
         from app.api.v1.endpoints.budget import budgets
 
         response = budgets.update_budget(
-            budget_id=test_budget.id,
-            total_amount=250000,
-            updated_by_id=test_user.id,
-            db_session=db_session,
+        budget_id=test_budget.id,
+        total_amount=250000,
+        updated_by_id=test_user.id,
+        db_session=db_session,
         )
         assert response.total_amount == 250000
 
@@ -124,10 +124,10 @@ class TestUpdateBudget:
 
         with pytest.raises(Exception):
             budgets.update_budget(
-                budget_id=99999,
-                total_amount=250000,
-                updated_by_id=test_user.id,
-                db_session=db_session,
+            budget_id=99999,
+            total_amount=250000,
+            updated_by_id=test_user.id,
+            db_session=db_session,
             )
 
 
@@ -139,9 +139,9 @@ class TestSubmitBudget:
         from app.api.v1.endpoints.budget import budgets
 
         response = budgets.submit_budget(
-            budget_id=test_budget.id,
-            submitted_by_id=test_user.id,
-            db_session=db_session,
+        budget_id=test_budget.id,
+        submitted_by_id=test_user.id,
+        db_session=db_session,
         )
         assert response.status == BudgetStatusEnum.PENDING_APPROVAL.value
 
@@ -157,9 +157,9 @@ class TestApproveBudget:
         db_session.commit()
 
         response = budgets.approve_budget(
-            budget_id=test_budget.id,
-            approved_by_id=test_user.id,
-            db_session=db_session,
+        budget_id=test_budget.id,
+        approved_by_id=test_user.id,
+        db_session=db_session,
         )
         assert response.status == BudgetStatusEnum.APPROVED.value
 

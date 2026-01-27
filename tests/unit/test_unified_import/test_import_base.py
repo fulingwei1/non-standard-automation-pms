@@ -18,14 +18,14 @@ class TestValidateFile:
     def test_validate_file_csv_invalid(self):
         with pytest.raises(HTTPException) as exc_info:
             ImportBase.validate_file("data.csv")
-        assert exc_info.value.status_code == 400
+            assert exc_info.value.status_code == 400
 
 
 class TestCheckRequiredColumns:
     def test_check_columns_all_present(self):
         sample_df = pd.DataFrame({
-            'employee_id': [1, 2],
-            'name': ['Alice', 'Bob']
+        'employee_id': [1, 2],
+        'name': ['Alice', 'Bob']
         })
         required = ['employee_id', 'name']
         missing = ImportBase.check_required_columns(sample_df, required)

@@ -290,11 +290,11 @@ class TestEcnStateMachineHelperMethods:
         db = MagicMock()
 
         cancellable_states = [
-            EcnStatusEnum.DRAFT,
-            EcnStatusEnum.PENDING_REVIEW,
-            EcnStatusEnum.REJECTED,
-            EcnStatusEnum.IMPLEMENTED,
-            EcnStatusEnum.COMPLETED,
+        EcnStatusEnum.DRAFT,
+        EcnStatusEnum.PENDING_REVIEW,
+        EcnStatusEnum.REJECTED,
+        EcnStatusEnum.IMPLEMENTED,
+        EcnStatusEnum.COMPLETED,
         ]
 
         for status in cancellable_states:
@@ -308,13 +308,13 @@ class TestEcnStateMachineHelperMethods:
         db = MagicMock()
 
         test_cases = [
-            (EcnStatusEnum.DRAFT, "草稿"),
-            (EcnStatusEnum.PENDING_REVIEW, "待审核"),
-            (EcnStatusEnum.APPROVED, "已批准"),
-            (EcnStatusEnum.REJECTED, "已拒绝"),
-            (EcnStatusEnum.IMPLEMENTED, "已实施"),
-            (EcnStatusEnum.COMPLETED, "已完成"),
-            (EcnStatusEnum.CANCELLED, "已取消"),
+        (EcnStatusEnum.DRAFT, "草稿"),
+        (EcnStatusEnum.PENDING_REVIEW, "待审核"),
+        (EcnStatusEnum.APPROVED, "已批准"),
+        (EcnStatusEnum.REJECTED, "已拒绝"),
+        (EcnStatusEnum.IMPLEMENTED, "已实施"),
+        (EcnStatusEnum.COMPLETED, "已完成"),
+        (EcnStatusEnum.CANCELLED, "已取消"),
         ]
 
         for status, expected_label in test_cases:
@@ -322,7 +322,7 @@ class TestEcnStateMachineHelperMethods:
             sm = EcnStateMachine(model, db)
             label = sm.get_status_label()
             assert label == expected_label, (
-                f"Status {status} should have label {expected_label}"
+            f"Status {status} should have label {expected_label}"
             )
 
     def test_get_status_label_unknown(self):

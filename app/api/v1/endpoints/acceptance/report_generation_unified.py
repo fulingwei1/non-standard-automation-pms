@@ -67,7 +67,7 @@ def generate_acceptance_report_unified(
         )
 
         # 生成报告编号和版本（保留原有逻辑）
-        from app.services.acceptance_report_service import (
+        from app.services.acceptance.report_utils import (
             generate_report_no,
             get_report_version,
             save_report_file,
@@ -79,13 +79,11 @@ def generate_acceptance_report_unified(
         # 构建报告内容（从统一框架结果中提取）
         report_content = result.data.get("content", "")
         if not report_content:
-            # 如果没有内容，使用适配器生成
-            adapter = AcceptanceReportAdapter(db)
-            data = adapter.generate_data(
-                {"order_id": order_id, "report_type": report_type},
-                current_user,
+            # 如果没有内容，使用工具函数生成
+            from app.services.acceptance.report_utils import build_report_content
+            report_content = build_report_content(
+                db, order, report_no, version, current_user
             )
-            report_content = f"验收报告\n\n报告编号：{report_no}\n验收单号：{order.order_no}\n\n{data}"
 
         # 保存报告文件
         file_rel_path, file_size, file_hash = save_report_file(

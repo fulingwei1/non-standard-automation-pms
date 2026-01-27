@@ -124,4 +124,4 @@ class TestCalculateProjectBonus:
 
             result = calculate_project_bonus(db_session, mock_project, [mock_rule])
             # 金额为0时，奖金也为0，应返回None
-            assert result is None
+        assert result is None

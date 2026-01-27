@@ -42,21 +42,25 @@ def notify_overdue_alert(
     db, ecn_id: int, ecn_number: str, days_overdue: int, days_remaining: int
 ):
     """发送ECN逾期预警（使用统一服务）"""
+    from app.services.channel_handlers.base import NotificationRequest
+    
     service = notification_service(db)
     ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
-    return service.send_notification(
-        {
-            "recipient_id": ecn.applicant_id if ecn else None,
-            "notification_type": "ECN_OVERDUE",
-            "category": "ecn",
-            "title": "ECN逾期提醒",
-            "content": f"ECN {ecn_number} 已逾期{days_overdue}天，距截止日期还有{days_remaining}天",
-            "priority": NotificationPriority.HIGH,
-            "source_type": "ecn",
-            "source_id": ecn_id,
-            "link_url": f"/ecns?ecnId={ecn_id}",
-        }
+    if not ecn or not ecn.applicant_id:
+        return {"success": False, "message": "ECN或申请人不存在"}
+    
+    request = NotificationRequest(
+        recipient_id=ecn.applicant_id,
+        notification_type="ECN_OVERDUE",
+        category="ecn",
+        title="ECN逾期提醒",
+        content=f"ECN {ecn_number} 已逾期{days_overdue}天，距截止日期还有{days_remaining}天",
+        priority=NotificationPriority.HIGH,
+        source_type="ecn",
+        source_id=ecn_id,
+        link_url=f"/ecns?ecnId={ecn_id}",
     )
+    return service.send_notification(request)
 
 
 # 向后兼容：保持原有函数接口，但内部使用统一NotificationService
@@ -94,45 +98,39 @@ def notify_approval_result(
     return result.get("success", False)
 
 
-# 导出原有的通知函数（保持向后兼容）
+# 导出通知函数（已迁移到统一服务）
 from .approval_notifications import (
-    notify_approval_assigned as notify_approval_assigned_legacy,
-    notify_approval_result as notify_approval_result_legacy,
+    notify_approval_assigned,
+    notify_approval_result,
 )
 from .evaluation_notifications import (
-    notify_evaluation_assigned as notify_evaluation_assigned_legacy,
-    notify_evaluation_completed as notify_evaluation_completed_legacy,
+    notify_evaluation_assigned,
+    notify_evaluation_completed,
 )
 from .task_notifications import (
-    notify_task_assigned as notify_task_assigned_legacy,
-    notify_task_completed as notify_task_completed_legacy,
+    notify_task_assigned,
+    notify_task_completed,
+)
+from .ecn_notifications import (
+    notify_ecn_submitted as notify_ecn_submitted_legacy,
+    notify_overdue_alert as notify_overdue_alert_legacy,
 )
 
-notify_approval_assigned = notify_approval_assigned_legacy
-notify_approval_result = notify_approval_result_legacy
-notify_evaluation_assigned = notify_evaluation_assigned_legacy
-notify_evaluation_completed = notify_evaluation_completed_legacy
-notify_task_assigned = notify_task_assigned_legacy
-notify_task_completed = notify_task_completed_legacy
-
 __all__ = [
-    # 基础函数
+    # 基础函数（已迁移到统一服务，保留用于向后兼容）
     "create_ecn_notification",
+    # 工具函数
     "find_users_by_department",
     "find_users_by_role",
     "find_department_manager",
     "check_all_evaluations_completed",
-    # 使用统一服务的快捷函数
+    # 通知函数（已迁移到统一服务）
     "notify_ecn_submitted",
     "notify_overdue_alert",
-    # 向后兼容：原有函数
     "notify_approval_assigned",
     "notify_approval_result",
     "notify_evaluation_assigned",
     "notify_evaluation_completed",
     "notify_task_assigned",
     "notify_task_completed",
-    # ECN通知
-    "notify_ecn_submitted",
-    "notify_overdue_alert",
 ]

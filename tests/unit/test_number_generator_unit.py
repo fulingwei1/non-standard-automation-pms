@@ -34,14 +34,14 @@ class TestGenerateSequentialNo:
 
         # First record should be -001
         code = generate_sequential_no(
-            db=db_session,
-            model_class=Project,
-            no_field="project_code",
-            prefix="TEST",
-            date_format="%y%m%d",
-            seq_length=3,
-            separator="-",
-            use_date=True,
+        db=db_session,
+        model_class=Project,
+        no_field="project_code",
+        prefix="TEST",
+        date_format="%y%m%d",
+        seq_length=3,
+        separator="-",
+        use_date=True,
         )
 
         assert code is not None
@@ -55,23 +55,23 @@ class TestGenerateSequentialNo:
         # Create first project
         today = datetime.now().strftime("%y%m%d")
         project1 = Project(
-            project_code=f"TEST-{today}-001",
-            project_name="Test Project 1",
-            customer_name="Test Customer",
+        project_code=f"TEST-{today}-001",
+        project_name="Test Project 1",
+        customer_name="Test Customer",
         )
         db_session.add(project1)
         db_session.commit()
 
         # Generate next code
         code = generate_sequential_no(
-            db=db_session,
-            model_class=Project,
-            no_field="project_code",
-            prefix="TEST",
-            date_format="%y%m%d",
-            seq_length=3,
-            separator="-",
-            use_date=True,
+        db=db_session,
+        model_class=Project,
+        no_field="project_code",
+        prefix="TEST",
+        date_format="%y%m%d",
+        seq_length=3,
+        separator="-",
+        use_date=True,
         )
 
         assert code.endswith("-002")
@@ -81,14 +81,14 @@ class TestGenerateSequentialNo:
         from app.models.project import Project
 
         code = generate_sequential_no(
-            db=db_session,
-            model_class=Project,
-            no_field="project_code",
-            prefix="PJ",
-            date_format="%y%m%d",
-            seq_length=3,
-            separator="",
-            use_date=True,
+        db=db_session,
+        model_class=Project,
+        no_field="project_code",
+        prefix="PJ",
+        date_format="%y%m%d",
+        seq_length=3,
+        separator="",
+        use_date=True,
         )
 
         assert "-" not in code
@@ -100,14 +100,14 @@ class TestGenerateSequentialNo:
         from app.models.project import Project
 
         code = generate_sequential_no(
-            db=db_session,
-            model_class=Project,
-            no_field="project_code",
-            prefix="NO",
-            date_format="%y%m%d",
-            seq_length=3,
-            separator="-",
-            use_date=False,
+        db=db_session,
+        model_class=Project,
+        no_field="project_code",
+        prefix="NO",
+        date_format="%y%m%d",
+        seq_length=3,
+        separator="-",
+        use_date=False,
         )
 
         # Should not contain date pattern (today's date would have 6 digits)
@@ -119,14 +119,14 @@ class TestGenerateSequentialNo:
         from app.models.project import Project
 
         code = generate_sequential_no(
-            db=db_session,
-            model_class=Project,
-            no_field="project_code",
-            prefix="TEST",
-            date_format="%y%m%d",
-            seq_length=5,
-            separator="-",
-            use_date=False,
+        db=db_session,
+        model_class=Project,
+        no_field="project_code",
+        prefix="TEST",
+        date_format="%y%m%d",
+        seq_length=5,
+        separator="-",
+        use_date=False,
         )
 
         parts = code.split("-")
@@ -144,12 +144,12 @@ class TestGenerateMonthlyNo:
 
         # First record of the month
         code = generate_monthly_no(
-            db=db_session,
-            model_class=Lead,
-            no_field="lead_code",
-            prefix="L",
-            separator="-",
-            seq_length=3,
+        db=db_session,
+        model_class=Lead,
+        no_field="lead_code",
+        prefix="L",
+        separator="-",
+        seq_length=3,
         )
 
         assert code is not None
@@ -165,23 +165,23 @@ class TestGenerateMonthlyNo:
         # Create first lead
         today = datetime.now().strftime("%y%m")
         lead1 = Lead(
-            lead_code=f"L{today}-001",
-            customer_name="Test Customer",
-            contact_name="John",
-            contact_phone="1234567890",
-            status=LeadStatusEnum.NEW,
+        lead_code=f"L{today}-001",
+        customer_name="Test Customer",
+        contact_name="John",
+        contact_phone="1234567890",
+        status=LeadStatusEnum.NEW,
         )
         db_session.add(lead1)
         db_session.commit()
 
         # Generate next code
         code = generate_monthly_no(
-            db=db_session,
-            model_class=Lead,
-            no_field="lead_code",
-            prefix="L",
-            separator="-",
-            seq_length=3,
+        db=db_session,
+        model_class=Lead,
+        no_field="lead_code",
+        prefix="L",
+        separator="-",
+        seq_length=3,
         )
 
         assert code.endswith("-002")
@@ -191,12 +191,12 @@ class TestGenerateMonthlyNo:
         from app.models.sales import Lead
 
         code = generate_monthly_no(
-            db=db_session,
-            model_class=Lead,
-            no_field="lead_code",
-            prefix="O",
-            separator="",
-            seq_length=4,
+        db=db_session,
+        model_class=Lead,
+        no_field="lead_code",
+        prefix="O",
+        separator="",
+        seq_length=4,
         )
 
         assert "-" not in code
@@ -219,10 +219,10 @@ class TestGenerateEmployeeCode:
 
         # Create first employee
         emp1 = Employee(
-            employee_code="EMP-00001",
-            name="John Doe",
-            role="Engineer",
-            department="Engineering",
+        employee_code="EMP-00001",
+        name="John Doe",
+        role="Engineer",
+        department="Engineering",
         )
         db_session.add(emp1)
         db_session.commit()
@@ -253,10 +253,10 @@ class TestGenerateCustomerCode:
 
         # Create first customer
         cust1 = Customer(
-            customer_code="CUS-0000001",
-            customer_name="Test Customer",
-            contact_person="John",
-            contact_phone="1234567890",
+        customer_code="CUS-0000001",
+        customer_name="Test Customer",
+        contact_person="John",
+        contact_phone="1234567890",
         )
         db_session.add(cust1)
         db_session.commit()
@@ -296,16 +296,16 @@ class TestGenerateMaterialCode:
         from app.models.material import Material, MaterialCategory
 
         category = MaterialCategory(
-            category_code="ME-01-01",
-            category_name="Test Category",
+        category_code="ME-01-01",
+        category_name="Test Category",
         )
         db_session.add(category)
         db_session.commit()
 
         mat1 = Material(
-            material_code="MAT-ME-00001",
-            material_name="Test Material",
-            category_id=category.id,
+        material_code="MAT-ME-00001",
+        material_name="Test Material",
+        category_id=category.id,
         )
         db_session.add(mat1)
         db_session.commit()
@@ -333,17 +333,17 @@ class TestGenerateMachineCode:
         from app.models.project import Machine, Project
 
         project = Project(
-            project_code="PJ250708002",
-            project_name="Test Project for Machine",
-            customer_name="Test Customer",
+        project_code="PJ250708002",
+        project_name="Test Project for Machine",
+        customer_name="Test Customer",
         )
         db_session.add(project)
         db_session.commit()
 
         mach1 = Machine(
-            machine_code="PJ250708002-PN001",
-            machine_name="Test Machine 1",
-            project_id=project.id,
+        machine_code="PJ250708002-PN001",
+        machine_name="Test Machine 1",
+        project_id=project.id,
         )
         db_session.add(mach1)
         db_session.commit()
@@ -388,9 +388,9 @@ class TestGenerateCalculationCode:
         today = datetime.now().strftime("%y%m%d")
         # Create first calculation
         calc1 = BonusCalculation(
-            calculation_code=f"BC-{today}-001",
-            employee_id=1,
-            calculated_amount=1000.00,
+        calculation_code=f"BC-{today}-001",
+        employee_id=1,
+        calculated_amount=1000.00,
         )
         db_session.add(calc1)
         db_session.commit()
@@ -421,23 +421,23 @@ class TestEdgeCases:
 
         # Create a record with malformed code
         project = Project(
-            project_code="TEST-MALFORMED",
-            project_name="Test",
-            customer_name="Test",
+        project_code="TEST-MALFORMED",
+        project_name="Test",
+        customer_name="Test",
         )
         db_session.add(project)
         db_session.commit()
 
         # Should still generate a valid code (starting from 001)
         code = generate_sequential_no(
-            db=db_session,
-            model_class=Project,
-            no_field="project_code",
-            prefix="TEST2",
-            date_format="%y%m%d",
-            seq_length=3,
-            separator="-",
-            use_date=True,
+        db=db_session,
+        model_class=Project,
+        no_field="project_code",
+        prefix="TEST2",
+        date_format="%y%m%d",
+        seq_length=3,
+        separator="-",
+        use_date=True,
         )
 
         assert code.endswith("-001")
@@ -449,23 +449,23 @@ class TestEdgeCases:
         # Create 999th record
         today = datetime.now().strftime("%y%m%d")
         project = Project(
-            project_code=f"OVER-{today}-999",
-            project_name="Test",
-            customer_name="Test",
+        project_code=f"OVER-{today}-999",
+        project_name="Test",
+        customer_name="Test",
         )
         db_session.add(project)
         db_session.commit()
 
         # Next should be 1000 (will truncate to last 3 digits)
         code = generate_sequential_no(
-            db=db_session,
-            model_class=Project,
-            no_field="project_code",
-            prefix="OVER",
-            date_format="%y%m%d",
-            seq_length=3,
-            separator="-",
-            use_date=True,
+        db=db_session,
+        model_class=Project,
+        no_field="project_code",
+        prefix="OVER",
+        date_format="%y%m%d",
+        seq_length=3,
+        separator="-",
+        use_date=True,
         )
 
         assert code is not None

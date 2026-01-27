@@ -52,7 +52,7 @@ class TestGetEngineerFeedback:
                 assert result['message'] == '绩效数据尚未计算'
         except ValueError:
             # 考核周期不存在，这也是预期的
-            pass
+        pass
 
 
 class TestGenerateFeedbackMessage:
@@ -65,8 +65,8 @@ class TestGenerateFeedbackMessage:
         # Mock get_engineer_feedback 返回无数据
         with patch.object(service, 'get_engineer_feedback') as mock_get:
             mock_get.return_value = {
-                'has_data': False,
-                'period_name': '2024年Q1',
+            'has_data': False,
+            'period_name': '2024年Q1',
             }
             message = service.generate_feedback_message(1, 1)
             assert '绩效数据尚未计算' in message
@@ -78,24 +78,24 @@ class TestGenerateFeedbackMessage:
         # Mock get_engineer_feedback 返回有数据
         with patch.object(service, 'get_engineer_feedback') as mock_get:
             mock_get.return_value = {
-                'has_data': True,
-                'period_name': '2024年Q1',
-                'current_performance': {
-                    'total_score': 85.0,
-                    'level': 'A',
-                    'dept_rank': 3,
-                    'company_rank': 15,
-                    'dimension_scores': {
-                        'technical': 88.0,
-                        'execution': 82.0,
-                        'cost_quality': 85.0,
-                        'knowledge': 80.0,
-                        'collaboration': 90.0,
-                    }
-                },
-                'comparison': {},
-                'highlights': ['项目执行效率高'],
-                'improvements': ['可加强技术文档分享'],
+            'has_data': True,
+            'period_name': '2024年Q1',
+            'current_performance': {
+            'total_score': 85.0,
+            'level': 'A',
+            'dept_rank': 3,
+            'company_rank': 15,
+            'dimension_scores': {
+            'technical': 88.0,
+            'execution': 82.0,
+            'cost_quality': 85.0,
+            'knowledge': 80.0,
+            'collaboration': 90.0,
+            }
+            },
+            'comparison': {},
+            'highlights': ['项目执行效率高'],
+            'improvements': ['可加强技术文档分享'],
             }
             message = service.generate_feedback_message(1, 1)
             assert '2024年Q1' in message
@@ -149,12 +149,12 @@ class TestIdentifyAbilityChanges:
         # Mock get_dimension_trend 返回少于2个周期的数据
         with patch.object(service, 'get_dimension_trend') as mock_get:
             mock_get.return_value = {
-                'technical': [80.0],
-                'execution': [75.0],
-                'cost_quality': [78.0],
-                'knowledge': [70.0],
-                'collaboration': [85.0],
-                'periods': ['2024Q1']
+            'technical': [80.0],
+            'execution': [75.0],
+            'cost_quality': [78.0],
+            'knowledge': [70.0],
+            'collaboration': [85.0],
+            'periods': ['2024Q1']
             }
             result = service.identify_ability_changes(1, 6)
             assert result == []
@@ -170,7 +170,7 @@ class TestGeneratePersonalizedFeedback:
         # Mock get_engineer_feedback 返回无数据
         with patch.object(service, 'get_engineer_feedback') as mock_get:
             mock_get.return_value = {
-                'has_data': False,
+            'has_data': False,
             }
             result = service.generate_personalized_feedback(1, 1)
             assert result['has_data'] is False
@@ -182,16 +182,16 @@ class TestGeneratePersonalizedFeedback:
         # Mock get_engineer_feedback 返回有数据
         with patch.object(service, 'get_engineer_feedback') as mock_get:
             mock_get.return_value = {
-                'has_data': True,
-                'current_performance': {
-                    'dimension_scores': {
-                        'technical': 65.0,  # 低于70，应该触发建议
-                        'execution': 80.0,
-                        'cost_quality': 75.0,
-                        'knowledge': 60.0,  # 低于70，应该触发建议
-                        'collaboration': 85.0,
-                    }
-                }
+            'has_data': True,
+            'current_performance': {
+            'dimension_scores': {
+            'technical': 65.0,  # 低于70，应该触发建议
+            'execution': 80.0,
+            'cost_quality': 75.0,
+            'knowledge': 60.0,  # 低于70，应该触发建议
+            'collaboration': 85.0,
+            }
+            }
             }
             result = service.generate_personalized_feedback(99999, 1)
             assert 'personalized_suggestions' in result

@@ -27,7 +27,7 @@ class TestReadAcceptanceOrder:
         from app.api.v1.endpoints.acceptance import order_crud
 
         response = order_crud.read_acceptance_order(
-            order_id=test_acceptance_order.id, db_session=db_session
+        order_id=test_acceptance_order.id, db_session=db_session
         )
         assert response.id == test_acceptance_order.id
 
@@ -37,7 +37,7 @@ class TestReadAcceptanceOrder:
 
         with pytest.raises(HTTPException) as exc_info:
             order_crud.read_acceptance_order(order_id=99999, db_session=db_session)
-        assert exc_info.value.status_code == 404
+            assert exc_info.value.status_code == 404
 
 
 class TestReadAcceptanceOrders:
@@ -46,38 +46,38 @@ class TestReadAcceptanceOrders:
     def test_read_orders_by_project(self, db_session: Session, test_project):
         """按项目读取验收单列表"""
         AcceptanceOrderFactory.create(
-            project=test_project, acceptance_type="FAT", order_no="FAT-001"
+        project=test_project, acceptance_type="FAT", order_no="FAT-001"
         )
         AcceptanceOrderFactory.create(
-            project=test_project, acceptance_type="SAT", order_no="SAT-001"
+        project=test_project, acceptance_type="SAT", order_no="SAT-001"
         )
         db_session.commit()
 
         from app.api.v1.endpoints.acceptance import order_crud
 
         response = order_crud.read_acceptance_orders(
-            project_id=test_project.id, db_session=db_session, skip=0, limit=10
+        project_id=test_project.id, db_session=db_session, skip=0, limit=10
         )
         assert len(response.items) == 2
 
     def test_read_orders_with_filter_by_status(self, db_session: Session, test_project):
         """按状态过滤验收单列表"""
         AcceptanceOrderFactory.create(
-            project=test_project, status="COMPLETED", order_no="FAT-001"
+        project=test_project, status="COMPLETED", order_no="FAT-001"
         )
         AcceptanceOrderFactory.create(
-            project=test_project, status="IN_PROGRESS", order_no="SAT-001"
+        project=test_project, status="IN_PROGRESS", order_no="SAT-001"
         )
         db_session.commit()
 
         from app.api.v1.endpoints.acceptance import order_crud
 
         response = order_crud.read_acceptance_orders(
-            project_id=test_project.id,
-            status="COMPLETED",
-            db_session=db_session,
-            skip=0,
-            limit=10,
+        project_id=test_project.id,
+        status="COMPLETED",
+        db_session=db_session,
+        skip=0,
+        limit=10,
         )
         assert len(response.items) == 1
         assert response.items[0].status == "COMPLETED"
@@ -94,17 +94,17 @@ class TestCreateAcceptanceOrder:
         from app.schemas.acceptance import AcceptanceOrderCreateRequest
 
         order_data = AcceptanceOrderCreateRequest(
-            acceptance_type="FAT",
-            scheduled_date="2025-02-01",
-            engineer_id=test_user.id,
+        acceptance_type="FAT",
+        scheduled_date="2025-02-01",
+        engineer_id=test_user.id,
         )
 
         response = order_crud.create_acceptance_order(
-            project_id=test_project.id,
-            machine_id=test_machine.id,
-            order_data=order_data,
-            current_user=test_user,
-            db_session=db_session,
+        project_id=test_project.id,
+        machine_id=test_machine.id,
+        order_data=order_data,
+        current_user=test_user,
+        db_session=db_session,
         )
         assert response.acceptance_type == "FAT"
         assert response.project_id == test_project.id
@@ -118,17 +118,17 @@ class TestCreateAcceptanceOrder:
         from app.schemas.acceptance import AcceptanceOrderCreateRequest
 
         order_data = AcceptanceOrderCreateRequest(
-            acceptance_type="SAT",
-            scheduled_date="2025-02-15",
-            engineer_id=test_user.id,
+        acceptance_type="SAT",
+        scheduled_date="2025-02-15",
+        engineer_id=test_user.id,
         )
 
         response = order_crud.create_acceptance_order(
-            project_id=test_project.id,
-            machine_id=test_machine.id,
-            order_data=order_data,
-            current_user=test_user,
-            db_session=db_session,
+        project_id=test_project.id,
+        machine_id=test_machine.id,
+        order_data=order_data,
+        current_user=test_user,
+        db_session=db_session,
         )
         assert response.acceptance_type == "SAT"
 
@@ -140,17 +140,17 @@ class TestCreateAcceptanceOrder:
         from app.schemas.acceptance import AcceptanceOrderCreateRequest
 
         order_data = AcceptanceOrderCreateRequest(
-            acceptance_type="FINAL",
-            scheduled_date="2025-03-01",
-            engineer_id=test_user.id,
+        acceptance_type="FINAL",
+        scheduled_date="2025-03-01",
+        engineer_id=test_user.id,
         )
 
         response = order_crud.create_acceptance_order(
-            project_id=test_project.id,
-            machine_id=None,
-            order_data=order_data,
-            current_user=test_user,
-            db_session=db_session,
+        project_id=test_project.id,
+        machine_id=None,
+        order_data=order_data,
+        current_user=test_user,
+        db_session=db_session,
         )
         assert response.acceptance_type == "FINAL"
         assert response.machine_id is None
@@ -167,14 +167,14 @@ class TestUpdateAcceptanceOrder:
         from app.schemas.acceptance import AcceptanceOrderUpdateRequest
 
         update_data = AcceptanceOrderUpdateRequest(
-            scheduled_date="2025-02-10", engineer_id=test_user.id
+        scheduled_date="2025-02-10", engineer_id=test_user.id
         )
 
         response = order_crud.update_acceptance_order(
-            order_id=test_acceptance_order.id,
-            order_data=update_data,
-            current_user=test_user,
-            db_session=db_session,
+        order_id=test_acceptance_order.id,
+        order_data=update_data,
+        current_user=test_user,
+        db_session=db_session,
         )
         assert response.scheduled_date == "2025-02-10"
 
@@ -187,9 +187,9 @@ class TestUpdateAcceptanceOrder:
 
         with pytest.raises(HTTPException) as exc_info:
             order_crud.update_acceptance_order(
-                99999, update_data, test_user, db_session
+            99999, update_data, test_user, db_session
             )
-        assert exc_info.value.status_code == 404
+            assert exc_info.value.status_code == 404
 
 
 class TestDeleteAcceptanceOrder:
@@ -206,9 +206,9 @@ class TestDeleteAcceptanceOrder:
 
         # 验证已被标记为已删除
         deleted_order = (
-            db_session.query(AcceptanceOrder)
-            .filter(AcceptanceOrder.id == order_id)
-            .first()
+        db_session.query(AcceptanceOrder)
+        .filter(AcceptanceOrder.id == order_id)
+        .first()
         )
         assert deleted_order.is_active == False
 
@@ -218,10 +218,10 @@ class TestDeleteAcceptanceOrder:
 
         with pytest.raises(HTTPException) as exc_info:
             order_crud.delete_acceptance_order(order_id=99999, db_session=db_session)
-        assert exc_info.value.status_code == 404
+            assert exc_info.value.status_code == 404
 
 
-# Fixtures
+            # Fixtures
 @pytest.fixture
 def test_project(db_session: Session):
     """创建测试项目"""

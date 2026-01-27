@@ -32,18 +32,18 @@ class TestGenerateSequentialNo:
         class MockModel:
             pass
         
-        # 模拟没有现有记录
-        mock_query = MagicMock()
-        mock_query.filter.return_value.order_by.return_value.first.return_value = None
-        db.query.return_value = mock_query
+            # 模拟没有现有记录
+            mock_query = MagicMock()
+            mock_query.filter.return_value.order_by.return_value.first.return_value = None
+            db.query.return_value = mock_query
 
-        result = generate_sequential_no(
+            result = generate_sequential_no(
             db, MockModel, "no_field", "TEST", separator="-"
-        )
+            )
 
-        assert result.startswith("TEST-")
-        assert "-" in result
-        assert result.endswith("-001")
+            assert result.startswith("TEST-")
+            assert "-" in result
+            assert result.endswith("-001")
 
     def test_first_record_without_separator(self):
         """测试第一个记录（不带分隔符）"""
@@ -53,17 +53,17 @@ class TestGenerateSequentialNo:
         class MockModel:
             pass
         
-        mock_query = MagicMock()
-        mock_query.filter.return_value.order_by.return_value.first.return_value = None
-        db.query.return_value = mock_query
+            mock_query = MagicMock()
+            mock_query.filter.return_value.order_by.return_value.first.return_value = None
+            db.query.return_value = mock_query
 
-        result = generate_sequential_no(
+            result = generate_sequential_no(
             db, MockModel, "no_field", "TEST", separator="", use_date=True
-        )
+            )
 
-        assert result.startswith("TEST")
-        assert "-" not in result
-        assert result.endswith("001")
+            assert result.startswith("TEST")
+            assert "-" not in result
+            assert result.endswith("001")
 
     def test_increment_sequence(self, mock_model):
         """测试序号递增"""
@@ -73,17 +73,17 @@ class TestGenerateSequentialNo:
         class MockModel:
             pass
         
-        # 模拟已有记录
-        mock_model.no_field = "TEST-250115-005"
-        mock_query = MagicMock()
-        mock_query.filter.return_value.order_by.return_value.first.return_value = mock_model
-        db.query.return_value = mock_query
+            # 模拟已有记录
+            mock_model.no_field = "TEST-250115-005"
+            mock_query = MagicMock()
+            mock_query.filter.return_value.order_by.return_value.first.return_value = mock_model
+            db.query.return_value = mock_query
 
-        result = generate_sequential_no(
+            result = generate_sequential_no(
             db, MockModel, "no_field", "TEST", separator="-"
-        )
+            )
 
-        assert result.endswith("-006")
+            assert result.endswith("-006")
 
     def test_without_date(self):
         """测试不使用日期"""
@@ -93,18 +93,18 @@ class TestGenerateSequentialNo:
         class MockModel:
             pass
         
-        mock_query = MagicMock()
-        mock_query.filter.return_value.order_by.return_value.first.return_value = None
-        db.query.return_value = mock_query
+            mock_query = MagicMock()
+            mock_query.filter.return_value.order_by.return_value.first.return_value = None
+            db.query.return_value = mock_query
 
-        result = generate_sequential_no(
+            result = generate_sequential_no(
             db, MockModel, "no_field", "TEST", use_date=False, separator="-"
-        )
+            )
 
-        assert result.startswith("TEST-")
-        assert result.endswith("-001")
-        # 不应该包含日期
-        assert len(result.split("-")) == 2
+            assert result.startswith("TEST-")
+            assert result.endswith("-001")
+            # 不应该包含日期
+            assert len(result.split("-")) == 2
 
     def test_custom_date_format(self):
         """测试自定义日期格式"""
@@ -114,21 +114,21 @@ class TestGenerateSequentialNo:
         class MockModel:
             pass
         
-        mock_query = MagicMock()
-        mock_query.filter.return_value.order_by.return_value.first.return_value = None
-        db.query.return_value = mock_query
+            mock_query = MagicMock()
+            mock_query.filter.return_value.order_by.return_value.first.return_value = None
+            db.query.return_value = mock_query
 
-        result = generate_sequential_no(
+            result = generate_sequential_no(
             db,
             MockModel,
             "no_field",
             "TEST",
             date_format="%Y%m%d",
             separator="-",
-        )
+            )
 
-        # 应该包含完整日期格式
-        assert "2025" in result or "2024" in result
+            # 应该包含完整日期格式
+            assert "2025" in result or "2024" in result
 
     def test_custom_seq_length(self):
         """测试自定义序号长度"""
@@ -138,18 +138,18 @@ class TestGenerateSequentialNo:
         class MockModel:
             pass
         
-        mock_query = MagicMock()
-        mock_query.filter.return_value.order_by.return_value.first.return_value = None
-        db.query.return_value = mock_query
+            mock_query = MagicMock()
+            mock_query.filter.return_value.order_by.return_value.first.return_value = None
+            db.query.return_value = mock_query
 
-        result = generate_sequential_no(
+            result = generate_sequential_no(
             db, MockModel, "no_field", "TEST", seq_length=5, separator="-"
-        )
+            )
 
-        # 序号应该是5位
-        seq_part = result.split("-")[-1]
-        assert len(seq_part) == 5
-        assert seq_part == "00001"
+            # 序号应该是5位
+            seq_part = result.split("-")[-1]
+            assert len(seq_part) == 5
+            assert seq_part == "00001"
 
 
 class TestGenerateMonthlyNo:
@@ -163,17 +163,17 @@ class TestGenerateMonthlyNo:
         class MockModel:
             pass
         
-        mock_query = MagicMock()
-        mock_query.filter.return_value.order_by.return_value.first.return_value = None
-        db.query.return_value = mock_query
+            mock_query = MagicMock()
+            mock_query.filter.return_value.order_by.return_value.first.return_value = None
+            db.query.return_value = mock_query
 
-        result = generate_monthly_no(db, MockModel, "no_field", "L")
+            result = generate_monthly_no(db, MockModel, "no_field", "L")
 
-        assert result.startswith("L")
-        assert "-" in result
-        assert result.endswith("-001")
-        # 应该包含年月（yymm格式）
-        assert len(result.split("-")) == 2
+            assert result.startswith("L")
+            assert "-" in result
+            assert result.endswith("-001")
+            # 应该包含年月（yymm格式）
+            assert len(result.split("-")) == 2
 
     def test_increment_monthly(self):
         """测试月度编号递增"""
@@ -183,15 +183,15 @@ class TestGenerateMonthlyNo:
         class MockModel:
             pass
         
-        mock_model = MagicMock()
-        mock_model.no_field = "L2507-010"
-        mock_query = MagicMock()
-        mock_query.filter.return_value.order_by.return_value.first.return_value = mock_model
-        db.query.return_value = mock_query
+            mock_model = MagicMock()
+            mock_model.no_field = "L2507-010"
+            mock_query = MagicMock()
+            mock_query.filter.return_value.order_by.return_value.first.return_value = mock_model
+            db.query.return_value = mock_query
 
-        result = generate_monthly_no(db, MockModel, "no_field", "L")
+            result = generate_monthly_no(db, MockModel, "no_field", "L")
 
-        assert result.endswith("-011")
+            assert result.endswith("-011")
 
 
 class TestGenerateEmployeeCode:

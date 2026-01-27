@@ -22,13 +22,13 @@ class TestProjectStatusTransitions:
     def test_status_s1_to_s2_transition(self, db_session: Session):
         """测试阶段 S1 -> S2 转换"""
         project = Project(
-            project_code="PJ250119003",
-            project_name="测试项目",
-            customer_name="测试客户",
-            contract_amount=100000.00,
-            stage="S1",
-            status="ST01",
-            health="H1",
+        project_code="PJ250119003",
+        project_name="测试项目",
+        customer_name="测试客户",
+        contract_amount=100000.00,
+        stage="S1",
+        status="ST01",
+        health="H1",
         )
         db_session.add(project)
         db_session.commit()
@@ -44,12 +44,12 @@ class TestProjectStatusTransitions:
 
         # 创建历史记录
         history = ProjectStatusLog(
-            project_id=project.id,
-            old_status="S1",
-            new_status="S2",
-            change_type="STAGE_CHANGE",
-            changed_at=datetime.now(),
-            change_reason="正常阶段推进",
+        project_id=project.id,
+        old_status="S1",
+        new_status="S2",
+        change_type="STAGE_CHANGE",
+        changed_at=datetime.now(),
+        change_reason="正常阶段推进",
         )
         db_session.add(history)
         db_session.commit()
@@ -67,13 +67,13 @@ class TestProjectStatusTransitions:
     def test_invalid_status_transition(self, db_session: Session):
         """测试无效状态转换 - 验证状态可以直接设置（无业务验证）"""
         project = Project(
-            project_code="PJ250119004",
-            project_name="测试项目",
-            customer_name="测试客户",
-            contract_amount=100000.00,
-            stage="S1",
-            status="ST01",
-            health="H1",
+        project_code="PJ250119004",
+        project_name="测试项目",
+        customer_name="测试客户",
+        contract_amount=100000.00,
+        stage="S1",
+        status="ST01",
+        health="H1",
         )
         db_session.add(project)
         db_session.commit()
@@ -94,13 +94,13 @@ class TestProjectStatusTransitions:
     def test_health_status_assignment(self, db_session: Session):
         """测试健康度状态分配"""
         project = Project(
-            project_code="PJ250119005",
-            project_name="测试项目",
-            customer_name="测试客户",
-            contract_amount=100000.00,
-            stage="S1",
-            status="ST01",
-            health="H1",
+        project_code="PJ250119005",
+        project_name="测试项目",
+        customer_name="测试客户",
+        contract_amount=100000.00,
+        stage="S1",
+        status="ST01",
+        health="H1",
         )
         db_session.add(project)
         db_session.commit()
@@ -133,13 +133,13 @@ class TestProjectStatusTransitions:
     def test_project_status_creation(self, db_session: Session):
         """测试创建项目和状态"""
         project = Project(
-            project_code="PJ250119006",
-            project_name="测试项目",
-            customer_name="测试客户",
-            contract_amount=100000.00,
-            stage="S1",
-            status="ST01",
-            health="H1",
+        project_code="PJ250119006",
+        project_name="测试项目",
+        customer_name="测试客户",
+        contract_amount=100000.00,
+        stage="S1",
+        status="ST01",
+        health="H1",
         )
         db_session.add(project)
         db_session.commit()
@@ -163,13 +163,13 @@ class TestProjectStatusHistory:
     def test_status_history_creation(self, db_session: Session):
         """测试创建状态历史记录"""
         project = Project(
-            project_code="PJ250119007",
-            project_name="测试项目",
-            customer_name="测试客户",
-            contract_amount=100000.00,
-            stage="S1",
-            status="ST01",
-            health="H1",
+        project_code="PJ250119007",
+        project_name="测试项目",
+        customer_name="测试客户",
+        contract_amount=100000.00,
+        stage="S1",
+        status="ST01",
+        health="H1",
         )
         db_session.add(project)
         db_session.commit()
@@ -177,21 +177,21 @@ class TestProjectStatusHistory:
 
         # 创建状态变更历史
         history = ProjectStatusLog(
-            project_id=project.id,
-            old_status="ST01",
-            new_status="ST02",
-            change_type="STATUS_CHANGE",
-            changed_at=datetime.now(),
-            change_reason="首次状态转换",
+        project_id=project.id,
+        old_status="ST01",
+        new_status="ST02",
+        change_type="STATUS_CHANGE",
+        changed_at=datetime.now(),
+        change_reason="首次状态转换",
         )
         db_session.add(history)
         db_session.commit()
 
         # 验证历史记录已创建
         histories = (
-            db_session.query(ProjectStatusLog)
-            .filter(ProjectStatusLog.project_id == project.id)
-            .all()
+        db_session.query(ProjectStatusLog)
+        .filter(ProjectStatusLog.project_id == project.id)
+        .all()
         )
 
         assert len(histories) >= 1
@@ -201,21 +201,21 @@ class TestProjectStatusHistory:
         # 清理
         for h in histories:
             db_session.delete(h)
-        db_session.delete(project)
-        db_session.commit()
+            db_session.delete(project)
+            db_session.commit()
 
     def test_status_history_ordering(self, db_session: Session):
         """测试状态历史按时间排序"""
         import time
 
         project = Project(
-            project_code="PJ250119008",
-            project_name="测试项目",
-            customer_name="测试客户",
-            contract_amount=100000.00,
-            stage="S1",
-            status="ST01",
-            health="H1",
+        project_code="PJ250119008",
+        project_name="测试项目",
+        customer_name="测试客户",
+        contract_amount=100000.00,
+        stage="S1",
+        status="ST01",
+        health="H1",
         )
         db_session.add(project)
         db_session.commit()
@@ -225,31 +225,31 @@ class TestProjectStatusHistory:
         statuses = ["ST01", "ST02", "ST03", "ST04", "ST05"]
         for i in range(len(statuses) - 1):
             history = ProjectStatusLog(
-                project_id=project.id,
-                old_status=statuses[i],
-                new_status=statuses[i + 1],
-                change_type="STATUS_CHANGE",
-                changed_at=datetime.now(),
-                change_reason=f"状态转换 {i + 1}",
+            project_id=project.id,
+            old_status=statuses[i],
+            new_status=statuses[i + 1],
+            change_type="STATUS_CHANGE",
+            changed_at=datetime.now(),
+            change_reason=f"状态转换 {i + 1}",
             )
             db_session.add(history)
             db_session.commit()
             time.sleep(0.01)  # 确保时间戳不同
 
-        # 验证排序
-        histories = (
+            # 验证排序
+            histories = (
             db_session.query(ProjectStatusLog)
             .filter(ProjectStatusLog.project_id == project.id)
             .order_by(ProjectStatusLog.changed_at)
             .all()
-        )
+            )
 
-        assert len(histories) == 4
-        for i in range(len(histories) - 1):
-            assert histories[i].changed_at <= histories[i + 1].changed_at
+            assert len(histories) == 4
+            for i in range(len(histories) - 1):
+                assert histories[i].changed_at <= histories[i + 1].changed_at
 
-        # 清理
-        for h in histories:
-            db_session.delete(h)
-        db_session.delete(project)
-        db_session.commit()
+                # 清理
+                for h in histories:
+                    db_session.delete(h)
+                    db_session.delete(project)
+                    db_session.commit()

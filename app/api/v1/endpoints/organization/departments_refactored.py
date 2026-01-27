@@ -4,7 +4,7 @@
 使用统一响应格式
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, or_
@@ -40,10 +40,13 @@ def read_departments(
     if is_active is not None:
         query = query.filter(Department.is_active == is_active)
     departments = query.order_by(Department.sort_order, Department.dept_code).offset(skip).limit(limit).all()
-    
+
+    # 转换为Pydantic模型
+    dept_responses = [DepartmentResponse.model_validate(dept) for dept in departments]
+
     # 使用统一响应格式
     return list_response(
-        items=departments,
+        items=dept_responses,
         message="获取部门列表成功"
     )
 
@@ -147,10 +150,13 @@ def create_department(
     db.add(department)
     db.commit()
     db.refresh(department)
-    
+
+    # 转换为Pydantic模型
+    dept_response = DepartmentResponse.model_validate(department)
+
     # 使用统一响应格式
     return success_response(
-        data=department,
+        data=dept_response,
         message="部门创建成功"
     )
 
@@ -165,10 +171,13 @@ def read_department(
     department = db.query(Department).filter(Department.id == dept_id).first()
     if not department:
         raise HTTPException(status_code=404, detail="Department not found")
-    
+
+    # 转换为Pydantic模型
+    dept_response = DepartmentResponse.model_validate(department)
+
     # 使用统一响应格式
     return success_response(
-        data=department,
+        data=dept_response,
         message="获取部门信息成功"
     )
 
@@ -231,10 +240,13 @@ def update_department(
     db.add(department)
     db.commit()
     db.refresh(department)
-    
+
+    # 转换为Pydantic模型
+    dept_response = DepartmentResponse.model_validate(department)
+
     # 使用统一响应格式
     return success_response(
-        data=department,
+        data=dept_response,
         message="部门更新成功"
     )
 
@@ -273,17 +285,36 @@ def get_department_users(
     offset = (page - 1) * page_size
     users = query.order_by(User.created_at.desc()).offset(offset).limit(page_size).all()
 
+    # 转换为UserResponse并处理roles
+    from app.schemas.auth import UserResponse
+    user_responses = []
     for u in users:
-        u.roles = [ur.role.role_name for ur in u.roles] if u.roles else []
+        user_dict = {
+            "id": u.id,
+            "username": u.username,
+            "employee_id": u.employee_id,
+            "email": u.email,
+            "phone": u.phone,
+            "real_name": u.real_name,
+            "employee_no": u.employee_no,
+            "department": u.department,
+            "position": u.position,
+            "avatar": u.avatar,
+            "is_active": u.is_active,
+            "is_superuser": u.is_superuser,
+            "last_login_at": u.last_login_at,
+            "created_at": u.created_at,
+            "updated_at": u.updated_at,
+            "roles": [ur.role.role_name for ur in u.user_roles] if u.user_roles else [],
+            "role_ids": [ur.role_id for ur in u.user_roles] if u.user_roles else [],
+            "permissions": [],
+        }
+        user_responses.append(UserResponse(**user_dict))
 
-    pages = (total + page_size - 1) // page_size
-    
-    # 使用统一响应格式
+    # 使用统一分页响应格式
     return paginated_response(
-        items=users,
+        items=user_responses,
         total=total,
         page=page,
-        page_size=page_size,
-        pages=pages,
-        message="获取部门人员列表成功"
+        page_size=page_size
     )

@@ -85,8 +85,8 @@ class TestDelayRootCauseService:
         end_date = date.today()
         
         result = delay_root_cause_service.analyze_root_cause(
-            start_date=start_date,
-            end_date=end_date
+        start_date=start_date,
+        end_date=end_date
         )
         
         assert result is not None
@@ -96,7 +96,7 @@ class TestDelayRootCauseService:
     def test_analyze_root_cause_with_project_id(self, delay_root_cause_service, test_project, test_delayed_task):
         """测试延期根因分析 - 指定项目"""
         result = delay_root_cause_service.analyze_root_cause(
-            project_id=test_project.id
+        project_id=test_project.id
         )
         
         assert result is not None
@@ -127,8 +127,8 @@ class TestDelayRootCauseService:
         end_date = date.today()
         
         result = delay_root_cause_service.analyze_impact(
-            start_date=start_date,
-            end_date=end_date
+        start_date=start_date,
+        end_date=end_date
         )
         
         assert result is not None
@@ -148,8 +148,8 @@ class TestDelayRootCauseService:
         end_date = date.today()
         
         result = delay_root_cause_service.analyze_trends(
-            start_date=start_date,
-            end_date=end_date
+        start_date=start_date,
+        end_date=end_date
         )
         
         assert result is not None

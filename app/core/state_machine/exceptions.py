@@ -33,3 +33,14 @@ class StateMachineValidationError(StateMachineException):
     """状态机验证失败异常"""
 
     pass
+
+
+class PermissionDeniedError(StateMachineException):
+    """权限拒绝异常"""
+
+    def __init__(self, reason: str = ""):
+        self.reason = reason
+        message = "Permission denied"
+        if reason:
+            message += f": {reason}"
+        super().__init__(message)

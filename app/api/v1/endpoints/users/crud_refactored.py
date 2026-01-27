@@ -20,7 +20,6 @@ from app.models.user import User
 from app.schemas.auth import UserCreate, UserResponse, UserRoleAssign, UserUpdate
 from app.services.permission_audit_service import PermissionAuditService
 
-from .models import UserListResponse
 from .utils import build_user_response, ensure_employee_unbound, prepare_employee_for_new_user, replace_user_roles
 
 logger = logging.getLogger(__name__)
@@ -77,16 +76,12 @@ def read_users(
                     roles=[], role_ids=[], created_at=u.created_at, updated_at=u.updated_at,
                 ))
 
-        pages = (total + page_size - 1) // page_size
-        
-        # 使用统一响应格式
+        # 使用统一分页响应格式
         return paginated_response(
             items=user_responses,
             total=total,
             page=page,
-            page_size=page_size,
-            pages=pages,
-            message="获取用户列表成功"
+            page_size=page_size
         )
     except Exception as e:
         logger.error(f"获取用户列表失败: {e}", exc_info=True)

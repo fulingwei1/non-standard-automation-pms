@@ -63,8 +63,8 @@ class TestProjectEvaluationService:
         dim2.default_weight = Decimal("20")
 
         db_session.query.return_value.filter.return_value.all.return_value = [
-            dim1,
-            dim2,
+        dim1,
+        dim2,
         ]
 
         weights = service.get_dimension_weights()
@@ -89,11 +89,11 @@ class TestProjectEvaluationService:
         db_session.query.return_value.filter.return_value.all.return_value = []
 
         total = service.calculate_total_score(
-            novelty_score=Decimal("80"),
-            new_tech_score=Decimal("90"),
-            difficulty_score=Decimal("85"),
-            workload_score=Decimal("75"),
-            amount_score=Decimal("70"),
+        novelty_score=Decimal("80"),
+        new_tech_score=Decimal("90"),
+        difficulty_score=Decimal("85"),
+        workload_score=Decimal("75"),
+        amount_score=Decimal("70"),
         )
 
         assert float(total) == pytest.approx(80.25, rel=1e-3)

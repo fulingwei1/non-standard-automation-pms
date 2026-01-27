@@ -40,15 +40,15 @@ class TestProjectModel:
     def test_project_creation_basic(self, db_session):
         """测试基本的 Project 创建"""
         project = Project(
-            project_code="PJ250101001",
-            project_name="测试项目",
-            customer_name="测试客户",
-            contract_amount=1000000.00,
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 12, 31),
-            current_stage=ProjectStage.S1.value,
-            status=ProjectStatus.ACTIVE.value,
-            health=ProjectHealth.H1.value,
+        project_code="PJ250101001",
+        project_name="测试项目",
+        customer_name="测试客户",
+        contract_amount=1000000.00,
+        start_date=date(2024, 1, 1),
+        end_date=date(2024, 12, 31),
+        current_stage=ProjectStage.S1.value,
+        status=ProjectStatus.ACTIVE.value,
+        health=ProjectHealth.H1.value,
         )
 
         db_session.add(project)
@@ -64,15 +64,15 @@ class TestProjectModel:
     def test_project_relationships(self, db_session):
         """测试 Project 关系"""
         project = Project(
-            project_code="PJ250101002",
-            project_name="关系测试",
-            customer_name="测试客户",
-            contract_amount=500000.00,
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 6, 30),
-            current_stage=ProjectStage.S1.value,
-            status=ProjectStatus.ACTIVE.value,
-            health=ProjectHealth.H1.value,
+        project_code="PJ250101002",
+        project_name="关系测试",
+        customer_name="测试客户",
+        contract_amount=500000.00,
+        start_date=date(2024, 1, 1),
+        end_date=date(2024, 6, 30),
+        current_stage=ProjectStage.S1.value,
+        status=ProjectStatus.ACTIVE.value,
+        health=ProjectHealth.H1.value,
         )
 
         db_session.add(project)
@@ -104,15 +104,15 @@ class TestProjectModel:
     def test_project_unique_constraint(self, db_session):
         """测试 project_code 唯一约束"""
         project1 = Project(
-            project_code="PJ250101003",
-            project_name="测试项目1",
-            customer_name="测试客户",
-            contract_amount=100000.00,
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 6, 30),
-            current_stage=ProjectStage.S1.value,
-            status=ProjectStatus.ACTIVE.value,
-            health=ProjectHealth.H1.value,
+        project_code="PJ250101003",
+        project_name="测试项目1",
+        customer_name="测试客户",
+        contract_amount=100000.00,
+        start_date=date(2024, 1, 1),
+        end_date=date(2024, 6, 30),
+        current_stage=ProjectStage.S1.value,
+        status=ProjectStatus.ACTIVE.value,
+        health=ProjectHealth.H1.value,
         )
 
         db_session.add(project1)
@@ -120,14 +120,14 @@ class TestProjectModel:
 
         # 尝试创建相同 code 的项目
         project2 = Project(
-            project_code="PJ250101003",  # 相同的 code
-            project_name="测试项目2",
-            customer_name="测试客户",
-            contract_amount=200000.00,
-            start_date=date(2024, 7, 1),
-            end_date=date(2024, 12, 31),
-            current_stage=ProjectStage.S1.value,
-            status=ProjectStatus.ACTIVE.value,
+        project_code="PJ250101003",  # 相同的 code
+        project_name="测试项目2",
+        customer_name="测试客户",
+        contract_amount=200000.00,
+        start_date=date(2024, 7, 1),
+        end_date=date(2024, 12, 31),
+        current_stage=ProjectStage.S1.value,
+        status=ProjectStatus.ACTIVE.value,
         )
 
 
@@ -137,12 +137,12 @@ class TestUserModel:
     def test_user_creation_basic(self, db_session):
         """测试基本的 User 创建"""
         user = User(
-            username="testuser",
-            email="test@example.com",
-            hashed_password="hashed_password_here",
-            full_name="Test User",
-            role=UserRole.MEMBER.value,
-            is_active=True,
+        username="testuser",
+        email="test@example.com",
+        hashed_password="hashed_password_here",
+        full_name="Test User",
+        role=UserRole.MEMBER.value,
+        is_active=True,
         )
 
         db_session.add(user)
@@ -170,12 +170,12 @@ class TestUserModel:
         hashed = get_password_hash(plain_password)
 
         user = User(
-            username="user_with_hash",
-            email="user@example.com",
-            hashed_password=hashed,
-            full_name="User With Hash",
-            role=UserRole.MEMBER.value,
-            is_active=True,
+        username="user_with_hash",
+        email="user@example.com",
+        hashed_password=hashed,
+        full_name="User With Hash",
+        role=UserRole.MEMBER.value,
+        is_active=True,
         )
 
         db_session.add(user)
@@ -189,11 +189,11 @@ class TestUserModel:
     def test_user_default_values(self, db_session):
         """测试 User 默认值"""
         user = User(
-            username="defaultuser",
-            email="default@example.com",
-            hashed_password="hash",
-            full_name="Default User",
-            role=UserRole.MEMBER.value,
+        username="defaultuser",
+        email="default@example.com",
+        hashed_password="hash",
+        full_name="Default User",
+        role=UserRole.MEMBER.value,
         )
 
         db_session.add(user)
@@ -212,12 +212,12 @@ class TestMaterialModel:
     def test_material_creation_basic(self, db_session):
         """测试基本的 Material 创建"""
         material = Material(
-            material_code="MAT001",
-            material_name="测试材料",
-            material_type="standard",
-            unit="piece",
-            standard_price=Decimal("100.50"),
-            is_active=True,
+        material_code="MAT001",
+        material_name="测试材料",
+        material_type="standard",
+        unit="piece",
+        standard_price=Decimal("100.50"),
+        is_active=True,
         )
 
         db_session.add(material)
@@ -236,31 +236,31 @@ class TestMaterialModel:
 
         for i, category in enumerate(categories):
             material = Material(
-                material_code=f"MAT{100 + i:03d}",
-                material_name=f"测试材料{i}",
-                material_type=category,
-                unit="piece",
-                standard_price=Decimal("50.00"),
+            material_code=f"MAT{100 + i:03d}",
+            material_name=f"测试材料{i}",
+            material_type=category,
+            unit="piece",
+            standard_price=Decimal("50.00"),
             )
 
             db_session.add(material)
 
-        db_session.commit()
+            db_session.commit()
 
-        # 验证所有材料都被保存
-        materials = (
+            # 验证所有材料都被保存
+            materials = (
             db_session.query(Material).filter(Material.material_code.like("MAT%")).all()
-        )
-        assert len(materials) == 4
+            )
+            assert len(materials) == 4
 
     def test_supplier_creation(self, db_session):
         """测试 Supplier 创建"""
         supplier = Supplier(
-            supplier_name="测试供应商",
-            contact_person="张三",
-            contact_phone="13800138000",
-            contact_email="supplier@example.com",
-            address="北京市朝阳区",
+        supplier_name="测试供应商",
+        contact_person="张三",
+        contact_phone="13800138000",
+        contact_email="supplier@example.com",
+        address="北京市朝阳区",
         )
 
         db_session.add(supplier)
@@ -274,10 +274,10 @@ class TestMaterialModel:
     def test_material_supplier_relationship(self, db_session):
         """测试 Material 和 Supplier 关系"""
         supplier = Supplier(
-            supplier_name="关联供应商",
-            contact_person="李四",
-            contact_phone="13900139000",
-            contact_email="关联@example.com",
+        supplier_name="关联供应商",
+        contact_person="李四",
+        contact_phone="13900139000",
+        contact_email="关联@example.com",
         )
 
         db_session.add(supplier)
@@ -285,12 +285,12 @@ class TestMaterialModel:
         db_session.refresh(supplier)
 
         material = Material(
-            material_code="MAT005",
-            material_name="关联测试材料",
-            material_type="standard",
-            unit="piece",
-            standard_price=Decimal("200.00"),
-            is_active=True,
+        material_code="MAT005",
+        material_name="关联测试材料",
+        material_type="standard",
+        unit="piece",
+        standard_price=Decimal("200.00"),
+        is_active=True,
         )
 
         db_session.add(material)
@@ -306,15 +306,15 @@ class TestModelTimestamps:
     def test_project_timestamps(self, db_session):
         """测试 Project 时间戳"""
         project = Project(
-            project_code="PJ250101004",
-            project_name="时间戳测试",
-            customer_name="测试客户",
-            contract_amount=1000.00,
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 6, 30),
-            current_stage=ProjectStage.S1.value,
-            status=ProjectStatus.ACTIVE.value,
-            health=ProjectHealth.H1.value,
+        project_code="PJ250101004",
+        project_name="时间戳测试",
+        customer_name="测试客户",
+        contract_amount=1000.00,
+        start_date=date(2024, 1, 1),
+        end_date=date(2024, 6, 30),
+        current_stage=ProjectStage.S1.value,
+        status=ProjectStatus.ACTIVE.value,
+        health=ProjectHealth.H1.value,
         )
 
         db_session.add(project)
@@ -330,11 +330,11 @@ class TestModelTimestamps:
     def test_user_timestamps(self, db_session):
         """测试 User 时间戳"""
         user = User(
-            username="timetestuser",
-            email="timetest@example.com",
-            hashed_password="hash",
-            full_name="Time Test User",
-            role=UserRole.MEMBER.value,
+        username="timetestuser",
+        email="timetest@example.com",
+        hashed_password="hash",
+        full_name="Time Test User",
+        role=UserRole.MEMBER.value,
         )
 
         db_session.add(user)
@@ -353,9 +353,9 @@ class TestModelValidators:
         """测试 Project 必填字段验证"""
         project = Project(
             # 缺少必填字段
-            project_code="PJ250101005",
+        project_code="PJ250101005",
             # project_name 缺失
-            customer_name="测试客户",
+        customer_name="测试客户",
         )
 
         # SQLAlchemy 不会自动验证必填字段，但模型应该定义它们
@@ -367,11 +367,11 @@ class TestModelValidators:
         """测试 User 邮箱字段"""
         # 测试有效邮箱格式
         user = User(
-            username="emailtestuser",
-            email="user@example.com",
-            hashed_password="hash",
-            full_name="Email Test User",
-            role=UserRole.MEMBER.value,
+        username="emailtestuser",
+        email="user@example.com",
+        hashed_password="hash",
+        full_name="Email Test User",
+        role=UserRole.MEMBER.value,
         )
 
         db_session.add(user)
@@ -388,27 +388,27 @@ class TestModelQueryMethods:
         """测试按状态过滤"""
         # 创建不同状态的项目
         active_project = Project(
-            project_code="PJ250101006",
-            project_name="活跃项目",
-            customer_name="客户1",
-            contract_amount=1000.00,
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 6, 30),
-            current_stage=ProjectStage.S1.value,
-            status=ProjectStatus.ACTIVE.value,
-            health=ProjectHealth.H1.value,
+        project_code="PJ250101006",
+        project_name="活跃项目",
+        customer_name="客户1",
+        contract_amount=1000.00,
+        start_date=date(2024, 1, 1),
+        end_date=date(2024, 6, 30),
+        current_stage=ProjectStage.S1.value,
+        status=ProjectStatus.ACTIVE.value,
+        health=ProjectHealth.H1.value,
         )
 
         completed_project = Project(
-            project_code="PJ250101007",
-            project_name="完成项目",
-            customer_name="客户2",
-            contract_amount=2000.00,
-            start_date=date(2023, 1, 1),
-            end_date=date(2023, 12, 31),
-            current_stage=ProjectStage.S9.value,
-            status=ProjectStatus.COMPLETED.value,
-            health=ProjectHealth.H4.value,
+        project_code="PJ250101007",
+        project_name="完成项目",
+        customer_name="客户2",
+        contract_amount=2000.00,
+        start_date=date(2023, 1, 1),
+        end_date=date(2023, 12, 31),
+        current_stage=ProjectStage.S9.value,
+        status=ProjectStatus.COMPLETED.value,
+        health=ProjectHealth.H4.value,
         )
 
         db_session.add(active_project)
@@ -417,18 +417,18 @@ class TestModelQueryMethods:
 
         # 查询活跃项目
         active_projects = (
-            db_session.query(Project)
-            .filter(Project.status == ProjectStatus.ACTIVE.value)
-            .all()
+        db_session.query(Project)
+        .filter(Project.status == ProjectStatus.ACTIVE.value)
+        .all()
         )
         assert len(active_projects) == 1
         assert active_projects[0].project_code == "PJ250101006"
 
         # 查询完成项目
         completed_projects = (
-            db_session.query(Project)
-            .filter(Project.status == ProjectStatus.COMPLETED.value)
-            .all()
+        db_session.query(Project)
+        .filter(Project.status == ProjectStatus.COMPLETED.value)
+        .all()
         )
         assert len(completed_projects) == 1
 
@@ -436,21 +436,21 @@ class TestModelQueryMethods:
         """测试按 is_active 字段过滤"""
         # 创建活跃和禁用用户
         active_user = User(
-            username="activeuser",
-            email="active@example.com",
-            hashed_password="hash",
-            full_name="Active User",
-            role=UserRole.MEMBER.value,
-            is_active=True,
+        username="activeuser",
+        email="active@example.com",
+        hashed_password="hash",
+        full_name="Active User",
+        role=UserRole.MEMBER.value,
+        is_active=True,
         )
 
         inactive_user = User(
-            username="inactiveuser",
-            email="inactive@example.com",
-            hashed_password="hash",
-            full_name="Inactive User",
-            role=UserRole.MEMBER.value,
-            is_active=False,
+        username="inactiveuser",
+        email="inactive@example.com",
+        hashed_password="hash",
+        full_name="Inactive User",
+        role=UserRole.MEMBER.value,
+        is_active=False,
         )
 
         db_session.add(active_user)

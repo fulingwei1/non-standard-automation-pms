@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 工单管理 - 状态操作
+
+使用统一状态更新服务重构
 """
-from datetime import datetime
+import logging
 from typing import Any, Optional
 
 from fastapi import Body, Depends, HTTPException
@@ -18,6 +20,7 @@ from fastapi import APIRouter
 
 from .utils import get_work_order_response
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -30,31 +33,52 @@ def start_work_order(
 ) -> Any:
     """
     开始工单
+
+    使用统一状态更新服务，支持：
+    - 状态转换规则验证（只能从ASSIGNED转换到STARTED）
+    - 自动记录开始时间
+    - 关联工位状态更新
     """
     order = db.query(WorkOrder).filter(WorkOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="工单不存在")
 
-    if order.status != "ASSIGNED":
-        raise HTTPException(status_code=400, detail="只有已派工的工单才能开始")
-
-    order.status = "STARTED"
-    order.actual_start_time = datetime.now()
-
-    # 更新工位状态
+    # 准备关联实体更新（工位）
+    related_entities = []
     if order.workstation_id:
         workstation = db.query(Workstation).filter(Workstation.id == order.workstation_id).first()
         if workstation:
-            workstation.status = "WORKING"
+            related_entities.append({
+                "entity": workstation,
+                "field": "status",
+                "value": "WORKING",
+            })
+            # 工位还需要更新其他字段
             workstation.current_work_order_id = order.id
             workstation.current_worker_id = order.assigned_to
-            db.add(workstation)
 
-    db.add(order)
-    db.commit()
-    db.refresh(order)
+    # 使用统一状态更新服务
+    service = StatusUpdateService(db)
+    result = service.update_status(
+        entity=order,
+        new_status="STARTED",
+        operator=current_user,
+        transition_rules={
+            "ASSIGNED": ["STARTED"],  # 只能从ASSIGNED转换到STARTED
+        },
+        timestamp_fields={
+            "STARTED": "actual_start_time",
+        },
+        related_entities=related_entities,
+    )
 
-    return get_work_order_response(db, order)
+    if not result.success:
+        raise HTTPException(
+            status_code=400,
+            detail="; ".join(result.errors) if result.errors else "开始工单失败",
+        )
+
+    return get_work_order_response(db, result.entity)
 
 
 @router.put("/work-orders/{order_id}/complete", response_model=WorkOrderResponse)
@@ -66,32 +90,59 @@ def complete_work_order(
 ) -> Any:
     """
     完成工单
+
+    使用统一状态更新服务，支持：
+    - 状态转换规则验证（只能从STARTED或PAUSED转换到COMPLETED）
+    - 自动记录完成时间
+    - 自动设置进度为100%
+    - 关联工位状态更新
     """
     order = db.query(WorkOrder).filter(WorkOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="工单不存在")
 
-    if order.status not in ["STARTED", "PAUSED"]:
-        raise HTTPException(status_code=400, detail="只有已开始或已暂停的工单才能完成")
-
-    order.status = "COMPLETED"
-    order.actual_end_time = datetime.now()
-    order.progress = 100
-
-    # 更新工位状态
+    # 准备关联实体更新（工位）
+    related_entities = []
     if order.workstation_id:
         workstation = db.query(Workstation).filter(Workstation.id == order.workstation_id).first()
         if workstation:
-            workstation.status = "IDLE"
+            related_entities.append({
+                "entity": workstation,
+                "field": "status",
+                "value": "IDLE",
+            })
+            # 工位还需要清空其他字段
             workstation.current_work_order_id = None
             workstation.current_worker_id = None
-            db.add(workstation)
 
-    db.add(order)
-    db.commit()
-    db.refresh(order)
+    # 更新前回调：设置进度
+    def before_update_callback(entity, old_status, new_status, operator):
+        entity.progress = 100
 
-    return get_work_order_response(db, order)
+    # 使用统一状态更新服务
+    service = StatusUpdateService(db)
+    result = service.update_status(
+        entity=order,
+        new_status="COMPLETED",
+        operator=current_user,
+        transition_rules={
+            "STARTED": ["COMPLETED"],
+            "PAUSED": ["COMPLETED"],
+        },
+        timestamp_fields={
+            "COMPLETED": "actual_end_time",
+        },
+        related_entities=related_entities,
+        before_update_callback=before_update_callback,
+    )
+
+    if not result.success:
+        raise HTTPException(
+            status_code=400,
+            detail="; ".join(result.errors) if result.errors else "完成工单失败",
+        )
+
+    return get_work_order_response(db, result.entity)
 
 
 @router.put("/work-orders/{order_id}/pause", response_model=WorkOrderResponse)
@@ -104,30 +155,53 @@ def pause_work_order(
 ) -> Any:
     """
     暂停工单
+
+    使用统一状态更新服务，支持：
+    - 状态转换规则验证（只能从STARTED转换到PAUSED）
+    - 记录暂停原因
+    - 关联工位状态更新
     """
     order = db.query(WorkOrder).filter(WorkOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="工单不存在")
 
-    if order.status != "STARTED":
-        raise HTTPException(status_code=400, detail="只有已开始的工单才能暂停")
-
-    order.status = "PAUSED"
-    if pause_reason:
-        order.remark = (order.remark or "") + f"\n暂停原因：{pause_reason}"
-
-    # 更新工位状态
+    # 准备关联实体更新（工位）
+    related_entities = []
     if order.workstation_id:
         workstation = db.query(Workstation).filter(Workstation.id == order.workstation_id).first()
         if workstation:
-            workstation.status = "IDLE"
-            db.add(workstation)
+            related_entities.append({
+                "entity": workstation,
+                "field": "status",
+                "value": "IDLE",
+            })
 
-    db.add(order)
-    db.commit()
-    db.refresh(order)
+    # 更新前回调：记录暂停原因
+    def before_update_callback(entity, old_status, new_status, operator):
+        if pause_reason:
+            entity.remark = (entity.remark or "") + f"\n暂停原因：{pause_reason}"
 
-    return get_work_order_response(db, order)
+    # 使用统一状态更新服务
+    service = StatusUpdateService(db)
+    result = service.update_status(
+        entity=order,
+        new_status="PAUSED",
+        operator=current_user,
+        transition_rules={
+            "STARTED": ["PAUSED"],  # 只能从STARTED转换到PAUSED
+        },
+        related_entities=related_entities,
+        before_update_callback=before_update_callback,
+        reason=pause_reason,
+    )
+
+    if not result.success:
+        raise HTTPException(
+            status_code=400,
+            detail="; ".join(result.errors) if result.errors else "暂停工单失败",
+        )
+
+    return get_work_order_response(db, result.entity)
 
 
 @router.put("/work-orders/{order_id}/resume", response_model=WorkOrderResponse)
@@ -139,30 +213,48 @@ def resume_work_order(
 ) -> Any:
     """
     恢复工单
+
+    使用统一状态更新服务，支持：
+    - 状态转换规则验证（只能从PAUSED转换到STARTED）
+    - 关联工位状态更新
     """
     order = db.query(WorkOrder).filter(WorkOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="工单不存在")
 
-    if order.status != "PAUSED":
-        raise HTTPException(status_code=400, detail="只有已暂停的工单才能恢复")
-
-    order.status = "STARTED"
-
-    # 更新工位状态
+    # 准备关联实体更新（工位）
+    related_entities = []
     if order.workstation_id:
         workstation = db.query(Workstation).filter(Workstation.id == order.workstation_id).first()
         if workstation:
-            workstation.status = "WORKING"
+            related_entities.append({
+                "entity": workstation,
+                "field": "status",
+                "value": "WORKING",
+            })
+            # 工位还需要更新其他字段
             workstation.current_work_order_id = order.id
             workstation.current_worker_id = order.assigned_to
-            db.add(workstation)
 
-    db.add(order)
-    db.commit()
-    db.refresh(order)
+    # 使用统一状态更新服务
+    service = StatusUpdateService(db)
+    result = service.update_status(
+        entity=order,
+        new_status="STARTED",
+        operator=current_user,
+        transition_rules={
+            "PAUSED": ["STARTED"],  # 只能从PAUSED转换到STARTED
+        },
+        related_entities=related_entities,
+    )
 
-    return get_work_order_response(db, order)
+    if not result.success:
+        raise HTTPException(
+            status_code=400,
+            detail="; ".join(result.errors) if result.errors else "恢复工单失败",
+        )
+
+    return get_work_order_response(db, result.entity)
 
 
 @router.put("/work-orders/{order_id}/cancel", response_model=WorkOrderResponse)
@@ -175,29 +267,56 @@ def cancel_work_order(
 ) -> Any:
     """
     取消工单
+
+    使用统一状态更新服务，支持：
+    - 状态转换规则验证（不能从COMPLETED或CANCELLED转换）
+    - 记录取消原因
+    - 关联工位状态更新
     """
     order = db.query(WorkOrder).filter(WorkOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="工单不存在")
 
-    if order.status in ["COMPLETED", "CANCELLED"]:
-        raise HTTPException(status_code=400, detail="已完成或已取消的工单不能再次取消")
-
-    order.status = "CANCELLED"
-    if cancel_reason:
-        order.remark = (order.remark or "") + f"\n取消原因：{cancel_reason}"
-
-    # 更新工位状态
+    # 准备关联实体更新（工位）
+    related_entities = []
     if order.workstation_id:
         workstation = db.query(Workstation).filter(Workstation.id == order.workstation_id).first()
         if workstation:
-            workstation.status = "IDLE"
+            related_entities.append({
+                "entity": workstation,
+                "field": "status",
+                "value": "IDLE",
+            })
+            # 工位还需要清空其他字段
             workstation.current_work_order_id = None
             workstation.current_worker_id = None
-            db.add(workstation)
 
-    db.add(order)
-    db.commit()
-    db.refresh(order)
+    # 更新前回调：记录取消原因
+    def before_update_callback(entity, old_status, new_status, operator):
+        if cancel_reason:
+            entity.remark = (entity.remark or "") + f"\n取消原因：{cancel_reason}"
 
-    return get_work_order_response(db, order)
+    # 使用统一状态更新服务
+    service = StatusUpdateService(db)
+    result = service.update_status(
+        entity=order,
+        new_status="CANCELLED",
+        operator=current_user,
+        transition_rules={
+            # 允许从除COMPLETED和CANCELLED外的所有状态转换到CANCELLED
+            "ASSIGNED": ["CANCELLED"],
+            "STARTED": ["CANCELLED"],
+            "PAUSED": ["CANCELLED"],
+        },
+        related_entities=related_entities,
+        before_update_callback=before_update_callback,
+        reason=cancel_reason,
+    )
+
+    if not result.success:
+        raise HTTPException(
+            status_code=400,
+            detail="; ".join(result.errors) if result.errors else "取消工单失败",
+        )
+
+    return get_work_order_response(db, result.entity)

@@ -89,11 +89,11 @@ class TestGenerateDateRange:
         end = date(2024, 2, 5)
         dates = generate_date_range(start, end, "DAILY")
         assert dates == [
-            "2024-02-01",
-            "2024-02-02",
-            "2024-02-03",
-            "2024-02-04",
-            "2024-02-05",
+        "2024-02-01",
+        "2024-02-02",
+        "2024-02-03",
+        "2024-02-04",
+        "2024-02-05",
         ]
 
     def test_generate_date_range_monthly(self):
@@ -104,10 +104,10 @@ class TestGenerateDateRange:
         end = date(2024, 4, 10)
         dates = generate_date_range(start, end, "MONTHLY")
         assert dates == [
-            "2024-01-01",
-            "2024-02-01",
-            "2024-03-01",
-            "2024-04-01",
+        "2024-01-01",
+        "2024-02-01",
+        "2024-03-01",
+        "2024-04-01",
         ]
 
     def test_generate_date_range_single_day(self):
@@ -128,33 +128,33 @@ class TestBuildTrendStatistics:
         from app.services.alert_trend_service import build_trend_statistics
 
         alerts = [
-            MockAlertRecord(
-                alert_no="ALT001",
-                alert_level="WARNING",
-                alert_title="进度延迟",
-                triggered_at=datetime(2024, 2, 1, 10, 0),
-                status="RESOLVED",
-                rule_type="PROGRESS",
-                rule=MockAlertRule("PROGRESS"),
-            ),
-            MockAlertRecord(
-                alert_no="ALT002",
-                alert_level="ERROR",
-                alert_title="成本超支",
-                triggered_at=datetime(2024, 2, 1, 14, 0),
-                status="OPEN",
-                rule_type="COST",
-                rule=MockAlertRule("COST"),
-            ),
-            MockAlertRecord(
-                alert_no="ALT003",
-                alert_level="WARNING",
-                alert_title="质量异常",
-                triggered_at=datetime(2024, 2, 2, 9, 0),
-                status="RESOLVED",
-                rule_type="QUALITY",
-                rule=MockAlertRule("QUALITY"),
-            ),
+        MockAlertRecord(
+        alert_no="ALT001",
+        alert_level="WARNING",
+        alert_title="进度延迟",
+        triggered_at=datetime(2024, 2, 1, 10, 0),
+        status="RESOLVED",
+        rule_type="PROGRESS",
+        rule=MockAlertRule("PROGRESS"),
+        ),
+        MockAlertRecord(
+        alert_no="ALT002",
+        alert_level="ERROR",
+        alert_title="成本超支",
+        triggered_at=datetime(2024, 2, 1, 14, 0),
+        status="OPEN",
+        rule_type="COST",
+        rule=MockAlertRule("COST"),
+        ),
+        MockAlertRecord(
+        alert_no="ALT003",
+        alert_level="WARNING",
+        alert_title="质量异常",
+        triggered_at=datetime(2024, 2, 2, 9, 0),
+        status="RESOLVED",
+        rule_type="QUALITY",
+        rule=MockAlertRule("QUALITY"),
+        ),
         ]
 
         stats = build_trend_statistics(alerts, "DAILY")
@@ -175,24 +175,24 @@ class TestBuildTrendStatistics:
         from app.services.alert_trend_service import build_trend_statistics
 
         alerts = [
-            MockAlertRecord(
-                alert_no="ALT001",
-                alert_level="WARNING",
-                alert_title="进度延迟",
-                triggered_at=None,
-                status="OPEN",
-                rule_type="PROGRESS",
-                rule=MockAlertRule("PROGRESS"),
-            ),
-            MockAlertRecord(
-                alert_no="ALT002",
-                alert_level="ERROR",
-                alert_title="成本超支",
-                triggered_at=datetime(2024, 2, 1, 14, 0),
-                status="OPEN",
-                rule_type="COST",
-                rule=MockAlertRule("COST"),
-            ),
+        MockAlertRecord(
+        alert_no="ALT001",
+        alert_level="WARNING",
+        alert_title="进度延迟",
+        triggered_at=None,
+        status="OPEN",
+        rule_type="PROGRESS",
+        rule=MockAlertRule("PROGRESS"),
+        ),
+        MockAlertRecord(
+        alert_no="ALT002",
+        alert_level="ERROR",
+        alert_title="成本超支",
+        triggered_at=datetime(2024, 2, 1, 14, 0),
+        status="OPEN",
+        rule_type="COST",
+        rule=MockAlertRule("COST"),
+        ),
         ]
 
         stats = build_trend_statistics(alerts, "DAILY")
@@ -207,24 +207,24 @@ class TestBuildSummaryStatistics:
         from app.services.alert_trend_service import build_summary_statistics
 
         alerts = [
-            MockAlertRecord(
-                alert_no="ALT001",
-                alert_level="WARNING",
-                alert_title="进度延迟",
-                triggered_at=datetime(2024, 2, 1, 10, 0),
-                status="RESOLVED",
-                rule_type="PROGRESS",
-                rule=MockAlertRule("PROGRESS"),
-            ),
-            MockAlertRecord(
-                alert_no="ALT002",
-                alert_level="ERROR",
-                alert_title="成本超支",
-                triggered_at=datetime(2024, 2, 1, 14, 0),
-                status="OPEN",
-                rule_type="COST",
-                rule=MockAlertRule("COST"),
-            ),
+        MockAlertRecord(
+        alert_no="ALT001",
+        alert_level="WARNING",
+        alert_title="进度延迟",
+        triggered_at=datetime(2024, 2, 1, 10, 0),
+        status="RESOLVED",
+        rule_type="PROGRESS",
+        rule=MockAlertRule("PROGRESS"),
+        ),
+        MockAlertRecord(
+        alert_no="ALT002",
+        alert_level="ERROR",
+        alert_title="成本超支",
+        triggered_at=datetime(2024, 2, 1, 14, 0),
+        status="OPEN",
+        rule_type="COST",
+        rule=MockAlertRule("COST"),
+        ),
         ]
 
         stats = build_summary_statistics(alerts)
@@ -247,24 +247,24 @@ class TestBuildSummaryStatistics:
         from app.services.alert_trend_service import build_summary_statistics
 
         alerts = [
-            MockAlertRecord(
-                alert_no="ALT001",
-                alert_level="WARNING",
-                alert_title="进度延迟",
-                triggered_at=datetime(2024, 2, 1, 10, 0),
-                status="OPEN",
-                rule_type="PROGRESS",
-                rule=MockAlertRule("PROGRESS"),
-            ),
-            MockAlertRecord(
-                alert_no="ALT002",
-                alert_level=None,
-                alert_title="成本超支",
-                triggered_at=datetime(2024, 2, 1, 14, 0),
-                status=None,
-                rule_type=None,
-                rule=None,
-            ),
+        MockAlertRecord(
+        alert_no="ALT001",
+        alert_level="WARNING",
+        alert_title="进度延迟",
+        triggered_at=datetime(2024, 2, 1, 10, 0),
+        status="OPEN",
+        rule_type="PROGRESS",
+        rule=MockAlertRule("PROGRESS"),
+        ),
+        MockAlertRecord(
+        alert_no="ALT002",
+        alert_level=None,
+        alert_title="成本超支",
+        triggered_at=datetime(2024, 2, 1, 14, 0),
+        status=None,
+        rule_type=None,
+        rule=None,
+        ),
         ]
 
         stats = build_summary_statistics(alerts)

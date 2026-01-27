@@ -14,13 +14,10 @@ class TestSolutionEngineerBonusServiceInit:
 
     def test_init_with_db_session(self, db_session):
         """测试使用数据库会话初始化"""
-        try:
-            from app.services.solution_engineer_bonus_service import SolutionEngineerBonusService
+        from app.services.solution_engineer_bonus_service import SolutionEngineerBonusService
 
-            service = SolutionEngineerBonusService(db_session)
-            assert service.db == db_session
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        service = SolutionEngineerBonusService(db_session)
+        assert service.db == db_session
 
 
 class TestCalculateSolutionBonus:
@@ -28,94 +25,82 @@ class TestCalculateSolutionBonus:
 
     def test_period_not_found(self, db_session):
         """测试考核周期不存在"""
-        try:
-            from app.services.solution_engineer_bonus_service import SolutionEngineerBonusService
+        from app.services.solution_engineer_bonus_service import SolutionEngineerBonusService
 
-            service = SolutionEngineerBonusService(db_session)
+        service = SolutionEngineerBonusService(db_session)
 
-            with pytest.raises(ValueError, match="考核周期不存在"):
-                service.calculate_solution_bonus(1, 99999)
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        with pytest.raises(ValueError, match="考核周期不存在"):
+            service.calculate_solution_bonus(1, 99999)
 
     def test_no_solutions(self, db_session):
         """测试无方案"""
-        try:
-            from app.services.solution_engineer_bonus_service import SolutionEngineerBonusService
-            from app.models.performance import PerformancePeriod
-            from datetime import date
+        from app.services.solution_engineer_bonus_service import SolutionEngineerBonusService
+        from app.models.performance import PerformancePeriod
+        from datetime import date
 
             # 创建考核周期
-            period = PerformancePeriod(
-                period_name='2025-01',
-                start_date=date(2025, 1, 1),
-                end_date=date(2025, 1, 31),
-                status='ACTIVE'
-            )
-            db_session.add(period)
-            db_session.flush()
+        period = PerformancePeriod(
+        period_name='2025-01',
+        start_date=date(2025, 1, 1),
+        end_date=date(2025, 1, 31),
+        status='ACTIVE'
+        )
+        db_session.add(period)
+        db_session.flush()
 
-            service = SolutionEngineerBonusService(db_session)
-            result = service.calculate_solution_bonus(99999, period.id)
+        service = SolutionEngineerBonusService(db_session)
+        result = service.calculate_solution_bonus(99999, period.id)
 
-            assert result['total_solutions'] == 0
-            assert result['completion_bonus'] == 0.0
-            assert result['won_bonus'] == 0.0
-            assert result['high_quality_compensation'] == 0.0
-            assert result['success_rate_bonus'] == 0.0
-            assert result['total_bonus'] == 0.0
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert result['total_solutions'] == 0
+        assert result['completion_bonus'] == 0.0
+        assert result['won_bonus'] == 0.0
+        assert result['high_quality_compensation'] == 0.0
+        assert result['success_rate_bonus'] == 0.0
+        assert result['total_bonus'] == 0.0
 
     def test_default_bonus_parameters(self, db_session):
         """测试默认奖金参数"""
-        try:
-            from app.services.solution_engineer_bonus_service import SolutionEngineerBonusService
+        from app.services.solution_engineer_bonus_service import SolutionEngineerBonusService
 
-            service = SolutionEngineerBonusService(db_session)
+        service = SolutionEngineerBonusService(db_session)
 
             # 检查默认参数
-            import inspect
-            sig = inspect.signature(service.calculate_solution_bonus)
-            params = sig.parameters
+        import inspect
+        sig = inspect.signature(service.calculate_solution_bonus)
+        params = sig.parameters
 
-            assert params['base_bonus_per_solution'].default == Decimal('500')
-            assert params['won_bonus_ratio'].default == Decimal('0.001')
-            assert params['high_quality_compensation'].default == Decimal('300')
-            assert params['success_rate_bonus'].default == Decimal('2000')
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert params['base_bonus_per_solution'].default == Decimal('500')
+        assert params['won_bonus_ratio'].default == Decimal('0.001')
+        assert params['high_quality_compensation'].default == Decimal('300')
+        assert params['success_rate_bonus'].default == Decimal('2000')
 
     def test_custom_bonus_parameters(self, db_session):
         """测试自定义奖金参数"""
-        try:
-            from app.services.solution_engineer_bonus_service import SolutionEngineerBonusService
-            from app.models.performance import PerformancePeriod
-            from datetime import date
+        from app.services.solution_engineer_bonus_service import SolutionEngineerBonusService
+        from app.models.performance import PerformancePeriod
+        from datetime import date
 
-            period = PerformancePeriod(
-                period_name='2025-01',
-                start_date=date(2025, 1, 1),
-                end_date=date(2025, 1, 31),
-                status='ACTIVE'
-            )
-            db_session.add(period)
-            db_session.flush()
+        period = PerformancePeriod(
+        period_name='2025-01',
+        start_date=date(2025, 1, 1),
+        end_date=date(2025, 1, 31),
+        status='ACTIVE'
+        )
+        db_session.add(period)
+        db_session.flush()
 
-            service = SolutionEngineerBonusService(db_session)
-            result = service.calculate_solution_bonus(
-                engineer_id=1,
-                period_id=period.id,
-                base_bonus_per_solution=Decimal('1000'),
-                won_bonus_ratio=Decimal('0.002'),
-                high_quality_compensation=Decimal('500'),
-                success_rate_bonus=Decimal('3000')
-            )
+        service = SolutionEngineerBonusService(db_session)
+        result = service.calculate_solution_bonus(
+        engineer_id=1,
+        period_id=period.id,
+        base_bonus_per_solution=Decimal('1000'),
+        won_bonus_ratio=Decimal('0.002'),
+        high_quality_compensation=Decimal('500'),
+        success_rate_bonus=Decimal('3000')
+        )
 
             # 验证方法接受自定义参数
-            assert 'total_bonus' in result
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert 'total_bonus' in result
 
 
 class TestBonusCalculationLogic:
@@ -130,7 +115,7 @@ class TestBonusCalculationLogic:
         if status in ['APPROVED', 'SUBMITTED']:
             completion_bonus += base_bonus
 
-        assert completion_bonus == Decimal('500')
+            assert completion_bonus == Decimal('500')
 
     def test_completion_bonus_for_submitted_solution(self):
         """测试已提交方案的完成奖金"""
@@ -141,7 +126,7 @@ class TestBonusCalculationLogic:
         if status in ['APPROVED', 'SUBMITTED']:
             completion_bonus += base_bonus
 
-        assert completion_bonus == Decimal('500')
+            assert completion_bonus == Decimal('500')
 
     def test_no_completion_bonus_for_draft(self):
         """测试草稿方案无完成奖金"""
@@ -152,7 +137,7 @@ class TestBonusCalculationLogic:
         if status in ['APPROVED', 'SUBMITTED']:
             completion_bonus += base_bonus
 
-        assert completion_bonus == Decimal('0')
+            assert completion_bonus == Decimal('0')
 
     def test_won_bonus_calculation(self):
         """测试中标奖金计算"""
@@ -188,7 +173,7 @@ class TestBonusCalculationLogic:
         else:
             compensation = Decimal('0')
 
-        assert compensation == Decimal('300')
+            assert compensation == Decimal('300')
 
 
 class TestGetSolutionScoreDetails:
@@ -196,15 +181,12 @@ class TestGetSolutionScoreDetails:
 
     def test_period_not_found(self, db_session):
         """测试考核周期不存在"""
-        try:
-            from app.services.solution_engineer_bonus_service import SolutionEngineerBonusService
+        from app.services.solution_engineer_bonus_service import SolutionEngineerBonusService
 
-            service = SolutionEngineerBonusService(db_session)
+        service = SolutionEngineerBonusService(db_session)
 
-            with pytest.raises(ValueError, match="考核周期不存在"):
-                service.get_solution_score_details(1, 99999)
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        with pytest.raises(ValueError, match="考核周期不存在"):
+            service.get_solution_score_details(1, 99999)
 
 
 class TestBonusResultStructure:
@@ -212,56 +194,50 @@ class TestBonusResultStructure:
 
     def test_result_fields(self, db_session):
         """测试结果字段"""
-        try:
-            from app.services.solution_engineer_bonus_service import SolutionEngineerBonusService
-            from app.models.performance import PerformancePeriod
-            from datetime import date
+        from app.services.solution_engineer_bonus_service import SolutionEngineerBonusService
+        from app.models.performance import PerformancePeriod
+        from datetime import date
 
-            period = PerformancePeriod(
-                period_name='2025-01',
-                start_date=date(2025, 1, 1),
-                end_date=date(2025, 1, 31),
-                status='ACTIVE'
-            )
-            db_session.add(period)
-            db_session.flush()
+        period = PerformancePeriod(
+        period_name='2025-01',
+        start_date=date(2025, 1, 1),
+        end_date=date(2025, 1, 31),
+        status='ACTIVE'
+        )
+        db_session.add(period)
+        db_session.flush()
 
-            service = SolutionEngineerBonusService(db_session)
-            result = service.calculate_solution_bonus(1, period.id)
+        service = SolutionEngineerBonusService(db_session)
+        result = service.calculate_solution_bonus(1, period.id)
 
-            expected_fields = [
-                'engineer_id', 'period_id', 'total_solutions',
-                'completion_bonus', 'won_bonus', 'high_quality_compensation',
-                'success_rate_bonus', 'total_bonus', 'details'
-            ]
+        expected_fields = [
+        'engineer_id', 'period_id', 'total_solutions',
+        'completion_bonus', 'won_bonus', 'high_quality_compensation',
+        'success_rate_bonus', 'total_bonus', 'details'
+        ]
 
-            for field in expected_fields:
-                assert field in result
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        for field in expected_fields:
+            assert field in result
 
     def test_details_is_list(self, db_session):
         """测试详情是列表"""
-        try:
-            from app.services.solution_engineer_bonus_service import SolutionEngineerBonusService
-            from app.models.performance import PerformancePeriod
-            from datetime import date
+        from app.services.solution_engineer_bonus_service import SolutionEngineerBonusService
+        from app.models.performance import PerformancePeriod
+        from datetime import date
 
-            period = PerformancePeriod(
-                period_name='2025-01',
-                start_date=date(2025, 1, 1),
-                end_date=date(2025, 1, 31),
-                status='ACTIVE'
-            )
-            db_session.add(period)
-            db_session.flush()
+        period = PerformancePeriod(
+        period_name='2025-01',
+        start_date=date(2025, 1, 1),
+        end_date=date(2025, 1, 31),
+        status='ACTIVE'
+        )
+        db_session.add(period)
+        db_session.flush()
 
-            service = SolutionEngineerBonusService(db_session)
-            result = service.calculate_solution_bonus(1, period.id)
+        service = SolutionEngineerBonusService(db_session)
+        result = service.calculate_solution_bonus(1, period.id)
 
-            assert isinstance(result['details'], list)
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert isinstance(result['details'], list)
 
 
 class TestWinRateCalculation:

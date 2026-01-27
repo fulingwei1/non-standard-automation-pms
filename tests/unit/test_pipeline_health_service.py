@@ -54,11 +54,11 @@ class TestPipelineHealthService:
 
     def test_calculate_lead_health_h1(self, pipeline_health_service, test_sales_user):
         lead = Lead(
-            owner_id=test_sales_user.id,
-            lead_code="LEAD001",
-            customer_name="测试客户",
-            status="NEW",
-            created_at=datetime.now() - timedelta(days=3),
+        owner_id=test_sales_user.id,
+        lead_code="LEAD001",
+        customer_name="测试客户",
+        status="NEW",
+        created_at=datetime.now() - timedelta(days=3),
         )
         pipeline_health_service.db.add(lead)
         pipeline_health_service.db.commit()
@@ -70,11 +70,11 @@ class TestPipelineHealthService:
 
     def test_calculate_lead_health_h2(self, pipeline_health_service, test_sales_user):
         lead = Lead(
-            owner_id=test_sales_user.id,
-            lead_code="LEAD002",
-            customer_name="测试客户2",
-            status="NEW",
-            created_at=datetime.now() - timedelta(days=10),
+        owner_id=test_sales_user.id,
+        lead_code="LEAD002",
+        customer_name="测试客户2",
+        status="NEW",
+        created_at=datetime.now() - timedelta(days=10),
         )
         pipeline_health_service.db.add(lead)
         pipeline_health_service.db.commit()
@@ -85,11 +85,11 @@ class TestPipelineHealthService:
 
     def test_calculate_lead_health_h3(self, pipeline_health_service, test_sales_user):
         lead = Lead(
-            owner_id=test_sales_user.id,
-            lead_code="LEAD003",
-            customer_name="测试客户3",
-            status="NEW",
-            created_at=datetime.now() - timedelta(days=35),
+        owner_id=test_sales_user.id,
+        lead_code="LEAD003",
+        customer_name="测试客户3",
+        status="NEW",
+        created_at=datetime.now() - timedelta(days=35),
         )
         pipeline_health_service.db.add(lead)
         pipeline_health_service.db.commit()
@@ -102,11 +102,11 @@ class TestPipelineHealthService:
         self, pipeline_health_service, test_sales_user
     ):
         lead = Lead(
-            owner_id=test_sales_user.id,
-            lead_code="LEAD004",
-            customer_name="已转换客户",
-            status="CONVERTED",
-            created_at=datetime.now() - timedelta(days=5),
+        owner_id=test_sales_user.id,
+        lead_code="LEAD004",
+        customer_name="已转换客户",
+        status="CONVERTED",
+        created_at=datetime.now() - timedelta(days=5),
         )
         pipeline_health_service.db.add(lead)
         pipeline_health_service.db.commit()
@@ -119,13 +119,13 @@ class TestPipelineHealthService:
         self, pipeline_health_service, test_sales_user, test_customer
     ):
         opp = Opportunity(
-            owner_id=test_sales_user.id,
-            opp_code="OPP001",
-            opp_name="测试商机",
-            customer_id=test_customer.id,
-            stage="NEGOTIATING",
-            created_at=datetime.now() - timedelta(days=7),
-            updated_at=datetime.now() - timedelta(days=5),
+        owner_id=test_sales_user.id,
+        opp_code="OPP001",
+        opp_name="测试商机",
+        customer_id=test_customer.id,
+        stage="NEGOTIATING",
+        created_at=datetime.now() - timedelta(days=7),
+        updated_at=datetime.now() - timedelta(days=5),
         )
         pipeline_health_service.db.add(opp)
         pipeline_health_service.db.commit()
@@ -138,13 +138,13 @@ class TestPipelineHealthService:
         self, pipeline_health_service, test_sales_user, test_customer
     ):
         opp = Opportunity(
-            owner_id=test_sales_user.id,
-            opp_code="OPP002",
-            opp_name="测试商机2",
-            customer_id=test_customer.id,
-            stage="NEGOTIATING",
-            created_at=datetime.now() - timedelta(days=20),
-            updated_at=datetime.now() - timedelta(days=18),
+        owner_id=test_sales_user.id,
+        opp_code="OPP002",
+        opp_name="测试商机2",
+        customer_id=test_customer.id,
+        stage="NEGOTIATING",
+        created_at=datetime.now() - timedelta(days=20),
+        updated_at=datetime.now() - timedelta(days=18),
         )
         pipeline_health_service.db.add(opp)
         pipeline_health_service.db.commit()
@@ -157,13 +157,13 @@ class TestPipelineHealthService:
         self, pipeline_health_service, test_sales_user, test_customer
     ):
         opp = Opportunity(
-            owner_id=test_sales_user.id,
-            opp_code="OPP003",
-            opp_name="测试商机3",
-            customer_id=test_customer.id,
-            stage="NEGOTIATING",
-            created_at=datetime.now() - timedelta(days=70),
-            updated_at=datetime.now() - timedelta(days=68),
+        owner_id=test_sales_user.id,
+        opp_code="OPP003",
+        opp_name="测试商机3",
+        customer_id=test_customer.id,
+        stage="NEGOTIATING",
+        created_at=datetime.now() - timedelta(days=70),
+        updated_at=datetime.now() - timedelta(days=68),
         )
         pipeline_health_service.db.add(opp)
         pipeline_health_service.db.commit()
@@ -176,12 +176,12 @@ class TestPipelineHealthService:
         self, pipeline_health_service, test_sales_user, test_customer
     ):
         opp = Opportunity(
-            owner_id=test_sales_user.id,
-            opp_code="OPP004",
-            opp_name="已赢商机",
-            customer_id=test_customer.id,
-            stage="WON",
-            created_at=datetime.now() - timedelta(days=10),
+        owner_id=test_sales_user.id,
+        opp_code="OPP004",
+        opp_name="已赢商机",
+        customer_id=test_customer.id,
+        stage="WON",
+        created_at=datetime.now() - timedelta(days=10),
         )
         pipeline_health_service.db.add(opp)
         pipeline_health_service.db.commit()
@@ -194,23 +194,23 @@ class TestPipelineHealthService:
         from app.models.sales import Opportunity
         # 创建商机（Quote 需要 opportunity_id）
         opp = Opportunity(
-            owner_id=test_sales_user.id,
-            opp_code="OPP-QUOTE1",
-            opp_name="测试商机",
-            customer_id=test_customer.id,
-            stage="NEGOTIATING",
-            created_at=datetime.now()
+        owner_id=test_sales_user.id,
+        opp_code="OPP-QUOTE1",
+        opp_name="测试商机",
+        customer_id=test_customer.id,
+        stage="NEGOTIATING",
+        created_at=datetime.now()
         )
         pipeline_health_service.db.add(opp)
         pipeline_health_service.db.flush()
 
         quote = Quote(
-            owner_id=test_sales_user.id,
-            quote_code="Q001",
-            opportunity_id=opp.id,
-            customer_id=test_customer.id,
-            status="PENDING",
-            created_at=datetime.now() - timedelta(days=10),
+        owner_id=test_sales_user.id,
+        quote_code="Q001",
+        opportunity_id=opp.id,
+        customer_id=test_customer.id,
+        status="PENDING",
+        created_at=datetime.now() - timedelta(days=10),
         )
         pipeline_health_service.db.add(quote)
         pipeline_health_service.db.commit()
@@ -223,23 +223,23 @@ class TestPipelineHealthService:
         from app.models.sales import Opportunity
         # 创建商机
         opp = Opportunity(
-            owner_id=test_sales_user.id,
-            opp_code="OPP-QUOTE2",
-            opp_name="测试商机2",
-            customer_id=test_customer.id,
-            stage="NEGOTIATING",
-            created_at=datetime.now()
+        owner_id=test_sales_user.id,
+        opp_code="OPP-QUOTE2",
+        opp_name="测试商机2",
+        customer_id=test_customer.id,
+        stage="NEGOTIATING",
+        created_at=datetime.now()
         )
         pipeline_health_service.db.add(opp)
         pipeline_health_service.db.flush()
 
         quote = Quote(
-            owner_id=test_sales_user.id,
-            quote_code="Q002",
-            opportunity_id=opp.id,
-            customer_id=test_customer.id,
-            status="PENDING",
-            created_at=datetime.now() - timedelta(days=100),
+        owner_id=test_sales_user.id,
+        quote_code="Q002",
+        opportunity_id=opp.id,
+        customer_id=test_customer.id,
+        status="PENDING",
+        created_at=datetime.now() - timedelta(days=100),
         )
         pipeline_health_service.db.add(quote)
         pipeline_health_service.db.commit()
@@ -254,23 +254,23 @@ class TestPipelineHealthService:
         from app.models.sales import Opportunity
         # 创建商机
         opp = Opportunity(
-            owner_id=test_sales_user.id,
-            opp_code="OPP-QUOTE3",
-            opp_name="测试商机3",
-            customer_id=test_customer.id,
-            stage="NEGOTIATING",
-            created_at=datetime.now()
+        owner_id=test_sales_user.id,
+        opp_code="OPP-QUOTE3",
+        opp_name="测试商机3",
+        customer_id=test_customer.id,
+        stage="NEGOTIATING",
+        created_at=datetime.now()
         )
         pipeline_health_service.db.add(opp)
         pipeline_health_service.db.flush()
 
         quote = Quote(
-            owner_id=test_sales_user.id,
-            quote_code="Q003",
-            opportunity_id=opp.id,
-            customer_id=test_customer.id,
-            status="APPROVED",
-            created_at=datetime.now() - timedelta(days=5),
+        owner_id=test_sales_user.id,
+        quote_code="Q003",
+        opportunity_id=opp.id,
+        customer_id=test_customer.id,
+        status="APPROVED",
+        created_at=datetime.now() - timedelta(days=5),
         )
         pipeline_health_service.db.add(quote)
         pipeline_health_service.db.commit()
@@ -285,12 +285,12 @@ class TestPipelineHealthService:
         from app.models.sales import Opportunity
         # 创建商机（Contract 需要 opportunity_id）
         opp = Opportunity(
-            owner_id=test_sales_user.id,
-            opp_code="OPP-CONTRACT1",
-            opp_name="测试商机",
-            customer_id=test_customer.id,
-            stage="NEGOTIATING",
-            created_at=datetime.now()
+        owner_id=test_sales_user.id,
+        opp_code="OPP-CONTRACT1",
+        opp_name="测试商机",
+        customer_id=test_customer.id,
+        stage="NEGOTIATING",
+        created_at=datetime.now()
         )
         pipeline_health_service.db.add(opp)
         pipeline_health_service.db.flush()
@@ -298,25 +298,25 @@ class TestPipelineHealthService:
         # 创建项目（Contract 关联项目后健康度会更好）
         from app.models.project import Project
         project = Project(
-            project_code="PJ-CONTRACT1",
-            project_name="测试项目",
-            customer_id=test_customer.id,
-            stage="S4",
-            status="ST09",
-            health="H1",
+        project_code="PJ-CONTRACT1",
+        project_name="测试项目",
+        customer_id=test_customer.id,
+        stage="S4",
+        status="ST09",
+        health="H1",
         )
         pipeline_health_service.db.add(project)
         pipeline_health_service.db.flush()
 
         contract = Contract(
-            owner_id=test_sales_user.id,
-            customer_id=test_customer.id,
-            contract_code="C001",
-            opportunity_id=opp.id,
-            project_id=project.id,  # 关联项目
-            contract_amount=Decimal("1000000"),
-            status="ACTIVE",
-            signed_date=date.today(),
+        owner_id=test_sales_user.id,
+        customer_id=test_customer.id,
+        contract_code="C001",
+        opportunity_id=opp.id,
+        project_id=project.id,  # 关联项目
+        contract_amount=Decimal("1000000"),
+        status="ACTIVE",
+        signed_date=date.today(),
         )
         pipeline_health_service.db.add(contract)
         pipeline_health_service.db.commit()
@@ -331,24 +331,24 @@ class TestPipelineHealthService:
         from app.models.sales import Opportunity
         # 创建商机
         opp = Opportunity(
-            owner_id=test_sales_user.id,
-            opp_code="OPP-CONTRACT2",
-            opp_name="测试商机2",
-            customer_id=test_customer.id,
-            stage="NEGOTIATING",
-            created_at=datetime.now()
+        owner_id=test_sales_user.id,
+        opp_code="OPP-CONTRACT2",
+        opp_name="测试商机2",
+        customer_id=test_customer.id,
+        stage="NEGOTIATING",
+        created_at=datetime.now()
         )
         pipeline_health_service.db.add(opp)
         pipeline_health_service.db.flush()
 
         contract = Contract(
-            owner_id=test_sales_user.id,
-            customer_id=test_customer.id,
-            contract_code="C002",
-            opportunity_id=opp.id,
-            contract_amount=Decimal("1000000"),
-            status="DELAYED",
-            signed_date=date.today() - timedelta(days=30),
+        owner_id=test_sales_user.id,
+        customer_id=test_customer.id,
+        contract_code="C002",
+        opportunity_id=opp.id,
+        contract_amount=Decimal("1000000"),
+        status="DELAYED",
+        signed_date=date.today() - timedelta(days=30),
         )
         pipeline_health_service.db.add(contract)
         pipeline_health_service.db.commit()
@@ -363,36 +363,36 @@ class TestPipelineHealthService:
         from app.models.sales import Opportunity
         # 创建商机
         opp = Opportunity(
-            owner_id=test_sales_user.id,
-            opp_code="OPP-CONTRACT3",
-            opp_name="测试商机3",
-            customer_id=test_customer.id,
-            stage="NEGOTIATING",
-            created_at=datetime.now()
+        owner_id=test_sales_user.id,
+        opp_code="OPP-CONTRACT3",
+        opp_name="测试商机3",
+        customer_id=test_customer.id,
+        stage="NEGOTIATING",
+        created_at=datetime.now()
         )
         pipeline_health_service.db.add(opp)
         pipeline_health_service.db.flush()
 
         contract = Contract(
-            owner_id=test_sales_user.id,
-            customer_id=test_customer.id,
-            contract_code="C003",
-            opportunity_id=opp.id,
-            contract_amount=Decimal("1000000"),
-            status="ACTIVE",
+        owner_id=test_sales_user.id,
+        customer_id=test_customer.id,
+        contract_code="C003",
+        opportunity_id=opp.id,
+        contract_amount=Decimal("1000000"),
+        status="ACTIVE",
         )
         pipeline_health_service.db.add(contract)
         pipeline_health_service.db.commit()
 
         invoice = Invoice(
-            contract_id=contract.id,
-            invoice_code="INV001",
-            total_amount=Decimal("100000"),  # 使用 total_amount
-            amount=Decimal("100000"),  # 也设置 amount 作为备用
-            payment_status="PAID",
-            due_date=date.today() - timedelta(days=10),
-            paid_date=date.today() - timedelta(days=5),
-            paid_amount=Decimal("100000"),  # 已付金额等于总金额
+        contract_id=contract.id,
+        invoice_code="INV001",
+        total_amount=Decimal("100000"),  # 使用 total_amount
+        amount=Decimal("100000"),  # 也设置 amount 作为备用
+        payment_status="PAID",
+        due_date=date.today() - timedelta(days=10),
+        paid_date=date.today() - timedelta(days=5),
+        paid_amount=Decimal("100000"),  # 已付金额等于总金额
         )
         pipeline_health_service.db.add(invoice)
         pipeline_health_service.db.commit()
@@ -407,35 +407,35 @@ class TestPipelineHealthService:
         from app.models.sales import Opportunity
         # 创建商机
         opp = Opportunity(
-            owner_id=test_sales_user.id,
-            opp_code="OPP-CONTRACT4",
-            opp_name="测试商机4",
-            customer_id=test_customer.id,
-            stage="NEGOTIATING",
-            created_at=datetime.now()
+        owner_id=test_sales_user.id,
+        opp_code="OPP-CONTRACT4",
+        opp_name="测试商机4",
+        customer_id=test_customer.id,
+        stage="NEGOTIATING",
+        created_at=datetime.now()
         )
         pipeline_health_service.db.add(opp)
         pipeline_health_service.db.flush()
 
         contract = Contract(
-            owner_id=test_sales_user.id,
-            customer_id=test_customer.id,
-            contract_code="C004",
-            opportunity_id=opp.id,
-            contract_amount=Decimal("1000000"),
-            status="ACTIVE",
+        owner_id=test_sales_user.id,
+        customer_id=test_customer.id,
+        contract_code="C004",
+        opportunity_id=opp.id,
+        contract_amount=Decimal("1000000"),
+        status="ACTIVE",
         )
         pipeline_health_service.db.add(contract)
         pipeline_health_service.db.commit()
 
         invoice = Invoice(
-            contract_id=contract.id,
-            invoice_code="INV002",
-            total_amount=Decimal("100000"),  # 使用 total_amount
-            amount=Decimal("100000"),  # 也设置 amount 作为备用
-            payment_status="UNPAID",
-            due_date=date.today() - timedelta(days=15),
-            paid_amount=Decimal("0"),  # 未付款
+        contract_id=contract.id,
+        invoice_code="INV002",
+        total_amount=Decimal("100000"),  # 使用 total_amount
+        amount=Decimal("100000"),  # 也设置 amount 作为备用
+        payment_status="UNPAID",
+        due_date=date.today() - timedelta(days=15),
+        paid_amount=Decimal("0"),  # 未付款
         )
         pipeline_health_service.db.add(invoice)
         pipeline_health_service.db.commit()
@@ -452,17 +452,17 @@ class TestPipelineHealthService:
         from app.models.sales import Lead
         from datetime import datetime
         lead = Lead(
-            owner_id=test_sales_user.id,
-            lead_code="LEAD-PIPELINE",
-            customer_name="测试客户",
-            status="NEW",
-            created_at=datetime.now()
+        owner_id=test_sales_user.id,
+        lead_code="LEAD-PIPELINE",
+        customer_name="测试客户",
+        status="NEW",
+        created_at=datetime.now()
         )
         pipeline_health_service.db.add(lead)
         pipeline_health_service.db.commit()
 
         result = pipeline_health_service.calculate_pipeline_health(
-            lead_id=lead.id
+        lead_id=lead.id
         )
 
         assert isinstance(result, dict)

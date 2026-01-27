@@ -76,18 +76,18 @@ class TestPredictProjectCost(TestCostAnalysisService):
     ):
         """基于历史工时数据预测成本"""
         db_session.query.return_value.filter.return_value.first.return_value = (
-            mock_project
+        mock_project
         )
         db_session.query.return_value.filter.return_value.all.return_value = [
-            mock_timesheet
+        mock_timesheet
         ]
         db_session.query.return_value.filter.return_value.all.return_value = [mock_task]
 
         with patch(
-            "app.services.cost_analysis_service.HourlyRateService.get_user_hourly_rate",
-            return_value=Decimal("100"),
+        "app.services.cost_analysis_service.HourlyRateService.get_user_hourly_rate",
+        return_value=Decimal("100"),
         ):
-            result = service.predict_project_cost(1, based_on_history=True)
+        result = service.predict_project_cost(1, based_on_history=True)
 
         assert result["project_id"] == 1
         assert result["budget"] == 1000000
@@ -100,16 +100,16 @@ class TestPredictProjectCost(TestCostAnalysisService):
     ):
         """没有历史数据时使用默认时薪"""
         db_session.query.return_value.filter.return_value.first.return_value = (
-            mock_project
+        mock_project
         )
         db_session.query.return_value.filter.return_value.all.return_value = []
         db_session.query.return_value.filter.return_value.all.return_value = [mock_task]
 
         with patch(
-            "app.services.cost_analysis_service.HourlyRateService.get_user_hourly_rate",
-            return_value=Decimal("100"),
+        "app.services.cost_analysis_service.HourlyRateService.get_user_hourly_rate",
+        return_value=Decimal("100"),
         ):
-            result = service.predict_project_cost(1, based_on_history=True)
+        result = service.predict_project_cost(1, based_on_history=True)
 
         assert result["cost_variance"] == pytest.approx(0.2, abs=1e-3)
         assert result["is_over_budget"] is False
@@ -119,18 +119,18 @@ class TestPredictProjectCost(TestCostAnalysisService):
         mock_project.budget_amount = Decimal("0")
 
         db_session.query.return_value.filter.return_value.first.return_value = (
-            mock_project
+        mock_project
         )
         db_session.query.return_value.filter.return_value.all.return_value = [
-            mock_timesheet
+        mock_timesheet
         ]
         db_session.query.return_value.filter.return_value.all.return_value = [mock_task]
 
         with patch(
-            "app.services.cost_analysis_service.HourlyRateService.get_user_hourly_rate",
-            return_value=Decimal("100"),
+        "app.services.cost_analysis_service.HourlyRateService.get_user_hourly_rate",
+        return_value=Decimal("100"),
         ):
-            result = service.predict_project_cost(1, based_on_history=True)
+        result = service.predict_project_cost(1, based_on_history=True)
 
         assert result["is_over_budget"] is False
 
@@ -154,7 +154,7 @@ class TestCheckCostOverrunAlerts(TestCostAnalysisService):
         mock_project.actual_cost = Decimal("2000000")
 
         db_session.query.return_value.filter.return_value.all.return_value = [
-            mock_project
+        mock_project
         ]
 
         alerts = service.check_cost_overrun_alerts()
@@ -169,14 +169,14 @@ class TestCheckCostOverrunAlerts(TestCostAnalysisService):
         mock_project.actual_cost = Decimal("1800000")
 
         db_session.query.return_value.filter.return_value.all.return_value = [
-            mock_project
+        mock_project
         ]
 
         with patch(
-            "app.services.cost_analysis_service.HourlyRateService.get_user_hourly_rate",
-            return_value=Decimal("100"),
+        "app.services.cost_analysis_service.HourlyRateService.get_user_hourly_rate",
+        return_value=Decimal("100"),
         ) as mock_rate:
-            alerts = service.check_cost_overrun_alerts()
+        alerts = service.check_cost_overrun_alerts()
 
         assert len(alerts) == 1
         assert alerts[0]["alert_level"] == "WARNING"
@@ -189,7 +189,7 @@ class TestCheckCostOverrunAlerts(TestCostAnalysisService):
         mock_project.actual_cost = Decimal("900000")
 
         db_session.query.return_value.filter.return_value.all.return_value = [
-            mock_project
+        mock_project
         ]
 
         alerts = service.check_cost_overrun_alerts()
@@ -204,7 +204,7 @@ class TestCheckCostOverrunAlerts(TestCostAnalysisService):
         mock_project.actual_cost = Decimal("900000")
 
         db_session.query.return_value.filter.return_value.all.return_value = [
-            mock_project
+        mock_project
         ]
 
         alerts = service.check_cost_overrun_alerts()
@@ -216,7 +216,7 @@ class TestCheckCostOverrunAlerts(TestCostAnalysisService):
     ):
         """检查指定项目"""
         db_session.query.return_value.filter.return_value.all.return_value = [
-            mock_project
+        mock_project
         ]
 
         alerts = service.check_cost_overrun_alerts(project_id=1)
@@ -240,15 +240,15 @@ class TestCompareProjectCosts(TestCostAnalysisService):
         project2.is_active = True
 
         db_session.query.return_value.filter.return_value.all.return_value = [
-            mock_project,
-            project2,
+        mock_project,
+        project2,
         ]
 
         with patch(
-            "app.services.cost_analysis_service.HourlyRateService.get_user_hourly_rate"
+        "app.services.cost_analysis_service.HourlyRateService.get_user_hourly_rate"
         ) as mock_rate:
-            mock_rate.return_value = Decimal("100")
-            result = service.compare_project_costs([1, 2])
+        mock_rate.return_value = Decimal("100")
+        result = service.compare_project_costs([1, 2])
 
         assert len(result["projects"]) == 2
         assert result["summary"]["avg_total_cost"] == pytest.approx(110000, rel=1e-3)
@@ -272,7 +272,7 @@ class TestAnalyzeCostTrend(TestCostAnalysisService):
     ):
         """分析6个月成本趋势"""
         db_session.query.return_value.filter.return_value.first.return_value = (
-            mock_project
+        mock_project
         )
 
         ts_list = []
@@ -286,18 +286,18 @@ class TestAnalyzeCostTrend(TestCostAnalysisService):
             ts.status = "APPROVED"
             ts_list.append(ts)
 
-        db_session.query.return_value.filter.return_value.all.return_value = ts_list
+            db_session.query.return_value.filter.return_value.all.return_value = ts_list
 
-        with patch(
+            with patch(
             "app.services.cost_analysis_service.HourlyRateService.get_user_hourly_rate",
             return_value=Decimal("100"),
-        ):
+            ):
             result = service.analyze_cost_trend(1, months=6)
 
-        assert result["project_id"] == 1
-        assert len(result["monthly_trend"]) == 6
-        assert result["total_cost"] > 0
-        assert result["total_hours"] == 240
+            assert result["project_id"] == 1
+            assert len(result["monthly_trend"]) == 6
+            assert result["total_cost"] > 0
+            assert result["total_hours"] == 240
 
     def test_analyze_cost_trend_project_not_exists(self, service, db_session):
         """项目不存在"""
@@ -310,7 +310,7 @@ class TestAnalyzeCostTrend(TestCostAnalysisService):
     def test_analyze_cost_trend_no_timesheet(self, service, db_session, mock_project):
         """没有工时数据"""
         db_session.query.return_value.filter.return_value.first.return_value = (
-            mock_project
+        mock_project
         )
         db_session.query.return_value.filter.return_value.all.return_value = []
 
@@ -328,16 +328,16 @@ class TestCostAnalysisServiceEdgeCases:
         mock_project.total_hours = Decimal("0")
 
         db_session.query.return_value.filter.return_value.first.return_value = (
-            mock_project
+        mock_project
         )
         db_session.query.return_value.filter.return_value.all.return_value = []
         db_session.query.return_value.filter.return_value.all.return_value = []
 
         with patch(
-            "app.services.cost_analysis_service.HourlyRateService.get_user_hourly_rate",
-            return_value=Decimal("100"),
+        "app.services.cost_analysis_service.HourlyRateService.get_user_hourly_rate",
+        return_value=Decimal("100"),
         ):
-            result = service.predict_project_cost(1, based_on_history=True)
+        result = service.predict_project_cost(1, based_on_history=True)
 
         assert result["predicted_remaining_cost"] == 0
         assert result["predicted_total_cost"] == float(mock_project.actual_cost or 0)
@@ -350,7 +350,7 @@ class TestCostAnalysisServiceEdgeCases:
         mock_project.actual_cost = Decimal("6000000")
 
         db_session.query.return_value.filter.return_value.all.return_value = [
-            mock_project
+        mock_project
         ]
 
         alerts = service.check_cost_overrun_alerts()
@@ -362,17 +362,17 @@ class TestCostAnalysisServiceEdgeCases:
     def test_compare_project_costs_one_project(self, service, db_session, mock_project):
         """只有一个项目"""
         db_session.query.return_value.filter.return_value.all.return_value = [
-            mock_project
+        mock_project
         ]
 
         with patch(
-            "app.services.cost_analysis_service.HourlyRateService.get_user_hourly_rate",
-            return_value=Decimal("100"),
+        "app.services.cost_analysis_service.HourlyRateService.get_user_hourly_rate",
+        return_value=Decimal("100"),
         ):
-            result = service.compare_project_costs([1])
+        result = service.compare_project_costs([1])
 
         assert len(result["projects"]) == 1
         assert result["summary"]["avg_total_cost"] == float(
-            mock_project.actual_cost or 0
+        mock_project.actual_cost or 0
         )
         assert result["summary"]["min_cost"] == result["summary"]["max_cost"]

@@ -42,10 +42,10 @@ class TestCalculateKitRate:
 
             result = calculate_kit_rate(db_session, [mock_item], calculate_by="quantity")
 
-        assert result["fulfilled_items"] == 1
-        assert result["shortage_items"] == 0
-        assert result["kit_rate"] == 100.0
-        assert result["kit_status"] == "complete"
+            assert result["fulfilled_items"] == 1
+            assert result["shortage_items"] == 0
+            assert result["kit_rate"] == 100.0
+            assert result["kit_status"] == "complete"
 
     def test_partial_fulfillment(self, db_session):
         """部分齐套应返回正确的齐套率和状态。"""
@@ -75,11 +75,11 @@ class TestCalculateKitRate:
 
             result = calculate_kit_rate(db_session, [mock_item1, mock_item2])
 
-        assert result["total_items"] == 2
-        assert result["fulfilled_items"] == 1
-        assert result["shortage_items"] == 1
-        assert result["kit_rate"] == 50.0
-        assert result["kit_status"] == "shortage"
+            assert result["total_items"] == 2
+            assert result["fulfilled_items"] == 1
+            assert result["shortage_items"] == 1
+            assert result["kit_rate"] == 50.0
+            assert result["kit_status"] == "shortage"
 
     def test_kit_status_thresholds(self, db_session):
         """验证齐套状态阈值：>=100 complete, >=80 partial, <80 shortage。"""
@@ -98,13 +98,13 @@ class TestCalculateKitRate:
             mock_item.unit_price = Decimal("1.00")
             items.append(mock_item)
 
-        with patch.object(db_session, 'query') as mock_query:
-            mock_query.return_value.filter.return_value.filter.return_value.all.return_value = []
+            with patch.object(db_session, 'query') as mock_query:
+                mock_query.return_value.filter.return_value.filter.return_value.all.return_value = []
 
-            result = calculate_kit_rate(db_session, items)
+                result = calculate_kit_rate(db_session, items)
 
-        # 80% 齐套应该是 partial 状态
-        assert result["kit_status"] == "partial"
+                # 80% 齐套应该是 partial 状态
+                assert result["kit_status"] == "partial"
 
     def test_calculate_by_amount(self, db_session):
         """按金额计算齐套率。"""
@@ -123,9 +123,9 @@ class TestCalculateKitRate:
 
             result = calculate_kit_rate(db_session, [mock_item], calculate_by="amount")
 
-        assert result["calculate_by"] == "amount"
-        assert result["total_amount"] == 1000.0  # 50 * 20
-        assert result["fulfilled_amount"] == 1000.0
+            assert result["calculate_by"] == "amount"
+            assert result["total_amount"] == 1000.0  # 50 * 20
+            assert result["fulfilled_amount"] == 1000.0
 
     def test_in_transit_items(self, db_session):
         """测试在途物料的计算。"""
@@ -149,6 +149,6 @@ class TestCalculateKitRate:
 
             result = calculate_kit_rate(db_session, [mock_item])
 
-        # 在途数量 50 >= 需求 50，应该齐套
-        assert result["fulfilled_items"] == 1
-        assert result["kit_rate"] == 100.0
+            # 在途数量 50 >= 需求 50，应该齐套
+            assert result["fulfilled_items"] == 1
+            assert result["kit_rate"] == 100.0

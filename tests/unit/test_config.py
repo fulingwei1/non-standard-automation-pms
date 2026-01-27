@@ -118,11 +118,11 @@ class TestSettings:
     def test_redis_configuration(self):
         """测试 Redis 配置"""
         settings = Settings(
-            REDIS_URL="redis://localhost:6379/0",
-            REDIS_CACHE_ENABLED=True,
-            REDIS_CACHE_DEFAULT_TTL=600,
-            REDIS_CACHE_PROJECT_DETAIL_TTL=1200,
-            REDIS_CACHE_PROJECT_LIST_TTL=400,
+        REDIS_URL="redis://localhost:6379/0",
+        REDIS_CACHE_ENABLED=True,
+        REDIS_CACHE_DEFAULT_TTL=600,
+        REDIS_CACHE_PROJECT_DETAIL_TTL=1200,
+        REDIS_CACHE_PROJECT_LIST_TTL=400,
         )
 
         assert settings.REDIS_URL == "redis://localhost:6379/0"
@@ -134,12 +134,12 @@ class TestSettings:
     def test_email_configuration(self):
         """测试邮件配置"""
         settings = Settings(
-            EMAIL_ENABLED=True,
-            EMAIL_FROM="test@example.com",
-            EMAIL_SMTP_SERVER="smtp.example.com",
-            EMAIL_SMTP_PORT=587,
-            EMAIL_USERNAME="user",
-            EMAIL_PASSWORD="pass",
+        EMAIL_ENABLED=True,
+        EMAIL_FROM="test@example.com",
+        EMAIL_SMTP_SERVER="smtp.example.com",
+        EMAIL_SMTP_PORT=587,
+        EMAIL_USERNAME="user",
+        EMAIL_PASSWORD="pass",
         )
 
         assert settings.EMAIL_ENABLED is True
@@ -152,15 +152,15 @@ class TestSettings:
     def test_sms_configuration(self):
         """测试短信配置"""
         settings = Settings(
-            SMS_ENABLED=True,
-            SMS_PROVIDER="aliyun",
-            SMS_ALIYUN_ACCESS_KEY_ID="key_id",
-            SMS_ALIYUN_ACCESS_KEY_SECRET="secret",
-            SMS_ALIYUN_SIGN_NAME="sign",
-            SMS_ALIYUN_TEMPLATE_CODE="template",
-            SMS_ALIYUN_REGION="cn-hangzhou",
-            SMS_MAX_PER_DAY=200,
-            SMS_MAX_PER_HOUR=30,
+        SMS_ENABLED=True,
+        SMS_PROVIDER="aliyun",
+        SMS_ALIYUN_ACCESS_KEY_ID="key_id",
+        SMS_ALIYUN_ACCESS_KEY_SECRET="secret",
+        SMS_ALIYUN_SIGN_NAME="sign",
+        SMS_ALIYUN_TEMPLATE_CODE="template",
+        SMS_ALIYUN_REGION="cn-hangzhou",
+        SMS_MAX_PER_DAY=200,
+        SMS_MAX_PER_HOUR=30,
         )
 
         assert settings.SMS_ENABLED is True
@@ -176,10 +176,10 @@ class TestSettings:
     def test_sales_reminder_configuration(self):
         """测试销售提醒配置"""
         settings = Settings(
-            SALES_GATE_TIMEOUT_DAYS=5,
-            SALES_QUOTE_EXPIRE_REMINDER_DAYS=[14, 7, 3, 1],
-            SALES_CONTRACT_EXPIRE_REMINDER_DAYS=[60, 30, 15],
-            SALES_APPROVAL_TIMEOUT_HOURS=12,
+        SALES_GATE_TIMEOUT_DAYS=5,
+        SALES_QUOTE_EXPIRE_REMINDER_DAYS=[14, 7, 3, 1],
+        SALES_CONTRACT_EXPIRE_REMINDER_DAYS=[60, 30, 15],
+        SALES_APPROVAL_TIMEOUT_HOURS=12,
         )
 
         assert settings.SALES_GATE_TIMEOUT_DAYS == 5
@@ -190,17 +190,17 @@ class TestSettings:
     def test_wechat_configuration(self):
         """测试企业微信配置"""
         settings = Settings(
-            WECHAT_WEBHOOK_URL="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=test",
-            WECHAT_ENABLED=True,
-            WECHAT_CORP_ID="corp_id",
-            WECHAT_AGENT_ID="agent_id",
-            WECHAT_SECRET="secret",
-            WECHAT_TOKEN_CACHE_TTL=7200,
+        WECHAT_WEBHOOK_URL="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=test",
+        WECHAT_ENABLED=True,
+        WECHAT_CORP_ID="corp_id",
+        WECHAT_AGENT_ID="agent_id",
+        WECHAT_SECRET="secret",
+        WECHAT_TOKEN_CACHE_TTL=7200,
         )
 
         assert (
-            settings.WECHAT_WEBHOOK_URL
-            == "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=test"
+        settings.WECHAT_WEBHOOK_URL
+        == "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=test"
         )
         assert settings.WECHAT_ENABLED is True
         assert settings.WECHAT_CORP_ID == "corp_id"
@@ -241,8 +241,8 @@ class TestSettings:
     def test_page_size_configuration(self):
         """测试分页配置"""
         settings = Settings(
-            DEFAULT_PAGE_SIZE=50,
-            MAX_PAGE_SIZE=500,
+        DEFAULT_PAGE_SIZE=50,
+        MAX_PAGE_SIZE=500,
         )
 
         assert settings.DEFAULT_PAGE_SIZE == 50

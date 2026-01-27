@@ -18,21 +18,21 @@ class TestDataScopeServiceImport:
         """测试导入数据权限服务模块"""
         try:
             from app.services.data_scope_service import (
-                DataScopeConfig,
-                DATA_SCOPE_CONFIGS,
-                DataScopeService,
-                UserScopeService,
-                ProjectFilterService,
-                IssueFilterService,
-                GenericFilterService,
+            DataScopeConfig,
+            DATA_SCOPE_CONFIGS,
+            DataScopeService,
+            UserScopeService,
+            ProjectFilterService,
+            IssueFilterService,
+            GenericFilterService,
             )
             # 验证导入成功
-            assert DataScopeConfig is not None
-            assert DataScopeService is not None
-            assert UserScopeService is not None
-            assert ProjectFilterService is not None
-            assert IssueFilterService is not None
-            assert GenericFilterService is not None
+        assert DataScopeConfig is not None
+        assert DataScopeService is not None
+        assert UserScopeService is not None
+        assert ProjectFilterService is not None
+        assert IssueFilterService is not None
+        assert GenericFilterService is not None
         except ImportError as e:
             pytest.skip(f"模块导入失败: {e}")
 

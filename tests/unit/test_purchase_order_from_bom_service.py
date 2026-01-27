@@ -146,13 +146,13 @@ class TestPurchaseOrderFromBomService:
         """测试获取需要采购的物料 - 无采购物料"""
         # 创建非采购类型的BOM项
         bom_item = BomItem(
-            bom_id=test_bom.id,
-            item_no=1,
-            material_code="MAT002",
-            material_name="测试物料2",
-            unit="件",
-            quantity=Decimal("5.0"),
-            source_type="MAKE",  # 自制
+        bom_id=test_bom.id,
+        item_no=1,
+        material_code="MAT002",
+        material_name="测试物料2",
+        unit="件",
+        quantity=Decimal("5.0"),
+        source_type="MAKE",  # 自制
         )
         db_session.add(bom_item)
         db_session.commit()
@@ -167,7 +167,7 @@ class TestPurchaseOrderFromBomService:
     ):
         """测试确定供应商 - 使用默认供应商"""
         result = determine_supplier_for_item(
-            db_session, test_bom_item, default_supplier_id=test_supplier.id
+        db_session, test_bom_item, default_supplier_id=test_supplier.id
         )
 
         assert result == test_supplier.id
@@ -177,7 +177,7 @@ class TestPurchaseOrderFromBomService:
     ):
         """测试确定供应商 - 使用BOM项中的供应商"""
         result = determine_supplier_for_item(
-            db_session, test_bom_item, default_supplier_id=None
+        db_session, test_bom_item, default_supplier_id=None
         )
 
         assert result == test_supplier.id
@@ -191,7 +191,7 @@ class TestPurchaseOrderFromBomService:
         db_session.commit()
 
         result = determine_supplier_for_item(
-            db_session, test_bom_item, default_supplier_id=None
+        db_session, test_bom_item, default_supplier_id=None
         )
 
         assert result == test_supplier.id
@@ -202,26 +202,26 @@ class TestPurchaseOrderFromBomService:
         test_bom_item.supplier_id = None
         if test_bom_item.material_id:
             material = (
-                db_session.query(Material)
-                .filter(Material.id == test_bom_item.material_id)
-                .first()
+            db_session.query(Material)
+            .filter(Material.id == test_bom_item.material_id)
+            .first()
             )
             if material:
                 material.default_supplier_id = None
-        db_session.commit()
+                db_session.commit()
 
-        result = determine_supplier_for_item(
-            db_session, test_bom_item, default_supplier_id=None
-        )
+                result = determine_supplier_for_item(
+                db_session, test_bom_item, default_supplier_id=None
+                )
 
-        assert result is None
+                assert result is None
 
     def test_group_items_by_supplier(
         self, db_session, test_bom, test_bom_item, test_supplier
     ):
         """测试按供应商分组物料"""
         result = group_items_by_supplier(
-            db_session, [test_bom_item], default_supplier_id=None
+        db_session, [test_bom_item], default_supplier_id=None
         )
 
         assert isinstance(result, dict)
@@ -238,7 +238,7 @@ class TestPurchaseOrderFromBomService:
         db_session.commit()
 
         result = group_items_by_supplier(
-            db_session, [test_bom_item], default_supplier_id=None
+        db_session, [test_bom_item], default_supplier_id=None
         )
 
         assert isinstance(result, dict)
@@ -249,7 +249,7 @@ class TestPurchaseOrderFromBomService:
     def test_calculate_order_item(self, test_bom_item):
         """测试计算订单明细项"""
         result = calculate_order_item(
-            test_bom_item, item_no=1, remaining_qty=Decimal("10.0")
+        test_bom_item, item_no=1, remaining_qty=Decimal("10.0")
         )
 
         assert isinstance(result, dict)
@@ -266,7 +266,7 @@ class TestPurchaseOrderFromBomService:
         """测试计算订单明细项 - 含税计算"""
         test_bom_item.unit_price = Decimal("100.0")
         result = calculate_order_item(
-            test_bom_item, item_no=1, remaining_qty=Decimal("10.0")
+        test_bom_item, item_no=1, remaining_qty=Decimal("10.0")
         )
 
         assert result["amount"] == Decimal("1000.0")
@@ -299,28 +299,28 @@ class TestPurchaseOrderFromBomService:
     def test_create_order_preview(self, test_supplier, test_bom, test_project):
         """测试生成订单预览"""
         order_items = [
-            {
-                "item_no": 1,
-                "material_id": 1,
-                "material_code": "MAT001",
-                "material_name": "测试物料",
-                "quantity": Decimal("10.0"),
-                "unit_price": Decimal("100.0"),
-                "amount": Decimal("1000.0"),
-                "tax_amount": Decimal("130.0"),
-                "amount_with_tax": Decimal("1130.0"),
-            }
+        {
+        "item_no": 1,
+        "material_id": 1,
+        "material_code": "MAT001",
+        "material_name": "测试物料",
+        "quantity": Decimal("10.0"),
+        "unit_price": Decimal("100.0"),
+        "amount": Decimal("1000.0"),
+        "tax_amount": Decimal("130.0"),
+        "amount_with_tax": Decimal("1130.0"),
+        }
         ]
 
         result = create_order_preview(
-            test_supplier,
-            test_supplier.id,
-            test_bom,
-            test_project.id,
-            order_items,
-            Decimal("1000.0"),
-            Decimal("130.0"),
-            Decimal("1130.0"),
+        test_supplier,
+        test_supplier.id,
+        test_bom,
+        test_project.id,
+        order_items,
+        Decimal("1000.0"),
+        Decimal("130.0"),
+        Decimal("1130.0"),
         )
 
         assert isinstance(result, dict)
@@ -337,71 +337,71 @@ class TestPurchaseOrderFromBomService:
         from tests.conftest import _ensure_login_user
 
         admin = _ensure_login_user(
-            db_session,
-            username="admin",
-            password="admin123",
-            real_name="系统管理员",
-            department="系统",
-            employee_role="ADMIN",
-            is_superuser=True,
+        db_session,
+        username="admin",
+        password="admin123",
+        real_name="系统管理员",
+        department="系统",
+        employee_role="ADMIN",
+        is_superuser=True,
         )
 
         order_preview = {
-            "supplier_id": test_supplier.id,
-            "supplier_name": test_supplier.supplier_name,
-            "project_id": test_project.id,
-            "order_type": "NORMAL",
-            "order_title": "测试订单",
-            "total_amount": 1000.0,
-            "tax_amount": 130.0,
-            "amount_with_tax": 1130.0,
-            "items": [
-                {
-                    "item_no": 1,
-                    "material_id": 1,
-                    "bom_item_id": 1,
-                    "material_code": "MAT001",
-                    "material_name": "测试物料",
-                    "specification": "测试规格",
-                    "unit": "件",
-                    "quantity": Decimal("10.0"),
-                    "unit_price": Decimal("100.0"),
-                    "tax_rate": Decimal("13.0"),
-                    "amount": Decimal("1000.0"),
-                    "tax_amount": Decimal("130.0"),
-                    "amount_with_tax": Decimal("1130.0"),
-                    "required_date": date.today(),
-                }
-            ],
+        "supplier_id": test_supplier.id,
+        "supplier_name": test_supplier.supplier_name,
+        "project_id": test_project.id,
+        "order_type": "NORMAL",
+        "order_title": "测试订单",
+        "total_amount": 1000.0,
+        "tax_amount": 130.0,
+        "amount_with_tax": 1130.0,
+        "items": [
+        {
+        "item_no": 1,
+        "material_id": 1,
+        "bom_item_id": 1,
+        "material_code": "MAT001",
+        "material_name": "测试物料",
+        "specification": "测试规格",
+        "unit": "件",
+        "quantity": Decimal("10.0"),
+        "unit_price": Decimal("100.0"),
+        "tax_rate": Decimal("13.0"),
+        "amount": Decimal("1000.0"),
+        "tax_amount": Decimal("130.0"),
+        "amount_with_tax": Decimal("1130.0"),
+        "required_date": date.today(),
+        }
+        ],
         }
 
         def generate_order_no(db):
             return "PO001"
 
-        order, order_items = create_purchase_order_from_preview(
+            order, order_items = create_purchase_order_from_preview(
             db_session, order_preview, test_bom, admin.id, generate_order_no
-        )
+            )
 
-        assert order is not None
-        assert order.order_no == "PO001"
-        assert order.supplier_id == test_supplier.id
-        assert order.project_id == test_project.id
-        assert isinstance(order_items, list)
-        assert len(order_items) == 1
+            assert order is not None
+            assert order.order_no == "PO001"
+            assert order.supplier_id == test_supplier.id
+            assert order.project_id == test_project.id
+            assert isinstance(order_items, list)
+            assert len(order_items) == 1
 
     def test_calculate_summary(self):
         """测试计算汇总统计"""
         purchase_orders_preview = [
-            {
-                "items": [{"item_no": 1}, {"item_no": 2}],
-                "total_amount": 1000.0,
-                "amount_with_tax": 1130.0,
-            },
-            {
-                "items": [{"item_no": 1}],
-                "total_amount": 500.0,
-                "amount_with_tax": 565.0,
-            },
+        {
+        "items": [{"item_no": 1}, {"item_no": 2}],
+        "total_amount": 1000.0,
+        "amount_with_tax": 1130.0,
+        },
+        {
+        "items": [{"item_no": 1}],
+        "total_amount": 500.0,
+        "amount_with_tax": 565.0,
+        },
         ]
 
         result = calculate_summary(purchase_orders_preview)

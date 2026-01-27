@@ -86,9 +86,9 @@ class TestTimesheetQualityService:
         service = TimesheetQualityService(db_session)
         
         result = service.detect_anomalies(
-            user_id=test_user.id,
-            start_date=date.today() - timedelta(days=7),
-            end_date=date.today()
+        user_id=test_user.id,
+        start_date=date.today() - timedelta(days=7),
+        end_date=date.today()
         )
         
         assert isinstance(result, list)
@@ -100,9 +100,9 @@ class TestTimesheetQualityService:
         service = TimesheetQualityService(db_session)
         
         result = service.detect_anomalies(
-            user_id=test_user.id,
-            start_date=date.today() - timedelta(days=7),
-            end_date=date.today()
+        user_id=test_user.id,
+        start_date=date.today() - timedelta(days=7),
+        end_date=date.today()
         )
         
         assert isinstance(result, list)
@@ -117,24 +117,24 @@ class TestTimesheetQualityService:
         week_start = date.today() - timedelta(days=date.today().weekday() + 7)
         for i in range(7):
             timesheet = Timesheet(
-                user_id=test_user.id,
-                project_id=1,
-                work_date=week_start + timedelta(days=i),
-                hours=12.0,  # 每天12小时，总计84小时
-                status="APPROVED",
-                overtime_type="NORMAL"
+            user_id=test_user.id,
+            project_id=1,
+            work_date=week_start + timedelta(days=i),
+            hours=12.0,  # 每天12小时，总计84小时
+            status="APPROVED",
+            overtime_type="NORMAL"
             )
             db_session.add(timesheet)
-        db_session.commit()
+            db_session.commit()
         
-        result = service.detect_anomalies(
+            result = service.detect_anomalies(
             user_id=test_user.id,
             start_date=week_start,
             end_date=week_start + timedelta(days=6)
-        )
+            )
         
-        assert isinstance(result, list)
-        assert any(a['type'] == 'EXCESSIVE_WEEKLY_HOURS' for a in result)
+            assert isinstance(result, list)
+            assert any(a['type'] == 'EXCESSIVE_WEEKLY_HOURS' for a in result)
 
     def test_detect_anomalies_excessive_monthly_hours(self, db_session, test_user):
         """测试检测异常 - 单月工时超限"""
@@ -143,21 +143,21 @@ class TestTimesheetQualityService:
         # 创建一个月的工时记录，总计超过300小时
         month_start = date.today().replace(day=1)
         for i in range(20):  # 20个工作日，每天16小时，总计320小时
-            timesheet = Timesheet(
-                user_id=test_user.id,
-                project_id=1,
-                work_date=month_start + timedelta(days=i),
-                hours=16.0,
-                status="APPROVED",
-                overtime_type="NORMAL"
-            )
-            db_session.add(timesheet)
+        timesheet = Timesheet(
+        user_id=test_user.id,
+        project_id=1,
+        work_date=month_start + timedelta(days=i),
+        hours=16.0,
+        status="APPROVED",
+        overtime_type="NORMAL"
+        )
+        db_session.add(timesheet)
         db_session.commit()
         
         result = service.detect_anomalies(
-            user_id=test_user.id,
-            start_date=month_start,
-            end_date=month_start + timedelta(days=30)
+        user_id=test_user.id,
+        start_date=month_start,
+        end_date=month_start + timedelta(days=30)
         )
         
         assert isinstance(result, list)
@@ -168,8 +168,8 @@ class TestTimesheetQualityService:
         service = TimesheetQualityService(db_session)
         
         result = service.detect_anomalies(
-            start_date=date.today() - timedelta(days=7),
-            end_date=date.today()
+        start_date=date.today() - timedelta(days=7),
+        end_date=date.today()
         )
         
         assert isinstance(result, list)
@@ -179,9 +179,9 @@ class TestTimesheetQualityService:
         service = TimesheetQualityService(db_session)
         
         result = service.detect_anomalies(
-            user_id=test_user.id,
-            start_date=date.today() - timedelta(days=30),
-            end_date=date.today() - timedelta(days=1)
+        user_id=test_user.id,
+        start_date=date.today() - timedelta(days=30),
+        end_date=date.today() - timedelta(days=1)
         )
         
         assert isinstance(result, list)
@@ -192,18 +192,18 @@ class TestTimesheetQualityService:
         
         # 创建工作日志
         work_log = WorkLog(
-            user_id=test_user.id,
-            work_date=test_timesheet_normal.work_date,
-            content="测试工作日志",
-            timesheet_id=test_timesheet_normal.id
+        user_id=test_user.id,
+        work_date=test_timesheet_normal.work_date,
+        content="测试工作日志",
+        timesheet_id=test_timesheet_normal.id
         )
         db_session.add(work_log)
         db_session.commit()
         
         result = service.check_work_log_completeness(
-            user_id=test_user.id,
-            start_date=date.today() - timedelta(days=7),
-            end_date=date.today()
+        user_id=test_user.id,
+        start_date=date.today() - timedelta(days=7),
+        end_date=date.today()
         )
         
         assert isinstance(result, dict)
@@ -216,9 +216,9 @@ class TestTimesheetQualityService:
         
         # 不创建工作日志，应该检测到缺失
         result = service.check_work_log_completeness(
-            user_id=test_user.id,
-            start_date=date.today() - timedelta(days=7),
-            end_date=date.today()
+        user_id=test_user.id,
+        start_date=date.today() - timedelta(days=7),
+        end_date=date.today()
         )
         
         assert isinstance(result, dict)
@@ -231,7 +231,7 @@ class TestTimesheetQualityService:
         service = TimesheetQualityService(db_session)
         
         result = service.check_work_log_completeness(
-            user_id=test_user.id
+        user_id=test_user.id
         )
         
         assert isinstance(result, dict)
@@ -243,8 +243,8 @@ class TestTimesheetQualityService:
         service = TimesheetQualityService(db_session)
         
         result = service.check_work_log_completeness(
-            start_date=date.today() - timedelta(days=7),
-            end_date=date.today()
+        start_date=date.today() - timedelta(days=7),
+        end_date=date.today()
         )
         
         assert isinstance(result, dict)
@@ -258,10 +258,10 @@ class TestTimesheetQualityService:
         
         # 创建工作日志，关联工时记录
         work_log = WorkLog(
-            user_id=test_user.id,
-            work_date=test_timesheet_normal.work_date,
-            content="测试工作日志",
-            timesheet_id=test_timesheet_normal.id
+        user_id=test_user.id,
+        work_date=test_timesheet_normal.work_date,
+        content="测试工作日志",
+        timesheet_id=test_timesheet_normal.id
         )
         db_session.add(work_log)
         db_session.commit()
@@ -270,24 +270,24 @@ class TestTimesheetQualityService:
         # 如果工时记录关联了项目，需要在工作日志中提及该项目
         if test_timesheet_normal.project_id:
             mention = WorkLogMention(
-                work_log_id=work_log.id,
-                mention_type="PROJECT",
-                mention_id=test_timesheet_normal.project_id,
-                mention_name="测试项目"
+            work_log_id=work_log.id,
+            mention_type="PROJECT",
+            mention_id=test_timesheet_normal.project_id,
+            mention_name="测试项目"
             )
             db_session.add(mention)
             db_session.commit()
         
-        result = service.validate_data_consistency(
+            result = service.validate_data_consistency(
             user_id=test_user.id,
             start_date=date.today() - timedelta(days=7),
             end_date=date.today()
-        )
+            )
         
-        assert isinstance(result, dict)
-        assert 'inconsistency_count' in result
-        # 由于可能有其他不一致，只检查结果结构
-        assert result['inconsistency_count'] >= 0
+            assert isinstance(result, dict)
+            assert 'inconsistency_count' in result
+            # 由于可能有其他不一致，只检查结果结构
+            assert result['inconsistency_count'] >= 0
 
     def test_validate_data_consistency_mismatched_association(self, db_session, test_user, test_timesheet_normal):
         """测试校验数据一致性 - 关联不一致"""
@@ -295,30 +295,30 @@ class TestTimesheetQualityService:
         
         # 创建另一个工时记录
         timesheet2 = Timesheet(
-            user_id=test_user.id,
-            project_id=1,
-            work_date=date.today() - timedelta(days=3),
-            hours=8.0,
-            status="APPROVED",
-            overtime_type="NORMAL"
+        user_id=test_user.id,
+        project_id=1,
+        work_date=date.today() - timedelta(days=3),
+        hours=8.0,
+        status="APPROVED",
+        overtime_type="NORMAL"
         )
         db_session.add(timesheet2)
         db_session.commit()
         
         # 创建工作日志，但关联到错误的工时记录
         work_log = WorkLog(
-            user_id=test_user.id,
-            work_date=timesheet2.work_date,
-            content="测试工作日志",
-            timesheet_id=test_timesheet_normal.id  # 关联错误
+        user_id=test_user.id,
+        work_date=timesheet2.work_date,
+        content="测试工作日志",
+        timesheet_id=test_timesheet_normal.id  # 关联错误
         )
         db_session.add(work_log)
         db_session.commit()
         
         result = service.validate_data_consistency(
-            user_id=test_user.id,
-            start_date=date.today() - timedelta(days=7),
-            end_date=date.today()
+        user_id=test_user.id,
+        start_date=date.today() - timedelta(days=7),
+        end_date=date.today()
         )
         
         assert isinstance(result, dict)
@@ -331,7 +331,7 @@ class TestTimesheetQualityService:
         service = TimesheetQualityService(db_session)
         
         result = service.validate_data_consistency(
-            user_id=test_user.id
+        user_id=test_user.id
         )
         
         assert isinstance(result, dict)
@@ -343,8 +343,8 @@ class TestTimesheetQualityService:
         service = TimesheetQualityService(db_session)
         
         result = service.validate_data_consistency(
-            start_date=date.today() - timedelta(days=7),
-            end_date=date.today()
+        start_date=date.today() - timedelta(days=7),
+        end_date=date.today()
         )
         
         assert isinstance(result, dict)
@@ -358,26 +358,26 @@ class TestTimesheetQualityService:
         month_start = date.today().replace(day=1)
         for i in range(10):
             timesheet = Timesheet(
-                user_id=test_user.id,
-                project_id=1,
-                work_date=month_start + timedelta(days=i),
-                hours=3.0,  # 每天3小时加班，总计30小时
-                status="APPROVED",
-                overtime_type="OVERTIME"
+            user_id=test_user.id,
+            project_id=1,
+            work_date=month_start + timedelta(days=i),
+            hours=3.0,  # 每天3小时加班，总计30小时
+            status="APPROVED",
+            overtime_type="OVERTIME"
             )
             db_session.add(timesheet)
-        db_session.commit()
+            db_session.commit()
         
-        result = service.check_labor_law_compliance(
+            result = service.check_labor_law_compliance(
             user_id=test_user.id,
             year=date.today().year,
             month=date.today().month
-        )
+            )
         
-        assert isinstance(result, dict)
-        assert 'is_compliant' in result
-        assert result['is_compliant'] is True
-        assert result['overtime_hours'] <= 36
+            assert isinstance(result, dict)
+            assert 'is_compliant' in result
+            assert result['is_compliant'] is True
+            assert result['overtime_hours'] <= 36
 
     def test_check_labor_law_compliance_violation(self, db_session, test_user):
         """测试检查劳动法合规性 - 违规"""
@@ -387,26 +387,26 @@ class TestTimesheetQualityService:
         month_start = date.today().replace(day=1)
         for i in range(10):
             timesheet = Timesheet(
-                user_id=test_user.id,
-                project_id=1,
-                work_date=month_start + timedelta(days=i),
-                hours=4.0,  # 每天4小时加班，总计40小时
-                status="APPROVED",
-                overtime_type="OVERTIME"
+            user_id=test_user.id,
+            project_id=1,
+            work_date=month_start + timedelta(days=i),
+            hours=4.0,  # 每天4小时加班，总计40小时
+            status="APPROVED",
+            overtime_type="OVERTIME"
             )
             db_session.add(timesheet)
-        db_session.commit()
+            db_session.commit()
         
-        result = service.check_labor_law_compliance(
+            result = service.check_labor_law_compliance(
             user_id=test_user.id,
             year=date.today().year,
             month=date.today().month
-        )
+            )
         
-        assert isinstance(result, dict)
-        assert 'is_compliant' in result
-        assert result['is_compliant'] is False
-        assert result['violation_hours'] > 0
+            assert isinstance(result, dict)
+            assert 'is_compliant' in result
+            assert result['is_compliant'] is False
+            assert result['violation_hours'] > 0
 
     def test_check_labor_law_compliance_no_overtime(self, db_session, test_user):
         """测试检查劳动法合规性 - 无加班"""
@@ -416,35 +416,35 @@ class TestTimesheetQualityService:
         month_start = date.today().replace(day=1)
         for i in range(5):
             timesheet = Timesheet(
-                user_id=test_user.id,
-                project_id=1,
-                work_date=month_start + timedelta(days=i),
-                hours=8.0,
-                status="APPROVED",
-                overtime_type="NORMAL"
+            user_id=test_user.id,
+            project_id=1,
+            work_date=month_start + timedelta(days=i),
+            hours=8.0,
+            status="APPROVED",
+            overtime_type="NORMAL"
             )
             db_session.add(timesheet)
-        db_session.commit()
+            db_session.commit()
         
-        result = service.check_labor_law_compliance(
+            result = service.check_labor_law_compliance(
             user_id=test_user.id,
             year=date.today().year,
             month=date.today().month
-        )
+            )
         
-        assert isinstance(result, dict)
-        assert 'is_compliant' in result
-        assert result['is_compliant'] is True
-        assert result['overtime_hours'] == 0
+            assert isinstance(result, dict)
+            assert 'is_compliant' in result
+            assert result['is_compliant'] is True
+            assert result['overtime_hours'] == 0
 
     def test_check_labor_law_compliance_december(self, db_session, test_user):
         """测试检查劳动法合规性 - 12月（跨年边界）"""
         service = TimesheetQualityService(db_session)
         
         result = service.check_labor_law_compliance(
-            user_id=test_user.id,
-            year=2024,
-            month=12
+        user_id=test_user.id,
+        year=2024,
+        month=12
         )
         
         assert isinstance(result, dict)
@@ -458,9 +458,9 @@ class TestTimesheetQualityService:
         service = TimesheetQualityService(db_session)
         
         result = service.check_labor_law_compliance(
-            user_id=test_user.id,
-            year=2024,
-            month=2
+        user_id=test_user.id,
+        year=2024,
+        month=2
         )
         
         assert isinstance(result, dict)

@@ -110,11 +110,11 @@ class TestMachineServiceGenerateCode:
         def query_side_effect(model):
             mock_query = MagicMock()
             if call_count[0] == 0:  # Project query
-                mock_query.filter.return_value.first.return_value = project
-                call_count[0] += 1
-            else:  # Max machine_no query
-                mock_query.filter.return_value.scalar.return_value = 5
-            return mock_query
+            mock_query.filter.return_value.first.return_value = project
+            call_count[0] += 1
+        else:  # Max machine_no query
+        mock_query.filter.return_value.scalar.return_value = 5
+        return mock_query
 
         db.query.side_effect = query_side_effect
 
@@ -306,9 +306,9 @@ class TestProjectAggregationCalculateStage:
         """测试返回最早阶段"""
         db = create_mock_db_session()
         machines = [
-            MagicMock(stage="S5"),
-            MagicMock(stage="S2"),
-            MagicMock(stage="S7"),
+        MagicMock(stage="S5"),
+        MagicMock(stage="S2"),
+        MagicMock(stage="S7"),
         ]
         db.query.return_value.filter.return_value.all.return_value = machines
 
@@ -321,8 +321,8 @@ class TestProjectAggregationCalculateStage:
         """测试忽略无效阶段"""
         db = create_mock_db_session()
         machines = [
-            MagicMock(stage="INVALID"),
-            MagicMock(stage="S5"),
+        MagicMock(stage="INVALID"),
+        MagicMock(stage="S5"),
         ]
         db.query.return_value.filter.return_value.all.return_value = machines
 
@@ -361,9 +361,9 @@ class TestProjectAggregationCalculateHealth:
         """测试任一机台阻塞则返回H3"""
         db = create_mock_db_session()
         machines = [
-            MagicMock(health="H1"),
-            MagicMock(health="H3"),
-            MagicMock(health="H1"),
+        MagicMock(health="H1"),
+        MagicMock(health="H3"),
+        MagicMock(health="H1"),
         ]
         db.query.return_value.filter.return_value.all.return_value = machines
 
@@ -376,9 +376,9 @@ class TestProjectAggregationCalculateHealth:
         """测试任一机台有风险则返回H2"""
         db = create_mock_db_session()
         machines = [
-            MagicMock(health="H1"),
-            MagicMock(health="H2"),
-            MagicMock(health="H1"),
+        MagicMock(health="H1"),
+        MagicMock(health="H2"),
+        MagicMock(health="H1"),
         ]
         db.query.return_value.filter.return_value.all.return_value = machines
 
@@ -391,9 +391,9 @@ class TestProjectAggregationCalculateHealth:
         """测试全部完结则返回H4"""
         db = create_mock_db_session()
         machines = [
-            MagicMock(health="H4"),
-            MagicMock(health="H4"),
-            MagicMock(health="H4"),
+        MagicMock(health="H4"),
+        MagicMock(health="H4"),
+        MagicMock(health="H4"),
         ]
         db.query.return_value.filter.return_value.all.return_value = machines
 
@@ -406,8 +406,8 @@ class TestProjectAggregationCalculateHealth:
         """测试正常情况返回H1"""
         db = create_mock_db_session()
         machines = [
-            MagicMock(health="H1"),
-            MagicMock(health="H1"),
+        MagicMock(health="H1"),
+        MagicMock(health="H1"),
         ]
         db.query.return_value.filter.return_value.all.return_value = machines
 
@@ -420,8 +420,8 @@ class TestProjectAggregationCalculateHealth:
         """测试H3优先于H2"""
         db = create_mock_db_session()
         machines = [
-            MagicMock(health="H2"),
-            MagicMock(health="H3"),
+        MagicMock(health="H2"),
+        MagicMock(health="H3"),
         ]
         db.query.return_value.filter.return_value.all.return_value = machines
 
@@ -434,8 +434,8 @@ class TestProjectAggregationCalculateHealth:
         """测试忽略无效健康度"""
         db = create_mock_db_session()
         machines = [
-            MagicMock(health="INVALID"),
-            MagicMock(health="H2"),
+        MagicMock(health="INVALID"),
+        MagicMock(health="H2"),
         ]
         db.query.return_value.filter.return_value.all.return_value = machines
 
@@ -469,23 +469,23 @@ class TestProjectAggregationUpdateProject:
         def query_side_effect(*args):
             mock_query = MagicMock()
             if call_count[0] == 0:  # Project query
-                mock_query.filter.return_value.first.return_value = project
-                mock_query.filter.return_value.scalar.return_value = 50.0
-                mock_query.filter.return_value.all.return_value = []
-            else:
-                mock_query.filter.return_value.scalar.return_value = 50.0
-                mock_query.filter.return_value.all.return_value = []
+            mock_query.filter.return_value.first.return_value = project
+            mock_query.filter.return_value.scalar.return_value = 50.0
+            mock_query.filter.return_value.all.return_value = []
+        else:
+            mock_query.filter.return_value.scalar.return_value = 50.0
+            mock_query.filter.return_value.all.return_value = []
             call_count[0] += 1
             return mock_query
 
-        db.query.side_effect = query_side_effect
+            db.query.side_effect = query_side_effect
 
-        service = ProjectAggregationService(db)
-        result = service.update_project_aggregation(1)
+            service = ProjectAggregationService(db)
+            result = service.update_project_aggregation(1)
 
-        db.add.assert_called_once()
-        db.commit.assert_called_once()
-        db.refresh.assert_called_once()
+            db.add.assert_called_once()
+            db.commit.assert_called_once()
+            db.refresh.assert_called_once()
 
 
 @pytest.mark.unit
@@ -509,9 +509,9 @@ class TestProjectAggregationMachineSummary:
         """测试计算分布"""
         db = create_mock_db_session()
         machines = [
-            create_mock_machine(stage="S2", health="H1", progress_pct=Decimal("30")),
-            create_mock_machine(stage="S2", health="H2", progress_pct=Decimal("50")),
-            create_mock_machine(stage="S5", health="H1", progress_pct=Decimal("70")),
+        create_mock_machine(stage="S2", health="H1", progress_pct=Decimal("30")),
+        create_mock_machine(stage="S2", health="H2", progress_pct=Decimal("50")),
+        create_mock_machine(stage="S5", health="H1", progress_pct=Decimal("70")),
         ]
         db.query.return_value.filter.return_value.all.return_value = machines
 
@@ -529,9 +529,9 @@ class TestProjectAggregationMachineSummary:
         """测试统计完结机台数"""
         db = create_mock_db_session()
         machines = [
-            create_mock_machine(stage="S9", health="H4", progress_pct=Decimal("100")),
-            create_mock_machine(stage="S9", health="H4", progress_pct=Decimal("100")),
-            create_mock_machine(stage="S5", health="H1", progress_pct=Decimal("50")),
+        create_mock_machine(stage="S9", health="H4", progress_pct=Decimal("100")),
+        create_mock_machine(stage="S9", health="H4", progress_pct=Decimal("100")),
+        create_mock_machine(stage="S5", health="H1", progress_pct=Decimal("50")),
         ]
         db.query.return_value.filter.return_value.all.return_value = machines
 
@@ -544,9 +544,9 @@ class TestProjectAggregationMachineSummary:
         """测试统计风险和阻塞机台数"""
         db = create_mock_db_session()
         machines = [
-            create_mock_machine(health="H2", progress_pct=Decimal("30")),
-            create_mock_machine(health="H2", progress_pct=Decimal("40")),
-            create_mock_machine(health="H3", progress_pct=Decimal("20")),
+        create_mock_machine(health="H2", progress_pct=Decimal("30")),
+        create_mock_machine(health="H2", progress_pct=Decimal("40")),
+        create_mock_machine(health="H3", progress_pct=Decimal("20")),
         ]
         db.query.return_value.filter.return_value.all.return_value = machines
 

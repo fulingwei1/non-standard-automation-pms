@@ -94,9 +94,9 @@ class TestReportDataGenerationCore:
         db_session.commit()
         
         result = ReportDataGenerationCore.check_permission(
-            db_session,
-            test_user_with_role,
-            "PROJECT_WEEKLY"
+        db_session,
+        test_user_with_role,
+        "PROJECT_WEEKLY"
         )
         
         assert result is True
@@ -104,9 +104,9 @@ class TestReportDataGenerationCore:
     def test_check_permission_with_role(self, db_session, test_user_with_role):
         """测试有角色的用户权限检查"""
         result = ReportDataGenerationCore.check_permission(
-            db_session,
-            test_user_with_role,
-            "PROJECT_WEEKLY"
+        db_session,
+        test_user_with_role,
+        "PROJECT_WEEKLY"
         )
         
         assert result is True
@@ -114,18 +114,18 @@ class TestReportDataGenerationCore:
     def test_check_permission_no_role(self, db_session):
         """测试无角色的用户权限检查"""
         user = _get_or_create_user(
-            db_session,
-            username="no_role_user",
-            password="test123",
-            real_name="无角色用户",
-            department="技术部",
-            employee_role="ENGINEER"
+        db_session,
+        username="no_role_user",
+        password="test123",
+        real_name="无角色用户",
+        department="技术部",
+        employee_role="ENGINEER"
         )
         
         result = ReportDataGenerationCore.check_permission(
-            db_session,
-            user,
-            "PROJECT_WEEKLY"
+        db_session,
+        user,
+        "PROJECT_WEEKLY"
         )
         
         assert result is False
@@ -133,9 +133,9 @@ class TestReportDataGenerationCore:
     def test_check_permission_invalid_report_type(self, db_session, test_user_with_role):
         """测试无效报表类型权限检查"""
         result = ReportDataGenerationCore.check_permission(
-            db_session,
-            test_user_with_role,
-            "INVALID_REPORT_TYPE"
+        db_session,
+        test_user_with_role,
+        "INVALID_REPORT_TYPE"
         )
         
         assert result is False
@@ -171,10 +171,10 @@ class TestProjectReportMixin:
     def test_generate_project_weekly_report_project_not_found(self, db_session):
         """测试生成项目周报 - 项目不存在"""
         result = ProjectReportMixin.generate_project_weekly_report(
-            db_session,
-            project_id=99999,
-            start_date=date.today() - timedelta(days=7),
-            end_date=date.today()
+        db_session,
+        project_id=99999,
+        start_date=date.today() - timedelta(days=7),
+        end_date=date.today()
         )
         
         assert "error" in result
@@ -186,10 +186,10 @@ class TestProjectReportMixin:
         end_date = date.today()
         
         result = ProjectReportMixin.generate_project_weekly_report(
-            db_session,
-            project_id=test_project.id,
-            start_date=start_date,
-            end_date=end_date
+        db_session,
+        project_id=test_project.id,
+        start_date=start_date,
+        end_date=end_date
         )
         
         assert "error" not in result
@@ -203,10 +203,10 @@ class TestProjectReportMixin:
     def test_generate_project_monthly_report_project_not_found(self, db_session):
         """测试生成项目月报 - 项目不存在"""
         result = ProjectReportMixin.generate_project_monthly_report(
-            db_session,
-            project_id=99999,
-            start_date=date.today() - timedelta(days=30),
-            end_date=date.today()
+        db_session,
+        project_id=99999,
+        start_date=date.today() - timedelta(days=30),
+        end_date=date.today()
         )
         
         assert "error" in result
@@ -218,10 +218,10 @@ class TestProjectReportMixin:
         end_date = date.today()
         
         result = ProjectReportMixin.generate_project_monthly_report(
-            db_session,
-            project_id=test_project.id,
-            start_date=start_date,
-            end_date=end_date
+        db_session,
+        project_id=test_project.id,
+        start_date=start_date,
+        end_date=end_date
         )
         
         assert "error" not in result
@@ -237,10 +237,10 @@ class TestDeptReportMixin:
     def test_generate_dept_weekly_report_department_not_found(self, db_session):
         """测试生成部门周报 - 部门不存在"""
         result = DeptReportMixin.generate_dept_weekly_report(
-            db_session,
-            department_id=99999,
-            start_date=date.today() - timedelta(days=7),
-            end_date=date.today()
+        db_session,
+        department_id=99999,
+        start_date=date.today() - timedelta(days=7),
+        end_date=date.today()
         )
         
         assert "error" in result
@@ -252,10 +252,10 @@ class TestDeptReportMixin:
         end_date = date.today()
         
         result = DeptReportMixin.generate_dept_weekly_report(
-            db_session,
-            department_id=test_department.id,
-            start_date=start_date,
-            end_date=end_date
+        db_session,
+        department_id=test_department.id,
+        start_date=start_date,
+        end_date=end_date
         )
         
         assert "error" not in result
@@ -266,10 +266,10 @@ class TestDeptReportMixin:
     def test_generate_dept_monthly_report_department_not_found(self, db_session):
         """测试生成部门月报 - 部门不存在"""
         result = DeptReportMixin.generate_dept_monthly_report(
-            db_session,
-            department_id=99999,
-            start_date=date.today() - timedelta(days=30),
-            end_date=date.today()
+        db_session,
+        department_id=99999,
+        start_date=date.today() - timedelta(days=30),
+        end_date=date.today()
         )
         
         assert "error" in result
@@ -281,10 +281,10 @@ class TestDeptReportMixin:
         end_date = date.today()
         
         result = DeptReportMixin.generate_dept_monthly_report(
-            db_session,
-            department_id=test_department.id,
-            start_date=start_date,
-            end_date=end_date
+        db_session,
+        department_id=test_department.id,
+        start_date=start_date,
+        end_date=end_date
         )
         
         assert "error" not in result
@@ -299,10 +299,10 @@ class TestAnalysisReportMixin:
     def test_generate_workload_analysis_no_department(self, db_session):
         """测试生成负荷分析 - 无部门限制"""
         result = AnalysisReportMixin.generate_workload_analysis(
-            db_session,
-            department_id=None,
-            start_date=date.today() - timedelta(days=30),
-            end_date=date.today()
+        db_session,
+        department_id=None,
+        start_date=date.today() - timedelta(days=30),
+        end_date=date.today()
         )
         
         assert "summary" in result
@@ -312,10 +312,10 @@ class TestAnalysisReportMixin:
     def test_generate_workload_analysis_with_department(self, db_session, test_department):
         """测试生成负荷分析 - 指定部门"""
         result = AnalysisReportMixin.generate_workload_analysis(
-            db_session,
-            department_id=test_department.id,
-            start_date=date.today() - timedelta(days=30),
-            end_date=date.today()
+        db_session,
+        department_id=test_department.id,
+        start_date=date.today() - timedelta(days=30),
+        end_date=date.today()
         )
         
         assert "summary" in result
@@ -326,8 +326,8 @@ class TestAnalysisReportMixin:
     def test_generate_workload_analysis_default_dates(self, db_session):
         """测试生成负荷分析 - 默认日期范围"""
         result = AnalysisReportMixin.generate_workload_analysis(
-            db_session,
-            department_id=None
+        db_session,
+        department_id=None
         )
         
         assert "summary" in result
@@ -336,10 +336,10 @@ class TestAnalysisReportMixin:
     def test_generate_cost_analysis_no_project(self, db_session):
         """测试生成成本分析 - 无项目限制"""
         result = AnalysisReportMixin.generate_cost_analysis(
-            db_session,
-            project_id=None,
-            start_date=date.today() - timedelta(days=30),
-            end_date=date.today()
+        db_session,
+        project_id=None,
+        start_date=date.today() - timedelta(days=30),
+        end_date=date.today()
         )
         
         assert "summary" in result
@@ -348,10 +348,10 @@ class TestAnalysisReportMixin:
     def test_generate_cost_analysis_with_project(self, db_session, test_project):
         """测试生成成本分析 - 指定项目"""
         result = AnalysisReportMixin.generate_cost_analysis(
-            db_session,
-            project_id=test_project.id,
-            start_date=date.today() - timedelta(days=30),
-            end_date=date.today()
+        db_session,
+        project_id=test_project.id,
+        start_date=date.today() - timedelta(days=30),
+        end_date=date.today()
         )
         
         assert "summary" in result
@@ -364,9 +364,9 @@ class TestReportRouterMixin:
     def test_generate_report_by_type_project_weekly(self, db_session, test_project):
         """测试路由分发 - 项目周报"""
         result = ReportRouterMixin.generate_report_by_type(
-            db_session,
-            report_type="PROJECT_WEEKLY",
-            project_id=test_project.id
+        db_session,
+        report_type="PROJECT_WEEKLY",
+        project_id=test_project.id
         )
         
         assert "error" not in result
@@ -375,8 +375,8 @@ class TestReportRouterMixin:
     def test_generate_report_by_type_project_weekly_no_project_id(self, db_session):
         """测试路由分发 - 项目周报无项目ID"""
         result = ReportRouterMixin.generate_report_by_type(
-            db_session,
-            report_type="PROJECT_WEEKLY"
+        db_session,
+        report_type="PROJECT_WEEKLY"
         )
         
         assert "error" in result
@@ -385,9 +385,9 @@ class TestReportRouterMixin:
     def test_generate_report_by_type_dept_weekly(self, db_session, test_department):
         """测试路由分发 - 部门周报"""
         result = ReportRouterMixin.generate_report_by_type(
-            db_session,
-            report_type="DEPT_WEEKLY",
-            department_id=test_department.id
+        db_session,
+        report_type="DEPT_WEEKLY",
+        department_id=test_department.id
         )
         
         assert "error" not in result
@@ -396,8 +396,8 @@ class TestReportRouterMixin:
     def test_generate_report_by_type_workload_analysis(self, db_session):
         """测试路由分发 - 负荷分析"""
         result = ReportRouterMixin.generate_report_by_type(
-            db_session,
-            report_type="WORKLOAD_ANALYSIS"
+        db_session,
+        report_type="WORKLOAD_ANALYSIS"
         )
         
         assert "summary" in result
@@ -405,8 +405,8 @@ class TestReportRouterMixin:
     def test_generate_report_by_type_cost_analysis(self, db_session):
         """测试路由分发 - 成本分析"""
         result = ReportRouterMixin.generate_report_by_type(
-            db_session,
-            report_type="COST_ANALYSIS"
+        db_session,
+        report_type="COST_ANALYSIS"
         )
         
         assert "summary" in result
@@ -414,8 +414,8 @@ class TestReportRouterMixin:
     def test_generate_report_by_type_invalid_type(self, db_session):
         """测试路由分发 - 无效报表类型"""
         result = ReportRouterMixin.generate_report_by_type(
-            db_session,
-            report_type="INVALID_TYPE"
+        db_session,
+        report_type="INVALID_TYPE"
         )
         
         assert "message" in result
@@ -424,8 +424,8 @@ class TestReportRouterMixin:
     def test_generate_report_by_type_default_dates(self, db_session):
         """测试路由分发 - 默认日期范围"""
         result = ReportRouterMixin.generate_report_by_type(
-            db_session,
-            report_type="WORKLOAD_ANALYSIS"
+        db_session,
+        report_type="WORKLOAD_ANALYSIS"
         )
         
         assert isinstance(result, dict)

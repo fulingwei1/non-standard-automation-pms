@@ -42,8 +42,8 @@ class TestExcelExportService:
         try:
             service = ExcelExportService()
             data = [
-                {"id": 1, "name": "测试1", "value": 100},
-                {"id": 2, "name": "测试2", "value": 200},
+            {"id": 1, "name": "测试1", "value": 100},
+            {"id": 2, "name": "测试2", "value": 200},
             ]
 
             result = service.export_to_excel(data)
@@ -59,11 +59,11 @@ class TestExcelExportService:
         try:
             service = ExcelExportService()
             data = [
-                {"id": 1, "name": "测试1", "value": 100},
+            {"id": 1, "name": "测试1", "value": 100},
             ]
             columns = [
-                {"key": "id", "label": "ID", "width": 10},
-                {"key": "name", "label": "名称", "width": 20},
+            {"key": "id", "label": "ID", "width": 10},
+            {"key": "name", "label": "名称", "width": 20},
             ]
 
             result = service.export_to_excel(data, columns=columns)
@@ -92,8 +92,8 @@ class TestExcelExportService:
         try:
             service = ExcelExportService()
             data = [
-                {"id": 1, "date": date.today()},
-                {"id": 2, "date": datetime.now()},
+            {"id": 1, "date": date.today()},
+            {"id": 2, "date": datetime.now()},
             ]
 
             result = service.export_to_excel(data)
@@ -108,7 +108,7 @@ class TestExcelExportService:
         try:
             service = ExcelExportService()
             data = [
-                {"id": 1, "amount": Decimal("100.50")},
+            {"id": 1, "amount": Decimal("100.50")},
             ]
 
             result = service.export_to_excel(data)
@@ -124,11 +124,11 @@ class TestExcelExportService:
             service = ExcelExportService()
             data = [{"id": 1, "value": 100}]
             columns = [
-                {
-                    "key": "value",
-                    "label": "值",
-                    "format": lambda x: f"¥{x}" if x else ""
-                }
+            {
+            "key": "value",
+            "label": "值",
+            "format": lambda x: f"¥{x}" if x else ""
+            }
             ]
 
             result = service.export_to_excel(data, columns=columns)
@@ -143,14 +143,14 @@ class TestExcelExportService:
         try:
             service = ExcelExportService()
             sheets = [
-                {
-                    "name": "Sheet1",
-                    "data": [{"id": 1, "name": "测试1"}],
-                },
-                {
-                    "name": "Sheet2",
-                    "data": [{"id": 2, "name": "测试2"}],
-                },
+            {
+            "name": "Sheet1",
+            "data": [{"id": 1, "name": "测试1"}],
+            },
+            {
+            "name": "Sheet2",
+            "data": [{"id": 2, "name": "测试2"}],
+            },
             ]
 
             result = service.export_multisheet(sheets)
@@ -166,11 +166,11 @@ class TestExcelExportService:
         try:
             service = ExcelExportService()
             sheets = [
-                {
-                    "name": "Sheet1",
-                    "data": [{"id": 1}],
-                    "title": "报表1",
-                },
+            {
+            "name": "Sheet1",
+            "data": [{"id": 1}],
+            "title": "报表1",
+            },
             ]
 
             result = service.export_multisheet(sheets)
@@ -248,11 +248,11 @@ class TestExcelExportService:
         try:
             service = ExcelExportService()
             sheets = [
-                {
-                    "name": "EmptySheet",
-                    "data": [],
-                    "title": "空报表",
-                },
+            {
+            "name": "EmptySheet",
+            "data": [],
+            "title": "空报表",
+            },
             ]
 
             result = service.export_multisheet(sheets)

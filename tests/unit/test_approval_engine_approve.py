@@ -66,9 +66,9 @@ class TestApprove:
             mock_process.return_value = True
 
             result = mixin.approve(
-                task_id=10,
-                approver_id=1,
-                comment="Approved",
+            task_id=10,
+            approver_id=1,
+            comment="Approved",
             )
 
             assert result.id == 10
@@ -101,9 +101,9 @@ class TestApprove:
             mock_process.return_value = True
 
             result = mixin.approve(
-                task_id=10,
-                approver_id=1,
-                comment="Good work!",
+            task_id=10,
+            approver_id=1,
+            comment="Good work!",
             )
 
             assert result.status == "APPROVED"
@@ -136,14 +136,14 @@ class TestApprove:
             mock_process.return_value = True
 
             result = mixin.approve(
-                task_id=10,
-                approver_id=1,
-                attachments=attachments,
+            task_id=10,
+            approver_id=1,
+            attachments=attachments,
             )
 
             assert result.status == "APPROVED"
             # Check attachments were passed to process_approval
-            assert mock_process.call_args[0][1].get("attachments") == attachments
+        assert mock_process.call_args[0][1].get("attachments") == attachments
 
 
 @pytest.mark.unit
@@ -179,10 +179,10 @@ class TestReject:
             mock_process.return_value = True
 
             result = mixin.reject(
-                task_id=10,
-                approver_id=1,
-                comment="Needs revision",
-                reject_to="START",
+            task_id=10,
+            approver_id=1,
+            comment="Needs revision",
+            reject_to="START",
             )
 
             assert result.status == "REJECTED"
@@ -212,10 +212,10 @@ class TestReject:
             mock_process.return_value = True
 
             result = mixin.reject(
-                task_id=10,
-                approver_id=1,
-                attachments=attachments,
-                comment="Error in attachment",
+            task_id=10,
+            approver_id=1,
+            attachments=attachments,
+            comment="Error in attachment",
             )
 
             assert result.status == "REJECTED"

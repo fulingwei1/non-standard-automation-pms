@@ -60,14 +60,14 @@ class TestGetTurnoverRateData:
         """测试无物料时返回空汇总"""
         db = create_mock_db_session()
         db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = (
-            []
+        []
         )
         db.query.return_value.join.return_value.filter.return_value.scalar.return_value = (
-            0
+        0
         )
 
         result = InventoryAnalysisService.get_turnover_rate_data(
-            db, date(2024, 1, 1), date(2024, 12, 31)
+        db, date(2024, 1, 1), date(2024, 12, 31)
         )
 
         assert result["summary"]["total_materials"] == 0
@@ -77,21 +77,21 @@ class TestGetTurnoverRateData:
         """测试计算库存价值"""
         db = create_mock_db_session()
         materials = [
-            create_mock_material(current_stock=100, standard_price=10.0),  # 1000
-            create_mock_material(current_stock=50, standard_price=20.0),  # 1000
+        create_mock_material(current_stock=100, standard_price=10.0),  # 1000
+        create_mock_material(current_stock=50, standard_price=20.0),  # 1000
         ]
         db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = (
-            materials
+        materials
         )
         db.query.return_value.outerjoin.return_value.filter.return_value.filter.return_value.all.return_value = (
-            materials
+        materials
         )
         db.query.return_value.join.return_value.filter.return_value.scalar.return_value = (
-            0
+        0
         )
 
         result = InventoryAnalysisService.get_turnover_rate_data(
-            db, date(2024, 1, 1), date(2024, 12, 31)
+        db, date(2024, 1, 1), date(2024, 12, 31)
         )
 
         assert result["summary"]["total_inventory_value"] == 2000.0
@@ -101,25 +101,25 @@ class TestGetTurnoverRateData:
         """测试按分类分组"""
         db = create_mock_db_session()
         materials = [
-            create_mock_material(
-                category_name="电子元件", current_stock=100, standard_price=10.0
-            ),
-            create_mock_material(
-                category_name="机械件", current_stock=50, standard_price=20.0
-            ),
+        create_mock_material(
+        category_name="电子元件", current_stock=100, standard_price=10.0
+        ),
+        create_mock_material(
+        category_name="机械件", current_stock=50, standard_price=20.0
+        ),
         ]
         db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = (
-            materials
+        materials
         )
         db.query.return_value.outerjoin.return_value.filter.return_value.filter.return_value.all.return_value = (
-            materials
+        materials
         )
         db.query.return_value.join.return_value.filter.return_value.scalar.return_value = (
-            0
+        0
         )
 
         result = InventoryAnalysisService.get_turnover_rate_data(
-            db, date(2024, 1, 1), date(2024, 12, 31)
+        db, date(2024, 1, 1), date(2024, 12, 31)
         )
 
         assert len(result["category_breakdown"]) == 2
@@ -130,17 +130,17 @@ class TestGetTurnoverRateData:
         # 有库存但价格为None的情况
         material = create_mock_material(current_stock=10, standard_price=None)
         db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = [
-            material
+        material
         ]
         db.query.return_value.outerjoin.return_value.filter.return_value.filter.return_value.all.return_value = [
-            material
+        material
         ]
         db.query.return_value.join.return_value.filter.return_value.scalar.return_value = (
-            0
+        0
         )
 
         result = InventoryAnalysisService.get_turnover_rate_data(
-            db, date(2024, 1, 1), date(2024, 12, 31)
+        db, date(2024, 1, 1), date(2024, 12, 31)
         )
 
         # 价格为None时，库存价值应该为0
@@ -155,7 +155,7 @@ class TestGetStaleMaterialsData:
         """测试无物料时返回空"""
         db = create_mock_db_session()
         db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = (
-            []
+        []
         )
 
         result = InventoryAnalysisService.get_stale_materials_data(db)
@@ -168,21 +168,21 @@ class TestGetStaleMaterialsData:
         db = create_mock_db_session()
         # 120天前更新 - 呆滞
         stale_material = create_mock_material(
-            material_code="M001",
-            current_stock=100,
-            standard_price=10.0,
-            updated_at=datetime.now() - timedelta(days=120),
+        material_code="M001",
+        current_stock=100,
+        standard_price=10.0,
+        updated_at=datetime.now() - timedelta(days=120),
         )
         # 30天前更新 - 不呆滞
         fresh_material = create_mock_material(
-            material_code="M002",
-            current_stock=50,
-            standard_price=20.0,
-            updated_at=datetime.now() - timedelta(days=30),
+        material_code="M002",
+        current_stock=50,
+        standard_price=20.0,
+        updated_at=datetime.now() - timedelta(days=30),
         )
         db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = [
-            stale_material,
-            fresh_material,
+        stale_material,
+        fresh_material,
         ]
 
         result = InventoryAnalysisService.get_stale_materials_data(db, threshold_days=90)
@@ -194,29 +194,29 @@ class TestGetStaleMaterialsData:
         """测试计算库龄分布"""
         db = create_mock_db_session()
         materials = [
-            create_mock_material(
-                updated_at=datetime.now() - timedelta(days=10),
-                current_stock=100,
-                standard_price=10.0,
-            ),  # 30天以内
-            create_mock_material(
-                updated_at=datetime.now() - timedelta(days=45),
-                current_stock=100,
-                standard_price=10.0,
-            ),  # 30-60天
-            create_mock_material(
-                updated_at=datetime.now() - timedelta(days=75),
-                current_stock=100,
-                standard_price=10.0,
-            ),  # 60-90天
-            create_mock_material(
-                updated_at=datetime.now() - timedelta(days=100),
-                current_stock=100,
-                standard_price=10.0,
-            ),  # 90天以上
+        create_mock_material(
+        updated_at=datetime.now() - timedelta(days=10),
+        current_stock=100,
+        standard_price=10.0,
+        ),  # 30天以内
+        create_mock_material(
+        updated_at=datetime.now() - timedelta(days=45),
+        current_stock=100,
+        standard_price=10.0,
+        ),  # 30-60天
+        create_mock_material(
+        updated_at=datetime.now() - timedelta(days=75),
+        current_stock=100,
+        standard_price=10.0,
+        ),  # 60-90天
+        create_mock_material(
+        updated_at=datetime.now() - timedelta(days=100),
+        current_stock=100,
+        standard_price=10.0,
+        ),  # 90天以上
         ]
         db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = (
-            materials
+        materials
         )
 
         result = InventoryAnalysisService.get_stale_materials_data(db)
@@ -231,21 +231,21 @@ class TestGetStaleMaterialsData:
         """测试按库存金额排序"""
         db = create_mock_db_session()
         materials = [
-            create_mock_material(
-                material_code="M001",
-                current_stock=10,
-                standard_price=10.0,
-                updated_at=datetime.now() - timedelta(days=100),
-            ),  # 100
-            create_mock_material(
-                material_code="M002",
-                current_stock=100,
-                standard_price=10.0,
-                updated_at=datetime.now() - timedelta(days=100),
-            ),  # 1000
+        create_mock_material(
+        material_code="M001",
+        current_stock=10,
+        standard_price=10.0,
+        updated_at=datetime.now() - timedelta(days=100),
+        ),  # 100
+        create_mock_material(
+        material_code="M002",
+        current_stock=100,
+        standard_price=10.0,
+        updated_at=datetime.now() - timedelta(days=100),
+        ),  # 1000
         ]
         db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = (
-            materials
+        materials
         )
 
         result = InventoryAnalysisService.get_stale_materials_data(db)
@@ -261,7 +261,7 @@ class TestGetSafetyStockComplianceData:
         """测试无物料时返回空"""
         db = create_mock_db_session()
         db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = (
-            []
+        []
         )
 
         result = InventoryAnalysisService.get_safety_stock_compliance_data(db)
@@ -273,13 +273,13 @@ class TestGetSafetyStockComplianceData:
         """测试统计达标物料"""
         db = create_mock_db_session()
         materials = [
-            create_mock_material(current_stock=100, safety_stock=50),  # 达标
-            create_mock_material(current_stock=100, safety_stock=100),  # 达标
-            create_mock_material(current_stock=30, safety_stock=50),  # 预警
-            create_mock_material(current_stock=0, safety_stock=50),  # 缺货
+        create_mock_material(current_stock=100, safety_stock=50),  # 达标
+        create_mock_material(current_stock=100, safety_stock=100),  # 达标
+        create_mock_material(current_stock=30, safety_stock=50),  # 预警
+        create_mock_material(current_stock=0, safety_stock=50),  # 缺货
         ]
         db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = (
-            materials
+        materials
         )
 
         result = InventoryAnalysisService.get_safety_stock_compliance_data(db)
@@ -292,11 +292,11 @@ class TestGetSafetyStockComplianceData:
         """测试达标率排除未设安全库存"""
         db = create_mock_db_session()
         materials = [
-            create_mock_material(current_stock=100, safety_stock=50),  # 达标
-            create_mock_material(current_stock=0, safety_stock=0),  # 未设安全库存
+        create_mock_material(current_stock=100, safety_stock=50),  # 达标
+        create_mock_material(current_stock=0, safety_stock=0),  # 未设安全库存
         ]
         db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = (
-            materials
+        materials
         )
 
         result = InventoryAnalysisService.get_safety_stock_compliance_data(db)
@@ -309,7 +309,7 @@ class TestGetSafetyStockComplianceData:
         db = create_mock_db_session()
         material = create_mock_material(current_stock=30, safety_stock=50)
         db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = [
-            material
+        material
         ]
 
         result = InventoryAnalysisService.get_safety_stock_compliance_data(db)
@@ -325,11 +325,11 @@ class TestGetAbcAnalysisData:
         """测试无数据时返回空"""
         db = create_mock_db_session()
         db.query.return_value.join.return_value.outerjoin.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.all.return_value = (
-            []
+        []
         )
 
         result = InventoryAnalysisService.get_abc_analysis_data(
-            db, date(2024, 1, 1), date(2024, 12, 31)
+        db, date(2024, 1, 1), date(2024, 12, 31)
         )
 
         assert result["abc_materials"] == []
@@ -349,22 +349,22 @@ class TestGetAbcAnalysisData:
             mock.order_count = 1
             results.append(mock)
 
-        db.query.return_value.join.return_value.outerjoin.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.all.return_value = (
+            db.query.return_value.join.return_value.outerjoin.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.all.return_value = (
             results
-        )
+            )
 
-        result = InventoryAnalysisService.get_abc_analysis_data(
+            result = InventoryAnalysisService.get_abc_analysis_data(
             db, date(2024, 1, 1), date(2024, 12, 31)
-        )
+            )
 
-        # 验证A类累计占比约70%
-        a_materials = [m for m in result["abc_materials"] if m["abc_class"] == "A"]
-        assert len(a_materials) > 0
+            # 验证A类累计占比约70%
+            a_materials = [m for m in result["abc_materials"] if m["abc_class"] == "A"]
+            assert len(a_materials) > 0
 
-        # 验证汇总
-        assert result["abc_summary"]["A"]["count"] > 0
-        assert result["abc_summary"]["B"]["count"] >= 0
-        assert result["abc_summary"]["C"]["count"] >= 0
+            # 验证汇总
+            assert result["abc_summary"]["A"]["count"] > 0
+            assert result["abc_summary"]["B"]["count"] >= 0
+            assert result["abc_summary"]["C"]["count"] >= 0
 
     def test_calculates_cumulative_percent(self):
         """测试计算累计百分比"""
@@ -379,17 +379,17 @@ class TestGetAbcAnalysisData:
             mock.order_count = 1
             results.append(mock)
 
-        db.query.return_value.join.return_value.outerjoin.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.all.return_value = (
+            db.query.return_value.join.return_value.outerjoin.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.all.return_value = (
             results
-        )
+            )
 
-        result = InventoryAnalysisService.get_abc_analysis_data(
+            result = InventoryAnalysisService.get_abc_analysis_data(
             db, date(2024, 1, 1), date(2024, 12, 31)
-        )
+            )
 
-        # 每个约33.33%
-        assert result["abc_materials"][0]["amount_percent"] == pytest.approx(33.33, 0.1)
-        assert result["abc_materials"][2]["cumulative_percent"] == pytest.approx(100.0, 0.1)
+            # 每个约33.33%
+            assert result["abc_materials"][0]["amount_percent"] == pytest.approx(33.33, 0.1)
+            assert result["abc_materials"][2]["cumulative_percent"] == pytest.approx(100.0, 0.1)
 
 
 @pytest.mark.unit
@@ -400,10 +400,10 @@ class TestGetCostOccupancyData:
         """测试无分类时返回空"""
         db = create_mock_db_session()
         db.query.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.all.return_value = (
-            []
+        []
         )
         db.query.return_value.outerjoin.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
-            []
+        []
         )
 
         result = InventoryAnalysisService.get_cost_occupancy_data(db)
@@ -415,24 +415,24 @@ class TestGetCostOccupancyData:
         """测试按分类分组"""
         db = create_mock_db_session()
         categories = [
-            MagicMock(
-                category_id=1,
-                category_name="电子元件",
-                inventory_value=10000,
-                material_count=50,
-            ),
-            MagicMock(
-                category_id=2,
-                category_name="机械件",
-                inventory_value=5000,
-                material_count=30,
-            ),
+        MagicMock(
+        category_id=1,
+        category_name="电子元件",
+        inventory_value=10000,
+        material_count=50,
+        ),
+        MagicMock(
+        category_id=2,
+        category_name="机械件",
+        inventory_value=5000,
+        material_count=30,
+        ),
         ]
         db.query.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.all.return_value = (
-            categories
+        categories
         )
         db.query.return_value.outerjoin.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
-            []
+        []
         )
 
         result = InventoryAnalysisService.get_cost_occupancy_data(db)
@@ -444,24 +444,24 @@ class TestGetCostOccupancyData:
         """测试计算价值占比"""
         db = create_mock_db_session()
         categories = [
-            MagicMock(
-                category_id=1,
-                category_name="电子元件",
-                inventory_value=7000,
-                material_count=50,
-            ),
-            MagicMock(
-                category_id=2,
-                category_name="机械件",
-                inventory_value=3000,
-                material_count=30,
-            ),
+        MagicMock(
+        category_id=1,
+        category_name="电子元件",
+        inventory_value=7000,
+        material_count=50,
+        ),
+        MagicMock(
+        category_id=2,
+        category_name="机械件",
+        inventory_value=3000,
+        material_count=30,
+        ),
         ]
         db.query.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.all.return_value = (
-            categories
+        categories
         )
         db.query.return_value.outerjoin.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
-            []
+        []
         )
 
         result = InventoryAnalysisService.get_cost_occupancy_data(db)
@@ -473,21 +473,21 @@ class TestGetCostOccupancyData:
         """测试返回TOP物料"""
         db = create_mock_db_session()
         db.query.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.all.return_value = (
-            []
+        []
         )
 
         top_materials = [
-            MagicMock(
-                material_code="M001",
-                material_name="高价值物料",
-                category_name="电子元件",
-                inventory_value=5000,
-                current_stock=100,
-                unit="个",
-            )
+        MagicMock(
+        material_code="M001",
+        material_name="高价值物料",
+        category_name="电子元件",
+        inventory_value=5000,
+        current_stock=100,
+        unit="个",
+        )
         ]
         db.query.return_value.outerjoin.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
-            top_materials
+        top_materials
         )
 
         result = InventoryAnalysisService.get_cost_occupancy_data(db)

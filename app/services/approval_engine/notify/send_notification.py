@@ -9,20 +9,56 @@ BACKWARD COMPATIBILITY: 此模块现在使用unified_notification_service进行�
 import logging
 from typing import Any, Dict
 
-
-from app.models.notification import Notification
+from app.services.unified_notification_service import get_notification_service
+from app.services.channel_handlers.base import (
+    NotificationRequest,
+    NotificationChannel,
+    NotificationPriority,
+)
 
 logger = logging.getLogger(__name__)
 
-# 导入统一通知服务
-
 
 class SendNotificationMixin:
-    """发送通知 Mixin"""
+    """发送通知 Mixin（使用统一通知服务）"""
+
+    def _get_unified_service(self):
+        """获取统一通知服务实例"""
+        if not hasattr(self, '_unified_service') or self._unified_service is None:
+            self._unified_service = get_notification_service(self.db)
+        return self._unified_service
+
+    def _map_notification_type(self, approval_type: str) -> str:
+        """映射审批通知类型到统一服务通知类型"""
+        type_mapping = {
+            "APPROVAL_PENDING": "APPROVAL_PENDING",
+            "APPROVAL_APPROVED": "APPROVAL_RESULT",
+            "APPROVAL_REJECTED": "APPROVAL_RESULT",
+            "APPROVAL_CC": "APPROVAL_CC",
+            "APPROVAL_TIMEOUT_WARNING": "APPROVAL_PENDING",
+            "APPROVAL_REMIND": "APPROVAL_PENDING",
+            "APPROVAL_WITHDRAWN": "APPROVAL_RESULT",
+            "APPROVAL_TRANSFERRED": "APPROVAL_PENDING",
+            "APPROVAL_DELEGATED": "APPROVAL_PENDING",
+            "APPROVAL_ADD_APPROVER": "APPROVAL_PENDING",
+            "APPROVAL_COMMENT_MENTION": "APPROVAL_PENDING",
+        }
+        return type_mapping.get(approval_type, "APPROVAL_PENDING")
+
+    def _map_urgency_to_priority(self, urgency: str) -> str:
+        """映射紧急程度到统一服务优先级"""
+        urgency_upper = urgency.upper() if urgency else "NORMAL"
+        mapping = {
+            "URGENT": NotificationPriority.URGENT,
+            "HIGH": NotificationPriority.HIGH,
+            "NORMAL": NotificationPriority.NORMAL,
+            "LOW": NotificationPriority.LOW,
+        }
+        return mapping.get(urgency_upper, NotificationPriority.NORMAL)
 
     def _send_notification(self, notification: Dict[str, Any]):
         """
-        发送通知
+        发送通知（使用统一通知服务）
 
         统一通知出口，支持：
         - 站内消息
@@ -31,89 +67,52 @@ class SendNotificationMixin:
         - 飞书
         - 短信
         - 推送
+
+        注意：统一服务内部已经处理了去重、用户偏好、免打扰等功能
         """
         receiver_id = notification.get("receiver_id")
         if not receiver_id:
             logger.warning("通知缺少 receiver_id，跳过发送")
             return
 
-        # 1. 通知去重检查
-        dedup_key = self._generate_dedup_key(notification)
-        if self._is_duplicate(dedup_key):
-            logger.debug(f"重复通知已跳过: {notification.get('type')}")
-            return
+        # 获取统一通知服务
+        unified_service = self._get_unified_service()
 
-        # 2. 检查用户偏好
-        prefs = self._check_user_preferences(receiver_id, notification.get("type", ""))
-
-        # 3. 发送站内通知
-        if prefs.get("system_enabled", True):
-            try:
-                self._save_system_notification(notification)
-            except Exception as e:
-                logger.error(f"保存站内通知失败: {e}")
-
-        # 4. 发送其他渠道通知（异步）
-        # 注：实际生产环境建议使用 Celery 异步任务
-        if prefs.get("email_enabled"):
-            self._queue_email_notification(notification)
-
-        if prefs.get("wechat_enabled"):
-            self._queue_wechat_notification(notification)
-
-        logger.info(
-            f"审批通知已发送: type={notification.get('type')}, receiver={receiver_id}"
+        # 构建通知请求
+        request = NotificationRequest(
+            recipient_id=receiver_id,
+            notification_type=self._map_notification_type(notification.get("type", "APPROVAL_PENDING")),
+            category="approval",
+            title=notification.get("title", "审批通知"),
+            content=notification.get("content", ""),
+            priority=self._map_urgency_to_priority(notification.get("urgency", "NORMAL")),
+            source_type="approval",
+            source_id=notification.get("instance_id"),
+            link_url=f"/approvals/{notification.get('instance_id')}" if notification.get("instance_id") else None,
+            extra_data={
+                "original_type": notification.get("type"),
+                "task_id": notification.get("task_id"),
+                "instance_id": notification.get("instance_id"),
+            },
         )
 
-    def _save_system_notification(self, notification: Dict[str, Any]):
-        """保存站内通知到数据库"""
+        # 使用统一服务发送通知
+        # 统一服务内部会处理：
+        # - 去重检查
+        # - 用户偏好检查
+        # - 免打扰时间检查
+        # - 多渠道路由
         try:
-            # 映射通知类型
-            type_mapping = {
-                "APPROVAL_PENDING": "APPROVAL_PENDING",
-                "APPROVAL_APPROVED": "APPROVAL_RESULT",
-                "APPROVAL_REJECTED": "APPROVAL_RESULT",
-                "APPROVAL_CC": "APPROVAL_CC",
-                "APPROVAL_TIMEOUT_WARNING": "APPROVAL_PENDING",
-                "APPROVAL_REMIND": "APPROVAL_PENDING",
-                "APPROVAL_WITHDRAWN": "APPROVAL_RESULT",
-                "APPROVAL_TRANSFERRED": "APPROVAL_PENDING",
-                "APPROVAL_DELEGATED": "APPROVAL_PENDING",
-                "APPROVAL_ADD_APPROVER": "APPROVAL_PENDING",
-                "APPROVAL_COMMENT_MENTION": "APPROVAL_PENDING",
-            }
-
-            # 映射优先级
-            urgency = notification.get("urgency", "NORMAL")
-            priority_mapping = {
-                "LOW": "LOW",
-                "NORMAL": "NORMAL",
-                "HIGH": "HIGH",
-                "URGENT": "URGENT",
-            }
-
-            db_notification = Notification(
-                user_id=notification["receiver_id"],
-                notification_type=type_mapping.get(
-                    notification.get("type"), "APPROVAL_PENDING"
-                ),
-                source_type="approval",
-                source_id=notification.get("instance_id"),
-                title=notification.get("title", "审批通知"),
-                content=notification.get("content", ""),
-                link_url=f"/approvals/{notification.get('instance_id')}",
-                priority=priority_mapping.get(urgency, "NORMAL"),
-                extra_data={
-                    "original_type": notification.get("type"),
-                    "task_id": notification.get("task_id"),
-                    "instance_id": notification.get("instance_id"),
-                },
-            )
-
-            self.db.add(db_notification)
-            self.db.commit()
-
+            result = unified_service.send_notification(request)
+            if result.get("success"):
+                logger.info(
+                    f"审批通知已发送: type={notification.get('type')}, receiver={receiver_id}, "
+                    f"channels={result.get('channels_sent', [])}"
+                )
+            else:
+                logger.warning(
+                    f"审批通知发送失败: type={notification.get('type')}, receiver={receiver_id}, "
+                    f"reason={result.get('message', 'Unknown error')}"
+                )
         except Exception as e:
-            logger.error(f"保存站内通知异常: {e}")
-            self.db.rollback()
-            raise
+            logger.error(f"发送审批通知异常: {e}", exc_info=True)

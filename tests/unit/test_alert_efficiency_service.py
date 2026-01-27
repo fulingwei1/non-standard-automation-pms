@@ -81,16 +81,16 @@ class TestCalculateBasicMetrics:
         now = datetime.now()
 
         alerts = [
-            create_mock_alert(
-                status='RESOLVED',
-                triggered_at=now - timedelta(hours=2),
-                acknowledged_at=now - timedelta(hours=1)
-            ),
-            create_mock_alert(
-                status='CLOSED',
-                triggered_at=now - timedelta(hours=3),
-                acknowledged_at=now - timedelta(hours=2)
-            )
+        create_mock_alert(
+        status='RESOLVED',
+        triggered_at=now - timedelta(hours=2),
+        acknowledged_at=now - timedelta(hours=1)
+        ),
+        create_mock_alert(
+        status='CLOSED',
+        triggered_at=now - timedelta(hours=3),
+        acknowledged_at=now - timedelta(hours=2)
+        )
         ]
 
         result = calculate_basic_metrics(alerts, engine)
@@ -104,10 +104,10 @@ class TestCalculateBasicMetrics:
         now = datetime.now()
 
         alerts = [
-            create_mock_alert(status='RESOLVED', triggered_at=now, acknowledged_at=now),
-            create_mock_alert(status='PENDING', triggered_at=now),
-            create_mock_alert(status='PENDING', triggered_at=now),
-            create_mock_alert(status='PENDING', triggered_at=now),
+        create_mock_alert(status='RESOLVED', triggered_at=now, acknowledged_at=now),
+        create_mock_alert(status='PENDING', triggered_at=now),
+        create_mock_alert(status='PENDING', triggered_at=now),
+        create_mock_alert(status='PENDING', triggered_at=now),
         ]
 
         result = calculate_basic_metrics(alerts, engine)
@@ -120,10 +120,10 @@ class TestCalculateBasicMetrics:
         now = datetime.now()
 
         alerts = [
-            create_mock_alert(is_escalated=True),
-            create_mock_alert(is_escalated=True),
-            create_mock_alert(is_escalated=False),
-            create_mock_alert(is_escalated=False),
+        create_mock_alert(is_escalated=True),
+        create_mock_alert(is_escalated=True),
+        create_mock_alert(is_escalated=False),
+        create_mock_alert(is_escalated=False),
         ]
 
         result = calculate_basic_metrics(alerts, engine)
@@ -136,9 +136,9 @@ class TestCalculateBasicMetrics:
         now = datetime.now()
 
         alerts = [
-            create_mock_alert(rule_id=1, target_type='project', target_id=1, triggered_at=now),
-            create_mock_alert(rule_id=1, target_type='project', target_id=1, triggered_at=now + timedelta(hours=1)),  # Duplicate
-            create_mock_alert(rule_id=2, target_type='project', target_id=1, triggered_at=now),
+        create_mock_alert(rule_id=1, target_type='project', target_id=1, triggered_at=now),
+        create_mock_alert(rule_id=1, target_type='project', target_id=1, triggered_at=now + timedelta(hours=1)),  # Duplicate
+        create_mock_alert(rule_id=2, target_type='project', target_id=1, triggered_at=now),
         ]
 
         result = calculate_basic_metrics(alerts, engine)
@@ -152,18 +152,18 @@ class TestCalculateBasicMetrics:
 
         # One timely (within 8 hours for MEDIUM), one not
         alerts = [
-            create_mock_alert(
-                status='RESOLVED',
-                triggered_at=now - timedelta(hours=2),
-                acknowledged_at=now - timedelta(hours=1),
-                alert_level='MEDIUM'
-            ),
-            create_mock_alert(
-                status='RESOLVED',
-                triggered_at=now - timedelta(hours=20),
-                acknowledged_at=now,
-                alert_level='MEDIUM'
-            )
+        create_mock_alert(
+        status='RESOLVED',
+        triggered_at=now - timedelta(hours=2),
+        acknowledged_at=now - timedelta(hours=1),
+        alert_level='MEDIUM'
+        ),
+        create_mock_alert(
+        status='RESOLVED',
+        triggered_at=now - timedelta(hours=20),
+        acknowledged_at=now,
+        alert_level='MEDIUM'
+        )
         ]
 
         result = calculate_basic_metrics(alerts, engine)
@@ -195,17 +195,17 @@ class TestCalculateProjectMetrics:
         now = datetime.now()
 
         alerts = [
-            create_mock_alert(
-                status='RESOLVED',
-                project_id=1,
-                triggered_at=now - timedelta(hours=2),
-                acknowledged_at=now - timedelta(hours=1)
-            ),
-            create_mock_alert(
-                status='PENDING',
-                project_id=1,
-                triggered_at=now
-            )
+        create_mock_alert(
+        status='RESOLVED',
+        project_id=1,
+        triggered_at=now - timedelta(hours=2),
+        acknowledged_at=now - timedelta(hours=1)
+        ),
+        create_mock_alert(
+        status='PENDING',
+        project_id=1,
+        triggered_at=now
+        )
         ]
 
         result = calculate_project_metrics(alerts, mock_db, engine)
@@ -220,7 +220,7 @@ class TestCalculateProjectMetrics:
         engine = create_mock_engine()
 
         alerts = [
-            create_mock_alert(project_id=None)
+        create_mock_alert(project_id=None)
         ]
 
         result = calculate_project_metrics(alerts, mock_db, engine)
@@ -252,18 +252,18 @@ class TestCalculateHandlerMetrics:
         now = datetime.now()
 
         alerts = [
-            create_mock_alert(
-                status='RESOLVED',
-                handler_id=1,
-                triggered_at=now - timedelta(hours=2),
-                acknowledged_at=now - timedelta(hours=1)
-            ),
-            create_mock_alert(
-                status='RESOLVED',
-                handler_id=1,
-                triggered_at=now - timedelta(hours=2),
-                acknowledged_at=now - timedelta(hours=1)
-            )
+        create_mock_alert(
+        status='RESOLVED',
+        handler_id=1,
+        triggered_at=now - timedelta(hours=2),
+        acknowledged_at=now - timedelta(hours=1)
+        ),
+        create_mock_alert(
+        status='RESOLVED',
+        handler_id=1,
+        triggered_at=now - timedelta(hours=2),
+        acknowledged_at=now - timedelta(hours=1)
+        )
         ]
 
         result = calculate_handler_metrics(alerts, mock_db, engine)
@@ -278,7 +278,7 @@ class TestCalculateHandlerMetrics:
         engine = create_mock_engine()
 
         alerts = [
-            create_mock_alert(handler_id=None)
+        create_mock_alert(handler_id=None)
         ]
 
         result = calculate_handler_metrics(alerts, mock_db, engine)
@@ -307,17 +307,17 @@ class TestCalculateTypeMetrics:
         mock_rule.rule_type = 'SCHEDULE_DELAY'
 
         alerts = [
-            create_mock_alert(
-                status='RESOLVED',
-                rule=mock_rule,
-                triggered_at=now - timedelta(hours=2),
-                acknowledged_at=now - timedelta(hours=1)
-            ),
-            create_mock_alert(
-                status='PENDING',
-                rule=mock_rule,
-                triggered_at=now
-            )
+        create_mock_alert(
+        status='RESOLVED',
+        rule=mock_rule,
+        triggered_at=now - timedelta(hours=2),
+        acknowledged_at=now - timedelta(hours=1)
+        ),
+        create_mock_alert(
+        status='PENDING',
+        rule=mock_rule,
+        triggered_at=now
+        )
         ]
 
         result = calculate_type_metrics(alerts, engine)
@@ -338,8 +338,8 @@ class TestCalculateTypeMetrics:
         mock_rule2.rule_type = 'COST_OVERRUN'
 
         alerts = [
-            create_mock_alert(status='RESOLVED', rule=mock_rule1, triggered_at=now, acknowledged_at=now),
-            create_mock_alert(status='PENDING', rule=mock_rule2, triggered_at=now)
+        create_mock_alert(status='RESOLVED', rule=mock_rule1, triggered_at=now, acknowledged_at=now),
+        create_mock_alert(status='PENDING', rule=mock_rule2, triggered_at=now)
         ]
 
         result = calculate_type_metrics(alerts, engine)
@@ -352,7 +352,7 @@ class TestCalculateTypeMetrics:
         engine = create_mock_engine()
 
         alerts = [
-            create_mock_alert(rule=None)
+        create_mock_alert(rule=None)
         ]
 
         result = calculate_type_metrics(alerts, engine)
@@ -376,44 +376,44 @@ class TestGenerateRankings:
     def test_rankings_with_data(self):
         """测试有数据的排行"""
         project_metrics = {
-            'Project A': {
-                'project_id': 1,
-                'total': 10,
-                'efficiency_score': 90,
-                'processing_rate': 0.9,
-                'timely_processing_rate': 0.85
-            },
-            'Project B': {
-                'project_id': 2,
-                'total': 8,
-                'efficiency_score': 70,
-                'processing_rate': 0.7,
-                'timely_processing_rate': 0.65
-            },
-            'Project C': {
-                'project_id': 3,
-                'total': 3,  # Less than 5, should be excluded
-                'efficiency_score': 95,
-                'processing_rate': 0.95,
-                'timely_processing_rate': 0.9
-            }
+        'Project A': {
+        'project_id': 1,
+        'total': 10,
+        'efficiency_score': 90,
+        'processing_rate': 0.9,
+        'timely_processing_rate': 0.85
+        },
+        'Project B': {
+        'project_id': 2,
+        'total': 8,
+        'efficiency_score': 70,
+        'processing_rate': 0.7,
+        'timely_processing_rate': 0.65
+        },
+        'Project C': {
+        'project_id': 3,
+        'total': 3,  # Less than 5, should be excluded
+        'efficiency_score': 95,
+        'processing_rate': 0.95,
+        'timely_processing_rate': 0.9
+        }
         }
 
         handler_metrics = {
-            'User A': {
-                'user_id': 1,
-                'total': 10,
-                'efficiency_score': 85,
-                'processing_rate': 0.85,
-                'timely_processing_rate': 0.8
-            },
-            'User B': {
-                'user_id': 2,
-                'total': 6,
-                'efficiency_score': 60,
-                'processing_rate': 0.6,
-                'timely_processing_rate': 0.55
-            }
+        'User A': {
+        'user_id': 1,
+        'total': 10,
+        'efficiency_score': 85,
+        'processing_rate': 0.85,
+        'timely_processing_rate': 0.8
+        },
+        'User B': {
+        'user_id': 2,
+        'total': 6,
+        'efficiency_score': 60,
+        'processing_rate': 0.6,
+        'timely_processing_rate': 0.55
+        }
         }
 
         result = generate_rankings(project_metrics, handler_metrics)
@@ -428,14 +428,14 @@ class TestGenerateRankings:
     def test_rankings_limit(self):
         """测试排行榜数量限制（最多5个）"""
         project_metrics = {
-            f'Project {i}': {
-                'project_id': i,
-                'total': 10,
-                'efficiency_score': 50 + i,
-                'processing_rate': 0.5 + i * 0.01,
-                'timely_processing_rate': 0.5 + i * 0.01
-            }
-            for i in range(10)
+        f'Project {i}': {
+        'project_id': i,
+        'total': 10,
+        'efficiency_score': 50 + i,
+        'processing_rate': 0.5 + i * 0.01,
+        'timely_processing_rate': 0.5 + i * 0.01
+        }
+        for i in range(10)
         }
 
         result = generate_rankings(project_metrics, {})
@@ -451,11 +451,11 @@ class TestAlertEfficiencyIntegration:
     def test_all_functions_importable(self):
         """测试所有函数可导入"""
         from app.services.alert_efficiency_service import (
-            calculate_basic_metrics,
-            calculate_handler_metrics,
-            calculate_project_metrics,
-            calculate_type_metrics,
-            generate_rankings,
+        calculate_basic_metrics,
+        calculate_handler_metrics,
+        calculate_project_metrics,
+        calculate_type_metrics,
+        generate_rankings,
         )
 
         assert calculate_basic_metrics is not None
@@ -473,8 +473,8 @@ class TestAlertEfficiencyIntegration:
         mock_user.username = "test_user"
 
         mock_db.query.return_value.filter.return_value.first.side_effect = [
-            mock_project,  # For project query
-            mock_user,     # For handler query
+        mock_project,  # For project query
+        mock_user,     # For handler query
         ]
 
         engine = create_mock_engine()
@@ -484,14 +484,14 @@ class TestAlertEfficiencyIntegration:
         mock_rule.rule_type = 'SCHEDULE_DELAY'
 
         alerts = [
-            create_mock_alert(
-                status='RESOLVED',
-                project_id=1,
-                handler_id=1,
-                rule=mock_rule,
-                triggered_at=now - timedelta(hours=2),
-                acknowledged_at=now - timedelta(hours=1)
-            )
+        create_mock_alert(
+        status='RESOLVED',
+        project_id=1,
+        handler_id=1,
+        rule=mock_rule,
+        triggered_at=now - timedelta(hours=2),
+        acknowledged_at=now - timedelta(hours=1)
+        )
         ]
 
         # Calculate all metrics

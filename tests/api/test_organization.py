@@ -15,9 +15,6 @@ from app.core.config import settings
 from tests.helpers.response_helpers import (
     assert_success_response,
     assert_list_response,
-    assert_paginated_response,
-    extract_data,
-    extract_items,
 )
 
 
@@ -69,7 +66,7 @@ class TestDepartmentCRUD:
         assert "items" in list_data
         assert isinstance(list_data["items"], list)
         # 所有返回的部门都应该是启用的
-        for dept in data:
+        for dept in list_data["items"]:
             assert dept.get("is_active", True) == True
 
     def test_get_department_tree(self, client: TestClient, admin_token: str):
@@ -134,10 +131,11 @@ class TestDepartmentCRUD:
             headers=headers
         )
 
-        if list_response.status_code != 200 or not list_response.json():
+        list_data = list_response.json()
+        if list_response.status_code != 200 or not list_data.get("items"):
             pytest.skip("No departments available for testing")
 
-        dept_id = list_response.json()[0]["id"]
+        dept_id = list_data["items"][0]["id"]
 
         response = client.get(
             f"{settings.API_V1_PREFIX}/org/departments/{dept_id}",
@@ -220,10 +218,11 @@ class TestDepartmentCRUD:
             headers=headers
         )
 
-        if list_response.status_code != 200 or not list_response.json():
+        list_data = list_response.json()
+        if list_response.status_code != 200 or not list_data.get("items"):
             pytest.skip("No departments available for testing")
 
-        dept_id = list_response.json()[0]["id"]
+        dept_id = list_data["items"][0]["id"]
 
         response = client.get(
             f"{settings.API_V1_PREFIX}/org/departments/{dept_id}/users",
@@ -299,10 +298,11 @@ class TestEmployeeCRUD:
             headers=headers
         )
 
-        if list_response.status_code != 200 or not list_response.json():
+        list_data = list_response.json()
+        if list_response.status_code != 200 or not list_data.get("items"):
             pytest.skip("No employees available for testing")
 
-        emp_id = list_response.json()[0]["id"]
+        emp_id = list_data["items"][0]["id"]
 
         response = client.get(
             f"{settings.API_V1_PREFIX}/org/employees/{emp_id}",
@@ -310,7 +310,9 @@ class TestEmployeeCRUD:
         )
 
         assert response.status_code == 200
-        data = response.json()
+        response_data = response.json()
+        # 使用统一响应格式辅助函数提取数据
+        data = assert_success_response(response_data)
         assert data["id"] == emp_id
 
     def test_update_employee(self, client: TestClient, admin_token: str):
@@ -326,10 +328,11 @@ class TestEmployeeCRUD:
             headers=headers
         )
 
-        if list_response.status_code != 200 or not list_response.json():
+        list_data = list_response.json()
+        if list_response.status_code != 200 or not list_data.get("items"):
             pytest.skip("No employees available for testing")
 
-        emp = list_response.json()[0]
+        emp = list_data["items"][0]
         emp_id = emp["id"]
 
         update_data = {

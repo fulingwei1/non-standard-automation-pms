@@ -48,18 +48,18 @@ class TestCalculateResponseTimes:
         from app.services.alert_response_service import calculate_response_times
 
         alerts = [
-            MockAlertRecord(
-                alert_no="ALT001",
-                alert_level="WARNING",
-                triggered_at=datetime(2024, 2, 1, 10, 0),
-                acknowledged_at=datetime(2024, 2, 1, 11, 30),  # 1.5小时
-            ),
-            MockAlertRecord(
-                alert_no="ALT002",
-                alert_level="ERROR",
-                triggered_at=datetime(2024, 2, 1, 12, 0),
-                acknowledged_at=datetime(2024, 2, 1, 12, 30),  # 0.5小时
-            ),
+        MockAlertRecord(
+        alert_no="ALT001",
+        alert_level="WARNING",
+        triggered_at=datetime(2024, 2, 1, 10, 0),
+        acknowledged_at=datetime(2024, 2, 1, 11, 30),  # 1.5小时
+        ),
+        MockAlertRecord(
+        alert_no="ALT002",
+        alert_level="ERROR",
+        triggered_at=datetime(2024, 2, 1, 12, 0),
+        acknowledged_at=datetime(2024, 2, 1, 12, 30),  # 0.5小时
+        ),
         ]
 
         response_times = calculate_response_times(alerts)
@@ -75,18 +75,18 @@ class TestCalculateResponseTimes:
         from app.services.alert_response_service import calculate_response_times
 
         alerts = [
-            MockAlertRecord(
-                alert_no="ALT001",
-                alert_level="WARNING",
-                triggered_at=None,
-                acknowledged_at=datetime(2024, 2, 1, 11, 30),
-            ),
-            MockAlertRecord(
-                alert_no="ALT002",
-                alert_level="ERROR",
-                triggered_at=datetime(2024, 2, 1, 12, 0),
-                acknowledged_at=None,
-            ),
+        MockAlertRecord(
+        alert_no="ALT001",
+        alert_level="WARNING",
+        triggered_at=None,
+        acknowledged_at=datetime(2024, 2, 1, 11, 30),
+        ),
+        MockAlertRecord(
+        alert_no="ALT002",
+        alert_level="ERROR",
+        triggered_at=datetime(2024, 2, 1, 12, 0),
+        acknowledged_at=None,
+        ),
         ]
 
         response_times = calculate_response_times(alerts)
@@ -102,13 +102,13 @@ class TestCalculateResolveTimes:
         from app.services.alert_response_service import calculate_resolve_times
 
         alerts = [
-            MockAlertRecord(
-                alert_no="ALT001",
-                alert_level="WARNING",
-                triggered_at=datetime(2024, 2, 1, 10, 0),
-                acknowledged_at=datetime(2024, 2, 1, 11, 0),
-                handle_end_at=datetime(2024, 2, 1, 14, 0),  # 3小时
-            ),
+        MockAlertRecord(
+        alert_no="ALT001",
+        alert_level="WARNING",
+        triggered_at=datetime(2024, 2, 1, 10, 0),
+        acknowledged_at=datetime(2024, 2, 1, 11, 0),
+        handle_end_at=datetime(2024, 2, 1, 14, 0),  # 3小时
+        ),
         ]
 
         resolve_times = calculate_resolve_times(alerts)
@@ -126,26 +126,26 @@ class TestCalculateResponseDistribution:
         from app.services.alert_response_service import calculate_response_distribution
 
         response_times = [
-            {
-                "alert": MockAlertRecord("ALT001", "WARNING", None),
-                "minutes": 30,
-                "hours": 0.5,
-            },  # <1小时
-            {
-                "alert": MockAlertRecord("ALT002", "ERROR", None),
-                "minutes": 120,
-                "hours": 2.0,
-            },  # 1-4小时
-            {
-                "alert": MockAlertRecord("ALT003", "WARNING", None),
-                "minutes": 360,
-                "hours": 6.0,
-            },  # 4-8小时
-            {
-                "alert": MockAlertRecord("ALT004", "ERROR", None),
-                "minutes": 600,
-                "hours": 10.0,
-            },  # >8小时
+        {
+        "alert": MockAlertRecord("ALT001", "WARNING", None),
+        "minutes": 30,
+        "hours": 0.5,
+        },  # <1小时
+        {
+        "alert": MockAlertRecord("ALT002", "ERROR", None),
+        "minutes": 120,
+        "hours": 2.0,
+        },  # 1-4小时
+        {
+        "alert": MockAlertRecord("ALT003", "WARNING", None),
+        "minutes": 360,
+        "hours": 6.0,
+        },  # 4-8小时
+        {
+        "alert": MockAlertRecord("ALT004", "ERROR", None),
+        "minutes": 600,
+        "hours": 10.0,
+        },  # >8小时
         ]
 
         distribution = calculate_response_distribution(response_times)
@@ -164,10 +164,10 @@ class TestCalculateLevelMetrics:
         from app.services.alert_response_service import calculate_level_metrics
 
         response_times = [
-            {"alert": MockAlertRecord("ALT001", "WARNING", None), "hours": 1.0},
-            {"alert": MockAlertRecord("ALT002", "WARNING", None), "hours": 2.0},
-            {"alert": MockAlertRecord("ALT003", "ERROR", None), "hours": 0.5},
-            {"alert": MockAlertRecord("ALT004", "ERROR", None), "hours": 1.5},
+        {"alert": MockAlertRecord("ALT001", "WARNING", None), "hours": 1.0},
+        {"alert": MockAlertRecord("ALT002", "WARNING", None), "hours": 2.0},
+        {"alert": MockAlertRecord("ALT003", "ERROR", None), "hours": 0.5},
+        {"alert": MockAlertRecord("ALT004", "ERROR", None), "hours": 1.5},
         ]
 
         metrics = calculate_level_metrics(response_times)
@@ -192,29 +192,29 @@ class TestCalculateTypeMetrics:
         from app.services.alert_response_service import calculate_type_metrics
 
         alerts = [
-            MockAlertRecord(
-                alert_no="ALT001",
-                alert_level="WARNING",
-                triggered_at=datetime(2024, 2, 1, 10, 0),
-                acknowledged_at=datetime(2024, 2, 1, 11, 0),
-            ),
+        MockAlertRecord(
+        alert_no="ALT001",
+        alert_level="WARNING",
+        triggered_at=datetime(2024, 2, 1, 10, 0),
+        acknowledged_at=datetime(2024, 2, 1, 11, 0),
+        ),
         ]
 
         alerts[0].rule = MockAlertRule("PROGRESS")
 
         alerts.append(
-            MockAlertRecord(
-                alert_no="ALT002",
-                alert_level="ERROR",
-                triggered_at=datetime(2024, 2, 1, 12, 0),
-                acknowledged_at=datetime(2024, 2, 1, 13, 0),
-            )
+        MockAlertRecord(
+        alert_no="ALT002",
+        alert_level="ERROR",
+        triggered_at=datetime(2024, 2, 1, 12, 0),
+        acknowledged_at=datetime(2024, 2, 1, 13, 0),
+        )
         )
         alerts[1].rule = MockAlertRule("COST")
 
         response_times = [
-            {"alert": alerts[0], "hours": 1.0},
-            {"alert": alerts[1], "hours": 1.5},
+        {"alert": alerts[0], "hours": 1.0},
+        {"alert": alerts[1], "hours": 1.5},
         ]
 
         metrics = calculate_type_metrics(response_times)
@@ -231,34 +231,34 @@ class TestGenerateResponseRankings:
         from app.services.alert_response_service import generate_response_rankings
 
         project_metrics = {
-            "Project A": {
-                "project_id": 1,
-                "count": 10,
-                "avg_hours": 0.5,
-            },
-            "Project B": {
-                "project_id": 2,
-                "count": 8,
-                "avg_hours": 2.5,
-            },
-            "Project C": {
-                "project_id": 3,
-                "count": 15,
-                "avg_hours": 1.0,
-            },
+        "Project A": {
+        "project_id": 1,
+        "count": 10,
+        "avg_hours": 0.5,
+        },
+        "Project B": {
+        "project_id": 2,
+        "count": 8,
+        "avg_hours": 2.5,
+        },
+        "Project C": {
+        "project_id": 3,
+        "count": 15,
+        "avg_hours": 1.0,
+        },
         }
 
         handler_metrics = {
-            "User A": {
-                "user_id": 1,
-                "count": 5,
-                "avg_hours": 0.3,
-            },
-            "User B": {
-                "user_id": 2,
-                "count": 7,
-                "avg_hours": 1.5,
-            },
+        "User A": {
+        "user_id": 1,
+        "count": 5,
+        "avg_hours": 0.3,
+        },
+        "User B": {
+        "user_id": 2,
+        "count": 7,
+        "avg_hours": 1.5,
+        },
         }
 
         rankings = generate_response_rankings(project_metrics, handler_metrics)

@@ -28,8 +28,8 @@ class TestCheckProjectAccessOrRaise:
         with pytest.raises(HTTPException) as exc_info:
             check_project_access_or_raise(db, user, 99999)
 
-        assert exc_info.value.status_code == 404
-        assert "项目不存在" in str(exc_info.value.detail)
+            assert exc_info.value.status_code == 404
+            assert "项目不存在" in str(exc_info.value.detail)
 
     @patch("app.utils.permission_helpers.DataScopeService.check_project_access")
     def test_no_access_permission(self, mock_check_access):
@@ -51,8 +51,8 @@ class TestCheckProjectAccessOrRaise:
         with pytest.raises(HTTPException) as exc_info:
             check_project_access_or_raise(db, user, 1)
 
-        assert exc_info.value.status_code == 403
-        assert "没有权限访问该项目" in str(exc_info.value.detail)
+            assert exc_info.value.status_code == 403
+            assert "没有权限访问该项目" in str(exc_info.value.detail)
 
     @patch("app.utils.permission_helpers.DataScopeService.check_project_access")
     def test_has_access_permission(self, mock_check_access):
@@ -93,11 +93,11 @@ class TestCheckProjectAccessOrRaise:
 
         with pytest.raises(HTTPException) as exc_info:
             check_project_access_or_raise(
-                db, user, 1, error_message="自定义错误消息"
+            db, user, 1, error_message="自定义错误消息"
             )
 
-        assert exc_info.value.status_code == 403
-        assert "自定义错误消息" in str(exc_info.value.detail)
+            assert exc_info.value.status_code == 403
+            assert "自定义错误消息" in str(exc_info.value.detail)
 
 
 class TestFilterProjectsByScope:

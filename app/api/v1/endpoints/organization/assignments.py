@@ -1,27 +1,28 @@
 # -*- coding: utf-8 -*-
 """
-员工组织分配管理端点
+员工组织分配管理端点（重构版）
+使用统一响应格式
 """
 
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.core.schemas import list_response, success_response
 from app.models.organization import EmployeeOrgAssignment
 from app.models.user import User
 from app.schemas.organization import (
     EmployeeOrgAssignmentCreate,
-    EmployeeOrgAssignmentResponse,
     EmployeeOrgAssignmentUpdate,
 )
 
 router = APIRouter()
 
 
-@router.get("/", response_model=List[EmployeeOrgAssignmentResponse])
+@router.get("/")
 def list_assignments(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
@@ -42,21 +43,37 @@ def list_assignments(
 
     assignments = query.offset(skip).limit(limit).all()
 
-    # 补充关联名称
+    # 手动构建响应数据（包含关联名称）
+    result = []
     for a in assignments:
-        if a.employee:
-            a.employee_name = a.employee.name
-        if a.org_unit:
-            a.org_unit_name = a.org_unit.unit_name
-        if a.position:
-            a.position_name = a.position.position_name
-        if a.job_level:
-            a.job_level_name = a.job_level.level_name
+        a_dict = {
+            "id": a.id,
+            "employee_id": a.employee_id,
+            "org_unit_id": a.org_unit_id,
+            "position_id": a.position_id,
+            "job_level_id": a.job_level_id,
+            "is_primary": a.is_primary,
+            "assignment_type": a.assignment_type,
+            "start_date": a.start_date,
+            "end_date": a.end_date,
+            "is_active": a.is_active,
+            "created_at": a.created_at,
+            "updated_at": a.updated_at,
+            "employee_name": a.employee.name if a.employee else None,
+            "org_unit_name": a.org_unit.unit_name if a.org_unit else None,
+            "position_name": a.position.position_name if a.position else None,
+            "job_level_name": a.job_level.level_name if a.job_level else None,
+        }
+        result.append(a_dict)
 
-    return assignments
+    # 使用统一响应格式
+    return list_response(
+        items=result,
+        message="获取员工分配列表成功"
+    )
 
 
-@router.post("/", response_model=EmployeeOrgAssignmentResponse)
+@router.post("/")
 def create_assignment(
     *,
     db: Session = Depends(deps.get_db),
@@ -84,10 +101,35 @@ def create_assignment(
     db.add(assign)
     db.commit()
     db.refresh(assign)
-    return assign
+
+    # 手动构建响应数据
+    a_dict = {
+        "id": assign.id,
+        "employee_id": assign.employee_id,
+        "org_unit_id": assign.org_unit_id,
+        "position_id": assign.position_id,
+        "job_level_id": assign.job_level_id,
+        "is_primary": assign.is_primary,
+        "assignment_type": assign.assignment_type,
+        "start_date": assign.start_date,
+        "end_date": assign.end_date,
+        "is_active": assign.is_active,
+        "created_at": assign.created_at,
+        "updated_at": assign.updated_at,
+        "employee_name": assign.employee.name if assign.employee else None,
+        "org_unit_name": assign.org_unit.unit_name if assign.org_unit else None,
+        "position_name": assign.position.position_name if assign.position else None,
+        "job_level_name": assign.job_level.level_name if assign.job_level else None,
+    }
+
+    # 使用统一响应格式
+    return success_response(
+        data=a_dict,
+        message="员工分配创建成功"
+    )
 
 
-@router.put("/{id}", response_model=EmployeeOrgAssignmentResponse)
+@router.put("/{id}")
 def update_assignment(
     *,
     db: Session = Depends(deps.get_db),
@@ -118,7 +160,32 @@ def update_assignment(
     db.add(assign)
     db.commit()
     db.refresh(assign)
-    return assign
+
+    # 手动构建响应数据
+    a_dict = {
+        "id": assign.id,
+        "employee_id": assign.employee_id,
+        "org_unit_id": assign.org_unit_id,
+        "position_id": assign.position_id,
+        "job_level_id": assign.job_level_id,
+        "is_primary": assign.is_primary,
+        "assignment_type": assign.assignment_type,
+        "start_date": assign.start_date,
+        "end_date": assign.end_date,
+        "is_active": assign.is_active,
+        "created_at": assign.created_at,
+        "updated_at": assign.updated_at,
+        "employee_name": assign.employee.name if assign.employee else None,
+        "org_unit_name": assign.org_unit.unit_name if assign.org_unit else None,
+        "position_name": assign.position.position_name if assign.position else None,
+        "job_level_name": assign.job_level.level_name if assign.job_level else None,
+    }
+
+    # 使用统一响应格式
+    return success_response(
+        data=a_dict,
+        message="员工分配更新成功"
+    )
 
 
 @router.delete("/{id}")
@@ -136,4 +203,9 @@ def delete_assignment(
 
     db.delete(assign)
     db.commit()
-    return {"message": "Success"}
+
+    # 使用统一响应格式
+    return success_response(
+        data={"id": id},
+        message="员工分配删除成功"
+    )

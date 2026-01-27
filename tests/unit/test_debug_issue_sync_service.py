@@ -15,13 +15,10 @@ class TestDebugIssueSyncServiceInit:
 
     def test_init_with_db_session(self, db_session):
         """测试使用数据库会话初始化"""
-        try:
-            from app.services.debug_issue_sync_service import DebugIssueSyncService
+        from app.services.debug_issue_sync_service import DebugIssueSyncService
 
-            service = DebugIssueSyncService(db_session)
-            assert service.db == db_session
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        service = DebugIssueSyncService(db_session)
+        assert service.db == db_session
 
 
 class TestSyncMechanicalDebugIssue:
@@ -29,36 +26,30 @@ class TestSyncMechanicalDebugIssue:
 
     def test_issue_not_found(self, db_session):
         """测试问题不存在"""
-        try:
-            from app.services.debug_issue_sync_service import DebugIssueSyncService
+        from app.services.debug_issue_sync_service import DebugIssueSyncService
 
-            service = DebugIssueSyncService(db_session)
-            result = service.sync_mechanical_debug_issue(99999)
+        service = DebugIssueSyncService(db_session)
+        result = service.sync_mechanical_debug_issue(99999)
 
-            assert result is None
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert result is None
 
     def test_wrong_category(self, db_session):
         """测试非项目类别"""
-        try:
-            from app.services.debug_issue_sync_service import DebugIssueSyncService
-            from app.models.issue import Issue
+        from app.services.debug_issue_sync_service import DebugIssueSyncService
+        from app.models.issue import Issue
 
-            issue = Issue(
-                issue_no="ISS001",
-                category="OTHER",
-                issue_type="DEFECT"
-            )
-            db_session.add(issue)
-            db_session.flush()
+        issue = Issue(
+        issue_no="ISS001",
+        category="OTHER",
+        issue_type="DEFECT"
+        )
+        db_session.add(issue)
+        db_session.flush()
 
-            service = DebugIssueSyncService(db_session)
-            result = service.sync_mechanical_debug_issue(issue.id)
+        service = DebugIssueSyncService(db_session)
+        result = service.sync_mechanical_debug_issue(issue.id)
 
-            assert result is None
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert result is None
 
 
 class TestSyncTestBugRecord:
@@ -66,36 +57,30 @@ class TestSyncTestBugRecord:
 
     def test_issue_not_found(self, db_session):
         """测试问题不存在"""
-        try:
-            from app.services.debug_issue_sync_service import DebugIssueSyncService
+        from app.services.debug_issue_sync_service import DebugIssueSyncService
 
-            service = DebugIssueSyncService(db_session)
-            result = service.sync_test_bug_record(99999)
+        service = DebugIssueSyncService(db_session)
+        result = service.sync_test_bug_record(99999)
 
-            assert result is None
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert result is None
 
     def test_wrong_issue_type(self, db_session):
         """测试非Bug类型"""
-        try:
-            from app.services.debug_issue_sync_service import DebugIssueSyncService
-            from app.models.issue import Issue
+        from app.services.debug_issue_sync_service import DebugIssueSyncService
+        from app.models.issue import Issue
 
-            issue = Issue(
-                issue_no="ISS002",
-                category="PROJECT",
-                issue_type="DEFECT"  # 不是BUG
-            )
-            db_session.add(issue)
-            db_session.flush()
+        issue = Issue(
+        issue_no="ISS002",
+        category="PROJECT",
+        issue_type="DEFECT"  # 不是BUG
+        )
+        db_session.add(issue)
+        db_session.flush()
 
-            service = DebugIssueSyncService(db_session)
-            result = service.sync_test_bug_record(issue.id)
+        service = DebugIssueSyncService(db_session)
+        result = service.sync_test_bug_record(issue.id)
 
-            assert result is None
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert result is None
 
 
 class TestSyncIssue:
@@ -103,32 +88,26 @@ class TestSyncIssue:
 
     def test_issue_not_found(self, db_session):
         """测试问题不存在"""
-        try:
-            from app.services.debug_issue_sync_service import DebugIssueSyncService
+        from app.services.debug_issue_sync_service import DebugIssueSyncService
 
-            service = DebugIssueSyncService(db_session)
-            result = service.sync_issue(99999)
+        service = DebugIssueSyncService(db_session)
+        result = service.sync_issue(99999)
 
-            assert result['synced'] is False
-            assert result['error'] == '问题不存在'
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert result['synced'] is False
+        assert result['error'] == '问题不存在'
 
     def test_result_structure(self, db_session):
         """测试结果结构"""
-        try:
-            from app.services.debug_issue_sync_service import DebugIssueSyncService
+        from app.services.debug_issue_sync_service import DebugIssueSyncService
 
-            service = DebugIssueSyncService(db_session)
-            result = service.sync_issue(99999)
+        service = DebugIssueSyncService(db_session)
+        result = service.sync_issue(99999)
 
-            assert 'issue_id' in result
-            assert 'synced' in result
-            assert 'type' in result
-            assert 'record_id' in result
-            assert 'error' in result
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert 'issue_id' in result
+        assert 'synced' in result
+        assert 'type' in result
+        assert 'record_id' in result
+        assert 'error' in result
 
 
 class TestSyncAllProjectIssues:
@@ -136,48 +115,39 @@ class TestSyncAllProjectIssues:
 
     def test_no_issues(self, db_session):
         """测试无问题"""
-        try:
-            from app.services.debug_issue_sync_service import DebugIssueSyncService
+        from app.services.debug_issue_sync_service import DebugIssueSyncService
 
-            service = DebugIssueSyncService(db_session)
-            result = service.sync_all_project_issues()
+        service = DebugIssueSyncService(db_session)
+        result = service.sync_all_project_issues()
 
-            assert result['total_issues'] == 0
-            assert result['synced_count'] == 0
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert result['total_issues'] == 0
+        assert result['synced_count'] == 0
 
     def test_with_date_filter(self, db_session):
         """测试带日期过滤"""
-        try:
-            from app.services.debug_issue_sync_service import DebugIssueSyncService
+        from app.services.debug_issue_sync_service import DebugIssueSyncService
 
-            service = DebugIssueSyncService(db_session)
-            result = service.sync_all_project_issues(
-                start_date=date(2025, 1, 1),
-                end_date=date(2025, 12, 31)
-            )
+        service = DebugIssueSyncService(db_session)
+        result = service.sync_all_project_issues(
+        start_date=date(2025, 1, 1),
+        end_date=date(2025, 12, 31)
+        )
 
-            assert 'total_issues' in result
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert 'total_issues' in result
 
     def test_stats_structure(self, db_session):
         """测试统计结构"""
-        try:
-            from app.services.debug_issue_sync_service import DebugIssueSyncService
+        from app.services.debug_issue_sync_service import DebugIssueSyncService
 
-            service = DebugIssueSyncService(db_session)
-            result = service.sync_all_project_issues()
+        service = DebugIssueSyncService(db_session)
+        result = service.sync_all_project_issues()
 
-            expected_fields = [
-                'total_issues', 'synced_count', 'skipped_count',
-                'error_count', 'mechanical_debug_count', 'test_bug_count', 'errors'
-            ]
-            for field in expected_fields:
-                assert field in result
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        expected_fields = [
+        'total_issues', 'synced_count', 'skipped_count',
+        'error_count', 'mechanical_debug_count', 'test_bug_count', 'errors'
+        ]
+        for field in expected_fields:
+            assert field in result
 
 
 class TestFoundStageInference:
@@ -192,7 +162,7 @@ class TestFoundStageInference:
         if 'site' in tags_str or '现场' in tags_str:
             found_stage = 'site_debug'
 
-        assert found_stage == 'site_debug'
+            assert found_stage == 'site_debug'
 
     def test_acceptance_stage(self):
         """测试验收阶段"""
@@ -205,7 +175,7 @@ class TestFoundStageInference:
         elif 'acceptance' in tags_str or '验收' in tags_str:
             found_stage = 'acceptance'
 
-        assert found_stage == 'acceptance'
+            assert found_stage == 'acceptance'
 
     def test_default_stage(self):
         """测试默认阶段"""
@@ -218,7 +188,7 @@ class TestFoundStageInference:
         elif 'acceptance' in tags_str:
             found_stage = 'acceptance'
 
-        assert found_stage == 'internal_debug'
+            assert found_stage == 'internal_debug'
 
 
 class TestFixDurationCalculation:

@@ -108,9 +108,9 @@ class TestNotificationDispatcher:
         mock_notification.notify_channel = "EMAIL"
 
         with patch.object(
-            dispatcher.email_handler, "send", side_effect=Exception("Test error")
+        dispatcher.email_handler, "send", side_effect=Exception("Test error")
         ):
-            result = dispatcher.dispatch(mock_notification, mock_alert, mock_user)
+        result = dispatcher.dispatch(mock_notification, mock_alert, mock_user)
 
         assert result is False
         assert mock_notification.status == "FAILED"

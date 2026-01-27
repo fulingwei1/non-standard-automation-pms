@@ -85,15 +85,15 @@ class TestSettingsInitialization:
         with pytest.raises(ValueError) as exc_info:
             Settings()
 
-        assert "生产环境必须设置 SECRET_KEY" in str(exc_info.value)
+            assert "生产环境必须设置 SECRET_KEY" in str(exc_info.value)
 
     @patch.dict(
         os.environ,
         {
-            "SECRET_KEY": "test_key",
-            "DATABASE_URL": "mysql://user:pass@localhost:3306/testdb",
-            "REDIS_URL": "redis://localhost:6379/0",
-            "POSTGRES_URL": "postgresql://user:pass@localhost:5432/testdb",
+        "SECRET_KEY": "test_key",
+        "DATABASE_URL": "mysql://user:pass@localhost:3306/testdb",
+        "REDIS_URL": "redis://localhost:6379/0",
+        "POSTGRES_URL": "postgresql://user:pass@localhost:5432/testdb",
         },
     )
     def test_settings_override_from_env(self):
@@ -224,9 +224,9 @@ class TestRedisConfig:
     @patch.dict(
         os.environ,
         {
-            "SECRET_KEY": "test_key",
-            "REDIS_CACHE_PROJECT_DETAIL_TTL": "1200",
-            "REDIS_CACHE_PROJECT_LIST_TTL": "900",
+        "SECRET_KEY": "test_key",
+        "REDIS_CACHE_PROJECT_DETAIL_TTL": "1200",
+        "REDIS_CACHE_PROJECT_LIST_TTL": "900",
         },
     )
     def test_redis_project_specific_ttl(self):
@@ -280,8 +280,8 @@ class TestDatabaseConfig:
     @patch.dict(
         os.environ,
         {
-            "SECRET_KEY": "test_key",
-            "DATABASE_URL": "mysql://root:pass@localhost:3306/mydb",
+        "SECRET_KEY": "test_key",
+        "DATABASE_URL": "mysql://root:pass@localhost:3306/mydb",
         },
     )
     def test_database_url(self):
@@ -292,8 +292,8 @@ class TestDatabaseConfig:
     @patch.dict(
         os.environ,
         {
-            "SECRET_KEY": "test_key",
-            "POSTGRES_URL": "postgresql://user:pass@host:5432/db",
+        "SECRET_KEY": "test_key",
+        "POSTGRES_URL": "postgresql://user:pass@host:5432/db",
         },
     )
     def test_postgres_url(self):
@@ -356,20 +356,20 @@ class TestConfigModule:
         settings = Settings()
 
         required_fields = [
-            "APP_NAME",
-            "APP_VERSION",
-            "API_V1_PREFIX",
-            "SQLITE_DB_PATH",
-            "DATABASE_URL",
-            "POSTGRES_URL",
-            "REDIS_URL",
-            "REDIS_CACHE_ENABLED",
-            "REDIS_CACHE_DEFAULT_TTL",
-            "SECRET_KEY",
-            "ALGORITHM",
-            "ACCESS_TOKEN_EXPIRE_MINUTES",
-            "CORS_ORIGINS",
-            "DEBUG",
+        "APP_NAME",
+        "APP_VERSION",
+        "API_V1_PREFIX",
+        "SQLITE_DB_PATH",
+        "DATABASE_URL",
+        "POSTGRES_URL",
+        "REDIS_URL",
+        "REDIS_CACHE_ENABLED",
+        "REDIS_CACHE_DEFAULT_TTL",
+        "SECRET_KEY",
+        "ALGORITHM",
+        "ACCESS_TOKEN_EXPIRE_MINUTES",
+        "CORS_ORIGINS",
+        "DEBUG",
         ]
 
         for field in required_fields:
@@ -407,8 +407,8 @@ class TestConfigModule:
             settings = Settings()
 
             # DEBUG 模式应该生成关于 SECRET_KEY 的警告
-            assert any(
-                "使用开发环境临时生成的 SECRET_KEY" in str(warning.message)
-                for warning in w
-                if "SECRET_KEY" in str(warning.message)
-            )
+        assert any(
+        "使用开发环境临时生成的 SECRET_KEY" in str(warning.message)
+        for warning in w
+        if "SECRET_KEY" in str(warning.message)
+        )

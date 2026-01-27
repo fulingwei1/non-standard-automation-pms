@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-职级管理端点
+职级管理端点（重构版）
+使用统一响应格式
 """
 
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.core.schemas import list_response, success_response
 from app.models.organization import JobLevel
 from app.models.user import User
 from app.schemas.organization import (
@@ -21,7 +23,7 @@ from app.schemas.organization import (
 router = APIRouter()
 
 
-@router.get("/", response_model=List[JobLevelResponse])
+@router.get("/")
 def list_job_levels(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
@@ -43,10 +45,18 @@ def list_job_levels(
         .limit(limit)
         .all()
     )
-    return levels
+
+    # 转换为Pydantic模型
+    level_responses = [JobLevelResponse.model_validate(level) for level in levels]
+
+    # 使用统一响应格式
+    return list_response(
+        items=level_responses,
+        message="获取职级列表成功"
+    )
 
 
-@router.post("/", response_model=JobLevelResponse)
+@router.post("/")
 def create_job_level(
     *,
     db: Session = Depends(deps.get_db),
@@ -64,10 +74,18 @@ def create_job_level(
     db.add(level)
     db.commit()
     db.refresh(level)
-    return level
+
+    # 转换为Pydantic模型
+    level_response = JobLevelResponse.model_validate(level)
+
+    # 使用统一响应格式
+    return success_response(
+        data=level_response,
+        message="职级创建成功"
+    )
 
 
-@router.get("/{id}", response_model=JobLevelResponse)
+@router.get("/{id}")
 def get_job_level(
     id: int,
     db: Session = Depends(deps.get_db),
@@ -77,10 +95,18 @@ def get_job_level(
     level = db.query(JobLevel).filter(JobLevel.id == id).first()
     if not level:
         raise HTTPException(status_code=404, detail="职级不存在")
-    return level
+
+    # 转换为Pydantic模型
+    level_response = JobLevelResponse.model_validate(level)
+
+    # 使用统一响应格式
+    return success_response(
+        data=level_response,
+        message="获取职级信息成功"
+    )
 
 
-@router.put("/{id}", response_model=JobLevelResponse)
+@router.put("/{id}")
 def update_job_level(
     *,
     db: Session = Depends(deps.get_db),
@@ -100,7 +126,15 @@ def update_job_level(
     db.add(level)
     db.commit()
     db.refresh(level)
-    return level
+
+    # 转换为Pydantic模型
+    level_response = JobLevelResponse.model_validate(level)
+
+    # 使用统一响应格式
+    return success_response(
+        data=level_response,
+        message="职级更新成功"
+    )
 
 
 @router.delete("/{id}")
@@ -116,4 +150,9 @@ def delete_job_level(
 
     db.delete(level)
     db.commit()
-    return {"message": "Success"}
+
+    # 使用统一响应格式
+    return success_response(
+        data={"id": id},
+        message="职级删除成功"
+    )

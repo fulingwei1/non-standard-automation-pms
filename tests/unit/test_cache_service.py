@@ -382,12 +382,12 @@ class TestRedisInfo:
         """测试成功获取 Redis 信息"""
         mock_redis = Mock()
         mock_redis.info.return_value = {
-            "connected_clients": 5,
-            "used_memory_human": "1.5M",
-            "used_memory_peak_human": "2M",
-            "keyspace_hits": 100,
-            "keyspace_misses": 10,
-            "db0": {"keys": "50"}
+        "connected_clients": 5,
+        "used_memory_human": "1.5M",
+        "used_memory_peak_human": "2M",
+        "keyspace_hits": 100,
+        "keyspace_misses": 10,
+        "db0": {"keys": "50"}
         }
 
         cache = CacheService(redis_client=mock_redis)
@@ -414,11 +414,11 @@ class TestRedisInfo:
         """测试 Redis 信息中没有 db0"""
         mock_redis = Mock()
         mock_redis.info.return_value = {
-            "connected_clients": 1,
-            "used_memory_human": "1M",
-            "used_memory_peak_human": "1M",
-            "keyspace_hits": 0,
-            "keyspace_misses": 0
+        "connected_clients": 1,
+        "used_memory_human": "1M",
+        "used_memory_peak_human": "1M",
+        "keyspace_hits": 0,
+        "keyspace_misses": 0
             # 没有 db0
         }
 

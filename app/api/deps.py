@@ -1,18 +1,13 @@
-from typing import Generator, Optional
+from typing import Optional
 
 from fastapi import Depends, HTTPException, Request, status
 
 from app.core import security
-from app.models.base import get_db as get_db_session
+from app.models.base import get_db
 from app.models.user import User
 
-
-def get_db() -> Generator:
-    """
-    Get database session
-    """
-    yield from get_db_session()
-
+# Re-export get_db from models.base for API endpoint dependencies
+# This is the single source of truth for database session injection
 
 def get_current_user_from_state(request: Request) -> User:
     """

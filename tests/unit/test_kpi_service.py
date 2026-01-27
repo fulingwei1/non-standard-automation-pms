@@ -18,11 +18,11 @@ class TestKPIService:
         """Test importing KPI service module."""
         try:
             from app.services.kpi_service import (
-                calculate_project_kpi,
-                calculate_team_kpi,
-                calculate_department_kpi,
-                get_kpi_dashboard_data,
-                generate_kpi_report
+            calculate_project_kpi,
+            calculate_team_kpi,
+            calculate_department_kpi,
+            get_kpi_dashboard_data,
+            generate_kpi_report
             )
             assert callable(calculate_project_kpi)
             assert callable(calculate_team_kpi)
@@ -38,11 +38,11 @@ class TestKPIService:
         
         # Test data
         project_data = {
-            "progress_pct": 75.0,
-            "schedule_variance_days": 5,
-            "cost_variance_rate": 5.0,
-            "quality_score": 95.0,
-            "client_satisfaction": 4.5,
+        "progress_pct": 75.0,
+        "schedule_variance_days": 5,
+        "cost_variance_rate": 5.0,
+        "quality_score": 95.0,
+        "client_satisfaction": 4.5,
         }
         
         result = calculate_project_kpi(project_data)
@@ -59,22 +59,22 @@ class TestKPIService:
         
         # Test data
         team_data = [
-            {
-                "member_id": 1,
-                "member_name": "张三",
-                "completed_tasks": 15,
-                "on_time_tasks": 12,
-                "quality_score": 4.8,
-                "productivity": 1.25,
-            },
-            {
-                "member_id": 2,
-                "member_name": "李四",
-                "completed_tasks": 20,
-                "on_time_tasks": 18,
-                "quality_score": 4.9,
-                "productivity": 1.5,
-            },
+        {
+        "member_id": 1,
+        "member_name": "张三",
+        "completed_tasks": 15,
+        "on_time_tasks": 12,
+        "quality_score": 4.8,
+        "productivity": 1.25,
+        },
+        {
+        "member_id": 2,
+        "member_name": "李四",
+        "completed_tasks": 20,
+        "on_time_tasks": 18,
+        "quality_score": 4.9,
+        "productivity": 1.5,
+        },
         ]
         
         result = calculate_team_kpi(team_data)
@@ -91,13 +91,13 @@ class TestKPIService:
         
         # Test data
         department_data = {
-            "department_id": 1,
-            "department_name": "研发部",
-            "active_projects": 5,
-            "completed_projects": 12,
-            "avg_cycle_days": 85.0,
-            "on_time_rate": 0.92,
-            "budget_utilization": 0.88,
+        "department_id": 1,
+        "department_name": "研发部",
+        "active_projects": 5,
+        "completed_projects": 12,
+        "avg_cycle_days": 85.0,
+        "on_time_rate": 0.92,
+        "budget_utilization": 0.88,
         }
         
         result = calculate_department_kpi(department_data)

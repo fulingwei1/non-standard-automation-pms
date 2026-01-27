@@ -65,20 +65,20 @@ class TestSalesTeamService:
         self, sales_team_service, test_sales_user
     ):
         target = SalesTarget(
-            target_scope="PERSONAL",
-            user_id=test_sales_user.id,
-            target_type="LEAD_COUNT",
-            target_value=Decimal("100"),
-            target_period="MONTHLY",
-            period_value="2024-01",
-            status="ACTIVE",
-            created_by=test_sales_user.id,
+        target_scope="PERSONAL",
+        user_id=test_sales_user.id,
+        target_type="LEAD_COUNT",
+        target_value=Decimal("100"),
+        target_period="MONTHLY",
+        period_value="2024-01",
+        status="ACTIVE",
+        created_by=test_sales_user.id,
         )
         sales_team_service.db.add(target)
         sales_team_service.db.commit()
 
         actual_value, completion_rate = sales_team_service.calculate_target_performance(
-            target
+        target
         )
 
         assert isinstance(actual_value, Decimal)
@@ -89,20 +89,20 @@ class TestSalesTeamService:
         self, sales_team_service, test_sales_user
     ):
         target = SalesTarget(
-            target_scope="PERSONAL",
-            user_id=test_sales_user.id,
-            target_type="OPPORTUNITY_COUNT",
-            target_value=Decimal("50"),
-            target_period="MONTHLY",
-            period_value="2024-01",
-            status="ACTIVE",
-            created_by=test_sales_user.id,
+        target_scope="PERSONAL",
+        user_id=test_sales_user.id,
+        target_type="OPPORTUNITY_COUNT",
+        target_value=Decimal("50"),
+        target_period="MONTHLY",
+        period_value="2024-01",
+        status="ACTIVE",
+        created_by=test_sales_user.id,
         )
         sales_team_service.db.add(target)
         sales_team_service.db.commit()
 
         actual_value, completion_rate = sales_team_service.calculate_target_performance(
-            target
+        target
         )
 
         assert isinstance(actual_value, Decimal)
@@ -113,20 +113,20 @@ class TestSalesTeamService:
         self, sales_team_service, test_sales_user
     ):
         target = SalesTarget(
-            target_scope="PERSONAL",
-            user_id=test_sales_user.id,
-            target_type="CONTRACT_AMOUNT",
-            target_value=Decimal("1000000"),
-            target_period="MONTHLY",
-            period_value="2024-01",
-            status="ACTIVE",
-            created_by=test_sales_user.id,
+        target_scope="PERSONAL",
+        user_id=test_sales_user.id,
+        target_type="CONTRACT_AMOUNT",
+        target_value=Decimal("1000000"),
+        target_period="MONTHLY",
+        period_value="2024-01",
+        status="ACTIVE",
+        created_by=test_sales_user.id,
         )
         sales_team_service.db.add(target)
         sales_team_service.db.commit()
 
         actual_value, completion_rate = sales_team_service.calculate_target_performance(
-            target
+        target
         )
 
         assert isinstance(actual_value, Decimal)
@@ -137,20 +137,20 @@ class TestSalesTeamService:
         self, sales_team_service, test_sales_user
     ):
         target = SalesTarget(
-            target_scope="PERSONAL",
-            user_id=test_sales_user.id,
-            target_type="LEAD_COUNT",
-            target_value=Decimal("0"),
-            target_period="MONTHLY",
-            period_value="2024-01",
-            status="ACTIVE",
-            created_by=test_sales_user.id,
+        target_scope="PERSONAL",
+        user_id=test_sales_user.id,
+        target_type="LEAD_COUNT",
+        target_value=Decimal("0"),
+        target_period="MONTHLY",
+        period_value="2024-01",
+        status="ACTIVE",
+        created_by=test_sales_user.id,
         )
         sales_team_service.db.add(target)
         sales_team_service.db.commit()
 
         actual_value, completion_rate = sales_team_service.calculate_target_performance(
-            target
+        target
         )
 
         assert completion_rate == 0.0
@@ -160,20 +160,20 @@ class TestSalesTeamService:
         self, sales_team_service, test_sales_user
     ):
         target = SalesTarget(
-            target_scope="PERSONAL",
-            user_id=test_sales_user.id,
-            target_type="COLLECTION_AMOUNT",
-            target_value=Decimal("500000"),
-            target_period="MONTHLY",
-            period_value="2024-01",
-            status="ACTIVE",
-            created_by=test_sales_user.id,
+        target_scope="PERSONAL",
+        user_id=test_sales_user.id,
+        target_type="COLLECTION_AMOUNT",
+        target_value=Decimal("500000"),
+        target_period="MONTHLY",
+        period_value="2024-01",
+        status="ACTIVE",
+        created_by=test_sales_user.id,
         )
         sales_team_service.db.add(target)
         sales_team_service.db.commit()
 
         actual_value, completion_rate = sales_team_service.calculate_target_performance(
-            target
+        target
         )
 
         assert isinstance(actual_value, Decimal)
@@ -192,20 +192,20 @@ class TestSalesTeamService:
         self, sales_team_service, test_sales_user
     ):
         target = SalesTarget(
-            target_scope="PERSONAL",
-            user_id=test_sales_user.id,
-            target_type="CONTRACT_AMOUNT",
-            target_value=Decimal("1000000"),
-            target_period="MONTHLY",
-            period_value="2024-01",
-            status="ACTIVE",
-            created_by=test_sales_user.id,
+        target_scope="PERSONAL",
+        user_id=test_sales_user.id,
+        target_type="CONTRACT_AMOUNT",
+        target_value=Decimal("1000000"),
+        target_period="MONTHLY",
+        period_value="2024-01",
+        status="ACTIVE",
+        created_by=test_sales_user.id,
         )
         sales_team_service.db.add(target)
         sales_team_service.db.commit()
 
         result = sales_team_service.build_personal_target_map(
-            [test_sales_user.id], "2024-01", None
+        [test_sales_user.id], "2024-01", None
         )
 
         assert test_sales_user.id in result
@@ -219,9 +219,9 @@ class TestSalesTeamService:
     def test_get_followup_statistics_map_success(self, sales_team_service, test_sales_user):
         """测试获取跟进统计"""
         result = sales_team_service.get_followup_statistics_map(
-            [test_sales_user.id],
-            None,
-            None
+        [test_sales_user.id],
+        None,
+        None
         )
         assert isinstance(result, dict)
 
@@ -241,9 +241,9 @@ class TestSalesTeamService:
         start = datetime.now() - timedelta(days=30)
         end = datetime.now()
         result = sales_team_service.get_recent_followups_map(
-            [test_sales_user.id],
-            start_datetime=start,
-            end_datetime=end
+        [test_sales_user.id],
+        start_datetime=start,
+        end_datetime=end
         )
         assert isinstance(result, dict)
 
@@ -259,9 +259,9 @@ class TestSalesTeamService:
         """测试获取客户分布"""
         from datetime import date
         result = sales_team_service.get_customer_distribution_map(
-            [test_sales_user.id],
-            date(2024, 1, 1),
-            date(2024, 12, 31)
+        [test_sales_user.id],
+        date(2024, 1, 1),
+        date(2024, 12, 31)
         )
         assert isinstance(result, dict)
 
@@ -277,9 +277,9 @@ class TestSalesTeamService:
         """测试获取线索质量统计"""
         from datetime import datetime
         result = sales_team_service.get_lead_quality_stats_map(
-            [test_sales_user.id],
-            None,
-            None
+        [test_sales_user.id],
+        None,
+        None
         )
         assert isinstance(result, dict)
 
@@ -295,9 +295,9 @@ class TestSalesTeamService:
         """测试获取商机统计"""
         from datetime import datetime
         result = sales_team_service.get_opportunity_stats_map(
-            [test_sales_user.id],
-            None,
-            None
+        [test_sales_user.id],
+        None,
+        None
         )
         assert isinstance(result, dict)
 
@@ -321,28 +321,28 @@ class TestSalesTeamService:
         start = datetime.now() - timedelta(days=30)
         end = datetime.now()
         result = sales_team_service.get_recent_followups_map(
-            [test_sales_user.id],
-            start_datetime=start,
-            end_datetime=end
+        [test_sales_user.id],
+        start_datetime=start,
+        end_datetime=end
         )
         assert isinstance(result, dict)
 
     def test_invalid_target_type(self, sales_team_service, test_sales_user):
         target = SalesTarget(
-            target_scope="PERSONAL",  # 必填字段
-            user_id=test_sales_user.id,
-            target_type="INVALID_TYPE",
-            target_value=Decimal("100"),
-            target_period="MONTHLY",
-            period_value="2024-01",
-            status="ACTIVE",
-            created_by=test_sales_user.id,  # 必填字段
+        target_scope="PERSONAL",  # 必填字段
+        user_id=test_sales_user.id,
+        target_type="INVALID_TYPE",
+        target_value=Decimal("100"),
+        target_period="MONTHLY",
+        period_value="2024-01",
+        status="ACTIVE",
+        created_by=test_sales_user.id,  # 必填字段
         )
         sales_team_service.db.add(target)
         sales_team_service.db.commit()
 
         actual_value, completion_rate = sales_team_service.calculate_target_performance(
-            target
+        target
         )
 
         assert actual_value == Decimal("0")

@@ -143,27 +143,27 @@ class TestCreateRating:
             if "EngineerProfile" in model_name:
                 mock_filter = MagicMock()
                 # 根据调用次数返回不同的档案
-                if engineer_call_count[0] == 0:
-                    mock_filter.first.return_value = rater_profile
-                    engineer_call_count[0] += 1
-                else:
-                    mock_filter.first.return_value = ratee_profile
-                mock_query.filter.return_value = mock_filter
-            elif "CollaborationRating" in model_name:
-                mock_filter = MagicMock()
-                mock_filter.first.return_value = None  # 无重复评价
-                mock_query.filter.return_value = mock_filter
+        if engineer_call_count[0] == 0:
+            mock_filter.first.return_value = rater_profile
+            engineer_call_count[0] += 1
+        else:
+            mock_filter.first.return_value = ratee_profile
+            mock_query.filter.return_value = mock_filter
+        elif "CollaborationRating" in model_name:
+            mock_filter = MagicMock()
+            mock_filter.first.return_value = None  # 无重复评价
+            mock_query.filter.return_value = mock_filter
             return mock_query
 
-        db.query.side_effect = query_side_effect
+            db.query.side_effect = query_side_effect
 
-        service = CollaborationService(db)
-        data = create_mock_rating_data(ratee_id=2)
+            service = CollaborationService(db)
+            data = create_mock_rating_data(ratee_id=2)
 
-        rating = service.create_rating(data, rater_id=1)
+            rating = service.create_rating(data, rater_id=1)
 
-        db.add.assert_called_once()
-        db.commit.assert_called_once()
+            db.add.assert_called_once()
+            db.commit.assert_called_once()
 
     def test_raises_error_for_non_engineer_rater(self):
         """测试非工程师评价人抛出错误"""
@@ -185,8 +185,8 @@ class TestCreateRating:
         ratee_profile = create_mock_engineer_profile(user_id=2, job_type="mechanical")
 
         db.query.return_value.filter.return_value.first.side_effect = [
-            rater_profile,
-            ratee_profile,
+        rater_profile,
+        ratee_profile,
         ]
 
         service = CollaborationService(db)
@@ -214,15 +214,15 @@ class TestCreateRating:
                 if call_count[0] == 0:
                     mock_filter.first.return_value = rater_profile
                     call_count[0] += 1
-                else:
-                    mock_filter.first.return_value = ratee_profile
-                mock_query.filter.return_value = mock_filter
-            else:
+        else:
+            mock_filter.first.return_value = ratee_profile
+            mock_query.filter.return_value = mock_filter
+        else:
                 # CollaborationRating 返回已存在记录
-                mock_filter = MagicMock()
-                mock_filter.first.return_value = existing_rating
-                mock_query.filter.return_value = mock_filter
-            return mock_query
+        mock_filter = MagicMock()
+        mock_filter.first.return_value = existing_rating
+        mock_query.filter.return_value = mock_filter
+        return mock_query
 
         db.query.side_effect = query_side_effect
 
@@ -249,29 +249,29 @@ class TestCreateRating:
                 if call_count[0] == 0:
                     mock_filter.first.return_value = rater_profile
                     call_count[0] += 1
-                else:
-                    mock_filter.first.return_value = ratee_profile
-                mock_query.filter.return_value = mock_filter
-            else:
-                mock_filter = MagicMock()
-                mock_filter.first.return_value = None
-                mock_query.filter.return_value = mock_filter
+        else:
+            mock_filter.first.return_value = ratee_profile
+            mock_query.filter.return_value = mock_filter
+        else:
+            mock_filter = MagicMock()
+            mock_filter.first.return_value = None
+            mock_query.filter.return_value = mock_filter
             return mock_query
 
-        db.query.side_effect = query_side_effect
+            db.query.side_effect = query_side_effect
 
-        service = CollaborationService(db)
-        data = create_mock_rating_data(
+            service = CollaborationService(db)
+            data = create_mock_rating_data(
             communication_score=5,
             response_score=5,
             delivery_score=5,
             interface_score=5,
-        )
+            )
 
-        rating = service.create_rating(data, rater_id=1)
+            rating = service.create_rating(data, rater_id=1)
 
-        # (5+5+5+5)/4 * 20 = 100
-        assert rating.total_score == Decimal("100")
+            # (5+5+5+5)/4 * 20 = 100
+            assert rating.total_score == Decimal("100")
 
 
 @pytest.mark.unit
@@ -313,7 +313,7 @@ class TestGetRatingsReceived:
         mock_filtered = MagicMock()
         mock_filtered.count.return_value = 3
         mock_filtered.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
-            ratings
+        ratings
         )
         mock_query.filter.return_value = mock_filtered
         db.query.return_value = mock_query
@@ -332,7 +332,7 @@ class TestGetRatingsReceived:
         mock_filtered.filter.return_value = mock_filtered
         mock_filtered.count.return_value = 1
         mock_filtered.order_by.return_value.offset.return_value.limit.return_value.all.return_value = [
-            create_mock_rating()
+        create_mock_rating()
         ]
         mock_query.filter.return_value = mock_filtered
         db.query.return_value = mock_query
@@ -356,7 +356,7 @@ class TestGetRatingsGiven:
         mock_filtered = MagicMock()
         mock_filtered.count.return_value = 2
         mock_filtered.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
-            ratings
+        ratings
         )
         mock_query.filter.return_value = mock_filtered
         db.query.return_value = mock_query
@@ -376,21 +376,21 @@ class TestGetCollaborationMatrix:
         """测试从评价构建矩阵"""
         db = create_mock_db_session()
         ratings = [
-            create_mock_rating(
-                rater_job_type="mechanical",
-                ratee_job_type="test",
-                total_score=Decimal("80"),
-            ),
-            create_mock_rating(
-                rater_job_type="mechanical",
-                ratee_job_type="test",
-                total_score=Decimal("90"),
-            ),
-            create_mock_rating(
-                rater_job_type="test",
-                ratee_job_type="electrical",
-                total_score=Decimal("70"),
-            ),
+        create_mock_rating(
+        rater_job_type="mechanical",
+        ratee_job_type="test",
+        total_score=Decimal("80"),
+        ),
+        create_mock_rating(
+        rater_job_type="mechanical",
+        ratee_job_type="test",
+        total_score=Decimal("90"),
+        ),
+        create_mock_rating(
+        rater_job_type="test",
+        ratee_job_type="electrical",
+        total_score=Decimal("70"),
+        ),
         ]
         db.query.return_value.filter.return_value.all.return_value = ratings
 
@@ -443,21 +443,21 @@ class TestGetPendingRatings:
 
             if call_count[0] == 0:
                 # 第一次：获取评价人档案
-                mock_query.filter.return_value.first.return_value = rater_profile
-                call_count[0] += 1
-            elif call_count[0] == 1:
+        mock_query.filter.return_value.first.return_value = rater_profile
+        call_count[0] += 1
+        elif call_count[0] == 1:
                 # 第二次：获取已评价用户ID
-                mock_query.filter.return_value.all.return_value = [(2,)]  # 已评价用户2
-                call_count[0] += 1
-            else:
+        mock_query.filter.return_value.all.return_value = [(2,)]  # 已评价用户2
+        call_count[0] += 1
+        else:
                 # 第三次：获取待评价工程师（多参数查询）
-                pending_profile = create_mock_engineer_profile(user_id=3, job_type="test")
-                pending_user = create_mock_user(user_id=3, name="待评价用户")
-                mock_query.join.return_value.filter.return_value.all.return_value = [
-                    (pending_profile, pending_user)
-                ]
+        pending_profile = create_mock_engineer_profile(user_id=3, job_type="test")
+        pending_user = create_mock_user(user_id=3, name="待评价用户")
+        mock_query.join.return_value.filter.return_value.all.return_value = [
+        (pending_profile, pending_user)
+        ]
 
-            return mock_query
+        return mock_query
 
         db.query.side_effect = query_side_effect
 
@@ -489,20 +489,20 @@ class TestGetCollaborationStats:
         """测试计算各维度平均分"""
         db = create_mock_db_session()
         ratings = [
-            create_mock_rating(
-                communication_score=4,
-                response_score=5,
-                delivery_score=3,
-                interface_score=4,
-                total_score=Decimal("80"),
-            ),
-            create_mock_rating(
-                communication_score=5,
-                response_score=4,
-                delivery_score=4,
-                interface_score=5,
-                total_score=Decimal("90"),
-            ),
+        create_mock_rating(
+        communication_score=4,
+        response_score=5,
+        delivery_score=3,
+        interface_score=4,
+        total_score=Decimal("80"),
+        ),
+        create_mock_rating(
+        communication_score=5,
+        response_score=4,
+        delivery_score=4,
+        interface_score=5,
+        total_score=Decimal("90"),
+        ),
         ]
         db.query.return_value.filter.return_value.all.return_value = ratings
 
@@ -527,9 +527,9 @@ class TestGroupByRaterType:
         service = CollaborationService(db)
 
         ratings = [
-            create_mock_rating(rater_job_type="mechanical", total_score=Decimal("80")),
-            create_mock_rating(rater_job_type="mechanical", total_score=Decimal("90")),
-            create_mock_rating(rater_job_type="test", total_score=Decimal("70")),
+        create_mock_rating(rater_job_type="mechanical", total_score=Decimal("80")),
+        create_mock_rating(rater_job_type="mechanical", total_score=Decimal("90")),
+        create_mock_rating(rater_job_type="test", total_score=Decimal("70")),
         ]
 
         result = service._group_by_rater_type(ratings)

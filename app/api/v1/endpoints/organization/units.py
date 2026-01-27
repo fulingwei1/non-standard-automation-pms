@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-组织单元管理端点
+组织单元管理端点（重构版）
+使用统一响应格式
 """
 
-from typing import Any, List, Optional, Dict
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.core.schemas import list_response, success_response
 from app.models.organization import OrganizationUnit, Employee
 from app.models.user import User
 from app.schemas.organization import (
@@ -21,7 +23,7 @@ from app.schemas.organization import (
 router = APIRouter()
 
 
-@router.get("/", response_model=List[OrganizationUnitResponse])
+@router.get("/")
 def list_org_units(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
@@ -44,17 +46,17 @@ def list_org_units(
         .all()
     )
 
-    # 补充关联名称
-    for unit in units:
-        if unit.manager:
-            unit.manager_name = unit.manager.name
-        if unit.parent:
-            unit.parent_name = unit.parent.unit_name
+    # 转换为Pydantic模型
+    unit_responses = [OrganizationUnitResponse.model_validate(unit) for unit in units]
 
-    return units
+    # 使用统一响应格式
+    return list_response(
+        items=unit_responses,
+        message="获取组织单元列表成功"
+    )
 
 
-@router.get("/tree", response_model=List[Dict])
+@router.get("/tree")
 def get_org_tree(
     db: Session = Depends(deps.get_db),
     is_active: Optional[bool] = Query(None, description="是否启用"),
@@ -95,10 +97,14 @@ def get_org_tree(
         else:
             tree.append(u_data)
 
-    return tree
+    # 使用统一响应格式
+    return list_response(
+        items=tree,
+        message="获取组织架构树成功"
+    )
 
 
-@router.post("/", response_model=OrganizationUnitResponse)
+@router.post("/")
 def create_org_unit(
     *,
     db: Session = Depends(deps.get_db),
@@ -134,10 +140,18 @@ def create_org_unit(
     db.add(unit)
     db.commit()
     db.refresh(unit)
-    return unit
+
+    # 转换为Pydantic模型
+    unit_response = OrganizationUnitResponse.model_validate(unit)
+
+    # 使用统一响应格式
+    return success_response(
+        data=unit_response,
+        message="组织单元创建成功"
+    )
 
 
-@router.get("/{id}", response_model=OrganizationUnitResponse)
+@router.get("/{id}")
 def get_org_unit(
     id: int,
     db: Session = Depends(deps.get_db),
@@ -148,15 +162,17 @@ def get_org_unit(
     if not unit:
         raise HTTPException(status_code=404, detail="组织单元不存在")
 
-    if unit.manager:
-        unit.manager_name = unit.manager.name
-    if unit.parent:
-        unit.parent_name = unit.parent.unit_name
+    # 转换为Pydantic模型
+    unit_response = OrganizationUnitResponse.model_validate(unit)
 
-    return unit
+    # 使用统一响应格式
+    return success_response(
+        data=unit_response,
+        message="获取组织单元成功"
+    )
 
 
-@router.put("/{id}", response_model=OrganizationUnitResponse)
+@router.put("/{id}")
 def update_org_unit(
     *,
     db: Session = Depends(deps.get_db),
@@ -171,7 +187,7 @@ def update_org_unit(
 
     update_data = unit_in.model_dump(exclude_unset=True)
 
-    # 如果修改了父组织，需要重新计算层级和路径（简单处理，不递归更新子节点）
+    # 如果修改了父组织，需要重新计算层级和路径
     if "parent_id" in update_data and update_data["parent_id"] != unit.parent_id:
         if update_data["parent_id"]:
             parent = (
@@ -193,7 +209,15 @@ def update_org_unit(
     db.add(unit)
     db.commit()
     db.refresh(unit)
-    return unit
+
+    # 转换为Pydantic模型
+    unit_response = OrganizationUnitResponse.model_validate(unit)
+
+    # 使用统一响应格式
+    return success_response(
+        data=unit_response,
+        message="组织单元更新成功"
+    )
 
 
 @router.delete("/{id}")
@@ -216,10 +240,15 @@ def delete_org_unit(
 
     db.delete(unit)
     db.commit()
-    return {"message": "Success"}
+
+    # 使用统一响应格式
+    return success_response(
+        data={"id": id},
+        message="组织单元删除成功"
+    )
 
 
-@router.get("/{id}/employees", response_model=List[Any])
+@router.get("/{id}/employees")
 def get_org_unit_employees(
     id: int,
     db: Session = Depends(deps.get_db),
@@ -231,5 +260,14 @@ def get_org_unit_employees(
         raise HTTPException(status_code=404, detail="组织单元不存在")
 
     # 查找在该部门下的员工
+    from app.schemas.organization import EmployeeResponse
     employees = db.query(Employee).filter(Employee.department == unit.unit_name).all()
-    return employees
+
+    # 转换为Pydantic模型
+    emp_responses = [EmployeeResponse.model_validate(emp) for emp in employees]
+
+    # 使用统一响应格式
+    return list_response(
+        items=emp_responses,
+        message="获取组织单元员工成功"
+    )

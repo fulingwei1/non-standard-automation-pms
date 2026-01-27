@@ -2,10 +2,7 @@
 """
 工时记录管理 - 自动生成
 从 timesheet.py 拆分
-"""
 
-# -*- coding: utf-8 -*-
-"""
 工时管理详细 API endpoints
 核心功能：周工时表、批量填报、审批流程
 """
@@ -35,11 +32,6 @@ from app.schemas.timesheet import (
     TimesheetResponse,
     TimesheetUpdate,
 )
-
-router = APIRouter()
-
-
-from fastapi import APIRouter
 
 router = APIRouter(prefix="/timesheet/records", tags=["records"])
 

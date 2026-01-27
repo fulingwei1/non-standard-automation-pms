@@ -23,9 +23,9 @@ class TestAggregationLogic:
         """测试加权平均算法数学正确性"""
         # 模拟3个任务的进度
         tasks = [
-            Mock(progress=0, status="ACCEPTED"),
-            Mock(progress=50, status="IN_PROGRESS"),
-            Mock(progress=100, status="COMPLETED"),
+        Mock(progress=0, status="ACCEPTED"),
+        Mock(progress=50, status="IN_PROGRESS"),
+        Mock(progress=100, status="COMPLETED"),
         ]
 
         # 手工计算加权平均
@@ -41,9 +41,9 @@ class TestAggregationLogic:
         """测试排除已取消任务的逻辑"""
         # 模拟任务列表
         all_tasks = [
-            Mock(progress=60, status="IN_PROGRESS"),
-            Mock(progress=100, status="CANCELLED"),  # 应被排除
-            Mock(progress=40, status="IN_PROGRESS"),
+        Mock(progress=60, status="IN_PROGRESS"),
+        Mock(progress=100, status="CANCELLED"),  # 应被排除
+        Mock(progress=40, status="IN_PROGRESS"),
         ]
 
         # 过滤掉CANCELLED状态
@@ -72,9 +72,9 @@ class TestAggregationLogic:
     def test_handles_all_zero_progress(self):
         """测试所有任务进度为0"""
         tasks = [
-            Mock(progress=0),
-            Mock(progress=0),
-            Mock(progress=0),
+        Mock(progress=0),
+        Mock(progress=0),
+        Mock(progress=0),
         ]
 
         total = len(tasks)
@@ -87,9 +87,9 @@ class TestAggregationLogic:
     def test_precision_control(self):
         """测试精度控制（保留2位小数）"""
         tasks = [
-            Mock(progress=33),
-            Mock(progress=33),
-            Mock(progress=34),
+        Mock(progress=33),
+        Mock(progress=33),
+        Mock(progress=34),
         ]
 
         total = len(tasks)
@@ -121,9 +121,9 @@ class TestAggregationLogic:
         else:
             health = 'H1'
 
-        # 验证：1/10 = 10%，应为H1
-        assert delayed_ratio == 0.1
-        assert health == 'H1'
+            # 验证：1/10 = 10%，应为H1
+            assert delayed_ratio == 0.1
+            assert health == 'H1'
 
     def test_health_status_at_risk(self):
         """测试H3健康度（延期>25%）"""
@@ -141,17 +141,17 @@ class TestAggregationLogic:
         else:
             health = 'H1'
 
-        # 验证：3/10 = 30% > 25%，应为H3
-        assert delayed_ratio == 0.3
-        assert health == 'H3'
+            # 验证：3/10 = 30% > 25%，应为H3
+            assert delayed_ratio == 0.3
+            assert health == 'H3'
 
     def test_aggregation_with_different_weights(self):
         """测试不同权重的加权平均（概念验证）"""
         # 虽然当前实现使用简单平均，但测试加权逻辑
         tasks = [
-            Mock(progress=50, estimated_hours=10),   # 贡献：500
-            Mock(progress=75, estimated_hours=20),   # 贡献：1500
-            Mock(progress=100, estimated_hours=10),  # 贡献：1000
+        Mock(progress=50, estimated_hours=10),   # 贡献：500
+        Mock(progress=75, estimated_hours=20),   # 贡献：1500
+        Mock(progress=100, estimated_hours=10),  # 贡献：1000
         ]
 
         # 简单平均（当前实现）
@@ -161,7 +161,7 @@ class TestAggregationLogic:
         # 工时加权平均（潜在改进）
         total_hours = sum(t.estimated_hours for t in tasks)
         weighted_avg = round(
-            sum(t.progress * t.estimated_hours for t in tasks) / total_hours, 2
+        sum(t.progress * t.estimated_hours for t in tasks) / total_hours, 2
         ) if total_hours > 0 else 0
 
         # (500 + 1500 + 1000) / 40 = 3000 / 40 = 75.0
@@ -171,14 +171,14 @@ class TestAggregationLogic:
         """测试真实世界场景"""
         # 模拟一个项目的任务状态
         tasks = [
-            Mock(progress=100, status="COMPLETED"),    # 已完成
-            Mock(progress=100, status="COMPLETED"),    # 已完成
-            Mock(progress=75, status="IN_PROGRESS"),   # 进行中
-            Mock(progress=50, status="IN_PROGRESS"),   # 进行中
-            Mock(progress=25, status="IN_PROGRESS"),   # 进行中
-            Mock(progress=0, status="ACCEPTED"),       # 未开始
-            Mock(progress=0, status="ACCEPTED"),       # 未开始
-            Mock(progress=100, status="CANCELLED"),    # 已取消（应排除）
+        Mock(progress=100, status="COMPLETED"),    # 已完成
+        Mock(progress=100, status="COMPLETED"),    # 已完成
+        Mock(progress=75, status="IN_PROGRESS"),   # 进行中
+        Mock(progress=50, status="IN_PROGRESS"),   # 进行中
+        Mock(progress=25, status="IN_PROGRESS"),   # 进行中
+        Mock(progress=0, status="ACCEPTED"),       # 未开始
+        Mock(progress=0, status="ACCEPTED"),       # 未开始
+        Mock(progress=100, status="CANCELLED"),    # 已取消（应排除）
         ]
 
         # 过滤活跃任务
@@ -236,9 +236,9 @@ class TestAggregationEdgeCases:
         """浮点数精度问题"""
         # 创建会产生浮点数精度问题的数据
         tasks = [
-            Mock(progress=10.1),
-            Mock(progress=20.2),
-            Mock(progress=30.3),
+        Mock(progress=10.1),
+        Mock(progress=20.2),
+        Mock(progress=30.3),
         ]
 
         total = len(tasks)
@@ -251,12 +251,12 @@ class TestAggregationEdgeCases:
     def test_mixed_status_filtering(self):
         """测试多种状态的混合过滤"""
         tasks = [
-            Mock(progress=100, status="COMPLETED"),
-            Mock(progress=50, status="IN_PROGRESS"),
-            Mock(progress=100, status="CANCELLED"),
-            Mock(progress=0, status="PENDING_APPROVAL"),
-            Mock(progress=75, status="IN_PROGRESS"),
-            Mock(progress=100, status="REJECTED"),
+        Mock(progress=100, status="COMPLETED"),
+        Mock(progress=50, status="IN_PROGRESS"),
+        Mock(progress=100, status="CANCELLED"),
+        Mock(progress=0, status="PENDING_APPROVAL"),
+        Mock(progress=75, status="IN_PROGRESS"),
+        Mock(progress=100, status="REJECTED"),
         ]
 
         # 排除CANCELLED
@@ -275,9 +275,9 @@ class TestAggregationAlgorithmVariations:
     def test_median_progress(self):
         """测试中位数进度（替代方案）"""
         tasks = [
-            Mock(progress=10),
-            Mock(progress=50),
-            Mock(progress=90),
+        Mock(progress=10),
+        Mock(progress=50),
+        Mock(progress=90),
         ]
 
         progresses = sorted([t.progress for t in tasks])
@@ -288,9 +288,9 @@ class TestAggregationAlgorithmVariations:
     def test_min_max_progress(self):
         """测试最小/最大进度"""
         tasks = [
-            Mock(progress=20),
-            Mock(progress=50),
-            Mock(progress=80),
+        Mock(progress=20),
+        Mock(progress=50),
+        Mock(progress=80),
         ]
 
         min_progress = min(t.progress for t in tasks)
@@ -302,10 +302,10 @@ class TestAggregationAlgorithmVariations:
     def test_completion_rate(self):
         """测试完成率计算"""
         tasks = [
-            Mock(progress=100, status="COMPLETED"),
-            Mock(progress=100, status="COMPLETED"),
-            Mock(progress=50, status="IN_PROGRESS"),
-            Mock(progress=0, status="ACCEPTED"),
+        Mock(progress=100, status="COMPLETED"),
+        Mock(progress=100, status="COMPLETED"),
+        Mock(progress=50, status="IN_PROGRESS"),
+        Mock(progress=0, status="ACCEPTED"),
         ]
 
         completed_count = sum(1 for t in tasks if t.progress == 100)

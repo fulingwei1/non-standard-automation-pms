@@ -26,7 +26,7 @@ class TestGetBudgetExecutionAnalysis:
         with pytest.raises(ValueError) as exc_info:
             BudgetAnalysisService.get_budget_execution_analysis(mock_db, 999)
 
-        assert "项目不存在" in str(exc_info.value)
+            assert "项目不存在" in str(exc_info.value)
 
     def test_no_budget(self):
         """测试没有预算"""
@@ -44,20 +44,20 @@ class TestGetBudgetExecutionAnalysis:
             model_name = model.__name__
             if model_name == 'Project':
                 query_mock.filter.return_value.first.return_value = mock_project
-            elif model_name == 'ProjectBudget':
-                query_mock.filter.return_value.order_by.return_value.first.return_value = None
-            elif model_name == 'ProjectCost':
-                query_mock.filter.return_value.all.return_value = []
+        elif model_name == 'ProjectBudget':
+            query_mock.filter.return_value.order_by.return_value.first.return_value = None
+        elif model_name == 'ProjectCost':
+            query_mock.filter.return_value.all.return_value = []
             return query_mock
 
-        mock_db.query.side_effect = query_side_effect
+            mock_db.query.side_effect = query_side_effect
 
-        result = BudgetAnalysisService.get_budget_execution_analysis(mock_db, 1)
+            result = BudgetAnalysisService.get_budget_execution_analysis(mock_db, 1)
 
-        assert result['project_id'] == 1
-        assert result['budget_amount'] == 100000.0
-        assert result['actual_cost'] == 0
-        assert result['warning_status'] == '正常'
+            assert result['project_id'] == 1
+            assert result['budget_amount'] == 100000.0
+            assert result['actual_cost'] == 0
+            assert result['warning_status'] == '正常'
 
     def test_with_budget_and_costs(self):
         """测试有预算和成本"""
@@ -85,21 +85,21 @@ class TestGetBudgetExecutionAnalysis:
             model_name = model.__name__
             if model_name == 'Project':
                 query_mock.filter.return_value.first.return_value = mock_project
-            elif model_name == 'ProjectBudget':
-                query_mock.filter.return_value.order_by.return_value.first.return_value = mock_budget
-            elif model_name == 'ProjectCost':
-                query_mock.filter.return_value.all.return_value = [mock_cost]
+        elif model_name == 'ProjectBudget':
+            query_mock.filter.return_value.order_by.return_value.first.return_value = mock_budget
+        elif model_name == 'ProjectCost':
+            query_mock.filter.return_value.all.return_value = [mock_cost]
             return query_mock
 
-        mock_db.query.side_effect = query_side_effect
+            mock_db.query.side_effect = query_side_effect
 
-        result = BudgetAnalysisService.get_budget_execution_analysis(mock_db, 1)
+            result = BudgetAnalysisService.get_budget_execution_analysis(mock_db, 1)
 
-        assert result['budget_amount'] == 100000.0
-        assert result['actual_cost'] == 50000.0
-        assert result['execution_rate'] == 50.0
-        assert result['remaining_budget'] == 50000.0
-        assert result['warning_status'] == '正常'
+            assert result['budget_amount'] == 100000.0
+            assert result['actual_cost'] == 50000.0
+            assert result['execution_rate'] == 50.0
+            assert result['remaining_budget'] == 50000.0
+            assert result['warning_status'] == '正常'
 
     def test_over_budget(self):
         """测试超预算"""
@@ -117,18 +117,18 @@ class TestGetBudgetExecutionAnalysis:
             model_name = model.__name__
             if model_name == 'Project':
                 query_mock.filter.return_value.first.return_value = mock_project
-            elif model_name == 'ProjectBudget':
-                query_mock.filter.return_value.order_by.return_value.first.return_value = None
-            elif model_name == 'ProjectCost':
-                query_mock.filter.return_value.all.return_value = []
+        elif model_name == 'ProjectBudget':
+            query_mock.filter.return_value.order_by.return_value.first.return_value = None
+        elif model_name == 'ProjectCost':
+            query_mock.filter.return_value.all.return_value = []
             return query_mock
 
-        mock_db.query.side_effect = query_side_effect
+            mock_db.query.side_effect = query_side_effect
 
-        result = BudgetAnalysisService.get_budget_execution_analysis(mock_db, 1)
+            result = BudgetAnalysisService.get_budget_execution_analysis(mock_db, 1)
 
-        assert result['execution_rate'] == 120.0
-        assert result['warning_status'] == '超支'
+            assert result['execution_rate'] == 120.0
+            assert result['warning_status'] == '超支'
 
     def test_warning_status(self):
         """测试警告状态"""
@@ -146,17 +146,17 @@ class TestGetBudgetExecutionAnalysis:
             model_name = model.__name__
             if model_name == 'Project':
                 query_mock.filter.return_value.first.return_value = mock_project
-            elif model_name == 'ProjectBudget':
-                query_mock.filter.return_value.order_by.return_value.first.return_value = None
-            elif model_name == 'ProjectCost':
-                query_mock.filter.return_value.all.return_value = []
+        elif model_name == 'ProjectBudget':
+            query_mock.filter.return_value.order_by.return_value.first.return_value = None
+        elif model_name == 'ProjectCost':
+            query_mock.filter.return_value.all.return_value = []
             return query_mock
 
-        mock_db.query.side_effect = query_side_effect
+            mock_db.query.side_effect = query_side_effect
 
-        result = BudgetAnalysisService.get_budget_execution_analysis(mock_db, 1)
+            result = BudgetAnalysisService.get_budget_execution_analysis(mock_db, 1)
 
-        assert result['warning_status'] == '警告'
+            assert result['warning_status'] == '警告'
 
     def test_with_budget_items(self):
         """测试有预算明细"""
@@ -188,20 +188,20 @@ class TestGetBudgetExecutionAnalysis:
             model_name = model.__name__
             if model_name == 'Project':
                 query_mock.filter.return_value.first.return_value = mock_project
-            elif model_name == 'ProjectBudget':
-                query_mock.filter.return_value.order_by.return_value.first.return_value = mock_budget
-            elif model_name == 'ProjectCost':
-                query_mock.filter.return_value.all.return_value = [mock_cost]
+        elif model_name == 'ProjectBudget':
+            query_mock.filter.return_value.order_by.return_value.first.return_value = mock_budget
+        elif model_name == 'ProjectCost':
+            query_mock.filter.return_value.all.return_value = [mock_cost]
             return query_mock
 
-        mock_db.query.side_effect = query_side_effect
+            mock_db.query.side_effect = query_side_effect
 
-        result = BudgetAnalysisService.get_budget_execution_analysis(mock_db, 1)
+            result = BudgetAnalysisService.get_budget_execution_analysis(mock_db, 1)
 
-        assert len(result['category_comparison']) == 1
-        assert result['category_comparison'][0]['category'] == '人工成本'
-        assert result['category_comparison'][0]['budget_amount'] == 50000.0
-        assert result['category_comparison'][0]['actual_amount'] == 30000.0
+            assert len(result['category_comparison']) == 1
+            assert result['category_comparison'][0]['category'] == '人工成本'
+            assert result['category_comparison'][0]['budget_amount'] == 50000.0
+            assert result['category_comparison'][0]['actual_amount'] == 30000.0
 
 
 @pytest.mark.unit
@@ -216,7 +216,7 @@ class TestGetBudgetTrendAnalysis:
         with pytest.raises(ValueError) as exc_info:
             BudgetAnalysisService.get_budget_trend_analysis(mock_db, 999)
 
-        assert "项目不存在" in str(exc_info.value)
+            assert "项目不存在" in str(exc_info.value)
 
     def test_no_costs(self):
         """测试没有成本记录"""
@@ -231,23 +231,23 @@ class TestGetBudgetTrendAnalysis:
             model_name = model.__name__
             if model_name == 'Project':
                 query_mock.filter.return_value.first.return_value = mock_project
-            elif model_name == 'ProjectBudget':
-                query_mock.filter.return_value.order_by.return_value.first.return_value = None
-            elif model_name == 'ProjectCost':
-                chain_mock = MagicMock()
-                chain_mock.filter.return_value = chain_mock
-                chain_mock.order_by.return_value.all.return_value = []
-                query_mock.filter.return_value = chain_mock
+        elif model_name == 'ProjectBudget':
+            query_mock.filter.return_value.order_by.return_value.first.return_value = None
+        elif model_name == 'ProjectCost':
+            chain_mock = MagicMock()
+            chain_mock.filter.return_value = chain_mock
+            chain_mock.order_by.return_value.all.return_value = []
+            query_mock.filter.return_value = chain_mock
             return query_mock
 
-        mock_db.query.side_effect = query_side_effect
+            mock_db.query.side_effect = query_side_effect
 
-        result = BudgetAnalysisService.get_budget_trend_analysis(mock_db, 1)
+            result = BudgetAnalysisService.get_budget_trend_analysis(mock_db, 1)
 
-        assert result['project_id'] == 1
-        assert result['budget_amount'] == 100000.0
-        assert result['total_actual_cost'] == 0
-        assert result['monthly_trend'] == []
+            assert result['project_id'] == 1
+            assert result['budget_amount'] == 100000.0
+            assert result['total_actual_cost'] == 0
+            assert result['monthly_trend'] == []
 
     def test_with_costs(self):
         """测试有成本记录"""
@@ -277,34 +277,34 @@ class TestGetBudgetTrendAnalysis:
             model_name = model.__name__
             if model_name == 'Project':
                 query_mock.filter.return_value.first.return_value = mock_project
-            elif model_name == 'ProjectBudget':
-                query_mock.filter.return_value.order_by.return_value.first.return_value = mock_budget
-            elif model_name == 'ProjectCost':
-                chain_mock = MagicMock()
-                chain_mock.filter.return_value = chain_mock
-                chain_mock.order_by.return_value.all.return_value = [mock_cost1, mock_cost2, mock_cost3]
-                query_mock.filter.return_value = chain_mock
+        elif model_name == 'ProjectBudget':
+            query_mock.filter.return_value.order_by.return_value.first.return_value = mock_budget
+        elif model_name == 'ProjectCost':
+            chain_mock = MagicMock()
+            chain_mock.filter.return_value = chain_mock
+            chain_mock.order_by.return_value.all.return_value = [mock_cost1, mock_cost2, mock_cost3]
+            query_mock.filter.return_value = chain_mock
             return query_mock
 
-        mock_db.query.side_effect = query_side_effect
+            mock_db.query.side_effect = query_side_effect
 
-        result = BudgetAnalysisService.get_budget_trend_analysis(mock_db, 1)
+            result = BudgetAnalysisService.get_budget_trend_analysis(mock_db, 1)
 
-        assert result['project_id'] == 1
-        assert result['total_actual_cost'] == 45000.0
-        assert len(result['monthly_trend']) == 2
+            assert result['project_id'] == 1
+            assert result['total_actual_cost'] == 45000.0
+            assert len(result['monthly_trend']) == 2
 
-        # January data
-        jan_data = result['monthly_trend'][0]
-        assert jan_data['month'] == '2024-01'
-        assert jan_data['monthly_cost'] == 30000.0
-        assert jan_data['cumulative_cost'] == 30000.0
+            # January data
+            jan_data = result['monthly_trend'][0]
+            assert jan_data['month'] == '2024-01'
+            assert jan_data['monthly_cost'] == 30000.0
+            assert jan_data['cumulative_cost'] == 30000.0
 
-        # February data
-        feb_data = result['monthly_trend'][1]
-        assert feb_data['month'] == '2024-02'
-        assert feb_data['monthly_cost'] == 15000.0
-        assert feb_data['cumulative_cost'] == 45000.0
+            # February data
+            feb_data = result['monthly_trend'][1]
+            assert feb_data['month'] == '2024-02'
+            assert feb_data['monthly_cost'] == 15000.0
+            assert feb_data['cumulative_cost'] == 45000.0
 
     def test_with_date_filter(self):
         """测试带日期过滤"""
@@ -319,25 +319,25 @@ class TestGetBudgetTrendAnalysis:
             model_name = model.__name__
             if model_name == 'Project':
                 query_mock.filter.return_value.first.return_value = mock_project
-            elif model_name == 'ProjectBudget':
-                query_mock.filter.return_value.order_by.return_value.first.return_value = None
-            elif model_name == 'ProjectCost':
-                chain_mock = MagicMock()
-                chain_mock.filter.return_value = chain_mock
-                chain_mock.order_by.return_value.all.return_value = []
-                query_mock.filter.return_value = chain_mock
+        elif model_name == 'ProjectBudget':
+            query_mock.filter.return_value.order_by.return_value.first.return_value = None
+        elif model_name == 'ProjectCost':
+            chain_mock = MagicMock()
+            chain_mock.filter.return_value = chain_mock
+            chain_mock.order_by.return_value.all.return_value = []
+            query_mock.filter.return_value = chain_mock
             return query_mock
 
-        mock_db.query.side_effect = query_side_effect
+            mock_db.query.side_effect = query_side_effect
 
-        result = BudgetAnalysisService.get_budget_trend_analysis(
+            result = BudgetAnalysisService.get_budget_trend_analysis(
             mock_db,
             1,
             start_date=date(2024, 1, 1),
             end_date=date(2024, 12, 31)
-        )
+            )
 
-        assert result['project_id'] == 1
+            assert result['project_id'] == 1
 
 
 @pytest.mark.unit
@@ -371,18 +371,18 @@ class TestBudgetAnalysisIntegration:
             model_name = model.__name__
             if model_name == 'Project':
                 query_mock.filter.return_value.first.return_value = mock_project
-            elif model_name == 'ProjectBudget':
-                query_mock.filter.return_value.order_by.return_value.first.return_value = None
-            elif model_name == 'ProjectCost':
-                query_mock.filter.return_value.all.return_value = []
+        elif model_name == 'ProjectBudget':
+            query_mock.filter.return_value.order_by.return_value.first.return_value = None
+        elif model_name == 'ProjectCost':
+            query_mock.filter.return_value.all.return_value = []
             return query_mock
 
-        mock_db.query.side_effect = query_side_effect
+            mock_db.query.side_effect = query_side_effect
 
-        result = BudgetAnalysisService.get_budget_execution_analysis(mock_db, 1)
+            result = BudgetAnalysisService.get_budget_execution_analysis(mock_db, 1)
 
-        assert result['execution_rate'] == 85.0
-        assert result['warning_status'] == '注意'
+            assert result['execution_rate'] == 85.0
+            assert result['warning_status'] == '注意'
 
     def test_zero_budget(self):
         """测试零预算"""
@@ -400,15 +400,15 @@ class TestBudgetAnalysisIntegration:
             model_name = model.__name__
             if model_name == 'Project':
                 query_mock.filter.return_value.first.return_value = mock_project
-            elif model_name == 'ProjectBudget':
-                query_mock.filter.return_value.order_by.return_value.first.return_value = None
-            elif model_name == 'ProjectCost':
-                query_mock.filter.return_value.all.return_value = []
+        elif model_name == 'ProjectBudget':
+            query_mock.filter.return_value.order_by.return_value.first.return_value = None
+        elif model_name == 'ProjectCost':
+            query_mock.filter.return_value.all.return_value = []
             return query_mock
 
-        mock_db.query.side_effect = query_side_effect
+            mock_db.query.side_effect = query_side_effect
 
-        result = BudgetAnalysisService.get_budget_execution_analysis(mock_db, 1)
+            result = BudgetAnalysisService.get_budget_execution_analysis(mock_db, 1)
 
-        assert result['execution_rate'] == 0
-        assert result['variance_pct'] == 0
+            assert result['execution_rate'] == 0
+            assert result['variance_pct'] == 0

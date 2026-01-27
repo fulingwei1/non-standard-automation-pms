@@ -156,7 +156,7 @@ class TestHealthCalculatorEdgeCases:
         with pytest.raises(TypeError):
             health_calculator._is_deadline_approaching(mock_project, days=7)
 
-    # ==================== 数据库错误边界测试 ====================
+            # ==================== 数据库错误边界测试 ====================
 
     def test_has_blocked_critical_tasks_database_error(
         self, health_calculator, mock_project, db_session
@@ -178,7 +178,7 @@ class TestHealthCalculatorEdgeCases:
         with pytest.raises(SQLAlchemyError):
             health_calculator._has_blocking_issues(mock_project)
 
-    # ==================== 计算精度边界测试 ====================
+            # ==================== 计算精度边界测试 ====================
 
     def test_schedule_variance_extreme_precision(self, health_calculator, mock_project):
         """测试进度偏差 - 极端精度"""
@@ -211,7 +211,7 @@ class TestStageAdvanceServiceEdgeCases:
             with pytest.raises(Exception):
                 validate_target_stage(stage)
 
-    # ==================== 验证阶段推进边界测试 ====================
+                # ==================== 验证阶段推进边界测试 ====================
 
     def test_validate_stage_advancement_forward(self):
         """测试向前推进"""
@@ -228,7 +228,7 @@ class TestStageAdvanceServiceEdgeCases:
         with pytest.raises(Exception):
             validate_stage_advancement("S1", "S1")
 
-    # ==================== 状态映射边界测试 ====================
+            # ==================== 状态映射边界测试 ====================
 
     def test_get_stage_status_mapping_completeness(self):
         """测试状态映射完整性"""

@@ -5,9 +5,9 @@
 导出所有ORM模型供外部使用
 
 注意：此文件包含所有模型的导出。
-如需按业务域分组导入，可以使用可选的分组导出模块（app/models/exports/）：
-    from app.models.exports.main.project_related import Project, Task
-    from app.models.exports.main.material_purchase import Material, BomHeader
+如需按业务域分组导入，可以使用可选的分组导出模块（app/models/exports/complete/）：
+    from app.models.exports.complete.project_related import Project, Task
+    from app.models.exports.complete.material_purchase import Material, BomHeader
     # 等等...
 
 但原有的导入方式仍然有效（推荐）：

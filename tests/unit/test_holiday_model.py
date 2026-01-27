@@ -14,12 +14,12 @@ class TestHolidayModel:
     def test_create_holiday(self, db):
         """测试创建节假日记录"""
         holiday = Holiday(
-            holiday_date=date(2024, 2, 10),
-            year=2024,
-            holiday_type="HOLIDAY",
-            name="春节",
-            description="农历新年",
-            is_active=True,
+        holiday_date=date(2024, 2, 10),
+        year=2024,
+        holiday_type="HOLIDAY",
+        name="春节",
+        description="农历新年",
+        is_active=True,
         )
         db.add(holiday)
         db.commit()
@@ -34,12 +34,12 @@ class TestHolidayModel:
     def test_create_workday(self, db):
         """测试创建调休工作日记录"""
         holiday = Holiday(
-            holiday_date=date(2024, 2, 4),
-            year=2024,
-            holiday_type="WORKDAY",
-            name="春节调休",
-            description="周日上班",
-            is_active=True,
+        holiday_date=date(2024, 2, 4),
+        year=2024,
+        holiday_type="WORKDAY",
+        name="春节调休",
+        description="周日上班",
+        is_active=True,
         )
         db.add(holiday)
         db.commit()
@@ -51,12 +51,12 @@ class TestHolidayModel:
     def test_create_company_holiday(self, db):
         """测试创建公司假期记录"""
         holiday = Holiday(
-            holiday_date=date(2024, 12, 25),
-            year=2024,
-            holiday_type="COMPANY",
-            name="公司年会",
-            description="全员团建活动",
-            is_active=True,
+        holiday_date=date(2024, 12, 25),
+        year=2024,
+        holiday_type="COMPANY",
+        name="公司年会",
+        description="全员团建活动",
+        is_active=True,
         )
         db.add(holiday)
         db.commit()
@@ -68,11 +68,11 @@ class TestHolidayModel:
     def test_holiday_repr(self, db):
         """测试节假日对象的字符串表示"""
         holiday = Holiday(
-            holiday_date=date(2024, 2, 10),
-            year=2024,
-            holiday_type="HOLIDAY",
-            name="春节",
-            is_active=True,
+        holiday_date=date(2024, 2, 10),
+        year=2024,
+        holiday_type="HOLIDAY",
+        name="春节",
+        is_active=True,
         )
         db.add(holiday)
         db.commit()
@@ -89,11 +89,11 @@ class TestHolidayServiceIsHoliday:
     def test_is_holiday_true(self, db):
         """测试判断法定节假日"""
         holiday = Holiday(
-            holiday_date=date(2024, 2, 10),
-            year=2024,
-            holiday_type="HOLIDAY",
-            name="春节",
-            is_active=True,
+        holiday_date=date(2024, 2, 10),
+        year=2024,
+        holiday_type="HOLIDAY",
+        name="春节",
+        is_active=True,
         )
         db.add(holiday)
         db.commit()
@@ -104,11 +104,11 @@ class TestHolidayServiceIsHoliday:
     def test_is_holiday_false(self, db):
         """测试判断非节假日"""
         holiday = Holiday(
-            holiday_date=date(2024, 2, 10),
-            year=2024,
-            holiday_type="HOLIDAY",
-            name="春节",
-            is_active=True,
+        holiday_date=date(2024, 2, 10),
+        year=2024,
+        holiday_type="HOLIDAY",
+        name="春节",
+        is_active=True,
         )
         db.add(holiday)
         db.commit()
@@ -119,11 +119,11 @@ class TestHolidayServiceIsHoliday:
     def test_is_holiday_inactive(self, db):
         """测试判断已停用的节假日"""
         holiday = Holiday(
-            holiday_date=date(2024, 2, 10),
-            year=2024,
-            holiday_type="HOLIDAY",
-            name="春节",
-            is_active=False,
+        holiday_date=date(2024, 2, 10),
+        year=2024,
+        holiday_type="HOLIDAY",
+        name="春节",
+        is_active=False,
         )
         db.add(holiday)
         db.commit()
@@ -134,11 +134,11 @@ class TestHolidayServiceIsHoliday:
     def test_is_holiday_workday_type(self, db):
         """测试调休工作日不是节假日"""
         holiday = Holiday(
-            holiday_date=date(2024, 2, 4),
-            year=2024,
-            holiday_type="WORKDAY",
-            name="春节调休",
-            is_active=True,
+        holiday_date=date(2024, 2, 4),
+        year=2024,
+        holiday_type="WORKDAY",
+        name="春节调休",
+        is_active=True,
         )
         db.add(holiday)
         db.commit()
@@ -153,11 +153,11 @@ class TestHolidayServiceIsWorkday:
     def test_is_workday_true(self, db):
         """测试判断调休工作日"""
         holiday = Holiday(
-            holiday_date=date(2024, 2, 4),
-            year=2024,
-            holiday_type="WORKDAY",
-            name="春节调休",
-            is_active=True,
+        holiday_date=date(2024, 2, 4),
+        year=2024,
+        holiday_type="WORKDAY",
+        name="春节调休",
+        is_active=True,
         )
         db.add(holiday)
         db.commit()
@@ -168,11 +168,11 @@ class TestHolidayServiceIsWorkday:
     def test_is_workday_false(self, db):
         """测试判断非调休工作日"""
         holiday = Holiday(
-            holiday_date=date(2024, 2, 10),
-            year=2024,
-            holiday_type="HOLIDAY",
-            name="春节",
-            is_active=True,
+        holiday_date=date(2024, 2, 10),
+        year=2024,
+        holiday_type="HOLIDAY",
+        name="春节",
+        is_active=True,
         )
         db.add(holiday)
         db.commit()
@@ -192,11 +192,11 @@ class TestHolidayServiceGetWorkType:
     def test_get_work_type_holiday(self, db):
         """测试获取节假日类型"""
         holiday = Holiday(
-            holiday_date=date(2024, 2, 10),
-            year=2024,
-            holiday_type="HOLIDAY",
-            name="春节",
-            is_active=True,
+        holiday_date=date(2024, 2, 10),
+        year=2024,
+        holiday_type="HOLIDAY",
+        name="春节",
+        is_active=True,
         )
         db.add(holiday)
         db.commit()
@@ -207,11 +207,11 @@ class TestHolidayServiceGetWorkType:
     def test_get_work_type_workday_adjustment(self, db):
         """测试调休工作日返回NORMAL"""
         holiday = Holiday(
-            holiday_date=date(2024, 2, 4),  # 周日
-            year=2024,
-            holiday_type="WORKDAY",
-            name="春节调休",
-            is_active=True,
+        holiday_date=date(2024, 2, 4),  # 周日
+        year=2024,
+        holiday_type="WORKDAY",
+        name="春节调休",
+        is_active=True,
         )
         db.add(holiday)
         db.commit()
@@ -238,11 +238,11 @@ class TestHolidayServiceGetHolidayName:
     def test_get_holiday_name_holiday(self, db):
         """测试获取节假日名称"""
         holiday = Holiday(
-            holiday_date=date(2024, 2, 10),
-            year=2024,
-            holiday_type="HOLIDAY",
-            name="春节",
-            is_active=True,
+        holiday_date=date(2024, 2, 10),
+        year=2024,
+        holiday_type="HOLIDAY",
+        name="春节",
+        is_active=True,
         )
         db.add(holiday)
         db.commit()
@@ -253,11 +253,11 @@ class TestHolidayServiceGetHolidayName:
     def test_get_holiday_name_workday(self, db):
         """测试获取调休工作日名称"""
         holiday = Holiday(
-            holiday_date=date(2024, 2, 4),
-            year=2024,
-            holiday_type="WORKDAY",
-            name="春节调休",
-            is_active=True,
+        holiday_date=date(2024, 2, 4),
+        year=2024,
+        holiday_type="WORKDAY",
+        name="春节调休",
+        is_active=True,
         )
         db.add(holiday)
         db.commit()
@@ -273,11 +273,11 @@ class TestHolidayServiceGetHolidayName:
     def test_get_holiday_name_inactive(self, db):
         """测试获取已停用的节假日返回None"""
         holiday = Holiday(
-            holiday_date=date(2024, 2, 10),
-            year=2024,
-            holiday_type="HOLIDAY",
-            name="春节",
-            is_active=False,
+        holiday_date=date(2024, 2, 10),
+        year=2024,
+        holiday_type="HOLIDAY",
+        name="春节",
+        is_active=False,
         )
         db.add(holiday)
         db.commit()

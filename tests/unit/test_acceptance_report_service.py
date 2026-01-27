@@ -73,11 +73,11 @@ class TestGetReportVersion:
 
         # 创建一个现有的报告
         existing_report = AcceptanceReport(
-            report_no="FAT-TEST-001",
-            order_id=12345,
-            report_type="FAT",
-            version=1,
-            status="GENERATED",
+        report_no="FAT-TEST-001",
+        order_id=12345,
+        report_type="FAT",
+        version=1,
+        status="GENERATED",
         )
         db_session.add(existing_report)
         db_session.commit()
@@ -136,25 +136,25 @@ class TestBuildReportContent:
     ):
         """测试构建基本报告内容"""
         with patch(
-            "app.services.acceptance_report_service.func"
+        "app.services.acceptance_report_service.func"
         ) as mock_func:
             # Mock 查询结果
-            mock_func.count.return_value.scalar.return_value = 5
+        mock_func.count.return_value.scalar.return_value = 5
 
-            content = build_report_content(
-                db=db_session,
-                order=mock_order,
-                report_no="FAT-TEST-001",
-                version=1,
-                current_user=mock_user,
-            )
+        content = build_report_content(
+        db=db_session,
+        order=mock_order,
+        report_no="FAT-TEST-001",
+        version=1,
+        current_user=mock_user,
+        )
 
-            assert content is not None
-            assert "验收报告" in content
-            assert "FAT-TEST-001" in content
-            assert "AO-TEST-001" in content
-            assert "测试项目" in content
-            assert "测试设备" in content
+        assert content is not None
+        assert "验收报告" in content
+        assert "FAT-TEST-001" in content
+        assert "AO-TEST-001" in content
+        assert "测试项目" in content
+        assert "测试设备" in content
 
     def test_build_report_content_with_missing_project(
         self, db_session: Session, mock_user
@@ -176,20 +176,20 @@ class TestBuildReportContent:
         order.machine = None
 
         with patch(
-            "app.services.acceptance_report_service.func"
+        "app.services.acceptance_report_service.func"
         ) as mock_func:
-            mock_func.count.return_value.scalar.return_value = 0
+        mock_func.count.return_value.scalar.return_value = 0
 
-            content = build_report_content(
-                db=db_session,
-                order=order,
-                report_no="SAT-TEST-001",
-                version=1,
-                current_user=mock_user,
-            )
+        content = build_report_content(
+        db=db_session,
+        order=order,
+        report_no="SAT-TEST-001",
+        version=1,
+        current_user=mock_user,
+        )
 
-            assert content is not None
-            assert "N/A" in content  # 缺少的信息应显示为 N/A
+        assert content is not None
+        assert "N/A" in content  # 缺少的信息应显示为 N/A
 
 
 @pytest.mark.unit
@@ -250,28 +250,28 @@ class TestSaveReportFile:
         report_content = "测试报告内容"
 
         with patch(
-            "app.services.acceptance_report_service.settings"
+        "app.services.acceptance_report_service.settings"
         ) as mock_settings:
-            mock_settings.UPLOAD_DIR = str(tmp_path)
+        mock_settings.UPLOAD_DIR = str(tmp_path)
 
-            with patch(
-                "app.services.acceptance_report_service.REPORTLAB_AVAILABLE", False
-            ):
-                with patch(
-                    "app.services.acceptance_report_service.get_report_version",
-                    return_value=1,
-                ):
-                    file_path, file_size, file_hash = save_report_file(
-                        report_content=report_content,
-                        report_no="FAT-TEST-001",
-                        report_type="FAT",
-                        include_signatures=False,
-                        order=mock_order,
-                        db=db_session,
-                        current_user=mock_user,
-                    )
+        with patch(
+        "app.services.acceptance_report_service.REPORTLAB_AVAILABLE", False
+        ):
+        with patch(
+        "app.services.acceptance_report_service.get_report_version",
+        return_value=1,
+        ):
+        file_path, file_size, file_hash = save_report_file(
+        report_content=report_content,
+        report_no="FAT-TEST-001",
+        report_type="FAT",
+        include_signatures=False,
+        order=mock_order,
+        db=db_session,
+        current_user=mock_user,
+        )
 
-                    assert file_path is not None
-                    assert file_path.endswith(".txt")
-                    assert file_size > 0
-                    assert file_hash is not None
+        assert file_path is not None
+        assert file_path.endswith(".txt")
+        assert file_size > 0
+        assert file_hash is not None

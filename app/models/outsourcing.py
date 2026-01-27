@@ -365,3 +365,9 @@ class OutsourcingProgress(Base, TimestampMixin):
         Index('idx_os_progress_order', 'order_id'),
         Index('idx_os_progress_date', 'report_date'),
     )
+
+
+# ---------------------------------------------------------------------------
+# 兼容层：旧 OutsourcingVendor 模型（现统一为 Vendor）
+# ---------------------------------------------------------------------------
+from .vendor import Vendor as OutsourcingVendor  # noqa: E402

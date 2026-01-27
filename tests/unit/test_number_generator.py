@@ -24,14 +24,14 @@ class TestGenerateSequentialNo:
         db.query.return_value.order_by.return_value.first.return_value = None
 
         result = generate_sequential_no(
-            db,
-            MagicMock,
-            "ecn_no",
-            "ECN",
-            date_format="%y%m%d",
-            separator="-",
-            seq_length=3,
-            use_date=True,
+        db,
+        MagicMock,
+        "ecn_no",
+        "ECN",
+        date_format="%y%m%d",
+        separator="-",
+        seq_length=3,
+        use_date=True,
         )
 
         assert result == "ECN-250120-001"
@@ -42,7 +42,7 @@ class TestGenerateSequentialNo:
         db.query.return_value.order_by.return_value.first.return_value = None
 
         result = generate_sequential_no(
-            db, MagicMock, "code", "PJ", use_date=False, separator="", seq_length=3
+        db, MagicMock, "code", "PJ", use_date=False, separator="", seq_length=3
         )
 
         assert result == "PJ001"
@@ -57,14 +57,14 @@ class TestGenerateSequentialNo:
         db.query.return_value.order_by.return_value.first.return_value = mock_record
 
         result = generate_sequential_no(
-            db,
-            MagicMock,
-            "ecn_no",
-            "ECN",
-            date_format="%y%m%d",
-            separator="-",
-            seq_length=3,
-            use_date=True,
+        db,
+        MagicMock,
+        "ecn_no",
+        "ECN",
+        date_format="%y%m%d",
+        separator="-",
+        seq_length=3,
+        use_date=True,
         )
 
         assert result == "ECN-250120-011"
@@ -74,7 +74,7 @@ class TestGenerateSequentialNo:
         db = MagicMock()
         db.query.return_value.order_by.return_value.first.return_value = MagicMock()
         db.query.return_value.order_by.return_value.first.return_value.serial_no = (
-            "ECN-invalid"
+        "ECN-invalid"
         )
 
         db.query.return_value.order_by.return_value.first.return_value = MagicMock()
@@ -84,14 +84,14 @@ class TestGenerateSequentialNo:
         invalid_record.serial_no.split.side_effect = ValueError("Invalid format")
 
         result = generate_sequential_no(
-            db,
-            MagicMock,
-            "ecn_no",
-            "ECN",
-            date_format="%y%m%d",
-            separator="-",
-            seq_length=3,
-            use_date=True,
+        db,
+        MagicMock,
+        "ecn_no",
+        "ECN",
+        date_format="%y%m%d",
+        separator="-",
+        seq_length=3,
+        use_date=True,
         )
 
         assert result == "ECN-250120-001"
@@ -102,7 +102,7 @@ class TestGenerateSequentialNo:
         db.query.return_value.order_by.return_value.first.return_value = None
 
         result = generate_sequential_no(
-            db, MagicMock, "code", "PJ", use_date=False, separator="", seq_length=3
+        db, MagicMock, "code", "PJ", use_date=False, separator="", seq_length=3
         )
 
         assert result == "PJ001"
@@ -110,7 +110,7 @@ class TestGenerateSequentialNo:
         db_session.query.return_value.filter.return_value.first.return_value = None
 
         result = generator.generate_sequential_no(
-            "PJ", date(2025, 1, 20), separator="-"
+        "PJ", date(2025, 1, 20), separator="-"
         )
 
         assert result == "PJ-20250120-001"
@@ -122,11 +122,11 @@ class TestGenerateSequentialNo:
         mock_existing.serial_no = 5
 
         db_session.query.return_value.filter.return_value.first.return_value = (
-            mock_existing
+        mock_existing
         )
 
         result = generator.generate_sequential_no(
-            "PJ", date(2025, 1, 20), separator="-"
+        "PJ", date(2025, 1, 20), separator="-"
         )
 
         assert result == "PJ-20250120-006"
@@ -163,7 +163,7 @@ class TestGenerateSequentialNo:
         mock_existing.monthly_no = 15
 
         db_session.query.return_value.filter.return_value.first.return_value = (
-            mock_existing
+        mock_existing
         )
 
         result = generator.generate_monthly_no("PO", 2025, 1, prefix="PO")
@@ -185,7 +185,7 @@ class TestGenerateSequentialNo:
         mock_existing.employee_code = "EMP000050"
 
         db_session.query.return_value.filter.return_value.first.return_value = (
-            mock_existing
+        mock_existing
         )
 
         result = generator.generate_employee_code()
@@ -232,7 +232,7 @@ class TestGenerateSequentialNo:
         mock_existing.machine_code = "PN099"
 
         db_session.query.return_value.filter.return_value.first.return_value = (
-            mock_existing
+        mock_existing
         )
 
         result = generator.generate_machine_code()
@@ -262,7 +262,7 @@ class TestNumberGeneratorPadding:
         db_session.query.return_value.filter.return_value.first.return_value = None
 
         result = generator.generate_sequential_no(
-            "TEST", None, separator="-", padding=4
+        "TEST", None, separator="-", padding=4
         )
 
         assert result == "TEST--0001"
@@ -272,7 +272,7 @@ class TestNumberGeneratorPadding:
         db_session.query.return_value.filter.return_value.first.return_value = None
 
         result = generator.generate_sequential_no(
-            "TEST", None, separator="-", padding=6
+        "TEST", None, separator="-", padding=6
         )
 
         assert "-000001" in result
@@ -292,7 +292,7 @@ class TestNumberGeneratorCustomPrefix:
         db_session.query.return_value.filter.return_value.first.return_value = None
 
         result = generator.generate_sequential_no(
-            "CUSTOM", date(2025, 1, 20), prefix="PRE", separator="-"
+        "CUSTOM", date(2025, 1, 20), prefix="PRE", separator="-"
         )
 
         assert result.startswith("PRE-20250120")
@@ -302,7 +302,7 @@ class TestNumberGeneratorCustomPrefix:
         db_session.query.return_value.filter.return_value.first.return_value = None
 
         result = generator.generate_sequential_no(
-            "CUSTOM", None, prefix="PRE", separator="-"
+        "CUSTOM", None, prefix="PRE", separator="-"
         )
 
         assert result.startswith("PRE-")

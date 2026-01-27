@@ -58,9 +58,9 @@ class TestServiceModuleImports:
         except Exception as e:
             pytest.skip(f"Cannot import alert efficiency service: {str(e)}")
 
-        try:
-            from app.services.alert.alert_response_service import AlertResponseService
-            assert AlertResponseService is not None
+            try:
+                from app.services.alert.alert_response_service import AlertResponseService
+                assert AlertResponseService is not None
         except Exception as e:
             pytest.skip(f"Cannot import alert response service: {str(e)}")
 
@@ -72,9 +72,9 @@ class TestServiceModuleImports:
         except Exception as e:
             pytest.skip(f"Cannot import purchase order service: {str(e)}")
 
-        try:
-            from app.services.purchase_request_from_bom_service import create_purchase_request_from_bom
-            assert callable(create_purchase_request_from_bom)
+            try:
+                from app.services.purchase_request_from_bom_service import create_purchase_request_from_bom
+                assert callable(create_purchase_request_from_bom)
         except Exception as e:
             pytest.skip(f"Cannot import purchase request service: {str(e)}")
 
@@ -86,8 +86,8 @@ class TestServiceModuleImports:
         except Exception as e:
             pytest.skip(f"Cannot import ECN auto assign service: {str(e)}")
 
-        try:
-            from app.services.ecn_bom_analysis_service import analyze_bom_for_ecn
-            assert callable(analyze_bom_for_ecn)
+            try:
+                from app.services.ecn_bom_analysis_service import analyze_bom_for_ecn
+                assert callable(analyze_bom_for_ecn)
         except Exception as e:
             pytest.skip(f"Cannot import ECN BOM analysis service: {str(e)}")

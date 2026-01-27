@@ -45,8 +45,8 @@ class TestIdentifyLostProjects:
         end_date = date.today()
 
         projects = service.identify_lost_projects(
-            start_date=start_date,
-            end_date=end_date
+        start_date=start_date,
+        end_date=end_date
         )
         assert isinstance(projects, list)
 
@@ -110,8 +110,8 @@ class TestExpenseLostProjects:
         end_date = date.today()
 
         result = service.expense_lost_projects(
-            start_date=start_date,
-            end_date=end_date
+        start_date=start_date,
+        end_date=end_date
         )
 
         assert isinstance(result, dict)
@@ -154,8 +154,8 @@ class TestGetLostProjectExpenses:
         end_date = date.today()
 
         result = service.get_lost_project_expenses(
-            start_date=start_date,
-            end_date=end_date
+        start_date=start_date,
+        end_date=end_date
         )
 
         assert isinstance(result, dict)
@@ -166,7 +166,7 @@ class TestGetLostProjectExpenses:
         """测试按销售人员筛选"""
         service = LaborCostExpenseService(db_session)
         result = service.get_lost_project_expenses(
-            salesperson_id=test_sales_user.id
+        salesperson_id=test_sales_user.id
         )
 
         assert isinstance(result, dict)
@@ -220,9 +220,9 @@ class TestGetExpenseStatistics:
         end_date = date.today()
 
         result = service.get_expense_statistics(
-            start_date=start_date,
-            end_date=end_date,
-            group_by="person"
+        start_date=start_date,
+        end_date=end_date,
+        group_by="person"
         )
 
         assert isinstance(result, dict)
@@ -312,8 +312,8 @@ class TestEdgeCases:
         future_end = date.today() + timedelta(days=60)
 
         projects = service.identify_lost_projects(
-            start_date=future_start,
-            end_date=future_end
+        start_date=future_start,
+        end_date=future_end
         )
         assert projects == []
 

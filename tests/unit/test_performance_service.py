@@ -186,24 +186,24 @@ class TestGetUserManagerRoles:
             call_count[0] += 1
             if call_count[0] == 1:
                 mock_filter.first.return_value = dept
-            else:
-                mock_filter.all.return_value = []
+        else:
+            mock_filter.all.return_value = []
             return mock_filter
 
-        db.query.return_value.filter.side_effect = filter_side_effect
+            db.query.return_value.filter.side_effect = filter_side_effect
 
-        result = PerformanceService.get_user_manager_roles(db, user)
+            result = PerformanceService.get_user_manager_roles(db, user)
 
-        assert result["is_dept_manager"] is True
-        assert result["managed_dept_id"] == 10
+            assert result["is_dept_manager"] is True
+            assert result["managed_dept_id"] == 10
 
     def test_identifies_project_manager(self):
         """测试识别项目经理"""
         db = create_mock_db_session()
         user = create_mock_user(employee_id=None)
         projects = [
-            create_mock_project(project_id=1, pm_id=1),
-            create_mock_project(project_id=2, pm_id=1)
+        create_mock_project(project_id=1, pm_id=1),
+        create_mock_project(project_id=2, pm_id=1)
         ]
 
         db.query.return_value.filter.return_value.all.return_value = projects
@@ -228,16 +228,16 @@ class TestGetUserManagerRoles:
             call_count[0] += 1
             if call_count[0] == 1:
                 mock_filter.first.return_value = dept
-            else:
-                mock_filter.all.return_value = projects
+        else:
+            mock_filter.all.return_value = projects
             return mock_filter
 
-        db.query.return_value.filter.side_effect = filter_side_effect
+            db.query.return_value.filter.side_effect = filter_side_effect
 
-        result = PerformanceService.get_user_manager_roles(db, user)
+            result = PerformanceService.get_user_manager_roles(db, user)
 
-        assert result["is_dept_manager"] is True
-        assert result["is_project_manager"] is True
+            assert result["is_dept_manager"] is True
+            assert result["is_project_manager"] is True
 
 
 @pytest.mark.unit
@@ -300,14 +300,14 @@ class TestCalculateFinalScore:
         """测试无配置时使用默认权重50:50"""
         db = create_mock_db_session()
         dept_record = create_mock_assessment_record(
-            assessor_type="DEPT_MANAGER",
-            score=80
+        assessor_type="DEPT_MANAGER",
+        score=80
         )
         proj_record = create_mock_assessment_record(
-            assessor_type="PROJECT_MANAGER",
-            score=90,
-            project_id=1,
-            project_weight=100
+        assessor_type="PROJECT_MANAGER",
+        score=90,
+        project_id=1,
+        project_weight=100
         )
 
         call_count = [0]
@@ -317,17 +317,17 @@ class TestCalculateFinalScore:
             call_count[0] += 1
             if call_count[0] == 1:
                 mock_query.filter.return_value.order_by.return_value.first.return_value = None
-            else:
-                mock_query.filter.return_value.all.return_value = [dept_record, proj_record]
+        else:
+            mock_query.filter.return_value.all.return_value = [dept_record, proj_record]
             return mock_query
 
-        db.query.side_effect = query_side_effect
+            db.query.side_effect = query_side_effect
 
-        result = PerformanceService.calculate_final_score(db, 1, "2024-12")
+            result = PerformanceService.calculate_final_score(db, 1, "2024-12")
 
-        assert result is not None
-        assert result["dept_weight"] == 50
-        assert result["project_weight"] == 50
+            assert result is not None
+            assert result["dept_weight"] == 50
+            assert result["project_weight"] == 50
 
     def test_uses_configured_weights(self):
         """测试使用配置的权重"""
@@ -342,16 +342,16 @@ class TestCalculateFinalScore:
             call_count[0] += 1
             if call_count[0] == 1:
                 mock_query.filter.return_value.order_by.return_value.first.return_value = weight_config
-            else:
-                mock_query.filter.return_value.all.return_value = [dept_record]
+        else:
+            mock_query.filter.return_value.all.return_value = [dept_record]
             return mock_query
 
-        db.query.side_effect = query_side_effect
+            db.query.side_effect = query_side_effect
 
-        result = PerformanceService.calculate_final_score(db, 1, "2024-12")
+            result = PerformanceService.calculate_final_score(db, 1, "2024-12")
 
-        assert result["dept_weight"] == 60
-        assert result["project_weight"] == 40
+            assert result["dept_weight"] == 60
+            assert result["project_weight"] == 40
 
     def test_calculates_weighted_score_correctly(self):
         """测试加权分数计算正确"""
@@ -359,10 +359,10 @@ class TestCalculateFinalScore:
         weight_config = create_mock_weight_config(dept_weight=60, project_weight=40)
         dept_record = create_mock_assessment_record(assessor_type="DEPT_MANAGER", score=80)
         proj_record = create_mock_assessment_record(
-            assessor_type="PROJECT_MANAGER",
-            score=90,
-            project_id=1,
-            project_weight=100
+        assessor_type="PROJECT_MANAGER",
+        score=90,
+        project_id=1,
+        project_weight=100
         )
 
         call_count = [0]
@@ -372,16 +372,16 @@ class TestCalculateFinalScore:
             call_count[0] += 1
             if call_count[0] == 1:
                 mock_query.filter.return_value.order_by.return_value.first.return_value = weight_config
-            else:
-                mock_query.filter.return_value.all.return_value = [dept_record, proj_record]
+        else:
+            mock_query.filter.return_value.all.return_value = [dept_record, proj_record]
             return mock_query
 
-        db.query.side_effect = query_side_effect
+            db.query.side_effect = query_side_effect
 
-        result = PerformanceService.calculate_final_score(db, 1, "2024-12")
+            result = PerformanceService.calculate_final_score(db, 1, "2024-12")
 
-        # 80 * 0.6 + 90 * 0.4 = 48 + 36 = 84
-        assert result["final_score"] == 84.0
+            # 80 * 0.6 + 90 * 0.4 = 48 + 36 = 84
+            assert result["final_score"] == 84.0
 
     def test_uses_100_percent_when_only_dept_assessment(self):
         """测试只有部门评价时使用100%"""
@@ -396,25 +396,25 @@ class TestCalculateFinalScore:
             call_count[0] += 1
             if call_count[0] == 1:
                 mock_query.filter.return_value.order_by.return_value.first.return_value = weight_config
-            else:
-                mock_query.filter.return_value.all.return_value = [dept_record]
+        else:
+            mock_query.filter.return_value.all.return_value = [dept_record]
             return mock_query
 
-        db.query.side_effect = query_side_effect
+            db.query.side_effect = query_side_effect
 
-        result = PerformanceService.calculate_final_score(db, 1, "2024-12")
+            result = PerformanceService.calculate_final_score(db, 1, "2024-12")
 
-        assert result["final_score"] == 85.0
+            assert result["final_score"] == 85.0
 
     def test_uses_100_percent_when_only_project_assessment(self):
         """测试只有项目评价时使用100%"""
         db = create_mock_db_session()
         weight_config = create_mock_weight_config(dept_weight=60, project_weight=40)
         proj_record = create_mock_assessment_record(
-            assessor_type="PROJECT_MANAGER",
-            score=90,
-            project_id=1,
-            project_weight=100
+        assessor_type="PROJECT_MANAGER",
+        score=90,
+        project_id=1,
+        project_weight=100
         )
 
         call_count = [0]
@@ -424,31 +424,31 @@ class TestCalculateFinalScore:
             call_count[0] += 1
             if call_count[0] == 1:
                 mock_query.filter.return_value.order_by.return_value.first.return_value = weight_config
-            else:
-                mock_query.filter.return_value.all.return_value = [proj_record]
+        else:
+            mock_query.filter.return_value.all.return_value = [proj_record]
             return mock_query
 
-        db.query.side_effect = query_side_effect
+            db.query.side_effect = query_side_effect
 
-        result = PerformanceService.calculate_final_score(db, 1, "2024-12")
+            result = PerformanceService.calculate_final_score(db, 1, "2024-12")
 
-        assert result["final_score"] == 90.0
+            assert result["final_score"] == 90.0
 
     def test_calculates_project_weighted_average(self):
         """测试多项目加权平均"""
         db = create_mock_db_session()
         weight_config = create_mock_weight_config(dept_weight=0, project_weight=100)
         proj_record1 = create_mock_assessment_record(
-            assessor_type="PROJECT_MANAGER",
-            score=80,
-            project_id=1,
-            project_weight=60
+        assessor_type="PROJECT_MANAGER",
+        score=80,
+        project_id=1,
+        project_weight=60
         )
         proj_record2 = create_mock_assessment_record(
-            assessor_type="PROJECT_MANAGER",
-            score=90,
-            project_id=2,
-            project_weight=40
+        assessor_type="PROJECT_MANAGER",
+        score=90,
+        project_id=2,
+        project_weight=40
         )
 
         call_count = [0]
@@ -458,16 +458,16 @@ class TestCalculateFinalScore:
             call_count[0] += 1
             if call_count[0] == 1:
                 mock_query.filter.return_value.order_by.return_value.first.return_value = weight_config
-            else:
-                mock_query.filter.return_value.all.return_value = [proj_record1, proj_record2]
+        else:
+            mock_query.filter.return_value.all.return_value = [proj_record1, proj_record2]
             return mock_query
 
-        db.query.side_effect = query_side_effect
+            db.query.side_effect = query_side_effect
 
-        result = PerformanceService.calculate_final_score(db, 1, "2024-12")
+            result = PerformanceService.calculate_final_score(db, 1, "2024-12")
 
-        # 项目加权平均: (80*60 + 90*40) / (60+40) = (4800+3600)/100 = 84
-        assert result["project_score"] == 84.0
+            # 项目加权平均: (80*60 + 90*40) / (60+40) = (4800+3600)/100 = 84
+            assert result["project_score"] == 84.0
 
 
 @pytest.mark.unit
@@ -488,9 +488,9 @@ class TestCalculateQuarterlyScore:
         """测试无有效分数时返回None"""
         db = create_mock_db_session()
         summaries = [
-            create_mock_summary(summary_id=1, period="2024-12"),
-            create_mock_summary(summary_id=2, period="2024-11"),
-            create_mock_summary(summary_id=3, period="2024-10")
+        create_mock_summary(summary_id=1, period="2024-12"),
+        create_mock_summary(summary_id=2, period="2024-11"),
+        create_mock_summary(summary_id=3, period="2024-10")
         ]
         db.query.return_value.filter.return_value.all.return_value = summaries
         mock_calc.return_value = None
@@ -504,16 +504,16 @@ class TestCalculateQuarterlyScore:
         """测试计算3个月平均分"""
         db = create_mock_db_session()
         summaries = [
-            create_mock_summary(summary_id=1, period="2024-12"),
-            create_mock_summary(summary_id=2, period="2024-11"),
-            create_mock_summary(summary_id=3, period="2024-10")
+        create_mock_summary(summary_id=1, period="2024-12"),
+        create_mock_summary(summary_id=2, period="2024-11"),
+        create_mock_summary(summary_id=3, period="2024-10")
         ]
         db.query.return_value.filter.return_value.all.return_value = summaries
 
         mock_calc.side_effect = [
-            {"final_score": 80},
-            {"final_score": 85},
-            {"final_score": 90}
+        {"final_score": 80},
+        {"final_score": 85},
+        {"final_score": 90}
         ]
 
         result = PerformanceService.calculate_quarterly_score(db, 1, "2024-12")
@@ -526,14 +526,14 @@ class TestCalculateQuarterlyScore:
         """测试忽略0分的月份"""
         db = create_mock_db_session()
         summaries = [
-            create_mock_summary(summary_id=1, period="2024-12"),
-            create_mock_summary(summary_id=2, period="2024-11")
+        create_mock_summary(summary_id=1, period="2024-12"),
+        create_mock_summary(summary_id=2, period="2024-11")
         ]
         db.query.return_value.filter.return_value.all.return_value = summaries
 
         mock_calc.side_effect = [
-            {"final_score": 80},
-            {"final_score": 0}
+        {"final_score": 80},
+        {"final_score": 0}
         ]
 
         result = PerformanceService.calculate_quarterly_score(db, 1, "2024-12")
@@ -551,10 +551,10 @@ class TestGetManageableEmployees:
         db = create_mock_db_session()
         user = create_mock_user()
         mock_roles.return_value = {
-            "is_dept_manager": False,
-            "is_project_manager": False,
-            "managed_dept_id": None,
-            "managed_project_ids": []
+        "is_dept_manager": False,
+        "is_project_manager": False,
+        "managed_dept_id": None,
+        "managed_project_ids": []
         }
 
         result = PerformanceService.get_manageable_employees(db, user)
@@ -568,19 +568,19 @@ class TestGetManageableEmployees:
         user = create_mock_user()
         dept = create_mock_department(dept_id=1, dept_name="技术部")
         employees = [
-            create_mock_employee(emp_id=1),
-            create_mock_employee(emp_id=2)
+        create_mock_employee(emp_id=1),
+        create_mock_employee(emp_id=2)
         ]
         emp_users = [
-            create_mock_user(user_id=10, employee_id=1),
-            create_mock_user(user_id=11, employee_id=2)
+        create_mock_user(user_id=10, employee_id=1),
+        create_mock_user(user_id=11, employee_id=2)
         ]
 
         mock_roles.return_value = {
-            "is_dept_manager": True,
-            "is_project_manager": False,
-            "managed_dept_id": 1,
-            "managed_project_ids": []
+        "is_dept_manager": True,
+        "is_project_manager": False,
+        "managed_dept_id": 1,
+        "managed_project_ids": []
         }
 
         call_count = [0]
@@ -590,22 +590,22 @@ class TestGetManageableEmployees:
             call_count[0] += 1
             if call_count[0] == 1:
                 mock_query.get.return_value = dept
-            elif call_count[0] == 2:
-                mock_query.filter.return_value.all.return_value = employees
-            else:
-                idx = call_count[0] - 3
-                if idx < len(emp_users):
-                    mock_query.filter.return_value.first.return_value = emp_users[idx]
-                else:
-                    mock_query.filter.return_value.first.return_value = None
+        elif call_count[0] == 2:
+            mock_query.filter.return_value.all.return_value = employees
+        else:
+            idx = call_count[0] - 3
+            if idx < len(emp_users):
+                mock_query.filter.return_value.first.return_value = emp_users[idx]
+        else:
+            mock_query.filter.return_value.first.return_value = None
             return mock_query
 
-        db.query.side_effect = query_side_effect
+            db.query.side_effect = query_side_effect
 
-        result = PerformanceService.get_manageable_employees(db, user)
+            result = PerformanceService.get_manageable_employees(db, user)
 
-        assert 10 in result
-        assert 11 in result
+            assert 10 in result
+            assert 11 in result
 
     @patch.object(PerformanceService, "get_user_manager_roles")
     def test_gets_project_members_for_project_manager(self, mock_roles):
@@ -613,15 +613,15 @@ class TestGetManageableEmployees:
         db = create_mock_db_session()
         user = create_mock_user()
         members = [
-            create_mock_project_member(user_id=10),
-            create_mock_project_member(user_id=11)
+        create_mock_project_member(user_id=10),
+        create_mock_project_member(user_id=11)
         ]
 
         mock_roles.return_value = {
-            "is_dept_manager": False,
-            "is_project_manager": True,
-            "managed_dept_id": None,
-            "managed_project_ids": [1, 2]
+        "is_dept_manager": False,
+        "is_project_manager": True,
+        "managed_dept_id": None,
+        "managed_project_ids": [1, 2]
         }
 
         db.query.return_value.filter.return_value.all.return_value = members
@@ -663,24 +663,24 @@ class TestCreateAssessmentTasks:
             call_count[0] += 1
             if call_count[0] == 1:
                 return employee
-            elif call_count[0] == 2:
-                return emp_obj
-            elif call_count[0] == 3:
-                return manager_emp
+        elif call_count[0] == 2:
+            return emp_obj
+        elif call_count[0] == 3:
+            return manager_emp
             return None
 
-        db.query.return_value.get.side_effect = get_side_effect
-        db.query.return_value.filter.return_value.first.side_effect = [
+            db.query.return_value.get.side_effect = get_side_effect
+            db.query.return_value.filter.return_value.first.side_effect = [
             dept,
             manager_user,
             existing_record
-        ]
-        db.query.return_value.filter.return_value.all.return_value = []
+            ]
+            db.query.return_value.filter.return_value.all.return_value = []
 
-        result = PerformanceService.create_evaluation_tasks(db, summary)
+            result = PerformanceService.create_evaluation_tasks(db, summary)
 
-        assert len(result) == 0
-        db.add.assert_not_called()
+            assert len(result) == 0
+            db.add.assert_not_called()
 
 
 @pytest.mark.unit
@@ -702,14 +702,14 @@ class TestGetHistoricalPerformance:
         """测试返回带等级的历史记录"""
         db = create_mock_db_session()
         summaries = [
-            create_mock_summary(summary_id=1, period="2024-12"),
-            create_mock_summary(summary_id=2, period="2024-11")
+        create_mock_summary(summary_id=1, period="2024-12"),
+        create_mock_summary(summary_id=2, period="2024-11")
         ]
         db.query.return_value.filter.return_value.order_by.return_value.all.return_value = summaries
 
         mock_calc.side_effect = [
-            {"final_score": 92, "dept_score": 90, "project_score": 94},
-            {"final_score": 85, "dept_score": 85, "project_score": None}
+        {"final_score": 92, "dept_score": 90, "project_score": 94},
+        {"final_score": 85, "dept_score": 85, "project_score": None}
         ]
 
         result = PerformanceService.get_historical_performance(db, 1)

@@ -495,28 +495,28 @@ class TestPermissionsInit:
     def test_all_permissions_exported(self):
         """测试所有权限函数都已导出"""
         from app.core.permissions import (
-            RD_PROJECT_ROLES,
-            check_project_access,
-            check_timesheet_approval_permission,
-            has_finance_access,
-            has_hr_access,
-            has_machine_document_permission,
-            has_machine_document_upload_permission,
-            has_procurement_access,
-            has_production_access,
-            has_rd_project_access,
-            has_scheduler_admin_access,
-            has_shortage_report_access,
-            has_timesheet_approval_access,
-            require_finance_access,
-            require_hr_access,
-            require_procurement_access,
-            require_production_access,
-            require_project_access,
-            require_rd_project_access,
-            require_scheduler_admin_access,
-            require_shortage_report_access,
-            require_timesheet_approval_access,
+        RD_PROJECT_ROLES,
+        check_project_access,
+        check_timesheet_approval_permission,
+        has_finance_access,
+        has_hr_access,
+        has_machine_document_permission,
+        has_machine_document_upload_permission,
+        has_procurement_access,
+        has_production_access,
+        has_rd_project_access,
+        has_scheduler_admin_access,
+        has_shortage_report_access,
+        has_timesheet_approval_access,
+        require_finance_access,
+        require_hr_access,
+        require_procurement_access,
+        require_production_access,
+        require_project_access,
+        require_rd_project_access,
+        require_scheduler_admin_access,
+        require_shortage_report_access,
+        require_timesheet_approval_access,
         )
 
         # 验证所有函数可调用
@@ -620,7 +620,7 @@ class TestTokenCreation:
         from app.core.auth import create_access_token
 
         token = create_access_token(
-            data={"sub": "456"}, expires_delta=timedelta(hours=2)
+        data={"sub": "456"}, expires_delta=timedelta(hours=2)
         )
 
         assert token is not None
@@ -636,10 +636,10 @@ class TestTokenCreation:
         token = create_access_token(data={"sub": "789"})
 
         payload = jwt.decode(
-            token,
-            settings.SECRET_KEY,
-            algorithms=[settings.ALGORITHM],
-            options={"verify_exp": False},
+        token,
+        settings.SECRET_KEY,
+        algorithms=[settings.ALGORITHM],
+        options={"verify_exp": False},
         )
 
         assert "jti" in payload
@@ -655,10 +655,10 @@ class TestTokenCreation:
         token = create_access_token(data={"sub": "test"})
 
         payload = jwt.decode(
-            token,
-            settings.SECRET_KEY,
-            algorithms=[settings.ALGORITHM],
-            options={"verify_exp": False},
+        token,
+        settings.SECRET_KEY,
+        algorithms=[settings.ALGORITHM],
+        options={"verify_exp": False},
         )
 
         assert "exp" in payload
@@ -684,9 +684,9 @@ class TestTokenRevocation:
     def test_revoke_and_check_token_memory_fallback(self):
         """测试撤销并检查 Token（内存降级模式）"""
         from app.core.auth import (
-            create_access_token,
-            is_token_revoked,
-            revoke_token,
+        create_access_token,
+        is_token_revoked,
+        revoke_token,
         )
 
         # 创建 Token
@@ -895,8 +895,8 @@ class TestSalesEditPermission:
         from app.core.sales_permissions import check_sales_edit_permission
 
         user = MockUser(
-            user_id=1,
-            roles=[MockUserRole("SALES_DIRECTOR", "销售总监")]
+        user_id=1,
+        roles=[MockUserRole("SALES_DIRECTOR", "销售总监")]
         )
         db = MagicMock()
 
@@ -907,8 +907,8 @@ class TestSalesEditPermission:
         from app.core.sales_permissions import check_sales_edit_permission
 
         user = MockUser(
-            user_id=1,
-            roles=[MockUserRole("SALES_MANAGER", "销售经理")]
+        user_id=1,
+        roles=[MockUserRole("SALES_MANAGER", "销售经理")]
         )
         db = MagicMock()
 
@@ -919,8 +919,8 @@ class TestSalesEditPermission:
         from app.core.sales_permissions import check_sales_edit_permission
 
         user = MockUser(
-            user_id=100,
-            roles=[MockUserRole("SALES", "销售")]
+        user_id=100,
+        roles=[MockUserRole("SALES", "销售")]
         )
         db = MagicMock()
 
@@ -932,8 +932,8 @@ class TestSalesEditPermission:
         from app.core.sales_permissions import check_sales_edit_permission
 
         user = MockUser(
-            user_id=100,
-            roles=[MockUserRole("SALES", "销售")]
+        user_id=100,
+        roles=[MockUserRole("SALES", "销售")]
         )
         db = MagicMock()
 
@@ -945,8 +945,8 @@ class TestSalesEditPermission:
         from app.core.sales_permissions import check_sales_edit_permission
 
         user = MockUser(
-            user_id=100,
-            roles=[MockUserRole("SALES", "销售")]
+        user_id=100,
+        roles=[MockUserRole("SALES", "销售")]
         )
         db = MagicMock()
 
@@ -958,8 +958,8 @@ class TestSalesEditPermission:
         from app.core.sales_permissions import check_sales_edit_permission
 
         user = MockUser(
-            user_id=1,
-            roles=[MockUserRole("FINANCE", "财务")]
+        user_id=1,
+        roles=[MockUserRole("FINANCE", "财务")]
         )
         db = MagicMock()
 
@@ -983,8 +983,8 @@ class TestSalesDeletePermission:
         from app.core.sales_permissions import check_sales_delete_permission
 
         user = MockUser(
-            user_id=1,
-            roles=[MockUserRole("SALES_DIRECTOR", "销售总监")]
+        user_id=1,
+        roles=[MockUserRole("SALES_DIRECTOR", "销售总监")]
         )
         db = MagicMock()
 
@@ -995,8 +995,8 @@ class TestSalesDeletePermission:
         from app.core.sales_permissions import check_sales_delete_permission
 
         user = MockUser(
-            user_id=100,
-            roles=[MockUserRole("SALES_MANAGER", "销售经理")]
+        user_id=100,
+        roles=[MockUserRole("SALES_MANAGER", "销售经理")]
         )
         db = MagicMock()
 
@@ -1010,8 +1010,8 @@ class TestSalesDeletePermission:
         from app.core.sales_permissions import check_sales_delete_permission
 
         user = MockUser(
-            user_id=100,
-            roles=[MockUserRole("SALES", "销售")]
+        user_id=100,
+        roles=[MockUserRole("SALES", "销售")]
         )
         db = MagicMock()
 
@@ -1026,8 +1026,8 @@ class TestSalesDeletePermission:
         from app.core.sales_permissions import check_sales_delete_permission
 
         user = MockUser(
-            user_id=1,
-            roles=[MockUserRole("FINANCE", "财务")]
+        user_id=1,
+        roles=[MockUserRole("FINANCE", "财务")]
         )
         db = MagicMock()
 
@@ -1039,8 +1039,8 @@ class TestSalesDeletePermission:
         from app.core.sales_permissions import check_sales_delete_permission
 
         user = MockUser(
-            user_id=1,
-            roles=[MockUserRole("FINANCE", "财务")]
+        user_id=1,
+        roles=[MockUserRole("FINANCE", "财务")]
         )
         db = MagicMock()
 
@@ -1292,20 +1292,20 @@ class TestSalesPermissionsExport:
     def test_all_sales_permissions_exported(self):
         """测试所有销售权限函数都已导出"""
         from app.core.sales_permissions import (
-            check_sales_approval_permission,
-            check_sales_create_permission,
-            check_sales_delete_permission,
-            check_sales_edit_permission,
-            filter_sales_data_by_scope,
-            filter_sales_finance_data_by_scope,
-            get_sales_data_scope,
-            has_sales_approval_access,
-            has_sales_assessment_access,
-            require_sales_approval_permission,
-            require_sales_assessment_access,
-            require_sales_create_permission,
-            require_sales_delete_permission,
-            require_sales_edit_permission,
+        check_sales_approval_permission,
+        check_sales_create_permission,
+        check_sales_delete_permission,
+        check_sales_edit_permission,
+        filter_sales_data_by_scope,
+        filter_sales_finance_data_by_scope,
+        get_sales_data_scope,
+        has_sales_approval_access,
+        has_sales_assessment_access,
+        require_sales_approval_permission,
+        require_sales_assessment_access,
+        require_sales_create_permission,
+        require_sales_delete_permission,
+        require_sales_edit_permission,
         )
 
         assert callable(get_sales_data_scope)
@@ -1333,20 +1333,20 @@ class TestPermissionsIntegration:
         from app.core.permissions.hr import has_hr_access
         from app.core.permissions.machine import has_machine_document_permission
         from app.core.permissions.procurement import (
-            has_procurement_access,
-            has_shortage_report_access,
+        has_procurement_access,
+        has_shortage_report_access,
         )
         from app.core.permissions.production import has_production_access
         from app.core.permissions.rd_project import has_rd_project_access
         from app.core.permissions.scheduler import has_scheduler_admin_access
         from app.core.permissions.timesheet import has_timesheet_approval_access
         from app.core.sales_permissions import (
-            check_sales_create_permission,
-            check_sales_delete_permission,
-            check_sales_edit_permission,
-            get_sales_data_scope,
-            has_sales_approval_access,
-            has_sales_assessment_access,
+        check_sales_create_permission,
+        check_sales_delete_permission,
+        check_sales_edit_permission,
+        get_sales_data_scope,
+        has_sales_approval_access,
+        has_sales_assessment_access,
         )
 
         user = MockUser(is_superuser=True)
@@ -1374,17 +1374,17 @@ class TestPermissionsIntegration:
         from app.core.permissions.finance import has_finance_access
         from app.core.permissions.hr import has_hr_access
         from app.core.permissions.procurement import (
-            has_procurement_access,
-            has_shortage_report_access,
+        has_procurement_access,
+        has_shortage_report_access,
         )
         from app.core.permissions.production import has_production_access
         from app.core.permissions.rd_project import has_rd_project_access
         from app.core.permissions.scheduler import has_scheduler_admin_access
         from app.core.permissions.timesheet import has_timesheet_approval_access
         from app.core.sales_permissions import (
-            check_sales_create_permission,
-            get_sales_data_scope,
-            has_sales_assessment_access,
+        check_sales_create_permission,
+        get_sales_data_scope,
+        has_sales_assessment_access,
         )
 
         user = MockUser(is_superuser=False, roles=[])

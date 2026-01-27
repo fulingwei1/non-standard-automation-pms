@@ -182,9 +182,9 @@ class TestDepartmentNameBuilding:
     def test_build_department_name_multi(self):
         """测试组合部门名称 - 多级部门"""
         row = pd.Series({
-            "一级部门": "技术部",
-            "二级部门": "研发组",
-            "三级部门": "前端组"
+        "一级部门": "技术部",
+        "二级部门": "研发组",
+        "三级部门": "前端组"
         })
         result = build_department_name(row)
         
@@ -228,8 +228,8 @@ class TestEmploymentStatus:
     def test_determine_employment_type_probation(self):
         """测试确定员工类型 - 试用期"""
         row = pd.Series({
-            "是否转正": "否",
-            "在职离职状态": "试用期"
+        "是否转正": "否",
+        "在职离职状态": "试用期"
         })
         result = determine_employment_type(row)
         
@@ -238,8 +238,8 @@ class TestEmploymentStatus:
     def test_determine_employment_type_regular(self):
         """测试确定员工类型 - 正式员工"""
         row = pd.Series({
-            "是否转正": "是",
-            "在职离职状态": "在职"
+        "是否转正": "是",
+        "在职离职状态": "在职"
         })
         result = determine_employment_type(row)
         
@@ -266,20 +266,20 @@ class TestEmployeeOperations:
     def test_create_or_update_employee_new(self, db_session):
         """测试创建或更新员工 - 新员工"""
         row = pd.Series({
-            "姓名": "新员工",
-            "工号": None,
-            "部门": "技术部",
-            "职务": "工程师"
+        "姓名": "新员工",
+        "工号": None,
+        "部门": "技术部",
+        "职务": "工程师"
         })
         name_map = {}
         existing_codes = set()
         
         employee, is_new = create_or_update_employee(
-            db_session,
-            row,
-            "新员工",
-            name_map,
-            existing_codes
+        db_session,
+        row,
+        "新员工",
+        name_map,
+        existing_codes
         )
         
         assert employee is not None
@@ -290,21 +290,21 @@ class TestEmployeeOperations:
     def test_create_or_update_employee_existing(self, db_session, test_employee):
         """测试创建或更新员工 - 已存在员工"""
         row = pd.Series({
-            "姓名": "测试员工",
-            "工号": "EMP-00001",
-            "部门": "技术部",
-            "职务": "高级工程师",
-            "联系方式": "13800138000"
+        "姓名": "测试员工",
+        "工号": "EMP-00001",
+        "部门": "技术部",
+        "职务": "高级工程师",
+        "联系方式": "13800138000"
         })
         name_map = {"测试员工": test_employee}
         existing_codes = {"EMP-00001"}
         
         employee, is_new = create_or_update_employee(
-            db_session,
-            row,
-            "测试员工",
-            name_map,
-            existing_codes
+        db_session,
+        row,
+        "测试员工",
+        name_map,
+        existing_codes
         )
         
         assert employee.id == test_employee.id
@@ -318,12 +318,12 @@ class TestEmployeeOperations:
         db_session.commit()
         
         row = pd.Series({
-            "一级部门": "技术部",
-            "二级部门": "研发组",
-            "职务": "高级工程师",
-            "入职时间": "2024-01-01",
-            "性别": "男",
-            "年龄": 30
+        "一级部门": "技术部",
+        "二级部门": "研发组",
+        "职务": "高级工程师",
+        "入职时间": "2024-01-01",
+        "性别": "男",
+        "年龄": 30
         })
         
         update_hr_profile_from_row(db_session, profile, row)
@@ -339,19 +339,19 @@ class TestEmployeeOperations:
     def test_process_hr_profile_row_new(self, db_session):
         """测试处理HR档案行 - 新员工"""
         row = pd.Series({
-            "姓名": "新员工",
-            "部门": "技术部",
-            "职务": "工程师"
+        "姓名": "新员工",
+        "部门": "技术部",
+        "职务": "工程师"
         })
         name_map = {}
         existing_codes = set()
         
         result_code, error = process_hr_profile_row(
-            db_session,
-            row,
-            0,
-            name_map,
-            existing_codes
+        db_session,
+        row,
+        0,
+        name_map,
+        existing_codes
         )
         
         assert result_code == 1  # 新增
@@ -365,19 +365,19 @@ class TestEmployeeOperations:
         db_session.commit()
         
         row = pd.Series({
-            "姓名": "测试员工",
-            "部门": "技术部",
-            "职务": "高级工程师"
+        "姓名": "测试员工",
+        "部门": "技术部",
+        "职务": "高级工程师"
         })
         name_map = {"测试员工": test_employee}
         existing_codes = {"EMP-00001"}
         
         result_code, error = process_hr_profile_row(
-            db_session,
-            row,
-            0,
-            name_map,
-            existing_codes
+        db_session,
+        row,
+        0,
+        name_map,
+        existing_codes
         )
         
         assert result_code == 2  # 更新
@@ -386,18 +386,18 @@ class TestEmployeeOperations:
     def test_process_hr_profile_row_skip(self, db_session):
         """测试处理HR档案行 - 跳过（无姓名）"""
         row = pd.Series({
-            "姓名": None,
-            "部门": "技术部"
+        "姓名": None,
+        "部门": "技术部"
         })
         name_map = {}
         existing_codes = set()
         
         result_code, error = process_hr_profile_row(
-            db_session,
-            row,
-            0,
-            name_map,
-            existing_codes
+        db_session,
+        row,
+        0,
+        name_map,
+        existing_codes
         )
         
         assert result_code == 0  # 跳过
@@ -406,9 +406,9 @@ class TestEmployeeOperations:
     def test_import_hr_profiles_from_dataframe_success(self, db_session):
         """测试从DataFrame导入HR档案 - 成功场景"""
         df = pd.DataFrame({
-            "姓名": ["员工1", "员工2"],
-            "部门": ["技术部", "销售部"],
-            "职务": ["工程师", "销售"]
+        "姓名": ["员工1", "员工2"],
+        "部门": ["技术部", "销售部"],
+        "职务": ["工程师", "销售"]
         })
         
         result = import_hr_profiles_from_dataframe(db_session, df)
@@ -421,9 +421,9 @@ class TestEmployeeOperations:
     def test_import_hr_profiles_from_dataframe_with_errors(self, db_session):
         """测试从DataFrame导入HR档案 - 包含错误"""
         df = pd.DataFrame({
-            "姓名": ["员工1", None, "员工3"],
-            "部门": ["技术部", "销售部", "技术部"],
-            "职务": ["工程师", "销售", "工程师"]
+        "姓名": ["员工1", None, "员工3"],
+        "部门": ["技术部", "销售部", "技术部"],
+        "职务": ["工程师", "销售", "工程师"]
         })
         
         result = import_hr_profiles_from_dataframe(db_session, df)

@@ -93,7 +93,7 @@ class TestAccessToken:
 
         # 解码令牌验证内容
         payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
         assert payload["sub"] == user_id
 
@@ -103,7 +103,7 @@ class TestAccessToken:
         token = create_access_token(data)
 
         payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
         assert "exp" in payload
         assert "iat" in payload
@@ -114,7 +114,7 @@ class TestAccessToken:
         token = create_access_token(data)
 
         payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
         assert "jti" in payload
         assert len(payload["jti"]) == 32  # 16字节的hex编码
@@ -126,7 +126,7 @@ class TestAccessToken:
         token = create_access_token(data, expires_delta=expires_delta)
 
         payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
         # 验证令牌已创建且可解码
         assert payload["sub"] == "123"
@@ -138,10 +138,10 @@ class TestAccessToken:
         token2 = create_access_token(data)
 
         payload1 = jwt.decode(
-            token1, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        token1, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
         payload2 = jwt.decode(
-            token2, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        token2, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
 
         assert payload1["jti"] != payload2["jti"]
@@ -249,7 +249,7 @@ class TestCheckPermission:
             role_perm.permission.permission_code = perm_code
             user_role.role.permissions.append(role_perm)
 
-        return user_role
+            return user_role
 
     def test_check_permission_superuser(self):
         """测试超级用户权限检查"""
@@ -344,7 +344,7 @@ class TestRequirePermission:
         with pytest.raises(HTTPException) as exc_info:
             await checker(current_user=user, db=db)
 
-        assert exc_info.value.status_code == 403
+            assert exc_info.value.status_code == 403
 
 
 class TestGetCurrentUser:
@@ -367,8 +367,8 @@ class TestGetCurrentUser:
             with pytest.raises(HTTPException) as exc_info:
                 await get_current_user(token=token, db=db)
 
-            assert exc_info.value.status_code == 401
-            assert "Token已失效" in exc_info.value.detail
+                assert exc_info.value.status_code == 401
+                assert "Token已失效" in exc_info.value.detail
 
     @pytest.mark.asyncio
     async def test_get_current_user_invalid_token(self):
@@ -385,7 +385,7 @@ class TestGetCurrentUser:
             with pytest.raises(HTTPException) as exc_info:
                 await get_current_user(token="invalid_token", db=db)
 
-            assert exc_info.value.status_code == 401
+                assert exc_info.value.status_code == 401
 
     @pytest.mark.asyncio
     async def test_get_current_user_no_subject(self):
@@ -405,7 +405,7 @@ class TestGetCurrentUser:
             with pytest.raises(HTTPException) as exc_info:
                 await get_current_user(token=token, db=db)
 
-            assert exc_info.value.status_code == 401
+                assert exc_info.value.status_code == 401
 
     @pytest.mark.asyncio
     async def test_get_current_user_user_not_found(self):
@@ -422,10 +422,10 @@ class TestGetCurrentUser:
             db = MagicMock()
             db.query.return_value.filter.return_value.first.return_value = None
             # 模拟SQL查询也返回None
-            db.execute.return_value.fetchone.return_value = None
+        db.execute.return_value.fetchone.return_value = None
 
-            with pytest.raises(HTTPException) as exc_info:
-                await get_current_user(token=token, db=db)
+        with pytest.raises(HTTPException) as exc_info:
+            await get_current_user(token=token, db=db)
 
             assert exc_info.value.status_code == 401
 
@@ -457,8 +457,8 @@ class TestGetCurrentActiveUser:
         with pytest.raises(HTTPException) as exc_info:
             await get_current_active_user(current_user=user)
 
-        assert exc_info.value.status_code == 400
-        assert "禁用" in exc_info.value.detail
+            assert exc_info.value.status_code == 400
+            assert "禁用" in exc_info.value.detail
 
 
 class TestGetCurrentActiveSuperuser:
@@ -488,5 +488,5 @@ class TestGetCurrentActiveSuperuser:
         with pytest.raises(HTTPException) as exc_info:
             await get_current_active_superuser(current_user=user)
 
-        assert exc_info.value.status_code == 403
-        assert "管理员权限" in exc_info.value.detail
+            assert exc_info.value.status_code == 403
+            assert "管理员权限" in exc_info.value.detail

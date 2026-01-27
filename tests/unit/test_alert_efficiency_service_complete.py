@@ -60,22 +60,22 @@ class TestCalculateBasicMetrics:
         from app.services.alert_efficiency_service import calculate_basic_metrics
 
         alerts = [
-            MockAlertRecord(
-                alert_no="ALT001",
-                alert_level="WARNING",
-                triggered_at=datetime(2024, 2, 1, 10, 0),
-                acknowledged_at=datetime(2024, 2, 1, 11, 0),
-                status="RESOLVED",
-                is_escalated=False,
-            ),
-            MockAlertRecord(
-                alert_no="ALT002",
-                alert_level="ERROR",
-                triggered_at=datetime(2024, 2, 1, 12, 0),
-                acknowledged_at=datetime(2024, 2, 1, 12, 30),
-                status="OPEN",
-                is_escalated=False,
-            ),
+        MockAlertRecord(
+        alert_no="ALT001",
+        alert_level="WARNING",
+        triggered_at=datetime(2024, 2, 1, 10, 0),
+        acknowledged_at=datetime(2024, 2, 1, 11, 0),
+        status="RESOLVED",
+        is_escalated=False,
+        ),
+        MockAlertRecord(
+        alert_no="ALT002",
+        alert_level="ERROR",
+        triggered_at=datetime(2024, 2, 1, 12, 0),
+        acknowledged_at=datetime(2024, 2, 1, 12, 30),
+        status="OPEN",
+        is_escalated=False,
+        ),
         ]
 
         metrics = calculate_basic_metrics(alerts, MockAlertRuleEngine())
@@ -87,14 +87,14 @@ class TestCalculateBasicMetrics:
         from app.services.alert_efficiency_service import calculate_basic_metrics
 
         alerts = [
-            MockAlertRecord(
-                alert_no="ALT001",
-                alert_level="WARNING",
-                triggered_at=datetime(2024, 2, 1, 10, 0),
-                acknowledged_at=datetime(2024, 2, 1, 11, 0),
-                status="RESOLVED",
-                is_escalated=False,
-            ),
+        MockAlertRecord(
+        alert_no="ALT001",
+        alert_level="WARNING",
+        triggered_at=datetime(2024, 2, 1, 10, 0),
+        acknowledged_at=datetime(2024, 2, 1, 11, 0),
+        status="RESOLVED",
+        is_escalated=False,
+        ),
         ]
 
         metrics = calculate_basic_metrics(alerts, MockAlertRuleEngine())
@@ -105,22 +105,22 @@ class TestCalculateBasicMetrics:
         from app.services.alert_efficiency_service import calculate_basic_metrics
 
         alerts = [
-            MockAlertRecord(
-                alert_no="ALT001",
-                alert_level="WARNING",
-                triggered_at=datetime(2024, 2, 1, 10, 0),
-                acknowledged_at=datetime(2024, 2, 1, 11, 0),
-                status="RESOLVED",
-                is_escalated=True,
-            ),
-            MockAlertRecord(
-                alert_no="ALT002",
-                alert_level="ERROR",
-                triggered_at=datetime(2024, 2, 1, 12, 0),
-                acknowledged_at=datetime(2024, 2, 1, 12, 30),
-                status="OPEN",
-                is_escalated=False,
-            ),
+        MockAlertRecord(
+        alert_no="ALT001",
+        alert_level="WARNING",
+        triggered_at=datetime(2024, 2, 1, 10, 0),
+        acknowledged_at=datetime(2024, 2, 1, 11, 0),
+        status="RESOLVED",
+        is_escalated=True,
+        ),
+        MockAlertRecord(
+        alert_no="ALT002",
+        alert_level="ERROR",
+        triggered_at=datetime(2024, 2, 1, 12, 0),
+        acknowledged_at=datetime(2024, 2, 1, 12, 30),
+        status="OPEN",
+        is_escalated=False,
+        ),
         ]
 
         metrics = calculate_basic_metrics(alerts, MockAlertRuleEngine())
@@ -131,30 +131,30 @@ class TestCalculateBasicMetrics:
         from app.services.alert_efficiency_service import calculate_basic_metrics
 
         alerts = [
-            MockAlertRecord(
-                alert_no="ALT001",
-                alert_level="WARNING",
-                triggered_at=datetime(2024, 2, 1, 10, 0),
-                acknowledged_at=datetime(2024, 2, 1, 11, 0),
-                status="RESOLVED",
-                is_escalated=False,
-                project_id=1,
-                rule_id=1,
-                target_type="PROJECT",
-                target_id=1,
-            ),
-            MockAlertRecord(
-                alert_no="ALT002",
-                alert_level="WARNING",
-                triggered_at=datetime(2024, 2, 1, 11, 0),
-                acknowledged_at=datetime(2024, 2, 1, 12, 0),
-                status="RESOLVED",
-                is_escalated=False,
-                project_id=1,
-                rule_id=1,
-                target_type="PROJECT",
-                target_id=1,
-            ),
+        MockAlertRecord(
+        alert_no="ALT001",
+        alert_level="WARNING",
+        triggered_at=datetime(2024, 2, 1, 10, 0),
+        acknowledged_at=datetime(2024, 2, 1, 11, 0),
+        status="RESOLVED",
+        is_escalated=False,
+        project_id=1,
+        rule_id=1,
+        target_type="PROJECT",
+        target_id=1,
+        ),
+        MockAlertRecord(
+        alert_no="ALT002",
+        alert_level="WARNING",
+        triggered_at=datetime(2024, 2, 1, 11, 0),
+        acknowledged_at=datetime(2024, 2, 1, 12, 0),
+        status="RESOLVED",
+        is_escalated=False,
+        project_id=1,
+        rule_id=1,
+        target_type="PROJECT",
+        target_id=1,
+        ),
         ]
 
         metrics = calculate_basic_metrics(alerts, MockAlertRuleEngine())
@@ -177,28 +177,28 @@ class TestGenerateRankings:
         from app.services.alert_efficiency_service import generate_rankings
 
         project_metrics = {
-            "Project A": {
-                "project_id": 1,
-                "total": 10,
-                "processed": 10,
-                "timely_processed": 9,
-                "escalated": 0,
-                "processing_rate": 1.0,
-                "timely_processing_rate": 0.9,
-                "escalation_rate": 0.0,
-                "efficiency_score": 95.0,
-            },
-            "Project B": {
-                "project_id": 2,
-                "total": 5,
-                "processed": 3,
-                "timely_processed": 2,
-                "escalated": 1,
-                "processing_rate": 0.6,
-                "timely_processing_rate": 0.4,
-                "escalation_rate": 0.2,
-                "efficiency_score": 60.0,
-            },
+        "Project A": {
+        "project_id": 1,
+        "total": 10,
+        "processed": 10,
+        "timely_processed": 9,
+        "escalated": 0,
+        "processing_rate": 1.0,
+        "timely_processing_rate": 0.9,
+        "escalation_rate": 0.0,
+        "efficiency_score": 95.0,
+        },
+        "Project B": {
+        "project_id": 2,
+        "total": 5,
+        "processed": 3,
+        "timely_processed": 2,
+        "escalated": 1,
+        "processing_rate": 0.6,
+        "timely_processing_rate": 0.4,
+        "escalation_rate": 0.2,
+        "efficiency_score": 60.0,
+        },
         }
 
         handler_metrics = {}
@@ -219,28 +219,28 @@ class TestGenerateRankings:
         project_metrics = {}
 
         handler_metrics = {
-            "User A": {
-                "user_id": 1,
-                "total": 8,
-                "processed": 8,
-                "timely_processed": 8,
-                "escalated": 0,
-                "processing_rate": 1.0,
-                "timely_processing_rate": 1.0,
-                "escalation_rate": 0.0,
-                "efficiency_score": 100.0,
-            },
-            "User B": {
-                "user_id": 2,
-                "total": 6,
-                "processed": 4,
-                "timely_processed": 3,
-                "escalated": 1,
-                "processing_rate": 0.67,
-                "timely_processing_rate": 0.5,
-                "escalation_rate": 0.17,
-                "efficiency_score": 70.0,
-            },
+        "User A": {
+        "user_id": 1,
+        "total": 8,
+        "processed": 8,
+        "timely_processed": 8,
+        "escalated": 0,
+        "processing_rate": 1.0,
+        "timely_processing_rate": 1.0,
+        "escalation_rate": 0.0,
+        "efficiency_score": 100.0,
+        },
+        "User B": {
+        "user_id": 2,
+        "total": 6,
+        "processed": 4,
+        "timely_processed": 3,
+        "escalated": 1,
+        "processing_rate": 0.67,
+        "timely_processing_rate": 0.5,
+        "escalation_rate": 0.17,
+        "efficiency_score": 70.0,
+        },
         }
 
         rankings = generate_rankings(project_metrics, handler_metrics)

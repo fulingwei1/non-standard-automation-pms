@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-岗位管理端点
+岗位管理端点（重构版）
+使用统一响应格式
 """
 
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.core.schemas import list_response, success_response
 from app.models.organization import Position
 from app.models.user import User
 from app.schemas.organization import (
@@ -21,7 +23,7 @@ from app.schemas.organization import (
 router = APIRouter()
 
 
-@router.get("/", response_model=List[PositionResponse])
+@router.get("/")
 def list_positions(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
@@ -47,15 +49,17 @@ def list_positions(
         .all()
     )
 
-    # 补充组织名称
-    for p in positions:
-        if p.org_unit:
-            p.org_unit_name = p.org_unit.unit_name
+    # 转换为Pydantic模型
+    pos_responses = [PositionResponse.model_validate(pos) for pos in positions]
 
-    return positions
+    # 使用统一响应格式
+    return list_response(
+        items=pos_responses,
+        message="获取岗位列表成功"
+    )
 
 
-@router.post("/", response_model=PositionResponse)
+@router.post("/")
 def create_position(
     *,
     db: Session = Depends(deps.get_db),
@@ -75,10 +79,18 @@ def create_position(
     db.add(pos)
     db.commit()
     db.refresh(pos)
-    return pos
+
+    # 转换为Pydantic模型
+    pos_response = PositionResponse.model_validate(pos)
+
+    # 使用统一响应格式
+    return success_response(
+        data=pos_response,
+        message="岗位创建成功"
+    )
 
 
-@router.get("/{id}", response_model=PositionResponse)
+@router.get("/{id}")
 def get_position(
     id: int,
     db: Session = Depends(deps.get_db),
@@ -89,13 +101,17 @@ def get_position(
     if not pos:
         raise HTTPException(status_code=404, detail="岗位不存在")
 
-    if pos.org_unit:
-        pos.org_unit_name = pos.org_unit.unit_name
+    # 转换为Pydantic模型
+    pos_response = PositionResponse.model_validate(pos)
 
-    return pos
+    # 使用统一响应格式
+    return success_response(
+        data=pos_response,
+        message="获取岗位信息成功"
+    )
 
 
-@router.put("/{id}", response_model=PositionResponse)
+@router.put("/{id}")
 def update_position(
     *,
     db: Session = Depends(deps.get_db),
@@ -115,7 +131,15 @@ def update_position(
     db.add(pos)
     db.commit()
     db.refresh(pos)
-    return pos
+
+    # 转换为Pydantic模型
+    pos_response = PositionResponse.model_validate(pos)
+
+    # 使用统一响应格式
+    return success_response(
+        data=pos_response,
+        message="岗位更新成功"
+    )
 
 
 @router.delete("/{id}")
@@ -131,10 +155,15 @@ def delete_position(
 
     db.delete(pos)
     db.commit()
-    return {"message": "Success"}
+
+    # 使用统一响应格式
+    return success_response(
+        data={"id": id},
+        message="岗位删除成功"
+    )
 
 
-@router.get("/{id}/roles", response_model=List[Any])
+@router.get("/{id}/roles")
 def get_position_roles(
     id: int,
     db: Session = Depends(deps.get_db),
@@ -145,5 +174,21 @@ def get_position_roles(
     if not pos:
         raise HTTPException(status_code=404, detail="岗位不存在")
 
+    # 获取角色列表
     roles = [pr.role for pr in pos.position_roles if pr.is_active]
-    return roles
+
+    # 构建角色响应数据
+    role_data = []
+    for role in roles:
+        role_data.append({
+            "id": role.id,
+            "role_code": role.role_code,
+            "role_name": role.role_name,
+            "is_active": role.is_active,
+        })
+
+    # 使用统一响应格式
+    return list_response(
+        items=role_data,
+        message="获取岗位角色成功"
+    )

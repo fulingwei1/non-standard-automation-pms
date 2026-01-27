@@ -24,6 +24,7 @@ from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.dashboard.base import BaseDashboardEndpoint
 from app.core import security
 from app.models import (
     AssemblyStage,
@@ -160,38 +161,72 @@ def _build_recent_analyses_list(db, recent_analyses, Project, BomHeader, Machine
     return recent_list
 
 
-@router.get("/dashboard", response_model=ResponseModel)
-async def get_assembly_dashboard(
-    db: Session = Depends(deps.get_db),
-    project_ids: Optional[str] = Query(None, description="项目ID列表，逗号分隔")
-):
-    """获取装配齐套看板数据"""
-    # 获取最近的齐套分析记录(每个项目取最新一条)
-    subquery = db.query(
-        MaterialReadiness.project_id,
-        func.max(MaterialReadiness.id).label("max_id")
-    ).group_by(MaterialReadiness.project_id).subquery()
-
-    query = db.query(MaterialReadiness).join(
-        subquery,
-        and_(
-            MaterialReadiness.project_id == subquery.c.project_id,
-            MaterialReadiness.id == subquery.c.max_id
+class AssemblyKitDashboardEndpoint(BaseDashboardEndpoint):
+    """装配齐套Dashboard端点"""
+    
+    module_name = "assembly-kit"
+    permission_required = None
+    
+    def __init__(self):
+        """初始化路由，支持project_ids参数"""
+        # 先创建router，不调用super().__init__()
+        self.router = APIRouter(
+            prefix="/assembly-kit/dashboard",
+            tags=["dashboard"]
         )
-    )
+        self._register_custom_routes()
+    
+    def _register_custom_routes(self):
+        """注册自定义路由"""
+        user_dependency = self._get_user_dependency()
+        
+        async def dashboard_endpoint(
+            db: Session = Depends(deps.get_db),
+            project_ids: Optional[str] = Query(None, description="项目ID列表，逗号分隔"),
+            current_user: User = Depends(user_dependency),
+        ):
+            return self._get_dashboard_handler(db, current_user, project_ids)
+        
+        # 主dashboard端点（保持原有路径）
+        self.router.add_api_route(
+            "/dashboard",
+            dashboard_endpoint,
+            methods=["GET"],
+            summary="获取装配齐套看板数据",
+            response_model=ResponseModel
+        )
+    
+    def get_dashboard_data(
+        self,
+        db: Session,
+        current_user: User,
+        project_ids: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """获取装配齐套看板数据"""
+        # 获取最近的齐套分析记录(每个项目取最新一条)
+        subquery = db.query(
+            MaterialReadiness.project_id,
+            func.max(MaterialReadiness.id).label("max_id")
+        ).group_by(MaterialReadiness.project_id).subquery()
 
-    if project_ids:
-        ids = [int(x) for x in project_ids.split(",") if x.strip().isdigit()]
-        if ids:
-            query = query.filter(MaterialReadiness.project_id.in_(ids))
+        query = db.query(MaterialReadiness).join(
+            subquery,
+            and_(
+                MaterialReadiness.project_id == subquery.c.project_id,
+                MaterialReadiness.id == subquery.c.max_id
+            )
+        )
 
-    recent_analyses = query.all()
+        if project_ids:
+            ids = [int(x) for x in project_ids.split(",") if x.strip().isdigit()]
+            if ids:
+                query = query.filter(MaterialReadiness.project_id.in_(ids))
 
-    # 空数据返回
-    if not recent_analyses:
-        return ResponseModel(
-            code=200, message="success",
-            data=AssemblyDashboardResponse(
+        recent_analyses = query.all()
+
+        # 空数据返回
+        if not recent_analyses:
+            dashboard_response = AssemblyDashboardResponse(
                 stats=AssemblyDashboardStats(
                     total_projects=0, can_start_count=0, partial_ready_count=0,
                     not_ready_count=0, avg_kit_rate=Decimal(0), avg_blocking_rate=Decimal(0)
@@ -199,44 +234,43 @@ async def get_assembly_dashboard(
                 stage_stats=[], alert_summary={"L1": 0, "L2": 0, "L3": 0, "L4": 0},
                 recent_analyses=[], pending_suggestions=[]
             )
-        )
+            result = dashboard_response.model_dump()
+            result["stats"] = []
+            return result
 
-    # 使用辅助函数计算统计数据
-    stats = _calculate_dashboard_stats(recent_analyses)
-    stages = db.query(AssemblyStage).filter(AssemblyStage.is_active == True).order_by(AssemblyStage.stage_order).all()
-    stage_stats = _calculate_stage_stats(db, stages, recent_analyses, stats['total'])
+        # 使用辅助函数计算统计数据
+        stats = _calculate_dashboard_stats(recent_analyses)
+        stages = db.query(AssemblyStage).filter(AssemblyStage.is_active == True).order_by(AssemblyStage.stage_order).all()
+        stage_stats = _calculate_stage_stats(db, stages, recent_analyses, stats['total'])
 
-    # 预警汇总
-    alert_summary = {
-        level: db.query(ShortageDetail).filter(
-            ShortageDetail.alert_level == level, ShortageDetail.shortage_qty > 0
-        ).count()
-        for level in ["L1", "L2", "L3", "L4"]
-    }
+        # 预警汇总
+        alert_summary = {
+            level: db.query(ShortageDetail).filter(
+                ShortageDetail.alert_level == level, ShortageDetail.shortage_qty > 0
+            ).count()
+            for level in ["L1", "L2", "L3", "L4"]
+        }
 
-    # 构建响应数据
-    recent_list = _build_recent_analyses_list(db, recent_analyses, Project, BomHeader, Machine)
+        # 构建响应数据
+        recent_list = _build_recent_analyses_list(db, recent_analyses, Project, BomHeader, Machine)
 
-    # 待处理建议
-    pending_suggestions = db.query(SchedulingSuggestion).filter(
-        SchedulingSuggestion.status == "pending"
-    ).order_by(SchedulingSuggestion.priority_score.desc()).limit(5).all()
+        # 待处理建议
+        pending_suggestions = db.query(SchedulingSuggestion).filter(
+            SchedulingSuggestion.status == "pending"
+        ).order_by(SchedulingSuggestion.priority_score.desc()).limit(5).all()
 
-    suggestion_list = []
-    for s in pending_suggestions:
-        project = db.query(Project).filter(Project.id == s.project_id).first()
-        machine = db.query(Machine).filter(Machine.id == s.machine_id).first() if s.machine_id else None
+        suggestion_list = []
+        for s in pending_suggestions:
+            project = db.query(Project).filter(Project.id == s.project_id).first()
+            machine = db.query(Machine).filter(Machine.id == s.machine_id).first() if s.machine_id else None
 
-        data = SchedulingSuggestionResponse.model_validate(s)
-        data.project_no = project.project_no if project else None
-        data.project_name = project.name if project else None
-        data.machine_no = machine.machine_no if machine else None
-        suggestion_list.append(data)
+            data = SchedulingSuggestionResponse.model_validate(s)
+            data.project_no = project.project_no if project else None
+            data.project_name = project.name if project else None
+            data.machine_no = machine.machine_no if machine else None
+            suggestion_list.append(data)
 
-    return ResponseModel(
-        code=200,
-        message="success",
-        data=AssemblyDashboardResponse(
+        dashboard_response = AssemblyDashboardResponse(
             stats=AssemblyDashboardStats(
                 total_projects=stats['total'],
                 can_start_count=stats['can_start'],
@@ -250,7 +284,86 @@ async def get_assembly_dashboard(
             recent_analyses=recent_list,
             pending_suggestions=suggestion_list
         )
-    )
+        
+        # 转换为字典并添加统计卡片
+        result = dashboard_response.model_dump()
+        
+        # 使用基类方法创建统计卡片
+        stat_cards = [
+            self.create_stat_card(
+                key="total_projects",
+                label="项目总数",
+                value=stats['total'],
+                unit="个",
+                icon="project"
+            ),
+            self.create_stat_card(
+                key="can_start_count",
+                label="可启动项目",
+                value=stats['can_start'],
+                unit="个",
+                icon="start",
+                color="success"
+            ),
+            self.create_stat_card(
+                key="not_ready_count",
+                label="未就绪项目",
+                value=stats['not_ready'],
+                unit="个",
+                icon="blocked",
+                color="warning"
+            ),
+            self.create_stat_card(
+                key="avg_kit_rate",
+                label="平均齐套率",
+                value=round(float(stats['avg_kit']), 1),
+                unit="%",
+                icon="kit_rate"
+            ),
+            self.create_stat_card(
+                key="avg_blocking_rate",
+                label="平均阻塞率",
+                value=round(float(stats['avg_blocking']), 1),
+                unit="%",
+                icon="blocking",
+                color="danger"
+            ),
+        ]
+        
+        result["stat_cards"] = stat_cards
+        return result
+    
+    def _get_dashboard_handler(
+        self,
+        db: Session,
+        current_user: User,
+        project_ids: Optional[str] = None
+    ) -> ResponseModel:
+        """Dashboard处理器，支持project_ids参数"""
+        try:
+            data = self.get_dashboard_data(db, current_user, project_ids)
+            # 移除stat_cards，因为AssemblyDashboardResponse不包含这个字段
+            dashboard_data = data.copy()
+            stat_cards = dashboard_data.pop("stat_cards", [])
+            
+            # 构建AssemblyDashboardResponse
+            dashboard_response = AssemblyDashboardResponse(**dashboard_data)
+            
+            return ResponseModel(
+                code=200,
+                message="success",
+                data=dashboard_response
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"获取仪表板数据失败: {str(e)}"
+            )
+
+
+# 创建端点实例并获取路由
+dashboard_endpoint = AssemblyKitDashboardEndpoint()
+router = dashboard_endpoint.router
 
 
 

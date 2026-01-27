@@ -144,9 +144,9 @@ class TestAdminAddCredits:
         """测试充值数量无效时返回失败"""
         service = SolutionCreditService(db_session)
         success, message, transaction = service.admin_add_credits(
-            user_id=1,
-            amount=0,
-            operator_id=1
+        user_id=1,
+        amount=0,
+        operator_id=1
         )
         assert success is False
         assert "必须大于0" in message
@@ -156,9 +156,9 @@ class TestAdminAddCredits:
         """测试充值负数时返回失败"""
         service = SolutionCreditService(db_session)
         success, message, transaction = service.admin_add_credits(
-            user_id=1,
-            amount=-100,
-            operator_id=1
+        user_id=1,
+        amount=-100,
+        operator_id=1
         )
         assert success is False
         assert "必须大于0" in message
@@ -167,9 +167,9 @@ class TestAdminAddCredits:
         """测试用户不存在时返回失败"""
         service = SolutionCreditService(db_session)
         success, message, transaction = service.admin_add_credits(
-            user_id=99999,
-            amount=100,
-            operator_id=1
+        user_id=99999,
+        amount=100,
+        operator_id=1
         )
         assert success is False
         assert "用户不存在" in message
@@ -182,9 +182,9 @@ class TestAdminDeductCredits:
         """测试扣除数量无效时返回失败"""
         service = SolutionCreditService(db_session)
         success, message, transaction = service.admin_deduct_credits(
-            user_id=1,
-            amount=0,
-            operator_id=1
+        user_id=1,
+        amount=0,
+        operator_id=1
         )
         assert success is False
         assert "必须大于0" in message
@@ -193,9 +193,9 @@ class TestAdminDeductCredits:
         """测试用户不存在时返回失败"""
         service = SolutionCreditService(db_session)
         success, message, transaction = service.admin_deduct_credits(
-            user_id=99999,
-            amount=100,
-            operator_id=1
+        user_id=99999,
+        amount=100,
+        operator_id=1
         )
         assert success is False
         assert "用户不存在" in message
@@ -215,9 +215,9 @@ class TestGetTransactionHistory:
         """测试分页参数"""
         service = SolutionCreditService(db_session)
         transactions, total = service.get_transaction_history(
-            user_id=1,
-            page=1,
-            page_size=10
+        user_id=1,
+        page=1,
+        page_size=10
         )
         assert isinstance(transactions, list)
         assert len(transactions) <= 10
@@ -226,8 +226,8 @@ class TestGetTransactionHistory:
         """测试按类型筛选"""
         service = SolutionCreditService(db_session)
         transactions, total = service.get_transaction_history(
-            user_id=1,
-            transaction_type=CreditTransactionType.GENERATE
+        user_id=1,
+        transaction_type=CreditTransactionType.GENERATE
         )
         assert isinstance(transactions, list)
 
@@ -263,10 +263,10 @@ class TestBatchAddCredits:
         """测试返回数据结构"""
         service = SolutionCreditService(db_session)
         result = service.batch_add_credits(
-            user_ids=[99998, 99999],
-            amount=100,
-            operator_id=1,
-            remark="测试批量充值"
+        user_ids=[99998, 99999],
+        amount=100,
+        operator_id=1,
+        remark="测试批量充值"
         )
 
         assert "total" in result
@@ -303,9 +303,9 @@ class TestUpdateConfig:
         service = SolutionCreditService(db_session)
         try:
             success, message = service.update_config(
-                key="TEST_CONFIG_KEY",
-                value="100",
-                description="测试配置"
+            key="TEST_CONFIG_KEY",
+            value="100",
+            description="测试配置"
             )
             assert success is True
         except Exception as e:

@@ -22,10 +22,10 @@ class TestReadAcceptanceIssue:
     def test_read_issue_success(self, db_session: Session, test_acceptance_order):
         """成功读取验收问题"""
         issue = AcceptanceIssueFactory.create(
-            order=test_acceptance_order,
-            title="测试问题",
-            severity="HIGH",
-            status="OPEN",
+        order=test_acceptance_order,
+        title="测试问题",
+        severity="HIGH",
+        status="OPEN",
         )
         db_session.commit()
 
@@ -41,7 +41,7 @@ class TestReadAcceptanceIssue:
             from app.api.v1.endpoints.acceptance import issues
 
             issues.read_acceptance_issue(99999, db_session)
-        assert exc_info.value.status_code == 404
+            assert exc_info.value.status_code == 404
 
 
 class TestReadAcceptanceIssues:
@@ -50,21 +50,21 @@ class TestReadAcceptanceIssues:
     def test_read_issues_by_order(self, db_session: Session, test_acceptance_order):
         """按验收单号读取问题列表"""
         AcceptanceIssueFactory.create(
-            order=test_acceptance_order,
-            title="问题1",
-            status="OPEN",
+        order=test_acceptance_order,
+        title="问题1",
+        status="OPEN",
         )
         AcceptanceIssueFactory.create(
-            order=test_acceptance_order,
-            title="问题2",
-            status="RESOLVED",
+        order=test_acceptance_order,
+        title="问题2",
+        status="RESOLVED",
         )
         db_session.commit()
 
         from app.api.v1.endpoints.acceptance import issues
 
         response = issues.read_acceptance_issues(
-            order_id=test_acceptance_order.id, db_session=db_session, skip=0, limit=10
+        order_id=test_acceptance_order.id, db_session=db_session, skip=0, limit=10
         )
         assert len(response.items) == 2
 
@@ -79,11 +79,11 @@ class TestReadAcceptanceIssues:
         from app.api.v1.endpoints.acceptance import issues
 
         response = issues.read_acceptance_issues(
-            order_id=test_acceptance_order.id,
-            status="OPEN",
-            db_session=db_session,
-            skip=0,
-            limit=10,
+        order_id=test_acceptance_order.id,
+        status="OPEN",
+        db_session=db_session,
+        skip=0,
+        limit=10,
         )
         assert len(response.items) == 1
         assert response.items[0].status == "OPEN"
@@ -100,17 +100,17 @@ class TestCreateAcceptanceIssue:
         from app.schemas.acceptance import IssueCreateRequest
 
         issue_data = IssueCreateRequest(
-            title="测试问题",
-            description="问题描述",
-            severity="HIGH",
-            is_blocking=False,
+        title="测试问题",
+        description="问题描述",
+        severity="HIGH",
+        is_blocking=False,
         )
 
         response = issues.create_acceptance_issue(
-            order_id=test_acceptance_order.id,
-            issue_data=issue_data,
-            current_user=test_user,
-            db_session=db_session,
+        order_id=test_acceptance_order.id,
+        issue_data=issue_data,
+        current_user=test_user,
+        db_session=db_session,
         )
         assert response.title == "测试问题"
         assert response.severity == "HIGH"
@@ -124,17 +124,17 @@ class TestCreateAcceptanceIssue:
         from app.schemas.acceptance import IssueCreateRequest
 
         issue_data = IssueCreateRequest(
-            title="阻塞问题",
-            description="阻塞问题描述",
-            severity="CRITICAL",
-            is_blocking=True,
+        title="阻塞问题",
+        description="阻塞问题描述",
+        severity="CRITICAL",
+        is_blocking=True,
         )
 
         response = issues.create_acceptance_issue(
-            order_id=test_acceptance_order.id,
-            issue_data=issue_data,
-            current_user=test_user,
-            db_session=db_session,
+        order_id=test_acceptance_order.id,
+        issue_data=issue_data,
+        current_user=test_user,
+        db_session=db_session,
         )
         assert response.is_blocking == True
         assert response.severity == "CRITICAL"
@@ -151,14 +151,14 @@ class TestUpdateAcceptanceIssue:
         from app.schemas.acceptance import IssueUpdateRequest
 
         update_data = IssueUpdateRequest(
-            title="更新后的问题", description="更新后的描述", status="PROCESSING"
+        title="更新后的问题", description="更新后的描述", status="PROCESSING"
         )
 
         response = issues.update_acceptance_issue(
-            issue_id=test_acceptance_issue.id,
-            issue_data=update_data,
-            current_user=test_user,
-            db_session=db_session,
+        issue_id=test_acceptance_issue.id,
+        issue_data=update_data,
+        current_user=test_user,
+        db_session=db_session,
         )
         assert response.title == "更新后的问题"
         assert response.status == "PROCESSING"
@@ -172,7 +172,7 @@ class TestUpdateAcceptanceIssue:
 
         with pytest.raises(HTTPException) as exc_info:
             issues.update_acceptance_issue(99999, update_data, test_user, db_session)
-        assert exc_info.value.status_code == 404
+            assert exc_info.value.status_code == 404
 
 
 class TestCloseAcceptanceIssue:
@@ -185,9 +185,9 @@ class TestCloseAcceptanceIssue:
         from app.api.v1.endpoints.acceptance import issues
 
         response = issues.close_acceptance_issue(
-            issue_id=test_acceptance_issue.id,
-            current_user=test_user,
-            db_session=db_session,
+        issue_id=test_acceptance_issue.id,
+        current_user=test_user,
+        db_session=db_session,
         )
         assert response.status == IssueStatusEnum.CLOSED.value
 
@@ -205,10 +205,10 @@ class TestAssignAcceptanceIssue:
         db_session.commit()
 
         response = issues.assign_acceptance_issue(
-            issue_id=test_acceptance_issue.id,
-            assignee_id=assignee.id,
-            current_user=test_user,
-            db_session=db_session,
+        issue_id=test_acceptance_issue.id,
+        assignee_id=assignee.id,
+        current_user=test_user,
+        db_session=db_session,
         )
         assert response.assigned_to_id == assignee.id
 
@@ -223,10 +223,10 @@ class TestResolveAcceptanceIssue:
         from app.api.v1.endpoints.acceptance import issues
 
         response = issues.resolve_acceptance_issue(
-            issue_id=test_acceptance_issue.id,
-            resolution="已解决",
-            current_user=test_user,
-            db_session=db_session,
+        issue_id=test_acceptance_issue.id,
+        resolution="已解决",
+        current_user=test_user,
+        db_session=db_session,
         )
         assert response.status == IssueStatusEnum.RESOLVED.value
         assert response.resolution == "已解决"
@@ -245,10 +245,10 @@ class TestVerifyAcceptanceIssue:
         db_session.commit()
 
         response = issues.verify_acceptance_issue(
-            issue_id=test_acceptance_issue.id,
-            verified_result="VERIFIED",
-            current_user=test_user,
-            db_session=db_session,
+        issue_id=test_acceptance_issue.id,
+        verified_result="VERIFIED",
+        current_user=test_user,
+        db_session=db_session,
         )
         assert response.verified_result == "VERIFIED"
 
@@ -263,10 +263,10 @@ class TestDeferAcceptanceIssue:
         from app.api.v1.endpoints.acceptance import issues
 
         response = issues.defer_acceptance_issue(
-            issue_id=test_acceptance_issue.id,
-            reason="需要更多信息",
-            current_user=test_user,
-            db_session=db_session,
+        issue_id=test_acceptance_issue.id,
+        reason="需要更多信息",
+        current_user=test_user,
+        db_session=db_session,
         )
         assert response.status == IssueStatusEnum.DEFERRED.value
 
@@ -281,10 +281,10 @@ class TestIssueFollowUps:
         from app.api.v1.endpoints.acceptance import issues
 
         response = issues.add_issue_follow_up(
-            issue_id=test_acceptance_issue.id,
-            content="跟进记录内容",
-            current_user=test_user,
-            db_session=db_session,
+        issue_id=test_acceptance_issue.id,
+        content="跟进记录内容",
+        current_user=test_user,
+        db_session=db_session,
         )
         assert response.content == "跟进记录内容"
 
@@ -293,7 +293,7 @@ class TestIssueFollowUps:
         from app.api.v1.endpoints.acceptance import issues
 
         response = issues.read_issue_follow_ups(
-            issue_id=test_acceptance_issue.id, db_session=db_session, skip=0, limit=10
+        issue_id=test_acceptance_issue.id, db_session=db_session, skip=0, limit=10
         )
         assert len(response.items) >= 0
 

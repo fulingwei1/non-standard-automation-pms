@@ -89,11 +89,11 @@ class TestTimesheetSyncService:
     def test_sync_to_finance_not_approved(self, timesheet_sync_service, db_session, test_project, test_user):
         """测试同步到财务 - 工时记录未审批"""
         timesheet = Timesheet(
-            user_id=test_user.id,
-            project_id=test_project.id,
-            work_date=date.today(),
-            hours=8.0,
-            status="DRAFT"
+        user_id=test_user.id,
+        project_id=test_project.id,
+        work_date=date.today(),
+        hours=8.0,
+        status="DRAFT"
         )
         db_session.add(timesheet)
         db_session.commit()
@@ -108,11 +108,11 @@ class TestTimesheetSyncService:
     def test_sync_to_finance_no_project(self, timesheet_sync_service, db_session, test_user):
         """测试同步到财务 - 工时记录未关联项目"""
         timesheet = Timesheet(
-            user_id=test_user.id,
-            project_id=None,
-            work_date=date.today(),
-            hours=8.0,
-            status="APPROVED"
+        user_id=test_user.id,
+        project_id=None,
+        work_date=date.today(),
+        hours=8.0,
+        status="APPROVED"
         )
         db_session.add(timesheet)
         db_session.commit()
@@ -128,9 +128,9 @@ class TestTimesheetSyncService:
         """测试同步到财务 - 成功场景"""
         with patch.object(timesheet_sync_service, '_create_financial_cost_from_timesheet') as mock_create:
             mock_create.return_value = {
-                'success': True,
-                'created': True,
-                'message': '同步成功'
+            'success': True,
+            'created': True,
+            'message': '同步成功'
             }
             
             result = timesheet_sync_service.sync_to_finance(timesheet_id=test_timesheet.id)
@@ -145,32 +145,32 @@ class TestTimesheetSyncService:
         timesheets = []
         for i in range(3):
             ts = Timesheet(
-                user_id=test_user.id,
-                project_id=test_project.id,
-                work_date=date.today() - timedelta(days=i),
-                hours=8.0,
-                status="APPROVED"
+            user_id=test_user.id,
+            project_id=test_project.id,
+            work_date=date.today() - timedelta(days=i),
+            hours=8.0,
+            status="APPROVED"
             )
             db_session.add(ts)
             timesheets.append(ts)
-        db_session.commit()
+            db_session.commit()
         
-        with patch.object(timesheet_sync_service, '_create_financial_cost_from_timesheet') as mock_create:
-            mock_create.return_value = {
+            with patch.object(timesheet_sync_service, '_create_financial_cost_from_timesheet') as mock_create:
+                mock_create.return_value = {
                 'success': True,
                 'created': True
-            }
+                }
             
-            result = timesheet_sync_service.sync_to_finance(
+                result = timesheet_sync_service.sync_to_finance(
                 project_id=test_project.id,
                 year=date.today().year,
                 month=date.today().month
-            )
+                )
             
-            assert result is not None
-            assert result['success'] is True
-            assert 'created_count' in result
-            assert 'updated_count' in result
+                assert result is not None
+                assert result['success'] is True
+                assert 'created_count' in result
+                assert 'updated_count' in result
 
     def test_sync_to_finance_incomplete_params(self, timesheet_sync_service):
         """测试同步到财务 - 参数不完整"""
@@ -203,14 +203,14 @@ class TestTimesheetSyncService:
         
         with patch.object(OvertimeCalculationService, 'get_overtime_statistics') as mock_stats:
             mock_stats.return_value = {
-                'total_users': 10,
-                'total_overtime_hours': 50.0
+            'total_users': 10,
+            'total_overtime_hours': 50.0
             }
             
             result = timesheet_sync_service.sync_to_hr(
-                year=2026,
-                month=1,
-                department_id=None
+            year=2026,
+            month=1,
+            department_id=None
             )
             
             assert result is not None
@@ -224,14 +224,14 @@ class TestTimesheetSyncService:
         
         with patch.object(OvertimeCalculationService, 'get_overtime_statistics') as mock_stats:
             mock_stats.return_value = {
-                'total_users': 5,
-                'total_overtime_hours': 25.0
+            'total_users': 5,
+            'total_overtime_hours': 25.0
             }
             
             result = timesheet_sync_service.sync_to_hr(
-                year=2026,
-                month=1,
-                department_id=1
+            year=2026,
+            month=1,
+            department_id=1
             )
             
             assert result is not None
@@ -249,18 +249,18 @@ class TestTimesheetSyncService:
     def test_sync_all_on_approval_success(self, timesheet_sync_service, test_timesheet):
         """测试自动同步 - 成功场景（有项目）"""
         with patch.object(timesheet_sync_service, 'sync_to_finance') as mock_finance, \
-             patch.object(timesheet_sync_service, 'sync_to_project') as mock_project:
+        patch.object(timesheet_sync_service, 'sync_to_project') as mock_project:
             
-            mock_finance.return_value = {'success': True, 'created': True}
-            mock_project.return_value = {'success': True}
+        mock_finance.return_value = {'success': True, 'created': True}
+        mock_project.return_value = {'success': True}
             
-            result = timesheet_sync_service.sync_all_on_approval(timesheet_id=test_timesheet.id)
+        result = timesheet_sync_service.sync_all_on_approval(timesheet_id=test_timesheet.id)
             
-            assert result is not None
-            assert result['success'] is True
-            assert 'results' in result
-            assert result['results']['finance'] is not None
-            assert result['results']['project'] is not None
+        assert result is not None
+        assert result['success'] is True
+        assert 'results' in result
+        assert result['results']['finance'] is not None
+        assert result['results']['project'] is not None
 
     def test_sync_all_on_approval_with_rd_project(self, timesheet_sync_service, db_session, test_user):
         """测试自动同步 - 有研发项目"""
@@ -268,21 +268,21 @@ class TestTimesheetSyncService:
         
         # 创建研发项目
         rd_project = RdProject(
-            project_no="RD001",
-            project_name="研发项目",
-            category_type="SELF",
-            initiation_date=date.today()
+        project_no="RD001",
+        project_name="研发项目",
+        category_type="SELF",
+        initiation_date=date.today()
         )
         db_session.add(rd_project)
         db_session.commit()
         
         # 创建有研发项目的工时记录
         timesheet = Timesheet(
-            user_id=test_user.id,
-            rd_project_id=rd_project.id,
-            work_date=date.today(),
-            hours=8.0,
-            status="APPROVED"
+        user_id=test_user.id,
+        rd_project_id=rd_project.id,
+        work_date=date.today(),
+        hours=8.0,
+        status="APPROVED"
         )
         db_session.add(timesheet)
         db_session.commit()
@@ -302,20 +302,20 @@ class TestTimesheetSyncService:
         from app.models.rd_project import RdProject
         
         rd_project = RdProject(
-            project_no="RD001",
-            project_name="研发项目",
-            category_type="SELF",
-            initiation_date=date.today()
+        project_no="RD001",
+        project_name="研发项目",
+        category_type="SELF",
+        initiation_date=date.today()
         )
         db_session.add(rd_project)
         db_session.commit()
         
         timesheet = Timesheet(
-            user_id=test_user.id,
-            rd_project_id=rd_project.id,
-            work_date=date.today(),
-            hours=8.0,
-            status="DRAFT"
+        user_id=test_user.id,
+        rd_project_id=rd_project.id,
+        work_date=date.today(),
+        hours=8.0,
+        status="DRAFT"
         )
         db_session.add(timesheet)
         db_session.commit()
@@ -330,11 +330,11 @@ class TestTimesheetSyncService:
     def test_sync_to_rd_no_rd_project(self, timesheet_sync_service, db_session, test_user):
         """测试同步到研发 - 工时记录未关联研发项目"""
         timesheet = Timesheet(
-            user_id=test_user.id,
-            rd_project_id=None,
-            work_date=date.today(),
-            hours=8.0,
-            status="APPROVED"
+        user_id=test_user.id,
+        rd_project_id=None,
+        work_date=date.today(),
+        hours=8.0,
+        status="APPROVED"
         )
         db_session.add(timesheet)
         db_session.commit()
@@ -351,10 +351,10 @@ class TestTimesheetSyncService:
         from app.models.rd_project import RdProject
         
         rd_project = RdProject(
-            project_no="RD001",
-            project_name="研发项目",
-            category_type="SELF",
-            initiation_date=date.today()
+        project_no="RD001",
+        project_name="研发项目",
+        category_type="SELF",
+        initiation_date=date.today()
         )
         db_session.add(rd_project)
         db_session.commit()
@@ -363,41 +363,41 @@ class TestTimesheetSyncService:
         timesheets = []
         for i in range(3):
             ts = Timesheet(
-                user_id=test_user.id,
-                rd_project_id=rd_project.id,
-                work_date=date.today() - timedelta(days=i),
-                hours=8.0,
-                status="APPROVED"
+            user_id=test_user.id,
+            rd_project_id=rd_project.id,
+            work_date=date.today() - timedelta(days=i),
+            hours=8.0,
+            status="APPROVED"
             )
             db_session.add(ts)
             timesheets.append(ts)
-        db_session.commit()
+            db_session.commit()
         
-        with patch.object(timesheet_sync_service, '_create_rd_cost_from_timesheet') as mock_create:
-            mock_create.return_value = {
+            with patch.object(timesheet_sync_service, '_create_rd_cost_from_timesheet') as mock_create:
+                mock_create.return_value = {
                 'success': True,
                 'created': True
-            }
+                }
             
-            result = timesheet_sync_service.sync_to_rd(
+                result = timesheet_sync_service.sync_to_rd(
                 rd_project_id=rd_project.id,
                 year=date.today().year,
                 month=date.today().month
-            )
+                )
             
-            assert result is not None
-            assert result['success'] is True
-            assert 'created_count' in result
-            assert 'updated_count' in result
+                assert result is not None
+                assert result['success'] is True
+                assert 'created_count' in result
+                assert 'updated_count' in result
 
     def test_sync_to_project_not_approved(self, timesheet_sync_service, db_session, test_project, test_user):
         """测试同步到项目 - 工时记录未审批"""
         timesheet = Timesheet(
-            user_id=test_user.id,
-            project_id=test_project.id,
-            work_date=date.today(),
-            hours=8.0,
-            status="DRAFT"
+        user_id=test_user.id,
+        project_id=test_project.id,
+        work_date=date.today(),
+        hours=8.0,
+        status="DRAFT"
         )
         db_session.add(timesheet)
         db_session.commit()
@@ -412,11 +412,11 @@ class TestTimesheetSyncService:
     def test_sync_to_project_no_project(self, timesheet_sync_service, db_session, test_user):
         """测试同步到项目 - 工时记录未关联项目"""
         timesheet = Timesheet(
-            user_id=test_user.id,
-            project_id=None,
-            work_date=date.today(),
-            hours=8.0,
-            status="APPROVED"
+        user_id=test_user.id,
+        project_id=None,
+        work_date=date.today(),
+        hours=8.0,
+        status="APPROVED"
         )
         db_session.add(timesheet)
         db_session.commit()
@@ -434,8 +434,8 @@ class TestTimesheetSyncService:
         
         with patch.object(LaborCostService, 'calculate_project_labor_cost') as mock_calc:
             mock_calc.return_value = {
-                'success': True,
-                'total_cost': 1000.0
+            'success': True,
+            'total_cost': 1000.0
             }
             
             result = timesheet_sync_service.sync_to_project(project_id=test_project.id)
@@ -460,18 +460,18 @@ class TestTimesheetSyncService:
             mock_rate.return_value = Decimal('50.0')
             
             # 确保不存在现有记录
-            timesheet_sync_service.db.query(FinancialProjectCost).filter(
-                FinancialProjectCost.source_type == 'TIMESHEET',
-                FinancialProjectCost.source_no == str(test_timesheet.id)
-            ).delete()
-            timesheet_sync_service.db.commit()
+        timesheet_sync_service.db.query(FinancialProjectCost).filter(
+        FinancialProjectCost.source_type == 'TIMESHEET',
+        FinancialProjectCost.source_no == str(test_timesheet.id)
+        ).delete()
+        timesheet_sync_service.db.commit()
             
-            result = timesheet_sync_service._create_financial_cost_from_timesheet(test_timesheet)
+        result = timesheet_sync_service._create_financial_cost_from_timesheet(test_timesheet)
             
-            assert result is not None
-            assert result['success'] is True
-            assert result['created'] is True
-            assert 'cost_id' in result
+        assert result is not None
+        assert result['success'] is True
+        assert result['created'] is True
+        assert 'cost_id' in result
 
     def test_create_financial_cost_from_timesheet_update(self, timesheet_sync_service, test_timesheet, db_session):
         """测试创建财务成本记录 - 更新现有"""
@@ -480,15 +480,15 @@ class TestTimesheetSyncService:
         
         # 创建现有记录
         existing_cost = FinancialProjectCost(
-            project_id=test_timesheet.project_id,
-            cost_type='LABOR',
-            cost_category='人工费',
-            cost_item='工时成本',
-            amount=Decimal('100.0'),
-            cost_date=test_timesheet.work_date,
-            uploaded_by=test_timesheet.user_id,
-            source_type='TIMESHEET',
-            source_no=str(test_timesheet.id)
+        project_id=test_timesheet.project_id,
+        cost_type='LABOR',
+        cost_category='人工费',
+        cost_item='工时成本',
+        amount=Decimal('100.0'),
+        cost_date=test_timesheet.work_date,
+        uploaded_by=test_timesheet.user_id,
+        source_type='TIMESHEET',
+        source_no=str(test_timesheet.id)
         )
         db_session.add(existing_cost)
         db_session.commit()

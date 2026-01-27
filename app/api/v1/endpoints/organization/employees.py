@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-员工管理端点
+员工管理端点（重构版）
+使用统一响应格式
 """
 
-from typing import Any, List
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.core.schemas import list_response, success_response
 from app.models.organization import Employee
 from app.schemas.organization import (
     EmployeeCreate,
@@ -19,24 +21,32 @@ from app.schemas.organization import (
 router = APIRouter()
 
 
-@router.get("/employees", response_model=List[EmployeeResponse])
+@router.get("/employees")
 def read_employees(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
     limit: int = 100,
 ) -> Any:
-    """Retrieve employees."""
+    """获取员工列表"""
     employees = db.query(Employee).offset(skip).limit(limit).all()
-    return employees
+
+    # 转换为Pydantic模型
+    emp_responses = [EmployeeResponse.model_validate(emp) for emp in employees]
+
+    # 使用统一响应格式
+    return list_response(
+        items=emp_responses,
+        message="获取员工列表成功"
+    )
 
 
-@router.post("/employees", response_model=EmployeeResponse)
+@router.post("/employees")
 def create_employee(
     *,
     db: Session = Depends(deps.get_db),
     emp_in: EmployeeCreate,
 ) -> Any:
-    """Create new employee."""
+    """创建新员工"""
     employee = (
         db.query(Employee)
         .filter(Employee.employee_code == emp_in.employee_code)
@@ -51,30 +61,46 @@ def create_employee(
     db.add(employee)
     db.commit()
     db.refresh(employee)
-    return employee
+
+    # 转换为Pydantic模型
+    emp_response = EmployeeResponse.model_validate(employee)
+
+    # 使用统一响应格式
+    return success_response(
+        data=emp_response,
+        message="员工创建成功"
+    )
 
 
-@router.get("/employees/{emp_id}", response_model=EmployeeResponse)
+@router.get("/employees/{emp_id}")
 def read_employee(
     *,
     db: Session = Depends(deps.get_db),
     emp_id: int,
 ) -> Any:
-    """Get employee by ID."""
+    """获取员工详情"""
     employee = db.query(Employee).filter(Employee.id == emp_id).first()
     if not employee:
         raise HTTPException(status_code=404, detail="Employee not found")
-    return employee
+
+    # 转换为Pydantic模型
+    emp_response = EmployeeResponse.model_validate(employee)
+
+    # 使用统一响应格式
+    return success_response(
+        data=emp_response,
+        message="获取员工信息成功"
+    )
 
 
-@router.put("/employees/{emp_id}", response_model=EmployeeResponse)
+@router.put("/employees/{emp_id}")
 def update_employee(
     *,
     db: Session = Depends(deps.get_db),
     emp_id: int,
     emp_in: EmployeeUpdate,
 ) -> Any:
-    """Update an employee."""
+    """更新员工信息"""
     employee = db.query(Employee).filter(Employee.id == emp_id).first()
     if not employee:
         raise HTTPException(status_code=404, detail="Employee not found")
@@ -86,16 +112,24 @@ def update_employee(
     db.add(employee)
     db.commit()
     db.refresh(employee)
-    return employee
+
+    # 转换为Pydantic模型
+    emp_response = EmployeeResponse.model_validate(employee)
+
+    # 使用统一响应格式
+    return success_response(
+        data=emp_response,
+        message="员工更新成功"
+    )
 
 
-@router.get("/{emp_id}/assignments", response_model=List[Any])
+@router.get("/{emp_id}/assignments")
 def get_employee_assignments(
     *,
     db: Session = Depends(deps.get_db),
     emp_id: int,
 ) -> Any:
-    """Get employee organization assignments."""
+    """获取员工组织分配"""
     from app.models.organization import EmployeeOrgAssignment
 
     limit = 100
@@ -104,17 +138,9 @@ def get_employee_assignments(
     )
     assignments = query.limit(limit).all()
 
-    # 补充关联名称
+    # 手动构建响应数据（包含关联名称）
     result = []
     for a in assignments:
-        # Pydantic model will handle basic mapping, but we might need extra fields
-        # Ideally schema handles from_attributes=True and relation access
-        # But let's check schema definition basically
-        # The response model EmployeeOrgAssignmentResponse expects:
-        # employee_name, org_unit_name, position_name, job_level_name
-        # These are not on the model directly, usually computed or properties
-        # We can simple attach them here if needed or let Pydantic try if models have them
-        # Let's manually populate to be safe as previously done in assignments.py
         a_dict = {
             "id": a.id,
             "employee_id": a.employee_id,
@@ -135,4 +161,8 @@ def get_employee_assignments(
         }
         result.append(a_dict)
 
-    return result
+    # 使用统一响应格式
+    return list_response(
+        items=result,
+        message="获取员工分配成功"
+    )

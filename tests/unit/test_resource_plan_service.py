@@ -21,8 +21,8 @@ class TestResourcePlanService:
     def test_calculate_fill_rate_partial(self):
         """测试部分填充的填充率"""
         requirements = [
-            MagicMock(headcount=2, assignment_status="ASSIGNED"),
-            MagicMock(headcount=1, assignment_status="PENDING"),
+        MagicMock(headcount=2, assignment_status="ASSIGNED"),
+        MagicMock(headcount=1, assignment_status="PENDING"),
         ]
         result = ResourcePlanService.calculate_fill_rate(requirements)
         # 2 assigned / 3 total = 66.67%
@@ -31,8 +31,8 @@ class TestResourcePlanService:
     def test_calculate_fill_rate_full(self):
         """测试完全填充的填充率"""
         requirements = [
-            MagicMock(headcount=2, assignment_status="ASSIGNED"),
-            MagicMock(headcount=1, assignment_status="ASSIGNED"),
+        MagicMock(headcount=2, assignment_status="ASSIGNED"),
+        MagicMock(headcount=1, assignment_status="ASSIGNED"),
         ]
         result = ResourcePlanService.calculate_fill_rate(requirements)
         assert result == 100.0
@@ -40,8 +40,8 @@ class TestResourcePlanService:
     def test_calculate_fill_rate_none(self):
         """测试无分配的填充率"""
         requirements = [
-            MagicMock(headcount=2, assignment_status="PENDING"),
-            MagicMock(headcount=1, assignment_status="PENDING"),
+        MagicMock(headcount=2, assignment_status="PENDING"),
+        MagicMock(headcount=1, assignment_status="PENDING"),
         ]
         result = ResourcePlanService.calculate_fill_rate(requirements)
         assert result == 0.0
@@ -49,40 +49,40 @@ class TestResourcePlanService:
     def test_detect_date_overlap_no_overlap(self):
         """测试无重叠日期"""
         result = ResourcePlanService.calculate_date_overlap(
-            date(2026, 1, 1),
-            date(2026, 1, 31),
-            date(2026, 2, 1),
-            date(2026, 2, 28),
+        date(2026, 1, 1),
+        date(2026, 1, 31),
+        date(2026, 2, 1),
+        date(2026, 2, 28),
         )
         assert result is None
 
     def test_detect_date_overlap_with_overlap(self):
         """测试有重叠日期"""
         result = ResourcePlanService.calculate_date_overlap(
-            date(2026, 1, 15),
-            date(2026, 2, 15),
-            date(2026, 2, 1),
-            date(2026, 2, 28),
+        date(2026, 1, 15),
+        date(2026, 2, 15),
+        date(2026, 2, 1),
+        date(2026, 2, 28),
         )
         assert result == (date(2026, 2, 1), date(2026, 2, 15))
 
     def test_detect_date_overlap_contained(self):
         """测试完全包含的日期"""
         result = ResourcePlanService.calculate_date_overlap(
-            date(2026, 1, 1),
-            date(2026, 3, 31),
-            date(2026, 2, 1),
-            date(2026, 2, 28),
+        date(2026, 1, 1),
+        date(2026, 3, 31),
+        date(2026, 2, 1),
+        date(2026, 2, 28),
         )
         assert result == (date(2026, 2, 1), date(2026, 2, 28))
 
     def test_detect_date_overlap_none_dates(self):
         """测试包含 None 的日期"""
         result = ResourcePlanService.calculate_date_overlap(
-            date(2026, 1, 1),
-            date(2026, 1, 31),
-            None,
-            date(2026, 2, 28),
+        date(2026, 1, 1),
+        date(2026, 1, 31),
+        None,
+        date(2026, 2, 28),
         )
         assert result is None
 

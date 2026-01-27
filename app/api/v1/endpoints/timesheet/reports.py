@@ -75,49 +75,42 @@ def get_hr_report(
     current_user: User = Depends(security.require_permission("timesheet:read")),
 ) -> Any:
     """
-    获取HR加班工资报表
+    获取HR加班工资报表（使用统一报表框架）
     """
     from fastapi.responses import StreamingResponse
 
-    from app.services.timesheet_aggregation_service import TimesheetAggregationService
-    from app.services.timesheet_report_service import TimesheetReportService
-
-    from app.core.permissions.timesheet import get_user_manageable_dimensions
-
-    dims = get_user_manageable_dimensions(db, current_user)
-
-    # 权限检查：如果不是管理员，且没有该部门的权限
-    if (
-        department_id
-        and not dims["is_admin"]
-        and department_id not in dims["department_ids"]
-    ):
-        raise HTTPException(status_code=403, detail="您没有权限查看该部门的报表")
-    elif not department_id and not dims["is_admin"]:
-        # 如果没有指定部门且不是管理员，默认只能看自己管理的部门
-        if not dims["department_ids"]:
-            raise HTTPException(status_code=403, detail="您没有权限查看部门报表")
+    from app.services.report_framework import ConfigError
+    from app.services.report_framework.engine import ParameterError, PermissionError, ReportEngine
 
     try:
-        if format == "excel":
-            # 生成Excel报表
-            report_service = TimesheetReportService(db)
-            excel_file = report_service.generate_hr_report_excel(
-                year, month, department_id
-            )
+        engine = ReportEngine(db)
+        result = engine.generate(
+            report_code="TIMESHEET_HR_MONTHLY",
+            params={
+                "year": year,
+                "month": month,
+                "department_id": department_id,
+            },
+            format=format,
+            user=current_user,
+            skip_cache=False,
+        )
 
+        if format == "excel":
             filename = f"HR加班工资表_{year}年{month}月.xlsx"
             return StreamingResponse(
-                excel_file,
+                result.data.get("file_stream"),
                 media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 headers={"Content-Disposition": f"attachment; filename={filename}"},
             )
         else:
-            # 返回JSON数据
-            service = TimesheetAggregationService(db)
-            data = service.generate_hr_report(year, month, department_id)
-
-            return ResponseModel(code=200, message="success", data=data)
+            return ResponseModel(code=200, message="success", data=result.data)
+    except ConfigError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ParameterError as e:
+        raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"生成HR报表失败: {str(e)}")
 
@@ -133,44 +126,42 @@ def get_finance_report(
     current_user: User = Depends(security.require_permission("timesheet:read")),
 ) -> Any:
     """
-    获取财务报表（项目成本核算表）
+    获取财务报表（项目成本核算表）（使用统一报表框架）
     """
     from fastapi.responses import StreamingResponse
 
-    from app.services.timesheet_aggregation_service import TimesheetAggregationService
-    from app.services.timesheet_report_service import TimesheetReportService
-
-    from app.core.permissions.timesheet import get_user_manageable_dimensions
-
-    dims = get_user_manageable_dimensions(db, current_user)
-
-    # 权限检查：如果不是管理员，且没有该项目的权限
-    if project_id and not dims["is_admin"] and project_id not in dims["project_ids"]:
-        raise HTTPException(status_code=403, detail="您没有权限查看该项目的财务报表")
-    elif not project_id and not dims["is_admin"]:
-        if not dims["project_ids"]:
-            raise HTTPException(status_code=403, detail="您没有权限查看财务报表")
+    from app.services.report_framework import ConfigError
+    from app.services.report_framework.engine import ParameterError, PermissionError, ReportEngine
 
     try:
-        if format == "excel":
-            # 生成Excel报表
-            report_service = TimesheetReportService(db)
-            excel_file = report_service.generate_finance_report_excel(
-                year, month, project_id
-            )
+        engine = ReportEngine(db)
+        result = engine.generate(
+            report_code="TIMESHEET_FINANCE_MONTHLY",
+            params={
+                "year": year,
+                "month": month,
+                "project_id": project_id,
+            },
+            format=format,
+            user=current_user,
+            skip_cache=False,
+        )
 
+        if format == "excel":
             filename = f"项目成本核算表_{year}年{month}月.xlsx"
             return StreamingResponse(
-                excel_file,
+                result.data.get("file_stream"),
                 media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 headers={"Content-Disposition": f"attachment; filename={filename}"},
             )
         else:
-            # 返回JSON数据
-            service = TimesheetAggregationService(db)
-            data = service.generate_finance_report(year, month, project_id)
-
-            return ResponseModel(code=200, message="success", data=data)
+            return ResponseModel(code=200, message="success", data=result.data)
+    except ConfigError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ParameterError as e:
+        raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"生成财务报表失败: {str(e)}")
 
@@ -186,48 +177,42 @@ def get_rd_report(
     current_user: User = Depends(security.require_permission("timesheet:read")),
 ) -> Any:
     """
-    获取研发报表（研发费用核算表）
+    获取研发报表（研发费用核算表）（使用统一报表框架）
     """
     from fastapi.responses import StreamingResponse
 
-    from app.services.timesheet_aggregation_service import TimesheetAggregationService
-    from app.services.timesheet_report_service import TimesheetReportService
-
-    from app.core.permissions.timesheet import get_user_manageable_dimensions
-
-    dims = get_user_manageable_dimensions(db, current_user)
-
-    # 权限检查
-    if (
-        rd_project_id
-        and not dims["is_admin"]
-        and rd_project_id not in dims["rd_project_ids"]
-    ):
-        raise HTTPException(status_code=403, detail="您没有权限查看该研发项目的报表")
-    elif not rd_project_id and not dims["is_admin"]:
-        if not dims["rd_project_ids"]:
-            raise HTTPException(status_code=403, detail="您没有权限查看研发报表")
+    from app.services.report_framework import ConfigError
+    from app.services.report_framework.engine import ParameterError, PermissionError, ReportEngine
 
     try:
-        if format == "excel":
-            # 生成Excel报表
-            report_service = TimesheetReportService(db)
-            excel_file = report_service.generate_rd_report_excel(
-                year, month, rd_project_id
-            )
+        engine = ReportEngine(db)
+        result = engine.generate(
+            report_code="TIMESHEET_RD_MONTHLY",
+            params={
+                "year": year,
+                "month": month,
+                "rd_project_id": rd_project_id,
+            },
+            format=format,
+            user=current_user,
+            skip_cache=False,
+        )
 
+        if format == "excel":
             filename = f"研发费用核算表_{year}年{month}月.xlsx"
             return StreamingResponse(
-                excel_file,
+                result.data.get("file_stream"),
                 media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 headers={"Content-Disposition": f"attachment; filename={filename}"},
             )
         else:
-            # 返回JSON数据
-            service = TimesheetAggregationService(db)
-            data = service.generate_rd_report(year, month, rd_project_id)
-
-            return ResponseModel(code=200, message="success", data=data)
+            return ResponseModel(code=200, message="success", data=result.data)
+    except ConfigError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ParameterError as e:
+        raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"生成研发报表失败: {str(e)}")
 
@@ -243,44 +228,45 @@ def get_project_report(
     current_user: User = Depends(security.require_permission("timesheet:read")),
 ) -> Any:
     """
-    获取项目报表（项目工时统计）
+    获取项目报表（项目工时统计）（使用统一报表框架）
     """
     from fastapi.responses import StreamingResponse
 
-    from app.services.timesheet_aggregation_service import TimesheetAggregationService
-    from app.services.timesheet_report_service import TimesheetReportService
-
-    from app.core.permissions.timesheet import get_user_manageable_dimensions
-
-    dims = get_user_manageable_dimensions(db, current_user)
-
-    # 权限检查
-    if not dims["is_admin"] and project_id not in dims["project_ids"]:
-        raise HTTPException(status_code=403, detail="您没有权限查看该项目的工时报表")
+    from app.services.report_framework import ConfigError
+    from app.services.report_framework.engine import ParameterError, PermissionError, ReportEngine
 
     try:
-        if format == "excel":
-            # 生成Excel报表
-            report_service = TimesheetReportService(db)
-            excel_file = report_service.generate_project_report_excel(
-                project_id, start_date, end_date
-            )
+        engine = ReportEngine(db)
+        result = engine.generate(
+            report_code="TIMESHEET_PROJECT",
+            params={
+                "project_id": project_id,
+                "start_date": start_date.isoformat() if start_date else None,
+                "end_date": end_date.isoformat() if end_date else None,
+            },
+            format=format,
+            user=current_user,
+            skip_cache=False,
+        )
 
+        if format == "excel":
             project = db.query(Project).filter(Project.id == project_id).first()
             project_name = project.project_name if project else f"项目{project_id}"
             filename = f"{project_name}_工时报表.xlsx"
 
             return StreamingResponse(
-                excel_file,
+                result.data.get("file_stream"),
                 media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 headers={"Content-Disposition": f"attachment; filename={filename}"},
             )
         else:
-            # 返回JSON数据
-            service = TimesheetAggregationService(db)
-            data = service.generate_project_report(project_id, start_date, end_date)
-
-            return ResponseModel(code=200, message="success", data=data)
+            return ResponseModel(code=200, message="success", data=result.data)
+    except ConfigError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ParameterError as e:
+        raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"生成项目报表失败: {str(e)}")
 

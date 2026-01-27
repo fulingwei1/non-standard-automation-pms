@@ -73,79 +73,59 @@ def get_rd_auxiliary_ledger(
     db: Session = Depends(deps.get_db),
     year: int = Query(..., description="年度"),
     project_id: Optional[int] = Query(None, description="研发项目ID（不提供则查询所有项目）"),
+    format: str = Query("json", description="导出格式：json/excel/pdf"),
     current_user: User = Depends(security.require_permission("report:read")),
 ) -> Any:
     """
-    研发费用辅助账
+    研发费用辅助账（使用统一报表框架）
     税务要求的研发费用辅助账格式
     """
-    query = db.query(RdCost).join(RdProject).filter(
-        func.extract('year', RdCost.cost_date) == year
-    )
+    from fastapi.responses import StreamingResponse
 
-    if project_id:
-        query = query.filter(RdCost.rd_project_id == project_id)
+    from app.services.report_framework import ConfigError
+    from app.services.report_framework.adapters.rd_expense import RdExpenseReportAdapter
+    from app.services.report_framework.engine import ParameterError, PermissionError, ReportEngine
 
-    costs = query.order_by(RdCost.rd_project_id, RdCost.cost_date, RdCost.cost_type_id).all()
-
-    # 按项目和费用类型汇总
-    ledger_items = []
-    current_project_id = None
-    current_type_id = None
-    project_total = Decimal("0")
-    type_total = Decimal("0")
-
-    for cost in costs:
-        if current_project_id != cost.rd_project_id:
-            if current_project_id:
-                ledger_items.append({
-                    "project_id": current_project_id,
-                    "project_name": "",
-                    "cost_type_id": current_type_id,
-                    "cost_type_name": "",
-                    "total_amount": float(type_total),
-                    "items": []
-                })
-            current_project_id = cost.rd_project_id
-            project = db.query(RdProject).filter(RdProject.id == cost.rd_project_id).first()
-            project_total = Decimal("0")
-            type_total = Decimal("0")
-            current_type_id = cost.cost_type_id
-
-        if current_type_id != cost.cost_type_id:
-            if current_type_id:
-                ledger_items.append({
-                    "project_id": current_project_id,
-                    "project_name": project.project_name if project else "",
-                    "cost_type_id": current_type_id,
-                    "cost_type_name": "",
-                    "total_amount": float(type_total),
-                    "items": []
-                })
-            current_type_id = cost.cost_type_id
-            cost_type = db.query(RdCostType).filter(RdCostType.id == cost.cost_type_id).first()
-            type_total = Decimal("0")
-
-        type_total += cost.cost_amount or Decimal("0")
-        project_total += cost.cost_amount or Decimal("0")
-
-        ledger_items.append({
-            "date": cost.cost_date.isoformat() if cost.cost_date else None,
-            "cost_no": cost.cost_no,
-            "description": cost.cost_description,
-            "amount": float(cost.cost_amount or 0),
-            "deductible_amount": float(cost.deductible_amount or 0)
-        })
-
-    return ResponseModel(
-        code=200,
-        message="success",
-        data={
-            "year": year,
-            "total_amount": float(project_total),
-            "ledger": ledger_items
-        }
-    )
+    try:
+        # 优先使用统一报表框架（如果存在YAML配置）
+        engine = ReportEngine(db)
+        try:
+            result = engine.generate(
+                report_code="RD_AUXILIARY_LEDGER",
+                params={
+                    "year": year,
+                    "project_id": project_id,
+                },
+                format=format,
+                user=current_user,
+                skip_cache=False,
+            )
+            
+            if format in ["excel", "pdf"]:
+                filename = f"研发费用辅助账_{year}年.xlsx" if format == "excel" else f"研发费用辅助账_{year}年.pdf"
+                return StreamingResponse(
+                    result.data.get("file_stream"),
+                    media_type=result.content_type,
+                    headers={"Content-Disposition": f"attachment; filename={filename}"},
+                )
+            else:
+                return ResponseModel(code=200, message="success", data=result.data)
+        except (ConfigError, ParameterError):
+            # 如果YAML配置不存在，使用适配器（向后兼容）
+            adapter = RdExpenseReportAdapter(db, "RD_AUXILIARY_LEDGER")
+            result = adapter.generate(
+                params={"year": year, "project_id": project_id},
+                format=format,
+                user=current_user,
+            )
+            data = result.data if hasattr(result, 'data') else result
+            return ResponseModel(code=200, message="success", data=data)
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"生成研发费用辅助账失败: {str(e)}")
 
 
 @router.get("/rd-deduction-detail", response_model=ResponseModel, status_code=status.HTTP_200_OK)
@@ -154,68 +134,58 @@ def get_rd_deduction_detail(
     db: Session = Depends(deps.get_db),
     year: int = Query(..., description="年度"),
     project_id: Optional[int] = Query(None, description="研发项目ID"),
+    format: str = Query("json", description="导出格式：json/excel/pdf"),
     current_user: User = Depends(security.require_permission("report:read")),
 ) -> Any:
     """
-    研发费用加计扣除明细
+    研发费用加计扣除明细（使用统一报表框架）
     """
-    query = db.query(RdCost).join(RdProject).filter(
-        func.extract('year', RdCost.cost_date) == year,
-        RdCost.deductible_amount > 0
-    )
+    from fastapi.responses import StreamingResponse
 
-    if project_id:
-        query = query.filter(RdCost.rd_project_id == project_id)
+    from app.services.report_framework import ConfigError
+    from app.services.report_framework.adapters.rd_expense import RdExpenseReportAdapter
+    from app.services.report_framework.engine import ParameterError, PermissionError, ReportEngine
 
-    costs = query.order_by(RdCost.rd_project_id, RdCost.cost_type_id).all()
-
-    # 按费用类型汇总
-    by_type = {}
-    total_deductible = Decimal("0")
-
-    for cost in costs:
-        type_id = cost.cost_type_id
-        if type_id not in by_type:
-            cost_type = db.query(RdCostType).filter(RdCostType.id == type_id).first()
-            by_type[type_id] = {
-                "cost_type_id": type_id,
-                "cost_type_name": cost_type.type_name if cost_type else "",
-                "total_amount": Decimal("0"),
-                "deductible_amount": Decimal("0"),
-                "items": []
-            }
-
-        deductible = cost.deductible_amount or Decimal("0")
-        by_type[type_id]["total_amount"] += cost.cost_amount or Decimal("0")
-        by_type[type_id]["deductible_amount"] += deductible
-        total_deductible += deductible
-
-        by_type[type_id]["items"].append({
-            "cost_no": cost.cost_no,
-            "date": cost.cost_date.isoformat() if cost.cost_date else None,
-            "description": cost.cost_description,
-            "amount": float(cost.cost_amount or 0),
-            "deductible_amount": float(deductible)
-        })
-
-    return ResponseModel(
-        code=200,
-        message="success",
-        data={
-            "year": year,
-            "total_deductible": float(total_deductible),
-            "by_type": [
-                {
-                    "cost_type_id": v["cost_type_id"],
-                    "cost_type_name": v["cost_type_name"],
-                    "total_amount": float(v["total_amount"]),
-                    "deductible_amount": float(v["deductible_amount"]),
-                    "items": v["items"]
-                }
-                for v in by_type.values()
-            ]
-        }
-    )
+    try:
+        # 优先使用统一报表框架（如果存在YAML配置）
+        engine = ReportEngine(db)
+        try:
+            result = engine.generate(
+                report_code="RD_DEDUCTION_DETAIL",
+                params={
+                    "year": year,
+                    "project_id": project_id,
+                },
+                format=format,
+                user=current_user,
+                skip_cache=False,
+            )
+            
+            if format in ["excel", "pdf"]:
+                filename = f"研发费用加计扣除明细_{year}年.xlsx" if format == "excel" else f"研发费用加计扣除明细_{year}年.pdf"
+                return StreamingResponse(
+                    result.data.get("file_stream"),
+                    media_type=result.content_type,
+                    headers={"Content-Disposition": f"attachment; filename={filename}"},
+                )
+            else:
+                return ResponseModel(code=200, message="success", data=result.data)
+        except (ConfigError, ParameterError):
+            # 如果YAML配置不存在，使用适配器（向后兼容）
+            adapter = RdExpenseReportAdapter(db, "RD_DEDUCTION_DETAIL")
+            result = adapter.generate(
+                params={"year": year, "project_id": project_id},
+                format=format,
+                user=current_user,
+            )
+            data = result.data if hasattr(result, 'data') else result
+            return ResponseModel(code=200, message="success", data=data)
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"生成研发费用加计扣除明细失败: {str(e)}")
 
 
 @router.get("/rd-high-tech", response_model=ResponseModel, status_code=status.HTTP_200_OK)
@@ -223,51 +193,56 @@ def get_rd_high_tech_report(
     *,
     db: Session = Depends(deps.get_db),
     year: int = Query(..., description="年度"),
+    format: str = Query("json", description="导出格式：json/excel/pdf"),
     current_user: User = Depends(security.require_permission("report:read")),
 ) -> Any:
     """
-    高新企业研发费用表
+    高新企业研发费用表（使用统一报表框架）
     用于高新技术企业认定
     """
-    # 获取研发费用
-    costs = db.query(RdCost).join(RdProject).filter(
-        func.extract('year', RdCost.cost_date) == year
-    ).all()
+    from fastapi.responses import StreamingResponse
 
-    # 按费用类型汇总（六大费用类型）
-    by_type = {}
-    total_cost = Decimal("0")
+    from app.services.report_framework import ConfigError
+    from app.services.report_framework.adapters.rd_expense import RdExpenseReportAdapter
+    from app.services.report_framework.engine import ParameterError, PermissionError, ReportEngine
 
-    for cost in costs:
-        cost_type = db.query(RdCostType).filter(RdCostType.id == cost.cost_type_id).first()
-        type_code = cost_type.type_code if cost_type else "OTHER"
-
-        if type_code not in by_type:
-            by_type[type_code] = {
-                "type_code": type_code,
-                "type_name": cost_type.type_name if cost_type else "其他",
-                "amount": Decimal("0")
-            }
-
-        by_type[type_code]["amount"] += cost.cost_amount or Decimal("0")
-        total_cost += cost.cost_amount or Decimal("0")
-
-    return ResponseModel(
-        code=200,
-        message="success",
-        data={
-            "year": year,
-            "total_cost": float(total_cost),
-            "by_type": [
-                {
-                    "type_code": v["type_code"],
-                    "type_name": v["type_name"],
-                    "amount": float(v["amount"])
-                }
-                for v in by_type.values()
-            ]
-        }
-    )
+    try:
+        # 优先使用统一报表框架（如果存在YAML配置）
+        engine = ReportEngine(db)
+        try:
+            result = engine.generate(
+                report_code="RD_HIGH_TECH",
+                params={"year": year},
+                format=format,
+                user=current_user,
+                skip_cache=False,
+            )
+            
+            if format in ["excel", "pdf"]:
+                filename = f"高新企业研发费用表_{year}年.xlsx" if format == "excel" else f"高新企业研发费用表_{year}年.pdf"
+                return StreamingResponse(
+                    result.data.get("file_stream"),
+                    media_type=result.content_type,
+                    headers={"Content-Disposition": f"attachment; filename={filename}"},
+                )
+            else:
+                return ResponseModel(code=200, message="success", data=result.data)
+        except (ConfigError, ParameterError):
+            # 如果YAML配置不存在，使用适配器（向后兼容）
+            adapter = RdExpenseReportAdapter(db, "RD_HIGH_TECH")
+            result = adapter.generate(
+                params={"year": year},
+                format=format,
+                user=current_user,
+            )
+            data = result.data if hasattr(result, 'data') else result
+            return ResponseModel(code=200, message="success", data=data)
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"生成高新企业研发费用表失败: {str(e)}")
 
 
 @router.get("/rd-intensity", response_model=ResponseModel, status_code=status.HTTP_200_OK)
@@ -276,45 +251,59 @@ def get_rd_intensity_report(
     db: Session = Depends(deps.get_db),
     start_year: int = Query(..., description="开始年度"),
     end_year: int = Query(..., description="结束年度"),
+    format: str = Query("json", description="导出格式：json/excel/pdf"),
     current_user: User = Depends(security.require_permission("report:read")),
 ) -> Any:
     """
-    研发投入强度报表
+    研发投入强度报表（使用统一报表框架）
     研发费用/营业收入
     """
-    intensity_data = []
+    from fastapi.responses import StreamingResponse
 
-    for year in range(start_year, end_year + 1):
-        # 计算研发费用
-        rd_costs = db.query(func.sum(RdCost.cost_amount)).filter(
-            func.extract('year', RdCost.cost_date) == year
-        ).scalar() or Decimal("0")
+    from app.services.report_framework import ConfigError
+    from app.services.report_framework.adapters.rd_expense import RdExpenseReportAdapter
+    from app.services.report_framework.engine import ParameterError, PermissionError, ReportEngine
 
-        # 从项目收款计划获取营业收入（按实际收款日期统计）
-        revenue = db.query(func.sum(ProjectPaymentPlan.actual_amount)).filter(
-            func.extract('year', ProjectPaymentPlan.actual_date) == year,
-            ProjectPaymentPlan.status.in_(['COMPLETED', 'PARTIAL']),
-            ProjectPaymentPlan.actual_amount.isnot(None)
-        ).scalar() or Decimal("0")
-
-        intensity = (float(rd_costs) / float(revenue) * 100) if revenue > 0 else 0.0
-
-        intensity_data.append({
-            "year": year,
-            "rd_cost": float(rd_costs),
-            "revenue": float(revenue),
-            "intensity": round(intensity, 2)
-        })
-
-    return ResponseModel(
-        code=200,
-        message="success",
-        data={
-            "period": {"start": start_year, "end": end_year},
-            "intensity_data": intensity_data,
-            "avg_intensity": round(sum(d["intensity"] for d in intensity_data) / len(intensity_data), 2) if intensity_data else 0.0
-        }
-    )
+    try:
+        # 优先使用统一报表框架（如果存在YAML配置）
+        engine = ReportEngine(db)
+        try:
+            result = engine.generate(
+                report_code="RD_INTENSITY",
+                params={
+                    "start_year": start_year,
+                    "end_year": end_year,
+                },
+                format=format,
+                user=current_user,
+                skip_cache=False,
+            )
+            
+            if format in ["excel", "pdf"]:
+                filename = f"研发投入强度报表_{start_year}-{end_year}年.xlsx" if format == "excel" else f"研发投入强度报表_{start_year}-{end_year}年.pdf"
+                return StreamingResponse(
+                    result.data.get("file_stream"),
+                    media_type=result.content_type,
+                    headers={"Content-Disposition": f"attachment; filename={filename}"},
+                )
+            else:
+                return ResponseModel(code=200, message="success", data=result.data)
+        except (ConfigError, ParameterError):
+            # 如果YAML配置不存在，使用适配器（向后兼容）
+            adapter = RdExpenseReportAdapter(db, "RD_INTENSITY")
+            result = adapter.generate(
+                params={"start_year": start_year, "end_year": end_year},
+                format=format,
+                user=current_user,
+            )
+            data = result.data if hasattr(result, 'data') else result
+            return ResponseModel(code=200, message="success", data=data)
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"生成研发投入强度报表失败: {str(e)}")
 
 
 @router.get("/rd-personnel", response_model=ResponseModel, status_code=status.HTTP_200_OK)
@@ -322,55 +311,56 @@ def get_rd_personnel_report(
     *,
     db: Session = Depends(deps.get_db),
     year: int = Query(..., description="年度"),
+    format: str = Query("json", description="导出格式：json/excel/pdf"),
     current_user: User = Depends(security.require_permission("report:read")),
 ) -> Any:
     """
-    研发人员统计
+    研发人员统计（使用统一报表框架）
     研发人员占比统计
     """
-    # 获取参与研发项目的用户
-    rd_projects = db.query(RdProject).filter(
-        func.extract('year', RdProject.start_date) <= year,
-        func.extract('year', RdProject.end_date) >= year
-    ).all()
+    from fastapi.responses import StreamingResponse
 
-    # 通过工时记录统计研发人员
-    rd_user_ids = set()
-    for project in rd_projects:
-        if project.linked_project_id:
-            timesheets = db.query(Timesheet).filter(
-                Timesheet.project_id == project.linked_project_id,
-                func.extract('year', Timesheet.work_date) == year,
-                Timesheet.status == 'APPROVED'
-            ).all()
-            rd_user_ids.update([ts.user_id for ts in timesheets])
+    from app.services.report_framework import ConfigError
+    from app.services.report_framework.adapters.rd_expense import RdExpenseReportAdapter
+    from app.services.report_framework.engine import ParameterError, PermissionError, ReportEngine
 
-    # 获取所有用户
-    all_users = db.query(User).filter(User.is_active == True).all()
-    total_users = len(all_users)
-    rd_users_count = len(rd_user_ids)
-
-    rd_personnel_list = []
-    for user_id in rd_user_ids:
-        user = db.query(User).filter(User.id == user_id).first()
-        if user:
-            rd_personnel_list.append({
-                "user_id": user.id,
-                "user_name": user.real_name or user.username,
-                "department": user.department
-            })
-
-    return ResponseModel(
-        code=200,
-        message="success",
-        data={
-            "year": year,
-            "total_users": total_users,
-            "rd_users_count": rd_users_count,
-            "rd_ratio": round(rd_users_count / total_users * 100, 2) if total_users > 0 else 0.0,
-            "rd_personnel": rd_personnel_list
-        }
-    )
+    try:
+        # 优先使用统一报表框架（如果存在YAML配置）
+        engine = ReportEngine(db)
+        try:
+            result = engine.generate(
+                report_code="RD_PERSONNEL",
+                params={"year": year},
+                format=format,
+                user=current_user,
+                skip_cache=False,
+            )
+            
+            if format in ["excel", "pdf"]:
+                filename = f"研发人员统计_{year}年.xlsx" if format == "excel" else f"研发人员统计_{year}年.pdf"
+                return StreamingResponse(
+                    result.data.get("file_stream"),
+                    media_type=result.content_type,
+                    headers={"Content-Disposition": f"attachment; filename={filename}"},
+                )
+            else:
+                return ResponseModel(code=200, message="success", data=result.data)
+        except (ConfigError, ParameterError):
+            # 如果YAML配置不存在，使用适配器（向后兼容）
+            adapter = RdExpenseReportAdapter(db, "RD_PERSONNEL")
+            result = adapter.generate(
+                params={"year": year},
+                format=format,
+                user=current_user,
+            )
+            data = result.data if hasattr(result, 'data') else result
+            return ResponseModel(code=200, message="success", data=data)
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"生成研发人员统计失败: {str(e)}")
 
 
 @router.get("/rd-export", response_model=ResponseModel, status_code=status.HTTP_200_OK)
@@ -384,44 +374,84 @@ def export_rd_report(
     current_user: User = Depends(security.require_permission("report:export")),
 ) -> Any:
     """
-    导出研发费用报表
+    导出研发费用报表（使用统一报表框架）
     """
-    from app.services.rd_report_data_service import get_rd_report_data
-    from app.services.report_export_service import report_export_service
+    from fastapi.responses import StreamingResponse
 
-    # 获取报表数据
+    from app.services.report_framework import ConfigError
+    from app.services.report_framework.adapters.rd_expense import RdExpenseReportAdapter
+    from app.services.report_framework.engine import ParameterError, PermissionError, ReportEngine
+
+    # 报表类型映射
+    report_type_map = {
+        "auxiliary-ledger": "RD_AUXILIARY_LEDGER",
+        "deduction-detail": "RD_DEDUCTION_DETAIL",
+        "high-tech": "RD_HIGH_TECH",
+        "intensity": "RD_INTENSITY",
+        "personnel": "RD_PERSONNEL",
+    }
+    
+    mapped_report_type = report_type_map.get(report_type)
+    if not mapped_report_type:
+        raise HTTPException(status_code=400, detail=f"不支持的报表类型: {report_type}")
+
     try:
-        report_result = get_rd_report_data(db, report_type, year, project_id)
-        report_data = {k: v for k, v in report_result.items() if k != 'title'}
-        report_title = report_result.get('title', f"{year}年研发费用报表")
+        # 优先使用统一报表框架（如果存在YAML配置）
+        engine = ReportEngine(db)
+        try:
+            params = {"year": year}
+            if project_id:
+                params["project_id"] = project_id
+            
+            result = engine.generate(
+                report_code=mapped_report_type,
+                params=params,
+                format=format.lower(),
+                user=current_user,
+                skip_cache=False,
+            )
+            
+            filename = f"rd-{report_type}-{year}.{format.lower()}"
+            return StreamingResponse(
+                result.data.get("file_stream"),
+                media_type=result.content_type,
+                headers={"Content-Disposition": f"attachment; filename={filename}"},
+            )
+        except (ConfigError, ParameterError):
+            # 如果YAML配置不存在，使用适配器（向后兼容）
+            adapter = RdExpenseReportAdapter(db, mapped_report_type)
+            result = adapter.generate(
+                params={"year": year, "project_id": project_id},
+                format=format.lower(),
+                user=current_user,
+            )
+            
+            # 使用统一报表框架的渲染器导出
+            from app.services.report_framework.renderers import ExcelRenderer, PdfRenderer
+            
+            if format.lower() == "xlsx":
+                renderer = ExcelRenderer()
+            elif format.lower() == "pdf":
+                renderer = PdfRenderer()
+            else:
+                raise HTTPException(status_code=400, detail=f"不支持的导出格式: {format}")
+            
+            data = result.data if hasattr(result, 'data') else result
+            render_result = renderer.render(
+                sections=[{"id": "summary", "title": "汇总", "type": "metrics", "items": []}],
+                metadata={"code": mapped_report_type, "name": data.get("title", "研发费用报表")}
+            )
+            
+            filename = f"rd-{report_type}-{year}.{format.lower()}"
+            return StreamingResponse(
+                render_result.data.get("file_stream"),
+                media_type=render_result.content_type,
+                headers={"Content-Disposition": f"attachment; filename={filename}"},
+            )
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-    # 导出文件
-    try:
-        filename = f"rd-{report_type}-{year}"
-        export_fmt = format.upper()
-
-        if export_fmt == 'XLSX':
-            filepath = report_export_service.export_to_excel(report_data, filename, report_title)
-        elif export_fmt == 'PDF':
-            filepath = report_export_service.export_to_pdf(report_data, filename, report_title)
-        elif export_fmt == 'CSV':
-            filepath = report_export_service.export_to_csv(report_data, filename)
-        else:
-            raise HTTPException(status_code=400, detail=f"不支持的导出格式: {format}")
-
-        return ResponseModel(
-            code=200,
-            message="导出成功",
-            data={
-                "report_type": report_type,
-                "year": year,
-                "format": export_fmt,
-                "file_path": filepath,
-                "download_url": f"/api/v1/reports/download-file?path={filepath}"
-            }
-        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"导出失败: {str(e)}")
 

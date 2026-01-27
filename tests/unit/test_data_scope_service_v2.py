@@ -21,17 +21,17 @@ class TestDataScopeService:
         from app.core.security import get_password_hash
 
         employee = Employee(
-            employee_code="EMP-TEST", name="测试员工", department="测试部门"
+        employee_code="EMP-TEST", name="测试员工", department="测试部门"
         )
         db_session.add(employee)
         db_session.flush()
 
         user = User(
-            username="test_user",
-            password_hash=get_password_hash("test123"),
-            real_name="测试用户",
-            employee_id=employee.id,
-            is_active=True,
+        username="test_user",
+        password_hash=get_password_hash("test123"),
+        real_name="测试用户",
+        employee_id=employee.id,
+        is_active=True,
         )
         db_session.add(user)
         db_session.commit()
@@ -43,27 +43,27 @@ class TestDataScopeService:
     def test_get_accessible_org_units_all_scope(self, db_session: Session):
         """测试获取可访问组织单元 - 全部数据"""
         org_units = DataScopeService.get_accessible_org_units(
-            db_session, user_id=1, scope_type=ScopeType.ALL.value
+        db_session, user_id=1, scope_type=ScopeType.ALL.value
         )
         assert isinstance(org_units, list)
 
     def test_get_subtree_ids(self, db_session: Session):
         """测试获取子树ID"""
         parent = OrganizationUnit(
-            unit_code="DEPT001",
-            unit_name="测试部门",
-            unit_type="DEPARTMENT",
-            is_active=True,
+        unit_code="DEPT001",
+        unit_name="测试部门",
+        unit_type="DEPARTMENT",
+        is_active=True,
         )
         db_session.add(parent)
         db_session.flush()
 
         child = OrganizationUnit(
-            unit_code="TEAM001",
-            unit_name="测试团队",
-            unit_type="TEAM",
-            parent_id=parent.id,
-            is_active=True,
+        unit_code="TEAM001",
+        unit_name="测试团队",
+        unit_type="TEAM",
+        parent_id=parent.id,
+        is_active=True,
         )
         db_session.add(child)
         db_session.commit()
@@ -86,12 +86,12 @@ class TestDataScopeService:
         db_session.flush()
 
         user = User(
-            username="admin_scope",
-            password_hash=get_password_hash("admin123"),
-            real_name="管理员",
-            employee_id=employee.id,
-            is_active=True,
-            is_superuser=True,
+        username="admin_scope",
+        password_hash=get_password_hash("admin123"),
+        real_name="管理员",
+        employee_id=employee.id,
+        is_active=True,
+        is_superuser=True,
         )
         db_session.add(user)
         db_session.commit()
@@ -101,7 +101,7 @@ class TestDataScopeService:
         mock_query.column_descriptions = [{"entity": Mock}]
 
         result = DataScopeService.apply_data_scope(
-            mock_query, db_session, user, "project"
+        mock_query, db_session, user, "project"
         )
 
         assert result == mock_query  # 超级管理员不过滤

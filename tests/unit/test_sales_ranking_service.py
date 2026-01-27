@@ -66,18 +66,18 @@ class TestSalesRankingService:
     def test_save_config_new(self, sales_ranking_service, db_session):
         """测试保存配置 - 新建"""
         metrics = [
-            {
-                "key": "contract_amount",
-                "label": "合同金额",
-                "weight": 0.5,
-                "data_source": "contract_amount",
-                "is_primary": True
-            }
+        {
+        "key": "contract_amount",
+        "label": "合同金额",
+        "weight": 0.5,
+        "data_source": "contract_amount",
+        "is_primary": True
+        }
         ]
         
         result = sales_ranking_service.save_config(
-            config_name="新配置",
-            metrics=metrics
+        config_name="新配置",
+        metrics=metrics
         )
         
         assert result is not None
@@ -86,7 +86,7 @@ class TestSalesRankingService:
         
         # 验证配置已创建
         config = db_session.query(SalesRankingConfig).filter_by(
-            id=result['config_id']
+        id=result['config_id']
         ).first()
         assert config is not None
         assert config.config_name == "新配置"
@@ -94,19 +94,19 @@ class TestSalesRankingService:
     def test_save_config_update(self, sales_ranking_service, test_config):
         """测试保存配置 - 更新"""
         updated_metrics = [
-            {
-                "key": "contract_amount",
-                "label": "合同金额（更新）",
-                "weight": 0.6,
-                "data_source": "contract_amount",
-                "is_primary": True
-            }
+        {
+        "key": "contract_amount",
+        "label": "合同金额（更新）",
+        "weight": 0.6,
+        "data_source": "contract_amount",
+        "is_primary": True
+        }
         ]
         
         result = sales_ranking_service.save_config(
-            config_id=test_config.id,
-            config_name="更新配置",
-            metrics=updated_metrics
+        config_id=test_config.id,
+        config_name="更新配置",
+        metrics=updated_metrics
         )
         
         assert result is not None
@@ -115,25 +115,25 @@ class TestSalesRankingService:
     def test_save_config_invalid_weights(self, sales_ranking_service):
         """测试保存配置 - 权重无效"""
         metrics = [
-            {
-                "key": "contract_amount",
-                "label": "合同金额",
-                "weight": 0.5,
-                "data_source": "contract_amount",
-                "is_primary": True
-            },
-            {
-                "key": "acceptance_amount",
-                "label": "验收金额",
-                "weight": 0.6,  # 总权重超过1.0
-                "data_source": "acceptance_amount",
-                "is_primary": True
-            }
+        {
+        "key": "contract_amount",
+        "label": "合同金额",
+        "weight": 0.5,
+        "data_source": "contract_amount",
+        "is_primary": True
+        },
+        {
+        "key": "acceptance_amount",
+        "label": "验收金额",
+        "weight": 0.6,  # 总权重超过1.0
+        "data_source": "acceptance_amount",
+        "is_primary": True
+        }
         ]
         
         result = sales_ranking_service.save_config(
-            config_name="无效配置",
-            metrics=metrics
+        config_name="无效配置",
+        metrics=metrics
         )
         
         assert result is not None
@@ -143,18 +143,18 @@ class TestSalesRankingService:
     def test_save_config_primary_weight_invalid(self, sales_ranking_service):
         """测试保存配置 - 主要指标权重无效"""
         metrics = [
-            {
-                "key": "contract_amount",
-                "label": "合同金额",
-                "weight": 0.3,  # 主要指标权重不足0.8
-                "data_source": "contract_amount",
-                "is_primary": True
-            }
+        {
+        "key": "contract_amount",
+        "label": "合同金额",
+        "weight": 0.3,  # 主要指标权重不足0.8
+        "data_source": "contract_amount",
+        "is_primary": True
+        }
         ]
         
         result = sales_ranking_service.save_config(
-            config_name="主要权重不足",
-            metrics=metrics
+        config_name="主要权重不足",
+        metrics=metrics
         )
         
         assert result is not None
@@ -164,8 +164,8 @@ class TestSalesRankingService:
     def test_calculate_rankings_no_config(self, sales_ranking_service):
         """测试计算排名 - 无配置"""
         result = sales_ranking_service.calculate_rankings(
-            start_date=date.today() - timedelta(days=30),
-            end_date=date.today()
+        start_date=date.today() - timedelta(days=30),
+        end_date=date.today()
         )
         
         assert result is not None
@@ -176,16 +176,16 @@ class TestSalesRankingService:
         """测试计算排名 - 成功"""
         with patch.object(sales_ranking_service, '_get_sales_metrics') as mock_metrics:
             mock_metrics.return_value = {
-                1: {
-                    "contract_amount": 100000.0,
-                    "acceptance_amount": 80000.0,
-                    "collection_amount": 60000.0
-                }
+            1: {
+            "contract_amount": 100000.0,
+            "acceptance_amount": 80000.0,
+            "collection_amount": 60000.0
+            }
             }
             
             result = sales_ranking_service.calculate_rankings(
-                start_date=date.today() - timedelta(days=30),
-                end_date=date.today()
+            start_date=date.today() - timedelta(days=30),
+            end_date=date.today()
             )
             
             assert result is not None
@@ -198,8 +198,8 @@ class TestSalesRankingService:
             mock_metrics.return_value = {}
             
             result = sales_ranking_service.calculate_rankings(
-                start_date=date.today() - timedelta(days=30),
-                end_date=date.today()
+            start_date=date.today() - timedelta(days=30),
+            end_date=date.today()
             )
             
             assert result is not None
@@ -217,13 +217,13 @@ class TestSalesRankingService:
     def test_validate_metrics_config_invalid_source(self, sales_ranking_service):
         """测试验证指标配置 - 无效数据源"""
         metrics = [
-            {
-                "key": "invalid_metric",
-                "label": "无效指标",
-                "weight": 0.1,
-                "data_source": "invalid_source",  # 无效数据源
-                "is_primary": False
-            }
+        {
+        "key": "invalid_metric",
+        "label": "无效指标",
+        "weight": 0.1,
+        "data_source": "invalid_source",  # 无效数据源
+        "is_primary": False
+        }
         ]
         
         result = sales_ranking_service._validate_metrics_config(metrics)

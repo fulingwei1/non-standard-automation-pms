@@ -33,24 +33,24 @@ class TestGetQualificationLevels:
     def test_get_qualification_levels_with_role_type(self, db_session: Session):
         """测试按角色类型筛选"""
         levels = QualificationService.get_qualification_levels(
-            db_session,
-            role_type='engineer'
+        db_session,
+        role_type='engineer'
         )
         assert isinstance(levels, list)
 
     def test_get_qualification_levels_active_only(self, db_session: Session):
         """测试只获取激活的等级"""
         levels = QualificationService.get_qualification_levels(
-            db_session,
-            is_active=True
+        db_session,
+        is_active=True
         )
         assert isinstance(levels, list)
 
     def test_get_qualification_levels_include_inactive(self, db_session: Session):
         """测试包含非激活的等级"""
         levels = QualificationService.get_qualification_levels(
-            db_session,
-            is_active=None
+        db_session,
+        is_active=None
         )
         assert isinstance(levels, list)
 
@@ -61,19 +61,19 @@ class TestGetCompetencyModel:
     def test_get_competency_model_not_found(self, db_session: Session):
         """测试能力模型不存在时返回None"""
         model = QualificationService.get_competency_model(
-            db_session,
-            position_type='NONEXISTENT',
-            level_id=99999
+        db_session,
+        position_type='NONEXISTENT',
+        level_id=99999
         )
         assert model is None
 
     def test_get_competency_model_with_subtype(self, db_session: Session):
         """测试按子类型获取能力模型"""
         model = QualificationService.get_competency_model(
-            db_session,
-            position_type='engineer',
-            level_id=1,
-            position_subtype='mechanical'
+        db_session,
+        position_type='engineer',
+        level_id=1,
+        position_subtype='mechanical'
         )
         # 可能存在也可能不存在
         assert model is None or hasattr(model, 'position_type')
@@ -85,17 +85,17 @@ class TestGetEmployeeQualification:
     def test_get_employee_qualification_not_found(self, db_session: Session):
         """测试员工无任职资格时返回None"""
         qualification = QualificationService.get_employee_qualification(
-            db_session,
-            employee_id=99999
+        db_session,
+        employee_id=99999
         )
         assert qualification is None
 
     def test_get_employee_qualification_with_position_type(self, db_session: Session):
         """测试按岗位类型获取"""
         qualification = QualificationService.get_employee_qualification(
-            db_session,
-            employee_id=1,
-            position_type='engineer'
+        db_session,
+        employee_id=1,
+        position_type='engineer'
         )
         # 可能存在也可能不存在
         assert qualification is None or hasattr(qualification, 'employee_id')
@@ -108,12 +108,12 @@ class TestCertifyEmployee:
         """测试员工不存在时抛出异常"""
         with pytest.raises(ValueError, match="员工.*不存在"):
             QualificationService.certify_employee(
-                db_session,
-                employee_id=99999,
-                position_type='engineer',
-                level_id=1,
-                assessment_details={'score': 85},
-                certifier_id=1
+            db_session,
+            employee_id=99999,
+            position_type='engineer',
+            level_id=1,
+            assessment_details={'score': 85},
+            certifier_id=1
             )
 
     def test_certify_employee_level_not_found(self, db_session: Session):
@@ -123,8 +123,8 @@ class TestCertifyEmployee:
         with patch('app.services.qualification_service.db.query') as mock_query:
             mock_employee = MagicMock()
             mock_query.return_value.filter.return_value.first.side_effect = [
-                mock_employee,  # 员工存在
-                None  # 等级不存在
+            mock_employee,  # 员工存在
+            None  # 等级不存在
             ]
 
             # 实际测试会因为查询逻辑不同而有所变化
@@ -147,9 +147,9 @@ class TestAssessEmployee:
     def test_calculate_total_score_multiple(self, db_session: Session):
         """测试多项分数平均"""
         score = QualificationService._calculate_total_score({
-            'dim1': 80,
-            'dim2': 90,
-            'dim3': 70
+        'dim1': 80,
+        'dim2': 90,
+        'dim3': 70
         })
         assert score == Decimal('80.00')  # (80+90+70)/3 = 80
 
@@ -175,9 +175,9 @@ class TestCheckPromotionEligibility:
     def test_check_promotion_no_qualification(self, db_session: Session):
         """测试无任职资格时不符合晋升条件"""
         result = QualificationService.check_promotion_eligibility(
-            db_session,
-            employee_id=99999,
-            target_level_id=2
+        db_session,
+        employee_id=99999,
+        target_level_id=2
         )
         assert result['eligible'] is False
         assert '尚未获得任职资格认证' in result['reason']
@@ -189,8 +189,8 @@ class TestGetAssessmentHistory:
     def test_get_assessment_history_empty(self, db_session: Session):
         """测试无评估历史时返回空列表"""
         history = QualificationService.get_assessment_history(
-            db_session,
-            employee_id=99999
+        db_session,
+        employee_id=99999
         )
         assert isinstance(history, list)
         assert len(history) == 0
@@ -198,9 +198,9 @@ class TestGetAssessmentHistory:
     def test_get_assessment_history_with_qualification_filter(self, db_session: Session):
         """测试按任职资格筛选"""
         history = QualificationService.get_assessment_history(
-            db_session,
-            employee_id=1,
-            qualification_id=1
+        db_session,
+        employee_id=1,
+        qualification_id=1
         )
         assert isinstance(history, list)
 
@@ -211,16 +211,16 @@ class TestGetCompetencyModelsByPosition:
     def test_get_competency_models_by_position_empty(self, db_session: Session):
         """测试无能力模型时返回空列表"""
         models = QualificationService.get_competency_models_by_position(
-            db_session,
-            position_type='NONEXISTENT'
+        db_session,
+        position_type='NONEXISTENT'
         )
         assert isinstance(models, list)
 
     def test_get_competency_models_by_position_with_subtype(self, db_session: Session):
         """测试按子类型获取"""
         models = QualificationService.get_competency_models_by_position(
-            db_session,
-            position_type='engineer',
-            position_subtype='mechanical'
+        db_session,
+        position_type='engineer',
+        position_subtype='mechanical'
         )
         assert isinstance(models, list)

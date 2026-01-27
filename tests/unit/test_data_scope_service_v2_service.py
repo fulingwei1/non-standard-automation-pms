@@ -13,11 +13,8 @@ class TestDataScopeServiceV2Init:
 
     def test_class_exists(self):
         """测试类存在"""
-        try:
-            from app.services.data_scope_service_v2 import DataScopeServiceV2
-            assert DataScopeServiceV2 is not None
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        from app.services.data_scope_service_v2 import DataScopeServiceV2
+        assert DataScopeServiceV2 is not None
 
 
 class TestGetUserOrgUnits:
@@ -25,23 +22,17 @@ class TestGetUserOrgUnits:
 
     def test_no_assignments(self, db_session):
         """测试无组织分配"""
-        try:
-            from app.services.data_scope_service_v2 import DataScopeServiceV2
+        from app.services.data_scope_service_v2 import DataScopeServiceV2
 
-            result = DataScopeServiceV2.get_user_org_units(db_session, 99999)
-            assert result == []
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        result = DataScopeServiceV2.get_user_org_units(db_session, 99999)
+        assert result == []
 
     def test_with_mock_user(self, db_session):
         """测试使用Mock用户"""
-        try:
-            from app.services.data_scope_service_v2 import DataScopeServiceV2
+        from app.services.data_scope_service_v2 import DataScopeServiceV2
 
-            result = DataScopeServiceV2.get_user_org_units(db_session, 1)
-            assert isinstance(result, list)
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        result = DataScopeServiceV2.get_user_org_units(db_session, 1)
+        assert isinstance(result, list)
 
 
 class TestGetAccessibleOrgUnits:
@@ -49,39 +40,30 @@ class TestGetAccessibleOrgUnits:
 
     def test_all_scope(self, db_session):
         """测试ALL权限范围"""
-        try:
-            from app.services.data_scope_service_v2 import DataScopeServiceV2
+        from app.services.data_scope_service_v2 import DataScopeServiceV2
 
-            result = DataScopeServiceV2.get_accessible_org_units(
-                db_session, 1, "ALL"
-            )
-            assert isinstance(result, list)
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        result = DataScopeServiceV2.get_accessible_org_units(
+        db_session, 1, "ALL"
+        )
+        assert isinstance(result, list)
 
     def test_team_scope(self, db_session):
         """测试TEAM权限范围"""
-        try:
-            from app.services.data_scope_service_v2 import DataScopeServiceV2
+        from app.services.data_scope_service_v2 import DataScopeServiceV2
 
-            result = DataScopeServiceV2.get_accessible_org_units(
-                db_session, 1, "TEAM"
-            )
-            assert isinstance(result, list)
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        result = DataScopeServiceV2.get_accessible_org_units(
+        db_session, 1, "TEAM"
+        )
+        assert isinstance(result, list)
 
     def test_department_scope(self, db_session):
         """测试DEPARTMENT权限范围"""
-        try:
-            from app.services.data_scope_service_v2 import DataScopeServiceV2
+        from app.services.data_scope_service_v2 import DataScopeServiceV2
 
-            result = DataScopeServiceV2.get_accessible_org_units(
-                db_session, 1, "DEPARTMENT"
-            )
-            assert isinstance(result, list)
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        result = DataScopeServiceV2.get_accessible_org_units(
+        db_session, 1, "DEPARTMENT"
+        )
+        assert isinstance(result, list)
 
 
 class TestFindAncestorByType:
@@ -89,35 +71,29 @@ class TestFindAncestorByType:
 
     def test_find_department(self, db_session):
         """测试查找部门祖先"""
-        try:
-            from app.services.data_scope_service_v2 import DataScopeServiceV2
+        from app.services.data_scope_service_v2 import DataScopeServiceV2
 
-            org_unit = MagicMock()
-            org_unit.unit_type = "TEAM"
-            org_unit.parent_id = None
+        org_unit = MagicMock()
+        org_unit.unit_type = "TEAM"
+        org_unit.parent_id = None
 
-            result = DataScopeServiceV2._find_ancestor_by_type(
-                db_session, org_unit, "DEPARTMENT"
-            )
-            assert result is None  # 没有父级
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        result = DataScopeServiceV2._find_ancestor_by_type(
+        db_session, org_unit, "DEPARTMENT"
+        )
+        assert result is None  # 没有父级
 
     def test_same_type(self, db_session):
         """测试类型匹配"""
-        try:
-            from app.services.data_scope_service_v2 import DataScopeServiceV2
+        from app.services.data_scope_service_v2 import DataScopeServiceV2
 
-            org_unit = MagicMock()
-            org_unit.unit_type = "DEPARTMENT"
-            org_unit.parent_id = None
+        org_unit = MagicMock()
+        org_unit.unit_type = "DEPARTMENT"
+        org_unit.parent_id = None
 
-            result = DataScopeServiceV2._find_ancestor_by_type(
-                db_session, org_unit, "DEPARTMENT"
-            )
-            assert result == org_unit
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        result = DataScopeServiceV2._find_ancestor_by_type(
+        db_session, org_unit, "DEPARTMENT"
+        )
+        assert result == org_unit
 
 
 class TestGetSubtreeIds:
@@ -125,13 +101,10 @@ class TestGetSubtreeIds:
 
     def test_single_node(self, db_session):
         """测试单节点"""
-        try:
-            from app.services.data_scope_service_v2 import DataScopeServiceV2
+        from app.services.data_scope_service_v2 import DataScopeServiceV2
 
-            result = DataScopeServiceV2._get_subtree_ids(db_session, 99999)
-            assert 99999 in result
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        result = DataScopeServiceV2._get_subtree_ids(db_session, 99999)
+        assert 99999 in result
 
 
 class TestApplyDataScope:
@@ -139,20 +112,17 @@ class TestApplyDataScope:
 
     def test_superuser_no_filter(self, db_session):
         """测试超级管理员不过滤"""
-        try:
-            from app.services.data_scope_service_v2 import DataScopeServiceV2
+        from app.services.data_scope_service_v2 import DataScopeServiceV2
 
-            user = MagicMock()
-            user.is_superuser = True
+        user = MagicMock()
+        user.is_superuser = True
 
-            query = MagicMock()
+        query = MagicMock()
 
-            result = DataScopeServiceV2.apply_data_scope(
-                query, db_session, user, "project"
-            )
-            assert result == query  # 不修改查询
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        result = DataScopeServiceV2.apply_data_scope(
+        query, db_session, user, "project"
+        )
+        assert result == query  # 不修改查询
 
 
 class TestCanAccessData:
@@ -160,20 +130,17 @@ class TestCanAccessData:
 
     def test_superuser_can_access(self, db_session):
         """测试超级管理员可访问"""
-        try:
-            from app.services.data_scope_service_v2 import DataScopeServiceV2
+        from app.services.data_scope_service_v2 import DataScopeServiceV2
 
-            user = MagicMock()
-            user.is_superuser = True
+        user = MagicMock()
+        user.is_superuser = True
 
-            data = MagicMock()
+        data = MagicMock()
 
-            result = DataScopeServiceV2.can_access_data(
-                db_session, user, "project", data
-            )
-            assert result is True
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        result = DataScopeServiceV2.can_access_data(
+        db_session, user, "project", data
+        )
+        assert result is True
 
 
 # pytest fixtures

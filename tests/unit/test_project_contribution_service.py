@@ -41,9 +41,9 @@ class TestCalculateMemberContribution:
         period = date.today().strftime("%Y-%m")
 
         contribution = service.calculate_member_contribution(
-            project_id=mock_project.id,
-            user_id=test_user.id,
-            period=period
+        project_id=mock_project.id,
+        user_id=test_user.id,
+        period=period
         )
 
         assert contribution is not None
@@ -60,17 +60,17 @@ class TestCalculateMemberContribution:
 
         # 第一次计算
         contribution1 = service.calculate_member_contribution(
-            project_id=mock_project.id,
-            user_id=test_user.id,
-            period=period
+        project_id=mock_project.id,
+        user_id=test_user.id,
+        period=period
         )
         contribution_id = contribution1.id
 
         # 第二次计算（应该更新而不是创建新记录）
         contribution2 = service.calculate_member_contribution(
-            project_id=mock_project.id,
-            user_id=test_user.id,
-            period=period
+        project_id=mock_project.id,
+        user_id=test_user.id,
+        period=period
         )
 
         assert contribution2.id == contribution_id
@@ -83,9 +83,9 @@ class TestCalculateMemberContribution:
         period = date.today().strftime("%Y-%m")
 
         contribution = service.calculate_member_contribution(
-            project_id=mock_project.id,
-            user_id=test_user.id,
-            period=period
+        project_id=mock_project.id,
+        user_id=test_user.id,
+        period=period
         )
 
         # 验证字段存在
@@ -152,7 +152,7 @@ class TestGetProjectContributions:
         """测试无贡献度数据时返回空列表"""
         service = ProjectContributionService(db_session)
         contributions = service.get_project_contributions(
-            project_id=mock_project.id
+        project_id=mock_project.id
         )
         assert contributions == []
 
@@ -164,8 +164,8 @@ class TestGetProjectContributions:
         period = date.today().strftime("%Y-%m")
 
         contributions = service.get_project_contributions(
-            project_id=mock_project.id,
-            period=period
+        project_id=mock_project.id,
+        period=period
         )
         assert isinstance(contributions, list)
 
@@ -178,15 +178,15 @@ class TestGetProjectContributions:
 
         # 先计算
         service.calculate_member_contribution(
-            project_id=mock_project.id,
-            user_id=test_user.id,
-            period=period
+        project_id=mock_project.id,
+        user_id=test_user.id,
+        period=period
         )
 
         # 然后获取
         contributions = service.get_project_contributions(
-            project_id=mock_project.id,
-            period=period
+        project_id=mock_project.id,
+        period=period
         )
 
         assert len(contributions) == 1
@@ -202,7 +202,7 @@ class TestGetUserProjectContributions:
         """测试用户无贡献度数据时返回空列表"""
         service = ProjectContributionService(db_session)
         contributions = service.get_user_project_contributions(
-            user_id=test_user.id
+        user_id=test_user.id
         )
         assert contributions == []
 
@@ -215,9 +215,9 @@ class TestGetUserProjectContributions:
         end_period = "2024-12"
 
         contributions = service.get_user_project_contributions(
-            user_id=test_user.id,
-            start_period=start_period,
-            end_period=end_period
+        user_id=test_user.id,
+        start_period=start_period,
+        end_period=end_period
         )
         assert isinstance(contributions, list)
 
@@ -233,11 +233,11 @@ class TestRateMemberContribution:
         period = date.today().strftime("%Y-%m")
 
         contribution = service.rate_member_contribution(
-            project_id=mock_project.id,
-            user_id=test_user.id,
-            period=period,
-            pm_rating=4,
-            rater_id=test_pm_user.id
+        project_id=mock_project.id,
+        user_id=test_user.id,
+        period=period,
+        pm_rating=4,
+        rater_id=test_pm_user.id
         )
 
         assert contribution.pm_rating == 4
@@ -251,11 +251,11 @@ class TestRateMemberContribution:
 
         with pytest.raises(ValueError, match="评分必须在1-5之间"):
             service.rate_member_contribution(
-                project_id=mock_project.id,
-                user_id=test_user.id,
-                period=period,
-                pm_rating=0,
-                rater_id=test_pm_user.id
+            project_id=mock_project.id,
+            user_id=test_user.id,
+            period=period,
+            pm_rating=0,
+            rater_id=test_pm_user.id
             )
 
     def test_rate_contribution_invalid_rating_too_high(
@@ -267,11 +267,11 @@ class TestRateMemberContribution:
 
         with pytest.raises(ValueError, match="评分必须在1-5之间"):
             service.rate_member_contribution(
-                project_id=mock_project.id,
-                user_id=test_user.id,
-                period=period,
-                pm_rating=6,
-                rater_id=test_pm_user.id
+            project_id=mock_project.id,
+            user_id=test_user.id,
+            period=period,
+            pm_rating=6,
+            rater_id=test_pm_user.id
             )
 
     def test_rate_contribution_creates_if_not_exists(
@@ -283,11 +283,11 @@ class TestRateMemberContribution:
 
         # 直接评分（不先计算）
         contribution = service.rate_member_contribution(
-            project_id=mock_project.id,
-            user_id=test_user.id,
-            period=period,
-            pm_rating=5,
-            rater_id=test_pm_user.id
+        project_id=mock_project.id,
+        user_id=test_user.id,
+        period=period,
+        pm_rating=5,
+        rater_id=test_pm_user.id
         )
 
         assert contribution is not None
@@ -303,7 +303,7 @@ class TestGenerateContributionReport:
         """测试无贡献度数据项目的报告"""
         service = ProjectContributionService(db_session)
         report = service.generate_contribution_report(
-            project_id=mock_project.id
+        project_id=mock_project.id
         )
 
         assert report["project_id"] == mock_project.id
@@ -322,8 +322,8 @@ class TestGenerateContributionReport:
         period = date.today().strftime("%Y-%m")
 
         report = service.generate_contribution_report(
-            project_id=mock_project.id,
-            period=period
+        project_id=mock_project.id,
+        period=period
         )
 
         assert report["period"] == period
@@ -337,14 +337,14 @@ class TestGenerateContributionReport:
 
         # 先计算一个贡献度
         service.calculate_member_contribution(
-            project_id=mock_project.id,
-            user_id=test_user.id,
-            period=period
+        project_id=mock_project.id,
+        user_id=test_user.id,
+        period=period
         )
 
         report = service.generate_contribution_report(
-            project_id=mock_project.id,
-            period=period
+        project_id=mock_project.id,
+        period=period
         )
 
         # 验证报告结构

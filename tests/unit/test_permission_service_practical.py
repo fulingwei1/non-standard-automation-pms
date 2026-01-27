@@ -91,12 +91,12 @@ class TestPermissionService:
         """测试超级用户拥有所有权限。"""
         # 将用户设为超级用户
         db_session.query(User).filter(User.id == test_user_with_role.id).update(
-            {"is_superuser": True}
+        {"is_superuser": True}
         )
         db_session.commit()
 
         result = PermissionService.check_permission(
-            db_session, test_user_with_role.id, "project:read", "PROJECT"
+        db_session, test_user_with_role.id, "project:read", "PROJECT"
         )
         assert result is True
 
@@ -105,20 +105,20 @@ class TestPermissionService:
     ):
         """测试用户有特定权限。"""
         result = PermissionService.check_permission(
-            db_session, test_user_with_role.id, "project:read", "PROJECT"
+        db_session, test_user_with_role.id, "project:read", "PROJECT"
         )
         assert result is True
 
         # 测试无权限
         result = PermissionService.check_permission(
-            db_session, test_user_with_role.id, "project:delete", "PROJECT"
+        db_session, test_user_with_role.id, "project:delete", "PROJECT"
         )
         assert result is False
 
     def test_check_permission_user_no_user(self, db_session: Session):
         """测试不存在的用户没有权限。"""
         result = PermissionService.check_permission(
-            db_session, 9999, "project:read", "PROJECT"
+        db_session, 9999, "project:read", "PROJECT"
         )
         assert result is False
 
@@ -127,11 +127,11 @@ class TestPermissionService:
 
         # 创建数据范围规则
         scope_rule = DataScopeRule(
-            rule_name="Test Scope Rule",
-            rule_code="ALL_PROJECTS",
-            scope_type="PROJECT",
-            description="测试：所有项目访问权限",
-            is_active=True,
+        rule_name="Test Scope Rule",
+        rule_code="ALL_PROJECTS",
+        scope_type="PROJECT",
+        description="测试：所有项目访问权限",
+        is_active=True,
         )
         db_session.add(scope_rule)
         db_session.commit()
@@ -139,10 +139,10 @@ class TestPermissionService:
 
         # 创建权限
         perm = Permission(
-            permission_name="test:project:write",
-            permission_code="project:write",
-            module="PROJECT",
-            action="write",
+        permission_name="test:project:write",
+        permission_code="project:write",
+        module="PROJECT",
+        action="write",
         )
         db_session.add(perm)
         db_session.commit()
@@ -155,7 +155,7 @@ class TestPermissionService:
         db_session.commit()
 
         result = PermissionService.get_user_permissions(
-            db_session, test_user_with_role.id
+        db_session, test_user_with_role.id
         )
         assert "project:write" in result
 
@@ -164,7 +164,7 @@ class TestPermissionService:
     ):
         """测试用户的有效角色。"""
         result = PermissionService.get_user_effective_roles(
-            db_session, test_user_with_role.id
+        db_session, test_user_with_role.id
         )
         assert len(result) > 0
 
@@ -173,6 +173,6 @@ class TestPermissionService:
     ):
         """测试普通用户有特定权限返回True。"""
         result = PermissionService.check_any_permission(
-            db_session, test_user_with_role.id, ["project:read"], "PROJECT"
+        db_session, test_user_with_role.id, ["project:read"], "PROJECT"
         )
         assert result is True

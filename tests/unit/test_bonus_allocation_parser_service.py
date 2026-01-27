@@ -15,36 +15,27 @@ class TestValidateFileType:
 
     def test_valid_xlsx_file(self):
         """测试有效的xlsx文件"""
-        try:
-            from app.services.bonus_allocation_parser import validate_file_type
+        from app.services.bonus_allocation_parser import validate_file_type
 
             # 不应抛出异常
-            validate_file_type("test.xlsx")
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        validate_file_type("test.xlsx")
 
     def test_valid_xls_file(self):
         """测试有效的xls文件"""
-        try:
-            from app.services.bonus_allocation_parser import validate_file_type
+        from app.services.bonus_allocation_parser import validate_file_type
 
-            validate_file_type("test.xls")
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        validate_file_type("test.xls")
 
     def test_invalid_file_type(self):
         """测试无效的文件类型"""
-        try:
-            from app.services.bonus_allocation_parser import validate_file_type
-            from fastapi import HTTPException
+        from app.services.bonus_allocation_parser import validate_file_type
+        from fastapi import HTTPException
 
-            with pytest.raises(HTTPException) as exc_info:
-                validate_file_type("test.csv")
+        with pytest.raises(HTTPException) as exc_info:
+            validate_file_type("test.csv")
 
             assert exc_info.value.status_code == 400
             assert "只支持Excel文件" in exc_info.value.detail
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
 
 
 class TestParseDate:
@@ -52,24 +43,18 @@ class TestParseDate:
 
     def test_parse_string_date(self):
         """测试解析字符串日期"""
-        try:
-            from app.services.bonus_allocation_parser import parse_date
+        from app.services.bonus_allocation_parser import parse_date
 
-            result = parse_date("2025-01-15")
-            assert result == date(2025, 1, 15)
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        result = parse_date("2025-01-15")
+        assert result == date(2025, 1, 15)
 
     def test_parse_datetime_object(self):
         """测试解析datetime对象"""
-        try:
-            from app.services.bonus_allocation_parser import parse_date
+        from app.services.bonus_allocation_parser import parse_date
 
-            dt = datetime(2025, 1, 15, 10, 30)
-            result = parse_date(dt)
-            assert result == date(2025, 1, 15)
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        dt = datetime(2025, 1, 15, 10, 30)
+        result = parse_date(dt)
+        assert result == date(2025, 1, 15)
 
 
 class TestGetColumnValue:
@@ -77,29 +62,23 @@ class TestGetColumnValue:
 
     def test_primary_column_exists(self):
         """测试主列存在"""
-        try:
-            from app.services.bonus_allocation_parser import get_column_value
-            import pandas as pd
+        from app.services.bonus_allocation_parser import get_column_value
+        import pandas as pd
 
-            row = pd.Series({'计算记录ID*': 123, '计算记录ID': 456})
-            result = get_column_value(row, '计算记录ID*')
+        row = pd.Series({'计算记录ID*': 123, '计算记录ID': 456})
+        result = get_column_value(row, '计算记录ID*')
 
-            assert result == 123
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert result == 123
 
     def test_fallback_to_alt_column(self):
         """测试回退到备选列"""
-        try:
-            from app.services.bonus_allocation_parser import get_column_value
-            import pandas as pd
+        from app.services.bonus_allocation_parser import get_column_value
+        import pandas as pd
 
-            row = pd.Series({'计算记录ID': 456})
-            result = get_column_value(row, '计算记录ID*')
+        row = pd.Series({'计算记录ID': 456})
+        result = get_column_value(row, '计算记录ID*')
 
-            assert result == 456
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert result == 456
 
 
 class TestValidateRequiredColumns:
@@ -107,37 +86,31 @@ class TestValidateRequiredColumns:
 
     def test_missing_all_id_columns(self):
         """测试缺少所有ID列"""
-        try:
-            from app.services.bonus_allocation_parser import validate_required_columns
-            from fastapi import HTTPException
-            import pandas as pd
+        from app.services.bonus_allocation_parser import validate_required_columns
+        from fastapi import HTTPException
+        import pandas as pd
 
-            df = pd.DataFrame({'其他列': [1, 2, 3]})
+        df = pd.DataFrame({'其他列': [1, 2, 3]})
 
-            with pytest.raises(HTTPException) as exc_info:
-                validate_required_columns(df)
+        with pytest.raises(HTTPException) as exc_info:
+            validate_required_columns(df)
 
             assert exc_info.value.status_code == 400
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
 
     def test_has_calculation_id(self):
         """测试有计算记录ID"""
-        try:
-            from app.services.bonus_allocation_parser import validate_required_columns
-            import pandas as pd
+        from app.services.bonus_allocation_parser import validate_required_columns
+        import pandas as pd
 
-            df = pd.DataFrame({
-                '计算记录ID*': [1],
-                '受益人ID*': [1],
-                '发放金额*': [100],
-                '发放日期*': ['2025-01-15']
-            })
+        df = pd.DataFrame({
+        '计算记录ID*': [1],
+        '受益人ID*': [1],
+        '发放金额*': [100],
+        '发放日期*': ['2025-01-15']
+        })
 
             # 不应抛出异常
-            validate_required_columns(df)
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        validate_required_columns(df)
 
 
 class TestValidateRowData:
@@ -145,41 +118,35 @@ class TestValidateRowData:
 
     def test_missing_calculation_record(self, db_session):
         """测试计算记录不存在"""
-        try:
-            from app.services.bonus_allocation_parser import validate_row_data
+        from app.services.bonus_allocation_parser import validate_row_data
 
-            errors = validate_row_data(
-                db_session,
-                calc_id=99999,
-                team_allocation_id=None,
-                user_id=1,
-                calc_amount=Decimal('100'),
-                dist_amount=Decimal('100')
-            )
+        errors = validate_row_data(
+        db_session,
+        calc_id=99999,
+        team_allocation_id=None,
+        user_id=1,
+        calc_amount=Decimal('100'),
+        dist_amount=Decimal('100')
+        )
 
-            assert len(errors) > 0
-            assert any("计算记录ID" in e for e in errors)
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert len(errors) > 0
+        assert any("计算记录ID" in e for e in errors)
 
     def test_missing_user(self, db_session):
         """测试用户不存在"""
-        try:
-            from app.services.bonus_allocation_parser import validate_row_data
+        from app.services.bonus_allocation_parser import validate_row_data
 
-            errors = validate_row_data(
-                db_session,
-                calc_id=None,
-                team_allocation_id=1,
-                user_id=99999,
-                calc_amount=Decimal('100'),
-                dist_amount=Decimal('100')
-            )
+        errors = validate_row_data(
+        db_session,
+        calc_id=None,
+        team_allocation_id=1,
+        user_id=99999,
+        calc_amount=Decimal('100'),
+        dist_amount=Decimal('100')
+        )
 
-            assert len(errors) > 0
-            assert any("受益人ID" in e for e in errors)
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert len(errors) > 0
+        assert any("受益人ID" in e for e in errors)
 
 
 class TestParseAllocationSheet:
@@ -187,17 +154,14 @@ class TestParseAllocationSheet:
 
     def test_empty_dataframe(self, db_session):
         """测试空数据框"""
-        try:
-            from app.services.bonus_allocation_parser import parse_allocation_sheet
-            import pandas as pd
+        from app.services.bonus_allocation_parser import parse_allocation_sheet
+        import pandas as pd
 
-            df = pd.DataFrame()
-            valid_rows, errors = parse_allocation_sheet(df, db_session)
+        df = pd.DataFrame()
+        valid_rows, errors = parse_allocation_sheet(df, db_session)
 
-            assert valid_rows == []
-            assert errors == {}
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
+        assert valid_rows == []
+        assert errors == {}
 
 
 class TestParseExcelFile:
@@ -205,17 +169,14 @@ class TestParseExcelFile:
 
     def test_invalid_excel_content(self):
         """测试无效的Excel内容"""
-        try:
-            from app.services.bonus_allocation_parser import parse_excel_file
-            from fastapi import HTTPException
+        from app.services.bonus_allocation_parser import parse_excel_file
+        from fastapi import HTTPException
 
-            with pytest.raises(HTTPException) as exc_info:
-                parse_excel_file(b"invalid content")
+        with pytest.raises(HTTPException) as exc_info:
+            parse_excel_file(b"invalid content")
 
             assert exc_info.value.status_code == 400
             assert "Excel文件解析失败" in exc_info.value.detail
-        except Exception as e:
-            pytest.skip(f"Service dependencies not available: {e}")
 
 
 class TestDecimalConversion:
@@ -244,8 +205,8 @@ class TestRowNumberCalculation:
             row_num = idx + 2
             assert row_num >= 2
 
-        assert 0 + 2 == 2  # 第一行数据
-        assert 1 + 2 == 3  # 第二行数据
+            assert 0 + 2 == 2  # 第一行数据
+            assert 1 + 2 == 3  # 第二行数据
 
 
 class TestParsedDataStructure:
@@ -254,17 +215,17 @@ class TestParsedDataStructure:
     def test_data_fields(self):
         """测试数据字段"""
         data = {
-            'calculation_id': 1,
-            'team_allocation_id': None,
-            'user_id': 10,
-            'user_name': '张三',
-            'calculated_amount': 1000.00,
-            'distributed_amount': 1000.00,
-            'distribution_date': '2025-01-15',
-            'payment_method': '银行转账',
-            'voucher_no': 'V001',
-            'payment_account': '1234567890',
-            'payment_remark': '测试备注',
+        'calculation_id': 1,
+        'team_allocation_id': None,
+        'user_id': 10,
+        'user_name': '张三',
+        'calculated_amount': 1000.00,
+        'distributed_amount': 1000.00,
+        'distribution_date': '2025-01-15',
+        'payment_method': '银行转账',
+        'voucher_no': 'V001',
+        'payment_account': '1234567890',
+        'payment_remark': '测试备注',
         }
 
         assert data['calculation_id'] == 1

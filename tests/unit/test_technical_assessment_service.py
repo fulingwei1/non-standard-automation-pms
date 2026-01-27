@@ -109,7 +109,7 @@ class TestGetActiveScoringRule:
 
         mock_rule = MockScoringRule(1, '{"evaluation_criteria": {}}')
         db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
-            mock_rule
+        mock_rule
         )
 
         result = service._get_active_scoring_rule()
@@ -121,7 +121,7 @@ class TestGetActiveScoringRule:
         service = TechnicalAssessmentService(db)
 
         db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
-            None
+        None
         )
 
         result = service._get_active_scoring_rule()
@@ -146,7 +146,7 @@ class TestCalculateScores:
         rules_config = {"evaluation_criteria": {}, "scales": {}}
 
         dimension_scores, total_score = service._calculate_scores(
-            requirement_data, rules_config
+        requirement_data, rules_config
         )
 
         assert dimension_scores["technology"] == 0
@@ -163,23 +163,23 @@ class TestCalculateScores:
 
         requirement_data = {"tech_maturity": "high", "budget_status": "confirmed"}
         rules_config = {
-            "evaluation_criteria": {
-                "tech_maturity": {
-                    "field": "tech_maturity",
-                    "max_points": 10,
-                    "options": [{"value": "high", "points": 10}],
-                },
-                "budget_status": {
-                    "field": "budget_status",
-                    "max_points": 10,
-                    "options": [{"value": "confirmed", "points": 10}],
-                },
-            },
-            "scales": {},
+        "evaluation_criteria": {
+        "tech_maturity": {
+        "field": "tech_maturity",
+        "max_points": 10,
+        "options": [{"value": "high", "points": 10}],
+        },
+        "budget_status": {
+        "field": "budget_status",
+        "max_points": 10,
+        "options": [{"value": "confirmed", "points": 10}],
+        },
+        },
+        "scales": {},
         }
 
         dimension_scores, total_score = service._calculate_scores(
-            requirement_data, rules_config
+        requirement_data, rules_config
         )
 
         # 应该有一些分数
@@ -205,7 +205,7 @@ class TestScoreDimension:
         criteria_keys = ["tech_maturity"]
 
         result = service._score_dimension(
-            requirement_data, evaluation_criteria, criteria_keys
+        requirement_data, evaluation_criteria, criteria_keys
         )
         assert result == 0
 
@@ -216,20 +216,20 @@ class TestScoreDimension:
 
         requirement_data = {"tech_maturity": "high"}
         evaluation_criteria = {
-            "tech_maturity": {
-                "field": "tech_maturity",
-                "max_points": 10,
-                "options": [
-                    {"value": "low", "points": 2},
-                    {"value": "medium", "points": 5},
-                    {"value": "high", "points": 10},
-                ],
-            }
+        "tech_maturity": {
+        "field": "tech_maturity",
+        "max_points": 10,
+        "options": [
+        {"value": "low", "points": 2},
+        {"value": "medium", "points": 5},
+        {"value": "high", "points": 10},
+        ],
+        }
         }
         criteria_keys = ["tech_maturity"]
 
         result = service._score_dimension(
-            requirement_data, evaluation_criteria, criteria_keys
+        requirement_data, evaluation_criteria, criteria_keys
         )
         assert result == 20  # 10/10 * 20 = 20
 
@@ -240,16 +240,16 @@ class TestScoreDimension:
 
         requirement_data = {"tech_maturity": "unknown"}
         evaluation_criteria = {
-            "tech_maturity": {
-                "field": "tech_maturity",
-                "max_points": 10,
-                "options": [{"value": "high", "points": 10}],
-            }
+        "tech_maturity": {
+        "field": "tech_maturity",
+        "max_points": 10,
+        "options": [{"value": "high", "points": 10}],
+        }
         }
         criteria_keys = ["tech_maturity"]
 
         result = service._score_dimension(
-            requirement_data, evaluation_criteria, criteria_keys
+        requirement_data, evaluation_criteria, criteria_keys
         )
         assert result == 0
 
@@ -269,7 +269,7 @@ class TestMatchValue:
         service = TechnicalAssessmentService(db)
 
         result = service._match_value(
-            "high", {"value": "high"}, {"match_mode": "exact"}
+        "high", {"value": "high"}, {"match_mode": "exact"}
         )
         assert result is True
 
@@ -279,7 +279,7 @@ class TestMatchValue:
         service = TechnicalAssessmentService(db)
 
         result = service._match_value(
-            "high", {"value": "low"}, {"match_mode": "exact"}
+        "high", {"value": "low"}, {"match_mode": "exact"}
         )
         assert result is False
 
@@ -289,7 +289,7 @@ class TestMatchValue:
         service = TechnicalAssessmentService(db)
 
         result = service._match_value(
-            "high precision", {"keywords": ["high", "precision"]}, {"match_mode": "contains"}
+        "high precision", {"keywords": ["high", "precision"]}, {"match_mode": "contains"}
         )
         assert result is True
 
@@ -299,7 +299,7 @@ class TestMatchValue:
         service = TechnicalAssessmentService(db)
 
         result = service._match_value(
-            "low precision", {"keywords": ["high"]}, {"match_mode": "contains"}
+        "low precision", {"keywords": ["high"]}, {"match_mode": "contains"}
         )
         assert result is False
 
@@ -342,17 +342,17 @@ class TestCheckVetoRules:
 
         requirement_data = {"tech_risk": "unacceptable"}
         rules_config = {
-            "veto_rules": [
-                {
-                    "name": "技术风险一票否决",
-                    "reason": "技术风险不可接受",
-                    "condition": {
-                        "field": "tech_risk",
-                        "operator": "==",
-                        "value": "unacceptable",
-                    },
-                }
-            ]
+        "veto_rules": [
+        {
+        "name": "技术风险一票否决",
+        "reason": "技术风险不可接受",
+        "condition": {
+        "field": "tech_risk",
+        "operator": "==",
+        "value": "unacceptable",
+        },
+        }
+        ]
         }
 
         triggered, rules = service._check_veto_rules(requirement_data, rules_config)
@@ -368,17 +368,17 @@ class TestCheckVetoRules:
 
         requirement_data = {"tech_risk": "acceptable"}
         rules_config = {
-            "veto_rules": [
-                {
-                    "name": "技术风险一票否决",
-                    "reason": "技术风险不可接受",
-                    "condition": {
-                        "field": "tech_risk",
-                        "operator": "==",
-                        "value": "unacceptable",
-                    },
-                }
-            ]
+        "veto_rules": [
+        {
+        "name": "技术风险一票否决",
+        "reason": "技术风险不可接受",
+        "condition": {
+        "field": "tech_risk",
+        "operator": "==",
+        "value": "unacceptable",
+        },
+        }
+        ]
         }
 
         triggered, rules = service._check_veto_rules(requirement_data, rules_config)
@@ -393,17 +393,17 @@ class TestCheckVetoRules:
 
         requirement_data = {"status": "rejected"}
         rules_config = {
-            "veto_rules": [
-                {
-                    "name": "状态否决",
-                    "reason": "状态不允许",
-                    "condition": {
-                        "field": "status",
-                        "operator": "in",
-                        "value": ["rejected", "cancelled"],
-                    },
-                }
-            ]
+        "veto_rules": [
+        {
+        "name": "状态否决",
+        "reason": "状态不允许",
+        "condition": {
+        "field": "status",
+        "operator": "in",
+        "value": ["rejected", "cancelled"],
+        },
+        }
+        ]
         }
 
         triggered, rules = service._check_veto_rules(requirement_data, rules_config)
@@ -451,22 +451,22 @@ class TestCalculateSimilarity:
         service = TechnicalAssessmentService(db)
 
         requirement_data = {
-            "industry": "汽车电子",
-            "productTypes": '["ICT", "FCT"]',
-            "targetTakt": 30,
-            "budgetStatus": "confirmed",
-            "customerProjectStatus": "active",
-            "specStatus": "finalized",
+        "industry": "汽车电子",
+        "productTypes": '["ICT", "FCT"]',
+        "targetTakt": 30,
+        "budgetStatus": "confirmed",
+        "customerProjectStatus": "active",
+        "specStatus": "finalized",
         }
         failure_case = MockFailureCase(
-            "CASE-001",
-            "项目A",
-            industry="汽车电子",
-            product_types='["ICT", "FCT"]',
-            takt_time_s=30,
-            budget_status="confirmed",
-            customer_project_status="active",
-            spec_status="finalized",
+        "CASE-001",
+        "项目A",
+        industry="汽车电子",
+        product_types='["ICT", "FCT"]',
+        takt_time_s=30,
+        budget_status="confirmed",
+        customer_project_status="active",
+        spec_status="finalized",
         )
 
         result = service._calculate_similarity(requirement_data, failure_case)
@@ -489,14 +489,14 @@ class TestGenerateDecision:
         service = TechnicalAssessmentService(db)
 
         rules_config = {
-            "scales": {
-                "decision_thresholds": [
-                    {"min_score": 80, "decision": "推荐立项"},
-                    {"min_score": 60, "decision": "有条件立项"},
-                    {"min_score": 40, "decision": "暂缓"},
-                    {"min_score": 0, "decision": "不建议立项"},
-                ]
-            }
+        "scales": {
+        "decision_thresholds": [
+        {"min_score": 80, "decision": "推荐立项"},
+        {"min_score": 60, "decision": "有条件立项"},
+        {"min_score": 40, "decision": "暂缓"},
+        {"min_score": 0, "decision": "不建议立项"},
+        ]
+        }
         }
 
         result = service._generate_decision(85, rules_config)
@@ -508,14 +508,14 @@ class TestGenerateDecision:
         service = TechnicalAssessmentService(db)
 
         rules_config = {
-            "scales": {
-                "decision_thresholds": [
-                    {"min_score": 80, "decision": "推荐立项"},
-                    {"min_score": 60, "decision": "有条件立项"},
-                    {"min_score": 40, "decision": "暂缓"},
-                    {"min_score": 0, "decision": "不建议立项"},
-                ]
-            }
+        "scales": {
+        "decision_thresholds": [
+        {"min_score": 80, "decision": "推荐立项"},
+        {"min_score": 60, "decision": "有条件立项"},
+        {"min_score": 40, "decision": "暂缓"},
+        {"min_score": 0, "decision": "不建议立项"},
+        ]
+        }
         }
 
         result = service._generate_decision(65, rules_config)
@@ -527,14 +527,14 @@ class TestGenerateDecision:
         service = TechnicalAssessmentService(db)
 
         rules_config = {
-            "scales": {
-                "decision_thresholds": [
-                    {"min_score": 80, "decision": "推荐立项"},
-                    {"min_score": 60, "decision": "有条件立项"},
-                    {"min_score": 40, "decision": "暂缓"},
-                    {"min_score": 0, "decision": "不建议立项"},
-                ]
-            }
+        "scales": {
+        "decision_thresholds": [
+        {"min_score": 80, "decision": "推荐立项"},
+        {"min_score": 60, "decision": "有条件立项"},
+        {"min_score": 40, "decision": "暂缓"},
+        {"min_score": 0, "decision": "不建议立项"},
+        ]
+        }
         }
 
         result = service._generate_decision(30, rules_config)
@@ -557,11 +557,11 @@ class TestGenerateRisks:
 
         requirement_data = {}
         dimension_scores = {
-            "technology": 5,  # 低于10，高风险
-            "business": 15,
-            "resource": 15,
-            "delivery": 15,
-            "customer": 15,
+        "technology": 5,  # 低于10，高风险
+        "business": 15,
+        "resource": 15,
+        "delivery": 15,
+        "customer": 15,
         }
         rules_config = {}
 
@@ -578,11 +578,11 @@ class TestGenerateRisks:
 
         requirement_data = {}
         dimension_scores = {
-            "technology": 12,  # 10-15，中等风险
-            "business": 18,
-            "resource": 18,
-            "delivery": 18,
-            "customer": 18,
+        "technology": 12,  # 10-15，中等风险
+        "business": 18,
+        "resource": 18,
+        "delivery": 18,
+        "customer": 18,
         }
         rules_config = {}
 
@@ -598,11 +598,11 @@ class TestGenerateRisks:
 
         requirement_data = {"requirementMaturity": 2}
         dimension_scores = {
-            "technology": 18,
-            "business": 18,
-            "resource": 18,
-            "delivery": 18,
-            "customer": 18,
+        "technology": 18,
+        "business": 18,
+        "resource": 18,
+        "delivery": 18,
+        "customer": 18,
         }
         rules_config = {}
 
@@ -627,16 +627,16 @@ class TestEvaluate:
         service = TechnicalAssessmentService(db)
 
         db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
-            None
+        None
         )
 
         with pytest.raises(ValueError, match="未找到启用的评分规则"):
             service.evaluate("LEAD", 1, 1, {})
 
 
-# ============================================================================
-# 集成测试
-# ============================================================================
+            # ============================================================================
+            # 集成测试
+            # ============================================================================
 
 
 @pytest.mark.unit

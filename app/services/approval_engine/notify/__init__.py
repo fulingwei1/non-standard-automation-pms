@@ -25,12 +25,11 @@ from .reminder_notifications import ReminderNotificationsMixin
 from .send_notification import SendNotificationMixin
 from .utils import NotificationUtilsMixin
 
-# 导入统一通知服务（用于未来的迁移）
-# 目前仅作为预留，ApprovalNotifyService使用自身实现
-# from app.services.unified_notification_service import (
-#     notification_service,
-#     NotificationService,
-# )
+# 导入统一通知服务（已启用）
+from app.services.unified_notification_service import (
+    get_notification_service,
+    NotificationService,
+)
 
 
 class ApprovalNotifyService(
@@ -44,18 +43,26 @@ class ApprovalNotifyService(
     BatchNotificationMixin,
     SendNotificationMixin,
 ):
-    """审批通知服务（组合所有功能模块）"""
+    """审批通知服务（组合所有功能模块）
+    
+    现在使用统一通知服务（unified_notification_service）进行所有通知发送。
+    统一服务提供：
+    - 自动去重
+    - 用户偏好管理
+    - 免打扰时间
+    - 多渠道支持
+    """
 
     def __init__(self, db: Session):
         ApprovalNotifyServiceBase.__init__(self, db)
-        # 初始化统一通知服务（可选，用于未来迁移）
-        self.unified_service = None
+        # 统一通知服务由 SendNotificationMixin 管理
+        self._unified_service = None
 
-    def get_unified_service(self):
-        """获取统一通知服务单例"""
-        if self.unified_service is None:
-            self.unified_service = notification_service(self.db)
-        return self.unified_service
+    def get_unified_service(self) -> NotificationService:
+        """获取统一通知服务单例（向后兼容方法）"""
+        if self._unified_service is None:
+            self._unified_service = get_notification_service(self.db)
+        return self._unified_service
 
 
 __all__ = ["ApprovalNotifyService"]

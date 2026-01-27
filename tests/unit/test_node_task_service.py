@@ -69,8 +69,8 @@ class TestCreateTask:
         service = NodeTaskService(db_session)
         with pytest.raises(ValueError, match="节点实例.*不存在"):
             service.create_task(
-                node_instance_id=99999,
-                task_name="测试任务"
+            node_instance_id=99999,
+            task_name="测试任务"
             )
 
 
@@ -208,6 +208,6 @@ class TestBatchCreateTasks:
         service = NodeTaskService(db_session)
         with pytest.raises(ValueError):
             service.batch_create_tasks(
-                node_instance_id=99999,
-                tasks_data=[{"task_name": "任务1"}]
+            node_instance_id=99999,
+            tasks_data=[{"task_name": "任务1"}]
             )

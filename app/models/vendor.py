@@ -6,8 +6,10 @@
 通过 vendor_type 字段区分供应商类型。
 """
 
+from typing import Optional
+
 from sqlalchemy import Column, ForeignKey, Index, JSON, Integer, String, Text
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, validates
 
 from .base import Base, TimestampMixin, VendorBaseMixin
 
@@ -37,7 +39,11 @@ class Vendor(Base, TimestampMixin, VendorBaseMixin):
 
     # 供应商类型 - 区分物料供应商和外协商
     vendor_type = Column(
-        String(20), nullable=False, comment="供应商类型: MATERIAL/OUTSOURCING"
+        String(20),
+        nullable=False,
+        default="MATERIAL",
+        server_default="MATERIAL",
+        comment="供应商类型: MATERIAL/OUTSOURCING",
     )
 
     # 资质信息
@@ -91,3 +97,32 @@ class Vendor(Base, TimestampMixin, VendorBaseMixin):
     def is_outsourcing_vendor(self) -> bool:
         """是否为外协商"""
         return self.vendor_type == "OUTSOURCING"
+
+    def __init__(self, *args, **kwargs):
+        # vendor_type became mandatory after merging legacy supplier tables.
+        # Older call-sites pass supplier_type instead, so normalize here.
+        vendor_type = kwargs.pop("vendor_type", None)
+        supplier_type = kwargs.get("supplier_type")
+        kwargs["vendor_type"] = self._normalize_vendor_type(
+            vendor_type or supplier_type
+        )
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def _normalize_vendor_type(value: Optional[str]) -> str:
+        if not value:
+            return "MATERIAL"
+        normalized = value.upper()
+        if normalized in {"OUTSOURCING", "OUTSOURCE", "OUTSOURCING_VENDOR"}:
+            return "OUTSOURCING"
+        return "MATERIAL"
+
+    @validates("supplier_type")
+    def _sync_vendor_type_from_supplier_type(self, key, value):
+        # keep vendor_type consistent when legacy field is set/updated
+        self.vendor_type = self._normalize_vendor_type(value)
+        return value
+
+    @validates("vendor_type")
+    def _validate_vendor_type(self, key, value):
+        return self._normalize_vendor_type(value)

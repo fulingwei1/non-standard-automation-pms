@@ -64,23 +64,23 @@ class TestContractStatusHandler:
 
         with patch.object(db_session, "query") as mock_query:
             # 设置查询返回 mock 合同
-            mock_query.return_value.filter.return_value.first.return_value = (
-                mock_contract
-            )
+        mock_query.return_value.filter.return_value.first.return_value = (
+        mock_contract
+        )
 
             # 直接测试项目更新逻辑
-            mock_project.stage = "S2"
-            mock_project.status = "ST05"
-            db_session.commit()
+        mock_project.stage = "S2"
+        mock_project.status = "ST05"
+        db_session.commit()
 
             # 模拟合同签订后项目阶段更新
-            mock_project.stage = "S3"
-            mock_project.status = "ST08"
-            db_session.commit()
+        mock_project.stage = "S3"
+        mock_project.status = "ST08"
+        db_session.commit()
 
-            db_session.refresh(mock_project)
-            assert mock_project.stage == "S3"
-            assert mock_project.status == "ST08"
+        db_session.refresh(mock_project)
+        assert mock_project.stage == "S3"
+        assert mock_project.status == "ST08"
 
 
 # ============================================================================
@@ -333,7 +333,7 @@ class TestECNStatusHandler:
         """测试项目不存在返回False"""
         handler = ECNStatusHandler(db_session)
         result = handler.handle_ecn_schedule_impact(
-            project_id=999999, ecn_id=1, impact_days=5
+        project_id=999999, ecn_id=1, impact_days=5
         )
         assert result is False
 
@@ -343,7 +343,7 @@ class TestECNStatusHandler:
         """测试ECN不存在返回False"""
         handler = ECNStatusHandler(db_session)
         result = handler.handle_ecn_schedule_impact(
-            project_id=mock_project.id, ecn_id=999999, impact_days=5
+        project_id=mock_project.id, ecn_id=999999, impact_days=5
         )
         assert result is False
 
@@ -355,22 +355,22 @@ class TestECNStatusHandler:
 
         # 创建ECN
         ecn = Ecn(
-            ecn_no="ECN-TEST-001",
-            ecn_title="测试ECN",
-            ecn_type="DESIGN_CHANGE",
-            source_type="MANUAL",
-            project_id=mock_project.id,
-            change_reason="测试",
-            change_description="测试",
-            status="DRAFT",
-            created_by=1,
+        ecn_no="ECN-TEST-001",
+        ecn_title="测试ECN",
+        ecn_type="DESIGN_CHANGE",
+        source_type="MANUAL",
+        project_id=mock_project.id,
+        change_reason="测试",
+        change_description="测试",
+        status="DRAFT",
+        created_by=1,
         )
         db_session.add(ecn)
         db_session.commit()
 
         old_health = mock_project.health
         result = handler.handle_ecn_schedule_impact(
-            project_id=mock_project.id, ecn_id=ecn.id, impact_days=3
+        project_id=mock_project.id, ecn_id=ecn.id, impact_days=3
         )
 
         assert result is True
@@ -391,21 +391,21 @@ class TestECNStatusHandler:
 
         # 创建ECN
         ecn = Ecn(
-            ecn_no="ECN-TEST-002",
-            ecn_title="测试ECN2",
-            ecn_type="DESIGN_CHANGE",
-            source_type="MANUAL",
-            project_id=mock_project.id,
-            change_reason="测试",
-            change_description="测试",
-            status="DRAFT",
-            created_by=1,
+        ecn_no="ECN-TEST-002",
+        ecn_title="测试ECN2",
+        ecn_type="DESIGN_CHANGE",
+        source_type="MANUAL",
+        project_id=mock_project.id,
+        change_reason="测试",
+        change_description="测试",
+        status="DRAFT",
+        created_by=1,
         )
         db_session.add(ecn)
         db_session.commit()
 
         result = handler.handle_ecn_schedule_impact(
-            project_id=mock_project.id, ecn_id=ecn.id, impact_days=10
+        project_id=mock_project.id, ecn_id=ecn.id, impact_days=10
         )
 
         assert result is True
@@ -427,10 +427,10 @@ class TestStatusHandlersIntegration:
     def test_all_handlers_have_log_status_change(self, db_session: Session):
         """测试所有处理器都有日志记录方法"""
         handlers = [
-            ContractStatusHandler(db_session),
-            MaterialStatusHandler(db_session),
-            AcceptanceStatusHandler(db_session),
-            ECNStatusHandler(db_session),
+        ContractStatusHandler(db_session),
+        MaterialStatusHandler(db_session),
+        AcceptanceStatusHandler(db_session),
+        ECNStatusHandler(db_session),
         ]
 
         for handler in handlers:
@@ -451,10 +451,10 @@ class TestStatusHandlersIntegration:
         def custom_log(*args, **kwargs):
             log_called.append({"args": args, "kwargs": kwargs})
 
-        result = handler.handle_material_ready(
+            result = handler.handle_material_ready(
             mock_project.id, log_status_change=custom_log
-        )
+            )
 
-        assert result is True
-        assert len(log_called) == 1
-        assert log_called[0]["kwargs"]["change_type"] == "MATERIAL_READY"
+            assert result is True
+            assert len(log_called) == 1
+            assert log_called[0]["kwargs"]["change_type"] == "MATERIAL_READY"

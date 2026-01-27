@@ -36,8 +36,8 @@ class TestApplyForecastToTasks:
 
         service = ProgressAutoService(mock_db)
         result = service.apply_forecast_to_tasks(
-            project_id=1,
-            forecast_items=[]
+        project_id=1,
+        forecast_items=[]
         )
 
         assert result["total"] == 0
@@ -57,22 +57,22 @@ class TestApplyForecastToTasks:
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_task]
 
         forecast_item = TaskForecastItem(
-            task_id=1,
-            task_name="Test Task",
-            progress_percent=50,
-            predicted_finish_date=date.today() + timedelta(days=10),
-            plan_end=date.today(),
-            delay_days=5,
-            status="Delayed",
-            critical=True
+        task_id=1,
+        task_name="Test Task",
+        progress_percent=50,
+        predicted_finish_date=date.today() + timedelta(days=10),
+        plan_end=date.today(),
+        delay_days=5,
+        status="Delayed",
+        critical=True
         )
 
         service = ProgressAutoService(mock_db)
         result = service.apply_forecast_to_tasks(
-            project_id=1,
-            forecast_items=[forecast_item],
-            auto_block=True,
-            delay_threshold=3
+        project_id=1,
+        forecast_items=[forecast_item],
+        auto_block=True,
+        delay_threshold=3
         )
 
         assert result["blocked"] == 1
@@ -90,21 +90,21 @@ class TestApplyForecastToTasks:
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_task]
 
         forecast_item = TaskForecastItem(
-            task_id=1,
-            task_name="Test Task",
-            progress_percent=100,
-            predicted_finish_date=date.today(),
-            delay_days=5,
-            status="Delayed",
-            critical=True
+        task_id=1,
+        task_name="Test Task",
+        progress_percent=100,
+        predicted_finish_date=date.today(),
+        delay_days=5,
+        status="Delayed",
+        critical=True
         )
 
         service = ProgressAutoService(mock_db)
         result = service.apply_forecast_to_tasks(
-            project_id=1,
-            forecast_items=[forecast_item],
-            auto_block=True,
-            delay_threshold=3
+        project_id=1,
+        forecast_items=[forecast_item],
+        auto_block=True,
+        delay_threshold=3
         )
 
         assert result["blocked"] == 0
@@ -121,21 +121,21 @@ class TestApplyForecastToTasks:
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_task]
 
         forecast_item = TaskForecastItem(
-            task_id=1,
-            task_name="Test Task",
-            progress_percent=0,
-            predicted_finish_date=date.today(),
-            delay_days=10,
-            status="Delayed",
-            critical=True
+        task_id=1,
+        task_name="Test Task",
+        progress_percent=0,
+        predicted_finish_date=date.today(),
+        delay_days=10,
+        status="Delayed",
+        critical=True
         )
 
         service = ProgressAutoService(mock_db)
         result = service.apply_forecast_to_tasks(
-            project_id=1,
-            forecast_items=[forecast_item],
-            auto_block=True,
-            delay_threshold=3
+        project_id=1,
+        forecast_items=[forecast_item],
+        auto_block=True,
+        delay_threshold=3
         )
 
         assert result["blocked"] == 0
@@ -153,20 +153,20 @@ class TestApplyForecastToTasks:
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_task]
 
         forecast_item = TaskForecastItem(
-            task_id=1,
-            task_name="Test Task",
-            progress_percent=30,
-            predicted_finish_date=date.today() + timedelta(days=10),
-            delay_days=5,
-            status="Delayed",
-            critical=True
+        task_id=1,
+        task_name="Test Task",
+        progress_percent=30,
+        predicted_finish_date=date.today() + timedelta(days=10),
+        delay_days=5,
+        status="Delayed",
+        critical=True
         )
 
         service = ProgressAutoService(mock_db)
         result = service.apply_forecast_to_tasks(
-            project_id=1,
-            forecast_items=[forecast_item],
-            auto_block=False
+        project_id=1,
+        forecast_items=[forecast_item],
+        auto_block=False
         )
 
         assert result["risk_tagged"] == 1
@@ -182,18 +182,18 @@ class TestApplyForecastToTasks:
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_task]
 
         forecast_item = TaskForecastItem(
-            task_id=1,  # No match
-            task_name="Test Task",
-            progress_percent=30,
-            predicted_finish_date=date.today(),
-            delay_days=5,
-            status="Delayed"
+        task_id=1,  # No match
+        task_name="Test Task",
+        progress_percent=30,
+        predicted_finish_date=date.today(),
+        delay_days=5,
+        status="Delayed"
         )
 
         service = ProgressAutoService(mock_db)
         result = service.apply_forecast_to_tasks(
-            project_id=1,
-            forecast_items=[forecast_item]
+        project_id=1,
+        forecast_items=[forecast_item]
         )
 
         assert result["blocked"] == 0
@@ -210,8 +210,8 @@ class TestAutoFixDependencyIssues:
         service = ProgressAutoService(mock_db)
 
         result = service.auto_fix_dependency_issues(
-            project_id=1,
-            issues=[]
+        project_id=1,
+        issues=[]
         )
 
         assert result["total_issues"] == 0
@@ -224,16 +224,16 @@ class TestAutoFixDependencyIssues:
         service = ProgressAutoService(mock_db)
 
         issue = DependencyIssue(
-            issue_type="CYCLE",
-            severity="HIGH",
-            task_id=1,
-            task_name="Task 1",
-            detail="循环依赖: Task 1 -> Task 2 -> Task 1"
+        issue_type="CYCLE",
+        severity="HIGH",
+        task_id=1,
+        task_name="Task 1",
+        detail="循环依赖: Task 1 -> Task 2 -> Task 1"
         )
 
         result = service.auto_fix_dependency_issues(
-            project_id=1,
-            issues=[issue]
+        project_id=1,
+        issues=[issue]
         )
 
         assert result["cycles_skipped"] == 1
@@ -263,36 +263,36 @@ class TestAutoFixDependencyIssues:
         def query_side_effect(model):
             query_mock = MagicMock()
             if model.__name__ == 'Task':
-                def filter_side_effect(*args):
-                    filter_mock = MagicMock()
-                    filter_mock.first.return_value = mock_task if mock_task.id == 1 else mock_pred_task
-                    filter_mock.all.return_value = []
-                    return filter_mock
-                query_mock.filter.side_effect = filter_side_effect
-            elif model.__name__ == 'TaskDependency':
-                query_mock.filter.return_value.all.return_value = [mock_dependency]
+        def filter_side_effect(*args):
+            filter_mock = MagicMock()
+            filter_mock.first.return_value = mock_task if mock_task.id == 1 else mock_pred_task
+            filter_mock.all.return_value = []
+            return filter_mock
+            query_mock.filter.side_effect = filter_side_effect
+        elif model.__name__ == 'TaskDependency':
+            query_mock.filter.return_value.all.return_value = [mock_dependency]
             return query_mock
 
-        mock_db.query.side_effect = query_side_effect
+            mock_db.query.side_effect = query_side_effect
 
-        service = ProgressAutoService(mock_db)
+            service = ProgressAutoService(mock_db)
 
-        with patch.object(service, '_fix_timing_conflict', return_value=True):
-            issue = DependencyIssue(
+            with patch.object(service, '_fix_timing_conflict', return_value=True):
+                issue = DependencyIssue(
                 issue_type="TIMING_CONFLICT",
                 severity="MEDIUM",
                 task_id=1,
                 task_name="Task 1",
                 detail="时序冲突"
-            )
+                )
 
-            result = service.auto_fix_dependency_issues(
+                result = service.auto_fix_dependency_issues(
                 project_id=1,
                 issues=[issue],
                 auto_fix_timing=True
-            )
+                )
 
-            assert result["timing_fixed"] == 1
+                assert result["timing_fixed"] == 1
 
     def test_fix_missing_dependency(self):
         """测试移除缺失依赖"""
@@ -301,16 +301,16 @@ class TestAutoFixDependencyIssues:
 
         with patch.object(service, '_remove_missing_dependency', return_value=True):
             issue = DependencyIssue(
-                issue_type="MISSING_PREDECESSOR",
-                severity="LOW",
-                task_id=1,
-                detail="依赖任务不存在"
+            issue_type="MISSING_PREDECESSOR",
+            severity="LOW",
+            task_id=1,
+            detail="依赖任务不存在"
             )
 
             result = service.auto_fix_dependency_issues(
-                project_id=1,
-                issues=[issue],
-                auto_fix_missing=True
+            project_id=1,
+            issues=[issue],
+            auto_fix_missing=True
             )
 
             assert result["missing_removed"] == 1
@@ -322,16 +322,16 @@ class TestAutoFixDependencyIssues:
 
         with patch.object(service, '_fix_timing_conflict', side_effect=Exception("Test error")):
             issue = DependencyIssue(
-                issue_type="TIMING_CONFLICT",
-                severity="MEDIUM",
-                task_id=1,
-                detail="时序冲突"
+            issue_type="TIMING_CONFLICT",
+            severity="MEDIUM",
+            task_id=1,
+            detail="时序冲突"
             )
 
             result = service.auto_fix_dependency_issues(
-                project_id=1,
-                issues=[issue],
-                auto_fix_timing=True
+            project_id=1,
+            issues=[issue],
+            auto_fix_timing=True
             )
 
             assert result["errors"] == 1
@@ -349,10 +349,10 @@ class TestFixTimingConflict:
         service = ProgressAutoService(mock_db)
 
         issue = DependencyIssue(
-            issue_type="TIMING_CONFLICT",
-            severity="MEDIUM",
-            task_id=999,
-            detail="任务不存在"
+        issue_type="TIMING_CONFLICT",
+        severity="MEDIUM",
+        task_id=999,
+        detail="任务不存在"
         )
 
         result = service._fix_timing_conflict(issue)
@@ -369,23 +369,23 @@ class TestFixTimingConflict:
             query_mock = MagicMock()
             if model.__name__ == 'Task':
                 query_mock.filter.return_value.first.return_value = mock_task
-            elif model.__name__ == 'TaskDependency':
-                query_mock.filter.return_value.all.return_value = []
+        elif model.__name__ == 'TaskDependency':
+            query_mock.filter.return_value.all.return_value = []
             return query_mock
 
-        mock_db.query.side_effect = query_side_effect
+            mock_db.query.side_effect = query_side_effect
 
-        service = ProgressAutoService(mock_db)
+            service = ProgressAutoService(mock_db)
 
-        issue = DependencyIssue(
+            issue = DependencyIssue(
             issue_type="TIMING_CONFLICT",
             severity="MEDIUM",
             task_id=1,
             detail="无依赖"
-        )
+            )
 
-        result = service._fix_timing_conflict(issue)
-        assert result is False
+            result = service._fix_timing_conflict(issue)
+            assert result is False
 
     def test_successful_timing_fix(self):
         """测试成功修复时序"""
@@ -416,29 +416,29 @@ class TestFixTimingConflict:
                 call_count += 1
                 if call_count == 1:
                     query_mock.filter.return_value.first.return_value = mock_task
-                else:
-                    query_mock.filter.return_value.first.return_value = mock_pred_task
-            elif model.__name__ == 'TaskDependency':
-                query_mock.filter.return_value.all.return_value = [mock_dependency]
+        else:
+            query_mock.filter.return_value.first.return_value = mock_pred_task
+        elif model.__name__ == 'TaskDependency':
+            query_mock.filter.return_value.all.return_value = [mock_dependency]
             return query_mock
 
-        mock_db.query.side_effect = query_side_effect
+            mock_db.query.side_effect = query_side_effect
 
-        service = ProgressAutoService(mock_db)
+            service = ProgressAutoService(mock_db)
 
-        issue = DependencyIssue(
+            issue = DependencyIssue(
             issue_type="TIMING_CONFLICT",
             severity="MEDIUM",
             task_id=1,
             detail="时序冲突"
-        )
+            )
 
-        result = service._fix_timing_conflict(issue)
+            result = service._fix_timing_conflict(issue)
 
-        assert result is True
-        # Plan start should be updated based on predecessor end + lag
-        assert mock_task.plan_start == date(2024, 1, 10) + timedelta(days=2)
-        assert mock_db.add.called
+            assert result is True
+            # Plan start should be updated based on predecessor end + lag
+            assert mock_task.plan_start == date(2024, 1, 10) + timedelta(days=2)
+            assert mock_db.add.called
 
     def test_pred_task_not_found(self):
         """测试前置任务不存在"""
@@ -461,25 +461,25 @@ class TestFixTimingConflict:
                 call_count += 1
                 if call_count == 1:
                     query_mock.filter.return_value.first.return_value = mock_task
-                else:
-                    query_mock.filter.return_value.first.return_value = None
-            elif model.__name__ == 'TaskDependency':
-                query_mock.filter.return_value.all.return_value = [mock_dependency]
+        else:
+            query_mock.filter.return_value.first.return_value = None
+        elif model.__name__ == 'TaskDependency':
+            query_mock.filter.return_value.all.return_value = [mock_dependency]
             return query_mock
 
-        mock_db.query.side_effect = query_side_effect
+            mock_db.query.side_effect = query_side_effect
 
-        service = ProgressAutoService(mock_db)
+            service = ProgressAutoService(mock_db)
 
-        issue = DependencyIssue(
+            issue = DependencyIssue(
             issue_type="TIMING_CONFLICT",
             severity="MEDIUM",
             task_id=1,
             detail="时序冲突"
-        )
+            )
 
-        result = service._fix_timing_conflict(issue)
-        assert result is False
+            result = service._fix_timing_conflict(issue)
+            assert result is False
 
 
 @pytest.mark.unit
@@ -494,10 +494,10 @@ class TestRemoveMissingDependency:
         service = ProgressAutoService(mock_db)
 
         issue = DependencyIssue(
-            issue_type="MISSING_PREDECESSOR",
-            severity="LOW",
-            task_id=1,
-            detail="无依赖"
+        issue_type="MISSING_PREDECESSOR",
+        severity="LOW",
+        task_id=1,
+        detail="无依赖"
         )
 
         result = service._remove_missing_dependency(issue)
@@ -520,24 +520,24 @@ class TestRemoveMissingDependency:
             query_mock = MagicMock()
             if model.__name__ == 'TaskDependency':
                 query_mock.filter.return_value.all.return_value = [mock_dep]
-            elif model.__name__ == 'Task':
-                call_count += 1
-                query_mock.filter.return_value.first.return_value = mock_pred_task
+        elif model.__name__ == 'Task':
+            call_count += 1
+            query_mock.filter.return_value.first.return_value = mock_pred_task
             return query_mock
 
-        mock_db.query.side_effect = query_side_effect
+            mock_db.query.side_effect = query_side_effect
 
-        service = ProgressAutoService(mock_db)
+            service = ProgressAutoService(mock_db)
 
-        issue = DependencyIssue(
+            issue = DependencyIssue(
             issue_type="MISSING_PREDECESSOR",
             severity="LOW",
             task_id=1,
             detail="缺失依赖"
-        )
+            )
 
-        result = service._remove_missing_dependency(issue)
-        assert result is False  # Nothing removed
+            result = service._remove_missing_dependency(issue)
+            assert result is False  # Nothing removed
 
 
 @pytest.mark.unit
@@ -553,21 +553,21 @@ class TestSendForecastNotifications:
         service = ProgressAutoService(mock_db)
 
         forecast_items = [
-            TaskForecastItem(
-                task_id=1,
-                task_name="Task 1",
-                progress_percent=80,
-                predicted_finish_date=date.today(),
-                delay_days=0,
-                status="OnTrack",
-                critical=False
-            )
+        TaskForecastItem(
+        task_id=1,
+        task_name="Task 1",
+        progress_percent=80,
+        predicted_finish_date=date.today(),
+        delay_days=0,
+        status="OnTrack",
+        critical=False
+        )
         ]
 
         result = service.send_forecast_notifications(
-            project_id=1,
-            project=mock_project,
-            forecast_items=forecast_items
+        project_id=1,
+        project=mock_project,
+        forecast_items=forecast_items
         )
 
         assert result["total"] == 0
@@ -592,35 +592,35 @@ class TestSendForecastNotifications:
             query_mock = MagicMock()
             if model.__name__ == 'Notification':
                 query_mock.filter.return_value.first.return_value = None
-            elif model.__name__ == 'Task':
-                query_mock.filter.return_value.first.return_value = mock_task
+        elif model.__name__ == 'Task':
+            query_mock.filter.return_value.first.return_value = mock_task
             return query_mock
 
-        mock_db.query.side_effect = query_side_effect
+            mock_db.query.side_effect = query_side_effect
 
-        service = ProgressAutoService(mock_db)
+            service = ProgressAutoService(mock_db)
 
-        forecast_items = [
+            forecast_items = [
             TaskForecastItem(
-                task_id=1,
-                task_name="Critical Task",
-                progress_percent=30,
-                predicted_finish_date=date.today() + timedelta(days=10),
-                delay_days=5,
-                status="Delayed",
-                critical=True
+            task_id=1,
+            task_name="Critical Task",
+            progress_percent=30,
+            predicted_finish_date=date.today() + timedelta(days=10),
+            delay_days=5,
+            status="Delayed",
+            critical=True
             )
-        ]
+            ]
 
-        result = service.send_forecast_notifications(
+            result = service.send_forecast_notifications(
             project_id=1,
             project=mock_project,
             forecast_items=forecast_items
-        )
+            )
 
-        assert result["total"] == 2  # PM + task owner
-        assert result["sent"] == 2
-        assert result["critical_task_count"] == 1
+            assert result["total"] == 2  # PM + task owner
+            assert result["sent"] == 2
+            assert result["critical_task_count"] == 1
 
     @patch('app.services.progress_auto_service.create_notification')
     def test_skip_duplicate_notification(self, mock_create_notification):
@@ -637,21 +637,21 @@ class TestSendForecastNotifications:
         service = ProgressAutoService(mock_db)
 
         forecast_items = [
-            TaskForecastItem(
-                task_id=1,
-                task_name="Critical Task",
-                progress_percent=30,
-                predicted_finish_date=date.today() + timedelta(days=10),
-                delay_days=5,
-                status="Delayed",
-                critical=True
-            )
+        TaskForecastItem(
+        task_id=1,
+        task_name="Critical Task",
+        progress_percent=30,
+        predicted_finish_date=date.today() + timedelta(days=10),
+        delay_days=5,
+        status="Delayed",
+        critical=True
+        )
         ]
 
         result = service.send_forecast_notifications(
-            project_id=1,
-            project=mock_project,
-            forecast_items=forecast_items
+        project_id=1,
+        project=mock_project,
+        forecast_items=forecast_items
         )
 
         assert result["sent"] == 0  # Notification skipped due to duplicate
@@ -683,17 +683,17 @@ class TestRunAutoProcessing:
             query_mock = MagicMock()
             if model.__name__ == 'Project':
                 query_mock.filter.return_value.first.return_value = mock_project
-            elif model.__name__ == 'Task':
-                query_mock.options.return_value.filter.return_value.all.return_value = []
+        elif model.__name__ == 'Task':
+            query_mock.options.return_value.filter.return_value.all.return_value = []
             return query_mock
 
-        mock_db.query.side_effect = query_side_effect
+            mock_db.query.side_effect = query_side_effect
 
-        service = ProgressAutoService(mock_db)
-        result = service.run_auto_processing(project_id=1)
+            service = ProgressAutoService(mock_db)
+            result = service.run_auto_processing(project_id=1)
 
-        assert result["success"] is True
-        assert result["forecast_stats"] == {}
+            assert result["success"] is True
+            assert result["forecast_stats"] == {}
 
     def test_default_options(self):
         """测试默认选项"""
@@ -708,16 +708,16 @@ class TestRunAutoProcessing:
             query_mock = MagicMock()
             if model.__name__ == 'Project':
                 query_mock.filter.return_value.first.return_value = mock_project
-            elif model.__name__ == 'Task':
-                query_mock.options.return_value.filter.return_value.all.return_value = []
+        elif model.__name__ == 'Task':
+            query_mock.options.return_value.filter.return_value.all.return_value = []
             return query_mock
 
-        mock_db.query.side_effect = query_side_effect
+            mock_db.query.side_effect = query_side_effect
 
-        service = ProgressAutoService(mock_db)
-        result = service.run_auto_processing(project_id=1)
+            service = ProgressAutoService(mock_db)
+            result = service.run_auto_processing(project_id=1)
 
-        assert result["success"] is True
+            assert result["success"] is True
 
 
 @pytest.mark.unit
@@ -760,32 +760,32 @@ class TestProgressAutoIntegration:
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_task1, mock_task2]
 
         forecast_items = [
-            TaskForecastItem(
-                task_id=1,
-                task_name="Task 1",
-                progress_percent=30,
-                predicted_finish_date=date.today() + timedelta(days=10),
-                delay_days=10,
-                status="Delayed",
-                critical=True
-            ),
-            TaskForecastItem(
-                task_id=2,
-                task_name="Task 2",
-                progress_percent=50,
-                predicted_finish_date=date.today() + timedelta(days=5),
-                delay_days=5,
-                status="Delayed",
-                critical=True
-            )
+        TaskForecastItem(
+        task_id=1,
+        task_name="Task 1",
+        progress_percent=30,
+        predicted_finish_date=date.today() + timedelta(days=10),
+        delay_days=10,
+        status="Delayed",
+        critical=True
+        ),
+        TaskForecastItem(
+        task_id=2,
+        task_name="Task 2",
+        progress_percent=50,
+        predicted_finish_date=date.today() + timedelta(days=5),
+        delay_days=5,
+        status="Delayed",
+        critical=True
+        )
         ]
 
         service = ProgressAutoService(mock_db)
         result = service.apply_forecast_to_tasks(
-            project_id=1,
-            forecast_items=forecast_items,
-            auto_block=True,
-            delay_threshold=3
+        project_id=1,
+        forecast_items=forecast_items,
+        auto_block=True,
+        delay_threshold=3
         )
 
         assert result["total"] == 2
@@ -797,33 +797,33 @@ class TestProgressAutoIntegration:
         service = ProgressAutoService(mock_db)
 
         issues = [
-            DependencyIssue(
-                issue_type="CYCLE",
-                severity="HIGH",
-                task_id=1,
-                detail="循环依赖"
-            ),
-            DependencyIssue(
-                issue_type="TIMING_CONFLICT",
-                severity="MEDIUM",
-                task_id=2,
-                detail="时序冲突"
-            ),
-            DependencyIssue(
-                issue_type="MISSING_PREDECESSOR",
-                severity="LOW",
-                task_id=3,
-                detail="缺失依赖"
-            )
+        DependencyIssue(
+        issue_type="CYCLE",
+        severity="HIGH",
+        task_id=1,
+        detail="循环依赖"
+        ),
+        DependencyIssue(
+        issue_type="TIMING_CONFLICT",
+        severity="MEDIUM",
+        task_id=2,
+        detail="时序冲突"
+        ),
+        DependencyIssue(
+        issue_type="MISSING_PREDECESSOR",
+        severity="LOW",
+        task_id=3,
+        detail="缺失依赖"
+        )
         ]
 
         with patch.object(service, '_fix_timing_conflict', return_value=True):
             with patch.object(service, '_remove_missing_dependency', return_value=True):
                 result = service.auto_fix_dependency_issues(
-                    project_id=1,
-                    issues=issues,
-                    auto_fix_timing=True,
-                    auto_fix_missing=True
+                project_id=1,
+                issues=issues,
+                auto_fix_timing=True,
+                auto_fix_missing=True
                 )
 
                 assert result["total_issues"] == 3

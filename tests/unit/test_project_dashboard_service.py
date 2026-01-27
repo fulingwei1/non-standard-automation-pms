@@ -36,21 +36,21 @@ class TestBuildBasicInfo:
     def test_build_basic_info_complete_project(self):
         """Test building basic info for a complete project."""
         project = Project(
-            id=1,
-            project_code="PJ250708001",
-            project_name="测试项目",
-            customer_name="测试客户",
-            pm_name="张三",
-            stage="S2",
-            status="ST01",
-            health="H1",
-            progress_pct=50.5,
-            planned_start_date=date(2025, 1, 1),
-            planned_end_date=date(2025, 6, 30),
-            actual_start_date=date(2025, 1, 5),
-            actual_end_date=None,
-            contract_amount=Decimal("100000.00"),
-            budget_amount=Decimal("90000.00"),
+        id=1,
+        project_code="PJ250708001",
+        project_name="测试项目",
+        customer_name="测试客户",
+        pm_name="张三",
+        stage="S2",
+        status="ST01",
+        health="H1",
+        progress_pct=50.5,
+        planned_start_date=date(2025, 1, 1),
+        planned_end_date=date(2025, 6, 30),
+        actual_start_date=date(2025, 1, 5),
+        actual_end_date=None,
+        contract_amount=Decimal("100000.00"),
+        budget_amount=Decimal("90000.00"),
         )
 
         result = build_basic_info(project)
@@ -73,21 +73,21 @@ class TestBuildBasicInfo:
     def test_build_basic_info_with_null_values(self):
         """Test building basic info with null values."""
         project = Project(
-            id=1,
-            project_code="PJ250708001",
-            project_name="测试项目",
-            customer_name="测试客户",
-            pm_name="张三",
-            stage=None,
-            status=None,
-            health=None,
-            progress_pct=None,
-            planned_start_date=None,
-            planned_end_date=None,
-            actual_start_date=None,
-            actual_end_date=None,
-            contract_amount=None,
-            budget_amount=None,
+        id=1,
+        project_code="PJ250708001",
+        project_name="测试项目",
+        customer_name="测试客户",
+        pm_name="张三",
+        stage=None,
+        status=None,
+        health=None,
+        progress_pct=None,
+        planned_start_date=None,
+        planned_end_date=None,
+        actual_start_date=None,
+        actual_end_date=None,
+        contract_amount=None,
+        budget_amount=None,
         )
 
         result = build_basic_info(project)
@@ -110,11 +110,11 @@ class TestCalculateProgressStats:
     def test_calculate_progress_stats_normal_case(self):
         """Test progress calculation for normal case."""
         project = Project(
-            id=1,
-            progress_pct=60.0,
-            stage="S2",
-            planned_start_date=date(2025, 1, 1),
-            planned_end_date=date(2025, 6, 30),
+        id=1,
+        progress_pct=60.0,
+        stage="S2",
+        planned_start_date=date(2025, 1, 1),
+        planned_end_date=date(2025, 6, 30),
         )
         today = date(2025, 3, 1)  # 60 days out of 180 = 33.33%
 
@@ -129,10 +129,10 @@ class TestCalculateProgressStats:
     def test_calculate_progress_stats_delayed(self):
         """Test progress calculation for delayed project."""
         project = Project(
-            id=1,
-            progress_pct=60.0,
-            stage="S2",
-            planned_end_date=date(2025, 1, 1),
+        id=1,
+        progress_pct=60.0,
+        stage="S2",
+        planned_end_date=date(2025, 1, 1),
         )
         today = date(2025, 2, 1)  # After planned end date
 
@@ -144,10 +144,10 @@ class TestCalculateProgressStats:
     def test_calculate_progress_stats_completed_project(self):
         """Test that completed projects (S9) are not marked as delayed."""
         project = Project(
-            id=1,
-            progress_pct=100.0,
-            stage="S9",
-            planned_end_date=date(2025, 1, 1),
+        id=1,
+        progress_pct=100.0,
+        stage="S9",
+        planned_end_date=date(2025, 1, 1),
         )
         today = date(2025, 2, 1)
 
@@ -159,10 +159,10 @@ class TestCalculateProgressStats:
     def test_calculate_progress_stats_no_dates(self):
         """Test progress calculation with no planned dates."""
         project = Project(
-            id=1,
-            progress_pct=50.0,
-            planned_start_date=None,
-            planned_end_date=None,
+        id=1,
+        progress_pct=50.0,
+        planned_start_date=None,
+        planned_end_date=None,
         )
         today = date(2025, 3, 1)
 
@@ -178,10 +178,10 @@ class TestCalculateProgressStats:
         """Test that plan progress is clamped between 0 and 100."""
         # Test early start (before planned start)
         project = Project(
-            id=1,
-            progress_pct=0.0,
-            planned_start_date=date(2025, 3, 1),
-            planned_end_date=date(2025, 6, 30),
+        id=1,
+        progress_pct=0.0,
+        planned_start_date=date(2025, 3, 1),
+        planned_end_date=date(2025, 6, 30),
         )
         today = date(2025, 1, 1)
 
@@ -205,16 +205,16 @@ class TestCalculateCostStats:
         """Test cost calculation with project costs."""
         # Create project costs
         cost1 = ProjectCost(
-            project_id=1,
-            amount=Decimal("50000.00"),
-            cost_type="DESIGN",
-            cost_category="人工成本",
+        project_id=1,
+        amount=Decimal("50000.00"),
+        cost_type="DESIGN",
+        cost_category="人工成本",
         )
         cost2 = ProjectCost(
-            project_id=1,
-            amount=Decimal("30000.00"),
-            cost_type="MANUFACTURING",
-            cost_category="材料成本",
+        project_id=1,
+        amount=Decimal("30000.00"),
+        cost_type="MANUFACTURING",
+        cost_category="材料成本",
         )
         db_session.add_all([cost1, cost2])
         db_session.commit()
@@ -236,10 +236,10 @@ class TestCalculateCostStats:
     def test_calculate_cost_stats_over_budget(self, db_session: Session):
         """Test cost calculation when over budget."""
         cost = ProjectCost(
-            project_id=1,
-            amount=Decimal("100000.00"),
-            cost_type="DESIGN",
-            cost_category="人工成本",
+        project_id=1,
+        amount=Decimal("100000.00"),
+        cost_type="DESIGN",
+        cost_category="人工成本",
         )
         db_session.add(cost)
         db_session.commit()
@@ -270,10 +270,10 @@ class TestCalculateCostStats:
     def test_calculate_cost_stats_zero_budget(self, db_session: Session):
         """Test cost calculation with zero budget."""
         cost = ProjectCost(
-            project_id=1,
-            amount=Decimal("50000.00"),
-            cost_type="DESIGN",
-            cost_category="人工成本",
+        project_id=1,
+        amount=Decimal("50000.00"),
+        cost_type="DESIGN",
+        cost_category="人工成本",
         )
         db_session.add(cost)
         db_session.commit()
@@ -296,12 +296,12 @@ class TestCalculateTaskStats:
         """Test task calculation with various task statuses."""
         # Create tasks
         tasks = [
-            Task(project_id=1, status="COMPLETED", progress_pct=100.0),
-            Task(project_id=1, status="COMPLETED", progress_pct=100.0),
-            Task(project_id=1, status="IN_PROGRESS", progress_pct=50.0),
-            Task(project_id=1, status="PENDING", progress_pct=0.0),
-            Task(project_id=1, status="ACCEPTED", progress_pct=0.0),
-            Task(project_id=1, status="BLOCKED", progress_pct=25.0),
+        Task(project_id=1, status="COMPLETED", progress_pct=100.0),
+        Task(project_id=1, status="COMPLETED", progress_pct=100.0),
+        Task(project_id=1, status="IN_PROGRESS", progress_pct=50.0),
+        Task(project_id=1, status="PENDING", progress_pct=0.0),
+        Task(project_id=1, status="ACCEPTED", progress_pct=0.0),
+        Task(project_id=1, status="BLOCKED", progress_pct=25.0),
         ]
         db_session.add_all(tasks)
         db_session.commit()
@@ -338,36 +338,36 @@ class TestCalculateMilestoneStats:
 
         # Create milestones
         milestones = [
-            ProjectMilestone(
-                project_id=1,
-                status="COMPLETED",
-                planned_date=date(2025, 1, 15),
-                actual_date=date(2025, 1, 15),
-            ),
-            ProjectMilestone(
-                project_id=1,
-                status="COMPLETED",
-                planned_date=date(2025, 2, 15),
-                actual_date=date(2025, 2, 18),
-            ),
-            ProjectMilestone(
-                project_id=1,
-                status="PENDING",
-                planned_date=date(2025, 3, 15),
-                actual_date=None,
-            ),
-            ProjectMilestone(
-                project_id=1,
-                status="PENDING",
-                planned_date=date(2025, 2, 1),  # Overdue
-                actual_date=None,
-            ),
-            ProjectMilestone(
-                project_id=1,
-                status="PENDING",
-                planned_date=date(2025, 4, 1),  # Upcoming
-                actual_date=None,
-            ),
+        ProjectMilestone(
+        project_id=1,
+        status="COMPLETED",
+        planned_date=date(2025, 1, 15),
+        actual_date=date(2025, 1, 15),
+        ),
+        ProjectMilestone(
+        project_id=1,
+        status="COMPLETED",
+        planned_date=date(2025, 2, 15),
+        actual_date=date(2025, 2, 18),
+        ),
+        ProjectMilestone(
+        project_id=1,
+        status="PENDING",
+        planned_date=date(2025, 3, 15),
+        actual_date=None,
+        ),
+        ProjectMilestone(
+        project_id=1,
+        status="PENDING",
+        planned_date=date(2025, 2, 1),  # Overdue
+        actual_date=None,
+        ),
+        ProjectMilestone(
+        project_id=1,
+        status="PENDING",
+        planned_date=date(2025, 4, 1),  # Upcoming
+        actual_date=None,
+        ),
         ]
         db_session.add_all(milestones)
         db_session.commit()
@@ -405,33 +405,33 @@ class TestCalculateRiskStats:
         mock_risk.status = "OPEN"
 
         with patch(
-            "app.services.project_dashboard_service.PmoProjectRisk", new=MagicMock
+        "app.services.project_dashboard_service.PmoProjectRisk", new=MagicMock
         ):
-            mock_query = MagicMock()
-            mock_query.filter.return_value.all.return_value = [
-                MagicMock(risk_level="HIGH", status="OPEN"),
-                MagicMock(risk_level="HIGH", status="CLOSED"),
-                MagicMock(risk_level="CRITICAL", status="OPEN"),
-                MagicMock(risk_level="MEDIUM", status="OPEN"),
-            ]
-            db_session.query.return_value = mock_query
+        mock_query = MagicMock()
+        mock_query.filter.return_value.all.return_value = [
+        MagicMock(risk_level="HIGH", status="OPEN"),
+        MagicMock(risk_level="HIGH", status="CLOSED"),
+        MagicMock(risk_level="CRITICAL", status="OPEN"),
+        MagicMock(risk_level="MEDIUM", status="OPEN"),
+        ]
+        db_session.query.return_value = mock_query
 
-            result = calculate_risk_stats(db_session, 1)
+        result = calculate_risk_stats(db_session, 1)
 
-            assert result["total"] == 4
-            assert result["open"] == 3
-            assert result["high"] == 1
-            assert result["critical"] == 1
+        assert result["total"] == 4
+        assert result["open"] == 3
+        assert result["high"] == 1
+        assert result["critical"] == 1
 
     def test_calculate_risk_stats_model_not_exists(self, db_session: Session):
         """Test risk calculation when PmoProjectRisk model doesn't exist."""
         with patch(
-            "app.services.project_dashboard_service.PmoProjectRisk",
-            side_effect=ImportError,
+        "app.services.project_dashboard_service.PmoProjectRisk",
+        side_effect=ImportError,
         ):
-            result = calculate_risk_stats(db_session, 1)
+        result = calculate_risk_stats(db_session, 1)
 
-            assert result is None
+        assert result is None
 
 
 class TestCalculateIssueStats:
@@ -443,11 +443,11 @@ class TestCalculateIssueStats:
         with patch("app.services.project_dashboard_service.Issue", new=MagicMock):
             mock_query = MagicMock()
             mock_query.filter.return_value.all.return_value = [
-                MagicMock(status="OPEN", is_blocking=False),
-                MagicMock(status="OPEN", is_blocking=False),
-                MagicMock(status="PROCESSING", is_blocking=False),
-                MagicMock(status="CLOSED", is_blocking=True),
-                MagicMock(status="OPEN", is_blocking=True),
+            MagicMock(status="OPEN", is_blocking=False),
+            MagicMock(status="OPEN", is_blocking=False),
+            MagicMock(status="PROCESSING", is_blocking=False),
+            MagicMock(status="CLOSED", is_blocking=True),
+            MagicMock(status="OPEN", is_blocking=True),
             ]
             db_session.query.return_value = mock_query
 
@@ -461,11 +461,11 @@ class TestCalculateIssueStats:
     def test_calculate_issue_stats_model_not_exists(self, db_session: Session):
         """Test issue calculation when Issue model doesn't exist."""
         with patch(
-            "app.services.project_dashboard_service.Issue", side_effect=ImportError
+        "app.services.project_dashboard_service.Issue", side_effect=ImportError
         ):
-            result = calculate_issue_stats(db_session, 1)
+        result = calculate_issue_stats(db_session, 1)
 
-            assert result is None
+        assert result is None
 
 
 class TestCalculateResourceUsage:
@@ -475,54 +475,54 @@ class TestCalculateResourceUsage:
         """Test resource usage calculation with allocations."""
         # Mock PmoResourceAllocation model
         with patch(
-            "app.services.project_dashboard_service.PmoResourceAllocation",
-            new=MagicMock,
+        "app.services.project_dashboard_service.PmoResourceAllocation",
+        new=MagicMock,
         ):
-            mock_query = MagicMock()
-            mock_allocations = [
-                MagicMock(department_name="研发部", role="设计工程师"),
-                MagicMock(department_name="研发部", role="设计工程师"),
-                MagicMock(department_name="制造部", role="装配技师"),
-                MagicMock(department_name=None, role=None),
-                MagicMock(role="测试工程师"),
-            ]
-            mock_query.filter.return_value.all.return_value = mock_allocations
-            db_session.query.return_value = mock_query
+        mock_query = MagicMock()
+        mock_allocations = [
+        MagicMock(department_name="研发部", role="设计工程师"),
+        MagicMock(department_name="研发部", role="设计工程师"),
+        MagicMock(department_name="制造部", role="装配技师"),
+        MagicMock(department_name=None, role=None),
+        MagicMock(role="测试工程师"),
+        ]
+        mock_query.filter.return_value.all.return_value = mock_allocations
+        db_session.query.return_value = mock_query
 
-            result = calculate_resource_usage(db_session, 1)
+        result = calculate_resource_usage(db_session, 1)
 
-            assert result["total_allocations"] == 5
-            assert result["by_department"]["研发部"] == 2
-            assert result["by_department"]["制造部"] == 1
-            assert result["by_department"]["未分配"] == 2
-            assert result["by_role"]["设计工程师"] == 2
-            assert result["by_role"]["装配技师"] == 1
-            assert result["by_role"]["测试工程师"] == 1
-            assert result["by_role"]["未分配"] == 1
+        assert result["total_allocations"] == 5
+        assert result["by_department"]["研发部"] == 2
+        assert result["by_department"]["制造部"] == 1
+        assert result["by_department"]["未分配"] == 2
+        assert result["by_role"]["设计工程师"] == 2
+        assert result["by_role"]["装配技师"] == 1
+        assert result["by_role"]["测试工程师"] == 1
+        assert result["by_role"]["未分配"] == 1
 
     def test_calculate_resource_usage_no_allocations(self, db_session: Session):
         """Test resource usage calculation with no allocations."""
         with patch(
-            "app.services.project_dashboard_service.PmoResourceAllocation",
-            new=MagicMock,
+        "app.services.project_dashboard_service.PmoResourceAllocation",
+        new=MagicMock,
         ):
-            mock_query = MagicMock()
-            mock_query.filter.return_value.all.return_value = []
-            db_session.query.return_value = mock_query
+        mock_query = MagicMock()
+        mock_query.filter.return_value.all.return_value = []
+        db_session.query.return_value = mock_query
 
-            result = calculate_resource_usage(db_session, 1)
+        result = calculate_resource_usage(db_session, 1)
 
-            assert result is None
+        assert result is None
 
     def test_calculate_resource_usage_model_not_exists(self, db_session: Session):
         """Test resource usage when PmoResourceAllocation model doesn't exist."""
         with patch(
-            "app.services.project_dashboard_service.PmoResourceAllocation",
-            side_effect=ImportError,
+        "app.services.project_dashboard_service.PmoResourceAllocation",
+        side_effect=ImportError,
         ):
-            result = calculate_resource_usage(db_session, 1)
+        result = calculate_resource_usage(db_session, 1)
 
-            assert result is None
+        assert result is None
 
 
 class TestGetRecentActivities:
@@ -532,36 +532,36 @@ class TestGetRecentActivities:
         """Test getting recent activities."""
         # Create status logs
         status_logs = [
-            ProjectStatusLog(
-                project_id=1,
-                old_status="S1",
-                new_status="S2",
-                changed_at=datetime(2025, 3, 1, 10, 0),
-                change_reason="需求确认完成",
-            ),
-            ProjectStatusLog(
-                project_id=1,
-                old_status="S2",
-                new_status="S3",
-                changed_at=datetime(2025, 2, 15, 14, 0),
-                change_reason="设计方案完成",
-            ),
+        ProjectStatusLog(
+        project_id=1,
+        old_status="S1",
+        new_status="S2",
+        changed_at=datetime(2025, 3, 1, 10, 0),
+        change_reason="需求确认完成",
+        ),
+        ProjectStatusLog(
+        project_id=1,
+        old_status="S2",
+        new_status="S3",
+        changed_at=datetime(2025, 2, 15, 14, 0),
+        change_reason="设计方案完成",
+        ),
         ]
 
         # Create milestones
         milestones = [
-            ProjectMilestone(
-                project_id=1,
-                milestone_name="需求冻结",
-                status="COMPLETED",
-                actual_date=datetime(2025, 3, 5, 9, 0),
-            ),
-            ProjectMilestone(
-                project_id=1,
-                milestone_name="设计评审",
-                status="COMPLETED",
-                actual_date=datetime(2025, 2, 20, 16, 0),
-            ),
+        ProjectMilestone(
+        project_id=1,
+        milestone_name="需求冻结",
+        status="COMPLETED",
+        actual_date=datetime(2025, 3, 5, 9, 0),
+        ),
+        ProjectMilestone(
+        project_id=1,
+        milestone_name="设计评审",
+        status="COMPLETED",
+        actual_date=datetime(2025, 2, 20, 16, 0),
+        ),
         ]
 
         db_session.add_all(status_logs + milestones)
@@ -587,21 +587,21 @@ class TestGetRecentActivities:
         logs = []
         for i in range(15):
             logs.append(
-                ProjectStatusLog(
-                    project_id=1,
-                    old_status=f"S{i}",
-                    new_status=f"S{i + 1}",
-                    changed_at=datetime(2025, 3, 1, i, 0),
-                    change_reason=f"变更{i}",
-                )
+            ProjectStatusLog(
+            project_id=1,
+            old_status=f"S{i}",
+            new_status=f"S{i + 1}",
+            changed_at=datetime(2025, 3, 1, i, 0),
+            change_reason=f"变更{i}",
             )
-        db_session.add_all(logs)
-        db_session.commit()
+            )
+            db_session.add_all(logs)
+            db_session.commit()
 
-        result = get_recent_activities(db_session, 1)
+            result = get_recent_activities(db_session, 1)
 
-        # Should limit to 10
-        assert len(result) == 10
+            # Should limit to 10
+            assert len(result) == 10
 
 
 class TestCalculateKeyMetrics:
@@ -610,17 +610,17 @@ class TestCalculateKeyMetrics:
     def test_calculate_key_metrics_healthy_project(self):
         """Test key metrics calculation for healthy project."""
         project = Project(
-            id=1,
-            health="H1",
-            progress_pct=75.0,
+        id=1,
+        health="H1",
+        progress_pct=75.0,
         )
 
         result = calculate_key_metrics(
-            project=project,
-            progress_deviation=5.0,
-            cost_variance_rate=-2.0,
-            task_completed=8,
-            task_total=10,
+        project=project,
+        progress_deviation=5.0,
+        cost_variance_rate=-2.0,
+        task_completed=8,
+        task_total=10,
         )
 
         assert result["health_score"] == 100.0
@@ -634,17 +634,17 @@ class TestCalculateKeyMetrics:
     def test_calculate_key_metrics_at_risk_project(self):
         """Test key metrics calculation for at-risk project."""
         project = Project(
-            id=1,
-            health="H2",
-            progress_pct=50.0,
+        id=1,
+        health="H2",
+        progress_pct=50.0,
         )
 
         result = calculate_key_metrics(
-            project=project,
-            progress_deviation=-15.0,
-            cost_variance_rate=15.0,
-            task_completed=3,
-            task_total=10,
+        project=project,
+        progress_deviation=-15.0,
+        cost_variance_rate=15.0,
+        task_completed=3,
+        task_total=10,
         )
 
         assert result["health_score"] == 75.0
@@ -658,17 +658,17 @@ class TestCalculateKeyMetrics:
     def test_calculate_key_metrics_critical_project(self):
         """Test key metrics calculation for critical project."""
         project = Project(
-            id=1,
-            health="H3",
-            progress_pct=25.0,
+        id=1,
+        health="H3",
+        progress_pct=25.0,
         )
 
         result = calculate_key_metrics(
-            project=project,
-            progress_deviation=-30.0,
-            cost_variance_rate=25.0,
-            task_completed=1,
-            task_total=10,
+        project=project,
+        progress_deviation=-30.0,
+        cost_variance_rate=25.0,
+        task_completed=1,
+        task_total=10,
         )
 
         assert result["health_score"] == 50.0
@@ -680,17 +680,17 @@ class TestCalculateKeyMetrics:
     def test_calculate_key_metrics_completed_project(self):
         """Test key metrics calculation for completed project."""
         project = Project(
-            id=1,
-            health="H4",
-            progress_pct=100.0,
+        id=1,
+        health="H4",
+        progress_pct=100.0,
         )
 
         result = calculate_key_metrics(
-            project=project,
-            progress_deviation=0.0,
-            cost_variance_rate=5.0,
-            task_completed=10,
-            task_total=10,
+        project=project,
+        progress_deviation=0.0,
+        cost_variance_rate=5.0,
+        task_completed=10,
+        task_total=10,
         )
 
         assert result["health_score"] == 25.0
@@ -702,17 +702,17 @@ class TestCalculateKeyMetrics:
     def test_calculate_key_metrics_no_tasks(self):
         """Test key metrics calculation with no tasks."""
         project = Project(
-            id=1,
-            health="H1",
-            progress_pct=50.0,
+        id=1,
+        health="H1",
+        progress_pct=50.0,
         )
 
         result = calculate_key_metrics(
-            project=project,
-            progress_deviation=0.0,
-            cost_variance_rate=0.0,
-            task_completed=0,
-            task_total=0,
+        project=project,
+        progress_deviation=0.0,
+        cost_variance_rate=0.0,
+        task_completed=0,
+        task_total=0,
         )
 
         # When no tasks, quality_score defaults to 100

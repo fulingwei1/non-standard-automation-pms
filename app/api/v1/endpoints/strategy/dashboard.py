@@ -1,6 +1,15 @@
 # -*- coding: utf-8 -*-
 """
 战略管理 API 端点 - 仪表板
+
+注意：此文件包含多个非标准dashboard端点：
+- /overview/{strategy_id} - 特定战略概览
+- /my-strategy - 用户个人战略信息
+- /execution-status/{strategy_id} - 特定战略执行状态
+- /quick-stats - 快速统计（类似dashboard）
+
+这些端点不是典型的dashboard模式，更像是业务查询端点。
+只有 /quick-stats 端点使用了基类重构。
 """
 
 from typing import Any, Dict
@@ -9,6 +18,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.dashboard.base import BaseDashboardEndpoint
 from app.schemas.strategy import (
     ExecutionStatusResponse,
     MyStrategyResponse,
@@ -245,49 +255,130 @@ def get_execution_status(
     )
 
 
-@router.get("/quick-stats", response_model=Dict[str, Any])
-def get_quick_stats(
-    db: Session = Depends(deps.get_db),
-):
-    """
-    获取快速统计
+class StrategyQuickStatsEndpoint(BaseDashboardEndpoint):
+    """战略快速统计端点（使用基类）"""
+    
+    module_name = "strategy"
+    permission_required = None
+    
+    def __init__(self):
+        """初始化路由"""
+        # 只注册quick-stats端点
+        self.router = APIRouter()
+        self._register_custom_routes()
+    
+    def _register_custom_routes(self):
+        """注册quick-stats端点"""
+        user_dependency = self._get_user_dependency()
+        
+        async def quick_stats_endpoint(
+            db: Session = Depends(deps.get_db),
+            current_user = Depends(user_dependency),
+        ):
+            return self._get_quick_stats_handler(db, current_user)
+        
+        self.router.add_api_route(
+            "/quick-stats",
+            quick_stats_endpoint,
+            methods=["GET"],
+            summary="获取快速统计",
+            response_model=Dict[str, Any]
+        )
+    
+    def get_dashboard_data(
+        self,
+        db: Session,
+        current_user
+    ) -> Dict[str, Any]:
+        """
+        获取快速统计
+        返回系统级的战略管理统计数据
+        """
+        from app.models.strategy import Strategy, CSF, KPI, AnnualKeyWork
 
-    返回系统级的战略管理统计数据
-    """
-    from app.models.strategy import Strategy, CSF, KPI, AnnualKeyWork
+        # 统计战略数量
+        strategy_count = db.query(Strategy).filter(Strategy.is_active == True).count()
+        active_strategy = strategy_service.get_active_strategy(db)
 
-    # 统计战略数量
-    strategy_count = db.query(Strategy).filter(Strategy.is_active == True).count()
-    active_strategy = strategy_service.get_active_strategy(db)
+        # 统计 CSF 数量
+        csf_count = 0
+        kpi_count = 0
+        work_count = 0
 
-    # 统计 CSF 数量
-    csf_count = 0
-    kpi_count = 0
-    work_count = 0
+        if active_strategy:
+            csf_count = db.query(CSF).filter(
+                CSF.strategy_id == active_strategy.id,
+                CSF.is_active == True
+            ).count()
 
-    if active_strategy:
-        csf_count = db.query(CSF).filter(
-            CSF.strategy_id == active_strategy.id,
-            CSF.is_active == True
-        ).count()
+            kpi_count = db.query(KPI).join(CSF).filter(
+                CSF.strategy_id == active_strategy.id,
+                CSF.is_active == True,
+                KPI.is_active == True
+            ).count()
 
-        kpi_count = db.query(KPI).join(CSF).filter(
-            CSF.strategy_id == active_strategy.id,
-            CSF.is_active == True,
-            KPI.is_active == True
-        ).count()
+            work_count = db.query(AnnualKeyWork).join(CSF).filter(
+                CSF.strategy_id == active_strategy.id,
+                CSF.is_active == True,
+                AnnualKeyWork.is_active == True
+            ).count()
 
-        work_count = db.query(AnnualKeyWork).join(CSF).filter(
-            CSF.strategy_id == active_strategy.id,
-            CSF.is_active == True,
-            AnnualKeyWork.is_active == True
-        ).count()
+        # 使用基类方法创建统计卡片
+        stats = [
+            self.create_stat_card(
+                key="total_strategies",
+                label="战略总数",
+                value=strategy_count,
+                unit="个",
+                icon="strategy"
+            ),
+            self.create_stat_card(
+                key="csf_count",
+                label="关键成功因素",
+                value=csf_count,
+                unit="个",
+                icon="csf"
+            ),
+            self.create_stat_card(
+                key="kpi_count",
+                label="KPI总数",
+                value=kpi_count,
+                unit="个",
+                icon="kpi"
+            ),
+            self.create_stat_card(
+                key="annual_work_count",
+                label="年度重点工作",
+                value=work_count,
+                unit="个",
+                icon="work"
+            ),
+        ]
 
-    return {
-        "total_strategies": strategy_count,
-        "active_strategy_id": active_strategy.id if active_strategy else None,
-        "active_strategy_name": active_strategy.name if active_strategy else None,
-        "csf_count": csf_count,
-        "kpi_count": kpi_count,
-        "annual_work_count": work_count,
-    }
+        return {
+            "stats": stats,
+            "total_strategies": strategy_count,
+            "active_strategy_id": active_strategy.id if active_strategy else None,
+            "active_strategy_name": active_strategy.name if active_strategy else None,
+            "csf_count": csf_count,
+            "kpi_count": kpi_count,
+            "annual_work_count": work_count,
+        }
+    
+    def _get_quick_stats_handler(
+        self,
+        db: Session,
+        current_user
+    ) -> Dict[str, Any]:
+        """快速统计处理器"""
+        data = self.get_dashboard_data(db, current_user)
+        # 移除stats字段，保持原有响应格式
+        result = {k: v for k, v in data.items() if k != "stats"}
+        return result
+
+
+# 创建quick-stats端点实例
+quick_stats_endpoint = StrategyQuickStatsEndpoint()
+
+# 将quick-stats路由添加到主router
+router.include_router(quick_stats_endpoint.router)

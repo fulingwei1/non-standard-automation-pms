@@ -80,9 +80,9 @@ class TestGetMonthlyRevenue:
         service = SalesPredictionService(db)
 
         contracts = [
-            create_mock_contract(signed_date=date(2024, 1, 15), contract_amount=Decimal("100000")),
-            create_mock_contract(signed_date=date(2024, 1, 20), contract_amount=Decimal("50000")),
-            create_mock_contract(signed_date=date(2024, 2, 10), contract_amount=Decimal("200000")),
+        create_mock_contract(signed_date=date(2024, 1, 15), contract_amount=Decimal("100000")),
+        create_mock_contract(signed_date=date(2024, 1, 20), contract_amount=Decimal("50000")),
+        create_mock_contract(signed_date=date(2024, 2, 10), contract_amount=Decimal("200000")),
         ]
 
         result = service._get_monthly_revenue(contracts)
@@ -141,9 +141,9 @@ class TestMovingAverageForecast:
         service = SalesPredictionService(db)
 
         monthly_data = [
-            {"month": "2024-01", "revenue": 100000, "count": 2},
-            {"month": "2024-02", "revenue": 200000, "count": 3},
-            {"month": "2024-03", "revenue": 300000, "count": 4},
+        {"month": "2024-01", "revenue": 100000, "count": 2},
+        {"month": "2024-02", "revenue": 200000, "count": 3},
+        {"month": "2024-03", "revenue": 300000, "count": 4},
         ]
 
         # 30天预测，使用最近3个月平均 (100000+200000+300000)/3 = 200000
@@ -157,7 +157,7 @@ class TestMovingAverageForecast:
         service = SalesPredictionService(db)
 
         monthly_data = [
-            {"month": "2024-01", "revenue": 300000, "count": 3},
+        {"month": "2024-01", "revenue": 300000, "count": 3},
         ]
 
         # 90天 = 3个月，平均月收入 300000，预测 300000 * 3 = 900000
@@ -171,8 +171,8 @@ class TestMovingAverageForecast:
         service = SalesPredictionService(db)
 
         monthly_data = [
-            {"month": "2024-01", "revenue": 100000, "count": 1},
-            {"month": "2024-02", "revenue": 200000, "count": 2},
+        {"month": "2024-01", "revenue": 100000, "count": 1},
+        {"month": "2024-02", "revenue": 200000, "count": 2},
         ]
 
         # 2个月数据，平均 150000，30天预测
@@ -211,8 +211,8 @@ class TestExponentialSmoothingForecast:
         service = SalesPredictionService(db)
 
         monthly_data = [
-            {"month": "2024-01", "revenue": 100000, "count": 1},
-            {"month": "2024-02", "revenue": 200000, "count": 2},
+        {"month": "2024-01", "revenue": 100000, "count": 1},
+        {"month": "2024-02", "revenue": 200000, "count": 2},
         ]
 
         # alpha=0.3: forecast = 0.3*200000 + 0.7*100000 = 130000
@@ -252,8 +252,8 @@ class TestForecastFromOpportunities:
         service = SalesPredictionService(db)
 
         opportunities = [
-            create_mock_opportunity(stage="PROPOSAL", est_amount=Decimal("100000")),  # 0.6
-            create_mock_opportunity(stage="NEGOTIATION", est_amount=Decimal("100000")),  # 0.8
+        create_mock_opportunity(stage="PROPOSAL", est_amount=Decimal("100000")),  # 0.6
+        create_mock_opportunity(stage="NEGOTIATION", est_amount=Decimal("100000")),  # 0.8
         ]
 
         # PROPOSAL: 100000 * 0.6 = 60000
@@ -457,10 +457,10 @@ class TestGetHistoricalWinRateByStage:
         db = create_mock_db_session()
 
         opportunities = [
-            create_mock_opportunity(stage="WON"),
-            create_mock_opportunity(stage="WON"),
-            create_mock_opportunity(stage="LOST"),
-            create_mock_opportunity(stage="PROPOSAL"),
+        create_mock_opportunity(stage="WON"),
+        create_mock_opportunity(stage="WON"),
+        create_mock_opportunity(stage="LOST"),
+        create_mock_opportunity(stage="PROPOSAL"),
         ]
         db.query.return_value.filter.return_value.all.return_value = opportunities
 
@@ -499,9 +499,9 @@ class TestGetCustomerWinRate:
         """测试计算客户赢单率"""
         db = create_mock_db_session()
         opportunities = [
-            create_mock_opportunity(stage="WON"),
-            create_mock_opportunity(stage="WON"),
-            create_mock_opportunity(stage="LOST"),
+        create_mock_opportunity(stage="WON"),
+        create_mock_opportunity(stage="WON"),
+        create_mock_opportunity(stage="LOST"),
         ]
         db.query.return_value.filter.return_value.all.return_value = opportunities
 
@@ -535,10 +535,10 @@ class TestPredictRevenue:
         def query_side_effect(model):
             model_name = str(model)
             if call_count[0] == 0:  # Contract
-                call_count[0] += 1
-                return contracts_query
-            else:  # Opportunity
-                return opps_query
+            call_count[0] += 1
+            return contracts_query
+        else:  # Opportunity
+        return opps_query
 
         db.query.side_effect = query_side_effect
 
@@ -571,15 +571,15 @@ class TestPredictRevenue:
             if call_count[0] == 0:
                 call_count[0] += 1
                 return contracts_query
-            else:
-                return opps_query
+        else:
+            return opps_query
 
-        db.query.side_effect = query_side_effect
+            db.query.side_effect = query_side_effect
 
-        service = SalesPredictionService(db)
-        result = service.predict_revenue()
+            service = SalesPredictionService(db)
+            result = service.predict_revenue()
 
-        assert result["method"] == "moving_average"
+            assert result["method"] == "moving_average"
 
     def test_accepts_exponential_smoothing_method(self):
         """测试接受指数平滑法"""
@@ -599,15 +599,15 @@ class TestPredictRevenue:
             if call_count[0] == 0:
                 call_count[0] += 1
                 return contracts_query
-            else:
-                return opps_query
+        else:
+            return opps_query
 
-        db.query.side_effect = query_side_effect
+            db.query.side_effect = query_side_effect
 
-        service = SalesPredictionService(db)
-        result = service.predict_revenue(method="exponential_smoothing")
+            service = SalesPredictionService(db)
+            result = service.predict_revenue(method="exponential_smoothing")
 
-        assert result["method"] == "exponential_smoothing"
+            assert result["method"] == "exponential_smoothing"
 
 
 @pytest.mark.unit
@@ -632,10 +632,10 @@ class TestEvaluatePredictionAccuracy:
 
         def query_side_effect(model):
             if call_count[0] == 0:  # Contract
-                call_count[0] += 1
-                return contracts_query
-            else:  # Opportunity
-                return opps_query
+            call_count[0] += 1
+            return contracts_query
+        else:  # Opportunity
+        return opps_query
 
         db.query.side_effect = query_side_effect
 
@@ -655,8 +655,8 @@ class TestEvaluatePredictionAccuracy:
 
         # Mock contracts with actual revenue
         contracts = [
-            create_mock_contract(contract_amount=Decimal("100000")),
-            create_mock_contract(contract_amount=Decimal("100000")),
+        create_mock_contract(contract_amount=Decimal("100000")),
+        create_mock_contract(contract_amount=Decimal("100000")),
         ]
 
         contracts_query = MagicMock()
@@ -671,10 +671,10 @@ class TestEvaluatePredictionAccuracy:
 
         def query_side_effect(model):
             if call_count[0] == 0:  # Contract
-                call_count[0] += 1
-                return contracts_query
-            else:  # Opportunity
-                return opps_query
+            call_count[0] += 1
+            return contracts_query
+        else:  # Opportunity
+        return opps_query
 
         db.query.side_effect = query_side_effect
 

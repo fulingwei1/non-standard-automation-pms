@@ -209,9 +209,9 @@ class TestContentSlideBuilder:
         """测试使用字典列表添加内容幻灯片"""
         config = PresentationConfig()
         content = [
-            {"text": "标题行", "size": 24, "bold": True, "color": config.TECH_BLUE},
-            {"text": "普通行", "size": 18},
-            "字符串行",
+        {"text": "标题行", "size": 24, "bold": True, "color": config.TECH_BLUE},
+        {"text": "普通行", "size": 18},
+        "字符串行",
         ]
         slide = builder.add_content_slide("测试标题", content, page_num=2)
 
@@ -413,12 +413,12 @@ class TestPresentationGenerator:
         with tempfile.NamedTemporaryFile(suffix=".pptx", delete=False) as tmp:
             output_path = tmp.name
 
-        try:
-            result = generator.generate(output_path)
+            try:
+                result = generator.generate(output_path)
 
-            assert result == output_path
-            assert os.path.exists(output_path)
-            assert os.path.getsize(output_path) > 0
+                assert result == output_path
+                assert os.path.exists(output_path)
+                assert os.path.getsize(output_path) > 0
         finally:
             if os.path.exists(output_path):
                 os.unlink(output_path)

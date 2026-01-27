@@ -96,17 +96,17 @@ class TestApprovalDelegateService_GetActiveDelegate:
         """Test getting delegate with ALL scope"""
         today = date.today()
         next_week = date(
-            today.year, today.month + 1 if today.month < 12 else 1, today.day
+        today.year, today.month + 1 if today.month < 12 else 1, today.day
         )
 
         # Create delegate with ALL scope
         delegate = ApprovalDelegate(
-            user_id=test_users["original"].id,
-            delegate_id=test_users["delegate"].id,
-            scope="ALL",
-            start_date=today,
-            end_date=next_week,
-            is_active=True,
+        user_id=test_users["original"].id,
+        delegate_id=test_users["delegate"].id,
+        scope="ALL",
+        start_date=today,
+        end_date=next_week,
+        is_active=True,
         )
         db_session.add(delegate)
         db_session.commit()
@@ -128,25 +128,25 @@ class TestApprovalDelegateService_GetActiveDelegate:
         """Test getting delegate with TEMPLATE scope when template matches"""
         today = date.today()
         next_week = date(
-            today.year, today.month + 1 if today.month < 12 else 1, today.day
+        today.year, today.month + 1 if today.month < 12 else 1, today.day
         )
 
         # Create delegate with TEMPLATE scope
         delegate = ApprovalDelegate(
-            user_id=test_users["original"].id,
-            delegate_id=test_users["delegate"].id,
-            scope="TEMPLATE",
-            template_ids=[100, 200, 300],
-            start_date=today,
-            end_date=next_week,
-            is_active=True,
+        user_id=test_users["original"].id,
+        delegate_id=test_users["delegate"].id,
+        scope="TEMPLATE",
+        template_ids=[100, 200, 300],
+        start_date=today,
+        end_date=next_week,
+        is_active=True,
         )
         db_session.add(delegate)
         db_session.commit()
 
         # Get active delegate for matching template
         result = delegate_service.get_active_delegate(
-            user_id=test_users["original"].id, template_id=200
+        user_id=test_users["original"].id, template_id=200
         )
 
         assert result is not None
@@ -161,25 +161,25 @@ class TestApprovalDelegateService_GetActiveDelegate:
         """Test getting delegate with TEMPLATE scope when template doesn't match"""
         today = date.today()
         next_week = date(
-            today.year, today.month + 1 if today.month < 12 else 1, today.day
+        today.year, today.month + 1 if today.month < 12 else 1, today.day
         )
 
         # Create delegate with TEMPLATE scope
         delegate = ApprovalDelegate(
-            user_id=test_users["original"].id,
-            delegate_id=test_users["delegate"].id,
-            scope="TEMPLATE",
-            template_ids=[100, 200],
-            start_date=today,
-            end_date=next_week,
-            is_active=True,
+        user_id=test_users["original"].id,
+        delegate_id=test_users["delegate"].id,
+        scope="TEMPLATE",
+        template_ids=[100, 200],
+        start_date=today,
+        end_date=next_week,
+        is_active=True,
         )
         db_session.add(delegate)
         db_session.commit()
 
         # Get active delegate for non-matching template
         result = delegate_service.get_active_delegate(
-            user_id=test_users["original"].id, template_id=999
+        user_id=test_users["original"].id, template_id=999
         )
 
         assert result is None
@@ -196,19 +196,19 @@ class TestApprovalDelegateService_GetActiveDelegate:
 
         # Create expired delegate
         delegate = ApprovalDelegate(
-            user_id=test_users["original"].id,
-            delegate_id=test_users["delegate"].id,
-            scope="ALL",
-            start_date=yesterday,
-            end_date=yesterday,
-            is_active=True,
+        user_id=test_users["original"].id,
+        delegate_id=test_users["delegate"].id,
+        scope="ALL",
+        start_date=yesterday,
+        end_date=yesterday,
+        is_active=True,
         )
         db_session.add(delegate)
         db_session.commit()
 
         # Get active delegate for today
         result = delegate_service.get_active_delegate(
-            user_id=test_users["original"].id, check_date=today
+        user_id=test_users["original"].id, check_date=today
         )
 
         assert result is None
@@ -222,17 +222,17 @@ class TestApprovalDelegateService_GetActiveDelegate:
         """Test that inactive delegates are not returned"""
         today = date.today()
         next_week = date(
-            today.year, today.month + 1 if today.month < 12 else 1, today.day
+        today.year, today.month + 1 if today.month < 12 else 1, today.day
         )
 
         # Create inactive delegate
         delegate = ApprovalDelegate(
-            user_id=test_users["original"].id,
-            delegate_id=test_users["delegate"].id,
-            scope="ALL",
-            start_date=today,
-            end_date=next_week,
-            is_active=False,
+        user_id=test_users["original"].id,
+        delegate_id=test_users["delegate"].id,
+        scope="ALL",
+        start_date=today,
+        end_date=next_week,
+        is_active=False,
         )
         db_session.add(delegate)
         db_session.commit()
@@ -255,16 +255,16 @@ class TestApprovalDelegateService_CreateDelegate:
         """Test creating a new delegate configuration"""
         today = date.today()
         next_week = date(
-            today.year, today.month + 1 if today.month < 12 else 1, today.day
+        today.year, today.month + 1 if today.month < 12 else 1, today.day
         )
 
         result = delegate_service.create_delegate(
-            user_id=test_users["original"].id,
-            delegate_id=test_users["delegate"].id,
-            start_date=today,
-            end_date=next_week,
-            scope="ALL",
-            reason="Vacation",
+        user_id=test_users["original"].id,
+        delegate_id=test_users["delegate"].id,
+        start_date=today,
+        end_date=next_week,
+        scope="ALL",
+        reason="Vacation",
         )
 
         assert result is not None
@@ -283,29 +283,29 @@ class TestApprovalDelegateService_CreateDelegate:
         """Test that creating overlapping delegates raises error"""
         today = date.today()
         next_week = date(
-            today.year, today.month + 1 if today.month < 12 else 1, today.day
+        today.year, today.month + 1 if today.month < 12 else 1, today.day
         )
 
         # Create first delegate
         delegate_service.create_delegate(
-            user_id=test_users["original"].id,
-            delegate_id=test_users["delegate"].id,
-            start_date=today,
-            end_date=next_week,
-            scope="ALL",
+        user_id=test_users["original"].id,
+        delegate_id=test_users["delegate"].id,
+        start_date=today,
+        end_date=next_week,
+        scope="ALL",
         )
 
         # Try to create overlapping delegate
         with pytest.raises(ValueError) as exc_info:
             delegate_service.create_delegate(
-                user_id=test_users["original"].id,
-                delegate_id=test_users["delegate"].id,
-                start_date=date.fromordinal(today.toordinal() + 2),
-                end_date=date.fromordinal(today.toordinal() + 10),
-                scope="ALL",
+            user_id=test_users["original"].id,
+            delegate_id=test_users["delegate"].id,
+            start_date=date.fromordinal(today.toordinal() + 2),
+            end_date=date.fromordinal(today.toordinal() + 10),
+            scope="ALL",
             )
 
-        assert "存在重叠" in str(exc_info.value)
+            assert "存在重叠" in str(exc_info.value)
 
     def test_create_delegate_with_template_ids(
         self,
@@ -316,16 +316,16 @@ class TestApprovalDelegateService_CreateDelegate:
         """Test creating delegate with specific template IDs"""
         today = date.today()
         next_week = date(
-            today.year, today.month + 1 if today.month < 12 else 1, today.day
+        today.year, today.month + 1 if today.month < 12 else 1, today.day
         )
 
         result = delegate_service.create_delegate(
-            user_id=test_users["original"].id,
-            delegate_id=test_users["delegate"].id,
-            start_date=today,
-            end_date=next_week,
-            scope="TEMPLATE",
-            template_ids=[100, 200, 300],
+        user_id=test_users["original"].id,
+        delegate_id=test_users["delegate"].id,
+        start_date=today,
+        end_date=next_week,
+        scope="TEMPLATE",
+        template_ids=[100, 200, 300],
         )
 
         assert result.scope == "TEMPLATE"
@@ -344,21 +344,21 @@ class TestApprovalDelegateService_UpdateDelegate:
         """Test updating an existing delegate"""
         today = date.today()
         next_week = date(
-            today.year, today.month + 1 if today.month < 12 else 1, today.day
+        today.year, today.month + 1 if today.month < 12 else 1, today.day
         )
 
         # Create delegate
         created = delegate_service.create_delegate(
-            user_id=test_users["original"].id,
-            delegate_id=test_users["delegate"].id,
-            start_date=today,
-            end_date=next_week,
-            scope="ALL",
+        user_id=test_users["original"].id,
+        delegate_id=test_users["delegate"].id,
+        start_date=today,
+        end_date=next_week,
+        scope="ALL",
         )
 
         # Update reason
         updated = delegate_service.update_delegate(
-            delegate_id=created.id, reason="Updated reason"
+        delegate_id=created.id, reason="Updated reason"
         )
 
         assert updated is not None
@@ -382,16 +382,16 @@ class TestApprovalDelegateService_CancelDelegate:
         """Test cancelling an active delegate"""
         today = date.today()
         next_week = date(
-            today.year, today.month + 1 if today.month < 12 else 1, today.day
+        today.year, today.month + 1 if today.month < 12 else 1, today.day
         )
 
         # Create delegate
         created = delegate_service.create_delegate(
-            user_id=test_users["original"].id,
-            delegate_id=test_users["delegate"].id,
-            start_date=today,
-            end_date=next_week,
-            scope="ALL",
+        user_id=test_users["original"].id,
+        delegate_id=test_users["delegate"].id,
+        start_date=today,
+        end_date=next_week,
+        scope="ALL",
         )
 
         assert created.is_active is True
@@ -426,36 +426,36 @@ class TestApprovalDelegateService_GetUserDelegates:
         """Test getting active delegates for user"""
         today = date.today()
         next_week = date(
-            today.year, today.month + 1 if today.month < 12 else 1, today.day
+        today.year, today.month + 1 if today.month < 12 else 1, today.day
         )
         last_month = date(
-            today.year, today.month - 1 if today.month > 1 else 12, today.day
+        today.year, today.month - 1 if today.month > 1 else 12, today.day
         )
 
         # Create active delegate
         active_delegate = delegate_service.create_delegate(
-            user_id=test_users["original"].id,
-            delegate_id=test_users["delegate"].id,
-            start_date=today,
-            end_date=next_week,
-            scope="ALL",
+        user_id=test_users["original"].id,
+        delegate_id=test_users["delegate"].id,
+        start_date=today,
+        end_date=next_week,
+        scope="ALL",
         )
 
         # Create inactive delegate
         inactive_delegate = ApprovalDelegate(
-            user_id=test_users["original"].id,
-            delegate_id=test_users["delegate"].id,
-            scope="ALL",
-            start_date=last_month,
-            end_date=date.fromordinal(last_month.toordinal() + 7),
-            is_active=False,
+        user_id=test_users["original"].id,
+        delegate_id=test_users["delegate"].id,
+        scope="ALL",
+        start_date=last_month,
+        end_date=date.fromordinal(last_month.toordinal() + 7),
+        is_active=False,
         )
         db_session.add(inactive_delegate)
         db_session.commit()
 
         # Get only active delegates
         result = delegate_service.get_user_delegates(
-            user_id=test_users["original"].id, include_inactive=False
+        user_id=test_users["original"].id, include_inactive=False
         )
 
         assert len(result) == 1
@@ -470,36 +470,36 @@ class TestApprovalDelegateService_GetUserDelegates:
         """Test getting all delegates including inactive"""
         today = date.today()
         next_week = date(
-            today.year, today.month + 1 if today.month < 12 else 1, today.day
+        today.year, today.month + 1 if today.month < 12 else 1, today.day
         )
         last_month = date(
-            today.year, today.month - 1 if today.month > 1 else 12, today.day
+        today.year, today.month - 1 if today.month > 1 else 12, today.day
         )
 
         # Create active delegate
         active_delegate = delegate_service.create_delegate(
-            user_id=test_users["original"].id,
-            delegate_id=test_users["delegate"].id,
-            start_date=today,
-            end_date=next_week,
-            scope="ALL",
+        user_id=test_users["original"].id,
+        delegate_id=test_users["delegate"].id,
+        start_date=today,
+        end_date=next_week,
+        scope="ALL",
         )
 
         # Create inactive delegate
         inactive_delegate = ApprovalDelegate(
-            user_id=test_users["original"].id,
-            delegate_id=test_users["delegate"].id,
-            scope="ALL",
-            start_date=last_month,
-            end_date=date.fromordinal(last_month.toordinal() + 7),
-            is_active=False,
+        user_id=test_users["original"].id,
+        delegate_id=test_users["delegate"].id,
+        scope="ALL",
+        start_date=last_month,
+        end_date=date.fromordinal(last_month.toordinal() + 7),
+        is_active=False,
         )
         db_session.add(inactive_delegate)
         db_session.commit()
 
         # Get all delegates
         result = delegate_service.get_user_delegates(
-            user_id=test_users["original"].id, include_inactive=True
+        user_id=test_users["original"].id, include_inactive=True
         )
 
         assert len(result) == 2
@@ -517,28 +517,28 @@ class TestApprovalDelegateService_CleanupExpiredDelegates:
         """Test that expired delegates are marked inactive"""
         today = date.today()
         next_week = date(
-            today.year, today.month + 1 if today.month < 12 else 1, today.day
+        today.year, today.month + 1 if today.month < 12 else 1, today.day
         )
         yesterday = date.fromordinal(today.toordinal() - 1)
 
         delegate_service.create_delegate(
-            user_id=test_users["original"].id,
-            delegate_id=test_users["delegate"].id,
-            start_date=today,
-            end_date=next_week,
-            scope="ALL",
+        user_id=test_users["original"].id,
+        delegate_id=test_users["delegate"].id,
+        start_date=today,
+        end_date=next_week,
+        scope="ALL",
         )
 
         # Create expired delegate
         from app.models.approval import ApprovalDelegate
 
         expired_delegate = ApprovalDelegate(
-            user_id=test_users["original"].id + 1,
-            delegate_id=test_users["delegate"].id,
-            scope="ALL",
-            start_date=yesterday,
-            end_date=yesterday,
-            is_active=True,
+        user_id=test_users["original"].id + 1,
+        delegate_id=test_users["delegate"].id,
+        scope="ALL",
+        start_date=yesterday,
+        end_date=yesterday,
+        is_active=True,
         )
         db_session.add(expired_delegate)
         db_session.commit()
@@ -556,10 +556,10 @@ class TestApprovalDelegateService_CleanupExpiredDelegates:
         from app.models.approval import ApprovalDelegate
 
         active_delegates = (
-            db_session.query(ApprovalDelegate)
-            .filter(ApprovalDelegate.user_id == test_users["original"].id)
-            .filter(ApprovalDelegate.is_active == True)
-            .all()
+        db_session.query(ApprovalDelegate)
+        .filter(ApprovalDelegate.user_id == test_users["original"].id)
+        .filter(ApprovalDelegate.is_active == True)
+        .all()
         )
         assert len(active_delegates) == 1
 
@@ -576,28 +576,28 @@ class TestApprovalDelegateService_NotifyOriginalUser:
         """Test notify original user without notify_original flag set"""
         today = date.today()
         next_week = date(
-            today.year, today.month + 1 if today.month < 12 else 1, today.day
+        today.year, today.month + 1 if today.month < 12 else 1, today.day
         )
 
         # Create delegate WITHOUT notify_original
         delegate = delegate_service.create_delegate(
-            user_id=test_users["original"].id,
-            delegate_id=test_users["delegate"].id,
-            start_date=today,
-            end_date=next_week,
-            scope="ALL",
-            notify_original=False,
+        user_id=test_users["original"].id,
+        delegate_id=test_users["delegate"].id,
+        start_date=today,
+        end_date=next_week,
+        scope="ALL",
+        notify_original=False,
         )
 
         # Create delegate log
         from app.models.approval import ApprovalDelegateLog
 
         log = ApprovalDelegateLog(
-            delegate_config_id=delegate.id,
-            task_id=999,
-            instance_id=888,
-            original_user_id=test_users["original"].id,
-            delegate_user_id=test_users["delegate"].id,
+        delegate_config_id=delegate.id,
+        task_id=999,
+        instance_id=888,
+        original_user_id=test_users["original"].id,
+        delegate_user_id=test_users["delegate"].id,
         )
         db_session.add(log)
         db_session.commit()
@@ -618,28 +618,28 @@ class TestApprovalDelegateService_NotifyOriginalUser:
         """Test notify original user with notify_original flag set"""
         today = date.today()
         next_week = date(
-            today.year, today.month + 1 if today.month < 12 else 1, today.day
+        today.year, today.month + 1 if today.month < 12 else 1, today.day
         )
 
         # Create delegate WITH notify_original
         delegate = delegate_service.create_delegate(
-            user_id=test_users["original"].id,
-            delegate_id=test_users["delegate"].id,
-            start_date=today,
-            end_date=next_week,
-            scope="ALL",
-            notify_original=True,
+        user_id=test_users["original"].id,
+        delegate_id=test_users["delegate"].id,
+        start_date=today,
+        end_date=next_week,
+        scope="ALL",
+        notify_original=True,
         )
 
         # Create delegate log
         from app.models.approval import ApprovalDelegateLog
 
         log = ApprovalDelegateLog(
-            delegate_config_id=delegate.id,
-            task_id=999,
-            instance_id=888,
-            original_user_id=test_users["original"].id,
-            delegate_user_id=test_users["delegate"].id,
+        delegate_config_id=delegate.id,
+        task_id=999,
+        instance_id=888,
+        original_user_id=test_users["original"].id,
+        delegate_user_id=test_users["delegate"].id,
         )
         db_session.add(log)
         db_session.commit()

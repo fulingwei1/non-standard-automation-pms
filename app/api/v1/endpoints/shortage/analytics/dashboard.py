@@ -23,6 +23,7 @@ from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.dashboard.base import BaseDashboardEndpoint
 from app.core import security
 from app.models.material import MaterialShortage
 from app.models.project import Project
@@ -35,8 +36,6 @@ from app.models.shortage import (
 )
 from app.models.user import User
 from app.schemas.common import ResponseModel
-
-router = APIRouter()
 
 
 # ============================================================
@@ -89,96 +88,188 @@ def _build_shortage_daily_report(report: ShortageDailyReport) -> Dict[str, Any]:
 # 缺料看板
 # ============================================================
 
-@router.get("/dashboard", response_model=ResponseModel)
-def get_shortage_dashboard(
-    db: Session = Depends(deps.get_db),
-    project_id: Optional[int] = Query(None, description="项目ID筛选"),
-    current_user: User = Depends(security.get_current_active_user),
-) -> Any:
-    """
-    缺料看板
-    综合展示缺料上报、到货跟踪、物料替代、物料调拨的状态
-    """
-    # === 缺料上报统计 (ShortageReport) ===
-    report_query = db.query(ShortageReport)
-    if project_id:
-        report_query = report_query.filter(ShortageReport.project_id == project_id)
-
-    total_reports = report_query.count()
-    reported = report_query.filter(ShortageReport.status == 'REPORTED').count()
-    confirmed = report_query.filter(ShortageReport.status == 'CONFIRMED').count()
-    handling = report_query.filter(ShortageReport.status == 'HANDLING').count()
-    resolved = report_query.filter(ShortageReport.status == 'RESOLVED').count()
-
-    # 紧急缺料
-    urgent_reports = report_query.filter(
-        ShortageReport.urgent_level.in_(['URGENT', 'CRITICAL']),
-        ShortageReport.status != 'RESOLVED'
-    ).count()
-
-    # === 系统检测的缺料预警 (MaterialShortage) ===
-    alert_query = db.query(MaterialShortage)
-    if project_id:
-        alert_query = alert_query.filter(MaterialShortage.project_id == project_id)
-
-    total_alerts = alert_query.count()
-    unresolved_alerts = alert_query.filter(MaterialShortage.status != "RESOLVED").count()
-    critical_alerts = alert_query.filter(
-        MaterialShortage.alert_level == "CRITICAL",
-        MaterialShortage.status != "RESOLVED"
-    ).count()
-
-    # === 到货跟踪统计 ===
-    arrival_query = db.query(MaterialArrival)
-    total_arrivals = arrival_query.count()
-    pending_arrivals = arrival_query.filter(MaterialArrival.status == 'PENDING').count()
-    delayed_arrivals = arrival_query.filter(MaterialArrival.is_delayed == True).count()
-
-    # === 物料替代统计 ===
-    sub_query = db.query(MaterialSubstitution)
-    if project_id:
-        sub_query = sub_query.filter(MaterialSubstitution.project_id == project_id)
-    total_substitutions = sub_query.count()
-    pending_substitutions = sub_query.filter(
-        MaterialSubstitution.status.in_(['DRAFT', 'TECH_PENDING', 'PROD_PENDING'])
-    ).count()
-
-    # === 物料调拨统计 ===
-    transfer_query = db.query(MaterialTransfer)
-    if project_id:
-        transfer_query = transfer_query.filter(
-            (MaterialTransfer.from_project_id == project_id) |
-            (MaterialTransfer.to_project_id == project_id)
+class ShortageAnalyticsDashboardEndpoint(BaseDashboardEndpoint):
+    """缺料分析Dashboard端点"""
+    
+    module_name = "shortage_analytics"
+    permission_required = None  # 使用默认权限
+    
+    def __init__(self):
+        """初始化路由，添加额外端点"""
+        # 先创建router，不调用super().__init__()
+        self.router = APIRouter()
+        self._register_custom_routes()
+    
+    def _register_custom_routes(self):
+        """注册自定义路由"""
+        user_dependency = self._get_user_dependency()
+        
+        # 主dashboard端点
+        async def dashboard_endpoint(
+            db: Session = Depends(deps.get_db),
+            project_id: Optional[int] = Query(None, description="项目ID筛选"),
+            current_user: User = Depends(user_dependency),
+        ):
+            return self._get_dashboard_handler(db, current_user, project_id)
+        
+        self.router.add_api_route(
+            "/dashboard",
+            dashboard_endpoint,
+            methods=["GET"],
+            summary="缺料看板",
+            response_model=ResponseModel
         )
-    total_transfers = transfer_query.count()
-    pending_transfers = transfer_query.filter(
-        MaterialTransfer.status.in_(['DRAFT', 'PENDING'])
-    ).count()
+        
+        # 保留其他端点（daily-report, trends等）
+        # 这些端点将在文件末尾注册
+    
+    def get_dashboard_data(
+        self,
+        db: Session,
+        current_user: User,
+        project_id: Optional[int] = None
+    ) -> Dict[str, Any]:
+        """
+        缺料看板
+        综合展示缺料上报、到货跟踪、物料替代、物料调拨的状态
+        """
+        # === 缺料上报统计 (ShortageReport) ===
+        report_query = db.query(ShortageReport)
+        if project_id:
+            report_query = report_query.filter(ShortageReport.project_id == project_id)
 
-    # === 最近缺料上报 ===
-    recent_query = db.query(ShortageReport)
-    if project_id:
-        recent_query = recent_query.filter(ShortageReport.project_id == project_id)
-    recent_reports = recent_query.order_by(desc(ShortageReport.created_at)).limit(10).all()
+        total_reports = report_query.count()
+        reported = report_query.filter(ShortageReport.status == 'REPORTED').count()
+        confirmed = report_query.filter(ShortageReport.status == 'CONFIRMED').count()
+        handling = report_query.filter(ShortageReport.status == 'HANDLING').count()
+        resolved = report_query.filter(ShortageReport.status == 'RESOLVED').count()
 
-    recent_reports_list = []
-    for report in recent_reports:
-        project = db.query(Project).filter(Project.id == report.project_id).first()
-        recent_reports_list.append({
-            'id': report.id,
-            'report_no': report.report_no,
-            'project_name': project.project_name if project else None,
-            'material_name': report.material_name,
-            'shortage_qty': float(report.shortage_qty),
-            'urgent_level': report.urgent_level,
-            'status': report.status,
-            'report_time': report.report_time
-        })
+        # 紧急缺料
+        urgent_reports = report_query.filter(
+            ShortageReport.urgent_level.in_(['URGENT', 'CRITICAL']),
+            ShortageReport.status != 'RESOLVED'
+        ).count()
 
-    return ResponseModel(
-        code=200,
-        message="success",
-        data={
+        # === 系统检测的缺料预警 (MaterialShortage) ===
+        alert_query = db.query(MaterialShortage)
+        if project_id:
+            alert_query = alert_query.filter(MaterialShortage.project_id == project_id)
+
+        total_alerts = alert_query.count()
+        unresolved_alerts = alert_query.filter(MaterialShortage.status != "RESOLVED").count()
+        critical_alerts = alert_query.filter(
+            MaterialShortage.alert_level == "CRITICAL",
+            MaterialShortage.status != "RESOLVED"
+        ).count()
+
+        # === 到货跟踪统计 ===
+        arrival_query = db.query(MaterialArrival)
+        total_arrivals = arrival_query.count()
+        pending_arrivals = arrival_query.filter(MaterialArrival.status == 'PENDING').count()
+        delayed_arrivals = arrival_query.filter(MaterialArrival.is_delayed == True).count()
+
+        # === 物料替代统计 ===
+        sub_query = db.query(MaterialSubstitution)
+        if project_id:
+            sub_query = sub_query.filter(MaterialSubstitution.project_id == project_id)
+        total_substitutions = sub_query.count()
+        pending_substitutions = sub_query.filter(
+            MaterialSubstitution.status.in_(['DRAFT', 'TECH_PENDING', 'PROD_PENDING'])
+        ).count()
+
+        # === 物料调拨统计 ===
+        transfer_query = db.query(MaterialTransfer)
+        if project_id:
+            transfer_query = transfer_query.filter(
+                (MaterialTransfer.from_project_id == project_id) |
+                (MaterialTransfer.to_project_id == project_id)
+            )
+        total_transfers = transfer_query.count()
+        pending_transfers = transfer_query.filter(
+            MaterialTransfer.status.in_(['DRAFT', 'PENDING'])
+        ).count()
+
+        # === 最近缺料上报 ===
+        recent_query = db.query(ShortageReport)
+        if project_id:
+            recent_query = recent_query.filter(ShortageReport.project_id == project_id)
+        recent_reports = recent_query.order_by(desc(ShortageReport.created_at)).limit(10).all()
+
+        recent_reports_list = []
+        for report in recent_reports:
+            project = db.query(Project).filter(Project.id == report.project_id).first()
+            recent_reports_list.append(
+                self.create_list_item(
+                    id=report.id,
+                    title=f"{report.material_name} - 缺料数量: {report.shortage_qty}",
+                    subtitle=f"项目: {project.project_name if project else '未知'} | 状态: {report.status}",
+                    status=report.status.lower(),
+                    priority=report.urgent_level.lower() if report.urgent_level else None,
+                    extra={
+                        'report_no': report.report_no,
+                        'project_id': report.project_id,
+                        'project_name': project.project_name if project else None,
+                        'material_name': report.material_name,
+                        'shortage_qty': float(report.shortage_qty),
+                        'urgent_level': report.urgent_level,
+                        'report_time': str(report.report_time) if report.report_time else None,
+                    }
+                )
+            )
+
+        # 使用基类方法创建统计卡片
+        stats = [
+            self.create_stat_card(
+                key="total_reports",
+                label="缺料上报总数",
+                value=total_reports,
+                unit="个",
+                icon="report"
+            ),
+            self.create_stat_card(
+                key="urgent_reports",
+                label="紧急缺料",
+                value=urgent_reports,
+                unit="个",
+                icon="urgent",
+                color="danger"
+            ),
+            self.create_stat_card(
+                key="unresolved_alerts",
+                label="未解决预警",
+                value=unresolved_alerts,
+                unit="个",
+                icon="alert",
+                color="warning"
+            ),
+            self.create_stat_card(
+                key="critical_alerts",
+                label="严重预警",
+                value=critical_alerts,
+                unit="个",
+                icon="critical",
+                color="danger"
+            ),
+            self.create_stat_card(
+                key="pending_arrivals",
+                label="待处理到货",
+                value=pending_arrivals,
+                unit="个",
+                icon="arrival",
+                color="warning"
+            ),
+            self.create_stat_card(
+                key="delayed_arrivals",
+                label="延迟到货",
+                value=delayed_arrivals,
+                unit="个",
+                icon="delayed",
+                color="danger"
+            ),
+        ]
+
+        return {
+            "stats": stats,
             "reports": {
                 "total": total_reports,
                 "reported": reported,
@@ -207,7 +298,34 @@ def get_shortage_dashboard(
             },
             "recent_reports": recent_reports_list
         }
-    )
+    
+    def _get_dashboard_handler(
+        self,
+        db: Session,
+        current_user: User,
+        project_id: Optional[int] = None
+    ) -> ResponseModel:
+        """Dashboard处理器，支持project_id参数"""
+        try:
+            data = self.get_dashboard_data(db, current_user, project_id)
+            return ResponseModel(
+                code=200,
+                message="success",
+                data=data
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"获取仪表板数据失败: {str(e)}"
+            )
+
+
+# 创建端点实例并获取路由
+dashboard_endpoint = ShortageAnalyticsDashboardEndpoint()
+router = dashboard_endpoint.router
+
+# 注意：其他端点（daily-report, trends等）已经在文件末尾定义
+# 它们使用 @router.get 装饰器，会自动注册到同一个router上
 
 
 # ============================================================

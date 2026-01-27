@@ -67,8 +67,8 @@ class TestCostMatchSuggestionService:
         """测试检查成本异常 - 成本偏高"""
         # 创建历史成本记录
         historical_cost = PurchaseMaterialCost(
-            material_name="测试物料",
-            unit_cost=Decimal("50.00")
+        material_name="测试物料",
+        unit_cost=Decimal("50.00")
         )
         db_session.add(historical_cost)
         db_session.commit()
@@ -93,9 +93,9 @@ class TestCostMatchSuggestionService:
         """测试查找匹配成本 - 精确匹配"""
         # 创建精确匹配的成本记录
         cost = PurchaseMaterialCost(
-            material_name="测试物料",
-            unit_cost=Decimal("100.00"),
-            match_priority=100
+        material_name="测试物料",
+        unit_cost=Decimal("100.00"),
+        match_priority=100
         )
         db_session.add(cost)
         db_session.commit()
@@ -112,8 +112,8 @@ class TestCostMatchSuggestionService:
         
         # 创建模糊匹配的成本记录
         cost = PurchaseMaterialCost(
-            material_name="测试物料A型",
-            unit_cost=Decimal("100.00")
+        material_name="测试物料A型",
+        unit_cost=Decimal("100.00")
         )
         db_session.add(cost)
         db_session.commit()
@@ -135,12 +135,12 @@ class TestCostMatchSuggestionService:
         matched_cost.submitter = None
         
         suggestion = build_cost_suggestion(
-            test_quote_item,
-            current_cost=100.0,
-            matched_cost=matched_cost,
-            match_score=100,
-            reason="精确匹配",
-            warnings=[]
+        test_quote_item,
+        current_cost=100.0,
+        matched_cost=matched_cost,
+        match_score=100,
+        reason="精确匹配",
+        warnings=[]
         )
         
         assert suggestion is not None
@@ -151,12 +151,12 @@ class TestCostMatchSuggestionService:
     def test_build_cost_suggestion_no_match(self, test_quote_item):
         """测试构建成本建议 - 无匹配"""
         suggestion = build_cost_suggestion(
-            test_quote_item,
-            current_cost=100.0,
-            matched_cost=None,
-            match_score=None,
-            reason=None,
-            warnings=["未找到匹配"]
+        test_quote_item,
+        current_cost=100.0,
+        matched_cost=None,
+        match_score=None,
+        reason=None,
+        warnings=["未找到匹配"]
         )
         
         assert suggestion is not None
@@ -169,11 +169,11 @@ class TestCostMatchSuggestionService:
         suggestions = []
         
         warnings = check_overall_anomalies(
-            current_total_price=1000.0,
-            current_total_cost=950.0,
-            suggested_total_cost=960.0,
-            items=items,
-            suggestions=suggestions
+        current_total_price=1000.0,
+        current_total_cost=950.0,
+        suggested_total_cost=960.0,
+        items=items,
+        suggestions=suggestions
         )
         
         assert isinstance(warnings, list)
@@ -181,11 +181,11 @@ class TestCostMatchSuggestionService:
     def test_check_overall_anomalies_zero_price(self):
         """测试整体异常检查 - 价格为0"""
         warnings = check_overall_anomalies(
-            current_total_price=0.0,
-            current_total_cost=100.0,
-            suggested_total_cost=90.0,
-            items=[],
-            suggestions=[]
+        current_total_price=0.0,
+        current_total_cost=100.0,
+        suggested_total_cost=90.0,
+        items=[],
+        suggestions=[]
         )
         
         assert isinstance(warnings, list)
@@ -194,22 +194,22 @@ class TestCostMatchSuggestionService:
     def test_calculate_summary_success(self):
         """测试计算汇总 - 成功场景"""
         items = [
-            QuoteItem(id=1, qty=10, cost=Decimal("100.00"))
+        QuoteItem(id=1, qty=10, cost=Decimal("100.00"))
         ]
         suggestions = [
-            CostMatchSuggestion(
-                item_id=1,
-                item_name="物料1",
-                current_cost=Decimal("100.00"),
-                suggested_cost=Decimal("90.00")
-            )
+        CostMatchSuggestion(
+        item_id=1,
+        item_name="物料1",
+        current_cost=Decimal("100.00"),
+        suggested_cost=Decimal("90.00")
+        )
         ]
         
         result = calculate_summary(
-            current_total_cost=1000.0,
-            current_total_price=1200.0,
-            items=items,
-            suggestions=suggestions
+        current_total_cost=1000.0,
+        current_total_price=1200.0,
+        items=items,
+        suggestions=suggestions
         )
         
         assert result is not None
@@ -221,10 +221,10 @@ class TestCostMatchSuggestionService:
     def test_calculate_summary_zero_cost(self):
         """测试计算汇总 - 成本为0"""
         result = calculate_summary(
-            current_total_cost=0.0,
-            current_total_price=1000.0,
-            items=[],
-            suggestions=[]
+        current_total_cost=0.0,
+        current_total_price=1000.0,
+        items=[],
+        suggestions=[]
         )
         
         assert result is not None
@@ -233,18 +233,18 @@ class TestCostMatchSuggestionService:
     def test_process_cost_match_suggestions_success(self, db_session, test_cost_query):
         """测试处理成本匹配建议 - 成功场景"""
         items = [
-            QuoteItem(
-                id=1,
-                item_name="测试物料",
-                qty=10,
-                cost=Decimal("100.00")
-            )
+        QuoteItem(
+        id=1,
+        item_name="测试物料",
+        qty=10,
+        cost=Decimal("100.00")
+        )
         ]
         
         suggestions, matched_count, unmatched_count, warnings, total_cost = process_cost_match_suggestions(
-            db_session,
-            items,
-            test_cost_query
+        db_session,
+        items,
+        test_cost_query
         )
         
         assert isinstance(suggestions, list)
@@ -256,9 +256,9 @@ class TestCostMatchSuggestionService:
     def test_process_cost_match_suggestions_empty_items(self, db_session, test_cost_query):
         """测试处理成本匹配建议 - 空列表"""
         suggestions, matched_count, unmatched_count, warnings, total_cost = process_cost_match_suggestions(
-            db_session,
-            [],
-            test_cost_query
+        db_session,
+        [],
+        test_cost_query
         )
         
         assert len(suggestions) == 0

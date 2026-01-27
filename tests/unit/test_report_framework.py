@@ -29,7 +29,7 @@ class TestReportConfig:
     def test_minimal_config(self):
         """测试最小配置"""
         config = ReportConfig(
-            meta=ReportMeta(name="测试", code="TEST")
+        meta=ReportMeta(name="测试", code="TEST")
         )
         assert config.meta.code == "TEST"
         assert config.cache.enabled is False
@@ -38,18 +38,18 @@ class TestReportConfig:
     def test_full_config(self):
         """测试完整配置"""
         config = ReportConfig(
-            meta={"name": "完整测试", "code": "FULL_TEST", "version": "2.0"},
-            permissions={"roles": ["ADMIN", "PM"], "data_scope": "company"},
-            parameters=[
-                {"name": "project_id", "type": "integer", "required": True}
-            ],
-            cache={"enabled": True, "ttl": 3600},
-            data_sources={
-                "tasks": {"type": "query", "sql": "SELECT * FROM tasks"}
-            },
-            sections=[
-                {"id": "summary", "type": "metrics", "items": [{"label": "总数", "value": "100"}]}
-            ],
+        meta={"name": "完整测试", "code": "FULL_TEST", "version": "2.0"},
+        permissions={"roles": ["ADMIN", "PM"], "data_scope": "company"},
+        parameters=[
+        {"name": "project_id", "type": "integer", "required": True}
+        ],
+        cache={"enabled": True, "ttl": 3600},
+        data_sources={
+        "tasks": {"type": "query", "sql": "SELECT * FROM tasks"}
+        },
+        sections=[
+        {"id": "summary", "type": "metrics", "items": [{"label": "总数", "value": "100"}]}
+        ],
         )
         assert config.meta.version == "2.0"
         assert "ADMIN" in config.permissions.roles
@@ -110,11 +110,11 @@ class TestExpressionParser:
         """测试 count_by 过滤器"""
         parser = ExpressionParser()
         context = {
-            "tasks": [
-                {"status": "DONE"},
-                {"status": "IN_PROGRESS"},
-                {"status": "DONE"},
-            ]
+        "tasks": [
+        {"status": "DONE"},
+        {"status": "IN_PROGRESS"},
+        {"status": "DONE"},
+        ]
         }
         result = parser.evaluate('{{ tasks | count_by("status", "DONE") }}', context)
         assert result == 2
@@ -123,11 +123,11 @@ class TestExpressionParser:
         """测试 sum_by 过滤器"""
         parser = ExpressionParser()
         context = {
-            "items": [
-                {"amount": 100},
-                {"amount": 200},
-                {"amount": 150},
-            ]
+        "items": [
+        {"amount": 100},
+        {"amount": 200},
+        {"amount": 150},
+        ]
         }
         result = parser.evaluate('{{ items | sum_by("amount") }}', context)
         assert result == 450
@@ -159,8 +159,8 @@ class TestCacheManager:
         """测试内存缓存设置和获取"""
         cache = CacheManager()
         config = ReportConfig(
-            meta={"name": "Test", "code": "CACHE_TEST"},
-            cache={"enabled": True, "ttl": 60}
+        meta={"name": "Test", "code": "CACHE_TEST"},
+        cache={"enabled": True, "ttl": 60}
         )
         cache.set(config, {"id": 1}, {"result": "data"})
         cached = cache.get(config, {"id": 1})
@@ -170,8 +170,8 @@ class TestCacheManager:
         """测试缓存禁用"""
         cache = CacheManager()
         config = ReportConfig(
-            meta={"name": "Test", "code": "NO_CACHE"},
-            cache={"enabled": False}
+        meta={"name": "Test", "code": "NO_CACHE"},
+        cache={"enabled": False}
         )
         cache.set(config, {"id": 1}, {"result": "data"})
         cached = cache.get(config, {"id": 1})
@@ -181,8 +181,8 @@ class TestCacheManager:
         """测试缓存键生成"""
         cache = CacheManager()
         config = ReportConfig(
-            meta={"name": "Test", "code": "KEY_TEST"},
-            cache={"enabled": True, "key_pattern": "report:{code}:{id}"}
+        meta={"name": "Test", "code": "KEY_TEST"},
+        cache={"enabled": True, "key_pattern": "report:{code}:{id}"}
         )
         key = cache._generate_key(config, {"id": 123})
         assert key == "report:KEY_TEST:123"
@@ -191,8 +191,8 @@ class TestCacheManager:
         """测试缓存失效"""
         cache = CacheManager()
         config = ReportConfig(
-            meta={"name": "Test", "code": "INVALIDATE_TEST"},
-            cache={"enabled": True, "ttl": 60}
+        meta={"name": "Test", "code": "INVALIDATE_TEST"},
+        cache={"enabled": True, "ttl": 60}
         )
         cache.set(config, {"id": 1}, {"result": "data"})
         cache.invalidate("INVALIDATE_TEST")
@@ -211,8 +211,8 @@ class TestQueryDataSource:
     def test_validate_dangerous_sql(self):
         """测试危险 SQL 检测"""
         config = DataSourceConfig(
-            type=DataSourceType.QUERY,
-            sql="DROP TABLE users"
+        type=DataSourceType.QUERY,
+        sql="DROP TABLE users"
         )
         with pytest.raises(DataSourceError, match="Dangerous SQL"):
             QueryDataSource(MagicMock(), config)
@@ -220,8 +220,8 @@ class TestQueryDataSource:
     def test_get_required_params(self):
         """测试提取参数"""
         config = DataSourceConfig(
-            type=DataSourceType.QUERY,
-            sql="SELECT * FROM tasks WHERE project_id = :project_id AND status = :status"
+        type=DataSourceType.QUERY,
+        sql="SELECT * FROM tasks WHERE project_id = :project_id AND status = :status"
         )
         ds = QueryDataSource(MagicMock(), config)
         params = ds.get_required_params()
@@ -236,7 +236,7 @@ class TestJsonRenderer:
         """测试渲染 sections"""
         renderer = JsonRenderer()
         sections = [
-            {"id": "summary", "title": "概览", "type": "metrics", "items": [{"label": "总数", "value": 100}]}
+        {"id": "summary", "title": "概览", "type": "metrics", "items": [{"label": "总数", "value": 100}]}
         ]
         metadata = {"code": "TEST", "name": "测试报告"}
         result = renderer.render(sections, metadata)
@@ -279,11 +279,11 @@ class TestReportEngineIntegration:
 
         # 使用测试配置（无数据源）
         result = engine.generate(
-            report_code="TEST_REPORT",
-            params={"project_id": 1},
-            format="json",
-            user=None,
-            skip_cache=True,
+        report_code="TEST_REPORT",
+        params={"project_id": 1},
+        format="json",
+        user=None,
+        skip_cache=True,
         )
 
         assert result is not None
@@ -299,10 +299,10 @@ class TestReportEngineIntegration:
         engine = ReportEngine(mock_db)
 
         config = ReportConfig(
-            meta={"name": "Test", "code": "PARAM_TEST"},
-            parameters=[
-                {"name": "required_param", "type": "integer", "required": True}
-            ]
+        meta={"name": "Test", "code": "PARAM_TEST"},
+        parameters=[
+        {"name": "required_param", "type": "integer", "required": True}
+        ]
         )
 
         # 缺少必填参数
@@ -337,17 +337,17 @@ class TestPdfRenderer:
 
         renderer = PdfRenderer(output_dir=str(tmp_path))
         sections = [
-            {
-                "id": "summary",
-                "title": "项目概览",
-                "type": "metrics",
-                "items": [
-                    {"label": "总数", "value": 100},
-                    {"label": "完成", "value": 80},
-                    {"label": "进行中", "value": 15},
-                    {"label": "待启动", "value": 5},
-                ]
-            }
+        {
+        "id": "summary",
+        "title": "项目概览",
+        "type": "metrics",
+        "items": [
+        {"label": "总数", "value": 100},
+        {"label": "完成", "value": 80},
+        {"label": "进行中", "value": 15},
+        {"label": "待启动", "value": 5},
+        ]
+        }
         ]
         metadata = {"code": "TEST_PDF", "name": "PDF 测试报告"}
 
@@ -367,19 +367,19 @@ class TestPdfRenderer:
 
         renderer = PdfRenderer(output_dir=str(tmp_path))
         sections = [
-            {
-                "id": "tasks",
-                "title": "任务列表",
-                "type": "table",
-                "columns": [
-                    {"field": "name", "label": "名称"},
-                    {"field": "status", "label": "状态"},
-                ],
-                "data": [
-                    {"name": "任务1", "status": "完成"},
-                    {"name": "任务2", "status": "进行中"},
-                ]
-            }
+        {
+        "id": "tasks",
+        "title": "任务列表",
+        "type": "table",
+        "columns": [
+        {"field": "name", "label": "名称"},
+        {"field": "status", "label": "状态"},
+        ],
+        "data": [
+        {"name": "任务1", "status": "完成"},
+        {"name": "任务2", "status": "进行中"},
+        ]
+        }
         ]
         metadata = {"code": "TEST_TABLE", "name": "表格测试"}
 
@@ -397,15 +397,15 @@ class TestExcelRenderer:
 
         renderer = ExcelRenderer(output_dir=str(tmp_path))
         sections = [
-            {
-                "id": "summary",
-                "title": "项目概览",
-                "type": "metrics",
-                "items": [
-                    {"label": "总数", "value": 100},
-                    {"label": "完成", "value": 80},
-                ]
-            }
+        {
+        "id": "summary",
+        "title": "项目概览",
+        "type": "metrics",
+        "items": [
+        {"label": "总数", "value": 100},
+        {"label": "完成", "value": 80},
+        ]
+        }
         ]
         metadata = {"code": "TEST_EXCEL", "name": "Excel 测试报告"}
 
@@ -425,21 +425,21 @@ class TestExcelRenderer:
 
         renderer = ExcelRenderer(output_dir=str(tmp_path))
         sections = [
-            {
-                "id": "tasks",
-                "title": "任务列表",
-                "type": "table",
-                "columns": [
-                    {"field": "name", "label": "名称"},
-                    {"field": "status", "label": "状态"},
-                    {"field": "progress", "label": "进度"},
-                ],
-                "data": [
-                    {"name": "任务1", "status": "完成", "progress": 100},
-                    {"name": "任务2", "status": "进行中", "progress": 50},
-                    {"name": "任务3", "status": "待启动", "progress": 0},
-                ]
-            }
+        {
+        "id": "tasks",
+        "title": "任务列表",
+        "type": "table",
+        "columns": [
+        {"field": "name", "label": "名称"},
+        {"field": "status", "label": "状态"},
+        {"field": "progress", "label": "进度"},
+        ],
+        "data": [
+        {"name": "任务1", "status": "完成", "progress": 100},
+        {"name": "任务2", "status": "进行中", "progress": 50},
+        {"name": "任务3", "status": "待启动", "progress": 0},
+        ]
+        }
         ]
         metadata = {"code": "TEST_TABLE", "name": "表格测试"}
 
@@ -457,15 +457,15 @@ class TestWordRenderer:
 
         renderer = WordRenderer(output_dir=str(tmp_path))
         sections = [
-            {
-                "id": "summary",
-                "title": "项目概览",
-                "type": "metrics",
-                "items": [
-                    {"label": "总数", "value": 100},
-                    {"label": "完成", "value": 80},
-                ]
-            }
+        {
+        "id": "summary",
+        "title": "项目概览",
+        "type": "metrics",
+        "items": [
+        {"label": "总数", "value": 100},
+        {"label": "完成", "value": 80},
+        ]
+        }
         ]
         metadata = {"code": "TEST_WORD", "name": "Word 测试报告"}
 
@@ -485,19 +485,19 @@ class TestWordRenderer:
 
         renderer = WordRenderer(output_dir=str(tmp_path))
         sections = [
-            {
-                "id": "tasks",
-                "title": "任务列表",
-                "type": "table",
-                "columns": [
-                    {"field": "name", "label": "名称"},
-                    {"field": "status", "label": "状态"},
-                ],
-                "data": [
-                    {"name": "任务1", "status": "完成"},
-                    {"name": "任务2", "status": "进行中"},
-                ]
-            }
+        {
+        "id": "tasks",
+        "title": "任务列表",
+        "type": "table",
+        "columns": [
+        {"field": "name", "label": "名称"},
+        {"field": "status", "label": "状态"},
+        ],
+        "data": [
+        {"name": "任务1", "status": "完成"},
+        {"name": "任务2", "status": "进行中"},
+        ]
+        }
         ]
         metadata = {"code": "TEST_TABLE", "name": "表格测试"}
 
@@ -534,11 +534,11 @@ class TestEngineWithRenderers:
         engine.renderers["pdf"] = PdfRenderer(output_dir=str(tmp_path))
 
         result = engine.generate(
-            report_code="TEST_REPORT",
-            params={"project_id": 1},
-            format="pdf",
-            user=None,
-            skip_cache=True,
+        report_code="TEST_REPORT",
+        params={"project_id": 1},
+        format="pdf",
+        user=None,
+        skip_cache=True,
         )
 
         assert result is not None

@@ -3,8 +3,11 @@
 项目阶段状态更新 API
 
 提供阶段状态更新和评审功能
+
+使用统一状态更新服务重构
 """
 
+import logging
 from datetime import datetime
 from typing import Any
 
@@ -20,7 +23,9 @@ from app.schemas.stage_template import (
     StageReviewRequest,
     UpdateStageStatusRequest,
 )
+from app.services.status_update_service import StatusUpdateService
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -34,6 +39,10 @@ def update_stage_status(
     """
     更新阶段状态
 
+    使用统一状态更新服务，支持：
+    - 状态值验证
+    - 备注更新
+
     支持设置 DELAYED（延期）和 BLOCKED（受阻）状态。
     """
     stage = (
@@ -45,27 +54,38 @@ def update_stage_status(
     if not stage:
         raise HTTPException(status_code=404, detail="阶段实例不存在")
 
-    valid_statuses = {
+    valid_statuses = [
         "PENDING",
         "IN_PROGRESS",
         "COMPLETED",
         "DELAYED",
         "BLOCKED",
         "SKIPPED",
-    }
-    if status_in.status not in valid_statuses:
+    ]
+
+    # 更新前回调：更新备注
+    def before_update_callback(entity, old_status, new_status, operator):
+        if status_in.remark:
+            entity.remark = status_in.remark
+
+    # 使用统一状态更新服务
+    service = StatusUpdateService(db)
+    result = service.update_status(
+        entity=stage,
+        new_status=status_in.status,
+        operator=current_user,
+        valid_statuses=valid_statuses,
+        before_update_callback=before_update_callback,
+        reason=status_in.remark,
+    )
+
+    if not result.success:
         raise HTTPException(
             status_code=400,
-            detail=f"无效状态，支持的状态: {', '.join(valid_statuses)}",
+            detail="; ".join(result.errors) if result.errors else "更新阶段状态失败",
         )
 
-    stage.status = status_in.status
-    if status_in.remark:
-        stage.remark = status_in.remark
-
-    db.commit()
-    db.refresh(stage)
-    return stage
+    return result.entity
 
 
 @router.post("/{stage_instance_id}/review", response_model=ProjectStageInstanceResponse)

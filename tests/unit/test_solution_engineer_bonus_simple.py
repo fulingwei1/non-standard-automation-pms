@@ -57,12 +57,12 @@ class TestSolutionEngineerBonusService:
         
         # Test calculation with simple values
         result = service.calculate_solution_bonus(
-            engineer_id=1,
-            period_id=1,
-            base_bonus_per_solution=Decimal('500'),
-            won_bonus_ratio=Decimal('0.001'),
-            high_quality_compensation=Decimal('300'),
-            success_rate_bonus=Decimal('2000')
+        engineer_id=1,
+        period_id=1,
+        base_bonus_per_solution=Decimal('500'),
+        won_bonus_ratio=Decimal('0.001'),
+        high_quality_compensation=Decimal('300'),
+        success_rate_bonus=Decimal('2000')
         )
         
         # Verify it returns a dict
@@ -77,12 +77,12 @@ class TestSolutionEngineerBonusService:
         
         # Test with zero won bonus ratio
         result = service.calculate_solution_bonus(
-            engineer_id=1,
-            period_id=1,
-            base_bonus_per_solution=Decimal('500'),
-            won_bonus_ratio=Decimal('0'),
-            high_quality_compensation=Decimal('300'),
-            success_rate_bonus=Decimal('2000')
+        engineer_id=1,
+        period_id=1,
+        base_bonus_per_solution=Decimal('500'),
+        won_bonus_ratio=Decimal('0'),
+        high_quality_compensation=Decimal('300'),
+        success_rate_bonus=Decimal('2000')
         )
         
         # Verify result has total_bonus

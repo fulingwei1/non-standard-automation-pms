@@ -7,14 +7,18 @@
 
 import logging
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Tuple, TYPE_CHECKING
+from typing import Any, Callable, Dict, List, Optional, Tuple, TYPE_CHECKING
 
 from sqlalchemy.orm import Session
 
 from .exceptions import (
     InvalidStateTransitionError,
+    PermissionDeniedError,
     StateMachineValidationError,
 )
+from .permissions import StateMachinePermissionChecker
+from .notifications import StateMachineNotifier
+from app.services.notification_service import NotificationPriority
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +53,10 @@ class StateMachine:
         self._before_hooks: List[Callable] = []
         self._after_hooks: List[Callable] = []
         self._transition_history: List[Dict[str, Any]] = []
+
+        # 初始化权限检查器和通知服务
+        self._permission_checker = StateMachinePermissionChecker()
+        self._notifier = StateMachineNotifier()
 
         self._register_transitions()
 
@@ -96,12 +104,22 @@ class StateMachine:
 
         return True, ""
 
-    def transition_to(self, target_state: str, **kwargs: Any) -> bool:
+    def transition_to(
+        self,
+        target_state: str,
+        current_user: Optional[Any] = None,
+        comment: Optional[str] = None,
+        action_type: Optional[str] = None,
+        **kwargs: Any,
+    ) -> bool:
         """
-        执行状态转换
+        执行状态转换（增强版）
 
         Args:
             target_state: 目标状态
+            current_user: 当前操作用户（可选，用于权限检查和审计）
+            comment: 转换备注/原因（可选）
+            action_type: 操作类型（可选，如SUBMIT/APPROVE/REJECT等）
             **kwargs: 传递给钩子和转换函数的额外参数
 
         Returns:
@@ -110,44 +128,101 @@ class StateMachine:
         Raises:
             InvalidStateTransitionError: 状态转换无效
             StateMachineValidationError: 状态验证失败
+            PermissionDeniedError: 权限不足
         """
         from_state = self.current_state
         target_state = str(target_state)
         to_state = target_state
 
+        # 1. 获取转换函数和元数据
+        transition_key = (from_state, to_state)
+        if transition_key not in self._transitions:
+            raise InvalidStateTransitionError(
+                from_state, target_state, f"未定义从 '{from_state}' 到 '{target_state}' 的状态转换规则"
+            )
+
+        transition_func = self._transitions[transition_key]
+
+        # 2. 权限检查（使用装饰器定义的权限要求）
+        if hasattr(transition_func, "_required_permission") or hasattr(
+            transition_func, "_required_role"
+        ):
+            required_permission = getattr(transition_func, "_required_permission", None)
+            required_role = getattr(transition_func, "_required_role", None)
+
+            has_permission, reason = self._permission_checker.check_permission(
+                current_user=current_user,
+                required_permission=required_permission,
+                required_role=required_role,
+            )
+
+            if not has_permission:
+                raise PermissionDeniedError(reason)
+
+        # 3. 验证转换是否有效
         can_transition, reason = self.can_transition_to(target_state)
         if not can_transition:
             raise InvalidStateTransitionError(from_state, target_state, reason)
 
         try:
+            # 4. 执行 before hooks
             for hook in self._before_hooks:
                 try:
                     hook(self, from_state, to_state, **kwargs)
                 except Exception as e:
                     logger.warning(f"before transition hook 失败: {e}")
 
-            transition_key = (from_state, to_state)
-            transition_func = self._transitions[transition_key]
-
+            # 5. 再次验证（业务验证器）
             if hasattr(transition_func, "_validator") and transition_func._validator:
                 validator = transition_func._validator
                 is_valid, reason = validator(self, from_state, to_state)
                 if not is_valid:
                     raise StateMachineValidationError(reason)
 
+            # 6. 执行转换函数
             try:
-                # Pass self explicitly since transition_func is an instance method
                 transition_func(self, from_state, to_state, **kwargs)
             except TypeError as e:
                 logger.error(
-                    f"transition_func type error: {e}. args: self={type(self).__name__}, from_state={from_state}, to_state={to_state}"
+                    f"transition_func type error: {e}. args: self={type(self).__name__}, "
+                    f"from_state={from_state}, to_state={to_state}"
                 )
                 raise
 
+            # 7. 更新状态字段
             setattr(self.model, self.state_field, target_state)
 
+            # 8. 创建审计日志
+            if current_user:
+                # 从装饰器获取action_type（如果未提供）
+                if not action_type and hasattr(transition_func, "_action_type"):
+                    action_type = transition_func._action_type
+
+                self._create_audit_log(
+                    from_state=from_state,
+                    to_state=to_state,
+                    operator=current_user,
+                    action_type=action_type,
+                    comment=comment,
+                )
+
+            # 9. 记录内存中的转换历史
             self._record_transition(from_state, target_state, **kwargs)
 
+            # 10. 发送通知
+            if hasattr(transition_func, "_notify_users") and transition_func._notify_users:
+                notify_users = transition_func._notify_users
+                template = getattr(transition_func, "_notification_template", None)
+
+                self._send_notifications(
+                    from_state=from_state,
+                    to_state=to_state,
+                    operator=current_user,
+                    notify_user_types=notify_users,
+                    template=template,
+                )
+
+            # 11. 执行 after hooks
             for hook in self._after_hooks:
                 try:
                     hook(self, from_state, target_state, **kwargs)
@@ -209,7 +284,7 @@ class StateMachine:
 
     def _record_transition(self, from_state: str, to_state: str, **kwargs: Any):
         """
-        记录状态转换历史
+        记录状态转换历史（内存）
 
         Args:
             from_state: 起始状态
@@ -223,6 +298,125 @@ class StateMachine:
             **kwargs,
         }
         self._transition_history.append(record)
+
+    def _create_audit_log(
+        self,
+        from_state: str,
+        to_state: str,
+        operator: Any,
+        action_type: Optional[str] = None,
+        comment: Optional[str] = None,
+    ):
+        """
+        创建状态转换审计日志（数据库）
+
+        Args:
+            from_state: 源状态
+            to_state: 目标状态
+            operator: 操作人对象
+            action_type: 操作类型（如SUBMIT、APPROVE等）
+            comment: 备注信息
+        """
+        try:
+            from app.models.state_machine import StateTransitionLog
+
+            # 获取实体类型和ID
+            entity_type = self._get_entity_type()
+            entity_id = self._get_entity_id()
+
+            # 获取操作人信息
+            operator_id = operator.id if hasattr(operator, 'id') else None
+            operator_name = None
+            if hasattr(operator, 'name'):
+                operator_name = operator.name
+            elif hasattr(operator, 'username'):
+                operator_name = operator.username
+
+            # 创建审计日志
+            log = StateTransitionLog(
+                entity_type=entity_type,
+                entity_id=entity_id,
+                from_state=from_state,
+                to_state=to_state,
+                operator_id=operator_id,
+                operator_name=operator_name,
+                action_type=action_type,
+                comment=comment,
+            )
+
+            self.db.add(log)
+            self.db.commit()
+
+            logger.info(
+                f"状态转换审计日志已创建: {entity_type}:{entity_id} "
+                f"{from_state}→{to_state} by {operator_name}"
+            )
+
+        except Exception as e:
+            logger.error(f"创建状态转换审计日志失败: {e}")
+            self.db.rollback()
+
+    def _send_notifications(
+        self,
+        from_state: str,
+        to_state: str,
+        operator: Optional[Any],
+        notify_user_types: List[str],
+        template: Optional[str] = None,
+    ):
+        """
+        发送状态转换通知
+
+        Args:
+            from_state: 源状态
+            to_state: 目标状态
+            operator: 操作人
+            notify_user_types: 通知用户类型列表
+            template: 通知模板名称
+        """
+        try:
+            entity_type = self._get_entity_type()
+            entity_id = self._get_entity_id()
+
+            self._notifier.send_transition_notification(
+                db=self.db,
+                entity=self.model,
+                entity_type=entity_type,
+                entity_id=entity_id,
+                from_state=from_state,
+                to_state=to_state,
+                operator=operator,
+                notify_user_types=notify_user_types,
+                template=template,
+                priority=NotificationPriority.NORMAL,
+            )
+
+        except Exception as e:
+            logger.error(f"发送状态转换通知失败: {e}")
+
+    def _get_entity_type(self) -> str:
+        """
+        获取实体类型（从模型类名推断）
+
+        Returns:
+            实体类型字符串（如ISSUE、ECN、PROJECT等）
+        """
+        # 从模型类名获取
+        class_name = self.model.__class__.__name__
+        # 转换为大写（Issue -> ISSUE, Ecn -> ECN）
+        return class_name.upper()
+
+    def _get_entity_id(self) -> int:
+        """
+        获取实体ID
+
+        Returns:
+            实体ID
+        """
+        if hasattr(self.model, 'id'):
+            return self.model.id
+        else:
+            raise AttributeError(f"模型 {self.model.__class__.__name__} 没有 'id' 属性")
 
     @classmethod
     def create(

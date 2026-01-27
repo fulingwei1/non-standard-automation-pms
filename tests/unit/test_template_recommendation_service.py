@@ -109,8 +109,8 @@ class TestTemplateRecommendationService:
         service = TemplateRecommendationService(db_session)
         
         result = service.recommend_templates(
-            project_type="AUTOMATION",
-            limit=5
+        project_type="AUTOMATION",
+        limit=5
         )
         
         assert isinstance(result, list)
@@ -123,8 +123,8 @@ class TestTemplateRecommendationService:
         service = TemplateRecommendationService(db_session)
         
         result = service.recommend_templates(
-            product_category="ICT",
-            limit=5
+        product_category="ICT",
+        limit=5
         )
         
         assert isinstance(result, list)
@@ -137,8 +137,8 @@ class TestTemplateRecommendationService:
         service = TemplateRecommendationService(db_session)
         
         result = service.recommend_templates(
-            industry="ELECTRONICS",
-            limit=5
+        industry="ELECTRONICS",
+        limit=5
         )
         
         assert isinstance(result, list)
@@ -151,10 +151,10 @@ class TestTemplateRecommendationService:
         service = TemplateRecommendationService(db_session)
         
         result = service.recommend_templates(
-            project_type="AUTOMATION",
-            product_category="ICT",
-            industry="ELECTRONICS",
-            limit=5
+        project_type="AUTOMATION",
+        product_category="ICT",
+        industry="ELECTRONICS",
+        limit=5
         )
         
         assert isinstance(result, list)
@@ -167,10 +167,10 @@ class TestTemplateRecommendationService:
         service = TemplateRecommendationService(db_session)
         
         result = service.recommend_templates(
-            project_type="NONEXISTENT",
-            product_category="NONEXISTENT",
-            industry="NONEXISTENT",
-            limit=5
+        project_type="NONEXISTENT",
+        product_category="NONEXISTENT",
+        industry="NONEXISTENT",
+        limit=5
         )
         
         assert isinstance(result, list)
@@ -183,8 +183,8 @@ class TestTemplateRecommendationService:
         service = TemplateRecommendationService(db_session)
         
         result = service.recommend_templates(
-            project_type="AUTOMATION",
-            limit=2
+        project_type="AUTOMATION",
+        limit=2
         )
         
         assert isinstance(result, list)
@@ -195,23 +195,23 @@ class TestTemplateRecommendationService:
         service = TemplateRecommendationService(db_session)
         
         result = service.recommend_templates(
-            project_type="AUTOMATION",
-            limit=5
+        project_type="AUTOMATION",
+        limit=5
         )
         
         assert isinstance(result, list)
         if len(result) > 1:
             # 应该按评分降序排列
-            scores = [r['score'] for r in result]
-            assert scores == sorted(scores, reverse=True)
+        scores = [r['score'] for r in result]
+        assert scores == sorted(scores, reverse=True)
 
     def test_recommend_templates_excludes_inactive(self, db_session, test_template1, test_template_inactive):
         """测试排除非活跃模板"""
         service = TemplateRecommendationService(db_session)
         
         result = service.recommend_templates(
-            project_type="AUTOMATION",
-            limit=5
+        project_type="AUTOMATION",
+        limit=5
         )
         
         assert isinstance(result, list)
@@ -223,10 +223,10 @@ class TestTemplateRecommendationService:
         service = TemplateRecommendationService(db_session)
         
         score = service._calculate_score(
-            template=test_template1,
-            project_type="AUTOMATION",
-            product_category=None,
-            industry=None
+        template=test_template1,
+        project_type="AUTOMATION",
+        product_category=None,
+        industry=None
         )
         
         assert score >= 40.0  # 基础分10 + 项目类型30
@@ -236,10 +236,10 @@ class TestTemplateRecommendationService:
         service = TemplateRecommendationService(db_session)
         
         score = service._calculate_score(
-            template=test_template1,
-            project_type=None,
-            product_category="ICT",
-            industry=None
+        template=test_template1,
+        project_type=None,
+        product_category="ICT",
+        industry=None
         )
         
         assert score >= 35.0  # 基础分10 + 产品类别25
@@ -249,10 +249,10 @@ class TestTemplateRecommendationService:
         service = TemplateRecommendationService(db_session)
         
         score = service._calculate_score(
-            template=test_template1,
-            project_type=None,
-            product_category=None,
-            industry="ELECTRONICS"
+        template=test_template1,
+        project_type=None,
+        product_category=None,
+        industry="ELECTRONICS"
         )
         
         assert score >= 30.0  # 基础分10 + 行业20
@@ -262,10 +262,10 @@ class TestTemplateRecommendationService:
         service = TemplateRecommendationService(db_session)
         
         score = service._calculate_score(
-            template=test_template1,
-            project_type="AUTOMATION",
-            product_category="ICT",
-            industry="ELECTRONICS"
+        template=test_template1,
+        project_type="AUTOMATION",
+        product_category="ICT",
+        industry="ELECTRONICS"
         )
         
         assert score >= 70.0  # 基础分10 + 项目类型30 + 产品类别25 + 行业20
@@ -275,10 +275,10 @@ class TestTemplateRecommendationService:
         service = TemplateRecommendationService(db_session)
         
         score = service._calculate_score(
-            template=test_template3,
-            project_type=None,
-            product_category=None,
-            industry=None
+        template=test_template3,
+        project_type=None,
+        product_category=None,
+        industry=None
         )
         
         # 基础分10 + 使用频率加分（最高15）
@@ -290,10 +290,10 @@ class TestTemplateRecommendationService:
         service = TemplateRecommendationService(db_session)
         
         score = service._calculate_score(
-            template=test_template1,
-            project_type="NONEXISTENT",
-            product_category="NONEXISTENT",
-            industry="NONEXISTENT"
+        template=test_template1,
+        project_type="NONEXISTENT",
+        product_category="NONEXISTENT",
+        industry="NONEXISTENT"
         )
         
         # 只有基础分10 + 使用频率加分
@@ -304,10 +304,10 @@ class TestTemplateRecommendationService:
         service = TemplateRecommendationService(db_session)
         
         reasons = service._get_recommendation_reasons(
-            template=test_template1,
-            project_type="AUTOMATION",
-            product_category=None,
-            industry=None
+        template=test_template1,
+        project_type="AUTOMATION",
+        product_category=None,
+        industry=None
         )
         
         assert isinstance(reasons, list)
@@ -318,10 +318,10 @@ class TestTemplateRecommendationService:
         service = TemplateRecommendationService(db_session)
         
         reasons = service._get_recommendation_reasons(
-            template=test_template1,
-            project_type=None,
-            product_category="ICT",
-            industry=None
+        template=test_template1,
+        project_type=None,
+        product_category="ICT",
+        industry=None
         )
         
         assert isinstance(reasons, list)
@@ -332,10 +332,10 @@ class TestTemplateRecommendationService:
         service = TemplateRecommendationService(db_session)
         
         reasons = service._get_recommendation_reasons(
-            template=test_template1,
-            project_type=None,
-            product_category=None,
-            industry="ELECTRONICS"
+        template=test_template1,
+        project_type=None,
+        product_category=None,
+        industry="ELECTRONICS"
         )
         
         assert isinstance(reasons, list)
@@ -346,10 +346,10 @@ class TestTemplateRecommendationService:
         service = TemplateRecommendationService(db_session)
         
         reasons = service._get_recommendation_reasons(
-            template=test_template1,
-            project_type=None,
-            product_category=None,
-            industry=None
+        template=test_template1,
+        project_type=None,
+        product_category=None,
+        industry=None
         )
         
         assert isinstance(reasons, list)
@@ -358,14 +358,14 @@ class TestTemplateRecommendationService:
     def test_get_recommendation_reasons_no_matches(self, db_session):
         """测试获取推荐理由 - 无匹配"""
         template = ProjectTemplate(
-            template_code="TEMPLATE-GENERIC",
-            template_name="通用模板",
-            description="通用模板描述",
-            project_type=None,
-            product_category=None,
-            industry=None,
-            is_active=True,
-            usage_count=0
+        template_code="TEMPLATE-GENERIC",
+        template_name="通用模板",
+        description="通用模板描述",
+        project_type=None,
+        product_category=None,
+        industry=None,
+        is_active=True,
+        usage_count=0
         )
         db_session.add(template)
         db_session.commit()
@@ -374,10 +374,10 @@ class TestTemplateRecommendationService:
         service = TemplateRecommendationService(db_session)
         
         reasons = service._get_recommendation_reasons(
-            template=template,
-            project_type=None,
-            product_category=None,
-            industry=None
+        template=template,
+        project_type=None,
+        product_category=None,
+        industry=None
         )
         
         assert isinstance(reasons, list)
@@ -388,8 +388,8 @@ class TestTemplateRecommendationService:
         service = TemplateRecommendationService(db_session)
         
         result = service.recommend_templates(
-            project_type="AUTOMATION",
-            limit=5
+        project_type="AUTOMATION",
+        limit=5
         )
         
         assert isinstance(result, list)
@@ -400,7 +400,7 @@ class TestTemplateRecommendationService:
         service = TemplateRecommendationService(db_session)
         
         result = service.recommend_templates(
-            limit=5
+        limit=5
         )
         
         assert isinstance(result, list)

@@ -136,8 +136,8 @@ class TestStateMachineBase:
         """测试无效状态转换抛出异常"""
         with pytest.raises(InvalidStateTransitionError) as exc_info:
             self.sm.transition_to("COMPLETED")
-        assert "DRAFT" in str(exc_info.value)
-        assert "COMPLETED" in str(exc_info.value)
+            assert "DRAFT" in str(exc_info.value)
+            assert "COMPLETED" in str(exc_info.value)
 
     def test_transition_history(self):
         """测试转换历史"""
@@ -166,25 +166,25 @@ class TestStateMachineValidation:
 
         # 创建带验证器的状态机
         class ValidatedStateMachine(StateMachine):
-            def __init__(self, model, db):
-                super().__init__(model, db, state_field="status")
-                self.validator_called = False
+        def __init__(self, model, db):
+            super().__init__(model, db, state_field="status")
+            self.validator_called = False
 
-            def validate_transition(self, from_state, to_state):
-                self.validator_called = True
-                if self.model.some_condition:
-                    return True, ""
+        def validate_transition(self, from_state, to_state):
+            self.validator_called = True
+            if self.model.some_condition:
+                return True, ""
                 return False, "验证失败: 条件不满足"
 
-            @transition(
-                from_state="DRAFT",
-                to_state="SUBMITTED",
-                validator=validate_transition,
-            )
-            def submit(self, from_state, to_state, **kwargs):
-                pass
+        @transition(
+        from_state="DRAFT",
+        to_state="SUBMITTED",
+        validator=validate_transition,
+        )
+        def submit(self, from_state, to_state, **kwargs):
+            pass
 
-        self.sm = ValidatedStateMachine(self.model, self.db)
+            self.sm = ValidatedStateMachine(self.model, self.db)
 
     def test_can_transition_to_with_valid_validator(self):
         """测试验证器通过的情况"""
@@ -206,7 +206,7 @@ class TestStateMachineValidation:
         self.model.some_condition = False
         with pytest.raises(StateMachineValidationError) as exc_info:
             self.sm.transition_to("SUBMITTED")
-        assert "验证失败" in str(exc_info.value)
+            assert "验证失败" in str(exc_info.value)
 
 
 class TestStateMachineHooks:
@@ -244,19 +244,19 @@ class TestStateMachineHooks:
         """测试钩子失败不阻止转换"""
 
         class FailingHookStateMachine(StateMachine):
-            @transition(from_state="DRAFT", to_state="SUBMITTED")
-            def submit(self, from_state, to_state, **kwargs):
-                pass
+        @transition(from_state="DRAFT", to_state="SUBMITTED")
+        def submit(self, from_state, to_state, **kwargs):
+            pass
 
-            @before_transition
-            def failing_hook(self, from_state, to_state, **kwargs):
-                raise Exception("Hook failed")
+        @before_transition
+        def failing_hook(self, from_state, to_state, **kwargs):
+            raise Exception("Hook failed")
 
-        sm = FailingHookStateMachine(self.model, self.db)
-        # 转换应该成功，即使钩子失败
-        result = sm.transition_to("SUBMITTED")
-        assert result is True
-        assert self.model.status == "SUBMITTED"
+            sm = FailingHookStateMachine(self.model, self.db)
+            # 转换应该成功，即使钩子失败
+            result = sm.transition_to("SUBMITTED")
+            assert result is True
+            assert self.model.status == "SUBMITTED"
 
 
 class TestStateMachineFactory:

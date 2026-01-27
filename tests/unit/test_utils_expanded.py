@@ -40,9 +40,9 @@ class TestWeChatTokenCache:
 
         expired_time = datetime.now() - timedelta(minutes=10)
         WeChatTokenCache._cache["test_key"] = {
-            "token": "test_token",
-            "expires_at": expired_time,
-            "created_at": datetime.now(),
+        "token": "test_token",
+        "expires_at": expired_time,
+        "created_at": datetime.now(),
         }
         result = WeChatTokenCache.get("test_key")
         assert result is None
@@ -53,9 +53,9 @@ class TestWeChatTokenCache:
 
         near_expired = datetime.now() + timedelta(minutes=4)
         WeChatTokenCache._cache["test_key"] = {
-            "token": "test_token",
-            "expires_at": near_expired,
-            "created_at": datetime.now(),
+        "token": "test_token",
+        "expires_at": near_expired,
+        "created_at": datetime.now(),
         }
         result = WeChatTokenCache.get("test_key")
         assert result is None
@@ -66,9 +66,9 @@ class TestWeChatTokenCache:
 
         valid_time = datetime.now() + timedelta(minutes=10)
         WeChatTokenCache._cache["test_key"] = {
-            "token": "valid_token",
-            "expires_at": valid_time,
-            "created_at": datetime.now(),
+        "token": "valid_token",
+        "expires_at": valid_time,
+        "created_at": datetime.now(),
         }
         result = WeChatTokenCache.get("test_key")
         assert result == "valid_token"
@@ -201,8 +201,8 @@ class TestCodeConfig:
     def test_validate_material_category_code_valid(self):
         """Test validating a valid material category code."""
         from app.utils.code_config import (
-            MATERIAL_CATEGORY_CODES,
-            validate_material_category_code,
+        MATERIAL_CATEGORY_CODES,
+        validate_material_category_code,
         )
 
         # 使用实际存在的分类代码
@@ -235,13 +235,13 @@ class TestNumberGenerator:
         from app.utils.number_generator import generate_sequential_no
 
         no = generate_sequential_no(
-            db=db_session,
-            model_class=Ecn,
-            no_field="ecn_no",
-            prefix="ECN",
-            date_format="%y%m%d",
-            separator="-",
-            seq_length=3,
+        db=db_session,
+        model_class=Ecn,
+        no_field="ecn_no",
+        prefix="ECN",
+        date_format="%y%m%d",
+        separator="-",
+        seq_length=3,
         )
 
         assert no is not None
@@ -254,10 +254,10 @@ class TestNumberGenerator:
         from app.utils.number_generator import generate_monthly_no
 
         no = generate_monthly_no(
-            db=db_session,
-            model_class=Project,
-            no_field="project_code",
-            prefix="PJ",
+        db=db_session,
+        model_class=Project,
+        no_field="project_code",
+        prefix="PJ",
         )
 
         assert no is not None
@@ -404,7 +404,7 @@ class TestRedisClient:
             mock_settings.REDIS_ENABLED = False
             client = get_redis_client()
             # 当 Redis 禁用时，应该返回 None 或 Mock
-            assert client is None or client is not None
+        assert client is None or client is not None
 
     def test_close_redis_client_no_error(self):
         """Test that close_redis_client doesn't raise errors."""

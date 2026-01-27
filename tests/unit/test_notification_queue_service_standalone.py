@@ -19,9 +19,9 @@ class TestEnqueueNotification:
         from app.services.notification_queue import enqueue_notification
 
         payload = {
-            "notification_id": 123,
-            "alert_id": 456,
-            "notify_channel": "EMAIL",
+        "notification_id": 123,
+        "alert_id": 456,
+        "notify_channel": "EMAIL",
         }
 
         result = enqueue_notification(payload)
@@ -69,8 +69,8 @@ class TestDequeueNotification:
         """阻塞模式出队"""
         mock_redis = MagicMock()
         mock_redis.blpop.return_value = [
-            b"notification:dispatch:queue",
-            b'{"notification_id": 123}',
+        b"notification:dispatch:queue",
+        b'{"notification_id": 123}',
         ]
 
         mock_get_redis.return_value = mock_redis
@@ -134,8 +134,8 @@ class TestDequeueNotification:
         """自定义超时参数"""
         mock_redis = MagicMock()
         mock_redis.blpop.return_value = [
-            b"notification:dispatch:queue",
-            b'{"notification_id": 123}',
+        b"notification:dispatch:queue",
+        b'{"notification_id": 123}',
         ]
 
         mock_get_redis.return_value = mock_redis

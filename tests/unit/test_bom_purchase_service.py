@@ -164,7 +164,7 @@ class TestBuildOrderItems:
         item3.specification = "规格C"
 
         order_items, total_amount, total_tax, total_with_tax = build_order_items(
-            [item1, item3]
+        [item1, item3]
         )
 
         assert len(order_items) == 2
@@ -200,7 +200,7 @@ class TestBuildOrderItems:
         item2.specification = "规格B"
 
         order_items, total_amount, total_tax, total_with_tax = build_order_items(
-            [item1, item2]
+        [item1, item2]
         )
 
         assert len(order_items) == 1
@@ -241,7 +241,7 @@ class TestBuildOrderItems:
         item2.specification = "规格B"
 
         order_items, total_amount, total_tax, total_with_tax = build_order_items(
-            [item1, item2]
+        [item1, item2]
         )
 
         assert order_items == []
@@ -265,10 +265,10 @@ class TestBuildOrderItems:
             item.specification = f"规格{i}"
             items.append(item)
 
-        order_items, _, _, _ = build_order_items(items)
+            order_items, _, _, _ = build_order_items(items)
 
-        for i, item in enumerate(order_items, start=1):
-            assert item["item_no"] == i
+            for i, item in enumerate(order_items, start=1):
+                assert item["item_no"] == i
 
 
 @pytest.mark.unit
@@ -278,11 +278,11 @@ class TestCalculateSummary:
     def test_calculate_summary_single_order(self):
         """测试单个订单的汇总"""
         orders = [
-            {
-                "items": [{"item_no": 1}, {"item_no": 2}],
-                "total_amount": 1000.0,
-                "amount_with_tax": 1130.0,
-            }
+        {
+        "items": [{"item_no": 1}, {"item_no": 2}],
+        "total_amount": 1000.0,
+        "amount_with_tax": 1130.0,
+        }
         ]
 
         summary = calculate_summary(orders)
@@ -295,21 +295,21 @@ class TestCalculateSummary:
     def test_calculate_summary_multiple_orders(self):
         """测试多个订单的汇总"""
         orders = [
-            {
-                "items": [{"item_no": 1}, {"item_no": 2}],
-                "total_amount": 1000.0,
-                "amount_with_tax": 1130.0,
-            },
-            {
-                "items": [{"item_no": 1}],
-                "total_amount": 500.0,
-                "amount_with_tax": 565.0,
-            },
-            {
-                "items": [],
-                "total_amount": 0.0,
-                "amount_with_tax": 0.0,
-            },
+        {
+        "items": [{"item_no": 1}, {"item_no": 2}],
+        "total_amount": 1000.0,
+        "amount_with_tax": 1130.0,
+        },
+        {
+        "items": [{"item_no": 1}],
+        "total_amount": 500.0,
+        "amount_with_tax": 565.0,
+        },
+        {
+        "items": [],
+        "total_amount": 0.0,
+        "amount_with_tax": 0.0,
+        },
         ]
 
         summary = calculate_summary(orders)
@@ -345,26 +345,26 @@ class TestCreateOrderPreview:
         bom.project.project_name = "测试项目"
 
         order_items = [
-            {
-                "material_code": "MAT001",
-                "material_name": "物料1",
-                "quantity": Decimal("10"),
-                "unit_price": Decimal("100"),
-                "amount": Decimal("1000"),
-                "tax_amount": Decimal("130"),
-                "amount_with_tax": Decimal("1130"),
-            }
+        {
+        "material_code": "MAT001",
+        "material_name": "物料1",
+        "quantity": Decimal("10"),
+        "unit_price": Decimal("100"),
+        "amount": Decimal("1000"),
+        "tax_amount": Decimal("130"),
+        "amount_with_tax": Decimal("1130"),
+        }
         ]
 
         preview = create_order_preview(
-            supplier,
-            supplier.id,
-            bom,
-            1,
-            order_items,
-            Decimal("1000"),
-            Decimal("130"),
-            Decimal("1130"),
+        supplier,
+        supplier.id,
+        bom,
+        1,
+        order_items,
+        Decimal("1000"),
+        Decimal("130"),
+        Decimal("1130"),
         )
 
         assert preview["supplier_id"] == 1
@@ -392,14 +392,14 @@ class TestCreateOrderPreview:
         order_items = []
 
         preview = create_order_preview(
-            supplier,
-            supplier.id,
-            bom,
-            0,
-            order_items,
-            Decimal("0"),
-            Decimal("0"),
-            Decimal("0"),
+        supplier,
+        supplier.id,
+        bom,
+        0,
+        order_items,
+        Decimal("0"),
+        Decimal("0"),
+        Decimal("0"),
         )
 
         assert preview["project_name"] is None
@@ -433,10 +433,10 @@ class TestDetermineSupplierForItem:
         """测试回退到物料默认供应商"""
 
         material = Material(
-            material_code="MAT-001",
-            material_name="物料1",
-            default_supplier_id=3,
-            is_active=True,
+        material_code="MAT-001",
+        material_name="物料1",
+        default_supplier_id=3,
+        is_active=True,
         )
         db_session.add(material)
         db_session.flush()
@@ -463,10 +463,10 @@ class TestDetermineSupplierForItem:
         """测试物料没有默认供应商时返回None"""
 
         material = Material(
-            material_code="MAT-001",
-            material_name="物料1",
-            default_supplier_id=None,
-            is_active=True,
+        material_code="MAT-001",
+        material_name="物料1",
+        default_supplier_id=None,
+        is_active=True,
         )
         db_session.add(material)
         db_session.flush()
@@ -507,7 +507,7 @@ class TestGroupItemsBySupplier:
         item4.material_id = None
 
         grouped = group_items_by_supplier(
-            db_session, [item1, item2, item3, item4], default_supplier_id
+        db_session, [item1, item2, item3, item4], default_supplier_id
         )
 
         assert supplier1_id in grouped
@@ -537,7 +537,7 @@ class TestGroupItemsBySupplier:
         item3.material_id = None
 
         grouped = group_items_by_supplier(
-            db_session, [item1, item2, item3], default_supplier_id
+        db_session, [item1, item2, item3], default_supplier_id
         )
 
         assert default_supplier_id in grouped
@@ -575,64 +575,64 @@ class TestGetPurchaseItemsFromBom:
         from app.models.project import Project
 
         project = Project(
-            project_code="PJ-TEST-001",
-            project_name="测试项目",
-            customer_id=1,
-            customer_name="测试客户",
-            stage="S1",
-            status="ST01",
-            health="H1",
-            created_by=1,
+        project_code="PJ-TEST-001",
+        project_name="测试项目",
+        customer_id=1,
+        customer_name="测试客户",
+        stage="S1",
+        status="ST01",
+        health="H1",
+        created_by=1,
         )
         db_session.add(project)
         db_session.flush()
 
         bom = BomHeader(
-            bom_no="BOM-TEST-001",
-            bom_name="测试BOM",
-            project_id=project.id,
-            version="1.0",
-            status="DRAFT",
-            created_by=1,
+        bom_no="BOM-TEST-001",
+        bom_name="测试BOM",
+        project_id=project.id,
+        version="1.0",
+        status="DRAFT",
+        created_by=1,
         )
         db_session.add(bom)
         db_session.flush()
 
         item1 = BomItem(
-            bom_id=bom.id,
-            item_no=1,
-            material_code="MAT001",
-            material_name="物料1",
-            source_type="PURCHASE",
-            quantity=Decimal("10"),
-            unit="个",
+        bom_id=bom.id,
+        item_no=1,
+        material_code="MAT001",
+        material_name="物料1",
+        source_type="PURCHASE",
+        quantity=Decimal("10"),
+        unit="个",
         )
         item2 = BomItem(
-            bom_id=bom.id,
-            item_no=2,
-            material_code="MAT002",
-            material_name="物料2",
-            source_type="MANUFACTURE",
-            quantity=Decimal("5"),
-            unit="个",
+        bom_id=bom.id,
+        item_no=2,
+        material_code="MAT002",
+        material_name="物料2",
+        source_type="MANUFACTURE",
+        quantity=Decimal("5"),
+        unit="个",
         )
         item3 = BomItem(
-            bom_id=bom.id,
-            item_no=3,
-            material_code="MAT003",
-            material_name="物料3",
-            source_type="PURCHASE",
-            quantity=Decimal("20"),
-            unit="个",
+        bom_id=bom.id,
+        item_no=3,
+        material_code="MAT003",
+        material_name="物料3",
+        source_type="PURCHASE",
+        quantity=Decimal("20"),
+        unit="个",
         )
         item4 = BomItem(
-            bom_id=bom.id,
-            item_no=4,
-            material_code="MAT004",
-            material_name="物料4",
-            source_type="OUTSOURCE",
-            quantity=Decimal("15"),
-            unit="个",
+        bom_id=bom.id,
+        item_no=4,
+        material_code="MAT004",
+        material_name="物料4",
+        source_type="OUTSOURCE",
+        quantity=Decimal("15"),
+        unit="个",
         )
 
         db_session.add_all([item1, item2, item3, item4])
@@ -648,25 +648,25 @@ class TestGetPurchaseItemsFromBom:
         from app.models.project import Project
 
         project = Project(
-            project_code="PJ-TEST-002",
-            project_name="测试项目",
-            customer_id=1,
-            customer_name="测试客户",
-            stage="S1",
-            status="ST01",
-            health="H1",
-            created_by=1,
+        project_code="PJ-TEST-002",
+        project_name="测试项目",
+        customer_id=1,
+        customer_name="测试客户",
+        stage="S1",
+        status="ST01",
+        health="H1",
+        created_by=1,
         )
         db_session.add(project)
         db_session.flush()
 
         bom = BomHeader(
-            bom_no="BOM-TEST-002",
-            bom_name="测试BOM",
-            project_id=project.id,
-            version="1.0",
-            status="DRAFT",
-            created_by=1,
+        bom_no="BOM-TEST-002",
+        bom_name="测试BOM",
+        project_id=project.id,
+        version="1.0",
+        status="DRAFT",
+        created_by=1,
         )
         db_session.add(bom)
         db_session.commit()
@@ -680,46 +680,46 @@ class TestGetPurchaseItemsFromBom:
         from app.models.project import Project
 
         project = Project(
-            project_code="PJ-TEST-003",
-            project_name="测试项目",
-            customer_id=1,
-            customer_name="测试客户",
-            stage="S1",
-            status="ST01",
-            health="H1",
-            created_by=1,
+        project_code="PJ-TEST-003",
+        project_name="测试项目",
+        customer_id=1,
+        customer_name="测试客户",
+        stage="S1",
+        status="ST01",
+        health="H1",
+        created_by=1,
         )
         db_session.add(project)
         db_session.flush()
 
         bom = BomHeader(
-            bom_no="BOM-TEST-003",
-            bom_name="测试BOM",
-            project_id=project.id,
-            version="1.0",
-            status="DRAFT",
-            created_by=1,
+        bom_no="BOM-TEST-003",
+        bom_name="测试BOM",
+        project_id=project.id,
+        version="1.0",
+        status="DRAFT",
+        created_by=1,
         )
         db_session.add(bom)
         db_session.flush()
 
         item1 = BomItem(
-            bom_id=bom.id,
-            item_no=1,
-            material_code="MAT001",
-            material_name="物料1",
-            source_type="MANUFACTURE",
-            quantity=Decimal("10"),
-            unit="个",
+        bom_id=bom.id,
+        item_no=1,
+        material_code="MAT001",
+        material_name="物料1",
+        source_type="MANUFACTURE",
+        quantity=Decimal("10"),
+        unit="个",
         )
         item2 = BomItem(
-            bom_id=bom.id,
-            item_no=2,
-            material_code="MAT002",
-            material_name="物料2",
-            source_type="OUTSOURCE",
-            quantity=Decimal("5"),
-            unit="个",
+        bom_id=bom.id,
+        item_no=2,
+        material_code="MAT002",
+        material_name="物料2",
+        source_type="OUTSOURCE",
+        quantity=Decimal("5"),
+        unit="个",
         )
 
         db_session.add_all([item1, item2])

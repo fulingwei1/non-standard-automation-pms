@@ -124,19 +124,19 @@ class TestInformationGapAnalysisService:
         # 创建多个线索
         for i in range(3):
             lead = Lead(
-                customer_name=f"客户{i}",
-                contact_name="联系人" if i % 2 == 0 else None
+            customer_name=f"客户{i}",
+            contact_name="联系人" if i % 2 == 0 else None
             )
             db_session.add(lead)
-        db_session.commit()
+            db_session.commit()
         
-        result = information_gap_analysis_service.analyze_missing('LEAD')
+            result = information_gap_analysis_service.analyze_missing('LEAD')
         
-        assert result is not None
-        assert result['entity_type'] == 'LEAD'
-        assert 'total' in result
-        assert 'quality_distribution' in result
-        assert 'common_missing_fields' in result
+            assert result is not None
+            assert result['entity_type'] == 'LEAD'
+            assert 'total' in result
+            assert 'quality_distribution' in result
+            assert 'common_missing_fields' in result
 
     def test_analyze_missing_quote_complete(self, information_gap_analysis_service, test_quote_complete):
         """测试分析报价信息缺失 - 完整信息"""
@@ -169,8 +169,8 @@ class TestInformationGapAnalysisService:
         end_date = date.today()
         
         result = information_gap_analysis_service.analyze_impact(
-            start_date=start_date,
-            end_date=end_date
+        start_date=start_date,
+        end_date=end_date
         )
         
         assert result is not None

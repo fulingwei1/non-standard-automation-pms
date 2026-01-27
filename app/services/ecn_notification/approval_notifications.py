@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-ECN通知服务 - 审批相关通知
+ECN通知服务 - 审批相关通知（使用统一NotificationService）
 包含：审批任务分配、审批结果通知
 """
 
@@ -13,7 +13,12 @@ from app.models.ecn import Ecn, EcnApproval, EcnTask
 from app.models.project import ProjectMember
 from app.models.user import User
 
-from .base import create_ecn_notification
+from app.services.unified_notification_service import get_notification_service
+from app.services.channel_handlers.base import (
+    NotificationRequest,
+    NotificationChannel,
+    NotificationPriority,
+)
 from .utils import find_users_by_role
 
 
@@ -46,16 +51,19 @@ def notify_approval_assigned(
     title = f"ECN审批任务分配：{ecn.ecn_no}"
     content = f"您有一个新的ECN审批任务：\n\nECN编号：{ecn.ecn_no}\nECN标题：{ecn.ecn_title}\n审批层级：第{approval.approval_level}级\n审批角色：{approval.approval_role}\n截止日期：{approval.due_date.strftime('%Y-%m-%d') if approval.due_date else '未设置'}\n\n请及时完成审批。"
 
-    priority = "URGENT" if approval.due_date and approval.due_date < datetime.now().date() else "HIGH"
+    priority = NotificationPriority.URGENT if approval.due_date and approval.due_date < datetime.now().date() else NotificationPriority.HIGH
 
-    create_ecn_notification(
-        db=db,
-        user_id=approver_id,
+    unified_service = get_notification_service(db)
+    request = NotificationRequest(
+        recipient_id=approver_id,
         notification_type="ECN_APPROVAL_ASSIGNED",
+        category="ecn",
         title=title,
         content=content,
-        ecn_id=ecn.id,
         priority=priority,
+        source_type="ecn",
+        source_id=ecn.id,
+        link_url=f"/ecns?ecnId={ecn.id}",
         extra_data={
             "ecn_no": ecn.ecn_no,
             "ecn_title": ecn.ecn_title,
@@ -65,6 +73,7 @@ def notify_approval_assigned(
             "due_date": approval.due_date.isoformat() if approval.due_date else None
         }
     )
+    unified_service.send_notification(request)
 
     # 抄送项目相关人员（如果ECN关联了项目，且审批人员不是项目成员）
     if ecn.project_id:
@@ -86,14 +95,16 @@ def notify_approval_assigned(
             content_cc = f"ECN {ecn.ecn_no} 的第{approval.approval_level}级审批（{approval.approval_role}）任务已分配给{approver_names}。\n\nECN标题：{ecn.ecn_title}\n审批层级：第{approval.approval_level}级\n审批角色：{approval.approval_role}\n截止日期：{approval.due_date.strftime('%Y-%m-%d') if approval.due_date else '未设置'}\n\n请关注项目变更审批情况。"
 
             for user_id in project_user_ids:
-                create_ecn_notification(
-                    db=db,
-                    user_id=user_id,
+                request = NotificationRequest(
+                    recipient_id=user_id,
                     notification_type="ECN_APPROVAL_ASSIGNED",
+                    category="ecn",
                     title=title_cc,
                     content=content_cc,
-                    ecn_id=ecn.id,
-                    priority="NORMAL",
+                    priority=NotificationPriority.NORMAL,
+                    source_type="ecn",
+                    source_id=ecn.id,
+                    link_url=f"/ecns?ecnId={ecn.id}",
                     extra_data={
                         "ecn_no": ecn.ecn_no,
                         "ecn_title": ecn.ecn_title,
@@ -105,8 +116,7 @@ def notify_approval_assigned(
                         "is_cc": True  # 标记为抄送
                     }
                 )
-
-    db.commit()
+                unified_service.send_notification(request)
 
 
 def notify_approval_result(
@@ -120,21 +130,24 @@ def notify_approval_result(
     通知ECN申请人、项目相关人员和其他相关人员
     """
     result_text = "通过" if result == "APPROVED" else "驳回"
-    priority = "HIGH" if result == "APPROVED" else "NORMAL"
+    priority = NotificationPriority.HIGH if result == "APPROVED" else NotificationPriority.NORMAL
 
+    unified_service = get_notification_service(db)
     # 通知申请人
     if ecn.applicant_id:
         title = f"ECN审批结果：{ecn.ecn_no}"
         content = f"ECN {ecn.ecn_no} 的第{approval.approval_level}级审批（{approval.approval_role}）{result_text}。\n\n审批意见：{approval.approval_opinion or '无'}"
 
-        create_ecn_notification(
-            db=db,
-            user_id=ecn.applicant_id,
+        request = NotificationRequest(
+            recipient_id=ecn.applicant_id,
             notification_type="ECN_APPROVAL_RESULT",
+            category="ecn",
             title=title,
             content=content,
-            ecn_id=ecn.id,
             priority=priority,
+            source_type="ecn",
+            source_id=ecn.id,
+            link_url=f"/ecns?ecnId={ecn.id}",
             extra_data={
                 "ecn_no": ecn.ecn_no,
                 "approval_level": approval.approval_level,
@@ -142,6 +155,7 @@ def notify_approval_result(
                 "approval_result": result
             }
         )
+        unified_service.send_notification(request)
 
     # 抄送项目相关人员（如果ECN关联了项目）
     if ecn.project_id:
@@ -159,14 +173,16 @@ def notify_approval_result(
             content = f"ECN {ecn.ecn_no} 的第{approval.approval_level}级审批（{approval.approval_role}）{result_text}。\n\n审批意见：{approval.approval_opinion or '无'}\n\n请关注项目变更影响。"
 
             for user_id in project_user_ids:
-                create_ecn_notification(
-                    db=db,
-                    user_id=user_id,
+                request = NotificationRequest(
+                    recipient_id=user_id,
                     notification_type="ECN_APPROVAL_RESULT",
+                    category="ecn",
                     title=title,
                     content=content,
-                    ecn_id=ecn.id,
                     priority=priority,
+                    source_type="ecn",
+                    source_id=ecn.id,
+                    link_url=f"/ecns?ecnId={ecn.id}",
                     extra_data={
                         "ecn_no": ecn.ecn_no,
                         "approval_level": approval.approval_level,
@@ -175,6 +191,7 @@ def notify_approval_result(
                         "is_cc": True  # 标记为抄送
                     }
                 )
+                unified_service.send_notification(request)
 
     # 如果审批通过，通知执行人员
     if result == "APPROVED":
@@ -189,19 +206,20 @@ def notify_approval_result(
                 title = f"ECN已批准，请开始执行：{ecn.ecn_no}"
                 content = f"ECN {ecn.ecn_no} 已通过审批，请开始执行您的任务。\n\n任务名称：{task.task_name}\n任务类型：{task.task_type}\n计划完成：{task.planned_end.strftime('%Y-%m-%d') if task.planned_end else '未设置'}"
 
-                create_ecn_notification(
-                    db=db,
-                    user_id=task.assignee_id,
+                request = NotificationRequest(
+                    recipient_id=task.assignee_id,
                     notification_type="ECN_APPROVED_EXECUTION",
+                    category="ecn",
                     title=title,
                     content=content,
-                    ecn_id=ecn.id,
-                    priority="HIGH",
+                    priority=NotificationPriority.HIGH,
+                    source_type="ecn",
+                    source_id=ecn.id,
+                    link_url=f"/ecns?ecnId={ecn.id}",
                     extra_data={
                         "ecn_no": ecn.ecn_no,
                         "task_id": task.id,
                         "task_name": task.task_name
                     }
                 )
-
-    db.commit()
+                unified_service.send_notification(request)

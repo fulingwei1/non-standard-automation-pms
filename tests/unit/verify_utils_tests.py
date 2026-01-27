@@ -220,12 +220,12 @@ def main():
             failed += 1
             print()
     
-    print("=" * 60)
-    print(f"测试总结: {passed} 个通过, {failed} 个失败")
-    print("=" * 60)
+            print("=" * 60)
+            print(f"测试总结: {passed} 个通过, {failed} 个失败")
+            print("=" * 60)
     
-    return 0 if failed == 0 else 1
+            return 0 if failed == 0 else 1
 
 
-if __name__ == "__main__":
-    sys.exit(main())
+            if __name__ == "__main__":
+                sys.exit(main())

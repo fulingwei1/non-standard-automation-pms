@@ -67,8 +67,8 @@ class TestResolveCallable:
         from app.utils.scheduler import _resolve_callable
         
         task = {
-            "module": "app.utils.scheduler",
-            "callable": "job_listener"
+        "module": "app.utils.scheduler",
+        "callable": "job_listener"
         }
         
         func = _resolve_callable(task)
@@ -80,8 +80,8 @@ class TestResolveCallable:
         from app.utils.scheduler import _resolve_callable
         
         task = {
-            "module": "nonexistent.module",
-            "callable": "some_function"
+        "module": "nonexistent.module",
+        "callable": "some_function"
         }
         
         with pytest.raises(ModuleNotFoundError):
@@ -92,8 +92,8 @@ class TestResolveCallable:
         from app.utils.scheduler import _resolve_callable
         
         task = {
-            "module": "app.utils.scheduler",
-            "callable": "nonexistent_function"
+        "module": "app.utils.scheduler",
+        "callable": "nonexistent_function"
         }
         
         with pytest.raises(AttributeError):
@@ -112,19 +112,19 @@ class TestWrapJobCallable:
         def test_func():
             return "success"
         
-        task = {
+            task = {
             "id": "test_job",
             "name": "Test Job",
             "owner": "test",
             "category": "test"
-        }
+            }
         
-        wrapped = _wrap_job_callable(test_func, task)
-        result = wrapped()
+            wrapped = _wrap_job_callable(test_func, task)
+            result = wrapped()
         
-        assert result == "success"
-        mock_logger.info.assert_called()
-        mock_record_success.assert_called_once()
+            assert result == "success"
+            mock_logger.info.assert_called()
+            mock_record_success.assert_called_once()
 
     @patch('app.utils.scheduler.logger')
     @patch('app.utils.scheduler.record_job_failure')
@@ -135,20 +135,20 @@ class TestWrapJobCallable:
         def test_func():
             raise ValueError("Test error")
         
-        task = {
+            task = {
             "id": "test_job",
             "name": "Test Job",
             "owner": "test",
             "category": "test"
-        }
+            }
         
-        wrapped = _wrap_job_callable(test_func, task)
+            wrapped = _wrap_job_callable(test_func, task)
         
-        with pytest.raises(ValueError):
-            wrapped()
+            with pytest.raises(ValueError):
+                wrapped()
         
-        mock_logger.error.assert_called()
-        mock_record_failure.assert_called_once()
+                mock_logger.error.assert_called()
+                mock_record_failure.assert_called_once()
 
     @patch('app.utils.scheduler.logger')
     @patch('app.utils.scheduler.record_job_success')
@@ -160,20 +160,20 @@ class TestWrapJobCallable:
             time.sleep(0.1)
             return "done"
         
-        task = {
+            task = {
             "id": "test_job",
             "name": "Test Job",
             "owner": "test",
             "category": "test"
-        }
+            }
         
-        wrapped = _wrap_job_callable(slow_func, task)
-        wrapped()
+            wrapped = _wrap_job_callable(slow_func, task)
+            wrapped()
         
-        # Verify duration was recorded
-        call_args = mock_record_success.call_args
-        assert call_args[0][0] == "test_job"
-        assert call_args[0][1] > 0  # duration_ms > 0
+            # Verify duration was recorded
+            call_args = mock_record_success.call_args
+            assert call_args[0][0] == "test_job"
+            assert call_args[0][1] > 0  # duration_ms > 0
 
 
 class TestLoadTaskConfigFromDb:
@@ -260,27 +260,27 @@ class TestInitScheduler:
         def mock_resolve_func(task):
             return lambda: None
         
-        mock_resolve.side_effect = mock_resolve_func
-        mock_wrap.side_effect = lambda func, task: func
-        mock_load_db.return_value = None  # Use default config
+            mock_resolve.side_effect = mock_resolve_func
+            mock_wrap.side_effect = lambda func, task: func
+            mock_load_db.return_value = None  # Use default config
         
-        # Mock SCHEDULER_TASKS to have at least one enabled task
-        with patch('app.utils.scheduler.SCHEDULER_TASKS', [
+            # Mock SCHEDULER_TASKS to have at least one enabled task
+            with patch('app.utils.scheduler.SCHEDULER_TASKS', [
             {
-                "id": "test_task",
-                "name": "Test Task",
-                "module": "app.utils.scheduler",
-                "callable": "job_listener",
-                "enabled": True,
-                "cron": {"hour": 10}
+            "id": "test_task",
+            "name": "Test Task",
+            "module": "app.utils.scheduler",
+            "callable": "job_listener",
+            "enabled": True,
+            "cron": {"hour": 10}
             }
-        ]):
+            ]):
             result = init_scheduler()
         
-        assert result == mock_scheduler
-        mock_scheduler.add_listener.assert_called_once()
-        mock_scheduler.add_job.assert_called()
-        mock_scheduler.start.assert_called_once()
+            assert result == mock_scheduler
+            mock_scheduler.add_listener.assert_called_once()
+            mock_scheduler.add_job.assert_called()
+            mock_scheduler.start.assert_called_once()
 
     @patch('app.utils.scheduler.scheduler')
     @patch('app.utils.scheduler._load_task_config_from_db')
@@ -296,21 +296,21 @@ class TestInitScheduler:
         mock_load_db.return_value = {"enabled": False}
         
         with patch('app.utils.scheduler.SCHEDULER_TASKS', [
-            {
-                "id": "disabled_task",
-                "name": "Disabled Task",
-                "module": "app.utils.scheduler",
-                "callable": "job_listener",
-                "enabled": True,
-                "cron": {"hour": 10}
-            }
+        {
+        "id": "disabled_task",
+        "name": "Disabled Task",
+        "module": "app.utils.scheduler",
+        "callable": "job_listener",
+        "enabled": True,
+        "cron": {"hour": 10}
+        }
         ]):
-            with patch('app.utils.scheduler._resolve_callable'):
-                with patch('app.utils.scheduler._wrap_job_callable'):
-                    init_scheduler()
+        with patch('app.utils.scheduler._resolve_callable'):
+            with patch('app.utils.scheduler._wrap_job_callable'):
+                init_scheduler()
         
-        # Should not add disabled task
-        mock_scheduler.add_job.assert_not_called()
+                # Should not add disabled task
+                mock_scheduler.add_job.assert_not_called()
 
 
 class TestShutdownScheduler:

@@ -62,11 +62,11 @@ def test_timesheets(db_session: Session, test_user, test_project):
     timesheets = []
     for i in range(5):
         timesheet = Timesheet(
-            user_id=test_user.id,
-            project_id=test_project.id,
-            work_date=date.today() - timedelta(days=i),
-            hours=8.0,
-            status="APPROVED"
+        user_id=test_user.id,
+        project_id=test_project.id,
+        work_date=date.today() - timedelta(days=i),
+        hours=8.0,
+        status="APPROVED"
         )
         db_session.add(timesheet)
         timesheets.append(timesheet)
@@ -108,9 +108,9 @@ class TestPerformanceStatsService:
         end_date = date.today()
         
         result = performance_stats_service.get_user_performance_stats(
-            test_user.id,
-            start_date=start_date,
-            end_date=end_date
+        test_user.id,
+        start_date=start_date,
+        end_date=end_date
         )
         
         assert result is not None
@@ -146,8 +146,8 @@ class TestPerformanceStatsService:
         """测试获取部门绩效统计 - 成功场景"""
         # 创建部门
         department = Department(
-            department_name="测试部门",
-            department_code="DEPT001"
+        department_name="测试部门",
+        department_code="DEPT001"
         )
         db_session.add(department)
         db_session.commit()
@@ -169,8 +169,8 @@ class TestPerformanceStatsService:
     def test_get_department_performance_stats_no_users(self, performance_stats_service, db_session):
         """测试获取部门绩效统计 - 无用户"""
         department = Department(
-            department_name="空部门",
-            department_code="DEPT002"
+        department_name="空部门",
+        department_code="DEPT002"
         )
         db_session.add(department)
         db_session.commit()

@@ -65,12 +65,12 @@ def test_timesheets(db_session: Session, test_project, test_user):
     timesheets = []
     for i in range(3):
         timesheet = Timesheet(
-            user_id=test_user.id,
-            user_name=test_user.real_name,
-            project_id=test_project.id,
-            work_date=date.today() - timedelta(days=i),
-            hours=8.0,
-            status="APPROVED"
+        user_id=test_user.id,
+        user_name=test_user.real_name,
+        project_id=test_project.id,
+        work_date=date.today() - timedelta(days=i),
+        hours=8.0,
+        status="APPROVED"
         )
         db_session.add(timesheet)
         timesheets.append(timesheet)
@@ -84,10 +84,10 @@ class TestLaborCostCalculationService:
     def test_query_approved_timesheets_no_date_range(self, db_session, test_project, test_timesheets):
         """测试查询已审批工时 - 无日期范围"""
         result = query_approved_timesheets(
-            db_session,
-            project_id=test_project.id,
-            start_date=None,
-            end_date=None
+        db_session,
+        project_id=test_project.id,
+        start_date=None,
+        end_date=None
         )
         
         assert isinstance(result, list)
@@ -100,10 +100,10 @@ class TestLaborCostCalculationService:
         end_date = date.today()
         
         result = query_approved_timesheets(
-            db_session,
-            project_id=test_project.id,
-            start_date=start_date,
-            end_date=end_date
+        db_session,
+        project_id=test_project.id,
+        start_date=start_date,
+        end_date=end_date
         )
         
         assert isinstance(result, list)
@@ -112,10 +112,10 @@ class TestLaborCostCalculationService:
     def test_query_approved_timesheets_no_results(self, db_session, test_project):
         """测试查询已审批工时 - 无结果"""
         result = query_approved_timesheets(
-            db_session,
-            project_id=test_project.id,
-            start_date=None,
-            end_date=None
+        db_session,
+        project_id=test_project.id,
+        start_date=None,
+        end_date=None
         )
         
         assert isinstance(result, list)
@@ -125,10 +125,10 @@ class TestLaborCostCalculationService:
         """测试删除现有成本 - 成功场景"""
         # 创建测试成本记录
         cost = ProjectCost(
-            project_id=test_project.id,
-            source_module="TIMESHEET",
-            source_type="LABOR_COST",
-            amount=Decimal("1000.00")
+        project_id=test_project.id,
+        source_module="TIMESHEET",
+        source_type="LABOR_COST",
+        amount=Decimal("1000.00")
         )
         db_session.add(cost)
         test_project.actual_cost = Decimal("1000.00")
@@ -140,8 +140,8 @@ class TestLaborCostCalculationService:
         
         # 验证成本已删除
         remaining_costs = db_session.query(ProjectCost).filter(
-            ProjectCost.project_id == test_project.id,
-            ProjectCost.source_module == "TIMESHEET"
+        ProjectCost.project_id == test_project.id,
+        ProjectCost.source_module == "TIMESHEET"
         ).all()
         
         assert len(remaining_costs) == 0
@@ -169,11 +169,11 @@ class TestLaborCostCalculationService:
     def test_find_existing_cost_found(self, db_session, test_project, test_user):
         """测试查找现有成本 - 找到"""
         cost = ProjectCost(
-            project_id=test_project.id,
-            source_module="TIMESHEET",
-            source_type="LABOR_COST",
-            source_id=test_user.id,
-            amount=Decimal("500.00")
+        project_id=test_project.id,
+        source_module="TIMESHEET",
+        source_type="LABOR_COST",
+        source_id=test_user.id,
+        amount=Decimal("500.00")
         )
         db_session.add(cost)
         db_session.commit()
@@ -192,11 +192,11 @@ class TestLaborCostCalculationService:
     def test_update_existing_cost_success(self, db_session, test_project, test_user):
         """测试更新现有成本 - 成功场景"""
         existing_cost = ProjectCost(
-            project_id=test_project.id,
-            source_module="TIMESHEET",
-            source_type="LABOR_COST",
-            source_id=test_user.id,
-            amount=Decimal("500.00")
+        project_id=test_project.id,
+        source_module="TIMESHEET",
+        source_type="LABOR_COST",
+        source_id=test_user.id,
+        amount=Decimal("500.00")
         )
         db_session.add(existing_cost)
         test_project.actual_cost = Decimal("500.00")
@@ -204,18 +204,18 @@ class TestLaborCostCalculationService:
         db_session.commit()
         
         user_data = {
-            'user_name': '测试用户',
-            'total_hours': Decimal("10.0")
+        'user_name': '测试用户',
+        'total_hours': Decimal("10.0")
         }
         new_amount = Decimal("1000.00")
         
         update_existing_cost(
-            db_session,
-            test_project,
-            existing_cost,
-            new_amount,
-            user_data,
-            date.today()
+        db_session,
+        test_project,
+        existing_cost,
+        new_amount,
+        user_data,
+        date.today()
         )
         db_session.commit()
         
@@ -225,19 +225,19 @@ class TestLaborCostCalculationService:
     def test_create_new_cost_success(self, db_session, test_project, test_user):
         """测试创建新成本 - 成功场景"""
         user_data = {
-            'user_name': '测试用户',
-            'total_hours': Decimal("8.0")
+        'user_name': '测试用户',
+        'total_hours': Decimal("8.0")
         }
         cost_amount = Decimal("800.00")
         
         result = create_new_cost(
-            db_session,
-            test_project,
-            test_project.id,
-            test_user.id,
-            cost_amount,
-            user_data,
-            date.today()
+        db_session,
+        test_project,
+        test_project.id,
+        test_user.id,
+        cost_amount,
+        user_data,
+        date.today()
         )
         db_session.commit()
         
@@ -252,7 +252,7 @@ class TestLaborCostCalculationService:
             check_budget_alert(db_session, test_project.id, test_user.id)
             
             # 验证调用了预警服务
-            mock_service.check_budget_execution.assert_called_once()
+        mock_service.check_budget_execution.assert_called_once()
 
     def test_check_budget_alert_exception(self, db_session, test_project, test_user):
         """测试检查预算预警 - 异常处理"""
@@ -260,7 +260,7 @@ class TestLaborCostCalculationService:
             mock_service.check_budget_execution.side_effect = Exception("Test error")
             
             # 应该不抛出异常
-            check_budget_alert(db_session, test_project.id, test_user.id)
+        check_budget_alert(db_session, test_project.id, test_user.id)
 
     def test_process_user_costs_new_cost(self, db_session, test_project, test_user):
         """测试处理用户成本 - 创建新成本"""
@@ -268,22 +268,22 @@ class TestLaborCostCalculationService:
             mock_service.get_user_hourly_rate.return_value = Decimal("100.00")
             
             user_costs = {
-                test_user.id: {
-                    'user_id': test_user.id,
-                    'user_name': '测试用户',
-                    'total_hours': Decimal("8.0"),
-                    'timesheet_ids': [1, 2],
-                    'work_date': date.today()
-                }
+            test_user.id: {
+            'user_id': test_user.id,
+            'user_name': '测试用户',
+            'total_hours': Decimal("8.0"),
+            'timesheet_ids': [1, 2],
+            'work_date': date.today()
+            }
             }
             
             created_costs, total_cost = process_user_costs(
-                db_session,
-                test_project,
-                test_project.id,
-                user_costs,
-                date.today(),
-                recalculate=False
+            db_session,
+            test_project,
+            test_project.id,
+            user_costs,
+            date.today(),
+            recalculate=False
             )
             
             assert len(created_costs) == 1
@@ -293,11 +293,11 @@ class TestLaborCostCalculationService:
         """测试处理用户成本 - 更新现有成本"""
         # 创建现有成本
         existing_cost = ProjectCost(
-            project_id=test_project.id,
-            source_module="TIMESHEET",
-            source_type="LABOR_COST",
-            source_id=test_user.id,
-            amount=Decimal("500.00")
+        project_id=test_project.id,
+        source_module="TIMESHEET",
+        source_type="LABOR_COST",
+        source_id=test_user.id,
+        amount=Decimal("500.00")
         )
         db_session.add(existing_cost)
         db_session.commit()
@@ -306,22 +306,22 @@ class TestLaborCostCalculationService:
             mock_service.get_user_hourly_rate.return_value = Decimal("100.00")
             
             user_costs = {
-                test_user.id: {
-                    'user_id': test_user.id,
-                    'user_name': '测试用户',
-                    'total_hours': Decimal("8.0"),
-                    'timesheet_ids': [1, 2],
-                    'work_date': date.today()
-                }
+            test_user.id: {
+            'user_id': test_user.id,
+            'user_name': '测试用户',
+            'total_hours': Decimal("8.0"),
+            'timesheet_ids': [1, 2],
+            'work_date': date.today()
+            }
             }
             
             created_costs, total_cost = process_user_costs(
-                db_session,
-                test_project,
-                test_project.id,
-                user_costs,
-                date.today(),
-                recalculate=False
+            db_session,
+            test_project,
+            test_project.id,
+            user_costs,
+            date.today(),
+            recalculate=False
             )
             
             assert len(created_costs) == 1

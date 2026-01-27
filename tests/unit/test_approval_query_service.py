@@ -54,13 +54,13 @@ class TestApprovalQueryService:
         mock_query.order_by.return_value = mock_query
         mock_query.count.return_value = 5
         mock_query.offset.return_value.limit.return_value.all.return_value = (
-            mock_instances
+        mock_instances
         )
 
         mock_db.query.return_value = mock_query
 
         result = service.get_initiated_instances(
-            user_id=100, status="PENDING", page=1, page_size=20
+        user_id=100, status="PENDING", page=1, page_size=20
         )
 
         assert result["total"] == 5
@@ -82,7 +82,7 @@ class TestApprovalQueryService:
         mock_query.order_by.return_value = mock_query
         mock_query.count.return_value = 1
         mock_query.offset.return_value.limit.return_value.all.return_value = (
-            mock_records
+        mock_records
         )
 
         mock_db.query.return_value = mock_query

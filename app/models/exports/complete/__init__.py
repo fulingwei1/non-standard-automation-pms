@@ -21,6 +21,8 @@ __all__ = [
     "get_engine",
     "get_session",
     "init_db",
+    # State Machine
+    "StateTransitionLog",
     # User
     "User",
     "Role",

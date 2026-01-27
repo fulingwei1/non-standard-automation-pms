@@ -101,25 +101,25 @@ class TestWrapJobCallable:
     def test_wrap_callable_without_owner(self, mock_logger):
         """Test wrapping callable without owner field."""
         task = {
-            "id": "task_no_owner",
-            "name": "No Owner Task",
+        "id": "task_no_owner",
+        "name": "No Owner Task",
         }
 
         def sample_func():
             return "result"
 
-        wrapper = _wrap_job_callable(sample_func, task)
-        result = wrapper()
+            wrapper = _wrap_job_callable(sample_func, task)
+            result = wrapper()
 
-        assert result == "result"
+            assert result == "result"
 
     def test_task_context_structure(self):
         """Test that task context is properly structured."""
         task = {
-            "id": "task_context",
-            "name": "Context Task",
-            "owner": "owner_1",
-            "category": "category_1",
+        "id": "task_context",
+        "name": "Context Task",
+        "owner": "owner_1",
+        "category": "category_1",
         }
 
         def sample_func():
@@ -138,4 +138,4 @@ class TestWrapJobCallable:
             assert "owner_1" in start_log
             assert "category_1" in start_log
 
-        wrapped_test()
+            wrapped_test()

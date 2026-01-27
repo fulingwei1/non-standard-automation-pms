@@ -49,9 +49,9 @@ class TestAnalyzeResolutionTime:
         end_date = datetime(2024, 12, 31)
 
         result = analyze_resolution_time(
-            db_session,
-            start_date=start_date,
-            end_date=end_date
+        db_session,
+        start_date=start_date,
+        end_date=end_date
         )
         assert isinstance(result['total_tickets'], int)
 
@@ -79,9 +79,9 @@ class TestAnalyzeSatisfactionTrend:
         end_date = datetime(2024, 12, 31)
 
         result = analyze_satisfaction_trend(
-            db_session,
-            start_date=start_date,
-            end_date=end_date
+        db_session,
+        start_date=start_date,
+        end_date=end_date
         )
         assert isinstance(result['total_surveys'], int)
 
@@ -105,9 +105,9 @@ class TestIdentifyBottlenecks:
         end_date = datetime(2024, 12, 31)
 
         result = identify_bottlenecks(
-            db_session,
-            start_date=start_date,
-            end_date=end_date
+        db_session,
+        start_date=start_date,
+        end_date=end_date
         )
         assert isinstance(result['total_analyzed'], int)
 
@@ -135,9 +135,9 @@ class TestAnalyzeSlaPerformance:
         end_date = datetime(2024, 12, 31)
 
         result = analyze_sla_performance(
-            db_session,
-            start_date=start_date,
-            end_date=end_date
+        db_session,
+        start_date=start_date,
+        end_date=end_date
         )
         assert isinstance(result['total_monitors'], int)
 

@@ -18,6 +18,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 
 from .base import Base, TimestampMixin
+from .vendor import Vendor  # 兼容旧的 Supplier 引用
 
 
 class MaterialCategory(Base, TimestampMixin):
@@ -261,3 +262,9 @@ class MaterialShortage(Base, TimestampMixin):
         Index('idx_shortage_material', 'material_id'),
         Index('idx_shortage_status', 'status'),
     )
+
+
+# ---------------------------------------------------------------------------
+# 兼容层：旧 Supplier 模型（现已合并至 Vendor）
+# ---------------------------------------------------------------------------
+Supplier = Vendor

@@ -227,9 +227,9 @@ class TestGetAffectedUserIds:
         mock_instance.id = 100
 
         mock_tasks = [
-            MagicMock(assignee_id=1),
-            MagicMock(assignee_id=2),
-            MagicMock(assignee_id=3),
+        MagicMock(assignee_id=1),
+        MagicMock(assignee_id=2),
+        MagicMock(assignee_id=3),
         ]
 
         mock_query = MagicMock()
@@ -267,17 +267,17 @@ class TestLogAction:
         service = ApprovalEngineCore(mock_db)
 
         service._log_action(
-            instance_id=100,
-            operator_id=1,
-            action="APPROVE",
-            task_id=50,
-            node_id=10,
-            operator_name="Test User",
-            comment="Test comment",
-            attachments=[{"name": "file.pdf"}],
-            action_detail={"key": "value"},
-            before_status="PENDING",
-            after_status="APPROVED",
+        instance_id=100,
+        operator_id=1,
+        action="APPROVE",
+        task_id=50,
+        node_id=10,
+        operator_name="Test User",
+        comment="Test comment",
+        attachments=[{"name": "file.pdf"}],
+        action_detail={"key": "value"},
+        before_status="PENDING",
+        after_status="APPROVED",
         )
 
         mock_db.add.assert_called_once()
@@ -296,9 +296,9 @@ class TestLogAction:
         service = ApprovalEngineCore(mock_db)
 
         service._log_action(
-            instance_id=100,
-            operator_id=1,
-            action="APPROVE",
+        instance_id=100,
+        operator_id=1,
+        action="APPROVE",
         )
 
         mock_db.add.assert_called_once()
@@ -373,7 +373,7 @@ class TestReturnToNode:
             assert mock_instance.current_node_id == 5
             mock_query.filter.assert_called_once()
             mock_query.filter.return_value.update.assert_called_once_with(
-                {"status": "CANCELLED"}, synchronize_session=False
+            {"status": "CANCELLED"}, synchronize_session=False
             )
 
     def test_return_to_node_cancel_multiple_tasks(self):
@@ -397,15 +397,15 @@ class TestReturnToNode:
             update_call_count[0] += 1
             return MagicMock()
 
-        mock_query = MagicMock()
-        mock_query.filter.return_value.update.side_effect = update_side_effect
-        mock_db.query.return_value = mock_query
+            mock_query = MagicMock()
+            mock_query.filter.return_value.update.side_effect = update_side_effect
+            mock_db.query.return_value = mock_query
 
-        with patch.object(service, "_create_node_tasks"):
-            service._return_to_node(mock_instance, mock_target_node)
+            with patch.object(service, "_create_node_tasks"):
+                service._return_to_node(mock_instance, mock_target_node)
 
-            # Should update all pending tasks
-            assert update_call_count[0] == 1
+                # Should update all pending tasks
+                assert update_call_count[0] == 1
 
 
 @pytest.mark.unit
