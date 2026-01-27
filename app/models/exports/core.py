@@ -11,8 +11,17 @@
 # 基础模型
 from ..base import Base, TimestampMixin, get_engine, get_session, init_db
 
-# 用户相关
-from ..user import Permission, PermissionAudit, Role, RolePermission, User, UserRole
+# 用户相关（同时导出新旧模型，旧模型将逐步废弃）
+from ..user import (
+    ApiPermission,
+    Permission,
+    PermissionAudit,
+    Role,
+    RoleApiPermission,
+    RolePermission,
+    User,
+    UserRole,
+)
 
 # 项目相关
 from ..project import (
@@ -52,8 +61,10 @@ __all__ = [
     # 用户
     "User",
     "Role",
-    "Permission",
-    "RolePermission",
+    "Permission",  # 旧模型，待废弃
+    "RolePermission",  # 旧模型，待废弃
+    "ApiPermission",  # 新模型
+    "RoleApiPermission",  # 新模型
     "UserRole",
     "PermissionAudit",
     # 项目

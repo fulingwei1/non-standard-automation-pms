@@ -23,13 +23,16 @@ __all__ = [
     "init_db",
     # State Machine
     "StateTransitionLog",
-    # User
+    # User - 新模型
     "User",
     "Role",
-    "Permission",
-    "RolePermission",
+    "ApiPermission",
+    "RoleApiPermission",
     "UserRole",
     "PermissionAudit",
+    # User - 旧模型（待废弃）
+    "Permission",
+    "RolePermission",
     # Project (from project_related)
     "Project",
     "Machine",

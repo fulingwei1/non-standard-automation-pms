@@ -2,8 +2,21 @@
 """
 完整模型导出 - 绩效和人员相关
 """
-# 用户权限
-from ...user import Permission, PermissionAudit, Role, RolePermission, User, UserRole
+
+# 用户权限（同时导出新旧模型）
+from ...user import (
+    ApiPermission,
+    Permission,
+    PermissionAudit,
+    Role,
+    RoleApiPermission,
+    RolePermission,
+    User,
+    UserRole,
+)
+
+# 租户
+from ...tenant import Tenant, TenantStatus, TenantPlan
 
 # 组织架构
 from ...organization import (
@@ -66,13 +79,16 @@ from ...qualification import (
 from ...hourly_rate import HourlyRateConfig
 
 __all__ = [
-    # User
+    # User - 新模型
     "User",
     "Role",
-    "Permission",
-    "RolePermission",
+    "ApiPermission",
+    "RoleApiPermission",
     "UserRole",
     "PermissionAudit",
+    # User - 旧模型（待废弃）
+    "Permission",
+    "RolePermission",
     # Organization
     "Department",
     "Employee",

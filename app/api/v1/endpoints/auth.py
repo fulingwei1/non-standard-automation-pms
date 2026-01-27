@@ -14,7 +14,13 @@ from app.api import deps
 from app.core import security
 from app.core.config import settings
 from app.core.rate_limit import limiter
-from app.models.user import User
+from app.models.user import (
+    ApiPermission,
+    Role,
+    RoleApiPermission,
+    User,
+    UserRole,
+)
 from app.schemas.auth import PasswordChange, Token, UserResponse
 from app.schemas.common import ResponseModel
 
@@ -158,27 +164,27 @@ def get_me(
     if not db_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="用户不存在")
 
-    # 规范化角色与权限列表
-    user_roles = db_user.roles
-    if hasattr(user_roles, "all"):
-        user_roles = user_roles.all()
+    # 直接通过 JOIN 查询角色与权限，避免懒加载触发 SQLite 旧库的字段映射问题
+    role_rows = (
+        db.query(Role.id, Role.role_name)
+        .join(UserRole, UserRole.role_id == Role.id)
+        .filter(UserRole.user_id == db_user.id)
+        .all()
+    )
+    role_ids = [row.id for row in role_rows]
+    role_names = [row.role_name for row in role_rows]
 
-    role_names = []
-    permission_codes = set()
-    for user_role in user_roles or []:
-        role = getattr(user_role, "role", None)
-        if not role:
-            continue
-        role_names.append(role.role_name)
-
-        role_permissions = role.permissions
-        if hasattr(role_permissions, "all"):
-            role_permissions = role_permissions.all()
-
-        for role_permission in role_permissions or []:
-            permission = getattr(role_permission, "permission", None)
-            if permission and permission.permission_code:
-                permission_codes.add(permission.permission_code)
+    permission_rows = (
+        db.query(ApiPermission.perm_code)
+        .join(RoleApiPermission, RoleApiPermission.permission_id == ApiPermission.id)
+        .join(UserRole, UserRole.role_id == RoleApiPermission.role_id)
+        .filter(UserRole.user_id == db_user.id, ApiPermission.is_active == True)
+        .distinct()
+        .all()
+    )
+    permission_codes = sorted(
+        {row.perm_code for row in permission_rows if row.perm_code}
+    )
 
     # 构建响应数据（避免直接修改ORM对象）
     is_superuser = db_user.is_superuser or security.is_system_admin(db_user)
@@ -196,7 +202,8 @@ def get_me(
         "is_superuser": is_superuser,
         "last_login_at": db_user.last_login_at,
         "roles": role_names,
-        "permissions": sorted(permission_codes),
+        "role_ids": role_ids,
+        "permissions": permission_codes,
         "created_at": db_user.created_at,
         "updated_at": db_user.updated_at,
     }

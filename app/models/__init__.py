@@ -24,11 +24,17 @@ __all__ = [
     "get_engine",
     "get_session",
     "init_db",
+    # Tenant
+    "Tenant",
+    "TenantStatus",
+    "TenantPlan",
     # User
     "User",
     "Role",
-    "Permission",
-    "RolePermission",
+    "Permission",  # 旧模型，待废弃
+    "RolePermission",  # 旧模型，待废弃
+    "ApiPermission",  # 新模型
+    "RoleApiPermission",  # 新模型
     "UserRole",
     "PermissionAudit",
     # Project
