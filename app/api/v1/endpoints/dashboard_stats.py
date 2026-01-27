@@ -11,6 +11,7 @@
 - admin: 管理员相关（用户、角色、登录、错误）
 """
 
+from datetime import date
 from typing import Any
 
 from fastapi import APIRouter, Depends
@@ -21,6 +22,7 @@ from app.api import deps
 from app.core import security
 from app.models.user import User, Role
 from app.models.project import Project
+from app.models.purchase import PurchaseOrder
 from app.schemas.common import ResponseModel
 
 router = APIRouter()
@@ -55,13 +57,37 @@ def get_engineer_stats(db: Session, current_user: User) -> dict:
 
 def get_procurement_stats(db: Session, current_user: User) -> dict:
     """获取采购统计数据"""
-    # TODO: 集成实际的采购订单数据
+    # 定义活跃状态（排除草稿和已取消）
+    active_statuses = ['SUBMITTED', 'APPROVED', 'CONFIRMED', 'PARTIAL_RECEIVED']
+    pending_statuses = ['SUBMITTED', 'APPROVED']  # 待确认状态
+    not_completed_statuses = ['SUBMITTED', 'APPROVED', 'CONFIRMED', 'PARTIAL_RECEIVED']
+
+    # 统计活跃采购订单数量
+    total_orders = db.query(func.count(PurchaseOrder.id)).filter(
+        PurchaseOrder.status.in_(active_statuses)
+    ).scalar() or 0
+
+    # 统计待确认订单数量（已提交/已审批但供应商未确认）
+    pending_orders = db.query(func.count(PurchaseOrder.id)).filter(
+        PurchaseOrder.status.in_(pending_statuses)
+    ).scalar() or 0
+
+    # 统计逾期订单数量（要求交期已过但未完成收货）
+    today = date.today()
+    overdue_orders = db.query(func.count(PurchaseOrder.id)).filter(
+        PurchaseOrder.status.in_(not_completed_statuses),
+        PurchaseOrder.required_date < today
+    ).scalar() or 0
+
+    # 节省金额暂无比较数据，保持为0
+    savings = 0
+
     return {
         'stats': [
-            {'key': 'orders', 'label': '采购订单', 'value': 0, 'trend': 0},
-            {'key': 'pending', 'label': '待确认', 'value': 0, 'trend': 0},
-            {'key': 'overdue', 'label': '逾期', 'value': 0, 'trend': 0},
-            {'key': 'savings', 'label': '节省金额', 'value': '¥0', 'trend': 0},
+            {'key': 'orders', 'label': '采购订单', 'value': total_orders, 'trend': 0},
+            {'key': 'pending', 'label': '待确认', 'value': pending_orders, 'trend': 0},
+            {'key': 'overdue', 'label': '逾期', 'value': overdue_orders, 'trend': 0},
+            {'key': 'savings', 'label': '节省金额', 'value': f'¥{savings}', 'trend': 0},
         ]
     }
 
