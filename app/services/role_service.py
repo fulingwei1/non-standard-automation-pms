@@ -11,7 +11,7 @@ from sqlalchemy import text
 
 from app.common.crud.base import BaseService
 from app.models.user import Role
-from app.schemas.auth import RoleCreate, RoleUpdate, RoleResponse
+from app.schemas.role import RoleCreate, RoleUpdate, RoleResponse
 
 logger = logging.getLogger(__name__)
 
@@ -31,14 +31,14 @@ class RoleService(BaseService[Role, RoleCreate, RoleUpdate, RoleResponse]):
 
     def _to_response(self, obj: Role) -> RoleResponse:
         """
-        转换为角色响应对象，包含权限列表
+        转换为角色响应对象，包含权限列表（使用新的 api_permissions 表）
         """
-        # 获取角色的权限名称列表
+        # 获取角色的权限名称列表（已迁移到新表）
         perm_sql = """
-            SELECT p.perm_name
-            FROM role_permissions rp
-            JOIN permissions p ON rp.permission_id = p.id
-            WHERE rp.role_id = :role_id
+            SELECT ap.perm_name
+            FROM role_api_permissions rap
+            JOIN api_permissions ap ON rap.permission_id = ap.id
+            WHERE rap.role_id = :role_id AND ap.is_active = 1
         """
         perm_result = self.db.execute(text(perm_sql), {"role_id": obj.id})
         permissions = [row[0] for row in perm_result.fetchall() if row[0]]

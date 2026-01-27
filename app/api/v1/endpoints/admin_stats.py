@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.user import Permission, Role, RolePermission, User, UserRole
+from app.models.user import ApiPermission, Role, RoleApiPermission, User, UserRole
 from app.schemas.common import ResponseModel
 
 router = APIRouter()
@@ -60,22 +60,29 @@ def get_admin_stats(
     )
     custom_roles = total_roles - system_roles
 
-    # 权限统计
-    total_permissions = db.query(func.count(Permission.id)).scalar() or 0
+    # 权限统计（使用新的 ApiPermission 和 RoleApiPermission 表）
+    total_permissions = (
+        db.query(func.count(ApiPermission.id))
+        .filter(ApiPermission.is_active == True)
+        .scalar()
+        or 0
+    )
 
     # 已分配的权限数（角色-权限关联总数）
-    assigned_permissions = db.query(func.count(RolePermission.id)).scalar() or 0
+    assigned_permissions = db.query(func.count(RoleApiPermission.id)).scalar() or 0
 
     # 未分配给任何角色的权限数
-    # 使用更安全的方式：先获取已分配的权限ID列表，然后计算未分配的
     try:
         assigned_perm_ids = [
-            row[0] for row in db.query(RolePermission.permission_id).distinct().all()
+            row[0] for row in db.query(RoleApiPermission.permission_id).distinct().all()
         ]
         if assigned_perm_ids:
             unassigned_permissions = (
-                db.query(func.count(Permission.id))
-                .filter(~Permission.id.in_(assigned_perm_ids))
+                db.query(func.count(ApiPermission.id))
+                .filter(
+                    ApiPermission.is_active == True,
+                    ~ApiPermission.id.in_(assigned_perm_ids),
+                )
                 .scalar()
                 or 0
             )

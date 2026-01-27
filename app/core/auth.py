@@ -276,10 +276,11 @@ async def get_current_active_superuser(
 
 
 def _load_user_permissions_from_db(user_id: int, db: Session) -> set:
-    """从数据库加载用户权限（含继承）"""
+    """从数据库加载用户权限（含继承）- 使用新的 api_permissions 表"""
     from sqlalchemy import text
 
     # 查询用户直接拥有的权限 + 通过角色继承链获得的权限
+    # 已迁移到新表: api_permissions + role_api_permissions
     sql = """
         WITH RECURSIVE role_tree AS (
             -- 用户直接拥有的角色
@@ -295,10 +296,11 @@ def _load_user_permissions_from_db(user_id: int, db: Session) -> set:
             FROM roles r
             JOIN role_tree rt ON r.id = rt.parent_id
         )
-        SELECT DISTINCT p.perm_code
+        SELECT DISTINCT ap.perm_code
         FROM role_tree rt
-        JOIN role_permissions rp ON rt.id = rp.role_id
-        JOIN permissions p ON rp.permission_id = p.id
+        JOIN role_api_permissions rap ON rt.id = rap.role_id
+        JOIN api_permissions ap ON rap.permission_id = ap.id
+        WHERE ap.is_active = 1
     """
     result = db.execute(text(sql), {"user_id": user_id})
     return {row[0] for row in result.fetchall()}
@@ -367,26 +369,32 @@ def check_permission(user: User, permission_code: str, db: Session = None) -> bo
     except Exception as e:
         logger.warning(f"Permission cache failed, fallback to DB: {e}")
 
-    # 降级：直接查询数据库
+    # 降级：直接查询数据库（使用新的 api_permissions 表）
     try:
         from sqlalchemy import text
 
         if db is None:
             # 如果没有提供db，尝试使用ORM（可能失败）
             for user_role in user.roles:
-                for role_permission in user_role.role.permissions:
-                    if role_permission.permission.permission_code == permission_code:
-                        return True
+                role = user_role.role
+                if hasattr(role, "api_permissions"):
+                    for rap in role.api_permissions:
+                        if (
+                            rap.permission
+                            and rap.permission.perm_code == permission_code
+                        ):
+                            return True
             return False
         else:
-            # 使用SQL查询
+            # 使用SQL查询（已迁移到新表）
             sql = """
                 SELECT COUNT(*)
                 FROM user_roles ur
-                JOIN role_permissions rp ON ur.role_id = rp.role_id
-                JOIN permissions p ON rp.permission_id = p.id
+                JOIN role_api_permissions rap ON ur.role_id = rap.role_id
+                JOIN api_permissions ap ON rap.permission_id = ap.id
                 WHERE ur.user_id = :user_id
-                AND p.perm_code = :permission_code
+                AND ap.perm_code = :permission_code
+                AND ap.is_active = 1
             """
             result = db.execute(
                 text(sql), {"user_id": user.id, "permission_code": permission_code}
@@ -397,9 +405,14 @@ def check_permission(user: User, permission_code: str, db: Session = None) -> bo
         # 降级到ORM查询
         try:
             for user_role in user.roles:
-                for role_permission in user_role.role.permissions:
-                    if role_permission.permission.permission_code == permission_code:
-                        return True
+                role = user_role.role
+                if hasattr(role, "api_permissions"):
+                    for rap in role.api_permissions:
+                        if (
+                            rap.permission
+                            and rap.permission.perm_code == permission_code
+                        ):
+                            return True
         except Exception:
             logger.debug("权限检查 ORM 降级查询失败", exc_info=True)
         return False

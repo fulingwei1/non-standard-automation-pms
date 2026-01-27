@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-用户与权限模型
+用户与权限模型（20260127 合并后）
 """
 
 from sqlalchemy import (
@@ -13,6 +13,7 @@ from sqlalchemy import (
     String,
     Text,
 )
+
 from sqlalchemy.orm import relationship
 
 from .base import Base, TimestampMixin
@@ -25,7 +26,9 @@ class User(Base, TimestampMixin):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     # 多租户支持
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
+    tenant_id = Column(
+        Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID"
+    )
     is_tenant_admin = Column(Boolean, default=False, comment="是否租户管理员")
 
     employee_id = Column(
@@ -50,7 +53,9 @@ class User(Base, TimestampMixin):
     reporting_to = Column(Integer, ForeignKey("users.id"), comment="直接上级用户ID")
 
     # 方案生成积分系统
-    solution_credits = Column(Integer, default=100, nullable=False, comment="方案生成积分余额")
+    solution_credits = Column(
+        Integer, default=100, nullable=False, comment="方案生成积分余额"
+    )
     credits_updated_at = Column(DateTime, comment="积分最后变动时间")
 
     # 关系
@@ -63,9 +68,13 @@ class User(Base, TimestampMixin):
         "Project", back_populates="manager", foreign_keys="Project.pm_id"
     )
     # 上下级关系
-    manager = relationship("User", remote_side=[id], foreign_keys=[reporting_to], backref="subordinates")
+    manager = relationship(
+        "User", remote_side=[id], foreign_keys=[reporting_to], backref="subordinates"
+    )
     # 项目成员关系（补充缺失的反向关系）
-    project_memberships = relationship("ProjectMember", back_populates="user", foreign_keys="ProjectMember.user_id")
+    project_memberships = relationship(
+        "ProjectMember", back_populates="user", foreign_keys="ProjectMember.user_id"
+    )
 
     # ========================================================================
     # 便捷属性方法
@@ -80,21 +89,21 @@ class User(Base, TimestampMixin):
     def full_info(self) -> dict:
         """获取用户完整信息"""
         return {
-            'id': self.id,
-            'username': self.username,
-            'real_name': self.real_name,
-            'employee_no': self.employee_no,
-            'department': self.department,
-            'position': self.position,
-            'email': self.email,
-            'phone': self.phone,
-            'avatar': self.avatar,
+            "id": self.id,
+            "username": self.username,
+            "real_name": self.real_name,
+            "employee_no": self.employee_no,
+            "department": self.department,
+            "position": self.position,
+            "email": self.email,
+            "phone": self.phone,
+            "avatar": self.avatar,
         }
 
     @property
     def is_manager(self) -> bool:
         """是否是管理者（有下属）"""
-        return hasattr(self, 'subordinates') and list(self.subordinates)
+        return hasattr(self, "subordinates") and list(self.subordinates)
 
     @property
     def role_codes(self) -> list:
@@ -117,33 +126,96 @@ class Role(Base, TimestampMixin):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     # 多租户支持
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
-    source_template_id = Column(Integer, ForeignKey("role_templates.id"), nullable=True, comment="来源模板ID")
+    tenant_id = Column(
+        Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID"
+    )
+    source_template_id = Column(
+        Integer, ForeignKey("role_templates.id"), nullable=True, comment="来源模板ID"
+    )
 
     role_code = Column(String(50), unique=True, nullable=False, comment="角色编码")
     role_name = Column(String(100), nullable=False, comment="角色名称")
     description = Column(Text, comment="角色描述")
     data_scope = Column(String(20), default="OWN", comment="数据权限范围")
-    parent_id = Column(Integer, ForeignKey("roles.id"), nullable=True, comment="父角色ID（继承）")
+    parent_id = Column(
+        Integer, ForeignKey("roles.id"), nullable=True, comment="父角色ID（继承）"
+    )
     is_system = Column(Boolean, default=False, comment="是否系统预置")
     is_active = Column(Boolean, default=True, comment="是否启用")
     sort_order = Column(Integer, default=0, comment="排序")
     # 前端配置字段
     nav_groups = Column(JSON, comment="导航组配置（JSON数组）")
     ui_config = Column(JSON, comment="UI配置（JSON对象，包含导航、权限等前端配置）")
+    # 数据库中存在但模型中缺失的字段
+    role_type = Column(
+        String(20), default="BUSINESS", nullable=True, comment="角色类型"
+    )
+    scope_type = Column(String(20), default="GLOBAL", nullable=True, comment="范围类型")
+    level = Column(Integer, default=2, nullable=True, comment="层级")
+    inherit_permissions = Column(
+        Boolean, default=False, nullable=True, comment="是否继承权限"
+    )
+    status = Column(String(20), default="ACTIVE", nullable=True, comment="状态")
+    role_category = Column(String(50), nullable=True, comment="角色分类")
 
     # 关系
     tenant = relationship("Tenant", back_populates="roles")
     users = relationship("UserRole", back_populates="role", lazy="dynamic")
-    permissions = relationship("RolePermission", back_populates="role", lazy="dynamic")
+    permissions = relationship(
+        "RolePermission", back_populates="role", lazy="dynamic"
+    )  # 旧表，待废弃
+    api_permissions = relationship(
+        "RoleApiPermission", back_populates="role", lazy="dynamic"
+    )  # 新表
     parent = relationship("Role", remote_side=[id], backref="children")
 
     def __repr__(self):
         return f"<Role {self.role_code}>"
 
 
+# ============================================================================
+# 新的 API 权限模型（20260127 引入）
+# ============================================================================
+
+
+class ApiPermission(Base, TimestampMixin):
+    """API权限表（独立于菜单权限）"""
+
+    __tablename__ = "api_permissions"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    perm_code = Column(String(100), unique=True, nullable=False, comment="权限编码")
+    perm_name = Column(String(200), nullable=False, comment="权限名称")
+    module = Column(String(50), comment="所属模块编码")
+    page_code = Column(String(50), nullable=True, comment="所属页面编码")
+    action = Column(
+        String(20), comment="操作类型: VIEW/CREATE/EDIT/DELETE/APPROVE/EXPORT"
+    )
+    description = Column(Text, nullable=True, comment="权限描述")
+    permission_type = Column(
+        String(20), default="API", nullable=False, comment="权限类型"
+    )
+    group_id = Column(Integer, nullable=True, comment="权限组ID")
+    is_active = Column(Boolean, default=True, nullable=False, comment="是否启用")
+
+    # 关系
+    role_api_permissions = relationship(
+        "RoleApiPermission", back_populates="permission", lazy="dynamic"
+    )
+
+    def __repr__(self):
+        return f"<ApiPermission {self.perm_code}>"
+
+
+# ============================================================================
+# 旧的 Permission 表（代码已迁移到 ApiPermission，待删除表）
+# 注意：所有使用此模型的代码已于 2026-01-27 迁移到 ApiPermission
+# 此模型保留仅用于数据库兼容，下次数据库迁移后应删除
+# ============================================================================
+
+
 class Permission(Base, TimestampMixin):
-    """权限表"""
+    """权限表（已废弃，代码已迁移到 ApiPermission，待删除）"""
 
     __tablename__ = "permissions"
 
@@ -153,26 +225,35 @@ class Permission(Base, TimestampMixin):
     permission_code = Column(
         "perm_code", String(100), unique=True, nullable=False, comment="权限编码"
     )
-    permission_name = Column("perm_name", String(200), nullable=False, comment="权限名称")
+    permission_name = Column(
+        "perm_name", String(200), nullable=False, comment="权限名称"
+    )
     module = Column(String(50), comment="所属模块编码")
     page_code = Column(String(50), nullable=True, comment="所属页面编码")
     # 以下字段在旧表结构中可能不存在，设为可选
     resource = Column(String(50), nullable=True, comment="资源类型")
-    action = Column(String(20), comment="操作类型: VIEW/CREATE/EDIT/DELETE/APPROVE/EXPORT")
-    depends_on = Column(Integer, ForeignKey("permissions.id"), nullable=True, comment="依赖的权限ID")
+    action = Column(
+        String(20), comment="操作类型: VIEW/CREATE/EDIT/DELETE/APPROVE/EXPORT"
+    )
+    # depends_on 在数据库中是 TEXT 类型，不是外键
+    depends_on = Column(Text, nullable=True, comment="依赖的权限ID（TEXT格式）")
     description = Column(Text, nullable=True, comment="权限描述")
     is_active = Column(Boolean, default=True, nullable=True, comment="是否启用")
+    # 数据库中存在但模型中缺失的字段
+    permission_type = Column(
+        String(20), default="API", nullable=True, comment="权限类型"
+    )
+    group_id = Column(Integer, nullable=True, comment="权限组ID")
 
     # 关系
     roles = relationship("RolePermission", back_populates="permission", lazy="dynamic")
-    parent_permission = relationship("Permission", remote_side=[id], backref="dependent_permissions")
 
     def __repr__(self):
         return f"<Permission {self.permission_code}>"
 
 
 class RolePermission(Base):
-    """角色权限关联表"""
+    """角色权限关联表（已废弃，代码已迁移到 RoleApiPermission，待删除）"""
 
     __tablename__ = "role_permissions"
 
@@ -185,6 +266,30 @@ class RolePermission(Base):
     # 关系
     role = relationship("Role", back_populates="permissions")
     permission = relationship("Permission", back_populates="roles")
+
+
+# ============================================================================
+# 新的 RoleApiPermission 表（20260127 引入）
+# ============================================================================
+
+
+class RoleApiPermission(Base):
+    """角色API权限关联表"""
+
+    __tablename__ = "role_api_permissions"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    role_id = Column(Integer, ForeignKey("roles.id"), nullable=False, comment="角色ID")
+    permission_id = Column(
+        Integer, ForeignKey("api_permissions.id"), nullable=False, comment="API权限ID"
+    )
+    created_at = Column(
+        DateTime, server_default="CURRENT_TIMESTAMP", comment="创建时间"
+    )
+
+    # 关系
+    role = relationship("Role", back_populates="api_permissions")
+    permission = relationship("ApiPermission", back_populates="role_api_permissions")
 
 
 class UserRole(Base):
@@ -209,7 +314,9 @@ class RoleTemplate(Base, TimestampMixin):
     id = Column(Integer, primary_key=True, autoincrement=True)
     template_code = Column(String(30), unique=True, nullable=False, comment="模板编码")
     template_name = Column(String(50), nullable=False, comment="模板名称")
-    role_type = Column(String(20), nullable=False, default="BUSINESS", comment="角色类型")
+    role_type = Column(
+        String(20), nullable=False, default="BUSINESS", comment="角色类型"
+    )
     scope_type = Column(String(20), default="GLOBAL", comment="范围类型")
     data_scope = Column(String(20), default="PROJECT", comment="数据权限范围")
     level = Column(Integer, default=2, comment="层级")
@@ -231,7 +338,9 @@ class PermissionAudit(Base, TimestampMixin):
         Integer, ForeignKey("users.id"), nullable=False, comment="操作人ID"
     )
     action = Column(String(50), nullable=False, comment="操作类型")
-    target_type = Column(String(20), nullable=False, comment="目标类型（user/role/permission）")
+    target_type = Column(
+        String(20), nullable=False, comment="目标类型（user/role/permission）"
+    )
     target_id = Column(Integer, nullable=False, comment="目标ID")
     detail = Column(Text, comment="详细信息（JSON格式）")
     ip_address = Column(String(50), comment="操作IP地址")
@@ -278,7 +387,9 @@ class SolutionCreditTransaction(Base):
     ip_address = Column(String(50), comment="操作IP")
     user_agent = Column(String(500), comment="用户代理")
 
-    created_at = Column(DateTime, server_default="CURRENT_TIMESTAMP", comment="创建时间")
+    created_at = Column(
+        DateTime, server_default="CURRENT_TIMESTAMP", comment="创建时间"
+    )
 
     # 关系
     user = relationship("User", foreign_keys=[user_id], backref="credit_transactions")
@@ -298,8 +409,12 @@ class SolutionCreditConfig(Base):
     config_value = Column(String(200), nullable=False, comment="配置值")
     description = Column(Text, comment="配置说明")
     is_active = Column(Boolean, default=True, comment="是否启用")
-    created_at = Column(DateTime, server_default="CURRENT_TIMESTAMP", comment="创建时间")
-    updated_at = Column(DateTime, server_default="CURRENT_TIMESTAMP", comment="更新时间")
+    created_at = Column(
+        DateTime, server_default="CURRENT_TIMESTAMP", comment="创建时间"
+    )
+    updated_at = Column(
+        DateTime, server_default="CURRENT_TIMESTAMP", comment="更新时间"
+    )
 
     def __repr__(self):
         return f"<SolutionCreditConfig {self.config_key}={self.config_value}>"

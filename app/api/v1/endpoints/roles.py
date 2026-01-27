@@ -13,9 +13,16 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.core.security import get_current_active_user
-from app.models.user import Permission, Role, RolePermission, RoleTemplate, User, UserRole
+from app.models.user import (
+    ApiPermission,
+    Role,
+    RoleApiPermission,
+    RoleTemplate,
+    User,
+    UserRole,
+)
 from app.schemas.common import ResponseModel
-from app.schemas.auth import RoleCreate, RoleUpdate
+from app.schemas.role import RoleCreate, RoleUpdate
 from app.services.role_service import RoleService
 
 router = APIRouter(prefix="/roles", tags=["角色管理"])
@@ -27,14 +34,13 @@ def get_current_tenant_id(current_user: User) -> Optional[int]:
 
 
 def require_role_management_permission(
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ) -> User:
     """要求角色管理权限（超级管理员或租户管理员）"""
     if current_user.is_superuser or current_user.is_tenant_admin:
         return current_user
     raise HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN,
-        detail="需要角色管理权限"
+        status_code=status.HTTP_403_FORBIDDEN, detail="需要角色管理权限"
     )
 
 
@@ -64,18 +70,18 @@ def list_permissions(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    """获取权限列表"""
-    query = db.query(Permission)
+    """获取权限列表（使用新的 ApiPermission 模型）"""
+    query = db.query(ApiPermission).filter(ApiPermission.is_active == True)
     if module:
-        query = query.filter(Permission.module == module)
+        query = query.filter(ApiPermission.module == module)
 
-    permissions = query.order_by(Permission.module, Permission.permission_code).all()
+    permissions = query.order_by(ApiPermission.module, ApiPermission.perm_code).all()
 
     result = [
         {
             "id": p.id,
-            "permission_code": p.permission_code,
-            "permission_name": p.permission_name,
+            "permission_code": p.perm_code,
+            "permission_name": p.perm_name,
             "module": p.module,
             "action": p.action,
         }
@@ -90,7 +96,12 @@ def list_role_templates(
     current_user: User = Depends(require_role_management_permission),
 ):
     """获取角色模板列表"""
-    templates = db.query(RoleTemplate).filter(RoleTemplate.is_active == True).order_by(RoleTemplate.sort_order).all()
+    templates = (
+        db.query(RoleTemplate)
+        .filter(RoleTemplate.is_active == True)
+        .order_by(RoleTemplate.sort_order)
+        .all()
+    )
 
     result = [
         {
@@ -112,18 +123,22 @@ def get_all_config(
     current_user: User = Depends(get_current_active_user),
 ):
     """获取所有角色配置"""
-    roles = db.query(Role).filter(Role.is_active == True).order_by(Role.sort_order).all()
+    roles = (
+        db.query(Role).filter(Role.is_active == True).order_by(Role.sort_order).all()
+    )
 
     result = []
     for role in roles:
-        result.append({
-            "id": role.id,
-            "role_code": role.role_code,
-            "role_name": role.role_name,
-            "data_scope": role.data_scope,
-            "nav_groups": role.nav_groups,
-            "ui_config": role.ui_config,
-        })
+        result.append(
+            {
+                "id": role.id,
+                "role_code": role.role_code,
+                "role_name": role.role_name,
+                "data_scope": role.data_scope,
+                "nav_groups": role.nav_groups,
+                "ui_config": role.ui_config,
+            }
+        )
 
     return ResponseModel(code=200, message="获取成功", data=result)
 
@@ -156,7 +171,9 @@ def get_my_nav_groups(
                     merged_nav_groups.append(group)
                     seen_labels.add(label)
 
-    return ResponseModel(code=200, message="获取成功", data={"nav_groups": merged_nav_groups})
+    return ResponseModel(
+        code=200, message="获取成功", data={"nav_groups": merged_nav_groups}
+    )
 
 
 @router.post("/", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
@@ -171,7 +188,7 @@ def create_role(
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"角色编码 {role_in.role_code} 已存在"
+            detail=f"角色编码 {role_in.role_code} 已存在",
         )
 
     role = Role(
@@ -188,9 +205,7 @@ def create_role(
 
     service = RoleService(db)
     return ResponseModel(
-        code=201,
-        message="创建成功",
-        data=service._to_response(role).model_dump()
+        code=201, message="创建成功", data=service._to_response(role).model_dump()
     )
 
 
@@ -206,7 +221,9 @@ def get_role(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="角色不存在")
 
     service = RoleService(db)
-    return ResponseModel(code=200, message="获取成功", data=service._to_response(role).model_dump())
+    return ResponseModel(
+        code=200, message="获取成功", data=service._to_response(role).model_dump()
+    )
 
 
 @router.put("/{role_id}", response_model=ResponseModel)
@@ -224,8 +241,7 @@ def update_role(
     # 系统预置角色不允许修改编码
     if role.is_system and role_in.role_code and role_in.role_code != role.role_code:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="系统预置角色不允许修改编码"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="系统预置角色不允许修改编码"
         )
 
     update_data = role_in.model_dump(exclude_unset=True)
@@ -236,7 +252,9 @@ def update_role(
     db.refresh(role)
 
     service = RoleService(db)
-    return ResponseModel(code=200, message="更新成功", data=service._to_response(role).model_dump())
+    return ResponseModel(
+        code=200, message="更新成功", data=service._to_response(role).model_dump()
+    )
 
 
 @router.delete("/{role_id}", response_model=ResponseModel)
@@ -252,8 +270,7 @@ def delete_role(
 
     if role.is_system:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="系统预置角色不允许删除"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="系统预置角色不允许删除"
         )
 
     # 检查是否有用户使用此角色
@@ -261,7 +278,7 @@ def delete_role(
     if user_count > 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"该角色下有 {user_count} 个用户，无法删除"
+            detail=f"该角色下有 {user_count} 个用户，无法删除",
         )
 
     db.delete(role)
@@ -277,19 +294,19 @@ def update_role_permissions(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role_management_permission),
 ):
-    """更新角色权限"""
+    """更新角色权限（使用新的 RoleApiPermission 模型）"""
     role = db.query(Role).filter(Role.id == role_id).first()
     if not role:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="角色不存在")
 
-    # 删除现有权限
-    db.query(RolePermission).filter(RolePermission.role_id == role_id).delete()
+    # 删除现有权限（使用新的关联表）
+    db.query(RoleApiPermission).filter(RoleApiPermission.role_id == role_id).delete()
 
     # 添加新权限
     for perm_id in permission_ids:
-        perm = db.query(Permission).filter(Permission.id == perm_id).first()
+        perm = db.query(ApiPermission).filter(ApiPermission.id == perm_id).first()
         if perm:
-            db.add(RolePermission(role_id=role_id, permission_id=perm_id))
+            db.add(RoleApiPermission(role_id=role_id, permission_id=perm_id))
 
     db.commit()
 
@@ -308,9 +325,7 @@ def get_role_nav_groups(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="角色不存在")
 
     return ResponseModel(
-        code=200,
-        message="获取成功",
-        data={"nav_groups": role.nav_groups or []}
+        code=200, message="获取成功", data={"nav_groups": role.nav_groups or []}
     )
 
 
@@ -336,23 +351,29 @@ def update_role_nav_groups(
 # 角色层级管理 API
 # ============================================================
 
+
 @router.get("/hierarchy/tree", response_model=ResponseModel)
 def get_role_hierarchy_tree(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     """获取角色层级树"""
-    roles = db.query(Role).filter(Role.is_active == True).order_by(Role.sort_order).all()
+    roles = (
+        db.query(Role).filter(Role.is_active == True).order_by(Role.sort_order).all()
+    )
 
     # 构建树形结构
-    role_map = {r.id: {
-        "id": r.id,
-        "role_code": r.role_code,
-        "role_name": r.role_name,
-        "parent_id": r.parent_id,
-        "data_scope": r.data_scope,
-        "children": []
-    } for r in roles}
+    role_map = {
+        r.id: {
+            "id": r.id,
+            "role_code": r.role_code,
+            "role_name": r.role_name,
+            "parent_id": r.parent_id,
+            "data_scope": r.data_scope,
+            "children": [],
+        }
+        for r in roles
+    }
 
     tree = []
     for role in roles:
@@ -384,8 +405,7 @@ def update_role_parent(
 
     if role.is_system:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="系统预置角色不允许修改层级"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="系统预置角色不允许修改层级"
         )
 
     # 检查父角色是否存在
@@ -393,15 +413,14 @@ def update_role_parent(
         parent_role = db.query(Role).filter(Role.id == parent_id).first()
         if not parent_role:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="父角色不存在"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="父角色不存在"
             )
 
         # 检查是否形成循环引用
         if _would_create_cycle(db, role_id, parent_id):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="不能将子角色设为父角色（会形成循环引用）"
+                detail="不能将子角色设为父角色（会形成循环引用）",
             )
 
     role.parent_id = parent_id
@@ -414,8 +433,8 @@ def update_role_parent(
             "role_id": role_id,
             "parent_id": parent_id,
             "role_code": role.role_code,
-            "role_name": role.role_name
-        }
+            "role_name": role.role_name,
+        },
     )
 
 
@@ -455,12 +474,14 @@ def get_role_ancestors(
     while current.parent_id is not None:
         parent = db.query(Role).filter(Role.id == current.parent_id).first()
         if parent:
-            ancestors.append({
-                "id": parent.id,
-                "role_code": parent.role_code,
-                "role_name": parent.role_name,
-                "data_scope": parent.data_scope,
-            })
+            ancestors.append(
+                {
+                    "id": parent.id,
+                    "role_code": parent.role_code,
+                    "role_name": parent.role_name,
+                    "data_scope": parent.data_scope,
+                }
+            )
             current = parent
         else:
             break
@@ -468,11 +489,7 @@ def get_role_ancestors(
     return ResponseModel(
         code=200,
         message="获取成功",
-        data={
-            "role_id": role_id,
-            "role_code": role.role_code,
-            "ancestors": ancestors
-        }
+        data={"role_id": role_id, "role_code": role.role_code, "ancestors": ancestors},
     )
 
 
@@ -496,20 +513,24 @@ def get_role_descendants(
         data={
             "role_id": role_id,
             "role_code": role.role_code,
-            "descendants": descendants
-        }
+            "descendants": descendants,
+        },
     )
 
 
 def _collect_descendants(db: Session, parent_id: int, result: list):
     """递归收集所有子孙角色"""
-    children = db.query(Role).filter(Role.parent_id == parent_id, Role.is_active == True).all()
+    children = (
+        db.query(Role).filter(Role.parent_id == parent_id, Role.is_active == True).all()
+    )
     for child in children:
-        result.append({
-            "id": child.id,
-            "role_code": child.role_code,
-            "role_name": child.role_name,
-            "parent_id": child.parent_id,
-            "data_scope": child.data_scope,
-        })
+        result.append(
+            {
+                "id": child.id,
+                "role_code": child.role_code,
+                "role_name": child.role_name,
+                "parent_id": child.parent_id,
+                "data_scope": child.data_scope,
+            }
+        )
         _collect_descendants(db, child.id, result)

@@ -46,24 +46,6 @@ from .timesheet import (
     has_timesheet_approval_access,
     require_timesheet_approval_access,
 )
-from .sales import (
-    can_manage_sales_opportunity,
-    can_set_opportunity_gate,
-    check_sales_approval_permission,
-    check_sales_create_permission,
-    check_sales_delete_permission,
-    check_sales_edit_permission,
-    filter_sales_data_by_scope,
-    filter_sales_finance_data_by_scope,
-    get_sales_data_scope,
-    has_sales_approval_access,
-    has_sales_assessment_access,
-    require_sales_approval_permission,
-    require_sales_assessment_access,
-    require_sales_create_permission,
-    require_sales_delete_permission,
-    require_sales_edit_permission,
-)
 
 # 向后兼容：导出所有原有函数和常量
 __all__ = [
@@ -88,23 +70,6 @@ __all__ = [
     "has_timesheet_approval_access",
     "require_timesheet_approval_access",
     "check_timesheet_approval_permission",
-    # 销售权限
-    "can_manage_sales_opportunity",
-    "can_set_opportunity_gate",
-    "check_sales_approval_permission",
-    "check_sales_create_permission",
-    "check_sales_delete_permission",
-    "check_sales_edit_permission",
-    "filter_sales_data_by_scope",
-    "filter_sales_finance_data_by_scope",
-    "get_sales_data_scope",
-    "has_sales_approval_access",
-    "has_sales_assessment_access",
-    "require_sales_approval_permission",
-    "require_sales_assessment_access",
-    "require_sales_create_permission",
-    "require_sales_delete_permission",
-    "require_sales_edit_permission",
     # 调度器权限
     "has_scheduler_admin_access",
     "require_scheduler_admin_access",
