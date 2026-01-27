@@ -7,10 +7,11 @@ import sys
 import os
 
 # 切换到项目根目录
-os.chdir("/Users/flw/non-standard-automation-pm")
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+os.chdir(project_root)
 
 # 导入必要模块
-sys.path.insert(0, ".")
+sys.path.insert(0, project_root)
 from app.models.base import get_db_session
 from app.models.sales.contracts import Contract
 from app.models.project import Project

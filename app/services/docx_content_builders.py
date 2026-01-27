@@ -3,8 +3,10 @@
 Word文档内容构建工具函数
 """
 
+from __future__ import annotations
+
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 try:
     from docx import Document
@@ -14,6 +16,9 @@ try:
     DOCX_AVAILABLE = True
 except ImportError:
     DOCX_AVAILABLE = False
+
+if TYPE_CHECKING:
+    from docx import Document
 
 
 def setup_document_formatting(doc: Document) -> None:

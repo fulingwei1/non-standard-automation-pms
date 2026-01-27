@@ -9,22 +9,15 @@ Batch: 2
 """
 
 import pytest
-from unittest.mock import MagicMock
 from sqlalchemy.orm import Session
 
-pytestmark = pytest.mark.skip(reason="Import errors - needs review")
-
-# Try to import the service
-try:
-    from app.services.material_transfer_service import MaterialTransferService
-except ImportError:
-    MaterialTransferService = None
-
+pytestmark = pytest.mark.skip(reason="Import errors - needs review: app.models.inventory module not found")
 
 
 @pytest.fixture
 def material_transfer_service(db_session: Session):
     """创建 MaterialTransferService 实例"""
+    from app.services.material_transfer_service import MaterialTransferService
     return MaterialTransferService(db_session)
 
 
@@ -33,6 +26,7 @@ class TestMaterialTransferService:
 
     def test_init(self, db_session: Session):
         """测试服务初始化"""
+        from app.services.material_transfer_service import MaterialTransferService
         service = MaterialTransferService(db_session)
         assert service is not None
         if hasattr(service, 'db'):

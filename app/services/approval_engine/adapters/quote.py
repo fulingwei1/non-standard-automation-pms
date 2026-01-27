@@ -5,12 +5,14 @@
 将报价模块接入统一审批系统
 """
 
+from __future__ import annotations
+
 from decimal import Decimal
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.approval import ApprovalInstance
+from app.models.approval import ApprovalInstance, ApprovalTask
 from app.models.sales.quotes import Quote, QuoteVersion
 
 from .base import ApprovalAdapter

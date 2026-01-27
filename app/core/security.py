@@ -59,6 +59,7 @@ from .permissions import (
     require_scheduler_admin_access,
     require_shortage_report_access,
     require_timesheet_approval_access,
+    check_timesheet_approval_permission,
 )
 
 __all__ = [

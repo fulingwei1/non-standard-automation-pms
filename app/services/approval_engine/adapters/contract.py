@@ -5,11 +5,16 @@
 将合同模块接入统一审批系统
 """
 
-from typing import Any, Dict, Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
+if TYPE_CHECKING:
+    from app.models.sales.contracts import ContractApproval
 
 from sqlalchemy.orm import Session
 
-from app.models.approval import ApprovalInstance
+from app.models.approval import ApprovalInstance, ApprovalTask
 from app.models.sales.contracts import Contract
 
 from .base import ApprovalAdapter
