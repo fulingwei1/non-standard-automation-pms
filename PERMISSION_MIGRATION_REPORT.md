@@ -38,6 +38,7 @@
 
 | 文件 | 修改内容 |
 |-----|---------|
+| `app/api/v1/endpoints/auth.py` | `get_me()` 中的权限查询迁移到新模型 |
 | `app/api/v1/endpoints/roles.py` | `list_permissions()` 和 `update_role_permissions()` 迁移到新模型 |
 | `app/api/v1/endpoints/permissions/matrix.py` | 权限矩阵、角色权限查询全部迁移到新模型 |
 | `app/api/v1/endpoints/admin_stats.py` | 权限统计查询迁移到新表 |
