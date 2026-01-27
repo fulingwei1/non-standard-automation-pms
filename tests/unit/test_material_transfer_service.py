@@ -9,12 +9,16 @@ Batch: 2
 """
 
 import pytest
+from unittest.mock import MagicMock
+from sqlalchemy.orm import Session
+
 pytestmark = pytest.mark.skip(reason="Import errors - needs review")
-# from unittest.mock import MagicMock, patch, Mock
-# from datetime import datetime, date, timedelta
-# from decimal import Decimal
-# from sqlalchemy.orm import Session
-# from app.services.material_transfer_service import MaterialTransferService
+
+# Try to import the service
+try:
+    from app.services.material_transfer_service import MaterialTransferService
+except ImportError:
+    MaterialTransferService = None
 
 
 

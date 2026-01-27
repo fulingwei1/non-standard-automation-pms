@@ -571,7 +571,8 @@ class TestGetPurchaseItemsFromBom:
 
     def test_get_purchase_items_filters_by_source_type(self, db_session: Session):
         """测试只返回采购类型的物料"""
-        from app.models.material import BomItem, Project
+        from app.models.material import BomItem
+        from app.models.project import Project
 
         project = Project(
             project_code="PJ-TEST-001",
@@ -644,7 +645,7 @@ class TestGetPurchaseItemsFromBom:
 
     def test_get_purchase_items_empty_bom(self, db_session: Session):
         """测试空BOM返回空列表"""
-        from app.models.material import Project
+        from app.models.project import Project
 
         project = Project(
             project_code="PJ-TEST-002",
@@ -676,7 +677,7 @@ class TestGetPurchaseItemsFromBom:
 
     def test_get_purchase_items_no_purchase_type(self, db_session: Session):
         """测试没有采购类型物料时返回空列表"""
-        from app.models.material import Project
+        from app.models.project import Project
 
         project = Project(
             project_code="PJ-TEST-003",

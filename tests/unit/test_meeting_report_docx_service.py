@@ -12,7 +12,12 @@ import pytest
 from unittest.mock import MagicMock, patch, Mock
 from datetime import datetime, date, timedelta
 from decimal import Decimal
-from app.services.meeting_report_docx_service import MeetingReportDocxService
+from sqlalchemy.orm import Session
+
+try:
+    from app.services.meeting_report_docx_service import MeetingReportDocxService
+except ImportError:
+    MeetingReportDocxService = None
 
 
 
