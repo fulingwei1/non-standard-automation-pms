@@ -184,8 +184,16 @@ class EcnStateMachine(StateMachine):
             message: 日志消息
             **kwargs: 额外参数
         """
-        # TODO: 实现日志记录到数据库
-        pass
+        from app.models.ecn.log import EcnLog
+
+        log = EcnLog(
+            ecn_id=self.model.id,
+            log_type="STATE_TRANSITION",
+            log_action="transition_log",
+            log_content=message,
+            created_by=kwargs.get("operator_id"),
+        )
+        self.db.add(log)
 
     def _update_change_log(self, from_state, to_state, **kwargs):
         """
@@ -196,8 +204,18 @@ class EcnStateMachine(StateMachine):
             to_state: 目标状态
             **kwargs: 额外参数
         """
-        # TODO: 实现变更日志更新
-        pass
+        from app.models.ecn.log import EcnLog
+
+        log = EcnLog(
+            ecn_id=self.model.id,
+            log_type="STATUS_CHANGE",
+            log_action=f"{from_state}_to_{to_state}",
+            old_status=from_state,
+            new_status=to_state,
+            log_content=kwargs.get("comment", f"状态从{from_state}变更为{to_state}"),
+            created_by=kwargs.get("operator_id"),
+        )
+        self.db.add(log)
 
     # ==================== 辅助方法 ====================
 
