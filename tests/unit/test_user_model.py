@@ -12,7 +12,7 @@ import pytest
 from sqlalchemy.orm import Session
 from datetime import datetime
 
-from app.models.user import User, Role, UserRole, RolePermission, Permission
+from app.models.user import User, Role, UserRole, RoleApiPermission, ApiPermission
 from app.core.auth import verify_password, get_password_hash
 
 
@@ -24,29 +24,29 @@ class TestUserModel:
     def test_user_data(self):
         """测试用户数据"""
         return {
-        "employee_id": 1,
-        "username": "test_user_001",
-        "password": "test_password_123",
-        "email": "test@example.com",
-        "real_name": "测试用户",
-        "department": "测试部门",
-        "position": "测试职位",
-        "is_active": True,
-        "is_superuser": False,
+            "employee_id": 1,
+            "username": "test_user_001",
+            "password": "test_password_123",
+            "email": "test@example.com",
+            "real_name": "测试用户",
+            "department": "测试部门",
+            "position": "测试职位",
+            "is_active": True,
+            "is_superuser": False,
         }
 
     def test_create_user(self, db_session: Session, test_user_data: dict):
         """测试创建用户"""
         user = User(
-        employee_id=test_user_data["employee_id"],
-        username=test_user_data["username"],
-        password_hash=get_password_hash(test_user_data["password"]),
-        email=test_user_data["email"],
-        real_name=test_user_data["real_name"],
-        department=test_user_data["department"],
-        position=test_user_data["position"],
-        is_active=test_user_data["is_active"],
-        is_superuser=test_user_data["is_superuser"],
+            employee_id=test_user_data["employee_id"],
+            username=test_user_data["username"],
+            password_hash=get_password_hash(test_user_data["password"]),
+            email=test_user_data["email"],
+            real_name=test_user_data["real_name"],
+            department=test_user_data["department"],
+            position=test_user_data["position"],
+            is_active=test_user_data["is_active"],
+            is_superuser=test_user_data["is_superuser"],
         )
         db_session.add(user)
         db_session.commit()
@@ -68,12 +68,12 @@ class TestUserModel:
         hashed = get_password_hash(password)
 
         user = User(
-        employee_id=1,
-        username="test_user_002",
-        password_hash=hashed,
-        email="test2@example.com",
-        is_active=True,
-        is_superuser=False,
+            employee_id=1,
+            username="test_user_002",
+            password_hash=hashed,
+            email="test2@example.com",
+            is_active=True,
+            is_superuser=False,
         )
         db_session.add(user)
         db_session.commit()
@@ -91,12 +91,12 @@ class TestUserModel:
     def test_user_soft_delete(self, db_session: Session):
         """测试用户软删除"""
         user = User(
-        employee_id=1,
-        username="test_user_003",
-        password_hash=get_password_hash("password"),
-        email="test3@example.com",
-        is_active=True,
-        is_superuser=False,
+            employee_id=1,
+            username="test_user_003",
+            password_hash=get_password_hash("password"),
+            email="test3@example.com",
+            is_active=True,
+            is_superuser=False,
         )
         db_session.add(user)
         db_session.commit()
@@ -117,22 +117,22 @@ class TestUserModel:
         """测试用户关系"""
         # 创建角色
         role = Role(
-        role_code="TEST_ROLE",
-        role_name="测试角色",
-        description="这是一个测试角色",
-        is_active=True,
+            role_code="TEST_ROLE",
+            role_name="测试角色",
+            description="这是一个测试角色",
+            is_active=True,
         )
         db_session.add(role)
         db_session.commit()
 
         # 创建用户
         user = User(
-        employee_id=1,
-        username="test_user_004",
-        password_hash=get_password_hash("password"),
-        email="test4@example.com",
-        is_active=True,
-        is_superuser=False,
+            employee_id=1,
+            username="test_user_004",
+            password_hash=get_password_hash("password"),
+            email="test4@example.com",
+            is_active=True,
+            is_superuser=False,
         )
         db_session.add(user)
         db_session.commit()
@@ -140,8 +140,8 @@ class TestUserModel:
 
         # 创建用户角色关联
         user_role = UserRole(
-        user_id=user.id,
-        role_id=role.id,
+            user_id=user.id,
+            role_id=role.id,
         )
         db_session.add(user_role)
         db_session.commit()
@@ -159,12 +159,12 @@ class TestUserModel:
     def test_superuser_privileges(self, db_session: Session):
         """测试超级管理员权限"""
         superuser = User(
-        employee_id=1,
-        username="super_user",
-        password_hash=get_password_hash("password"),
-        email="super@example.com",
-        is_active=True,
-        is_superuser=True,
+            employee_id=1,
+            username="super_user",
+            password_hash=get_password_hash("password"),
+            email="super@example.com",
+            is_active=True,
+            is_superuser=True,
         )
         db_session.add(superuser)
         db_session.commit()
@@ -179,12 +179,12 @@ class TestUserModel:
     def test_last_login_update(self, db_session: Session):
         """测试最后登录时间更新"""
         user = User(
-        employee_id=1,
-        username="test_user_005",
-        password_hash=get_password_hash("password"),
-        email="test5@example.com",
-        is_active=True,
-        is_superuser=False,
+            employee_id=1,
+            username="test_user_005",
+            password_hash=get_password_hash("password"),
+            email="test5@example.com",
+            is_active=True,
+            is_superuser=False,
         )
         db_session.add(user)
         db_session.commit()
@@ -210,12 +210,13 @@ class TestUserModel:
             """测试角色数据"""
 
             # 使用动态角色代码避免唯一约束冲突
+
         role_code = f"QA_{datetime.now().timestamp()}"
         return {
-        "role_code": role_code,
-        "role_name": "质检员",
-        "description": "质量检查角色",
-        "is_active": True,
+            "role_code": role_code,
+            "role_name": "质检员",
+            "description": "质量检查角色",
+            "is_active": True,
         }
 
         def test_create_role(self, db_session: Session, test_role_data: dict):
@@ -230,34 +231,34 @@ class TestUserModel:
         """测试角色权限关联"""
         # 创建角色
         role = Role(
-        role_code="QA",
-        role_name="质检员",
-        description="质量检查角色",
-        is_active=True,
+            role_code="QA",
+            role_name="质检员",
+            description="质量检查角色",
+            is_active=True,
         )
         db_session.add(role)
         db_session.commit()
 
         # 创建权限
-        permission = Permission(
-        permission_code="project:read",
-        permission_name="项目读取",
-        description="读取项目信息",
+        permission = ApiPermission(
+            permission_code="project:read",
+            permission_name="项目读取",
+            description="读取项目信息",
         )
         db_session.add(permission)
         db_session.commit()
 
         # 创建角色权限关联
-        role_permission = RolePermission(
-        role_id=role.id,
-        permission_id=permission.id,
+        role_permission = RoleApiPermission(
+            role_id=role.id,
+            permission_id=permission.id,
         )
         db_session.add(role_permission)
         db_session.commit()
 
         # 验证关系
-        assert len(list(role.permissions)) >= 1
-        assert permission in [rp.permission for rp in role.permissions]
+        assert len(list(role.api_permissions)) >= 1
+        assert permission in [rp.permission for rp in role.api_permissions]
 
         # 清理
         db_session.delete(role_permission)

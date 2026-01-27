@@ -13,7 +13,7 @@ from fastapi.testclient import TestClient
 from app.core.config import settings
 from app.core.security import get_password_hash
 from app.models.organization import Employee
-from app.models.user import Permission, Role, RolePermission, User, UserRole
+from app.models.user import ApiPermission, Role, RoleApiPermission, User, UserRole
 
 
 class TestIssueCRUD:
@@ -36,9 +36,7 @@ class TestIssueCRUD:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/issues",
-            json=issue_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/issues", json=issue_data, headers=headers
         )
 
         assert response.status_code == 201
@@ -58,8 +56,7 @@ class TestIssueCRUD:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/issues/{issue_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/issues/{issue_id}", headers=headers
         )
 
         assert response.status_code == 200
@@ -74,8 +71,7 @@ class TestIssueCRUD:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/issues?page=1&page_size=10",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/issues?page=1&page_size=10", headers=headers
         )
 
         assert response.status_code == 200
@@ -83,7 +79,9 @@ class TestIssueCRUD:
         assert "items" in data or isinstance(data, list)
         assert "total" in data or len(data) >= 0
 
-    def test_list_issues_ignores_all_filters(self, client: TestClient, admin_token: str):
+    def test_list_issues_ignores_all_filters(
+        self, client: TestClient, admin_token: str
+    ):
         """测试后端兼容 status=all 等筛选值"""
         if not admin_token:
             pytest.skip("Admin token not available")
@@ -94,7 +92,7 @@ class TestIssueCRUD:
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
             f"{settings.API_V1_PREFIX}/issues?status=all&severity=all&category=all&priority=all&page=1&page_size=10",
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -106,7 +104,7 @@ class TestIssueCRUD:
         # 兼容 search 参数（老前端可能传 search 而不是 keyword）
         response_search = client.get(
             f"{settings.API_V1_PREFIX}/issues?search=测试问题&page=1&page_size=10",
-            headers=headers
+            headers=headers,
         )
         assert response_search.status_code == 200
         data_search = response_search.json()
@@ -129,7 +127,7 @@ class TestIssueCRUD:
         response = client.put(
             f"{settings.API_V1_PREFIX}/issues/{issue_id}",
             json=update_data,
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -147,8 +145,7 @@ class TestIssueCRUD:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.delete(
-            f"{settings.API_V1_PREFIX}/issues/{issue_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/issues/{issue_id}", headers=headers
         )
 
         # 删除应该是软删除，状态码可能是200或204
@@ -176,7 +173,7 @@ class TestIssueOperations:
         response = client.post(
             f"{settings.API_V1_PREFIX}/issues/{issue_id}/assign",
             json=assign_data,
-            headers=headers
+            headers=headers,
         )
 
         # 如果用户不存在可能返回404，这里只检查格式
@@ -202,7 +199,7 @@ class TestIssueOperations:
         response = client.post(
             f"{settings.API_V1_PREFIX}/issues/{issue_id}/resolve",
             json=resolve_data,
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -227,7 +224,7 @@ class TestIssueOperations:
         response = client.post(
             f"{settings.API_V1_PREFIX}/issues/{issue_id}/close",
             json=close_data,
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -238,7 +235,9 @@ class TestIssueOperations:
 class TestIssueBlockingAlert:
     """阻塞问题预警集成测试"""
 
-    def test_create_blocking_issue_creates_alert(self, client: TestClient, admin_token: str):
+    def test_create_blocking_issue_creates_alert(
+        self, client: TestClient, admin_token: str
+    ):
         """测试创建阻塞问题时自动创建预警"""
         if not admin_token:
             pytest.skip("Admin token not available")
@@ -256,9 +255,7 @@ class TestIssueBlockingAlert:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/issues",
-            json=issue_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/issues", json=issue_data, headers=headers
         )
 
         assert response.status_code == 201
@@ -268,7 +265,9 @@ class TestIssueBlockingAlert:
         # 这里只验证问题创建成功，预警创建在后台完成
         assert response.json()["is_blocking"] is True
 
-    def test_resolve_blocking_issue_closes_alert(self, client: TestClient, admin_token: str):
+    def test_resolve_blocking_issue_closes_alert(
+        self, client: TestClient, admin_token: str
+    ):
         """测试解决阻塞问题时自动关闭预警"""
         if not admin_token:
             pytest.skip("Admin token not available")
@@ -282,7 +281,7 @@ class TestIssueBlockingAlert:
             update_response = client.put(
                 f"{settings.API_V1_PREFIX}/issues/{issue_id}",
                 json={"is_blocking": True},
-                headers=headers
+                headers=headers,
             )
 
             # 如果更新失败（可能是数据库约束问题），跳过测试
@@ -294,7 +293,7 @@ class TestIssueBlockingAlert:
             response = client.post(
                 f"{settings.API_V1_PREFIX}/issues/{issue_id}/resolve",
                 json=resolve_data,
-                headers=headers
+                headers=headers,
             )
 
             # 如果解决失败也可能是数据库问题
@@ -309,11 +308,15 @@ class TestIssueBlockingAlert:
 
 
 class TestIssueDataScope:
-    def _ensure_perm(self, db_session, code: str, name: str) -> Permission:
-        perm = db_session.query(Permission).filter(Permission.permission_code == code).first()
+    def _ensure_perm(self, db_session, code: str, name: str) -> ApiPermission:
+        perm = (
+            db_session.query(ApiPermission)
+            .filter(ApiPermission.permission_code == code)
+            .first()
+        )
         if perm:
             return perm
-        perm = Permission(
+        perm = ApiPermission(
             permission_code=code,
             permission_name=name,
             module="issue",
@@ -326,7 +329,9 @@ class TestIssueDataScope:
         db_session.refresh(perm)
         return perm
 
-    def _ensure_role(self, db_session, role_code: str, role_name: str, data_scope: str) -> Role:
+    def _ensure_role(
+        self, db_session, role_code: str, role_name: str, data_scope: str
+    ) -> Role:
         role = db_session.query(Role).filter(Role.role_code == role_code).first()
         if role:
             if role.data_scope != data_scope:
@@ -346,18 +351,29 @@ class TestIssueDataScope:
         db_session.refresh(role)
         return role
 
-    def _assign_perm_to_role(self, db_session, role: Role, perm: Permission) -> None:
+    def _assign_perm_to_role(self, db_session, role: Role, perm: ApiPermission) -> None:
         exists = (
-            db_session.query(RolePermission)
-            .filter(RolePermission.role_id == role.id, RolePermission.permission_id == perm.id)
+            db_session.query(RoleApiPermission)
+            .filter(
+                RoleApiPermission.role_id == role.id,
+                RoleApiPermission.permission_id == perm.id,
+            )
             .first()
         )
         if exists:
             return
-        db_session.add(RolePermission(role_id=role.id, permission_id=perm.id))
+        db_session.add(RoleApiPermission(role_id=role.id, permission_id=perm.id))
         db_session.commit()
 
-    def _create_user(self, db_session, username: str, password: str, real_name: str, department: str, role: Role) -> User:
+    def _create_user(
+        self,
+        db_session,
+        username: str,
+        password: str,
+        real_name: str,
+        department: str,
+        role: Role,
+    ) -> User:
         user = db_session.query(User).filter(User.username == username).first()
         if user:
             return user
@@ -406,8 +422,12 @@ class TestIssueDataScope:
         self._assign_perm_to_role(db_session, role_own, perm_read)
         self._assign_perm_to_role(db_session, role_own, perm_create)
 
-        user1 = self._create_user(db_session, "issue_u1", "u1pass", "用户一", "工程部", role_own)
-        user2 = self._create_user(db_session, "issue_u2", "u2pass", "用户二", "销售部", role_own)
+        user1 = self._create_user(
+            db_session, "issue_u1", "u1pass", "用户一", "工程部", role_own
+        )
+        user2 = self._create_user(
+            db_session, "issue_u2", "u2pass", "用户二", "销售部", role_own
+        )
 
         token1 = self._login(client, "issue_u1", "u1pass")
         token2 = self._login(client, "issue_u2", "u2pass")
@@ -434,21 +454,29 @@ class TestIssueDataScope:
             "is_blocking": False,
         }
 
-        r1 = client.post(f"{settings.API_V1_PREFIX}/issues", json=issue_data_1, headers=headers1)
+        r1 = client.post(
+            f"{settings.API_V1_PREFIX}/issues", json=issue_data_1, headers=headers1
+        )
         assert r1.status_code == 201
         id1 = r1.json()["id"]
 
-        r2 = client.post(f"{settings.API_V1_PREFIX}/issues", json=issue_data_2, headers=headers2)
+        r2 = client.post(
+            f"{settings.API_V1_PREFIX}/issues", json=issue_data_2, headers=headers2
+        )
         assert r2.status_code == 201
         id2 = r2.json()["id"]
 
-        list1 = client.get(f"{settings.API_V1_PREFIX}/issues?page=1&page_size=50", headers=headers1)
+        list1 = client.get(
+            f"{settings.API_V1_PREFIX}/issues?page=1&page_size=50", headers=headers1
+        )
         assert list1.status_code == 200
         items1 = list1.json()["items"]
         assert any(it["id"] == id1 for it in items1)
         assert all(it["id"] != id2 for it in items1)
 
-        list2 = client.get(f"{settings.API_V1_PREFIX}/issues?page=1&page_size=50", headers=headers2)
+        list2 = client.get(
+            f"{settings.API_V1_PREFIX}/issues?page=1&page_size=50", headers=headers2
+        )
         assert list2.status_code == 200
         items2 = list2.json()["items"]
         assert any(it["id"] == id2 for it in items2)
@@ -465,9 +493,15 @@ class TestIssueDataScope:
         self._assign_perm_to_role(db_session, role_own, perm_create)
         self._assign_perm_to_role(db_session, role_dept, perm_read)
 
-        dept_user = self._create_user(db_session, "dept_user", "dpass", "部门用户", "工程部", role_own)
-        other_user = self._create_user(db_session, "other_user", "opass", "其他用户", "销售部", role_own)
-        dept_mgr = self._create_user(db_session, "dept_mgr", "mpass", "部门经理", "工程部", role_dept)
+        dept_user = self._create_user(
+            db_session, "dept_user", "dpass", "部门用户", "工程部", role_own
+        )
+        other_user = self._create_user(
+            db_session, "other_user", "opass", "其他用户", "销售部", role_own
+        )
+        dept_mgr = self._create_user(
+            db_session, "dept_mgr", "mpass", "部门经理", "工程部", role_dept
+        )
 
         dept_user_token = self._login(client, "dept_user", "dpass")
         other_user_token = self._login(client, "other_user", "opass")
@@ -529,8 +563,7 @@ class TestIssueStatistics:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/issues/statistics/overview",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/issues/statistics/overview", headers=headers
         )
 
         assert response.status_code == 200
@@ -553,7 +586,7 @@ class TestIssueStatistics:
         response = client.get(
             f"{settings.API_V1_PREFIX}/issues/statistics/trend",
             params=params,
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -568,7 +601,7 @@ class TestIssueStatistics:
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
             f"{settings.API_V1_PREFIX}/issues/statistics/snapshots?page=1&page_size=10",
-            headers=headers
+            headers=headers,
         )
 
         # 端点可能不存在（返回404）或返回数据
@@ -591,7 +624,7 @@ class TestIssueTemplates:
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
             f"{settings.API_V1_PREFIX}/issue-templates?page=1&page_size=10",
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -605,6 +638,7 @@ class TestIssueTemplates:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         import uuid
+
         unique_suffix = uuid.uuid4().hex[:8].upper()
         template_data = {
             "template_name": "测试模板",
@@ -620,7 +654,7 @@ class TestIssueTemplates:
         response = client.post(
             f"{settings.API_V1_PREFIX}/issue-templates",
             json=template_data,
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 201
@@ -645,7 +679,7 @@ class TestIssueTemplates:
         response = client.post(
             f"{settings.API_V1_PREFIX}/issue-templates/{template_id}/create-issue",
             json=issue_data,
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 201

@@ -24,7 +24,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sqlalchemy import func, text
 
 from app.models.base import get_db_session, get_engine
-from app.models.user import Role, RolePermission, UserRole
+from app.models.user import Role, UserRole
 
 
 def is_chinese_role_code(role_code: str) -> bool:

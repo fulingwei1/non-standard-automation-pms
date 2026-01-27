@@ -37,9 +37,9 @@ from app.models.organization import Employee
 from app.models.project import Customer, Machine, Project, ProjectMember
 from app.models.task_center import TaskApprovalWorkflow, TaskUnified
 from app.models.user import (
-    Permission,
+    ApiPermission,
     Role,
-    RolePermission,
+    RoleApiPermission,
     User,
     UserRole,
 )
@@ -492,12 +492,14 @@ ENGINEER_PERMISSION_SPECS: Tuple[Tuple[str, str], ...] = (
 )
 
 
-def _ensure_permission(db: Session, code: str, name: str) -> Permission:
-    permission = db.query(Permission).filter(Permission.permission_code == code).first()
+def _ensure_permission(db: Session, code: str, name: str) -> ApiPermission:
+    permission = (
+        db.query(ApiPermission).filter(ApiPermission.permission_code == code).first()
+    )
     if permission:
         return permission
 
-    permission = Permission(
+    permission = ApiPermission(
         permission_code=code,
         permission_name=name,
         module="engineer",
@@ -626,15 +628,15 @@ def _ensure_role_permissions(
     for code, name in permission_specs:
         permission = _ensure_permission(db, code, name)
         exists = (
-            db.query(RolePermission)
+            db.query(RoleApiPermission)
             .filter(
-                RolePermission.role_id == role.id,
-                RolePermission.permission_id == permission.id,
+                RoleApiPermission.role_id == role.id,
+                RoleApiPermission.permission_id == permission.id,
             )
             .first()
         )
         if not exists:
-            db.add(RolePermission(role_id=role.id, permission_id=permission.id))
+            db.add(RoleApiPermission(role_id=role.id, permission_id=permission.id))
             changed = True
     if changed:
         db.commit()

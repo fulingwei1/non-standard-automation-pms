@@ -44,7 +44,7 @@ class TestBasePermissionChecks:
     @pytest.fixture
     def setup_permissions(self, db_session: Session):
         """设置测试权限和角色"""
-        from app.models.user import Role, Permission, RolePermission
+        from app.models.user import Role, ApiPermission, RoleApiPermission
 
         # 创建测试权限
         permissions_to_create = [
@@ -58,12 +58,12 @@ class TestBasePermissionChecks:
 
         for perm_code, perm_name, module in permissions_to_create:
             existing = (
-            db_session.query(Permission)
-            .filter(Permission.permission_code == perm_code)
+            db_session.query(ApiPermission)
+            .filter(ApiPermission.permission_code == perm_code)
             .first()
             )
             if not existing:
-                perm = Permission(
+                perm = ApiPermission(
                 permission_code=perm_code,
                 permission_name=perm_name,
                 module=module,
@@ -99,38 +99,38 @@ class TestBasePermissionChecks:
                         # 为角色分配权限
                         for perm_code in ["project:read", "project:write"]:
                             perm = (
-                            db_session.query(Permission)
-                            .filter(Permission.permission_code == perm_code)
+                            db_session.query(ApiPermission)
+                            .filter(ApiPermission.permission_code == perm_code)
                             .first()
                             )
                             if (
                             perm
-                            and not db_session.query(RolePermission)
+                            and not db_session.query(RoleApiPermission)
                             .filter(
-                            RolePermission.role_id == role_pm.id,
-                            RolePermission.permission_id == perm.id,
+                            RoleApiPermission.role_id == role_pm.id,
+                            RoleApiPermission.permission_id == perm.id,
                             )
                             .first()
                             ):
-                            rp = RolePermission(role_id=role_pm.id, permission_id=perm.id)
+                            rp = RoleApiPermission(role_id=role_pm.id, permission_id=perm.id)
                             db_session.add(rp)
 
                             for perm_code in ["procurement:read", "procurement:write"]:
                                 perm = (
-                                db_session.query(Permission)
-                                .filter(Permission.permission_code == perm_code)
+                                db_session.query(ApiPermission)
+                                .filter(ApiPermission.permission_code == perm_code)
                                 .first()
                                 )
                                 if (
                                 perm
-                                and not db_session.query(RolePermission)
+                                and not db_session.query(RoleApiPermission)
                                 .filter(
-                                RolePermission.role_id == role_procurement.id,
-                                RolePermission.permission_id == perm.id,
+                                RoleApiPermission.role_id == role_procurement.id,
+                                RoleApiPermission.permission_id == perm.id,
                                 )
                                 .first()
                                 ):
-                                rp = RolePermission(role_id=role_procurement.id, permission_id=perm.id)
+                                rp = RoleApiPermission(role_id=role_procurement.id, permission_id=perm.id)
                                 db_session.add(rp)
 
                                 db_session.commit()
