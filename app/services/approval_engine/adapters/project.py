@@ -6,11 +6,13 @@
 项目审批主要用于：项目立项、项目变更、项目结项等场景
 """
 
-from typing import Any, Dict, Optional
+from __future__ import annotations
+
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.approval import ApprovalInstance
+from app.models.approval import ApprovalInstance, ApprovalTask
 from app.models.project.core import Project
 
 from .base import ApprovalAdapter

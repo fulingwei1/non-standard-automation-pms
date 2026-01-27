@@ -16,12 +16,10 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.models.ecn import Ecn
-from app.services.status_handlers import (
-    AcceptanceStatusHandler,
-    ContractStatusHandler,
-    ECNStatusHandler,
-    MaterialStatusHandler,
-)
+from app.services.status_handlers.acceptance_handler import AcceptanceStatusHandler
+from app.services.status_handlers.contract_handler import ContractStatusHandler
+from app.services.status_handlers.ecn_handler import ECNStatusHandler
+from app.services.status_handlers.material_handler import MaterialStatusHandler
 
 
 # ============================================================================

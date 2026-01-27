@@ -6,15 +6,14 @@
 """
 
 import pytest
-# from fastapi import HTTPException
-# from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session
 
+from app.models.enums import IssueStatusEnum
 from tests.factories import (
     AcceptanceIssueFactory,
     AcceptanceOrderFactory,
     UserFactory,
 )
-from app.models.enums import IssueStatusEnum
 
 
 class TestReadAcceptanceIssue:

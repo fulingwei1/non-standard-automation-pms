@@ -6,6 +6,7 @@ Tests coverage for:
 
 import pytest
 from datetime import date
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from sqlalchemy.orm import Session

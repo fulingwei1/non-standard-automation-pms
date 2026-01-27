@@ -31,23 +31,22 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.models.material import (
-    MaterialCategory,
-    Supplier,
     BomHeader,
+    MaterialCategory,
 )
+from app.models.vendor import Vendor as Supplier
 from app.models.purchase import PurchaseOrder
 from app.models.ecn import Ecn
 from app.models.acceptance import (
     AcceptanceOrder,
     AcceptanceTemplate,
 )
-from app.models.outsourcing import (
-    OutsourcingOrder,
-    OutsourcingVendor,
-)
-from app.models.alert import AlertRule, AlertRecord
+from app.models.outsourcing import OutsourcingOrder
+from app.models.vendor import Vendor as OutsourcingVendor
+from app.models.alert import AlertRecord, AlertRule
 from app.models.issue import Issue
-from app.models.project import Project, Machine
+from app.models.project import Machine, Project
+from app.models.shortage import ShortageReport
 
 
 # ============================================================================
@@ -1009,9 +1008,9 @@ class TestOutsourcingOrdersAPI:
     @pytest.fixture
     def test_vendor(self, db_session: Session):
         vendor = OutsourcingVendor(
-            vendor_code="OS-VENDOR-001",
-            vendor_name="测试外协商",
-            vendor_type="PROCESSING",
+            supplier_code="OS-VENDOR-001",
+            supplier_name="测试外协商",
+            vendor_type="OUTSOURCING",
             contact_person="赵六",
             contact_phone="13600000000",
             status="ACTIVE",

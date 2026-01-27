@@ -9,9 +9,12 @@ Batch: 2
 """
 
 import pytest
-from unittest.mock import MagicMock, patch, Mock
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
+from unittest.mock import MagicMock, Mock, patch
+
+from sqlalchemy.orm import Session
+
 from app.services.meeting_report_docx_service import MeetingReportDocxService
 
 

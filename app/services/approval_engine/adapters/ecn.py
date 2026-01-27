@@ -6,14 +6,19 @@ ECN审批适配器
 ECN审批较为复杂，包含多部门评估（会签）环节
 """
 
-from typing import Any, Dict, List, Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.approval import ApprovalInstance
+from app.models.approval import ApprovalInstance, ApprovalTask
 from app.models.ecn import Ecn, EcnEvaluation
 
 from .base import ApprovalAdapter
+
+if TYPE_CHECKING:
+    from app.models.ecn import EcnApproval
 
 
 class EcnApprovalAdapter(ApprovalAdapter):

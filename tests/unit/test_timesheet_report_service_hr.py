@@ -4,14 +4,20 @@ Tests coverage for:
 - app.services.timesheet_report_service.TimesheetReportService
 """
 
+from __future__ import annotations
+
 import pytest
 from decimal import Decimal
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
 from sqlalchemy.orm import Session
 
-from app.models.user import User
 from app.models.organization import Department
+from app.models.user import User
+
+if TYPE_CHECKING:
+    from app.services.timesheet_report_service import TimesheetReportService
 
 
 class TestTimesheetReportServiceInit:

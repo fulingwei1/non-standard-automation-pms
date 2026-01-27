@@ -5,11 +5,13 @@
 将工时模块接入统一审批系统
 """
 
-from typing import Any, Dict, Optional
+from __future__ import annotations
+
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.approval import ApprovalInstance
+from app.models.approval import ApprovalInstance, ApprovalTask
 from app.models.timesheet import Timesheet
 
 from .base import ApprovalAdapter

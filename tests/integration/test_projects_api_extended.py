@@ -15,11 +15,12 @@ from decimal import Decimal
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.main import app
-from app.models.material import Material, Supplier
-from app.models.project import Project, Customer
-from app.models.purchase import PurchaseOrder, PurchaseOrderItem
 from app.core.config import settings
+from app.main import app
+from app.models.material import Material
+from app.models.project import Customer, Project
+from app.models.purchase import PurchaseOrder, PurchaseOrderItem
+from app.models.vendor import Vendor as Supplier
 
 
 @pytest.mark.api

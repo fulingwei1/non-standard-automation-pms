@@ -4,20 +4,26 @@
 整合所有通知渠道，提供统一接口
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
-from typing import Dict, List, Optional, Any
 from hashlib import md5
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.notification import NotificationSettings
 from app.models.alert import AlertNotification
-from app.services.channel_handlers.base import NotificationRequest, NotificationResult
+from app.models.notification import NotificationSettings
 from app.services.channel_handlers.base import (
     NotificationChannel,
     NotificationPriority,
+    NotificationRequest,
+    NotificationResult,
 )
+
+if TYPE_CHECKING:
+    from app.models.alert import Alert
 
 
 class NotificationService:
