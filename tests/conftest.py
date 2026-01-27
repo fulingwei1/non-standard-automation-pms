@@ -23,7 +23,7 @@ os.environ["REDIS_URL"] = ""
 os.environ.setdefault("ENABLE_SCHEDULER", "false")
 
 import uuid
-from typing import Callable, Dict, Generator, Iterable, Tuple
+from typing import Callable, Dict, Generator, Iterable, Optional, Tuple
 
 import pytest
 from fastapi.testclient import TestClient
@@ -439,7 +439,7 @@ def db_session() -> Generator[Session, None, None]:
 _token_cache: Dict[str, str] = {}
 
 
-def _get_cached_token(username: str) -> str | None:
+def _get_cached_token(username: str) -> Optional[str]:
     """
     从缓存获取 token，避免重复登录请求
 
