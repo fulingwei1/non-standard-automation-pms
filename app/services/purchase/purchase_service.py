@@ -33,7 +33,7 @@ class PurchaseService:
         """获取采购订单列表"""
         # Note: items关系使用lazy='dynamic'，不支持selectinload
         query = self.db.query(PurchaseOrder).options(
-            joinedload(PurchaseOrder.supplier),
+            joinedload(PurchaseOrder.vendor),
             joinedload(PurchaseOrder.project)
         )
 
@@ -50,19 +50,19 @@ class PurchaseService:
         """根据ID获取采购订单"""
         # Note: items关系使用lazy='dynamic'，不支持selectinload
         return self.db.query(PurchaseOrder).options(
-            joinedload(PurchaseOrder.supplier),
+            joinedload(PurchaseOrder.vendor),
             joinedload(PurchaseOrder.project)
         ).filter(PurchaseOrder.id == order_id).first()
 
     def create_purchase_order(self, order_data: Dict[str, Any]) -> PurchaseOrder:
         """创建采购订单"""
         purchase_order = PurchaseOrder(
-            order_code=order_data.get('order_code'),
+            order_no=order_data.get('order_code') or order_data.get('order_no'),
             supplier_id=order_data.get('supplier_id'),
             project_id=order_data.get('project_id'),
             total_amount=order_data.get('total_amount'),
             order_date=order_data.get('order_date'),
-            expected_date=order_data.get('expected_date'),
+            required_date=order_data.get('expected_date'),
             status='DRAFT'
         )
 
@@ -71,13 +71,16 @@ class PurchaseService:
 
         # 创建订单项
         items = order_data.get('items', [])
-        for item_data in items:
+        for idx, item_data in enumerate(items):
             item = PurchaseOrderItem(
                 order_id=purchase_order.id,
+                item_no=idx + 1,
                 material_id=item_data.get('material_id'),
+                material_code=item_data.get('material_code', ''),
+                material_name=item_data.get('material_name', ''),
                 quantity=item_data.get('quantity'),
                 unit_price=item_data.get('unit_price'),
-                total_amount=item_data.get('total_amount')
+                amount=item_data.get('total_amount') or item_data.get('amount', 0)
             )
             self.db.add(item)
 
@@ -121,8 +124,7 @@ class PurchaseService:
                          status: Optional[str] = None) -> List[GoodsReceipt]:
         """获取收货记录列表"""
         query = self.db.query(GoodsReceipt).options(
-            joinedload(GoodsReceipt.order),
-            joinedload(GoodsReceipt.supplier)
+            joinedload(GoodsReceipt.order)
         )
 
         if order_id:
@@ -135,9 +137,10 @@ class PurchaseService:
     def create_goods_receipt(self, receipt_data: Dict[str, Any]) -> GoodsReceipt:
         """创建收货记录"""
         receipt = GoodsReceipt(
+            receipt_no=receipt_data.get('receipt_no', f"GR-{datetime.now().strftime('%Y%m%d%H%M%S')}"),
             order_id=receipt_data.get('order_id'),
+            supplier_id=receipt_data.get('supplier_id', 0),
             receipt_date=receipt_data.get('receipt_date'),
-            receiver_name=receipt_data.get('receiver_name'),
             status='COMPLETED'
         )
 
@@ -177,13 +180,12 @@ class PurchaseService:
     def create_purchase_request(self, request_data: Dict[str, Any]) -> PurchaseRequest:
         """创建采购申请"""
         request = PurchaseRequest(
-            request_code=request_data.get('request_code'),
+            request_no=request_data.get('request_code') or request_data.get('request_no'),
             project_id=request_data.get('project_id'),
-            requester_id=request_data.get('requester_id'),
-            title=request_data.get('title'),
-            description=request_data.get('description'),
+            requested_by=request_data.get('requester_id'),
+            request_reason=request_data.get('description') or request_data.get('title'),
             total_amount=request_data.get('total_amount'),
-            expected_date=request_data.get('expected_date'),
+            required_date=request_data.get('expected_date'),
             status='DRAFT'
         )
 
@@ -212,11 +214,11 @@ class PurchaseService:
 
         # 创建采购订单
         order = PurchaseOrder(
-            order_code=f'PO-{datetime.now().strftime("%Y%m%d")}-{request.id:04d}',
+            order_no=f'PO-{datetime.now().strftime("%Y%m%d")}-{request.id:04d}',
             supplier_id=supplier_id,
             project_id=request.project_id,
             total_amount=request.total_amount,
-            request_id=request_id,
+            source_request_id=request_id,
             status='DRAFT'
         )
 
