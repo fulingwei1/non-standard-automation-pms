@@ -418,19 +418,20 @@ def db_session() -> Generator[Session, None, None]:
     提供与应用相同的数据库会话，供测试直接操作数据库数据
 
     每个测试结束后自动回滚，确保测试隔离：
-    - 使用事务包装所有操作
-    - 测试结束时回滚，不提交数据
+    - 测试结束时回滚未提交的更改
     - 避免测试间相互影响
+
+    注意：不使用 begin_nested() (savepoint) 因为 SQLite :memory: 在
+    多会话场景下不支持跨会话的 savepoint。测试隔离通过 session 级别的
+    init_db(drop_all=True) 保证。
     """
     session: Session = SessionLocal()
-    transaction = session.begin_nested()
 
     try:
         yield session
     finally:
-        # 强制回滚，不提交任何数据到数据库
-        if transaction.is_active:
-            transaction.rollback()
+        # 回滚所有未提交的更改
+        session.rollback()
         session.close()
 
 

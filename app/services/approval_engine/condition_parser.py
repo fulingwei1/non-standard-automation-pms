@@ -46,21 +46,18 @@ class ConditionEvaluator:
     def _register_filters(self):
         """注册Jinja2过滤器"""
 
-        @self._jinja_env.filter("length")
         def length_filter(value):
             """计算长度"""
             if value is None:
                 return 0
             return len(value)
 
-        @self._jinja_env.filter("sum_by")
         def sum_by_filter(items, field):
             """按字段求和"""
             if not items:
                 return 0
             return sum(item.get(field, 0) for item in items if item)
 
-        @self._jinja_env.filter("count_by")
         def count_by_filter(items, field, value=None):
             """按字段计数"""
             if not items:
@@ -69,7 +66,6 @@ class ConditionEvaluator:
                 return len(items)
             return len([item for item in items if item.get(field) == value])
 
-        @self._jinja_env.filter("percentage")
         def percentage_filter(value, decimals=1):
             """转百分比"""
             if value is None:
@@ -79,10 +75,16 @@ class ConditionEvaluator:
             except (TypeError, ValueError):
                 return 0
 
-        @self._jinja_env.filter("default")
         def default_filter(value, default_value):
             """默认值"""
             return value if value is not None else default_value
+
+        # 使用正确的 Jinja2 API 注册过滤器
+        self._jinja_env.filters["length"] = length_filter
+        self._jinja_env.filters["sum_by"] = sum_by_filter
+        self._jinja_env.filters["count_by"] = count_by_filter
+        self._jinja_env.filters["percentage"] = percentage_filter
+        self._jinja_env.filters["default"] = default_filter
 
     def evaluate(self, expression: str, context: Dict[str, Any]) -> Any:
         """
