@@ -16,7 +16,7 @@ from app.models.production import WorkOrder, Workstation
 from app.models.stage_instance import ProjectStageInstance
 from app.models.user import User
 from app.models.project import Project
-from app.models.sales import Customer
+from app.models.project.customer import Customer
 
 
 @pytest.mark.integration

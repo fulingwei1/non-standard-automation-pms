@@ -47,6 +47,7 @@ from app.models.alert import AlertRule, AlertRecord
 from app.models.issue import Issue
 from app.models.project import Project, Machine
 from app.models.vendor import Vendor
+from app.models.shortage.reports import ShortageReport
 
 # Vendor 模型替代了历史上的 Supplier/OutsourcingVendor，这里保持别名兼容
 Supplier = Vendor
