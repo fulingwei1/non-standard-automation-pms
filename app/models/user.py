@@ -3,15 +3,19 @@
 用户与权限模型（20260127 合并后）
 """
 
+from datetime import datetime
+
 from sqlalchemy import (
     JSON,
     Boolean,
     Column,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
+    UniqueConstraint,
 )
 
 from sqlalchemy.orm import relationship
@@ -161,12 +165,9 @@ class Role(Base, TimestampMixin):
     # 关系
     tenant = relationship("Tenant", back_populates="roles")
     users = relationship("UserRole", back_populates="role", lazy="dynamic")
-    permissions = relationship(
-        "RolePermission", back_populates="role", lazy="dynamic"
-    )  # 旧表，待废弃
     api_permissions = relationship(
         "RoleApiPermission", back_populates="role", lazy="dynamic"
-    )  # 新表
+    )
     parent = relationship("Role", remote_side=[id], backref="children")
 
     def __repr__(self):
@@ -179,12 +180,21 @@ class Role(Base, TimestampMixin):
 
 
 class ApiPermission(Base, TimestampMixin):
-    """API权限表（独立于菜单权限）"""
+    """API权限表（独立于菜单权限）
+
+    多租户支持：
+    - tenant_id = NULL: 系统级权限，所有租户共享
+    - tenant_id = N: 租户自定义权限，仅该租户可见
+    """
 
     __tablename__ = "api_permissions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    perm_code = Column(String(100), unique=True, nullable=False, comment="权限编码")
+    # 多租户支持：NULL表示系统级权限，所有租户可用
+    tenant_id = Column(
+        Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID（NULL=系统级权限）"
+    )
+    perm_code = Column(String(100), nullable=False, comment="权限编码")
     perm_name = Column(String(200), nullable=False, comment="权限名称")
     module = Column(String(50), comment="所属模块编码")
     page_code = Column(String(50), nullable=True, comment="所属页面编码")
@@ -197,80 +207,23 @@ class ApiPermission(Base, TimestampMixin):
     )
     group_id = Column(Integer, nullable=True, comment="权限组ID")
     is_active = Column(Boolean, default=True, nullable=False, comment="是否启用")
+    is_system = Column(Boolean, default=False, nullable=False, comment="是否系统预置权限")
 
     # 关系
+    tenant = relationship("Tenant", backref="custom_permissions")
     role_api_permissions = relationship(
         "RoleApiPermission", back_populates="permission", lazy="dynamic"
     )
 
+    # 租户内唯一约束（系统权限全局唯一，租户权限租户内唯一）
+    __table_args__ = (
+        Index("idx_api_perm_tenant", "tenant_id"),
+        Index("idx_api_perm_module", "module"),
+        UniqueConstraint("tenant_id", "perm_code", name="uk_tenant_perm_code"),
+    )
+
     def __repr__(self):
         return f"<ApiPermission {self.perm_code}>"
-
-
-# ============================================================================
-# 旧的 Permission 表（代码已迁移到 ApiPermission，待删除表）
-# 注意：所有使用此模型的代码已于 2026-01-27 迁移到 ApiPermission
-# 此模型保留仅用于数据库兼容，下次数据库迁移后应删除
-# ============================================================================
-
-
-class Permission(Base, TimestampMixin):
-    """权限表（已废弃，代码已迁移到 ApiPermission，待删除）"""
-
-    __tablename__ = "permissions"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    # 兼容旧表结构：数据库使用 perm_code，模型使用 permission_code
-    # 使用 name 参数映射到数据库字段名
-    permission_code = Column(
-        "perm_code", String(100), unique=True, nullable=False, comment="权限编码"
-    )
-    permission_name = Column(
-        "perm_name", String(200), nullable=False, comment="权限名称"
-    )
-    module = Column(String(50), comment="所属模块编码")
-    page_code = Column(String(50), nullable=True, comment="所属页面编码")
-    # 以下字段在旧表结构中可能不存在，设为可选
-    resource = Column(String(50), nullable=True, comment="资源类型")
-    action = Column(
-        String(20), comment="操作类型: VIEW/CREATE/EDIT/DELETE/APPROVE/EXPORT"
-    )
-    # depends_on 在数据库中是 TEXT 类型，不是外键
-    depends_on = Column(Text, nullable=True, comment="依赖的权限ID（TEXT格式）")
-    description = Column(Text, nullable=True, comment="权限描述")
-    is_active = Column(Boolean, default=True, nullable=True, comment="是否启用")
-    # 数据库中存在但模型中缺失的字段
-    permission_type = Column(
-        String(20), default="API", nullable=True, comment="权限类型"
-    )
-    group_id = Column(Integer, nullable=True, comment="权限组ID")
-
-    # 关系
-    roles = relationship("RolePermission", back_populates="permission", lazy="dynamic")
-
-    def __repr__(self):
-        return f"<Permission {self.permission_code}>"
-
-
-class RolePermission(Base):
-    """角色权限关联表（已废弃，代码已迁移到 RoleApiPermission，待删除）"""
-
-    __tablename__ = "role_permissions"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    role_id = Column(Integer, ForeignKey("roles.id"), nullable=False, comment="角色ID")
-    permission_id = Column(
-        Integer, ForeignKey("permissions.id"), nullable=False, comment="权限ID"
-    )
-
-    # 关系
-    role = relationship("Role", back_populates="permissions")
-    permission = relationship("Permission", back_populates="roles")
-
-
-# ============================================================================
-# 新的 RoleApiPermission 表（20260127 引入）
-# ============================================================================
 
 
 class RoleApiPermission(Base):
@@ -283,9 +236,7 @@ class RoleApiPermission(Base):
     permission_id = Column(
         Integer, ForeignKey("api_permissions.id"), nullable=False, comment="API权限ID"
     )
-    created_at = Column(
-        DateTime, server_default="CURRENT_TIMESTAMP", comment="创建时间"
-    )
+    created_at = Column(DateTime, default=datetime.now, comment="创建时间")
 
     # 关系
     role = relationship("Role", back_populates="api_permissions")
@@ -387,9 +338,7 @@ class SolutionCreditTransaction(Base):
     ip_address = Column(String(50), comment="操作IP")
     user_agent = Column(String(500), comment="用户代理")
 
-    created_at = Column(
-        DateTime, server_default="CURRENT_TIMESTAMP", comment="创建时间"
-    )
+    created_at = Column(DateTime, default=datetime.now, comment="创建时间")
 
     # 关系
     user = relationship("User", foreign_keys=[user_id], backref="credit_transactions")
@@ -409,12 +358,8 @@ class SolutionCreditConfig(Base):
     config_value = Column(String(200), nullable=False, comment="配置值")
     description = Column(Text, comment="配置说明")
     is_active = Column(Boolean, default=True, comment="是否启用")
-    created_at = Column(
-        DateTime, server_default="CURRENT_TIMESTAMP", comment="创建时间"
-    )
-    updated_at = Column(
-        DateTime, server_default="CURRENT_TIMESTAMP", comment="更新时间"
-    )
+    created_at = Column(DateTime, default=datetime.now, comment="创建时间")
+    updated_at = Column(DateTime, default=datetime.now, comment="更新时间")
 
     def __repr__(self):
         return f"<SolutionCreditConfig {self.config_key}={self.config_value}>"

@@ -22,7 +22,7 @@ def get_machine_kit_rate(
     db: Session = Depends(deps.get_db),
     machine_id: int,
     calculate_by: str = Query("quantity", description="计算方式：quantity(数量) 或 amount(金额)"),
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("procurement:read")),
 ) -> Any:
     """
     计算机台齐套率
@@ -36,7 +36,7 @@ def get_machine_material_status(
     *,
     db: Session = Depends(deps.get_db),
     machine_id: int,
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("procurement:read")),
 ) -> Any:
     """
     获取机台物料状态（详细到货状态）

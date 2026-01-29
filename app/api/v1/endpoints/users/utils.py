@@ -17,19 +17,27 @@ logger = logging.getLogger(__name__)
 
 
 def get_role_names(user: User) -> List[str]:
-    """提取用户角色名称"""
-    roles = user.roles
-    if hasattr(roles, "all"):
-        roles = roles.all()
-    return [ur.role.role_name for ur in roles] if roles else []
+    """提取用户角色名称（安全版本）"""
+    try:
+        roles = user.roles
+        if hasattr(roles, "all"):
+            roles = roles.all()
+        return [ur.role.role_name for ur in roles if ur and ur.role] if roles else []
+    except Exception as e:
+        logger.warning(f"获取用户 {user.id} 角色名称失败: {e}")
+        return []
 
 
 def get_role_ids(user: User) -> List[int]:
-    """提取用户角色ID列表"""
-    roles = user.roles
-    if hasattr(roles, "all"):
-        roles = roles.all()
-    return [ur.role_id for ur in roles] if roles else []
+    """提取用户角色ID列表（安全版本）"""
+    try:
+        roles = user.roles
+        if hasattr(roles, "all"):
+            roles = roles.all()
+        return [ur.role_id for ur in roles if ur and ur.role_id] if roles else []
+    except Exception as e:
+        logger.warning(f"获取用户 {user.id} 角色ID失败: {e}")
+        return []
 
 
 def build_user_response(user: User) -> UserResponse:

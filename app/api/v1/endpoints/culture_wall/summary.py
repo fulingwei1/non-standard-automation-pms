@@ -44,13 +44,8 @@ def get_culture_wall_summary(
     # 获取配置
     config = get_culture_wall_config(db)
 
-    # 检查角色权限 - 获取用户的第一个角色代码
-    user_roles = list(current_user.roles)
-    user_role = ''
-    if user_roles:
-        role_obj = user_roles[0].role
-        user_role = role_obj.role_code if role_obj else ''
-    if not check_user_role_permission(config, user_role):
+    # 检查角色权限
+    if not check_user_role_permission(config, current_user.role_codes):
         # 如果用户角色不在可见列表中，返回空数据
         return CultureWallSummary(
             strategies=[],
@@ -69,11 +64,13 @@ def get_culture_wall_summary(
     content_query = build_content_query(db, today)
 
     # 按类型查询内容
-    strategies = query_content_by_type(content_query, 'STRATEGY', content_types_config)
-    cultures = query_content_by_type(content_query, 'CULTURE', content_types_config)
-    important_items = query_content_by_type(content_query, 'IMPORTANT', content_types_config)
-    notices = query_content_by_type(content_query, 'NOTICE', content_types_config)
-    rewards = query_content_by_type(content_query, 'REWARD', content_types_config)
+    strategies = query_content_by_type(content_query, "STRATEGY", content_types_config)
+    cultures = query_content_by_type(content_query, "CULTURE", content_types_config)
+    important_items = query_content_by_type(
+        content_query, "IMPORTANT", content_types_config
+    )
+    notices = query_content_by_type(content_query, "NOTICE", content_types_config)
+    rewards = query_content_by_type(content_query, "REWARD", content_types_config)
 
     # 检查阅读状态
     all_contents = strategies + cultures + important_items + notices + rewards
@@ -81,7 +78,9 @@ def get_culture_wall_summary(
     read_records = get_read_records(db, content_ids, current_user.id)
 
     # 获取个人目标
-    personal_goals = get_personal_goals(db, current_user.id, today, content_types_config)
+    personal_goals = get_personal_goals(
+        db, current_user.id, today, content_types_config
+    )
 
     # 获取系统通知
     notification_list = get_notifications(db, current_user.id, content_types_config)

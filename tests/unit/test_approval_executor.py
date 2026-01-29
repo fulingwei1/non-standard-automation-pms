@@ -43,9 +43,9 @@ class TestCreateTasksForNode:
         mock_node.timeout_hours = None
 
         result = executor.create_tasks_for_node(
-        instance=mock_instance,
-        node=mock_node,
-        approver_ids=[],
+            instance=mock_instance,
+            node=mock_node,
+            approver_ids=[],
         )
 
         assert result == []
@@ -65,9 +65,9 @@ class TestCreateTasksForNode:
         mock_node.timeout_hours = None
 
         result = executor.create_tasks_for_node(
-        instance=mock_instance,
-        node=mock_node,
-        approver_ids=[1],
+            instance=mock_instance,
+            node=mock_node,
+            approver_ids=[1],
         )
 
         assert len(result) == 1
@@ -93,9 +93,9 @@ class TestCreateTasksForNode:
         mock_node.timeout_hours = None
 
         result = executor.create_tasks_for_node(
-        instance=mock_instance,
-        node=mock_node,
-        approver_ids=[1, 2, 3],
+            instance=mock_instance,
+            node=mock_node,
+            approver_ids=[1, 2, 3],
         )
 
         assert len(result) == 3
@@ -106,8 +106,8 @@ class TestCreateTasksForNode:
             assert task.status == "PENDING"
             assert task.is_countersign is False
             assert task.task_order == idx + 1
-            assert mock_db.add.call_count == 3
-            mock_db.flush.assert_called_once()
+        assert mock_db.add.call_count == 3
+        mock_db.flush.assert_called_once()
 
     def test_create_tasks_and_sign(self):
         """测试会签模式"""
@@ -123,9 +123,9 @@ class TestCreateTasksForNode:
         mock_node.timeout_hours = None
 
         result = executor.create_tasks_for_node(
-        instance=mock_instance,
-        node=mock_node,
-        approver_ids=[1, 2],
+            instance=mock_instance,
+            node=mock_node,
+            approver_ids=[1, 2],
         )
 
         # 应该创建 2 个任务 + 1 个统计记录
@@ -136,15 +136,15 @@ class TestCreateTasksForNode:
         for task in result:
             assert task.is_countersign is True
 
-            # 检查会签结果记录
-            countersign_result = mock_db.add.call_args_list[2][0][0]
-            assert countersign_result.instance_id == 100
-            assert countersign_result.node_id == 5
-            assert countersign_result.total_count == 2
-            assert countersign_result.approved_count == 0
-            assert countersign_result.rejected_count == 0
-            assert countersign_result.pending_count == 2
-            assert countersign_result.final_result == "PENDING"
+        # 检查会签结果记录
+        countersign_result = mock_db.add.call_args_list[2][0][0]
+        assert countersign_result.instance_id == 100
+        assert countersign_result.node_id == 5
+        assert countersign_result.total_count == 2
+        assert countersign_result.approved_count == 0
+        assert countersign_result.rejected_count == 0
+        assert countersign_result.pending_count == 2
+        assert countersign_result.final_result == "PENDING"
 
     def test_create_tasks_sequential(self):
         """测试依次审批模式"""
@@ -160,9 +160,9 @@ class TestCreateTasksForNode:
         mock_node.timeout_hours = None
 
         result = executor.create_tasks_for_node(
-        instance=mock_instance,
-        node=mock_node,
-        approver_ids=[1, 2, 3],
+            instance=mock_instance,
+            node=mock_node,
+            approver_ids=[1, 2, 3],
         )
 
         assert len(result) == 3
@@ -193,9 +193,9 @@ class TestCreateTasksForNode:
         mock_node.timeout_hours = 24
 
         result = executor.create_tasks_for_node(
-        instance=mock_instance,
-        node=mock_node,
-        approver_ids=[1],
+            instance=mock_instance,
+            node=mock_node,
+            approver_ids=[1],
         )
 
         assert len(result) == 1
@@ -219,9 +219,9 @@ class TestProcessApproval:
         mock_task.node.approval_mode = "SINGLE"
 
         result, error = executor.process_approval(
-        task=mock_task,
-        action="APPROVE",
-        comment="OK",
+            task=mock_task,
+            action="APPROVE",
+            comment="OK",
         )
 
         assert result is False
@@ -240,9 +240,9 @@ class TestProcessApproval:
         mock_task.node.approval_mode = "SINGLE"
 
         result, error = executor.process_approval(
-        task=mock_task,
-        action="APPROVE",
-        comment="Approved",
+            task=mock_task,
+            action="APPROVE",
+            comment="Approved",
         )
 
         assert result is True
@@ -267,15 +267,15 @@ class TestProcessApproval:
         # Mock _cancel_pending_tasks
         with patch.object(executor, "_cancel_pending_tasks") as mock_cancel:
             result, error = executor.process_approval(
-            task=mock_task,
-            action="APPROVE",
-            comment="Approved",
+                task=mock_task,
+                action="APPROVE",
+                comment="Approved",
             )
 
             assert result is True
             assert error is None
             mock_cancel.assert_called_once_with(
-            mock_task.instance_id, mock_task.node_id, exclude_task_id=mock_task.id
+                mock_task.instance_id, mock_task.node_id, exclude_task_id=mock_task.id
             )
 
     def test_process_approval_or_sign_reject_last(self):
@@ -293,9 +293,9 @@ class TestProcessApproval:
         # Mock _count_pending_tasks to return 0
         with patch.object(executor, "_count_pending_tasks", return_value=0):
             result, error = executor.process_approval(
-            task=mock_task,
-            action="REJECT",
-            comment="Rejected",
+                task=mock_task,
+                action="REJECT",
+                comment="Rejected",
             )
 
             assert result is True
@@ -316,9 +316,9 @@ class TestProcessApproval:
         # Mock _count_pending_tasks to return 2
         with patch.object(executor, "_count_pending_tasks", return_value=2):
             result, error = executor.process_approval(
-            task=mock_task,
-            action="REJECT",
-            comment="Rejected",
+                task=mock_task,
+                action="REJECT",
+                comment="Rejected",
             )
 
             assert result is False
@@ -341,16 +341,16 @@ class TestProcessApproval:
         # Mock _activate_next_sequential_task to return next task
         mock_next_task = MagicMock()
         with patch.object(
-        executor, "_activate_next_sequential_task", return_value=mock_next_task
+            executor, "_activate_next_sequential_task", return_value=mock_next_task
         ):
-        result, error = executor.process_approval(
-        task=mock_task,
-        action="APPROVE",
-        comment="Approved",
-        )
+            result, error = executor.process_approval(
+                task=mock_task,
+                action="APPROVE",
+                comment="Approved",
+            )
 
-        assert result is False  # 还有后续任务
-        assert error is None
+            assert result is False  # 还有后续任务
+            assert error is None
 
     def test_process_approval_sequential_approve_last(self):
         """测试依次审批通过（最后一人）"""
@@ -366,16 +366,16 @@ class TestProcessApproval:
 
         # Mock _activate_next_sequential_task to return None
         with patch.object(
-        executor, "_activate_next_sequential_task", return_value=None
+            executor, "_activate_next_sequential_task", return_value=None
         ):
-        result, error = executor.process_approval(
-        task=mock_task,
-        action="APPROVE",
-        comment="Approved",
-        )
+            result, error = executor.process_approval(
+                task=mock_task,
+                action="APPROVE",
+                comment="Approved",
+            )
 
-        assert result is True
-        assert error is None
+            assert result is True
+            assert error is None
 
     def test_process_approval_sequential_reject(self):
         """测试依次审批驳回"""
@@ -390,9 +390,9 @@ class TestProcessApproval:
         mock_task.node.approval_mode = "SEQUENTIAL"
 
         result, error = executor.process_approval(
-        task=mock_task,
-        action="REJECT",
-        comment="Rejected",
+            task=mock_task,
+            action="REJECT",
+            comment="Rejected",
         )
 
         assert result is True
@@ -410,10 +410,10 @@ class TestProcessApproval:
         attachments = [{"name": "file.pdf", "url": "http://example.com/file.pdf"}]
 
         result, error = executor.process_approval(
-        task=mock_task,
-        action="APPROVE",
-        comment="Approved",
-        attachments=attachments,
+            task=mock_task,
+            action="APPROVE",
+            comment="Approved",
+            attachments=attachments,
         )
 
         assert result is True
@@ -429,16 +429,16 @@ class TestProcessApproval:
         mock_task.node.approval_mode = "SINGLE"
 
         eval_data = {
-        "cost_estimate": 1000,
-        "schedule_estimate": 5,
-        "risk_assessment": "中",
+            "cost_estimate": 1000,
+            "schedule_estimate": 5,
+            "risk_assessment": "中",
         }
 
         result, error = executor.process_approval(
-        task=mock_task,
-        action="APPROVE",
-        comment="Approved",
-        eval_data=eval_data,
+            task=mock_task,
+            action="APPROVE",
+            comment="Approved",
+            eval_data=eval_data,
         )
 
         assert result is True
@@ -458,9 +458,9 @@ class TestProcessApproval:
         # Mock _process_countersign to return True (complete)
         with patch.object(executor, "_process_countersign", return_value=(True, None)):
             result, error = executor.process_approval(
-            task=mock_task,
-            action="APPROVE",
-            comment="Approved",
+                task=mock_task,
+                action="APPROVE",
+                comment="Approved",
             )
 
             assert result is True
@@ -477,9 +477,9 @@ class TestProcessApproval:
         mock_task.node.approval_mode = "UNKNOWN_MODE"
 
         result, error = executor.process_approval(
-        task=mock_task,
-        action="APPROVE",
-        comment="Approved",
+            task=mock_task,
+            action="APPROVE",
+            comment="Approved",
         )
 
         # 未知模式应该走最后一个 else 返回 True
@@ -641,7 +641,7 @@ class TestProcessCountersign:
             assert result is True
             assert error is None
             # 执行后：approved_count=3, rejected_count=1，3>1，所以通过
-        assert mock_result.final_result == "PASSED"
+            assert mock_result.final_result == "PASSED"
 
     def test_process_countersign_any_pass(self):
         """测试任一通过"""
@@ -668,7 +668,7 @@ class TestProcessCountersign:
             assert result is True
             assert error is None
             # 执行后：approved_count=1, rejected_count=3，approved_count>0，所以通过
-        assert mock_result.final_result == "PASSED"
+            assert mock_result.final_result == "PASSED"
 
     def test_process_countersign_any_fail(self):
         """测试任一通过规则失败"""
@@ -695,7 +695,7 @@ class TestProcessCountersign:
             assert result is True
             assert error is None
             # 执行后：approved_count=0, rejected_count=2，approved_count=0，所以失败
-        assert mock_result.final_result == "FAILED"
+            assert mock_result.final_result == "FAILED"
 
     def test_process_countersign_default_rule(self):
         """测试默认通过规则（ALL）"""
@@ -722,7 +722,7 @@ class TestProcessCountersign:
             assert result is True
             assert error is None
             # 执行后：approved_count=2, rejected_count=0，rejected_count=0，所以通过
-        assert mock_result.final_result == "PASSED"
+            assert mock_result.final_result == "PASSED"
 
 
 @pytest.mark.unit
@@ -745,9 +745,9 @@ class TestSummarizeEvalData:
         mock_task1.action = "APPROVE"
         mock_task1.comment = "OK"
         mock_task1.eval_data = {
-        "cost_estimate": 1000,
-        "schedule_estimate": 5,
-        "risk_assessment": "低",
+            "cost_estimate": 1000,
+            "schedule_estimate": 5,
+            "risk_assessment": "低",
         }
 
         mock_task2 = MagicMock()
@@ -756,9 +756,9 @@ class TestSummarizeEvalData:
         mock_task2.action = "APPROVE"
         mock_task2.comment = "Good"
         mock_task2.eval_data = {
-        "cost_estimate": 1200,
-        "schedule_estimate": 6,
-        "risk_assessment": "中",
+            "cost_estimate": 1200,
+            "schedule_estimate": 6,
+            "risk_assessment": "中",
         }
 
         mock_query = MagicMock()
@@ -837,7 +837,7 @@ class TestCancelPendingTasks:
         mock_db.query.assert_called_once()
         mock_query.filter.assert_called_once()
         mock_query.filter.return_value.update.assert_called_once_with(
-        {"status": "CANCELLED"}, synchronize_session=False
+            {"status": "CANCELLED"}, synchronize_session=False
         )
 
     def test_cancel_pending_tasks_with_exclude(self):
@@ -850,7 +850,7 @@ class TestCancelPendingTasks:
         mock_filtered_query = MagicMock()  # 第一次 filter 后的结果
         mock_filtered_query2 = MagicMock()  # 第二次 filter 后的结果（如果有 exclude_task_id）
         mock_filtered_query2.update.return_value = None
-        
+
         # 第一次 filter 返回 mock_filtered_query
         # 如果有 exclude_task_id，第二次 filter 返回 mock_filtered_query2
         mock_filtered_query.filter.return_value = mock_filtered_query2
@@ -864,7 +864,7 @@ class TestCancelPendingTasks:
         assert mock_query.filter.call_count >= 1
         # 验证 update 被调用（在最终的 filtered query 上）
         mock_filtered_query2.update.assert_called_once_with(
-        {"status": "CANCELLED"}, synchronize_session=False
+            {"status": "CANCELLED"}, synchronize_session=False
         )
 
 
@@ -907,7 +907,7 @@ class TestActivateNextSequentialTask:
 
         mock_query = MagicMock()
         mock_query.filter.return_value.order_by.return_value.first.return_value = (
-        mock_next_task
+            mock_next_task
         )
         mock_db.query.return_value = mock_query
 
@@ -949,7 +949,7 @@ class TestCreateCcRecords:
         mock_instance.id = 100
 
         result = executor.create_cc_records(
-        instance=mock_instance, node_id=5, cc_user_ids=[]
+            instance=mock_instance, node_id=5, cc_user_ids=[]
         )
 
         assert result == []
@@ -968,7 +968,7 @@ class TestCreateCcRecords:
         mock_db.query.return_value = mock_query
 
         result = executor.create_cc_records(
-        instance=mock_instance, node_id=5, cc_user_ids=[1, 2, 3]
+            instance=mock_instance, node_id=5, cc_user_ids=[1, 2, 3]
         )
 
         assert len(result) == 3
@@ -986,14 +986,14 @@ class TestCreateCcRecords:
         # 模拟第一个用户已存在
         mock_query = MagicMock()
         mock_query.filter.return_value.first.side_effect = [
-        MagicMock(),  # 用户1已存在
-        None,  # 用户2不存在
-        None,  # 用户3不存在
+            MagicMock(),  # 用户1已存在
+            None,  # 用户2不存在
+            None,  # 用户3不存在
         ]
         mock_db.query.return_value = mock_query
 
         result = executor.create_cc_records(
-        instance=mock_instance, node_id=5, cc_user_ids=[1, 2, 3]
+            instance=mock_instance, node_id=5, cc_user_ids=[1, 2, 3]
         )
 
         # 只应该添加2个新用户
@@ -1013,11 +1013,11 @@ class TestCreateCcRecords:
         mock_db.query.return_value = mock_query
 
         result = executor.create_cc_records(
-        instance=mock_instance,
-        node_id=5,
-        cc_user_ids=[1],
-        cc_source="MANUAL",
-        added_by=100,
+            instance=mock_instance,
+            node_id=5,
+            cc_user_ids=[1],
+            cc_source="MANUAL",
+            added_by=100,
         )
 
         assert len(result) == 1

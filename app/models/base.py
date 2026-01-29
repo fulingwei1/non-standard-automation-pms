@@ -252,6 +252,7 @@ def get_engine(database_url: Optional[str] = None, echo: bool = False):
             echo=echo,
             connect_args={"check_same_thread": False},
             poolclass=StaticPool,
+            pool_pre_ping=True,  # 在使用连接前检查连接是否有效
         )
 
         # SQLite启用外键约束

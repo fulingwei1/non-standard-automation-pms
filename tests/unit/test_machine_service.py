@@ -110,11 +110,11 @@ class TestMachineServiceGenerateCode:
         def query_side_effect(model):
             mock_query = MagicMock()
             if call_count[0] == 0:  # Project query
-            mock_query.filter.return_value.first.return_value = project
-            call_count[0] += 1
-        else:  # Max machine_no query
-        mock_query.filter.return_value.scalar.return_value = 5
-        return mock_query
+                mock_query.filter.return_value.first.return_value = project
+                call_count[0] += 1
+            else:  # Max machine_no query
+                mock_query.filter.return_value.scalar.return_value = 5
+            return mock_query
 
         db.query.side_effect = query_side_effect
 
@@ -469,23 +469,23 @@ class TestProjectAggregationUpdateProject:
         def query_side_effect(*args):
             mock_query = MagicMock()
             if call_count[0] == 0:  # Project query
-            mock_query.filter.return_value.first.return_value = project
-            mock_query.filter.return_value.scalar.return_value = 50.0
-            mock_query.filter.return_value.all.return_value = []
-        else:
-            mock_query.filter.return_value.scalar.return_value = 50.0
-            mock_query.filter.return_value.all.return_value = []
+                mock_query.filter.return_value.first.return_value = project
+                mock_query.filter.return_value.scalar.return_value = 50.0
+                mock_query.filter.return_value.all.return_value = []
+            else:
+                mock_query.filter.return_value.scalar.return_value = 50.0
+                mock_query.filter.return_value.all.return_value = []
             call_count[0] += 1
             return mock_query
 
-            db.query.side_effect = query_side_effect
+        db.query.side_effect = query_side_effect
 
-            service = ProjectAggregationService(db)
-            result = service.update_project_aggregation(1)
+        service = ProjectAggregationService(db)
+        result = service.update_project_aggregation(1)
 
-            db.add.assert_called_once()
-            db.commit.assert_called_once()
-            db.refresh.assert_called_once()
+        db.add.assert_called_once()
+        db.commit.assert_called_once()
+        db.refresh.assert_called_once()
 
 
 @pytest.mark.unit

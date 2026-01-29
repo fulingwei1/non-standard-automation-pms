@@ -6,6 +6,7 @@
 from fastapi import APIRouter
 
 from .employee_api import router as employee_api_router
+from .evaluation_tasks import router as evaluation_tasks_router
 from .hr_api import router as hr_api_router
 from .individual import router as individual_router
 from .integration import router as integration_router
@@ -15,6 +16,7 @@ from .team import router as team_router
 
 router = APIRouter()
 
+router.include_router(evaluation_tasks_router)
 router.include_router(individual_router)
 router.include_router(team_router)
 router.include_router(project_router)

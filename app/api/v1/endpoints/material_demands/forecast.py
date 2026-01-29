@@ -23,7 +23,7 @@ def get_material_lead_time_forecast(
     material_id: int,
     db: Session = Depends(deps.get_db),
     days: int = Query(90, description="统计天数（默认90天）"),
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("procurement:read")),
 ) -> Any:
     """
     物料交期预测（基于历史）

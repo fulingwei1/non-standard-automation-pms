@@ -82,14 +82,14 @@ print('✅ 所有模块导入成功！')
 
 ### 待删除的模型类
 
-- [ ] `app/models/user.py` 中的 `Permission` 类
-- [ ] `app/models/user.py` 中的 `RolePermission` 类
-- [ ] `app/models/user.py` 中的 `Role.permissions` 关系
+- [x] `app/models/user.py` 中的 `Permission` 类
+- [x] `app/models/user.py` 中的 `RolePermission` 类
+- [x] `app/models/user.py` 中的 `Role.permissions` 关系
 
 ### 待删除的数据库表
 
-- [ ] `permissions` 表（需先迁移数据到 `api_permissions`）
-- [ ] `role_permissions` 表（需先迁移数据到 `role_api_permissions`）
+- [x] `permissions` 表（已物理删除）
+- [x] `role_permissions` 表（已物理删除）
 
 ### 数据迁移脚本（建议）
 
@@ -168,10 +168,11 @@ WHERE NOT EXISTS (
 | 管理统计 API 使用新模型 | ✅ 完成 |
 | 服务层使用新模型 | ✅ 完成 |
 | Role 模型添加新关系 | ✅ 完成 |
-| 旧模型标记为废弃 | ✅ 完成 |
+| 旧模型物理删除 | ✅ 完成 |
+| 旧数据库表物理删除 | ✅ 完成 |
 | 代码语法检查通过 | ✅ 通过 |
 
-**整体状态**: ✅ **代码层面迁移完成，权限系统已统一**
+**整体状态**: ✅ **迁移任务全部完成，系统已完全清理**
 
 ---
 

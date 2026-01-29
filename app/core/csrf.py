@@ -11,6 +11,8 @@ CSRF防护机制
 此模块主要用于双重验证Origin头，为state-changing操作提供额外保护。
 """
 
+from typing import Optional, Union
+
 from fastapi import Request, HTTPException, status
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -57,7 +59,7 @@ class CSRFMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
     def _validate_origin_or_referer(
-        self, origin: str | None, referer: str | None, request: Request
+        self, origin: Optional[str], referer: Optional[str], request: Request
     ) -> None:
         """
         验证Origin或Referer头是否在允许的来源列表中
@@ -130,7 +132,7 @@ class CSRFMiddleware(BaseHTTPMiddleware):
 
         return False
 
-    def _extract_origin_from_referer(self, referer: str) -> str | None:
+    def _extract_origin_from_referer(self, referer: str) -> Union[str, None]:
         """
         从Referer头提取Origin
 

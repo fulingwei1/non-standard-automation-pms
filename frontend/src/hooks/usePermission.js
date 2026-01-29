@@ -217,16 +217,52 @@ export function PermissionGuard({
 }
 
 /**
- * 常用权限编码常量
- * 统一管理，避免硬编码字符串
+ * 权限编码常量
+ *
+ * 命名规范：
+ * - 格式: module:resource:action 或 module:action
+ * - 示例: project:project:read, budget:read, sales:lead:create
+ * - 特殊: 部分历史端点使用大写格式 (USER_VIEW, ROLE_VIEW)
+ *
+ * 注意：这些常量必须与后端 api_permissions 表中的 perm_code 保持一致
  */
 export const PERMISSIONS = {
+  // 用户管理 (后端使用大写格式)
+  USER: {
+    VIEW: 'USER_VIEW',
+    CREATE: 'USER_CREATE',
+    UPDATE: 'USER_UPDATE',
+    DELETE: 'USER_DELETE',
+  },
+
+  // 角色管理 (后端使用大写格式)
+  ROLE: {
+    VIEW: 'ROLE_VIEW',
+    CREATE: 'ROLE_CREATE',
+    UPDATE: 'ROLE_UPDATE',
+    DELETE: 'ROLE_DELETE',
+  },
+
+  // 审计日志 (后端使用大写格式)
+  AUDIT: {
+    VIEW: 'AUDIT_VIEW',
+  },
+
   // 项目管理
   PROJECT: {
-    READ: 'project:read',
-    CREATE: 'project:create',
-    UPDATE: 'project:update',
-    DELETE: 'project:delete',
+    READ: 'project:project:read',
+    CREATE: 'project:project:create',
+    UPDATE: 'project:project:update',
+    DELETE: 'project:project:delete',
+    INITIATION_READ: 'project:initiation:read',
+    CLOSE: 'project:close',
+  },
+
+  // 预算管理
+  BUDGET: {
+    READ: 'budget:read',
+    CREATE: 'budget:create',
+    APPROVE: 'budget:approve',
   },
 
   // 客户管理
@@ -239,6 +275,7 @@ export const PERMISSIONS = {
 
   // 销售管理
   SALES: {
+    TARGET_READ: 'sales:target:read',
     LEAD_READ: 'sales:lead:read',
     LEAD_CREATE: 'sales:lead:create',
     OPPORTUNITY_READ: 'sales:opportunity:read',
@@ -248,48 +285,181 @@ export const PERMISSIONS = {
     QUOTE_APPROVE: 'sales:quote:approve',
     CONTRACT_READ: 'sales:contract:read',
     CONTRACT_CREATE: 'sales:contract:create',
+    FUNNEL_READ: 'sales:funnel:read',
+    TEAM_READ: 'sales:team:read',
+    BID_READ: 'sales:bid:read',
   },
 
   // 采购管理
-  PROCUREMENT: {
-    READ: 'procurement:read',
-    ORDER_CREATE: 'purchase:order:create',
-    ORDER_APPROVE: 'purchase:order:approve',
-    SUPPLIER_READ: 'procurement:supplier:read',
-    SUPPLIER_CREATE: 'procurement:supplier:create',
+  PURCHASE: {
+    READ: 'purchase:read',
+    CREATE: 'purchase:create',
+    REQUEST_READ: 'purchase:request:read',
+    RECEIPT_READ: 'purchase:receipt:read',
+    ANALYSIS_READ: 'purchase:analysis:read',
+  },
+
+  // 供应商管理
+  SUPPLIER: {
+    READ: 'supplier:read',
+    CREATE: 'supplier:create',
+  },
+
+  // 物料管理
+  MATERIAL: {
+    READ: 'material:read',
+    CREATE: 'material:create',
+    DEMAND_READ: 'material:demand:read',
+    ANALYSIS_READ: 'material:analysis:read',
+    REQUISITION_READ: 'material:requisition:read',
+  },
+
+  // BOM管理
+  BOM: {
+    READ: 'bom:read',
+    CREATE: 'bom:create',
   },
 
   // 生产管理
   PRODUCTION: {
-    READ: 'production:read',
+    BOARD_READ: 'production:board:read',
+    PLAN_READ: 'production:plan:read',
     PLAN_CREATE: 'production:plan:create',
-    WORKORDER_CREATE: 'production:workorder:create',
+    EXCEPTION_READ: 'production:exception:read',
+  },
+
+  // 工单管理
+  WORKORDER: {
+    READ: 'workorder:read',
+    CREATE: 'workorder:create',
+  },
+
+  // 派工管理
+  DISPATCH: {
+    READ: 'dispatch:read',
+    CREATE: 'dispatch:create',
+  },
+
+  // ECN变更管理
+  ECN: {
+    READ: 'ecn:read',
+    CREATE: 'ecn:create',
+    TYPE_READ: 'ecn:type:read',
+    STATISTICS_READ: 'ecn:statistics:read',
+  },
+
+  // 研发管理
+  RD: {
+    PROJECT_READ: 'rd:project:read',
+    PROJECT_CREATE: 'rd:project:create',
+    COST_READ: 'rd:cost:read',
   },
 
   // 财务管理
   FINANCE: {
-    READ: 'finance:read',
+    RECEIVABLE_READ: 'finance:receivable:read',
+    INVOICE_READ: 'finance:invoice:read',
     INVOICE_CREATE: 'finance:invoice:create',
-    PAYMENT_APPROVE: 'finance:payment:approve',
+    REPORT_READ: 'finance:report:read',
   },
 
-  // 人力资源
-  HR: {
-    READ: 'hr:read',
-    EMPLOYEE_CREATE: 'hr:employee:create',
-    EMPLOYEE_UPDATE: 'hr:employee:update',
-    SALARY_READ: 'hr:salary:read',
+  // 付款管理
+  PAYMENT: {
+    APPROVE: 'payment:approve',
+  },
+
+  // 成本管理
+  COST: {
+    ACCOUNTING_READ: 'cost:accounting:read',
+  },
+
+  // 结算管理
+  SETTLEMENT: {
+    READ: 'settlement:read',
+  },
+
+  // 服务管理
+  SERVICE: {
+    TICKET_READ: 'service:ticket:read',
+    ANALYTICS_READ: 'service:analytics:read',
+  },
+
+  // 验收管理
+  ACCEPTANCE: {
+    READ: 'acceptance:read',
+    CREATE: 'acceptance:create',
+  },
+
+  // 安装调试
+  INSTALLATION: {
+    READ: 'installation:read',
+    MANAGE: 'installation:manage',
+    DISPATCH: 'installation:dispatch',
+    ASSIGN: 'installation:assign',
+  },
+
+  // 绩效管理
+  PERFORMANCE: {
+    MANAGE: 'performance:manage',
+    ENGINEER_READ: 'performance:engineer:read',
+  },
+
+  // 评价管理
+  EVALUATION: {
+    TASK_READ: 'evaluation:task:read',
+    CONFIG_MANAGE: 'evaluation:config:manage',
+  },
+
+  // 资质管理
+  QUALIFICATION: {
+    READ: 'qualification:read',
+  },
+
+  // 员工管理
+  STAFF: {
+    TAG_MANAGE: 'staff:tag:manage',
+    PROFILE_READ: 'staff:profile:read',
+    NEED_READ: 'staff:need:read',
+    MATCH_READ: 'staff:match:read',
+  },
+
+  // 预警管理
+  ALERT: {
+    READ: 'alert:read',
+  },
+
+  // 问题管理
+  ISSUE: {
+    READ: 'issue:read',
+    CREATE: 'issue:create',
+  },
+
+  // 审批管理
+  APPROVAL: {
+    READ: 'approval:read',
+  },
+
+  // 知识库
+  KNOWLEDGE: {
+    READ: 'knowledge:read',
+  },
+
+  // 报表
+  REPORT: {
+    READ: 'report:read',
   },
 
   // 系统管理
   SYSTEM: {
-    USER_READ: 'system:user:read',
-    USER_CREATE: 'system:user:create',
-    ROLE_READ: 'system:role:read',
-    ROLE_CREATE: 'system:role:create',
-    PERMISSION_READ: 'system:permission:read',
-    ORG_READ: 'system:org:read',
-    ORG_CREATE: 'system:org:create',
+    TEMPLATE_MANAGE: 'system:template:manage',
+    USER_MANAGE: 'system:user:manage',
+    ROLE_MANAGE: 'system:role:manage',
+    PERMISSION_MANAGE: 'system:permission:manage',
+    ORG_MANAGE: 'system:org:manage',
+    POSITION_MANAGE: 'system:position:manage',
+    SCHEDULER_READ: 'system:scheduler:read',
+    AUDIT_READ: 'system:audit:read',
+    DATA_MANAGE: 'system:data:manage',
   },
 };
 

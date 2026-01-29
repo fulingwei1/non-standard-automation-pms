@@ -52,7 +52,7 @@ class TestCalculateIntegratedScore:
         from app.services.performance_integration_service import PerformanceIntegrationService
 
         result = PerformanceIntegrationService.calculate_integrated_score(
-        db_session, 99999, '2025-01'
+            db_session, 99999, '2025-01'
         )
 
         assert result is None
@@ -62,15 +62,15 @@ class TestCalculateIntegratedScore:
         from app.services.performance_integration_service import PerformanceIntegrationService
 
         with patch.object(
-        PerformanceIntegrationService, '_get_base_performance_score',
-        return_value=Decimal('85.0')
+            PerformanceIntegrationService, '_get_base_performance_score',
+            return_value=Decimal('85.0')
         ), patch.object(
-        PerformanceIntegrationService, '_get_qualification_score',
-        return_value={'score': 90.0, 'level_code': 'P3', 'level_name': '高级'}
+            PerformanceIntegrationService, '_get_qualification_score',
+            return_value={'score': 90.0, 'level_code': 'P3', 'level_name': '高级'}
         ):
-        result = PerformanceIntegrationService.calculate_integrated_score(
-        db_session, 1, '2025-01'
-        )
+            result = PerformanceIntegrationService.calculate_integrated_score(
+                db_session, 1, '2025-01'
+            )
 
         assert result is not None
         assert 'base_score' in result
@@ -84,15 +84,15 @@ class TestCalculateIntegratedScore:
         from app.services.performance_integration_service import PerformanceIntegrationService
 
         with patch.object(
-        PerformanceIntegrationService, '_get_base_performance_score',
-        return_value=Decimal('80.0')
+            PerformanceIntegrationService, '_get_base_performance_score',
+            return_value=Decimal('80.0')
         ), patch.object(
-        PerformanceIntegrationService, '_get_qualification_score',
-        return_value=None
+            PerformanceIntegrationService, '_get_qualification_score',
+            return_value=None
         ):
-        result = PerformanceIntegrationService.calculate_integrated_score(
-        db_session, 1, '2025-01'
-        )
+            result = PerformanceIntegrationService.calculate_integrated_score(
+                db_session, 1, '2025-01'
+            )
 
         assert result is not None
         assert result['qualification_score'] == 0.0
@@ -107,15 +107,15 @@ class TestCalculateIntegratedScore:
         expected = 80.0 * 0.70 + 90.0 * 0.30  # 56 + 27 = 83
 
         with patch.object(
-        PerformanceIntegrationService, '_get_base_performance_score',
-        return_value=base_score
+            PerformanceIntegrationService, '_get_base_performance_score',
+            return_value=base_score
         ), patch.object(
-        PerformanceIntegrationService, '_get_qualification_score',
-        return_value={'score': qual_score, 'level_code': 'P2'}
+            PerformanceIntegrationService, '_get_qualification_score',
+            return_value={'score': qual_score, 'level_code': 'P2'}
         ):
-        result = PerformanceIntegrationService.calculate_integrated_score(
-        db_session, 1, '2025-01'
-        )
+            result = PerformanceIntegrationService.calculate_integrated_score(
+                db_session, 1, '2025-01'
+            )
 
         assert result['integrated_score'] == expected
 
@@ -128,7 +128,7 @@ class TestGetBasePerformanceScore:
         from app.services.performance_integration_service import PerformanceIntegrationService
 
         result = PerformanceIntegrationService._get_base_performance_score(
-        db_session, 99999, '2025-01'
+            db_session, 99999, '2025-01'
         )
 
         assert result is None
@@ -195,30 +195,30 @@ class TestResultStructure:
         from app.services.performance_integration_service import PerformanceIntegrationService
 
         with patch.object(
-        PerformanceIntegrationService, '_get_base_performance_score',
-        return_value=Decimal('85.0')
+            PerformanceIntegrationService, '_get_base_performance_score',
+            return_value=Decimal('85.0')
         ), patch.object(
-        PerformanceIntegrationService, '_get_qualification_score',
-        return_value={'score': 90.0, 'level_code': 'P3', 'level_name': '高级'}
+            PerformanceIntegrationService, '_get_qualification_score',
+            return_value={'score': 90.0, 'level_code': 'P3', 'level_name': '高级'}
         ):
-        result = PerformanceIntegrationService.calculate_integrated_score(
-        db_session, 1, '2025-01'
-        )
+            result = PerformanceIntegrationService.calculate_integrated_score(
+                db_session, 1, '2025-01'
+            )
 
-                # 检查顶层字段
-        assert 'base_score' in result
-        assert 'qualification_score' in result
-        assert 'integrated_score' in result
-        assert 'base_weight' in result
-        assert 'qualification_weight' in result
-        assert 'qualification_level' in result
-        assert 'details' in result
+            # 检查顶层字段
+            assert 'base_score' in result
+            assert 'qualification_score' in result
+            assert 'integrated_score' in result
+            assert 'base_weight' in result
+            assert 'qualification_weight' in result
+            assert 'qualification_level' in result
+            assert 'details' in result
 
-                # 检查details字段
-        details = result['details']
-        assert 'base_performance' in details
-        assert 'qualification' in details
-        assert 'calculation' in details
+            # 检查details字段
+            details = result['details']
+            assert 'base_performance' in details
+            assert 'qualification' in details
+            assert 'calculation' in details
 
 
 # pytest fixtures

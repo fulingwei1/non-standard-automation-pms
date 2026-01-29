@@ -149,7 +149,7 @@ const ContractOverview = ({ data, loading, onNavigate }) => {
               value={overviewStats.totalContracts}
               prefix={<FileCheck />}
               suffix={`(${overviewStats.activeContracts} 执行中)`}
-              valueStyle={{ color: CHART_COLORS.PRIMARY }} />
+              styles={{ content: { color: CHART_COLORS.PRIMARY } }} />
 
           </Card>
         </Col>
@@ -161,7 +161,7 @@ const ContractOverview = ({ data, loading, onNavigate }) => {
               value={overviewStats.totalValue}
               prefix={<DollarSign />}
               precision={2}
-              valueStyle={{ color: CHART_COLORS.POSITIVE }} />
+              styles={{ content: { color: CHART_COLORS.POSITIVE } }} />
 
           </Card>
         </Col>
@@ -172,7 +172,7 @@ const ContractOverview = ({ data, loading, onNavigate }) => {
               title="待签署"
               value={overviewStats.pendingSignatures}
               prefix={<Users />}
-              valueStyle={{ color: CHART_COLORS.WARNING }} />
+              styles={{ content: { color: CHART_COLORS.WARNING } }} />
 
           </Card>
         </Col>
@@ -184,7 +184,7 @@ const ContractOverview = ({ data, loading, onNavigate }) => {
               value={overviewStats.completionRate}
               suffix="%"
               prefix={<CheckCircle2 />}
-              valueStyle={{ color: CHART_COLORS.SECONDARY }}
+              styles={{ content: { color: CHART_COLORS.SECONDARY } }}
               trend={overviewStats.monthlyGrowth} />
 
           </Card>
@@ -220,7 +220,7 @@ const ContractOverview = ({ data, loading, onNavigate }) => {
             </Timeline> :
 
             <Alert
-              message="暂无即将到期的合同"
+              title="暂无即将到期的合同"
               type="success"
               showIcon />
 
@@ -237,7 +237,7 @@ const ContractOverview = ({ data, loading, onNavigate }) => {
         loading={loading}>
 
           <Alert
-          message={`发现 ${data.riskContracts.length} 个高风险合同需要关注`}
+          title={`发现 ${data.riskContracts.length} 个高风险合同需要关注`}
           description="建议及时处理高风险合同，避免潜在损失"
           type="warning"
           showIcon

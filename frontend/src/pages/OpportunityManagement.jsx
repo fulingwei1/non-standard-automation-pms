@@ -190,7 +190,7 @@ export default function OpportunityManagement() {
 
   const loadCustomers = async () => {
     try {
-      const response = await customerApi.list({ page: 1, page_size: 200 });
+      const response = await customerApi.list({ page: 1, page_size: 100 });
       if (response.data && response.data.items) {
         setCustomers(response.data.items);
       }
@@ -201,7 +201,7 @@ export default function OpportunityManagement() {
 
   const loadOwners = async () => {
     try {
-      const response = await userApi.list({ page: 1, page_size: 200 });
+      const response = await userApi.list({ page: 1, page_size: 100 });
       // 使用统一响应格式处理
       const paginatedData = response.formatted || response.data;
       if (paginatedData?.items) {

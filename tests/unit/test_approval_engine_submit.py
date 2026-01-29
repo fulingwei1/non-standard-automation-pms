@@ -65,23 +65,23 @@ class TestSubmitApproval:
         mock_adapter.validate_submit.return_value = (True, None)
 
         with patch(
-        "app.services.approval_engine.engine.submit.get_adapter"
+            "app.services.approval_engine.engine.submit.get_adapter"
         ) as mock_get_adapter:
-        mock_get_adapter.return_value = mock_adapter
+            mock_get_adapter.return_value = mock_adapter
 
-        result = mixin.submit(
-        template_code="QUOTE",
-        entity_type="QUOTE",
-        entity_id=1001,
-        form_data={"amount": 10000},
-        initiator_id=100,
-        )
+            result = mixin.submit(
+                template_code="QUOTE",
+                entity_type="QUOTE",
+                entity_id=1001,
+                form_data={"amount": 10000},
+                initiator_id=100,
+            )
 
-        assert result.status == "PENDING"
-        assert result.template_id == 1
-        assert result.flow_id == 200
-        assert result.initiator_id == 100
-        assert result.initiator_name == "Test User"
+            assert result.status == "PENDING"
+            assert result.template_id == 1
+            assert result.flow_id == 200
+            assert result.initiator_id == 100
+            assert result.initiator_name == "Test User"
 
     def test_submit_with_title_and_summary(self):
         """测试带标题和摘要的提交"""
@@ -108,22 +108,22 @@ class TestSubmitApproval:
         mock_adapter.generate_summary.return_value = "Auto Summary"
 
         with patch(
-        "app.services.approval_engine.engine.submit.get_adapter"
+            "app.services.approval_engine.engine.submit.get_adapter"
         ) as mock_get_adapter:
-        mock_get_adapter.return_value = mock_adapter
+            mock_get_adapter.return_value = mock_adapter
 
-        result = mixin.submit(
-        template_code="QUOTE",
-        entity_type="QUOTE",
-        entity_id=1001,
-        form_data={"amount": 10000},
-        initiator_id=100,
-        title="Custom Title",
-        summary="Custom Summary",
-        )
+            result = mixin.submit(
+                template_code="QUOTE",
+                entity_type="QUOTE",
+                entity_id=1001,
+                form_data={"amount": 10000},
+                initiator_id=100,
+                title="Custom Title",
+                summary="Custom Summary",
+            )
 
-        assert result.title == "Custom Title"
-        assert result.summary == "Custom Summary"
+            assert result.title == "Custom Title"
+            assert result.summary == "Custom Summary"
 
     def test_submit_with_urgency_levels(self):
         """测试不同紧急程度"""
@@ -147,33 +147,33 @@ class TestSubmitApproval:
         mock_adapter.validate_submit.return_value = (True, None)
 
         with patch(
-        "app.services.approval_engine.engine.submit.get_adapter"
+            "app.services.approval_engine.engine.submit.get_adapter"
         ) as mock_get_adapter:
-        mock_get_adapter.return_value = mock_adapter
+            mock_get_adapter.return_value = mock_adapter
 
             # Test URGENCY
-        result = mixin.submit(
-        template_code="QUOTE",
-        entity_type="QUOTE",
-        entity_id=1001,
-        form_data={},
-        initiator_id=100,
-        urgency="URGENT",
-        )
+            result = mixin.submit(
+                template_code="QUOTE",
+                entity_type="QUOTE",
+                entity_id=1001,
+                form_data={},
+                initiator_id=100,
+                urgency="URGENT",
+            )
 
-        assert result.urgency == "URGENT"
+            assert result.urgency == "URGENT"
 
             # Test CRITICAL
-        result = mixin.submit(
-        template_code="QUOTE",
-        entity_type="QUOTE",
-        entity_id=1001,
-        form_data={},
-        initiator_id=100,
-        urgency="CRITICAL",
-        )
+            result = mixin.submit(
+                template_code="QUOTE",
+                entity_type="QUOTE",
+                entity_id=1001,
+                form_data={},
+                initiator_id=100,
+                urgency="CRITICAL",
+            )
 
-        assert result.urgency == "CRITICAL"
+            assert result.urgency == "CRITICAL"
 
     def test_submit_template_not_found(self):
         """测试模板不存在"""
@@ -186,11 +186,11 @@ class TestSubmitApproval:
 
         with pytest.raises(ValueError, match="审批模板不存在"):
             mixin.submit(
-            template_code="NOTEXIST",
-            entity_type="QUOTE",
-            entity_id=1001,
-            form_data={},
-            initiator_id=100,
+                template_code="NOTEXIST",
+                entity_type="QUOTE",
+                entity_id=1001,
+                form_data={},
+                initiator_id=100,
             )
 
     def test_submit_initiator_not_found(self):
@@ -211,11 +211,11 @@ class TestSubmitApproval:
 
         with pytest.raises(ValueError, match="发起人不存在"):
             mixin.submit(
-            template_code="QUOTE",
-            entity_type="QUOTE",
-            entity_id=1001,
-            form_data={},
-            initiator_id=999,
+                template_code="QUOTE",
+                entity_type="QUOTE",
+                entity_id=1001,
+                form_data={},
+                initiator_id=999,
             )
 
     def test_submit_adapter_validation_failed(self):
@@ -239,18 +239,18 @@ class TestSubmitApproval:
         mock_adapter.validate_submit.return_value = (False, "Cannot submit")
 
         with patch(
-        "app.services.approval_engine.engine.submit.get_adapter"
+            "app.services.approval_engine.engine.submit.get_adapter"
         ) as mock_get_adapter:
-        mock_get_adapter.return_value = mock_adapter
+            mock_get_adapter.return_value = mock_adapter
 
-        with pytest.raises(ValueError, match="Cannot submit"):
-            mixin.submit(
-            template_code="QUOTE",
-            entity_type="QUOTE",
-            entity_id=1001,
-            form_data={},
-            initiator_id=100,
-            )
+            with pytest.raises(ValueError, match="Cannot submit"):
+                mixin.submit(
+                    template_code="QUOTE",
+                    entity_type="QUOTE",
+                    entity_id=1001,
+                    form_data={},
+                    initiator_id=100,
+                )
 
     def test_submit_with_cc_users(self):
         """测试带抄送人"""
@@ -279,20 +279,20 @@ class TestSubmitApproval:
         mock_adapter.validate_submit.return_value = (True, None)
 
         with patch(
-        "app.services.approval_engine.engine.submit.get_adapter"
+            "app.services.approval_engine.engine.submit.get_adapter"
         ) as mock_get_adapter:
-        mock_get_adapter.return_value = mock_adapter
+            mock_get_adapter.return_value = mock_adapter
 
-        result = mixin.submit(
-        template_code="QUOTE",
-        entity_type="QUOTE",
-        entity_id=1001,
-        form_data={},
-        initiator_id=100,
-        cc_user_ids=[101, 102],
-        )
+            result = mixin.submit(
+                template_code="QUOTE",
+                entity_type="QUOTE",
+                entity_id=1001,
+                form_data={},
+                initiator_id=100,
+                cc_user_ids=[101, 102],
+            )
 
-        assert result.status == "PENDING"
+            assert result.status == "PENDING"
 
 
 @pytest.mark.unit
@@ -323,11 +323,11 @@ class TestSaveDraft:
         mock_db.query.return_value = mock_user_query
 
         result = mixin.save_draft(
-        template_code="QUOTE",
-        entity_type="QUOTE",
-        entity_id=1001,
-        form_data={"amount": 10000},
-        initiator_id=100,
+            template_code="QUOTE",
+            entity_type="QUOTE",
+            entity_id=1001,
+            form_data={"amount": 10000},
+            initiator_id=100,
         )
 
         assert result.status == "DRAFT"
@@ -350,12 +350,12 @@ class TestSaveDraft:
         mock_user.id = 100
 
         result = mixin.save_draft(
-        template_code="QUOTE",
-        entity_type="QUOTE",
-        entity_id=1001,
-        form_data={},
-        initiator_id=100,
-        title="Draft Title",
+            template_code="QUOTE",
+            entity_type="QUOTE",
+            entity_id=1001,
+            form_data={},
+            initiator_id=100,
+            title="Draft Title",
         )
 
         assert result.title == "Draft Title"
@@ -371,11 +371,11 @@ class TestSaveDraft:
 
         with pytest.raises(ValueError, match="审批模板不存在"):
             mixin.save_draft(
-            template_code="NOTEXIST",
-            entity_type="QUOTE",
-            entity_id=1001,
-            form_data={},
-            initiator_id=100,
+                template_code="NOTEXIST",
+                entity_type="QUOTE",
+                entity_id=1001,
+                form_data={},
+                initiator_id=100,
             )
 
 

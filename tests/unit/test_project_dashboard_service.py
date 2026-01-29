@@ -405,31 +405,31 @@ class TestCalculateRiskStats:
         mock_risk.status = "OPEN"
 
         with patch(
-        "app.services.project_dashboard_service.PmoProjectRisk", new=MagicMock
+            "app.services.project_dashboard_service.PmoProjectRisk", new=MagicMock
         ):
-        mock_query = MagicMock()
-        mock_query.filter.return_value.all.return_value = [
-        MagicMock(risk_level="HIGH", status="OPEN"),
-        MagicMock(risk_level="HIGH", status="CLOSED"),
-        MagicMock(risk_level="CRITICAL", status="OPEN"),
-        MagicMock(risk_level="MEDIUM", status="OPEN"),
-        ]
-        db_session.query.return_value = mock_query
+            mock_query = MagicMock()
+            mock_query.filter.return_value.all.return_value = [
+                MagicMock(risk_level="HIGH", status="OPEN"),
+                MagicMock(risk_level="HIGH", status="CLOSED"),
+                MagicMock(risk_level="CRITICAL", status="OPEN"),
+                MagicMock(risk_level="MEDIUM", status="OPEN"),
+            ]
+            db_session.query.return_value = mock_query
 
-        result = calculate_risk_stats(db_session, 1)
+            result = calculate_risk_stats(db_session, 1)
 
-        assert result["total"] == 4
-        assert result["open"] == 3
-        assert result["high"] == 1
-        assert result["critical"] == 1
+            assert result["total"] == 4
+            assert result["open"] == 3
+            assert result["high"] == 1
+            assert result["critical"] == 1
 
     def test_calculate_risk_stats_model_not_exists(self, db_session: Session):
         """Test risk calculation when PmoProjectRisk model doesn't exist."""
         with patch(
-        "app.services.project_dashboard_service.PmoProjectRisk",
-        side_effect=ImportError,
+            "app.services.project_dashboard_service.PmoProjectRisk",
+            side_effect=ImportError,
         ):
-        result = calculate_risk_stats(db_session, 1)
+            result = calculate_risk_stats(db_session, 1)
 
         assert result is None
 
@@ -461,11 +461,11 @@ class TestCalculateIssueStats:
     def test_calculate_issue_stats_model_not_exists(self, db_session: Session):
         """Test issue calculation when Issue model doesn't exist."""
         with patch(
-        "app.services.project_dashboard_service.Issue", side_effect=ImportError
+            "app.services.project_dashboard_service.Issue", side_effect=ImportError
         ):
-        result = calculate_issue_stats(db_session, 1)
+            result = calculate_issue_stats(db_session, 1)
 
-        assert result is None
+            assert result is None
 
 
 class TestCalculateResourceUsage:
@@ -475,17 +475,17 @@ class TestCalculateResourceUsage:
         """Test resource usage calculation with allocations."""
         # Mock PmoResourceAllocation model
         with patch(
-        "app.services.project_dashboard_service.PmoResourceAllocation",
-        new=MagicMock,
+            "app.services.project_dashboard_service.PmoResourceAllocation",
+            new=MagicMock,
         ):
-        mock_query = MagicMock()
-        mock_allocations = [
-        MagicMock(department_name="研发部", role="设计工程师"),
-        MagicMock(department_name="研发部", role="设计工程师"),
-        MagicMock(department_name="制造部", role="装配技师"),
-        MagicMock(department_name=None, role=None),
-        MagicMock(role="测试工程师"),
-        ]
+            mock_query = MagicMock()
+            mock_allocations = [
+                MagicMock(department_name="研发部", role="设计工程师"),
+                MagicMock(department_name="研发部", role="设计工程师"),
+                MagicMock(department_name="制造部", role="装配技师"),
+                MagicMock(department_name=None, role=None),
+                MagicMock(role="测试工程师"),
+            ]
         mock_query.filter.return_value.all.return_value = mock_allocations
         db_session.query.return_value = mock_query
 
@@ -503,26 +503,26 @@ class TestCalculateResourceUsage:
     def test_calculate_resource_usage_no_allocations(self, db_session: Session):
         """Test resource usage calculation with no allocations."""
         with patch(
-        "app.services.project_dashboard_service.PmoResourceAllocation",
-        new=MagicMock,
+            "app.services.project_dashboard_service.PmoResourceAllocation",
+            new=MagicMock,
         ):
-        mock_query = MagicMock()
-        mock_query.filter.return_value.all.return_value = []
-        db_session.query.return_value = mock_query
+            mock_query = MagicMock()
+            mock_query.filter.return_value.all.return_value = []
+            db_session.query.return_value = mock_query
 
-        result = calculate_resource_usage(db_session, 1)
+            result = calculate_resource_usage(db_session, 1)
 
-        assert result is None
+            assert result is None
 
     def test_calculate_resource_usage_model_not_exists(self, db_session: Session):
         """Test resource usage when PmoResourceAllocation model doesn't exist."""
         with patch(
-        "app.services.project_dashboard_service.PmoResourceAllocation",
-        side_effect=ImportError,
+            "app.services.project_dashboard_service.PmoResourceAllocation",
+            side_effect=ImportError,
         ):
-        result = calculate_resource_usage(db_session, 1)
+            result = calculate_resource_usage(db_session, 1)
 
-        assert result is None
+            assert result is None
 
 
 class TestGetRecentActivities:

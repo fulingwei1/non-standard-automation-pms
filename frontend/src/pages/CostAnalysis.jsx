@@ -78,13 +78,21 @@ export default function CostAnalysis() {
       const endDate = now.toISOString().split("T")[0];
 
       // Load purchase orders
-      const ordersRes = await purchaseApi.orders.list({
-        page: 1,
-        page_size: 1000,
-        start_date: startDate,
-        end_date: endDate
-      });
-      const orders = ordersRes.data?.items || ordersRes.data || [];
+      let orders = [];
+      try {
+        const ordersRes = await purchaseApi.orders.list({
+          page: 1,
+          page_size: 1000,
+          start_date: startDate,
+          end_date: endDate
+        });
+        orders = ordersRes.data?.items || ordersRes.data || [];
+      } catch (error) {
+        console.error("获取采购订单失败:", error);
+        // 如果获取采购订单失败，使用空数组继续执行，不影响其他数据的展示
+        // 用户可以通过刷新页面重试
+        orders = [];
+      }
 
       // Calculate statistics
       const totalCost = orders.reduce(
@@ -180,6 +188,7 @@ export default function CostAnalysis() {
       });
     } catch (error) {
       console.error("Failed to load cost analysis:", error);
+      // 设置空数据，避免页面崩溃
       setAnalysisData({
         totalPurchaseCost: 0,
         monthlyTrend: [],
@@ -188,6 +197,8 @@ export default function CostAnalysis() {
         costSavings: 0,
         savingsRate: 0
       });
+      // 注意：这里不显示错误提示，因为可能是部分数据加载失败
+      // 如果所有数据都加载失败，用户可以通过刷新页面重试
     } finally {
       setLoading(false);
     }

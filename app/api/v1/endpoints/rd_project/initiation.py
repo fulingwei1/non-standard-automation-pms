@@ -42,7 +42,7 @@ def get_rd_projects(
     status: Optional[str] = Query(None, description="状态筛选"),
     approval_status: Optional[str] = Query(None, description="审批状态筛选"),
     project_manager_id: Optional[int] = Query(None, description="项目负责人ID筛选"),
-    current_user: User = Depends(security.require_rd_project_access),
+    current_user: User = Depends(security.require_permission("rd_project:read")),
 ) -> Any:
     """
     获取研发项目列表（支持分页、搜索、筛选）
@@ -93,7 +93,7 @@ def create_rd_project(
     *,
     db: Session = Depends(deps.get_db),
     project_in: RdProjectCreate,
-    current_user: User = Depends(security.require_rd_project_access),
+    current_user: User = Depends(security.require_permission("rd_project:read")),
 ) -> Any:
     """
     创建研发项目（立项申请）
@@ -146,7 +146,7 @@ def get_rd_project(
     *,
     db: Session = Depends(deps.get_db),
     project_id: int,
-    current_user: User = Depends(security.require_rd_project_access),
+    current_user: User = Depends(security.require_permission("rd_project:read")),
 ) -> Any:
     """
     获取研发项目详情
@@ -168,7 +168,7 @@ def update_rd_project(
     db: Session = Depends(deps.get_db),
     project_id: int,
     project_in: RdProjectUpdate,
-    current_user: User = Depends(security.require_rd_project_access),
+    current_user: User = Depends(security.require_permission("rd_project:read")),
 ) -> Any:
     """
     更新研发项目
@@ -210,7 +210,7 @@ def approve_rd_project(
     db: Session = Depends(deps.get_db),
     project_id: int,
     approve_request: RdProjectApproveRequest,
-    current_user: User = Depends(security.require_rd_project_access),
+    current_user: User = Depends(security.require_permission("rd_project:read")),
 ) -> Any:
     """
     研发项目审批
@@ -250,7 +250,7 @@ def close_rd_project(
     db: Session = Depends(deps.get_db),
     project_id: int,
     close_request: RdProjectCloseRequest,
-    current_user: User = Depends(security.require_rd_project_access),
+    current_user: User = Depends(security.require_permission("rd_project:read")),
 ) -> Any:
     """
     研发项目结项
@@ -285,7 +285,7 @@ def link_rd_project(
     db: Session = Depends(deps.get_db),
     project_id: int,
     link_request: RdProjectLinkRequest,
-    current_user: User = Depends(security.require_rd_project_access),
+    current_user: User = Depends(security.require_permission("rd_project:read")),
 ) -> Any:
     """
     关联非标项目

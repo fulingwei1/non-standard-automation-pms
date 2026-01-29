@@ -61,6 +61,10 @@ class GlobalAuthMiddleware(BaseHTTPMiddleware):
         """处理每个请求"""
         path = request.url.path
 
+        # 允许 CORS 预检请求 (OPTIONS) 通过，让 CORS 中间件处理
+        if request.method == "OPTIONS":
+            return await call_next(request)
+
         # 开发环境可以通过配置临时禁用全局认证
         if hasattr(settings, 'ENABLE_GLOBAL_AUTH') and not settings.ENABLE_GLOBAL_AUTH:
             logger.warning("全局认证已禁用（仅开发环境）")
@@ -72,17 +76,25 @@ class GlobalAuthMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         # 验证Token
+        # 从Authorization header获取token
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            logger.warning(f"未提供认证凭据: {request.method} {path}")
+            return self._unauthorized_response("未提供认证凭据", "MISSING_TOKEN")
+
+        # 安全地提取token
+        parts = auth_header.split(" ")
+        if len(parts) != 2 or not parts[1]:
+            logger.warning(f"认证凭据格式错误: {request.method} {path}")
+            return self._unauthorized_response("认证凭据格式错误", "INVALID_TOKEN_FORMAT")
+
+        token = parts[1]
+
+        # 验证token并获取用户（只在认证过程捕获异常）
+        # 获取数据库会话
+        from app.models.base import get_session
+        db = get_session()
         try:
-            # 从Authorization header获取token
-            auth_header = request.headers.get("Authorization")
-            if not auth_header or not auth_header.startswith("Bearer "):
-                logger.warning(f"未提供认证凭据: {request.method} {path}")
-                return self._unauthorized_response("未提供认证凭据", "MISSING_TOKEN")
-
-            token = auth_header.split(" ")[1]
-
-            # 验证token并获取用户
-            db = next(get_db())
             try:
                 user = await get_current_user(token=token, db=db)
 
@@ -96,34 +108,35 @@ class GlobalAuthMiddleware(BaseHTTPMiddleware):
                     f"用户: {user.username} (ID: {user.id})"
                 )
 
-                # 继续处理请求
-                response = await call_next(request)
-                return response
+            except HTTPException as e:
+                logger.warning(f"认证失败: {path} - {e.detail}")
+                return JSONResponse(
+                    status_code=e.status_code,
+                    content={
+                        "code": e.status_code,
+                        "message": str(e.detail),
+                        "error_code": "AUTH_FAILED"
+                    },
+                    headers=e.headers or {},
+                )
+            except Exception as e:
+                logger.error(f"认证服务异常: {path} - {type(e).__name__}: {str(e)}", exc_info=True)
+                return JSONResponse(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    content={
+                        "code": 500,
+                        "message": "认证服务异常，请稍后重试",
+                        "error_code": "AUTH_ERROR",
+                        "detail": str(e) if settings.DEBUG else None  # 仅在调试模式下显示详细错误
+                    },
+                )
+        finally:
+            # 确保数据库会话被关闭
+            db.close()
 
-            finally:
-                db.close()
-
-        except HTTPException as e:
-            logger.warning(f"认证失败: {path} - {e.detail}")
-            return JSONResponse(
-                status_code=e.status_code,
-                content={
-                    "code": e.status_code,
-                    "message": str(e.detail),
-                    "error_code": "AUTH_FAILED"
-                },
-                headers=e.headers or {},
-            )
-        except Exception as e:
-            logger.error(f"认证服务异常: {path} - {str(e)}", exc_info=True)
-            return JSONResponse(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                content={
-                    "code": 500,
-                    "message": "认证服务异常，请稍后重试",
-                    "error_code": "AUTH_ERROR"
-                },
-            )
+        # 认证成功，继续处理请求（不捕获后续异常，让 FastAPI 的异常处理器处理）
+        response = await call_next(request)
+        return response
 
     def _is_whitelisted(self, path: str) -> bool:
         """

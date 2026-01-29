@@ -52,7 +52,7 @@ class TestGetEngineerFeedback:
                 assert result['message'] == '绩效数据尚未计算'
         except ValueError:
             # 考核周期不存在，这也是预期的
-        pass
+            pass
 
 
 class TestGenerateFeedbackMessage:

@@ -7,11 +7,11 @@ import { ChevronRight } from "lucide-react";
 import { Card, CardContent, Button, Badge, Progress } from "../../../components/ui";
 import { cn } from "../../../lib/utils";
 import { fadeIn } from "../../../lib/animations";
-import { getHealthConfig } from "../../../lib/constants/strategy";
+import { getStrategyHealthConfig } from "../../../lib/constants/strategy";
 
 export function DimensionCard({ dimension: _dimension, config, data }) {
   const Icon = config.icon;
-  const healthConfig = data?.level ? getHealthConfig(data.level) : null;
+  const healthConfig = data?.level ? getStrategyHealthConfig(data.level) : null;
 
   return (
     <motion.div variants={fadeIn}>

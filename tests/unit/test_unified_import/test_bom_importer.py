@@ -13,25 +13,19 @@ from unittest.mock import MagicMock, patch, Mock
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from sqlalchemy.orm import Session
+
+# BomImporter 使用 @classmethod，不需要实例化
 from app.services.unified_import.bom_importer import BomImporter
-
-
-
-@pytest.fixture
-def import_service(db_session: Session):
-    """创建 BomImporter 实例"""
-    return BomImporter(db_session)
 
 
 class TestBomImporter:
     """Test suite for BomImporter."""
 
     def test_init(self, db_session: Session):
-        """测试服务初始化"""
-        service = BomImporter(db_session)
-        assert service is not None
-        if hasattr(service, 'db'):
-            assert service.db == db_session
+        """测试 BomImporter 是一个类（使用 classmethod）"""
+        # BomImporter 使用 @classmethod，不需要实例化
+        assert hasattr(BomImporter, 'import_bom_data')
+        assert callable(getattr(BomImporter, 'import_bom_data'))
 
 
     def test_import_bom_data(self, db_session: Session):

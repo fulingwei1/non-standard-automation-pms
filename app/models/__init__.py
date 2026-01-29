@@ -31,10 +31,8 @@ __all__ = [
     # User
     "User",
     "Role",
-    "Permission",  # 旧模型，待废弃
-    "RolePermission",  # 旧模型，待废弃
-    "ApiPermission",  # 新模型
-    "RoleApiPermission",  # 新模型
+    "ApiPermission",
+    "RoleApiPermission",
     "UserRole",
     "PermissionAudit",
     # Project

@@ -24,5 +24,4 @@ CREATE INDEX IF NOT EXISTS idx_projects_salesperson ON projects(salesperson_id);
 
 -- 注意：SQLite 不支持直接修改表结构，如需添加约束，需重建表
 -- 现有数据的 outcome 可设置为 NULL 或 'PENDING'
-UPDATE projects SET outcome = 'WON' WHERE contract_id IS NOT NULL AND outcome IS NULL;
 UPDATE projects SET outcome = 'PENDING' WHERE outcome IS NULL;

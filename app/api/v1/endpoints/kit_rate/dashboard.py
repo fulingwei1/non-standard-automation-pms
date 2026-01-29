@@ -27,7 +27,7 @@ class KitRateDashboardEndpoint(BaseDashboardEndpoint):
         """初始化路由，添加额外端点"""
         # 先创建router，但不调用super().__init__()，因为需要覆盖主dashboard路由
         self.router = APIRouter()
-        user_dependency = security.require_procurement_access()
+        user_dependency = security.require_permission("procurement:read")
         
         # 覆盖主dashboard路由，支持project_ids参数
         async def dashboard_endpoint(
@@ -95,7 +95,7 @@ class KitRateDashboardEndpoint(BaseDashboardEndpoint):
     
     def _get_user_dependency(self):
         """重写用户依赖，使用采购权限"""
-        return security.require_procurement_access()
+        return security.require_permission("procurement:read")
     
     def get_dashboard_data(
         self,

@@ -23,7 +23,7 @@ def get_rd_project_categories(
     db: Session = Depends(deps.get_db),
     category_type: Optional[str] = Query(None, description="分类类型筛选：SELF/ENTRUST/COOPERATION"),
     is_active: Optional[bool] = Query(None, description="是否启用筛选"),
-    current_user: User = Depends(security.require_rd_project_access),
+    current_user: User = Depends(security.require_permission("rd_project:read")),
 ) -> Any:
     """
     获取研发项目分类列表

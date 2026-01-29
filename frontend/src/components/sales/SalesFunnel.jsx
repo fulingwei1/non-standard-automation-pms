@@ -15,27 +15,20 @@ const funnelStages = [
   { key: "won", label: "签约赢单", color: "from-emerald-500 to-green-500" },
 ];
 
-export default function SalesFunnel({ data = {}, onStageClick }) {
-  // Default mock data if not provided
+export default function SalesFunnel({ data = {}, trends = {}, onStageClick }) {
+  // 使用传入的数据，无数据时显示 0
   const funnelData = {
-    lead: data.lead ?? 12,
-    contact: data.contact ?? 8,
-    quote: data.quote ?? 5,
-    negotiate: data.negotiate ?? 3,
-    won: data.won ?? 2,
+    lead: data.lead ?? 0,
+    contact: data.contact ?? 0,
+    quote: data.quote ?? 0,
+    negotiate: data.negotiate ?? 0,
+    won: data.won ?? 0,
   };
 
   const maxValue = Math.max(...Object.values(funnelData), 1);
 
+  // 从 props 获取趋势数据
   const getTrend = (stage) => {
-    // Mock trend data
-    const trends = {
-      lead: { value: 15, direction: "up" },
-      contact: { value: 8, direction: "up" },
-      quote: { value: 5, direction: "down" },
-      negotiate: { value: 0, direction: "flat" },
-      won: { value: 25, direction: "up" },
-    };
     return trends[stage] || { value: 0, direction: "flat" };
   };
 

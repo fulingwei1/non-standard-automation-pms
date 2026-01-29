@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
 
-from sqlalchemy import and_, case, func
+from sqlalchemy import and_, case, func, literal
 from sqlalchemy.orm import Session
 
 from app.models.sales import (
@@ -224,9 +224,9 @@ class SalesTeamService:
             self.db.query(
                 Lead.owner_id.label("owner_id"),
                 func.count(Lead.id).label("total_leads"),
-                func.sum(case((Lead.status == "CONVERTED", 1), else_=0)).label("converted_leads"),
-                func.sum(case((Lead.requirement_detail_id.isnot(None), 1), else_=0)).label("modeled_leads"),
-                func.avg(func.coalesce(Lead.completeness, 0)).label("avg_completeness"),
+                func.sum(case((Lead.status == "CONVERTED", literal(1)), else_=literal(0))).label("converted_leads"),
+                func.sum(case((Lead.requirement_detail_id.isnot(None), literal(1)), else_=literal(0))).label("modeled_leads"),
+                func.avg(func.coalesce(Lead.completeness, literal(0))).label("avg_completeness"),
             )
             .filter(Lead.owner_id.in_(user_ids))
         )

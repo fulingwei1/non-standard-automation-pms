@@ -70,8 +70,8 @@ export default function SalesFunnel() {
     const loadFilterOptions = async () => {
       try {
         const [usersRes, customersRes] = await Promise.all([
-          userApi.list({ page: 1, page_size: 200 }),
-          customerApi.list({ page: 1, page_size: 200 }),
+          userApi.list({ page: 1, page_size: 100 }),
+          customerApi.list({ page: 1, page_size: 100 }),
         ]);
 
         const userItems = usersRes?.data?.items || usersRes?.data || [];

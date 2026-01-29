@@ -201,32 +201,6 @@ class TestUserModel:
         db_session.delete(user)
         db_session.commit()
 
-    @pytest.mark.unit
-    class TestRoleModel:
-        """角色模型测试"""
-
-        @pytest.fixture
-        def test_role_data(self, db_session: Session):
-            """测试角色数据"""
-
-            # 使用动态角色代码避免唯一约束冲突
-
-        role_code = f"QA_{datetime.now().timestamp()}"
-        return {
-            "role_code": role_code,
-            "role_name": "质检员",
-            "description": "质量检查角色",
-            "is_active": True,
-        }
-
-        def test_create_role(self, db_session: Session, test_role_data: dict):
-            """测试创建角色"""
-            pytest.skip(reason="角色唯一约束冲突")
-
-        def test_role_permissions(self, db_session: Session):
-            """测试角色权限关联"""
-            pytest.skip(reason="角色唯一约束冲突：fixture 未提供角色对象")
-
     def test_role_permissions(self, db_session: Session):
         """测试角色权限关联"""
         # 创建角色
@@ -239,10 +213,10 @@ class TestUserModel:
         db_session.add(role)
         db_session.commit()
 
-        # 创建权限
+        # 创建权限（使用正确的字段名 perm_code, perm_name）
         permission = ApiPermission(
-            permission_code="project:read",
-            permission_name="项目读取",
+            perm_code="project:read",
+            perm_name="项目读取",
             description="读取项目信息",
         )
         db_session.add(permission)
@@ -265,3 +239,28 @@ class TestUserModel:
         db_session.delete(role)
         db_session.delete(permission)
         db_session.commit()
+
+
+@pytest.mark.unit
+class TestRoleModel:
+    """角色模型测试"""
+
+    @pytest.fixture
+    def test_role_data(self, db_session: Session):
+        """测试角色数据"""
+        # 使用动态角色代码避免唯一约束冲突
+        role_code = f"QA_{datetime.now().timestamp()}"
+        return {
+            "role_code": role_code,
+            "role_name": "质检员",
+            "description": "质量检查角色",
+            "is_active": True,
+        }
+
+    def test_create_role(self, db_session: Session, test_role_data: dict):
+        """测试创建角色"""
+        pytest.skip(reason="角色唯一约束冲突")
+
+    def test_role_permissions(self, db_session: Session):
+        """测试角色权限关联"""
+        pytest.skip(reason="角色唯一约束冲突：fixture 未提供角色对象")

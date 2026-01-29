@@ -105,8 +105,8 @@ class TestGetTargetProjectIds:
         mock_project1 = MagicMock(id=1, status="APPROVED")
         mock_project2 = MagicMock(id=2, status="IN_PROGRESS")
         mock_query.filter.return_value.all.return_value = [
-        mock_project1,
-        mock_project2,
+            mock_project1,
+            mock_project2,
         ]
         mock_db.query.return_value = mock_query
 
@@ -270,10 +270,10 @@ class TestCalculateAllocationRates:
 
         # Mock the helper function
         with patch(
-        "app.services.cost_allocation_service.calculate_allocation_rates_by_hours",
-        return_value={1: 50.0, 2: 50.0},
+            "app.services.cost_allocation_service.calculate_allocation_rates_by_hours",
+            return_value={1: 50.0, 2: 50.0},
         ):
-        result = calculate_allocation_rates(mock_db, mock_rule, target_project_ids)
+            result = calculate_allocation_rates(mock_db, mock_rule, target_project_ids)
 
         assert result == {1: 50.0, 2: 50.0}
 
@@ -299,10 +299,10 @@ class TestCalculateAllocationRates:
         target_project_ids = [1, 2]
 
         with patch(
-        "app.services.cost_allocation_service.calculate_allocation_rates_by_headcount",
-        return_value={1: 40.0, 2: 60.0},
+            "app.services.cost_allocation_service.calculate_allocation_rates_by_headcount",
+            return_value={1: 40.0, 2: 60.0},
         ):
-        result = calculate_allocation_rates(mock_db, mock_rule, target_project_ids)
+            result = calculate_allocation_rates(mock_db, mock_rule, target_project_ids)
 
         assert result == {1: 40.0, 2: 60.0}
 
@@ -343,12 +343,12 @@ class TestCreateAllocatedCost:
         mock_db.query.return_value = mock_query
 
         result = create_allocated_cost(
-        mock_db,
-        mock_cost,
-        project_id=1,
-        rate=25.0,
-        rule_id=10,
-        generate_cost_no=lambda db: "ALLOC001",
+            mock_db,
+            mock_cost,
+            project_id=1,
+            rate=25.0,
+            rule_id=10,
+            generate_cost_no=lambda db: "ALLOC001",
         )
 
         # Verify the allocated cost properties
@@ -390,12 +390,12 @@ class TestCreateAllocatedCost:
         mock_db.query.return_value = mock_query
 
         result = create_allocated_cost(
-        mock_db,
-        mock_cost,
-        project_id=1,
-        rate=25.0,
-        rule_id=10,
-        generate_cost_no=lambda db: "ALLOC001",
+            mock_db,
+            mock_cost,
+            project_id=1,
+            rate=25.0,
+            rule_id=10,
+            generate_cost_no=lambda db: "ALLOC001",
         )
 
         # Allocated amount: 1000 * 25% = 250
@@ -420,12 +420,12 @@ class TestCreateAllocatedCost:
         mock_db.query.return_value = mock_query
 
         result = create_allocated_cost(
-        mock_db,
-        mock_cost,
-        project_id=1,
-        rate=25.0,
-        rule_id=10,
-        generate_cost_no=lambda db: "ALLOC001",
+            mock_db,
+            mock_cost,
+            project_id=1,
+            rate=25.0,
+            rule_id=10,
+            generate_cost_no=lambda db: "ALLOC001",
         )
 
         # Should still create the cost, just won't update project total

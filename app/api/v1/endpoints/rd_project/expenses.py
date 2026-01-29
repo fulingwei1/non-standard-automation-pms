@@ -41,7 +41,7 @@ def get_rd_costs(
     start_date: Optional[date] = Query(None, description="开始日期筛选"),
     end_date: Optional[date] = Query(None, description="结束日期筛选"),
     status: Optional[str] = Query(None, description="状态筛选"),
-    current_user: User = Depends(security.require_rd_project_access),
+    current_user: User = Depends(security.require_permission("rd_project:read")),
 ) -> Any:
     """
     获取研发费用列表（支持分页、筛选）
@@ -82,7 +82,7 @@ def create_rd_cost(
     *,
     db: Session = Depends(deps.get_db),
     cost_in: RdCostCreate,
-    current_user: User = Depends(security.require_rd_project_access),
+    current_user: User = Depends(security.require_permission("rd_project:read")),
 ) -> Any:
     """
     录入研发费用
@@ -147,7 +147,7 @@ def update_rd_cost(
     db: Session = Depends(deps.get_db),
     cost_id: int,
     cost_in: RdCostUpdate,
-    current_user: User = Depends(security.require_rd_project_access),
+    current_user: User = Depends(security.require_permission("rd_project:read")),
 ) -> Any:
     """
     更新研发费用
@@ -190,7 +190,7 @@ def get_rd_project_cost_summary(
     *,
     db: Session = Depends(deps.get_db),
     project_id: int,
-    current_user: User = Depends(security.require_rd_project_access),
+    current_user: User = Depends(security.require_permission("rd_project:read")),
 ) -> Any:
     """
     获取项目费用汇总
@@ -272,7 +272,7 @@ def calculate_labor_cost(
     *,
     db: Session = Depends(deps.get_db),
     calc_request: RdCostCalculateLaborRequest,
-    current_user: User = Depends(security.require_rd_project_access),
+    current_user: User = Depends(security.require_permission("rd_project:read")),
 ) -> Any:
     """
     人工费用自动计算（工时×时薪）

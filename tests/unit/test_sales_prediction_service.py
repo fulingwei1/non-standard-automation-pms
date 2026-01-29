@@ -535,10 +535,10 @@ class TestPredictRevenue:
         def query_side_effect(model):
             model_name = str(model)
             if call_count[0] == 0:  # Contract
-            call_count[0] += 1
-            return contracts_query
-        else:  # Opportunity
-        return opps_query
+                call_count[0] += 1
+                return contracts_query
+            else:  # Opportunity
+                return opps_query
 
         db.query.side_effect = query_side_effect
 
@@ -571,15 +571,15 @@ class TestPredictRevenue:
             if call_count[0] == 0:
                 call_count[0] += 1
                 return contracts_query
-        else:
-            return opps_query
+            else:
+                return opps_query
 
-            db.query.side_effect = query_side_effect
+        db.query.side_effect = query_side_effect
 
-            service = SalesPredictionService(db)
-            result = service.predict_revenue()
+        service = SalesPredictionService(db)
+        result = service.predict_revenue()
 
-            assert result["method"] == "moving_average"
+        assert result["method"] == "moving_average"
 
     def test_accepts_exponential_smoothing_method(self):
         """测试接受指数平滑法"""
@@ -599,15 +599,15 @@ class TestPredictRevenue:
             if call_count[0] == 0:
                 call_count[0] += 1
                 return contracts_query
-        else:
-            return opps_query
+            else:
+                return opps_query
 
-            db.query.side_effect = query_side_effect
+        db.query.side_effect = query_side_effect
 
-            service = SalesPredictionService(db)
-            result = service.predict_revenue(method="exponential_smoothing")
+        service = SalesPredictionService(db)
+        result = service.predict_revenue(method="exponential_smoothing")
 
-            assert result["method"] == "exponential_smoothing"
+        assert result["method"] == "exponential_smoothing"
 
 
 @pytest.mark.unit
@@ -632,10 +632,10 @@ class TestEvaluatePredictionAccuracy:
 
         def query_side_effect(model):
             if call_count[0] == 0:  # Contract
-            call_count[0] += 1
-            return contracts_query
-        else:  # Opportunity
-        return opps_query
+                call_count[0] += 1
+                return contracts_query
+            else:  # Opportunity
+                return opps_query
 
         db.query.side_effect = query_side_effect
 
@@ -671,10 +671,10 @@ class TestEvaluatePredictionAccuracy:
 
         def query_side_effect(model):
             if call_count[0] == 0:  # Contract
-            call_count[0] += 1
-            return contracts_query
-        else:  # Opportunity
-        return opps_query
+                call_count[0] += 1
+                return contracts_query
+            else:  # Opportunity
+                return opps_query
 
         db.query.side_effect = query_side_effect
 

@@ -200,8 +200,8 @@ class ProjectFactory(BaseFactory):
     class Meta:
         model = Project
 
-    project_code = factory.Sequence(
-        lambda n: f"PJ{date.today().strftime('%y%m%d')}{n:03d}"
+    project_code = factory.LazyFunction(
+        lambda: f"PJ{date.today().strftime('%y%m%d')}{random.randint(100, 999)}{random.randint(100, 999)}"
     )
     project_name = factory.Sequence(lambda n: f"测试项目{n}")
     short_name = factory.Sequence(lambda n: f"项目{n}")
@@ -235,7 +235,9 @@ class MachineFactory(BaseFactory):
     class Meta:
         model = Machine
 
-    machine_code = factory.Sequence(lambda n: f"PN{n:03d}")
+    machine_code = factory.LazyFunction(
+        lambda: f"PN{random.randint(100, 999)}{random.randint(100, 999)}"
+    )
     machine_name = factory.Sequence(lambda n: f"测试机台{n}")
     machine_type = "TEST_EQUIPMENT"
     status = "DESIGN"
@@ -445,8 +447,8 @@ class LeadFactory(BaseFactory):
     class Meta:
         model = Lead
 
-    lead_code = factory.Sequence(
-        lambda n: f"LD{date.today().strftime('%y%m%d')}{n:04d}"
+    lead_code = factory.LazyFunction(
+        lambda: f"LD{date.today().strftime('%y%m%d')}{random.randint(1000, 9999)}"
     )
     lead_name = factory.Sequence(lambda n: f"测试线索{n}")
     company_name = factory.Sequence(lambda n: f"潜在客户公司{n}")
@@ -467,8 +469,8 @@ class OpportunityFactory(BaseFactory):
     class Meta:
         model = Opportunity
 
-    opportunity_code = factory.Sequence(
-        lambda n: f"OP{date.today().strftime('%y%m%d')}{n:04d}"
+    opportunity_code = factory.LazyFunction(
+        lambda: f"OP{date.today().strftime('%y%m%d')}{random.randint(1000, 9999)}"
     )
     opportunity_name = factory.Sequence(lambda n: f"测试商机{n}")
     stage = "INITIAL"
@@ -488,8 +490,8 @@ class QuoteFactory(BaseFactory):
     class Meta:
         model = Quote
 
-    quote_code = factory.Sequence(
-        lambda n: f"QT{date.today().strftime('%y%m%d')}{n:04d}"
+    quote_code = factory.LazyFunction(
+        lambda: f"QT{date.today().strftime('%y%m%d')}{random.randint(1000, 9999)}"
     )
     quote_name = factory.Sequence(lambda n: f"测试报价{n}")
     version = 1
@@ -506,8 +508,8 @@ class ContractFactory(BaseFactory):
     class Meta:
         model = Contract
 
-    contract_code = factory.Sequence(
-        lambda n: f"CT{date.today().strftime('%y%m%d')}{n:04d}"
+    contract_code = factory.LazyFunction(
+        lambda: f"CT{date.today().strftime('%y%m%d')}{random.randint(1000, 9999)}"
     )
     contract_name = factory.Sequence(lambda n: f"测试合同{n}")
     contract_type = "SALES"
@@ -600,8 +602,8 @@ class AcceptanceOrderFactory(BaseFactory):
     class Meta:
         model = AcceptanceOrder
 
-    order_no = factory.Sequence(
-        lambda n: f"ACC{date.today().strftime('%y%m%d')}{n:04d}"
+    order_no = factory.LazyFunction(
+        lambda: f"ACC{date.today().strftime('%y%m%d')}{random.randint(1000, 9999)}"
     )
     acceptance_type = "FAT"
     status = "DRAFT"
@@ -737,8 +739,10 @@ class AcceptanceIssueFactory(BaseFactory):
     class Meta:
         model = AcceptanceIssue
 
-    issue_no = factory.Sequence(lambda n: f"ISS{n:05d}")
-    issue_title = factory.Sequence(lambda n: f"测试问题{n}")
+    issue_no = factory.LazyFunction(
+        lambda: f"ISS{random.randint(10000, 99999)}"
+    )
+    title = factory.Sequence(lambda n: f"测试问题{n}")
     issue_type = "FUNCTIONAL"
     severity = "NORMAL"
     description = factory.Sequence(lambda n: f"测试问题描述{n}")

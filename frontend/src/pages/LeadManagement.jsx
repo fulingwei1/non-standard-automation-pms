@@ -86,7 +86,7 @@ export default function LeadManagement() {
   // 加载客户列表
   const loadCustomers = async () => {
     try {
-      const response = await customerApi.list({ page: 1, page_size: 200 });
+      const response = await customerApi.list({ page: 1, page_size: 100 });
       if (response.data && response.data.items) {
         setCustomers(response.data.items);
       }

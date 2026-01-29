@@ -96,7 +96,6 @@ import {
 import { getContracts, getContractDetail, createContract, updateContract, deleteContract, getContractHistory } from '../services/contractService';
 
 const { Title, Text, Paragraph } = Typography;
-const { TabPane } = Tabs;
 const { RangePicker } = DatePicker;
 const { TextArea } = Input;
 
@@ -121,10 +120,13 @@ const ContractManagement = () => {
     setLoading(true);
     try {
       const data = await getContracts();
-      setContracts(data);
+      // 确保 contracts 是数组
+      const items = data?.items || data;
+      setContracts(Array.isArray(items) ? items : []);
       setLoading(false);
     } catch (_error) {
       message.error('加载合同数据失败');
+      setContracts([]);
       setLoading(false);
     }
   };
@@ -428,101 +430,97 @@ const ContractManagement = () => {
         activeKey={activeTab}
         onChange={setActiveTab}
         type="card"
-        className="contract-tabs">
-
-        <TabPane
-          tab={
-          <span>
-              <TrendingUp size={16} />
-              概览分析
-          </span>
+        className="contract-tabs"
+        items={[
+          {
+            key: 'overview',
+            label: (
+              <span>
+                <TrendingUp size={16} />
+                概览分析
+              </span>
+            ),
+            children: (
+              <ContractOverview
+                data={contracts}
+                loading={loading}
+                onNavigate={(type, value) => {
+                  setActiveTab('contracts');
+                  if (type === 'status') {setFilters({ ...filters, status: value });}
+                  if (type === 'risks') {setFilters({ ...filters, riskLevel: 'high' });}
+                }} />
+            )
+          },
+          {
+            key: 'contracts',
+            label: (
+              <span>
+                <FileText size={16} />
+                合同列表 ({filteredContracts.length})
+              </span>
+            ),
+            children: (
+              <ContractList
+                contracts={filteredContracts}
+                loading={loading}
+                onEdit={handleEditContract}
+                onDelete={handleDeleteContract}
+                onSign={handleSignContract}
+                onCreateProject={handleCreateProject} />
+            )
+          },
+          {
+            key: 'editor',
+            label: (
+              <span>
+                <Edit size={16} />
+                合同编辑
+              </span>
+            ),
+            children: (
+              <ContractEditor
+                contract={editingContract}
+                onSave={() => {
+                  setShowCreateModal(false);
+                  setEditingContract(null);
+                  loadData();
+                }}
+                onCancel={() => {
+                  setShowCreateModal(false);
+                  setEditingContract(null);
+                }} />
+            )
+          },
+          {
+            key: 'signature',
+            label: (
+              <span>
+                <FileCheck size={16} />
+                签署管理
+              </span>
+            ),
+            children: (
+              <SignatureManager
+                contracts={contracts}
+                loading={loading}
+                onRefresh={loadData} />
+            )
+          },
+          {
+            key: 'payment',
+            label: (
+              <span>
+                <DollarSign size={16} />
+                付款跟踪
+              </span>
+            ),
+            children: (
+              <PaymentTracker
+                contracts={contracts}
+                loading={loading} />
+            )
           }
-          key="overview">
-
-          <ContractOverview
-            data={contracts}
-            loading={loading}
-            onNavigate={(type, value) => {
-              setActiveTab('contracts');
-              if (type === 'status') {setFilters({ ...filters, status: value });}
-              if (type === 'risks') {setFilters({ ...filters, riskLevel: 'high' });}
-            }} />
-
-        </TabPane>
-
-        <TabPane
-          tab={
-          <span>
-              <FileText size={16} />
-              合同列表 ({filteredContracts.length})
-          </span>
-          }
-          key="contracts">
-
-          <ContractList
-            contracts={filteredContracts}
-            loading={loading}
-            onEdit={handleEditContract}
-            onDelete={handleDeleteContract}
-            onSign={handleSignContract}
-            onCreateProject={handleCreateProject} />
-
-        </TabPane>
-
-        <TabPane
-          tab={
-          <span>
-              <Edit size={16} />
-              合同编辑
-          </span>
-          }
-          key="editor">
-
-          <ContractEditor
-            contract={editingContract}
-            onSave={() => {
-              setShowCreateModal(false);
-              setEditingContract(null);
-              loadData();
-            }}
-            onCancel={() => {
-              setShowCreateModal(false);
-              setEditingContract(null);
-            }} />
-
-        </TabPane>
-
-        <TabPane
-          tab={
-          <span>
-              <FileCheck size={16} />
-              签署管理
-          </span>
-          }
-          key="signature">
-
-          <SignatureManager
-            contracts={contracts}
-            loading={loading}
-            onRefresh={loadData} />
-
-        </TabPane>
-
-        <TabPane
-          tab={
-          <span>
-              <DollarSign size={16} />
-              付款跟踪
-          </span>
-          }
-          key="payment">
-
-          <PaymentTracker
-            contracts={contracts}
-            loading={loading} />
-
-        </TabPane>
-      </Tabs>
+        ]} />
 
       {/* 合同创建/编辑模态框 */}
       <Modal

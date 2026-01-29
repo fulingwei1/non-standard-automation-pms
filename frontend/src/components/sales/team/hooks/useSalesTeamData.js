@@ -18,13 +18,11 @@ import {
 "../utils/salesTeamTransformers";
 import { DEFAULT_TEAM_STATS } from "../constants/salesTeamConstants";
 
-const mockTeamMembers = []; // 空数组作为fallback，不再使用mock数据
-
 export const useSalesTeamData = (filters, defaultRange, triggerAutoRefreshToast) => {
   const [loading, setLoading] = useState(false);
   const [teamMembers, setTeamMembers] = useState([]);
   const [teamStats, setTeamStats] = useState(DEFAULT_TEAM_STATS);
-  const [usingMockData, setUsingMockData] = useState(false);
+  const [error, setError] = useState(null);
   const [departmentOptions, setDepartmentOptions] = useState([
   { label: "全部", value: "all" }]
   );
@@ -48,7 +46,7 @@ export const useSalesTeamData = (filters, defaultRange, triggerAutoRefreshToast)
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        const res = await orgApi.departments({ page: 1, page_size: 200 });
+        const res = await orgApi.departments({ page: 1, page_size: 100 });
         const payload = res.data?.data || res.data || res;
         const list = payload.items || payload.data || [];
         const options = Array.isArray(list) ?
@@ -72,8 +70,10 @@ export const useSalesTeamData = (filters, defaultRange, triggerAutoRefreshToast)
     setLoading(true);
     try {
       const requestParams = {};
-      if (filters.departmentId && filters.departmentId !== "all")
-      {requestParams.department_id = filters.departmentId;}
+      // department_id 为 "all" 时不传递该参数（后端期望 Optional[int]）
+      if (filters.departmentId && filters.departmentId !== "all") {
+        requestParams.department_id = parseInt(filters.departmentId, 10);
+      }
       if (filters.region) {requestParams.region = filters.region.trim();}
       if (filters.startDate) {requestParams.start_date = filters.startDate;}
       if (filters.endDate) {requestParams.end_date = filters.endDate;}
@@ -102,11 +102,11 @@ export const useSalesTeamData = (filters, defaultRange, triggerAutoRefreshToast)
         period_value: targetPeriodValue,
         status: "ACTIVE",
         page: 1,
-        page_size: 200
+        page_size: 100
       }),
       customerApi.list({
         page: 1,
-        page_size: 200
+        page_size: 100
       })]
       );
 
@@ -127,7 +127,7 @@ export const useSalesTeamData = (filters, defaultRange, triggerAutoRefreshToast)
         setTeamMembers([]);
         setTeamStats(calculateTeamStats([], {}));
         updateRegionOptions([]);
-        setUsingMockData(false);
+        setError(null);
         triggerAutoRefreshToast();
         return;
       }
@@ -202,15 +202,14 @@ export const useSalesTeamData = (filters, defaultRange, triggerAutoRefreshToast)
       };
 
       setTeamStats(calculateTeamStats(normalizedMembers, enrichedSummary));
-      setUsingMockData(false);
+      setError(null);
       triggerAutoRefreshToast();
     } catch (err) {
       console.error("Failed to fetch sales team data:", err);
-      const fallbackMembers = mockTeamMembers.map(transformTeamMember);
-      setTeamMembers(fallbackMembers);
-      setTeamStats(calculateTeamStats(fallbackMembers, null));
-      updateRegionOptions(fallbackMembers);
-      setUsingMockData(true);
+      setError(err.response?.data?.detail || err.message || "获取团队数据失败");
+      setTeamMembers([]);
+      setTeamStats(DEFAULT_TEAM_STATS);
+      updateRegionOptions([]);
       triggerAutoRefreshToast();
     } finally {
       setLoading(false);
@@ -230,7 +229,7 @@ export const useSalesTeamData = (filters, defaultRange, triggerAutoRefreshToast)
     loading,
     teamMembers,
     teamStats,
-    usingMockData,
+    error,
     departmentOptions,
     regionOptions,
 

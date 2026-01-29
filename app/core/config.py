@@ -160,6 +160,15 @@ class Settings(BaseSettings):
     ]  # 合同到期提醒时间点（天）
     SALES_APPROVAL_TIMEOUT_HOURS: int = 24  # 审批超时提醒阈值（小时），默认24小时
 
+    # Kimi AI 配置
+    KIMI_API_KEY: Optional[str] = None  # Kimi API Key
+    KIMI_API_BASE: str = "https://api.moonshot.cn/v1"  # Kimi API 基础URL
+    KIMI_MODEL: str = "moonshot-v1-8k"  # 默认模型，可选：moonshot-v1-8k, moonshot-v1-32k, moonshot-v1-128k
+    KIMI_MAX_TOKENS: int = 4000  # 最大生成token数
+    KIMI_TEMPERATURE: float = 0.7  # 温度参数，控制随机性
+    KIMI_TIMEOUT: int = 30  # 请求超时时间（秒）
+    KIMI_ENABLED: bool = False  # 是否启用Kimi AI功能
+
 
 # 创建全局配置实例
 settings = Settings()

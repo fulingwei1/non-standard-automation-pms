@@ -94,21 +94,21 @@ class TestIdentifyAbilityChanges:
         service = PerformanceTrendService(db_session)
 
         with patch.object(service, 'get_engineer_trend', return_value={
-        'has_data': True,
-        'total_scores': [80.0],  # 只有一个周期
-        'dimension_trends': {}
+            'has_data': True,
+            'total_scores': [80.0],  # 只有一个周期
+            'dimension_trends': {}
         }):
-        result = service.identify_ability_changes(1)
-        assert result == []
+            result = service.identify_ability_changes(1)
+            assert result == []
 
     def test_dimension_names_mapping(self):
         """测试维度名称映射"""
         dimension_names = {
-        'technical': '技术能力',
-        'execution': '项目执行',
-        'cost_quality': '成本/质量',
-        'knowledge': '知识沉淀',
-        'collaboration': '团队协作'
+            'technical': '技术能力',
+            'execution': '项目执行',
+            'cost_quality': '成本/质量',
+            'knowledge': '知识沉淀',
+            'collaboration': '团队协作'
         }
 
         assert dimension_names['technical'] == '技术能力'

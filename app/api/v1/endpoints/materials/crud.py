@@ -38,7 +38,7 @@ def read_materials(
     material_type: Optional[str] = Query(None, description="物料类型筛选"),
     is_key_material: Optional[bool] = Query(None, description="是否关键物料"),
     is_active: Optional[bool] = Query(None, description="是否启用"),
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("procurement:read")),
 ) -> Any:
     """获取物料列表（支持分页、搜索、筛选）"""
     service = MaterialService(db)
@@ -59,7 +59,7 @@ def read_material(
     *,
     db: Session = Depends(deps.get_db),
     material_id: int,
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("procurement:read")),
 ) -> Any:
     """获取物料详情"""
     service = MaterialService(db)
@@ -71,7 +71,7 @@ def create_material(
     *,
     db: Session = Depends(deps.get_db),
     material_in: MaterialCreate,
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("procurement:read")),
 ) -> Any:
     """
     创建新物料
@@ -96,7 +96,7 @@ def update_material(
     db: Session = Depends(deps.get_db),
     material_id: int,
     material_in: MaterialUpdate,
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("procurement:read")),
 ) -> Any:
     """更新物料信息"""
     service = MaterialService(db)

@@ -24,7 +24,7 @@ def read_material_categories(
         None, description="父分类ID，为空则返回顶级分类树"
     ),
     is_active: Optional[bool] = Query(None, description="是否启用"),
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("procurement:read")),
 ) -> Any:
     """获取物料分类列表（树形结构）"""
     service = MaterialCategoryService(db)

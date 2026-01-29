@@ -225,8 +225,8 @@ CREATE INDEX IF NOT EXISTS idx_rm_menu ON role_menus(menu_id);
 -- ========================================
 -- 修改现有 roles 表
 -- ========================================
--- 添加 role_type 字段 (SYSTEM/CUSTOM)
-ALTER TABLE roles ADD COLUMN role_type VARCHAR(20) DEFAULT 'CUSTOM';
+-- 添加 role_type 字段 (SYSTEM/CUSTOM) - 已在 role_management_module 中添加
+-- ALTER TABLE roles ADD COLUMN role_type VARCHAR(20) DEFAULT 'CUSTOM';
 
 -- 添加 role_category 字段
 ALTER TABLE roles ADD COLUMN role_category VARCHAR(50);

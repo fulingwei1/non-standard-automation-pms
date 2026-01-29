@@ -24,13 +24,13 @@ class TestBasicCRUD:
     def test_create_user(self, db_session: Session):
         """测试创建用户"""
         user = User(
-        employee_id=999,
-        username=f"test_user_{datetime.now().timestamp()}",
-        password_hash=get_password_hash("test123"),
-        email=f"test_{datetime.now().timestamp()}@example.com",
-        real_name="测试用户",
-        is_active=True,
-        is_superuser=False,
+            employee_id=999,
+            username=f"test_user_{datetime.now().timestamp()}",
+            password_hash=get_password_hash("test123"),
+            email=f"test_{datetime.now().timestamp()}@example.com",
+            real_name="测试用户",
+            is_active=True,
+            is_superuser=False,
         )
         db_session.add(user)
         db_session.commit()
@@ -48,15 +48,15 @@ class TestBasicCRUD:
         """测试创建项目"""
         project_code = f"PJ{datetime.now().strftime('%y%m%d%H%M%S')}"
         project = Project(
-        project_code=project_code,
-        project_name="测试项目",
-        customer_name="测试客户",
-        contract_amount=100000.00,
-        stage="S1",
-        status="ST01",
-        health="H1",
-        created_by=1,
-        pm_id=1,
+            project_code=project_code,
+            project_name="测试项目",
+            customer_name="测试客户",
+            contract_amount=100000.00,
+            stage="S1",
+            status="ST01",
+            health="H1",
+            created_by=1,
+            pm_id=1,
         )
         db_session.add(project)
         db_session.commit()
@@ -98,12 +98,12 @@ class TestBasicCRUD:
 
         if user:
             # 获取该用户管理的项目
-        managed_projects = (
-        db_session.query(Project)
-        .filter(Project.pm_id == user.id)
-        .limit(5)
-        .all()
-        )
+            managed_projects = (
+                db_session.query(Project)
+                .filter(Project.pm_id == user.id)
+                .limit(5)
+                .all()
+            )
 
             # 验证关系
-        assert isinstance(managed_projects, list)
+            assert isinstance(managed_projects, list)

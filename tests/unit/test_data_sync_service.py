@@ -70,21 +70,21 @@ class TestDataSyncService:
         def mock_query_side_effect(model):
             if model == Contract:
                 return Mock(
-                filter=Mock(
-                return_value=Mock(first=Mock(return_value=mock_contract))
+                    filter=Mock(
+                        return_value=Mock(first=Mock(return_value=mock_contract))
+                    )
                 )
+            else:
+                return Mock(
+                    filter=Mock(return_value=Mock(first=Mock(return_value=None)))
                 )
-        else:
-            return Mock(
-            filter=Mock(return_value=Mock(first=Mock(return_value=None)))
-            )
 
-            db_session.query = Mock(side_effect=mock_query_side_effect)
+        db_session.query = Mock(side_effect=mock_query_side_effect)
 
-            result = service.sync_contract_to_project(1)
+        result = service.sync_contract_to_project(1)
 
-            assert result["success"] is False
-            assert "项目不存在" in result["message"]
+        assert result["success"] is False
+        assert "项目不存在" in result["message"]
 
     def test_sync_contract_to_project_sync_contract_amount(self, db_session):
         from app.services.data_sync_service import DataSyncService
@@ -102,24 +102,24 @@ class TestDataSyncService:
         def mock_query_side_effect(model):
             if model == Contract:
                 return Mock(
-                filter=Mock(
-                return_value=Mock(first=Mock(return_value=mock_contract))
+                    filter=Mock(
+                        return_value=Mock(first=Mock(return_value=mock_contract))
+                    )
                 )
+            else:
+                return Mock(
+                    filter=Mock(
+                        return_value=Mock(first=Mock(return_value=mock_project))
+                    )
                 )
-        else:
-            return Mock(
-            filter=Mock(
-            return_value=Mock(first=Mock(return_value=mock_project))
-            )
-            )
 
-            db_session.query = Mock(side_effect=mock_query_side_effect)
+        db_session.query = Mock(side_effect=mock_query_side_effect)
 
-            result = service.sync_contract_to_project(1)
+        result = service.sync_contract_to_project(1)
 
-            assert result["success"] is True
-            assert "已同步字段：contract_amount" in result["message"]
-            assert mock_project.contract_amount == 150000.0
+        assert result["success"] is True
+        assert "已同步字段：contract_amount" in result["message"]
+        assert mock_project.contract_amount == 150000.0
 
     def test_sync_contract_to_project_sync_contract_date(self, db_session):
         from app.services.data_sync_service import DataSyncService
@@ -139,24 +139,24 @@ class TestDataSyncService:
         def mock_query_side_effect(model):
             if model == Contract:
                 return Mock(
-                filter=Mock(
-                return_value=Mock(first=Mock(return_value=mock_contract))
+                    filter=Mock(
+                        return_value=Mock(first=Mock(return_value=mock_contract))
+                    )
                 )
+            else:
+                return Mock(
+                    filter=Mock(
+                        return_value=Mock(first=Mock(return_value=mock_project))
+                    )
                 )
-        else:
-            return Mock(
-            filter=Mock(
-            return_value=Mock(first=Mock(return_value=mock_project))
-            )
-            )
 
-            db_session.query = Mock(side_effect=mock_query_side_effect)
+        db_session.query = Mock(side_effect=mock_query_side_effect)
 
-            result = service.sync_contract_to_project(1)
+        result = service.sync_contract_to_project(1)
 
-            assert result["success"] is True
-            assert "已同步字段：contract_date" in result["message"]
-            assert mock_project.contract_date == date(2025, 6, 15)
+        assert result["success"] is True
+        assert "已同步字段：contract_date" in result["message"]
+        assert mock_project.contract_date == date(2025, 6, 15)
 
     def test_sync_contract_to_project_no_changes(self, db_session):
         from app.services.data_sync_service import DataSyncService
@@ -178,20 +178,20 @@ class TestDataSyncService:
         def mock_query_side_effect(model):
             if model == Contract:
                 return Mock(
-                filter=Mock(
-                return_value=Mock(first=Mock(return_value=mock_contract))
+                    filter=Mock(
+                        return_value=Mock(first=Mock(return_value=mock_contract))
+                    )
                 )
+            else:
+                return Mock(
+                    filter=Mock(
+                        return_value=Mock(first=Mock(return_value=mock_project))
+                    )
                 )
-        else:
-            return Mock(
-            filter=Mock(
-            return_value=Mock(first=Mock(return_value=mock_project))
-            )
-            )
 
-            db_session.query = Mock(side_effect=mock_query_side_effect)
+        db_session.query = Mock(side_effect=mock_query_side_effect)
 
-            result = service.sync_contract_to_project(1)
+        result = service.sync_contract_to_project(1)
 
-            assert result["success"] is True
-            assert "没有需要同步的字段" in result.get("message", "")
+        assert result["success"] is True
+        assert "没有需要同步的字段" in result.get("message", "")

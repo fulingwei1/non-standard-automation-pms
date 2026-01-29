@@ -151,11 +151,34 @@ def get_sales_summary(
     query_opps = filter_sales_data_by_scope(query_opps, current_user, db, Opportunity, "owner_id")
     query_contracts = filter_sales_data_by_scope(query_contracts, current_user, db, Contract, "owner_id")
 
+    # 日期过滤（先应用日期过滤，再获取合同ID用于发票过滤）
+    if start_date:
+        query_leads = query_leads.filter(Lead.created_at >= datetime.combine(start_date, datetime.min.time()))
+        query_opps = query_opps.filter(Opportunity.created_at >= datetime.combine(start_date, datetime.min.time()))
+        query_contracts = query_contracts.filter(Contract.created_at >= datetime.combine(start_date, datetime.min.time()))
+
+    if end_date:
+        query_leads = query_leads.filter(Lead.created_at <= datetime.combine(end_date, datetime.max.time()))
+        query_opps = query_opps.filter(Opportunity.created_at <= datetime.combine(end_date, datetime.max.time()))
+        query_contracts = query_contracts.filter(Contract.created_at <= datetime.combine(end_date, datetime.max.time()))
+
     # 发票通过合同关联过滤（Invoice 没有 owner_id/created_by 字段）
-    # 先获取用户有权限访问的合同ID列表，然后基于这些合同过滤发票
-    accessible_contract_ids = [c.id for c in query_contracts.all()]
-    if accessible_contract_ids:
-        query_invoices = db.query(Invoice).filter(Invoice.contract_id.in_(accessible_contract_ids))
+    # 使用子查询方式，避免加载大量合同ID到内存，同时避免空列表导致的 SQL 错误
+    from sqlalchemy import select, func
+    
+    # 创建合同ID子查询
+    contract_ids_subquery = query_contracts.with_entities(Contract.id).subquery()
+    
+    # 检查是否有可访问的合同
+    contract_count = db.query(func.count()).select_from(contract_ids_subquery).scalar() or 0
+    
+    if contract_count > 0:
+        # 使用子查询方式过滤发票
+        query_invoices = db.query(Invoice).filter(
+            Invoice.contract_id.in_(
+                select(contract_ids_subquery.c.id)
+            )
+        )
     else:
         # 用户没有可访问的合同时，检查是否有全局权限
         from app.core.sales_permissions import get_sales_data_scope
@@ -163,19 +186,14 @@ def get_sales_summary(
         if scope in ["ALL", "FINANCE_ONLY"]:
             query_invoices = db.query(Invoice)
         else:
-            query_invoices = db.query(Invoice).filter(Invoice.id == -1)  # 返回空结果
+            # 返回空结果：使用一个永远为假的条件
+            query_invoices = db.query(Invoice).filter(Invoice.id == -1)
 
-    # 日期过滤
+    # 对发票应用日期过滤
     if start_date:
-        query_leads = query_leads.filter(Lead.created_at >= datetime.combine(start_date, datetime.min.time()))
-        query_opps = query_opps.filter(Opportunity.created_at >= datetime.combine(start_date, datetime.min.time()))
-        query_contracts = query_contracts.filter(Contract.created_at >= datetime.combine(start_date, datetime.min.time()))
         query_invoices = query_invoices.filter(Invoice.created_at >= datetime.combine(start_date, datetime.min.time()))
 
     if end_date:
-        query_leads = query_leads.filter(Lead.created_at <= datetime.combine(end_date, datetime.max.time()))
-        query_opps = query_opps.filter(Opportunity.created_at <= datetime.combine(end_date, datetime.max.time()))
-        query_contracts = query_contracts.filter(Contract.created_at <= datetime.combine(end_date, datetime.max.time()))
         query_invoices = query_invoices.filter(Invoice.created_at <= datetime.combine(end_date, datetime.max.time()))
 
     # 线索统计

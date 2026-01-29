@@ -235,16 +235,16 @@ class TestCalculateChangeStatistics:
 
         changes = []
         for i, (change_type, level, status, cost) in enumerate([
-        ("DESIGN", "MAJOR", "APPROVED", Decimal("5000")),
-        ("DESIGN", "MINOR", "DRAFT", None),
-        ("PROCESS", "MAJOR", "APPROVED", Decimal("3000")),
+            ("DESIGN", "MAJOR", "APPROVED", Decimal("5000")),
+            ("DESIGN", "MINOR", "DRAFT", None),
+            ("PROCESS", "MAJOR", "APPROVED", Decimal("3000")),
         ]):
-        change = MagicMock()
-        change.change_type = change_type
-        change.change_level = level
-        change.status = status
-        change.cost_impact = cost
-        changes.append(change)
+            change = MagicMock()
+            change.change_type = change_type
+            change.change_level = level
+            change.status = status
+            change.cost_impact = cost
+            changes.append(change)
 
         impact_analysis = []
 
@@ -266,16 +266,16 @@ class TestCalculateChangeStatistics:
         changes = [MagicMock(change_type="DESIGN", change_level="MAJOR", status="APPROVED", cost_impact=None)]
 
         impact_analysis = [
-        {
-        "impacts": {
-        "related_projects": {
-        "affected_projects": [
-        {"project_id": 1},
-        {"project_id": 2}
-        ]
-        }
-        }
-        }
+            {
+                "impacts": {
+                    "related_projects": {
+                        "affected_projects": [
+                            {"project_id": 1},
+                            {"project_id": 2}
+                        ]
+                    }
+                }
+            }
         ]
 
         result = calculate_change_statistics(changes, impact_analysis)

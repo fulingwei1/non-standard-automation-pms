@@ -507,10 +507,10 @@ class TestGetRecommendations:
         assert isinstance(recommendations, list)
         if len(recommendations) > 0:
             # 物料变更应该有成本影响分析推荐
-        any_cost_analysis = any(
-        "COST" in rec.get("recommendation", "") for rec in recommendations
-        )
-        assert any_cost_analysis
+            any_cost_analysis = any(
+                "COST" in rec.get("recommendation", "") for rec in recommendations
+            )
+            assert any_cost_analysis
 
     def test_risk_mitigation(self, ecn_knowledge_service):
         """风险缓解建议"""

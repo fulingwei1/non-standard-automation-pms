@@ -27,7 +27,7 @@ def get_material_alternatives(
     *,
     db: Session = Depends(deps.get_db),
     material_id: int,
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("procurement:read")),
 ) -> Any:
     """
     获取物料的替代关系

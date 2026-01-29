@@ -62,8 +62,12 @@ def get_alert_statistics(
     by_project = {}
     for alert in alerts:
         if alert.project_id:
-            project = db.query(Project).filter(Project.id == alert.project_id).first()
-            project_name = project.project_name if project else f"项目{alert.project_id}"
+            try:
+                project = db.query(Project).filter(Project.id == alert.project_id).first()
+                project_name = project.project_name if project else f"项目{alert.project_id}"
+            except (ValueError, Exception):
+                # 处理数据库中日期字段为空字符串的情况
+                project_name = f"项目{alert.project_id}"
             by_project[project_name] = by_project.get(project_name, 0) + 1
 
     # 趋势统计（按日期）

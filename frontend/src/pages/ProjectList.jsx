@@ -153,29 +153,12 @@ export default function ProjectList() {
   const fetchProjects = async () => {
     try {
       setLoading(true);
-      const response = await projectApi.list();
+      // 增加 page_size 以获取更多项目，避免分页导致项目不在列表中
+      const response = await projectApi.list({ page_size: 100 });
       // Handle PaginatedResponse format: { items, total, page, page_size, pages }
       const data = response.data || response;
       const projectList = data.items || data || [];
       setProjects(projectList);
-
-      // 调试日志：检查目标项目是否在列表中
-      const targetProject = projectList.find(
-        (p) => p.project_code === "PJ250114" || p.id === 14,
-      );
-      if (targetProject) {
-        console.log("✓ 项目PJ250114在列表中:", targetProject);
-      } else {
-        console.warn("⚠️ 项目PJ250114不在列表中");
-        console.log(
-          "列表中的项目:",
-          projectList.map((p) => ({
-            id: p.id,
-            code: p.project_code,
-            name: p.project_name,
-          })),
-        );
-      }
     } catch (err) {
       console.error("Failed to fetch projects:", err);
       setProjects([]);

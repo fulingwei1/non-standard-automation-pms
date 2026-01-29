@@ -174,20 +174,28 @@ def get_me(
     role_ids = [row.id for row in role_rows]
     role_names = [row.role_name for row in role_rows]
 
-    permission_rows = (
-        db.query(ApiPermission.perm_code)
-        .join(RoleApiPermission, RoleApiPermission.permission_id == ApiPermission.id)
-        .join(UserRole, UserRole.role_id == RoleApiPermission.role_id)
-        .filter(UserRole.user_id == db_user.id, ApiPermission.is_active == True)
-        .distinct()
-        .all()
-    )
+    # 构建响应数据（避免直接修改ORM对象）
+    is_superuser = db_user.is_superuser or security.is_system_admin(db_user)
+
+    # 超级管理员获得所有权限，普通用户通过角色获取权限
+    if is_superuser:
+        permission_rows = (
+            db.query(ApiPermission.perm_code)
+            .filter(ApiPermission.is_active)
+            .all()
+        )
+    else:
+        permission_rows = (
+            db.query(ApiPermission.perm_code)
+            .join(RoleApiPermission, RoleApiPermission.permission_id == ApiPermission.id)
+            .join(UserRole, UserRole.role_id == RoleApiPermission.role_id)
+            .filter(UserRole.user_id == db_user.id, ApiPermission.is_active)
+            .distinct()
+            .all()
+        )
     permission_codes = sorted(
         {row.perm_code for row in permission_rows if row.perm_code}
     )
-
-    # 构建响应数据（避免直接修改ORM对象）
-    is_superuser = db_user.is_superuser or security.is_system_admin(db_user)
     user_data = {
         "id": db_user.id,
         "username": db_user.username,
@@ -245,3 +253,31 @@ def change_password(
     security.revoke_token(token)
 
     return ResponseModel(code=200, message="密码修改成功，请重新登录")
+
+
+@router.get("/permissions", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+def get_permissions(
+    current_user: User = Depends(security.get_current_active_user),
+    db: Session = Depends(deps.get_db),
+) -> Any:
+    """
+    获取当前用户的完整权限数据
+
+    返回:
+    - permissions: 权限编码列表
+    - menus: 可访问的菜单树
+    - dataScopes: 数据权限范围映射
+    """
+    from app.services.permission_service import PermissionService
+
+    permission_data = PermissionService.get_full_permission_data(
+        db=db,
+        user_id=current_user.id,
+        user=current_user
+    )
+
+    return ResponseModel(
+        code=200,
+        message="获取成功",
+        data=permission_data
+    )

@@ -236,21 +236,21 @@ class TestGetProjectMemberBonusSummary:
         service = ProjectBonusService(db_session)
         try:
             summary = service.get_project_member_bonus_summary(
-            project_id=mock_project.id
+                project_id=mock_project.id
             )
             assert isinstance(summary, list)
             # 如果有数据，验证结构
-        for item in summary:
-            assert "user_id" in item
-            assert "user_name" in item
-            assert "total_calculated" in item
-            assert "total_distributed" in item
-            assert "calculation_count" in item
-            assert "distribution_count" in item
+            for item in summary:
+                assert "user_id" in item
+                assert "user_name" in item
+                assert "total_calculated" in item
+                assert "total_distributed" in item
+                assert "calculation_count" in item
+                assert "distribution_count" in item
         except AttributeError as e:
             if "distributed_at" in str(e):
                 pytest.skip("服务代码使用了不存在的字段 distributed_at（应为 paid_at）")
-                raise
+            raise
 
 
 class TestGetProjectBonusStatistics:
@@ -287,13 +287,13 @@ class TestGetProjectBonusStatistics:
             assert "member_count" in stats
 
             # 验证类型
-        assert isinstance(stats["total_calculated"], float)
-        assert isinstance(stats["total_distributed"], float)
-        assert isinstance(stats["pending_amount"], float)
-        assert isinstance(stats["calculation_count"], int)
-        assert isinstance(stats["distribution_count"], int)
-        assert isinstance(stats["member_count"], int)
+            assert isinstance(stats["total_calculated"], float)
+            assert isinstance(stats["total_distributed"], float)
+            assert isinstance(stats["pending_amount"], float)
+            assert isinstance(stats["calculation_count"], int)
+            assert isinstance(stats["distribution_count"], int)
+            assert isinstance(stats["member_count"], int)
         except AttributeError as e:
             if "distributed_at" in str(e):
                 pytest.skip("服务代码使用了不存在的字段 distributed_at（应为 paid_at）")
-                raise
+            raise

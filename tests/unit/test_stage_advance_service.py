@@ -33,7 +33,7 @@ class TestValidateTargetStage:
 
         for stage in valid_stages:
             # 不应该抛出异常
-        validate_target_stage(stage)
+            validate_target_stage(stage)
 
     def test_validate_target_stage_invalid_stage_empty(self):
         """测试空字符串阶段编码"""
@@ -334,17 +334,17 @@ class TestUpdateProjectStageAndStatus:
 
         # 传入一个映射中不存在的阶段，应该保持旧状态
         with patch(
-        "app.services.stage_advance_service.get_stage_status_mapping"
+            "app.services.stage_advance_service.get_stage_status_mapping"
         ) as mock_mapping:
-        mock_mapping.return_value = {}  # 空映射，模拟目标阶段没有对应状态
+            mock_mapping.return_value = {}  # 空映射，模拟目标阶段没有对应状态
 
-        new_status = update_project_stage_and_status(
-        db_session, project, "INVALID", "S1", "ST01"
-        )
+            new_status = update_project_stage_and_status(
+                db_session, project, "INVALID", "S1", "ST01"
+            )
 
-        assert project.stage == "INVALID"
-        assert project.status == "ST01"  # 保持旧状态
-        assert new_status == "ST01"
+            assert project.stage == "INVALID"
+            assert project.status == "ST01"  # 保持旧状态
+            assert new_status == "ST01"
 
         db_session.rollback()
 

@@ -29,7 +29,7 @@ router = APIRouter()
 def get_rd_cost_allocation_rules(
     db: Session = Depends(deps.get_db),
     is_active: Optional[bool] = Query(None, description="是否启用筛选"),
-    current_user: User = Depends(security.require_rd_project_access),
+    current_user: User = Depends(security.require_permission("rd_project:read")),
 ) -> Any:
     """
     获取费用分摊规则列表
@@ -54,7 +54,7 @@ def apply_cost_allocation(
     db: Session = Depends(deps.get_db),
     rule_id: int = Query(..., description="分摊规则ID"),
     cost_ids: Optional[List[int]] = Query(None, description="费用ID列表（不提供则应用规则范围内的所有费用）"),
-    current_user: User = Depends(security.require_rd_project_access),
+    current_user: User = Depends(security.require_permission("rd_project:read")),
 ) -> Any:
     """
     应用费用分摊规则
@@ -132,7 +132,7 @@ def get_rd_project_timesheet_summary(
     project_id: int,
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
-    current_user: User = Depends(security.require_rd_project_access),
+    current_user: User = Depends(security.require_permission("rd_project:read")),
 ) -> Any:
     """
     获取研发项目工时汇总

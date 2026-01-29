@@ -157,7 +157,7 @@ function RdProjectCard({ project, onClick }) {
                 <div className="flex items-center justify-between text-sm mt-2">
                   <span className="text-slate-400">总工时</span>
                   <span className="text-white font-medium">
-                    {project.total_hours.toFixed(1)} 小时
+                    {Number(project.total_hours).toFixed(1)} 小时
                   </span>
                 </div>
               )}

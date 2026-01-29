@@ -13,7 +13,7 @@ export function useIssueStatistics() {
     const loadIssues = useCallback(async () => {
         try {
             setLoading(true);
-            const params = { page_size: 200 };
+            const params = { page_size: 100 };
             if (dateRange.start) params.start_date = dateRange.start;
             if (dateRange.end) params.end_date = dateRange.end;
 

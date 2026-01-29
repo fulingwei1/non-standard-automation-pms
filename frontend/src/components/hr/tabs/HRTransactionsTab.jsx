@@ -28,6 +28,7 @@ import { cn, formatDate } from "../../../lib/utils";
 import { useHRTransactions } from "../hooks/useHRTransactions";
 import { hrApi } from "../../../services/api";
 import { toast } from "../../ui/toast";
+import { DynamicIcon } from "../../../utils/iconMap.jsx";
 
 // 动态导入图标组件
 const iconMap = {
@@ -79,9 +80,10 @@ export default function HRTransactionsTab() {
     });
   }, [transactions, filter.searchText]);
 
-  // 获取图标组件
+  // 已迁移到 DynamicIcon 组件，保留此函数以向后兼容
   const getIcon = (iconName) => {
-    return iconMap[iconName] || FileText;
+    // 这个函数现在主要用于向后兼容，新代码应该使用 DynamicIcon 组件
+    return FileText; // 默认返回 FileText，实际渲染使用 DynamicIcon
   };
 
   return (
@@ -89,7 +91,6 @@ export default function HRTransactionsTab() {
       {/* Statistics Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {Object.entries(transactionTypeMap).map(([type, config]) => {
-          const Icon = getIcon(config.icon);
           const count = statistics?.by_type?.[type] || 0;
           return (
             <Card key={type} className="bg-surface-50 border-white/10">
@@ -101,9 +102,12 @@ export default function HRTransactionsTab() {
                       `bg-${config.color}-500/20`,
                     )}
                   >
-                    <Icon
-                      className={cn("w-5 h-5", `text-${config.color}-400`)}
-                    />
+                    {config.icon && (
+                      <DynamicIcon
+                        name={config.icon}
+                        className={cn("w-5 h-5", `text-${config.color}-400`)}
+                      />
+                    )}
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-white">{count}</p>
@@ -199,8 +203,6 @@ export default function HRTransactionsTab() {
                 const typeConfig =
                   transactionTypeMap[transaction.transaction_type] || {};
                 const statusConfig = statusMap[transaction.status] || {};
-                const TypeIcon = getIcon(typeConfig.icon) || FileText;
-
                 return (
                   <div
                     key={transaction.id}
@@ -214,12 +216,15 @@ export default function HRTransactionsTab() {
                             `bg-${typeConfig.color || "slate"}-500/20`,
                           )}
                         >
-                          <TypeIcon
-                            className={cn(
-                              "w-5 h-5",
-                              `text-${typeConfig.color || "slate"}-400`,
-                            )}
-                          />
+                          {typeConfig.icon && (
+                            <DynamicIcon
+                              name={typeConfig.icon}
+                              className={cn(
+                                "w-5 h-5",
+                                `text-${typeConfig.color || "slate"}-400`,
+                              )}
+                            />
+                          )}
                         </div>
                         <div>
                           <div className="flex items-center gap-2">

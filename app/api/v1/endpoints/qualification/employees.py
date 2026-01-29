@@ -31,7 +31,7 @@ def certify_employee_qualification(
     db: Session = Depends(deps.get_db),
     employee_id: int,
     certify_in: EmployeeQualificationCertifyRequest,
-    current_user: User = Depends(security.require_hr_access),
+    current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Any:
     """认证员工任职资格"""
     try:
@@ -112,7 +112,7 @@ def promote_employee_qualification(
     db: Session = Depends(deps.get_db),
     employee_id: int,
     promote_in: EmployeeQualificationPromoteRequest,
-    current_user: User = Depends(security.require_hr_access),
+    current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Any:
     """员工晋升评估"""
     # 检查晋升资格

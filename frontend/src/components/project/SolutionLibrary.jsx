@@ -27,7 +27,7 @@ export default function SolutionLibrary({ projectId, onApplyTemplate }) {
       setLoading(true);
       const response = await issueTemplateApi.list({
         page: 1,
-        page_size: 200,
+        page_size: 100,
         is_active: true,
       });
       const items = response.data?.items || response.data || [];

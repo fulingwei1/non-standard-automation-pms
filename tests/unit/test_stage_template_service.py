@@ -93,37 +93,37 @@ class TestPresetTemplateData:
 
         for template in PRESET_TEMPLATES:
             # 验证模板字段
-        for field in required_template_fields:
-            assert field in template, f"模板 {template.get('template_code')} 缺少字段: {field}"
+            for field in required_template_fields:
+                assert field in template, f"模板 {template.get('template_code')} 缺��字段: {field}"
 
             # 验证阶段字段
-        for stage in template["stages"]:
-            for field in required_stage_fields:
-                assert field in stage, f"阶段 {stage.get('stage_code')} 缺少字段: {field}"
+            for stage in template["stages"]:
+                for field in required_stage_fields:
+                    assert field in stage, f"阶段 {stage.get('stage_code')} 缺少字段: {field}"
 
                 # 验证节点字段
-        for node in stage.get("nodes", []):
-            for field in required_node_fields:
-                assert field in node, f"节点 {node.get('node_code')} 缺少字段: {field}"
+                for node in stage.get("nodes", []):
+                    for field in required_node_fields:
+                        assert field in node, f"节点 {node.get('node_code')} 缺少字段: {field}"
 
     def test_node_dependency_references_valid(self):
         """测试节点依赖引用有效性"""
         for template in PRESET_TEMPLATES:
             # 收集所有节点编码
-        all_node_codes = set()
-        for stage in template["stages"]:
-            for node in stage.get("nodes", []):
-                all_node_codes.add(node["node_code"])
+            all_node_codes = set()
+            for stage in template["stages"]:
+                for node in stage.get("nodes", []):
+                    all_node_codes.add(node["node_code"])
 
-                # 验证依赖引用
-                for stage in template["stages"]:
-                    for node in stage.get("nodes", []):
-                        deps = node.get("dependency_node_codes", [])
-                        for dep_code in deps:
-                            assert dep_code in all_node_codes, (
+            # 验证依赖引用
+            for stage in template["stages"]:
+                for node in stage.get("nodes", []):
+                    deps = node.get("dependency_node_codes", [])
+                    for dep_code in deps:
+                        assert dep_code in all_node_codes, (
                             f"模板 {template['template_code']} 节点 {node['node_code']} "
                             f"引用了不存在的依赖: {dep_code}"
-                            )
+                        )
 
 
 @pytest.mark.unit

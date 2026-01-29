@@ -71,7 +71,7 @@ class TestMetricCalculationService:
             assert True
         except Exception as e:
             # 如果服务方法有实现问题，至少验证可调用
-        assert True
+            assert True
     
     def test_format_metric_value_percentage(self, service):
         """测试格式化百分比值"""
@@ -98,21 +98,21 @@ class TestMetricCalculationService:
         mock_session.query.return_value = mock_query
         mock_query.filter.return_value = mock_query
         mock_query.all.return_value = [
-        type('Project', (), {**sample_project_data, 'id': i})()
-        for i in range(1, 4)
+            type('Project', (), {**sample_project_data, 'id': i})()
+            for i in range(1, 4)
         ]
         mock_get_session.return_value = mock_session
         
         # 批量计算
         try:
             results = service.calculate_metrics_batch(
-            project_ids=[1, 2, 3],
-            metric_types=['budget_variance', 'progress_rate']
+                project_ids=[1, 2, 3],
+                metric_types=['budget_variance', 'progress_rate']
             )
             assert True
         except Exception:
             # 方法可能还未实现
-        assert True
+            assert True
     
     @patch('app.services.metric_calculation_service.get_session')
     def test_calculate_metric_invalid_project(self, mock_get_session, service):

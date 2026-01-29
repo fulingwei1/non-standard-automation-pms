@@ -69,10 +69,10 @@ class TestPasswordFunctions:
         """测试密码哈希往返验证"""
         # 测试多个密码
         passwords = [
-        "simple",
-        "Complex!@#123",
-        "密码123",
-        "VeryLongPasswordWithNumbers123456",
+            "simple",
+            "Complex!@#123",
+            "密码123",
+            "VeryLongPasswordWithNumbers123456",
         ]
 
         for password in passwords:
@@ -117,11 +117,11 @@ class TestTokenCreation:
         mock_settings.ALGORITHM = "HS256"
 
         data = {
-        "sub": "user123",
-        "user_id": 1,
-        "username": "testuser",
-        "role": "admin",
-        "permissions": ["read", "write"],
+            "sub": "user123",
+            "user_id": 1,
+            "username": "testuser",
+            "role": "admin",
+            "permissions": ["read", "write"],
         }
 
         token = create_access_token(data)
@@ -167,10 +167,10 @@ class TestTokenRevocation:
 
         now = datetime.utcnow()
         payload = {
-        "sub": "user123",
-        "iat": now,
-        "exp": now + timedelta(hours=24),
-        "jti": "test_jti_123",
+            "sub": "user123",
+            "iat": now,
+            "exp": now + timedelta(hours=24),
+            "jti": "test_jti_123",
         }
         token = jwt.encode(payload, "test_secret_key", algorithm="HS256")
 
@@ -305,12 +305,12 @@ class TestAuthModule:
         from app.core import auth
 
         expected_exports = [
-        "verify_password",
-        "get_password_hash",
-        "create_access_token",
-        "get_current_user",
-        "revoke_token",
-        "is_token_revoked",
+            "verify_password",
+            "get_password_hash",
+            "create_access_token",
+            "get_current_user",
+            "revoke_token",
+            "is_token_revoked",
         ]
         for export in expected_exports:
             assert hasattr(auth, export)
@@ -341,22 +341,22 @@ class TestAuthModule:
 
         # Mock query
         mock_session.query.return_value.filter.return_value.first.return_value = (
-        mock_user
+            mock_user
         )
 
         # 创建有效 token
         now = datetime.utcnow()
         payload = {
-        "sub": "1",
-        "iat": now,
-        "exp": now + timedelta(hours=24),
-        "jti": "test_jti",
+            "sub": "1",
+            "iat": now,
+            "exp": now + timedelta(hours=24),
+            "jti": "test_jti",
         }
         valid_token = jwt.encode(payload, "test_secret_key", algorithm="HS256")
 
         # 模拟依赖注入
         async def get_current_user_dep(token: str = Depends(mock_scheme)):
-        return await get_current_user(token, mock_session)
+            return await get_current_user(token, mock_session)
 
         # 测试
         user = await get_current_user_dep(valid_token)

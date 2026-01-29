@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-安全认证模块 - 兼容层
+安全认证模块 - 简化版
 
-此文件保持向后兼容性，从拆分后的模块导入所有功能。
-原有功能已拆分为：
-- auth.py: 认证和密码管理
-- sales_permissions.py: 销售权限
-- permissions.py: 其他权限检查
+权限系统已迁移到数据库驱动模式。
+使用 require_permission("module:action") 代替旧的 require_*_access() 函数。
 """
 
 # 从认证模块导入
@@ -17,38 +14,13 @@ from .auth import (
     get_current_active_user,
     get_current_user,
     get_password_hash,
+    is_system_admin,
     is_token_revoked,
     oauth2_scheme,
     pwd_context,
     require_permission,
     revoke_token,
     verify_password,
-)
-
-# 从权限模块导入
-from .permissions import (
-    RD_PROJECT_ROLES,
-    check_project_access,
-    check_timesheet_approval_permission,
-    has_finance_access,
-    has_hr_access,
-    has_machine_document_permission,
-    has_machine_document_upload_permission,
-    has_procurement_access,
-    has_production_access,
-    has_rd_project_access,
-    has_scheduler_admin_access,
-    has_shortage_report_access,
-    has_timesheet_approval_access,
-    require_finance_access,
-    require_hr_access,
-    require_procurement_access,
-    require_production_access,
-    require_project_access,
-    require_rd_project_access,
-    require_scheduler_admin_access,
-    require_shortage_report_access,
-    require_timesheet_approval_access,
 )
 
 # 从销售权限模块导入
@@ -76,21 +48,14 @@ __all__ = [
     "create_access_token",
     "get_current_user",
     "get_current_active_user",
+    "get_current_active_superuser",
     "check_permission",
     "require_permission",
+    "is_system_admin",
     "oauth2_scheme",
+    "pwd_context",
     "revoke_token",
     "is_token_revoked",
-    # 基础权限
-    "has_procurement_access",
-    "require_procurement_access",
-    "has_shortage_report_access",
-    "require_shortage_report_access",
-    "has_finance_access",
-    "require_finance_access",
-    "has_production_access",
-    "require_production_access",
-    "require_project_access",
     # 销售权限
     "has_sales_assessment_access",
     "require_sales_assessment_access",
@@ -105,15 +70,5 @@ __all__ = [
     "require_sales_delete_permission",
     "has_sales_approval_access",
     "require_sales_approval_permission",
-    # 人事权限
-    "has_hr_access",
-    "require_hr_access",
-    "has_timesheet_approval_access",
-    "require_timesheet_approval_access",
-    "has_scheduler_admin_access",
-    "require_scheduler_admin_access",
-    "has_rd_project_access",
-    "require_rd_project_access",
-    "has_machine_document_permission",
-    "has_machine_document_upload_permission",
+    "check_sales_approval_permission",
 ]

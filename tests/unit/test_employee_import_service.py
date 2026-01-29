@@ -140,7 +140,7 @@ class TestEmployeeImportService:
         df = pd.DataFrame({"部门": ["技术部"]})
 
         with pytest.raises(Exception):  # HTTPException
-        import_employees_from_dataframe(db_session, df, evaluator_id=1)
+            import_employees_from_dataframe(db_session, df, evaluator_id=1)
 
     def test_import_employees_from_dataframe_success(self, db_session):
         """测试导入员工 - 成功场景"""

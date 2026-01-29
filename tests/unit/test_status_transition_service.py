@@ -367,20 +367,20 @@ class TestStatusTransitionService:
         db_session.refresh(project)
 
         with patch('app.services.stage_transition_checks.check_s3_to_s4_transition') as mock_check, \
-        patch('app.services.stage_transition_checks.execute_stage_transition') as mock_execute:
-        mock_check.return_value = (True, "S4", [])
-        mock_execute.return_value = (True, {
-        "can_advance": True,
-        "auto_advanced": True,
-        "current_stage": "S3",
-        "target_stage": "S4",
-        "message": "已自动推进至 S4 阶段"
-        })
-            
-        result = status_transition_service.check_auto_stage_transition(project.id, auto_advance=True)
-        assert result["can_advance"] is True
-        assert result["target_stage"] == "S4"
-        mock_execute.assert_called_once()
+             patch('app.services.stage_transition_checks.execute_stage_transition') as mock_execute:
+            mock_check.return_value = (True, "S4", [])
+            mock_execute.return_value = (True, {
+                "can_advance": True,
+                "auto_advanced": True,
+                "current_stage": "S3",
+                "target_stage": "S4",
+                "message": "已自动推进至 S4 阶段"
+            })
+
+            result = status_transition_service.check_auto_stage_transition(project.id, auto_advance=True)
+            assert result["can_advance"] is True
+            assert result["target_stage"] == "S4"
+            mock_execute.assert_called_once()
 
     def test_check_auto_stage_transition_no_transition(self, status_transition_service, db_session):
         """测试检查阶段自动流转 - 不满足流转条件"""

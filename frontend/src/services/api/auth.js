@@ -23,6 +23,11 @@ export const authApi = {
   refresh: () => api.post("/auth/refresh"),
   logout: () => api.post("/auth/logout"),
   changePassword: (data) => api.put("/auth/password", data),
+  /**
+   * 获取当前用户的完整权限数据
+   * @returns {Promise<{permissions: string[], menus: object[], dataScopes: object}>}
+   */
+  getPermissions: () => api.get("/auth/permissions"),
 };
 
 export const userApi = {

@@ -56,7 +56,7 @@ export default function MilestoneRateReport() {
   useEffect(() => {
     const loadProjects = async () => {
       try {
-        const res = await projectApi.list({ page: 1, page_size: 200 });
+        const res = await projectApi.list({ page: 1, page_size: 100 });
         const items = res.data?.items || res.data || [];
         setProjects(Array.isArray(items) ? items : []);
       } catch (error) {

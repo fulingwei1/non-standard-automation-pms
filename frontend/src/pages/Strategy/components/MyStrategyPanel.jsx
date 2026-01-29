@@ -24,7 +24,7 @@ import {
 } from "../../../components/ui";
 import { cn } from "../../../lib/utils";
 import { fadeIn, staggerContainer } from "../../../lib/animations";
-import { getHealthConfig, ANNUAL_WORK_STATUS } from "../../../lib/constants/strategy";
+import { getStrategyHealthConfig, ANNUAL_WORK_STATUS } from "../../../lib/constants/strategy";
 
 export function MyStrategyPanel({ myStrategy }) {
   if (!myStrategy) {
@@ -123,7 +123,7 @@ export function MyStrategyPanel({ myStrategy }) {
             {my_kpis.length > 0 ? (
               <div className="space-y-3">
                 {my_kpis.slice(0, 5).map((kpi) => {
-                  const healthConfig = getHealthConfig(kpi.health_status);
+                  const healthConfig = getStrategyHealthConfig(kpi.health_status);
                   const progress =
                     kpi.target_value > 0
                       ? ((kpi.current_value / kpi.target_value) * 100).toFixed(1)

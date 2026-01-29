@@ -79,7 +79,7 @@ generate_risk_no = pmo_codes.generate_risk_no
 
 # ==================== 立项管理 ====================
 
-@router.get("/pmo/initiations", response_model=PaginatedResponse)
+@router.get("/pmo/initiations", response_model=PaginatedResponse[InitiationResponse])
 def read_initiations(
     db: Session = Depends(deps.get_db),
     page: int = Query(1, ge=1, description="页码"),
@@ -92,66 +92,76 @@ def read_initiations(
     """
     立项申请列表
     """
-    query = db.query(PmoProjectInitiation)
+    try:
+        query = db.query(PmoProjectInitiation)
 
-    if keyword:
-        query = query.filter(
-            or_(
-                PmoProjectInitiation.application_no.like(f"%{keyword}%"),
-                PmoProjectInitiation.project_name.like(f"%{keyword}%"),
+        if keyword:
+            query = query.filter(
+                or_(
+                    PmoProjectInitiation.application_no.like(f"%{keyword}%"),
+                    PmoProjectInitiation.project_name.like(f"%{keyword}%"),
+                )
             )
+
+        if status:
+            query = query.filter(PmoProjectInitiation.status == status)
+
+        if applicant_id:
+            query = query.filter(PmoProjectInitiation.applicant_id == applicant_id)
+
+        # 先计算总数
+        total = query.count()
+        
+        # 再执行分页查询
+        offset = (page - 1) * page_size
+        initiations = query.order_by(desc(PmoProjectInitiation.created_at)).offset(offset).limit(page_size).all()
+
+        items = []
+        for init in initiations:
+            # 使用 from_attributes 从 ORM 对象创建响应
+            item_dict = {
+                "id": init.id,
+                "application_no": init.application_no,
+                "project_id": init.project_id,
+                "project_name": init.project_name,
+                "project_type": init.project_type,
+                "project_level": init.project_level,
+                "customer_name": init.customer_name,
+                "contract_no": init.contract_no,
+                "contract_amount": float(init.contract_amount) if init.contract_amount else None,
+                "required_start_date": init.required_start_date,
+                "required_end_date": init.required_end_date,
+                "technical_solution_id": init.technical_solution_id,
+                "requirement_summary": init.requirement_summary,
+                "technical_difficulty": init.technical_difficulty,
+                "estimated_hours": init.estimated_hours,
+                "resource_requirements": init.resource_requirements,
+                "risk_assessment": init.risk_assessment,
+                "applicant_id": init.applicant_id,
+                "applicant_name": init.applicant_name,
+                "apply_time": init.apply_time,
+                "status": init.status,
+                "review_result": init.review_result,
+                "approved_pm_id": init.approved_pm_id,
+                "approved_level": init.approved_level,
+                "approved_at": init.approved_at,
+                "approved_by": init.approved_by,
+                "created_at": init.created_at,
+                "updated_at": init.updated_at,
+            }
+            items.append(InitiationResponse(**item_dict))
+
+        return PaginatedResponse(
+            items=items,
+            total=total,
+            page=page,
+            page_size=page_size,
+            pages=(total + page_size - 1) // page_size
         )
-
-    if status:
-        query = query.filter(PmoProjectInitiation.status == status)
-
-    if applicant_id:
-        query = query.filter(PmoProjectInitiation.applicant_id == applicant_id)
-
-    total = query.count()
-    offset = (page - 1) * page_size
-    initiations = query.order_by(desc(PmoProjectInitiation.created_at)).offset(offset).limit(page_size).all()
-
-    items = []
-    for init in initiations:
-        items.append(InitiationResponse(
-            id=init.id,
-            application_no=init.application_no,
-            project_id=init.project_id,
-            project_name=init.project_name,
-            project_type=init.project_type,
-            project_level=init.project_level,
-            customer_name=init.customer_name,
-            contract_no=init.contract_no,
-            contract_amount=float(init.contract_amount) if init.contract_amount else None,
-            required_start_date=init.required_start_date,
-            required_end_date=init.required_end_date,
-            technical_solution_id=init.technical_solution_id,
-            requirement_summary=init.requirement_summary,
-            technical_difficulty=init.technical_difficulty,
-            estimated_hours=init.estimated_hours,
-            resource_requirements=init.resource_requirements,
-            risk_assessment=init.risk_assessment,
-            applicant_id=init.applicant_id,
-            applicant_name=init.applicant_name,
-            apply_time=init.apply_time,
-            status=init.status,
-            review_result=init.review_result,
-            approved_pm_id=init.approved_pm_id,
-            approved_level=init.approved_level,
-            approved_at=init.approved_at,
-            approved_by=init.approved_by,
-            created_at=init.created_at,
-            updated_at=init.updated_at,
-        ))
-
-    return PaginatedResponse(
-        items=items,
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
-    )
+    except Exception as e:
+        import traceback
+        error_detail = f"查询立项申请列表失败: {str(e)}\n{traceback.format_exc()}"
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_detail)
 
 
 @router.post("/pmo/initiations", response_model=InitiationResponse, status_code=status.HTTP_201_CREATED)

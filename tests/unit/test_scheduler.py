@@ -275,12 +275,12 @@ class TestInitScheduler:
             "cron": {"hour": 10}
             }
             ]):
-            result = init_scheduler()
-        
-            assert result == mock_scheduler
-            mock_scheduler.add_listener.assert_called_once()
-            mock_scheduler.add_job.assert_called()
-            mock_scheduler.start.assert_called_once()
+                result = init_scheduler()
+
+                assert result == mock_scheduler
+                mock_scheduler.add_listener.assert_called_once()
+                mock_scheduler.add_job.assert_called()
+                mock_scheduler.start.assert_called_once()
 
     @patch('app.utils.scheduler.scheduler')
     @patch('app.utils.scheduler._load_task_config_from_db')
@@ -296,18 +296,18 @@ class TestInitScheduler:
         mock_load_db.return_value = {"enabled": False}
         
         with patch('app.utils.scheduler.SCHEDULER_TASKS', [
-        {
-        "id": "disabled_task",
-        "name": "Disabled Task",
-        "module": "app.utils.scheduler",
-        "callable": "job_listener",
-        "enabled": True,
-        "cron": {"hour": 10}
-        }
+            {
+                "id": "disabled_task",
+                "name": "Disabled Task",
+                "module": "app.utils.scheduler",
+                "callable": "job_listener",
+                "enabled": True,
+                "cron": {"hour": 10}
+            }
         ]):
-        with patch('app.utils.scheduler._resolve_callable'):
-            with patch('app.utils.scheduler._wrap_job_callable'):
-                init_scheduler()
+            with patch('app.utils.scheduler._resolve_callable'):
+                with patch('app.utils.scheduler._wrap_job_callable'):
+                    init_scheduler()
         
                 # Should not add disabled task
                 mock_scheduler.add_job.assert_not_called()

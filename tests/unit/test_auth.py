@@ -238,18 +238,24 @@ class TestCheckPermission:
         return user
 
     def _create_mock_role(self, role_code: str, permissions: list = None):
-        """创建模拟角色对象"""
+        """创建模拟角色对象（适配新的权限系统）
+
+        新系统结构：user.roles → user_role.role → role.api_permissions → rap.permission.perm_code
+        """
         user_role = MagicMock()
         user_role.role = MagicMock()
-        user_role.role.permissions = []
+        user_role.role.role_code = role_code
+        user_role.role.is_active = True
+        user_role.role.api_permissions = []
 
         for perm_code in (permissions or []):
-            role_perm = MagicMock()
-            role_perm.permission = MagicMock()
-            role_perm.permission.permission_code = perm_code
-            user_role.role.permissions.append(role_perm)
+            role_api_perm = MagicMock()
+            role_api_perm.permission = MagicMock()
+            role_api_perm.permission.perm_code = perm_code  # 使用新字段名
+            role_api_perm.permission.is_active = True
+            user_role.role.api_permissions.append(role_api_perm)
 
-            return user_role
+        return user_role
 
     def test_check_permission_superuser(self):
         """测试超级用户权限检查"""
@@ -263,37 +269,55 @@ class TestCheckPermission:
 
     def test_check_permission_with_orm_matching_permission(self):
         """测试ORM方式检查匹配的权限"""
-        role = self._create_mock_role("ADMIN", ["project:read", "project:write"])
+        # 使用非管理员角色代码，避免触发 is_system_admin 检查
+        role = self._create_mock_role("VIEWER", ["project:read", "project:write"])
         user = self._create_mock_user(is_superuser=False, roles=[role])
 
-        # 不提供db时使用ORM
-        assert check_permission(user, "project:read") is True
+        # Mock 缓存服务返回 None，触发 ORM 回退
+        with patch("app.services.permission_cache_service.get_permission_cache_service") as mock_cache:
+            mock_cache.return_value.get_user_permissions.return_value = None
+            # 不提供db时使用ORM
+            assert check_permission(user, "project:read") is True
 
     def test_check_permission_with_orm_no_matching_permission(self):
         """测试ORM方式检查不匹配的权限"""
-        role = self._create_mock_role("ADMIN", ["project:read"])
+        # 使用非管理员角色代码，避免触发 is_system_admin 检查
+        role = self._create_mock_role("VIEWER", ["project:read"])
         user = self._create_mock_user(is_superuser=False, roles=[role])
 
-        assert check_permission(user, "project:delete") is False
+        # Mock 缓存服务返回 None，触发 ORM 回退
+        with patch("app.services.permission_cache_service.get_permission_cache_service") as mock_cache:
+            mock_cache.return_value.get_user_permissions.return_value = None
+            assert check_permission(user, "project:delete") is False
 
     def test_check_permission_with_db_session(self):
         """测试使用数据库会话检查权限"""
         user = self._create_mock_user(is_superuser=False)
 
         db = MagicMock()
-        db.execute.return_value.scalar.return_value = 1
 
-        assert check_permission(user, "project:read", db) is True
-        db.execute.assert_called_once()
+        # Mock 缓存服务返回 None，触发 DB 查询
+        # Mock _load_user_permissions_from_db 返回包含所需权限的集合
+        with patch("app.services.permission_cache_service.get_permission_cache_service") as mock_cache:
+            mock_cache.return_value.get_user_permissions.return_value = None
+            with patch("app.core.auth._load_user_permissions_from_db") as mock_load:
+                mock_load.return_value = {"project:read", "project:write"}
+                assert check_permission(user, "project:read", db) is True
+                mock_load.assert_called_once()
 
     def test_check_permission_with_db_session_no_permission(self):
         """测试使用数据库会话检查无权限"""
         user = self._create_mock_user(is_superuser=False)
 
         db = MagicMock()
-        db.execute.return_value.scalar.return_value = 0
 
-        assert check_permission(user, "project:read", db) is False
+        # Mock 缓存服务返回 None，触发 DB 查询
+        # Mock _load_user_permissions_from_db 返回不包含所需权限的集合
+        with patch("app.services.permission_cache_service.get_permission_cache_service") as mock_cache:
+            mock_cache.return_value.get_user_permissions.return_value = None
+            with patch("app.core.auth._load_user_permissions_from_db") as mock_load:
+                mock_load.return_value = {"other:permission"}
+                assert check_permission(user, "project:read", db) is False
 
 
 class TestRequirePermission:

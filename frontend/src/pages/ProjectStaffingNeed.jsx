@@ -129,7 +129,7 @@ export default function ProjectStaffingNeed() {
       const response = await staffMatchingApi.getTags({
         tag_type: "SKILL",
         is_active: true,
-        page_size: 200,
+        page_size: 100,
       });
       if (response.data?.items) {
         setTags(response.data.items);

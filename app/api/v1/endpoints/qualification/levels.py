@@ -32,7 +32,7 @@ def create_qualification_level(
     *,
     db: Session = Depends(deps.get_db),
     level_in: QualificationLevelCreate,
-    current_user: User = Depends(security.require_hr_access),
+    current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Any:
     """创建任职资格等级（仅人力资源经理可配置）"""
     # 检查等级编码是否已存在
@@ -106,7 +106,7 @@ def update_qualification_level(
     db: Session = Depends(deps.get_db),
     level_id: int,
     level_in: QualificationLevelUpdate,
-    current_user: User = Depends(security.require_hr_access),
+    current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Any:
     """更新任职资格等级"""
     level = db.query(QualificationLevel).filter(QualificationLevel.id == level_id).first()
@@ -128,7 +128,7 @@ def delete_qualification_level(
     *,
     db: Session = Depends(deps.get_db),
     level_id: int,
-    current_user: User = Depends(security.require_hr_access),
+    current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Any:
     """删除任职资格等级"""
     level = db.query(QualificationLevel).filter(QualificationLevel.id == level_id).first()

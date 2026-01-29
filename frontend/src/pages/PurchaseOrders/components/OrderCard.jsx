@@ -5,10 +5,7 @@ import {
     Edit3,
     Trash2,
     CheckCircle2,
-    Clock,
     AlertTriangle,
-    Truck,
-    FileText
 } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
@@ -19,23 +16,11 @@ import {
     ORDER_URGENCY_CONFIGS,
     PurchaseOrderUtils
 } from "../../../components/purchase-orders";
-
-function getIcon(iconName) {
-    const icons = {
-        FileText,
-        Clock,
-        Truck,
-        CheckCircle2,
-        AlertTriangle,
-        Trash2
-    };
-    return icons[iconName] || Package;
-}
+import { DynamicIcon } from "../../../utils/iconMap.jsx";
 
 export function OrderCard({ order, onView, onEdit, onDelete, onSubmit, onApprove }) {
     const status = ORDER_STATUS_CONFIGS[order.status];
     const urgency = ORDER_URGENCY_CONFIGS[order.urgency];
-    const StatusIcon = status?.icon ? getIcon(status.icon) : Package;
 
     return (
         <motion.div
@@ -56,7 +41,7 @@ export function OrderCard({ order, onView, onEdit, onDelete, onSubmit, onApprove
                     <p className="text-sm text-slate-400">{order.supplierName}</p>
                 </div>
                 <Badge className={cn("gap-1", status?.color)}>
-                    <StatusIcon className="w-3 h-3" />
+                    {status?.icon && <DynamicIcon name={status.icon} className="w-3 h-3" />}
                     {status?.label}
                 </Badge>
             </div>

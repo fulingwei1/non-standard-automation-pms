@@ -7,6 +7,8 @@
 """
 
 
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
@@ -58,8 +60,8 @@ def create_tenant(
 def list_tenants(
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(20, ge=1, le=100, description="每页数量"),
-    status: str | None = Query(None, description="状态筛选"),
-    keyword: str | None = Query(None, description="关键词搜索"),
+    status: Optional[str] = Query(None, description="状态筛选"),
+    keyword: Optional[str] = Query(None, description="关键词搜索"),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_super_admin),
 ):

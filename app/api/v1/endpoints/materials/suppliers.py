@@ -132,7 +132,7 @@ def get_material_suppliers(
     *,
     db: Session = Depends(deps.get_db),
     material_id: int,
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("procurement:read")),
 ) -> Any:
     """获取物料的供应商列表"""
     material = db.query(Material).filter(Material.id == material_id).first()

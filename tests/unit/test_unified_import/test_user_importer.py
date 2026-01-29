@@ -13,25 +13,19 @@ from unittest.mock import MagicMock, patch, Mock
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from sqlalchemy.orm import Session
+
+# UserImporter 使用 @classmethod，不需要实例化
 from app.services.unified_import.user_importer import UserImporter
-
-
-
-@pytest.fixture
-def import_service(db_session: Session):
-    """创建 UserImporter 实例"""
-    return UserImporter(db_session)
 
 
 class TestUserImporter:
     """Test suite for UserImporter."""
 
     def test_init(self, db_session: Session):
-        """测试服务初始化"""
-        service = UserImporter(db_session)
-        assert service is not None
-        if hasattr(service, 'db'):
-            assert service.db == db_session
+        """测试 UserImporter 是一个类（使用 classmethod）"""
+        # UserImporter 使用 @classmethod，不需要实例化
+        assert hasattr(UserImporter, 'import_user_data')
+        assert callable(getattr(UserImporter, 'import_user_data'))
 
 
     def test_import_user_data(self, db_session: Session):

@@ -26,7 +26,7 @@ def read_material_demand_schedule(
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
     group_by: str = Query("day", description="分组方式：day/week/month"),
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("procurement:read")),
 ) -> Any:
     """
     需求时间表（按日期需求）

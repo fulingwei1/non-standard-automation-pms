@@ -359,25 +359,25 @@ class TestTimesheetReminderService:
     def test_scan_and_notify_all_success(self, db_session):
         """测试扫描所有提醒 - 成功场景"""
         with patch('app.services.timesheet_reminder.scanner.notify_timesheet_missing') as mock_daily, \
-        patch('app.services.timesheet_reminder.scanner.notify_weekly_timesheet_missing') as mock_weekly, \
-        patch('app.services.timesheet_reminder.scanner.notify_timesheet_anomaly') as mock_anomaly, \
-        patch('app.services.timesheet_reminder.scanner.notify_approval_timeout') as mock_timeout, \
-        patch('app.services.timesheet_reminder.scanner.notify_sync_failure') as mock_sync:
-            
-        mock_daily.return_value = 5
-        mock_weekly.return_value = 3
-        mock_anomaly.return_value = 2
-        mock_timeout.return_value = 1
-        mock_sync.return_value = 0
-            
-        result = scan_and_notify_all(db_session)
-            
-        assert isinstance(result, dict)
-        assert result['daily_missing'] == 5
-        assert result['weekly_missing'] == 3
-        assert result['anomaly'] == 2
-        assert result['approval_timeout'] == 1
-        assert result['sync_failure'] == 0
+             patch('app.services.timesheet_reminder.scanner.notify_weekly_timesheet_missing') as mock_weekly, \
+             patch('app.services.timesheet_reminder.scanner.notify_timesheet_anomaly') as mock_anomaly, \
+             patch('app.services.timesheet_reminder.scanner.notify_approval_timeout') as mock_timeout, \
+             patch('app.services.timesheet_reminder.scanner.notify_sync_failure') as mock_sync:
+
+            mock_daily.return_value = 5
+            mock_weekly.return_value = 3
+            mock_anomaly.return_value = 2
+            mock_timeout.return_value = 1
+            mock_sync.return_value = 0
+
+            result = scan_and_notify_all(db_session)
+
+            assert isinstance(result, dict)
+            assert result['daily_missing'] == 5
+            assert result['weekly_missing'] == 3
+            assert result['anomaly'] == 2
+            assert result['approval_timeout'] == 1
+            assert result['sync_failure'] == 0
 
     def test_scan_and_notify_all_error_handling(self, db_session):
         """测试扫描所有提醒 - 错误处理"""

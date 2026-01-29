@@ -33,7 +33,7 @@ def read_material_demands(
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     start_date: Optional[date] = Query(None, description="需求开始日期"),
     end_date: Optional[date] = Query(None, description="需求结束日期"),
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("procurement:read")),
 ) -> Any:
     """
     获取物料需求列表
@@ -134,7 +134,7 @@ def read_material_demands_vs_stock(
     db: Session = Depends(deps.get_db),
     project_ids: Optional[str] = Query(None, description="项目ID列表（逗号分隔）"),
     material_ids: Optional[str] = Query(None, description="物料ID列表（逗号分隔）"),
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("procurement:read")),
 ) -> Any:
     """
     需求与库存对比（需求-库存）

@@ -35,7 +35,7 @@ def issue_invoice(
     db: Session = Depends(deps.get_db),
     invoice_id: int,
     issue_request: InvoiceIssueRequest,
-    current_user: User = Depends(security.require_finance_access()),
+    current_user: User = Depends(security.require_permission("finance:read")),
 ) -> Any:
     """
     开票
@@ -129,7 +129,7 @@ def void_invoice(
     db: Session = Depends(deps.get_db),
     invoice_id: int,
     reason: Optional[str] = Query(None, description="作废原因"),
-    current_user: User = Depends(security.require_finance_access()),
+    current_user: User = Depends(security.require_permission("finance:read")),
 ) -> Any:
     """
     作废发票

@@ -9,14 +9,14 @@ CREATE TABLE IF NOT EXISTS approval_templates (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     template_code VARCHAR(50) UNIQUE NOT NULL,
     template_name VARCHAR(100) NOT NULL,
-    category VARCHAR(30) COMMENT '分类：HR/FINANCE/PROJECT/BUSINESS/ENGINEERING',
+    category VARCHAR(30);
     description TEXT,
     icon VARCHAR(100),
-    form_schema JSON COMMENT '表单结构定义（JSON Schema）',
+    form_schema JSON;
     version INTEGER DEFAULT 1,
     is_published INTEGER DEFAULT 0,
-    visible_scope JSON COMMENT '可见范围（部门/角色ID列表）',
-    entity_type VARCHAR(50) COMMENT '关联的业务实体类型',
+    visible_scope JSON;
+    entity_type VARCHAR(50);
     is_active INTEGER DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS approval_template_versions (
     published_by INTEGER,
     published_at DATETIME,
     change_log TEXT,
-    snapshot JSON COMMENT '完整配置快照',
+    snapshot JSON;
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (template_id) REFERENCES approval_templates(id),
@@ -76,20 +76,20 @@ CREATE TABLE IF NOT EXISTS approval_node_definitions (
     node_code VARCHAR(50),
     node_name VARCHAR(100) NOT NULL,
     node_order INTEGER DEFAULT 0,
-    node_type VARCHAR(20) DEFAULT 'APPROVAL' COMMENT 'APPROVAL/CC/CONDITION/PARALLEL/JOIN',
-    approval_mode VARCHAR(20) DEFAULT 'SINGLE' COMMENT 'SINGLE/OR_SIGN/AND_SIGN/SEQUENTIAL',
-    approver_type VARCHAR(20) COMMENT 'FIXED_USER/ROLE/DEPARTMENT_HEAD/DIRECT_MANAGER/FORM_FIELD/MULTI_DEPT/DYNAMIC/INITIATOR',
-    approver_config JSON COMMENT '审批人配置详情',
-    condition_expression TEXT COMMENT '条件表达式（CONDITION类型）',
+    node_type VARCHAR(20) DEFAULT 'APPROVAL';
+    approval_mode VARCHAR(20) DEFAULT 'SINGLE';
+    approver_type VARCHAR(20);
+    approver_config JSON;
+    condition_expression TEXT;
     can_add_approver INTEGER DEFAULT 0,
     can_transfer INTEGER DEFAULT 1,
     can_delegate INTEGER DEFAULT 1,
-    can_reject_to VARCHAR(20) DEFAULT 'START' COMMENT 'START/PREV/SPECIFIC',
-    reject_to_node_id INTEGER COMMENT '指定驳回节点ID',
+    can_reject_to VARCHAR(20) DEFAULT 'START';
+    reject_to_node_id INTEGER;
     timeout_hours INTEGER,
-    timeout_action VARCHAR(20) COMMENT 'REMIND/AUTO_PASS/AUTO_REJECT/ESCALATE',
-    timeout_notify_config JSON COMMENT '超时通知配置',
-    notify_config JSON COMMENT '通知配置',
+    timeout_action VARCHAR(20);
+    timeout_notify_config JSON;
+    notify_config JSON;
     is_active INTEGER DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS approval_routing_rules (
     flow_id INTEGER NOT NULL,
     rule_name VARCHAR(100) NOT NULL,
     rule_order INTEGER DEFAULT 0,
-    conditions JSON COMMENT '条件配置JSON',
+    conditions JSON;
     is_active INTEGER DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -129,15 +129,15 @@ CREATE TABLE IF NOT EXISTS approval_instances (
     instance_no VARCHAR(50) UNIQUE NOT NULL,
     template_id INTEGER NOT NULL,
     flow_id INTEGER,
-    entity_type VARCHAR(50) COMMENT '业务实体类型',
-    entity_id INTEGER COMMENT '业务实体ID',
+    entity_type VARCHAR(50);
+    entity_id INTEGER;
     initiator_id INTEGER NOT NULL,
     initiator_name VARCHAR(50),
     initiator_dept_id INTEGER,
     form_data JSON,
-    status VARCHAR(20) DEFAULT 'DRAFT' COMMENT 'DRAFT/PENDING/APPROVED/REJECTED/CANCELLED/TERMINATED',
+    status VARCHAR(20) DEFAULT 'DRAFT';
     current_node_id INTEGER,
-    urgency VARCHAR(10) DEFAULT 'NORMAL' COMMENT 'NORMAL/URGENT/CRITICAL',
+    urgency VARCHAR(10) DEFAULT 'NORMAL';
     title VARCHAR(200),
     summary TEXT,
     submitted_at DATETIME,
@@ -166,18 +166,18 @@ CREATE TABLE IF NOT EXISTS approval_tasks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     instance_id INTEGER NOT NULL,
     node_id INTEGER NOT NULL,
-    task_type VARCHAR(20) DEFAULT 'APPROVAL' COMMENT 'APPROVAL/CC/EVALUATION',
+    task_type VARCHAR(20) DEFAULT 'APPROVAL';
     task_order INTEGER DEFAULT 1,
     assignee_id INTEGER NOT NULL,
     assignee_name VARCHAR(50),
     assignee_dept_id INTEGER,
-    assignee_type VARCHAR(20) DEFAULT 'NORMAL' COMMENT 'NORMAL/DELEGATED/TRANSFERRED/ADDED_BEFORE/ADDED_AFTER',
+    assignee_type VARCHAR(20) DEFAULT 'NORMAL';
     original_assignee_id INTEGER,
-    status VARCHAR(20) DEFAULT 'PENDING' COMMENT 'PENDING/COMPLETED/TRANSFERRED/DELEGATED/SKIPPED/EXPIRED/CANCELLED',
-    action VARCHAR(20) COMMENT 'APPROVE/REJECT/RETURN',
+    status VARCHAR(20) DEFAULT 'PENDING';
+    action VARCHAR(20);
     comment TEXT,
     attachments JSON,
-    eval_data JSON COMMENT '评估数据（ECN等场景）',
+    eval_data JSON;
     return_to_node_id INTEGER,
     due_at DATETIME,
     reminded_at DATETIME,
@@ -212,7 +212,7 @@ CREATE TABLE IF NOT EXISTS approval_carbon_copies (
     node_id INTEGER,
     cc_user_id INTEGER NOT NULL,
     cc_user_name VARCHAR(50),
-    cc_source VARCHAR(20) DEFAULT 'FLOW' COMMENT 'FLOW/INITIATOR/APPROVER',
+    cc_source VARCHAR(20) DEFAULT 'FLOW';
     added_by INTEGER,
     is_read INTEGER DEFAULT 0,
     read_at DATETIME,
@@ -238,9 +238,9 @@ CREATE TABLE IF NOT EXISTS approval_countersign_results (
     approved_count INTEGER DEFAULT 0,
     rejected_count INTEGER DEFAULT 0,
     pending_count INTEGER DEFAULT 0,
-    final_result VARCHAR(20) COMMENT 'PENDING/PASSED/FAILED',
+    final_result VARCHAR(20);
     result_reason TEXT,
-    summary_data JSON COMMENT '汇总数据',
+    summary_data JSON;
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (instance_id) REFERENCES approval_instances(id),
@@ -261,7 +261,7 @@ CREATE TABLE IF NOT EXISTS approval_action_logs (
     node_id INTEGER,
     operator_id INTEGER NOT NULL,
     operator_name VARCHAR(50),
-    action VARCHAR(30) NOT NULL COMMENT 'SUBMIT/SAVE_DRAFT/APPROVE/REJECT/RETURN/TRANSFER/DELEGATE/ADD_APPROVER_BEFORE/ADD_APPROVER_AFTER/ADD_CC/WITHDRAW/CANCEL/TERMINATE/REMIND/COMMENT/READ_CC/TIMEOUT',
+    action VARCHAR(30) NOT NULL;
     action_detail JSON,
     comment TEXT,
     attachments JSON,
@@ -320,11 +320,11 @@ CREATE INDEX idx_comment_parent ON approval_comments(parent_id);
 -- ============================================================
 CREATE TABLE IF NOT EXISTS approval_delegates (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL COMMENT '原审批人ID',
-    delegate_id INTEGER NOT NULL COMMENT '代理人ID',
-    scope VARCHAR(20) DEFAULT 'ALL' COMMENT 'ALL/TEMPLATE/CATEGORY',
-    template_ids JSON COMMENT '指定模板ID列表',
-    categories JSON COMMENT '指定分类列表',
+    user_id INTEGER NOT NULL;
+    delegate_id INTEGER NOT NULL;
+    scope VARCHAR(20) DEFAULT 'ALL';
+    template_ids JSON;
+    categories JSON;
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     is_active INTEGER DEFAULT 1,

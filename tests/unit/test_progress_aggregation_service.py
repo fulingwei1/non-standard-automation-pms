@@ -107,23 +107,23 @@ class TestAggregateTaskProgress:
             mock_query = MagicMock()
             model_name = str(model)
             if call_count[0] == 0:  # TaskUnified
-            mock_query.filter.return_value.first.return_value = task
-            mock_query.filter.return_value.scalar.return_value = 5  # total tasks
-        elif call_count[0] == 1:  # count
-        mock_query.filter.return_value.scalar.return_value = 5
-        elif call_count[0] == 2:  # sum progress
-        mock_query.filter.return_value.scalar.return_value = 250  # avg 50%
-        elif call_count[0] == 3:  # Project
-        mock_query.filter.return_value.first.return_value = project
-        call_count[0] += 1
-        return mock_query
+                mock_query.filter.return_value.first.return_value = task
+                mock_query.filter.return_value.scalar.return_value = 5  # total tasks
+            elif call_count[0] == 1:  # count
+                mock_query.filter.return_value.scalar.return_value = 5
+            elif call_count[0] == 2:  # sum progress
+                mock_query.filter.return_value.scalar.return_value = 250  # avg 50%
+            elif call_count[0] == 3:  # Project
+                mock_query.filter.return_value.first.return_value = project
+            call_count[0] += 1
+            return mock_query
 
         db.query.side_effect = query_side_effect
 
         with patch(
-        "app.services.progress_aggregation_service._check_and_update_health"
+            "app.services.progress_aggregation_service._check_and_update_health"
         ):
-        result = aggregate_task_progress(db, 1)
+            result = aggregate_task_progress(db, 1)
 
         assert result["project_id"] == 1
 
@@ -134,16 +134,16 @@ class TestAggregateTaskProgress:
         project = create_mock_project()
 
         db.query.return_value.filter.return_value.first.side_effect = [
-        task,
-        project,
-        project,  # for _check_and_update_health
+            task,
+            project,
+            project,  # for _check_and_update_health
         ]
         db.query.return_value.filter.return_value.scalar.return_value = 100
 
         with patch(
-        "app.services.progress_aggregation_service._check_and_update_health"
+            "app.services.progress_aggregation_service._check_and_update_health"
         ):
-        result = aggregate_task_progress(db, 1)
+            result = aggregate_task_progress(db, 1)
 
         assert result["project_id"] == 1
         assert result["project_progress_updated"] is True
@@ -203,10 +203,10 @@ class TestCheckAndUpdateHealth:
 
         def scalar_side_effect():
             # 20% delayed = H2
-        results = [10, 2, 0]  # total=10, delayed=2 (20%), overdue=0
-        result = results[call_count[0]] if call_count[0] < len(results) else 0
-        call_count[0] += 1
-        return result
+            results = [10, 2, 0]  # total=10, delayed=2 (20%), overdue=0
+            result = results[call_count[0]] if call_count[0] < len(results) else 0
+            call_count[0] += 1
+            return result
 
         db.query.return_value.filter.return_value.first.return_value = project
         db.query.return_value.filter.return_value.scalar.side_effect = scalar_side_effect
@@ -224,10 +224,10 @@ class TestCheckAndUpdateHealth:
 
         def scalar_side_effect():
             # 30% delayed = H3
-        results = [10, 3, 0]  # total=10, delayed=3 (30%), overdue=0
-        result = results[call_count[0]] if call_count[0] < len(results) else 0
-        call_count[0] += 1
-        return result
+            results = [10, 3, 0]  # total=10, delayed=3 (30%), overdue=0
+            result = results[call_count[0]] if call_count[0] < len(results) else 0
+            call_count[0] += 1
+            return result
 
         db.query.return_value.filter.return_value.first.return_value = project
         db.query.return_value.filter.return_value.scalar.side_effect = scalar_side_effect
@@ -245,10 +245,10 @@ class TestCheckAndUpdateHealth:
 
         def scalar_side_effect():
             # 20% overdue = H3
-        results = [10, 0, 2]  # total=10, delayed=0, overdue=2 (20%)
-        result = results[call_count[0]] if call_count[0] < len(results) else 0
-        call_count[0] += 1
-        return result
+            results = [10, 0, 2]  # total=10, delayed=0, overdue=2 (20%)
+            result = results[call_count[0]] if call_count[0] < len(results) else 0
+            call_count[0] += 1
+            return result
 
         db.query.return_value.filter.return_value.first.return_value = project
         db.query.return_value.filter.return_value.scalar.side_effect = scalar_side_effect
@@ -267,12 +267,12 @@ class TestCreateProgressLog:
         db = create_mock_db_session()
 
         result = create_progress_log(
-        db=db,
-        task_id=1,
-        progress=50,
-        actual_hours=4.0,
-        note="测试进度更新",
-        updater_id=1,
+            db=db,
+            task_id=1,
+            progress=50,
+            actual_hours=4.0,
+            note="测试进度更新",
+            updater_id=1,
         )
 
         db.add.assert_called_once()
@@ -346,20 +346,20 @@ class TestGetProjectProgressSummary:
         def query_side_effect(*args):
             mock_query = MagicMock()
             if call_count[0] == 0:  # total tasks
-            mock_query.filter.return_value.scalar.return_value = 10
-        elif call_count[0] == 1:  # status counts
-        mock_query.filter.return_value.group_by.return_value.all.return_value = [
-        ("COMPLETED", 5),
-        ("IN_PROGRESS", 3),
-        ]
-        elif call_count[0] == 2:  # delayed
-        mock_query.filter.return_value.scalar.return_value = 1
-        elif call_count[0] == 3:  # overdue
-        mock_query.filter.return_value.scalar.return_value = 0
-        elif call_count[0] == 4:  # avg progress
-        mock_query.filter.return_value.scalar.return_value = 60.0
-        call_count[0] += 1
-        return mock_query
+                mock_query.filter.return_value.scalar.return_value = 10
+            elif call_count[0] == 1:  # status counts
+                mock_query.filter.return_value.group_by.return_value.all.return_value = [
+                    ("COMPLETED", 5),
+                    ("IN_PROGRESS", 3),
+                ]
+            elif call_count[0] == 2:  # delayed
+                mock_query.filter.return_value.scalar.return_value = 1
+            elif call_count[0] == 3:  # overdue
+                mock_query.filter.return_value.scalar.return_value = 0
+            elif call_count[0] == 4:  # avg progress
+                mock_query.filter.return_value.scalar.return_value = 60.0
+            call_count[0] += 1
+            return mock_query
 
         db.query.side_effect = query_side_effect
 
@@ -416,22 +416,22 @@ class TestProgressAggregationService:
         def query_side_effect(*args):
             mock_query = MagicMock()
             if call_count[0] == 0:  # total tasks count
-            mock_query.filter.return_value.scalar.return_value = 3
-        elif call_count[0] == 1:  # status counts
-        mock_query.filter.return_value.group_by.return_value.all.return_value = [
-        ("COMPLETED", 1),
-        ("IN_PROGRESS", 2),
-        ]
-        elif call_count[0] == 2:  # total hours (weight)
-        mock_query.filter.return_value.scalar.return_value = 24.0
-        elif call_count[0] == 3:  # weighted progress sum
-        mock_query.filter.return_value.scalar.return_value = 1200.0  # 50 * 24
-        elif call_count[0] == 4:  # delayed
-        mock_query.filter.return_value.scalar.return_value = 0
-        elif call_count[0] == 5:  # overdue
-        mock_query.filter.return_value.scalar.return_value = 0
-        call_count[0] += 1
-        return mock_query
+                mock_query.filter.return_value.scalar.return_value = 3
+            elif call_count[0] == 1:  # status counts
+                mock_query.filter.return_value.group_by.return_value.all.return_value = [
+                    ("COMPLETED", 1),
+                    ("IN_PROGRESS", 2),
+                ]
+            elif call_count[0] == 2:  # total hours (weight)
+                mock_query.filter.return_value.scalar.return_value = 24.0
+            elif call_count[0] == 3:  # weighted progress sum
+                mock_query.filter.return_value.scalar.return_value = 1200.0  # 50 * 24
+            elif call_count[0] == 4:  # delayed
+                mock_query.filter.return_value.scalar.return_value = 0
+            elif call_count[0] == 5:  # overdue
+                mock_query.filter.return_value.scalar.return_value = 0
+            call_count[0] += 1
+            return mock_query
 
         db.query.side_effect = query_side_effect
 
@@ -449,21 +449,21 @@ class TestProgressAggregationService:
         def query_side_effect(*args):
             mock_query = MagicMock()
             if call_count[0] == 0:  # total tasks count
-            mock_query.filter.return_value.scalar.return_value = 3
-        elif call_count[0] == 1:  # status counts
-        mock_query.filter.return_value.group_by.return_value.all.return_value = []
-        elif call_count[0] == 2:  # total hours = 0
-        mock_query.filter.return_value.scalar.return_value = 0
-        elif call_count[0] == 3:  # weighted progress = 0
-        mock_query.filter.return_value.scalar.return_value = 0
-        elif call_count[0] == 4:  # avg progress fallback
-        mock_query.filter.return_value.scalar.return_value = 60.0
-        elif call_count[0] == 5:  # delayed
-        mock_query.filter.return_value.scalar.return_value = 0
-        elif call_count[0] == 6:  # overdue
-        mock_query.filter.return_value.scalar.return_value = 0
-        call_count[0] += 1
-        return mock_query
+                mock_query.filter.return_value.scalar.return_value = 3
+            elif call_count[0] == 1:  # status counts
+                mock_query.filter.return_value.group_by.return_value.all.return_value = []
+            elif call_count[0] == 2:  # total hours = 0
+                mock_query.filter.return_value.scalar.return_value = 0
+            elif call_count[0] == 3:  # weighted progress = 0
+                mock_query.filter.return_value.scalar.return_value = 0
+            elif call_count[0] == 4:  # avg progress fallback
+                mock_query.filter.return_value.scalar.return_value = 60.0
+            elif call_count[0] == 5:  # delayed
+                mock_query.filter.return_value.scalar.return_value = 0
+            elif call_count[0] == 6:  # overdue
+                mock_query.filter.return_value.scalar.return_value = 0
+            call_count[0] += 1
+            return mock_query
 
         db.query.side_effect = query_side_effect
 
@@ -493,24 +493,24 @@ class TestProgressAggregationService:
         def query_side_effect(*args):
             mock_query = MagicMock()
             if call_count[0] == 0:  # total tasks count
-            mock_query.filter.return_value.scalar.return_value = 10
-        elif call_count[0] == 1:  # status counts
-        mock_query.filter.return_value.group_by.return_value.all.return_value = [
-        ("COMPLETED", 3),
-        ("IN_PROGRESS", 4),
-        ("ACCEPTED", 1),
-        ("PENDING_APPROVAL", 2),
-        ]
-        elif call_count[0] == 2:  # total hours
-        mock_query.filter.return_value.scalar.return_value = 10.0
-        elif call_count[0] == 3:  # weighted progress
-        mock_query.filter.return_value.scalar.return_value = 500.0
-        elif call_count[0] == 4:  # delayed
-        mock_query.filter.return_value.scalar.return_value = 1
-        elif call_count[0] == 5:  # overdue
-        mock_query.filter.return_value.scalar.return_value = 0
-        call_count[0] += 1
-        return mock_query
+                mock_query.filter.return_value.scalar.return_value = 10
+            elif call_count[0] == 1:  # status counts
+                mock_query.filter.return_value.group_by.return_value.all.return_value = [
+                    ("COMPLETED", 3),
+                    ("IN_PROGRESS", 4),
+                    ("ACCEPTED", 1),
+                    ("PENDING_APPROVAL", 2),
+                ]
+            elif call_count[0] == 2:  # total hours
+                mock_query.filter.return_value.scalar.return_value = 10.0
+            elif call_count[0] == 3:  # weighted progress
+                mock_query.filter.return_value.scalar.return_value = 500.0
+            elif call_count[0] == 4:  # delayed
+                mock_query.filter.return_value.scalar.return_value = 1
+            elif call_count[0] == 5:  # overdue
+                mock_query.filter.return_value.scalar.return_value = 0
+            call_count[0] += 1
+            return mock_query
 
         db.query.side_effect = query_side_effect
 

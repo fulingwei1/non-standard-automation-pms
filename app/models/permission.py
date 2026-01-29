@@ -54,23 +54,37 @@ class PermissionType(str, Enum):
 
 
 class DataScopeRule(Base, TimestampMixin):
-    """数据权限规则表"""
+    """数据权限规则表
+
+    多租户支持：
+    - tenant_id = NULL: 系统级规则，所有租户共享
+    - tenant_id = N: 租户自定义规则
+    """
 
     __tablename__ = "data_scope_rules"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    rule_code = Column(String(50), unique=True, nullable=False)
-    rule_name = Column(String(100), nullable=False)
-    scope_type = Column(String(20), nullable=False)
-    scope_config = Column(JSON)
-    description = Column(Text)
-    is_active = Column(Boolean, default=True)
+    # 多租户支持
+    tenant_id = Column(
+        Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID（NULL=系统级规则）"
+    )
+    rule_code = Column(String(50), nullable=False, comment="规则编码")
+    rule_name = Column(String(100), nullable=False, comment="规则名称")
+    scope_type = Column(String(20), nullable=False, comment="范围类型")
+    scope_config = Column(JSON, comment="范围配置")
+    description = Column(Text, comment="描述")
+    is_active = Column(Boolean, default=True, comment="是否启用")
+    is_system = Column(Boolean, default=False, comment="是否系统预置")
 
+    # 关系
+    tenant = relationship("Tenant", backref="custom_data_scope_rules")
     role_data_scopes = relationship("RoleDataScope", back_populates="scope_rule")
 
     __table_args__ = (
         Index("idx_dsr_scope_type", "scope_type"),
         Index("idx_dsr_active", "is_active"),
+        Index("idx_dsr_tenant", "tenant_id"),
+        UniqueConstraint("tenant_id", "rule_code", name="uk_tenant_rule_code"),
     )
 
 
@@ -115,25 +129,42 @@ class PermissionGroup(Base, TimestampMixin):
 
 
 class MenuPermission(Base, TimestampMixin):
-    """菜单与按钮权限表"""
+    """菜单与按钮权限表
+
+    多租户支持：
+    - tenant_id = NULL: 系统级菜单，所有租户共享
+    - tenant_id = N: 租户自定义菜单
+    """
 
     __tablename__ = "menu_permissions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    menu_code = Column(String(50), unique=True, nullable=False)
-    menu_name = Column(String(100), nullable=False)
-    menu_path = Column(String(200))
-    menu_icon = Column(String(50))
-    parent_id = Column(Integer, ForeignKey("menu_permissions.id", ondelete="SET NULL"))
-    menu_type = Column(String(20), nullable=False)
-    permission_id = Column(Integer, ForeignKey("permissions.id", ondelete="SET NULL"))
-    sort_order = Column(Integer, default=0)
-    is_visible = Column(Boolean, default=True)
-    is_active = Column(Boolean, default=True)
+    # 多租户支持
+    tenant_id = Column(
+        Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID（NULL=系统级菜单）"
+    )
+    menu_code = Column(String(50), nullable=False, comment="菜单编码")
+    menu_name = Column(String(100), nullable=False, comment="菜单名称")
+    menu_path = Column(String(200), comment="前端路由路径")
+    menu_icon = Column(String(50), comment="菜单图标")
+    parent_id = Column(Integer, ForeignKey("menu_permissions.id", ondelete="SET NULL"), comment="父菜单ID")
+    menu_type = Column(String(20), nullable=False, comment="类型: DIRECTORY/MENU/BUTTON")
+    perm_code = Column(String(100), nullable=True, comment="关联的API权限编码（可选，纯目录可为NULL）")
+    sort_order = Column(Integer, default=0, comment="排序")
+    is_visible = Column(Boolean, default=True, comment="是否可见")
+    is_active = Column(Boolean, default=True, comment="是否启用")
+    is_system = Column(Boolean, default=False, comment="是否系统预置菜单")
 
+    # 关系
+    tenant = relationship("Tenant", backref="custom_menus")
     parent = relationship("MenuPermission", remote_side=[id], backref="children")
-    permission = relationship("Permission", backref="menu_items")
     role_menus = relationship("RoleMenu", back_populates="menu")
+
+    __table_args__ = (
+        Index("idx_menu_tenant", "tenant_id"),
+        Index("idx_menu_parent", "parent_id"),
+        UniqueConstraint("tenant_id", "menu_code", name="uk_tenant_menu_code"),
+    )
 
 
 class RoleMenu(Base):

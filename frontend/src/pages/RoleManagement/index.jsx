@@ -130,7 +130,9 @@ export default function RoleManagement() {
     const [activeEditTab, setActiveEditTab] = useState('basic');
 
     // 使用 roleData 中的权限数据
-    const allPermissions = roleData.permissions;
+    const allPermissions = roleData.permissions || [];
+    const roles = roleData.roles || [];
+    const templates = roleData.templates || [];
 
     // 处理函数
     const handleCreateChange = (field, value) => {
@@ -213,6 +215,7 @@ export default function RoleManagement() {
 
     // 获取筛选后的权限
     const getFilteredPermissions = () => {
+        if (!Array.isArray(allPermissions)) return [];
         let filtered = allPermissions;
 
         if (permissionSearch) {
@@ -246,6 +249,7 @@ export default function RoleManagement() {
 
     // 获取所有模块
     const getAllModules = () => {
+        if (!Array.isArray(allPermissions)) return [];
         const modules = new Set(allPermissions.map(p => p.module).filter(Boolean));
         return Array.from(modules).sort();
     };
@@ -382,7 +386,7 @@ export default function RoleManagement() {
                             对比 ({selectedForCompare.length})
                         </Button>
                     )}
-                    {roleData.templates.length > 0 && (
+                    {templates.length > 0 && (
                         <Button variant="outline" onClick={() => setShowTemplateDialog(true)}>
                             <FileText className="w-4 h-4 mr-2" />
                             从模板创建
@@ -401,7 +405,7 @@ export default function RoleManagement() {
                     <CardHeader>
                         <CardTitle>角色列表</CardTitle>
                         <CardDescription>
-                            共 {roleData.roles.length} 个角色
+                            共 {roles.length} 个角色
                             {selectedForCompare.length > 0 && (
                                 <span className="ml-2 text-blue-600">
                                     | 已选择 {selectedForCompare.length} 个角色
@@ -418,7 +422,7 @@ export default function RoleManagement() {
                     <CardContent>
                         {roleData.loading ? (
                             <div className="text-center py-8 text-slate-400">加载中...</div>
-                        ) : roleData.roles.length === 0 ? (
+                        ) : roles.length === 0 ? (
                             <div className="text-center py-8 text-slate-400">暂无角色数据</div>
                         ) : (
                             <Table>
@@ -442,7 +446,7 @@ export default function RoleManagement() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {roleData.roles.map((role) => (
+                                    {roles.map((role) => (
                                         <TableRow
                                             key={role.id}
                                             className={selectedForCompare.includes(role.id) ? 'bg-blue-50' : ''}
@@ -562,7 +566,7 @@ export default function RoleManagement() {
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="__none__">无（顶级角色）</SelectItem>
-                                        {roleData.roles.filter(r => r.is_active).map((role) => (
+                                        {roles.filter(r => r.is_active).map((role) => (
                                             <SelectItem key={role.id} value={role.id.toString()}>
                                                 {role.role_name}
                                             </SelectItem>
@@ -650,7 +654,7 @@ export default function RoleManagement() {
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="__none__">无（顶级角色）</SelectItem>
-                                            {roleData.roles
+                                            {roles
                                                 .filter(r => r.is_active && r.id !== editForm.id)
                                                 .map((role) => (
                                                     <SelectItem key={role.id} value={role.id.toString()}>
@@ -1085,7 +1089,7 @@ export default function RoleManagement() {
                                         <SelectValue placeholder="选择角色模板" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {roleData.templates.map((tpl) => (
+                                        {templates.map((tpl) => (
                                             <SelectItem key={tpl.id} value={tpl.id.toString()}>
                                                 {tpl.template_name}
                                                 <span className="text-slate-400 ml-2">

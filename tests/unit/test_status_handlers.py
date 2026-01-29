@@ -64,19 +64,19 @@ class TestContractStatusHandler:
 
         with patch.object(db_session, "query") as mock_query:
             # 设置查询返回 mock 合同
-        mock_query.return_value.filter.return_value.first.return_value = (
-        mock_contract
-        )
+            mock_query.return_value.filter.return_value.first.return_value = (
+                mock_contract
+            )
 
             # 直接测试项目更新逻辑
-        mock_project.stage = "S2"
-        mock_project.status = "ST05"
-        db_session.commit()
+            mock_project.stage = "S2"
+            mock_project.status = "ST05"
+            db_session.commit()
 
             # 模拟合同签订后项目阶段更新
-        mock_project.stage = "S3"
-        mock_project.status = "ST08"
-        db_session.commit()
+            mock_project.stage = "S3"
+            mock_project.status = "ST08"
+            db_session.commit()
 
         db_session.refresh(mock_project)
         assert mock_project.stage == "S3"

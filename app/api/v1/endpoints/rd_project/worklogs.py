@@ -42,7 +42,7 @@ def get_rd_project_worklogs(
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
     status: Optional[str] = Query(None, description="状态筛选"),
-    current_user: User = Depends(security.require_rd_project_access),
+    current_user: User = Depends(security.require_permission("rd_project:read")),
 ) -> Any:
     """
     获取研发项目工作日志列表
@@ -107,7 +107,7 @@ def create_rd_project_worklog(
     db: Session = Depends(deps.get_db),
     project_id: int,
     worklog_in: TimesheetCreate,
-    current_user: User = Depends(security.require_rd_project_access),
+    current_user: User = Depends(security.require_permission("rd_project:read")),
 ) -> Any:
     """
     创建研发项目工作日志

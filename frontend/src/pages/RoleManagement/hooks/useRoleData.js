@@ -31,7 +31,8 @@ export function useRoleData() {
             });
             // 使用统一响应格式处理
             const listData = response.formatted || response.data;
-            setRoles(listData?.items || listData || []);
+            const items = listData?.items || listData;
+            setRoles(Array.isArray(items) ? items : []);
         } catch (error) {
             console.error('Failed to load roles:', error);
             setRoles([]);
@@ -46,9 +47,11 @@ export function useRoleData() {
             const response = await roleApi.permissions();
             // 使用统一响应格式处理
             const listData = response.formatted || response.data;
-            setPermissions(listData?.items || listData || []);
+            const items = listData?.items || listData;
+            setPermissions(Array.isArray(items) ? items : []);
         } catch (error) {
             console.error('Failed to load permissions:', error);
+            setPermissions([]);
         }
     }, []);
 
@@ -80,9 +83,11 @@ export function useRoleData() {
             const response = await roleApi.listTemplates();
             // 使用统一响应格式处理
             const listData = response.formatted || response.data;
-            setTemplates(listData?.items || listData || []);
+            const items = listData?.items || listData;
+            setTemplates(Array.isArray(items) ? items : []);
         } catch (error) {
             console.error('Failed to load templates:', error);
+            setTemplates([]);
         }
     }, []);
 

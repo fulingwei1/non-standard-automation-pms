@@ -113,7 +113,7 @@ def create_bonus_rule(
     *,
     db: Session = Depends(deps.get_db),
     rule_in: BonusRuleCreate,
-    current_user: User = Depends(security.require_hr_access),
+    current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Any:
     """
     创建奖金规则（仅人力资源经理可配置）
@@ -191,7 +191,7 @@ def update_bonus_rule(
     db: Session = Depends(deps.get_db),
     rule_id: int,
     rule_in: BonusRuleUpdate,
-    current_user: User = Depends(security.require_hr_access),
+    current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Any:
     """
     更新奖金规则（仅人力资源经理可配置）
@@ -215,7 +215,7 @@ def delete_bonus_rule(
     *,
     db: Session = Depends(deps.get_db),
     rule_id: int,
-    current_user: User = Depends(security.require_hr_access),
+    current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Any:
     """
     删除奖金规则（仅人力资源经理可配置）
@@ -243,7 +243,7 @@ def activate_bonus_rule(
     *,
     db: Session = Depends(deps.get_db),
     rule_id: int,
-    current_user: User = Depends(security.require_hr_access),
+    current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Any:
     """
     启用奖金规则（仅人力资源经理可配置）
@@ -263,7 +263,7 @@ def deactivate_bonus_rule(
     *,
     db: Session = Depends(deps.get_db),
     rule_id: int,
-    current_user: User = Depends(security.require_hr_access),
+    current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Any:
     """
     停用奖金规则（仅人力资源经理可配置）

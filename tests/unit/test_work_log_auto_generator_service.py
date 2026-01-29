@@ -15,12 +15,11 @@ class TestWorkLogAutoGeneratorInit:
 
     def test_init_with_db_session(self, db_session):
         """测试使用数据库会话初始化"""
-                from app.services.work_log_auto_generator import WorkLogAutoGenerator
+        from app.services.work_log_auto_generator import WorkLogAutoGenerator
 
-                service = WorkLogAutoGenerator(db_session)
+        service = WorkLogAutoGenerator(db_session)
 
-                assert service.db == db_session
-
+        assert service.db == db_session
 
 
 class TestGenerateWorkLogFromTimesheet:
@@ -28,103 +27,62 @@ class TestGenerateWorkLogFromTimesheet:
 
     def test_existing_submitted_log_returns_none(self, db_session):
         """测试已存在已提交日志返回None"""
-                from app.services.work_log_auto_generator import WorkLogAutoGenerator
+        from app.services.work_log_auto_generator import WorkLogAutoGenerator
+        from app.models.work_log import WorkLog
 
-                from app.models.work_log import WorkLog
+        # 创建已提交的工作日志
+        existing_log = WorkLog(
+            user_id=1,
+            work_date=date.today(),
+            status='SUBMITTED',
+            content='测试内容'
+        )
+        db_session.add(existing_log)
+        db_session.flush()
 
+        service = WorkLogAutoGenerator(db_session)
+        result = service.generate_work_log_from_timesheet(
+            user_id=1,
+            work_date=date.today()
+        )
 
-                # 创建已提交的工作日志
-
-                existing_log = WorkLog(
-
-                user_id=1,
-
-                work_date=date.today(),
-
-                status='SUBMITTED',
-
-                content='测试内容'
-
-                )
-
-                db_session.add(existing_log)
-
-                db_session.flush()
-
-
-                service = WorkLogAutoGenerator(db_session)
-
-                result = service.generate_work_log_from_timesheet(
-
-                user_id=1,
-
-                work_date=date.today()
-
-                )
-
-
-                assert result is None
-
+        assert result is None
 
     def test_no_timesheets_returns_none(self, db_session):
         """测试无工时记录返回None"""
-                from app.services.work_log_auto_generator import WorkLogAutoGenerator
+        from app.services.work_log_auto_generator import WorkLogAutoGenerator
 
-                service = WorkLogAutoGenerator(db_session)
+        service = WorkLogAutoGenerator(db_session)
+        result = service.generate_work_log_from_timesheet(
+            user_id=99999,
+            work_date=date.today()
+        )
 
-                result = service.generate_work_log_from_timesheet(
-
-                user_id=99999,
-
-                work_date=date.today()
-
-                )
-
-
-                assert result is None
-
+        assert result is None
 
     def test_user_not_found_returns_none(self, db_session):
         """测试用户不存在返回None"""
-                from app.services.work_log_auto_generator import WorkLogAutoGenerator
+        from app.services.work_log_auto_generator import WorkLogAutoGenerator
+        from app.models.timesheet import Timesheet
 
-                from app.models.timesheet import Timesheet
+        # 创建工时记录但用户不存在
+        timesheet = Timesheet(
+            user_id=99999,
+            work_date=date.today(),
+            status='APPROVED',
+            hours=Decimal('8.0')
+        )
+        db_session.add(timesheet)
+        db_session.flush()
 
+        service = WorkLogAutoGenerator(db_session)
+        result = service.generate_work_log_from_timesheet(
+            user_id=99999,
+            work_date=date.today()
+        )
 
-                # 创建工时记录但用户不存在
-
-                timesheet = Timesheet(
-
-                user_id=99999,
-
-                work_date=date.today(),
-
-                status='APPROVED',
-
-                hours=Decimal('8.0')
-
-                )
-
-                db_session.add(timesheet)
-
-                db_session.flush()
-
-
-                service = WorkLogAutoGenerator(db_session)
-
-                result = service.generate_work_log_from_timesheet(
-
-                user_id=99999,
-
-                work_date=date.today()
-
-                )
-
-
-                # 用户不存在应返回None
-
-                assert result is None
-
+        # 用户不存在应返回None
+        assert result is None
 
 
 class TestBatchGenerateWorkLogs:
@@ -132,71 +90,46 @@ class TestBatchGenerateWorkLogs:
 
     def test_batch_no_users(self, db_session):
         """测试无用户时批量生成"""
-                from app.services.work_log_auto_generator import WorkLogAutoGenerator
+        from app.services.work_log_auto_generator import WorkLogAutoGenerator
 
-                service = WorkLogAutoGenerator(db_session)
+        service = WorkLogAutoGenerator(db_session)
+        result = service.batch_generate_work_logs(
+            start_date=date.today() - timedelta(days=7),
+            end_date=date.today()
+        )
 
-                result = service.batch_generate_work_logs(
-
-                start_date=date.today() - timedelta(days=7),
-
-                end_date=date.today()
-
-                )
-
-
-                assert result['total_users'] == 0
-
-                assert result['generated_count'] == 0
-
+        assert result['total_users'] == 0
+        assert result['generated_count'] == 0
 
     def test_batch_result_structure(self, db_session):
         """测试批量结果结构"""
-                from app.services.work_log_auto_generator import WorkLogAutoGenerator
+        from app.services.work_log_auto_generator import WorkLogAutoGenerator
 
-                service = WorkLogAutoGenerator(db_session)
+        service = WorkLogAutoGenerator(db_session)
+        result = service.batch_generate_work_logs(
+            start_date=date.today(),
+            end_date=date.today()
+        )
 
-                result = service.batch_generate_work_logs(
-
-                start_date=date.today(),
-
-                end_date=date.today()
-
-                )
-
-
-                expected_keys = [
-
-                'total_users', 'total_days', 'generated_count',
-
-                'skipped_count', 'error_count', 'errors'
-
-                ]
-
-                for key in expected_keys:
-
-                    assert key in result
-
+        expected_keys = [
+            'total_users', 'total_days', 'generated_count',
+            'skipped_count', 'error_count', 'errors'
+        ]
+        for key in expected_keys:
+            assert key in result
 
     def test_batch_with_user_ids(self, db_session):
         """测试指定用户ID列表"""
-                from app.services.work_log_auto_generator import WorkLogAutoGenerator
+        from app.services.work_log_auto_generator import WorkLogAutoGenerator
 
-                service = WorkLogAutoGenerator(db_session)
+        service = WorkLogAutoGenerator(db_session)
+        result = service.batch_generate_work_logs(
+            start_date=date.today(),
+            end_date=date.today(),
+            user_ids=[1, 2, 3]
+        )
 
-                result = service.batch_generate_work_logs(
-
-                start_date=date.today(),
-
-                end_date=date.today(),
-
-                user_ids=[1, 2, 3]
-
-                )
-
-
-                assert 'total_users' in result
-
+        assert 'total_users' in result
 
 
 class TestGenerateYesterdayWorkLogs:
@@ -204,29 +137,22 @@ class TestGenerateYesterdayWorkLogs:
 
     def test_generate_yesterday(self, db_session):
         """测试生成昨日日志"""
-                from app.services.work_log_auto_generator import WorkLogAutoGenerator
+        from app.services.work_log_auto_generator import WorkLogAutoGenerator
 
-                service = WorkLogAutoGenerator(db_session)
+        service = WorkLogAutoGenerator(db_session)
+        result = service.generate_yesterday_work_logs()
 
-                result = service.generate_yesterday_work_logs()
-
-
-                assert 'total_users' in result
-
-                assert 'generated_count' in result
-
+        assert 'total_users' in result
+        assert 'generated_count' in result
 
     def test_generate_yesterday_with_auto_submit(self, db_session):
         """测试昨日日志自动提交"""
-                from app.services.work_log_auto_generator import WorkLogAutoGenerator
+        from app.services.work_log_auto_generator import WorkLogAutoGenerator
 
-                service = WorkLogAutoGenerator(db_session)
+        service = WorkLogAutoGenerator(db_session)
+        result = service.generate_yesterday_work_logs(auto_submit=True)
 
-                result = service.generate_yesterday_work_logs(auto_submit=True)
-
-
-                assert 'generated_count' in result
-
+        assert 'generated_count' in result
 
 
 class TestContentGeneration:
@@ -239,15 +165,15 @@ class TestContentGeneration:
         if len(content) > 300:
             content = content[:297] + "..."
 
-            assert len(content) == 300
-            assert content.endswith("...")
+        assert len(content) == 300
+        assert content.endswith("...")
 
     def test_project_grouping(self):
         """测试按项目分组"""
         timesheets = [
-        {'project_id': 1, 'hours': Decimal('4.0')},
-        {'project_id': 1, 'hours': Decimal('2.0')},
-        {'project_id': 2, 'hours': Decimal('2.0')},
+            {'project_id': 1, 'hours': Decimal('4.0')},
+            {'project_id': 1, 'hours': Decimal('2.0')},
+            {'project_id': 2, 'hours': Decimal('2.0')},
         ]
 
         project_groups = {}
@@ -255,18 +181,18 @@ class TestContentGeneration:
             project_id = ts['project_id']
             if project_id not in project_groups:
                 project_groups[project_id] = []
-                project_groups[project_id].append(ts)
+            project_groups[project_id].append(ts)
 
-                assert len(project_groups) == 2
-                assert len(project_groups[1]) == 2
-                assert len(project_groups[2]) == 1
+        assert len(project_groups) == 2
+        assert len(project_groups[1]) == 2
+        assert len(project_groups[2]) == 1
 
     def test_total_hours_calculation(self):
         """测试总工时计算"""
         timesheets = [
-        {'hours': Decimal('4.0')},
-        {'hours': Decimal('2.5')},
-        {'hours': Decimal('1.5')},
+            {'hours': Decimal('4.0')},
+            {'hours': Decimal('2.5')},
+            {'hours': Decimal('1.5')},
         ]
 
         total_hours = sum(ts['hours'] for ts in timesheets)
@@ -287,7 +213,7 @@ class TestDateRangeIteration:
             days.append(current)
             current += timedelta(days=1)
 
-            assert len(days) == 1
+        assert len(days) == 1
 
     def test_week_range(self):
         """测试一周范围"""
@@ -300,7 +226,7 @@ class TestDateRangeIteration:
             days.append(current)
             current += timedelta(days=1)
 
-            assert len(days) == 7
+        assert len(days) == 7
 
 
 class TestWorkLogStatus:

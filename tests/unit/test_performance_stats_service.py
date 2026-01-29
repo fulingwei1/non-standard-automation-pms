@@ -34,7 +34,7 @@ def test_user(db_session: Session):
         username="test_user",
         real_name="测试用户",
         email="test@example.com",
-        hashed_password="hashed",
+        password_hash="hashed",
         is_active=True
     )
     db_session.add(user)

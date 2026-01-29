@@ -275,34 +275,51 @@ async def get_current_active_superuser(
     return current_user
 
 
-def _load_user_permissions_from_db(user_id: int, db: Session) -> set:
-    """从数据库加载用户权限（含继承）- 使用新的 api_permissions 表"""
+def _load_user_permissions_from_db(
+    user_id: int, db: Session, tenant_id: Optional[int] = None
+) -> set:
+    """从数据库加载用户权限（含角色继承 + 多租户隔离）
+
+    多租户权限规则：
+    - 系统级权限（tenant_id=NULL）：所有租户可用
+    - 租户级权限（tenant_id=N）：仅该租户可用
+
+    Args:
+        user_id: 用户ID
+        db: 数据库会话
+        tenant_id: 租户ID（用于过滤租户专属权限）
+
+    Returns:
+        权限编码集合
+    """
     from sqlalchemy import text
 
     # 查询用户直接拥有的权限 + 通过角色继承链获得的权限
-    # 已迁移到新表: api_permissions + role_api_permissions
+    # 权限过滤：系统级权限(tenant_id IS NULL) + 当前租户权限
     sql = """
         WITH RECURSIVE role_tree AS (
             -- 用户直接拥有的角色
-            SELECT r.id, r.parent_id
+            SELECT r.id, r.parent_id, r.inherit_permissions
             FROM roles r
             JOIN user_roles ur ON ur.role_id = r.id
             WHERE ur.user_id = :user_id
 
             UNION ALL
 
-            -- 递归获取父角色
-            SELECT r.id, r.parent_id
+            -- 递归获取父角色（仅当 inherit_permissions=1 时）
+            SELECT r.id, r.parent_id, r.inherit_permissions
             FROM roles r
             JOIN role_tree rt ON r.id = rt.parent_id
+            WHERE rt.inherit_permissions = 1
         )
         SELECT DISTINCT ap.perm_code
         FROM role_tree rt
         JOIN role_api_permissions rap ON rt.id = rap.role_id
         JOIN api_permissions ap ON rap.permission_id = ap.id
         WHERE ap.is_active = 1
+        AND (ap.tenant_id IS NULL OR ap.tenant_id = :tenant_id)
     """
-    result = db.execute(text(sql), {"user_id": user_id})
+    result = db.execute(text(sql), {"user_id": user_id, "tenant_id": tenant_id})
     return {row[0] for row in result.fetchall()}
 
 
@@ -336,12 +353,20 @@ def is_system_admin(user: User) -> bool:
 
 def check_permission(user: User, permission_code: str, db: Session = None) -> bool:
     """
-    检查用户权限（带缓存）
+    检查用户权限（带缓存，支持多租户隔离）
 
     优先从缓存获取用户权限列表，缓存不存在时从数据库加载并缓存。
+    缓存使用 tenant_id 进行隔离，防止跨租户数据泄露。
     """
+    logger.info(
+        f"Checking permission: user_id={user.id}, username={user.username}, code={permission_code}, is_superuser={user.is_superuser}"
+    )
     if user.is_superuser or is_system_admin(user):
+        logger.info(f"Permission GRANTED (superuser/admin): user_id={user.id}")
         return True
+
+    # 获取租户ID用于缓存隔离
+    tenant_id = getattr(user, "tenant_id", None)
 
     # 尝试使用缓存
     try:
@@ -349,21 +374,21 @@ def check_permission(user: User, permission_code: str, db: Session = None) -> bo
 
         cache_service = get_permission_cache_service()
 
-        # 从缓存获取用户权限
-        cached_permissions = cache_service.get_user_permissions(user.id)
+        # 从缓存获取用户权限（包含租户隔离）
+        cached_permissions = cache_service.get_user_permissions(user.id, tenant_id)
 
         if cached_permissions is not None:
             # 缓存命中
-            logger.debug(f"Permission cache hit for user {user.id}")
+            logger.debug(f"Permission cache hit for user {user.id} (tenant={tenant_id})")
             return permission_code in cached_permissions
 
         # 缓存未命中，从数据库加载
         if db is not None:
-            permissions = _load_user_permissions_from_db(user.id, db)
-            # 写入缓存
-            cache_service.set_user_permissions(user.id, permissions)
+            permissions = _load_user_permissions_from_db(user.id, db, tenant_id)
+            # 写入缓存（包含租户隔离）
+            cache_service.set_user_permissions(user.id, permissions, tenant_id)
             logger.debug(
-                f"Permission cache miss for user {user.id}, loaded {len(permissions)} permissions"
+                f"Permission cache miss for user {user.id} (tenant={tenant_id}), loaded {len(permissions)} permissions"
             )
             return permission_code in permissions
     except Exception as e:

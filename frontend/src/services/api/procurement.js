@@ -129,3 +129,26 @@ export const outsourcingApi = {
     update: (id, data) => api.put(`/outsourcing-payments/${id}`, data),
   },
 };
+
+/**
+ * 采购分析 API
+ */
+export const procurementAnalysisApi = {
+  // 采购成本趋势
+  getCostTrend: (params) => api.get("/procurement-analysis/cost-trend", { params }),
+
+  // 物料价格波动监控
+  getPriceFluctuation: (params) => api.get("/procurement-analysis/price-fluctuation", { params }),
+
+  // 供应商交期准时率
+  getDeliveryPerformance: (params) => api.get("/procurement-analysis/delivery-performance", { params }),
+
+  // 采购申请处理时效
+  getRequestEfficiency: (params) => api.get("/procurement-analysis/request-efficiency", { params }),
+
+  // 物料质量合格率
+  getQualityRate: (params) => api.get("/procurement-analysis/quality-rate", { params }),
+
+  // 采购分析概览
+  getOverview: () => api.get("/procurement-analysis/overview"),
+};

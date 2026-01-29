@@ -13,25 +13,19 @@ from unittest.mock import MagicMock, patch, Mock
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from sqlalchemy.orm import Session
+
+# MaterialImporter 使用 @classmethod，不需要实例化
 from app.services.unified_import.material_importer import MaterialImporter
-
-
-
-@pytest.fixture
-def import_service(db_session: Session):
-    """创建 MaterialImporter 实例"""
-    return MaterialImporter(db_session)
 
 
 class TestMaterialImporter:
     """Test suite for MaterialImporter."""
 
     def test_init(self, db_session: Session):
-        """测试服务初始化"""
-        service = MaterialImporter(db_session)
-        assert service is not None
-        if hasattr(service, 'db'):
-            assert service.db == db_session
+        """测试 MaterialImporter 是一个类（使用 classmethod）"""
+        # MaterialImporter 使用 @classmethod，不需要实例化
+        assert hasattr(MaterialImporter, 'import_material_data')
+        assert callable(getattr(MaterialImporter, 'import_material_data'))
 
 
     def test_import_material_data(self, db_session: Session):

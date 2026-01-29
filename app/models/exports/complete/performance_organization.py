@@ -3,14 +3,12 @@
 完整模型导出 - 绩效和人员相关
 """
 
-# 用户权限（同时导出新旧模型）
+# 用户权限
 from ...user import (
     ApiPermission,
-    Permission,
     PermissionAudit,
     Role,
     RoleApiPermission,
-    RolePermission,
     User,
     UserRole,
 )
@@ -86,9 +84,6 @@ __all__ = [
     "RoleApiPermission",
     "UserRole",
     "PermissionAudit",
-    # User - 旧模型（待废弃）
-    "Permission",
-    "RolePermission",
     # Organization
     "Department",
     "Employee",

@@ -28,6 +28,7 @@ from typing import Callable, Dict, Generator, Iterable, Optional, Tuple
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
+from app.services.permission_cache_service import get_permission_cache_service
 
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
@@ -433,9 +434,15 @@ def db_session() -> Generator[Session, None, None]:
         session.close()
 
 
-# ---------------------------------------------------------------------------
-# 认证 Token 缓存
-# ---------------------------------------------------------------------------
+@pytest.fixture(scope="function", autouse=True)
+def cleanup_permission_cache():
+    """每个测试前后清理权限缓存，防止 ID 重复导致的测试污染"""
+    cache_service = get_permission_cache_service()
+    cache_service.invalidate_all()
+    yield
+    cache_service.invalidate_all()
+
+
 _token_cache: Dict[str, str] = {}
 
 
@@ -493,15 +500,13 @@ ENGINEER_PERMISSION_SPECS: Tuple[Tuple[str, str], ...] = (
 
 
 def _ensure_permission(db: Session, code: str, name: str) -> ApiPermission:
-    permission = (
-        db.query(ApiPermission).filter(ApiPermission.permission_code == code).first()
-    )
+    permission = db.query(ApiPermission).filter(ApiPermission.perm_code == code).first()
     if permission:
         return permission
 
     permission = ApiPermission(
-        permission_code=code,
-        permission_name=name,
+        perm_code=code,
+        perm_name=name,
         module="engineer",
         action="access",
         description=f"测试自动创建 - {name}",

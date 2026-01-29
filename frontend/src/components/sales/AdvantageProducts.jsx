@@ -242,9 +242,8 @@ export default function AdvantageProducts({
       }
     } catch (err) {
       console.error("Failed to load advantage products:", err);
-      setError("加载产品数据失败");
-      // 使用 mock 数据
-      setGroupedData(getMockData());
+      setError(err.response?.data?.detail || "加载产品数据失败，请稍后重试");
+      setGroupedData([]);
     } finally {
       setLoading(false);
     }
@@ -396,118 +395,19 @@ export default function AdvantageProducts({
       }
 
       {/* 错误提示 */}
-      {error &&
-      <div className="text-center py-2 text-amber-400 text-xs">
-          {error}（显示演示数据）
-      </div>
-      }
+      {error && !groupedData.length && (
+        <div className="flex flex-col items-center justify-center py-8 text-slate-400">
+          <AlertCircle className="w-8 h-8 mb-2 opacity-50" />
+          <p className="text-sm">{error}</p>
+          <button
+            onClick={loadData}
+            className="mt-3 text-xs text-primary-400 hover:text-primary-300 transition-colors"
+          >
+            点击重试
+          </button>
+        </div>
+      )}
     </motion.div>);
-
-}
-
-// Mock 数据
-function getMockData() {
-  return [
-  {
-    category: {
-      id: 1,
-      code: "HOME_APPLIANCE",
-      name: "白色家电",
-      product_count: 19
-    },
-    products: [
-    {
-      id: 1,
-      product_code: "KC2701",
-      product_name: "离线双工位FCT",
-      category_name: "白色家电"
-    },
-    {
-      id: 2,
-      product_code: "KC2702",
-      product_name: "离线显示双工位FCT",
-      category_name: "白色家电"
-    },
-    {
-      id: 3,
-      product_code: "KC2706",
-      product_name: "在线式双轨双工位FCT",
-      category_name: "白色家电"
-    }]
-
-  },
-  {
-    category: {
-      id: 2,
-      code: "AUTOMOTIVE",
-      name: "汽车电子",
-      product_count: 34
-    },
-    products: [
-    {
-      id: 4,
-      product_code: "KC2101",
-      product_name: "域控制器测试系统",
-      category_name: "汽车电子"
-    },
-    {
-      id: 5,
-      product_code: "KC2102",
-      product_name: "车载导航整机测试系统",
-      category_name: "汽车电子"
-    },
-    {
-      id: 6,
-      product_code: "KC2106",
-      product_name: "电机控制器测试系统",
-      category_name: "汽车电子"
-    }]
-
-  },
-  {
-    category: {
-      id: 3,
-      code: "NEW_ENERGY",
-      name: "新能源",
-      product_count: 24
-    },
-    products: [
-    {
-      id: 7,
-      product_code: "KC2901",
-      product_name: "PACK/模组EOL测试系统",
-      category_name: "新能源"
-    },
-    {
-      id: 8,
-      product_code: "KC2909",
-      product_name: "BMS测试系统",
-      category_name: "新能源"
-    }]
-
-  },
-  {
-    category: {
-      id: 4,
-      code: "SEMICONDUCTOR",
-      name: "半导体",
-      product_count: 12
-    },
-    products: [
-    {
-      id: 9,
-      product_code: "KC3105",
-      product_name: "功率器件老化测试设备",
-      category_name: "半导体"
-    },
-    {
-      id: 10,
-      product_code: "KC3107",
-      product_name: "功率器件ATE测试设备",
-      category_name: "半导体"
-    }]
-
-  }];
 
 }
 

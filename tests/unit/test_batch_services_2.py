@@ -31,54 +31,54 @@ class TestTimesheetAggregationService:
 
         with patch.object(service, "db"):
             with patch(
-            "app.services.timesheet_aggregation_service.calculate_month_range"
+                "app.services.timesheet_aggregation_service.calculate_month_range"
             ) as mock_range:
-            mock_range.return_value = (date(2024, 1, 1), date(2024, 1, 31))
+                mock_range.return_value = (date(2024, 1, 1), date(2024, 1, 31))
 
-            with patch(
-            "app.services.timesheet_aggregation_service.query_timesheets"
-            ) as mock_query:
-            mock_query.return_value = []
+                with patch(
+                    "app.services.timesheet_aggregation_service.query_timesheets"
+                ) as mock_query:
+                    mock_query.return_value = []
 
-            with patch(
-            "app.services.timesheet_aggregation_service.calculate_hours_summary"
-            ) as mock_summary:
-            mock_summary.return_value = {
-            "total_hours": 40.0,
-            "normal_hours": 40.0,
-            "overtime_hours": 0.0,
-            "weekend_hours": 0.0,
-            "holiday_hours": 0.0,
-            }
+                    with patch(
+                        "app.services.timesheet_aggregation_service.calculate_hours_summary"
+                    ) as mock_summary:
+                        mock_summary.return_value = {
+                            "total_hours": 40.0,
+                            "normal_hours": 40.0,
+                            "overtime_hours": 0.0,
+                            "weekend_hours": 0.0,
+                            "holiday_hours": 0.0,
+                        }
 
-            with patch(
-            "app.services.timesheet_aggregation_service.build_project_breakdown"
-            ) as mock_project:
-            mock_project.return_value = {}
+                        with patch(
+                            "app.services.timesheet_aggregation_service.build_project_breakdown"
+                        ) as mock_project:
+                            mock_project.return_value = {}
 
-            with patch(
-            "app.services.timesheet_aggregation_service.build_daily_breakdown"
-            ) as mock_daily:
-            mock_daily.return_value = {}
+                            with patch(
+                                "app.services.timesheet_aggregation_service.build_daily_breakdown"
+                            ) as mock_daily:
+                                mock_daily.return_value = {}
 
-            with patch(
-            "app.services.timesheet_aggregation_service.build_task_breakdown"
-            ) as mock_task:
-            mock_task.return_value = {}
+                                with patch(
+                                    "app.services.timesheet_aggregation_service.build_task_breakdown"
+                                ) as mock_task:
+                                    mock_task.return_value = {}
 
-            with patch(
-            "app.services.timesheet_aggregation_service.get_or_create_summary"
-            ) as mock_get_summary:
-            mock_summary_obj = Mock()
-            mock_summary_obj.id = 1
-            mock_get_summary.return_value = mock_summary_obj
+                                    with patch(
+                                        "app.services.timesheet_aggregation_service.get_or_create_summary"
+                                    ) as mock_get_summary:
+                                        mock_summary_obj = Mock()
+                                        mock_summary_obj.id = 1
+                                        mock_get_summary.return_value = mock_summary_obj
 
-            result = service.aggregate_monthly_timesheet(
-            2024, 1
-            )
+                                        result = service.aggregate_monthly_timesheet(
+                                            2024, 1
+                                        )
 
-            assert result["success"] is True
-            assert "summary_id" in result
+                                        assert result["success"] is True
+                                        assert "summary_id" in result
 
     @patch(
         "app.services.timesheet_aggregation_service.TimesheetAggregationService.__init__",
@@ -191,7 +191,7 @@ class TestTimesheetQualityService:
         mock_db.query.side_effect = [mock_query, Mock(), mock_log_query]
 
         result = service.check_work_log_completeness(
-        user_id=1, start_date=date(2024, 1, 1), end_date=date(2024, 1, 31)
+            user_id=1, start_date=date(2024, 1, 1), end_date=date(2024, 1, 31)
         )
 
         assert "missing_log_count" in result
@@ -251,22 +251,22 @@ class TestTimesheetSyncService:
         mock_db.query.return_value = mock_query_instance
 
         with patch(
-        "app.services.timesheet_sync_service.HourlyRateService"
+            "app.services.timesheet_sync_service.HourlyRateService"
         ) as mock_rate:
-        mock_rate.get_user_hourly_rate.return_value = Decimal("100.00")
+            mock_rate.get_user_hourly_rate.return_value = Decimal("100.00")
 
-        with patch.object(
-        service, "_create_financial_cost_from_timesheet"
-        ) as mock_create:
-        mock_create.return_value = {
-        "success": True,
-        "created": True,
-        "cost_id": 1,
-        }
+            with patch.object(
+                service, "_create_financial_cost_from_timesheet"
+            ) as mock_create:
+                mock_create.return_value = {
+                    "success": True,
+                    "created": True,
+                    "cost_id": 1,
+                }
 
-        result = service.sync_to_finance(timesheet_id=1)
+                result = service.sync_to_finance(timesheet_id=1)
 
-        assert result["success"] is True
+                assert result["success"] is True
 
     @patch(
         "app.services.timesheet_sync_service.TimesheetSyncService.__init__",
@@ -435,7 +435,7 @@ class TestWorkLogAutoGenerator:
 
         mock_ts_query = Mock()
         mock_ts_query.filter.return_value.order_by.return_value.all.return_value = [
-        mock_timesheet
+            mock_timesheet
         ]
 
         mock_user_query = Mock()
@@ -445,10 +445,10 @@ class TestWorkLogAutoGenerator:
         mock_project_query.filter.return_value.first.return_value = mock_project
 
         mock_db.query.side_effect = [
-        mock_user_query,
-        mock_log_query,
-        mock_ts_query,
-        mock_project_query,
+            mock_user_query,
+            mock_log_query,
+            mock_ts_query,
+            mock_project_query,
         ]
 
         result = generator.generate_work_log_from_timesheet(1, date(2024, 1, 1))

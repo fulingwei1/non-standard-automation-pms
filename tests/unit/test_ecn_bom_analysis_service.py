@@ -188,10 +188,10 @@ class TestAnalyzeBomImpact:
             mock_filter = MagicMock()
             call_count[0] += 1
             if call_count[0] == 1:  # ECN query
-            mock_filter.first.return_value = ecn
-        elif call_count[0] == 2:  # Affected materials
-        mock_filter.all.return_value = []
-        return mock_filter
+                mock_filter.first.return_value = ecn
+            elif call_count[0] == 2:  # Affected materials
+                mock_filter.all.return_value = []
+            return mock_filter
 
         db.query.return_value.filter.side_effect = filter_side_effect
 
@@ -212,12 +212,12 @@ class TestAnalyzeBomImpact:
             mock_filter = MagicMock()
             call_count[0] += 1
             if call_count[0] == 1:  # ECN query
-            mock_filter.first.return_value = ecn
-        elif call_count[0] == 2:  # Affected materials
-        mock_filter.all.return_value = [affected_mat]
-        elif call_count[0] == 3:  # Machine query
-        mock_filter.first.return_value = None
-        return mock_filter
+                mock_filter.first.return_value = ecn
+            elif call_count[0] == 2:  # Affected materials
+                mock_filter.all.return_value = [affected_mat]
+            elif call_count[0] == 3:  # Machine query
+                mock_filter.first.return_value = None
+            return mock_filter
 
         db.query.return_value.filter.side_effect = filter_side_effect
 
@@ -238,14 +238,14 @@ class TestAnalyzeBomImpact:
             mock_filter = MagicMock()
             call_count[0] += 1
             if call_count[0] == 1:  # ECN query
-            mock_filter.first.return_value = ecn
-        elif call_count[0] == 2:  # Affected materials
-        mock_filter.all.return_value = [affected_mat]
-        elif call_count[0] == 3:  # Machine query
-        mock_filter.first.return_value = machine
-        elif call_count[0] == 4:  # BOM headers
-        mock_filter.all.return_value = []
-        return mock_filter
+                mock_filter.first.return_value = ecn
+            elif call_count[0] == 2:  # Affected materials
+                mock_filter.all.return_value = [affected_mat]
+            elif call_count[0] == 3:  # Machine query
+                mock_filter.first.return_value = machine
+            elif call_count[0] == 4:  # BOM headers
+                mock_filter.all.return_value = []
+            return mock_filter
 
         db.query.return_value.filter.side_effect = filter_side_effect
 
@@ -444,11 +444,11 @@ class TestCheckObsoleteMaterialRisk:
             mock_filter = MagicMock()
             call_count[0] += 1
             if call_count[0] == 1:  # ECN query
-            mock_filter.first.return_value = ecn
-        else:  # Affected materials with DELETE/REPLACE
-        mock_filter.in_.return_value = mock_filter
-        mock_filter.all.return_value = []
-        return mock_filter
+                mock_filter.first.return_value = ecn
+            else:  # Affected materials with DELETE/REPLACE
+                mock_filter.in_.return_value = mock_filter
+                mock_filter.all.return_value = []
+            return mock_filter
 
         db.query.return_value.filter.side_effect = filter_side_effect
 
@@ -469,18 +469,18 @@ class TestCheckObsoleteMaterialRisk:
             mock_filter = MagicMock()
             call_count[0] += 1
             if call_count[0] == 1:  # ECN query
-            mock_filter.first.return_value = ecn
-        else:
-            mock_filter.in_.return_value = mock_filter
-            mock_filter.all.return_value = [affected_mat]
+                mock_filter.first.return_value = ecn
+            else:
+                mock_filter.in_.return_value = mock_filter
+                mock_filter.all.return_value = [affected_mat]
             return mock_filter
 
-            db.query.return_value.filter.side_effect = filter_side_effect
+        db.query.return_value.filter.side_effect = filter_side_effect
 
-            service = EcnBomAnalysisService(db)
-            result = service.check_obsolete_material_risk(ecn_id=1)
+        service = EcnBomAnalysisService(db)
+        result = service.check_obsolete_material_risk(ecn_id=1)
 
-            assert result["has_obsolete_risk"] is False
+        assert result["has_obsolete_risk"] is False
 
 
 @pytest.mark.unit

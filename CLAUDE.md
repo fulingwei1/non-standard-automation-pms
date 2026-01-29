@@ -349,3 +349,77 @@ CORS_ORIGINS=["http://localhost:3000"]
 - 测试：`pnpm test`（不是 npm test）
 - 构建：`pnpm build`
 - Lint：`pnpm lint`
+
+## 权限系统重构完成 (2026-01-27)
+
+### 重构内容
+
+#### 1. PermissionService 重构完成
+- 文件：`app/services/permission_service.py`
+- 变更：
+  - 使用新的 `ApiPermission` 模型替代旧的 `Permission` 模型
+  - `get_user_permissions()` 方法现在通过 `RoleApiPermission` 表查询 `api_permissions`
+  - 所有权限检查方法 (`check_permission`, `check_any_permission`, `check_all_permissions`) 使用统一的 PermissionService
+
+#### 2. PermissionCacheService 压缩简化完成
+- 文件：`app/services/permission_cache_service.py`
+- 变更：
+  - 从 328 行压缩到约 200 行
+  - 移除了不必要的方法，保留核心缓存功能
+  - 简化了代码结构
+
+#### 3. 硬编码权限文件删除完成
+- 删除目录：`app/core/permissions/`（部分保留）
+- 删除的文件：
+  - `finance.py`
+  - `hr.py`
+  - `machine.py`
+  - `procurement.py`
+  - `production.py`
+  - `project.py`
+  - `rd_project.py`
+  - `scheduler.py`
+  - `sales.py`
+- **保留的文件**：
+  - `timesheet.py` - 包含工时审批业务逻辑函数（非简单权限检查）
+    - `apply_timesheet_access_filter()` - 工时数据访问过滤
+    - `get_user_manageable_dimensions()` - 获取用户可管理维度
+    - `is_timesheet_admin()` - 检查工时管理员
+    - `check_timesheet_approval_permission()` - 工时审批权限检查
+
+#### 4. Security.py 兼容层清理完成
+- 文件：`app/core/security.py`
+- 变更：
+  - 删除了 `permissions/` 目录的导入
+  - 简化为仅导出认证相关功能
+  - 保留 `check_permission()` 和 `require_permission()` 从 `auth.py`
+
+#### 5. API 端点保持不变
+- 155 个文件中的 470 处 `require_permission()` 调用保持不变
+- 所有 API 端点现在通过 `auth.py` 的 `check_permission()` 使用统一的 PermissionService
+
+#### 6. 权限系统架构
+
+**核心组件：**
+- `app/services/permission_service.py` - 权限服务（使用 ApiPermission）
+- `app/services/permission_cache_service.py` - 权限缓存服务（简化版）
+- `app/core/auth.py` - 认证和权限检查功能
+- `app/core/security.py` - 简化的导出层
+
+**数据模型：**
+- `ApiPermission` - API 权限表（新）
+- `RoleApiPermission` - 角色 API 权限关联表（新）
+- `Permission` - 旧权限表（保留用于兼容性）
+
+**API 端点使用模式：**
+```python
+from app.core.security import require_permission
+
+@router.get("/projects/")
+async def list_projects(
+    current_user: User = Depends(require_permission("project:read")),
+    db: Session = Depends(get_db)
+):
+    ...
+```
+

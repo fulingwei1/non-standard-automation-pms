@@ -67,6 +67,7 @@ def read_users(
                 user_responses.append(build_user_response(u))
             except Exception as e:
                 logger.error(f"构建用户 {u.username} 响应失败: {e}", exc_info=True)
+                # 构建失败时使用空角色列表
                 user_responses.append(UserResponse(
                     id=u.id, username=u.username, employee_id=getattr(u, "employee_id", None),
                     email=u.email or "", phone=u.phone or "", real_name=u.real_name or "",

@@ -102,7 +102,8 @@ export default function PositionManagement() {
 
       const response = await organizationApi.listPositions(params);
       const data = response.data;
-      setPositions(data.items || data || []);
+      const posItems = data?.items || data;
+      setPositions(Array.isArray(posItems) ? posItems : []);
       setTotal(data.total || 0);
     } catch (error) {
       console.error("加载岗位列表失败:", error);
@@ -119,7 +120,8 @@ export default function PositionManagement() {
       const response = await roleApi.list({ page: 1, page_size: 100 });
       // 使用统一响应格式处理
       const listData = response.formatted || response.data;
-      setRoles(listData?.items || listData || []);
+      const roleItems = listData?.items || listData;
+      setRoles(Array.isArray(roleItems) ? roleItems : []);
     } catch (error) {
       console.error("加载角色列表失败:", error);
     }
@@ -131,7 +133,8 @@ export default function PositionManagement() {
       const response = await organizationApi.listOrgUnits({ limit: 100 });
       // 使用统一响应格式处理
       const listData = response.formatted || response.data;
-      setOrgUnits(listData?.items || listData || []);
+      const orgItems = listData?.items || listData;
+      setOrgUnits(Array.isArray(orgItems) ? orgItems : []);
     } catch (error) {
       console.error("加载组织单元失败:", error);
     }

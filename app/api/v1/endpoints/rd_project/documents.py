@@ -53,7 +53,7 @@ def get_rd_project_documents(
     doc_type: Optional[str] = Query(None, description="文档类型筛选"),
     doc_category: Optional[str] = Query(None, description="文档分类筛选"),
     status: Optional[str] = Query(None, description="状态筛选"),
-    current_user: User = Depends(security.require_rd_project_access),
+    current_user: User = Depends(security.require_permission("rd_project:read")),
 ) -> Any:
     """
     获取研发项目文档列表
@@ -94,7 +94,7 @@ def create_rd_project_document(
     db: Session = Depends(deps.get_db),
     project_id: int,
     doc_in: ProjectDocumentCreate,
-    current_user: User = Depends(security.require_rd_project_access),
+    current_user: User = Depends(security.require_permission("rd_project:read")),
 ) -> Any:
     """
     创建研发项目文档记录
@@ -132,7 +132,7 @@ async def upload_rd_project_document(
     doc_no: Optional[str] = Form(None, description="文档编号"),
     version: str = Form("1.0", description="版本号"),
     description: Optional[str] = Form(None, description="描述"),
-    current_user: User = Depends(security.require_rd_project_access),
+    current_user: User = Depends(security.require_permission("rd_project:read")),
 ) -> Any:
     """
     上传研发项目文档（包含文件上传）
@@ -191,7 +191,7 @@ def download_rd_project_document(
     db: Session = Depends(deps.get_db),
     project_id: int,
     doc_id: int,
-    current_user: User = Depends(security.require_rd_project_access),
+    current_user: User = Depends(security.require_permission("rd_project:read")),
 ) -> Any:
     """
     下载研发项目文档

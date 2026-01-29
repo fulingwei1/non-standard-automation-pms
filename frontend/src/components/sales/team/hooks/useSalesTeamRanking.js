@@ -33,7 +33,10 @@ export const useSalesTeamRanking = (filters, showRanking, dateError) => {
         ranking_type: rankingType,
         limit: 20
       };
-      if (filters.departmentId) {params.department_id = filters.departmentId;}
+      // department_id 为 "all" 时不传递该参数（后端期望 Optional[int]）
+      if (filters.departmentId && filters.departmentId !== "all") {
+        params.department_id = parseInt(filters.departmentId, 10);
+      }
       if (filters.region) {params.region = filters.region.trim();}
       if (filters.startDate) {params.start_date = filters.startDate;}
       if (filters.endDate) {params.end_date = filters.endDate;}

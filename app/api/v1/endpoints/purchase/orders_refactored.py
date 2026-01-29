@@ -7,9 +7,10 @@
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, Optional
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import desc, or_
+from sqlalchemy import desc, or_, and_
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_active_user, get_db
@@ -49,46 +50,80 @@ def list_purchase_orders(
     keyword: Optional[str] = Query(None),
     supplier_id: Optional[int] = Query(None),
     status: Optional[str] = Query(None),
+    start_date: Optional[str] = Query(None, description="开始日期 (YYYY-MM-DD)"),
+    end_date: Optional[str] = Query(None, description="结束日期 (YYYY-MM-DD)"),
     current_user: User = Depends(get_current_active_user),
 ):
     """获取采购订单列表（按数据权限过滤）"""
-    query = db.query(PurchaseOrder)
+    try:
+        query = db.query(PurchaseOrder)
 
-    # 应用数据权限过滤
-    query = DataScopeService.filter_by_scope(
-        db, query, PurchaseOrder, current_user, PO_DATA_SCOPE_CONFIG
-    )
-
-    if keyword:
-        query = query.filter(
-            or_(
-                PurchaseOrder.order_no.like(f"%{keyword}%"),
-                PurchaseOrder.order_title.like(f"%{keyword}%"),
-            )
+        # 应用数据权限过滤
+        query = DataScopeService.filter_by_scope(
+            db, query, PurchaseOrder, current_user, PO_DATA_SCOPE_CONFIG
         )
-    if supplier_id:
-        query = query.filter(PurchaseOrder.supplier_id == supplier_id)
-    if status:
-        query = query.filter(PurchaseOrder.status == status)
 
-    total = query.count()
-    offset = (page - 1) * page_size
-    orders = (
-        query.order_by(desc(PurchaseOrder.created_at)).offset(offset).limit(page_size).all()
-    )
-    
-    items = [serialize_purchase_order(o, include_items=False) for o in orders]
-    pages = (total + page_size - 1) // page_size
-    
-    # 使用统一响应格式
-    return paginated_response(
-        items=items,
-        total=total,
-        page=page,
-        page_size=page_size,
-        pages=pages,
-        message="获取采购订单列表成功"
-    )
+        if keyword:
+            query = query.filter(
+                or_(
+                    PurchaseOrder.order_no.like(f"%{keyword}%"),
+                    PurchaseOrder.order_title.like(f"%{keyword}%"),
+                )
+            )
+        if supplier_id:
+            query = query.filter(PurchaseOrder.supplier_id == supplier_id)
+        if status:
+            query = query.filter(PurchaseOrder.status == status)
+
+        # 日期范围过滤（基于 order_date 字段，如果为 None 则跳过该订单）
+        if start_date:
+            try:
+                start_date_obj = date.fromisoformat(start_date)
+                query = query.filter(
+                    and_(
+                        PurchaseOrder.order_date.isnot(None),
+                        PurchaseOrder.order_date >= start_date_obj
+                    )
+                )
+            except ValueError:
+                raise HTTPException(status_code=400, detail="start_date 格式错误，应为 YYYY-MM-DD")
+        if end_date:
+            try:
+                end_date_obj = date.fromisoformat(end_date)
+                query = query.filter(
+                    and_(
+                        PurchaseOrder.order_date.isnot(None),
+                        PurchaseOrder.order_date <= end_date_obj
+                    )
+                )
+            except ValueError:
+                raise HTTPException(status_code=400, detail="end_date 格式错误，应为 YYYY-MM-DD")
+
+        total = query.count()
+        offset = (page - 1) * page_size
+        orders = (
+            query.order_by(desc(PurchaseOrder.created_at)).offset(offset).limit(page_size).all()
+        )
+
+        items = [serialize_purchase_order(o, include_items=False) for o in orders]
+
+        # 使用统一响应格式
+        return paginated_response(
+            items=items,
+            total=total,
+            page=page,
+            page_size=page_size
+        )
+    except HTTPException:
+        # 重新抛出 HTTP 异常（如参数验证错误）
+        raise
+    except Exception as e:
+        # 记录详细错误信息
+        logging.error(f"获取采购订单列表失败: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="获取采购订单失败，请稍后重试"
+        )
 
 
 @router.post("/")
@@ -193,7 +228,10 @@ def get_purchase_order_items(
     if not order:
         raise HTTPException(status_code=404, detail="采购订单不存在")
     
-    items = [serialize_order_item(i) for i in order.items.order_by(PurchaseOrderItem.item_no).all()]
+    try:
+        items = [serialize_order_item(i) for i in order.items.order_by(PurchaseOrderItem.item_no).all()]
+    except Exception:
+        items = []
     
     # 使用统一响应格式
     return list_response(
@@ -244,7 +282,11 @@ def submit_purchase_order(
         raise HTTPException(status_code=404, detail="采购订单不存在")
     if order.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只有草稿状态可提交")
-    if order.items.count() == 0:
+    try:
+        items_count = order.items.count()
+    except Exception:
+        items_count = 0
+    if items_count == 0:
         raise HTTPException(status_code=400, detail="采购订单没有明细")
     order.status = "SUBMITTED"
     order.submitted_at = datetime.now()

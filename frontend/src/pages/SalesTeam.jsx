@@ -57,7 +57,7 @@ export default function SalesTeam() {
     loading,
     teamMembers,
     teamStats,
-    usingMockData,
+    error: dataError,
     departmentOptions,
     regionOptions,
     fetchTeamData
@@ -129,17 +129,19 @@ export default function SalesTeam() {
   }, [teamMembers, searchTerm]);
 
   // 页面头部描述
-  const headerDescription = `团队规模: ${teamStats.totalMembers}人 | 活跃成员: ${teamStats.activeMembers}人 | 平均完成率: ${teamStats.avgAchievementRate}% | 统计区间: ${filters.startDate} ~ ${filters.endDate}${
-  usingMockData ? " | 当前展示演示环境备用数据" : ""}`;
+  const headerDescription = `团队规模: ${teamStats.totalMembers}人 | 活跃成员: ${teamStats.activeMembers}人 | 平均完成率: ${teamStats.avgAchievementRate}% | 统计区间: ${filters.startDate} ~ ${filters.endDate}`;
 
 
   // 导出数据
   const handleExport = async () => {
-    if (usingMockData || dateError) {return;}
+    if (dataError || dateError) {return;}
     try {
       setExporting(true);
       const params = {};
-      if (filters.departmentId) {params.department_id = filters.departmentId;}
+      // department_id 为 "all" 时不传递该参数（后端期望 Optional[int]）
+      if (filters.departmentId && filters.departmentId !== "all") {
+        params.department_id = parseInt(filters.departmentId, 10);
+      }
       if (filters.region) {params.region = filters.region.trim();}
       if (filters.startDate) {params.start_date = filters.startDate;}
       if (filters.endDate) {params.end_date = filters.endDate;}
@@ -208,7 +210,7 @@ export default function SalesTeam() {
             className="flex items-center gap-2"
             onClick={handleExport}
             loading={exporting}
-            disabled={usingMockData || exporting || !!dateError}>
+            disabled={!!dataError || exporting || !!dateError}>
 
               <Download className="w-4 h-4" />
               导出
@@ -237,12 +239,20 @@ export default function SalesTeam() {
         } />
 
 
-      {/* Mock数据提示 */}
-      {usingMockData &&
-      <p className="text-xs text-amber-400 px-1">
-          接口不可用时已自动启用"演示环境备用数据"兜底，真实数据可用时将立即恢复。
-      </p>
-      }
+      {/* 数据加载错误提示 */}
+      {dataError && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20">
+          <p className="text-xs text-red-400">{dataError}</p>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-xs text-red-400 hover:text-red-300"
+            onClick={() => fetchTeamData()}
+          >
+            重试
+          </Button>
+        </div>
+      )}
 
       {/* 筛选器 */}
       <TeamFilters

@@ -10,6 +10,9 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from .common import TimestampSchema
 
+# 从 role.py 导入角色相关 Schema（保持向后兼容）
+from .role import RoleCreate, RoleUpdate, RoleResponse
+
 
 def validate_password_strength(password: str) -> str:
     """
@@ -108,49 +111,6 @@ class UserResponse(TimestampSchema):
     roles: List[str] = Field(default_factory=list)
     role_ids: List[int] = Field(default_factory=list, description="角色ID列表")
     permissions: List[str] = Field(default_factory=list)
-
-
-class RoleCreate(BaseModel):
-    """创建角色"""
-    role_code: str = Field(max_length=50, description="角色编码")
-    role_name: str = Field(max_length=100, description="角色名称")
-    description: Optional[str] = None
-    data_scope: str = Field(default="OWN", description="数据权限范围")
-    parent_id: Optional[int] = Field(default=None, description="父角色ID（继承）")
-    permission_ids: Optional[List[int]] = Field(default_factory=list)
-    nav_groups: Optional[List[str]] = Field(default=None, description="导航组配置")
-    ui_config: Optional[Dict[str, Any]] = Field(default=None, description="UI配置")
-
-
-class RoleUpdate(BaseModel):
-    """更新角色"""
-    role_name: Optional[str] = None
-    description: Optional[str] = None
-    data_scope: Optional[str] = None
-    parent_id: Optional[int] = Field(default=None, description="父角色ID（继承）")
-    is_active: Optional[bool] = None
-    permission_ids: Optional[List[int]] = None
-    nav_groups: Optional[List[str]] = Field(default=None, description="导航组配置")
-    ui_config: Optional[Dict[str, Any]] = Field(default=None, description="UI配置")
-
-
-class RoleResponse(TimestampSchema):
-    """角色响应"""
-    id: int
-    role_code: str
-    role_name: str
-    description: Optional[str] = None
-    data_scope: str
-    parent_id: Optional[int] = Field(default=None, description="父角色ID")
-    parent_name: Optional[str] = Field(default=None, description="父角色名称")
-    is_system: bool = False
-    is_active: bool = True
-    sort_order: int = Field(default=0, description="排序")
-    permissions: List[str] = Field(default_factory=list)
-    permission_count: int = Field(default=0, description="直接权限数量")
-    inherited_permission_count: int = Field(default=0, description="继承权限数量")
-    nav_groups: Optional[List[str]] = Field(default=None, description="导航组配置")
-    ui_config: Optional[Dict[str, Any]] = Field(default=None, description="UI配置")
 
 
 class PermissionResponse(TimestampSchema):

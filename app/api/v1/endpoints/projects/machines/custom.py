@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.core.auth import check_permission
 from app.core.config import settings
 from app.models.material import BomHeader
 from app.models.project import Machine, Project, ProjectDocument
@@ -27,6 +28,28 @@ from app.schemas.project import MachineResponse, ProjectDocumentResponse
 from app.utils.permission_helpers import check_project_access_or_raise
 
 router = APIRouter()
+
+# 文档类型到权限代码的映射
+DOC_TYPE_PERMISSION_MAP = {
+    "CIRCUIT_DIAGRAM": "machine:doc_circuit",
+    "PLC_PROGRAM": "machine:doc_plc",
+    "LABELWORK_PROGRAM": "machine:doc_vision",
+    "VISION_PROGRAM": "machine:doc_vision",
+    "MOTION_PROGRAM": "machine:doc_motion",
+    "ROBOT_PROGRAM": "machine:doc_robot",
+    "OPERATION_MANUAL": "machine:doc_manual",
+    "DRAWING": "machine:doc_drawing",
+    "BOM_DOCUMENT": "machine:doc_bom",
+    "FAT_DOCUMENT": "machine:doc_other",
+    "SAT_DOCUMENT": "machine:doc_other",
+    "OTHER": "machine:doc_other",
+}
+
+
+def has_machine_document_permission_db(user: User, doc_type: str, db: Session) -> bool:
+    """检查用户是否有访问特定文档类型的权限"""
+    perm_code = DOC_TYPE_PERMISSION_MAP.get(doc_type.upper(), "machine:doc_other")
+    return check_permission(user, perm_code, db)
 
 # 文档上传目录
 DOCUMENT_UPLOAD_DIR = FilePath(settings.UPLOAD_DIR) / "documents" / "machines"
@@ -228,7 +251,7 @@ async def upload_machine_document(
     if doc_type.upper() not in valid_doc_types:
         raise HTTPException(status_code=400, detail=f"无效的文档类型。有效值：{', '.join(valid_doc_types)}")
 
-    if not security.has_machine_document_permission(current_user, doc_type):
+    if not has_machine_document_permission_db(current_user, doc_type, db):
         raise HTTPException(status_code=403, detail="您没有权限上传此类型的文档")
 
     file_ext = FilePath(file.filename).suffix
@@ -299,7 +322,7 @@ def get_machine_documents(
 
     accessible_documents = [
         doc for doc in all_documents
-        if security.has_machine_document_permission(current_user, doc.doc_type)
+        if has_machine_document_permission_db(current_user, doc.doc_type, db)
     ]
 
     if group_by_type:
@@ -360,7 +383,7 @@ def download_machine_document(
     if not document:
         raise HTTPException(status_code=404, detail="文档不存在")
 
-    if not security.has_machine_document_permission(current_user, document.doc_type):
+    if not has_machine_document_permission_db(current_user, document.doc_type, db):
         raise HTTPException(status_code=403, detail="您没有权限下载此类型的文档")
 
     file_path = FilePath(document.file_path)
@@ -410,7 +433,7 @@ def get_machine_document_versions(
     if not document:
         raise HTTPException(status_code=404, detail="文档不存在")
 
-    if not security.has_machine_document_permission(current_user, document.doc_type):
+    if not has_machine_document_permission_db(current_user, document.doc_type, db):
         raise HTTPException(status_code=403, detail="您没有权限查看此类型的文档版本")
 
     query = db.query(ProjectDocument).filter(ProjectDocument.machine_id == machine_id)
@@ -422,7 +445,7 @@ def get_machine_document_versions(
     all_versions = query.order_by(desc(ProjectDocument.created_at)).all()
     return [
         doc for doc in all_versions
-        if security.has_machine_document_permission(current_user, doc.doc_type)
+        if has_machine_document_permission_db(current_user, doc.doc_type, db)
     ]
 
 

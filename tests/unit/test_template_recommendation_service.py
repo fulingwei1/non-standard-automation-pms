@@ -202,16 +202,16 @@ class TestTemplateRecommendationService:
         assert isinstance(result, list)
         if len(result) > 1:
             # 应该按评分降序排列
-        scores = [r['score'] for r in result]
-        assert scores == sorted(scores, reverse=True)
+            scores = [r['score'] for r in result]
+            assert scores == sorted(scores, reverse=True)
 
     def test_recommend_templates_excludes_inactive(self, db_session, test_template1, test_template_inactive):
         """测试排除非活跃模板"""
         service = TemplateRecommendationService(db_session)
-        
+
         result = service.recommend_templates(
-        project_type="AUTOMATION",
-        limit=5
+            project_type="AUTOMATION",
+            limit=5
         )
         
         assert isinstance(result, list)

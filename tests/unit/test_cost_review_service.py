@@ -51,14 +51,14 @@ class TestGenerateCostReviewReport:
         from app.services.cost_review_service import CostReviewService
 
         db_session.query = Mock(
-        return_value=Mock(
-        filter=Mock(return_value=Mock(first=Mock(return_value=None)))
-        )
+            return_value=Mock(
+                filter=Mock(return_value=Mock(first=Mock(return_value=None)))
+            )
         )
 
         with pytest.raises(ValueError, match="项目不存在"):
             CostReviewService.generate_cost_review_report(
-            db_session, project_id=999, reviewer_id=1
+                db_session, project_id=999, reviewer_id=1
             )
 
     def test_generate_cost_review_project_not_completed(self, db_session, mock_project):
@@ -71,19 +71,19 @@ class TestGenerateCostReviewReport:
         def mock_query_side_effect(model):
             if model == Project:
                 return Mock(
-                filter=Mock(
-                return_value=Mock(first=Mock(return_value=mock_project))
+                    filter=Mock(
+                        return_value=Mock(first=Mock(return_value=mock_project))
+                    )
                 )
-                )
-        else:
-            return Mock()
+            else:
+                return Mock()
 
-            db_session.query = Mock(side_effect=mock_query_side_effect)
+        db_session.query = Mock(side_effect=mock_query_side_effect)
 
-            with pytest.raises(ValueError, match="项目未结项"):
-                CostReviewService.generate_cost_review_report(
+        with pytest.raises(ValueError, match="项目未结项"):
+            CostReviewService.generate_cost_review_report(
                 db_session, project_id=1, reviewer_id=1
-                )
+            )
 
     def test_generate_cost_review_existing_review(self, db_session, mock_project):
         """Test review generation when review already exists."""
@@ -95,25 +95,25 @@ class TestGenerateCostReviewReport:
         def mock_query_side_effect(model):
             if model == Project:
                 return Mock(
-                filter=Mock(
-                return_value=Mock(first=Mock(return_value=mock_project))
+                    filter=Mock(
+                        return_value=Mock(first=Mock(return_value=mock_project))
+                    )
                 )
+            elif model == ProjectReview:
+                return Mock(
+                    filter=Mock(
+                        return_value=Mock(first=Mock(return_value=mock_existing_review))
+                    )
                 )
-        elif model == ProjectReview:
-            return Mock(
-            filter=Mock(
-            return_value=Mock(first=Mock(return_value=mock_existing_review))
-            )
-            )
-        else:
-            return Mock()
+            else:
+                return Mock()
 
-            db_session.query = Mock(side_effect=mock_query_side_effect)
+        db_session.query = Mock(side_effect=mock_query_side_effect)
 
-            with pytest.raises(ValueError, match="已存在结项复盘报告"):
-                CostReviewService.generate_cost_review_report(
+        with pytest.raises(ValueError, match="已存在结项复盘报告"):
+            CostReviewService.generate_cost_review_report(
                 db_session, project_id=1, reviewer_id=1
-                )
+            )
 
     def test_generate_cost_review_success(self, db_session, mock_project, mock_budget):
         """Test successful cost review report generation."""
@@ -122,33 +122,33 @@ class TestGenerateCostReviewReport:
         def mock_query_side_effect(model):
             if model == Project:
                 return Mock(
-                filter=Mock(
-                return_value=Mock(first=Mock(return_value=mock_project))
+                    filter=Mock(
+                        return_value=Mock(first=Mock(return_value=mock_project))
+                    )
                 )
+            elif model == ProjectBudget:
+                return Mock(
+                    filter=Mock(return_value=Mock(first=Mock(return_value=mock_budget)))
                 )
-        elif model == ProjectBudget:
-            return Mock(
-            filter=Mock(return_value=Mock(first=Mock(return_value=mock_budget)))
-            )
-        elif model == ProjectReview:
-            return Mock(
-            filter=Mock(return_value=Mock(first=Mock(return_value=None)))
-            )
-        elif model == ProjectCost:
-            return Mock(filter=Mock(return_value=Mock(all=Mock(return_value=[]))))
-        else:
-            return Mock()
+            elif model == ProjectReview:
+                return Mock(
+                    filter=Mock(return_value=Mock(first=Mock(return_value=None)))
+                )
+            elif model == ProjectCost:
+                return Mock(filter=Mock(return_value=Mock(all=Mock(return_value=[]))))
+            else:
+                return Mock()
 
-            db_session.query = Mock(side_effect=mock_query_side_effect)
+        db_session.query = Mock(side_effect=mock_query_side_effect)
 
-            result = CostReviewService.generate_cost_review_report(
+        result = CostReviewService.generate_cost_review_report(
             db_session, project_id=1, reviewer_id=1, review_date=date(2026, 1, 20)
-            )
+        )
 
-            assert result is not None
-            assert result.project_id == 1
-            assert result.reviewer_id == 1
-            assert result.review_type == "POST_MORTEM"
+        assert result is not None
+        assert result.project_id == 1
+        assert result.reviewer_id == 1
+        assert result.review_type == "POST_MORTEM"
 
 
 class TestCostReviewService:

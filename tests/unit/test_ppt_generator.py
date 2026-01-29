@@ -14,6 +14,9 @@ import os
 import tempfile
 
 import pytest
+
+# Skip this module if python-pptx is not installed
+pptx = pytest.importorskip("pptx")
 from pptx import Presentation
 from pptx.dml.color import RGBColor as RgbColor  # python-pptx 使用 RGBColor
 from pptx.util import Inches, Pt
@@ -419,9 +422,9 @@ class TestPresentationGenerator:
                 assert result == output_path
                 assert os.path.exists(output_path)
                 assert os.path.getsize(output_path) > 0
-        finally:
-            if os.path.exists(output_path):
-                os.unlink(output_path)
+            finally:
+                if os.path.exists(output_path):
+                    os.unlink(output_path)
 
     def test_generate_default_path(self):
         """测试使用默认路径生成PPT"""

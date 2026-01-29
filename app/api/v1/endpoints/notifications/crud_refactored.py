@@ -79,16 +79,12 @@ def read_notifications(
             updated_at=notification.updated_at,
         ))
 
-    pages = (total + page_size - 1) // page_size
-    
     # 使用统一响应格式
     return paginated_response(
         items=items,
         total=total,
         page=page,
-        page_size=page_size,
-        pages=pages,
-        message="获取通知列表成功"
+        page_size=page_size
     )
 
 

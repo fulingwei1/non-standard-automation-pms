@@ -188,6 +188,52 @@ def filter_sales_finance_data_by_scope(
         # 全部可见 或 财务专用：可以看到所有发票和收款数据
         return query
 
+    # 其他角色按数据权限范围过滤
+    if scope == "DEPT":
+        # 部门可见：同部门用户的数据
+        if user.department and owner_field is not None:
+            dept = (
+                db.query(Department)
+                .filter(Department.dept_name == user.department)
+                .first()
+            )
+            if dept:
+                from ..models.user import User as UserModel
+                dept_users = (
+                    db.query(UserModel).filter(UserModel.department == user.department).all()
+                )
+                dept_user_ids = [u.id for u in dept_users]
+                return query.filter(owner_field.in_(dept_user_ids + [user.id]))
+        # 无部门信息，降级为 OWN
+        if owner_field is not None:
+            return query.filter(owner_field == user.id)
+        return query.filter(False)
+
+    elif scope == "TEAM":
+        # 团队可见：自己 + 直接下属的数据
+        if owner_field is not None:
+            subordinate_ids = DataScopeService.get_subordinate_ids(db, user.id)
+            allowed_user_ids = list(subordinate_ids | {user.id})
+            return query.filter(owner_field.in_(allowed_user_ids))
+        return query.filter(False)
+
+    elif scope == "PROJECT":
+        # 项目可见：参与项目相关的数据
+        # 对于财务数据，降级为 OWN
+        if owner_field is not None:
+            return query.filter(owner_field == user.id)
+        return query.filter(False)
+
+    elif scope == "OWN":
+        # 个人可见：只能看到自己的数据
+        if owner_field is not None:
+            return query.filter(owner_field == user.id)
+        return query.filter(False)
+
+    else:
+        # 无权限：返回空结果
+        return query.filter(False)
+
 
 def can_manage_sales_opportunity(db: Session, user: User, opportunity) -> bool:
     """
@@ -233,41 +279,8 @@ def can_set_opportunity_gate(db: Session, user: User, opportunity) -> bool:
     if scope in {"ALL", "DEPT", "TEAM"}:
         return can_manage_sales_opportunity(db, user, opportunity)
 
-    if scope == "DEPT":
-        # 部门可见
-        if user.department and owner_field is not None:
-            dept = (
-                db.query(Department)
-                .filter(Department.dept_name == user.department)
-                .first()
-            )
-            if dept:
-                from ..models.user import User as UserModel
-                dept_users = (
-                    db.query(UserModel).filter(UserModel.department == user.department).all()
-                )
-                dept_user_ids = [u.id for u in dept_users]
-                return query.filter(owner_field.in_(dept_user_ids + [user.id]))
-        if owner_field is not None:
-            return query.filter(owner_field == user.id)
-        return query.filter(False)
-
-    elif scope == "TEAM":
-        # 团队可见：自己 + 直接下属
-        if owner_field is not None:
-            subordinate_ids = DataScopeService.get_subordinate_ids(db, user.id)
-            allowed_user_ids = list(subordinate_ids | {user.id})
-            return query.filter(owner_field.in_(allowed_user_ids))
-        return query.filter(False)
-
-    elif scope in ["OWN", "PROJECT"]:
-        # 个人可见 或 项目可见（销售数据降级为个人）
-        if owner_field is not None:
-            return query.filter(owner_field == user.id)
-        return query.filter(False)
-
-    else:
-        return query.filter(False)
+    # 其他权限范围不能设置商机阶段门
+    return False
 
 
 def check_sales_create_permission(user: User, db: Session) -> bool:

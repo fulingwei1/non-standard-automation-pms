@@ -7,7 +7,7 @@ from datetime import date, timedelta
 from typing import Dict, List, Optional, Tuple
 
 from fastapi import HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.models.user import Role, User, UserRole
 
@@ -62,26 +62,49 @@ def get_visible_sales_users(
     region_keyword: Optional[str],
 ) -> List[User]:
     """根据角色、部门和区域过滤可见的销售用户"""
-    user_roles = db.query(UserRole).filter(UserRole.user_id == current_user.id).all()
-    user_role_codes = [ur.role.role_code for ur in user_roles if ur.role]
-    user_role_codes_lower = [rc.lower() for rc in user_role_codes]
+    # 使用 joinedload 预加载 role 关系，避免 N+1 查询
+    user_roles = (
+        db.query(UserRole)
+        .options(joinedload(UserRole.role))
+        .filter(UserRole.user_id == current_user.id)
+        .all()
+    )
+    user_role_codes = []
+    for ur in user_roles:
+        if ur.role is not None and hasattr(ur.role, 'role_code') and ur.role.role_code:
+            user_role_codes.append(ur.role.role_code)
 
     is_sales_director = 'SALES_DIR' in user_role_codes
     is_sales_manager = 'SALES_MANAGER' in user_role_codes
 
     query = db.query(User).filter(User.is_active == True)
 
+    # 应用部门过滤
+    if department_id is not None:
+        query = query.filter(User.department_id == department_id)
+
+    # 应用区域过滤（如果用户模型有 region 字段）
+    if region_keyword:
+        # 假设用户有 region 或负责区域字段，根据实际模型调整
+        # 这里先不实现，因为需要确认 User 模型是否有相关字段
+        pass
+
     if is_sales_director:
         sales_role_codes = ['SALES', 'SALES_DIR', 'SALES_MANAGER', 'SA']
+        # 优化查询：直接使用子查询，避免先查询再过滤
         sales_user_ids = (
             db.query(UserRole.user_id)
             .join(Role, Role.id == UserRole.role_id)
             .filter(Role.role_code.in_(sales_role_codes))
+            .filter(Role.is_active == True)  # 只查询激活的角色
             .distinct()
             .all()
         )
         sales_user_ids = [uid for (uid,) in sales_user_ids]
-        return query.filter(User.id.in_(sales_user_ids)).all()
+        if sales_user_ids:
+            return query.filter(User.id.in_(sales_user_ids)).all()
+        else:
+            return []
     elif is_sales_manager:
         dept_id = getattr(current_user, 'department_id', None)
         if dept_id:

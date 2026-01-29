@@ -249,40 +249,40 @@ class TestTimesheetSyncService:
     def test_sync_all_on_approval_success(self, timesheet_sync_service, test_timesheet):
         """测试自动同步 - 成功场景（有项目）"""
         with patch.object(timesheet_sync_service, 'sync_to_finance') as mock_finance, \
-        patch.object(timesheet_sync_service, 'sync_to_project') as mock_project:
-            
-        mock_finance.return_value = {'success': True, 'created': True}
-        mock_project.return_value = {'success': True}
-            
-        result = timesheet_sync_service.sync_all_on_approval(timesheet_id=test_timesheet.id)
-            
-        assert result is not None
-        assert result['success'] is True
-        assert 'results' in result
-        assert result['results']['finance'] is not None
-        assert result['results']['project'] is not None
+             patch.object(timesheet_sync_service, 'sync_to_project') as mock_project:
+
+            mock_finance.return_value = {'success': True, 'created': True}
+            mock_project.return_value = {'success': True}
+
+            result = timesheet_sync_service.sync_all_on_approval(timesheet_id=test_timesheet.id)
+
+            assert result is not None
+            assert result['success'] is True
+            assert 'results' in result
+            assert result['results']['finance'] is not None
+            assert result['results']['project'] is not None
 
     def test_sync_all_on_approval_with_rd_project(self, timesheet_sync_service, db_session, test_user):
         """测试自动同步 - 有研发项目"""
         from app.models.rd_project import RdProject
-        
+
         # 创建研发项目
         rd_project = RdProject(
-        project_no="RD001",
-        project_name="研发项目",
-        category_type="SELF",
-        initiation_date=date.today()
+            project_no="RD001",
+            project_name="研发项目",
+            category_type="SELF",
+            initiation_date=date.today()
         )
         db_session.add(rd_project)
         db_session.commit()
-        
+
         # 创建有研发项目的工时记录
         timesheet = Timesheet(
-        user_id=test_user.id,
-        rd_project_id=rd_project.id,
-        work_date=date.today(),
-        hours=8.0,
-        status="APPROVED"
+            user_id=test_user.id,
+            rd_project_id=rd_project.id,
+            work_date=date.today(),
+            hours=8.0,
+            status="APPROVED"
         )
         db_session.add(timesheet)
         db_session.commit()

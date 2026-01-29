@@ -11,7 +11,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
-from app.core.security import get_current_active_user, has_scheduler_admin_access
+from app.core.security import get_current_active_user
+from app.core.auth import check_permission
 from app.models.scheduler_config import SchedulerTaskConfig
 from app.models.user import User
 from app.schemas.common import ResponseModel
@@ -177,7 +178,7 @@ def update_task_config(
     注意：需要管理员权限
     """
     # 检查管理员权限
-    if not has_scheduler_admin_access(current_user):
+    if not check_permission(current_user, "scheduler:admin", db):
         raise HTTPException(status_code=403, detail="需要管理员权限才能更新任务配置")
 
     try:
@@ -245,7 +246,7 @@ def sync_task_configs(
     用于初始化或更新配置
     """
     # 检查管理员权限
-    if not has_scheduler_admin_access(current_user):
+    if not check_permission(current_user, "scheduler:admin", db):
         raise HTTPException(status_code=403, detail="需要管理员权限才能同步任务配置")
 
     try:

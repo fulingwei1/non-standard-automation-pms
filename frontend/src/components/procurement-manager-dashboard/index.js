@@ -6,5 +6,4 @@ export { default as SuppliersTab } from "./SuppliersTab";
 export { default as TeamTab } from "./TeamTab";
 export { default as CostAnalysisTab } from "./CostAnalysisTab";
 export { default as AlertsTab } from "./AlertsTab";
-export * from "./constants";
 export * from "./utils";

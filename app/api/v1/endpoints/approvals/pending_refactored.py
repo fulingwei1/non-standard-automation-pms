@@ -52,6 +52,10 @@ def get_my_pending_tasks(
         query = query.filter(ApprovalInstance.template_id == template_id)
 
     total = query.count()
+    # Safety check: if count() returns None (SQLite connection issue), default to 0
+    if total is None:
+        total = 0
+
     tasks = (
         query.order_by(ApprovalTask.created_at.desc())
         .offset((page - 1) * page_size)
@@ -71,16 +75,12 @@ def get_my_pending_tasks(
             item.node_name = task.node.node_name
         items.append(item)
 
-    pages = (total + page_size - 1) // page_size
-    
-    # 使用统一响应格式
+    # 使用统一响应格式（paginated_response 内部会计算 pages）
     return paginated_response(
         items=items,
         total=total,
         page=page,
-        page_size=page_size,
-        pages=pages,
-        message="获取待我审批的任务成功"
+        page_size=page_size
     )
 
 
@@ -116,15 +116,13 @@ def get_my_initiated(
     )
 
     pages = (total + page_size - 1) // page_size
-    
+
     # 使用统一响应格式
     return paginated_response(
         items=[ApprovalInstanceResponse.model_validate(i) for i in items],
         total=total,
         page=page,
-        page_size=page_size,
-        pages=pages,
-        message="获取我发起的审批成功"
+        page_size=page_size
     )
 
 
@@ -167,15 +165,13 @@ def get_my_cc(
         items.append(item)
 
     pages = (total + page_size - 1) // page_size
-    
+
     # 使用统一响应格式
     return paginated_response(
         items=items,
         total=total,
         page=page,
-        page_size=page_size,
-        pages=pages,
-        message="获取抄送我的成功"
+        page_size=page_size
     )
 
 
@@ -251,15 +247,13 @@ def get_my_processed(
         items.append(item)
 
     pages = (total + page_size - 1) // page_size
-    
+
     # 使用统一响应格式
     return paginated_response(
         items=items,
         total=total,
         page=page,
-        page_size=page_size,
-        pages=pages,
-        message="获取我已处理的审批成功"
+        page_size=page_size
     )
 
 

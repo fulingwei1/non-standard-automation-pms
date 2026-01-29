@@ -126,7 +126,7 @@ def create_invoice(
     *,
     db: Session = Depends(deps.get_db),
     invoice_in: InvoiceCreate,
-    current_user: User = Depends(security.require_finance_access()),
+    current_user: User = Depends(security.require_permission("finance:read")),
 ) -> Any:
     """
     创建发票
@@ -189,7 +189,7 @@ def delete_invoice(
     *,
     db: Session = Depends(deps.get_db),
     invoice_id: int,
-    current_user: User = Depends(security.require_finance_access()),
+    current_user: User = Depends(security.require_permission("finance:read")),
 ) -> Any:
     """
     删除发票（仅限草稿状态）

@@ -23,7 +23,7 @@ def get_rd_cost_types(
     db: Session = Depends(deps.get_db),
     category: Optional[str] = Query(None, description="费用大类筛选：LABOR/MATERIAL/DEPRECIATION/OTHER"),
     is_active: Optional[bool] = Query(None, description="是否启用筛选"),
-    current_user: User = Depends(security.require_rd_project_access),
+    current_user: User = Depends(security.require_permission("rd_project:read")),
 ) -> Any:
     """
     获取研发费用类型列表

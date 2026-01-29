@@ -13,7 +13,7 @@ export function useInventoryAnalysis() {
     const loadInventory = useCallback(async () => {
         try {
             setLoading(true);
-            const params = { page_size: 200 };
+            const params = { page_size: 100 };
             if (filters.category && filters.category !== 'all') params.category = filters.category;
             if (filters.status && filters.status !== 'all') params.status = filters.status;
             if (filters.warehouse && filters.warehouse !== 'all') params.warehouse = filters.warehouse;

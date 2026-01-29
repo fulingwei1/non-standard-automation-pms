@@ -54,5 +54,6 @@ class TestParseHours:
         assert result == expected
 
     def test_parse_hours_invalid(self):
-        result = ImportBase.parse_hours("invalid")
-        assert result is None
+        # parse_hours 在无效输入时抛出 ValueError
+        with pytest.raises(ValueError):
+            ImportBase.parse_hours("invalid")

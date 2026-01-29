@@ -7,7 +7,7 @@ import { Activity, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, Progress } from "../../../components/ui";
 import { cn } from "../../../lib/utils";
 import { fadeIn } from "../../../lib/animations";
-import { getHealthConfig, HEALTH_LEVELS } from "../../../lib/constants/strategy";
+import { getStrategyHealthConfig, HEALTH_LEVELS } from "../../../lib/constants/strategy";
 
 export function HealthScoreCard({ healthStats }) {
   if (!healthStats) {
@@ -29,7 +29,7 @@ export function HealthScoreCard({ healthStats }) {
   }
 
   const { overall, dimensions, trend } = healthStats;
-  const healthConfig = getHealthConfig(overall?.level);
+  const healthConfig = getStrategyHealthConfig(overall?.level);
   const Icon = healthConfig?.icon || Activity;
 
   // 计算趋势

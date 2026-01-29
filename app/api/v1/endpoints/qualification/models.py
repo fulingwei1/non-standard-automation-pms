@@ -33,7 +33,7 @@ def create_competency_model(
     *,
     db: Session = Depends(deps.get_db),
     model_in: PositionCompetencyModelCreate,
-    current_user: User = Depends(security.require_hr_access),
+    current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Any:
     """创建岗位能力模型"""
     # 检查等级是否存在
@@ -112,7 +112,7 @@ def update_competency_model(
     db: Session = Depends(deps.get_db),
     model_id: int,
     model_in: PositionCompetencyModelUpdate,
-    current_user: User = Depends(security.require_hr_access),
+    current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Any:
     """更新岗位能力模型"""
     model = db.query(PositionCompetencyModel).filter(PositionCompetencyModel.id == model_id).first()

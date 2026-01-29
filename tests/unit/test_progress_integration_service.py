@@ -277,22 +277,22 @@ class TestProgressIntegrationService:
         if milestone is None:
             # 如果方法会处理 None 的情况，直接测试
             # 否则需要创建测试数据
-        result = progress_integration_service.check_milestone_completion_requirements(fake_milestone)
+            result = progress_integration_service.check_milestone_completion_requirements(fake_milestone)
             # 方法应该能处理不存在的里程碑或返回错误信息
-        assert isinstance(result, tuple)
-        assert len(result) == 2
+            assert isinstance(result, tuple)
+            assert len(result) == 2
 
     def test_handle_acceptance_failed_not_found(self, progress_integration_service, db_session):
         """测试处理验收失败 - 验收单不存在"""
         from app.models.acceptance import AcceptanceOrder
-        
+
         # 创建一个不存在的验收单对象
         fake_order = AcceptanceOrder(
-        id=99999,
-        order_no="AO-FAKE",
-        project_id=1,
-        acceptance_type="FAT",
-        overall_result="FAILED"
+            id=99999,
+            order_no="AO-FAKE",
+            project_id=1,
+            acceptance_type="FAT",
+            overall_result="FAILED"
         )
         
         # 方法接受 AcceptanceOrder 对象，即使不存在也会处理

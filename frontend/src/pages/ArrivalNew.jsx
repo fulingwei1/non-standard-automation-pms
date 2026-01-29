@@ -73,7 +73,7 @@ export default function ArrivalNew() {
     try {
       const res = await materialApi.list({
         page: 1,
-        page_size: 200,
+        page_size: 100,
         is_active: true
       });
       setMaterials(res.data.items || res.data || []);

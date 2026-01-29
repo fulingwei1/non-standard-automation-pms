@@ -139,7 +139,7 @@ class TestUserModel:
         user = User(
         username="testuser",
         email="test@example.com",
-        hashed_password="hashed_password_here",
+        password_hash="password_hash_here",
         full_name="Test User",
         role=UserRole.MEMBER.value,
         is_active=True,
@@ -172,7 +172,7 @@ class TestUserModel:
         user = User(
         username="user_with_hash",
         email="user@example.com",
-        hashed_password=hashed,
+        password_hash=hashed,
         full_name="User With Hash",
         role=UserRole.MEMBER.value,
         is_active=True,
@@ -182,16 +182,16 @@ class TestUserModel:
         db_session.commit()
         db_session.refresh(user)
 
-        assert user.hashed_password == hashed
-        assert user.hashed_password is not None
-        assert len(user.hashed_password) > 50
+        assert user.password_hash == hashed
+        assert user.password_hash is not None
+        assert len(user.password_hash) > 50
 
     def test_user_default_values(self, db_session):
         """测试 User 默认值"""
         user = User(
         username="defaultuser",
         email="default@example.com",
-        hashed_password="hash",
+        password_hash="hash",
         full_name="Default User",
         role=UserRole.MEMBER.value,
         )
@@ -332,7 +332,7 @@ class TestModelTimestamps:
         user = User(
         username="timetestuser",
         email="timetest@example.com",
-        hashed_password="hash",
+        password_hash="hash",
         full_name="Time Test User",
         role=UserRole.MEMBER.value,
         )
@@ -369,7 +369,7 @@ class TestModelValidators:
         user = User(
         username="emailtestuser",
         email="user@example.com",
-        hashed_password="hash",
+        password_hash="hash",
         full_name="Email Test User",
         role=UserRole.MEMBER.value,
         )
@@ -438,7 +438,7 @@ class TestModelQueryMethods:
         active_user = User(
         username="activeuser",
         email="active@example.com",
-        hashed_password="hash",
+        password_hash="hash",
         full_name="Active User",
         role=UserRole.MEMBER.value,
         is_active=True,
@@ -447,7 +447,7 @@ class TestModelQueryMethods:
         inactive_user = User(
         username="inactiveuser",
         email="inactive@example.com",
-        hashed_password="hash",
+        password_hash="hash",
         full_name="Inactive User",
         role=UserRole.MEMBER.value,
         is_active=False,

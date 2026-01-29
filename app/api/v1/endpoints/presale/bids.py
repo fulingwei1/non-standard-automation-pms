@@ -56,8 +56,6 @@ from app.schemas.presale import (
     TicketUpdate,
 )
 
-router = APIRouter()
-
 # 使用统一的编码生成工具
 from app.utils.domain_codes import presale as presale_codes
 
@@ -65,11 +63,7 @@ generate_ticket_no = presale_codes.generate_ticket_no
 generate_solution_no = presale_codes.generate_solution_no
 generate_tender_no = presale_codes.generate_tender_no
 
-
-from fastapi import APIRouter
-
 router = APIRouter(
-    prefix="/presale/bids",
     tags=["bids"]
 )
 
@@ -77,7 +71,7 @@ router = APIRouter(
 
 # ==================== 投标管理 ====================
 
-@router.get("/presale/tenders", response_model=PaginatedResponse)
+@router.get("/tenders", response_model=PaginatedResponse)
 def read_tenders(
     db: Session = Depends(deps.get_db),
     page: int = Query(1, ge=1, description="页码"),
@@ -143,7 +137,7 @@ def read_tenders(
     )
 
 
-@router.post("/presale/tenders", response_model=TenderResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/tenders", response_model=TenderResponse, status_code=status.HTTP_201_CREATED)
 def create_tender(
     *,
     db: Session = Depends(deps.get_db),
@@ -199,7 +193,7 @@ def create_tender(
     )
 
 
-@router.get("/presale/tenders/{tender_id}", response_model=TenderResponse)
+@router.get("/tenders/{tender_id}", response_model=TenderResponse)
 def read_tender(
     *,
     db: Session = Depends(deps.get_db),
@@ -236,7 +230,7 @@ def read_tender(
     )
 
 
-@router.put("/presale/tenders/{tender_id}/result", response_model=TenderResponse)
+@router.put("/tenders/{tender_id}/result", response_model=TenderResponse)
 def update_tender_result(
     *,
     db: Session = Depends(deps.get_db),
@@ -287,7 +281,7 @@ def update_tender_result(
     )
 
 
-@router.get("/presale/tenders/analysis", response_model=ResponseModel)
+@router.get("/tenders/analysis", response_model=ResponseModel)
 def get_tender_analysis(
     db: Session = Depends(deps.get_db),
     start_date: Optional[date] = Query(None, description="开始日期"),

@@ -176,13 +176,13 @@ export const defaultNavGroups = [
     label: "系统管理",
     items: [
       { name: "阶段模板", path: "/stage-templates", icon: "Layers", permission: "system:template:manage", permissionLabel: "阶段模板" },
-      { name: "用户管理", path: "/user-management", icon: "Users", permission: "system:user:manage", permissionLabel: "用户管理" },
-      { name: "角色管理", path: "/role-management", icon: "Shield", permission: "system:role:manage", permissionLabel: "角色管理" },
-      { name: "权限管理", path: "/permission-management", icon: "Key", permission: "system:permission:manage", permissionLabel: "权限管理" },
+      { name: "用户管理", path: "/user-management", icon: "Users", permission: "USER_VIEW", permissionLabel: "用户管理" },
+      { name: "角色管理", path: "/role-management", icon: "Shield", permission: "ROLE_VIEW", permissionLabel: "角色管理" },
+      { name: "权限管理", path: "/permission-management", icon: "Key", permission: "ROLE_VIEW", permissionLabel: "权限管理" },
       { name: "组织管理", path: "/organization-management", icon: "Building2", permission: "system:org:manage", permissionLabel: "组织管理" },
       { name: "岗位管理", path: "/position-management", icon: "UserCog", permission: "system:position:manage", permissionLabel: "岗位管理" },
       { name: "定时任务", path: "/scheduler-monitoring", icon: "Activity", permission: "system:scheduler:read", permissionLabel: "定时任务" },
-      { name: "审计日志", path: "/audit-logs", icon: "FileText", permission: "system:audit:read", permissionLabel: "审计日志" },
+      { name: "审计日志", path: "/audit-logs", icon: "FileText", permission: "AUDIT_VIEW", permissionLabel: "审计日志" },
       { name: "数据导入导出", path: "/data-import-export", icon: "Archive", permission: "system:data:manage", permissionLabel: "数据导入导出" }
     ],
     roles: ["admin", "super_admin"]

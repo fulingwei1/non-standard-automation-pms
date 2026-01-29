@@ -28,16 +28,13 @@ import {
   Upload,
   List,
   Kanban,
-  AlertCircle,
-  Clock,
-  CheckCircle2,
-  XCircle,
   AlertTriangle,
   User,
   Calendar,
   Tag,
   ArrowRight } from
 "lucide-react";
+import { DynamicIcon } from "../../utils/iconMap.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -209,14 +206,10 @@ export const IssueListManager = ({
   // 渲染状态徽章
   const renderStatusBadge = (status) => {
     const config = getIssueStatusConfig(status);
-    const Icon = config.icon === 'AlertCircle' ? AlertCircle :
-    config.icon === 'Clock' ? Clock :
-    config.icon === 'CheckCircle2' ? CheckCircle2 :
-    config.icon === 'XCircle' ? XCircle : AlertCircle;
 
     return (
       <Badge variant="outline" className={config.color}>
-        <Icon className="w-3 h-3 mr-1" />
+        {config.icon && <DynamicIcon name={config.icon} className="w-3 h-3 mr-1" />}
         {config.label}
       </Badge>);
 
@@ -418,17 +411,13 @@ export const IssueListManager = ({
   const renderKanbanColumn = (status) => {
     const statusConfig = getIssueStatusConfig(status);
     const columnIssues = issuesByStatus[status] || [];
-    const Icon = statusConfig.icon === 'AlertCircle' ? AlertCircle :
-    statusConfig.icon === 'Clock' ? Clock :
-    statusConfig.icon === 'CheckCircle2' ? CheckCircle2 :
-    statusConfig.icon === 'XCircle' ? XCircle : AlertCircle;
 
     return (
       <div key={status} className="flex-1 min-w-0">
         <Card className="h-full border border-slate-700/70 bg-slate-900/40">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-sm font-semibold text-white">
-              <Icon className="w-4 h-4" />
+              {statusConfig.icon && <DynamicIcon name={statusConfig.icon} className="w-4 h-4" />}
               <span>{statusConfig.label}</span>
               <Badge variant="outline" className="bg-slate-800/80 text-xs border-slate-600 text-slate-200">
                 {columnIssues.length}

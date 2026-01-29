@@ -6,8 +6,11 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 
-from app.core.security import get_current_active_user, has_scheduler_admin_access
+from app.api.deps import get_db
+from app.core.security import get_current_active_user
+from app.core.auth import check_permission
 from app.models.user import User
 from app.schemas.common import ResponseModel
 
@@ -107,6 +110,7 @@ def get_scheduler_jobs(
 @router.post("/jobs/{job_id}/trigger", response_model=ResponseModel)
 def trigger_job(
     job_id: str,
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ) -> Any:
     """
@@ -114,7 +118,7 @@ def trigger_job(
     注意：需要管理员权限
     """
     # 检查管理员权限
-    if not has_scheduler_admin_access(current_user):
+    if not check_permission(current_user, "scheduler:admin", db):
         raise HTTPException(status_code=403, detail="需要管理员权限才能手动触发任务")
 
     try:

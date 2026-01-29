@@ -38,7 +38,7 @@ def read_outsourcing_payments(
     status: Optional[str] = Query(None, description="状态筛选"),
     start_date: Optional[date] = Query(None, description="开始日期筛选"),
     end_date: Optional[date] = Query(None, description="结束日期筛选"),
-    current_user: User = Depends(security.require_finance_access()),
+    current_user: User = Depends(security.require_permission("finance:read")),
 ) -> Any:
     """
     获取外协付款记录列表
@@ -124,7 +124,7 @@ def create_outsourcing_payment(
     *,
     db: Session = Depends(deps.get_db),
     payment_in: OutsourcingPaymentCreate,
-    current_user: User = Depends(security.require_finance_access()),
+    current_user: User = Depends(security.require_permission("finance:read")),
 ) -> Any:
     """
     创建外协付款记录

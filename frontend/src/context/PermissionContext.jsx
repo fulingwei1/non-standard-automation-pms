@@ -43,6 +43,14 @@ export function PermissionProvider({ children }) {
     setIsLoading(true);
     setError(null);
 
+    // 检查是否有token
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.log('[PermissionContext] 未找到token，跳过权限加载');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       // 获取当前用户信息和权限
       const response = await authApi.me();
@@ -82,19 +90,32 @@ export function PermissionProvider({ children }) {
 
     } catch (err) {
       console.error('加载权限数据失败:', err);
-      setError(err.message || '加载权限数据失败');
 
-      // 尝试从 localStorage 恢复
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        try {
-          const parsedUser = JSON.parse(storedUser);
-          setUser(parsedUser);
-          setIsSuperuser(parsedUser.is_superuser || parsedUser.isSuperuser || false);
-          setPermissions(parsedUser.permissions || []);
-        } catch (parseError) {
-          console.error('解析本地用户数据失败:', parseError);
+      // 检查是否是认证错误（401）
+      if (err.response?.status === 401) {
+        console.log('[PermissionContext] Token无效或已过期，清除本地数据');
+        // Token无效，清除本地存储
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setError('登录已过期，请重新登录');
+      } else if (err.response?.status === 500) {
+        console.error('[PermissionContext] 服务器错误，尝试从本地恢复');
+        setError('服务器暂时不可用，使用缓存数据');
+
+        // 尝试从 localStorage 恢复
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          try {
+            const parsedUser = JSON.parse(storedUser);
+            setUser(parsedUser);
+            setIsSuperuser(parsedUser.is_superuser || parsedUser.isSuperuser || false);
+            setPermissions(parsedUser.permissions || []);
+          } catch (parseError) {
+            console.error('解析本地用户数据失败:', parseError);
+          }
         }
+      } else {
+        setError(err.message || '加载权限数据失败');
       }
     } finally {
       setIsLoading(false);

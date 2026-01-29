@@ -23,9 +23,9 @@ class TestSpecMatchResult:
     def test_init_with_all_fields(self):
         """Test initialization with all fields."""
         result = SpecMatchResult(
-        match_status="MATCHED",
-        match_score=Decimal("85.5"),
-        differences={"brand": {"required": "Siemens", "actual": "ABB"}},
+            match_status="MATCHED",
+            match_score=Decimal("85.5"),
+            differences={"brand": {"required": "Siemens", "actual": "ABB"}},
         )
 
         assert result.match_status == "MATCHED"
@@ -35,7 +35,7 @@ class TestSpecMatchResult:
     def test_init_with_minimal_fields(self):
         """Test initialization with minimal fields."""
         result = SpecMatchResult(
-        match_status="MISMATCHED", match_score=None, differences=None
+            match_status="MISMATCHED", match_score=None, differences=None
         )
 
         assert result.match_status == "MISMATCHED"
@@ -66,306 +66,306 @@ class TestMatchSpecification:
         """Test perfect specification match."""
 
         class MockRequirement:
-        def specification(self):
-            return "PLC S7-1200"
+            def specification(self):
+                return "PLC S7-1200"
 
-        def brand(self):
-            return "Siemens"
+            def brand(self):
+                return "Siemens"
 
-        def model(self):
-            return "S7-1200"
+            def model(self):
+                return "S7-1200"
 
-        def key_parameters(self):
-            return {"voltage": "24V"}
+            def key_parameters(self):
+                return {"voltage": "24V"}
 
-        def requirementment_level(self):
-            return "NORMAL"
+            def requirementment_level(self):
+                return "NORMAL"
 
-            requirement = MockRequirement()
+        requirement = MockRequirement()
 
-            matcher = SpecMatcher()
-            result = matcher.match_specification(
+        matcher = SpecMatcher()
+        result = matcher.match_specification(
             requirement=requirement,
             actual_spec="PLC S7-1200",
             actual_brand="Siemens",
             actual_model="S7-1200",
-            )
+        )
 
-            assert result.match_status == "MATCHED"
-            assert result.match_score == Decimal("100")
-            assert result.differences is None or len(result.differences) == 0
+        assert result.match_status == "MATCHED"
+        assert result.match_score == Decimal("100")
+        assert result.differences is None or len(result.differences) == 0
 
     def test_specification_mismatch(self):
         """Test specification text mismatch."""
 
         class MockRequirement:
-        def specification(self):
-            return "PLC S7-1200"
+            def specification(self):
+                return "PLC S7-1200"
 
-        def brand(self):
-            return "Siemens"
+            def brand(self):
+                return "Siemens"
 
-        def model(self):
-            return "S7-1200"
+            def model(self):
+                return "S7-1200"
 
-        def requirementment_level(self):
-            return "NORMAL"
+            def requirementment_level(self):
+                return "NORMAL"
 
-            requirement = MockRequirement()
+        requirement = MockRequirement()
 
-            matcher = SpecMatcher()
-            result = matcher.match_specification(
+        matcher = SpecMatcher()
+        result = matcher.match_specification(
             requirement=requirement,
             actual_spec="PLC S7-1500",
             actual_brand="Siemens",
             actual_model="S7-1500",
-            )
+        )
 
-            assert result.match_status in ["MISMATCHED", "MATCHED"]
-            assert result.differences is not None
-            assert "specification" in result.differences
+        assert result.match_status in ["MISMATCHED", "MATCHED"]
+        assert result.differences is not None
+        assert "specification" in result.differences
 
     def test_brand_mismatch(self):
         """Test brand mismatch."""
 
         class MockRequirement:
-        def specification(self):
-            return "PLC S7-1200"
+            def specification(self):
+                return "PLC S7-1200"
 
-        def brand(self):
-            return "Siemens"
+            def brand(self):
+                return "Siemens"
 
-        def model(self):
-            return "S7-1200"
+            def model(self):
+                return "S7-1200"
 
-        def requirementment_level(self):
-            return "NORMAL"
+            def requirementment_level(self):
+                return "NORMAL"
 
-            requirement = MockRequirement()
+        requirement = MockRequirement()
 
-            matcher = SpecMatcher()
-            result = matcher.match_specification(
+        matcher = SpecMatcher()
+        result = matcher.match_specification(
             requirement=requirement,
             actual_spec="PLC S7-1200",
             actual_brand="ABB",
             actual_model="S7-1200",
-            )
+        )
 
-            assert result.match_status == "MISMATCHED"
-            assert "brand" in result.differences
-            assert result.differences["brand"]["required"] == "Siemens"
-            assert result.differences["brand"]["actual"] == "ABB"
+        assert result.match_status == "MISMATCHED"
+        assert "brand" in result.differences
+        assert result.differences["brand"]["required"] == "Siemens"
+        assert result.differences["brand"]["actual"] == "ABB"
 
     def test_model_mismatch(self):
         """Test model mismatch."""
 
         class MockRequirement:
-        def specification(self):
-            return "PLC S7-1200"
+            def specification(self):
+                return "PLC S7-1200"
 
-        def brand(self):
-            return "Siemens"
+            def brand(self):
+                return "Siemens"
 
-        def model(self):
-            return "S7-1200"
+            def model(self):
+                return "S7-1200"
 
-        def requirementment_level(self):
-            return "NORMAL"
+            def requirementment_level(self):
+                return "NORMAL"
 
-            requirement = MockRequirement()
+        requirement = MockRequirement()
 
-            matcher = SpecMatcher()
-            result = matcher.match_specification(
+        matcher = SpecMatcher()
+        result = matcher.match_specification(
             requirement=requirement,
             actual_spec="PLC S7-1200",
             actual_brand="Siemens",
             actual_model="S7-1500",
-            )
+        )
 
-            assert result.match_status == "MISMATCHED"
-            assert "model" in result.differences
-            assert result.differences["model"]["required"] == "S7-1200"
-            assert result.differences["model"]["actual"] == "S7-1500"
+        assert result.match_status == "MISMATCHED"
+        assert "model" in result.differences
+        assert result.differences["model"]["required"] == "S7-1200"
+        assert result.differences["model"]["actual"] == "S7-1500"
 
     def test_missing_actual_brand(self):
         """Test when actual brand is missing."""
 
         class MockRequirement:
-        def specification(self):
-            return "PLC S7-1200"
+            def specification(self):
+                return "PLC S7-1200"
 
-        def brand(self):
-            return "Siemens"
+            def brand(self):
+                return "Siemens"
 
-        def model(self):
-            return "S7-1200"
+            def model(self):
+                return "S7-1200"
 
-        def requirementment_level(self):
-            return "NORMAL"
+            def requirementment_level(self):
+                return "NORMAL"
 
-            requirement = MockRequirement()
+        requirement = MockRequirement()
 
-            matcher = SpecMatcher()
-            result = matcher.match_specification(
+        matcher = SpecMatcher()
+        result = matcher.match_specification(
             requirement=requirement,
             actual_spec="PLC S7-1200",
             actual_brand=None,
             actual_model="S7-1200",
-            )
+        )
 
-            assert result.match_status in ["MISMATCHED", "UNKNOWN"]
-            assert "brand" in result.differences
-            assert result.differences["brand"]["missing"] is True
+        assert result.match_status in ["MISMATCHED", "UNKNOWN"]
+        assert "brand" in result.differences
+        assert result.differences["brand"]["missing"] is True
 
     def test_missing_actual_model(self):
         """Test when actual model is missing."""
 
         class MockRequirement:
-        def specification(self):
-            return "PLC S7-1200"
+            def specification(self):
+                return "PLC S7-1200"
 
-        def brand(self):
-            return "Siemens"
+            def brand(self):
+                return "Siemens"
 
-        def model(self):
-            return "S7-1200"
+            def model(self):
+                return "S7-1200"
 
-        def requirementment_level(self):
-            return "NORMAL"
+            def requirementment_level(self):
+                return "NORMAL"
 
-            requirement = MockRequirement()
+        requirement = MockRequirement()
 
-            matcher = SpecMatcher()
-            result = matcher.match_specification(
+        matcher = SpecMatcher()
+        result = matcher.match_specification(
             requirement=requirement,
             actual_spec="PLC S7-1200",
             actual_brand="Siemens",
             actual_model=None,
-            )
+        )
 
-            assert result.match_status in ["MISMATCHED", "UNKNOWN"]
-            assert "model" in result.differences
-            assert result.differences["model"]["missing"] is True
+        assert result.match_status in ["MISMATCHED", "UNKNOWN"]
+        assert "model" in result.differences
+        assert result.differences["model"]["missing"] is True
 
     def test_low_similarity_threshold(self):
         """Test low similarity below 0.8 threshold."""
 
         class MockRequirement:
-        def specification(self):
-            return "PLC S7-1200"
+            def specification(self):
+                return "PLC S7-1200"
 
-        def brand(self):
-            return "Siemens"
+            def brand(self):
+                return "Siemens"
 
-        def model(self):
-            return "S7-1200"
+            def model(self):
+                return "S7-1200"
 
-        def requirementment_level(self):
-            return "NORMAL"
+            def requirementment_level(self):
+                return "NORMAL"
 
-            requirement = MockRequirement()
+        requirement = MockRequirement()
 
-            matcher = SpecMatcher()
-            result = matcher.match_specification(
+        matcher = SpecMatcher()
+        result = matcher.match_specification(
             requirement=requirement,
             actual_spec="Servo Motor XYZ",
             actual_brand="Panasonic",
             actual_model="XYZ",
-            )
+        )
 
-            assert "specification" in result.differences or result.match_score < Decimal(
+        assert "specification" in result.differences or result.match_score < Decimal(
             "80"
-            )
+        )
 
     def test_strict_requirement_mismatch(self):
         """Test strict requirement with partial match."""
 
         class MockRequirement:
-        def specification(self):
-            return "PLC S7-1200"
+            def specification(self):
+                return "PLC S7-1200"
 
-        def brand(self):
-            return "Siemens"
+            def brand(self):
+                return "Siemens"
 
-        def model(self):
-            return "S7-1200"
+            def model(self):
+                return "S7-1200"
 
-        def key_parameters(self):
-            return {"voltage": "24V"}
+            def key_parameters(self):
+                return {"voltage": "24V"}
 
-        def requirementment_level(self):
-            return "STRICT"
+            def requirementment_level(self):
+                return "STRICT"
 
-            requirement = MockRequirement()
+        requirement = MockRequirement()
 
-            matcher = SpecMatcher()
-            result = matcher.match_specification(
+        matcher = SpecMatcher()
+        result = matcher.match_specification(
             requirement=requirement,
             actual_spec="PLC S7-1200",
             actual_brand="ABB",
             actual_model="S7-1200",
-            )
+        )
 
-            assert result.match_status == "MISMATCHED"
+        assert result.match_status == "MISMATCHED"
 
     def test_normal_requirement_partial_match(self):
         """Test normal requirement with partial match."""
 
         class MockRequirement:
-        def specification(self):
-            return "PLC S7-1200"
+            def specification(self):
+                return "PLC S7-1200"
 
-        def brand(self):
-            return "Siemens"
+            def brand(self):
+                return "Siemens"
 
-        def model(self):
-            return "S7-1200"
+            def model(self):
+                return "S7-1200"
 
-        def key_parameters(self):
-            return {"voltage": "24V"}
+            def key_parameters(self):
+                return {"voltage": "24V"}
 
-        def requirementment_level(self):
-            return "NORMAL"
+            def requirementment_level(self):
+                return "NORMAL"
 
-            requirement = MockRequirement()
+        requirement = MockRequirement()
 
-            matcher = SpecMatcher()
-            result = matcher.match_specification(
+        matcher = SpecMatcher()
+        result = matcher.match_specification(
             requirement=requirement,
             actual_spec="PLC S7-1200",
             actual_brand="ABB",
             actual_model="S7-1200",
-            )
+        )
 
-            assert result.match_status == "MATCHED"
+        assert result.match_status == "MATCHED"
 
     def test_unknown_status_low_score(self):
         """Test UNKNOWN status for very low scores."""
 
         class MockRequirement:
-        def specification(self):
-            return "PLC S7-1200"
+            def specification(self):
+                return "PLC S7-1200"
 
-        def brand(self):
-            return "Siemens"
+            def brand(self):
+                return "Siemens"
 
-        def model(self):
-            return "S7-1200"
+            def model(self):
+                return "S7-1200"
 
-        def requirementment_level(self):
-            return "NORMAL"
+            def requirementment_level(self):
+                return "NORMAL"
 
-            requirement = MockRequirement()
+        requirement = MockRequirement()
 
-            matcher = SpecMatcher()
-            result = matcher.match_specification(
+        matcher = SpecMatcher()
+        result = matcher.match_specification(
             requirement=requirement,
             actual_spec="Servo",
             actual_brand="Unknown",
             actual_model="Unknown",
-            )
+        )
 
-            assert result.match_score < Decimal("50.0")
+        assert result.match_score < Decimal("50.0")
 
 
 class TestTextSimilarity:
@@ -543,29 +543,29 @@ class TestEdgeCases:
         """Test handling of None values."""
 
         class MockRequirement:
-        def specification(self):
-            return "PLC"
+            def specification(self):
+                return "PLC"
 
-        def brand(self):
-            return "Siemens"
+            def brand(self):
+                return "Siemens"
 
-        def model(self):
-            return "S7-1200"
+            def model(self):
+                return "S7-1200"
 
-        def key_parameters(self):
-            return {"voltage": "24V"}
+            def key_parameters(self):
+                return {"voltage": "24V"}
 
-            requirement = MockRequirement()
+        requirement = MockRequirement()
 
-            matcher = SpecMatcher()
-            result = matcher.match_specification(
+        matcher = SpecMatcher()
+        result = matcher.match_specification(
             requirement=requirement,
             actual_spec="PLC",
             actual_brand=None,
             actual_model=None,
-            )
+        )
 
-            assert result.match_status in ["UNKNOWN", "MISMATCHED"]
+        assert result.match_status in ["UNKNOWN", "MISMATCHED"]
 
     def test_empty_strings(self):
         """Test handling of empty strings."""

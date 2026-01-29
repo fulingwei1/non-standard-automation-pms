@@ -1,0 +1,883 @@
+PLUGIN registered: <_pytest.config.PytestPluginManager object at 0x100a99c40>
+PLUGIN registered: <_pytest.config.Config object at 0x1062ed190>
+PLUGIN registered: <module '_pytest.mark' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/mark/__init__.py'>
+PLUGIN registered: <module '_pytest.main' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/main.py'>
+PLUGIN registered: <module '_pytest.runner' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/runner.py'>
+PLUGIN registered: <module '_pytest.fixtures' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/fixtures.py'>
+PLUGIN registered: <module '_pytest.helpconfig' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/helpconfig.py'>
+PLUGIN registered: <module '_pytest.python' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/python.py'>
+PLUGIN registered: <module '_pytest.terminal' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/terminal.py'>
+PLUGIN registered: <module '_pytest.debugging' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/debugging.py'>
+PLUGIN registered: <module '_pytest.unittest' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/unittest.py'>
+PLUGIN registered: <module '_pytest.capture' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/capture.py'>
+PLUGIN registered: <module '_pytest.skipping' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/skipping.py'>
+PLUGIN registered: <module '_pytest.legacypath' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/legacypath.py'>
+PLUGIN registered: <module '_pytest.tmpdir' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/tmpdir.py'>
+PLUGIN registered: <module '_pytest.monkeypatch' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/monkeypatch.py'>
+PLUGIN registered: <module '_pytest.recwarn' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/recwarn.py'>
+PLUGIN registered: <module '_pytest.pastebin' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/pastebin.py'>
+PLUGIN registered: <module '_pytest.assertion' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/assertion/__init__.py'>
+PLUGIN registered: <module '_pytest.junitxml' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/junitxml.py'>
+PLUGIN registered: <module '_pytest.doctest' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/doctest.py'>
+PLUGIN registered: <module '_pytest.cacheprovider' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/cacheprovider.py'>
+PLUGIN registered: <module '_pytest.freeze_support' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/freeze_support.py'>
+PLUGIN registered: <module '_pytest.setuponly' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/setuponly.py'>
+PLUGIN registered: <module '_pytest.setupplan' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/setupplan.py'>
+PLUGIN registered: <module '_pytest.stepwise' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/stepwise.py'>
+PLUGIN registered: <module '_pytest.unraisableexception' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/unraisableexception.py'>
+PLUGIN registered: <module '_pytest.threadexception' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/threadexception.py'>
+PLUGIN registered: <module '_pytest.warnings' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/warnings.py'>
+PLUGIN registered: <module '_pytest.logging' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/logging.py'>
+PLUGIN registered: <module '_pytest.reports' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/reports.py'>
+PLUGIN registered: <module '_pytest.faulthandler' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/faulthandler.py'>
+PLUGIN registered: <module 'pytest_mock' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/pytest_mock/__init__.py'>
+PLUGIN registered: <module 'anyio.pytest_plugin' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/anyio/pytest_plugin.py'>
+PLUGIN registered: <module 'faker.contrib.pytest.plugin' from '/Users/flw/Library/Python/3.9/lib/python/site-packages/faker/contrib/pytest/plugin.py'>
+PLUGIN registered: <CaptureManager _method='fd' _global_capturing=<MultiCapture out=<FDCapture 1 oldfd=6 _state='suspended' tmpfile=<_io.TextIOWrapper name="<_io.FileIO name=7 mode='rb+' closefd=True>" mode='r+' encoding='utf-8'>> err=<FDCapture 2 oldfd=8 _state='suspended' tmpfile=<_io.TextIOWrapper name="<_io.FileIO name=9 mode='rb+' closefd=True>" mode='r+' encoding='utf-8'>> in_=<FDCapture 0 oldfd=4 _state='started' tmpfile=<_io.TextIOWrapper name='/dev/null' mode='r' encoding='utf-8'>> _state='suspended' _in_suspended=False> _capture_fixture=None>
+PLUGIN registered: <module 'tests.conftest' from '/Users/flw/non-standard-automation-pm/tests/conftest.py'>
+PLUGIN registered: <module 'tests.unit.conftest' from '/Users/flw/non-standard-automation-pm/tests/unit/conftest.py'>
+PLUGIN registered: <Session  exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=0>
+PLUGIN registered: <_pytest.cacheprovider.LFPlugin object at 0x128cc48b0>
+PLUGIN registered: <_pytest.cacheprovider.NFPlugin object at 0x128cc4940>
+PLUGIN registered: <class '_pytest.legacypath.LegacyTmpdirPlugin'>
+PLUGIN registered: <_pytest.terminal.TerminalReporter object at 0x128e6edc0>
+PLUGIN registered: <_pytest.logging.LoggingPlugin object at 0x128e8c970>
+PLUGIN registered: <_pytest.fixtures.FixtureManager object at 0x128fbeac0>
+============================= test session starts ==============================
+platform darwin -- Python 3.9.6, pytest-8.4.2, pluggy-1.6.0
+using: pytest-8.4.2
+registered third-party plugins:
+  pytest-mock-3.15.1 at /Users/flw/Library/Python/3.9/lib/python/site-packages/pytest_mock/__init__.py
+  anyio-4.12.0 at /Users/flw/Library/Python/3.9/lib/python/site-packages/anyio/pytest_plugin.py
+  Faker-37.12.0 at /Users/flw/Library/Python/3.9/lib/python/site-packages/faker/contrib/pytest/plugin.py
+active plugins:
+    4306082880          : <_pytest.config.PytestPluginManager object at 0x100a99c40>
+    pytestconfig        : <_pytest.config.Config object at 0x1062ed190>
+    mark                : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/mark/__init__.py
+    main                : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/main.py
+    runner              : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/runner.py
+    fixtures            : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/fixtures.py
+    helpconfig          : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/helpconfig.py
+    python              : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/python.py
+    terminal            : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/terminal.py
+    debugging           : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/debugging.py
+    unittest            : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/unittest.py
+    capture             : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/capture.py
+    skipping            : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/skipping.py
+    legacypath          : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/legacypath.py
+    tmpdir              : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/tmpdir.py
+    monkeypatch         : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/monkeypatch.py
+    recwarn             : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/recwarn.py
+    pastebin            : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/pastebin.py
+    assertion           : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/assertion/__init__.py
+    junitxml            : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/junitxml.py
+    doctest             : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/doctest.py
+    cacheprovider       : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/cacheprovider.py
+    freeze_support      : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/freeze_support.py
+    setuponly           : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/setuponly.py
+    setupplan           : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/setupplan.py
+    stepwise            : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/stepwise.py
+    unraisableexception : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/unraisableexception.py
+    threadexception     : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/threadexception.py
+    warnings            : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/warnings.py
+    logging             : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/logging.py
+    reports             : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/reports.py
+    faulthandler        : /Users/flw/Library/Python/3.9/lib/python/site-packages/_pytest/faulthandler.py
+    pytest_mock         : /Users/flw/Library/Python/3.9/lib/python/site-packages/pytest_mock/__init__.py
+    anyio               : /Users/flw/Library/Python/3.9/lib/python/site-packages/anyio/pytest_plugin.py
+    faker               : /Users/flw/Library/Python/3.9/lib/python/site-packages/faker/contrib/pytest/plugin.py
+    capturemanager      : <CaptureManager _method='fd' _global_capturing=<MultiCapture out=<FDCapture 1 oldfd=6 _state='suspended' tmpfile=<_io.TextIOWrapper name="<_io.FileIO name=7 mode='rb+' closefd=True>" mode='r+' encoding='utf-8'>> err=<FDCapture 2 oldfd=8 _state='suspended' tmpfile=<_io.TextIOWrapper name="<_io.FileIO name=9 mode='rb+' closefd=True>" mode='r+' encoding='utf-8'>> in_=<FDCapture 0 oldfd=4 _state='started' tmpfile=<_io.TextIOWrapper name='/dev/null' mode='r' encoding='utf-8'>> _state='suspended' _in_suspended=False> _capture_fixture=None>
+    /Users/flw/non-standard-automation-pm/tests/conftest.py: /Users/flw/non-standard-automation-pm/tests/conftest.py
+    /Users/flw/non-standard-automation-pm/tests/unit/conftest.py: /Users/flw/non-standard-automation-pm/tests/unit/conftest.py
+    session             : <Session  exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=0>
+    lfplugin            : <_pytest.cacheprovider.LFPlugin object at 0x128cc48b0>
+    nfplugin            : <_pytest.cacheprovider.NFPlugin object at 0x128cc4940>
+    legacypath-tmpdir   : <class '_pytest.legacypath.LegacyTmpdirPlugin'>
+    terminalreporter    : <_pytest.terminal.TerminalReporter object at 0x128e6edc0>
+    logging-plugin      : <_pytest.logging.LoggingPlugin object at 0x128e8c970>
+    funcmanage          : <_pytest.fixtures.FixtureManager object at 0x128fbeac0>
+rootdir: /Users/flw/non-standard-automation-pm
+configfile: pytest_no_cov.ini
+plugins: mock-3.15.1, anyio-4.12.0, Faker-37.12.0
+collected 0 items / 1 error
+
+==================================== ERRORS ====================================
+_______________ ERROR collecting tests/unit/test_security_new.py _______________
+ImportError while importing test module '/Users/flw/non-standard-automation-pm/tests/unit/test_security_new.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/importlib/__init__.py:127: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests/unit/test_security_new.py:4: in <module>
+    from app.core.security import (
+E   ImportError: cannot import name 'has_procurement_access' from 'app.core.security' (/Users/flw/non-standard-automation-pm/app/core/security.py)
+------------------------------- Captured stdout --------------------------------
+2026-01-27 21:59:49,884 - tzlocal - DEBUG - unix.py:120 - /etc/localtime found
+2026-01-27 21:59:49,885 - tzlocal - DEBUG - unix.py:136 - 1 found:
+ {'/etc/localtime is a symlink to': 'Asia/Shanghai'}
+=============================== warnings summary ===============================
+app/schemas/common.py:48
+  /Users/flw/non-standard-automation-pm/app/schemas/common.py:48: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class BatchOperationResponse(BaseModel):
+
+app/schemas/common.py:73
+  /Users/flw/non-standard-automation-pm/app/schemas/common.py:73: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class BaseSchema(BaseModel):
+
+app/schemas/assembly_kit.py:41
+  /Users/flw/non-standard-automation-pm/app/schemas/assembly_kit.py:41: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class AssemblyStageResponse(AssemblyStageBase):
+
+app/schemas/assembly_kit.py:76
+  /Users/flw/non-standard-automation-pm/app/schemas/assembly_kit.py:76: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class AssemblyTemplateResponse(AssemblyTemplateBase):
+
+app/schemas/assembly_kit.py:110
+  /Users/flw/non-standard-automation-pm/app/schemas/assembly_kit.py:110: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class CategoryStageMappingResponse(CategoryStageMappingBase):
+
+app/schemas/assembly_kit.py:159
+  /Users/flw/non-standard-automation-pm/app/schemas/assembly_kit.py:159: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class BomItemAssemblyAttrsResponse(BomItemAssemblyAttrsBase):
+
+app/schemas/assembly_kit.py:224
+  /Users/flw/non-standard-automation-pm/app/schemas/assembly_kit.py:224: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class MaterialReadinessResponse(MaterialReadinessBase):
+
+app/schemas/assembly_kit.py:266
+  /Users/flw/non-standard-automation-pm/app/schemas/assembly_kit.py:266: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ShortageDetailResponse(ShortageDetailBase):
+
+app/schemas/assembly_kit.py:310
+  /Users/flw/non-standard-automation-pm/app/schemas/assembly_kit.py:310: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ShortageAlertRuleResponse(ShortageAlertRuleBase):
+
+app/schemas/assembly_kit.py:374
+  /Users/flw/non-standard-automation-pm/app/schemas/assembly_kit.py:374: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class SchedulingSuggestionResponse(SchedulingSuggestionBase):
+
+app/schemas/role.py:45
+  /Users/flw/non-standard-automation-pm/app/schemas/role.py:45: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class RoleResponse(RoleBase):
+
+app/schemas/pitfall.py:70
+  /Users/flw/non-standard-automation-pm/app/schemas/pitfall.py:70: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class PitfallResponse(BaseModel):
+
+app/schemas/pitfall.py:106
+  /Users/flw/non-standard-automation-pm/app/schemas/pitfall.py:106: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class PitfallListItem(BaseModel):
+
+app/schemas/project/customer.py:61
+  /Users/flw/non-standard-automation-pm/app/schemas/project/customer.py:61: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class CustomerResponse(TimestampSchema):
+
+app/schemas/project/machine.py:55
+  /Users/flw/non-standard-automation-pm/app/schemas/project/machine.py:55: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class MachineResponse(TimestampSchema):
+
+app/schemas/project/project_analysis.py:18
+  /Users/flw/non-standard-automation-pm/app/schemas/project/project_analysis.py:18: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProjectHealthDetailsResponse(BaseModel):
+
+app/schemas/project/project_analysis.py:33
+  /Users/flw/non-standard-automation-pm/app/schemas/project/project_analysis.py:33: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProjectStatusLogResponse(BaseSchema):
+
+app/schemas/project/project_config.py:46
+  /Users/flw/non-standard-automation-pm/app/schemas/project/project_config.py:46: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProjectStageResponse(TimestampSchema):
+
+app/schemas/project/project_config.py:90
+  /Users/flw/non-standard-automation-pm/app/schemas/project/project_config.py:90: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProjectStatusResponse(TimestampSchema):
+
+app/schemas/project/project_config.py:141
+  /Users/flw/non-standard-automation-pm/app/schemas/project/project_config.py:141: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProjectTemplateResponse(TimestampSchema):
+
+app/schemas/project/project_config.py:184
+  /Users/flw/non-standard-automation-pm/app/schemas/project/project_config.py:184: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProjectTemplateVersionResponse(TimestampSchema):
+
+app/schemas/project/project_core.py:95
+  /Users/flw/non-standard-automation-pm/app/schemas/project/project_core.py:95: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProjectResponse(TimestampSchema):
+
+app/schemas/project/project_core.py:151
+  /Users/flw/non-standard-automation-pm/app/schemas/project/project_core.py:151: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProjectListResponse(BaseSchema):
+
+app/schemas/project/project_core.py:261
+  /Users/flw/non-standard-automation-pm/app/schemas/project/project_core.py:261: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProjectDocumentResponse(TimestampSchema):
+
+app/schemas/project/project_cost.py:49
+  /Users/flw/non-standard-automation-pm/app/schemas/project/project_cost.py:49: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProjectCostResponse(TimestampSchema):
+
+app/schemas/project/project_cost.py:179
+  /Users/flw/non-standard-automation-pm/app/schemas/project/project_cost.py:179: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProjectPaymentPlanResponse(TimestampSchema):
+
+app/schemas/project_review.py:91
+  /Users/flw/non-standard-automation-pm/app/schemas/project_review.py:91: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProjectReviewResponse(TimestampSchema):
+
+app/schemas/project_review.py:178
+  /Users/flw/non-standard-automation-pm/app/schemas/project_review.py:178: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProjectLessonResponse(TimestampSchema):
+
+app/schemas/project_review.py:252
+  /Users/flw/non-standard-automation-pm/app/schemas/project_review.py:252: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProjectBestPracticeResponse(TimestampSchema):
+
+app/schemas/project_role.py:46
+  /Users/flw/non-standard-automation-pm/app/schemas/project_role.py:46: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProjectRoleTypeResponse(ProjectRoleTypeBase):
+
+app/schemas/project_role.py:91
+  /Users/flw/non-standard-automation-pm/app/schemas/project_role.py:91: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProjectRoleConfigResponse(ProjectRoleConfigBase):
+
+app/schemas/project_role.py:114
+  /Users/flw/non-standard-automation-pm/app/schemas/project_role.py:114: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class UserBrief(BaseModel):
+
+app/schemas/project_role.py:147
+  /Users/flw/non-standard-automation-pm/app/schemas/project_role.py:147: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProjectLeadResponse(BaseModel):
+
+app/schemas/project_role.py:191
+  /Users/flw/non-standard-automation-pm/app/schemas/project_role.py:191: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class TeamMemberResponse(BaseModel):
+
+app/schemas/sales/team.py:39
+  /Users/flw/non-standard-automation-pm/app/schemas/sales/team.py:39: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class SalesTeamMemberInfo(BaseModel):
+
+app/schemas/sales/team.py:55
+  /Users/flw/non-standard-automation-pm/app/schemas/sales/team.py:55: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class SalesTeamResponse(BaseModel):
+
+app/schemas/sales/team.py:79
+  /Users/flw/non-standard-automation-pm/app/schemas/sales/team.py:79: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class SalesTeamListResponse(BaseModel):
+
+app/schemas/sales/team.py:123
+  /Users/flw/non-standard-automation-pm/app/schemas/sales/team.py:123: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class TeamPerformanceSnapshotResponse(BaseModel):
+
+app/schemas/sales/team.py:171
+  /Users/flw/non-standard-automation-pm/app/schemas/sales/team.py:171: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class TeamPKResponse(BaseModel):
+
+app/schemas/technical_review.py:16
+  /Users/flw/non-standard-automation-pm/app/schemas/technical_review.py:16: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class TechnicalReviewCreate(BaseModel):
+
+app/schemas/technical_review.py:36
+  /Users/flw/non-standard-automation-pm/app/schemas/technical_review.py:36: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class TechnicalReviewUpdate(BaseModel):
+
+app/schemas/technical_review.py:59
+  /Users/flw/non-standard-automation-pm/app/schemas/technical_review.py:59: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class TechnicalReviewResponse(TimestampSchema):
+
+app/schemas/technical_review.py:98
+  /Users/flw/non-standard-automation-pm/app/schemas/technical_review.py:98: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ReviewParticipantCreate(BaseModel):
+
+app/schemas/technical_review.py:110
+  /Users/flw/non-standard-automation-pm/app/schemas/technical_review.py:110: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ReviewParticipantUpdate(BaseModel):
+
+app/schemas/technical_review.py:122
+  /Users/flw/non-standard-automation-pm/app/schemas/technical_review.py:122: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ReviewParticipantResponse(BaseSchema):
+
+app/schemas/technical_review.py:142
+  /Users/flw/non-standard-automation-pm/app/schemas/technical_review.py:142: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ReviewMaterialCreate(BaseModel):
+
+app/schemas/technical_review.py:157
+  /Users/flw/non-standard-automation-pm/app/schemas/technical_review.py:157: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ReviewMaterialResponse(TimestampSchema):
+
+app/schemas/technical_review.py:177
+  /Users/flw/non-standard-automation-pm/app/schemas/technical_review.py:177: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ReviewChecklistRecordCreate(BaseModel):
+
+app/schemas/technical_review.py:196
+  /Users/flw/non-standard-automation-pm/app/schemas/technical_review.py:196: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ReviewChecklistRecordUpdate(BaseModel):
+
+app/schemas/technical_review.py:209
+  /Users/flw/non-standard-automation-pm/app/schemas/technical_review.py:209: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ReviewChecklistRecordResponse(BaseSchema):
+
+app/schemas/technical_review.py:231
+  /Users/flw/non-standard-automation-pm/app/schemas/technical_review.py:231: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ReviewIssueCreate(BaseModel):
+
+app/schemas/technical_review.py:247
+  /Users/flw/non-standard-automation-pm/app/schemas/technical_review.py:247: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ReviewIssueUpdate(BaseModel):
+
+app/schemas/technical_review.py:261
+  /Users/flw/non-standard-automation-pm/app/schemas/technical_review.py:261: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ReviewIssueResponse(TimestampSchema):
+
+app/schemas/technical_review.py:290
+  /Users/flw/non-standard-automation-pm/app/schemas/technical_review.py:290: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class TechnicalReviewDetailResponse(TechnicalReviewResponse):
+
+app/schemas/strategy/strategy.py:98
+  /Users/flw/non-standard-automation-pm/app/schemas/strategy/strategy.py:98: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class StrategyMapResponse(BaseModel):
+
+app/schemas/strategy/csf.py:78
+  /Users/flw/non-standard-automation-pm/app/schemas/strategy/csf.py:78: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class CSFByDimensionResponse(BaseModel):
+
+app/schemas/strategy/kpi.py:103
+  /Users/flw/non-standard-automation-pm/app/schemas/strategy/kpi.py:103: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class KPICollectResponse(BaseModel):
+
+app/schemas/strategy/kpi.py:150
+  /Users/flw/non-standard-automation-pm/app/schemas/strategy/kpi.py:150: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class KPITrendResponse(BaseModel):
+
+app/schemas/strategy/annual_work.py:97
+  /Users/flw/non-standard-automation-pm/app/schemas/strategy/annual_work.py:97: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProjectLinkItem(BaseModel):
+
+app/schemas/strategy/decomposition.py:155
+  /Users/flw/non-standard-automation-pm/app/schemas/strategy/decomposition.py:155: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class DecompositionTreeNode(BaseModel):
+
+app/schemas/strategy/decomposition.py:174
+  /Users/flw/non-standard-automation-pm/app/schemas/strategy/decomposition.py:174: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class DecompositionTreeResponse(BaseModel):
+
+app/schemas/strategy/decomposition.py:185
+  /Users/flw/non-standard-automation-pm/app/schemas/strategy/decomposition.py:185: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class TraceToStrategyResponse(BaseModel):
+
+app/schemas/strategy/review.py:92
+  /Users/flw/non-standard-automation-pm/app/schemas/strategy/review.py:92: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class HealthScoreResponse(BaseModel):
+
+app/schemas/strategy/review.py:197
+  /Users/flw/non-standard-automation-pm/app/schemas/strategy/review.py:197: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class CalendarMonthResponse(BaseModel):
+
+app/schemas/strategy/review.py:207
+  /Users/flw/non-standard-automation-pm/app/schemas/strategy/review.py:207: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class CalendarYearResponse(BaseModel):
+
+app/schemas/strategy/review.py:231
+  /Users/flw/non-standard-automation-pm/app/schemas/strategy/review.py:231: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class RoutineManagementCycleResponse(BaseModel):
+
+app/schemas/strategy/dashboard.py:19
+  /Users/flw/non-standard-automation-pm/app/schemas/strategy/dashboard.py:19: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class StrategyOverviewResponse(BaseModel):
+
+app/schemas/strategy/dashboard.py:66
+  /Users/flw/non-standard-automation-pm/app/schemas/strategy/dashboard.py:66: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class MyStrategyResponse(BaseModel):
+
+app/schemas/strategy/dashboard.py:106
+  /Users/flw/non-standard-automation-pm/app/schemas/strategy/dashboard.py:106: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ExecutionStatusResponse(BaseModel):
+
+app/schemas/strategy/dashboard.py:236
+  /Users/flw/non-standard-automation-pm/app/schemas/strategy/dashboard.py:236: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class YoYReportResponse(BaseModel):
+
+app/services/report_framework/models.py:160
+  /Users/flw/non-standard-automation-pm/app/services/report_framework/models.py:160: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ExportConfig(BaseModel):
+
+app/services/report_framework/models.py:172
+  /Users/flw/non-standard-automation-pm/app/services/report_framework/models.py:172: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ReportConfig(BaseModel):
+
+app/schemas/advantage_product.py:35
+  /Users/flw/non-standard-automation-pm/app/schemas/advantage_product.py:35: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class AdvantageProductCategoryResponse(AdvantageProductCategoryBase):
+
+app/schemas/advantage_product.py:72
+  /Users/flw/non-standard-automation-pm/app/schemas/advantage_product.py:72: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class AdvantageProductResponse(AdvantageProductBase):
+
+app/schemas/advantage_product.py:83
+  /Users/flw/non-standard-automation-pm/app/schemas/advantage_product.py:83: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class AdvantageProductSimple(BaseModel):
+
+app/api/v1/endpoints/audits.py:23
+  /Users/flw/non-standard-automation-pm/app/api/v1/endpoints/audits.py:23: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class PermissionAuditResponse(BaseModel):
+
+app/schemas/budget.py:36
+  /Users/flw/non-standard-automation-pm/app/schemas/budget.py:36: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProjectBudgetItemResponse(TimestampSchema):
+
+app/schemas/budget.py:76
+  /Users/flw/non-standard-automation-pm/app/schemas/budget.py:76: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProjectBudgetResponse(TimestampSchema):
+
+app/schemas/budget.py:146
+  /Users/flw/non-standard-automation-pm/app/schemas/budget.py:146: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProjectCostAllocationRuleResponse(TimestampSchema):
+
+app/schemas/culture_wall.py:48
+  /Users/flw/non-standard-automation-pm/app/schemas/culture_wall.py:48: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class CultureWallContentResponse(BaseModel):
+
+app/schemas/culture_wall.py:106
+  /Users/flw/non-standard-automation-pm/app/schemas/culture_wall.py:106: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class PersonalGoalResponse(BaseModel):
+
+app/core/schemas/response.py:14
+  /Users/flw/non-standard-automation-pm/app/core/schemas/response.py:14: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class BaseResponse(BaseModel, Generic[T]):
+
+app/core/schemas/response.py:42
+  /Users/flw/non-standard-automation-pm/app/core/schemas/response.py:42: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class SuccessResponse(BaseResponse[T]):
+
+app/core/schemas/response.py:75
+  /Users/flw/non-standard-automation-pm/app/core/schemas/response.py:75: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ErrorResponse(BaseResponse):
+
+app/core/schemas/response.py:106
+  /Users/flw/non-standard-automation-pm/app/core/schemas/response.py:106: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class PaginatedResponse(BaseModel, Generic[T]):
+
+app/core/schemas/response.py:144
+  /Users/flw/non-standard-automation-pm/app/core/schemas/response.py:144: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ListResponse(BaseModel, Generic[T]):
+
+app/schemas/hourly_rate.py:36
+  /Users/flw/non-standard-automation-pm/app/schemas/hourly_rate.py:36: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class HourlyRateConfigResponse(TimestampSchema):
+
+app/schemas/organization.py:37
+  /Users/flw/non-standard-automation-pm/app/schemas/organization.py:37: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class DepartmentResponse(TimestampSchema):
+
+app/schemas/organization.py:75
+  /Users/flw/non-standard-automation-pm/app/schemas/organization.py:75: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class EmployeeResponse(TimestampSchema):
+
+app/schemas/organization.py:202
+  /Users/flw/non-standard-automation-pm/app/schemas/organization.py:202: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class EmployeeHrProfileResponse(TimestampSchema):
+
+app/schemas/organization.py:255
+  /Users/flw/non-standard-automation-pm/app/schemas/organization.py:255: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class EmployeeWithHrProfileResponse(EmployeeResponse):
+
+app/schemas/organization.py:313
+  /Users/flw/non-standard-automation-pm/app/schemas/organization.py:313: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class HrTransactionResponse(TimestampSchema):
+
+app/schemas/organization.py:408
+  /Users/flw/non-standard-automation-pm/app/schemas/organization.py:408: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class EmployeeContractResponse(TimestampSchema):
+
+app/schemas/organization.py:441
+  /Users/flw/non-standard-automation-pm/app/schemas/organization.py:441: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ContractReminderResponse(TimestampSchema):
+
+app/schemas/organization.py:486
+  /Users/flw/non-standard-automation-pm/app/schemas/organization.py:486: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class OrganizationUnitResponse(TimestampSchema):
+
+app/schemas/organization.py:538
+  /Users/flw/non-standard-automation-pm/app/schemas/organization.py:538: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class PositionResponse(TimestampSchema):
+
+app/schemas/organization.py:581
+  /Users/flw/non-standard-automation-pm/app/schemas/organization.py:581: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class JobLevelResponse(TimestampSchema):
+
+app/schemas/organization.py:626
+  /Users/flw/non-standard-automation-pm/app/schemas/organization.py:626: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class EmployeeOrgAssignmentResponse(TimestampSchema):
+
+app/schemas/installation_dispatch.py:76
+  /Users/flw/non-standard-automation-pm/app/schemas/installation_dispatch.py:76: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class InstallationDispatchOrderResponse(BaseModel):
+
+app/schemas/issue.py:77
+  /Users/flw/non-standard-automation-pm/app/schemas/issue.py:77: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class IssueResponse(IssueBase):
+
+app/schemas/issue.py:127
+  /Users/flw/non-standard-automation-pm/app/schemas/issue.py:127: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class IssueFollowUpResponse(IssueFollowUpBase):
+
+app/schemas/issue.py:266
+  /Users/flw/non-standard-automation-pm/app/schemas/issue.py:266: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class IssueTemplateResponse(IssueTemplateBase):
+
+app/schemas/issue.py:300
+  /Users/flw/non-standard-automation-pm/app/schemas/issue.py:300: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class IssueStatisticsSnapshotResponse(BaseModel):
+
+app/schemas/qualification.py:40
+  /Users/flw/non-standard-automation-pm/app/schemas/qualification.py:40: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class QualificationLevelResponse(QualificationLevelBase):
+
+app/schemas/qualification.py:93
+  /Users/flw/non-standard-automation-pm/app/schemas/qualification.py:93: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class PositionCompetencyModelResponse(PositionCompetencyModelBase):
+
+app/schemas/qualification.py:142
+  /Users/flw/non-standard-automation-pm/app/schemas/qualification.py:142: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class EmployeeQualificationResponse(EmployeeQualificationBase):
+
+app/schemas/qualification.py:208
+  /Users/flw/non-standard-automation-pm/app/schemas/qualification.py:208: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class QualificationAssessmentResponse(QualificationAssessmentBase):
+
+app/schemas/scheduler_config.py:38
+  /Users/flw/non-standard-automation-pm/app/schemas/scheduler_config.py:38: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    @validator('cron_config')
+
+app/schemas/scheduler_config.py:53
+  /Users/flw/non-standard-automation-pm/app/schemas/scheduler_config.py:53: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class SchedulerTaskConfigResponse(SchedulerTaskConfigBase):
+
+app/schemas/sla.py:45
+  /Users/flw/non-standard-automation-pm/app/schemas/sla.py:45: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class SLAPolicyResponse(BaseModel):
+
+app/schemas/sla.py:70
+  /Users/flw/non-standard-automation-pm/app/schemas/sla.py:70: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class SLAMonitorResponse(BaseModel):
+
+app/api/v1/endpoints/solution_credits/schemas.py:22
+  /Users/flw/non-standard-automation-pm/app/api/v1/endpoints/solution_credits/schemas.py:22: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class TransactionResponse(BaseModel):
+
+app/schemas/staff_matching.py:43
+  /Users/flw/non-standard-automation-pm/app/schemas/staff_matching.py:43: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class TagDictResponse(TagDictBase):
+
+app/schemas/staff_matching.py:54
+  /Users/flw/non-standard-automation-pm/app/schemas/staff_matching.py:54: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class TagDictTreeNode(BaseModel):
+
+app/schemas/staff_matching.py:99
+  /Users/flw/non-standard-automation-pm/app/schemas/staff_matching.py:99: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class EmployeeTagEvaluationResponse(EmployeeTagEvaluationBase):
+
+app/schemas/staff_matching.py:136
+  /Users/flw/non-standard-automation-pm/app/schemas/staff_matching.py:136: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class EmployeeProfileResponse(BaseModel):
+
+app/schemas/staff_matching.py:167
+  /Users/flw/non-standard-automation-pm/app/schemas/staff_matching.py:167: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class EmployeeProfileSummary(BaseModel):
+
+app/schemas/staff_matching.py:227
+  /Users/flw/non-standard-automation-pm/app/schemas/staff_matching.py:227: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProjectPerformanceResponse(ProjectPerformanceBase):
+
+app/schemas/staff_matching.py:297
+  /Users/flw/non-standard-automation-pm/app/schemas/staff_matching.py:297: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class StaffingNeedResponse(StaffingNeedBase):
+
+app/schemas/staff_matching.py:387
+  /Users/flw/non-standard-automation-pm/app/schemas/staff_matching.py:387: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class MatchingLogResponse(BaseModel):
+
+app/schemas/approval/flow.py:35
+  /Users/flw/non-standard-automation-pm/app/schemas/approval/flow.py:35: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ApprovalFlowResponse(ApprovalFlowBase):
+
+app/schemas/approval/flow.py:93
+  /Users/flw/non-standard-automation-pm/app/schemas/approval/flow.py:93: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ApprovalNodeResponse(ApprovalNodeBase):
+
+app/schemas/approval/flow.py:120
+  /Users/flw/non-standard-automation-pm/app/schemas/approval/flow.py:120: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ApprovalRoutingRuleResponse(ApprovalRoutingRuleBase):
+
+app/schemas/approval/instance.py:33
+  /Users/flw/non-standard-automation-pm/app/schemas/approval/instance.py:33: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ApprovalInstanceResponse(BaseModel):
+
+app/schemas/approval/instance.py:58
+  /Users/flw/non-standard-automation-pm/app/schemas/approval/instance.py:58: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ApprovalTaskBrief(BaseModel):
+
+app/schemas/approval/instance.py:75
+  /Users/flw/non-standard-automation-pm/app/schemas/approval/instance.py:75: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ApprovalLogBrief(BaseModel):
+
+app/schemas/approval/task.py:14
+  /Users/flw/non-standard-automation-pm/app/schemas/approval/task.py:14: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ApprovalTaskResponse(BaseModel):
+
+app/schemas/approval/task.py:85
+  /Users/flw/non-standard-automation-pm/app/schemas/approval/task.py:85: PydanticDeprecatedSince20: `min_items` is deprecated and will be removed, use `min_length` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    approver_ids: List[int] = Field(..., min_items=1, description="要添加的审批人ID列表")
+
+app/schemas/approval/task.py:92
+  /Users/flw/non-standard-automation-pm/app/schemas/approval/task.py:92: PydanticDeprecatedSince20: `min_items` is deprecated and will be removed, use `min_length` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    cc_user_ids: List[int] = Field(..., min_items=1, description="抄送人ID列表")
+
+app/schemas/approval/task.py:121
+  /Users/flw/non-standard-automation-pm/app/schemas/approval/task.py:121: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class CommentResponse(BaseModel):
+
+app/schemas/approval/task.py:142
+  /Users/flw/non-standard-automation-pm/app/schemas/approval/task.py:142: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class CarbonCopyResponse(BaseModel):
+
+app/schemas/approval/task.py:201
+  /Users/flw/non-standard-automation-pm/app/schemas/approval/task.py:201: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class DelegateResponse(BaseModel):
+
+app/schemas/approval/template.py:40
+  /Users/flw/non-standard-automation-pm/app/schemas/approval/template.py:40: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ApprovalTemplateResponse(ApprovalTemplateBase):
+
+../Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35
+  /Users/flw/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+    warnings.warn(
+
+app/api/v1/endpoints/projects/ext_best_practices.py:25
+  /Users/flw/non-standard-automation-pm/app/api/v1/endpoints/projects/ext_best_practices.py:25: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class BestPracticeResponse(BaseModel):
+
+app/schemas/project_evaluation.py:47
+  /Users/flw/non-standard-automation-pm/app/schemas/project_evaluation.py:47: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProjectEvaluationResponse(ProjectEvaluationBase):
+
+app/schemas/project_evaluation.py:118
+  /Users/flw/non-standard-automation-pm/app/schemas/project_evaluation.py:118: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProjectEvaluationDimensionResponse(ProjectEvaluationDimensionBase):
+
+app/schemas/resource_plan.py:55
+  /Users/flw/non-standard-automation-pm/app/schemas/resource_plan.py:55: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class EmployeeBrief(BaseModel):
+
+app/schemas/resource_plan.py:69
+  /Users/flw/non-standard-automation-pm/app/schemas/resource_plan.py:69: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ResourcePlanResponse(ResourcePlanBase):
+
+app/schemas/stage_template/definitions.py:65
+  /Users/flw/non-standard-automation-pm/app/schemas/stage_template/definitions.py:65: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class NodeDefinitionResponse(NodeDefinitionBase):
+
+app/schemas/stage_template/definitions.py:109
+  /Users/flw/non-standard-automation-pm/app/schemas/stage_template/definitions.py:109: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class StageDefinitionResponse(StageDefinitionBase):
+
+app/schemas/stage_template/definitions.py:149
+  /Users/flw/non-standard-automation-pm/app/schemas/stage_template/definitions.py:149: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class StageTemplateResponse(StageTemplateBase):
+
+app/schemas/stage_template/instances.py:43
+  /Users/flw/non-standard-automation-pm/app/schemas/stage_template/instances.py:43: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProjectStageInstanceResponse(ProjectStageInstanceBase):
+
+app/schemas/stage_template/instances.py:108
+  /Users/flw/non-standard-automation-pm/app/schemas/stage_template/instances.py:108: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProjectNodeInstanceResponse(ProjectNodeInstanceBase):
+
+app/schemas/stage_template/node_tasks.py:59
+  /Users/flw/non-standard-automation-pm/app/schemas/stage_template/node_tasks.py:59: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class NodeTaskResponse(NodeTaskBase):
+
+app/schemas/performance.py:118
+  /Users/flw/non-standard-automation-pm/app/schemas/performance.py:118: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class MonthlyWorkSummaryCreate(BaseModel):
+
+app/schemas/performance.py:149
+  /Users/flw/non-standard-automation-pm/app/schemas/performance.py:149: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class MonthlyWorkSummaryResponse(BaseModel):
+
+app/schemas/performance.py:169
+  /Users/flw/non-standard-automation-pm/app/schemas/performance.py:169: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class MonthlyWorkSummaryListItem(BaseModel):
+
+app/schemas/performance.py:184
+  /Users/flw/non-standard-automation-pm/app/schemas/performance.py:184: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class PerformanceEvaluationRecordCreate(BaseModel):
+
+app/schemas/performance.py:208
+  /Users/flw/non-standard-automation-pm/app/schemas/performance.py:208: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class PerformanceEvaluationRecordResponse(BaseModel):
+
+app/schemas/performance.py:229
+  /Users/flw/non-standard-automation-pm/app/schemas/performance.py:229: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class EvaluationTaskItem(BaseModel):
+
+app/schemas/performance.py:269
+  /Users/flw/non-standard-automation-pm/app/schemas/performance.py:269: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class EvaluationDetailResponse(BaseModel):
+
+app/schemas/performance.py:301
+  /Users/flw/non-standard-automation-pm/app/schemas/performance.py:301: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class MyPerformanceCurrentStatus(BaseModel):
+
+app/schemas/performance.py:362
+  /Users/flw/non-standard-automation-pm/app/schemas/performance.py:362: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class EvaluationWeightConfigCreate(BaseModel):
+
+app/schemas/performance.py:380
+  /Users/flw/non-standard-automation-pm/app/schemas/performance.py:380: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class EvaluationWeightConfigResponse(BaseModel):
+
+app/api/v1/endpoints/report_center/unified.py:25
+  /Users/flw/non-standard-automation-pm/app/api/v1/endpoints/report_center/unified.py:25: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ReportMeta(BaseModel):
+
+app/schemas/service.py:53
+  /Users/flw/non-standard-automation-pm/app/schemas/service.py:53: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ServiceTicketResponse(BaseModel):
+
+app/schemas/service.py:125
+  /Users/flw/non-standard-automation-pm/app/schemas/service.py:125: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ServiceRecordResponse(BaseModel):
+
+app/schemas/service.py:193
+  /Users/flw/non-standard-automation-pm/app/schemas/service.py:193: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class CustomerCommunicationResponse(BaseModel):
+
+app/schemas/service.py:253
+  /Users/flw/non-standard-automation-pm/app/schemas/service.py:253: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class CustomerSatisfactionResponse(BaseModel):
+
+app/schemas/service.py:323
+  /Users/flw/non-standard-automation-pm/app/schemas/service.py:323: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class KnowledgeBaseResponse(BaseModel):
+
+app/schemas/rd_project.py:34
+  /Users/flw/non-standard-automation-pm/app/schemas/rd_project.py:34: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class RdProjectCategoryResponse(TimestampSchema):
+
+app/schemas/rd_project.py:84
+  /Users/flw/non-standard-automation-pm/app/schemas/rd_project.py:84: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class RdProjectResponse(TimestampSchema):
+
+app/schemas/rd_project.py:152
+  /Users/flw/non-standard-automation-pm/app/schemas/rd_project.py:152: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class RdCostTypeResponse(TimestampSchema):
+
+app/schemas/rd_project.py:217
+  /Users/flw/non-standard-automation-pm/app/schemas/rd_project.py:217: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class RdCostResponse(TimestampSchema):
+
+app/schemas/rd_project.py:287
+  /Users/flw/non-standard-automation-pm/app/schemas/rd_project.py:287: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class RdCostAllocationRuleResponse(TimestampSchema):
+
+app/schemas/rd_project.py:307
+  /Users/flw/non-standard-automation-pm/app/schemas/rd_project.py:307: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class RdReportRecordResponse(TimestampSchema):
+
+app/schemas/bonus.py:60
+  /Users/flw/non-standard-automation-pm/app/schemas/bonus.py:60: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class BonusRuleResponse(BonusRuleBase):
+
+app/schemas/bonus.py:90
+  /Users/flw/non-standard-automation-pm/app/schemas/bonus.py:90: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class BonusCalculationResponse(BonusCalculationBase):
+
+app/schemas/bonus.py:131
+  /Users/flw/non-standard-automation-pm/app/schemas/bonus.py:131: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class BonusDistributionResponse(BonusDistributionBase):
+
+app/schemas/bonus.py:168
+  /Users/flw/non-standard-automation-pm/app/schemas/bonus.py:168: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class TeamBonusAllocationResponse(TeamBonusAllocationBase):
+
+app/schemas/bonus.py:281
+  /Users/flw/non-standard-automation-pm/app/schemas/bonus.py:281: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class BonusAllocationSheetResponse(BaseModel):
+
+app/schemas/tenant.py:48
+  /Users/flw/non-standard-automation-pm/app/schemas/tenant.py:48: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class TenantResponse(TenantBase):
+
+app/schemas/tenant.py:130
+  /Users/flw/non-standard-automation-pm/app/schemas/tenant.py:130: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class RoleTemplateResponse(RoleTemplateBase):
+
+app/schemas/management_rhythm.py:35
+  /Users/flw/non-standard-automation-pm/app/schemas/management_rhythm.py:35: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class RhythmConfigResponse(BaseModel):
+
+app/schemas/management_rhythm.py:115
+  /Users/flw/non-standard-automation-pm/app/schemas/management_rhythm.py:115: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class StrategicMeetingResponse(BaseModel):
+
+app/schemas/management_rhythm.py:174
+  /Users/flw/non-standard-automation-pm/app/schemas/management_rhythm.py:174: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ActionItemResponse(BaseModel):
+
+app/schemas/management_rhythm.py:196
+  /Users/flw/non-standard-automation-pm/app/schemas/management_rhythm.py:196: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class RhythmDashboardResponse(BaseModel):
+
+app/schemas/management_rhythm.py:279
+  /Users/flw/non-standard-automation-pm/app/schemas/management_rhythm.py:279: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class MeetingReportResponse(BaseModel):
+
+app/schemas/management_rhythm.py:376
+  /Users/flw/non-standard-automation-pm/app/schemas/management_rhythm.py:376: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class MeetingReportConfigResponse(BaseModel):
+
+app/schemas/management_rhythm.py:431
+  /Users/flw/non-standard-automation-pm/app/schemas/management_rhythm.py:431: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ReportMetricDefinitionResponse(BaseModel):
+
+app/schemas/culture_wall_config.py:70
+  /Users/flw/non-standard-automation-pm/app/schemas/culture_wall_config.py:70: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class CultureWallConfigResponse(CultureWallConfigBase):
+
+app/schemas/presales.py:52
+  /Users/flw/non-standard-automation-pm/app/schemas/presales.py:52: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class LeadConversionRequest(BaseModel):
+
+app/main.py:83
+  /Users/flw/non-standard-automation-pm/app/main.py:83: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("startup")
+
+../Library/Python/3.9/lib/python/site-packages/fastapi/applications.py:4580
+../Library/Python/3.9/lib/python/site-packages/fastapi/applications.py:4580
+  /Users/flw/Library/Python/3.9/lib/python/site-packages/fastapi/applications.py:4580: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    return self.router.on_event(event_type)
+
+app/main.py:113
+  /Users/flw/non-standard-automation-pm/app/main.py:113: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("shutdown")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+ERROR tests/unit/test_security_new.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+======================== 187 warnings, 1 error in 0.15s ========================

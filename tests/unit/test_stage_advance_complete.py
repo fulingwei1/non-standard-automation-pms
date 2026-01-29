@@ -366,26 +366,26 @@ class TestCreateStatusLog:
         ]
 
         for i, (old_stage, new_stage, old_status, new_status) in enumerate(
-        transitions, 1
+            transitions, 1
         ):
-        create_status_log(
-        db_session,
-        project.id,
-        old_stage,
-        new_stage,
-        old_status,
-        new_status,
-        "H1",
-        "H1",
-        f"第{i}次推进",
-        100,
-        )
+            create_status_log(
+                db_session,
+                project.id,
+                old_stage,
+                new_stage,
+                old_status,
+                new_status,
+                "H1",
+                "H1",
+                f"第{i}次推进",
+                100,
+            )
 
         # 验证3条日志
         status_logs = (
-        db_session.query(ProjectStatusLog)
-        .filter(ProjectStatusLog.project_id == project.id)
-        .all()
+            db_session.query(ProjectStatusLog)
+            .filter(ProjectStatusLog.project_id == project.id)
+            .all()
         )
 
         assert len(status_logs) == 3
@@ -618,29 +618,29 @@ class TestCompleteStageAdvanceWorkflow:
 
         for target_stage, target_status in target_transitions:
             # 验证阶段推进
-        validate_stage_advancement(old_stage, target_stage)
+            validate_stage_advancement(old_stage, target_stage)
 
             # 更新阶段和状态
-        new_status = update_project_stage_and_status(
-        db_session, project, target_stage, old_stage, old_status
-        )
+            new_status = update_project_stage_and_status(
+                db_session, project, target_stage, old_stage, old_status
+            )
 
             # 创建状态日志
-        create_status_log(
-        db_session,
-        project.id,
-        old_stage,
-        target_stage,
-        old_status,
-        new_status,
-        "H1",
-        "H1",
-        f"推进到{target_stage}",
-        1,
-        )
+            create_status_log(
+                db_session,
+                project.id,
+                old_stage,
+                target_stage,
+                old_status,
+                new_status,
+                "H1",
+                "H1",
+                f"推进到{target_stage}",
+                1,
+            )
 
-        old_stage = target_stage
-        old_status = new_status
+            old_stage = target_stage
+            old_status = new_status
 
         # 验证最终状态
         db_session.refresh(project)

@@ -143,33 +143,33 @@ class TestTimesheetQualityService:
         # 创建一个月的工时记录，总计超过300小时
         month_start = date.today().replace(day=1)
         for i in range(20):  # 20个工作日，每天16小时，总计320小时
-        timesheet = Timesheet(
-        user_id=test_user.id,
-        project_id=1,
-        work_date=month_start + timedelta(days=i),
-        hours=16.0,
-        status="APPROVED",
-        overtime_type="NORMAL"
-        )
-        db_session.add(timesheet)
+            timesheet = Timesheet(
+                user_id=test_user.id,
+                project_id=1,
+                work_date=month_start + timedelta(days=i),
+                hours=16.0,
+                status="APPROVED",
+                overtime_type="NORMAL"
+            )
+            db_session.add(timesheet)
         db_session.commit()
-        
+
         result = service.detect_anomalies(
-        user_id=test_user.id,
-        start_date=month_start,
-        end_date=month_start + timedelta(days=30)
+            user_id=test_user.id,
+            start_date=month_start,
+            end_date=month_start + timedelta(days=30)
         )
-        
+
         assert isinstance(result, list)
         assert any(a['type'] == 'EXCESSIVE_MONTHLY_HOURS' for a in result)
 
     def test_detect_anomalies_all_users(self, db_session, test_user, test_timesheet_excessive):
         """测试检测异常 - 所有用户"""
         service = TimesheetQualityService(db_session)
-        
+
         result = service.detect_anomalies(
-        start_date=date.today() - timedelta(days=7),
-        end_date=date.today()
+            start_date=date.today() - timedelta(days=7),
+            end_date=date.today()
         )
         
         assert isinstance(result, list)

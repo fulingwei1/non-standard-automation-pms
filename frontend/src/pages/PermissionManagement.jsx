@@ -99,7 +99,8 @@ export default function PermissionManagement() {
         response.data?.length || 0,
         "条"
       );
-      setPermissions(response.data || []);
+      const permData = response.data;
+      setPermissions(Array.isArray(permData) ? permData : []);
     } catch (error) {
       console.error("[权限管理] ❌ 加载权限列表失败:", error);
       const errorDetail = error.response?.data?.detail || error.message;
@@ -143,7 +144,8 @@ export default function PermissionManagement() {
       const response = await roleApi.list({ page_size: 1000 });
       // 使用统一响应格式处理
       const listData = response.formatted || response.data;
-      setRoles(listData?.items || listData || []);
+      const roleItems = listData?.items || listData;
+      setRoles(Array.isArray(roleItems) ? roleItems : []);
     } catch (error) {
       console.error("加载角色列表失败:", error);
     }

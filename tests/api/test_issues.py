@@ -311,14 +311,14 @@ class TestIssueDataScope:
     def _ensure_perm(self, db_session, code: str, name: str) -> ApiPermission:
         perm = (
             db_session.query(ApiPermission)
-            .filter(ApiPermission.permission_code == code)
+            .filter(ApiPermission.perm_code == code)
             .first()
         )
         if perm:
             return perm
         perm = ApiPermission(
-            permission_code=code,
-            permission_name=name,
+            perm_code=code,
+            perm_name=name,
             module="issue",
             action="access",
             description=f"测试自动创建 - {name}",

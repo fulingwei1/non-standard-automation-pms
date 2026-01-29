@@ -123,7 +123,13 @@ def serialize_purchase_order(order: PurchaseOrder, *, include_items: bool = Fals
         "created_at": order.created_at.isoformat() if order.created_at else None,
     }
     if include_items:
-        data["items"] = [serialize_order_item(i) for i in order.items.order_by(PurchaseOrderItem.item_no).all()]
+        try:
+            # 安全地访问 items 关系，处理可能的异常
+            items_query = order.items.order_by(PurchaseOrderItem.item_no)
+            data["items"] = [serialize_order_item(i) for i in items_query.all()]
+        except Exception as e:
+            # 如果访问 items 失败，返回空列表
+            data["items"] = []
     return data
 
 

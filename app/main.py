@@ -14,6 +14,7 @@ from app.core.exception_handlers import setup_exception_handlers
 from app.api.v1.api import api_router
 from app.middleware.audit import AuditMiddleware
 from app.core.middleware.auth_middleware import GlobalAuthMiddleware
+from app.core.middleware.tenant_middleware import TenantContextMiddleware
 
 # 导入统一响应格式（确保可用）
 
@@ -61,6 +62,10 @@ app.add_middleware(CSRFMiddleware)
 
 # 审计日志中间件
 app.add_middleware(AuditMiddleware)
+
+# 租户上下文中间件 - 设置租户隔离上下文
+# 注意：必须在 GlobalAuthMiddleware 之前添加，这样它会在认证之后执行
+app.add_middleware(TenantContextMiddleware)
 
 # 全局认证中间件 - 默认拒绝策略（最后添加，最先执行）
 # 注意：FastAPI中间件是后进先出(LIFO)，后添加的先执行

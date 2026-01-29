@@ -38,9 +38,9 @@ class TestBuildAlertQuery:
         from app.services.alert_pdf_service import build_alert_query
 
         query = build_alert_query(
-        db_session,
-        start_date=date(2025, 1, 1),
-        end_date=date(2025, 12, 31)
+            db_session,
+            start_date=date(2025, 1, 1),
+            end_date=date(2025, 12, 31)
         )
         assert query is not None
 
@@ -63,7 +63,7 @@ class TestCalculateAlertStatistics:
         """测试统计结构"""
         from app.services.alert_pdf_service import calculate_alert_statistics
 
-            # 创建模拟预警
+        # 创建模���预警
         alert1 = MagicMock()
         alert1.alert_level = "CRITICAL"
         alert1.status = "OPEN"
@@ -103,20 +103,15 @@ class TestGetPdfStyles:
         """测试库未安装时的错误"""
         from app.services.alert_pdf_service import get_pdf_styles
 
-        with patch.dict('sys.modules', {'reportlab': None}):
-
+        try:
+            with patch.dict('sys.modules', {'reportlab': None}):
                 # 可能会抛出ImportError或返回样式
+                result = get_pdf_styles()
 
-        result = get_pdf_styles()
-
-        if result:
-
-            assert len(result) == 4
-
+                if result:
+                    assert len(result) == 4
         except ImportError:
-
             pass  # 预期的错误
-
 
 
 class TestBuildSummaryTable:
@@ -127,26 +122,17 @@ class TestBuildSummaryTable:
         from app.services.alert_pdf_service import build_summary_table
 
         statistics = {
-
-        'total': 10,
-
-        'by_level': {'CRITICAL': 3, 'WARNING': 5, 'INFO': 2},
-
-        'by_status': {'OPEN': 6, 'RESOLVED': 4},
-
-        'by_type': {'SCHEDULE': 5, 'COST': 5}
-
+            'total': 10,
+            'by_level': {'CRITICAL': 3, 'WARNING': 5, 'INFO': 2},
+            'by_status': {'OPEN': 6, 'RESOLVED': 4},
+            'by_type': {'SCHEDULE': 5, 'COST': 5}
         }
 
-
-        table = build_summary_table(statistics)
-
-        assert table is not None
-
+        try:
+            table = build_summary_table(statistics)
+            assert table is not None
         except ImportError:
-
             pytest.skip("reportlab not installed")
-
 
 
 class TestBuildAlertListTables:
@@ -156,56 +142,36 @@ class TestBuildAlertListTables:
         """测试空预警列表"""
         from app.services.alert_pdf_service import build_alert_list_tables
 
-        tables = build_alert_list_tables(db_session, [])
-
-        assert tables == []
-
+        try:
+            tables = build_alert_list_tables(db_session, [])
+            assert tables == []
         except ImportError:
-
             pytest.skip("reportlab not installed")
-
 
     def test_pagination(self, db_session):
         """测试分页"""
         from app.services.alert_pdf_service import build_alert_list_tables
 
-                # 创建25个模拟预警（超过默认页大小20）
-
+        # 创建25个模拟预警（超过默认页大小20）
         alerts = []
-
         for i in range(25):
-
             alert = MagicMock()
-
             alert.alert_no = f"ALT{i:03d}"
-
             alert.alert_level = "WARNING"
-
             alert.alert_title = f"测试预警{i}"
-
             alert.project = None
-
             alert.handler_id = None
-
             alert.acknowledged_by = None
-
             alert.triggered_at = datetime.now()
-
             alert.status = "OPEN"
-
             alerts.append(alert)
 
-
+        try:
             tables = build_alert_list_tables(db_session, alerts, page_size=20)
-
-                # 应该有2页（包含PageBreak）
-
-        assert len(tables) >= 2
-
+            # 应该有2页（包含PageBreak）
+            assert len(tables) >= 2
         except ImportError:
-
             pytest.skip("reportlab not installed")
-
 
 
 class TestBuildPdfContent:
@@ -215,24 +181,17 @@ class TestBuildPdfContent:
         """测试PDF内容结构"""
         from app.services.alert_pdf_service import build_pdf_content, get_pdf_styles
 
-        title_style, heading_style, normal_style, _ = get_pdf_styles()
+        try:
+            title_style, heading_style, normal_style, _ = get_pdf_styles()
 
+            story = build_pdf_content(
+                db_session, [], title_style, heading_style, normal_style
+            )
 
-        story = build_pdf_content(
-
-        db_session, [], title_style, heading_style, normal_style
-
-        )
-
-
-        assert isinstance(story, list)
-
-        assert len(story) > 0
-
+            assert isinstance(story, list)
+            assert len(story) > 0
         except ImportError:
-
             pytest.skip("reportlab not installed")
-
 
 
 class TestAlertLevelGrouping:
@@ -241,10 +200,10 @@ class TestAlertLevelGrouping:
     def test_group_by_level(self):
         """测试按级别分组"""
         alerts = [
-        {'level': 'CRITICAL'},
-        {'level': 'CRITICAL'},
-        {'level': 'WARNING'},
-        {'level': 'INFO'},
+            {'level': 'CRITICAL'},
+            {'level': 'CRITICAL'},
+            {'level': 'WARNING'},
+            {'level': 'INFO'},
         ]
 
         by_level = {}
@@ -252,9 +211,9 @@ class TestAlertLevelGrouping:
             level = alert['level']
             by_level[level] = by_level.get(level, 0) + 1
 
-            assert by_level['CRITICAL'] == 2
-            assert by_level['WARNING'] == 1
-            assert by_level['INFO'] == 1
+        assert by_level['CRITICAL'] == 2
+        assert by_level['WARNING'] == 1
+        assert by_level['INFO'] == 1
 
 
 class TestAlertStatusGrouping:
@@ -263,10 +222,10 @@ class TestAlertStatusGrouping:
     def test_group_by_status(self):
         """测试按状态分组"""
         alerts = [
-        {'status': 'OPEN'},
-        {'status': 'OPEN'},
-        {'status': 'RESOLVED'},
-        {'status': 'ACKNOWLEDGED'},
+            {'status': 'OPEN'},
+            {'status': 'OPEN'},
+            {'status': 'RESOLVED'},
+            {'status': 'ACKNOWLEDGED'},
         ]
 
         by_status = {}
@@ -274,12 +233,12 @@ class TestAlertStatusGrouping:
             status = alert['status']
             by_status[status] = by_status.get(status, 0) + 1
 
-            assert by_status['OPEN'] == 2
-            assert by_status['RESOLVED'] == 1
-            assert by_status['ACKNOWLEDGED'] == 1
+        assert by_status['OPEN'] == 2
+        assert by_status['RESOLVED'] == 1
+        assert by_status['ACKNOWLEDGED'] == 1
 
 
-            # pytest fixtures
+# pytest fixtures
 @pytest.fixture
 def db_session():
     """创建测试数据库会话"""

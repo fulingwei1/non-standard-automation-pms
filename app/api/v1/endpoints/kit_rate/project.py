@@ -22,7 +22,7 @@ def get_project_kit_rate(
     db: Session = Depends(deps.get_db),
     project_id: int,
     calculate_by: str = Query("quantity", description="计算方式：quantity(数量) 或 amount(金额)"),
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("procurement:read")),
 ) -> Any:
     """
     计算项目齐套率
@@ -36,7 +36,7 @@ def get_project_material_status(
     *,
     db: Session = Depends(deps.get_db),
     project_id: int,
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("procurement:read")),
 ) -> Any:
     """
     获取项目物料汇总
@@ -50,7 +50,7 @@ def get_project_shortage(
     *,
     db: Session = Depends(deps.get_db),
     project_id: int,
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("procurement:read")),
 ) -> Any:
     """
     获取项目缺料清单
@@ -78,7 +78,7 @@ def get_project_critical_shortage(
     *,
     db: Session = Depends(deps.get_db),
     project_id: int,
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("procurement:read")),
 ) -> Any:
     """
     获取项目关键物料缺口

@@ -28,7 +28,7 @@ def generate_purchase_requisition(
     project_ids: Optional[str] = Query(None, description="项目ID列表（逗号分隔）"),
     material_ids: Optional[str] = Query(None, description="物料ID列表（逗号分隔），为空则生成所有短缺物料"),
     supplier_id: Optional[int] = Query(None, description="默认供应商ID"),
-    current_user: User = Depends(security.require_procurement_access()),
+    current_user: User = Depends(security.require_permission("procurement:read")),
 ) -> Any:
     """
     自动生成采购需求（从缺口生成PR）

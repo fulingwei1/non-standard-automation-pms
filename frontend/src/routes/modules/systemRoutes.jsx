@@ -37,6 +37,7 @@ import AlertSubscription from "../../pages/AlertSubscription";
 import AlertSubscriptionSettings from "../../pages/AlertSubscriptionSettings";
 import Acceptance from "../../pages/Acceptance";
 import ApprovalCenter from "../../pages/ApprovalCenter";
+import ApprovalDetailPage from "../../pages/ApprovalDetailPage";
 import IssueManagement from "../../pages/IssueManagement";
 import IssueTemplateManagement from "../../pages/IssueTemplateManagement";
 import IssueStatisticsSnapshot from "../../pages/IssueStatisticsSnapshot";
@@ -115,6 +116,7 @@ export function SystemRoutes() {
       {/* Quality & Acceptance */}
       <Route path="/acceptance" element={<Acceptance />} />
       <Route path="/approvals" element={<ApprovalCenter />} />
+      <Route path="/approvals/:id" element={<ApprovalDetailPage />} />
       <Route path="/issues" element={<IssueManagement />} />
       <Route path="/issue-templates" element={<IssueTemplateManagement />} />
       <Route
