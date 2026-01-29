@@ -64,3 +64,90 @@ class TestMetricCalculationService:
         """测试格式化None值"""
         result = service.format_metric_value(None, 'NUMBER', 2)
         assert result == '-'
+
+    def test_format_metric_value_integer(self, service):
+        """测试格式化整数值"""
+        result = service.format_metric_value(100, 'NUMBER', 0)
+        assert result == '100'
+
+    def test_format_metric_value_decimal(self, service):
+        """测试格式化Decimal类型"""
+        result = service.format_metric_value(Decimal('1234.56'), 'CURRENCY', 2)
+        assert '1,234.56' in result
+
+    def test_format_metric_value_zero(self, service):
+        """测试格式化零值"""
+        result = service.format_metric_value(0, 'NUMBER', 2)
+        assert '0' in result  # Could be '0' or '0.00' depending on implementation
+
+    def test_calculate_metric_not_found(self, service):
+        """测试计算不存在的指标"""
+        with pytest.raises(ValueError) as exc_info:
+            service.calculate_metric(
+                metric_code='NON_EXISTENT',
+                period_start=date(2026, 1, 1),
+                period_end=date(2026, 1, 31)
+            )
+        assert '指标定义不存在' in str(exc_info.value)
+
+    def test_data_source_map_contains_expected_models(self, service):
+        """测试数据源映射包含预期模型"""
+        expected_models = [
+            'Project', 'Lead', 'Opportunity', 'Contract', 'Invoice',
+            'PurchaseOrder', 'Material', 'Ecn', 'Issue', 'Timesheet'
+        ]
+        for model in expected_models:
+            assert model in service.data_source_map
+
+    def test_format_metric_value_large_number(self, service):
+        """测试格式化大数值"""
+        result = service.format_metric_value(1234567890.12, 'CURRENCY', 2)
+        assert '1,234,567,890.12' in result
+
+    def test_format_metric_value_negative(self, service):
+        """测试格式化负数"""
+        result = service.format_metric_value(-100.5, 'NUMBER', 1)
+        assert '-100.5' in result
+
+    def test_format_metric_value_percentage_small(self, service):
+        """测试格式化小百分比"""
+        result = service.format_metric_value(0.5, 'PERCENTAGE', 2)
+        assert '0.50%' in result
+
+
+@pytest.mark.unit
+class TestMetricCalculationEdgeCases:
+    """指标计算边界情况测试"""
+
+    def test_service_with_mock_db(self):
+        """测试使用mock数据库"""
+        mock_db = MagicMock()
+        service = MetricCalculationService(mock_db)
+        assert service.db == mock_db
+
+    def test_format_unknown_type(self, db_session):
+        """测试格式化未知类型"""
+        service = MetricCalculationService(db_session)
+        # Should handle unknown type gracefully
+        result = service.format_metric_value(100, 'UNKNOWN_TYPE', 2)
+        assert result is not None
+
+    def test_calculate_metric_invalid_data_source(self, db_session):
+        """测试无效数据源"""
+        service = MetricCalculationService(db_session)
+        mock_def = Mock()
+        mock_def.metric_code = 'TEST'
+        mock_def.data_source = 'InvalidModel'
+        mock_def.is_active = True
+
+        # Mock the query to return our mock definition
+        db_session.query = MagicMock()
+        db_session.query.return_value.filter.return_value.first.return_value = mock_def
+
+        with pytest.raises(ValueError) as exc_info:
+            service.calculate_metric(
+                metric_code='TEST',
+                period_start=date(2026, 1, 1),
+                period_end=date(2026, 1, 31)
+            )
+        assert '不支持的数据源' in str(exc_info.value)
