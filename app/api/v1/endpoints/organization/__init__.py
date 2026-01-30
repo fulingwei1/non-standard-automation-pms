@@ -12,7 +12,6 @@
 
 from fastapi import APIRouter
 
-from .departments import router as departments_router
 from .departments_refactored import router as departments_refactored_router
 from .employee_import import router as import_router
 from .employees import router as employees_router
@@ -26,8 +25,6 @@ router = APIRouter()
 
 # 部门管理（使用重构版本，统一响应格式）
 router.include_router(departments_refactored_router, tags=["部门管理"])
-# 原版本保留作为参考
-# router.include_router(departments_router, tags=["部门管理"])
 
 # 员工管理
 router.include_router(employees_router, tags=["员工管理"])

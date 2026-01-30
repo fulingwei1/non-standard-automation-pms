@@ -11,23 +11,17 @@
 
 from fastapi import APIRouter
 
-from .orders import router as orders_router
 from .orders_refactored import router as orders_refactored_router
 from .receipts import router as receipts_router
-from .requests import router as requests_router
 from .requests_refactored import router as requests_refactored_router
 
 router = APIRouter()
 
 # 采购订单（使用重构版本，统一响应格式）
 router.include_router(orders_refactored_router, tags=["采购订单"])
-# 原版本保留作为参考
-# router.include_router(orders_router, tags=["采购订单"])
 
 # 采购申请（使用重构版本，统一响应格式）
 router.include_router(requests_refactored_router, tags=["采购申请"])
-# 原版本保留作为参考
-# router.include_router(requests_router, tags=["采购申请"])
 
 # 收货单
 router.include_router(receipts_router, tags=["收货管理"])
