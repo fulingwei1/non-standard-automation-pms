@@ -12,7 +12,6 @@
 
 from fastapi import APIRouter
 
-from .crud import router as crud_router
 from .crud_refactored import router as crud_refactored_router
 from .sync import router as sync_router
 from .time_allocation import router as time_router
@@ -21,8 +20,6 @@ router = APIRouter()
 
 # 用户 CRUD（使用重构版本，统一响应格式）
 router.include_router(crud_refactored_router, tags=["用户管理"])
-# 原版本保留作为参考
-# router.include_router(crud_router, tags=["用户管理"])
 
 # 用户同步
 router.include_router(sync_router, tags=["用户同步"])

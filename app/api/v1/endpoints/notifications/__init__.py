@@ -9,7 +9,6 @@
 
 from fastapi import APIRouter
 
-from .crud import router as crud_router
 from .crud_refactored import router as crud_refactored_router
 from .settings import router as settings_router
 
@@ -17,8 +16,6 @@ router = APIRouter()
 
 # 通知CRUD操作（使用重构版本，统一响应格式）
 router.include_router(crud_refactored_router, tags=["通知管理"])
-# 原版本保留作为参考
-# router.include_router(crud_router, tags=["通知管理"])
 
 # 通知设置
 router.include_router(settings_router, tags=["通知设置"])
