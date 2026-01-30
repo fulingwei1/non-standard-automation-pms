@@ -147,7 +147,16 @@ class EcnStateMachine(StateMachine):
         验证条件：
         - 需要特殊权限（通常不允许）
         """
-        # TODO: 添加权限检查
+        # 检查用户权限：取消已实施的ECN需要特殊权限
+        current_user = kwargs.get("current_user")
+        if current_user:
+            from app.core.auth import check_permission
+
+            # 检查是否有取消已实施ECN的权限
+            if not check_permission(current_user, "ecn:cancel_implemented", self.db):
+                # 也检查是否为超级管理员
+                if not getattr(current_user, "is_superuser", False):
+                    raise PermissionError("取消已实施的ECN需要特殊权限（ecn:cancel_implemented）")
 
     # ==================== 钩子函数 ====================
 
@@ -182,10 +191,31 @@ class EcnStateMachine(StateMachine):
 
         Args:
             message: 日志消息
-            **kwargs: 额外参数
+            **kwargs: 额外参数（可包含 current_user）
         """
-        # TODO: 实现日志记录到数据库
-        pass
+        try:
+            from app.models.ecn import EcnLog
+
+            # 获取操作用户ID
+            current_user = kwargs.get("current_user")
+            created_by = current_user.id if current_user and hasattr(current_user, "id") else None
+
+            # 创建日志记录
+            log_entry = EcnLog(
+                ecn_id=self.model.id,
+                log_type="TRANSITION",
+                log_action="STATE_TRANSITION",
+                log_content=message,
+                created_by=created_by,
+            )
+
+            self.db.add(log_entry)
+            # 不在这里提交，让外层事务统一管理
+        except Exception as e:
+            # 记录日志失败不应影响主业务流程
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"ECN状态转换日志记录失败: {e}")
 
     def _update_change_log(self, from_state, to_state, **kwargs):
         """
@@ -194,10 +224,46 @@ class EcnStateMachine(StateMachine):
         Args:
             from_state: 原状态
             to_state: 目标状态
-            **kwargs: 额外参数
+            **kwargs: 额外参数（可包含 current_user）
         """
-        # TODO: 实现变更日志更新
-        pass
+        try:
+            from app.models.ecn import EcnLog
+
+            # 获取操作用户ID
+            current_user = kwargs.get("current_user")
+            created_by = current_user.id if current_user and hasattr(current_user, "id") else None
+
+            # 构建日志内容
+            status_labels = {
+                DRAFT: "草稿",
+                PENDING_REVIEW: "待审核",
+                APPROVED: "已批准",
+                REJECTED: "已拒绝",
+                IMPLEMENTED: "已实施",
+                CANCELLED: "已取消",
+            }
+            from_label = status_labels.get(from_state, from_state)
+            to_label = status_labels.get(to_state, to_state)
+            log_content = f"ECN状态从【{from_label}】变更为【{to_label}】"
+
+            # 创建变更日志记录
+            log_entry = EcnLog(
+                ecn_id=self.model.id,
+                log_type="STATUS_CHANGE",
+                log_action=f"{from_state}_TO_{to_state}",
+                old_status=from_state,
+                new_status=to_state,
+                log_content=log_content,
+                created_by=created_by,
+            )
+
+            self.db.add(log_entry)
+            # 不在这里提交，让外层事务统一管理
+        except Exception as e:
+            # 记录日志失败不应影响主业务流程
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"ECN变更日志更新失败: {e}")
 
     # ==================== 辅助方法 ====================
 
