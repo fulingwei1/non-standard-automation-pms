@@ -41,21 +41,22 @@ def login(
     - **password**: 密码
 
     错误码说明：
-    - USER_NOT_FOUND: 账号不存在
-    - USER_INACTIVE: 账号未激活
-    - USER_DISABLED: 账号已禁用（员工已离职）
-    - WRONG_PASSWORD: 密码错误
+    - AUTH_FAILED: 用户名或密码错误
+    - ACCOUNT_DISABLED: 账号已被禁用或未激活
     """
     user = db.query(User).filter(User.username == form_data.username).first()
+
+    # 安全：统一错误信息，防止用户名枚举攻击（OWASP A07:2021）
+    _auth_failed_detail = {
+        "error_code": "AUTH_FAILED",
+        "message": "用户名或密码错误",
+    }
 
     # 1. 账号不存在
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={
-                "error_code": "USER_NOT_FOUND",
-                "message": "该员工尚未开通系统账号，请联系管理员",
-            },
+            detail=_auth_failed_detail,
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -63,38 +64,19 @@ def login(
     if not security.verify_password(form_data.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={
-                "error_code": "WRONG_PASSWORD",
-                "message": "密码错误，忘记密码请联系管理员重置",
-            },
+            detail=_auth_failed_detail,
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # 3. 账号未激活或已禁用
+    # 3. 账号未激活或已禁用（密码正确后才给出具体原因，不泄露账号存在信息）
     if not user.is_active:
-        # 检查关联的员工状态来区分是未激活还是离职
-        from app.models.organization import Employee
-
-        employee = db.query(Employee).filter(Employee.id == user.employee_id).first()
-
-        if employee and employee.employment_status != "active":
-            # 员工已离职
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail={
-                    "error_code": "USER_DISABLED",
-                    "message": "账号已被禁用，如有疑问请联系管理员",
-                },
-            )
-        else:
-            # 账号未激活
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail={
-                    "error_code": "USER_INACTIVE",
-                    "message": "账号待激活，请联系管理员开通系统访问权限",
-                },
-            )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "error_code": "ACCOUNT_DISABLED",
+                "message": "账号已被禁用或未激活，请联系管理员",
+            },
+        )
 
     # 更新最后登录时间
     user.last_login_at = datetime.now()

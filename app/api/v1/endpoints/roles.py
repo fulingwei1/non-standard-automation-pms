@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
-from app.core.security import get_current_active_user
+from app.core.security import get_current_active_user, require_permission
 from app.models.user import (
     ApiPermission,
     Role,
@@ -27,21 +27,16 @@ from app.services.role_service import RoleService
 
 router = APIRouter(prefix="/roles", tags=["角色管理"])
 
+# 系统预置角色编码，禁止通过 API 创建同名角色（防止权限提升）
+_RESERVED_ROLE_CODES = {
+    "ADMIN", "admin", "super_admin", "system_admin",
+    "GM", "CFO", "CTO", "SALES_DIR",
+}
+
 
 def get_current_tenant_id(current_user: User) -> Optional[int]:
     """获取当前用户的租户ID"""
     return current_user.tenant_id
-
-
-def require_role_management_permission(
-    current_user: User = Depends(get_current_active_user),
-) -> User:
-    """要求角色管理权限（超级管理员或租户管理员）"""
-    if current_user.is_superuser or current_user.is_tenant_admin:
-        return current_user
-    raise HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN, detail="需要角色管理权限"
-    )
 
 
 @router.get("/", response_model=ResponseModel)
@@ -93,7 +88,7 @@ def list_permissions(
 @router.get("/templates", response_model=ResponseModel)
 def list_role_templates(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role_management_permission),
+    current_user: User = Depends(require_permission("role:update")),
 ):
     """获取角色模板列表"""
     templates = (
@@ -122,9 +117,17 @@ def get_all_config(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    """获取所有角色配置"""
+    """获取所有角色配置（按租户隔离）"""
+    from sqlalchemy import or_
+    tenant_id = current_user.tenant_id
     roles = (
-        db.query(Role).filter(Role.is_active == True).order_by(Role.sort_order).all()
+        db.query(Role)
+        .filter(
+            Role.is_active == True,
+            or_(Role.tenant_id == tenant_id, Role.tenant_id.is_(None)),
+        )
+        .order_by(Role.sort_order)
+        .all()
     )
 
     result = []
@@ -180,9 +183,16 @@ def get_my_nav_groups(
 def create_role(
     role_in: RoleCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role_management_permission),
+    current_user: User = Depends(require_permission("role:create")),
 ):
     """创建角色"""
+    # 安全检查：禁止创建与系统预置角色同名的角色（防止权限提升）
+    if role_in.role_code in _RESERVED_ROLE_CODES or role_in.role_code.upper() in _RESERVED_ROLE_CODES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"角色编码 {role_in.role_code} 为系统保留编码，不允许使用",
+        )
+
     # 检查角色编码是否已存在
     existing = db.query(Role).filter(Role.role_code == role_in.role_code).first()
     if existing:
@@ -231,7 +241,7 @@ def update_role(
     role_id: int,
     role_in: RoleUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role_management_permission),
+    current_user: User = Depends(require_permission("role:update")),
 ):
     """更新角色"""
     role = db.query(Role).filter(Role.id == role_id).first()
@@ -261,7 +271,7 @@ def update_role(
 def delete_role(
     role_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role_management_permission),
+    current_user: User = Depends(require_permission("role:update")),
 ):
     """删除角色"""
     role = db.query(Role).filter(Role.id == role_id).first()
@@ -292,7 +302,7 @@ def update_role_permissions(
     role_id: int,
     permission_ids: List[int],
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role_management_permission),
+    current_user: User = Depends(require_permission("role:update")),
 ):
     """更新角色权限（使用新的 RoleApiPermission 模型）"""
     role = db.query(Role).filter(Role.id == role_id).first()
@@ -334,7 +344,7 @@ def update_role_nav_groups(
     role_id: int,
     nav_groups: List[dict],
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role_management_permission),
+    current_user: User = Depends(require_permission("role:update")),
 ):
     """更新角色的导航组配置"""
     role = db.query(Role).filter(Role.id == role_id).first()
@@ -357,9 +367,17 @@ def get_role_hierarchy_tree(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    """获取角色层级树"""
+    """获取角色层级树（按租户隔离）"""
+    from sqlalchemy import or_
+    tenant_id = current_user.tenant_id
     roles = (
-        db.query(Role).filter(Role.is_active == True).order_by(Role.sort_order).all()
+        db.query(Role)
+        .filter(
+            Role.is_active == True,
+            or_(Role.tenant_id == tenant_id, Role.tenant_id.is_(None)),
+        )
+        .order_by(Role.sort_order)
+        .all()
     )
 
     # 构建树形结构
@@ -391,7 +409,7 @@ def update_role_parent(
     role_id: int,
     parent_id: Optional[int] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role_management_permission),
+    current_user: User = Depends(require_permission("role:update")),
 ):
     """
     修改角色的父角色（层级关系）

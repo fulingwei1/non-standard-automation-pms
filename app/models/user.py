@@ -242,6 +242,10 @@ class RoleApiPermission(Base):
     role = relationship("Role", back_populates="api_permissions")
     permission = relationship("ApiPermission", back_populates="role_api_permissions")
 
+    __table_args__ = (
+        UniqueConstraint("role_id", "permission_id", name="uk_role_api_permission"),
+    )
+
 
 class UserRole(Base):
     """用户角色关联表"""

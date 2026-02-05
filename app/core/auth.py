@@ -327,8 +327,19 @@ def is_system_admin(user: User) -> bool:
     """
     判断用户是否为系统管理员角色
 
-    允许系统管理员在不显式设置 is_superuser 的情况下拥有全权限。
+    仅通过数据库标志位判断，不使用硬编码角色名，防止通过创建特定角色名提权。
+    检查条件：
+    1. User.is_superuser = True
+    2. User.is_tenant_admin = True
+    3. 用户拥有 is_system=True 且 role_code='ADMIN' 的系统预置角色
     """
+    # 优先检查数据库标志位
+    if getattr(user, "is_superuser", False):
+        return True
+    if getattr(user, "is_tenant_admin", False):
+        return True
+
+    # 仅检查系统预置的 ADMIN 角色（is_system=True），防止用户自建同名角色提权
     roles = getattr(user, "roles", None)
     if not roles:
         return False
@@ -336,16 +347,12 @@ def is_system_admin(user: User) -> bool:
     if hasattr(roles, "all"):
         roles = roles.all()
 
-    admin_role_codes = {"admin", "super_admin", "system_admin"}
-    admin_role_names = {"系统管理员", "超级管理员", "管理员"}
-
     for user_role in roles or []:
         role = getattr(user_role, "role", user_role)
-        role_code = (getattr(role, "role_code", "") or "").lower()
-        role_name = getattr(role, "role_name", "") or ""
-        if role_code in admin_role_codes:
-            return True
-        if role_name in admin_role_names:
+        role_code = getattr(role, "role_code", "")
+        is_system = getattr(role, "is_system", False)
+        # 只有系统预置角色（is_system=True）的 ADMIN 才被认可
+        if is_system and role_code == "ADMIN":
             return True
 
     return False
