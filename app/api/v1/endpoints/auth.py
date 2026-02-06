@@ -96,7 +96,9 @@ def login(
 
 
 @router.post("/logout", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@limiter.limit("10/minute")
 def logout(
+    request: Request,
     token: str = Depends(security.oauth2_scheme),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
@@ -112,7 +114,9 @@ def logout(
 
 
 @router.post("/refresh", response_model=Token, status_code=status.HTTP_200_OK)
+@limiter.limit("10/minute")
 def refresh_token(
+    request: Request,
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """

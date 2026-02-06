@@ -57,7 +57,7 @@ class PermissionCacheService:
         Returns:
             格式化的缓存键
         """
-        tid = tenant_id if tenant_id is not None else 0
+        tid = tenant_id if tenant_id is not None else "system"
         return f"{prefix.format(tenant_id=tid)}:{resource_id}"
 
     # ==================== 用户权限缓存 ====================

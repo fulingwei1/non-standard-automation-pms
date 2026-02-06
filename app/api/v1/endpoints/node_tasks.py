@@ -35,7 +35,7 @@ router = APIRouter()
 def create_task(
     task_in: NodeTaskCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_user),
+    current_user: User = Depends(security.require_permission("task_center:create")),
 ) -> Any:
     """创建子任务"""
     service = NodeTaskService(db)
@@ -68,7 +68,7 @@ def get_my_tasks(
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     status: Optional[str] = Query(None, description="状态筛选"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_user),
+    current_user: User = Depends(security.require_permission("task_center:read")),
 ) -> Any:
     """获取当前用户的任务列表"""
     service = NodeTaskService(db)
@@ -81,6 +81,7 @@ def get_user_tasks(
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     status: Optional[str] = Query(None, description="状态筛选"),
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("task_center:read")),
 ) -> Any:
     """获取用户的任务列表（跨节点）"""
     service = NodeTaskService(db)
@@ -91,6 +92,7 @@ def get_user_tasks(
 def get_task(
     task_id: int,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("task_center:read")),
 ) -> Any:
     """获取任务详情"""
     service = NodeTaskService(db)
@@ -105,7 +107,7 @@ def update_task(
     task_id: int,
     task_in: NodeTaskUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_user),
+    current_user: User = Depends(security.require_permission("task_center:update")),
 ) -> Any:
     """更新任务"""
     service = NodeTaskService(db)
@@ -120,7 +122,7 @@ def update_task(
 def delete_task(
     task_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_user),
+    current_user: User = Depends(security.require_permission("task_center:update")),
 ) -> Any:
     """删除任务"""
     service = NodeTaskService(db)
@@ -140,6 +142,7 @@ def list_node_tasks(
     status: Optional[str] = Query(None, description="状态筛选"),
     assignee_id: Optional[int] = Query(None, description="执行人筛选"),
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("task_center:read")),
 ) -> Any:
     """获取节点的任务列表"""
     service = NodeTaskService(db)
@@ -150,6 +153,7 @@ def list_node_tasks(
 def get_node_task_progress(
     node_instance_id: int,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("task_center:read")),
 ) -> Any:
     """获取节点任务进度"""
     service = NodeTaskService(db)
@@ -161,7 +165,7 @@ def batch_create_tasks(
     node_instance_id: int,
     batch_in: BatchCreateTasksRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_user),
+    current_user: User = Depends(security.require_permission("task_center:update")),
 ) -> Any:
     """批量创建任务"""
     service = NodeTaskService(db)
@@ -183,7 +187,7 @@ def reorder_tasks(
     node_instance_id: int,
     reorder_in: ReorderTasksRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_user),
+    current_user: User = Depends(security.require_permission("task_center:update")),
 ) -> Any:
     """重新排序任务"""
     service = NodeTaskService(db)
@@ -200,7 +204,7 @@ def start_task(
     task_id: int,
     actual_start_date: Optional[date] = Query(None, description="实际开始日期"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_user),
+    current_user: User = Depends(security.require_permission("task_center:update")),
 ) -> Any:
     """开始任务"""
     service = NodeTaskService(db)
@@ -217,7 +221,7 @@ def complete_task(
     task_id: int,
     complete_in: NodeTaskComplete,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_user),
+    current_user: User = Depends(security.require_permission("task_center:update")),
 ) -> Any:
     """完成任务"""
     service = NodeTaskService(db)
@@ -240,7 +244,7 @@ def skip_task(
     task_id: int,
     reason: Optional[str] = Query(None, description="跳过原因"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_user),
+    current_user: User = Depends(security.require_permission("task_center:update")),
 ) -> Any:
     """跳过任务"""
     service = NodeTaskService(db)
@@ -260,7 +264,7 @@ def assign_task(
     task_id: int,
     assignee_id: int = Query(..., description="执行人ID"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_user),
+    current_user: User = Depends(security.require_permission("task_center:update")),
 ) -> Any:
     """分配任务"""
     service = NodeTaskService(db)
@@ -277,7 +281,7 @@ def set_task_priority(
     task_id: int,
     priority: str = Query(..., description="优先级: LOW/NORMAL/HIGH/URGENT"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_user),
+    current_user: User = Depends(security.require_permission("task_center:update")),
 ) -> Any:
     """设置任务优先级"""
     service = NodeTaskService(db)

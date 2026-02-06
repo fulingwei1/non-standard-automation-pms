@@ -55,7 +55,7 @@ def read_ecns(
     ecn_type: Optional[str] = Query(None, description="变更类型筛选"),
     ecn_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     priority: Optional[str] = Query(None, description="优先级筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("ecn:read")),
 ) -> Any:
     """
     获取ECN列表
@@ -112,7 +112,7 @@ def read_ecns(
 def read_ecn(
     ecn_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("ecn:read")),
 ) -> Any:
     """
     获取ECN详情
@@ -129,7 +129,7 @@ def create_ecn(
     *,
     db: Session = Depends(deps.get_db),
     ecn_in: EcnCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("ecn:create")),
 ) -> Any:
     """
     创建ECN申请
@@ -183,7 +183,7 @@ def update_ecn(
     db: Session = Depends(deps.get_db),
     ecn_id: int,
     ecn_in: EcnUpdate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("ecn:update")),
 ) -> Any:
     """
     更新ECN
@@ -214,7 +214,7 @@ def submit_ecn(
     db: Session = Depends(deps.get_db),
     ecn_id: int,
     submit_in: EcnSubmit,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("ecn:submit")),
 ) -> Any:
     """
     提交ECN
@@ -304,7 +304,7 @@ def cancel_ecn(
     db: Session = Depends(deps.get_db),
     ecn_id: int,
     cancel_reason: Optional[str] = Query(None, description="取消原因"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("ecn:cancel")),
 ) -> Any:
     """
     取消ECN

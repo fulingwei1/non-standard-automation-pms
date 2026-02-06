@@ -221,6 +221,22 @@ INSERT OR IGNORE INTO api_permissions (tenant_id, perm_code, perm_name, module, 
 INSERT OR IGNORE INTO api_permissions (tenant_id, perm_code, perm_name, module, action, permission_type, is_active, is_system) VALUES
 (NULL, 'data_import_export:manage', '管理数据导入导出', 'DATA_MGMT', 'EDIT', 'API', 1, 1);
 
+-- ECN (工程变更通知) 权限
+INSERT OR IGNORE INTO api_permissions (tenant_id, perm_code, perm_name, module, action, permission_type, is_active, is_system) VALUES
+(NULL, 'ecn:read', '查看ECN', 'ECN', 'VIEW', 'API', 1, 1),
+(NULL, 'ecn:create', '创建ECN', 'ECN', 'CREATE', 'API', 1, 1),
+(NULL, 'ecn:update', '编辑ECN', 'ECN', 'EDIT', 'API', 1, 1),
+(NULL, 'ecn:submit', '提交ECN', 'ECN', 'EDIT', 'API', 1, 1),
+(NULL, 'ecn:approve', '审批ECN', 'ECN', 'APPROVE', 'API', 1, 1),
+(NULL, 'ecn:cancel', '取消ECN', 'ECN', 'EDIT', 'API', 1, 1);
+
+-- BOM (物料清单) 权限
+INSERT OR IGNORE INTO api_permissions (tenant_id, perm_code, perm_name, module, action, permission_type, is_active, is_system) VALUES
+(NULL, 'bom:read', '查看BOM', 'BOM', 'VIEW', 'API', 1, 1),
+(NULL, 'bom:create', '创建BOM', 'BOM', 'CREATE', 'API', 1, 1),
+(NULL, 'bom:update', '编辑BOM', 'BOM', 'EDIT', 'API', 1, 1),
+(NULL, 'bom:approve', '审批BOM', 'BOM', 'APPROVE', 'API', 1, 1);
+
 -- 系统管理权限
 INSERT OR IGNORE INTO api_permissions (tenant_id, perm_code, perm_name, module, action, permission_type, is_active, is_system) VALUES
 (NULL, 'admin:cache:clear', '清除缓存', 'ADMIN', 'EDIT', 'API', 1, 1),

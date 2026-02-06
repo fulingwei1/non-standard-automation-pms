@@ -35,7 +35,7 @@ def read_users(
     keyword: Optional[str] = Query(None, description="关键词搜索（用户名/姓名/工号/邮箱）"),
     department: Optional[str] = Query(None, description="部门筛选"),
     is_active: Optional[bool] = Query(None, description="是否启用"),
-    current_user: User = Depends(security.require_permission("USER_VIEW")),
+    current_user: User = Depends(security.require_permission("user:read")),
 ) -> Any:
     """获取用户列表（支持分页和筛选）"""
     try:
@@ -98,7 +98,7 @@ def create_user(
     db: Session = Depends(deps.get_db),
     user_in: UserCreate,
     request: Request,
-    current_user: User = Depends(security.require_permission("USER_CREATE")),
+    current_user: User = Depends(security.require_permission("user:create")),
 ) -> Any:
     """创建新用户"""
     exist = db.query(User).filter(User.username == user_in.username).first()
@@ -154,7 +154,7 @@ def read_user_by_id(
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="用户不存在")
-    if user.id != current_user.id and not security.check_permission(current_user, "USER_VIEW"):
+    if user.id != current_user.id and not security.check_permission(current_user, "user:read"):
         raise HTTPException(status_code=403, detail="权限不足")
     
     # 使用统一响应格式
@@ -171,7 +171,7 @@ def update_user(
     user_id: int,
     user_in: UserUpdate,
     request: Request,
-    current_user: User = Depends(security.require_permission("USER_UPDATE")),
+    current_user: User = Depends(security.require_permission("user:update")),
 ) -> Any:
     """更新用户信息"""
     user = db.query(User).filter(User.id == user_id).first()
@@ -229,7 +229,7 @@ def assign_user_roles(
     user_id: int,
     role_data: UserRoleAssign,
     request: Request,
-    current_user: User = Depends(security.require_permission("USER_UPDATE")),
+    current_user: User = Depends(security.require_permission("user:update")),
 ) -> Any:
     """分配用户角色"""
     user = db.query(User).filter(User.id == user_id).first()
@@ -259,7 +259,7 @@ def delete_user(
     *,
     db: Session = Depends(deps.get_db),
     user_id: int,
-    current_user: User = Depends(security.require_permission("USER_DELETE")),
+    current_user: User = Depends(security.require_permission("user:delete")),
 ) -> Any:
     """删除/禁用用户（软删除）"""
     user = db.query(User).filter(User.id == user_id).first()

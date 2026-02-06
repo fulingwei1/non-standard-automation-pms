@@ -9,7 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Dict, Any
 
 from app.services.material.bom_service import BOMService
-from app.api.deps import get_db, get_current_active_user
+from app.api.deps import get_db
+from app.core.security import require_permission
+from app.models.user import User
 
 
 router = APIRouter(prefix="/bom/headers", tags=["bom"])
@@ -19,7 +21,7 @@ router = APIRouter(prefix="/bom/headers", tags=["bom"])
 async def approve_bom(
     bom_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: get_current_active_user,
+    current_user: User = Depends(require_permission("bom:approve")),
 ):
     """
     BOM审核通过，自动创建采购订单

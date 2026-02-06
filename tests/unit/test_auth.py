@@ -233,7 +233,9 @@ class TestCheckPermission:
         """创建模拟用户对象"""
         user = MagicMock()
         user.is_superuser = is_superuser
+        user.is_tenant_admin = False
         user.id = 1
+        user.tenant_id = None
         user.roles = roles or []
         return user
 
@@ -356,8 +358,10 @@ class TestRequirePermission:
 
         user = MagicMock()
         user.is_superuser = False
+        user.is_tenant_admin = False
         user.is_active = True
         user.id = 1
+        user.tenant_id = None
         user.roles = []
 
         db = MagicMock()
@@ -508,6 +512,8 @@ class TestGetCurrentActiveSuperuser:
 
         user = MagicMock()
         user.is_superuser = False
+        user.is_tenant_admin = False
+        user.roles = []
 
         with pytest.raises(HTTPException) as exc_info:
             await get_current_active_superuser(current_user=user)

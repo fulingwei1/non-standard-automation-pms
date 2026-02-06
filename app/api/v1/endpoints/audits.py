@@ -53,7 +53,7 @@ def read_audits(
     action: Optional[str] = Query(None, description="操作类型筛选"),
     start_date: Optional[datetime] = Query(None, description="开始日期"),
     end_date: Optional[datetime] = Query(None, description="结束日期"),
-    current_user: User = Depends(security.require_permission("AUDIT_VIEW")),
+    current_user: User = Depends(security.require_permission("audit:read")),
 ) -> Any:
     """
     获取权限审计日志列表（支持分页和筛选）
@@ -131,7 +131,7 @@ def read_audits(
 def read_audit(
     audit_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("AUDIT_VIEW")),
+    current_user: User = Depends(security.require_permission("audit:read")),
 ) -> Any:
     """
     获取权限审计日志详情

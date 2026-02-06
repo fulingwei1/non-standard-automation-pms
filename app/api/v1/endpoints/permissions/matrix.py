@@ -21,7 +21,7 @@ router = APIRouter()
 @router.get("/matrix", response_model=ResponseModel)
 def get_permission_matrix(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("ROLE_VIEW")),
+    current_user: User = Depends(security.require_permission("role:read")),
 ) -> Any:
     """
     获取权限矩阵结构（使用新的 ApiPermission 模型）
@@ -83,7 +83,7 @@ def get_permission_matrix(
 @router.get("/dependencies", response_model=ResponseModel)
 def get_permission_dependencies(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("ROLE_VIEW")),
+    current_user: User = Depends(security.require_permission("role:read")),
 ) -> Any:
     """
     获取权限依赖关系（新模型暂不支持 depends_on 字段，返回空列表）
@@ -100,7 +100,7 @@ def get_role_permissions(
     role_id: int,
     include_inherited: bool = Query(True, description="是否包含继承的权限"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("ROLE_VIEW")),
+    current_user: User = Depends(security.require_permission("role:read")),
 ) -> Any:
     """
     获取角色的权限列表（支持继承）- 使用新的 ApiPermission 模型
