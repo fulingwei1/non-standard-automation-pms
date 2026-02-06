@@ -20,6 +20,7 @@ router = APIRouter()
 # 导入子路由
 from . import alerts
 from . import analysis
+from . import approval
 from . import core
 from . import evaluations
 from . import execution
@@ -47,6 +48,8 @@ router.include_router(evaluations.router, tags=["ecn-evaluations"])
 
 # 审批管理路由已移至统一审批系统
 # 使用 /api/v1/approvals 端点，entity_type=ECN
+# 或使用下面的ECN专用审批端点
+router.include_router(approval.router, tags=["ecn-approval"])
 
 # 任务管理路由
 router.include_router(tasks.router, tags=["ecn-tasks"])

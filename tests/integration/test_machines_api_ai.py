@@ -24,6 +24,7 @@ class TestMachinesCRUDAPI:
         self.helper = APITestHelper(client, admin_token)
         self.generator = TestDataGenerator()
         self.tracked_resources = []
+        self.test_project_id = None
 
         self.helper.print_info("机台管理 - 基本CRUD操作")
 
@@ -64,7 +65,6 @@ class TestMachinesCRUDAPI:
         self.helper.print_info("测试创建机台...")
 
         machine_data = {
-            "project_id": self.test_project_id,
             "machine_name": "测试机台001",
             "machine_type": "ICT测试机",
             "specifications": {
@@ -316,14 +316,15 @@ class TestMachinesCRUDAPI:
             pytest.skip("没有可用的项目ID")
 
         machine_data = {
-            "project_id": self.test_project_id,
             "machine_name": "待删除机台",
             "machine_type": "测试机",
             "status": "IN_DESIGN",
         }
 
         response = self.helper.post(
-            "/machines", machine_data, resource_type="machine_to_delete"
+            f"/projects/{self.test_project_id}/machines",
+            machine_data,
+            resource_type="machine_to_delete"
         )
 
         if self.helper.assert_success(response):
@@ -333,7 +334,7 @@ class TestMachinesCRUDAPI:
                 self.helper.print_info(f"测试删除机台 (ID: {machine_id})...")
 
                 delete_response = self.helper.delete(
-                    f"/machines/{machine_id}",
+                    f"/projects/{self.test_project_id}/machines/{machine_id}",
                     resource_type=f"machine_{machine_id}_delete",
                 )
 
@@ -357,6 +358,7 @@ class TestMachinesServiceHistoryAPI:
         self.helper = APITestHelper(client, admin_token)
         self.generator = TestDataGenerator()
         self.tracked_resources = []
+        self.test_project_id = None
 
         self.helper.print_info("机台管理 - 服务历史")
 
@@ -383,14 +385,16 @@ class TestMachinesServiceHistoryAPI:
                 project_id = result.get("id")
 
                 machine_data = {
-                    "project_id": project_id,
                     "machine_name": "服务测试机台",
                     "machine_type": "测试机",
                     "status": "IN_DESIGN",
                 }
 
+                self.test_project_id = project_id
                 machine_response = self.helper.post(
-                    "/machines", machine_data, resource_type="machine_for_service"
+                    f"/projects/{project_id}/machines",
+                    machine_data,
+                    resource_type="machine_for_service"
                 )
                 if self.helper.assert_success(machine_response):
                     machine_result = machine_response.get("data", {})
@@ -400,13 +404,16 @@ class TestMachinesServiceHistoryAPI:
                     )
                 else:
                     self.test_machine_id = None
+                    self.test_project_id = None
                     self.helper.print_warning("测试机台创建失败，相关测试将跳过")
             else:
                 self.test_machine_id = None
+                self.test_project_id = None
                 self.helper.print_warning("测试项目创建失败，相关测试将跳过")
         except Exception as e:
             self.helper.print_warning(f"测试环境初始化失败: {e}，相关测试将跳过")
             self.test_machine_id = None
+            self.test_project_id = None
 
     def test_get_machine_service_history(self):
         """测试获取机台服务历史"""
@@ -415,8 +422,11 @@ class TestMachinesServiceHistoryAPI:
 
         self.helper.print_info(f"测试获取机台服务历史 (ID: {self.test_machine_id})...")
 
+        if not self.test_project_id:
+            pytest.skip("没有可用的项目ID")
+
         response = self.helper.get(
-            f"/machines/{self.test_machine_id}/service-history",
+            f"/projects/{self.test_project_id}/machines/{self.test_machine_id}/service-history",
             resource_type=f"machine_{self.test_machine_id}_service_history",
         )
 
@@ -463,14 +473,16 @@ class TestMachinesDocumentsAPI:
                 project_id = result.get("id")
 
                 machine_data = {
-                    "project_id": project_id,
                     "machine_name": "文档测试机台",
                     "machine_type": "测试机",
                     "status": "IN_DESIGN",
                 }
 
+                self.test_project_id = project_id
                 machine_response = self.helper.post(
-                    "/machines", machine_data, resource_type="machine_for_documents"
+                    f"/projects/{project_id}/machines",
+                    machine_data,
+                    resource_type="machine_for_documents"
                 )
                 if self.helper.assert_success(machine_response):
                     machine_result = machine_response.get("data", {})
@@ -480,13 +492,16 @@ class TestMachinesDocumentsAPI:
                     )
                 else:
                     self.test_machine_id = None
+                    self.test_project_id = None
                     self.helper.print_warning("测试机台创建失败，相关测试将跳过")
             else:
                 self.test_machine_id = None
+                self.test_project_id = None
                 self.helper.print_warning("测试项目创建失败，相关测试将跳过")
         except Exception as e:
             self.helper.print_warning(f"测试环境初始化失败: {e}，相关测试将跳过")
             self.test_machine_id = None
+            self.test_project_id = None
 
     def test_upload_machine_document(self):
         """测试上传机台文档"""
@@ -511,8 +526,11 @@ class TestMachinesDocumentsAPI:
             file_content = io.BytesIO("测试文件内容".encode("utf-8"))
             files = {"file": ("test.txt", file_content, "text/plain")}
 
+            if not self.test_project_id:
+                pytest.skip("没有可用的项目ID")
+
             response = self.helper.post(
-                f"/machines/{self.test_machine_id}/documents/upload",
+                f"/projects/{self.test_project_id}/machines/{self.test_machine_id}/documents/upload",
                 data=document_data,
                 files=files,
                 resource_type=f"machine_{self.test_machine_id}_document",
@@ -538,8 +556,11 @@ class TestMachinesDocumentsAPI:
 
         self.helper.print_info(f"测试获取机台文档列表 (ID: {self.test_machine_id})...")
 
+        if not self.test_project_id:
+            pytest.skip("没有可用的项目ID")
+
         response = self.helper.get(
-            f"/machines/{self.test_machine_id}/documents",
+            f"/projects/{self.test_project_id}/machines/{self.test_machine_id}/documents",
             params={
                 "document_type": "SPECIFICATION",
                 "page": 1,
@@ -565,8 +586,11 @@ class TestMachinesDocumentsAPI:
         self.helper.print_info(f"测试下载文档 (ID: {doc_id})...")
 
         try:
+            if not self.test_project_id:
+                pytest.skip("没有可用的项目ID")
+
             response = self.helper.get(
-                f"/machines/{machine_id}/documents/{doc_id}/download",
+                f"/projects/{self.test_project_id}/machines/{machine_id}/documents/{doc_id}/download",
                 resource_type=f"machine_document_{doc_id}_download",
             )
 
@@ -587,8 +611,11 @@ class TestMachinesDocumentsAPI:
         doc_id = self.tracked_resources[0][1]
         self.helper.print_info(f"测试获取文档版本列表 (ID: {doc_id})...")
 
+        if not self.test_project_id:
+            pytest.skip("没有可用的项目ID")
+
         response = self.helper.get(
-            f"/machines/{machine_id}/documents/{doc_id}/versions",
+            f"/projects/{self.test_project_id}/machines/{machine_id}/documents/{doc_id}/versions",
             resource_type=f"machine_document_{doc_id}_versions",
         )
 

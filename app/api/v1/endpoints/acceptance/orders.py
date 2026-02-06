@@ -6,11 +6,12 @@
 - order_crud.py: 基础CRUD操作（list, get, create, update, delete）
 - order_workflow.py: 工作流操作（submit, start, complete）
 - order_items.py: 检查项管理（get items, update item result）
+- order_approval.py: 审批工作流（统一审批引擎集成）
 """
 
 from fastapi import APIRouter
 
-from . import order_crud, order_items, order_workflow
+from . import order_approval, order_crud, order_items, order_workflow
 
 router = APIRouter()
 
@@ -18,3 +19,4 @@ router = APIRouter()
 router.include_router(order_crud.router)
 router.include_router(order_workflow.router)
 router.include_router(order_items.router)
+router.include_router(order_approval.router)

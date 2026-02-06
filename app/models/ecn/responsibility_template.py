@@ -98,7 +98,7 @@ class EcnSolutionTemplate(Base, TimestampMixin):
     created_by = Column(Integer, ForeignKey('users.id'), comment='创建人ID')
 
     # 关系
-    source_ecn = relationship('Ecn', foreign_keys=[source_ecn_id])
+    source_ecn = relationship('Ecn', foreign_keys=[source_ecn_id], back_populates='solution_template')
     verifier = relationship('User', foreign_keys=[verified_by])
     creator = relationship('User', foreign_keys=[created_by])
 

@@ -137,7 +137,7 @@ def export_opportunities(
     if stage:
         query = query.filter(Opportunity.stage == stage)
     if status:
-        query = query.filter(Opportunity.status == status)
+        query = query.filter(Opportunity.gate_status == status)
     if owner_id:
         query = query.filter(Opportunity.owner_id == owner_id)
 

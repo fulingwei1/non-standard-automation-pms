@@ -51,7 +51,7 @@
 1. `audits` - 审计管理（2个端点）
 2. `data-import-export` - 数据导入导出（10个端点）
 3. `hourly-rates` - 时薪配置（8个端点）
-4. `project-roles` - 项目角色（16个端点）
+4. `projects-roles` - 项目角色（16个端点）
 5. `hr-management` - HR管理（14个端点）
 6. `presales-integration` - 售前集成（7个端点）
 

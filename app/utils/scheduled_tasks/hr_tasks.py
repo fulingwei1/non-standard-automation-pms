@@ -130,8 +130,8 @@ def check_employee_confirmation_reminder():
                 EmployeeHrProfile,
                 Employee.id == EmployeeHrProfile.employee_id
             ).filter(
-                Employee.status == "active",
-                EmployeeHrProfile.employment_status == "probation",
+                Employee.employment_status == "active",
+                Employee.employment_type == "probation",
                 EmployeeHrProfile.probation_end_date.isnot(None),
                 EmployeeHrProfile.probation_end_date <= reminder_date,
                 EmployeeHrProfile.probation_end_date >= today

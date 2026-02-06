@@ -248,7 +248,35 @@ from app.api.deps import get_db
 from app.models.base import get_db_session
 ```
 
-### 3. API 端点规范
+### 3. 分页与列表查询（必须使用通用工具）
+
+**列表接口**（返回分页数据）**禁止**手写分页和关键词过滤，**必须**使用通用工具：
+
+- **分页参数**：使用 `pagination = Depends(get_pagination_query)`，不再在端点里声明 `page`/`page_size`，也不写 `offset = (page - 1) * page_size`。
+- **分页应用**：对 Query 使用 `apply_pagination(query, pagination.offset, pagination.limit)`；对内存列表用 `list[pagination.offset : pagination.offset + pagination.limit]`。
+- **关键词搜索**：使用 `apply_keyword_filter(query, Model, keyword, ["field1", "field2"])`，禁止手写 `.like(f"%{keyword}%")` 或 `.ilike(...)`。
+
+**正确导入**：
+```python
+from app.common.pagination import get_pagination_query
+from app.common.query_filters import apply_keyword_filter, apply_pagination
+```
+
+**参考文档**：`docs/design/COMMON_PAGINATION_AND_FILTERS.md`（含迁移步骤与示例）。
+
+### 3.1 时间范围（月初/月末/上月）必须使用通用工具
+
+**凡涉及「当月」「上月」「按年月取范围」的计算**，必须使用 `app.common.date_range`，禁止手写：
+
+- **当月范围**：`month_start, month_end = get_month_range(date.today())`，禁止写 `today.replace(day=1)` 或 `date(year, month, 1)` 再手算月末。
+- **上月范围**：`get_last_month_range(date.today())`。
+- **按年、月取范围**：`get_month_range_by_ym(year, month)`（month 为 1–12）。
+
+**正确导入**：`from app.common.date_range import get_month_range, get_last_month_range, get_month_range_by_ym, month_start, month_end, get_week_range`。
+
+**参考文档**：`docs/design/COMMON_DATE_RANGE.md`。
+
+### 4. API 端点规范
 
 ```python
 @router.get("/{item_id}", response_model=ItemResponse)
@@ -271,7 +299,7 @@ async def get_item(
     return item
 ```
 
-### 4. 模型定义规范
+### 5. 模型定义规范
 
 ```python
 class MyModel(Base, TimestampMixin):

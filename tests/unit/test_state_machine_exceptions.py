@@ -43,8 +43,8 @@ class TestStateTransitionError:
     def test_error_can_be_raised(self):
         """测试错误可以被抛出"""
         with pytest.raises(StateTransitionError) as exc_info:
-            raise StateTransitionError("Transition failed")
-            assert "Transition failed" in str(exc_info.value)
+            raise StateTransitionError("DRAFT", "SUBMITTED", "Transition failed")
+        assert "Transition failed" in str(exc_info.value)
 
     def test_error_inheritance_chain(self):
         """测试异常继承链"""

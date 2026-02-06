@@ -53,6 +53,18 @@ class Project(Base, TimestampMixin):
     status = Column(String(20), default="ST01", comment="状态")
     health = Column(String(10), default="H1", comment="健康度")
 
+    # 审批信息
+    approval_status = Column(
+        String(20),
+        default="NONE",
+        comment="审批状态：NONE/PENDING/APPROVED/REJECTED/CANCELLED",
+    )
+    approval_record_id = Column(
+        Integer,
+        ForeignKey("approval_records.id"),
+        comment="关联审批实例ID",
+    )
+
     # 进度
     progress_pct = Column(Numeric(5, 2), default=0, comment="整体进度(%)")
 
@@ -185,6 +197,7 @@ class Project(Base, TimestampMixin):
         Index("idx_projects_stage", "stage"),
         Index("idx_projects_health", "health"),
         Index("idx_projects_active", "is_active"),
+        Index("idx_projects_approval", "approval_status", "approval_record_id"),
         # Sprint 5.1: 性能优化 - 添加复合索引
         Index("idx_projects_stage_status", "stage", "status"),
         Index("idx_projects_stage_health", "stage", "health"),

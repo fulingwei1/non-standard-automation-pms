@@ -40,6 +40,7 @@ class ApprovalInstance(Base, TimestampMixin):
 
     # 发起人信息
     initiator_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="发起人ID")
+    initiator_name = Column(String(50), comment="发起人姓名（冗余字段）")
     initiator_dept_id = Column(Integer, ForeignKey("departments.id"), comment="发起人部门ID")
 
     # 表单数据

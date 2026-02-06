@@ -10,12 +10,21 @@
 - analytics_service: 仪表盘 + 统计 + 报表
 """
 
-# 服务将在后续任务中逐步实现
-
-from .milestone_service import ProjectMilestoneService
+# 服务聚合入口
+from .analytics_service import ProjectAnalyticsService
+from .core_service import ProjectCoreService
+from .execution_service import ProjectExecutionService
+from .finance_service import ProjectFinanceService
 from .machine_service import ProjectMachineService
+from .milestone_service import ProjectMilestoneService
+from .resource_service import ProjectResourceService
 
 __all__ = [
+    "ProjectCoreService",
+    "ProjectExecutionService",
+    "ProjectResourceService",
+    "ProjectFinanceService",
+    "ProjectAnalyticsService",
     "ProjectMilestoneService",
     "ProjectMachineService",
 ]

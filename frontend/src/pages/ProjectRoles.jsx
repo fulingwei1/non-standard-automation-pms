@@ -51,7 +51,6 @@ export default function ProjectRoles() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [roleOverview, setRoleOverview] = useState([]);
-  const [_roleTypes, setRoleTypes] = useState([]);
   const [roleConfigs, setRoleConfigs] = useState([]);
   const [leads, setLeads] = useState([]);
   const [users, setUsers] = useState([]);
@@ -79,8 +78,6 @@ export default function ProjectRoles() {
       loadRoleConfigs();
       loadLeads();
       loadUsers();
-    } else {
-      loadRoleTypes();
     }
   }, [projectId]);
 
@@ -108,22 +105,6 @@ export default function ProjectRoles() {
     } catch (err) {
       console.error("Failed to load role overview:", err);
       setError(err.response?.data?.detail || err.message || "加载数据失败");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadRoleTypes = async () => {
-    try {
-      setLoading(true);
-      const response = await projectRolesApi.roleTypes.list({
-        active_only: true
-      });
-      const data = response.data?.data || response.data || response;
-      setRoleTypes(data.items || []);
-    } catch (err) {
-      console.error("Failed to load role types:", err);
-      setError(err.response?.data?.detail || err.message || "加载角色类型失败");
     } finally {
       setLoading(false);
     }

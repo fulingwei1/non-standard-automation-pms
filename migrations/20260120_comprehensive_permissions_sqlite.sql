@@ -174,7 +174,7 @@ INSERT OR IGNORE INTO permissions (perm_code, perm_name, module, resource, actio
 ('presales_integration:manage', '售前集成管理', 'presales_integration', 'presales_integration', 'manage', '可以管理售前集成的完整功能');
 
 -- ============================================
--- 19. 项目评估模块 (project-evaluation)
+-- 19. 项目评估模块 (projects/{project_id}/evaluations)
 -- ============================================
 INSERT OR IGNORE INTO permissions (perm_code, perm_name, module, resource, action, description) VALUES
 ('project_evaluation:read', '项目评估查看', 'project_evaluation', 'project_evaluation', 'read', '可以查看项目评估列表和详情'),
@@ -183,7 +183,7 @@ INSERT OR IGNORE INTO permissions (perm_code, perm_name, module, resource, actio
 ('project_evaluation:manage', '项目评估管理', 'project_evaluation', 'project_evaluation', 'manage', '可以管理项目评估的完整流程');
 
 -- ============================================
--- 20. 项目角色模块 (project-roles)
+-- 20. 项目角色模块 (projects/{project_id}/roles)
 -- ============================================
 INSERT OR IGNORE INTO permissions (perm_code, perm_name, module, resource, action, description) VALUES
 ('project_role:read', '项目角色查看', 'project_role', 'project_role', 'read', '可以查看项目角色列表和详情'),

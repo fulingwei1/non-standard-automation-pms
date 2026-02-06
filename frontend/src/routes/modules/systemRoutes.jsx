@@ -8,12 +8,9 @@ import TimesheetDashboard from "../../pages/TimesheetDashboard";
 import TimesheetBatchOperations from "../../pages/TimesheetBatchOperations";
 import Settings from "../../pages/Settings";
 import WorkCenter from "../../pages/WorkCenter";
-import WorkLog from "../../pages/WorkLog";
-import WorkLogConfig from "../../pages/WorkLogConfig";
 import UserManagement from "../../pages/UserManagement";
 import RoleManagement from "../../pages/RoleManagement";
 import PermissionManagement from "../../pages/PermissionManagement";
-import ProjectRoleTypeManagement from "../../pages/ProjectRoleTypeManagement";
 import SchedulerMonitoringDashboard from "../../pages/SchedulerMonitoringDashboard";
 import SchedulerConfigManagement from "../../pages/SchedulerConfigManagement";
 import AuditLogs from "../../pages/AuditLogs";
@@ -196,8 +193,6 @@ export function SystemRoutes() {
       <Route path="/timesheet" element={<Timesheet />} />
       <Route path="/timesheet/dashboard" element={<TimesheetDashboard />} />
       <Route path="/timesheet/batch" element={<TimesheetBatchOperations />} />
-      <Route path="/work-log" element={<WorkLog />} />
-      <Route path="/work-log/config" element={<WorkLogConfig />} />
       <Route path="/settings" element={<Settings />} />
 
       {/* System Management */}
@@ -206,10 +201,6 @@ export function SystemRoutes() {
       <Route path="/user-management" element={<UserManagement />} />
       <Route path="/role-management" element={<RoleManagement />} />
       <Route path="/permission-management" element={<PermissionManagement />} />
-      <Route
-        path="/project-role-types"
-        element={<ProjectRoleTypeManagement />}
-      />
       <Route
         path="/scheduler-monitoring"
         element={<SchedulerMonitoringDashboard />}

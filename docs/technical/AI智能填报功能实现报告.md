@@ -104,20 +104,15 @@
 
 ### 3.2 API端点
 
-**文件**: `app/api/v1/endpoints/work_log.py`
+**文件**: `app/api/v1/endpoints/work_log.py`（已移除）
 
-**新增端点**:
+**状态说明**:
+- 旧的全局工作日志 AI 端点已在 2026-01-31 移除（兼容层清理）
+- 当前工作日志入口为：
+  - `/api/v1/my/work-logs`（个人维度）
+  - `/api/v1/projects/{project_id}/work-logs/`（项目维度）
 
-#### 1. `POST /api/v1/work-logs/ai-analyze`
-- **功能**: AI分析工作日志内容
-- **参数**:
-  - `content`: 工作日志内容
-  - `work_date`: 工作日期
-- **返回**: 分析结果（工作项列表、总工时、置信度等）
-
-#### 2. `GET /api/v1/work-logs/suggested-projects`
-- **功能**: 获取用户参与的项目列表（用于智能推荐）
-- **返回**: 项目列表，按历史填报频率排序
+如需继续使用 AI 分析能力，请在以上新路由下重新提供对应端点。
 
 ---
 

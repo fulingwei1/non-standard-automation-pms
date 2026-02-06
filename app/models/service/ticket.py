@@ -80,7 +80,7 @@ class ServiceTicket(Base, TimestampMixin):
     related_issues = relationship(
         'Issue',
         foreign_keys='Issue.service_ticket_id',
-        backref='service_ticket_ref'
+        back_populates='service_ticket'
     )
 
     def __repr__(self):

@@ -114,17 +114,183 @@ class WorkflowEngine:
     ) -> bool:
         """
         评估节点条件是否满足
+
+        使用 ConditionEvaluator 解析和评估条件表达式，
+        支持 Jinja2 模板、简单 JSON 条件、SQL-like 表达式三种语法。
+
+        Args:
+            node: 审批节点
+            instance: 审批实例
+
+        Returns:
+            条件是否满足
         """
         if not node.condition_expression:
             return True
 
         try:
-            # 简化版：仅支持基本条件判断
-            # TODO: 实现完整条件表达式解析器
-            return True
+            from .condition_parser import ConditionEvaluator, ConditionParseError
+
+            # 构建评估上下文
+            context = self._build_condition_context(instance)
+
+            # 使用条件评估器
+            evaluator = ConditionEvaluator()
+            result = evaluator.evaluate(node.condition_expression, context)
+
+            # 确保返回布尔值
+            if isinstance(result, bool):
+                return result
+            elif isinstance(result, (int, float)):
+                return result > 0
+            elif isinstance(result, str):
+                return result.lower() in ('true', '1', 'yes')
+            else:
+                return bool(result)
+
+        except ConditionParseError as e:
+            logger.warning(f"条件表达式解析失败: {e}, node_id={node.id}")
+            return True  # 解析失败时默认允许
         except Exception as e:
-            logger.error(f"评估节点条件失败: {e}")
+            logger.error(f"评估节点条件失败: {e}, node_id={node.id}")
             return True  # 条件评估失败时默认允许审批
+
+    def _build_condition_context(self, instance: ApprovalInstance) -> dict:
+        """
+        构建条件评估上下文
+
+        包含业务实体数据、表单数据、发起人信息等
+        """
+        from app.models.user import User
+
+        context = {
+            # 实例信息
+            "instance": {
+                "id": instance.id,
+                "flow_code": instance.flow_code,
+                "business_type": instance.business_type,
+                "business_id": instance.business_id,
+                "status": instance.current_status,
+                "submitted_at": instance.submitted_at,
+            },
+            # 表单数据 (从业务数据中提取)
+            "form": {},
+            # 业务实体
+            "entity": {},
+            # 发起人
+            "initiator": {},
+        }
+
+        # 获取发起人信息
+        if instance.submitted_by:
+            submitter = self.db.query(User).filter(User.id == instance.submitted_by).first()
+            if submitter:
+                context["initiator"] = {
+                    "id": submitter.id,
+                    "username": submitter.username,
+                    "real_name": submitter.real_name,
+                    "department": submitter.department,
+                }
+                context["user"] = context["initiator"]
+
+        # 获取业务实体数据
+        entity_data = self._get_business_entity_data(
+            instance.business_type,
+            instance.business_id
+        )
+        if entity_data:
+            context["entity"] = entity_data
+            context["form"] = entity_data  # 兼容表单字段访问
+
+        return context
+
+    def _get_business_entity_data(self, business_type: str, business_id: int) -> dict:
+        """
+        获取业务实体数据
+
+        根据业务类型查询对应的业务数据
+        """
+        try:
+            if business_type == "ECN":
+                from app.models.ecn import Ecn
+                ecn = self.db.query(Ecn).filter(Ecn.id == business_id).first()
+                if ecn:
+                    return {
+                        "id": ecn.id,
+                        "ecn_no": ecn.ecn_no,
+                        "ecn_type": ecn.ecn_type,
+                        "status": ecn.status,
+                        "priority": getattr(ecn, 'priority', None),
+                        "change_reason": ecn.change_reason,
+                        "estimated_cost": getattr(ecn, 'estimated_cost', 0),
+                    }
+
+            elif business_type == "SALES_QUOTE":
+                from app.models.sales import SalesQuote
+                quote = self.db.query(SalesQuote).filter(SalesQuote.id == business_id).first()
+                if quote:
+                    return {
+                        "id": quote.id,
+                        "quote_no": quote.quote_no,
+                        "status": quote.status,
+                        "total_amount": float(quote.total_amount) if quote.total_amount else 0,
+                        "gross_margin": float(quote.gross_margin) if hasattr(quote, 'gross_margin') and quote.gross_margin else 0,
+                        "customer_id": quote.customer_id,
+                    }
+
+            elif business_type == "SALES_INVOICE":
+                from app.models.sales import SalesInvoice
+                invoice = self.db.query(SalesInvoice).filter(SalesInvoice.id == business_id).first()
+                if invoice:
+                    return {
+                        "id": invoice.id,
+                        "invoice_no": getattr(invoice, 'invoice_no', None),
+                        "status": invoice.status,
+                        "amount": float(invoice.amount) if invoice.amount else 0,
+                    }
+
+            elif business_type == "PURCHASE_ORDER":
+                from app.models.purchase import PurchaseOrder
+                po = self.db.query(PurchaseOrder).filter(PurchaseOrder.id == business_id).first()
+                if po:
+                    return {
+                        "id": po.id,
+                        "order_no": po.order_no,
+                        "status": po.status,
+                        "total_amount": float(po.total_amount) if po.total_amount else 0,
+                        "supplier_id": po.supplier_id,
+                    }
+
+            elif business_type == "ACCEPTANCE":
+                from app.models.acceptance import AcceptanceOrder
+                order = self.db.query(AcceptanceOrder).filter(AcceptanceOrder.id == business_id).first()
+                if order:
+                    return {
+                        "id": order.id,
+                        "order_no": order.order_no,
+                        "acceptance_type": order.acceptance_type,
+                        "status": order.status,
+                        "project_id": order.project_id,
+                    }
+
+            elif business_type == "OUTSOURCING":
+                from app.models.outsourcing import OutsourcingOrder
+                order = self.db.query(OutsourcingOrder).filter(OutsourcingOrder.id == business_id).first()
+                if order:
+                    return {
+                        "id": order.id,
+                        "order_no": order.order_no,
+                        "status": order.status,
+                        "total_amount": float(order.total_amount) if order.total_amount else 0,
+                        "vendor_id": order.vendor_id,
+                    }
+
+            # 默认返回空字典
+            return {}
+
+        except Exception as e:
+            logger.error(f"获取业务实体数据失败: {e}, type={business_type}, id={business_id}")
+            return {}
 
     def submit_approval(
         self,

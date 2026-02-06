@@ -2,7 +2,7 @@ import { useEffect as _useEffect, useState as _useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { cn } from "../lib/utils";
-import { projectApi, machineApi } from "../services/api";
+import { projectApi } from "../services/api";
 import { formatCurrency as _formatCurrency, getHealthColor as _getHealthColor, getStageName as _getStageName } from "../lib/utils";
 import {
   DashboardLayout,
@@ -59,13 +59,7 @@ export default function Dashboard() {
     cacheTime: 5 * 60 * 1000 // 5分钟缓存
   });
 
-  const { data: machinesData, loading: machinesLoading } = useDashboardData({
-    fetchFn: () => machineApi.list({}),
-    cacheKey: "dashboard_machines",
-    cacheTime: 5 * 60 * 1000
-  });
-
-  const loading = projectsLoading || machinesLoading;
+  const loading = projectsLoading;
 
   // 处理不同API响应格式
   const projects = (() => {
@@ -76,18 +70,16 @@ export default function Dashboard() {
     return [];
   })();
 
-  const machines = (() => {
-    if (!machinesData) {return [];}
-    if (Array.isArray(machinesData)) {return machinesData;}
-    if (Array.isArray(machinesData.items)) {return machinesData.items;}
-    if (Array.isArray(machinesData.data)) {return machinesData.data;}
-    return [];
-  })();
+  const totalMachines = projects.reduce(
+    (sum, project) =>
+      sum + (project.machine_count || project.machineCount || 0),
+    0
+  );
 
   const stats = {
     totalProjects: projects.length,
     activeProjects: projects.filter((p) => p.health !== "H4").length,
-    totalMachines: machines.length,
+    totalMachines,
     atRiskProjects: projects.filter((p) => ["H2", "H3"].includes(p.health)).
     length
   };

@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.dashboard.base import BaseDashboardEndpoint
+from app.common.date_range import get_month_range_by_ym
 from app.core import security
 from app.models.business_support import (
     BiddingProject,
@@ -303,13 +304,7 @@ class BusinessSupportDashboardEndpoint(BaseDashboardEndpoint):
                 year = today.year
                 month_num = today.month
 
-            month_start = date(year, month_num, 1)
-            # 计算下个月第一天，然后减一天得到本月最后一天
-            if month_num == 12:
-                month_end = date(year + 1, 1, 1) - timedelta(days=1)
-            else:
-                month_end = date(year, month_num + 1, 1) - timedelta(days=1)
-
+            month_start, month_end = get_month_range_by_ym(year, month_num)
             month_str = f"{year}-{month_num:02d}"
 
             # 1. 新签合同数（本月签订的合同）

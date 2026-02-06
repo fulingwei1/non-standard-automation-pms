@@ -7,7 +7,7 @@ import logging
 from datetime import date, datetime, timedelta
 from typing import Optional
 
-from sqlalchemy import func
+from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 
 from app.models.alert import ProjectHealthSnapshot
@@ -100,7 +100,7 @@ def daily_spec_match_check():
             for project in projects:
                 bom_headers = db.query(BomHeader).filter(
                     BomHeader.project_id == project.id,
-                    BomHeader.is_active == True
+                    BomHeader.is_latest == True
                 ).all()
 
                 for bom in bom_headers:
@@ -207,22 +207,31 @@ def daily_health_snapshot():
             snapshot_count = 0
 
             for project in projects:
-                # 计算当前健康度
-                health_data = calculator.calculate_project_health(project.id)
+                # 计算并更新健康度
+                health_result = calculator.calculate_and_update(project)
 
-                if health_data:
+                if health_result:
                     # 创建快照记录
+                    new_health = health_result.get('new_health', 'H1')
                     snapshot = ProjectHealthSnapshot(
                         project_id=project.id,
                         snapshot_date=datetime.now().date(),
-                        health_score=health_data.get('health_score', 0),
-                        progress_score=health_data.get('progress_score', 0),
-                        quality_score=health_data.get('quality_score', 0),
-                        cost_score=health_data.get('cost_score', 0),
-                        risk_score=health_data.get('risk_score', 0),
-                        overall_status=health_data.get('overall_status', 'normal'),
-                        risk_factors=health_data.get('risk_factors', []),
-                        recommendations=health_data.get('recommendations', [])
+                        overall_health=new_health,
+                        schedule_health=new_health,
+                        cost_health=new_health,
+                        quality_health=new_health,
+                        resource_health=new_health,
+                        health_score=100 if new_health == 'H1' else
+                                     70 if new_health == 'H2' else
+                                     30 if new_health == 'H3' else 0,
+                        open_alerts=0,
+                        open_exceptions=0,
+                        blocking_issues=0,
+                        schedule_variance=0,
+                        milestone_on_track=0,
+                        milestone_delayed=0,
+                        cost_variance=0,
+                        budget_used_pct=0
                     )
 
                     db.add(snapshot)
@@ -251,7 +260,8 @@ def calculate_progress_summary():
     """
     try:
         with get_db_session() as db:
-            from app.models.progress import MilestoneProgress, TaskProgress
+            from app.models.progress import Task
+            from app.models.project.financial import ProjectMilestone
 
             # 获取所有活跃项目
             projects = db.query(Project).filter(
@@ -262,31 +272,35 @@ def calculate_progress_summary():
             updated_count = 0
 
             for project in projects:
-                # 计算任务进度
+                # 计算任务进度（使用 Task 模型）
                 task_progress_summary = db.query(
-                    func.avg(TaskProgress.completion_rate).label('avg_completion'),
-                    func.count(TaskProgress.id).label('total_tasks'),
-                    func.sum(func.case([(TaskProgress.status == 'completed', 1)], else_=0)).label('completed_tasks')
-                ).filter(TaskProgress.project_id == project.id).first()
+                    func.avg(Task.progress_percent).label('avg_completion'),
+                    func.count(Task.id).label('total_tasks'),
+                    func.sum(case((Task.status == 'DONE', 1), else_=0)).label('completed_tasks')
+                ).filter(Task.project_id == project.id).first()
 
-                # 计算里程碑进度
+                # 计算里程碑进度（使用 ProjectMilestone 模型）
                 milestone_progress_summary = db.query(
-                    func.avg(MilestoneProgress.completion_rate).label('avg_completion'),
-                    func.count(MilestoneProgress.id).label('total_milestones'),
-                    func.sum(func.case([(MilestoneProgress.status == 'completed', 1)], else_=0)).label('completed_milestones')
-                ).filter(MilestoneProgress.project_id == project.id).first()
+                    func.count(ProjectMilestone.id).label('total_milestones'),
+                    func.sum(case((ProjectMilestone.status == 'COMPLETED', 1), else_=0)).label('completed_milestones')
+                ).filter(ProjectMilestone.project_id == project.id).first()
+
+                total_tasks = task_progress_summary.total_tasks or 0
+                total_milestones = milestone_progress_summary.total_milestones or 0
 
                 # 更新项目的进度汇总
-                if task_progress_summary.total_tasks > 0 or milestone_progress_summary.total_milestones > 0:
-                    task_completion_rate = (task_progress_summary.completed_tasks / task_progress_summary.total_tasks * 100) if task_progress_summary.total_tasks > 0 else 0
-                    milestone_completion_rate = (milestone_progress_summary.completed_milestones / milestone_progress_summary.total_milestones * 100) if milestone_progress_summary.total_milestones > 0 else 0
+                if total_tasks > 0 or total_milestones > 0:
+                    completed_tasks = task_progress_summary.completed_tasks or 0
+                    completed_milestones = milestone_progress_summary.completed_milestones or 0
+
+                    task_completion_rate = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
+                    milestone_completion_rate = (completed_milestones / total_milestones * 100) if total_milestones > 0 else 0
 
                     # 综合进度计算（任务权重60%，里程碑权重40%）
                     overall_progress = (task_completion_rate * 0.6) + (milestone_completion_rate * 0.4)
 
                     # 更新项目进度
-                    project.progress_percentage = round(overall_progress, 2)
-                    project.last_progress_update = datetime.now()
+                    project.progress_pct = round(overall_progress, 2)
 
                     updated_count += 1
 
@@ -321,38 +335,41 @@ def check_project_deadline_alerts():
             projects = db.query(Project).filter(
                 Project.is_active == True,
                 Project.status != 'completed',
-                Project.end_date <= upcoming_deadline,
-                Project.end_date >= datetime.now().date()
+                Project.planned_end_date <= upcoming_deadline,
+                Project.planned_end_date >= datetime.now().date()
             ).all()
 
             alert_count = 0
 
             for project in projects:
-                days_remaining = (project.end_date - datetime.now().date()).days
+                days_remaining = (project.planned_end_date - datetime.now().date()).days
 
-                # 检查是否已存在相同预警
+                # 检查是否已存在相同预警（使用target_type和target_id）
                 existing_alert = db.query(AlertRecord).filter(
-                    AlertRecord.source_type == 'project',
-                    AlertRecord.source_id == project.id,
-                    AlertRecord.alert_type == 'deadline_warning',
-                    AlertRecord.status == 'active'
+                    AlertRecord.target_type == 'project',
+                    AlertRecord.target_id == project.id,
+                    AlertRecord.alert_title.contains('截止日期'),
+                    AlertRecord.status == 'PENDING'
                 ).first()
 
                 if existing_alert:
                     continue
 
                 # 创建预警记录
-                urgency = 'high' if days_remaining <= 3 else 'medium'
+                urgency = 'CRITICAL' if days_remaining <= 3 else 'HIGH'
 
                 alert = AlertRecord(
-                    source_type='project',
-                    source_id=project.id,
-                    alert_type='deadline_warning',
+                    alert_no=f"ALT-DL-{project.id}-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                    rule_id=1,  # 使用默认规则ID
+                    target_type='project',
+                    target_id=project.id,
+                    target_no=project.project_code,
+                    target_name=project.project_name,
                     alert_title=f'项目截止日期预警',
-                    alert_content=f'项目 "{project.name}" 将在 {days_remaining} 天后截止（{project.end_date}），当前进度 {project.progress_percentage}%。',
+                    alert_content=f'项目 "{project.project_name}" 将在 {days_remaining} 天后截止（{project.planned_end_date}），当前进度 {project.progress_pct or 0}%。',
                     alert_level=urgency,
-                    alert_status='active',
-                    created_time=datetime.now(),
+                    status='PENDING',
+                    triggered_at=datetime.now(),
                     project_id=project.id
                 )
 
@@ -400,33 +417,36 @@ def check_project_cost_overrun():
                 ).scalar() or 0
 
                 # 检查是否超支
-                if project.budget and actual_cost > project.budget:
-                    overrun_amount = actual_cost - project.budget
-                    overrun_percentage = (overrun_amount / project.budget) * 100
+                if project.budget_amount and actual_cost > project.budget_amount:
+                    overrun_amount = actual_cost - project.budget_amount
+                    overrun_percentage = (overrun_amount / project.budget_amount) * 100
 
-                    # 检查是否已存在相同预警
+                    # 检查是否已存在相同预警（使用target_type和target_id）
                     existing_alert = db.query(AlertRecord).filter(
-                        AlertRecord.source_type == 'project',
-                        AlertRecord.source_id == project.id,
-                        AlertRecord.alert_type == 'cost_overrun',
-                        AlertRecord.status == 'active'
+                        AlertRecord.target_type == 'project',
+                        AlertRecord.target_id == project.id,
+                        AlertRecord.alert_title.contains('成本超支'),
+                        AlertRecord.status == 'PENDING'
                     ).first()
 
                     if existing_alert:
                         continue
 
                     # 创建成本超支预警
-                    urgency = 'critical' if overrun_percentage > 20 else 'high'
+                    urgency = 'CRITICAL' if overrun_percentage > 20 else 'HIGH'
 
                     alert = AlertRecord(
-                        source_type='project',
-                        source_id=project.id,
-                        alert_type='cost_overrun',
+                        alert_no=f"ALT-CO-{project.id}-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                        rule_id=1,  # 使用默认规则ID
+                        target_type='project',
+                        target_id=project.id,
+                        target_no=project.project_code,
+                        target_name=project.project_name,
                         alert_title=f'项目成本超支预警',
-                        alert_content=f'项目 "{project.name}" 成本已超支 {overrun_percentage:.1f}%（超支金额：{overrun_amount:,.2f}），预算 {project.budget:,.2f}，实际成本 {actual_cost:,.2f}。',
+                        alert_content=f'项目 "{project.project_name}" 成本已超支 {overrun_percentage:.1f}%（超支金额：{overrun_amount:,.2f}），预算 {project.budget_amount:,.2f}，实际成本 {actual_cost:,.2f}。',
                         alert_level=urgency,
-                        alert_status='active',
-                        created_time=datetime.now(),
+                        status='PENDING',
+                        triggered_at=datetime.now(),
                         project_id=project.id
                     )
 

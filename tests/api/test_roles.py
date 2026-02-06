@@ -239,6 +239,48 @@ class TestRolePermissions:
         assert_success_response(response_data)
 
 
+class TestRolePermissionGuards:
+    """角色权限边界测试"""
+
+    def test_create_role_requires_management_permission(
+        self,
+        client: TestClient,
+        normal_user_token: str,
+    ):
+        """没有角色管理权限的用户创建角色应被拒绝"""
+        if not normal_user_token:
+            pytest.skip("Normal user token not available")
+
+        headers = _auth_headers(normal_user_token)
+        role_data = {
+            "role_code": f"NOPE_{uuid.uuid4().hex[:4]}",
+            "role_name": "无权限用户角色",
+            "description": "should fail",
+        }
+        response = client.post(
+            f"{settings.API_V1_PREFIX}/roles/",
+            json=role_data,
+            headers=headers,
+        )
+        assert response.status_code == 403
+
+    def test_role_templates_require_management_permission(
+        self,
+        client: TestClient,
+        normal_user_token: str,
+    ):
+        """没有管理权限的用户无法查看角色模板"""
+        if not normal_user_token:
+            pytest.skip("Normal user token not available")
+
+        headers = _auth_headers(normal_user_token)
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/roles/templates",
+            headers=headers,
+        )
+        assert response.status_code == 403
+
+
 class TestRoleNavigation:
     """角色导航配置测试"""
 

@@ -39,6 +39,8 @@ def read_users(
 ) -> Any:
     """获取用户列表（支持分页和筛选）"""
     try:
+        from app.models.user import UserRole, Role
+
         query = db.query(User)
 
         if keyword:
@@ -61,10 +63,47 @@ def read_users(
         offset = (page - 1) * page_size
         users = query.order_by(User.created_at.desc()).offset(offset).limit(page_size).all()
 
+        # 批量查询所有用户的角色（避免N+1查询）
+        user_ids = [u.id for u in users]
+        user_roles_data = (
+            db.query(UserRole.user_id, UserRole.role_id, Role.role_name)
+            .join(Role, UserRole.role_id == Role.id)
+            .filter(UserRole.user_id.in_(user_ids))
+            .all()
+        )
+
+        # 构建用户角色映射
+        user_roles_map = {}
+        for user_id, role_id, role_name in user_roles_data:
+            if user_id not in user_roles_map:
+                user_roles_map[user_id] = {"role_ids": [], "role_names": []}
+            user_roles_map[user_id]["role_ids"].append(role_id)
+            user_roles_map[user_id]["role_names"].append(role_name)
+
         user_responses = []
         for u in users:
             try:
-                user_responses.append(build_user_response(u))
+                # 使用预加载的角色数据（避免N+1查询）
+                roles_data = user_roles_map.get(u.id, {"role_ids": [], "role_names": []})
+                user_responses.append(UserResponse(
+                    id=u.id,
+                    username=u.username,
+                    employee_id=getattr(u, "employee_id", None),
+                    email=u.email or "",
+                    phone=u.phone or "",
+                    real_name=u.real_name or "",
+                    employee_no=u.employee_no or "",
+                    department=u.department or "",
+                    position=u.position or "",
+                    avatar=u.avatar,
+                    is_active=u.is_active,
+                    is_superuser=u.is_superuser,
+                    last_login_at=u.last_login_at,
+                    roles=roles_data["role_names"],
+                    role_ids=roles_data["role_ids"],
+                    created_at=u.created_at,
+                    updated_at=u.updated_at,
+                ))
             except Exception as e:
                 logger.error(f"构建用户 {u.username} 响应失败: {e}", exc_info=True)
                 # 构建失败时使用空角色列表

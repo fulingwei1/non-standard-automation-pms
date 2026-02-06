@@ -74,7 +74,7 @@
     ├── /roles/                 # ← 合并自 project_roles/
     │   └── /                   # 项目角色配置
     │
-    ├── /evaluation/            # ← 合并自 project_evaluation/
+    ├── /evaluations/           # ← 合并自 project_evaluation/
     │   └── /                   # 项目评价
     │
     ├── /work-logs/             # ← 合并自 work_log/
@@ -82,6 +82,8 @@
     │
     └── /timesheet/             # ← 合并自 timesheet/ (项目维度)
         └── /                   # 项目工时记录
+
+> 注：旧兼容层已于 2026-01-31 清理移除，请使用项目子路由。
 ```
 
 #### 1.2 跨项目顶级路由（保持独立）
@@ -165,7 +167,7 @@ app/services/project/
 
 #### 3.1 API 层目录
 
-**迁移前** (13 个独立目录):
+**迁移前** (13 个独立目录，历史记录，兼容层已移除):
 ```
 app/api/v1/endpoints/
 ├── projects/           (51 files)
@@ -173,13 +175,13 @@ app/api/v1/endpoints/
 ├── project_stages/     (12 files)
 ├── milestones/         (3 files)
 ├── members/            (5 files)
-├── machines/           (4 files)
+├── machines/           (4 files，已移除)
 ├── costs/              (8 files)
 ├── timesheet/          (8 files)
 ├── workload/           (6 files)
-├── work_log/           (5 files)
-├── project_evaluation/ (4 files)
-├── project_roles/      (6 files)
+├── work_log/           (5 files，已移除)
+├── project_evaluation/ (4 files，已移除)
+├── project_roles/      (6 files，已移除)
 └── rd_project/         (9 files)
 ```
 
@@ -195,7 +197,7 @@ app/api/v1/endpoints/
 │   ├── machines/
 │   ├── costs/
 │   ├── roles/
-│   ├── evaluation/
+│   ├── evaluations/
 │   ├── work_logs/
 │   ├── timesheet/
 │   └── templates/
@@ -291,7 +293,7 @@ async def get_milestone_legacy(milestone_id: int, db: Session = Depends(get_db))
 | `machines/` | `projects/{id}/machines/` | 4 | P2 |
 | `costs/` | `projects/{id}/costs/` | 8 | P2 |
 | `project_roles/` | `projects/{id}/roles/` | 6 | P3 |
-| `project_evaluation/` | `projects/{id}/evaluation/` | 4 | P3 |
+| `project_evaluation/` | `projects/{id}/evaluations/` | 4 | P3 |
 | `work_log/` | `projects/{id}/work-logs/` | 5 | P3 |
 | `timesheet/` (项目) | `projects/{id}/timesheet/` | 4 | P3 |
 | `timesheet/` (个人) | `my/timesheet/` | 4 | P3 |
@@ -303,7 +305,7 @@ async def get_milestone_legacy(milestone_id: int, db: Session = Depends(get_db))
 
 | 风险 | 影响 | 缓解措施 |
 |------|------|----------|
-| 旧 API 调用失败 | 高 | 保留旧路由作为代理，添加 deprecation 头 |
+| 旧 API 调用失败 | 高 | 兼容层已移除，确保前端/客户端全部切换到新路由 |
 | 服务层调用链断裂 | 中 | 渐进式迁移，旧服务暂时代理到新服务 |
 | 前端遗漏更新 | 中 | 后端日志记录废弃 API 调用，主动发现遗漏 |
 | 测试覆盖不足 | 低 | 迁移前补充关键路径测试 |
@@ -335,19 +337,19 @@ async def get_milestone_legacy(milestone_id: int, db: Session = Depends(get_db))
 ### A. 当前模块统计
 
 ```
-API 层:
+API 层（历史统计，已迁移并清理兼容层）:
 ├── projects/           51 files
 ├── progress/           18 files
 ├── project_stages/     12 files
 ├── rd_project/          9 files
 ├── costs/               8 files
 ├── timesheet/           8 files
-├── project_roles/       6 files
+├── project_roles/       6 files（已移除）
 ├── workload/            6 files
 ├── members/             5 files
-├── work_log/            5 files
-├── machines/            4 files
-├── project_evaluation/  4 files
+├── work_log/            5 files（已移除）
+├── machines/            4 files（已移除）
+├── project_evaluation/  4 files（已移除）
 └── milestones/          3 files
 Total: 139 files
 

@@ -11,6 +11,7 @@ from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.date_range import get_month_range
 from app.core import security
 from app.models.material import Material, MaterialCategory
 from app.models.vendor import Vendor
@@ -122,7 +123,7 @@ def get_warehouse_statistics(
 
     # 库存周转率（简化计算：本月入库金额 / 平均库存金额）
     today = date.today()
-    month_start = date(today.year, today.month, 1)
+    month_start, _ = get_month_range(today)
 
     # 本月入库金额（从入库单计算）
     inbound_amount = db.query(func.sum(GoodsReceiptItem.amount)).filter(

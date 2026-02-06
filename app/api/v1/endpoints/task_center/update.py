@@ -1,71 +1,38 @@
 # -*- coding: utf-8 -*-
 """
-更新任务进度 - 自动生成
-从 task_center.py 拆分
+更新任务进度 - 使用统一 TaskProgressService
+从 task_center.py 拆分，与 engineers/progress 共用进度更新逻辑
 """
 
-# -*- coding: utf-8 -*-
-"""
-个人任务中心 API endpoints
-核心功能：多来源任务聚合、智能排序、转办协作
-"""
+from typing import Any
 
-from datetime import date, datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
-
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
-from sqlalchemy import and_, case, desc, func, or_
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.core.config import settings
-from app.models.notification import Notification
-from app.models.project import Project
-from app.models.task_center import (
-    JobDutyTemplate,
-    TaskComment,
-    TaskOperationLog,
-    TaskReminder,
-    TaskUnified,
-)
 from app.models.user import User
-from app.schemas.common import PaginatedResponse, ResponseModel
-from app.schemas.task_center import (
-    BatchOperationResponse,
-    BatchOperationStatistics,
-    BatchTaskOperation,
-    TaskCommentCreate,
-    TaskCommentResponse,
-    TaskOverviewResponse,
-    TaskProgressUpdate,
-    TaskTransferRequest,
-    TaskUnifiedCreate,
-    TaskUnifiedListResponse,
-    TaskUnifiedResponse,
-    TaskUnifiedUpdate,
-)
-from app.services.sales_reminder import create_notification
+from app.schemas.task_center import TaskProgressUpdate, TaskUnifiedResponse
+from app.services.task_progress_service import update_task_progress as update_task_progress_service
 
 from .detail import get_task_detail
-
-router = APIRouter()
-
-# 使用统一的编码生成工具和日志工具
-from .batch_helpers import generate_task_code, log_task_operation
-
-
-from fastapi import APIRouter
+from .batch_helpers import log_task_operation
 
 router = APIRouter(
     prefix="/task-center/update",
-    tags=["update"]
+    tags=["update"],
 )
 
-# 共 1 个路由
 
-# ==================== 更新任务进度 ====================
+def _progress_error_to_http(exc: ValueError) -> HTTPException:
+    """将服务层 ValueError 映射为 HTTP 异常"""
+    msg = str(exc)
+    if "任务不存在" in msg:
+        return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=msg)
+    if "只能更新" in msg or "无权" in msg:
+        return HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=msg)
+    return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
+
 
 @router.put("/tasks/{task_id}/progress", response_model=TaskUnifiedResponse, status_code=status.HTTP_200_OK)
 def update_task_progress(
@@ -76,46 +43,37 @@ def update_task_progress(
     current_user: User = Depends(security.require_permission("task_center:update")),
 ) -> Any:
     """
-    更新任务进度
+    更新任务进度（与工程师进度接口共用 TaskProgressService）
     """
-    task = db.query(TaskUnified).filter(TaskUnified.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=404, detail="任务不存在")
-
-    if task.assignee_id != current_user.id:
-        raise HTTPException(status_code=403, detail="无权更新此任务")
-
-    old_progress = task.progress
-    old_hours = task.actual_hours
-
-    task.progress = progress_in.progress
-    if progress_in.actual_hours is not None:
-        task.actual_hours = progress_in.actual_hours
-    task.updated_by = current_user.id
-
-    # 如果进度为100%，自动完成
-    if progress_in.progress >= 100 and task.status != "COMPLETED":
-        task.status = "COMPLETED"
-        task.actual_end_date = datetime.now().date()
-
-    # 如果开始更新进度且未开始，自动开始
-    if progress_in.progress > 0 and task.status == "ACCEPTED":
-        task.status = "IN_PROGRESS"
-        if not task.actual_start_date:
-            task.actual_start_date = datetime.now().date()
-
-    db.add(task)
-    db.commit()
-    db.refresh(task)
+    try:
+        task, _ = update_task_progress_service(
+            db,
+            task_id=task_id,
+            progress=progress_in.progress,
+            updater_id=current_user.id,
+            actual_hours=progress_in.actual_hours,
+            progress_note=progress_in.note,
+            reject_completed=False,
+            create_progress_log=bool(progress_in.note),
+            run_aggregation=True,
+        )
+    except ValueError as e:
+        raise _progress_error_to_http(e)
 
     log_task_operation(
-        db, task.id, "UPDATE_PROGRESS",
-        f"更新进度：{old_progress}% -> {progress_in.progress}%",
-        current_user.id, current_user.real_name or current_user.username,
-        old_value={"progress": old_progress, "actual_hours": float(old_hours) if old_hours else 0},
-        new_value={"progress": progress_in.progress, "actual_hours": float(progress_in.actual_hours) if progress_in.actual_hours else None}
+        db,
+        task.id,
+        "UPDATE_PROGRESS",
+        f"更新进度：{task.progress}%",
+        current_user.id,
+        current_user.real_name or current_user.username,
+        old_value={},
+        new_value={
+            "progress": task.progress,
+            "actual_hours": float(task.actual_hours) if task.actual_hours else None,
+        },
     )
 
-    return get_task_detail(task_id, db, current_user)
+    return get_task_detail(db=db, task_id=task_id, current_user=current_user)
 
 

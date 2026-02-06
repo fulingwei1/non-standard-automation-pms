@@ -27,6 +27,10 @@ class GateStatusEnum(str, Enum):
     PENDING = "PENDING"
     PASSED = "PASSED"
     FAILED = "FAILED"
+    # 阶段门待审批状态
+    G2_PENDING = "G2_PENDING"  # 商机转报价待审批
+    G3_PENDING = "G3_PENDING"  # 报价转合同待审批
+    G4_PENDING = "G4_PENDING"  # 合同转项目待审批
 
 
 class QuoteStatusEnum(str, Enum):

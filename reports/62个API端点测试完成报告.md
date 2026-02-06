@@ -110,9 +110,9 @@
 
 ### 4. Machines模块（3个端点）- ✅ 100%
 
-- ✅ `GET /api/v1/machines/projects/{id}/machines` - 项目机台列表
-- ✅ `POST /api/v1/machines/projects/{id}/machines` - 创建机台
-- ✅ `PUT /api/v1/machines/{machine_id}/progress` - 更新进度
+- ✅ `GET /api/v1/projects/{project_id}/machines` - 项目机台列表
+- ✅ `POST /api/v1/projects/{project_id}/machines` - 创建机台
+- ✅ `PUT /api/v1/projects/{project_id}/machines/{machine_id}/progress` - 更新进度
 
 ### 5. Org模块（3个端点）- ✅ 100%
 

@@ -21,6 +21,11 @@ from app.services.channel_handlers.base import (
     NotificationRequest,
     NotificationResult,
 )
+from app.services.channel_handlers.system_handler import SystemChannelHandler
+from app.services.channel_handlers.email_handler import EmailChannelHandler
+from app.services.channel_handlers.wechat_handler import WeChatChannelHandler
+from app.services.channel_handlers.sms_handler import SMSChannelHandler
+from app.services.channel_handlers.webhook_handler import WebhookChannelHandler
 
 if TYPE_CHECKING:
     from app.models.alert import Alert

@@ -8,42 +8,39 @@
 
 2025-01-XX
 
-## 1. 机台管理 API (`/api/v1/machines`)
+## 1. 机台管理 API (`/api/v1/projects/{project_id}/machines`)
 
 ### 已实现的端点
 
-1. **GET `/machines`** - 获取机台列表（支持分页、筛选）
+1. **GET `/projects/{project_id}/machines`** - 获取项目机台列表（支持分页、筛选）
    - 分页参数：`page`, `page_size`
-   - 筛选参数：`project_id`, `stage`, `status`, `health`
+   - 筛选参数：`stage`, `status`, `health`
    - 返回：`PaginatedResponse[MachineResponse]`
 
-2. **GET `/projects/{project_id}/machines`** - 获取项目的机台列表
-   - 返回：`List[MachineResponse]`
-
-3. **POST `/machines`** - 创建机台
+2. **POST `/projects/{project_id}/machines`** - 为项目创建机台
    - 请求体：`MachineCreate`
    - 返回：`MachineResponse`
 
-4. **POST `/projects/{project_id}/machines`** - 为项目创建机台
-   - 请求体：`MachineCreate`
+3. **GET `/projects/{project_id}/machines/{machine_id}`** - 获取机台详情
    - 返回：`MachineResponse`
 
-5. **GET `/machines/{machine_id}`** - 获取机台详情
-   - 返回：`MachineResponse`
-
-6. **PUT `/machines/{machine_id}`** - 更新机台
+4. **PUT `/projects/{project_id}/machines/{machine_id}`** - 更新机台
    - 请求体：`MachineUpdate`
    - 返回：`MachineResponse`
 
-7. **PUT `/machines/{machine_id}/progress`** - 更新机台进度
+5. **PUT `/projects/{project_id}/machines/{machine_id}/progress`** - 更新机台进度
    - 查询参数：`progress_pct` (0-100)
    - 返回：`MachineResponse`
 
-8. **GET `/machines/{machine_id}/bom`** - 获取机台的BOM列表
+6. **GET `/projects/{project_id}/machines/{machine_id}/bom`** - 获取机台的BOM列表
    - 返回：BOM列表（简化版）
    - 注意：完整的BOM API在 `/api/v1/bom/machines/{machine_id}/bom`
 
-9. **DELETE `/machines/{machine_id}`** - 删除机台
+7. **GET `/projects/{project_id}/machines/summary`** - 项目机台汇总
+
+8. **POST `/projects/{project_id}/machines/recalculate`** - 重新计算项目机台汇总
+
+9. **DELETE `/projects/{project_id}/machines/{machine_id}`** - 删除机台
    - 检查是否有关联的BOM，如有则阻止删除
    - 返回：`ResponseModel`
 
@@ -229,6 +226,5 @@
 - `app/api/v1/endpoints/projects.py` - 项目主API（包含阶段初始化）
 - `app/schemas/project.py` - 项目相关Schema定义
 - `app/utils/project_utils.py` - 项目工具函数（阶段初始化）
-
 
 

@@ -27,9 +27,15 @@ ENTITY_TYPE_PROJECT = "PROJECT"
 
 
 @router.post(
-    "/approval/action",
+    "/",
     response_model=ResponseModel[Dict[str, Any]],
     status_code=status.HTTP_200_OK,
+)
+@router.post(
+    "/action",
+    response_model=ResponseModel[Dict[str, Any]],
+    status_code=status.HTTP_200_OK,
+    include_in_schema=False,
 )
 def perform_project_approval_action(
     *,

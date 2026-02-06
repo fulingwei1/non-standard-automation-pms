@@ -306,9 +306,8 @@ class TestBomToPurchaseWorkflowE2E:
         # ========== Step 2: 创建设备/机台 ==========
         machine_code = _unique_code("PN")
         machine_response = client.post(
-            f"{settings.API_V1_PREFIX}/machines/",
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/",
             json={
-                "project_id": project_id,
                 "machine_code": machine_code,
                 "machine_name": f"测试设备-{machine_code}",
                 "machine_type": "ICT",

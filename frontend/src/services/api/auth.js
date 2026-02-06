@@ -71,10 +71,10 @@ export const roleApi = {
   getAllConfig: () => api.get("/roles/config/all"),
   // 角色继承相关
   getDetail: (id) => api.get(`/roles/${id}/detail`),
-  getInheritanceTree: () => api.get("/roles/inheritance-tree"),
+  getInheritanceTree: () => api.get("/roles/hierarchy/tree"),
   compare: (roleIds) => api.post("/roles/compare", roleIds),
   // 角色模板相关
-  listTemplates: (params) => api.get("/roles/templates/", { params }),
+  listTemplates: (params) => api.get("/roles/templates", { params }),
   getTemplate: (id) => api.get(`/roles/templates/${id}`),
   createTemplate: (data) => api.post("/roles/templates/", data),
   updateTemplate: (id, data) => api.put(`/roles/templates/${id}`, data),

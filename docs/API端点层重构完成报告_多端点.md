@@ -40,9 +40,11 @@
 - 重构后：~180行（包含特殊逻辑）
 - 标准CRUD端点代码减少：**约70%**
 
-### 3. Machines端点重构
+### 3. Machines端点重构（已迁移至项目子路由）
 
-**文件**: `app/api/v1/endpoints/machines/crud_refactored.py`
+**文件**:
+- `app/api/v1/endpoints/projects/machines/crud.py`
+- `app/api/v1/endpoints/projects/machines/custom.py`
 
 **改进**:
 - ✅ 使用统一响应格式
@@ -56,7 +58,7 @@
 **说明**:
 - Machines端点非常复杂，包含大量项目相关的特殊逻辑
 - 不完全适合通用CRUD路由生成器
-- 只重构了简单的列表和详情查询，使用统一响应格式
+- 统一响应格式已覆盖项目子路由版本
 - 保留了所有特殊端点和业务逻辑
 
 **代码减少**:
@@ -69,7 +71,8 @@
 **更新的文件**:
 - `app/api/v1/endpoints/materials/__init__.py`
 - `app/api/v1/endpoints/customers/__init__.py`
-- `app/api/v1/endpoints/machines/__init__.py`
+- `app/api/v1/endpoints/projects/machines/__init__.py`
+- `app/api/v1/endpoints/projects/__init__.py`
 
 **改进**:
 - ✅ 使用重构后的端点
@@ -148,11 +151,11 @@ DELETE /api/v1/customers/{id}
 ### Machines端点
 
 ```python
-# 列表查询（支持项目筛选）
-GET /api/v1/machines/?project_id=1&stage=S5&health=H1
+# 列表查询（项目子路由，支持筛选）
+GET /api/v1/projects/{project_id}/machines/?stage=S5&health=H1
 
 # 创建（自动生成编码，更新项目聚合）
-POST /api/v1/machines/
+POST /api/v1/projects/{project_id}/machines/
 {
   "project_id": 1,
   "machine_name": "机台名称",
@@ -160,16 +163,18 @@ POST /api/v1/machines/
 }
 
 # 更新（阶段验证，更新项目聚合）
-PUT /api/v1/machines/{id}
+PUT /api/v1/projects/{project_id}/machines/{id}
 {
   "stage": "S6",
   "health": "H1"
 }
 
 # 项目相关端点
-GET /api/v1/machines/projects/{project_id}/machines
-GET /api/v1/machines/projects/{project_id}/summary
-POST /api/v1/machines/projects/{project_id}/recalculate
+GET /api/v1/projects/{project_id}/machines
+GET /api/v1/projects/{project_id}/machines/summary
+POST /api/v1/projects/{project_id}/machines/recalculate
+PUT /api/v1/projects/{project_id}/machines/{id}/progress
+GET /api/v1/projects/{project_id}/machines/{id}/bom
 ```
 
 ---

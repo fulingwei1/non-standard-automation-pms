@@ -37,6 +37,64 @@ _SessionLocal = None
 logger = logging.getLogger(__name__)
 
 
+class RuntimePatchedSession(Session):
+    """
+    自定义 Session，确保 SQLite 关键补丁在运行期也会被应用。
+
+    某些测试/开发环境可能复用历史数据库文件，缺少最新字段（例如
+    api_permissions.group_id）。当使用 SessionLocal() 直接创建会话时，
+    我们在第一次初始化时检查并补齐缺失列，避免 API 请求报错。
+    """
+
+    _sqlite_patches_applied = False
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._ensure_runtime_patches()
+
+    def _ensure_runtime_patches(self):
+        if RuntimePatchedSession._sqlite_patches_applied:
+            return
+
+        bind = self.bind
+        if bind is None:
+            try:
+                bind = self.get_bind()
+            except Exception:
+                bind = None
+
+        if bind is None or bind.dialect.name != "sqlite":
+            logger.debug(
+                "Runtime SQLite patch skipped: bind=%s, dialect=%s",
+                bind,
+                getattr(bind, "dialect", None),
+            )
+            RuntimePatchedSession._sqlite_patches_applied = True
+            return
+
+        logger.debug("Runtime SQLite patch using database URL: %s", bind.url)
+
+        inspector = inspect(bind)
+        tables = inspector.get_table_names()
+        logger.debug("Runtime SQLite patch inspecting tables: %s", tables[:5])
+        if "api_permissions" not in tables:
+            # 表尚未创建，等下次会话再检查
+            return
+
+        columns = {col["name"] for col in inspector.get_columns("api_permissions")}
+        logger.debug("Runtime SQLite patch api_permissions columns: %s", columns)
+        if "group_id" not in columns:
+            logger.warning(
+                "Detected legacy SQLite schema missing api_permissions.group_id; applying runtime patch."
+            )
+            with bind.begin() as conn:
+                conn.execute(
+                    text("ALTER TABLE api_permissions ADD COLUMN group_id INTEGER")
+                )
+
+        RuntimePatchedSession._sqlite_patches_applied = True
+
+
 def _ensure_sqlite_schema(engine):
     """
     通过轻量的DDL补丁，确保SQLite数据库包含关键字段。
@@ -98,6 +156,14 @@ def _ensure_sqlite_schema(engine):
                         "ALTER TABLE task_unified "
                         "ADD COLUMN is_active BOOLEAN DEFAULT 1"
                     )
+                )
+
+    if "api_permissions" in tables:
+        columns = {col["name"] for col in inspector.get_columns("api_permissions")}
+        if "group_id" not in columns:
+            with engine.begin() as conn:
+                conn.execute(
+                    text("ALTER TABLE api_permissions ADD COLUMN group_id INTEGER")
                 )
 
 
@@ -260,6 +326,11 @@ def get_engine(database_url: Optional[str] = None, echo: bool = False):
         def set_sqlite_pragma(dbapi_connection, connection_record):
             cursor = dbapi_connection.cursor()
             cursor.execute("PRAGMA foreign_keys=ON")
+            # 使用 WAL 模式，更好的并发性能和权限兼容性
+            cursor.execute("PRAGMA journal_mode=WAL")
+            # 设置临时文件目录为数据库所在目录，避免 macOS 权限问题
+            cursor.execute("PRAGMA temp_store_directory = ''")  # 空字符串表示使用默认位置
+            cursor.execute("PRAGMA temp_store = MEMORY")  # 使用内存存储临时数据
             cursor.close()
 
         _ensure_sqlite_schema(_engine)
@@ -292,7 +363,12 @@ def get_session_factory():
     global _SessionLocal
     if _SessionLocal is None:
         engine = get_engine()
-        _SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        _SessionLocal = sessionmaker(
+            autocommit=False,
+            autoflush=False,
+            bind=engine,
+            class_=RuntimePatchedSession,
+        )
     return _SessionLocal
 
 
@@ -312,6 +388,11 @@ def get_db():
     try:
         yield db
     finally:
+        # 显式回滚任何未提交的更改，避免 macOS SQLite 权限问题
+        try:
+            db.rollback()
+        except Exception:
+            pass
         db.close()
 
 
@@ -349,6 +430,10 @@ def init_db(database_url: Optional[str] = None, drop_all: bool = False):
         Base.metadata.drop_all(bind=engine)
 
     Base.metadata.create_all(bind=engine)
+
+    url = str(engine.url)
+    if url.startswith("sqlite"):
+        _ensure_sqlite_schema(engine)
 
     return engine
 

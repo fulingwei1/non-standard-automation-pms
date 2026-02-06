@@ -31,7 +31,7 @@ export function useMachineData(projectId) {
         if (!projectId) return;
         try {
             setLoading(true);
-            const params = { project_id: projectId };
+            const params = {};
             if (filters.filterStatus && filters.filterStatus !== 'all') {
                 params.status = filters.filterStatus;
             }
@@ -41,7 +41,7 @@ export function useMachineData(projectId) {
             if (filters.searchKeyword) {
                 params.search = filters.searchKeyword;
             }
-            const res = await machineApi.list(params);
+            const res = await machineApi.list(projectId, params);
             const machineList = res.data?.items || res.data || [];
             setMachines(machineList);
         } catch (error) {
@@ -54,10 +54,7 @@ export function useMachineData(projectId) {
     // 创建机台
     const createMachine = useCallback(async (machineData) => {
         try {
-            await machineApi.create({
-                ...machineData,
-                project_id: parseInt(projectId),
-            });
+            await machineApi.create(projectId, machineData);
             await fetchMachines();
             return { success: true };
         } catch (error) {
@@ -72,13 +69,13 @@ export function useMachineData(projectId) {
     // 获取机台详情
     const getMachineDetail = useCallback(async (machineId) => {
         try {
-            const res = await machineApi.get(machineId);
+            const res = await machineApi.get(projectId, machineId);
             return res.data || res;
         } catch (error) {
             console.error('Failed to fetch machine detail:', error);
             throw error;
         }
-    }, []);
+    }, [projectId]);
 
     // 初始加载
     useEffect(() => {

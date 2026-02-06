@@ -14,6 +14,7 @@ from fastapi import APIRouter
 from .orders_refactored import router as orders_refactored_router
 from .receipts import router as receipts_router
 from .requests_refactored import router as requests_refactored_router
+from .workflow import router as workflow_router
 
 router = APIRouter()
 
@@ -25,3 +26,6 @@ router.include_router(requests_refactored_router, tags=["采购申请"])
 
 # 收货单
 router.include_router(receipts_router, tags=["收货管理"])
+
+# 审批工作流（使用统一审批引擎）
+router.include_router(workflow_router, tags=["采购审批工作流"])

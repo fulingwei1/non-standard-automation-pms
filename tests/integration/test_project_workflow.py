@@ -139,11 +139,10 @@ class TestProjectWorkflow:
             machine_data = {
                 "machine_code": "PN001",
                 "machine_name": "测试机台",
-                "project_id": project_id,
             }
 
             machine_response = client.post(
-                f"{settings.API_V1_PREFIX}/machines/",
+                f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/",
                 json=machine_data,
                 headers=headers
             )

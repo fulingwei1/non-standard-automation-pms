@@ -123,6 +123,35 @@ from .team import (
     TeamRankingItem,
     TeamRankingResponse,
 )
+from .contract_templates import (
+    ContractTemplateCreate,
+    ContractTemplateUpdate,
+    ContractTemplateResponse,
+    ContractTemplateVersionCreate,
+    ContractTemplateVersionResponse,
+    ContractTemplateApplyRequest,
+    ContractTemplateApplyResponse,
+    ContractTemplateVersionDiffResponse,
+    ContractTemplateHistoryResponse,
+    VersionDiffItem,
+    VersionHistoryItem,
+)
+from .quote_templates import (
+    CpqRuleSetCreate,
+    CpqRuleSetUpdate,
+    CpqRuleSetResponse,
+    CpqPricePreviewRequest,
+    CpqPricePreviewResponse,
+    QuoteTemplateCreate,
+    QuoteTemplateUpdate,
+    QuoteTemplateResponse,
+    QuoteTemplateVersionCreate,
+    QuoteTemplateVersionResponse,
+    QuoteTemplateApplyRequest,
+    QuoteTemplateApplyResponse,
+    TemplateVersionDiff,
+    TemplateApprovalHistoryRecord,
+)
 
 __all__ = [
     # AI澄清相关
@@ -237,4 +266,33 @@ __all__ = [
     "TeamPKResponse",
     "TeamRankingItem",
     "TeamRankingResponse",
+    # 合同模板相关
+    "ContractTemplateCreate",
+    "ContractTemplateUpdate",
+    "ContractTemplateResponse",
+    "ContractTemplateVersionCreate",
+    "ContractTemplateVersionResponse",
+    "ContractTemplateApplyRequest",
+    "ContractTemplateApplyResponse",
+    "ContractTemplateVersionDiffResponse",
+    "ContractTemplateHistoryResponse",
+    "VersionDiffItem",
+    "VersionHistoryItem",
+    # 报价模板相关
+    "QuoteTemplateCreate",
+    "QuoteTemplateUpdate",
+    "QuoteTemplateResponse",
+    "QuoteTemplateVersionCreate",
+    "QuoteTemplateVersionResponse",
+    "QuoteTemplateApplyRequest",
+    "QuoteTemplateApplyResponse",
+    # CPQ规则集相关
+    "CpqRuleSetCreate",
+    "CpqRuleSetUpdate",
+    "CpqRuleSetResponse",
+    "CpqPricePreviewRequest",
+    "CpqPricePreviewResponse",
+    # 模板通用
+    "TemplateVersionDiff",
+    "TemplateApprovalHistoryRecord",
 ]

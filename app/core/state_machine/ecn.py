@@ -13,12 +13,17 @@ ECN状态机实现
 - CANCELLED: 已取消
 """
 
+import logging
+from typing import Optional
+
 from app.core.state_machine import StateMachine
 from app.core.state_machine.decorators import (
     transition,
     before_transition,
     after_transition,
 )
+
+logger = logging.getLogger(__name__)
 
 # 定义状态常量（字符串）
 DRAFT = "DRAFT"
@@ -27,6 +32,28 @@ APPROVED = "APPROVED"
 REJECTED = "REJECTED"
 IMPLEMENTED = "IMPLEMENTED"
 CANCELLED = "CANCELLED"
+
+# 状态转换到操作类型的映射
+TRANSITION_ACTION_MAP = {
+    (DRAFT, PENDING_REVIEW): "SUBMIT",
+    (DRAFT, CANCELLED): "CANCEL",
+    (PENDING_REVIEW, APPROVED): "APPROVE",
+    (PENDING_REVIEW, REJECTED): "REJECT",
+    (APPROVED, IMPLEMENTED): "IMPLEMENT",
+    (REJECTED, DRAFT): "REVISE",
+    (REJECTED, CANCELLED): "CANCEL",
+    (IMPLEMENTED, CANCELLED): "CANCEL_IMPLEMENTED",
+}
+
+# 状态中文标签
+STATUS_LABELS = {
+    DRAFT: "草稿",
+    PENDING_REVIEW: "待审核",
+    APPROVED: "已批准",
+    REJECTED: "已拒绝",
+    IMPLEMENTED: "已实施",
+    CANCELLED: "已取消",
+}
 
 
 class EcnStateMachine(StateMachine):
@@ -145,7 +172,8 @@ class EcnStateMachine(StateMachine):
         取消已实施的变更
 
         验证条件：
-        - 需要特殊权限（通常不允许）
+        - 需要特殊权限（ecn:cancel_implemented）
+        - 必须提供取消原因
         """
         # 检查用户权限：取消已实施的ECN需要特殊权限
         current_user = kwargs.get("current_user")
@@ -157,6 +185,11 @@ class EcnStateMachine(StateMachine):
                 # 也检查是否为超级管理员
                 if not getattr(current_user, "is_superuser", False):
                     raise PermissionError("取消已实施的ECN需要特殊权限（ecn:cancel_implemented）")
+
+        # 必须提供取消原因
+        cancel_reason = kwargs.get("cancel_reason") or kwargs.get("comment")
+        if not cancel_reason:
+            raise ValueError("取消已实施的ECN必须提供取消原因")
 
     # ==================== 钩子函数 ====================
 
@@ -185,7 +218,7 @@ class EcnStateMachine(StateMachine):
         self._log_transition(f"状态转换完成: {from_state} → {to_state}", **kwargs)
         self._update_change_log(from_state, to_state, **kwargs)
 
-    def _log_transition(self, message, **kwargs):
+    def _log_transition(self, message: str, **kwargs):
         """
         记录转换日志（内部方法）
 
@@ -213,13 +246,13 @@ class EcnStateMachine(StateMachine):
             # 不在这里提交，让外层事务统一管理
         except Exception as e:
             # 记录日志失败不应影响主业务流程
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.warning(f"ECN状态转换日志记录失败: {e}")
+            logger.warning("ECN状态转换日志记录失败: %s", e)
 
-    def _update_change_log(self, from_state, to_state, **kwargs):
+    def _update_change_log(self, from_state: str, to_state: str, **kwargs):
         """
-        更新变更日志（内部方法）
+        更新ECN变更日志（内部方法）
+
+        记录到ECN专用的日志表，包含更详细的业务信息。
 
         Args:
             from_state: 原状态
@@ -234,16 +267,8 @@ class EcnStateMachine(StateMachine):
             created_by = current_user.id if current_user and hasattr(current_user, "id") else None
 
             # 构建日志内容
-            status_labels = {
-                DRAFT: "草稿",
-                PENDING_REVIEW: "待审核",
-                APPROVED: "已批准",
-                REJECTED: "已拒绝",
-                IMPLEMENTED: "已实施",
-                CANCELLED: "已取消",
-            }
-            from_label = status_labels.get(from_state, from_state)
-            to_label = status_labels.get(to_state, to_state)
+            from_label = STATUS_LABELS.get(from_state, from_state)
+            to_label = STATUS_LABELS.get(to_state, to_state)
             log_content = f"ECN状态从【{from_label}】变更为【{to_label}】"
 
             # 创建变更日志记录
@@ -261,9 +286,7 @@ class EcnStateMachine(StateMachine):
             # 不在这里提交，让外层事务统一管理
         except Exception as e:
             # 记录日志失败不应影响主业务流程
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.warning(f"ECN变更日志更新失败: {e}")
+            logger.warning("ECN变更日志更新失败: %s", e)
 
     # ==================== 辅助方法 ====================
 
@@ -309,12 +332,4 @@ class EcnStateMachine(StateMachine):
         Returns:
             str: 状态中文标签
         """
-        status_labels = {
-            DRAFT: "草稿",
-            PENDING_REVIEW: "待审核",
-            APPROVED: "已批准",
-            REJECTED: "已拒绝",
-            IMPLEMENTED: "已实施",
-            CANCELLED: "已取消",
-        }
-        return status_labels.get(self.current_state, "未知状态")
+        return STATUS_LABELS.get(self.current_state, "未知状态")

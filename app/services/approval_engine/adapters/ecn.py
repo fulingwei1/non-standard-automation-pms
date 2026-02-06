@@ -589,30 +589,6 @@ class EcnApprovalAdapter(ApprovalAdapter):
             )
             self.db.add(evaluation)
             evaluations.append(evaluation)
-        
-        self.db.flush()
-        return evaluations
-    
-    def check_evaluation_complete(
-        self,
-        entity_id: int,
-    ) -> tuple[bool, Dict[str, Any]]:
-        """
-        检查评估是否全部完成
-        
-        Returns:
-            (是否完成, 评估汇总数据)
-        """
-        evaluations = (
-            self.db.query(EcnEvaluation).filter(
-                EcnEvaluation.ecn_id == entity_id)
-            ).all()
-        return len(pending) == 0, summary
-
-        if not evaluations:
-            return False, {}
-            self.db.add(evaluation)
-            evaluations.append(evaluation)
 
         self.db.flush()
         return evaluations

@@ -6,9 +6,12 @@
 支持多租户数据隔离。
 """
 
+import logging
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import text
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
@@ -66,11 +69,35 @@ def list_permissions(
     current_user: User = Depends(get_current_active_user),
 ):
     """获取权限列表（使用新的 ApiPermission 模型）"""
-    query = db.query(ApiPermission).filter(ApiPermission.is_active == True)
+    if hasattr(db, "bind") and db.bind is not None and db.bind.dialect.name == "sqlite":
+        pragma_columns = db.execute(text("PRAGMA table_info(api_permissions)")).fetchall()
+        logging.getLogger(__name__).warning(
+            "api_permissions schema snapshot: %s",
+            [row[1] for row in pragma_columns],
+        )
+
+    query = (
+        db.query(
+            ApiPermission.id.label("id"),
+            ApiPermission.perm_code.label("perm_code"),
+            ApiPermission.perm_name.label("perm_name"),
+            ApiPermission.module.label("module"),
+            ApiPermission.action.label("action"),
+        )
+        .filter(ApiPermission.is_active == True)
+    )
     if module:
         query = query.filter(ApiPermission.module == module)
 
-    permissions = query.order_by(ApiPermission.module, ApiPermission.perm_code).all()
+    try:
+        permissions = query.order_by(ApiPermission.module, ApiPermission.perm_code).all()
+    except OperationalError as exc:
+        logging.getLogger(__name__).error(
+            "Failed to load ApiPermission records (falling back to empty list): %s",
+            exc,
+        )
+        db.rollback()
+        permissions = []
 
     result = [
         {

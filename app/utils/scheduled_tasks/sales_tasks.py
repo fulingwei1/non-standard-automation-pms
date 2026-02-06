@@ -188,9 +188,11 @@ def check_opportunity_stage_timeout():
 
             today = date.today()
 
-            # 查询活跃的商机
+            # 查询活跃的商机（使用stage字段）
             opportunities = db.query(Opportunity).filter(
-                Opportunity.status.in_(["ACTIVE", "NEGOTIATING", "PROPOSAL"])
+                Opportunity.stage.in_([
+                    "DISCOVERY", "QUALIFICATION", "PROPOSAL", "NEGOTIATION"
+                ])
             ).all()
 
             reminder_count = 0

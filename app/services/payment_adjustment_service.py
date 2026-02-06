@@ -378,3 +378,58 @@ class PaymentAdjustmentService:
 
         # 如果不是JSON格式，返回空列表
         return []
+
+    def check_and_adjust_all(self) -> Dict[str, Any]:
+        """
+        检查所有里程碑并调整相关的收款计划
+
+        Returns:
+            Dict: {
+                'checked': 检查的里程碑数量,
+                'adjusted': 调整的收款计划数量,
+                'errors': 错误列表
+            }
+        """
+        checked_count = 0
+        adjusted_count = 0
+        errors = []
+
+        try:
+            # 查询所有活跃项目的延期里程碑
+            today = date.today()
+            delayed_milestones = self.db.query(ProjectMilestone).join(
+                Project, ProjectMilestone.project_id == Project.id
+            ).filter(
+                Project.is_active == True,
+                ProjectMilestone.planned_date < today,
+                ProjectMilestone.status.in_(['PENDING', 'IN_PROGRESS'])
+            ).all()
+
+            checked_count = len(delayed_milestones)
+
+            for milestone in delayed_milestones:
+                try:
+                    result = self.adjust_payment_plan_by_milestone(
+                        milestone_id=milestone.id,
+                        reason="定时任务自动检测并调整"
+                    )
+                    if result.get('adjusted_count', 0) > 0:
+                        adjusted_count += result['adjusted_count']
+                except Exception as e:
+                    errors.append({
+                        'milestone_id': milestone.id,
+                        'error': str(e)
+                    })
+                    logger.warning(f"调整里程碑 {milestone.id} 的收款计划失败: {e}")
+
+            self.db.commit()
+
+        except Exception as e:
+            logger.error(f"检查并调整收款计划失败: {e}", exc_info=True)
+            errors.append({'error': str(e)})
+
+        return {
+            'checked': checked_count,
+            'adjusted': adjusted_count,
+            'errors': errors
+        }

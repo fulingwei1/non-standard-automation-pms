@@ -125,8 +125,7 @@ export default function IssueTemplateManagement() {
 
   const loadMachines = async (projectId) => {
     try {
-      const res = await machineApi.list({
-        project_id: projectId,
+      const res = await machineApi.list(projectId, {
         page_size: 1000,
       });
       const items = res.data?.items || res.data?.data?.items || res.data || [];

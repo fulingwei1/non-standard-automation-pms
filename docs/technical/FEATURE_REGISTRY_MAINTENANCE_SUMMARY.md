@@ -116,7 +116,7 @@ python scripts/generate_feature_report.py
 - `audits` - 审计管理（2个端点）
 - `data-import-export` - 数据导入导出（10个端点）
 - `hourly-rates` - 时薪配置（8个端点）
-- `project-roles` - 项目角色（16个端点）
+- `projects-roles` - 项目角色（16个端点）
 - `hr-management` - HR管理（14个端点）
 - `presales-integration` - 售前集成（7个端点）
 

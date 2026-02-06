@@ -1,5 +1,7 @@
 # API ↔ Frontend Coverage
 
+> 注：本报告生成时存在旧兼容路由；兼容层已于 2026-01-31 移除，以下旧路由已改为项目子路由。
+
 - Backend endpoints: **1460**
 - Frontend calls detected: **1376**
 - Matched: **718**
@@ -24,7 +26,7 @@
 - `task-center`: 20
 - `performance`: 20
 - `budgets`: 16
-- `project-evaluation`: 15
+- `projects-evaluations`: 15
 - `costs`: 14
 - `engineers`: 14
 - `solution-credits`: 13
@@ -86,9 +88,9 @@
 - `PUT` `/api/v1/projects/payment-plans/{plan_id}`
 - `DELETE` `/api/v1/projects/payment-plans/{plan_id}`
 - `GET` `/api/v1/projects/statistics`
-- `GET` `/api/v1/machines/projects/{project_id}/machines`
-- `POST` `/api/v1/machines/projects/{project_id}/machines`
-- `PUT` `/api/v1/machines/{machine_id}/progress`
+- `GET` `/api/v1/projects/{project_id}/machines`
+- `POST` `/api/v1/projects/{project_id}/machines`
+- `PUT` `/api/v1/projects/{project_id}/machines/{machine_id}/progress`
 - `DELETE` `/api/v1/milestones/{milestone_id}`
 - `POST` `/api/v1/members/projects/{project_id}/members`
 - `PUT` `/api/v1/members/project-members/{member_id}`

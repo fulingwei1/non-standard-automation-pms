@@ -10,8 +10,10 @@ import uuid
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.models.user import ApiPermission, Role, RoleApiPermission, User, UserRole
 from tests.helpers.response_helpers import (
     assert_success_response,
     assert_paginated_response,
@@ -22,6 +24,68 @@ from tests.helpers.response_helpers import (
 
 def _auth_headers(token: str) -> dict:
     return {"Authorization": f"Bearer {token}"}
+
+
+def _ensure_permission_record(db_session: Session, code: str, name: str) -> ApiPermission:
+    permission = (
+        db_session.query(ApiPermission)
+        .filter(ApiPermission.perm_code == code, ApiPermission.tenant_id == None)  # noqa: E711
+        .first()
+    )
+    if permission:
+        return permission
+    permission = ApiPermission(
+        perm_code=code,
+        perm_name=name,
+        module="system",
+        action="VIEW",
+        description="自动化测试生成",
+        is_active=True,
+        is_system=True,
+    )
+    db_session.add(permission)
+    db_session.commit()
+    db_session.refresh(permission)
+    return permission
+
+
+def _cleanup_role(db_session: Session, role_id: int) -> None:
+    if not role_id:
+        return
+    db_session.query(RoleApiPermission).filter(RoleApiPermission.role_id == role_id).delete()
+    db_session.query(UserRole).filter(UserRole.role_id == role_id).delete()
+    db_session.query(Role).filter(Role.id == role_id).delete()
+    db_session.commit()
+
+
+def _cleanup_user(db_session: Session, user_id: int) -> None:
+    if not user_id:
+        return
+    db_session.query(UserRole).filter(UserRole.user_id == user_id).delete()
+    db_session.query(User).filter(User.id == user_id).delete()
+    db_session.commit()
+
+
+def _ensure_super_admin_role(db_session: Session) -> Role:
+    """确保存在 system_admin 角色"""
+    role = (
+        db_session.query(Role)
+        .filter(Role.role_code == "system_admin")
+        .first()
+    )
+    if role:
+        return role
+    role = Role(
+        role_code="system_admin",
+        role_name="系统管理员",
+        description="自动创建的系统管理员角色",
+        is_system=True,
+        is_active=True,
+    )
+    db_session.add(role)
+    db_session.commit()
+    db_session.refresh(role)
+    return role
 
 
 class TestUserCRUD:
@@ -229,6 +293,193 @@ class TestUserRoles:
             pytest.skip("Role not found")
 
         assert response.status_code == 200, response.text
+
+
+class TestUserPermissionEnforcement:
+    """权限相关测试"""
+
+    def test_user_list_requires_permission(
+        self,
+        client: TestClient,
+        normal_user_token: str,
+    ):
+        """无 USER_VIEW 权限的用户访问列表应被拒绝"""
+        if not normal_user_token:
+            pytest.skip("Normal user token not available")
+
+        headers = _auth_headers(normal_user_token)
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/users/",
+            headers=headers,
+        )
+        assert response.status_code == 403
+
+    def test_role_assignment_grants_user_view_access(
+        self,
+        client: TestClient,
+        admin_token: str,
+        db_session: Session,
+    ):
+        """分配包含 USER_VIEW 的角色后应可访问用户列表"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        permission = _ensure_permission_record(db_session, "USER_VIEW", "用户查看")
+
+        role_code = f"PERM_ROLE_{uuid.uuid4().hex[:6]}"
+        role_payload = {
+            "role_code": role_code,
+            "role_name": "权限测试角色",
+            "description": "auto-generated",
+        }
+        role_resp = client.post(
+            f"{settings.API_V1_PREFIX}/roles/",
+            json=role_payload,
+            headers=headers,
+        )
+        assert role_resp.status_code == 201, role_resp.text
+        role_data = assert_success_response(role_resp.json(), expected_code=201)
+        role_id = role_data["id"]
+
+        user_username = f"perm_user_{uuid.uuid4().hex[:6]}"
+        user_password = "PermTest123!"
+        user_payload = {
+            "username": user_username,
+            "password": user_password,
+            "email": f"{user_username}@example.com",
+            "real_name": "权限测试用户",
+            "role_ids": [],
+        }
+        user_id = None
+        try:
+            user_resp = client.post(
+                f"{settings.API_V1_PREFIX}/users/",
+                json=user_payload,
+                headers=headers,
+            )
+            if user_resp.status_code not in (200, 201):
+                pytest.skip(f"Failed to create user: {user_resp.text}")
+            user_data = assert_success_response(user_resp.json(), expected_code=user_resp.status_code)
+            user_id = user_data["id"]
+
+            perm_resp = client.put(
+                f"{settings.API_V1_PREFIX}/roles/{role_id}/permissions",
+                json=[permission.id],
+                headers=headers,
+            )
+            assert perm_resp.status_code == 200, perm_resp.text
+
+            login_resp = client.post(
+                f"{settings.API_V1_PREFIX}/auth/login",
+                data={"username": user_username, "password": user_password},
+            )
+            assert login_resp.status_code == 200, login_resp.text
+            limited_headers = _auth_headers(login_resp.json()["access_token"])
+
+            forbidden_resp = client.get(
+                f"{settings.API_V1_PREFIX}/users/",
+                headers=limited_headers,
+            )
+            assert forbidden_resp.status_code == 403
+
+            assign_resp = client.put(
+                f"{settings.API_V1_PREFIX}/users/{user_id}/roles",
+                json={"role_ids": [role_id]},
+                headers=headers,
+            )
+            assert assign_resp.status_code == 200, assign_resp.text
+
+            # 重新登录以确保最新权限生效
+            login_resp = client.post(
+                f"{settings.API_V1_PREFIX}/auth/login",
+                data={"username": user_username, "password": user_password},
+            )
+            assert login_resp.status_code == 200, login_resp.text
+            elevated_headers = _auth_headers(login_resp.json()["access_token"])
+
+            allowed_resp = client.get(
+                f"{settings.API_V1_PREFIX}/users/",
+                headers=elevated_headers,
+            )
+            assert allowed_resp.status_code == 200, allowed_resp.text
+            assert_paginated_response(allowed_resp.json())
+        finally:
+            _cleanup_user(db_session, user_id)
+            _cleanup_role(db_session, role_id)
+
+    def test_system_admin_role_allows_user_access(
+        self,
+        client: TestClient,
+        admin_token: str,
+        db_session: Session,
+    ):
+        """绑定 system_admin 角色后无需显式权限也可访问用户列表"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        role = _ensure_super_admin_role(db_session)
+
+        user_username = f"sys_admin_user_{uuid.uuid4().hex[:6]}"
+        user_password = "SysAdmin123!"
+        user_payload = {
+            "username": user_username,
+            "password": user_password,
+            "email": f"{user_username}@example.com",
+            "real_name": "系统管理员角色用户",
+            "role_ids": [],
+        }
+
+        user_id = None
+        try:
+            create_resp = client.post(
+                f"{settings.API_V1_PREFIX}/users/",
+                json=user_payload,
+                headers=headers,
+            )
+            if create_resp.status_code not in (200, 201):
+                pytest.skip(f"Failed to create user: {create_resp.text}")
+            user_data = assert_success_response(create_resp.json(), expected_code=create_resp.status_code)
+            user_id = user_data["id"]
+
+            # 默认情况下没有 USER_VIEW，应被拒绝
+            login_resp = client.post(
+                f"{settings.API_V1_PREFIX}/auth/login",
+                data={"username": user_username, "password": user_password},
+            )
+            assert login_resp.status_code == 200, login_resp.text
+            limited_headers = _auth_headers(login_resp.json()["access_token"])
+            forbidden_resp = client.get(
+                f"{settings.API_V1_PREFIX}/users/",
+                headers=limited_headers,
+            )
+            assert forbidden_resp.status_code == 403
+
+            # 绑定 system_admin 角色
+            assign_resp = client.put(
+                f"{settings.API_V1_PREFIX}/users/{user_id}/roles",
+                json={"role_ids": [role.id]},
+                headers=headers,
+            )
+            assert assign_resp.status_code == 200, assign_resp.text
+
+            # 重新登录以便缓存刷新
+            login_resp = client.post(
+                f"{settings.API_V1_PREFIX}/auth/login",
+                data={"username": user_username, "password": user_password},
+            )
+            assert login_resp.status_code == 200, login_resp.text
+            elevated_headers = _auth_headers(login_resp.json()["access_token"])
+
+            allowed_resp = client.get(
+                f"{settings.API_V1_PREFIX}/users/",
+                headers=elevated_headers,
+            )
+            assert allowed_resp.status_code == 200, allowed_resp.text
+            assert_paginated_response(allowed_resp.json())
+        finally:
+            _cleanup_user(db_session, user_id)
 
 
 class TestUserOperations:

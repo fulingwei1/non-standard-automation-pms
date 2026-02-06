@@ -7,7 +7,7 @@
 import logging
 from datetime import date, datetime
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -16,14 +16,22 @@ from app.models.project import Project
 from app.models.task_center import TaskUnified
 from app.models.user import User
 from app.schemas import engineer as schemas
-from app.services.progress_aggregation_service import (
-    aggregate_task_progress,
-    create_progress_log,
-)
+from app.services.progress_aggregation_service import aggregate_task_progress
+from app.services.task_progress_service import update_task_progress as update_task_progress_service
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+def _progress_error_to_http(exc: ValueError) -> HTTPException:
+    """将服务层 ValueError 映射为 HTTP 异常"""
+    msg = str(exc)
+    if "任务不存在" in msg:
+        return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=msg)
+    if "只能更新" in msg or "无权" in msg:
+        return HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=msg)
+    return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
 
 
 @router.put("/tasks/{task_id}/progress", response_model=schemas.ProgressUpdateResponse)
@@ -36,66 +44,30 @@ def update_task_progress(
     """
     更新任务进度（自动触发项目/阶段进度聚合）
     """
-    # 获取任务
-    task = db.query(TaskUnified).filter(TaskUnified.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=404, detail="任务不存在")
-
-    # 验证权限
-    if task.assignee_id != current_user.id:
-        raise HTTPException(status_code=403, detail="只能更新分配给自己的任务")
-
-    if task.status in ['COMPLETED', 'REJECTED', 'CANCELLED']:
-        raise HTTPException(status_code=400, detail="任务已完成或已被拒绝，无法更新进度")
-
-    if progress_data.progress < 0 or progress_data.progress > 100:
-        raise HTTPException(status_code=400, detail="进度必须在0到100之间")
-
-    # 更新进度
-    old_progress = task.progress
-    task.progress = progress_data.progress
-
-    if progress_data.actual_hours is not None:
-        task.actual_hours = progress_data.actual_hours
-
-    # 状态自动转换
-    if progress_data.progress > 0 and task.status == 'ACCEPTED':
-        task.status = 'IN_PROGRESS'
-        task.actual_start_date = date.today()
-
-    if progress_data.progress == 100:
-        task.status = 'COMPLETED'
-        task.actual_end_date = date.today()
-
-    task.updated_by = current_user.id
-    task.updated_at = datetime.now()
-
-    db.commit()
-
-    # 创建进度日志
-    if progress_data.progress_note:
-        create_progress_log(
+    try:
+        task, aggregation_result = update_task_progress_service(
             db,
-            task_id=task.id,
+            task_id=task_id,
             progress=progress_data.progress,
-            actual_hours=float(progress_data.actual_hours) if progress_data.actual_hours else None,
-            note=progress_data.progress_note,
-            updater_id=current_user.id
+            updater_id=current_user.id,
+            actual_hours=progress_data.actual_hours,
+            progress_note=progress_data.progress_note,
+            reject_completed=True,
+            create_progress_log=True,
+            run_aggregation=True,
         )
-
-    # 触发进度聚合
-    aggregation_result = aggregate_task_progress(db, task.id)
+    except ValueError as e:
+        raise _progress_error_to_http(e)
 
     actual_hours_value = float(task.actual_hours) if task.actual_hours is not None else None
-
     return schemas.ProgressUpdateResponse(
         task_id=task.id,
         progress=task.progress,
         actual_hours=actual_hours_value,
         status=task.status,
         progress_note=progress_data.progress_note,
-        project_progress_updated=aggregation_result['project_progress_updated'],
-        stage_progress_updated=aggregation_result['stage_progress_updated']
+        project_progress_updated=aggregation_result.get("project_progress_updated", False),
+        stage_progress_updated=aggregation_result.get("stage_progress_updated", False),
     )
 
 

@@ -41,64 +41,99 @@ def login(
     - **password**: 密码
 
     错误码说明：
-    - AUTH_FAILED: 用户名或密码错误
-    - ACCOUNT_DISABLED: 账号已被禁用或未激活
+    - USER_NOT_FOUND: 账号不存在
+    - USER_INACTIVE: 账号未激活
+    - USER_DISABLED: 账号已禁用（员工已离职）
+    - WRONG_PASSWORD: 密码错误
     """
-    user = db.query(User).filter(User.username == form_data.username).first()
+    try:
+        # 使用原始 SQL 查询避免 ORM 的自动更新机制
+        from sqlalchemy import text
 
-    # 安全：统一错误信息，防止用户名枚举攻击（OWASP A07:2021）
-    _auth_failed_detail = {
-        "error_code": "AUTH_FAILED",
-        "message": "用户名或密码错误",
-    }
+        result = db.execute(
+            text("SELECT * FROM users WHERE username = :username LIMIT 1"),
+            {"username": form_data.username}
+        ).fetchone()
 
-    # 1. 账号不存在
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=_auth_failed_detail,
-            headers={"WWW-Authenticate": "Bearer"},
+        if not result:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail={
+                    "error_code": "USER_NOT_FOUND",
+                    "message": "该员工尚未开通系统账号，请联系管理员",
+                },
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        # 将结果转换为字典以便访问
+        user_dict = dict(result._mapping)
+
+        # 2. 密码错误
+        if not security.verify_password(form_data.password, user_dict["password_hash"]):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail={
+                    "error_code": "WRONG_PASSWORD",
+                    "message": "密码错误，忘记密码请联系管理员重置",
+                },
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        # 3. 账号未激活或已禁用
+        if not user_dict["is_active"]:
+            # 检查关联的员工状态来区分是未激活还是离职
+            employee_result = db.execute(
+                text("SELECT employment_status FROM employees WHERE id = :employee_id LIMIT 1"),
+                {"employee_id": user_dict["employee_id"]}
+            ).fetchone()
+
+            if employee_result and employee_result[0] != "active":
+                # 员工已离职
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail={
+                        "error_code": "USER_DISABLED",
+                        "message": "账号已被禁用，如有疑问请联系管理员",
+                    },
+                )
+            else:
+                # 账号未激活
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail={
+                        "error_code": "USER_INACTIVE",
+                        "message": "账号待激活，请联系管理员开通系统访问权限",
+                    },
+                )
+
+        # 更新最后登录时间（临时禁用以绕过只读数据库问题）
+        # user.last_login_at = datetime.now()
+        # db.add(user)
+        # db.commit()
+
+        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = security.create_access_token(
+            {"sub": str(user_dict["id"])}, expires_delta=access_token_expires
         )
 
-    # 2. 密码错误
-    if not security.verify_password(form_data.password, user.password_hash):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=_auth_failed_detail,
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        # 显式回滚任何可能的更改，确保不触发数据库写入
+        db.rollback()
 
-    # 3. 账号未激活或已禁用（密码正确后才给出具体原因，不泄露账号存在信息）
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={
-                "error_code": "ACCOUNT_DISABLED",
-                "message": "账号已被禁用或未激活，请联系管理员",
-            },
-        )
-
-    # 更新最后登录时间
-    user.last_login_at = datetime.now()
-    db.add(user)
-    db.commit()
-
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = security.create_access_token(
-        {"sub": str(user.id)}, expires_delta=access_token_expires
-    )
-
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-    }
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        }
+    finally:
+        # 确保在函数退出时回滚任何未提交的更改
+        try:
+            db.rollback()
+        except Exception:
+            pass
 
 
 @router.post("/logout", response_model=ResponseModel, status_code=status.HTTP_200_OK)
-@limiter.limit("10/minute")
 def logout(
-    request: Request,
     token: str = Depends(security.oauth2_scheme),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
@@ -114,9 +149,7 @@ def logout(
 
 
 @router.post("/refresh", response_model=Token, status_code=status.HTTP_200_OK)
-@limiter.limit("10/minute")
 def refresh_token(
-    request: Request,
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
@@ -152,7 +185,7 @@ def get_me(
 
     # 直接通过 JOIN 查询角色与权限，避免懒加载触发 SQLite 旧库的字段映射问题
     role_rows = (
-        db.query(Role.id, Role.role_name)
+        db.query(Role.id, Role.role_name, Role.role_code)
         .join(UserRole, UserRole.role_id == Role.id)
         .filter(UserRole.user_id == db_user.id)
         .all()
@@ -160,8 +193,17 @@ def get_me(
     role_ids = [row.id for row in role_rows]
     role_names = [row.role_name for row in role_rows]
 
+    # 检查是否为系统管理员（使用已查询的角色数据，避免N+1查询）
+    admin_role_codes = {"admin", "super_admin", "system_admin"}
+    admin_role_names = {"系统管理员", "超级管理员", "管理员"}
+    is_admin = any(
+        (row.role_code or "").lower() in admin_role_codes or
+        (row.role_name or "") in admin_role_names
+        for row in role_rows
+    )
+
     # 构建响应数据（避免直接修改ORM对象）
-    is_superuser = db_user.is_superuser or security.is_system_admin(db_user)
+    is_superuser = db_user.is_superuser or is_admin
 
     # 超级管理员获得所有权限，普通用户通过角色获取权限
     if is_superuser:

@@ -45,13 +45,13 @@
 11. ✅ `hr-management` - 人力资源管理模块
 12. ✅ `installation-dispatch` - 安装调度模块
 13. ✅ `issues` - 问题管理模块
-14. ✅ `machines` - 设备/机台模块
+14. ✅ `projects-machines` - 项目机台模块
 15. ✅ `materials` - 物料管理模块
 16. ✅ `milestones` - 里程碑模块
 17. ✅ `notifications` - 通知模块
 18. ✅ `presales-integration` - 售前集成模块
-19. ✅ `project-evaluation` - 项目评估模块
-20. ✅ `project-roles` - 项目角色模块
+19. ✅ `projects-evaluations` - 项目评估模块
+20. ✅ `projects-roles` - 项目角色模块
 21. ✅ `qualifications` - 资质模块
 22. ✅ `reports` - 报表中心模块
 23. ✅ `shortage-alerts` - 短缺预警模块
@@ -123,7 +123,7 @@ presales_integration:update  -- 售前集成更新
 presales_integration:manage  -- 售前集成管理
 ```
 
-### 项目角色模块 (project-roles)
+### 项目角色模块 (projects-roles)
 
 ```sql
 -- 权限编码

@@ -257,15 +257,15 @@ def generate_production_daily_reports(target_date=None):
             # 计算统计数据
             stats = _calculate_production_daily_stats(db, target_date, None)
 
-            # 创建日报
+            # 创建日报（映射到模型实际字段）
             report = ProductionDailyReport(
                 report_date=target_date,
-                total_work_orders=stats.get('total_work_orders', 0),
-                completed_work_orders=stats.get('completed_work_orders', 0),
-                total_output=stats.get('total_output', 0),
-                qualified_output=stats.get('qualified_output', 0),
-                defect_rate=stats.get('defect_rate', 0),
-                efficiency_rate=stats.get('efficiency_rate', 0)
+                plan_qty=stats.get('total_work_orders', 0),
+                completed_qty=stats.get('completed_work_orders', 0),
+                total_qty=stats.get('total_output', 0),
+                qualified_qty=stats.get('qualified_output', 0),
+                pass_rate=100 - stats.get('defect_rate', 0),
+                efficiency=stats.get('efficiency_rate', 0)
             )
             db.add(report)
             db.commit()

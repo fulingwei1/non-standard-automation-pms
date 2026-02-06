@@ -43,6 +43,9 @@ from .resource_plan import (
     ResourceConflict,
 )
 
+# 风险历史
+from .risk_history import ProjectRiskHistory, ProjectRiskSnapshot
+
 __all__ = [
     # 客户相关
     "Customer",
@@ -76,4 +79,7 @@ __all__ = [
     "ProjectWarranty",
     "ProjectImplementation",
     "ProjectPresale",
+    # 风险历史
+    "ProjectRiskHistory",
+    "ProjectRiskSnapshot",
 ]

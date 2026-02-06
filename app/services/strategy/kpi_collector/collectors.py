@@ -91,17 +91,103 @@ def collect_finance_metrics(
     """
     采集财务模块指标
 
+    支持的指标：
+    - CONTRACT_TOTAL_AMOUNT: 合同总金额
+    - CONTRACT_RECEIVED_AMOUNT: 已收款金额
+    - PROJECT_COST_TOTAL: 项目成本总计
+    - PROJECT_PROFIT_MARGIN: 项目利润率
+    - RECEIVABLE_OVERDUE_AMOUNT: 逾期应收款金额
+    - RECEIVABLE_OVERDUE_COUNT: 逾期应收款笔数
+
     Args:
         db: 数据库会话
         metric: 指标名称
-        filters: 筛选条件
+        filters: 筛选条件 (year, project_id, customer_id)
         aggregation: 聚合方式
 
     Returns:
         Optional[Decimal]: 采集到的值
     """
-    # 财务模块待实现，返回模拟数据
-    # TODO: 集成真实财务模块
+    from datetime import date
+    from app.models.sales.contracts import Contract
+    from app.models.project.financial import ProjectCost, ProjectPaymentPlan
+
+    filters = filters or {}
+
+    if metric == "CONTRACT_TOTAL_AMOUNT":
+        # 合同总金额
+        query = db.query(func.sum(Contract.contract_amount))
+        if "year" in filters:
+            query = query.filter(func.year(Contract.signed_date) == filters["year"])
+        if "customer_id" in filters:
+            query = query.filter(Contract.customer_id == filters["customer_id"])
+        result = query.scalar()
+        return Decimal(str(result or 0))
+
+    elif metric == "CONTRACT_RECEIVED_AMOUNT":
+        # 已收款金额（从收款计划中统计）
+        query = db.query(func.sum(ProjectPaymentPlan.actual_amount))
+        if "year" in filters:
+            query = query.filter(func.year(ProjectPaymentPlan.actual_date) == filters["year"])
+        if "project_id" in filters:
+            query = query.filter(ProjectPaymentPlan.project_id == filters["project_id"])
+        result = query.scalar()
+        return Decimal(str(result or 0))
+
+    elif metric == "PROJECT_COST_TOTAL":
+        # 项目成本总计
+        query = db.query(func.sum(ProjectCost.amount))
+        if "year" in filters:
+            query = query.filter(func.year(ProjectCost.cost_date) == filters["year"])
+        if "project_id" in filters:
+            query = query.filter(ProjectCost.project_id == filters["project_id"])
+        result = query.scalar()
+        return Decimal(str(result or 0))
+
+    elif metric == "PROJECT_PROFIT_MARGIN":
+        # 项目利润率 = (合同金额 - 成本) / 合同金额 * 100
+        from app.models.project import Project
+        project_id = filters.get("project_id")
+        if not project_id:
+            return None
+        project = db.query(Project).filter(Project.id == project_id).first()
+        if not project or not project.contract_amount:
+            return None
+        total_cost = db.query(func.sum(ProjectCost.amount)).filter(
+            ProjectCost.project_id == project_id
+        ).scalar() or 0
+        contract_amount = float(project.contract_amount)
+        if contract_amount == 0:
+            return Decimal(0)
+        profit_margin = (contract_amount - float(total_cost)) / contract_amount * 100
+        return Decimal(str(round(profit_margin, 2)))
+
+    elif metric == "RECEIVABLE_OVERDUE_AMOUNT":
+        # 逾期应收款金额
+        today = date.today()
+        query = db.query(
+            func.sum(ProjectPaymentPlan.planned_amount - ProjectPaymentPlan.actual_amount)
+        ).filter(
+            ProjectPaymentPlan.planned_date < today,
+            ProjectPaymentPlan.status.in_(["PENDING", "PARTIAL"])
+        )
+        if "project_id" in filters:
+            query = query.filter(ProjectPaymentPlan.project_id == filters["project_id"])
+        result = query.scalar()
+        return Decimal(str(result or 0))
+
+    elif metric == "RECEIVABLE_OVERDUE_COUNT":
+        # 逾期应收款笔数
+        today = date.today()
+        query = db.query(func.count(ProjectPaymentPlan.id)).filter(
+            ProjectPaymentPlan.planned_date < today,
+            ProjectPaymentPlan.status.in_(["PENDING", "PARTIAL"])
+        )
+        if "project_id" in filters:
+            query = query.filter(ProjectPaymentPlan.project_id == filters["project_id"])
+        result = query.scalar()
+        return Decimal(result or 0)
+
     return None
 
 
@@ -167,32 +253,112 @@ def collect_hr_metrics(
     """
     采集人力资源模块指标
 
+    支持的指标：
+    - EMPLOYEE_COUNT: 员工总数
+    - EMPLOYEE_ACTIVE_COUNT: 在职员工数
+    - EMPLOYEE_RESIGNED_COUNT: 离职员工数
+    - EMPLOYEE_TURNOVER_RATE: 离职率
+    - EMPLOYEE_PROBATION_COUNT: 试用期员工数
+    - EMPLOYEE_CONFIRMATION_RATE: 转正率
+
     Args:
         db: 数据库会话
         metric: 指标名称
-        filters: 筛选条件
+        filters: 筛选条件 (department_id, year)
         aggregation: 聚合方式
 
     Returns:
         Optional[Decimal]: 采集到的值
     """
     from app.models.user import User
+    from app.models.organization import Employee, EmployeeHrProfile
 
     filters = filters or {}
 
-    query = db.query(User).filter(User.is_active == True)
-
-    # 应用筛选条件
-    if "department_id" in filters:
-        query = query.filter(User.department_id == filters["department_id"])
-
     if metric == "EMPLOYEE_COUNT":
-        # 员工数量
-        return Decimal(query.count())
+        # 员工总数
+        query = db.query(func.count(Employee.id))
+        if "department_id" in filters:
+            query = query.join(User, User.employee_id == Employee.id).filter(
+                User.department_id == filters["department_id"]
+            )
+        result = query.scalar()
+        return Decimal(result or 0)
+
+    elif metric == "EMPLOYEE_ACTIVE_COUNT":
+        # 在职员工数
+        query = db.query(func.count(Employee.id)).filter(
+            Employee.employment_status == "active"
+        )
+        if "department_id" in filters:
+            query = query.join(User, User.employee_id == Employee.id).filter(
+                User.department_id == filters["department_id"]
+            )
+        result = query.scalar()
+        return Decimal(result or 0)
+
+    elif metric == "EMPLOYEE_RESIGNED_COUNT":
+        # 离职员工数
+        query = db.query(func.count(Employee.id)).filter(
+            Employee.employment_status == "resigned"
+        )
+        if "year" in filters:
+            query = query.join(
+                EmployeeHrProfile, EmployeeHrProfile.employee_id == Employee.id
+            ).filter(func.year(EmployeeHrProfile.resignation_date) == filters["year"])
+        result = query.scalar()
+        return Decimal(result or 0)
 
     elif metric == "EMPLOYEE_TURNOVER_RATE":
-        # 离职率（需要离职记录表，暂时返回模拟数据）
-        # TODO: 集成离职记录
-        return None
+        # 离职率 = 离职人数 / 总员工数 * 100
+        total_query = db.query(func.count(Employee.id))
+        if "department_id" in filters:
+            total_query = total_query.join(User, User.employee_id == Employee.id).filter(
+                User.department_id == filters["department_id"]
+            )
+        total = total_query.scalar() or 0
+        if total == 0:
+            return Decimal(0)
+
+        resigned_query = db.query(func.count(Employee.id)).filter(
+            Employee.employment_status == "resigned"
+        )
+        if "year" in filters:
+            resigned_query = resigned_query.join(
+                EmployeeHrProfile, EmployeeHrProfile.employee_id == Employee.id
+            ).filter(func.year(EmployeeHrProfile.resignation_date) == filters["year"])
+        resigned = resigned_query.scalar() or 0
+
+        turnover_rate = resigned / total * 100
+        return Decimal(str(round(turnover_rate, 2)))
+
+    elif metric == "EMPLOYEE_PROBATION_COUNT":
+        # 试用期员工数
+        query = db.query(func.count(Employee.id)).filter(
+            Employee.employment_type == "probation",
+            Employee.employment_status == "active"
+        )
+        result = query.scalar()
+        return Decimal(result or 0)
+
+    elif metric == "EMPLOYEE_CONFIRMATION_RATE":
+        # 转正率 = 已转正人数 / (已转正 + 试用期离职) * 100
+        from sqlalchemy import or_
+        confirmed = db.query(func.count(EmployeeHrProfile.id)).filter(
+            EmployeeHrProfile.is_confirmed == True
+        ).scalar() or 0
+
+        # 试用期离职（简化：employment_type仍为probation且状态为resigned）
+        probation_resigned = db.query(func.count(Employee.id)).filter(
+            Employee.employment_type == "probation",
+            Employee.employment_status == "resigned"
+        ).scalar() or 0
+
+        total = confirmed + probation_resigned
+        if total == 0:
+            return Decimal(100)  # 没有试用期数据，默认100%
+
+        confirmation_rate = confirmed / total * 100
+        return Decimal(str(round(confirmation_rate, 2)))
 
     return None

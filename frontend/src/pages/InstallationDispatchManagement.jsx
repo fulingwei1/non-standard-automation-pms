@@ -149,9 +149,8 @@ export default function InstallationDispatchManagement() {
 
   const fetchMachines = async (projectId) => {
     try {
-      const res = await machineApi.list({
+      const res = await machineApi.list(projectId, {
         page_size: 1000,
-        project_id: projectId,
       });
       setMachines(res.data || []);
     } catch (error) {

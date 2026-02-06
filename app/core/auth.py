@@ -217,6 +217,7 @@ async def get_current_user(
         raise credentials_exception
 
     try:
+        # 查询用户（User.roles 是 lazy="dynamic"，不需要预加载）
         user = db.query(User).filter(User.id == user_id).first()
         if user is None:
             raise credentials_exception

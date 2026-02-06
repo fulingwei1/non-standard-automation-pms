@@ -103,19 +103,19 @@ class TestGetSalespersonHistoricalWinRate:
         # 创建已中标的项目
         for i in range(7):
             project = Project(
-            project_code=f"PJ-WIN-{i:03d}",
-            project_name=f"中标项目{i}",
-            customer_id=test_customer.id,
-            customer_name=test_customer.customer_name,
-            salesperson_id=test_salesperson.id,
-            outcome=LeadOutcomeEnum.WON.value,
-            created_at=datetime.now() - timedelta(days=i * 10),
+                project_code=f"PJ-WIN-{i:03d}",
+                project_name=f"中标项目{i}",
+                customer_id=test_customer.id,
+                customer_name=test_customer.customer_name,
+                salesperson_id=test_salesperson.id,
+                outcome=LeadOutcomeEnum.WON.value,
+                created_at=datetime.now() - timedelta(days=i * 10),
             )
             win_rate_service.db.add(project)
 
-            # 创建未中标的项目
-            for i in range(3):
-                project = Project(
+        # 创建未中标的项目
+        for i in range(3):
+            project = Project(
                 project_code=f"PJ-LOSS-{i:03d}",
                 project_name=f"未中标项目{i}",
                 customer_id=test_customer.id,
@@ -123,17 +123,17 @@ class TestGetSalespersonHistoricalWinRate:
                 salesperson_id=test_salesperson.id,
                 outcome=LeadOutcomeEnum.LOST.value,
                 created_at=datetime.now() - timedelta(days=i * 10),
-                )
-                win_rate_service.db.add(project)
+            )
+            win_rate_service.db.add(project)
 
-                win_rate_service.db.commit()
+        win_rate_service.db.commit()
 
-                win_rate, total = win_rate_service.get_salesperson_historical_win_rate(
-                test_salesperson.id
-                )
+        win_rate, total = win_rate_service.get_salesperson_historical_win_rate(
+            test_salesperson.id
+        )
 
-                assert win_rate == pytest.approx(0.7)
-                assert total == 10
+        assert win_rate == pytest.approx(0.7)
+        assert total == 10
 
     def test_custom_lookback_months(self, win_rate_service, test_salesperson):
         """自定义回溯月数"""
@@ -151,18 +151,18 @@ class TestGetCustomerCooperationHistory:
         # 创建历史项目
         for i in range(5):
             project = Project(
-            project_code=f"PJ-HIST-{i:03d}",
-            project_name=f"历史项目{i}",
-            customer_id=test_customer.id,
-            customer_name=test_customer.customer_name,
-            salesperson_id=1,
-            outcome=LeadOutcomeEnum.WON.value,
-            created_at=datetime.now() - timedelta(days=i * 20),
+                project_code=f"PJ-HIST-{i:03d}",
+                project_name=f"历史项目{i}",
+                customer_id=test_customer.id,
+                customer_name=test_customer.customer_name,
+                salesperson_id=1,
+                outcome=LeadOutcomeEnum.WON.value,
+                created_at=datetime.now() - timedelta(days=i * 20),
             )
             win_rate_service.db.add(project)
 
-            for i in range(2):
-                project = Project(
+        for i in range(2):
+            project = Project(
                 project_code=f"PJ-HIST-LOSS-{i:03d}",
                 project_name=f"历史项目{i}",
                 customer_id=test_customer.id,
@@ -170,17 +170,17 @@ class TestGetCustomerCooperationHistory:
                 salesperson_id=1,
                 outcome=LeadOutcomeEnum.LOST.value,
                 created_at=datetime.now() - timedelta(days=i * 20),
-                )
-                win_rate_service.db.add(project)
+            )
+            win_rate_service.db.add(project)
 
-                win_rate_service.db.commit()
+        win_rate_service.db.commit()
 
-                total, won = win_rate_service.get_customer_cooperation_history(
-                customer_id=test_customer.id
-                )
+        total, won = win_rate_service.get_customer_cooperation_history(
+            customer_id=test_customer.id
+        )
 
-                assert total == 7
-                assert won == 5
+        assert total == 7
+        assert won == 5
 
     def test_by_customer_name(self, win_rate_service, db_session):
         """通过客户名称查询历史合作"""
@@ -240,34 +240,34 @@ class TestGetSimilarLeadsStatistics:
         """有相似线索时计算中标率"""
         # 创建不同结果的项目
         outcomes = [
-        LeadOutcomeEnum.WON.value,
-        LeadOutcomeEnum.WON.value,
-        LeadOutcomeEnum.WON.value,
-        LeadOutcomeEnum.LOST.value,
-        LeadOutcomeEnum.LOST.value,
+            LeadOutcomeEnum.WON.value,
+            LeadOutcomeEnum.WON.value,
+            LeadOutcomeEnum.WON.value,
+            LeadOutcomeEnum.LOST.value,
+            LeadOutcomeEnum.LOST.value,
         ]
 
         for i, outcome in enumerate(outcomes):
             project = Project(
-            project_code=f"PJ-SIM-{i:03d}",
-            project_name=f"相似项目{i}",
-            customer_id=test_customer.id,
-            customer_name=test_customer.customer_name,
-            salesperson_id=1,
-            outcome=outcome,
-            evaluation_score=dimension_scores.total_score,
-            created_at=datetime.now(),
+                project_code=f"PJ-SIM-{i:03d}",
+                project_name=f"相似项目{i}",
+                customer_id=test_customer.id,
+                customer_name=test_customer.customer_name,
+                salesperson_id=1,
+                outcome=outcome,
+                evaluation_score=dimension_scores.total_score,
+                created_at=datetime.now(),
             )
             win_rate_service.db.add(project)
 
-            win_rate_service.db.commit()
+        win_rate_service.db.commit()
 
-            similar_count, win_rate = win_rate_service.get_similar_leads_statistics(
+        similar_count, win_rate = win_rate_service.get_similar_leads_statistics(
             dimension_scores, score_tolerance=10
-            )
+        )
 
-            assert similar_count == 5
-            assert win_rate == pytest.approx(0.6)
+        assert similar_count == 5
+        assert win_rate == pytest.approx(0.6)
 
 
 class TestCalculateBaseScore:
@@ -668,66 +668,66 @@ class TestGetWinRateDistribution:
         """有预测数据时统计分布"""
         # 创建不同概率等级的项目
         levels_and_outcomes = [
-        (
-        WinProbabilityLevelEnum.VERY_HIGH.value,
-        LeadOutcomeEnum.WON.value,
-        ),  # 高概率，中标
-        (
-        WinProbabilityLevelEnum.VERY_HIGH.value,
-        LeadOutcomeEnum.LOST.value,
-        ),  # 高概率，未中
-        (WinProbabilityLevelEnum.HIGH.value, LeadOutcomeEnum.WON.value),
-        (WinProbabilityLevelEnum.HIGH.value, LeadOutcomeEnum.LOST.value),
-        (WinProbabilityLevelEnum.MEDIUM.value, LeadOutcomeEnum.WON.value),
-        (WinProbabilityLevelEnum.MEDIUM.value, LeadOutcomeEnum.LOST.value),
+            (
+                WinProbabilityLevelEnum.VERY_HIGH.value,
+                LeadOutcomeEnum.WON.value,
+            ),  # 高概率，中标
+            (
+                WinProbabilityLevelEnum.VERY_HIGH.value,
+                LeadOutcomeEnum.LOST.value,
+            ),  # 高概率，未中
+            (WinProbabilityLevelEnum.HIGH.value, LeadOutcomeEnum.WON.value),
+            (WinProbabilityLevelEnum.HIGH.value, LeadOutcomeEnum.LOST.value),
+            (WinProbabilityLevelEnum.MEDIUM.value, LeadOutcomeEnum.WON.value),
+            (WinProbabilityLevelEnum.MEDIUM.value, LeadOutcomeEnum.LOST.value),
         ]
 
         # 映射概率等级到对应的 predicted_win_rate 值
         level_to_rate = {
-        WinProbabilityLevelEnum.VERY_HIGH.value: Decimal("0.85"),  # >= 0.80
-        WinProbabilityLevelEnum.HIGH.value: Decimal("0.70"),  # >= 0.60
-        WinProbabilityLevelEnum.MEDIUM.value: Decimal("0.50"),  # >= 0.40
-        WinProbabilityLevelEnum.LOW.value: Decimal("0.30"),  # >= 0.20
-        WinProbabilityLevelEnum.VERY_LOW.value: Decimal("0.10"),  # < 0.20
+            WinProbabilityLevelEnum.VERY_HIGH.value: Decimal("0.85"),  # >= 0.80
+            WinProbabilityLevelEnum.HIGH.value: Decimal("0.70"),  # >= 0.60
+            WinProbabilityLevelEnum.MEDIUM.value: Decimal("0.50"),  # >= 0.40
+            WinProbabilityLevelEnum.LOW.value: Decimal("0.30"),  # >= 0.20
+            WinProbabilityLevelEnum.VERY_LOW.value: Decimal("0.10"),  # < 0.20
         }
-        
+
         for level, outcome in levels_and_outcomes:
             project = Project(
-            project_code=f"PJ-DIST-{level}-{outcome}",
-            project_name=f"分布测试{level}-{outcome}",
-            customer_id=test_customer.id,
-            customer_name=test_customer.customer_name,
-            salesperson_id=test_salesperson.id,
-            outcome=outcome,
-            predicted_win_rate=level_to_rate[level],
-            created_at=datetime.now(),
+                project_code=f"PJ-DIST-{level}-{outcome}",
+                project_name=f"分布测试{level}-{outcome}",
+                customer_id=test_customer.id,
+                customer_name=test_customer.customer_name,
+                salesperson_id=test_salesperson.id,
+                outcome=outcome,
+                predicted_win_rate=level_to_rate[level],
+                created_at=datetime.now(),
             )
             win_rate_service.db.add(project)
 
-            win_rate_service.db.commit()
+        win_rate_service.db.commit()
 
-            distribution = win_rate_service.get_win_rate_distribution()
+        distribution = win_rate_service.get_win_rate_distribution()
 
-            # 验证各等级数量
-            assert distribution[WinProbabilityLevelEnum.VERY_HIGH.value]["count"] == 2
-            assert distribution[WinProbabilityLevelEnum.HIGH.value]["count"] == 2
-            assert distribution[WinProbabilityLevelEnum.MEDIUM.value]["count"] == 2
+        # 验证各等级数量
+        assert distribution[WinProbabilityLevelEnum.VERY_HIGH.value]["count"] == 2
+        assert distribution[WinProbabilityLevelEnum.HIGH.value]["count"] == 2
+        assert distribution[WinProbabilityLevelEnum.MEDIUM.value]["count"] == 2
 
-            # 验证各等级中标数
-            assert distribution[WinProbabilityLevelEnum.VERY_HIGH.value]["won"] == 1
-            assert distribution[WinProbabilityLevelEnum.HIGH.value]["won"] == 1
-            assert distribution[WinProbabilityLevelEnum.MEDIUM.value]["won"] == 1
+        # 验证各等级中标数
+        assert distribution[WinProbabilityLevelEnum.VERY_HIGH.value]["won"] == 1
+        assert distribution[WinProbabilityLevelEnum.HIGH.value]["won"] == 1
+        assert distribution[WinProbabilityLevelEnum.MEDIUM.value]["won"] == 1
 
-            # 验证实际中标率（注意：actual_win_rate 是 float 类型）
-            assert distribution[WinProbabilityLevelEnum.VERY_HIGH.value][
+        # 验证实际中标率（注意：actual_win_rate 是 float 类型）
+        assert distribution[WinProbabilityLevelEnum.VERY_HIGH.value][
             "actual_win_rate"
-            ] == pytest.approx(0.50, abs=0.1)
-            assert distribution[WinProbabilityLevelEnum.HIGH.value][
+        ] == pytest.approx(0.50, abs=0.1)
+        assert distribution[WinProbabilityLevelEnum.HIGH.value][
             "actual_win_rate"
-            ] == pytest.approx(0.50, abs=0.1)
-            assert distribution[WinProbabilityLevelEnum.MEDIUM.value][
+        ] == pytest.approx(0.50, abs=0.1)
+        assert distribution[WinProbabilityLevelEnum.MEDIUM.value][
             "actual_win_rate"
-            ] == pytest.approx(0.50, abs=0.1)
+        ] == pytest.approx(0.50, abs=0.1)
 
     def test_date_range_filter(self, win_rate_service, test_customer, test_salesperson):
         """日期范围过滤"""

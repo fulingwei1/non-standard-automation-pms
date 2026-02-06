@@ -135,9 +135,9 @@ def notify_quote_expiring(db: Session) -> dict:
     expiring_count = 0
     expired_count = 0
 
-    # 查询所有有效的报价
-    quotes = db.query(Quote).join(QuoteVersion).filter(
-        Quote.status.in_([QuoteStatusEnum.SENT, QuoteStatusEnum.IN_REVIEW])
+    # 查询所有有效的报价（使用正确的枚举值，不需要join）
+    quotes = db.query(Quote).filter(
+        Quote.status.in_([QuoteStatusEnum.SUBMITTED, QuoteStatusEnum.APPROVED])
     ).all()
 
     for quote in quotes:

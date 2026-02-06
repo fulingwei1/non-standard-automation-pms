@@ -89,8 +89,7 @@ class AcceptanceService:
                 "order_id": order_id,
                 "open_issues_count": len(open_issues),
             }
-            }
-        
+
         # 4. 创建发票
         # 使用验收单的总金额作为发票金额
         invoice = Invoice(

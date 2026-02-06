@@ -29,7 +29,6 @@ from app.api.v1.endpoints import (  # projects,  # 已拆分为projects包; cost
     organization,
     procurement_analysis,
     project_contributions,
-    project_evaluation,
     project_workspace,
     purchase,
     qualification,
@@ -40,7 +39,6 @@ from app.api.v1.endpoints import (  # projects,  # 已拆分为projects包; cost
     technical_review,
     technical_spec,
     users,
-    work_log,
 )
 
 # 导入suppliers端点
@@ -60,14 +58,6 @@ api_router.include_router(projects_router, prefix="/projects", tags=["projects"]
 api_router.include_router(customers.router, prefix="/customers", tags=["customers"])
 # 使用重构后的suppliers端点（使用通用CRUD路由生成器和统一响应格式）
 api_router.include_router(suppliers_router, prefix="/suppliers", tags=["suppliers"])
-# 原suppliers端点已重构，保留注释供参考：
-# api_router.include_router(suppliers.router, prefix="/suppliers", tags=["suppliers"])
-# 机器管理已迁移至项目子路由 /projects/{project_id}/machines/，删除独立的 /machines 路由
-# api_router.include_router(machines.router, prefix="/machines", tags=["machines"])
-# 使用重构后的端点（使用统一响应格式）
-
-# 原stages端点已重构，保留注释供参考：
-# api_router.include_router(stages.router, prefix="/stages", tags=["stages"])
 api_router.include_router(organization.router, prefix="/org", tags=["organization"])
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(budget.router, prefix="/budgets", tags=["budgets"])
@@ -184,9 +174,6 @@ from app.api.v1.endpoints.bonus import router as bonus_router
 
 api_router.include_router(bonus_router, prefix="", tags=["bonus"])
 api_router.include_router(
-    project_evaluation.router, prefix="/project-evaluation", tags=["project-evaluation"]
-)
-api_router.include_router(
     hourly_rate.router, prefix="/hourly-rates", tags=["hourly-rates"]
 )
 api_router.include_router(
@@ -210,6 +197,11 @@ from app.api.v1.endpoints.roles import router as roles_router
 
 api_router.include_router(roles_router, tags=["roles"])
 
+# 权限管理模块
+from app.api.v1.endpoints.permissions import router as permissions_router
+
+api_router.include_router(permissions_router, prefix="/permissions", tags=["permissions"])
+
 # 管理节律模块已拆分为management_rhythm包
 from app.api.v1.endpoints.management_rhythm import router as management_rhythm_router
 
@@ -222,7 +214,6 @@ from app.api.v1.endpoints import culture_wall_config
 api_router.include_router(
     culture_wall_config.router, prefix="", tags=["culture-wall-config"]
 )
-api_router.include_router(work_log.router, prefix="", tags=["work-log"])
 api_router.include_router(
     project_workspace.router, prefix="", tags=["project-workspace"]
 )
@@ -273,9 +264,6 @@ from app.api.v1.endpoints import stage_templates, node_tasks
 api_router.include_router(
     stage_templates.router, prefix="/stage-templates", tags=["stage-templates"]
 )
-# api_router.include_router(
-#     project_stages.router, prefix="/projects", tags=["project-stages"]
-# )
 api_router.include_router(node_tasks.router, prefix="/node-tasks", tags=["node-tasks"])
 
 # 战略管理模块

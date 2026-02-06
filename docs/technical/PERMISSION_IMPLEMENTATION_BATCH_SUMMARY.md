@@ -26,9 +26,9 @@
 
 - task-center (21个端点)
 - budgets (17个端点)
-- project-roles (16个端点)
+- projects-roles (16个端点)
 - qualifications (16个端点)
-- project-evaluation (15个端点)
+- projects-evaluations (15个端点)
 - engineers (15个端点)
 - hr-management (14个端点)
 - machines (14个端点)

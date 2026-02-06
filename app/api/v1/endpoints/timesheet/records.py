@@ -16,8 +16,9 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
-from app.core.config import settings
 from app.models.organization import Department
 from app.models.project import Project
 from app.models.timesheet import (
@@ -44,13 +45,7 @@ router = APIRouter(prefix="/timesheet/records", tags=["records"])
 def list_timesheets(
     *,
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(
-        settings.DEFAULT_PAGE_SIZE,
-        ge=1,
-        le=settings.MAX_PAGE_SIZE,
-        description="每页数量",
-    ),
+    pagination=Depends(get_pagination_query),
     user_id: Optional[int] = Query(None, description="用户ID筛选"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     start_date: Optional[date] = Query(None, description="开始日期"),
@@ -79,13 +74,9 @@ def list_timesheets(
         query = query.filter(Timesheet.status == status)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    timesheets = (
-        query.order_by(desc(Timesheet.work_date), desc(Timesheet.created_at))
-        .offset(offset)
-        .limit(page_size)
-        .all()
-    )
+    query = query.order_by(desc(Timesheet.work_date), desc(Timesheet.created_at))
+    query = apply_pagination(query, pagination.offset, pagination.limit)
+    timesheets = query.all()
 
     items = []
     for ts in timesheets:
@@ -126,9 +117,9 @@ def list_timesheets(
     return TimesheetListResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total),
     )
 
 

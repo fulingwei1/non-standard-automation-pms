@@ -112,29 +112,29 @@ class TestTimesheetQualityService:
     def test_detect_anomalies_excessive_weekly_hours(self, db_session, test_user):
         """测试检测异常 - 单周工时超限"""
         service = TimesheetQualityService(db_session)
-        
+
         # 创建一周的工时记录，总计超过80小时
         week_start = date.today() - timedelta(days=date.today().weekday() + 7)
         for i in range(7):
             timesheet = Timesheet(
-            user_id=test_user.id,
-            project_id=1,
-            work_date=week_start + timedelta(days=i),
-            hours=12.0,  # 每天12小时，总计84小时
-            status="APPROVED",
-            overtime_type="NORMAL"
+                user_id=test_user.id,
+                project_id=1,
+                work_date=week_start + timedelta(days=i),
+                hours=12.0,  # 每天12小时，总计84小时
+                status="APPROVED",
+                overtime_type="NORMAL"
             )
             db_session.add(timesheet)
-            db_session.commit()
-        
-            result = service.detect_anomalies(
+        db_session.commit()
+
+        result = service.detect_anomalies(
             user_id=test_user.id,
             start_date=week_start,
             end_date=week_start + timedelta(days=6)
-            )
-        
-            assert isinstance(result, list)
-            assert any(a['type'] == 'EXCESSIVE_WEEKLY_HOURS' for a in result)
+        )
+
+        assert isinstance(result, list)
+        assert any(a['type'] == 'EXCESSIVE_WEEKLY_HOURS' for a in result)
 
     def test_detect_anomalies_excessive_monthly_hours(self, db_session, test_user):
         """测试检测异常 - 单月工时超限"""
@@ -353,89 +353,89 @@ class TestTimesheetQualityService:
     def test_check_labor_law_compliance_compliant(self, db_session, test_user):
         """测试检查劳动法合规性 - 合规"""
         service = TimesheetQualityService(db_session)
-        
+
         # 创建合规的加班工时（每月30小时）
         month_start = date.today().replace(day=1)
         for i in range(10):
             timesheet = Timesheet(
-            user_id=test_user.id,
-            project_id=1,
-            work_date=month_start + timedelta(days=i),
-            hours=3.0,  # 每天3小时加班，总计30小时
-            status="APPROVED",
-            overtime_type="OVERTIME"
+                user_id=test_user.id,
+                project_id=1,
+                work_date=month_start + timedelta(days=i),
+                hours=3.0,  # 每天3小时加班，总计30小时
+                status="APPROVED",
+                overtime_type="OVERTIME"
             )
             db_session.add(timesheet)
-            db_session.commit()
-        
-            result = service.check_labor_law_compliance(
+        db_session.commit()
+
+        result = service.check_labor_law_compliance(
             user_id=test_user.id,
             year=date.today().year,
             month=date.today().month
-            )
-        
-            assert isinstance(result, dict)
-            assert 'is_compliant' in result
-            assert result['is_compliant'] is True
-            assert result['overtime_hours'] <= 36
+        )
+
+        assert isinstance(result, dict)
+        assert 'is_compliant' in result
+        assert result['is_compliant'] is True
+        assert result['overtime_hours'] <= 36
 
     def test_check_labor_law_compliance_violation(self, db_session, test_user):
         """测试检查劳动法合规性 - 违规"""
         service = TimesheetQualityService(db_session)
-        
+
         # 创建违规的加班工时（每月40小时，超过36小时限制）
         month_start = date.today().replace(day=1)
         for i in range(10):
             timesheet = Timesheet(
-            user_id=test_user.id,
-            project_id=1,
-            work_date=month_start + timedelta(days=i),
-            hours=4.0,  # 每天4小时加班，总计40小时
-            status="APPROVED",
-            overtime_type="OVERTIME"
+                user_id=test_user.id,
+                project_id=1,
+                work_date=month_start + timedelta(days=i),
+                hours=4.0,  # 每天4小时加班，总计40小时
+                status="APPROVED",
+                overtime_type="OVERTIME"
             )
             db_session.add(timesheet)
-            db_session.commit()
-        
-            result = service.check_labor_law_compliance(
+        db_session.commit()
+
+        result = service.check_labor_law_compliance(
             user_id=test_user.id,
             year=date.today().year,
             month=date.today().month
-            )
-        
-            assert isinstance(result, dict)
-            assert 'is_compliant' in result
-            assert result['is_compliant'] is False
-            assert result['violation_hours'] > 0
+        )
+
+        assert isinstance(result, dict)
+        assert 'is_compliant' in result
+        assert result['is_compliant'] is False
+        assert result['violation_hours'] > 0
 
     def test_check_labor_law_compliance_no_overtime(self, db_session, test_user):
         """测试检查劳动法合规性 - 无加班"""
         service = TimesheetQualityService(db_session)
-        
+
         # 只创建正常工时，无加班
         month_start = date.today().replace(day=1)
         for i in range(5):
             timesheet = Timesheet(
-            user_id=test_user.id,
-            project_id=1,
-            work_date=month_start + timedelta(days=i),
-            hours=8.0,
-            status="APPROVED",
-            overtime_type="NORMAL"
+                user_id=test_user.id,
+                project_id=1,
+                work_date=month_start + timedelta(days=i),
+                hours=8.0,
+                status="APPROVED",
+                overtime_type="NORMAL"
             )
             db_session.add(timesheet)
-            db_session.commit()
-        
-            result = service.check_labor_law_compliance(
+        db_session.commit()
+
+        result = service.check_labor_law_compliance(
             user_id=test_user.id,
             year=date.today().year,
             month=date.today().month
-            )
-        
-            assert isinstance(result, dict)
-            assert 'is_compliant' in result
-            assert result['is_compliant'] is True
-            assert result['overtime_hours'] == 0
+        )
+
+        assert isinstance(result, dict)
+        assert 'is_compliant' in result
+        assert result['is_compliant'] is True
+        assert result['overtime_hours'] == 0
 
     def test_check_labor_law_compliance_december(self, db_session, test_user):
         """测试检查劳动法合规性 - 12月（跨年边界）"""

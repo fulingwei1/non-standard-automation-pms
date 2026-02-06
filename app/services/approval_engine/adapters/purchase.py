@@ -288,7 +288,15 @@ class PurchaseOrderApprovalAdapter(ApprovalAdapter):
             if project and hasattr(project, 'manager_id') and project.manager_id:
                 cc_users.append(project.manager_id)
 
-        # TODO: 可以添加采购部门负责人的逻辑
-        # 这需要访问部门和用户关系数据
+        # 采购部门负责人
+        purchase_dept_codes = ['PURCHASE', 'PROCUREMENT', 'PMC', '采购部']
+        purchase_manager_ids = self.get_department_manager_user_ids_by_codes(purchase_dept_codes)
+        cc_users.extend(purchase_manager_ids)
+
+        # 如果没找到，尝试通过部门名称查找
+        if not purchase_manager_ids:
+            purchase_manager = self.get_department_manager_user_id('采购部')
+            if purchase_manager:
+                cc_users.append(purchase_manager)
 
         return list(set(cc_users))  # 去重

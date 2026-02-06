@@ -239,3 +239,85 @@ def process_user_costs(
         total_cost += cost_amount
 
     return created_costs, total_cost
+
+
+class LaborCostCalculationService:
+    """
+    人工成本批量计算服务
+    用于定时任务批量计算所有项目的人工成本
+    """
+
+    def __init__(self, db: Session):
+        self.db = db
+
+    def calculate_monthly_costs(self, year: int, month: int) -> Dict:
+        """
+        计算指定月份所有项目的人工成本
+
+        Args:
+            year: 年份
+            month: 月份
+
+        Returns:
+            Dict: 计算结果统计
+        """
+        import logging
+        from datetime import date
+        from calendar import monthrange
+
+        logger = logging.getLogger(__name__)
+
+        # 计算月份的开始和结束日期
+        _, last_day = monthrange(year, month)
+        start_date = date(year, month, 1)
+        end_date = date(year, month, last_day)
+
+        # 查询有工时记录的项目
+        project_ids = self.db.query(Timesheet.project_id).filter(
+            Timesheet.work_date >= start_date,
+            Timesheet.work_date <= end_date,
+            Timesheet.status == "APPROVED"
+        ).distinct().all()
+
+        projects_processed = 0
+        total_cost = Decimal("0")
+        errors = []
+
+        for (project_id,) in project_ids:
+            if not project_id:
+                continue
+
+            try:
+                project = self.db.query(Project).filter(Project.id == project_id).first()
+                if not project:
+                    continue
+
+                # 查询该项目的工时
+                timesheets = query_approved_timesheets(self.db, project_id, start_date, end_date)
+                if not timesheets:
+                    continue
+
+                # 按用户分组
+                user_costs = group_timesheets_by_user(timesheets)
+
+                # 处理用户成本
+                _, project_cost = process_user_costs(
+                    self.db, project, project_id, user_costs, end_date, recalculate=False
+                )
+
+                total_cost += project_cost
+                projects_processed += 1
+
+            except Exception as e:
+                errors.append({"project_id": project_id, "error": str(e)})
+                logger.error(f"计算项目 {project_id} 人工成本失败: {str(e)}")
+
+        self.db.commit()
+
+        return {
+            "year": year,
+            "month": month,
+            "projects_processed": projects_processed,
+            "total_cost": float(total_cost),
+            "errors": errors
+        }

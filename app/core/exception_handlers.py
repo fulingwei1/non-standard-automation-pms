@@ -71,7 +71,7 @@ class RateLimitExceededException(SecurityException):
         )
 
 
-def _sanitize_error_detail(detail: Any) -> str:
+def _sanitize_error_detail(detail: Any) -> Any:
     """
     清理错误详情，避免泄露敏感信息
 
@@ -79,7 +79,7 @@ def _sanitize_error_detail(detail: Any) -> str:
         detail: 错误详情
 
     Returns:
-        str: 清理后的错误详情
+        Any: 清理后的错误详情，保留原始结构
     """
     if isinstance(detail, dict):
         sanitized = {}
@@ -97,11 +97,33 @@ def _sanitize_error_detail(detail: Any) -> str:
             ):
                 sanitized[key] = "***"
             else:
-                sanitized[key] = str(value)
-        return str(sanitized)
+                sanitized[key] = _sanitize_error_detail(value)
+        return sanitized
+    elif isinstance(detail, list):
+        return [_sanitize_error_detail(item) for item in detail]
+    elif isinstance(detail, tuple):
+        return tuple(_sanitize_error_detail(item) for item in detail)
+    elif isinstance(detail, (int, float, bool)) or detail is None:
+        return detail
     elif isinstance(detail, str):
         # 简单的字符串清理
         return detail[:500] if len(detail) > 500 else detail
+    return str(detail)
+
+
+def _extract_user_message(detail: Any) -> str:
+    """根据 detail 提取用户友好的提示信息"""
+    if isinstance(detail, dict):
+        for key in ("message", "detail", "error"):
+            value = detail.get(key)
+            if isinstance(value, str) and value:
+                return value
+        return str(detail)
+    elif isinstance(detail, list) and detail:
+        first = detail[0]
+        if isinstance(first, dict):
+            return first.get("message") or str(first)
+        return str(first)
     return str(detail)
 
 
@@ -167,11 +189,12 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
         )
     else:
         # FastAPI/Starlette默认HTTP异常
+        detail = exc.detail
         content = _build_error_response(
             status_code=status_code,
             error_code="HTTP_ERROR",
-            detail=str(exc.detail),
-            user_friendly_message=str(exc.detail),
+            detail=detail,
+            user_friendly_message=_extract_user_message(detail),
             request=request,
             exc=exc,
         )
@@ -208,7 +231,7 @@ async def validation_exception_handler(
     content = _build_error_response(
         status_code=status_code,
         error_code="VALIDATION_ERROR",
-        detail=str(error_details),
+        detail=error_details,
         user_friendly_message=user_friendly_message,
         request=request,
         exc=exc,

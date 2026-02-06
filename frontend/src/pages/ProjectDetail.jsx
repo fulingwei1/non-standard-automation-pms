@@ -95,7 +95,7 @@ export default function ProjectDetail() {
       documentsRes] =
       await Promise.allSettled([
       projectApi.get(id),
-      machineApi.list({ project_id: id }),
+      machineApi.list(id),
       stageApi.list({ project_id: id }),
       milestoneApi.list({ project_id: id }),
       memberApi.list({ project_id: id }),

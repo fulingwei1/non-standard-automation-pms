@@ -17,6 +17,7 @@ from .milestone import MILESTONE_TASKS
 from .other import OTHER_TASKS
 from .production import PRODUCTION_TASKS
 from .project_health import PROJECT_HEALTH_TASKS
+from .risk import RISK_TASKS
 from .schedule import SCHEDULE_TASKS
 from .shortage import SHORTAGE_TASKS
 from .timesheet import TIMESHEET_TASKS
@@ -24,6 +25,7 @@ from .timesheet import TIMESHEET_TASKS
 # 合并所有任务
 SCHEDULER_TASKS = (
     PROJECT_HEALTH_TASKS +
+    RISK_TASKS +
     ISSUE_MANAGEMENT_TASKS +
     MILESTONE_TASKS +
     SHORTAGE_TASKS +

@@ -84,31 +84,53 @@ export const projectApi = {
 };
 
 export const machineApi = {
-  list: (params) => api.get("/machines/", { params }),
-  get: (id) => api.get(`/machines/${id}`),
-  create: (data) => api.post("/machines/", data),
-  update: (id, data) => api.put(`/machines/${id}`, data),
-  delete: (id) => api.delete(`/machines/${id}`),
-  updateProgress: (id, progress) => api.put(`/machines/${id}/progress?progress_pct=${progress}`),
-  getBom: (id) => api.get(`/machines/${id}/bom`),
-  getServiceHistory: (id, params) =>
-    api.get(`/machines/${id}/service-history`, { params }),
+  list: (projectId, params) =>
+    api.get(`/projects/${projectId}/machines`, { params }),
+  get: (projectId, machineId) =>
+    api.get(`/projects/${projectId}/machines/${machineId}`),
+  create: (projectId, data) =>
+    api.post(`/projects/${projectId}/machines`, data),
+  update: (projectId, machineId, data) =>
+    api.put(`/projects/${projectId}/machines/${machineId}`, data),
+  delete: (projectId, machineId) =>
+    api.delete(`/projects/${projectId}/machines/${machineId}`),
+  updateProgress: (projectId, machineId, progress) =>
+    api.put(
+      `/projects/${projectId}/machines/${machineId}/progress`,
+      null,
+      { params: { progress_pct: progress } },
+    ),
+  getBom: (projectId, machineId) =>
+    api.get(`/projects/${projectId}/machines/${machineId}/bom`),
+  getServiceHistory: (projectId, machineId, params) =>
+    api.get(`/projects/${projectId}/machines/${machineId}/service-history`, {
+      params,
+    }),
   // 汇总视图
-  getSummary: (projectId) => api.get(`/machines/projects/${projectId}/summary`),
-  recalculate: (projectId) => api.post(`/machines/projects/${projectId}/recalculate`),
+  getSummary: (projectId) =>
+    api.get(`/projects/${projectId}/machines/summary`),
+  recalculate: (projectId) =>
+    api.post(`/projects/${projectId}/machines/recalculate`),
   // 文档管理
-  uploadDocument: (machineId, formData) =>
-    api.post(`/machines/${machineId}/documents/upload`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }),
-  getDocuments: (machineId, params) =>
-    api.get(`/machines/${machineId}/documents`, { params }),
-  downloadDocument: (machineId, docId) =>
-    api.get(`/machines/${machineId}/documents/${docId}/download`, {
-      responseType: "blob",
-    }),
-  getDocumentVersions: (machineId, docId) =>
-    api.get(`/machines/${machineId}/documents/${docId}/versions`),
+  uploadDocument: (projectId, machineId, formData) =>
+    api.post(
+      `/projects/${projectId}/machines/${machineId}/documents/upload`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      },
+    ),
+  getDocuments: (projectId, machineId, params) =>
+    api.get(`/projects/${projectId}/machines/${machineId}/documents`, { params }),
+  downloadDocument: (projectId, machineId, docId) =>
+    api.get(
+      `/projects/${projectId}/machines/${machineId}/documents/${docId}/download`,
+      { responseType: "blob" },
+    ),
+  getDocumentVersions: (projectId, machineId, docId) =>
+    api.get(
+      `/projects/${projectId}/machines/${machineId}/documents/${docId}/versions`,
+    ),
 };
 
 export const stageApi = {

@@ -88,6 +88,7 @@ class ApprovalNodeDefinition(Base, TimestampMixin):
         AND_SIGN: 会签（全部通过才通过）
         SEQUENTIAL: 依次审批（按顺序逐个审批）
     """)
+    is_active = Column(Boolean, default=True, comment="节点是否启用")
 
     # 审批人配置
     approver_type = Column(String(30), comment="""

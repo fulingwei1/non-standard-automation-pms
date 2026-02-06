@@ -41,11 +41,37 @@ from .hr_tasks import (
     check_employee_confirmation_reminder,
 )
 
+# ==================== 存根任务（待实现）====================
+from .stub_tasks import (
+    check_cost_overrun_alerts,
+    check_delivery_delay,
+    check_equipment_maintenance_reminder,
+    check_issue_timeout_escalation,
+    check_outsourcing_delivery_alerts,
+    check_presale_workorder_timeout,
+    check_task_deadline_reminder,
+    check_task_delay_alerts,
+    check_workload_overload_alerts,
+    daily_kit_check,
+    generate_job_duty_tasks,
+    generate_monthly_reports_task,
+    generate_shortage_alerts,
+    generate_shortage_daily_report,
+    auto_trigger_urgent_purchase_from_shortage_alerts,
+)
+
 # ==================== 齐套率任务 ====================
 from .kit_rate_tasks import (
     create_kit_rate_snapshot,
     create_stage_change_snapshot,
     daily_kit_rate_snapshot,
+)
+
+# ==================== 项目风险任务 ====================
+from .risk_tasks import (
+    calculate_all_project_risks,
+    check_high_risk_projects,
+    create_daily_risk_snapshots,
 )
 
 # ==================== 问题管理任务 ====================
@@ -160,6 +186,11 @@ SCHEDULED_TASKS = {
 
     # 齐套率任务
     'daily_kit_rate_snapshot': daily_kit_rate_snapshot,
+
+    # 项目风险任务
+    'calculate_all_project_risks': calculate_all_project_risks,
+    'create_daily_risk_snapshots': create_daily_risk_snapshots,
+    'check_high_risk_projects': check_high_risk_projects,
 }
 
 # ==================== 任务分组 ====================
@@ -245,6 +276,14 @@ TASK_GROUPS = {
         'name': '齐套率管理',
         'tasks': [
             'daily_kit_rate_snapshot',
+        ]
+    },
+    'risk': {
+        'name': '项目风险',
+        'tasks': [
+            'calculate_all_project_risks',
+            'create_daily_risk_snapshots',
+            'check_high_risk_projects',
         ]
     },
 }
@@ -370,4 +409,9 @@ __all__ = [
     'daily_kit_rate_snapshot',
     'create_kit_rate_snapshot',
     'create_stage_change_snapshot',
+
+    # 项目风险
+    'calculate_all_project_risks',
+    'create_daily_risk_snapshots',
+    'check_high_risk_projects',
 ]

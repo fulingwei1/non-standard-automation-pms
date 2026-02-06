@@ -27,7 +27,7 @@ export default function MachineManagement() {
 
     // 使用自定义 Hooks
     const machineData = useMachineData(id);
-    const documentData = useMachineDocuments();
+    const documentData = useMachineDocuments(id);
 
     // 对话框状态
     const [showCreateDialog, setShowCreateDialog] = useState(false);

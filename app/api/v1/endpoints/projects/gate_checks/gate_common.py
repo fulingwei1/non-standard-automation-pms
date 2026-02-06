@@ -17,7 +17,14 @@ from typing import Any, Dict, List, Tuple
 from sqlalchemy.orm import Session
 
 from app.models.project import Machine, Project, ProjectPaymentPlan
-
+from .gate_s1_s2 import check_gate_s1_to_s2
+from .gate_s2_s3 import check_gate_s2_to_s3
+from .gate_s3_s4 import check_gate_s3_to_s4
+from .gate_s4_s5 import check_gate_s4_to_s5
+from .gate_s5_s6 import check_gate_s5_to_s6
+from .gate_s6_s7 import check_gate_s6_to_s7
+from .gate_s7_s8 import check_gate_s7_to_s8
+from .gate_s8_s9 import check_gate_s8_to_s9
 
 
 def check_gate(db: Session, project: Project, target_stage: str) -> Tuple[bool, List[str]]:

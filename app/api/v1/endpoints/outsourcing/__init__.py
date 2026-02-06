@@ -11,6 +11,7 @@ from .payments import router as payments_router
 from .progress import router as progress_router
 from .quality import router as quality_router
 from .suppliers import router as suppliers_router
+from .workflow import router as workflow_router
 
 router = APIRouter()
 
@@ -20,5 +21,6 @@ router.include_router(deliveries_router)
 router.include_router(quality_router)
 router.include_router(progress_router)
 router.include_router(payments_router)
+router.include_router(workflow_router)
 
 __all__ = ['router']

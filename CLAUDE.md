@@ -765,6 +765,21 @@ async def list_projects(
     return db.query(Project).all()
 ```
 
+### 列表接口分页与关键词（必须使用通用工具）
+
+**凡返回分页列表的接口**，必须使用通用分页与过滤，不得手写：
+
+- **分页**：`pagination = Depends(get_pagination_query)`，用 `apply_pagination(query, pagination.offset, pagination.limit)` 或对内存列表用 `list[pagination.offset : pagination.offset + pagination.limit]`。禁止写 `offset = (page - 1) * page_size`。
+- **关键词**：用 `apply_keyword_filter(query, Model, keyword, ["field1", "field2"])`，禁止手写 `.like(f"%{keyword}%")` / `.ilike(...)`。
+
+**导入**：`from app.common.pagination import get_pagination_query`；`from app.common.query_filters import apply_keyword_filter, apply_pagination`。
+
+**迁移与示例**：见 `docs/design/COMMON_PAGINATION_AND_FILTERS.md`。
+
+### 时间范围（月初/月末/上月）
+
+**凡涉及当月、上月、按年月取范围**，必须使用 `app.common.date_range`：`get_month_range(date.today())`、`get_last_month_range(...)`、`get_month_range_by_ym(year, month)` 等，禁止手写 `replace(day=1)` 或 `date(year, month+1, 1) - timedelta(days=1)`。详见 `docs/design/COMMON_DATE_RANGE.md`。
+
 ### 数据模式（Schemas）
 
 - 使用 `from_attributes = True` 兼容 ORM
@@ -1054,6 +1069,18 @@ with get_db_session() as db:
 - `ECN_NOTIFICATION_UNIFICATION_COMPLETE.md` - ECN 通知统一报告
 - `IMPLEMENTATION_REPORT_AUTH_MIDDLEWARE.md` - 全局认证中间件报告
 - `DEPLOYMENT_GUIDE.md` - 部署指南
+
+## AI 助手注意事项
+
+1. **语言**: 代码使用英文标识符，注释和文档使用中文
+2. **日期格式**: 统一使用 `YYYY-MM-DD` 格式
+3. **金额精度**: 货币值使用 `Numeric(14, 2)`
+4. **软删除**: 多数模型使用 `is_active` 布尔值而非硬删除
+5. **时间戳**: 所有使用 `TimestampMixin` 的模型都有 `created_at` 和 `updated_at`
+6. **项目编码**: 格式为 `PJyymmddxxx`（例如 `PJ250708001`）
+7. **机台编码**: 格式为 `PNxxx`（例如 `PN001`）
+8. **列表接口分页与关键词**: 必须使用 `app.common.pagination`（`get_pagination_query`）和 `app.common.query_filters`（`apply_keyword_filter`、`apply_pagination`），禁止手写 `offset = (page - 1) * page_size` 或 `.like('%...%')`。详见 `docs/design/COMMON_PAGINATION_AND_FILTERS.md`。
+9. **时间范围（月初/月末/上月）**: 必须使用 `app.common.date_range`（`get_month_range`、`get_last_month_range`、`get_month_range_by_ym` 等），禁止手写 `replace(day=1)` 或月末的 `timedelta` 计算。详见 `docs/design/COMMON_DATE_RANGE.md`。
 
 ## 最近更新
 

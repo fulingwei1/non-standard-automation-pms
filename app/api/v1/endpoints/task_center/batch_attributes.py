@@ -20,6 +20,7 @@ from app.models.task_center import TaskUnified
 from app.models.user import User
 from app.schemas.common import BatchOperationResponse
 from app.utils.batch_operations import BatchOperationExecutor, BatchOperationResult
+from app.services.task_progress_service import apply_task_progress_update
 
 from .batch_helpers import log_task_operation
 
@@ -159,17 +160,13 @@ def batch_update_progress(
     
     def update_progress(task: TaskUnified):
         """更新进度的操作函数"""
-        task.progress = progress
-        task.updated_by = current_user.id
-        
-        if progress >= 100 and task.status != "COMPLETED":
-            task.status = "COMPLETED"
-            task.actual_end_date = datetime.now().date()
-        
-        if progress > 0 and task.status == "ACCEPTED":
-            task.status = "IN_PROGRESS"
-            if not task.actual_start_date:
-                task.actual_start_date = datetime.now().date()
+        apply_task_progress_update(
+            task,
+            progress,
+            current_user.id,
+            reject_completed=False,
+            enforce_assignee=True,
+        )
     
     def log_operation(task: TaskUnified, op_type: str):
         """记录操作日志"""

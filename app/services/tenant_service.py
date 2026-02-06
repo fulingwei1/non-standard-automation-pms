@@ -232,7 +232,7 @@ class TenantService:
         return result
 
     def get_tenant_stats(self, tenant_id: int) -> Optional[Dict[str, Any]]:
-        """获取租户统计信息"""
+        """获取租户统计信��"""
         tenant = self.get_tenant(tenant_id)
         if not tenant:
             return None
@@ -240,12 +240,32 @@ class TenantService:
         user_count = self.db.query(func.count(User.id)).filter(User.tenant_id == tenant_id).scalar()
         role_count = self.db.query(func.count(Role.id)).filter(Role.tenant_id == tenant_id).scalar()
 
-        # 项目数量（如果有 Project 模型）
+        # 项目数量
+        # 注意：当前 Project 模型未实现 tenant_id 字段
+        # 暂时统计与该租户用户创建的项目（通过 created_by 关联）
         project_count = 0
         try:
             from app.models.project import Project
-            project_count = self.db.query(func.count(Project.id)).scalar()  # TODO: 添加租户过滤
+            # 获取该租户的所有用户ID
+            tenant_user_ids = self.db.query(User.id).filter(User.tenant_id == tenant_id).subquery()
+            project_count = self.db.query(func.count(Project.id)).filter(
+                Project.created_by.in_(tenant_user_ids)
+            ).scalar() or 0
         except Exception:
+            pass
+
+        # 存储使用统计（基于附件表统计）
+        storage_used_mb = 0
+        try:
+            from app.models.document import Attachment
+            # 统计该租户用户上传的附件大小
+            tenant_user_ids = self.db.query(User.id).filter(User.tenant_id == tenant_id).subquery()
+            total_bytes = self.db.query(func.sum(Attachment.file_size)).filter(
+                Attachment.uploaded_by.in_(tenant_user_ids)
+            ).scalar() or 0
+            storage_used_mb = round(total_bytes / (1024 * 1024), 2)
+        except Exception:
+            # 如果 Attachment 模型不存在或查询失败，返回0
             pass
 
         return {
@@ -254,6 +274,6 @@ class TenantService:
             "user_count": user_count or 0,
             "role_count": role_count or 0,
             "project_count": project_count,
-            "storage_used_mb": 0,  # TODO: 实现存储统计
+            "storage_used_mb": storage_used_mb,
             "plan_limits": tenant.get_plan_limits(),
         }

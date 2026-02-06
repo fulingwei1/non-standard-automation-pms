@@ -40,7 +40,9 @@ class TestCheckS3ToS4Transition:
             # 合同状态不是SIGNED
         contract = Contract(
         contract_code="CT001",
-        status="DRAFT"
+        status="DRAFT",
+        opportunity_id=1,  # Required field
+        customer_id=1  # Required field
         )
         db_session.add(contract)
         db_session.flush()
@@ -62,7 +64,9 @@ class TestCheckS3ToS4Transition:
 
         contract = Contract(
         contract_code="CT002",
-        status="SIGNED"
+        status="SIGNED",
+        opportunity_id=1,  # Required field
+        customer_id=1  # Required field
         )
         db_session.add(contract)
         db_session.flush()
@@ -93,6 +97,8 @@ class TestCheckS4ToS5Transition:
         from app.models.material import BomHeader
 
         bom = BomHeader(
+        bom_no="BOM-001",  # Required field
+        bom_name="Test BOM",  # Required field
         project_id=1,
         status="RELEASED"
         )
@@ -125,6 +131,7 @@ class TestCheckS7ToS8Transition:
         from app.models.acceptance import AcceptanceOrder
 
         order = AcceptanceOrder(
+        order_no="AO-001",  # Required field
         project_id=1,
         acceptance_type="FAT",
         status="COMPLETED",
@@ -162,6 +169,7 @@ class TestCheckS8ToS9Transition:
 
             # 创建终验收
         order = AcceptanceOrder(
+        order_no="AO-002",  # Required field
         project_id=1,
         acceptance_type="FINAL",
         status="COMPLETED",
@@ -218,7 +226,7 @@ class TestExecuteStageTransition:
         project = MagicMock()
         project.stage = "S3"
 
-        with patch('app.services.stage_transition_checks.check_gate') as mock_gate:
+        with patch('app.api.v1.endpoints.projects.utils.check_gate') as mock_gate:
             mock_gate.return_value = (False, ["缺少必要条件"])
 
             success, result = execute_stage_transition(
@@ -236,7 +244,7 @@ class TestExecuteStageTransition:
         project = MagicMock()
         project.stage = "S3"
 
-        with patch('app.services.stage_transition_checks.check_gate') as mock_gate:
+        with patch('app.api.v1.endpoints.projects.utils.check_gate') as mock_gate:
             mock_gate.return_value = (True, [])
 
             success, result = execute_stage_transition(
@@ -254,7 +262,7 @@ class TestExecuteStageTransition:
         project = MagicMock()
         project.stage = "S3"
 
-        with patch('app.services.stage_transition_checks.check_gate') as mock_gate:
+        with patch('app.api.v1.endpoints.projects.utils.check_gate') as mock_gate:
             mock_gate.side_effect = Exception("测试异常")
 
             success, result = execute_stage_transition(

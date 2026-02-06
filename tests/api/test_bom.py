@@ -40,8 +40,7 @@ def _get_first_machine(client: TestClient, token: str) -> dict:
 
     # 获取项目的机台列表
     machines_response = client.get(
-        f"{settings.API_V1_PREFIX}/machines/",
-        params={"project_id": project_id},
+        f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/",
         headers=headers
     )
 

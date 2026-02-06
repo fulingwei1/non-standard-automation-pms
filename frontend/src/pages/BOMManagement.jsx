@@ -125,7 +125,7 @@ export default function BOMManagement() {
   };
   const fetchMachines = async (projId) => {
     try {
-      const res = await machineApi.list({ project_id: projId });
+      const res = await machineApi.list(projId);
       setMachines(res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch machines:", error);

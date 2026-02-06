@@ -287,7 +287,7 @@ cat app/api/v1/api.py
 - `audits` - 审计管理（可能需要管理界面）
 - `data-import-export` - 数据导入导出（可能需要上传界面）
 - `hourly-rates` - 时薪配置（可能需要配置界面）
-- `project-roles` - 项目角色（可能需要管理界面）
+- `projects-roles` - 项目角色（可能需要管理界面）
 - `hr-management` - HR管理（可能需要管理界面）
 - `presales-integration` - 售前集成（可能需要集成界面）
 

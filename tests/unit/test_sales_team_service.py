@@ -347,3 +347,136 @@ class TestSalesTeamService:
 
         assert actual_value == Decimal("0")
         assert completion_rate == 0.0
+
+    def test_parse_period_value_invalid_type(self, sales_team_service):
+        """测试无效的周期类型"""
+        start, end = SalesTeamService.parse_period_value("2024-01", "INVALID")
+        assert start is None
+        assert end is None
+
+    def test_parse_period_value_invalid_monthly_format(self, sales_team_service):
+        """测试无效的月度格式"""
+        start, end = SalesTeamService.parse_period_value("invalid", "MONTHLY")
+        assert start is None
+        assert end is None
+
+    def test_parse_period_value_invalid_quarterly_format(self, sales_team_service):
+        """测试无效的季度格式"""
+        start, end = SalesTeamService.parse_period_value("invalid", "QUARTERLY")
+        assert start is None
+        assert end is None
+
+    def test_parse_period_value_invalid_yearly_format(self, sales_team_service):
+        """测试无效的年度格式"""
+        start, end = SalesTeamService.parse_period_value("invalid", "YEARLY")
+        assert start is None
+        assert end is None
+
+    def test_parse_period_value_q2(self, sales_team_service):
+        """测试第二季度"""
+        start, end = SalesTeamService.parse_period_value("2024-Q2", "QUARTERLY")
+        assert start == date(2024, 4, 1)
+        assert end == date(2024, 6, 30)
+
+    def test_parse_period_value_q3(self, sales_team_service):
+        """测试第三季度"""
+        start, end = SalesTeamService.parse_period_value("2024-Q3", "QUARTERLY")
+        assert start == date(2024, 7, 1)
+        assert end == date(2024, 9, 30)
+
+    def test_parse_period_value_december(self, sales_team_service):
+        """测试12月份跨年"""
+        start, end = SalesTeamService.parse_period_value("2024-12", "MONTHLY")
+        assert start == date(2024, 12, 1)
+        assert end == date(2024, 12, 31)
+
+    def test_get_followup_statistics_map_with_date_range(
+        self, sales_team_service, test_sales_user
+    ):
+        """测试带日期范围的跟进统计"""
+        from datetime import datetime, timedelta
+        start = datetime.now() - timedelta(days=30)
+        end = datetime.now()
+        result = sales_team_service.get_followup_statistics_map(
+            [test_sales_user.id],
+            start,
+            end
+        )
+        assert isinstance(result, dict)
+
+    def test_get_lead_quality_stats_map_with_date_range(
+        self, sales_team_service, test_sales_user
+    ):
+        """测试带日期范围的线索质量统计"""
+        from datetime import datetime, timedelta
+        start = datetime.now() - timedelta(days=30)
+        end = datetime.now()
+        result = sales_team_service.get_lead_quality_stats_map(
+            [test_sales_user.id],
+            start,
+            end
+        )
+        assert isinstance(result, dict)
+
+    def test_get_opportunity_stats_map_with_date_range(
+        self, sales_team_service, test_sales_user
+    ):
+        """测试带日期范围的商机统计"""
+        from datetime import datetime, timedelta
+        start = datetime.now() - timedelta(days=30)
+        end = datetime.now()
+        result = sales_team_service.get_opportunity_stats_map(
+            [test_sales_user.id],
+            start,
+            end
+        )
+        assert isinstance(result, dict)
+
+    def test_build_personal_target_map_yearly(
+        self, sales_team_service, test_sales_user
+    ):
+        """测试年度目标映射"""
+        target = SalesTarget(
+            target_scope="PERSONAL",
+            user_id=test_sales_user.id,
+            target_type="CONTRACT_AMOUNT",
+            target_value=Decimal("5000000"),
+            target_period="YEARLY",
+            period_value="2024",
+            status="ACTIVE",
+            created_by=test_sales_user.id,
+        )
+        sales_team_service.db.add(target)
+        sales_team_service.db.commit()
+
+        result = sales_team_service.build_personal_target_map(
+            [test_sales_user.id], None, "2024"
+        )
+
+        assert test_sales_user.id in result
+        assert "yearly" in result[test_sales_user.id]
+
+    def test_build_personal_target_map_collection_amount(
+        self, sales_team_service, test_sales_user
+    ):
+        """测试回款金额目标映射"""
+        target = SalesTarget(
+            target_scope="PERSONAL",
+            user_id=test_sales_user.id,
+            target_type="COLLECTION_AMOUNT",
+            target_value=Decimal("2000000"),
+            target_period="MONTHLY",
+            period_value="2024-03",
+            status="ACTIVE",
+            created_by=test_sales_user.id,
+        )
+        sales_team_service.db.add(target)
+        sales_team_service.db.commit()
+
+        result = sales_team_service.build_personal_target_map(
+            [test_sales_user.id], "2024-03", None
+        )
+
+        assert test_sales_user.id in result
+        assert "monthly" in result[test_sales_user.id]
+        assert result[test_sales_user.id]["monthly"]["target_type"] == "COLLECTION_AMOUNT"

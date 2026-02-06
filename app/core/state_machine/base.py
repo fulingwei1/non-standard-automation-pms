@@ -97,10 +97,10 @@ class StateMachine:
             try:
                 is_valid, reason = validator(self, from_state, target_state)
                 if not is_valid:
-                    return False, reason
+                    return False, f"VALIDATION_FAILED:{reason}"
             except Exception as e:
                 logger.error(f"状态转换验证失败: {e}")
-                return False, f"验证失败: {str(e)}"
+                return False, f"VALIDATION_FAILED:验证失败: {str(e)}"
 
         return True, ""
 
@@ -162,13 +162,18 @@ class StateMachine:
         # 3. 验证转换是否有效
         can_transition, reason = self.can_transition_to(target_state)
         if not can_transition:
+            # Check if it's a validation failure vs invalid transition
+            if reason.startswith("VALIDATION_FAILED:"):
+                actual_reason = reason[len("VALIDATION_FAILED:"):]
+                raise StateMachineValidationError(actual_reason)
             raise InvalidStateTransitionError(from_state, target_state, reason)
 
         try:
             # 4. 执行 before hooks
             for hook in self._before_hooks:
                 try:
-                    hook(self, from_state, to_state, **kwargs)
+                    # Note: hooks are bound methods, so self is already bound
+                    hook(from_state, to_state, **kwargs)
                 except Exception as e:
                     logger.warning(f"before transition hook 失败: {e}")
 
@@ -225,7 +230,8 @@ class StateMachine:
             # 11. 执行 after hooks
             for hook in self._after_hooks:
                 try:
-                    hook(self, from_state, target_state, **kwargs)
+                    # Note: hooks are bound methods, so self is already bound
+                    hook(from_state, target_state, **kwargs)
                 except Exception as e:
                     logger.warning(f"after transition hook 失败: {e}")
 

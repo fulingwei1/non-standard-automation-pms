@@ -11,6 +11,7 @@ simpleeval==1.0.3  # 需要 1.0.3+ 支持 Python 3.12+
 # 配置和验证
 pydantic==2.9.2
 pydantic-settings==2.5.2
+email-validator==2.1.1  # Pydantic EmailStr 依赖
 
 # 安全认证
 python-jose[cryptography]==3.3.0

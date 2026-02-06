@@ -27,9 +27,15 @@ ENTITY_TYPE_PROJECT = "PROJECT"
 
 
 @router.post(
-    "/approval/submit",
+    "/",
     response_model=ResponseModel[Dict[str, Any]],
     status_code=status.HTTP_200_OK,
+)
+@router.post(
+    "/submit",
+    response_model=ResponseModel[Dict[str, Any]],
+    status_code=status.HTTP_200_OK,
+    include_in_schema=False,
 )
 def submit_project_approval(
     *,
@@ -50,9 +56,9 @@ def submit_project_approval(
         raise HTTPException(status_code=404, detail="项目不存在")
 
     # 检查项目状态
-    if project.status == "PENDING_APPROVAL":
+    if project.approval_status == "PENDING":
         raise HTTPException(status_code=400, detail="项目已在审批中")
-    if project.status == "APPROVED":
+    if project.approval_status == "APPROVED":
         raise HTTPException(status_code=400, detail="项目已审批通过")
 
     # 使用统一审批引擎提交审批

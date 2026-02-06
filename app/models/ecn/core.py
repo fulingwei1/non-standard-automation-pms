@@ -116,6 +116,7 @@ class Ecn(Base, TimestampMixin):
         "EcnSolutionTemplate",
         foreign_keys="EcnSolutionTemplate.source_ecn_id",
         uselist=False,
+        back_populates="source_ecn",
     )
     logs = relationship("EcnLog", back_populates="ecn", lazy="dynamic")
 

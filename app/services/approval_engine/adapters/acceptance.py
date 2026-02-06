@@ -367,7 +367,21 @@ class AcceptanceOrderApprovalAdapter(ApprovalAdapter):
             if project and hasattr(project, 'manager_id') and project.manager_id:
                 cc_users.append(project.manager_id)
 
-        # TODO: 可以添加质量部门负责人的逻辑
-        # TODO: 对于SAT/FINAL类型，可以添加销售负责人
+        # 质量部门负责人
+        qa_dept_codes = ['QA', 'QC', 'QUALITY', '质量部', '品质部']
+        qa_manager_ids = self.get_department_manager_user_ids_by_codes(qa_dept_codes)
+        cc_users.extend(qa_manager_ids)
+
+        # 如果没找到，尝试通过部门名称查找
+        if not qa_manager_ids:
+            qa_manager = self.get_department_manager_user_id('质量部')
+            if qa_manager:
+                cc_users.append(qa_manager)
+
+        # 对于SAT/FINAL类型，添加销售负责人
+        if order.acceptance_type in ['SAT', 'FINAL'] and order.project_id:
+            sales_user_id = self.get_project_sales_user_id(order.project_id)
+            if sales_user_id:
+                cc_users.append(sales_user_id)
 
         return list(set(cc_users))  # 去重

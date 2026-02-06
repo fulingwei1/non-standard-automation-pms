@@ -28,20 +28,19 @@ def check_overdue_issues():
             # 查询逾期的问题
             now = datetime.now()
             overdue_issues = db.query(Issue).filter(
-                Issue.status.in_(['pending', 'in_progress']),
-                Issue.due_date < now,
-                Issue.is_active == True
+                Issue.status.in_(['OPEN', 'IN_PROGRESS']),
+                Issue.due_date < now
             ).all()
 
             alert_count = 0
 
             for issue in overdue_issues:
-                # 检查是否已存在相同预警
+                # 检查是否已存在相同预警（使用target_type和target_id）
                 existing_alert = db.query(AlertRecord).filter(
-                    AlertRecord.source_type == 'issue',
-                    AlertRecord.source_id == issue.id,
-                    AlertRecord.alert_type == 'overdue_warning',
-                    AlertRecord.status == 'active'
+                    AlertRecord.target_type == 'issue',
+                    AlertRecord.target_id == issue.id,
+                    AlertRecord.alert_title.contains('逾期'),
+                    AlertRecord.status == 'PENDING'
                 ).first()
 
                 if existing_alert:
@@ -51,17 +50,20 @@ def check_overdue_issues():
                 overdue_days = (now - issue.due_date).days
 
                 # 创建逾期预警
-                urgency = 'critical' if overdue_days >= 7 else 'high' if overdue_days >= 3 else 'medium'
+                urgency = 'CRITICAL' if overdue_days >= 7 else 'HIGH' if overdue_days >= 3 else 'MEDIUM'
 
                 alert = AlertRecord(
-                    source_type='issue',
-                    source_id=issue.id,
-                    alert_type='overdue_warning',
+                    alert_no=f"ALT-IO-{issue.id}-{now.strftime('%Y%m%d%H%M%S')}",
+                    rule_id=1,  # 使用默认规则ID
+                    target_type='issue',
+                    target_id=issue.id,
+                    target_no=issue.issue_code if hasattr(issue, 'issue_code') else str(issue.id),
+                    target_name=issue.title,
                     alert_title=f'问题逾期预警',
                     alert_content=f'问题 "{issue.title}" 已逾期 {overdue_days} 天，截止日期为 {issue.due_date.strftime("%Y-%m-%d")}，当前状态为 {issue.status}。',
                     alert_level=urgency,
-                    alert_status='active',
-                    created_time=now,
+                    status='PENDING',
+                    triggered_at=now,
                     project_id=issue.project_id
                 )
 
@@ -94,40 +96,42 @@ def check_blocking_issues():
         with get_db_session() as db:
             from app.models.alert import AlertRecord
 
-            # 查询阻塞级别的问题
+            # 查询阻塞级别的问题（URGENT优先级，状态为OPEN或IN_PROGRESS）
             blocking_issues = db.query(Issue).filter(
                 Issue.priority == 'URGENT',
-                Issue.status.in_(['pending', 'in_progress']),
-                Issue.is_active == True
+                Issue.status.in_(['OPEN', 'IN_PROGRESS'])
             ).all()
 
             alert_count = 0
 
             for issue in blocking_issues:
-                # 检查是否已存在相同预警
+                # 检查是否已存在相同预警（使用target_type和target_id）
                 existing_alert = db.query(AlertRecord).filter(
-                    AlertRecord.source_type == 'issue',
-                    AlertRecord.source_id == issue.id,
-                    AlertRecord.alert_type == 'blocking_warning',
-                    AlertRecord.status == 'active'
+                    AlertRecord.target_type == 'issue',
+                    AlertRecord.target_id == issue.id,
+                    AlertRecord.alert_title.contains('阻塞'),
+                    AlertRecord.status == 'PENDING'
                 ).first()
 
                 if existing_alert:
                     continue
 
                 # 计算问题存在时间
-                days_open = (datetime.now() - issue.created_time).days
+                days_open = (datetime.now() - issue.created_at).days if issue.created_at else 0
 
                 # 创建阻塞预警
                 alert = AlertRecord(
-                    source_type='issue',
-                    source_id=issue.id,
-                    alert_type='blocking_warning',
+                    alert_no=f"ALT-IB-{issue.id}-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                    rule_id=1,  # 使用默认规则ID
+                    target_type='issue',
+                    target_id=issue.id,
+                    target_no=issue.issue_code if hasattr(issue, 'issue_code') else str(issue.id),
+                    target_name=issue.title,
                     alert_title=f'阻塞问题预警',
-                    alert_content=f'紧急问题 "{issue.title}" 已存在 {days_open} 天仍未解决，可能影响项目进度。问题描述：{issue.description[:100]}...',
-                    alert_level='critical',
-                    alert_status='active',
-                    created_time=datetime.now(),
+                    alert_content=f'紧急问题 "{issue.title}" 已存在 {days_open} 天仍未解决，可能影响项目进度。问题描述：{issue.description[:100] if issue.description else ""}...',
+                    alert_level='CRITICAL',
+                    status='PENDING',
+                    triggered_at=datetime.now(),
                     project_id=issue.project_id
                 )
 
@@ -162,10 +166,8 @@ def check_timeout_issues():
             # 查询超时未处理的问题（超过7天未更新）
             timeout_threshold = datetime.now() - timedelta(days=7)
             timeout_issues = db.query(Issue).filter(
-                Issue.status.in_(['pending', 'in_progress']),
-                Issue.last_updated < timeout_threshold,
-                Issue.is_active == True
-            ).all()
+                Issue.status.in_(['OPEN', 'IN_PROGRESS']),
+                Issue.updated_at < timeout_threshold).all()
 
             upgraded_count = 0
 
@@ -221,70 +223,54 @@ def daily_issue_statistics_snapshot():
         with get_db_session() as db:
 
             # 计算统计数据
-            total_issues = db.query(Issue).filter(Issue.is_active == True).count()
-            pending_issues = db.query(Issue).filter(
-                Issue.status == 'pending',
-                Issue.is_active == True
-            ).count()
-            in_progress_issues = db.query(Issue).filter(
-                Issue.status == 'in_progress',
-                Issue.is_active == True
-            ).count()
+            total_issues = db.query(Issue).filter().count()
+            open_issues = db.query(Issue).filter(
+                Issue.status == 'OPEN').count()
+            processing_issues = db.query(Issue).filter(
+                Issue.status == 'IN_PROGRESS').count()
             resolved_issues = db.query(Issue).filter(
-                Issue.status == 'resolved',
-                Issue.is_active == True
-            ).count()
+                Issue.status == 'RESOLVED').count()
 
-            # 按优先级统计
+            # ��优先级统计
             urgent_issues = db.query(Issue).filter(
-                Issue.priority == 'URGENT',
-                Issue.is_active == True
-            ).count()
-            high_issues = db.query(Issue).filter(
-                Issue.priority == 'HIGH',
-                Issue.is_active == True
-            ).count()
-            medium_issues = db.query(Issue).filter(
-                Issue.priority == 'MEDIUM',
-                Issue.is_active == True
-            ).count()
-            low_issues = db.query(Issue).filter(
-                Issue.priority == 'LOW',
-                Issue.is_active == True
-            ).count()
+                Issue.priority == 'URGENT').count()
+            high_priority_issues = db.query(Issue).filter(
+                Issue.priority == 'HIGH').count()
+            medium_priority_issues = db.query(Issue).filter(
+                Issue.priority == 'MEDIUM').count()
+            low_priority_issues = db.query(Issue).filter(
+                Issue.priority == 'LOW').count()
 
             # 按项目统计
             project_stats = db.query(
                 Issue.project_id,
                 func.count(Issue.id).label('issue_count')
             ).filter(
-                Issue.project_id.isnot(None),
-                Issue.is_active == True
-            ).group_by(Issue.project_id).all()
+                Issue.project_id.isnot(None)).group_by(Issue.project_id).all()
 
             # 创建统计快照
             snapshot = IssueStatisticsSnapshot(
                 snapshot_date=datetime.now().date(),
                 total_issues=total_issues,
-                pending_issues=pending_issues,
-                in_progress_issues=in_progress_issues,
+                open_issues=open_issues,
+                processing_issues=processing_issues,
                 resolved_issues=resolved_issues,
                 urgent_issues=urgent_issues,
-                high_issues=high_issues,
-                medium_issues=medium_issues,
-                low_issues=low_issues,
-                project_distribution={str(p.project_id): p.issue_count for p in project_stats}
+                high_priority_issues=high_priority_issues,
+                medium_priority_issues=medium_priority_issues,
+                low_priority_issues=low_priority_issues,
+                status_distribution={str(p.project_id): p.issue_count for p in project_stats}
             )
 
             db.add(snapshot)
             db.commit()
 
-            logger.info(f"问题统计快照生成完成: 总问题数 {total_issues}, 待处理 {pending_issues}, 进行中 {in_progress_issues}, 已解决 {resolved_issues}")
+            logger.info(f"问题统计快照生成完成: 总问题数 {total_issues}, 待处理 {open_issues}, 进行中 {processing_issues}, 已解决 {resolved_issues}")
 
             return {
                 'total_issues': total_issues,
-                'pending_issues': pending_issues,
-                'in_progress_issues': in_progress_issues,
+                'open_issues': open_issues,
+                'processing_issues': processing_issues,
                 'resolved_issues': resolved_issues,
                 'timestamp': datetime.now().isoformat()
             }
@@ -308,21 +294,19 @@ def check_issue_assignment_timeout():
             # 查询24小时内未分配的问题
             assignment_timeout = datetime.now() - timedelta(hours=24)
             unassigned_issues = db.query(Issue).filter(
-                Issue.status == 'pending',
-                Issue.assigned_to_id.is_(None),
-                Issue.created_time < assignment_timeout,
-                Issue.is_active == True
-            ).all()
+                Issue.status == 'OPEN',
+                Issue.assignee_id.is_(None),
+                Issue.created_at < assignment_timeout).all()
 
             alert_count = 0
 
             for issue in unassigned_issues:
-                # 检查是否已存在相同预警
+                # 检查是否已存在相同预警（使用target_type和target_id）
                 existing_alert = db.query(AlertRecord).filter(
-                    AlertRecord.source_type == 'issue',
-                    AlertRecord.source_id == issue.id,
-                    AlertRecord.alert_type == 'assignment_timeout',
-                    AlertRecord.status == 'active'
+                    AlertRecord.target_type == 'issue',
+                    AlertRecord.target_id == issue.id,
+                    AlertRecord.alert_title.contains('分配超时'),
+                    AlertRecord.status == 'PENDING'
                 ).first()
 
                 if existing_alert:
@@ -330,14 +314,17 @@ def check_issue_assignment_timeout():
 
                 # 创建分配超时预警
                 alert = AlertRecord(
-                    source_type='issue',
-                    source_id=issue.id,
-                    alert_type='assignment_timeout',
+                    alert_no=f"ALT-IA-{issue.id}-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                    rule_id=1,  # 使用默认规则ID
+                    target_type='issue',
+                    target_id=issue.id,
+                    target_no=issue.issue_code if hasattr(issue, 'issue_code') else str(issue.id),
+                    target_name=issue.title,
                     alert_title=f'问题分配超时预警',
                     alert_content=f'问题 "{issue.title}" 已创建超过24小时仍未分配处理人，请及时分配。',
-                    alert_level='medium',
-                    alert_status='active',
-                    created_time=datetime.now(),
+                    alert_level='MEDIUM',
+                    status='PENDING',
+                    triggered_at=datetime.now(),
                     project_id=issue.project_id
                 )
 
@@ -370,43 +357,45 @@ def check_issue_resolution_timeout():
         with get_db_session() as db:
             from app.models.alert import AlertRecord
 
-            # 查询超过预期解决时间的问题
+            # 查询超过预期解决时间的问题（使用due_date字段）
             now = datetime.now()
             overdue_resolution_issues = db.query(Issue).filter(
-                Issue.status == 'in_progress',
-                Issue.expected_resolution_date < now,
-                Issue.is_active == True
-            ).all()
+                Issue.status == 'IN_PROGRESS',
+                Issue.due_date.isnot(None),
+                Issue.due_date < now.date()).all()
 
             alert_count = 0
 
             for issue in overdue_resolution_issues:
-                # 检查是否已存在相同预警
+                # 检查是否已存在相同预警（使用target_type和target_id）
                 existing_alert = db.query(AlertRecord).filter(
-                    AlertRecord.source_type == 'issue',
-                    AlertRecord.source_id == issue.id,
-                    AlertRecord.alert_type == 'resolution_timeout',
-                    AlertRecord.status == 'active'
+                    AlertRecord.target_type == 'issue',
+                    AlertRecord.target_id == issue.id,
+                    AlertRecord.alert_title.contains('解决超时'),
+                    AlertRecord.status == 'PENDING'
                 ).first()
 
                 if existing_alert:
                     continue
 
                 # 计算超时天数
-                overdue_days = (now - issue.expected_resolution_date).days
+                overdue_days = (now.date() - issue.due_date).days
 
                 # 创建解决超时预警
-                urgency = 'high' if overdue_days >= 3 else 'medium'
+                urgency = 'HIGH' if overdue_days >= 3 else 'MEDIUM'
 
                 alert = AlertRecord(
-                    source_type='issue',
-                    source_id=issue.id,
-                    alert_type='resolution_timeout',
+                    alert_no=f"ALT-IR-{issue.id}-{now.strftime('%Y%m%d%H%M%S')}",
+                    rule_id=1,  # 使用默认规则ID
+                    target_type='issue',
+                    target_id=issue.id,
+                    target_no=issue.issue_code if hasattr(issue, 'issue_code') else str(issue.id),
+                    target_name=issue.title,
                     alert_title=f'问题解决超时预警',
-                    alert_content=f'问题 "{issue.title}" 已超过预期解决时间 {overdue_days} 天，预期解决日期为 {issue.expected_resolution_date.strftime("%Y-%m-%d")}。',
+                    alert_content=f'问题 "{issue.title}" 已超过预期解决时间 {overdue_days} 天，截止日期为 {issue.due_date.strftime("%Y-%m-%d")}。',
                     alert_level=urgency,
-                    alert_status='active',
-                    created_time=now,
+                    status='PENDING',
+                    triggered_at=now,
                     project_id=issue.project_id
                 )
 

@@ -90,13 +90,13 @@ async def resolve_item(
 | hr-management | `hr:` | `hr_management.py` | 14 | ⏳ 待添加 |
 | installation-dispatch | `installation_dispatch:` | `installation_dispatch.py` | 11 | ⏳ 待添加 |
 | issues | `issue:` | `issues.py` | 29 | ⏳ 待添加 |
-| machines | `machine:` | `machines.py` | 14 | ⏳ 待添加 |
+| projects-machines | `machine:` | `projects/machines/` | 14 | ⏳ 待添加 |
 | materials | `material:` | `materials.py` | 10 | ⏳ 待添加 |
 | milestones | `milestone:` | `milestones.py` | 7 | ⏳ 待添加 |
 | notifications | `notification:` | `notifications.py` | 8 | ⏳ 待添加 |
 | presales-integration | `presales_integration:` | `presales_integration.py` | 7 | ⏳ 待添加 |
-| project-evaluation | `project_evaluation:` | `project_evaluation.py` | 15 | ⏳ 待添加 |
-| project-roles | `project_role:` | `project_roles.py` | 16 | ⏳ 待添加 |
+| projects-evaluations | `project_evaluation:` | `projects/evaluations/` | 15 | ⏳ 待添加 |
+| projects-roles | `project_role:` | `projects/roles/` | 16 | ⏳ 待添加 |
 | qualifications | `qualification:` | `qualification.py` | 16 | ⏳ 待添加 |
 | reports | `report:` | `report_center.py` | 22 | ⏳ 待添加 |
 | shortage-alerts | `shortage_alert:` | `shortage_alerts.py` | 35 | ⏳ 待添加 |

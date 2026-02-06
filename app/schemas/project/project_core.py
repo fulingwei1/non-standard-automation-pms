@@ -15,6 +15,10 @@ from .machine import MachineResponse
 from .milestone import MilestoneResponse
 
 
+ZERO_DECIMAL = Decimal("0")
+HUNDRED_DECIMAL = Decimal("100")
+
+
 class ProjectCreate(BaseModel):
     """创建项目"""
 
@@ -32,8 +36,8 @@ class ProjectCreate(BaseModel):
     contract_date: Optional[date] = None
     planned_start_date: Optional[date] = None
     planned_end_date: Optional[date] = None
-    contract_amount: Optional[Decimal] = Field(default=0)
-    budget_amount: Optional[Decimal] = Field(default=0)
+    contract_amount: Optional[Decimal] = Field(default=ZERO_DECIMAL)
+    budget_amount: Optional[Decimal] = Field(default=ZERO_DECIMAL)
     pm_id: Optional[int] = None
     description: Optional[str] = None
     # 阶段模板
@@ -107,13 +111,13 @@ class ProjectResponse(TimestampSchema):
     stage: str = "S1"
     status: Optional[str] = None
     health: str = "H1"
-    progress_pct: Decimal = 0
+    progress_pct: Decimal = ZERO_DECIMAL
     contract_date: Optional[date] = None
     planned_start_date: Optional[date] = None
     planned_end_date: Optional[date] = None
-    contract_amount: Decimal = 0
-    budget_amount: Decimal = 0
-    actual_cost: Decimal = 0
+    contract_amount: Decimal = ZERO_DECIMAL
+    budget_amount: Decimal = ZERO_DECIMAL
+    actual_cost: Decimal = ZERO_DECIMAL
     pm_id: Optional[int] = None
     pm_name: Optional[str] = None
     is_active: bool = True
@@ -185,7 +189,7 @@ class ProjectMemberCreate(BaseModel):
     project_id: Optional[int] = Field(None, description="项目ID（可选，通常从路径中获取）")
     user_id: int
     role_code: str = Field(max_length=50)
-    allocation_pct: Decimal = Field(default=100, ge=0, le=100)
+    allocation_pct: Decimal = Field(default=HUNDRED_DECIMAL, ge=0, le=100)
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     remark: Optional[str] = None
@@ -213,7 +217,7 @@ class ProjectMemberResponse(BaseSchema):
     username: str
     real_name: Optional[str] = None
     role_code: str
-    allocation_pct: Decimal = 100
+    allocation_pct: Decimal = HUNDRED_DECIMAL
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     is_active: bool = True

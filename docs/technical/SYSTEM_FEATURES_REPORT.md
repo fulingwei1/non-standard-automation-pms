@@ -167,17 +167,17 @@
 |---------|---------|--------|------|------|------|
 | `presales-integration` | presales-integration | ✅ 7 | ✅ 58 | ✅ 1 | ✅ 启用 |
 
-### project-evaluation (1 个功能)
+### projects-evaluations (1 个功能)
 
 | 功能编码 | 功能名称 | API端点 | 权限 | 前端 | 状态 |
 |---------|---------|--------|------|------|------|
-| `project-evaluation` | project-evaluation | ✅ 15 | ✅ 58 | ✅ 1 | ✅ 启用 |
+| `projects-evaluations` | projects-evaluations | ✅ 15 | ✅ 58 | ✅ 1 | ✅ 启用 |
 
-### project-roles (1 个功能)
+### projects-roles (1 个功能)
 
 | 功能编码 | 功能名称 | API端点 | 权限 | 前端 | 状态 |
 |---------|---------|--------|------|------|------|
-| `project-roles` | project-roles | ✅ 16 | ✅ 58 | ✅ 1 | ✅ 启用 |
+| `projects-roles` | projects-roles | ✅ 16 | ✅ 58 | ✅ 1 | ✅ 启用 |
 
 ### projects (1 个功能)
 
@@ -278,4 +278,3 @@
 ---
 
 ## ⚠️ 缺失项提醒
-

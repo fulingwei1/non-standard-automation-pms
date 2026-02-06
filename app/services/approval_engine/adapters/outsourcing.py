@@ -311,7 +311,16 @@ class OutsourcingOrderApprovalAdapter(ApprovalAdapter):
             if project and hasattr(project, 'manager_id') and project.manager_id:
                 cc_users.append(project.manager_id)
 
-        # TODO: 可以添加生产部门负责人的逻辑
-        # 这需要访问部门和用户关系数据
+        # 生产部门负责人
+        # 常见的生产部门编码：PROD, PRODUCTION, MFG, MANUFACTURING
+        prod_dept_codes = ['PROD', 'PRODUCTION', 'MFG', '生产部']
+        prod_manager_ids = self.get_department_manager_user_ids_by_codes(prod_dept_codes)
+        cc_users.extend(prod_manager_ids)
+
+        # 如果没找到，尝试通过部门名称查找
+        if not prod_manager_ids:
+            prod_manager = self.get_department_manager_user_id('生产部')
+            if prod_manager:
+                cc_users.append(prod_manager)
 
         return list(set(cc_users))  # 去重

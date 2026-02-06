@@ -80,6 +80,8 @@ class ProjectApprovalAdapter(ApprovalAdapter):
         project = self.get_entity(entity_id)
         if project:
             project.status = "PENDING_APPROVAL"
+            project.approval_status = "PENDING"
+            project.approval_record_id = instance.id
             self.db.flush()
 
     def on_approved(self, entity_id: int, instance: ApprovalInstance) -> None:
@@ -93,6 +95,8 @@ class ProjectApprovalAdapter(ApprovalAdapter):
                 project.stage = "S2"
             else:
                 project.status = "ST02"
+            project.approval_status = "APPROVED"
+            project.approval_record_id = instance.id
             self.db.flush()
 
     def on_rejected(self, entity_id: int, instance: ApprovalInstance) -> None:
@@ -100,6 +104,8 @@ class ProjectApprovalAdapter(ApprovalAdapter):
         project = self.get_entity(entity_id)
         if project:
             project.status = "REJECTED"
+            project.approval_status = "REJECTED"
+            project.approval_record_id = instance.id
             self.db.flush()
 
     def on_withdrawn(self, entity_id: int, instance: ApprovalInstance) -> None:
@@ -107,6 +113,8 @@ class ProjectApprovalAdapter(ApprovalAdapter):
         project = self.get_entity(entity_id)
         if project:
             project.status = "ST01"  # 草稿
+            project.approval_status = "CANCELLED"
+            project.approval_record_id = None
             self.db.flush()
 
     def get_title(self, entity_id: int) -> str:

@@ -286,3 +286,79 @@ def generate_response_rankings(
             for name, data in slowest_handlers
         ],
     }
+
+
+class AlertResponseService:
+    """预警响应时效分析服务"""
+
+    def __init__(self, db: Session):
+        self.db = db
+
+    def calculate_daily_metrics(self) -> Dict[str, Any]:
+        """
+        计算每日预警响应指标
+
+        Returns:
+            Dict: 包含响应时间统计、分布、排行榜等指标
+        """
+        from datetime import datetime, timedelta
+
+        today = datetime.now().date()
+        yesterday = today - timedelta(days=1)
+
+        # 查询昨日已确认的预警
+        acknowledged_alerts = self.db.query(AlertRecord).filter(
+            AlertRecord.acknowledged_at >= datetime.combine(yesterday, datetime.min.time()),
+            AlertRecord.acknowledged_at < datetime.combine(today, datetime.min.time())
+        ).all()
+
+        # 查询昨日已解决的预警
+        resolved_alerts = self.db.query(AlertRecord).filter(
+            AlertRecord.handle_end_at >= datetime.combine(yesterday, datetime.min.time()),
+            AlertRecord.handle_end_at < datetime.combine(today, datetime.min.time())
+        ).all()
+
+        # 计算响应时间
+        response_times = calculate_response_times(acknowledged_alerts)
+        resolve_times = calculate_resolve_times(resolved_alerts)
+
+        # 计算分布
+        response_distribution = calculate_response_distribution(response_times)
+
+        # 按级别统计
+        level_metrics = calculate_level_metrics(response_times)
+
+        # 按项目统计
+        project_metrics = calculate_project_metrics(response_times, self.db)
+
+        # 按责任人统计
+        handler_metrics = calculate_handler_metrics(response_times, self.db)
+
+        # 生成排行榜
+        rankings = generate_response_rankings(project_metrics, handler_metrics)
+
+        # 计算总体指标
+        total_acknowledged = len(acknowledged_alerts)
+        total_resolved = len(resolved_alerts)
+
+        avg_response_hours = 0
+        avg_resolve_hours = 0
+
+        if response_times:
+            avg_response_hours = sum(rt['hours'] for rt in response_times) / len(response_times)
+        if resolve_times:
+            avg_resolve_hours = sum(rt['hours'] for rt in resolve_times) / len(resolve_times)
+
+        return {
+            'date': yesterday.isoformat(),
+            'total_acknowledged': total_acknowledged,
+            'total_resolved': total_resolved,
+            'avg_response_hours': round(avg_response_hours, 2),
+            'avg_resolve_hours': round(avg_resolve_hours, 2),
+            'response_distribution': response_distribution,
+            'level_metrics': level_metrics,
+            'project_metrics': project_metrics,
+            'handler_metrics': handler_metrics,
+            'rankings': rankings,
+            'timestamp': datetime.now().isoformat()
+        }

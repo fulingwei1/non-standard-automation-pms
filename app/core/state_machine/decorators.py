@@ -5,7 +5,7 @@
 提供声明式定义状态转换规则的装饰器
 """
 
-from functools import wraps, update_wrapper
+from functools import wraps
 from typing import Any, Callable, Optional, List, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -79,55 +79,71 @@ def transition(
     return decorator
 
 
-def before_transition(hook: Callable):
+def before_transition(method_or_hook: Optional[Callable] = None):
     """
     状态转换前钩子装饰器
 
+    支持两种使用方式:
+    1. @before_transition - 直接装饰方法
+    2. @before_transition() - 带括号装饰方法
+
     Args:
-        hook: 钩子函数，签名: (from_state, to_state, **kwargs)
+        method_or_hook: 被装饰的方法（直接使用时）或None（带括号使用时）
 
     Returns:
         装饰后的方法
     """
 
     def decorator(method: Callable) -> Callable:
-        @wraps(method, assigned=("_before_hook",))
+        @wraps(method)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             if args and hasattr(args[0], "_transitions"):
                 return method(args[0], *args[1:], **kwargs)
             else:
                 return method(*args, **kwargs)
 
-        wrapper._before_hook = hook
+        wrapper._before_hook = True
         return wrapper
 
-    return decorator
+    # Support both @before_transition and @before_transition()
+    if method_or_hook is not None and callable(method_or_hook):
+        # Used as @before_transition (without parentheses)
+        return decorator(method_or_hook)
+    else:
+        # Used as @before_transition() (with parentheses)
+        return decorator
 
 
-def after_transition(hook: Callable):
+def after_transition(method_or_hook: Optional[Callable] = None):
     """
     状态转换后钩子装饰器
 
+    支持两种使用方式:
+    1. @after_transition - 直接装饰方法
+    2. @after_transition() - 带括号装饰方法
+
     Args:
-        hook: 钩子函数，签名: (from_state, to_state, **kwargs)
+        method_or_hook: 被装饰的方法（直接使用时）或None（带括号使用时）
 
     Returns:
         装饰后的方法
     """
 
     def decorator(method: Callable) -> Callable:
+        @wraps(method)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             if args and hasattr(args[0], "_transitions"):
                 return method(args[0], *args[1:], **kwargs)
             else:
                 return method(*args, **kwargs)
 
-        wrapper._after_hook = hook
-        wrapper = update_wrapper(
-            wrapper,
-            method,
-            assigned=("__module__", "__name__", "__qualname__", "__doc__"),
-        )
+        wrapper._after_hook = True
         return wrapper
 
-    return decorator
+    # Support both @after_transition and @after_transition()
+    if method_or_hook is not None and callable(method_or_hook):
+        # Used as @after_transition (without parentheses)
+        return decorator(method_or_hook)
+    else:
+        # Used as @after_transition() (with parentheses)
+        return decorator

@@ -57,13 +57,6 @@ export default function WorkCenter() {
   // 快速操作数据
   const [quickActions, _setQuickActions] = useState([
   {
-    title: "填写工作日志",
-    description: "记录今天的工作内容",
-    icon: ClipboardList,
-    color: "bg-blue-500",
-    action: () => navigate("/work-log")
-  },
-  {
     title: "查看任务",
     description: "管理我的待办任务",
     icon: Target,

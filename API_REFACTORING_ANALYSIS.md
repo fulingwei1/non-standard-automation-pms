@@ -10,10 +10,9 @@
    - 废弃的 `milestones/workflow.py` 已删除
    - 只保留 `projects/milestones/workflow.py`
 
-2. **roles API 重复** - ✅ 已确认，不是问题
-   - `/project-roles/` - 全局项目角色类型管理（系统级）
+2. **roles API 重复** - ✅ 已处理
    - `/projects/{project_id}/roles/` - 项目内角色配置（项目级）
-   - **结论**: 这两个功能不同，不是重复，命名清晰
+   - **结论**: 旧的 `/project-roles/` 已移除，仅保留项目内角色路由
 
 3. **timesheet API 重复** - ✅ 已确认，不是问题
    - `/timesheet/` - 顶层全局工时管理（记录、审批、统计等）

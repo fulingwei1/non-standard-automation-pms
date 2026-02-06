@@ -29,9 +29,15 @@ router = APIRouter()
 ENTITY_TYPE_PROJECT = "PROJECT"
 
 @router.get(
-    "/approval/status",
+    "/",
     response_model=ResponseModel[Dict[str, Any]],
     status_code=status.HTTP_200_OK,
+)
+@router.get(
+    "/status",
+    response_model=ResponseModel[Dict[str, Any]],
+    status_code=status.HTTP_200_OK,
+    include_in_schema=False,
 )
 def get_project_approval_status(
     *,

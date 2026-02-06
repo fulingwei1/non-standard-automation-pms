@@ -21,6 +21,7 @@ from . import (
     payments,
     priority,
     quotes,
+    quote_approval,
     statistics,
     team,
     targets,
@@ -34,9 +35,8 @@ from . import (
     cross_analysis,
     workflows,
     receivables,
+    templates,
 )
-
-# from . import templates  # 模板管理模块 - 已拆分为templates包 - 暂时禁用，存在导入问题
 
 # 创建主路由
 router = APIRouter()
@@ -47,6 +47,7 @@ router.include_router(priority.router, tags=["sales-priority"])
 router.include_router(leads.router, tags=["sales-leads"])
 router.include_router(opportunities.router, tags=["sales-opportunities"])
 router.include_router(quotes.router, tags=["sales-quotes"])
+router.include_router(quote_approval.router, tags=["sales-quote-approval"])
 router.include_router(contracts.router, tags=["sales-contracts"])
 router.include_router(invoices.router, tags=["sales-invoices"])
 router.include_router(payments.router, tags=["sales-payments"])
@@ -57,7 +58,7 @@ router.include_router(assessments.router, tags=["sales-assessments"])
 router.include_router(disputes.router, tags=["sales-disputes"])
 router.include_router(targets.router, tags=["sales-targets"])
 router.include_router(team.router, tags=["sales-team"])
-# router.include_router(templates.router, tags=["sales-templates"])  # 暂时禁用，存在导入问题
+router.include_router(templates.router, tags=["sales-templates"])
 
 # 以下模块暂时禁用（缺少 schema 定义）
 # from . import cost_management

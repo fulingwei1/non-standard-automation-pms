@@ -649,22 +649,22 @@ class TestCalculateCustomerStatistics:
     def test_calculate_customer_statistics_with_null_customer(
         self, db_session: Session
     ):
-        """Test that projects without customer are filtered out."""
+        """Test that projects without customer are grouped as '未知客户'."""
         projects = [
-        Project(
-        project_code="PJ001",
-        project_name="客户项目X",
-        customer_id=1,
-        customer_name="客户A",
-        contract_amount=50000.0,
-        ),
-        Project(
-        project_code="PJ002",
-        project_name="客户项目Y",
-        customer_id=None,
-        customer_name=None,
-        contract_amount=0.0,
-        ),
+            Project(
+                project_code="PJ001",
+                project_name="客户项目X",
+                customer_id=1,
+                customer_name="客户A",
+                contract_amount=50000.0,
+            ),
+            Project(
+                project_code="PJ002",
+                project_name="客户项目Y",
+                customer_id=None,
+                customer_name=None,
+                contract_amount=10000.0,
+            ),
         ]
         db_session.add_all(projects)
         db_session.commit()
@@ -672,9 +672,16 @@ class TestCalculateCustomerStatistics:
         query = db_session.query(Project)
         result = calculate_customer_statistics(query)
 
-        # Should only include projects with assigned customer
-        assert len(result) == 1
-        assert result[0]["customer_name"] == "客户A"
+        # 空客户会被归类为 customer_id=0, customer_name="未知客户"
+        assert len(result) == 2
+
+        customer_a = next(r for r in result if r["customer_name"] == "客户A")
+        assert customer_a["customer_id"] == 1
+        assert customer_a["total_amount"] == 50000.0
+
+        unknown = next(r for r in result if r["customer_name"] == "未知客户")
+        assert unknown["customer_id"] == 0
+        assert unknown["total_amount"] == 10000.0
 
     def test_calculate_customer_statistics_null_name(self, db_session: Session):
         """Test that null customer names default to '未知客户'."""

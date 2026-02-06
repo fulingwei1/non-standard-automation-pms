@@ -22,6 +22,7 @@ import MilestoneManagement from "../../pages/MilestoneManagement";
 import AssemblerTaskCenter from "../../pages/AssemblerTaskCenter";
 import EngineerWorkstation from "../../pages/EngineerWorkstation";
 import ProjectStageView from "../../pages/ProjectStageView";
+import ProjectTimelineView from "../../pages/ProjectTimelineView";
 
 export function ProjectRoutes() {
   return (
@@ -38,7 +39,8 @@ export function ProjectRoutes() {
       <Route path="/progress-tracking/milestones" element={<MilestoneManagement />} />
       <Route path="/progress-tracking/wbs" element={<WBSTemplateManagement />} />
       <Route path="/progress-tracking/gantt" element={<ProjectGantt />} />
-      
+      <Route path="/progress-tracking/timeline" element={<ProjectTimelineView />} />
+
       {/* 向后兼容 - 保留旧路由 */}
       <Route path="/board" element={<ProjectBoard />} />
       <Route path="/projects" element={<ProjectList />} />
@@ -49,6 +51,7 @@ export function ProjectRoutes() {
         element={<ProjectContributionReport />}
       />
       <Route path="/projects/:id/gantt" element={<ProjectGantt />} />
+      <Route path="/projects/:id/timeline" element={<ProjectTimelineView />} />
       <Route path="/projects/:id/tasks" element={<ProjectTaskList />} />
       <Route path="/projects/:id/machines" element={<MachineManagement />} />
       <Route

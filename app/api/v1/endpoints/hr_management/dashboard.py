@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.dashboard.base import BaseDashboardEndpoint
+from app.common.date_range import get_month_range
 from app.core import security
 from app.models.organization import (
     ContractReminder,
@@ -47,7 +48,7 @@ class HrManagementDashboardEndpoint(BaseDashboardEndpoint):
     ) -> Dict[str, Any]:
         """获取人事管理仪表板概览数据"""
         today = date.today()
-        this_month_start = date(today.year, today.month, 1)
+        this_month_start, _ = get_month_range(today)
 
         # 在职员工总数
         total_active = db.query(Employee).filter(Employee.is_active == True).count()

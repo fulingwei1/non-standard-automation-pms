@@ -62,6 +62,7 @@ from app.schemas.pmo import (
     RiskWallResponse,
     WeeklyReportResponse,
 )
+from app.utils.risk_calculator import calculate_risk_level
 
 # Included without extra prefix; decorators already include `/pmo/...` paths.
 router = APIRouter(tags=["pmo-risks"])
@@ -148,17 +149,8 @@ def create_risk(
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
 
-    # 计算风险等级
-    risk_level = None
-    if risk_in.probability and risk_in.impact:
-        if risk_in.probability == 'HIGH' and risk_in.impact == 'HIGH':
-            risk_level = 'CRITICAL'
-        elif risk_in.probability == 'HIGH' or risk_in.impact == 'HIGH':
-            risk_level = 'HIGH'
-        elif risk_in.probability == 'MEDIUM' or risk_in.impact == 'MEDIUM':
-            risk_level = 'MEDIUM'
-        else:
-            risk_level = 'LOW'
+    # 使用标准风险计算函数
+    risk_level = calculate_risk_level(risk_in.probability, risk_in.impact)
 
     owner_name = None
     if risk_in.owner_id:
@@ -230,18 +222,11 @@ def assess_risk(
     risk.probability = assess_request.probability
     risk.impact = assess_request.impact
 
-    # 计算风险等级
+    # 计算风险等级（使用标准风险计算函数）
     if assess_request.risk_level:
         risk.risk_level = assess_request.risk_level
     else:
-        if assess_request.probability == 'HIGH' and assess_request.impact == 'HIGH':
-            risk.risk_level = 'CRITICAL'
-        elif assess_request.probability == 'HIGH' or assess_request.impact == 'HIGH':
-            risk.risk_level = 'HIGH'
-        elif assess_request.probability == 'MEDIUM' or assess_request.impact == 'MEDIUM':
-            risk.risk_level = 'MEDIUM'
-        else:
-            risk.risk_level = 'LOW'
+        risk.risk_level = calculate_risk_level(assess_request.probability, assess_request.impact)
 
     risk.status = 'ANALYZING'
 

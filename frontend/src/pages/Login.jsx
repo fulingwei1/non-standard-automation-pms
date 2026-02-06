@@ -65,7 +65,7 @@ const features = [
 }];
 
 
-export default function Login({ onLoginSuccess }) {const _errorCode_1 = null;
+export default function Login({ onLoginSuccess }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);

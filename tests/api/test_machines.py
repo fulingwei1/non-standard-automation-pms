@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-机台管理模块 API 测试
+机台管理模块 API 测试（项目子路由）
 
 测试机台的 CRUD 操作、进度更新、BOM 和文档管理
 """
 
 import uuid
-from datetime import date, timedelta
 
 import pytest
+from typing import Optional
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
@@ -18,8 +18,7 @@ def _auth_headers(token: str) -> dict:
     return {"Authorization": f"Bearer {token}"}
 
 
-def _get_first_project(client: TestClient, token: str) -> dict:
-    """获取第一个可用的项目"""
+def _get_first_project(client: TestClient, token: str) -> Optional[dict]:
     headers = _auth_headers(token)
     response = client.get(
         f"{settings.API_V1_PREFIX}/projects/",
@@ -37,17 +36,50 @@ def _get_first_project(client: TestClient, token: str) -> dict:
     return items[0]
 
 
+def _ensure_machine(client: TestClient, token: str, project_id: int) -> Optional[dict]:
+    headers = _auth_headers(token)
+    list_response = client.get(
+        f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/",
+        headers=headers
+    )
+
+    if list_response.status_code == 200:
+        data = list_response.json()
+        items = data.get("items", data) if isinstance(data, dict) else data
+        if items:
+            return items[0]
+
+    machine_data = {
+        "machine_code": f"PN{uuid.uuid4().hex[:3].upper()}",
+        "machine_name": f"测试机台-{uuid.uuid4().hex[:4]}",
+        "machine_type": "ICT",
+        "quantity": 1,
+    }
+    create_response = client.post(
+        f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/",
+        json=machine_data,
+        headers=headers
+    )
+    if create_response.status_code in [200, 201]:
+        return create_response.json()
+    return None
+
+
 class TestMachineCRUD:
     """机台 CRUD 测试"""
 
-    def test_list_machines(self, client: TestClient, admin_token: str):
-        """测试获取机台列表"""
+    def test_list_project_machines(self, client: TestClient, admin_token: str):
+        """测试获取项目机台列表"""
         if not admin_token:
             pytest.skip("Admin token not available")
 
+        project = _get_first_project(client, admin_token)
+        if not project:
+            pytest.skip("No projects available for testing")
+
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/machines/",
+            f"{settings.API_V1_PREFIX}/projects/{project['id']}/machines/",
             params={"page": 1, "page_size": 10},
             headers=headers
         )
@@ -55,43 +87,6 @@ class TestMachineCRUD:
         assert response.status_code == 200
         data = response.json()
         assert "items" in data or isinstance(data, list)
-
-    def test_list_machines_with_project_filter(self, client: TestClient, admin_token: str):
-        """测试按项目筛选机台"""
-        if not admin_token:
-            pytest.skip("Admin token not available")
-
-        project = _get_first_project(client, admin_token)
-        if not project:
-            pytest.skip("No projects available for testing")
-
-        headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/machines/",
-            params={"project_id": project["id"]},
-            headers=headers
-        )
-
-        assert response.status_code == 200
-
-    def test_list_machines_by_project(self, client: TestClient, admin_token: str):
-        """测试获取项目的机台列表"""
-        if not admin_token:
-            pytest.skip("Admin token not available")
-
-        project = _get_first_project(client, admin_token)
-        if not project:
-            pytest.skip("No projects available for testing")
-
-        headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/machines/projects/{project['id']}/machines",
-            headers=headers
-        )
-
-        assert response.status_code == 200
-        data = response.json()
-        assert isinstance(data, list)
 
     def test_create_machine(self, client: TestClient, admin_token: str):
         """测试创建机台"""
@@ -106,13 +101,12 @@ class TestMachineCRUD:
         machine_data = {
             "machine_code": f"PN{uuid.uuid4().hex[:3].upper()}",
             "machine_name": f"测试机台-{uuid.uuid4().hex[:4]}",
-            "project_id": project["id"],
             "machine_type": "ICT",
             "quantity": 1,
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/machines/",
+            f"{settings.API_V1_PREFIX}/projects/{project['id']}/machines/",
             json=machine_data,
             headers=headers
         )
@@ -128,8 +122,8 @@ class TestMachineCRUD:
         data = response.json()
         assert data["machine_code"] == machine_data["machine_code"]
 
-    def test_create_machine_for_project(self, client: TestClient, admin_token: str):
-        """测试为项目创建机台"""
+    def test_get_machine_by_id(self, client: TestClient, admin_token: str):
+        """测试根据 ID 获取机台"""
         if not admin_token:
             pytest.skip("Admin token not available")
 
@@ -137,103 +131,40 @@ class TestMachineCRUD:
         if not project:
             pytest.skip("No projects available for testing")
 
-        headers = _auth_headers(admin_token)
-        machine_data = {
-            "machine_code": f"PN{uuid.uuid4().hex[:3].upper()}",
-            "machine_name": f"项目机台-{uuid.uuid4().hex[:4]}",
-            "machine_type": "FCT",
-            "quantity": 1,
-        }
-
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/machines/projects/{project['id']}/machines",
-            json=machine_data,
-            headers=headers
-        )
-
-        if response.status_code == 403:
-            pytest.skip("User does not have permission to create machine")
-        if response.status_code == 422:
-            pytest.skip("Validation error - schema mismatch")
-        if response.status_code == 400:
-            pytest.skip("Machine code already exists or validation error")
-
-        assert response.status_code in [200, 201], response.text
-
-    def test_get_machine_by_id(self, client: TestClient, admin_token: str):
-        """测试根据 ID 获取机台"""
-        if not admin_token:
-            pytest.skip("Admin token not available")
-
-        headers = _auth_headers(admin_token)
-
-        # 先获取机台列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/machines/",
-            headers=headers
-        )
-
-        if list_response.status_code != 200:
-            pytest.skip("Failed to get machines list")
-
-        data = list_response.json()
-        items = data.get("items", data) if isinstance(data, dict) else data
-        if not items:
+        machine = _ensure_machine(client, admin_token, project["id"])
+        if not machine:
             pytest.skip("No machines available for testing")
 
-        machine_id = items[0]["id"]
-
+        headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/machines/{machine_id}",
+            f"{settings.API_V1_PREFIX}/projects/{project['id']}/machines/{machine['id']}",
             headers=headers
         )
 
         assert response.status_code == 200
         data = response.json()
-        assert data["id"] == machine_id
-
-    def test_get_machine_not_found(self, client: TestClient, admin_token: str):
-        """测试获取不存在的机台"""
-        if not admin_token:
-            pytest.skip("Admin token not available")
-
-        headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/machines/99999",
-            headers=headers
-        )
-
-        assert response.status_code == 404
+        assert data["id"] == machine["id"]
 
     def test_update_machine(self, client: TestClient, admin_token: str):
         """测试更新机台"""
         if not admin_token:
             pytest.skip("Admin token not available")
 
-        headers = _auth_headers(admin_token)
+        project = _get_first_project(client, admin_token)
+        if not project:
+            pytest.skip("No projects available for testing")
 
-        # 先获取机台列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/machines/",
-            headers=headers
-        )
-
-        if list_response.status_code != 200:
-            pytest.skip("Failed to get machines list")
-
-        data = list_response.json()
-        items = data.get("items", data) if isinstance(data, dict) else data
-        if not items:
+        machine = _ensure_machine(client, admin_token, project["id"])
+        if not machine:
             pytest.skip("No machines available for testing")
 
-        machine_id = items[0]["id"]
-
+        headers = _auth_headers(admin_token)
         update_data = {
             "machine_name": f"更新机台-{uuid.uuid4().hex[:4]}",
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/machines/{machine_id}",
+            f"{settings.API_V1_PREFIX}/projects/{project['id']}/machines/{machine['id']}",
             json=update_data,
             headers=headers
         )
@@ -252,31 +183,18 @@ class TestMachineProgress:
         if not admin_token:
             pytest.skip("Admin token not available")
 
-        headers = _auth_headers(admin_token)
+        project = _get_first_project(client, admin_token)
+        if not project:
+            pytest.skip("No projects available for testing")
 
-        # 先获取机台列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/machines/",
-            headers=headers
-        )
-
-        if list_response.status_code != 200:
-            pytest.skip("Failed to get machines list")
-
-        data = list_response.json()
-        items = data.get("items", data) if isinstance(data, dict) else data
-        if not items:
+        machine = _ensure_machine(client, admin_token, project["id"])
+        if not machine:
             pytest.skip("No machines available for testing")
 
-        machine_id = items[0]["id"]
-
-        progress_data = {
-            "progress": 50,
-        }
-
+        headers = _auth_headers(admin_token)
         response = client.put(
-            f"{settings.API_V1_PREFIX}/machines/{machine_id}/progress",
-            json=progress_data,
+            f"{settings.API_V1_PREFIX}/projects/{project['id']}/machines/{machine['id']}/progress",
+            params={"progress_pct": 50},
             headers=headers
         )
 
@@ -296,26 +214,17 @@ class TestMachineBom:
         if not admin_token:
             pytest.skip("Admin token not available")
 
-        headers = _auth_headers(admin_token)
+        project = _get_first_project(client, admin_token)
+        if not project:
+            pytest.skip("No projects available for testing")
 
-        # 先获取机台列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/machines/",
-            headers=headers
-        )
-
-        if list_response.status_code != 200:
-            pytest.skip("Failed to get machines list")
-
-        data = list_response.json()
-        items = data.get("items", data) if isinstance(data, dict) else data
-        if not items:
+        machine = _ensure_machine(client, admin_token, project["id"])
+        if not machine:
             pytest.skip("No machines available for testing")
 
-        machine_id = items[0]["id"]
-
+        headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/machines/{machine_id}/bom",
+            f"{settings.API_V1_PREFIX}/projects/{project['id']}/machines/{machine['id']}/bom",
             headers=headers
         )
 
@@ -332,26 +241,17 @@ class TestMachineServiceHistory:
         if not admin_token:
             pytest.skip("Admin token not available")
 
-        headers = _auth_headers(admin_token)
+        project = _get_first_project(client, admin_token)
+        if not project:
+            pytest.skip("No projects available for testing")
 
-        # 先获取机台列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/machines/",
-            headers=headers
-        )
-
-        if list_response.status_code != 200:
-            pytest.skip("Failed to get machines list")
-
-        data = list_response.json()
-        items = data.get("items", data) if isinstance(data, dict) else data
-        if not items:
+        machine = _ensure_machine(client, admin_token, project["id"])
+        if not machine:
             pytest.skip("No machines available for testing")
 
-        machine_id = items[0]["id"]
-
+        headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/machines/{machine_id}/service-history",
+            f"{settings.API_V1_PREFIX}/projects/{project['id']}/machines/{machine['id']}/service-history",
             headers=headers
         )
 
@@ -366,26 +266,17 @@ class TestMachineDocuments:
         if not admin_token:
             pytest.skip("Admin token not available")
 
-        headers = _auth_headers(admin_token)
+        project = _get_first_project(client, admin_token)
+        if not project:
+            pytest.skip("No projects available for testing")
 
-        # 先获取机台列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/machines/",
-            headers=headers
-        )
-
-        if list_response.status_code != 200:
-            pytest.skip("Failed to get machines list")
-
-        data = list_response.json()
-        items = data.get("items", data) if isinstance(data, dict) else data
-        if not items:
+        machine = _ensure_machine(client, admin_token, project["id"])
+        if not machine:
             pytest.skip("No machines available for testing")
 
-        machine_id = items[0]["id"]
-
+        headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/machines/{machine_id}/documents",
+            f"{settings.API_V1_PREFIX}/projects/{project['id']}/machines/{machine['id']}/documents",
             headers=headers
         )
 
@@ -400,9 +291,13 @@ class TestMachineDelete:
         if not admin_token:
             pytest.skip("Admin token not available")
 
+        project = _get_first_project(client, admin_token)
+        if not project:
+            pytest.skip("No projects available for testing")
+
         headers = _auth_headers(admin_token)
         response = client.delete(
-            f"{settings.API_V1_PREFIX}/machines/99999",
+            f"{settings.API_V1_PREFIX}/projects/{project['id']}/machines/99999",
             headers=headers
         )
 

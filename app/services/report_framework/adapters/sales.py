@@ -35,10 +35,11 @@ class SalesReportAdapter(BaseReportAdapter):
         Returns:
             报表数据字典
         """
-        from datetime import date, timedelta
+        from datetime import date
         from decimal import Decimal
         from sqlalchemy import func, text
 
+        from app.common.date_range import get_month_range_by_ym
         from app.models.business_support import BiddingProject, SalesOrder
         from app.models.sales import Contract, Invoice
 
@@ -54,11 +55,7 @@ class SalesReportAdapter(BaseReportAdapter):
             year, month_num = today.year, today.month
 
         # 计算月份范围
-        month_start = date(year, month_num, 1)
-        if month_num == 12:
-            month_end = date(year + 1, 1, 1) - timedelta(days=1)
-        else:
-            month_end = date(year, month_num + 1, 1) - timedelta(days=1)
+        month_start, month_end = get_month_range_by_ym(year, month_num)
 
         # 计算合同统计
         new_contracts = (

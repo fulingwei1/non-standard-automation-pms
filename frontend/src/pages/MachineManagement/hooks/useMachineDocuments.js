@@ -5,16 +5,16 @@ import { machineApi } from '../../../services/api';
  * 机台文档管理 Hook
  * 负责文档的加载、上传、下载
  */
-export function useMachineDocuments() {
+export function useMachineDocuments(projectId) {
     const [documents, setDocuments] = useState(null);
     const [loading, setLoading] = useState(false);
 
     // 加载文档列表
     const fetchDocuments = useCallback(async (machineId) => {
-        if (!machineId) return;
+        if (!projectId || !machineId) return;
         try {
             setLoading(true);
-            const res = await machineApi.getDocuments(machineId, {
+            const res = await machineApi.getDocuments(projectId, machineId, {
                 group_by_type: true,
             });
             const data = res.data?.data || res.data || {};
@@ -25,11 +25,11 @@ export function useMachineDocuments() {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [projectId]);
 
     // 上传文档
     const uploadDocument = useCallback(async (machineId, file, formData) => {
-        if (!file || !machineId) {
+        if (!projectId || !file || !machineId) {
             return { success: false, error: '请选择文件和机台' };
         }
 
@@ -47,7 +47,7 @@ export function useMachineDocuments() {
                 data.append('machine_stage', formData.machine_stage);
             }
 
-            await machineApi.uploadDocument(machineId, data);
+            await machineApi.uploadDocument(projectId, machineId, data);
             await fetchDocuments(machineId);
             return { success: true };
         } catch (error) {
@@ -60,12 +60,12 @@ export function useMachineDocuments() {
                 isPermissionError
             };
         }
-    }, [fetchDocuments]);
+    }, [fetchDocuments, projectId]);
 
     // 下载文档
     const downloadDocument = useCallback(async (machineId, doc) => {
         try {
-            const response = await machineApi.downloadDocument(machineId, doc.id);
+            const response = await machineApi.downloadDocument(projectId, machineId, doc.id);
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
             link.href = url;
@@ -85,7 +85,7 @@ export function useMachineDocuments() {
                 isPermissionError
             };
         }
-    }, []);
+    }, [projectId]);
 
     return {
         documents,

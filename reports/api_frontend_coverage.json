@@ -71,7 +71,7 @@
         16
       ],
       [
-        "project-evaluation",
+        "projects-evaluations",
         15
       ],
       [
@@ -241,7 +241,7 @@
         16
       ],
       [
-        "project-roles",
+        "projects-roles",
         16
       ],
       [
@@ -281,7 +281,7 @@
         12
       ],
       [
-        "work-logs",
+        "my/work-logs",
         12
       ],
       [
@@ -638,18 +638,18 @@
     },
     {
       "method": "GET",
-      "path": "/machines/projects/{project_id}/machines",
-      "skeleton": "/machines/projects/{}/machines"
+      "path": "/projects/{project_id}/machines",
+      "skeleton": "/projects/{}/machines"
     },
     {
       "method": "POST",
-      "path": "/machines/projects/{project_id}/machines",
-      "skeleton": "/machines/projects/{}/machines"
+      "path": "/projects/{project_id}/machines",
+      "skeleton": "/projects/{}/machines"
     },
     {
       "method": "PUT",
-      "path": "/machines/{machine_id}/progress",
-      "skeleton": "/machines/{}/progress"
+      "path": "/projects/{project_id}/machines/{machine_id}/progress",
+      "skeleton": "/projects/{}/machines/{}/progress"
     },
     {
       "method": "DELETE",
@@ -3223,78 +3223,78 @@
     },
     {
       "method": "GET",
-      "path": "/project-evaluation/evaluations/statistics",
-      "skeleton": "/project-evaluation/evaluations/statistics"
+      "path": "/projects/{project_id}/evaluations/statistics",
+      "skeleton": "/projects/{}/evaluations/statistics"
     },
     {
       "method": "POST",
-      "path": "/project-evaluation/evaluations",
-      "skeleton": "/project-evaluation/evaluations"
+      "path": "/projects/{project_id}/evaluations",
+      "skeleton": "/projects/{}/evaluations"
     },
     {
       "method": "POST",
-      "path": "/project-evaluation/evaluations/auto",
-      "skeleton": "/project-evaluation/evaluations/auto"
+      "path": "/projects/{project_id}/evaluations/auto",
+      "skeleton": "/projects/{}/evaluations/auto"
     },
     {
       "method": "GET",
-      "path": "/project-evaluation/evaluations",
-      "skeleton": "/project-evaluation/evaluations"
+      "path": "/projects/{project_id}/evaluations",
+      "skeleton": "/projects/{}/evaluations"
     },
     {
       "method": "GET",
-      "path": "/project-evaluation/evaluations/{eval_id}",
-      "skeleton": "/project-evaluation/evaluations/{}"
+      "path": "/projects/{project_id}/evaluations/{eval_id}",
+      "skeleton": "/projects/{}/evaluations/{}"
     },
     {
       "method": "GET",
-      "path": "/project-evaluation/projects/{project_id}/evaluation",
-      "skeleton": "/project-evaluation/projects/{}/evaluation"
+      "path": "/projects/{project_id}/evaluations/latest",
+      "skeleton": "/projects/{}/evaluations/latest"
     },
     {
       "method": "PUT",
-      "path": "/project-evaluation/evaluations/{eval_id}",
-      "skeleton": "/project-evaluation/evaluations/{}"
+      "path": "/projects/{project_id}/evaluations/{eval_id}",
+      "skeleton": "/projects/{}/evaluations/{}"
     },
     {
       "method": "POST",
-      "path": "/project-evaluation/evaluations/{eval_id}/confirm",
-      "skeleton": "/project-evaluation/evaluations/{}/confirm"
+      "path": "/projects/{project_id}/evaluations/{eval_id}/confirm",
+      "skeleton": "/projects/{}/evaluations/{}/confirm"
     },
     {
       "method": "GET",
-      "path": "/project-evaluation/dimensions/weights/summary",
-      "skeleton": "/project-evaluation/dimensions/weights/summary"
+      "path": "/projects/{project_id}/evaluations",
+      "skeleton": "/projects/{}/evaluations"
     },
     {
       "method": "GET",
-      "path": "/project-evaluation/dimensions",
-      "skeleton": "/project-evaluation/dimensions"
+      "path": "/projects/{project_id}/evaluations",
+      "skeleton": "/projects/{}/evaluations"
     },
     {
       "method": "GET",
-      "path": "/project-evaluation/dimensions/{dim_id}",
-      "skeleton": "/project-evaluation/dimensions/{}"
+      "path": "/projects/{project_id}/evaluations",
+      "skeleton": "/projects/{}/evaluations"
     },
     {
       "method": "POST",
-      "path": "/project-evaluation/dimensions",
-      "skeleton": "/project-evaluation/dimensions"
+      "path": "/projects/{project_id}/evaluations",
+      "skeleton": "/projects/{}/evaluations"
     },
     {
       "method": "PUT",
-      "path": "/project-evaluation/dimensions/{dim_id}",
-      "skeleton": "/project-evaluation/dimensions/{}"
+      "path": "/projects/{project_id}/evaluations",
+      "skeleton": "/projects/{}/evaluations"
     },
     {
       "method": "DELETE",
-      "path": "/project-evaluation/dimensions/{dim_id}",
-      "skeleton": "/project-evaluation/dimensions/{}"
+      "path": "/projects/{project_id}/evaluations",
+      "skeleton": "/projects/{}/evaluations"
     },
     {
       "method": "POST",
-      "path": "/project-evaluation/dimensions/{dim_id}/toggle",
-      "skeleton": "/project-evaluation/dimensions/{}/toggle"
+      "path": "/projects/{project_id}/evaluations",
+      "skeleton": "/projects/{}/evaluations"
     },
     {
       "method": "GET",

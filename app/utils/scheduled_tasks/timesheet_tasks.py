@@ -245,7 +245,7 @@ def calculate_monthly_labor_cost_task():
                 month = today.month - 1
 
             service = LaborCostCalculationService(db)
-            result = service.calculate_monthly_labor_cost(year, month)
+            result = service.calculate_monthly_costs(year, month)
 
             logger.info(
                 f"[{datetime.now()}] 月度人工成本计算完成（{year}年{month}月）: "

@@ -292,6 +292,68 @@ class HealthCalculator:
         # 如果实际进度落后计划进度超过阈值，认为有风险
         return variance > threshold
 
+    def calculate_project_health(self, project_id: int) -> Dict[str, Any]:
+        """
+        计算指定项目的健康度（不落库）
+
+        Args:
+            project_id: 项目ID
+
+        Returns:
+            dict: 计算结果（包含诊断信息）
+        """
+        project = self.db.query(Project).filter(Project.id == project_id).first()
+        if not project:
+            raise ValueError(f"Project {project_id} not found")
+
+        # 复用详情计算，获取完整诊断上下文
+        details = self.get_health_details(project)
+        old_health = project.health or ProjectHealthEnum.H1.value
+        new_health = details["calculated_health"]
+        changed = old_health != new_health
+
+        # 归纳关键影响因子，便于前端快速展示
+        factors = {
+            "deadline_approaching": details["checks"]["is_deadline_approaching"],
+            "overdue_milestones": details["statistics"]["overdue_milestones"],
+            "blocking_issues": details["statistics"]["blocking_issues"],
+            "blocked_tasks": details["statistics"]["blocked_tasks"],
+            "shortage_alerts_critical": details["checks"]["has_critical_shortage_alerts"],
+            "shortage_alerts_warning": details["checks"]["has_shortage_warnings"],
+            "high_priority_issues": details["checks"]["has_high_priority_issues"],
+            "schedule_variance": details["checks"]["has_schedule_variance"],
+            "rectification_status": details["checks"]["has_risks"],
+            "blocked_status": details["checks"]["is_blocked"],
+        }
+
+        # 生成触发原因列表（布尔为True或计数>0）
+        triggered_reasons = []
+        for key, value in factors.items():
+            if isinstance(value, bool) and value:
+                triggered_reasons.append(key)
+            elif isinstance(value, (int, float)) and value > 0:
+                triggered_reasons.append(key)
+
+        result = {
+            "project_id": project.id,
+            "project_code": project.project_code,
+            "project_name": project.project_name,
+            "stage": project.stage,
+            "status": project.status,
+            "old_health": old_health,
+            "current_health": project.health or old_health,
+            "new_health": new_health,
+            "calculated_health": new_health,
+            "changed": changed,
+            "calculation_time": datetime.now().isoformat(),
+            "factors": factors,
+            "reason_codes": triggered_reasons,
+            "checks": details["checks"],
+            "statistics": details["statistics"],
+        }
+
+        return result
+
     def calculate_and_update(self, project: Project, auto_save: bool = True) -> Dict[str, Any]:
         """
         计算健康度并更新项目

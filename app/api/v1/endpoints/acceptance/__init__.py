@@ -14,7 +14,7 @@
 
 from fastapi import APIRouter
 
-from . import issues, orders, reports, templates
+from . import issues, orders, order_approval, reports, templates
 
 # 创建主路由
 router = APIRouter()
@@ -33,6 +33,9 @@ router.include_router(issues.router, tags=["acceptance-issues"])
 
 # 报告和签字路由
 router.include_router(reports.router, tags=["acceptance-reports"])
+
+# 审批工作流路由（使用统一审批引擎）
+router.include_router(order_approval.router, tags=["acceptance-approval"])
 
 # 导出工具函数供外部使用
 from .utils import (

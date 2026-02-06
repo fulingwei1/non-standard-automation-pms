@@ -201,8 +201,8 @@ def create_kit_rate_snapshot(
             in_transit_items=kit_rate_data["in_transit_items"],
             total_amount=kit_rate_data["total_amount"],
             shortage_amount=kit_rate_data["shortage_amount"],
-            project_stage=project.current_stage,
-            project_health=project.health_status,
+            project_stage=project.stage,  # 使用stage字段
+            project_health=project.health,  # 使用health字段
             stage_kit_rates=json.dumps(stage_kit_rates) if stage_kit_rates else None,
         )
 
@@ -236,12 +236,12 @@ def daily_kit_rate_snapshot():
 
     try:
         with get_db_session() as db:
-            # 查询所有活跃项目（排除已完结项目）
+            # 查询所有活跃项目（排除已完结项目，使用stage字段）
             active_projects = (
                 db.query(Project)
                 .filter(
                     Project.is_active == True,
-                    Project.current_stage.notin_(["S9", "COMPLETED", "CLOSED"]),
+                    Project.stage.notin_(["S9", "COMPLETED", "CLOSED"]),
                 )
                 .all()
             )

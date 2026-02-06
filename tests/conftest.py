@@ -23,17 +23,20 @@ os.environ["REDIS_URL"] = ""
 os.environ.setdefault("ENABLE_SCHEDULER", "false")
 
 import uuid
+from pathlib import Path
 from typing import Callable, Dict, Generator, Iterable, Optional, Tuple
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import inspect, text
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 from app.services.permission_cache_service import get_permission_cache_service
 
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
 from app.main import app
-from app.models.base import SessionLocal
+from app.models.base import SessionLocal, get_engine
 from app.models.organization import Employee
 from app.models.project import Customer, Machine, Project, ProjectMember
 from app.models.task_center import TaskApprovalWorkflow, TaskUnified
@@ -99,7 +102,36 @@ def _init_test_database() -> None:
     from app.models.base import get_session, init_db
     from app.models.vendor import Vendor
 
+    # For file-based SQLite databases, remove the legacy file to avoid stale schemas.
+    def _resolve_sqlite_path() -> Optional[Path]:
+        db_url = os.getenv("DATABASE_URL") or settings.DATABASE_URL
+        if db_url and db_url.startswith("sqlite:///"):
+            raw_path = db_url.replace("sqlite:///", "", 1)
+            return Path(raw_path)
+
+        sqlite_path = os.getenv("SQLITE_DB_PATH", settings.SQLITE_DB_PATH)
+        if not sqlite_path or sqlite_path.startswith(":memory:") or sqlite_path.startswith("file:"):
+            return None
+        return Path(sqlite_path)
+
+    sqlite_path = _resolve_sqlite_path()
+    if sqlite_path:
+        sqlite_path.parent.mkdir(parents=True, exist_ok=True)
+        sqlite_path.unlink(missing_ok=True)
+
     init_db(drop_all=True)
+
+    engine = get_engine()
+    inspector = inspect(engine)
+    cols = [col["name"] for col in inspector.get_columns("api_permissions")]
+    print("api_permissions columns before patch:", cols)
+    with engine.begin() as conn:
+        try:
+            conn.execute(text("ALTER TABLE api_permissions ADD COLUMN group_id INTEGER"))
+            print("ALTER TABLE api_permissions ADD COLUMN group_id executed")
+        except OperationalError:
+            print("ALTER TABLE skipped (column exists)")
+            pass
 
     db = get_session()
     try:

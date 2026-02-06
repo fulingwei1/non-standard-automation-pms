@@ -214,22 +214,7 @@ export const financialReportApi = {
 };
 
 export const workLogApi = {
-  list: (params) => api.get("/work-logs", { params }),
-  get: (id) => api.get(`/work-logs/${id}`),
-  create: (data) => api.post("/work-logs", data),
-  update: (id, data) => api.put(`/work-logs/${id}`, data),
-  delete: (id) => api.delete(`/work-logs/${id}`),
-  getMentionOptions: () => api.get("/work-logs/mentions/options"),
-  // 配置相关（管理员）
-  getConfig: () => api.get("/work-logs/config"),
-  // AI智能分析
-  aiAnalyze: (content, workDate) =>
-    api.post("/work-logs/ai-analyze", { content, work_date: workDate }),
-  getSuggestedProjects: () => api.get("/work-logs/suggested-projects"),
-  // 配置管理（管理员）
-  listConfigs: () => api.get("/work-logs/config/list"),
-  createConfig: (data) => api.post("/work-logs/config", data),
-  updateConfig: (id, data) => api.put(`/work-logs/config/${id}`, data),
+  list: (params) => api.get("/my/work-logs", { params }),
 };
 
 export const auditApi = {

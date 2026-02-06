@@ -18,7 +18,7 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, deferred
 
 from .base import Base, TimestampMixin
 
@@ -205,7 +205,7 @@ class ApiPermission(Base, TimestampMixin):
     permission_type = Column(
         String(20), default="API", nullable=False, comment="权限类型"
     )
-    group_id = Column(Integer, nullable=True, comment="权限组ID")
+    group_id = deferred(Column(Integer, nullable=True, comment="权限组ID"))
     is_active = Column(Boolean, default=True, nullable=False, comment="是否启用")
     is_system = Column(Boolean, default=False, nullable=False, comment="是否系统预置权限")
 

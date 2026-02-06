@@ -102,7 +102,11 @@ class Issue(Base, TimestampMixin):
     responsible_engineer = relationship('User', foreign_keys=[responsible_engineer_id])
     acceptance_order = relationship('AcceptanceOrder', foreign_keys=[acceptance_order_id])
     related_issue = relationship('Issue', remote_side=[id], foreign_keys=[related_issue_id])
-    service_ticket = relationship('ServiceTicket', foreign_keys=[service_ticket_id])
+    service_ticket = relationship(
+        'ServiceTicket',
+        foreign_keys=[service_ticket_id],
+        back_populates='related_issues'
+    )
     follow_ups = relationship('IssueFollowUpRecord', back_populates='issue', lazy='dynamic', cascade='all, delete-orphan')
 
     __table_args__ = (

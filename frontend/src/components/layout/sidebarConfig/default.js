@@ -164,7 +164,6 @@ export const defaultNavGroups = [
     label: "个人中心",
     items: [
       { name: "工时填报", path: "/timesheet", icon: "Clock" },
-      { name: "工作日志", path: "/work-log", icon: "ClipboardList" },
       { name: "我的绩效", path: "/personal/my-performance", icon: "TrendingUp" },
       { name: "工程师绩效", path: "/engineer-performance", icon: "Gauge", permission: "performance:engineer:read", permissionLabel: "工程师绩效" },
       { name: "工程师协作", path: "/engineer-performance/collaboration", icon: "Users", permission: "engineer:collaboration:read", permissionLabel: "工程师协作" },

@@ -15,8 +15,9 @@ from sqlalchemy.orm import Session
 
 from app.api.v1.core.project_crud_base import create_project_crud_router
 from app.api import deps
+from app.common.pagination import get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
-from app.core.config import settings
 from app.models.project import Project
 from app.models.timesheet import Timesheet
 from app.models.user import User
@@ -99,10 +100,7 @@ def enrich_timesheet_response(ts: Timesheet, db: Session, project: Project) -> T
 @router.get("/", response_model=TimesheetListResponse)
 def list_project_timesheets(
     project_id: int = Path(..., description="项目ID"),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(
-        settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"
-    ),
+    pagination=Depends(get_pagination_query),
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
     user_id: Optional[int] = Query(None, description="用户ID筛选"),
@@ -112,14 +110,14 @@ def list_project_timesheets(
 ) -> Any:
     """获取项目的所有工时记录（覆盖基类端点，填充用户信息和任务名称）"""
     check_project_access_or_raise(db, current_user, project_id)
-    
+
     # 验证项目存在
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
-    
+
     query = db.query(Timesheet).filter(Timesheet.project_id == project_id)
-    
+
     if start_date:
         query = query.filter(Timesheet.work_date >= start_date)
     if end_date:
@@ -128,25 +126,21 @@ def list_project_timesheets(
         query = query.filter(Timesheet.user_id == user_id)
     if status:
         query = query.filter(Timesheet.status == status)
-    
+
     total = query.count()
-    offset = (page - 1) * page_size
-    timesheets = (
-        query.order_by(desc(Timesheet.work_date), desc(Timesheet.created_at))
-        .offset(offset)
-        .limit(page_size)
-        .all()
-    )
-    
+    query = query.order_by(desc(Timesheet.work_date), desc(Timesheet.created_at))
+    query = apply_pagination(query, pagination.offset, pagination.limit)
+    timesheets = query.all()
+
     # 填充用户信息和任务名称
     items = [enrich_timesheet_response(ts, db, project) for ts in timesheets]
-    
+
     return TimesheetListResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total),
     )
 
 

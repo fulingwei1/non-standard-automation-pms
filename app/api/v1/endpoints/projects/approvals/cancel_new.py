@@ -27,9 +27,15 @@ ENTITY_TYPE_PROJECT = "PROJECT"
 
 
 @router.post(
-    "/approval/withdraw",
+    "/withdraw",
     response_model=ResponseModel[Dict[str, Any]],
     status_code=status.HTTP_200_OK,
+)
+@router.post(
+    "/cancel",
+    response_model=ResponseModel[Dict[str, Any]],
+    status_code=status.HTTP_200_OK,
+    include_in_schema=False,
 )
 def withdraw_project_approval(
     *,

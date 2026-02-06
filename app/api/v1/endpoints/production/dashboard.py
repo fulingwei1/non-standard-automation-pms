@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.dashboard.base import BaseDashboardEndpoint
+from app.common.date_range import get_month_range
 from app.core import security
 from app.models.production import ProductionDailyReport, WorkOrder, Workshop
 from app.models.user import User
@@ -35,7 +36,7 @@ class ProductionDashboardEndpoint(BaseDashboardEndpoint):
         返回产能利用率、质量合格率等关键指标
         """
         today = date.today()
-        month_start = today.replace(day=1)
+        month_start, _ = get_month_range(today)
 
         # 统计车间数量
         workshop_count = db.query(func.count(Workshop.id)).filter(

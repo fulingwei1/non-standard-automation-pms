@@ -50,9 +50,9 @@ def notify_contract_expiring(db: Session) -> int:
     today = date.today()
     count = 0
 
-    # 查询所有有效的合同
+    # 查询所有有效的合同（使用正确的枚举值）
     contracts = db.query(Contract).filter(
-        Contract.status.in_([ContractStatusEnum.SIGNED, ContractStatusEnum.IN_EXECUTION])
+        Contract.status.in_([ContractStatusEnum.SIGNED, ContractStatusEnum.ACTIVE])
     ).all()
 
     for contract in contracts:

@@ -107,8 +107,7 @@ export default function PurchaseRequestNew() {
       }
 
       try {
-        const response = await machineApi.list({
-          project_id: formData.project_id,
+        const response = await machineApi.list(formData.project_id, {
           page: 1,
           page_size: 100
         });
