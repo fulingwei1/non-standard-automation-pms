@@ -66,6 +66,7 @@ import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
 import { qualificationApi } from "../services/api";
 import { toast } from "../components/ui/toast";
 import { CompetencyRadarChart } from "../components/qualification/CompetencyRadarChart";
+import { Checkbox } from "../components/ui/checkbox";
 export default function QualificationManagement() {
   const [pagination, setPagination] = useState({
     page: 1,

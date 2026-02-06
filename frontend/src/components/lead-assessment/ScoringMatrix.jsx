@@ -41,6 +41,7 @@ import {
   DECISION_TIMELINES,
   LEAD_STATUSES } from
 "./leadAssessmentConstants";
+import { Checkbox } from "../ui/checkbox";
 
 export const ScoringMatrix = ({
   leads = [],

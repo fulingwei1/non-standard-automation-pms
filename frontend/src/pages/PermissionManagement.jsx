@@ -40,6 +40,12 @@ import {
 import { cn } from "../lib/utils";
 import { fadeIn as _fadeIn } from "../lib/animations";
 import { roleApi } from "../services/api";
+import {
+ getModuleLabel,
+ getActionLabel,
+ getActionColor,
+ generatePermissionLabel,
+} from "../config/permissionLabels";
 
 export default function PermissionManagement() {
   const [permissions, setPermissions] = useState([]);
@@ -51,8 +57,9 @@ export default function PermissionManagement() {
   const [selectedPermission, setSelectedPermission] = useState(null);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [permissionRoles, setPermissionRoles] = useState([]);
+ const [permissionUsageStats, setPermissionUsageStats] = useState({ mostUsed: [], unused: [] });
 
-  const token = localStorage.getItem("token");
+ const token = localStorage.getItem("token");
   const isDemoAccount = token?.startsWith("demo_token_") || false;
 
   // 加载权限列表
@@ -96,10 +103,11 @@ export default function PermissionManagement() {
       }
       console.log(
         "[权限管理] ✅ 成功获取权限列表:",
-        response.data?.length || 0,
+        response.formatted?.length || response.data?.data?.length || 0,
         "条"
       );
-      const permData = response.data;
+      // 使用统一响应格式处理
+ const permData = response.formatted || response.data?.data || response.data;
       setPermissions(Array.isArray(permData) ? permData : []);
     } catch (error) {
       console.error("[权限管理] ❌ 加载权限列表失败:", error);
@@ -141,7 +149,7 @@ export default function PermissionManagement() {
   // 加载角色列表
   const loadRoles = async () => {
     try {
-      const response = await roleApi.list({ page_size: 1000 });
+      const response = await roleApi.list({ page_size: 100 });
       // 使用统一响应格式处理
       const listData = response.formatted || response.data;
       const roleItems = listData?.items || listData;
@@ -204,112 +212,72 @@ export default function PermissionManagement() {
     }));
   };
 
-  // 查看权限详情
-  const handleViewDetail = async (permission) => {
-    setSelectedPermission(permission);
-    setShowDetailDialog(true);
+ // 查看权限详情
+ const handleViewDetail = (permission) => {
+ setSelectedPermission(permission);
+ setShowDetailDialog(true);
 
-    // 查找拥有该权限的角色
-    try {
-      // 获取所有角色的详细信息（包含权限）
-      const rolesWithPermission = [];
-      for (const role of roles) {
-        try {
-          const roleDetail = await roleApi.get(role.id);
-          // 后端返回的permissions是权限名称列表（List[str]）
-          const rolePermissionNames = roleDetail.data?.permissions || [];
-          // 通过权限名称匹配
-          if (
-          rolePermissionNames.includes(permission.permission_name) ||
-          rolePermissionNames.includes(permission.permission_code))
-          {
-            rolesWithPermission.push(role);
-          }
-        } catch (error) {
-          console.warn(`获取角色 ${role.id} 详情失败:`, error);
-        }
-      }
-      setPermissionRoles(rolesWithPermission);
-    } catch (error) {
-      console.error("加载权限关联角色失败:", error);
-      setPermissionRoles([]);
-    }
-  };
-
-  // 获取权限操作类型颜色
-  const getActionColor = (action) => {
-    const colors = {
-      read: "bg-blue-500/10 text-blue-400",
-      create: "bg-green-500/10 text-green-400",
-      update: "bg-yellow-500/10 text-yellow-400",
-      delete: "bg-red-500/10 text-red-400",
-      approve: "bg-purple-500/10 text-purple-400",
-      submit: "bg-cyan-500/10 text-cyan-400"
-    };
-    return colors[action?.toLowerCase()] || "bg-gray-500/10 text-gray-400";
-  };
-
-  // 统计权限使用情况
-  const [permissionUsageStats, setPermissionUsageStats] = useState({
-    mostUsed: [],
-    unused: []
+ // 直接从已加载的角色数据中查找拥有该权限的角色
+ // 这样保证与列表显示的统计数据一致
+  const rolesWithPermission = roles.filter(role => {
+ const rolePermissions = role.permissions || [];
+  return rolePermissions.includes(permission.permission_name) ||
+   rolePermissions.includes(permission.permission_code);
   });
+  setPermissionRoles(rolesWithPermission);
+ };
 
-  // 计算权限使用统计
-  useEffect(() => {
-    if (permissions.length === 0 || roles.length === 0) return;
+ // 计算权限使用统计
+ useEffect(() => {
+ if (permissions.length === 0 || roles.length === 0) return;
 
-    const calculatePermissionUsage = async () => {
-      const usageMap = {};
+  // 直接使用已加载的角色权限数据，不再逐个调用 API
+ const usageMap = {};
 
-      // 为每个权限统计拥有它的角色数
-      for (const permission of permissions) {
-        let roleCount = 0;
-        const rolesWithPermission = [];
+ // 初始化所有权限的统计
+ for (const permission of permissions) {
+ usageMap[permission.permission_code] = {
+ permission,
+ roleCount: 0,
+ roles: []
+ };
+ }
 
-        for (const role of roles) {
-          try {
-            const roleDetail = await roleApi.get(role.id);
-            const rolePermissions = roleDetail.data?.permissions || [];
+ // 遍历角色，统计每个权限被多少角色使用
+ for (const role of roles) {
+ // 角色已经包含 permissions 数组（权限名称列表）
+ const rolePermissions = role.permissions || [];
 
-            if (rolePermissions.includes(permission.permission_name) ||
-                rolePermissions.includes(permission.permission_code)) {
-              roleCount++;
-              rolesWithPermission.push(role);
-            }
-          } catch (error) {
-            // 忽略错误，继续处理
-          }
-        }
+ for (const permission of permissions) {
+ // 检查权限名称或编码是否匹配
+ if (rolePermissions.includes(permission.permission_name) ||
+  rolePermissions.includes(permission.permission_code)) {
+ if (usageMap[permission.permission_code]) {
+ usageMap[permission.permission_code].roleCount++;
+  usageMap[permission.permission_code].roles.push(role);
+ }
+ }
+ }
+  }
 
-        usageMap[permission.permission_code] = {
-          permission,
-          roleCount,
-          roles: rolesWithPermission
-        };
-      }
+ // 找出使用最多的权限（前10）
+ const mostUsed = Object.values(usageMap)
+ .filter(item => item.roleCount > 0)
+ .sort((a, b) => b.roleCount - a.roleCount)
+ .slice(0, 10)
+ .map(item => ({
+ ...item.permission,
+ roleCount: item.roleCount,
+ roleNames: item.roles.map(r => r.role_name).join(', ')
+ }));
 
-      // 找出使用最多的权限（前10）
-      const mostUsed = Object.values(usageMap)
-        .filter(item => item.roleCount > 0)
-        .sort((a, b) => b.roleCount - a.roleCount)
-        .slice(0, 10)
-        .map(item => ({
-          ...item.permission,
-          roleCount: item.roleCount,
-          roleNames: item.roles.map(r => r.role_name).join(', ')
-        }));
+ // 找出未使用的权限
+ const unused = Object.values(usageMap)
+ .filter(item => item.roleCount === 0)
+ .map(item => item.permission);
 
-      // 找出未使用的权限
-      const unused = Object.values(usageMap)
-        .filter(item => item.roleCount === 0)
-        .map(item => item.permission);
-
-      setPermissionUsageStats({ mostUsed, unused });
-    };
-
-    calculatePermissionUsage();
-  }, [permissions, roles]);
+ setPermissionUsageStats({ mostUsed, unused });
+ }, [permissions, roles]);
 
   // 统计信息
   const stats = {
@@ -417,11 +385,11 @@ export default function PermissionManagement() {
                         <Badge
                           className={cn("text-xs", getActionColor(perm.action))}
                         >
-                          {perm.action || '-'}
+                          {getActionLabel(perm.action)}
                         </Badge>
                       </div>
                       <p className="text-xs text-slate-500 ml-6 truncate">
-                        {perm.permission_name}
+                        {generatePermissionLabel(perm)}
                       </p>
                     </div>
                     <div className="text-right ml-2">
@@ -463,18 +431,18 @@ export default function PermissionManagement() {
                         <Badge
                           className={cn("text-xs", getActionColor(perm.action))}
                         >
-                          {perm.action || '-'}
+                          {getActionLabel(perm.action)}
                         </Badge>
                         <Badge variant="outline" className="text-xs border-amber-500/30 text-amber-400">
                           未使用
                         </Badge>
                       </div>
                       <p className="text-xs text-slate-500 truncate">
-                        {perm.permission_name || '-'}
+                        {generatePermissionLabel(perm)}
                       </p>
                       {perm.module && (
                         <p className="text-xs text-slate-600">
-                          模块: {perm.module}
+                          模块: {getModuleLabel(perm.module)}
                         </p>
                       )}
                     </div>
@@ -517,7 +485,7 @@ export default function PermissionManagement() {
                 <SelectItem value="all">所有模块</SelectItem>
                 {modules.map((module) =>
                 <SelectItem key={module} value={module}>
-                    {module}
+                    {getModuleLabel(module)}
                 </SelectItem>
                 )}
               </SelectContent>
@@ -607,19 +575,19 @@ export default function PermissionManagement() {
 
                     <CardTitle className="flex items-center gap-2">
                       <Package className="h-5 w-5 text-blue-400" />
-                      <span>{module}</span>
+                      <span>{getModuleLabel(module)}</span>
                       <Badge variant="secondary" className="ml-2">
                         {perms.length}
                       </Badge>
                     </CardTitle>
-                    {expandedModules[module] !== false ?
+                    {expandedModules[module] === true ?
                 <ChevronDown className="h-5 w-5 text-slate-400" /> :
 
                 <ChevronRight className="h-5 w-5 text-slate-400" />
                 }
                   </div>
                 </CardHeader>
-                {expandedModules[module] !== false &&
+                {expandedModules[module] === true &&
             <CardContent>
                     <div className="space-y-2">
                       {perms.map((permission) => {
@@ -652,7 +620,7 @@ export default function PermissionManagement() {
                                     "text-xs",
                                     getActionColor(permission.action)
                                   )}>
-                                  {permission.action}
+                                  {getActionLabel(permission.action)}
                                 </Badge>
                               }
                               {permission.is_active === false &&
@@ -671,7 +639,7 @@ export default function PermissionManagement() {
                               }
                             </div>
                             <p className="text-sm text-slate-400 ml-6">
-                              {permission.permission_name}
+                              {generatePermissionLabel(permission)}
                             </p>
                             {permission.description &&
                               <p className="text-xs text-slate-500 ml-6 mt-1">
@@ -745,7 +713,7 @@ export default function PermissionManagement() {
                   权限名称
                 </label>
                 <p className="text-white mt-1">
-                  {selectedPermission.permission_name}
+                  {generatePermissionLabel(selectedPermission)}
                 </p>
               </div>
               {selectedPermission.description &&
@@ -764,7 +732,7 @@ export default function PermissionManagement() {
                     所属模块
                   </label>
                   <p className="text-white mt-1">
-                    {selectedPermission.module || "未分类"}
+                    {getModuleLabel(selectedPermission.module)}
                   </p>
                 </div>
                 <div>
@@ -784,7 +752,7 @@ export default function PermissionManagement() {
                   <Badge
                     className={getActionColor(selectedPermission.action)}>
 
-                        {selectedPermission.action}
+                        {getActionLabel(selectedPermission.action)}
                   </Badge> :
 
                   "未指定"

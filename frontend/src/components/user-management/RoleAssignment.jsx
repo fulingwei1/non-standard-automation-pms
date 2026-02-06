@@ -61,6 +61,7 @@ import {
   formatUserRole as _formatUserRole } from
 "./userManagementConstants";
 import { cn } from "../../lib/utils";
+import { Checkbox } from "../ui/checkbox";
 
 export function RoleAssignment({
   user,

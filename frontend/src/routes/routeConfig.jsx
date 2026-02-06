@@ -18,6 +18,8 @@ import {
 export function AppRoutes() {
   return (
     <Routes>
+  {/* 根路径重定向到工作台 */}
+  <Route path="/" element={<Navigate to="/dashboard" replace />} />
       {DashboardRoutes()}
       {ProjectRoutes()}
       {SalesRoutes()}

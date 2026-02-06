@@ -41,7 +41,7 @@ class RoleService(BaseService[Role, RoleCreate, RoleUpdate, RoleResponse]):
             WHERE rap.role_id = :role_id AND ap.is_active = 1
         """
         perm_result = self.db.execute(text(perm_sql), {"role_id": obj.id})
-        permissions = [row[0] for row in perm_result.fetchall() if row[0]]
+        permissions = [row[0] for row in perm_result.fetchall() if row and len(row) > 0 and row[0]]
 
         # 处理父角色名称
         parent_name = None

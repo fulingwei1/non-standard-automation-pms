@@ -50,7 +50,7 @@ from app.api.v1.endpoints.approvals import router as approvals_router
 
 api_router = APIRouter()
 
-api_router.include_router(approvals_router, tags=["approvals"])
+api_router.include_router(approvals_router, prefix="/approvals", tags=["approvals"])
 # 项目模块已拆分为子模块，从projects包导入
 from app.api.v1.endpoints.projects import router as projects_router
 

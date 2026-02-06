@@ -31,7 +31,7 @@ def sync_users_from_employees(
     *,
     db: Session = Depends(deps.get_db),
     sync_request: SyncEmployeesRequest = Body(default=SyncEmployeesRequest()),
-    current_user: User = Depends(security.require_permission("user:create")),
+    current_user: User = Depends(security.require_permission("system:user:create")),
 ) -> Any:
     """批量同步员工到用户表"""
     result = UserSyncService.sync_all_employees(
@@ -54,7 +54,7 @@ def create_user_from_employee(
     db: Session = Depends(deps.get_db),
     employee_id: int,
     auto_activate: bool = Query(False, description="是否自动激活"),
-    current_user: User = Depends(security.require_permission("user:create")),
+    current_user: User = Depends(security.require_permission("system:user:create")),
 ) -> Any:
     """从单个员工创建用户账号"""
     employee = db.query(Employee).filter(Employee.id == employee_id).first()
@@ -94,7 +94,7 @@ def toggle_user_active(
     user_id: int,
     toggle_request: ToggleActiveRequest,
     request: Request,
-    current_user: User = Depends(security.require_permission("user:update")),
+    current_user: User = Depends(security.require_permission("system:user:update")),
 ) -> Any:
     """切换用户激活状态"""
     target_active = toggle_request.is_active
@@ -131,7 +131,7 @@ def reset_user_password(
     db: Session = Depends(deps.get_db),
     user_id: int,
     request: Request,
-    current_user: User = Depends(security.require_permission("user:update")),
+    current_user: User = Depends(security.require_permission("system:user:update")),
 ) -> Any:
     """重置用户密码为初始密码"""
     success, result = UserSyncService.reset_user_password(db=db, user_id=user_id)
@@ -158,7 +158,7 @@ def batch_toggle_user_active(
     db: Session = Depends(deps.get_db),
     batch_request: BatchToggleActiveRequest,
     request: Request,
-    current_user: User = Depends(security.require_permission("user:update")),
+    current_user: User = Depends(security.require_permission("system:user:update")),
 ) -> Any:
     """批量切换用户激活状态"""
     result = UserSyncService.batch_toggle_active(

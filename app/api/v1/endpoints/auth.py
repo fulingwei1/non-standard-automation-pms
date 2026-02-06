@@ -46,6 +46,27 @@ def login(
     - USER_DISABLED: 账号已禁用（员工已离职）
     - WRONG_PASSWORD: 密码错误
     """
+    # 登录失败锁定检查
+    try:
+        from app.utils.redis_client import get_redis_client
+        redis_client = get_redis_client()
+        if redis_client:
+            lockout_key = f"login:lockout:{form_data.username}"
+            if redis_client.exists(lockout_key):
+                ttl = redis_client.ttl(lockout_key)
+                raise HTTPException(
+                    status_code=status.HTTP_423_LOCKED,
+                    detail={
+                        "error_code": "ACCOUNT_LOCKED",
+                        "message": f"账号已被锁定，请在 {ttl // 60 + 1} 分钟后重试",
+                    },
+                )
+    except Exception as lockout_err:
+        import logging
+        if "ACCOUNT_LOCKED" in str(lockout_err):
+            raise
+        logging.getLogger(__name__).debug(f"登录锁定检查跳过: {lockout_err}")
+
     try:
         # 使用原始 SQL 查询避免 ORM 的自动更新机制
         from sqlalchemy import text
@@ -70,6 +91,19 @@ def login(
 
         # 2. 密码错误
         if not security.verify_password(form_data.password, user_dict["password_hash"]):
+            # 记录登录失败并检查是否需要锁定
+            try:
+                from app.utils.redis_client import get_redis_client as get_redis
+                redis_cli = get_redis()
+                if redis_cli:
+                    attempt_key = f"login:attempts:{form_data.username}"
+                    attempts = redis_cli.incr(attempt_key)
+                    redis_cli.expire(attempt_key, 900)  # 15分钟窗口
+                    if attempts >= 5:  # 5次失败后锁定
+                        lockout_key = f"login:lockout:{form_data.username}"
+                        redis_cli.setex(lockout_key, 900, "1") # 锁定15分钟
+            except Exception:
+                pass
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail={
@@ -115,6 +149,15 @@ def login(
         access_token = security.create_access_token(
             {"sub": str(user_dict["id"])}, expires_delta=access_token_expires
         )
+        # 登录成功，清除失败计数
+        try:
+            from app.utils.redis_client import get_redis_client as get_redis_success
+            redis_success = get_redis_success()
+            if redis_success:
+                redis_success.delete(f"login:attempts:{form_data.username}")
+        except Exception:
+            pass
+
 
         # 显式回滚任何可能的更改，确保不触发数据库写入
         db.rollback()
@@ -237,7 +280,7 @@ def get_me(
         "is_active": db_user.is_active,
         "is_superuser": is_superuser,
         "last_login_at": db_user.last_login_at,
-        "roles": role_names,
+        "roles": [{"role_code": row.role_code, "role_name": row.role_name} for row in role_rows],
         "role_ids": role_ids,
         "permissions": permission_codes,
         "created_at": db_user.created_at,

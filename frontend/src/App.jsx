@@ -101,7 +101,7 @@ function LoginRoute({ onLoginSuccess, isAuthenticated }) {
 
   // 如果已认证，重定向到根路径（会自动跳转到对应的dashboard）
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   // 未认证时显示登录页面

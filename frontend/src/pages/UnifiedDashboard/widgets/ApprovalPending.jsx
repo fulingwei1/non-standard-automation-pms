@@ -133,7 +133,7 @@ export default function ApprovalPending({ limit = 5, data }) {
         }
 
         try {
-          const response = await api.get('/approvals/pending');
+           const response = await api.get('/approvals/pending/mine');
           if (response.data?.items) {
             setApprovals(response.data.items.slice(0, limit));
             setTotalCount(response.data.total || response.data.items.length);

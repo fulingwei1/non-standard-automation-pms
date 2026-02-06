@@ -108,7 +108,7 @@ class UserResponse(TimestampSchema):
     is_active: bool = True
     is_superuser: bool = False
     last_login_at: Optional[datetime] = None
-    roles: List[str] = Field(default_factory=list)
+    roles: List[Any] = Field(default_factory=list, description="角色列表")
     role_ids: List[int] = Field(default_factory=list, description="角色ID列表")
     permissions: List[str] = Field(default_factory=list)
 

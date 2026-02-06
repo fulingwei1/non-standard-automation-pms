@@ -128,7 +128,8 @@ export default function Login({ onLoginSuccess }) {
 
           // 优先从角色名称中提取角色代码
           if (userData.roles && userData.roles.length > 0) {
-            const roleName = userData.roles[0];
+            const firstRole = userData.roles[0];
+  const roleName = typeof firstRole === "object" ? (firstRole.role_code || firstRole.role_name || firstRole) : firstRole;
             // 尝试匹配角色代码（支持中英文和常见变体）
             const roleMap = {
               "系统管理员": "admin",
