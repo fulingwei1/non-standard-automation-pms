@@ -285,11 +285,18 @@ class ApprovalRouter:
     ) -> Optional[ApprovalFlow]:
         """
         根据业务类型获取审批流程
+
+        Args:
+            business_type: 业务类型（对应 module_name 字段）
+            config: 可选的配置参数
+
+        Returns:
+            匹配的审批流程，如果未找到则返回 None
         """
         flow = (
             self.db.query(ApprovalFlow)
             .filter(
-                ApprovalFlow.business_type == business_type,
+                ApprovalFlow.module_name == business_type,
                 ApprovalFlow.is_active == True,
             )
             .first()
