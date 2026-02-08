@@ -27,6 +27,7 @@ from app.schemas.sales import (
     ContractUpdate,
 )
 
+from app.common.pagination import PaginationParams, get_pagination_query
 from ..utils import (
     generate_contract_code,
     get_entity_creator_id,
@@ -39,8 +40,7 @@ router = APIRouter()
 @router.get("/contracts", response_model=PaginatedResponse[ContractResponse])
 def read_contracts(
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索"),
     status: Optional[str] = Query(None, description="状态筛选"),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
@@ -70,8 +70,7 @@ def read_contracts(
         query = query.filter(Contract.customer_id == customer_id)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    contracts = query.order_by(desc(Contract.created_at)).offset(offset).limit(page_size).all()
+    contracts = query.order_by(desc(Contract.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     contract_responses = []
     for contract in contracts:
@@ -89,9 +88,9 @@ def read_contracts(
     return PaginatedResponse(
         items=contract_responses,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages = pagination.pages_for_total(total)
     )
 
 

@@ -3,23 +3,32 @@
 问题工作流端点
 
 包含：分配、解决、验证、状态变更操作
+所有状态转换均通过 IssueStateMachine 执行，确保状态规则统一
 """
 
+import logging
 from datetime import datetime
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
 from app.core import security
+from app.core.state_machine.issue import IssueStateMachine
+from app.core.state_machine.exceptions import (
+    InvalidStateTransitionError,
+    StateMachineValidationError,
+    PermissionDeniedError,
+)
 from app.models.issue import Issue, IssueFollowUpRecord
 from app.models.user import User
 from app.schemas.issue import IssueResponse
 from app.services.data_scope import DataScopeService
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 class AssignRequest(BaseModel):
@@ -37,7 +46,7 @@ class ResolveRequest(BaseModel):
 
 class VerifyRequest(BaseModel):
     """验证请求"""
-    verified_result: str  # PASSED, FAILED
+    verified_result: str # PASSED, FAILED
     remark: Optional[str] = None
 
 
@@ -118,49 +127,61 @@ def assign_issue(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("issue:update")),
 ) -> Any:
-    """分配问题处理人"""
+    """分配问题处理人（通过状态机执行）"""
     issue = _get_scoped_issue(db, current_user, issue_id)
     if not issue:
         raise HTTPException(status_code=404, detail="问题不存在")
-
-    if issue.status in ['CLOSED', 'CANCELLED', 'DELETED']:
-        raise HTTPException(status_code=400, detail="该问题已关闭或取消，无法分配")
 
     # 获取指派人信息
     assignee = db.query(User).filter(User.id == request.assignee_id).first()
     if not assignee:
         raise HTTPException(status_code=404, detail="指派用户不存在")
 
-    old_assignee = issue.assignee_name
-    issue.assignee_id = request.assignee_id
-    issue.assignee_name = assignee.real_name or assignee.username
+    assignee_name = assignee.real_name or assignee.username
 
-    # 如果是新分配（之前没有处理人），状态变为处理中
+    # 使用状态机执行分配（仅当 OPEN 状态才走状态机转换到 IN_PROGRESS）
     if issue.status == 'OPEN':
-        old_status = issue.status
-        issue.status = 'IN_PROGRESS'
+        sm = IssueStateMachine(issue, db)
+        try:
+            sm.transition_to(
+                "IN_PROGRESS",
+                current_user=current_user,
+                comment=request.remark or f"问题已分配给 {assignee_name}",
+                assignee_id=request.assignee_id,
+                assignee_name=assignee_name,
+            )
+        except InvalidStateTransitionError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        except PermissionDeniedError as e:
+            raise HTTPException(status_code=403, detail=str(e))
     else:
-        old_status = issue.status
+        # 非 OPEN 状态下重新分配（仅更新分配人，不转换状态）
+        if issue.status in ['CLOSED', 'CANCELLED', 'DELETED']:
+            raise HTTPException(status_code=400, detail="该问题已关闭或取消，无法分配")
 
-    # 记录跟进
-    content = f"问题已分配给 {issue.assignee_name}"
-    if old_assignee:
-        content = f"问题处理人从 {old_assignee} 变更为 {issue.assignee_name}"
-    if request.remark:
-        content += f"。备注：{request.remark}"
+        old_assignee = issue.assignee_name
+        issue.assignee_id = request.assignee_id
+        issue.assignee_name = assignee_name
 
-    follow_up = IssueFollowUpRecord(
-        issue_id=issue_id,
-        follow_up_type='ASSIGN',
-        content=content,
-        operator_id=current_user.id,
-        operator_name=current_user.real_name or current_user.username,
-        old_status=old_status,
-        new_status=issue.status,
-    )
-    db.add(follow_up)
-    issue.follow_up_count = (issue.follow_up_count or 0) + 1
-    issue.last_follow_up_at = datetime.now()
+        # 记录跟进
+        content = f"问题已分配给 {assignee_name}"
+        if old_assignee:
+            content = f"问题处理人从 {old_assignee} 变更为 {assignee_name}"
+        if request.remark:
+            content += f"。备注：{request.remark}"
+
+        follow_up = IssueFollowUpRecord(
+            issue_id=issue_id,
+            follow_up_type='ASSIGN',
+            content=content,
+            operator_id=current_user.id,
+            operator_name=current_user.real_name or current_user.username,
+            old_status=issue.status,
+            new_status=issue.status,
+        )
+        db.add(follow_up)
+        issue.follow_up_count = (issue.follow_up_count or 0) + 1
+        issue.last_follow_up_at = datetime.now()
 
     db.add(issue)
     db.commit()
@@ -176,43 +197,39 @@ def resolve_issue(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("issue:update")),
 ) -> Any:
-    """解决问题"""
+    """解决问题（通过状态机执行）"""
     issue = _get_scoped_issue(db, current_user, issue_id)
     if not issue:
         raise HTTPException(status_code=404, detail="问题不存在")
 
-    if issue.status in ['CLOSED', 'CANCELLED', 'DELETED', 'RESOLVED']:
-        raise HTTPException(status_code=400, detail="该问题状态不允许解决操作")
+    # 使用状态机执行解决
+    sm = IssueStateMachine(issue, db)
+    try:
+        comment = f"解决方案：{request.solution}"
+        if request.root_cause:
+            comment += f"。根本原因：{request.root_cause}"
+        if request.remark:
+            comment += f"。备注：{request.remark}"
 
-    old_status = issue.status
-    issue.status = 'RESOLVED'
-    issue.solution = request.solution
-    issue.resolved_at = datetime.now()
-    issue.resolved_by = current_user.id
-    issue.resolved_by_name = current_user.real_name or current_user.username
+        sm.transition_to(
+            "RESOLVED",
+            current_user=current_user,
+            comment=comment,
+            solution=request.solution,
+            resolved_by=current_user.id,
+            resolved_by_name=current_user.real_name or current_user.username,
+        )
 
-    if request.root_cause:
-        issue.root_cause = request.root_cause
+        # 状态机不处理 root_cause，额外设置
+        if request.root_cause:
+            issue.root_cause = request.root_cause
 
-    # 记录跟进
-    content = f"问题已解决。解决方案：{request.solution}"
-    if request.root_cause:
-        content += f"。根本原因：{request.root_cause}"
-    if request.remark:
-        content += f"。备注：{request.remark}"
-
-    follow_up = IssueFollowUpRecord(
-        issue_id=issue_id,
-        follow_up_type='RESOLVE',
-        content=content,
-        operator_id=current_user.id,
-        operator_name=current_user.real_name or current_user.username,
-        old_status=old_status,
-        new_status='RESOLVED',
-    )
-    db.add(follow_up)
-    issue.follow_up_count = (issue.follow_up_count or 0) + 1
-    issue.last_follow_up_at = datetime.now()
+    except InvalidStateTransitionError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except StateMachineValidationError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except PermissionDeniedError as e:
+        raise HTTPException(status_code=403, detail=str(e))
 
     db.add(issue)
     db.commit()
@@ -228,42 +245,40 @@ def verify_issue(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("issue:update")),
 ) -> Any:
-    """验证问题解决方案"""
+    """验证问题解决方案（通过状态机执行）"""
     issue = _get_scoped_issue(db, current_user, issue_id)
     if not issue:
         raise HTTPException(status_code=404, detail="问题不存在")
 
-    if issue.status != 'RESOLVED':
-        raise HTTPException(status_code=400, detail="只能验证已解决的问题")
+    # 使用状态机执行验证
+    sm = IssueStateMachine(issue, db)
+    try:
+        if request.verified_result == 'PASSED':
+            # 验证通过 -> CLOSED
+            target_state = "CLOSED"
+            comment = "问题验证通过，已关闭"
+        else:
+            # 验证失败 -> IN_PROGRESS
+            target_state = "IN_PROGRESS"
+            comment = "问题验证未通过，重新打开处理"
 
-    old_status = issue.status
-    issue.verified_at = datetime.now()
-    issue.verified_by = current_user.id
-    issue.verified_by_name = current_user.real_name or current_user.username
-    issue.verified_result = request.verified_result
+        if request.remark:
+            comment += f"。备注：{request.remark}"
 
-    if request.verified_result == 'PASSED':
-        issue.status = 'CLOSED'
-        content = "问题验证通过，已关闭"
-    else:
-        issue.status = 'IN_PROGRESS'
-        content = "问题验证未通过，重新打开处理"
+        sm.transition_to(
+            target_state,
+            current_user=current_user,
+            comment=comment,
+            verified_by=current_user.id,
+            verified_by_name=current_user.real_name or current_user.username,
+        )
 
-    if request.remark:
-        content += f"。备注：{request.remark}"
-
-    follow_up = IssueFollowUpRecord(
-        issue_id=issue_id,
-        follow_up_type='VERIFY',
-        content=content,
-        operator_id=current_user.id,
-        operator_name=current_user.real_name or current_user.username,
-        old_status=old_status,
-        new_status=issue.status,
-    )
-    db.add(follow_up)
-    issue.follow_up_count = (issue.follow_up_count or 0) + 1
-    issue.last_follow_up_at = datetime.now()
+    except InvalidStateTransitionError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except StateMachineValidationError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except PermissionDeniedError as e:
+        raise HTTPException(status_code=403, detail=str(e))
 
     db.add(issue)
     db.commit()
@@ -279,41 +294,37 @@ def change_issue_status(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("issue:update")),
 ) -> Any:
-    """变更问题状态"""
+    """变更问题状态（通过状态机执行）"""
     issue = _get_scoped_issue(db, current_user, issue_id)
     if not issue:
         raise HTTPException(status_code=404, detail="问题不存在")
 
-    valid_statuses = ['OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED', 'CANCELLED', 'PENDING']
-    if request.new_status not in valid_statuses:
-        raise HTTPException(status_code=400, detail=f"无效的状态值，有效值：{valid_statuses}")
-
     if issue.status == request.new_status:
         raise HTTPException(status_code=400, detail="新状态与当前状态相同")
 
-    old_status = issue.status
-    issue.status = request.new_status
+    # 使用状态机执行状态变更
+    sm = IssueStateMachine(issue, db)
+    try:
+        comment = f"问题状态从 {issue.status} 变更为 {request.new_status}"
+        if request.remark:
+            comment += f"。备注：{request.remark}"
 
-    # 记录跟进
-    content = f"问题状态从 {old_status} 变更为 {request.new_status}"
-    if request.remark:
-        content += f"。备注：{request.remark}"
+        sm.transition_to(
+            request.new_status,
+            current_user=current_user,
+            comment=comment,
+        )
 
-    follow_up = IssueFollowUpRecord(
-        issue_id=issue_id,
-        follow_up_type='STATUS_CHANGE',
-        content=content,
-        operator_id=current_user.id,
-        operator_name=current_user.real_name or current_user.username,
-        old_status=old_status,
-        new_status=request.new_status,
-    )
-    db.add(follow_up)
-    issue.follow_up_count = (issue.follow_up_count or 0) + 1
-    issue.last_follow_up_at = datetime.now()
+    except InvalidStateTransitionError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except StateMachineValidationError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except PermissionDeniedError as e:
+        raise HTTPException(status_code=403, detail=str(e))
 
     db.add(issue)
     db.commit()
     db.refresh(issue)
 
     return _build_issue_response(issue)
+

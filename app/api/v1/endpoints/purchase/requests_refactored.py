@@ -22,6 +22,7 @@ from app.models.purchase import (
 )
 from app.models.user import User
 
+from app.common.pagination import PaginationParams, get_pagination_query
 from .utils import (
     decimal_value,
     generate_request_no,
@@ -36,8 +37,7 @@ router = APIRouter()
 @router.get("/requests")
 def list_purchase_requests(
     db: Session = Depends(get_db),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE),
+    pagination: PaginationParams = Depends(get_pagination_query),
     status: Optional[str] = Query(None, description="按状态筛选: DRAFT, SUBMITTED, APPROVED, REJECTED"),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -46,18 +46,17 @@ def list_purchase_requests(
     if status:
         query = query.filter(PurchaseRequest.status == status)
     total = query.count()
-    offset = (page - 1) * page_size
-    requests = query.order_by(desc(PurchaseRequest.created_at)).offset(offset).limit(page_size).all()
+    requests = query.order_by(desc(PurchaseRequest.created_at)).offset(pagination.offset).limit(pagination.limit).all()
     
     items = [serialize_purchase_request(r, include_items=False) for r in requests]
-    pages = (total + page_size - 1) // page_size
+    pages = pagination.pages_for_total(total)
     
     # 使用统一响应格式
     return paginated_response(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
         pages=pages,
         message="获取采购申请列表成功"
     )

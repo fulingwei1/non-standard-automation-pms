@@ -16,6 +16,7 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.models.strategy import StrategyCalendarEvent, StrategyReview
+from app.common.date_range import get_month_range_by_ym
 from app.schemas.strategy import (
     CalendarMonthResponse,
     CalendarYearResponse,
@@ -121,10 +122,7 @@ def generate_routine_events(
 
     # 生成月度经营分析会（每月最后一个工作日）
     for month in range(1, 13):
-        if month == 12:
-            last_day = date(year + 1, 1, 1) - timedelta(days=1)
-        else:
-            last_day = date(year, month + 1, 1) - timedelta(days=1)
+        _, last_day = get_month_range_by_ym(year, month)
 
         # 调整到工作日
         while last_day.weekday() >= 5:  # 周六或周日

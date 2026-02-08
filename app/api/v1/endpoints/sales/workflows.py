@@ -14,6 +14,7 @@ from app.core.config import settings
 from app.models.sales import ApprovalWorkflow, ApprovalWorkflowStep
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.schemas.sales import (
     ApprovalWorkflowCreate,
     ApprovalWorkflowResponse,
@@ -28,8 +29,7 @@ router = APIRouter()
 def list_approval_workflows(
     *,
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     workflow_type: Optional[str] = Query(None, description="工作流类型筛选"),
     is_active: Optional[bool] = Query(None, description="是否启用筛选"),
     current_user: User = Depends(security.get_current_active_user),
@@ -48,8 +48,7 @@ def list_approval_workflows(
         query = query.filter(ApprovalWorkflow.is_active == is_active)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    workflows = query.order_by(ApprovalWorkflow.created_at.desc()).offset(offset).limit(page_size).all()
+    workflows = query.order_by(ApprovalWorkflow.created_at.desc()).offset(pagination.offset).limit(pagination.limit).all()
 
     result = []
     for workflow in workflows:
@@ -68,9 +67,9 @@ def list_approval_workflows(
     return PaginatedResponse(
         items=result,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages = pagination.pages_for_total(total)
     )
 
 

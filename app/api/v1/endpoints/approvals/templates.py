@@ -25,6 +25,7 @@ from app.schemas.approval.flow import (
     ApprovalRoutingRuleCreate,
     ApprovalRoutingRuleResponse,
 )
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.schemas.approval.template import (
     ApprovalTemplateCreate,
     ApprovalTemplateListResponse,
@@ -39,8 +40,7 @@ router = APIRouter()
 
 @router.get("", response_model=ApprovalTemplateListResponse)
 def list_templates(
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    pagination: PaginationParams = Depends(get_pagination_query),
     category: Optional[str] = None,
     is_active: Optional[bool] = None,
     keyword: Optional[str] = None,
@@ -60,12 +60,12 @@ def list_templates(
         )
 
     total = query.count()
-    items = query.order_by(ApprovalTemplate.id.desc()).offset((page - 1) * page_size).limit(page_size).all()
+    items = query.order_by(ApprovalTemplate.id.desc()).offset(pagination.offset).limit(pagination.limit).all()
 
     return ApprovalTemplateListResponse(
         total=total,
-        page=page,
-        page_size=page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
         items=[ApprovalTemplateResponse.model_validate(t) for t in items],
     )
 

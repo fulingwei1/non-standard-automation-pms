@@ -13,6 +13,7 @@ from app.api import deps
 from app.core.schemas import list_response, paginated_response, success_response
 from app.models.approval import ApprovalCarbonCopy, ApprovalInstance, ApprovalTask
 from app.schemas.approval.instance import ApprovalInstanceListResponse, ApprovalInstanceResponse
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.schemas.approval.task import (
     ApprovalTaskListResponse,
     ApprovalTaskResponse,
@@ -25,8 +26,7 @@ router = APIRouter()
 
 @router.get("/mine")
 def get_my_pending_tasks(
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    pagination: PaginationParams = Depends(get_pagination_query),
     urgency: Optional[str] = None,
     template_id: Optional[int] = None,
     db: Session = Depends(deps.get_db),
@@ -58,8 +58,8 @@ def get_my_pending_tasks(
 
     tasks = (
         query.order_by(ApprovalTask.created_at.desc())
-        .offset((page - 1) * page_size)
-        .limit(page_size)
+        .offset(pagination.offset)
+        .limit(pagination.limit)
         .all()
     )
 
@@ -79,15 +79,14 @@ def get_my_pending_tasks(
     return paginated_response(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size
+        page=pagination.page,
+        page_size=pagination.page_size
     )
 
 
 @router.get("/initiated")
 def get_my_initiated(
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    pagination: PaginationParams = Depends(get_pagination_query),
     status: Optional[str] = None,
     template_id: Optional[int] = None,
     db: Session = Depends(deps.get_db),
@@ -110,26 +109,25 @@ def get_my_initiated(
     total = query.count()
     items = (
         query.order_by(ApprovalInstance.created_at.desc())
-        .offset((page - 1) * page_size)
-        .limit(page_size)
+        .offset(pagination.offset)
+        .limit(pagination.limit)
         .all()
     )
 
-    pages = (total + page_size - 1) // page_size
+    pages = pagination.pages_for_total(total)
 
     # 使用统一响应格式
     return paginated_response(
         items=[ApprovalInstanceResponse.model_validate(i) for i in items],
         total=total,
-        page=page,
-        page_size=page_size
+        page=pagination.page,
+        page_size=pagination.page_size
     )
 
 
 @router.get("/cc")
 def get_my_cc(
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    pagination: PaginationParams = Depends(get_pagination_query),
     is_read: Optional[bool] = None,
     db: Session = Depends(deps.get_db),
     current_user=Depends(deps.get_current_user),
@@ -149,8 +147,8 @@ def get_my_cc(
     total = query.count()
     records = (
         query.order_by(ApprovalCarbonCopy.created_at.desc())
-        .offset((page - 1) * page_size)
-        .limit(page_size)
+        .offset(pagination.offset)
+        .limit(pagination.limit)
         .all()
     )
 
@@ -164,14 +162,14 @@ def get_my_cc(
             item.initiator_name = cc.instance.initiator_name
         items.append(item)
 
-    pages = (total + page_size - 1) // page_size
+    pages = pagination.pages_for_total(total)
 
     # 使用统一响应格式
     return paginated_response(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size
+        page=pagination.page,
+        page_size=pagination.page_size
     )
 
 
@@ -194,14 +192,13 @@ def mark_cc_as_read(
             message="标记成功"
         )
     else:
-        from fastapi import HTTPException
+        from fastapi import Depends, HTTPException
         raise HTTPException(status_code=404, detail="记录不存在或无权操作")
 
 
 @router.get("/processed")
 def get_my_processed(
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    pagination: PaginationParams = Depends(get_pagination_query),
     action: Optional[str] = None,
     template_id: Optional[int] = None,
     db: Session = Depends(deps.get_db),
@@ -229,8 +226,8 @@ def get_my_processed(
     total = query.count()
     tasks = (
         query.order_by(ApprovalTask.completed_at.desc())
-        .offset((page - 1) * page_size)
-        .limit(page_size)
+        .offset(pagination.offset)
+        .limit(pagination.limit)
         .all()
     )
 
@@ -246,14 +243,14 @@ def get_my_processed(
             item.node_name = task.node.node_name
         items.append(item)
 
-    pages = (total + page_size - 1) // page_size
+    pages = pagination.pages_for_total(total)
 
     # 使用统一响应格式
     return paginated_response(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size
+        page=pagination.page,
+        page_size=pagination.page_size
     )
 
 

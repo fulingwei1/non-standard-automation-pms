@@ -17,6 +17,7 @@ from app.core.config import settings
 from app.models.sales import PurchaseMaterialCost
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.schemas.sales import (
     PurchaseMaterialCostCreate,
     PurchaseMaterialCostResponse,
@@ -30,8 +31,7 @@ router = APIRouter()
 def get_purchase_material_costs(
     *,
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     material_name: Optional[str] = Query(None, description="物料名称搜索"),
     material_type: Optional[str] = Query(None, description="物料类型筛选"),
     is_standard_part: Optional[bool] = Query(None, description="是否标准件"),
@@ -53,8 +53,7 @@ def get_purchase_material_costs(
         query = query.filter(PurchaseMaterialCost.is_active == is_active)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    costs = query.order_by(desc(PurchaseMaterialCost.match_priority), desc(PurchaseMaterialCost.created_at)).offset(offset).limit(page_size).all()
+    costs = query.order_by(desc(PurchaseMaterialCost.match_priority), desc(PurchaseMaterialCost.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for cost in costs:
@@ -67,9 +66,9 @@ def get_purchase_material_costs(
     return PaginatedResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages = pagination.pages_for_total(total)
     )
 
 

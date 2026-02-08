@@ -27,6 +27,7 @@ from . import (
     related_lists,
     statistics,
     templates,
+ workflow,
 )
 
 # 创建主路由
@@ -58,6 +59,9 @@ router.include_router(core.router, tags=["issue-core"])
 
 # 操作路由（/{issue_id}/close, /{issue_id}/cancel 等）
 router.include_router(operations.router, tags=["issue-operations"])
+
+# 工作流路由（assign, resolve, verify, status）
+router.include_router(workflow.router, tags=["issue-workflow"])
 
 # 模板路由
 template_router.include_router(templates.router, tags=["issue-templates"])

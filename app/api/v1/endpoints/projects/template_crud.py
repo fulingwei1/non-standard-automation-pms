@@ -15,6 +15,7 @@ from app.core.config import settings
 from app.models.project import ProjectTemplate
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.schemas.project import (
     ProjectTemplateCreate,
     ProjectTemplateResponse,
@@ -28,8 +29,7 @@ router = APIRouter()
 def get_project_templates(
     *,
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索"),
     project_type: Optional[str] = Query(None, description="项目类型筛选"),
     is_active: Optional[bool] = Query(True, description="是否启用"),
@@ -53,8 +53,7 @@ def get_project_templates(
         query = query.filter(ProjectTemplate.is_active == is_active)
 
     total = query.count()
-    offset = (page - 1) * page_size
-    templates = query.order_by(desc(ProjectTemplate.created_at)).offset(offset).limit(page_size).all()
+    templates = query.order_by(desc(ProjectTemplate.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for template in templates:
@@ -73,9 +72,9 @@ def get_project_templates(
     return PaginatedResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages = pagination.pages_for_total(total)
     )
 
 

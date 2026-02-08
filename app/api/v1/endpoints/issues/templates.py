@@ -20,6 +20,7 @@ from app.models.issue import Issue, IssueTemplate
 from app.models.project import Machine, Project
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.schemas.issue import (
     IssueFromTemplateRequest,
     IssueResponse,
@@ -118,8 +119,7 @@ def _build_issue_response(issue: Issue) -> IssueResponse:
 def list_issue_templates(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("issue:read")),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索（模板编码/名称）"),
     category: Optional[str] = Query(None, description="问题分类筛选"),
     is_active: Optional[bool] = Query(None, description="是否启用"),
@@ -148,7 +148,7 @@ def list_issue_templates(
     total = query.count()
 
     # 分页
-    templates = query.order_by(desc(IssueTemplate.created_at)).offset((page - 1) * page_size).limit(page_size).all()
+    templates = query.order_by(desc(IssueTemplate.created_at)).offset(pagination.offset).limit(pagination.limit).all()
 
     # 构建响应
     items = [_build_template_response(t) for t in templates]
@@ -156,9 +156,9 @@ def list_issue_templates(
     return IssueTemplateListResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages = pagination.pages_for_total(total)
     )
 
 

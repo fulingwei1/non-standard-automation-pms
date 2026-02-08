@@ -16,6 +16,7 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.models.strategy import StrategyCalendarEvent, StrategyReview
+from app.common.date_range import get_month_range_by_ym
 from app.schemas.strategy import (
     CalendarMonthResponse,
     CalendarYearResponse,
@@ -197,11 +198,7 @@ def get_calendar_month(
     Returns:
         CalendarMonthResponse: 月度日历数据
     """
-    start_date = date(year, month, 1)
-    if month == 12:
-        end_date = date(year + 1, 1, 1) - timedelta(days=1)
-    else:
-        end_date = date(year, month + 1, 1) - timedelta(days=1)
+    start_date, end_date = get_month_range_by_ym(year, month)
 
     events, _ = list_calendar_events(
         db, strategy_id, start_date, end_date, limit=1000

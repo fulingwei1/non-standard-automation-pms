@@ -17,6 +17,7 @@ from app.models.enums import AssessmentSourceTypeEnum
 from app.models.sales import AIClarification, Lead, Opportunity
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.schemas.sales import (
     AIClarificationCreate,
     AIClarificationResponse,
@@ -30,8 +31,7 @@ router = APIRouter()
 def list_ai_clarifications(
     *,
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    pagination: PaginationParams = Depends(get_pagination_query),
     source_type: Optional[str] = Query(None, description="来源类型：LEAD/OPPORTUNITY"),
     source_id: Optional[int] = Query(None, description="来源ID"),
     current_user: User = Depends(security.get_current_active_user),
@@ -51,7 +51,7 @@ def list_ai_clarifications(
         desc(AIClarification.source_type),
         desc(AIClarification.source_id),
         desc(AIClarification.round)
-    ).offset((page - 1) * page_size).limit(page_size).all()
+    ).offset(pagination.offset).limit(pagination.limit).all()
 
     items = []
     for clarification in clarifications:
@@ -69,9 +69,9 @@ def list_ai_clarifications(
     return PaginatedResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages = pagination.pages_for_total(total)
     )
 
 

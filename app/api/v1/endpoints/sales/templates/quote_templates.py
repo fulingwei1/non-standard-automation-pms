@@ -18,6 +18,7 @@ from app.core.config import settings
 from app.models.sales import QuoteTemplate, QuoteTemplateVersion
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.schemas.sales import (
     CpqPricePreviewRequest,
     CpqPricePreviewResponse,
@@ -45,8 +46,7 @@ router = APIRouter()
 def list_quote_templates(
     *,
     db: Session = Depends(deps.get_db),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE),
+    pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="搜索关键词"),
     status: Optional[str] = Query(None, description="状态筛选"),
     current_user: User = Depends(security.get_current_active_user),
@@ -66,20 +66,19 @@ def list_quote_templates(
         query = query.filter(QuoteTemplate.status == status)
 
     total = query.count()
-    offset = (page - 1) * page_size
     templates = (
         query.order_by(desc(QuoteTemplate.created_at))
-        .offset(offset)
-        .limit(page_size)
+        .offset(pagination.offset)
+        .limit(pagination.limit)
         .all()
     )
     items = [_serialize_quote_template(t) for t in templates]
     return PaginatedResponse(
         items=items,
         total=total,
-        page=page,
-        page_size=page_size,
-        pages=(total + page_size - 1) // page_size,
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages = pagination.pages_for_total(total)
     )
 
 

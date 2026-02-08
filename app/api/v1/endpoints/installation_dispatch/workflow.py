@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 安装调试派工状态流转端点
+
+所有状态转换均通过 InstallationDispatchStateMachine 执行，确保状态规则统一
 """
 
 import logging
@@ -12,9 +14,13 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.core.state_machine.installation_dispatch import InstallationDispatchStateMachine
+from app.core.state_machine.exceptions import (
+    InvalidStateTransitionError,
+    StateMachineValidationError,
+    PermissionDeniedError,
+)
 from app.models.installation_dispatch import InstallationDispatchOrder
-from app.models.project import Machine
-from app.models.service import ServiceRecord
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.installation_dispatch import (
@@ -29,6 +35,7 @@ from app.schemas.installation_dispatch import (
 from .orders import read_installation_dispatch_order
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.put("/orders/{order_id}/assign", response_model=InstallationDispatchOrderResponse, status_code=status.HTTP_200_OK)
@@ -40,28 +47,34 @@ def assign_installation_dispatch_order(
     current_user: User = Depends(security.require_permission("installation_dispatch:read")),
 ) -> Any:
     """
-    派工安装调试派工单
+    派工安装调试派工单（通过状态机执行）
     """
     order = db.query(InstallationDispatchOrder).filter(InstallationDispatchOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="安装调试派工单不存在")
-
-    if order.status != "PENDING":
-        raise HTTPException(status_code=400, detail="只有待派工状态的派工单才能派工")
 
     # 验证派工人员是否存在
     assignee = db.query(User).filter(User.id == assign_in.assigned_to_id).first()
     if not assignee:
         raise HTTPException(status_code=404, detail="派工人员不存在")
 
-    order.assigned_to_id = assign_in.assigned_to_id
-    order.assigned_to_name = assignee.real_name or assignee.username
-    order.assigned_by_id = current_user.id
-    order.assigned_by_name = current_user.real_name or current_user.username
-    order.assigned_time = datetime.now()
-    order.status = "ASSIGNED"
-    if assign_in.remark:
-        order.remark = (order.remark or "") + f"\n派工备注：{assign_in.remark}"
+    # 使用状态机执行派工
+    sm = InstallationDispatchStateMachine(order, db)
+    try:
+        sm.transition_to(
+            "ASSIGNED",
+            current_user=current_user,
+            comment=assign_in.remark or f"派工给 {assignee.real_name or assignee.username}",
+            assigned_to_id=assign_in.assigned_to_id,
+            assigned_to_name=assignee.real_name or assignee.username,
+            assigned_by_id=current_user.id,
+            assigned_by_name=current_user.real_name or current_user.username,
+            remark=assign_in.remark,
+        )
+    except InvalidStateTransitionError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except PermissionDeniedError as e:
+        raise HTTPException(status_code=403, detail=str(e))
 
     db.add(order)
     db.commit()
@@ -78,7 +91,7 @@ def batch_assign_installation_dispatch_orders(
     current_user: User = Depends(security.require_permission("installation_dispatch:read")),
 ) -> Any:
     """
-    批量派工安装调试派工单
+    批量派工安装调试派工单（通过状态机执行）
     """
     # 验证派工人员是否存在
     assignee = db.query(User).filter(User.id == batch_assign_in.assigned_to_id).first()
@@ -95,21 +108,24 @@ def batch_assign_installation_dispatch_orders(
                 failed_orders.append({"order_id": order_id, "reason": "派工单不存在"})
                 continue
 
-            if order.status != "PENDING":
-                failed_orders.append({"order_id": order_id, "reason": f"派工单状态为{order.status}，不能派工"})
-                continue
+            # 使用状态机执行派工
+            sm = InstallationDispatchStateMachine(order, db)
+            try:
+                sm.transition_to(
+                    "ASSIGNED",
+                    current_user=current_user,
+                    comment=batch_assign_in.remark or f"批量派工给 {assignee.real_name or assignee.username}",
+                    assigned_to_id=batch_assign_in.assigned_to_id,
+                    assigned_to_name=assignee.real_name or assignee.username,
+                    assigned_by_id=current_user.id,
+                    assigned_by_name=current_user.real_name or current_user.username,
+                    remark=batch_assign_in.remark,
+                )
+                db.add(order)
+                success_count += 1
+            except (InvalidStateTransitionError, PermissionDeniedError) as e:
+                failed_orders.append({"order_id": order_id, "reason": str(e)})
 
-            order.assigned_to_id = batch_assign_in.assigned_to_id
-            order.assigned_to_name = assignee.real_name or assignee.username
-            order.assigned_by_id = current_user.id
-            order.assigned_by_name = current_user.real_name or current_user.username
-            order.assigned_time = datetime.now()
-            order.status = "ASSIGNED"
-            if batch_assign_in.remark:
-                order.remark = (order.remark or "") + f"\n批量派工备注：{batch_assign_in.remark}"
-
-            db.add(order)
-            success_count += 1
         except Exception as e:
             failed_orders.append({"order_id": order_id, "reason": str(e)})
 
@@ -131,21 +147,28 @@ def start_installation_dispatch_order(
     current_user: User = Depends(security.require_permission("installation_dispatch:read")),
 ) -> Any:
     """
-    开始安装调试任务
+    开始安装调试任务（通过状态机执行）
     """
     order = db.query(InstallationDispatchOrder).filter(InstallationDispatchOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="安装调试派工单不存在")
 
-    if order.status != "ASSIGNED":
-        raise HTTPException(status_code=400, detail="只有已派工状态的派工单才能开始")
-
     if order.assigned_to_id != current_user.id:
         raise HTTPException(status_code=403, detail="只能开始分配给自己的任务")
 
-    order.status = "IN_PROGRESS"
-    order.start_time = start_in.start_time or datetime.now()
-    order.progress = 0
+    # 使用状态机执行开始
+    sm = InstallationDispatchStateMachine(order, db)
+    try:
+        sm.transition_to(
+            "IN_PROGRESS",
+            current_user=current_user,
+            comment="开始执行安装调试任务",
+            start_time=start_in.start_time or datetime.now(),
+        )
+    except InvalidStateTransitionError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except PermissionDeniedError as e:
+        raise HTTPException(status_code=403, detail=str(e))
 
     db.add(order)
     db.commit()
@@ -163,18 +186,21 @@ def update_installation_dispatch_order_progress(
     current_user: User = Depends(security.require_permission("installation_dispatch:read")),
 ) -> Any:
     """
-    更新安装调试任务进度
+    更新安装调试任务进度（不改变状态，使用状态机辅助方法）
     """
     order = db.query(InstallationDispatchOrder).filter(InstallationDispatchOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="安装调试派工单不存在")
 
-    if order.status != "IN_PROGRESS":
-        raise HTTPException(status_code=400, detail="只有进行中状态的派工单才能更新进度")
-
-    order.progress = progress_in.progress
-    if progress_in.execution_notes:
-        order.execution_notes = (order.execution_notes or "") + f"\n{datetime.now().strftime('%Y-%m-%d %H:%M')}：{progress_in.execution_notes}"
+    # 使用状态机的 update_progress 方法（不涉及状态转换）
+    sm = InstallationDispatchStateMachine(order, db)
+    try:
+        sm.update_progress(
+            progress=progress_in.progress,
+            notes=progress_in.execution_notes,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     db.add(order)
     db.commit()
@@ -192,68 +218,30 @@ def complete_installation_dispatch_order(
     current_user: User = Depends(security.require_permission("installation_dispatch:read")),
 ) -> Any:
     """
-    完成安装调试任务
+    完成安装调试任务（通过状态机执行，自动创建服务记录）
     """
     order = db.query(InstallationDispatchOrder).filter(InstallationDispatchOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="安装调试派工单不存在")
 
-    if order.status != "IN_PROGRESS":
-        raise HTTPException(status_code=400, detail="只有进行中状态的派工单才能完成")
-
-    order.status = "COMPLETED"
-    order.end_time = complete_in.end_time or datetime.now()
-    order.actual_hours = complete_in.actual_hours
-    order.progress = 100
-
-    if complete_in.execution_notes:
-        order.execution_notes = (order.execution_notes or "") + f"\n完成说明：{complete_in.execution_notes}"
-    if complete_in.issues_found:
-        order.issues_found = complete_in.issues_found
-    if complete_in.solution_provided:
-        order.solution_provided = complete_in.solution_provided
-    if complete_in.photos:
-        order.photos = complete_in.photos
-
-    # 自动创建现场服务记录
+    # 使用状态机执行完成（状态机内部会自动创建服务记录）
+    sm = InstallationDispatchStateMachine(order, db)
     try:
-        from app.api.v1.endpoints.service import generate_record_no
-
-        # 获取机台号
-        machine_no = None
-        if order.machine_id:
-            machine = db.query(Machine).filter(Machine.id == order.machine_id).first()
-            if machine:
-                machine_no = machine.machine_no
-
-        service_record = ServiceRecord(
-            record_no=generate_record_no(db),
-            service_type="INSTALLATION",
-            project_id=order.project_id,
-            machine_no=machine_no,
-            customer_id=order.customer_id,
-            location=order.location,
-            service_date=order.scheduled_date,
-            start_time=order.start_time.strftime("%H:%M") if order.start_time else None,
-            end_time=order.end_time.strftime("%H:%M") if order.end_time else None,
-            duration_hours=complete_in.actual_hours or order.estimated_hours,
-            service_engineer_id=order.assigned_to_id,
-            service_engineer_name=order.assigned_to_name,
-            customer_contact=order.customer_contact,
-            customer_phone=order.customer_phone,
-            service_content=order.task_description or order.task_title,
-            service_result=complete_in.execution_notes,
+        sm.transition_to(
+            "COMPLETED",
+            current_user=current_user,
+            comment=complete_in.execution_notes or "完成安装调试任务",
+            end_time=complete_in.end_time or datetime.now(),
+            actual_hours=complete_in.actual_hours,
+            execution_notes=complete_in.execution_notes,
             issues_found=complete_in.issues_found,
             solution_provided=complete_in.solution_provided,
             photos=complete_in.photos,
-            status="COMPLETED",
         )
-        db.add(service_record)
-        db.flush()
-        order.service_record_id = service_record.id
-    except Exception as e:
-        # 如果创建服务记录失败，不影响派工单完成
-        logging.warning(f"自动创建现场服务记录失败：{str(e)}")
+    except InvalidStateTransitionError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except PermissionDeniedError as e:
+        raise HTTPException(status_code=403, detail=str(e))
 
     db.add(order)
     db.commit()
@@ -270,19 +258,28 @@ def cancel_installation_dispatch_order(
     current_user: User = Depends(security.require_permission("installation_dispatch:read")),
 ) -> Any:
     """
-    取消安装调试派工单
+    取消安装调试派工单（通过状态机执行）
     """
     order = db.query(InstallationDispatchOrder).filter(InstallationDispatchOrder.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="安装调试派工单不存在")
 
-    if order.status in ["COMPLETED", "CANCELLED"]:
-        raise HTTPException(status_code=400, detail="已完成或已取消的派工单不能再次取消")
-
-    order.status = "CANCELLED"
+    # 状态机根据当前状态选择对应的取消转换
+    sm = InstallationDispatchStateMachine(order, db)
+    try:
+        sm.transition_to(
+            "CANCELLED",
+            current_user=current_user,
+            comment="取消安装调试派工单",
+        )
+    except InvalidStateTransitionError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except PermissionDeniedError as e:
+        raise HTTPException(status_code=403, detail=str(e))
 
     db.add(order)
     db.commit()
     db.refresh(order)
 
     return read_installation_dispatch_order(order.id, db, current_user)
+
