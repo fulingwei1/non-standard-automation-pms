@@ -6,7 +6,7 @@ import re
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 from .common import TimestampSchema
 
@@ -58,7 +58,7 @@ class UserCreate(BaseModel):
     """创建用户"""
     username: str = Field(min_length=3, max_length=50, description="用户名")
     password: str = Field(min_length=6, description="密码")
-    email: Optional[EmailStr] = Field(default=None, description="邮箱")
+    email: Optional[str] = Field(default=None, description="邮箱")
     phone: Optional[str] = Field(default=None, max_length=20, description="手机号")
     real_name: Optional[str] = Field(default=None, max_length=50, description="真实姓名")
     employee_no: Optional[str] = Field(default=None, max_length=50, description="工号（将同步为员工编码）")
@@ -70,7 +70,7 @@ class UserCreate(BaseModel):
 
 class UserUpdate(BaseModel):
     """更新用户"""
-    email: Optional[EmailStr] = None
+    email: Optional[str] = None
     phone: Optional[str] = None
     real_name: Optional[str] = None
     employee_no: Optional[str] = None
@@ -238,4 +238,3 @@ class RoleWithFullPermissions(BaseModel):
     # 前端配置
     nav_groups: Optional[List[str]] = None
     ui_config: Optional[Dict[str, Any]] = None
-

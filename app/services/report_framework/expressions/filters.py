@@ -8,7 +8,12 @@
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 
-from jinja2 import Environment
+from typing import Any as _Any
+
+try:
+    from jinja2 import Environment
+except ImportError:  # pragma: no cover - 可选依赖
+    Environment = _Any
 
 
 def register_filters(env: Environment) -> None:

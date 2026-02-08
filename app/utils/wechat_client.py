@@ -9,7 +9,10 @@ import time
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
-import requests
+try:
+    import requests
+except ImportError:  # pragma: no cover - 运行环境可选依赖
+    requests = None
 
 from app.core.config import settings
 
@@ -83,6 +86,9 @@ class WeChatClient:
         Returns:
             access_token字符串
         """
+        if requests is None:
+            raise RuntimeError("未安装 requests 依赖，无法调用企业微信API")
+
         # 检查缓存
         if not force_refresh:
             cached_token = WeChatTokenCache.get(self.TOKEN_CACHE_KEY)
@@ -134,6 +140,9 @@ class WeChatClient:
         Returns:
             是否发送成功
         """
+        if requests is None:
+            raise RuntimeError("未安装 requests 依赖，无法调用企业微信API")
+
         if not user_ids:
             return False
 

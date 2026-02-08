@@ -5,7 +5,18 @@
 """
 from typing import Optional
 
-from pypinyin import Style, lazy_pinyin
+try:
+    from pypinyin import Style, lazy_pinyin
+except ImportError:  # pragma: no cover - 可选依赖
+    Style = None
+
+    def lazy_pinyin(text: str, style=None):
+        # 降级策略：无拼音库时直接返回字符列表
+        if not text:
+            return []
+        if style is not None:
+            return [str(ch)[0].lower() for ch in text]
+        return [str(ch).lower() for ch in text]
 from sqlalchemy.orm import Session
 
 
@@ -38,7 +49,8 @@ def name_to_pinyin_initials(name: str) -> str:
     """
     if not name:
         return ""
-    initials = lazy_pinyin(name, style=Style.FIRST_LETTER)
+    style = Style.FIRST_LETTER if Style is not None else True
+    initials = lazy_pinyin(name, style=style)
     return ''.join(initials).upper()
 
 
