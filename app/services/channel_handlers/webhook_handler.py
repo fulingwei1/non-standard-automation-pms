@@ -6,7 +6,10 @@ Webhook通知处理器（钉钉、飞书等）
 from datetime import datetime
 from typing import Dict, Any
 
-import requests
+try:
+    import requests
+except ImportError:  # pragma: no cover - 运行环境可选依赖
+    requests = None
 
 from app.core.config import settings
 from app.services.channel_handlers.base import (
@@ -23,6 +26,11 @@ class WebhookChannelHandler(ChannelHandler):
         if not self.is_enabled():
             return NotificationResult(
                 channel=self.channel, success=False, error_message="Webhook未配置"
+            )
+
+        if requests is None:
+            return NotificationResult(
+                channel=self.channel, success=False, error_message="未安装 requests 依赖"
             )
 
         message = self._build_message(request)

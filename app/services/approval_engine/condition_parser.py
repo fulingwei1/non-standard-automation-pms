@@ -10,7 +10,12 @@
 
 import logging
 import re
-from jinja2 import Environment, TemplateSyntaxError, StrictUndefined
+try:
+    from jinja2 import Environment, TemplateSyntaxError, StrictUndefined
+except ImportError:  # pragma: no cover - 可选依赖
+    Environment = None
+    TemplateSyntaxError = Exception
+    StrictUndefined = None
 from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
@@ -33,15 +38,17 @@ class ConditionEvaluator:
     """
 
     def __init__(self):
-        self._jinja_env = Environment(
-            undefined=StrictUndefined,
-            trim_blocks=True,
-            lstrip_blocks=True,
-            autoescape=False,  # 条件表达式不需要HTML转义
-        )
+        self._jinja_env = None
+        if Environment is not None:
+            self._jinja_env = Environment(
+                undefined=StrictUndefined,
+                trim_blocks=True,
+                lstrip_blocks=True,
+                autoescape=False,  # 条件表达式不需要HTML转义
+            )
 
-        # 注册自定义过滤器
-        self._register_filters()
+            # 注册自定义过滤器
+            self._register_filters()
 
     def _register_filters(self):
         """注册Jinja2过滤器"""
@@ -132,6 +139,9 @@ class ConditionEvaluator:
         - {{ today() }}  # 如果注册了today函数
         - {{ items | count_by("status", "DONE") }}
         """
+        if self._jinja_env is None:
+            raise ConditionParseError("未安装 jinja2 依赖，无法解析模板表达式")
+
         try:
             template = self._jinja_env.from_string(expression)
             result = template.render(**context)

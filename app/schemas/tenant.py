@@ -6,7 +6,7 @@
 from datetime import datetime
 from typing import Any, Dict, Optional
 
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field
 
 
 # ============================================================
@@ -18,7 +18,7 @@ class TenantBase(BaseModel):
     tenant_name: str = Field(..., min_length=1, max_length=200, description="租户名称")
     plan_type: str = Field(default="FREE", description="套餐类型: FREE/STANDARD/ENTERPRISE")
     contact_name: Optional[str] = Field(None, max_length=100, description="联系人姓名")
-    contact_email: Optional[EmailStr] = Field(None, description="联系邮箱")
+    contact_email: Optional[str] = Field(None, description="联系邮箱")
     contact_phone: Optional[str] = Field(None, max_length=50, description="联系电话")
     settings: Optional[Dict[str, Any]] = Field(None, description="租户配置")
 
@@ -39,7 +39,7 @@ class TenantUpdate(BaseModel):
     max_users: Optional[int] = Field(None, ge=1)
     max_roles: Optional[int] = Field(None, ge=1)
     contact_name: Optional[str] = Field(None, max_length=100)
-    contact_email: Optional[EmailStr] = None
+    contact_email: Optional[str] = None
     contact_phone: Optional[str] = Field(None, max_length=50)
     settings: Optional[Dict[str, Any]] = None
     expired_at: Optional[datetime] = None
@@ -78,7 +78,7 @@ class TenantInitRequest(BaseModel):
     """租户初始化请求"""
     admin_username: str = Field(..., min_length=3, max_length=50, description="管理员用户名")
     admin_password: str = Field(..., min_length=6, max_length=100, description="管理员密码")
-    admin_email: EmailStr = Field(..., description="管理员邮箱")
+    admin_email: str = Field(..., description="管理员邮箱")
     admin_real_name: Optional[str] = Field(None, max_length=50, description="管理员姓名")
     copy_role_templates: bool = Field(default=True, description="是否复制角色模板")
 

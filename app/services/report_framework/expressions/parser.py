@@ -8,7 +8,13 @@
 from datetime import date, datetime, timedelta
 from typing import Any, Dict
 
-from jinja2 import Environment, BaseLoader, TemplateSyntaxError, UndefinedError
+try:
+    from jinja2 import Environment, BaseLoader, TemplateSyntaxError, UndefinedError
+except ImportError:  # pragma: no cover - 可选依赖
+    Environment = None
+    BaseLoader = None
+    TemplateSyntaxError = Exception
+    UndefinedError = Exception
 
 from app.services.report_framework.expressions.filters import register_filters
 
@@ -29,13 +35,16 @@ class ExpressionParser:
         """初始化表达式解析器"""
         self._env = self._create_environment()
 
-    def _create_environment(self) -> Environment:
+    def _create_environment(self):
         """
         创建 Jinja2 环境
 
         Returns:
             配置好的 Jinja2 环境
         """
+        if Environment is None or BaseLoader is None:
+            return None
+
         env = Environment(
             loader=BaseLoader(),
             autoescape=False,
@@ -105,6 +114,9 @@ class ExpressionParser:
         # 如果不是表达式格式，直接返回
         if not expression or "{{" not in expression:
             return expression
+
+        if self._env is None:
+            raise ExpressionError("未安装 jinja2 依赖，无法计算表达式")
 
         try:
             template = self._env.from_string(expression)

@@ -4,7 +4,10 @@
 import logging
 from typing import Optional, TYPE_CHECKING
 
-import requests
+try:
+    import requests
+except ImportError:  # pragma: no cover - 运行环境可选依赖
+    requests = None
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -65,6 +68,9 @@ class WeChatNotificationHandler:
         webhook: str,
     ) -> None:
         """通过Webhook发送企业微信消息"""
+        if requests is None:
+            raise ValueError("未安装 requests 依赖，无法调用企业微信Webhook")
+
         content = notification.notify_content or alert.alert_content
         payload = {
             "msgtype": "text",
@@ -88,6 +94,9 @@ class WeChatNotificationHandler:
             raise ValueError("User WeChat userid not found")
 
         title = notification.notify_title or alert.alert_title
+        if requests is None:
+            raise ValueError("未安装 requests 依赖，无法调用企业微信Webhook")
+
         content = notification.notify_content or alert.alert_content
         alert_level = alert.alert_level
 
